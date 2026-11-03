@@ -1,0 +1,33 @@
+# Models and registry
+
+Model assets: import, versions, lineage, conversion and retirement, for every model type.
+
+- Owns: `services/control/internal/modules/models`, `modelpreparations`, `runtimes/model-lifecycle`.
+- Depends on: delivery-and-upgrades (offline media), network-and-storage.
+
+## P1 Enterprise release
+
+- [ ] MOD-101 Import any Hugging Face format model from local media or an internal mirror, with checksums and resumable upload (P1) - Catalog: F062
+- [ ] MOD-102 Model catalog with type (chat, embedding, rerank, vision, speech, image), size, context, license and capabilities (P1) - Catalog: F063
+- [ ] MOD-103 Versions, artifacts and lineage: weights, adapters, tokenizer, template, training run, evaluation (P1) - Catalog: F064, F099
+- [ ] MOD-104 Per-model serving defaults such as chat-template options (for example disabling thinking mode) (P1)
+- [ ] MOD-105 LoRA merge and format conversion with recorded inputs and outputs (P1) - Catalog: F065
+- [ ] MOD-106 Quantization jobs producing serving variants (P1) - Catalog: F066, F175
+- [ ] MOD-107 Model retirement with dependency check across deployments, apps and keys (P1) - Catalog: F585
+- [ ] MOD-108 Model file and code review: scan for executable code and unsafe formats before import (P1) - Catalog: F583
+- [ ] MOD-109 Model distribution to nodes through the in-site registry with pre-warm (P1) - Catalog: F642
+
+## P2 Fleet operations
+
+- [ ] MOD-201 Peer-to-peer model distribution across thousands of nodes with rack seeding (P2) - Catalog: F642
+- [ ] MOD-202 Model and application bundle publishing (P2) - Catalog: F584
+- [ ] MOD-203 Retention and backup policy for checkpoints, adapters and reports (P2) - Catalog: F068
+- [ ] MOD-204 Compatibility declarations: engine, hardware, precision per model version (P2) - Catalog: F069
+
+## P4 Breadth
+
+- [ ] MOD-401 Distillation and small domain model recipes (P4) - Catalog: F140, F141, F143, F144
+- [ ] MOD-402 Edge model release and quality regression (P4) - Catalog: F142, F586
+- [ ] MOD-403 NVIDIA Model Optimizer and other compression toolkits (P4) - Catalog: F070
+
+Catalog rows absorbed: F062 to F070, F099, F140 to F144, F175, F583 to F586, F642.

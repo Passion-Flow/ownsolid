@@ -1,6 +1,8 @@
 # Capability status
 
-The single status table for ownsolid. Columns follow AGENTS.md section 4.
+The single status table for ownsolid. Columns follow AGENTS.md section 4. Planned work
+and its progress live in the [roadmap](roadmap/index.md); this page lists what is usable
+today and what is known to fail.
 
 | Capability | Implemented | Run end to end | Customer verified | Known failures |
 | --- | --- | --- | --- | --- |

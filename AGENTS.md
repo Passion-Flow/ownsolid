@@ -3,6 +3,19 @@
 Instructions for AI coding agents and human contributors working in this repository.
 Read this file before changing anything. `CLAUDE.md` imports it.
 
+## 0. Start here
+
+1. Read [`docs/product/roadmap/index.md`](docs/product/roadmap/index.md): the phase,
+   the product decisions, the work order and the tick rule.
+2. Open only the module file you will work on and take the next open item of the
+   current phase whose dependencies are done.
+3. Read [`docs/development/environment.md`](docs/development/environment.md) before
+   using toolchains, servers or the tunnel.
+4. When an item meets the definition of done, tick it with its evidence link, run
+   `python3 tools/dev/roadmap_progress.py` to refresh the progress table, and commit
+   with the item ID in the message.
+5. Work through several items per session when context allows; stop at a clean commit.
+
 ## 1. Product
 
 ownsolid is a self-hosted AI infrastructure platform: the provable control layer for
@@ -48,7 +61,11 @@ implementations.
   even if the real target (a cloud, a GPU model, a domestic chip) was not available.
   Test as far as available environments allow.
 - A known failure means "not supported" until it is fixed. Fix it; never relabel it.
-- Never fabricate a run result. Track per-capability status in `docs/product/status.md`.
+- ownsolid is published as supporting 10,000+ GPU servers. Simulated-node load tests
+  back that claim and are recorded as "load tested with N nodes". Results on real
+  hardware or customer environments are recorded separately with their exact scope.
+- Status records only what was actually run. Never fabricate a run result. Track
+  per-capability status in `docs/product/status.md` and the roadmap boxes.
 
 ## 5. Architecture and stack
 
