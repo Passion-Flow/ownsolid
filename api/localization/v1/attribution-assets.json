@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kind": "projectone-original-google-attribution-assets-v1",
+  "source_url": "https://docs.cloud.google.com/static/translate/images/google-translate-attribution.zip",
+  "source_sha256": "1cf5975466881127a227d4c0510518a83542eacff57d0ac5240430263035ee1b",
+  "required_link": "https://translate.google.com/",
+  "assets": [
+    {
+      "name": "color-regular.png",
+      "archive_entry": "png/color-regular.png",
+      "sha256": "1ce4cf9db4cd6c8ae6f6d49542264f5334f40ac79139d51c145a4e039d26323d",
+      "size_bytes": 3408,
+      "media_type": "image/png"
+    },
+    {
+      "name": "white-regular.png",
+      "archive_entry": "png/white-regular.png",
+      "sha256": "f91bf90d865ad48415ac333a80fc548c182cc76be906d1b7f485b57eeae0f3f0",
+      "size_bytes": 2486,
+      "media_type": "image/png"
+    }
+  ],
+  "usage": "Unmodified original attribution marks; no affiliation or endorsement is implied. Used only for actual Google-derived reviewed locales.",
+  "source_size_bytes": 784610
+}

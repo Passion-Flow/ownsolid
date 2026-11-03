@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Isolated monitoring read workload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version",
+    "deadline_seconds",
+    "request_seconds",
+    "fault_milliseconds",
+    "maximum_body_bytes",
+    "maximum_errors",
+    "stop_on_error",
+    "stages"
+  ],
+  "properties": {
+    "format_version": {
+      "const": 1
+    },
+    "deadline_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "description": "Whole authenticated read workload deadline in seconds; default30."
+    },
+    "request_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "description": "Each actual HTTP client deadline in seconds, <=whole deadline; default5."
+    },
+    "fault_milliseconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 5000,
+      "description": "Owned actual SQL-lock request timeout in milliseconds, <request_seconds*1000; default100. Lock release/join and a fresh real snapshot measure recovery."
+    },
+    "maximum_body_bytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 4194304,
+      "description": "Per-response complete decode ceiling in bytes; default1048576; truncation is failure."
+    },
+    "maximum_errors": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Explicit allowed error ceiling, <total requests; default0. No error converted to success."
+    },
+    "stop_on_error": {
+      "type": "boolean",
+      "default": true,
+      "description": "True cancels admission on first observed failure; false is literal false, still bounded by maximum_errors/deadline."
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "concurrency",
+          "requests"
+        ],
+        "properties": {
+          "concurrency": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "requests": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        }
+      },
+      "description": "Sequential stages; requests>=concurrency; total<=2000. Default stages1x3 then2x6. No external target field."
+    }
+  },
+  "description": "Nonsecret exact JSON selected CLI --workload-configuration > exact --workload-env-file > tracked capacity.json. All fields required. Go/Python enforce cross-field ranges. Parent owns resource admission/SQL/services/retained evidence. No customer endpoint/process PID."
+}

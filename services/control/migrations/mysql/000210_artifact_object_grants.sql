@@ -1,0 +1,21 @@
+CREATE TABLE artifact_object_grants (
+ id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY, tenant_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, workspace_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, object_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ recipient_user_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, created_by CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ creator_epoch BIGINT NOT NULL, creator_membership CHAR(36) CHARACTER SET ascii COLLATE ascii_bin, recipient_epoch BIGINT NOT NULL, recipient_membership CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ action VARCHAR(24) NOT NULL CHECK(action IN('read','ingest_model','ingest_dataset')),
+ creation_key CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, fingerprint VARBINARY(32) NOT NULL CHECK(OCTET_LENGTH(fingerprint)=32),
+ not_before DATETIME(6) NOT NULL, expires_at DATETIME(6) NOT NULL, revoked_at DATETIME(6), created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+ UNIQUE(tenant_id,workspace_id,object_id,id), UNIQUE(tenant_id,workspace_id,object_id,created_by,creation_key),
+ FOREIGN KEY(tenant_id,workspace_id,object_id) REFERENCES artifact_objects(tenant_id,workspace_id,id),
+ FOREIGN KEY(recipient_user_id) REFERENCES users(id), FOREIGN KEY(created_by) REFERENCES users(id), CHECK(expires_at>not_before),
+ KEY artifact_grant_recipient(tenant_id,workspace_id,recipient_user_id,object_id),
+ CONSTRAINT agrant_id CHECK(REGEXP_LIKE(id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT agrant_tenant_id CHECK(REGEXP_LIKE(tenant_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT agrant_workspace_id CHECK(REGEXP_LIKE(workspace_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT agrant_object_id CHECK(REGEXP_LIKE(object_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT agrant_recipient_user_id CHECK(REGEXP_LIKE(recipient_user_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT agrant_created_by CHECK(REGEXP_LIKE(created_by,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT agrant_recipient_membership CHECK(REGEXP_LIKE(recipient_membership,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT agrant_creation_key CHECK(REGEXP_LIKE(creation_key,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT agrant_creator_membership CHECK(creator_membership IS NULL OR REGEXP_LIKE(creator_membership,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

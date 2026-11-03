@@ -1,0 +1,22 @@
+CREATE TABLE training_checkpoints (
+    id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+    tenant_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    workspace_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    job_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    attempt_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    global_step integer NOT NULL CHECK(global_step BETWEEN 1 AND 1000),
+    receipt_sha256 VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(receipt_sha256,'^[a-f0-9]{64}$','c')),
+    receipt JSON NOT NULL CHECK(JSON_TYPE(receipt)='OBJECT' AND OCTET_LENGTH(CAST(receipt AS CHAR CHARACTER SET utf8mb4))<=1048576),
+    file_inventory JSON NOT NULL CHECK(JSON_TYPE(file_inventory)='OBJECT' AND OCTET_LENGTH(CAST(file_inventory AS CHAR CHARACTER SET utf8mb4))<=1048576),
+    storage_key VARCHAR(160) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(storage_key,'^checkpoints/[a-f0-9-]{36}/[a-f0-9-]{36}/[a-f0-9-]{36}$','c')),
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    UNIQUE(tenant_id,workspace_id,job_id,id),
+    UNIQUE(attempt_id,global_step),
+    FOREIGN KEY(tenant_id,workspace_id,job_id,attempt_id) REFERENCES training_attempts(tenant_id,workspace_id,job_id,id),
+    KEY training_checkpoint_scope_page_idx(tenant_id,workspace_id,job_id,created_at DESC,id DESC),
+    CONSTRAINT training_checkpoints_id_canonical CHECK(REGEXP_LIKE(id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_checkpoints_tenant_id_canonical CHECK(REGEXP_LIKE(tenant_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_checkpoints_workspace_id_canonical CHECK(REGEXP_LIKE(workspace_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_checkpoints_job_id_canonical CHECK(REGEXP_LIKE(job_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_checkpoints_attempt_id_canonical CHECK(REGEXP_LIKE(attempt_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

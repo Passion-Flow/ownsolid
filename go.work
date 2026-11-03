@@ -1,0 +1,10 @@
+go 1.27.0
+
+use (
+	./api
+	./deploy/offline
+	./pkg/license
+	./services/agent
+	./services/control
+	./tools/release/offline
+)

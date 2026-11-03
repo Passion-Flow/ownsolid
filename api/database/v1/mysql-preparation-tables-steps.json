@@ -1,0 +1,57 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "c3bb0b03746c2136a575aaee0c7118bc9a1e3c75281dee4d8c86694d52e24b7e",
+  "after_step": 94,
+  "steps": [
+    {
+      "step": 95,
+      "file": "000095_model_preparations.sql",
+      "object": "model_preparations",
+      "kind": "create_table",
+      "source_sha256": "169d99f1dc6bb89a782a9b093282b55604f9e89c93f94442608c0ff3bcd6550e"
+    },
+    {
+      "step": 96,
+      "file": "000096_model_preparation_attempts.sql",
+      "object": "model_preparation_attempts",
+      "kind": "create_table",
+      "source_sha256": "42f0fb69e6d455ba40b77d99eff722f77de13ac3a08a9e6bc62035fbfbbbf3b4"
+    },
+    {
+      "step": 97,
+      "file": "000097_model_preparation_events.sql",
+      "object": "model_preparation_events",
+      "kind": "create_table",
+      "source_sha256": "9f3158acfd639173c61f12facef74b3ffd7f5ec9c48f751ff146ad7c4ba41089"
+    },
+    {
+      "step": 98,
+      "file": "000098_model_preparation_recoveries.sql",
+      "object": "model_preparation_recoveries",
+      "kind": "create_table",
+      "source_sha256": "f90d07226229e3bebddcfb02a4e559289e9d237f0d942387c7a59075a5087f2a"
+    },
+    {
+      "step": 99,
+      "file": "000099_model_preparation_uploads.sql",
+      "object": "model_preparation_uploads",
+      "kind": "create_table",
+      "source_sha256": "e2649ba97a14e63ef1fe099ebe719670860d1311540a7a551d0a1f5519ba49a1"
+    },
+    {
+      "step": 100,
+      "file": "000100_model_preparation_upload_chunks.sql",
+      "object": "model_preparation_upload_chunks",
+      "kind": "create_table",
+      "source_sha256": "7b44e0bd8453ee574c127d5b991c7440afda36d21b40138eca3ba717ff814907"
+    },
+    {
+      "step": 101,
+      "file": "000101_model_preparation_artifacts.sql",
+      "object": "model_preparation_artifacts",
+      "kind": "create_table",
+      "source_sha256": "bcba37a1b59e1e86d89c028b46b687ca0b30e28bc7bfea72c7acc1b0e6941bfc"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "secrets": {
+    "files": ["database-dsn", "auth-hmac", "mail-keyring.json", "certificate.pem", "private-key.pem", "sso-keyring.json", "provider-ca.pem"]
+  }
+}

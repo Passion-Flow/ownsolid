@@ -1,0 +1,191 @@
+package workflows
+
+import "github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+
+// Every query owns explicit vendor text and, when needed, an explicit MySQL
+// argument order. Selection never parses, translates or rewrites SQL text.
+type workflowQuery struct {
+	postgres, mysql         string
+	dameng                  string
+	damengOrder, damengJSON []int
+	damengLimit             int
+	damengSuffix            string
+	mysqlOrder              []int
+}
+
+func workflowStatement(q transaction.Executor, query workflowQuery, args ...any) transaction.Statement {
+	if _, schema1 := q.(knowledgeExecutor); schema1 {
+		return knowledgeStatement(query, args...)
+	}
+	if q.Dialect() == transaction.Dameng {
+		return workflowDamengStatement(query, args...)
+	}
+	if q.Dialect() == transaction.MySQL {
+		if len(query.mysqlOrder) == 0 {
+			return transaction.SQL(transaction.MySQL, query.mysql, args...)
+		}
+		ordered := make([]any, len(query.mysqlOrder))
+		for n, index := range query.mysqlOrder {
+			if index < 1 || index > len(args) {
+				return transaction.SQL(transaction.MySQL, "")
+			}
+			ordered[n] = args[index-1]
+		}
+		return transaction.SQL(transaction.MySQL, query.mysql, ordered...)
+	}
+	if q.Dialect() == transaction.PostgreSQL {
+		return transaction.SQL(transaction.PostgreSQL, query.postgres, args...)
+	}
+	return transaction.SQL(q.Dialect(), "")
+}
+
+const workflowFieldsMySQL = "id,workspace_id,name,enabled,revision,draft_graph,draft_sha256,current_version_id,execution_authority,created_by,created_at,updated_at"
+
+func workflowFieldsWithin(q transaction.Executor) string {
+	if q.Dialect() == transaction.Dameng {
+		return workflowFieldsDameng
+	}
+	if q.Dialect() == transaction.MySQL {
+		return workflowFieldsMySQL
+	}
+	return workflowFields
+}
+
+const versionFieldsMySQL = "id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by,published_at"
+
+func versionFieldsWithin(q transaction.Executor) string {
+	if q.Dialect() == transaction.Dameng {
+		return versionFieldsDameng
+	}
+	if q.Dialect() == transaction.MySQL {
+		return versionFieldsMySQL
+	}
+	return versionFields
+}
+
+const conversationFieldsMySQL = "id,workflow_id,version_id,revision,turn_count,created_at,updated_at"
+
+func conversationFieldsWithin(q transaction.Executor) string {
+	if q.Dialect() == transaction.Dameng {
+		return conversationFieldsDameng
+	}
+	if q.Dialect() == transaction.MySQL {
+		return conversationFieldsMySQL
+	}
+	return conversationFields
+}
+
+const runFieldsMySQL = "r.id,r.workflow_id,r.conversation_id,r.version_id,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id,r.requested_audience,r.execution_authority,r.membership_authority,r.graph_snapshot,r.evidence,r.alias_snapshot,r.`usage`,r.process_owner,r.lease_id,r.result_kind,r.tool_result,r.tool_proof"
+
+func runFieldsWithin(q transaction.Executor) string {
+	if _, schema1 := q.(knowledgeExecutor); schema1 {
+		return knowledgeRunFields
+	}
+	if q.Dialect() == transaction.Dameng {
+		return runFieldsDameng
+	}
+	if q.Dialect() == transaction.MySQL {
+		return runFieldsMySQL
+	}
+	return runFields
+}
+
+var workflowAudit = workflowQuery{dameng: `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),?,?,?,?,?,'success',?,?,?,?)`, postgres: "INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES($1,clock_timestamp(),$2,$3,$4,$5,$6,'success',$7,$8,$9,$10)", mysql: "INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,UTC_TIMESTAMP(6),?,?,?,?,?,'success',?,?,?,?)"}
+
+var workflowReadIntent = workflowQuery{dameng: `SELECT entity_id,purpose,request_hash FROM workflow_mutation_intents WHERE tenant_id=? AND workspace_id=? AND actor_id=? AND idempotency_key=? FOR UPDATE`, postgres: "SELECT entity_id::text,purpose,request_hash FROM workflow_mutation_intents WHERE tenant_id=$1 AND workspace_id=$2 AND actor_id=$3 AND idempotency_key=$4 FOR UPDATE", mysql: "SELECT entity_id,purpose,request_hash FROM workflow_mutation_intents WHERE tenant_id=? AND workspace_id=? AND actor_id=? AND idempotency_key=? FOR UPDATE"}
+
+var workflowSaveIntent = workflowQuery{dameng: `INSERT INTO workflow_mutation_intents(tenant_id,workspace_id,actor_id,idempotency_key,purpose,request_hash,entity_id) VALUES(?,?,?,?,?,?,?)`, postgres: "INSERT INTO workflow_mutation_intents(tenant_id,workspace_id,actor_id,idempotency_key,purpose,request_hash,entity_id) VALUES($1,$2,$3,$4,$5,$6,$7)", mysql: "INSERT INTO workflow_mutation_intents(tenant_id,workspace_id,actor_id,idempotency_key,purpose,request_hash,entity_id) VALUES(?,?,?,?,?,?,?)"}
+
+var workflowNameExists = workflowQuery{dameng: `SELECT CASE WHEN EXISTS(SELECT 1 FROM workflows WHERE tenant_id=? AND workspace_id=? AND name_key=? AND id<>?) THEN 1 ELSE 0 END FROM DUAL`, postgres: "SELECT EXISTS(SELECT 1 FROM workflows WHERE tenant_id=$1 AND workspace_id=$2 AND name_key=$3 AND id::text<>$4)", mysql: "SELECT EXISTS(SELECT 1 FROM workflows WHERE tenant_id=? AND workspace_id=? AND name_key=? AND id<>?)"}
+
+var workflowLock = workflowQuery{dameng: `SELECT id,workspace_id,name,enabled,revision,draft_graph,draft_sha256,current_version_id,execution_authority,created_by,created_at,updated_at FROM workflows WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE`, postgres: "SELECT id::text,workspace_id::text,name,enabled,revision,draft_graph,draft_sha256,current_version_id::text,execution_authority::text,created_by::text,created_at,updated_at FROM workflows WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE", mysql: "SELECT id,workspace_id,name,enabled,revision,draft_graph,draft_sha256,current_version_id,execution_authority,created_by,created_at,updated_at FROM workflows WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE"}
+
+var workflowResolve = workflowQuery{dameng: `SELECT f.workspace_id FROM workflows f JOIN installation_state i ON i.tenant_id=f.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND f.id=?`, postgres: "SELECT f.workspace_id::text FROM workflows f JOIN installation_state i ON i.tenant_id=f.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND f.id=$1", mysql: "SELECT f.workspace_id FROM workflows f JOIN installation_state i ON i.tenant_id=f.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND f.id=?"}
+
+var workflowCount = workflowQuery{dameng: `SELECT count(*) FROM workflows WHERE tenant_id=? AND workspace_id=?`, postgres: "SELECT count(*) FROM workflows WHERE tenant_id=$1 AND workspace_id=$2", mysql: "SELECT count(*) FROM workflows WHERE tenant_id=? AND workspace_id=?"}
+
+var workflowCreate = workflowQuery{dameng: `INSERT INTO workflows(id,tenant_id,workspace_id,name,name_key,execution_authority,draft_graph,draft_sha256,created_by) VALUES(?,?,?,?,?,?,?,?,?)`, damengJSON: []int{7}, postgres: "INSERT INTO workflows(id,tenant_id,workspace_id,name,name_key,execution_authority,draft_graph,draft_sha256,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)", mysql: "INSERT INTO workflows(id,tenant_id,workspace_id,name,name_key,execution_authority,draft_graph,draft_sha256,created_by) VALUES(?,?,?,?,?,?,CAST(? AS JSON),?,?)"}
+
+var workflowUpdate = workflowQuery{dameng: `UPDATE workflows SET name=?,name_key=?,enabled=?,execution_authority=?,draft_graph=?,draft_sha256=?,revision=revision+1,updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, damengOrder: []int{2, 3, 4, 5, 6, 7, 1}, damengJSON: []int{6}, postgres: "UPDATE workflows SET name=$2,name_key=$3,enabled=$4,execution_authority=$5,draft_graph=$6,draft_sha256=$7,revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", mysql: "UPDATE workflows SET name=?,name_key=?,enabled=?,execution_authority=?,draft_graph=CAST(? AS JSON),draft_sha256=?,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?", mysqlOrder: []int{2, 3, 4, 5, 6, 7, 1}}
+
+var workflowCancelAll = workflowQuery{dameng: `UPDATE workflow_runs SET cancellation_requested_at=COALESCE(cancellation_requested_at,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))) WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND state IN ('pending','running')`, postgres: "UPDATE workflow_runs SET cancellation_requested_at=COALESCE(cancellation_requested_at,clock_timestamp()) WHERE tenant_id=$1 AND workspace_id=$2 AND workflow_id=$3 AND state IN ('pending','running')", mysql: "UPDATE workflow_runs SET cancellation_requested_at=COALESCE(cancellation_requested_at,UTC_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND state IN ('pending','running')"}
+
+var workflowVersionScoped = workflowQuery{dameng: `SELECT id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by,published_at FROM workflow_versions WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND id=?`, postgres: "SELECT id::text,workflow_id::text,version_number,draft_revision,graph,graph_sha256,published_by::text,published_at FROM workflow_versions WHERE tenant_id=$1 AND workspace_id=$2 AND workflow_id=$3 AND id=$4", mysql: "SELECT id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by,published_at FROM workflow_versions WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND id=?"}
+
+var workflowVersionCount = workflowQuery{dameng: `SELECT count(*),COALESCE(max(version_number),0)+1 FROM workflow_versions WHERE tenant_id=? AND workspace_id=? AND workflow_id=?`, postgres: "SELECT count(*),COALESCE(max(version_number),0)+1 FROM workflow_versions WHERE tenant_id=$1 AND workspace_id=$2 AND workflow_id=$3", mysql: "SELECT count(*),COALESCE(max(version_number),0)+1 FROM workflow_versions WHERE tenant_id=? AND workspace_id=? AND workflow_id=?"}
+
+var workflowVersionCreate = workflowQuery{dameng: `INSERT INTO workflow_versions(id,tenant_id,workspace_id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by) VALUES(?,?,?,?,?,?,?,?,?)`, damengJSON: []int{7}, postgres: "INSERT INTO workflow_versions(id,tenant_id,workspace_id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)", mysql: "INSERT INTO workflow_versions(id,tenant_id,workspace_id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by) VALUES(?,?,?,?,?,?,CAST(? AS JSON),?,?)"}
+
+var workflowPublish = workflowQuery{dameng: `UPDATE workflows SET current_version_id=?,revision=revision+1,updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, damengOrder: []int{2, 1}, postgres: "UPDATE workflows SET current_version_id=$2,revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", mysql: "UPDATE workflows SET current_version_id=?,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?", mysqlOrder: []int{2, 1}}
+
+var workflowVersionByID = workflowQuery{dameng: `SELECT id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by,published_at FROM workflow_versions WHERE id=?`, postgres: "SELECT id::text,workflow_id::text,version_number,draft_revision,graph,graph_sha256,published_by::text,published_at FROM workflow_versions WHERE id=$1", mysql: "SELECT id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by,published_at FROM workflow_versions WHERE id=?"}
+
+var workflowConversationLock = workflowQuery{dameng: `SELECT id,workflow_id,version_id,revision,turn_count,created_at,updated_at FROM workflow_conversations WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND id=? AND owner_id=? AND deleted_at IS NULL FOR UPDATE`, postgres: "SELECT id::text,workflow_id::text,version_id::text,revision,turn_count,created_at,updated_at FROM workflow_conversations WHERE tenant_id=$1 AND workspace_id=$2 AND workflow_id=$3 AND id=$4 AND owner_id=$5 AND deleted_at IS NULL FOR UPDATE", mysql: "SELECT id,workflow_id,version_id,revision,turn_count,created_at,updated_at FROM workflow_conversations WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND id=? AND owner_id=? AND deleted_at IS NULL FOR UPDATE"}
+
+var workflowConversationCount = workflowQuery{dameng: `SELECT count(*) FROM workflow_conversations WHERE tenant_id=? AND workspace_id=? AND owner_id=?`, postgres: "SELECT count(*) FROM workflow_conversations WHERE tenant_id=$1 AND workspace_id=$2 AND owner_id=$3", mysql: "SELECT count(*) FROM workflow_conversations WHERE tenant_id=? AND workspace_id=? AND owner_id=?"}
+
+var workflowConversationCreate = workflowQuery{dameng: `INSERT INTO workflow_conversations(id,tenant_id,workspace_id,workflow_id,version_id,owner_id) VALUES(?,?,?,?,?,?)`, postgres: "INSERT INTO workflow_conversations(id,tenant_id,workspace_id,workflow_id,version_id,owner_id) VALUES($1,$2,$3,$4,$5,$6)", mysql: "INSERT INTO workflow_conversations(id,tenant_id,workspace_id,workflow_id,version_id,owner_id) VALUES(?,?,?,?,?,?)"}
+
+var workflowConversationDelete = workflowQuery{dameng: `UPDATE workflow_conversations SET deleted_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),revision=revision+1 WHERE id=?`, postgres: "UPDATE workflow_conversations SET deleted_at=clock_timestamp(),updated_at=clock_timestamp(),revision=revision+1 WHERE id=$1", mysql: "UPDATE workflow_conversations SET deleted_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6),revision=revision+1 WHERE id=?"}
+
+var workflowConversationCancel = workflowQuery{dameng: `UPDATE workflow_runs SET cancellation_requested_at=COALESCE(cancellation_requested_at,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))) WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND conversation_id=? AND state IN ('pending','running')`, postgres: "UPDATE workflow_runs SET cancellation_requested_at=COALESCE(cancellation_requested_at,clock_timestamp()) WHERE tenant_id=$1 AND workspace_id=$2 AND workflow_id=$3 AND conversation_id=$4 AND state IN ('pending','running')", mysql: "UPDATE workflow_runs SET cancellation_requested_at=COALESCE(cancellation_requested_at,UTC_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND conversation_id=? AND state IN ('pending','running')"}
+
+var workflowRunVisible = workflowQuery{dameng: `SELECT r.id,r.workflow_id,r.conversation_id,r.version_id,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id,r.requested_audience,r.execution_authority,r.membership_authority,r.graph_snapshot,r.evidence,r.alias_snapshot,r."USAGE",r.process_owner,r.lease_id,r.result_kind,r.tool_result,r.tool_proof FROM workflow_runs r WHERE r.tenant_id=? AND r.workspace_id=? AND r.workflow_id=? AND r.owner_id=? AND r.id=? AND (r.conversation_id IS NULL OR EXISTS(SELECT 1 FROM workflow_conversations c WHERE c.tenant_id=r.tenant_id AND c.workspace_id=r.workspace_id AND c.workflow_id=r.workflow_id AND c.id=r.conversation_id AND c.owner_id=r.owner_id AND c.deleted_at IS NULL))`, postgres: "SELECT r.id::text,r.workflow_id::text,r.conversation_id::text,r.version_id::text,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id::text,r.requested_audience,r.execution_authority::text,r.membership_authority::text,r.graph_snapshot,r.evidence,r.alias_snapshot,r.usage,r.process_owner::text,r.lease_id::text,r.result_kind,r.tool_result,r.tool_proof FROM workflow_runs r WHERE r.tenant_id=$1 AND r.workspace_id=$2 AND r.workflow_id=$3 AND r.owner_id=$4 AND r.id=$5 AND (r.conversation_id IS NULL OR EXISTS(SELECT 1 FROM workflow_conversations c WHERE c.tenant_id=r.tenant_id AND c.workspace_id=r.workspace_id AND c.workflow_id=r.workflow_id AND c.id=r.conversation_id AND c.owner_id=r.owner_id AND c.deleted_at IS NULL))", mysql: "SELECT r.id,r.workflow_id,r.conversation_id,r.version_id,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id,r.requested_audience,r.execution_authority,r.membership_authority,r.graph_snapshot,r.evidence,r.alias_snapshot,r.`usage`,r.process_owner,r.lease_id,r.result_kind,r.tool_result,r.tool_proof FROM workflow_runs r WHERE r.tenant_id=? AND r.workspace_id=? AND r.workflow_id=? AND r.owner_id=? AND r.id=? AND (r.conversation_id IS NULL OR EXISTS(SELECT 1 FROM workflow_conversations c WHERE c.tenant_id=r.tenant_id AND c.workspace_id=r.workspace_id AND c.workflow_id=r.workflow_id AND c.id=r.conversation_id AND c.owner_id=r.owner_id AND c.deleted_at IS NULL))"}
+
+var workflowRunLock = workflowQuery{dameng: `SELECT r.id,r.workflow_id,r.conversation_id,r.version_id,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id,r.requested_audience,r.execution_authority,r.membership_authority,r.graph_snapshot,r.evidence,r.alias_snapshot,r."USAGE",r.process_owner,r.lease_id,r.result_kind,r.tool_result,r.tool_proof FROM workflow_runs r WHERE r.tenant_id=? AND r.workspace_id=? AND r.workflow_id=? AND r.owner_id=? AND r.id=? FOR UPDATE`, postgres: "SELECT r.id::text,r.workflow_id::text,r.conversation_id::text,r.version_id::text,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id::text,r.requested_audience,r.execution_authority::text,r.membership_authority::text,r.graph_snapshot,r.evidence,r.alias_snapshot,r.usage,r.process_owner::text,r.lease_id::text,r.result_kind,r.tool_result,r.tool_proof FROM workflow_runs r WHERE r.tenant_id=$1 AND r.workspace_id=$2 AND r.workflow_id=$3 AND r.owner_id=$4 AND r.id=$5 FOR UPDATE OF r", mysql: "SELECT r.id,r.workflow_id,r.conversation_id,r.version_id,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id,r.requested_audience,r.execution_authority,r.membership_authority,r.graph_snapshot,r.evidence,r.alias_snapshot,r.`usage`,r.process_owner,r.lease_id,r.result_kind,r.tool_result,r.tool_proof FROM workflow_runs r WHERE r.tenant_id=? AND r.workspace_id=? AND r.workflow_id=? AND r.owner_id=? AND r.id=? FOR UPDATE"}
+
+var workflowRunByID = workflowQuery{dameng: `SELECT r.id,r.workflow_id,r.conversation_id,r.version_id,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id,r.requested_audience,r.execution_authority,r.membership_authority,r.graph_snapshot,r.evidence,r.alias_snapshot,r."USAGE",r.process_owner,r.lease_id,r.result_kind,r.tool_result,r.tool_proof FROM workflow_runs r WHERE r.id=?`, postgres: "SELECT r.id::text,r.workflow_id::text,r.conversation_id::text,r.version_id::text,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id::text,r.requested_audience,r.execution_authority::text,r.membership_authority::text,r.graph_snapshot,r.evidence,r.alias_snapshot,r.usage,r.process_owner::text,r.lease_id::text,r.result_kind,r.tool_result,r.tool_proof FROM workflow_runs r WHERE r.id=$1", mysql: "SELECT r.id,r.workflow_id,r.conversation_id,r.version_id,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id,r.requested_audience,r.execution_authority,r.membership_authority,r.graph_snapshot,r.evidence,r.alias_snapshot,r.`usage`,r.process_owner,r.lease_id,r.result_kind,r.tool_result,r.tool_proof FROM workflow_runs r WHERE r.id=?"}
+
+var workflowConversationBusy = workflowQuery{dameng: `SELECT CASE WHEN EXISTS(SELECT 1 FROM workflow_runs WHERE conversation_id=? AND state IN ('pending','running')) THEN 1 ELSE 0 END FROM DUAL`, postgres: "SELECT EXISTS(SELECT 1 FROM workflow_runs WHERE conversation_id=$1 AND state IN ('pending','running'))", mysql: "SELECT EXISTS(SELECT 1 FROM workflow_runs WHERE conversation_id=? AND state IN ('pending','running'))"}
+
+var workflowLiveCount = workflowQuery{dameng: `SELECT count(*) FROM workflow_runs WHERE tenant_id=? AND workspace_id=? AND state IN ('pending','running')`, postgres: "SELECT count(*) FROM workflow_runs WHERE tenant_id=$1 AND workspace_id=$2 AND state IN ('pending','running')", mysql: "SELECT count(*) FROM workflow_runs WHERE tenant_id=? AND workspace_id=? AND state IN ('pending','running')"}
+
+var workflowRunCount = workflowQuery{dameng: `SELECT count(*) FROM workflow_runs WHERE tenant_id=? AND workspace_id=? AND owner_id=?`, postgres: "SELECT count(*) FROM workflow_runs WHERE tenant_id=$1 AND workspace_id=$2 AND owner_id=$3", mysql: "SELECT count(*) FROM workflow_runs WHERE tenant_id=? AND workspace_id=? AND owner_id=?"}
+
+var workflowRunCreate = workflowQuery{dameng: `INSERT INTO workflow_runs(id,tenant_id,workspace_id,workflow_id,owner_id,conversation_id,turn_number,version_id,draft_revision,execution_authority,membership_authority,requested_audience,graph_snapshot,graph_sha256,state,question,deadline_at,result_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',?,TIMESTAMPADD(SQL_TSI_SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))),?)`, damengJSON: []int{13}, postgres: "INSERT INTO workflow_runs(id,tenant_id,workspace_id,workflow_id,owner_id,conversation_id,turn_number,version_id,draft_revision,execution_authority,membership_authority,requested_audience,graph_snapshot,graph_sha256,state,question,deadline_at,result_kind) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'pending',$15,clock_timestamp()+make_interval(secs=>$16),$17)", mysql: "INSERT INTO workflow_runs(id,tenant_id,workspace_id,workflow_id,owner_id,conversation_id,turn_number,version_id,draft_revision,execution_authority,membership_authority,requested_audience,graph_snapshot,graph_sha256,state,question,deadline_at,result_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,CAST(? AS JSON),?,'pending',?,TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),?)"}
+
+var workflowTraceCreate = workflowQuery{dameng: `INSERT INTO workflow_node_traces(tenant_id,workspace_id,workflow_id,run_id,node_id,kind,state) VALUES(?,?,?,?,?,?,'not_started')`, postgres: "INSERT INTO workflow_node_traces(tenant_id,workspace_id,workflow_id,run_id,node_id,kind,state) VALUES($1,$2,$3,$4,$5,$6,'not_started')", mysql: "INSERT INTO workflow_node_traces(tenant_id,workspace_id,workflow_id,run_id,node_id,kind,state) VALUES(?,?,?,?,?,?,'not_started')"}
+
+var workflowConversationTurn = workflowQuery{dameng: `UPDATE workflow_conversations SET turn_count=?,updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),revision=revision+1 WHERE id=?`, damengOrder: []int{2, 1}, postgres: "UPDATE workflow_conversations SET turn_count=$2,updated_at=clock_timestamp(),revision=revision+1 WHERE id=$1", mysql: "UPDATE workflow_conversations SET turn_count=?,updated_at=UTC_TIMESTAMP(6),revision=revision+1 WHERE id=?", mysqlOrder: []int{2, 1}}
+
+var workflowRunConversation = workflowQuery{dameng: `SELECT r.conversation_id FROM workflow_runs r WHERE r.tenant_id=? AND r.workspace_id=? AND r.workflow_id=? AND r.owner_id=? AND r.id=? AND (r.conversation_id IS NULL OR EXISTS(SELECT 1 FROM workflow_conversations c WHERE c.tenant_id=r.tenant_id AND c.workspace_id=r.workspace_id AND c.workflow_id=r.workflow_id AND c.id=r.conversation_id AND c.owner_id=r.owner_id AND c.deleted_at IS NULL))`, postgres: "SELECT r.conversation_id::text FROM workflow_runs r WHERE r.tenant_id=$1 AND r.workspace_id=$2 AND r.workflow_id=$3 AND r.owner_id=$4 AND r.id=$5 AND (r.conversation_id IS NULL OR EXISTS(SELECT 1 FROM workflow_conversations c WHERE c.tenant_id=r.tenant_id AND c.workspace_id=r.workspace_id AND c.workflow_id=r.workflow_id AND c.id=r.conversation_id AND c.owner_id=r.owner_id AND c.deleted_at IS NULL))", mysql: "SELECT r.conversation_id FROM workflow_runs r WHERE r.tenant_id=? AND r.workspace_id=? AND r.workflow_id=? AND r.owner_id=? AND r.id=? AND (r.conversation_id IS NULL OR EXISTS(SELECT 1 FROM workflow_conversations c WHERE c.tenant_id=r.tenant_id AND c.workspace_id=r.workspace_id AND c.workflow_id=r.workflow_id AND c.id=r.conversation_id AND c.owner_id=r.owner_id AND c.deleted_at IS NULL))"}
+
+var workflowCancelOne = workflowQuery{dameng: `UPDATE workflow_runs SET cancellation_requested_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, postgres: "UPDATE workflow_runs SET cancellation_requested_at=clock_timestamp() WHERE id=$1", mysql: "UPDATE workflow_runs SET cancellation_requested_at=UTC_TIMESTAMP(6) WHERE id=?"}
+
+var workflowRunTimely = workflowQuery{dameng: `SELECT CASE WHEN deadline_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND (?=1 OR lease_expires_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))) THEN 1 ELSE 0 END FROM workflow_runs WHERE id=?`, damengOrder: []int{2, 1}, postgres: "SELECT deadline_at>clock_timestamp() AND ($2 OR lease_expires_at>clock_timestamp()) FROM workflow_runs WHERE id=$1", mysql: "SELECT deadline_at>UTC_TIMESTAMP(6) AND (? OR lease_expires_at>UTC_TIMESTAMP(6)) FROM workflow_runs WHERE id=?", mysqlOrder: []int{2, 1}}
+
+var workflowRunClaim = workflowQuery{dameng: `UPDATE workflow_runs SET state='running',process_owner=?,lease_id=?,lease_expires_at=LEAST(TIMESTAMPADD(SQL_TSI_SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))),deadline_at),started_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, damengOrder: []int{2, 3, 4, 1}, postgres: "UPDATE workflow_runs SET state='running',process_owner=$2,lease_id=$3,lease_expires_at=LEAST(clock_timestamp()+make_interval(secs=>$4),deadline_at),started_at=clock_timestamp() WHERE id=$1", mysql: "UPDATE workflow_runs SET state='running',process_owner=?,lease_id=?,lease_expires_at=LEAST(TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),deadline_at),started_at=UTC_TIMESTAMP(6) WHERE id=?", mysqlOrder: []int{2, 3, 4, 1}}
+
+var workflowRunRenew = workflowQuery{dameng: `UPDATE workflow_runs SET lease_expires_at=LEAST(TIMESTAMPADD(SQL_TSI_SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))),deadline_at) WHERE id=?`, damengOrder: []int{2, 1}, postgres: "UPDATE workflow_runs SET lease_expires_at=LEAST(clock_timestamp()+make_interval(secs=>$2),deadline_at) WHERE id=$1", mysql: "UPDATE workflow_runs SET lease_expires_at=LEAST(TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),deadline_at) WHERE id=?", mysqlOrder: []int{2, 1}}
+
+var workflowTraceTransition = workflowQuery{dameng: `UPDATE workflow_node_traces SET state=?,result_metadata=?,started_at=CASE WHEN ?='running' THEN SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) ELSE started_at END,finished_at=CASE WHEN ?='succeeded' THEN SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) ELSE NULL END WHERE run_id=? AND kind=? AND state=?`, damengOrder: []int{4, 5, 4, 4, 1, 2, 3}, damengJSON: []int{5}, postgres: "UPDATE workflow_node_traces SET state=$4::text,result_metadata=$5,started_at=CASE WHEN $4::text='running' THEN clock_timestamp() ELSE started_at END,finished_at=CASE WHEN $4::text='succeeded' THEN clock_timestamp() ELSE NULL END WHERE run_id=$1 AND kind=$2 AND state=$3", mysql: "UPDATE workflow_node_traces SET state=?,result_metadata=CAST(? AS JSON),started_at=CASE WHEN ?='running' THEN UTC_TIMESTAMP(6) ELSE started_at END,finished_at=CASE WHEN ?='succeeded' THEN UTC_TIMESTAMP(6) ELSE NULL END WHERE run_id=? AND kind=? AND state=?", mysqlOrder: []int{4, 5, 4, 4, 1, 2, 3}}
+
+var workflowTraceEnd = workflowQuery{dameng: `UPDATE workflow_node_traces SET state='succeeded',finished_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),result_metadata=? WHERE run_id=? AND kind='end' AND state='running'`, damengOrder: []int{2, 1}, damengJSON: []int{2}, postgres: "UPDATE workflow_node_traces SET state='succeeded',finished_at=clock_timestamp(),result_metadata=$2 WHERE run_id=$1 AND kind='end' AND state='running'", mysql: "UPDATE workflow_node_traces SET state='succeeded',finished_at=UTC_TIMESTAMP(6),result_metadata=CAST(? AS JSON) WHERE run_id=? AND kind='end' AND state='running'", mysqlOrder: []int{2, 1}}
+
+var workflowRunAnswerSuccess = workflowQuery{dameng: `UPDATE workflow_runs SET state='succeeded',answer=?,evidence=?,alias_snapshot=?,"USAGE"=?,error_code=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, damengOrder: []int{2, 3, 4, 5, 1}, damengJSON: []int{3, 4, 5}, postgres: "UPDATE workflow_runs SET state='succeeded',answer=$2,evidence=$3,alias_snapshot=$4,usage=$5,error_code=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=clock_timestamp() WHERE id=$1", mysql: "UPDATE workflow_runs SET state='succeeded',answer=?,evidence=CAST(? AS JSON),alias_snapshot=CAST(? AS JSON),`usage`=CAST(? AS JSON),error_code=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=UTC_TIMESTAMP(6) WHERE id=?", mysqlOrder: []int{2, 3, 4, 5, 1}}
+
+var workflowRunToolSuccess = workflowQuery{dameng: `UPDATE workflow_runs SET state='succeeded',tool_result=?,tool_proof=?,error_code=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, damengOrder: []int{2, 3, 1}, damengJSON: []int{2, 3}, postgres: "UPDATE workflow_runs SET state='succeeded',tool_result=$2,tool_proof=$3,error_code=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=clock_timestamp() WHERE id=$1", mysql: "UPDATE workflow_runs SET state='succeeded',tool_result=CAST(? AS JSON),tool_proof=CAST(? AS JSON),error_code=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=UTC_TIMESTAMP(6) WHERE id=?", mysqlOrder: []int{2, 3, 1}}
+
+var workflowTraceFailure = workflowQuery{dameng: `UPDATE workflow_node_traces SET state=?,error_code=?,finished_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE run_id=? AND state='running'`, damengOrder: []int{2, 3, 1}, postgres: "UPDATE workflow_node_traces SET state=$2,error_code=$3,finished_at=clock_timestamp() WHERE run_id=$1 AND state='running'", mysql: "UPDATE workflow_node_traces SET state=?,error_code=?,finished_at=UTC_TIMESTAMP(6) WHERE run_id=? AND state='running'", mysqlOrder: []int{2, 3, 1}}
+
+var workflowRunFailure = workflowQuery{dameng: `UPDATE workflow_runs SET state=?,error_code=?,answer=NULL,evidence=NULL,alias_snapshot=NULL,"USAGE"=NULL,tool_result=NULL,tool_proof=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, damengOrder: []int{2, 3, 1}, postgres: "UPDATE workflow_runs SET state=$2,error_code=$3,answer=NULL,evidence=NULL,alias_snapshot=NULL,usage=NULL,tool_result=NULL,tool_proof=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=clock_timestamp() WHERE id=$1", mysql: "UPDATE workflow_runs SET state=?,error_code=?,answer=NULL,evidence=NULL,alias_snapshot=NULL,`usage`=NULL,tool_result=NULL,tool_proof=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=UTC_TIMESTAMP(6) WHERE id=?", mysqlOrder: []int{2, 3, 1}}
+
+var workflowLockActor = workflowQuery{dameng: `SELECT id FROM users WHERE id=? FOR UPDATE`, postgres: "SELECT id FROM users WHERE id=$1 FOR NO KEY UPDATE", mysql: "SELECT id FROM users WHERE id=? FOR UPDATE"}
+
+var workflowLockWorkspace = workflowQuery{dameng: `SELECT w.id FROM workspaces w JOIN installation_state i ON i.id=1 AND i.bootstrap_complete=1 AND i.tenant_id=w.tenant_id WHERE w.tenant_id=? AND w.id=? FOR UPDATE OF w.id`, postgres: "SELECT w.id::text FROM workspaces w JOIN installation_state i ON i.id=1 AND i.bootstrap_complete AND i.tenant_id=w.tenant_id WHERE w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w", mysql: "SELECT w.id FROM workspaces w JOIN installation_state i ON i.id=1 AND i.bootstrap_complete AND i.tenant_id=w.tenant_id WHERE w.tenant_id=? AND w.id=? FOR UPDATE"}
+
+var workflowLockIdentity = workflowQuery{dameng: `SELECT id FROM workflows WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE`, postgres: "SELECT id::text FROM workflows WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE", mysql: "SELECT id FROM workflows WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE"}
+
+var workflowLockOwnedConversation = workflowQuery{dameng: `SELECT id FROM workflow_conversations WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND id=? AND owner_id=? FOR UPDATE`, postgres: "SELECT id::text FROM workflow_conversations WHERE tenant_id=$1 AND workspace_id=$2 AND workflow_id=$3 AND id=$4 AND owner_id=$5 FOR UPDATE", mysql: "SELECT id FROM workflow_conversations WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND id=? AND owner_id=? FOR UPDATE"}
+
+var workflowTracePage = workflowQuery{dameng: `SELECT node_id,kind,state,result_metadata,error_code,started_at,finished_at FROM workflow_node_traces WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND run_id=? ORDER BY CASE kind WHEN 'start' THEN 0 WHEN 'retrieval' THEN 1 WHEN 'tool' THEN 1 WHEN 'answer' THEN 2 ELSE 3 END`, postgres: "SELECT node_id::text,kind,state,result_metadata,error_code,started_at,finished_at FROM workflow_node_traces WHERE tenant_id=$1 AND workspace_id=$2 AND workflow_id=$3 AND run_id=$4 ORDER BY CASE kind WHEN 'start' THEN 0 WHEN 'retrieval' THEN 1 WHEN 'tool' THEN 1 WHEN 'answer' THEN 2 ELSE 3 END", mysql: "SELECT node_id,kind,state,result_metadata,error_code,started_at,finished_at FROM workflow_node_traces WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND run_id=? ORDER BY CASE kind WHEN 'start' THEN 0 WHEN 'retrieval' THEN 1 WHEN 'tool' THEN 1 WHEN 'answer' THEN 2 ELSE 3 END"}
+
+var workflowExpiredCandidates = workflowQuery{dameng: `SELECT r.id,r.tenant_id,r.workspace_id,r.workflow_id,r.owner_id,r.requested_audience,r.conversation_id FROM workflow_runs r JOIN installation_state i ON i.id=1 AND i.tenant_id=r.tenant_id AND i.bootstrap_complete=1 WHERE r.state IN ('pending','running') AND (r.deadline_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR (r.state='running' AND r.lease_expires_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)))) ORDER BY r.created_at,r.id`, damengLimit: 1, postgres: "SELECT r.id::text,r.tenant_id::text,r.workspace_id::text,r.workflow_id::text,r.owner_id::text,r.requested_audience,r.conversation_id::text FROM workflow_runs r JOIN installation_state i ON i.id=1 AND i.tenant_id=r.tenant_id AND i.bootstrap_complete WHERE r.state IN ('pending','running') AND (r.deadline_at<=clock_timestamp() OR (r.state='running' AND r.lease_expires_at<=clock_timestamp())) ORDER BY r.created_at,r.id LIMIT $1", mysql: "SELECT r.id,r.tenant_id,r.workspace_id,r.workflow_id,r.owner_id,r.requested_audience,r.conversation_id FROM workflow_runs r JOIN installation_state i ON i.id=1 AND i.tenant_id=r.tenant_id AND i.bootstrap_complete WHERE r.state IN ('pending','running') AND (r.deadline_at<=UTC_TIMESTAMP(6) OR (r.state='running' AND r.lease_expires_at<=UTC_TIMESTAMP(6))) ORDER BY r.created_at,r.id LIMIT ?"}
+
+var workflowLockExpiredConversation = workflowQuery{dameng: `SELECT id FROM workflow_conversations WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND owner_id=? AND id=? FOR UPDATE`, postgres: "SELECT id::text FROM workflow_conversations WHERE tenant_id=$1 AND workspace_id=$2 AND workflow_id=$3 AND owner_id=$4 AND id=$5 FOR UPDATE", mysql: "SELECT id FROM workflow_conversations WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND owner_id=? AND id=? FOR UPDATE"}
+
+var workflowExpiredEligible = workflowQuery{dameng: `SELECT CASE WHEN state IN ('pending','running') AND (deadline_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR (state='running' AND lease_expires_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)))) THEN 1 ELSE 0 END FROM workflow_runs WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND owner_id=? AND id=? FOR UPDATE`, postgres: "SELECT state IN ('pending','running') AND (deadline_at<=clock_timestamp() OR (state='running' AND lease_expires_at<=clock_timestamp())) FROM workflow_runs WHERE tenant_id=$1 AND workspace_id=$2 AND workflow_id=$3 AND owner_id=$4 AND id=$5 FOR UPDATE", mysql: "SELECT state IN ('pending','running') AND (deadline_at<=UTC_TIMESTAMP(6) OR (state='running' AND lease_expires_at<=UTC_TIMESTAMP(6))) FROM workflow_runs WHERE tenant_id=? AND workspace_id=? AND workflow_id=? AND owner_id=? AND id=? FOR UPDATE"}
+
+var workflowTraceInterrupt = workflowQuery{dameng: `UPDATE workflow_node_traces SET state='interrupted',error_code='WORKFLOW_RUN_INTERRUPTED',finished_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE run_id=? AND state='running'`, postgres: "UPDATE workflow_node_traces SET state='interrupted',error_code='WORKFLOW_RUN_INTERRUPTED',finished_at=clock_timestamp() WHERE run_id=$1 AND state='running'", mysql: "UPDATE workflow_node_traces SET state='interrupted',error_code='WORKFLOW_RUN_INTERRUPTED',finished_at=UTC_TIMESTAMP(6) WHERE run_id=? AND state='running'"}
+
+var workflowRunInterrupt = workflowQuery{dameng: `UPDATE workflow_runs SET state='interrupted',error_code='WORKFLOW_RUN_INTERRUPTED',answer=NULL,evidence=NULL,alias_snapshot=NULL,"USAGE"=NULL,tool_result=NULL,tool_proof=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, postgres: "UPDATE workflow_runs SET state='interrupted',error_code='WORKFLOW_RUN_INTERRUPTED',answer=NULL,evidence=NULL,alias_snapshot=NULL,usage=NULL,tool_result=NULL,tool_proof=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=clock_timestamp() WHERE id=$1", mysql: "UPDATE workflow_runs SET state='interrupted',error_code='WORKFLOW_RUN_INTERRUPTED',answer=NULL,evidence=NULL,alias_snapshot=NULL,`usage`=NULL,tool_result=NULL,tool_proof=NULL,process_owner=NULL,lease_id=NULL,lease_expires_at=NULL,finished_at=UTC_TIMESTAMP(6) WHERE id=?"}

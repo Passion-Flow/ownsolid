@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "kind": "projectone-isolated-knowledge-journey-v1",
+  "scope_id": "00000000-0000-4000-8000-000000000012",
+  "mount_root": "/mnt/projectone-qualification",
+  "workspace_id": "00000000-0000-4000-8000-000000000013",
+  "portal_origin": "https://127.0.0.1:18443",
+  "ca_file": "/mnt/projectone-qualification/private/ca.pem",
+  "credentials_file": "/mnt/projectone-qualification/private/synthetic-credentials.json",
+  "expected_catalog_sha256": "1028bf0db8b14abc61af73d1d1e53cf5a50daff254628421f2593282747cd83e",
+  "alias_id": null
+}

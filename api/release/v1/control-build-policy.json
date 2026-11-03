@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "kind": "projectone-control-image-build-policy-v1",
+  "fields": {
+    "frontend_timeout_seconds": {
+      "default": 120,
+      "minimum": 30,
+      "maximum": 600,
+      "units": "seconds"
+    },
+    "compile_timeout_seconds": {
+      "default": 180,
+      "minimum": 30,
+      "maximum": 900,
+      "units": "seconds"
+    },
+    "image_build_timeout_seconds": {
+      "default": 600,
+      "minimum": 30,
+      "maximum": 1800,
+      "units": "seconds"
+    },
+    "docker_operation_timeout_seconds": {
+      "default": 30,
+      "minimum": 5,
+      "maximum": 120,
+      "units": "seconds"
+    },
+    "probe_timeout_seconds": {
+      "default": 30,
+      "minimum": 5,
+      "maximum": 120,
+      "units": "seconds"
+    },
+    "probe_memory_bytes": {
+      "default": 268435456,
+      "minimum": 134217728,
+      "maximum": 536870912,
+      "units": "bytes"
+    },
+    "probe_milli_cpu": {
+      "default": 500,
+      "minimum": 100,
+      "maximum": 1000,
+      "units": "millicores"
+    },
+    "probe_pids": {
+      "default": 32,
+      "minimum": 16,
+      "maximum": 128,
+      "units": "processes"
+    },
+    "maximum_context_bytes": {
+      "default": 134217728,
+      "minimum": 16777216,
+      "maximum": 536870912,
+      "units": "bytes"
+    },
+    "go_memory_bytes": {
+      "default": 536870912,
+      "minimum": 134217728,
+      "maximum": 1073741824,
+      "units": "bytes"
+    },
+    "frontend_memory_mib": {
+      "default": 768,
+      "minimum": 256,
+      "maximum": 1536,
+      "units": "MiB"
+    },
+    "image_uid": {
+      "default": 65532,
+      "minimum": 1,
+      "maximum": 2147483647,
+      "units": "numeric UID"
+    },
+    "image_gid": {
+      "default": 65532,
+      "minimum": 1,
+      "maximum": 2147483647,
+      "units": "numeric GID"
+    },
+    "stop_seconds": {
+      "default": 5,
+      "minimum": 1,
+      "maximum": 30,
+      "units": "seconds of owned child/container termination grace"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "License slice of complete control configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "licensing"
+  ],
+  "properties": {
+    "licensing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trust_file"
+      ],
+      "properties": {
+        "trust_file": {
+          "type": "string",
+          "minLength": 2,
+          "pattern": "^/"
+        },
+        "environment_file": {
+          "type": "string",
+          "pattern": "^/|^$"
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "licensing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maximum_imports": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1024
+            },
+            "rollback_tolerance_seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 300
+            }
+          }
+        }
+      }
+    }
+  }
+}

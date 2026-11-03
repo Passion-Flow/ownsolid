@@ -1,0 +1,6 @@
+{
+  "stop_seconds": 15,
+  "observe_seconds": 10,
+  "poll_milliseconds": 200,
+  "reserve_percent": 30
+}

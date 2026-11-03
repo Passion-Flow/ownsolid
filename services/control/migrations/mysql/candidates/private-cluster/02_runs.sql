@@ -1,0 +1,21 @@
+CREATE TABLE private_cluster_runs (
+ id char(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY, tenant_id char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, workspace_id char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, connection_id char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ connection_revision bigint NOT NULL CHECK(connection_revision BETWEEN 1 AND 9007199254740991),
+ created_by char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, actor_epoch bigint NOT NULL CHECK(actor_epoch>=1),
+ membership_authority char(36) CHARACTER SET ascii COLLATE ascii_bin, created_session_id char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, created_token_hash binary(32) NOT NULL CHECK(OCTET_LENGTH(created_token_hash)=32),
+ config_sha256 char(64) NOT NULL CHECK(REGEXP_LIKE(config_sha256,'^[a-f0-9]{64}$','c')),
+ request json NOT NULL CHECK(JSON_TYPE(request)='OBJECT' COLLATE utf8mb4_bin), spec_sha256 char(64) NOT NULL CHECK(REGEXP_LIKE(spec_sha256,'^[a-f0-9]{64}$','c')),
+ phase varchar(24) NOT NULL CHECK(phase IN('prepared','lease_pending','lease_acquired','job_pending','observing','job_delete_pending','job_absent','lease_delete_pending','cleaned')),
+ result varchar(16) CHECK(result IN('succeeded','failed','cancelled')),
+ lease_uid char(36) CHARACTER SET ascii COLLATE ascii_bin, job_uid char(36) CHARACTER SET ascii COLLATE ascii_bin, pod_uid char(36) CHARACTER SET ascii COLLATE ascii_bin, remote_state json,
+ revision bigint NOT NULL CHECK(revision BETWEEN 1 AND 9007199254740991),
+ created_at datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), updated_at datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+ FOREIGN KEY(created_by) REFERENCES users(id),
+ UNIQUE(tenant_id,workspace_id,connection_id,id), UNIQUE(tenant_id,workspace_id,id),
+ FOREIGN KEY(tenant_id,workspace_id,connection_id) REFERENCES private_cluster_connections(tenant_id,workspace_id,id),
+ CHECK(job_uid IS NULL OR lease_uid IS NOT NULL), CHECK(pod_uid IS NULL OR job_uid IS NOT NULL),
+ CHECK(phase NOT IN('lease_acquired','job_pending','observing','job_delete_pending','job_absent','lease_delete_pending') OR lease_uid IS NOT NULL),
+ CHECK(phase NOT IN('observing','job_delete_pending') OR job_uid IS NOT NULL),
+ CHECK(phase<>'cleaned' OR result IS NOT NULL),
+ CHECK(remote_state IS NULL OR JSON_TYPE(remote_state)='OBJECT' COLLATE utf8mb4_bin)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

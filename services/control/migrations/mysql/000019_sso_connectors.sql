@@ -1,0 +1,23 @@
+CREATE TABLE sso_connectors (
+    id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+    tenant_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    name VARCHAR(100) NOT NULL CHECK(CHAR_LENGTH(TRIM(name))>0),
+    provider VARCHAR(16) NOT NULL CHECK(provider='gitea'),
+    origin VARCHAR(2048) NOT NULL,
+    client_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    secret_key_id VARCHAR(64) NOT NULL,
+    secret_nonce VARBINARY(12) NOT NULL CHECK(OCTET_LENGTH(secret_nonce)=12),
+    secret_ciphertext VARBINARY(4112) NOT NULL CHECK(OCTET_LENGTH(secret_ciphertext) BETWEEN 17 AND 4112),
+    enabled BOOLEAN NOT NULL CHECK(enabled IN(0,1)),
+    revision BIGINT NOT NULL DEFAULT 1 CHECK(revision BETWEEN 1 AND 9007199254740991),
+    auth_version BIGINT NOT NULL DEFAULT 1 CHECK(auth_version BETWEEN 1 AND 9007199254740991),
+    created_by CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    UNIQUE KEY sso_connectors_tenant_identity(tenant_id,id),
+    KEY sso_connectors_page_idx(tenant_id,created_at DESC,id DESC),
+    FOREIGN KEY(tenant_id) REFERENCES tenants(id),
+    FOREIGN KEY(created_by) REFERENCES users(id),
+    CONSTRAINT sso_connectors_id_canonical CHECK(REGEXP_LIKE(id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT sso_client_id_canonical CHECK(REGEXP_LIKE(client_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

@@ -1,0 +1,48 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "7b009342407d4e91a021717849cf812403327e41a4239d96e3e378a4221853cf",
+  "after_step": 67,
+  "steps": [
+    {
+      "step": 68,
+      "file": "000068_training_attempt_checkpoint.sql",
+      "object": "training_attempts",
+      "kind": "alter_table",
+      "source_sha256": "bda896218215c127159d0b5ae3ea4a68e839071e28b7223637546e49f3767b64",
+      "previous_definition_sha256": "8d3847c340b7178729b123e1b87b2e3d2ccec322d2ef8803e10bc087bcc4b6d6"
+    },
+    {
+      "step": 69,
+      "file": "000069_training_job_references.sql",
+      "object": "training_jobs",
+      "kind": "alter_table",
+      "source_sha256": "9a941447a367980c04d5ed3d0847d8a3528fcb8de22fa3658e279a9356fe8b31",
+      "previous_definition_sha256": "77d2cade95274b1f397c10f5f8fc2cbe3186b1a9f6f70598d4c362617007bb7f"
+    },
+    {
+      "step": 70,
+      "file": "000070_training_checkpoint_upload.sql",
+      "object": "training_checkpoints",
+      "kind": "alter_table",
+      "source_sha256": "14b146c440461452e0ee2f0a5e2460cd8c734e5f903db8eaad73ad5eb540681a",
+      "previous_definition_sha256": "4c3d805e10f384ee6837579f9198e123a1bb512c4d3448f02f096669b074710f"
+    },
+    {
+      "step": 71,
+      "file": "000071_training_artifact_upload.sql",
+      "object": "training_artifacts",
+      "kind": "alter_table",
+      "source_sha256": "30d07ac0d6f1bb73c43428eb1bfbb0909c0ad1b0c69e64a748a675538017939f",
+      "previous_definition_sha256": "7cdc9f7ce461697125a9951b957b204b203fceb2c22e0d508a99dc0982e8f8a8"
+    },
+    {
+      "step": 72,
+      "file": "000072_gpu_training_owner.sql",
+      "object": "gpu_leases",
+      "kind": "alter_table",
+      "source_sha256": "d558eeb7202ca92b4223af4c0d35b49f945800b1d3e6c15abd2b0a997c081887",
+      "previous_definition_sha256": "59e0a60099aa23185cdf6ffdc1da7a307a7e9578706960eacf4a82c5416aca94"
+    }
+  ]
+}

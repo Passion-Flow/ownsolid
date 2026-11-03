@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit healthy Linux Control manufacturing environment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_root",
+    "state_root",
+    "go_binary",
+    "node_binary",
+    "pnpm_binary",
+    "go_cache",
+    "go_mod_cache",
+    "compiler_tmp",
+    "runtime_tmp",
+    "preflight_script",
+    "format_version",
+    "kind",
+    "go_max_procs",
+    "go_build_parallelism",
+    "peak_memory_bytes",
+    "resource_plan",
+    "inventory_binary"
+  ],
+  "properties": {
+    "source_root": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Exact clean current repository root; must match the executing producer."
+    },
+    "state_root": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Exclusive current-owner0700 manufacturing state; receipts/assets/context remain here."
+    },
+    "go_binary": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Canonical existing pinned Go executable; no installation or toolchain fallback."
+    },
+    "node_binary": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Canonical existing pinned Node24.21.0 executable."
+    },
+    "pnpm_binary": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Canonical executable for the packageManager version; no runtime install."
+    },
+    "go_cache": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Existing current-owner Go build cache, reused in place."
+    },
+    "go_mod_cache": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Existing current-owner offline Go module cache, reused in place."
+    },
+    "compiler_tmp": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Private compiler-only scope admitted by the bounded foreground job."
+    },
+    "runtime_tmp": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Private durable runtime scratch beneath state_root; never compiler tmpfs."
+    },
+    "preflight_script": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Canonical current-owner executable additional storage admission script; internal checks still run."
+    },
+    "format_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "kind": {
+      "const": "projectone-control-manufacturing-environment-v1"
+    },
+    "go_max_procs": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "description": "Maximum Go CPU parallelism; bounded foreground affinity must be1..3 CPUs."
+    },
+    "go_build_parallelism": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "description": "Go package build parallelism; cannot exceed go_max_procs."
+    },
+    "peak_memory_bytes": {
+      "type": "integer",
+      "minimum": 1073741824,
+      "maximum": 8589934592,
+      "description": "Entire operation incremental RAM peak including compiler memory filesystem; retain30% actual MemTotal."
+    },
+    "resource_plan": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "description": "Exactly one of every role. Count all retained inputs, outputs, duplicate images, logs and return coexistence. Shared-device peaks sum.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "path",
+          "storage_role",
+          "mount_root",
+          "mount_source",
+          "filesystem",
+          "peak_additional_bytes",
+          "safety_reserve_bytes"
+        ],
+        "properties": {
+          "role": {
+            "enum": [
+              "source_return",
+              "frontend",
+              "context",
+              "docker",
+              "go_cache",
+              "module_cache",
+              "compiler",
+              "runtime",
+              "evidence"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/",
+            "description": "Actual existing allocation path. Docker must equal current local Engine DockerRootDir."
+          },
+          "storage_role": {
+            "enum": [
+              "internal",
+              "external",
+              "compiler-memory"
+            ],
+            "description": "Internal retains30% actual volume capacity; external uses peak plus fixed reserve; memory only compiler."
+          },
+          "mount_root": {
+            "type": "string",
+            "pattern": "^/",
+            "description": "Genuine mount point matching kernel findmnt; / is only the explicitly selected internal root filesystem."
+          },
+          "mount_source": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact current kernel mount source; never an external-volume alias."
+          },
+          "filesystem": {
+            "enum": [
+              "ext4",
+              "xfs",
+              "btrfs",
+              "tmpfs"
+            ],
+            "description": "Durable Linux filesystems for runtime/state; tmpfs allowed only for compiler-memory."
+          },
+          "peak_additional_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1099511627776,
+            "description": "Incremental peak allocation including coexistence/return copies, grouped by actual device."
+          },
+          "safety_reserve_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1099511627776,
+            "description": "At least32GiB for durable filesystems; compiler-memory requires0. Internal also retains30%."
+          }
+        }
+      }
+    },
+    "inventory_binary": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Canonical existing ripgrep executable used by source closure. Private official extraction is permitted; no global installation/relocation."
+    }
+  }
+}

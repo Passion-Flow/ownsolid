@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/datasets/processor/v1",
+  "title": "Protected local dataset processor request v1",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/InspectRequest"
+    },
+    {
+      "$ref": "#/$defs/PublishRequest"
+    }
+  ],
+  "$defs": {
+    "Limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum_bytes",
+        "maximum_rows",
+        "maximum_line_bytes",
+        "maximum_text_bytes",
+        "maximum_source_bytes",
+        "maximum_errors"
+      ],
+      "properties": {
+        "maximum_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 67108864
+        },
+        "maximum_rows": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 10000
+        },
+        "maximum_line_bytes": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 131072
+        },
+        "maximum_text_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32768
+        },
+        "maximum_source_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 512
+        },
+        "maximum_errors": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2000
+        }
+      }
+    },
+    "Resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wall_seconds",
+        "cpu_seconds",
+        "memory_bytes",
+        "maximum_result_bytes"
+      ],
+      "properties": {
+        "wall_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        },
+        "cpu_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "memory_bytes": {
+          "type": "integer",
+          "minimum": 67108864,
+          "maximum": 1073741824
+        },
+        "maximum_result_bytes": {
+          "type": "integer",
+          "minimum": 4096,
+          "maximum": 83886080
+        }
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "prompt",
+        "completion"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1,
+          "x-max-utf8-bytes": 512
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "x-max-utf8-bytes": 32768
+        },
+        "completion": {
+          "type": "string",
+          "minLength": 1,
+          "x-max-utf8-bytes": 32768
+        }
+      }
+    },
+    "InspectRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "job_id",
+        "attempt_id",
+        "scope_directory",
+        "input_file",
+        "input_sha256",
+        "output_directory",
+        "limits",
+        "resources",
+        "operation"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "job_id": {
+          "type": "string",
+          "format": "uuid",
+          "not": {
+            "const": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid",
+          "not": {
+            "const": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "scope_directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "output_directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limits": {
+          "$ref": "#/$defs/Limits"
+        },
+        "resources": {
+          "$ref": "#/$defs/Resources"
+        },
+        "operation": {
+          "const": "inspect"
+        }
+      }
+    },
+    "PublishRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "job_id",
+        "attempt_id",
+        "scope_directory",
+        "input_file",
+        "input_sha256",
+        "output_directory",
+        "limits",
+        "resources",
+        "operation",
+        "seed",
+        "validation_basis_points"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "job_id": {
+          "type": "string",
+          "format": "uuid",
+          "not": {
+            "const": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid",
+          "not": {
+            "const": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "scope_directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "output_directory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limits": {
+          "$ref": "#/$defs/Limits"
+        },
+        "resources": {
+          "$ref": "#/$defs/Resources"
+        },
+        "operation": {
+          "const": "publish"
+        },
+        "seed": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "validation_basis_points": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 5000
+        }
+      }
+    }
+  },
+  "description": "Exact fields, private canonical scoped paths and current UID/modes are additionally checked by the actual processor. Limits.maximum_text_bytes*2<=maximum_line_bytes<=maximum_bytes; maximum_errors<=maximum_rows; resources.wall_seconds>=cpu_seconds. A prepared result is not a Go business publication."
+}

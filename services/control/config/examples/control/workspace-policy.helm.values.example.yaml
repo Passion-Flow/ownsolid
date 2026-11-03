@@ -1,0 +1,10 @@
+# Chart configuration owner: optional private policy file basename, default empty (YAML/default policy only).
+# String matching the chart filename schema; must be a key in the already provisioned Secret and secrets.files.
+# It becomes control serve --env-file after protected materialization. No secret value; restart required.
+# Workspace integer inputs/defaults/ranges are documented in workspace-policy.env.example.
+configuration:
+  policyEnvironmentFile: workspace-policy.env
+# Secret projection owner: this list replaces, rather than appends to, the base list.
+# Retain every existing required file; add only provisioned private inputs. Operator arguments remain separate.
+secrets:
+  files: [database-dsn, auth-hmac, mail-keyring.json, certificate.pem, private-key.pem, license-trust.json, workspace-policy.env]

@@ -18,3 +18,16 @@ jobs:
           python-version: "3.12"
       - name: Layout, language and tooling checks
         run: make check PYTHON=python3
+
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.3"
+          cache: false
+      - name: Install the pinned Rust toolchain
+        run: rustup toolchain install 1.99.1 --profile minimal && rustup default 1.99.1
+      - name: Build Go modules and the gateway
+        run: make build

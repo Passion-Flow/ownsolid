@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "kind": "projectone-localization-build-v1",
+  "project_id": "example-localization-project",
+  "location": "global",
+  "model": "general/nmt",
+  "target_locale": "fr",
+  "credential_directory": "/Users/OPERATOR/.config/projectone/localization",
+  "token_file": "/Users/OPERATOR/.config/projectone/localization/access-token",
+  "authorization_file": "/Users/OPERATOR/.config/projectone/localization/approval.json",
+  "output_directory": "/Volumes/APPROVED_EXTERNAL_STATE/localization/approved-build",
+  "request_timeout_seconds": 30,
+  "batch_items": 64,
+  "batch_codepoints": 5000,
+  "maximum_total_codepoints": 200000
+}

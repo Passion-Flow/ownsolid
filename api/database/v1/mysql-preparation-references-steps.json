@@ -1,0 +1,24 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "7ae73fcaafc230d6bd181a4b34009930b31dcd57d53cb246af1bdc953349621a",
+  "after_step": 101,
+  "steps": [
+    {
+      "step": 102,
+      "file": "000102_preparation_backreferences.sql",
+      "object": "model_preparations",
+      "kind": "alter_table",
+      "source_sha256": "12288ed7a12f1d4f1c2204079a27a45ecde66a72d74f177ce193ae00c1b4352e",
+      "previous_definition_sha256": "bac07a58dc1d49f48cf6034f3d47b0cd3acd01fc1f6da38562276829ef4e9584"
+    },
+    {
+      "step": 103,
+      "file": "000103_gpu_preparation_owner.sql",
+      "object": "gpu_leases",
+      "kind": "alter_table",
+      "source_sha256": "dd78847a9aa412f777aeb05d69ab84d869eb07ecdcffcc2ac58d92b1a4f251f0",
+      "previous_definition_sha256": "5b4a8feec38826e88289960a27bddbce3d3916a3f2c17865ea76b61ca7757333"
+    }
+  ]
+}

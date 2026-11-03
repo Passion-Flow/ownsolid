@@ -1,0 +1,18 @@
+{
+  "format_version": 3,
+  "connection_file": "/run/ownsolid-private/odbc-connection",
+  "login_seconds": 3,
+  "connection_seconds": 7,
+  "query_seconds": 11,
+  "maximum_parameter_bytes": 1048576,
+  "maximum_cell_bytes": 65536,
+  "maximum_rows": 1000,
+  "maximum_columns": 32,
+  "maximum_result_bytes": 16777216,
+  "maximum_sql_bytes": 16384,
+  "maximum_open_connections": 1,
+  "maximum_physical_connections": 1,
+  "maximum_long_value_bytes": 8388608,
+  "transfer_chunk_bytes": 16384,
+  "maximum_retained_bytes": 67108864
+}

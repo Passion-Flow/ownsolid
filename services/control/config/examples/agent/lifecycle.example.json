@@ -1,0 +1,27 @@
+{
+  "control_origin": "https://admin.example.invalid",
+  "ca_file": "/etc/projectone/agent/ca.pem",
+  "state_directory": "/var/lib/projectone/agent-lifecycle",
+  "disk_path": "/var/lib/projectone",
+  "join_token_file": "/etc/projectone/agent/join-token",
+  "execution_profile": "docker_model_lifecycle",
+  "inference": {
+    "root_directory": "/var/lib/projectone/inference",
+    "docker_socket": "/run/docker.sock"
+  },
+  "training": {
+    "root_directory": "/var/lib/projectone/training-execution",
+    "docker_socket": "/run/docker.sock",
+    "image_reference": "<TRAINING_IMAGE_REFERENCE_FROM_MANUFACTURING_RECEIPT>",
+    "image_id": "<TRAINING_IMAGE_ID_FROM_MANUFACTURING_RECEIPT>",
+    "worker_source_sha256": "<TRAINING_WORKER_SOURCE_FROM_MANUFACTURING_RECEIPT>"
+  },
+  "model_preparation": {
+    "root_directory": "/var/lib/projectone/model-preparation-execution",
+    "docker_socket": "/run/docker.sock",
+    "image_reference": "<LIFECYCLE_IMAGE_REFERENCE_FROM_MANUFACTURING_RECEIPT>",
+    "image_id": "<LIFECYCLE_IMAGE_ID_FROM_MANUFACTURING_RECEIPT>",
+    "worker_source_sha256": "<LIFECYCLE_WORKER_SOURCE_FROM_MANUFACTURING_RECEIPT>",
+    "output_seconds": 300
+  }
+}

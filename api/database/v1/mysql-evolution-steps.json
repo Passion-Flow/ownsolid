@@ -1,0 +1,27 @@
+{
+  "format": "projectone.mysql.evolution-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "steps": [
+    {
+      "step": 16,
+      "file": "000016_users_locale.sql",
+      "object": "users",
+      "source_sha256": "4ff203c7f6e480cd6545e47e2029494adc913c4306e1fb431839373bfaca96db",
+      "previous_definition_sha256": "b27bb735ace2de949dfbbd2bc999d5ffade57878e912e83980ba27522618d841"
+    },
+    {
+      "step": 17,
+      "file": "000017_invitations_locale.sql",
+      "object": "invitations",
+      "source_sha256": "20716293f94378965c0cf6bbbc8d376cf76db0623f3b2f4e69d3ebe53f583103",
+      "previous_definition_sha256": "8654da6c1588fe3e57b26799f2d8064f704f1021e22fa4ba3ce120ba9643c3de"
+    },
+    {
+      "step": 18,
+      "file": "000018_mail_locale.sql",
+      "object": "mail_deliveries",
+      "source_sha256": "b6f4d85629f59babc0dcc9798f76420c91e169bbfbe688be8cfa4eee2f8a0033",
+      "previous_definition_sha256": "26cd71d8f9da54322e69b4825c8165a50db2b65ca2bb5e4d34ffe043e93a75e6"
+    }
+  ]
+}

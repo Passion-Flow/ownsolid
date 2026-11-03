@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/configuration/control-dameng-serving/v1",
+  "title": "Native Dameng control database selection",
+  "description": "The complete database mapping for the native serving selection. This replaces the PostgreSQL/MySQL database mapping; it is not merged with legacy connection or migration settings. Code-only integration pending the real complete central catalog and native build/target validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "engine",
+    "dameng"
+  ],
+  "properties": {
+    "engine": {
+      "const": "dameng"
+    },
+    "dameng": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtime_configuration_file",
+        "schema_configuration_file"
+      ],
+      "properties": {
+        "runtime_configuration_file": {
+          "type": "string",
+          "minLength": 2,
+          "pattern": "^/[^\\u0000\\r\\n]+$",
+          "description": "Required canonical absolute protected existing restricted-runtime connector JSON reference. No literal credential, owner identity or automatic grant. The connector owns socket, artifact/password references, TLS/IPC admission and all pool/operation/cleanup budgets."
+        },
+        "schema_configuration_file": {
+          "type": "string",
+          "minLength": 2,
+          "pattern": "^/[^\\u0000\\r\\n]+$",
+          "description": "Required different canonical absolute protected schema policy JSON reference; exact schema/runtime-principal binding and runtime metadata/readback budgets. Does not authorize migration or load owner credentials."
+        },
+        "readiness_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 10,
+          "description": "Periodic native runtime readiness interval in seconds after each completed audit. Each audit has the existing runtime.http.request_seconds deadline; startup uses runtime.http.startup_seconds. A failure cancels the lifecycle; workers join before owner release. Explicit native env-file overrides valid YAML, ambient environment ignored, restart required."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:projectone:registry:agent:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "root",
+    "docker_data_root",
+    "verification"
+  ],
+  "properties": {
+    "root": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Required restart-only input; local clean absolute paths or independently measured real release SHA256. No client URL/path/digest override."
+    },
+    "docker_data_root": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Required restart-only input; local clean absolute paths or independently measured real release SHA256. No client URL/path/digest override."
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mount_root",
+        "trust_file"
+      ],
+      "properties": {
+        "mount_root": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Required canonical absolute actual mount root; no substitute mount."
+        },
+        "trust_file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Required canonical absolute protected manufacturer trust file; restart required."
+        },
+        "allow_test_fixture": {
+          "type": "boolean",
+          "const": false,
+          "default": false,
+          "description": "Fixed production admission. Synthetic fixture permission is refused."
+        },
+        "maximum_manifest_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 4194304,
+          "description": "Existing offlinefactory verification bound; bytes/count according to field. Omission uses existing typed default; restart required."
+        },
+        "maximum_assets": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096,
+          "description": "Existing offlinefactory verification bound; bytes/count according to field. Omission uses existing typed default; restart required."
+        },
+        "maximum_asset_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1099511627776,
+          "description": "Existing offlinefactory verification bound; bytes/count according to field. Omission uses existing typed default; restart required."
+        },
+        "maximum_total_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4398046511104,
+          "description": "Existing offlinefactory verification bound; bytes/count according to field. Omission uses existing typed default; restart required."
+        },
+        "maximum_metadata_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 16777216,
+          "description": "Existing offlinefactory verification bound; bytes/count according to field. Omission uses existing typed default; restart required."
+        },
+        "maximum_archive_entries": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 131072,
+          "description": "Existing offlinefactory verification bound; bytes/count according to field. Omission uses existing typed default; restart required."
+        }
+      },
+      "description": "Actual existing offlinefactory verification; maximum_total_bytes must be >=maximum_asset_bytes."
+    },
+    "maximum_archive_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Restart-required component policy: bytes for *_bytes, seconds for *_seconds, percent for *_percent, otherwise count. See README.",
+      "maximum": 1125899906842624
+    },
+    "maximum_expanded_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Restart-required component policy: bytes for *_bytes, seconds for *_seconds, percent for *_percent, otherwise count. See README.",
+      "maximum": 1125899906842624
+    },
+    "maximum_docker_response_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Positive bytes, default1048576, must also be <=verification.maximum_metadata_bytes; restart required.",
+      "maximum": 16777216
+    },
+    "operation_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Restart-required component policy: bytes for *_bytes, seconds for *_seconds, percent for *_percent, otherwise count. See README.",
+      "maximum": 86400
+    },
+    "minimum_headroom_percent": {
+      "type": "integer",
+      "minimum": 30,
+      "description": "Restart-required component policy: bytes for *_bytes, seconds for *_seconds, percent for *_percent, otherwise count. See README.",
+      "maximum": 90
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Private generated initial administrator packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version",
+    "purpose",
+    "request",
+    "request_sha256",
+    "password"
+  ],
+  "properties": {
+    "format_version": {
+      "const": 1
+    },
+    "purpose": {
+      "const": "initial-administrator"
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format_version",
+        "administrator_email",
+        "display_name",
+        "installation_name",
+        "workspace_name"
+      ],
+      "properties": {
+        "format_version": {
+          "const": 1
+        },
+        "administrator_email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Canonical trimmed NFC name without control characters; Go validation also bounds UTF-8 bytes to400."
+        },
+        "installation_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Canonical trimmed NFC name without control characters; Go validation also bounds UTF-8 bytes to400."
+        },
+        "workspace_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Canonical trimmed NFC name without control characters; Go validation also bounds UTF-8 bytes to400."
+        }
+      }
+    },
+    "request_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 of Go canonical JSON encoding of the normalized Request, verified by the backend."
+    },
+    "password": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "description": "Secret, canonical unpadded base64url of32 generated random bytes; verify unused low bits and active password policy. Never log or use as an example default."
+    }
+  },
+  "description": "Generated only by prepare-bootstrap-packet into a new owned private file. Keep offline original before separately authorized Secret provisioning; no deployment default password exists. The Go boundary validates all canonical/hash/policy/private-path assertions."
+}

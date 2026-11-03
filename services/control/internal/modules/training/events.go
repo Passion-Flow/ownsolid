@@ -1,0 +1,120 @@
+package training
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+
+	"github.com/google/uuid"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+)
+
+type EventAcceptance = wire.EventAcceptance
+
+// RecordEvent accepts one event through the same atomic bounded batch path.
+func (s *Service) RecordEvent(ctx context.Context, node, credential, task, token string, raw []byte) (EventAcceptance, error) {
+	values, e := s.RecordEvents(ctx, node, credential, task, token, [][]byte{raw})
+	if e != nil {
+		return EventAcceptance{}, e
+	}
+	return values[0], nil
+}
+
+// RecordEvents accepts one atomic finite batch under current authority. Checkpoint metadata never publishes files.
+func (s *Service) RecordEvents(ctx context.Context, node, credential, task, token string, raw [][]byte) ([]EventAcceptance, error) {
+	out := []EventAcceptance{}
+	if len(raw) < 1 || len(raw) > wire.MaximumEventBatch {
+		return out, fail("TRAINING_EVENT_INVALID")
+	}
+	e := s.withMachineLease(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, j Job, command wire.Command) error {
+		for _, item := range raw {
+			accepted, e := s.recordEvent(ctx, tx, w, j, command, item)
+			if e != nil {
+				return e
+			}
+			out = append(out, accepted)
+			j.State = accepted.JobState
+		}
+		return nil
+	})
+	if e != nil {
+		return []EventAcceptance{}, e
+	}
+	return out, nil
+}
+
+func (s *Service) recordEvent(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, j Job, command wire.Command, raw []byte) (EventAcceptance, error) {
+	var out EventAcceptance
+	event, e := wire.DecodeEvent(raw, j.ID, command.AttemptID, j.Configuration.MaximumSteps)
+	if e != nil {
+		return out, fail("TRAINING_EVENT_INVALID")
+	}
+	canonical, _ := json.Marshal(event)
+	sum := sha256.Sum256(canonical)
+	digest := hex.EncodeToString(sum[:])
+	var lastSequence, lastStep int64
+	if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT last_event_sequence,last_global_step FROM training_attempts WHERE tenant_id=$1 AND workspace_id=$2 AND job_id=$3 AND id=$4 FOR UPDATE", "SELECT last_event_sequence,last_global_step FROM training_attempts WHERE tenant_id=? AND workspace_id=? AND job_id=? AND id=? FOR UPDATE", []any{w.TenantID, w.ID, j.ID, command.AttemptID}, []any{w.TenantID, w.ID, j.ID, command.AttemptID})).Scan(&lastSequence, &lastStep); e != nil {
+		return out, e
+	}
+	out = EventAcceptance{JobID: j.ID, AttemptID: command.AttemptID, Sequence: event.Sequence, JobState: j.State}
+	if event.Sequence <= lastSequence {
+		var previous string
+		if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT canonical_sha256 FROM training_events WHERE attempt_id=$1 AND sequence=$2", "SELECT canonical_sha256 FROM training_events WHERE attempt_id=? AND sequence=?", []any{command.AttemptID, event.Sequence}, []any{command.AttemptID, event.Sequence})).Scan(&previous); e != nil {
+			return out, e
+		}
+		if previous != digest {
+			return out, fail("TRAINING_EVENT_CONFLICT")
+		}
+		out.Duplicate = true
+		return out, nil
+	}
+	if event.Sequence != lastSequence+1 || event.GlobalStep < lastStep {
+		return out, fail("TRAINING_EVENT_ORDER_CONFLICT")
+	}
+	if event.Kind == "phase" {
+		resumeStep := int64(0)
+		if command.Resume != nil {
+			resumeStep = command.Resume.GlobalStep
+		}
+		validPhase := event.Sequence == 1 && *event.Phase == "loading_model" && event.GlobalStep == 0 || event.Sequence == 2 && event.GlobalStep == resumeStep && (*event.Phase == "training" && resumeStep < j.Configuration.MaximumSteps || *event.Phase == "finalizing_checkpoint" && resumeStep == j.Configuration.MaximumSteps)
+		if !validPhase {
+			return out, fail("TRAINING_EVENT_ORDER_CONFLICT")
+		}
+	} else if lastSequence < 2 || j.State != "running" {
+		return out, fail("TRAINING_EVENT_ORDER_CONFLICT")
+	}
+	if event.Kind == "checkpoint" {
+		var present bool
+		if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT EXISTS(SELECT 1 FROM training_events WHERE attempt_id=$1 AND kind='checkpoint' AND global_step=$2)", "SELECT EXISTS(SELECT 1 FROM training_events WHERE attempt_id=? AND kind='checkpoint' AND global_step=?)", []any{command.AttemptID, event.GlobalStep}, []any{command.AttemptID, event.GlobalStep})).Scan(&present); e != nil {
+			return out, e
+		}
+		if present {
+			return out, fail("TRAINING_CHECKPOINT_CONFLICT")
+		}
+	}
+	if _, e = tx.Exec(ctx, transferStatement(tx, `INSERT INTO training_events(tenant_id,workspace_id,job_id,attempt_id,sequence,kind,global_step,payload,canonical_sha256) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`, `INSERT INTO training_events(tenant_id,workspace_id,job_id,attempt_id,sequence,kind,global_step,payload,canonical_sha256) VALUES(?,?,?,?,?,?,?,CAST(? AS JSON),?)`, []any{w.TenantID, w.ID, j.ID, command.AttemptID, event.Sequence, event.Kind, event.GlobalStep, canonical, digest}, []any{w.TenantID, w.ID, j.ID, command.AttemptID, event.Sequence, event.Kind, event.GlobalStep, canonical, digest})); e != nil {
+		return out, e
+	}
+	if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_attempts SET last_event_sequence=$2,last_global_step=$3,updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_attempts SET last_event_sequence=?,last_global_step=?,updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{command.AttemptID, event.Sequence, event.GlobalStep}, []any{event.Sequence, event.GlobalStep, command.AttemptID})); e != nil {
+		return out, e
+	}
+	if event.Kind == "phase" && event.Phase != nil && (*event.Phase == "training" || *event.Phase == "finalizing_checkpoint") && j.State == "preparing" {
+		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_jobs SET state='running',revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_jobs SET state='running',revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{j.ID}, []any{j.ID})); e != nil {
+			return out, e
+		}
+		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_attempts SET state='running',updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_attempts SET state='running',updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{command.AttemptID}, []any{command.AttemptID})); e != nil {
+			return out, e
+		}
+		out.JobState = "running"
+	}
+	a := identity.Auth{}
+	// The actor is the stored delegated principal, never a job/node identifier supplied as a user.
+	if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT requested_by::text,requested_audience FROM training_attempts WHERE id=$1", "SELECT requested_by,requested_audience FROM training_attempts WHERE id=?", []any{command.AttemptID}, []any{command.AttemptID})).Scan(&a.Me.User.ID, &a.Me.Audience); e != nil {
+		return out, e
+	}
+	return out, transferAuditWithin(ctx, tx, a, w, "training.event_recorded", j.ID, "Accepted current-authority ordered training metadata", uuid.NewString())
+}

@@ -1,0 +1,10 @@
+{
+  "memory_bytes": 8589934592,
+  "nano_cpus": 2000000000,
+  "pids_limit": 256,
+  "shared_memory_bytes": 1073741824,
+  "temporary_memory_bytes": 1073741824,
+  "cpu_threads": 2,
+  "log_max_size": "1m",
+  "log_max_files": 2
+}

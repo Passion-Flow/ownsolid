@@ -1,0 +1,29 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "5085e41304119bdbab59ae9f50386001b64a1258036bc6b67baa202e3cbc9204",
+  "after_step": 85,
+  "steps": [
+    {
+      "step": 86,
+      "file": "000086_model_holdouts.sql",
+      "object": "model_holdouts",
+      "kind": "create_table",
+      "source_sha256": "1811e588a878d729ad18815aa3f9a56fb5b02447480570f027e61fbb559ef1f9"
+    },
+    {
+      "step": 87,
+      "file": "000087_model_holdout_sources.sql",
+      "object": "model_holdout_sources",
+      "kind": "create_table",
+      "source_sha256": "f906b47d03294894051fd2ac48316280d969d3e5ba9ccab64865b3643826cfba"
+    },
+    {
+      "step": 88,
+      "file": "000088_model_holdout_prompts.sql",
+      "object": "model_holdout_prompts",
+      "kind": "create_table",
+      "source_sha256": "f1f6328e66c48e58db1ddfba3c20dbb232fa1755f3bc789529e0a035ed68ff56"
+    }
+  ]
+}

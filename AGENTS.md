@@ -78,11 +78,12 @@ allowlists live in `tools/lint/layout/rules.json` and change together with this 
 ownsolid/
 ├── .github/workflows/     CI and release pipelines
 ├── api/                   Versioned contracts, the source of truth for generated code
-│   ├── openapi/           HTTP APIs, one file per domain
+│   ├── openapi/           HTTP APIs, one directory per domain
 │   ├── agent/             Control plane to agent protocol
-│   └── schemas/           JSON Schemas: catalog, license, configuration
+│   └── <domain>/          Other contracts: datasets, training, release, configuration
 ├── catalog/apps/<app>/    Application catalog definitions, one directory per version
 ├── deploy/
+│   ├── components/        Recipes for components installed on nodes
 │   ├── compose/           compose.yaml and the repository's only .env.example
 │   ├── helm/ownsolid/     Helm chart
 │   ├── images/<image>/    One Dockerfile per image
@@ -100,7 +101,9 @@ ownsolid/
 │   ├── control/           cmd/, internal/{app,modules,platform}/, migrations/, config/
 │   ├── agent/             cmd/, internal/, config/
 │   └── gateway/           src/, tests/, config/
-├── tests/e2e/             Cross-service end-to-end tests only
+├── tests/
+│   ├── e2e/               Cross-service end-to-end tests only
+│   └── fixtures/          Test data shared by more than one component
 ├── tools/                 codegen/, dev/, lint/, release/
 └── web/                   apps/{console,portal}/, packages/{ui,api,i18n,config}/
 ```
@@ -110,19 +113,23 @@ ownsolid/
 - **Configuration:** each service keeps one commented example in its `config/`.
   Deployment variables live only in `deploy/`.
 - **Tests:** unit tests sit beside the code (`_test.go`, `*.test.ts`, Python `tests/`).
-  Test data goes in a `testdata/` directory next to the test.
+  Test data used by one component goes in a `testdata/` directory next to its test.
 - **Generated code:** only in directories named `gen/`, marked "do not edit".
 - **Names:** lowercase paths. Directories and docs use kebab-case; Go and Python
   files use snake_case; TypeScript files use kebab-case. Conventional names such as
   `README.md`, `Makefile`, `Dockerfile` and `Cargo.toml` keep their usual spelling.
 - **One README per responsibility root**, not per helper directory.
+- **Vendored code** lives in `third_party/` directories and keeps its original names,
+  language and license text; `locales/` directories keep locale-specific names.
 
 ## 7. Language
 
 Everything is written in English: code, identifiers, comments, docs, configuration,
 error codes, log messages, commit messages and file names. The only exception is
-internationalization: translated product text, and multilingual test data, live
-only in directories named `locales/`. Replies to the project owner are in Chinese.
+internationalization: translated product text lives only in directories named
+`locales/`. Unicode test input in code is written with escape sequences.
+Unmodified third-party files are not ours to translate. Replies to the project owner
+are in Chinese.
 
 ## 8. Configuration and secrets
 

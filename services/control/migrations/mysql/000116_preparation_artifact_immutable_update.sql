@@ -1,0 +1,4 @@
+CREATE TRIGGER model_preparation_artifact_immutable_update BEFORE UPDATE ON model_preparation_artifacts FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='MODEL_PREPARATION_OUTPUT_RECORD_IMMUTABLE';
+END;

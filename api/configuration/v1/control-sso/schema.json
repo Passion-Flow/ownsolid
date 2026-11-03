@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SSO effective typed runtime policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "flow_seconds",
+    "operation_seconds",
+    "connect_seconds",
+    "response_bytes",
+    "max_concurrent_exchanges",
+    "maximum_connectors",
+    "maximum_bindings_per_user",
+    "maximum_pending_flows",
+    "start_ip_count",
+    "start_window_seconds",
+    "callback_ip_count",
+    "callback_window_seconds",
+    "password_ip_count",
+    "password_window_seconds",
+    "cleanup_seconds",
+    "cleanup_timeout_seconds",
+    "cleanup_batch_size",
+    "flow_retention_days"
+  ],
+  "properties": {
+    "flow_seconds": {
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 900,
+      "default": 300
+    },
+    "operation_seconds": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 30,
+      "default": 10
+    },
+    "connect_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 3
+    },
+    "response_bytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 262144,
+      "default": 65536
+    },
+    "max_concurrent_exchanges": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16,
+      "default": 4
+    },
+    "maximum_connectors": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64,
+      "default": 16
+    },
+    "maximum_bindings_per_user": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 256,
+      "default": 64
+    },
+    "maximum_pending_flows": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 1000
+    },
+    "start_ip_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 120,
+      "default": 20
+    },
+    "start_window_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 3600,
+      "default": 60
+    },
+    "callback_ip_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 600,
+      "default": 120
+    },
+    "callback_window_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 3600,
+      "default": 60
+    },
+    "password_ip_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "default": 10
+    },
+    "password_window_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 3600,
+      "default": 60
+    },
+    "cleanup_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 3600,
+      "default": 60
+    },
+    "cleanup_timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 5
+    },
+    "cleanup_batch_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100
+    },
+    "flow_retention_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 90,
+      "default": 7
+    }
+  }
+}

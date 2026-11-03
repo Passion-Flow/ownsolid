@@ -1,0 +1,11 @@
+{
+  "architecture": "amd64",
+  "configuration": {"policyEnvironmentFile": "plugins.env"},
+  "image": {"reference": "REPLACE_WITH_IMPORTED_CURRENT_SIGNED_TOOL_CONTROL_IMAGE_AT_SHA256"},
+  "knowledge": {"enabled": false},
+  "workflows": {"enabled": true},
+  "plugins": {"enabled": true},
+  "lifecycle": {"terminationGraceSeconds": 45},
+  "resources": {"requestMemoryMiB": 1536, "limitMemoryMiB": 3072, "requestCPU": 500, "limitCPU": 2000},
+  "runtime": {"goMemoryMiB": 768}
+}

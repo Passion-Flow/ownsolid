@@ -1,0 +1,49 @@
+# Minimal M01+M02+M03+M04 inputs. Copy to a private operator/runtime configuration and provision
+# every secret/asset reference below. Restart after edits; no secret bytes belong here.
+server:
+  # Enum account|workspaces|nodes|components|maintenance|platform; omitted preserves platform. Same artifact, restart required.
+  application_profile: maintenance
+  # Verified HTTPS for both browser and agent. HTTP browser deployments require
+  # a separate machine_server HTTPS listener/origin; keep advertised origins separate from listen/bind.
+  transport_mode: direct_https
+  # Protected direct TLS files; owner server; PEM; both required; restart after edits.
+  tls_certificate_file: /run/projectone/server.pem
+  tls_private_key_file: /run/projectone/server.key
+  listen_address: 127.0.0.1:8080
+  portal_origin: https://portal.internal:8080
+  admin_origin: https://admin.internal:8080
+  portal_assets: /opt/projectone/portal
+  admin_assets: /opt/projectone/admin
+database:
+  engine: postgresql
+  # Runtime role: schema USAGE, business DML, SELECT-only schema_migrations.
+  # The separate operator copy points to its protected migration/operator DSN.
+  dsn_file: /run/projectone/runtime-dsn
+  max_open_connections: 8
+  max_idle_connections: 1
+  statement_timeout_seconds: 5
+security:
+  auth_hmac_key_file: /run/projectone/auth-hmac
+  mail_keyring_file: /run/projectone/mail-keyring.json
+  password_blocklist_file: /opt/projectone/security/password-blocklist.txt
+smtp:
+  host: smtp.internal
+  port: 587
+  from_address: platform@example.invalid
+  tls_mode: starttls_required
+  ca_file: /run/projectone/smtp-ca.pem
+  connect_timeout_seconds: 5
+  operation_timeout_seconds: 20
+licensing:
+  # Manufacturer public verification trust. Signing keys are never runtime inputs.
+  trust_file: /run/projectone/license-trust.json
+
+components:
+  # Component artifact owner; absolute immutable regular archive path. Optional when
+  # observing only; required for install. Fixed recipe size/SHA-256/ELF are enforced.
+  # Nonsecret file reference; protected --env-file override below, restart required.
+  # The approved maintenance catalog is local; arbitrary URLs/public downloads are refused.
+  # Optional canonical absolute catalog directory; nonsecret, restart required.
+  # Typed owner components.node_exporter_catalog_directory; contains exactly both approved versions.
+  node_exporter_catalog_directory: /opt/projectone/components/node-exporter/catalog
+  node_exporter_archive_file: /opt/projectone/components/node-exporter/catalog/1.12.1/linux-amd64/node_exporter-1.12.1.linux-amd64.tar.gz

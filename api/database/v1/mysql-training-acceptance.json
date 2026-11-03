@@ -1,0 +1,575 @@
+{
+  "format": "projectone.mysql.training-schema-acceptance.v1",
+  "scope": "Frozen real SQL metadata acceptance only; full business repositories and target qualification separate",
+  "cases": {
+    "Fresh": {
+      "selector": "^TestActualMySQLTrainingSchemaFresh$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Upgrade": {
+      "selector": "^TestActualMySQLTrainingSchemaUpgrade$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Constraints": {
+      "selector": "^TestActualMySQLTrainingSchemaConstraints$",
+      "complete_entries": 59,
+      "leaves": [
+        "job_state",
+        "job_revision_zero",
+        "job_revision_overflow",
+        "job_attempt_negative",
+        "job_attempt_overflow",
+        "job_audience",
+        "job_epoch_negative",
+        "job_portal_without_authority",
+        "job_configuration_array",
+        "job_configuration_JSON_null",
+        "job_recipe_array",
+        "job_digest_uppercase",
+        "job_fingerprint_short",
+        "job_reason_blank",
+        "job_creation_key_noncanonical",
+        "job_GPU_noncanonical",
+        "attempt_number_zero",
+        "attempt_number_overflow",
+        "attempt_state",
+        "attempt_inventory_JSON_null",
+        "attempt_sequence_negative",
+        "attempt_sequence_overflow",
+        "attempt_step_negative",
+        "attempt_step_overflow",
+        "attempt_short_stop_token",
+        "attempt_outcome_without_digest",
+        "attempt_digest_without_outcome",
+        "attempt_JSON_null_outcome",
+        "attempt_array_stop_receipt",
+        "attempt_unpaired_stop_receipt",
+        "attempt_unpaired_stop_time",
+        "event_sequence_zero",
+        "event_kind",
+        "event_payload_array",
+        "checkpoint_step_zero",
+        "checkpoint_receipt_array",
+        "checkpoint_path_traversal",
+        "artifact_manifest_JSON_null",
+        "artifact_inventory_array",
+        "artifact_path_traversal",
+        "recovery_mode",
+        "recovery_checkpoint_missing",
+        "recovery_restart_with_checkpoint",
+        "recovery_reason_blank",
+        "upload_kind",
+        "upload_state",
+        "upload_manifest_array",
+        "upload_manifest_short",
+        "upload_chunk_partial",
+        "upload_chunk_misaligned",
+        "upload_chunk_unsafe_asset",
+        "chunk_size_zero",
+        "chunk_size_overflow",
+        "chunk_offset_misaligned",
+        "chunk_asset_traversal",
+        "GPU_no_owner",
+        "GPU_two_owners",
+        "GPU_id_noncanonical"
+      ],
+      "layer": 72
+    },
+    "Bounds": {
+      "selector": "^TestActualMySQLTrainingSchemaBounds$",
+      "complete_entries": 15,
+      "leaves": [
+        "training_jobs_configuration_exact_byte_boundary",
+        "training_jobs_execution_recipe_exact_byte_boundary",
+        "training_attempts_input_inventory_exact_byte_boundary",
+        "training_attempts_outcome_exact_byte_boundary",
+        "training_attempts_physical_stop_receipt_exact_byte_boundary",
+        "training_events_payload_exact_byte_boundary",
+        "training_checkpoints_receipt_exact_byte_boundary",
+        "training_checkpoints_file_inventory_exact_byte_boundary",
+        "training_artifacts_manifest_exact_byte_boundary",
+        "training_artifacts_file_inventory_exact_byte_boundary",
+        "training_uploads_manifest_exact_byte_boundary",
+        "manifest_raw_bytes_exact_boundary",
+        "SQL_null_and_invalid_JSON_refusal",
+        "safe_numeric_and_nullable_limits"
+      ],
+      "layer": 72
+    },
+    "ForeignScopes": {
+      "selector": "^TestActualMySQLTrainingSchemaForeignScopes$",
+      "complete_entries": 58,
+      "leaves": [
+        "job_job_current_attempt",
+        "job_job_accepted_artifact",
+        "job_job_pending_recovery",
+        "job_attempt_resume_checkpoint",
+        "job_event_attempt",
+        "job_checkpoint_attempt",
+        "job_artifact_attempt",
+        "job_recovery_previous_attempt",
+        "job_recovery_next_attempt",
+        "job_recovery_checkpoint",
+        "job_upload_attempt",
+        "workspace_job_current_attempt",
+        "workspace_job_accepted_artifact",
+        "workspace_job_pending_recovery",
+        "workspace_attempt_resume_checkpoint",
+        "workspace_event_attempt",
+        "workspace_checkpoint_attempt",
+        "workspace_artifact_attempt",
+        "workspace_recovery_previous_attempt",
+        "workspace_recovery_next_attempt",
+        "workspace_recovery_checkpoint",
+        "workspace_upload_attempt",
+        "workspace_job_dataset_version",
+        "workspace_job_original_node",
+        "workspace_job_current_node",
+        "workspace_job_model",
+        "workspace_attempt_task",
+        "workspace_recovery_previous_node",
+        "workspace_recovery_next_node",
+        "workspace_GPU_training_owner",
+        "tenant_job_current_attempt",
+        "tenant_job_accepted_artifact",
+        "tenant_job_pending_recovery",
+        "tenant_attempt_resume_checkpoint",
+        "tenant_event_attempt",
+        "tenant_checkpoint_attempt",
+        "tenant_artifact_attempt",
+        "tenant_recovery_previous_attempt",
+        "tenant_recovery_next_attempt",
+        "tenant_recovery_checkpoint",
+        "tenant_upload_attempt",
+        "tenant_job_dataset_version",
+        "tenant_job_original_node",
+        "tenant_job_current_node",
+        "tenant_job_model",
+        "tenant_attempt_task",
+        "tenant_recovery_previous_node",
+        "tenant_recovery_next_node",
+        "tenant_GPU_training_owner",
+        "referenced_training_jobs_delete",
+        "referenced_training_attempts_delete",
+        "referenced_training_uploads_delete",
+        "referenced_training_checkpoints_delete",
+        "referenced_training_artifacts_delete",
+        "referenced_training_recoveries_delete",
+        "referenced_dataset_versions_delete",
+        "referenced_managed_nodes_delete"
+      ],
+      "layer": 72
+    },
+    "Reservations": {
+      "selector": "^TestActualMySQLTrainingSchemaReservations$",
+      "complete_entries": 10,
+      "leaves": [
+        "held_inference_excludes_training_node",
+        "held_inference_excludes_training_GPU",
+        "uncertain_inference_retains_reservation",
+        "released_inference_allows_explicit_training_owner",
+        "uncertain_training_excludes_inference",
+        "one_retained_lease_per_training_job",
+        "released_training_allows_inference",
+        "one_uncleared_attempt_and_explicit_stopped_tuple",
+        "checkpoint_step_unique_phase_step_reusable"
+      ],
+      "layer": 85
+    },
+    "ConcurrentReservations": {
+      "selector": "^TestActualMySQLTrainingSchemaConcurrentReservations$",
+      "complete_entries": 3,
+      "leaves": [
+        "same_node_different_GPU",
+        "same_GPU_different_node"
+      ],
+      "layer": 85
+    },
+    "Immutability": {
+      "selector": "^TestActualMySQLTrainingSchemaImmutability$",
+      "complete_entries": 22,
+      "leaves": [
+        "job_frozen_configuration",
+        "job_frozen_creation_identity",
+        "attempt_frozen_inventory",
+        "attempt_frozen_task",
+        "checkpoint_update",
+        "checkpoint_delete",
+        "artifact_update",
+        "artifact_delete",
+        "event_update",
+        "event_delete",
+        "chunk_update",
+        "chunk_delete",
+        "upload_frozen_manifest",
+        "upload_accepted_state",
+        "recovery_frozen_reason",
+        "recovery_delete",
+        "attempt_outcome_once_and_exact_replay",
+        "stop_token_once",
+        "physical_stop_tuple_once",
+        "recovery_next_attempt_once",
+        "new_job_progress_and_upload_chunk_tuple_remain_mutable"
+      ],
+      "layer": 85
+    },
+    "PrepareRecovery": {
+      "selector": "^TestActualMySQLTrainingSchemaPrepareRecovery$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "UnjournaledJob": {
+      "selector": "^TestActualMySQLTrainingSchemaUnjournaledJob$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "MissingAppliedEvents": {
+      "selector": "^TestActualMySQLTrainingSchemaMissingAppliedEvents$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "WrongDefinition": {
+      "selector": "^TestActualMySQLTrainingSchemaWrongDefinition$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "WrongSourceChecksum": {
+      "selector": "^TestActualMySQLTrainingSchemaWrongSourceChecksum$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "WrongTrigger": {
+      "selector": "^TestActualMySQLTrainingSchemaWrongTrigger$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before60": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore60$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After60": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter60$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before61": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore61$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After61": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter61$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before62": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore62$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After62": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter62$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before63": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore63$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After63": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter63$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before64": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore64$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After64": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter64$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before65": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore65$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After65": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter65$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before66": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore66$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After66": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter66$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before67": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore67$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After67": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter67$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before68": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore68$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After68": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter68$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before69": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore69$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After69": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter69$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before70": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore70$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After70": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter70$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before71": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore71$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After71": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter71$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before72": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore72$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After72": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter72$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before73": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore73$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After73": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter73$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before74": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore74$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After74": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter74$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before75": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore75$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After75": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter75$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before76": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore76$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After76": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter76$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before77": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore77$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After77": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter77$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before78": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore78$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After78": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter78$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before79": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore79$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After79": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter79$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before80": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore80$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After80": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter80$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before81": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore81$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After81": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter81$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before82": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore82$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After82": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter82$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before83": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore83$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After83": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter83$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before84": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore84$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After84": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter84$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "Before85": {
+      "selector": "^TestActualMySQLTrainingSchemaBefore85$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    },
+    "After85": {
+      "selector": "^TestActualMySQLTrainingSchemaAfter85$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 85
+    }
+  },
+  "readback": {
+    "selector": "^TestActualMySQLTrainingSchemaReadback$",
+    "complete_entries": 1
+  },
+  "packet_profile_bytes": 33554432,
+  "result_records": "docs/execution/mvp/m20-training-schema-cases.json"
+}

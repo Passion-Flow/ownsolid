@@ -70,6 +70,10 @@ class LanguageTest(unittest.TestCase):
         path = "web/packages/i18n/locales/zh-cn/messages.json"
         self.assertEqual(run([path], {path: "{\"save\": \"\u4fdd\u5b58\"}"}), [])
 
+    def test_exempts_third_party_names_and_language(self):
+        path = "services/control/third_party/httpsnoop/LICENSE.txt"
+        self.assertEqual(run([path], {path: "Geisend\u00f6rfer"}), [])
+
     def test_allows_symbols_such_as_box_drawing(self):
         self.assertEqual(run(["docs/architecture/overview.md"], {"docs/architecture/overview.md": "\u251c\u2500\u2500 api \u2192 web"}), [])
 

@@ -1,0 +1,15 @@
+# Merge into the existing complete control YAML; all fields have the same names
+# as the documented model-cache.env.example mapping. YAML < explicit --env-file.
+# Restart control to apply. No credentials are embedded in this example.
+model_cache:
+  enabled: false
+  address: valkey:6379
+  tls: true
+  ca_file: ''
+  username: projectone_model_cache
+  password_file: /run/projectone/private/model-cache-password
+  namespace: projectone
+  ttl_seconds: 60
+  timeout_milliseconds: 100
+  maximum_bytes: 1048576
+  maximum_concurrent: 4

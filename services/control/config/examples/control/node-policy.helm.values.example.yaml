@@ -1,0 +1,10 @@
+# Control owner: optional private serve --env-file basename; string matching chart filename grammar.
+# Default empty keeps valid YAML/defaults. This nonsecret basename must be provisioned in the named Secret.
+# Mapped to configuration.privateMountPath/private/<basename>; rollout/restart required; no live reload.
+configuration:
+  policyEnvironmentFile: node-policy.env
+# Secret projection owner: replacement list of basenames; preserve every other required profile file.
+# No secret literals. Provision an owner-bound policy file out of band using node-policy.env.example.
+# The same private file may include supported Workspace/database/HTTP/SSO overrides; duplicate keys fail.
+secrets:
+  files: [database-dsn, auth-hmac, mail-keyring.json, certificate.pem, private-key.pem, license-trust.json, node-policy.env]

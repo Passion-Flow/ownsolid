@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/configuration/v1/control-workflows",
+  "title": "Workflow typed runtime policy and enablement",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "graph_bytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 1048576,
+      "default": 65536,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_GRAPH_BYTES",
+      "x-runtime-path": "runtime.workflows.graph_bytes"
+    },
+    "name_characters": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 120,
+      "default": 120,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_NAME_CHARACTERS",
+      "x-runtime-path": "runtime.workflows.name_characters"
+    },
+    "instructions_bytes": {
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 16384,
+      "default": 4096,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_INSTRUCTIONS_BYTES",
+      "x-runtime-path": "runtime.workflows.instructions_bytes"
+    },
+    "question_bytes": {
+      "type": "integer",
+      "minimum": 32,
+      "maximum": 32768,
+      "default": 4096,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_QUESTION_BYTES",
+      "x-runtime-path": "runtime.workflows.question_bytes"
+    },
+    "answer_bytes": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 1048576,
+      "default": 65536,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_ANSWER_BYTES",
+      "x-runtime-path": "runtime.workflows.answer_bytes"
+    },
+    "run_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 180,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_RUN_SECONDS",
+      "x-runtime-path": "runtime.workflows.run_seconds"
+    },
+    "retrieval_seconds": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 120,
+      "default": 60,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_RETRIEVAL_SECONDS",
+      "x-runtime-path": "runtime.workflows.retrieval_seconds"
+    },
+    "answer_seconds": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 120,
+      "default": 60,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_ANSWER_SECONDS",
+      "x-runtime-path": "runtime.workflows.answer_seconds"
+    },
+    "concurrency": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "default": 2,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_CONCURRENCY",
+      "x-runtime-path": "runtime.workflows.concurrency"
+    },
+    "workspace_concurrency": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8,
+      "default": 2,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_WORKSPACE_CONCURRENCY",
+      "x-runtime-path": "runtime.workflows.workspace_concurrency"
+    },
+    "lease_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 900,
+      "default": 240,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_LEASE_SECONDS",
+      "x-runtime-path": "runtime.workflows.lease_seconds"
+    },
+    "heartbeat_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 5,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_HEARTBEAT_SECONDS",
+      "x-runtime-path": "runtime.workflows.heartbeat_seconds"
+    },
+    "commit_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 10,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_COMMIT_SECONDS",
+      "x-runtime-path": "runtime.workflows.commit_seconds"
+    },
+    "maximum_workflows": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_MAXIMUM_WORKFLOWS",
+      "x-runtime-path": "runtime.workflows.maximum_workflows"
+    },
+    "maximum_versions": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_MAXIMUM_VERSIONS",
+      "x-runtime-path": "runtime.workflows.maximum_versions"
+    },
+    "maximum_conversations": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_MAXIMUM_CONVERSATIONS",
+      "x-runtime-path": "runtime.workflows.maximum_conversations"
+    },
+    "maximum_runs": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 1000,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_MAXIMUM_RUNS",
+      "x-runtime-path": "runtime.workflows.maximum_runs"
+    },
+    "maximum_turns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 1000,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_MAXIMUM_TURNS",
+      "x-runtime-path": "runtime.workflows.maximum_turns"
+    },
+    "retention_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365,
+      "default": 30,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_RETENTION_DAYS",
+      "x-runtime-path": "runtime.workflows.retention_days"
+    },
+    "maintenance_batch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_MAINTENANCE_BATCH",
+      "x-runtime-path": "runtime.workflows.maintenance_batch"
+    },
+    "maintenance_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 60,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_MAINTENANCE_SECONDS",
+      "x-runtime-path": "runtime.workflows.maintenance_seconds"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "x-environment": "PROJECT_ONE_WORKFLOWS_ENABLED",
+      "x-runtime-path": "workflows.enabled"
+    }
+  },
+  "x-cross-field-constraints": [
+    "run_seconds >= retrieval_seconds + answer_seconds + commit_seconds",
+    "lease_seconds >= run_seconds + commit_seconds",
+    "heartbeat_seconds * 3 < lease_seconds",
+    "HTTP request budget >= commit_seconds; HTTP shutdown budget >= commit_seconds + knowledge key cleanup + child stop",
+    "Cumulative workflows requires enabled Knowledge only when workflow execution is enabled; all later features remain disabled"
+  ]
+}

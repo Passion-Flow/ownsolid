@@ -1,0 +1,24 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "1e24b7a7383a384f4443aa50d753fabb6099b42d50325ae21610a0a5a3413de4",
+  "after_step": 33,
+  "steps": [
+    {
+      "step": 34,
+      "file": "000034_membership_authority_seed.sql",
+      "object": "membership_authority_seed",
+      "kind": "seed",
+      "source_sha256": "a12397f6a75509ee206d0a9998d4d75cbe1ce1c478988cabada2fda9e6d8947c",
+      "definition": "NOT EXISTS workspace_memberships authority_id IS NULL"
+    },
+    {
+      "step": 35,
+      "file": "000035_membership_authority_required.sql",
+      "object": "workspace_memberships",
+      "kind": "alter_table",
+      "source_sha256": "e00ebdff7356f8f80e12fa1b48925b9cfdc67d8e5ba93eab3b412624939cbda4",
+      "previous_definition_sha256": "6d37742a3016752a41bdfc5454f08db7c2c96a888aa50c4175a4e7683ecb69f2"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# Control owner: optional protected serving policy basename, matching chart filename grammar.
+# Default empty preserves valid YAML/defaults; provision a file matching model-import-policy.env.example.
+# Nonsecret reference only; mapped to privateMountPath/private/<basename>; rollout/restart required.
+configuration:
+  policyEnvironmentFile: model-import-policy.env
+# Secret projection owner: replace this list while preserving every required file in the chosen profile.
+# No secret literals. Existing Secret must contain these exact references before deployment.
+secrets:
+  files: [database-dsn, auth-hmac, mail-keyring.json, certificate.pem, private-key.pem, license-trust.json, model-import-policy.env]

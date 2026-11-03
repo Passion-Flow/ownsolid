@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Protected MySQL connection and transaction kernel configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host",
+    "port",
+    "database",
+    "user",
+    "password_file",
+    "ca_file",
+    "server_name",
+    "expected_version"
+  ],
+  "properties": {
+    "host": {
+      "type": "string",
+      "minLength": 1
+    },
+    "port": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535
+    },
+    "database": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "user": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9_]{0,31}$"
+    },
+    "password_file": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/"
+    },
+    "ca_file": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/"
+    },
+    "server_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected_version": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^8\\.4\\.(0|[1-9][0-9]*)$"
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maximum_open_connections": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32,
+          "default": 4
+        },
+        "maximum_idle_connections": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32,
+          "default": 1
+        },
+        "connect_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 5
+        },
+        "read_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 10
+        },
+        "write_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 10
+        },
+        "statement_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 5
+        },
+        "transaction_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 10
+        },
+        "lock_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 3
+        },
+        "maximum_lifetime_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400,
+          "default": 300
+        },
+        "maximum_idle_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400,
+          "default": 60
+        },
+        "maximum_packet_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 67108864,
+          "default": 16777216
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+CREATE TRIGGER model_derived_delete_guard BEFORE DELETE ON model_versions FOR EACH ROW
+BEGIN
+    IF OLD.kind='merged_lora' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='MODEL_DERIVED_IDENTITY_IMMUTABLE';
+    END IF;
+END;

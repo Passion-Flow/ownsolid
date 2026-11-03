@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Public unixODBC native Control input; no vendor client",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version",
+    "kind",
+    "architecture",
+    "source_archive",
+    "prefix",
+    "cc",
+    "toolchain_receipt",
+    "toolchain_receipt_sha256",
+    "libraries"
+  ],
+  "properties": {
+    "format_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "kind": {
+      "const": "projectone-control-unixodbc-input-v1"
+    },
+    "architecture": {
+      "enum": [
+        "amd64",
+        "arm64"
+      ]
+    },
+    "source_archive": {
+      "type": "string",
+      "description": "Exact public unixODBC2.3.14 source archive; fixedSHA in producer, current-owner regular file beneath state_root.",
+      "pattern": "^/"
+    },
+    "prefix": {
+      "type": "string",
+      "description": "Current-owner public manager headers/libraries root beneath state; no proprietary driver.",
+      "pattern": "^/"
+    },
+    "cc": {
+      "type": "string",
+      "description": "Canonical matching Bookworm target C compiler/wrapper; whole Control CGO/external link must use the same target ABI.",
+      "pattern": "^/"
+    },
+    "toolchain_receipt": {
+      "type": "string",
+      "description": "Canonical bounded public provenance JSON of compiler/sysroot/manager manufacture.",
+      "pattern": "^/"
+    },
+    "toolchain_receipt_sha256": {
+      "type": "string",
+      "description": "Exact SHA256 of selected public toolchain receipt.",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "libraries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "libodbc.so.2.0.0",
+        "libodbcinst.so.2.0.0"
+      ],
+      "properties": {
+        "libodbc.so.2.0.0": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "libodbcinst.so.2.0.0": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

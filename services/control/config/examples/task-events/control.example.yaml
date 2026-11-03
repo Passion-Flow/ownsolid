@@ -1,0 +1,96 @@
+# Standalone component input; global Config/Compose/Helm installation remains parent-owned.
+# This synthetic nondefault profile requires an existing private broker and protected files.
+# To disable, keep only enabled: false. All enabled fields are explicit; none has a working deployment default.
+# Task-events owner: Select optional transport activation. Type/units/range: boolean true/false; false alone disables and all other fields must be absent. Required explicit selection; omitted component means disabled in root composition. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+enabled: true
+# Task-events owner: Select the one initial transport. Type/units/range: string; only nats_jetstream. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+driver: "nats_jetstream"
+# Task-events owner: Select the exact private broker TLS authority. Type/units/range: string; tls:// DNS/localhost/private-IP with explicit canonical port 1..65535; no URL credentials/path/query. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+endpoint: "tls://nats.example.invalid:4422"
+# Task-events owner: Pin allowed private broker network destinations. Type/units/range: compact JSON array of 1..8 unique canonical RFC1918/ULA/loopback IP strings; literal endpoint IP must be included. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+dial_addresses: ["127.0.0.1"]
+# Task-events owner: Reference the private broker trust anchors. Type/units/range: absolute canonical protected CA file path; distinct from every other reference. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+ca_file: "/run/secrets/task-events/ca.pem"
+# Task-events owner: Reference the actual mTLS client certificate. Type/units/range: absolute canonical protected certificate file path; distinct references. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+client_certificate_file: "/run/secrets/task-events/client.pem"
+# Task-events owner: Reference the actual mTLS private key. Type/units/range: absolute canonical protected secret-file path; never literal key material. Required when enabled; no implicit enabled default. Secret reference only; target must satisfy protected-file ownership checks.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+client_key_file: "/run/secrets/task-events/client.key"
+# Task-events owner: Reference the restricted publisher NKey identity. Type/units/range: absolute canonical protected secret-file path; private seed never enters env/log/browser. Required when enabled; no implicit enabled default. Secret reference only; target must satisfy protected-file ownership checks.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+publisher_seed_file: "/run/secrets/task-events/publisher.nk"
+# Task-events owner: Reference the separate restricted consumer NKey identity. Type/units/range: absolute canonical protected secret-file path; distinct publisher identity. Required when enabled; no implicit enabled default. Secret reference only; target must satisfy protected-file ownership checks.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+consumer_seed_file: "/run/secrets/task-events/consumer.nk"
+# Task-events owner: Bind subjects and provisioned broker metadata to this deployment. Type/units/range: canonical nonzero lower-case UUID string; synthetic example must be replaced deliberately. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+namespace_id: "11111111-1111-4111-8111-111111111111"
+# Task-events owner: Bind the preprovisioned exact owned file stream. Type/units/range: 1..64 ASCII characters matching [A-Za-z][A-Za-z0-9_-]*; no wildcard/dot; differs from consumer. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+stream: "ProjectOneTaskEvents"
+# Task-events owner: Bind the preprovisioned durable pull consumer. Type/units/range: 1..64 ASCII characters matching [A-Za-z][A-Za-z0-9_-]*; no wildcard/dot; differs from stream. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+consumer: "ProjectOneTaskReceiver"
+# Task-events owner: Bound each connection/TLS/auth attempt. Type/units/range: integer seconds 1..60, no greater than request_seconds. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+connect_seconds: 2
+# Task-events owner: Bound broker and task-event SQL operations. Type/units/range: integer seconds 1..300; owning root transaction budgets also apply. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+request_seconds: 7
+# Task-events owner: Bound one pull wait. Type/units/range: integer seconds 1..request_seconds; each fetch requests one event. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+pull_seconds: 3
+# Task-events owner: Allow confirmed SQL handling before broker redelivery. Type/units/range: integer seconds 3*request_seconds+pull_seconds ..3600. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+ack_wait_seconds: 25
+# Task-events owner: Bound idle publisher/maintenance polling cadence. Type/units/range: integer seconds 1..60; cancellation interrupts waits. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+worker_poll_seconds: 2
+# Task-events owner: Delay recoverable publication/NAK attempts. Type/units/range: integer seconds 1..3600 and no greater than retry_lifetime_seconds. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+retry_seconds: 4
+# Task-events owner: Delay explicit bounded recovery of a disconnected connection. Type/units/range: integer seconds 1..60; no hidden reconnect buffer replay. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+reconnect_seconds: 3
+# Task-events owner: Bound consecutive explicit broker reconstruction attempts. Type/units/range: integer attempts 1..1000; exhaustion stops the worker with retained SQL intent; no hidden replay. Required when enabled; no implicit enabled default. This field contains no secret.
+# Explicit component YAML is the base; protected environment overrides it; restart/admission required.
+maximum_reconnect_attempts: 4
+# Task-events owner: Bound attempts within one immutable delivery generation. Type/units/range: integer count 1..1000; actual unknown outcome retains readback requirement. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+maximum_publish_attempts: 7
+# Task-events owner: Bound application delivery failures before durable SQL DLQ. Type/units/range: integer count 1..1000; native MaxDeliver=-1 remains fixed until receipt/DLQ can commit. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+maximum_deliveries: 5
+# Task-events owner: Bound broker in-flight consumer deliveries. Type/units/range: integer count 1..64; never native unlimited. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+maximum_ack_pending: 3
+# Task-events owner: Bound broker retained event count. Type/units/range: integer count maximum_ack_pending ..100000000. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+stream_maximum_messages: 100
+# Task-events owner: Bound broker retained event bytes. Type/units/range: integer bytes maximum_ack_pending*5120 ..1099511627776; actual storage admission is additionally required. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+stream_maximum_bytes: 1048576
+# Task-events owner: Bound broker message lifetime. Type/units/range: integer seconds 60..31536000; expiry is explicit retained SQL DLQ reconciliation. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+stream_retention_seconds: 600
+# Task-events owner: Bound the broker duplicate-ID memory window. Type/units/range: integer seconds 1..stream_retention_seconds; SQL inbox supplies longer idempotency proof. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+duplicate_window_seconds: 60
+# Task-events owner: Bound one event transport replay window. Type/units/range: integer seconds request_seconds ..stream_retention_seconds. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+retry_lifetime_seconds: 300
+# Task-events owner: Retain SQL receipts and history beyond message and retry lifetimes. Type/units/range: integer seconds stream_retention_seconds+retry_lifetime_seconds+ack_wait_seconds ..94608000; unresolved effects remain retained. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+history_retention_seconds: 1000
+# Task-events owner: Bound one exact SQL retention/expiry pass. Type/units/range: integer rows 1..1000; no prefix purge or physical task mutation. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+cleanup_batch: 9
+# Task-events owner: Bound joined cancellation and connection shutdown. Type/units/range: integer seconds request_seconds+pull_seconds ..3600; timeout remains an incomplete stop. Required when enabled; no implicit enabled default. No secret literal is accepted in this field.
+# Explicit component YAML is the base; a supplied protected env map overrides it; restart and exact broker admission required.
+shutdown_seconds: 20

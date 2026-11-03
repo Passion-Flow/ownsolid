@@ -1,0 +1,10 @@
+{
+ "format_version":1,
+ "deadline_seconds":30,
+ "request_seconds":5,
+ "fault_milliseconds":100,
+ "maximum_body_bytes":1048576,
+ "maximum_errors":0,
+ "stop_on_error":true,
+ "stages":[{"concurrency":1,"requests":3},{"concurrency":2,"requests":6}]
+}

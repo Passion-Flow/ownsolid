@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native DM foundation operator format1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format_version", "schema", "runtime_user", "lock_wait_seconds", "step_seconds", "total_seconds", "cleanup_seconds", "maximum_metadata_rows", "maximum_metadata_bytes"],
+  "properties": {
+    "format_version": {"type": "integer", "const": 1},
+    "schema": {"type": "string", "pattern": "^(?!SYS)[A-Z][A-Z0-9_]{0,62}$"},
+    "runtime_user": {"type": "string", "pattern": "^(?!SYS)[A-Z][A-Z0-9_]{0,62}$"},
+    "lock_wait_seconds": {"type": "integer", "minimum": 1, "maximum": 60},
+    "step_seconds": {"type": "integer", "minimum": 1, "maximum": 120},
+    "total_seconds": {"type": "integer", "minimum": 2, "maximum": 1800, "description": "Runtime additionally requires total >= lock_wait_seconds + step_seconds."},
+    "cleanup_seconds": {"type": "integer", "minimum": 1, "maximum": 30},
+    "maximum_metadata_rows": {"type": "integer", "minimum": 512, "maximum": 10001},
+    "maximum_metadata_bytes": {"type": "integer", "minimum": 16384, "maximum": 1048576}
+  }
+}

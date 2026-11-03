@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Portal policy",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "commit_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 10,
+      "x-environment": "PROJECT_ONE_PORTAL_COMMIT_SECONDS",
+      "x-runtime-path": "runtime.portal.commit_seconds"
+    },
+    "notification_retention_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365,
+      "default": 30,
+      "x-environment": "PROJECT_ONE_PORTAL_NOTIFICATION_RETENTION_DAYS",
+      "x-runtime-path": "runtime.portal.notification_retention_days"
+    },
+    "notification_maintenance_batch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_PORTAL_NOTIFICATION_MAINTENANCE_BATCH",
+      "x-runtime-path": "runtime.portal.notification_maintenance_batch"
+    },
+    "notification_maintenance_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 60,
+      "x-environment": "PROJECT_ONE_PORTAL_NOTIFICATION_MAINTENANCE_SECONDS",
+      "x-runtime-path": "runtime.portal.notification_maintenance_seconds"
+    }
+  }
+}

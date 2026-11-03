@@ -1,0 +1,175 @@
+// Package applications projects current publications and caller-private conversations.
+package applications
+
+import (
+	"context"
+	"errors"
+	"net/url"
+	"strconv"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/pagination"
+	strict "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+)
+
+type Service struct {
+	DB         *pgxpool.Pool
+	Identity   *identity.Service
+	Workspaces *workspaces.Service
+	Workflows  *workflows.Service
+}
+type Application struct {
+	WorkflowID    string    `json:"workflow_id"`
+	WorkspaceID   string    `json:"workspace_id"`
+	Name          string    `json:"name"`
+	VersionID     string    `json:"version_id"`
+	VersionNumber int       `json:"version_number"`
+	GraphSHA256   string    `json:"graph_sha256"`
+	PublishedAt   time.Time `json:"published_at"`
+	CanExecute    bool      `json:"can_execute"`
+	QuestionBytes int       `json:"question_bytes"`
+}
+type Conversation struct {
+	ID            string    `json:"id"`
+	WorkspaceID   string    `json:"workspace_id"`
+	WorkflowID    string    `json:"workflow_id"`
+	WorkflowName  string    `json:"workflow_name"`
+	VersionID     string    `json:"version_id"`
+	VersionNumber int       `json:"version_number"`
+	TurnCount     int       `json:"turn_count"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	CanExecute    bool      `json:"can_execute"`
+	QuestionBytes int       `json:"question_bytes"`
+}
+type Page[T any] struct {
+	Items      []T     `json:"items"`
+	NextCursor *string `json:"next_cursor"`
+}
+
+func failure(code string) error { return errors.New(code) }
+func (s *Service) options(values url.Values) url.Values {
+	out := url.Values{}
+	for key, v := range values {
+		out[key] = append([]string(nil), v...)
+	}
+	if _, ok := out["limit"]; !ok {
+		out.Set("limit", strconv.Itoa(s.Identity.Config.Policy().UI.PageSize))
+	}
+	return out
+}
+func (s *Service) List(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[Application], error) {
+	out := Page[Application]{Items: []Application{}}
+	if _, e := s.repository(); e != nil {
+		return out, applicationError(e)
+	}
+	if a.Me.Audience != "portal" || !strict.ValidID(workspace) {
+		return out, failure("ACCESS_DENIED")
+	}
+	limit, cursor, scope, e := pagination.Parse(s.options(values), "applications:"+a.Me.Audience+":"+a.Me.User.ID+":"+workspace)
+	if e != nil {
+		return out, e
+	}
+	if s.Workflows == nil {
+		return out, failure("WORKFLOW_UNAVAILABLE")
+	}
+	e = s.transaction(ctx, a, workspace, func(operation context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+		configuration, e := s.Workflows.ConfigurationWithin(operation, tx, a, workspace)
+		if e != nil {
+			return e
+		}
+		query, e := projectionQuery(tx.Dialect(), false, w.TenantID, w.ID, a.Me.User.ID, cursor, limit)
+		if e != nil {
+			return e
+		}
+		rows, e := tx.Query(operation, query)
+		if e != nil {
+			return e
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var app Application
+			if e = rows.Scan(&app.WorkflowID, &app.WorkspaceID, &app.Name, &app.VersionID, &app.VersionNumber, &app.GraphSHA256, &app.PublishedAt); e != nil {
+				return e
+			}
+			app.PublishedAt = app.PublishedAt.UTC()
+			app.CanExecute = configuration.Enabled && configuration.CanExecute
+			app.QuestionBytes = configuration.Limits.QuestionBytes
+			out.Items = append(out.Items, app)
+		}
+		if rows.Err() != nil {
+			return rows.Err()
+		}
+		if len(out.Items) > limit {
+			out.Items = out.Items[:limit]
+			last := out.Items[limit-1]
+			out.NextCursor = pagination.Encode(last.PublishedAt, last.WorkflowID, scope)
+		}
+		return nil
+	})
+	if e != nil {
+		return Page[Application]{}, e
+	}
+	return out, nil
+}
+func (s *Service) Conversations(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[Conversation], error) {
+	out := Page[Conversation]{Items: []Conversation{}}
+	if _, e := s.repository(); e != nil {
+		return out, applicationError(e)
+	}
+	if a.Me.Audience != "portal" || !strict.ValidID(workspace) {
+		return out, failure("ACCESS_DENIED")
+	}
+	limit, cursor, scope, e := pagination.Parse(s.options(values), "application-conversations:"+a.Me.Audience+":"+a.Me.User.ID+":"+workspace)
+	if e != nil {
+		return out, e
+	}
+	if s.Workflows == nil {
+		return out, failure("WORKFLOW_UNAVAILABLE")
+	}
+	e = s.transaction(ctx, a, workspace, func(operation context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+		configuration, e := s.Workflows.ConfigurationWithin(operation, tx, a, workspace)
+		if e != nil {
+			return e
+		}
+		query, e := projectionQuery(tx.Dialect(), true, w.TenantID, w.ID, a.Me.User.ID, cursor, limit)
+		if e != nil {
+			return e
+		}
+		rows, e := tx.Query(operation, query)
+		if e != nil {
+			return e
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var item Conversation
+			var enabled bool
+			if e = rows.Scan(&item.ID, &item.WorkspaceID, &item.WorkflowID, &item.WorkflowName, &item.VersionID, &item.VersionNumber, &item.TurnCount, &item.CreatedAt, &item.UpdatedAt, &enabled); e != nil {
+				return e
+			}
+			item.CreatedAt = item.CreatedAt.UTC()
+			item.UpdatedAt = item.UpdatedAt.UTC()
+			item.CanExecute = enabled && configuration.Enabled && configuration.CanExecute
+			item.QuestionBytes = configuration.Limits.QuestionBytes
+			out.Items = append(out.Items, item)
+		}
+		if rows.Err() != nil {
+			return rows.Err()
+		}
+		if len(out.Items) > limit {
+			out.Items = out.Items[:limit]
+			last := out.Items[limit-1]
+			out.NextCursor = pagination.Encode(last.UpdatedAt, last.ID, scope)
+		}
+		return nil
+	})
+	if e != nil {
+		return Page[Conversation]{}, e
+	}
+	return out, nil
+}

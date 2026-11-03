@@ -1,0 +1,111 @@
+{
+  "format": "projectone.mysql.runtime-owner-schema-source-candidate.v1",
+  "status": "candidate_source_only_not_measured_not_activated",
+  "specification": "docs/milestones/m20-mysql/runtime-owner-schema.md",
+  "specification_sha256": "5240f8efcb8413b5deb25506e4cfd24544617f8af8c1e6ee5b08b97cbe597558",
+  "base_step_count": 194,
+  "start_step": 195,
+  "end_step": 203,
+  "base_candidate_catalogs": {
+    "candidates/knowledge-workflow-portal/catalog.json": "17c870972d5282c4c91052ab5d7aa555d4871541aa5d87751d330d5ce74a2858",
+    "candidates/plugin-tool/catalog.json": "0a4f634f7742230d417b16be5135af71766efb4baca9639998d01ab06281d9f1"
+  },
+  "postgresql_source_sha256": {
+    "postgresql/000004_components.up.sql": "c17adfd8c1d84d50f83e50869383ab5e96a8c8fbdcfd6b6600190c95d42bc7d7",
+    "postgresql/000005_component_maintenance.up.sql": "749b1035ece370b39b314436e81a1de30066e6cfed09e8e86a97273b49c0d911",
+    "postgresql/000007_distribution.up.sql": "b157ee7fde697f9fdbf5fe40d80f602bf81af8a43744ebfd64a19b50ecdb7ce0",
+    "postgresql/000010_model_lifecycle.up.sql": "970ce5f0b4a06bb34b531ea5484332d14b547ea66c3c08693181e144bc6e2484"
+  },
+  "steps": [
+    {
+      "step": 195,
+      "file": "000195_managed_components.sql",
+      "object": "managed_components",
+      "kind": "create_table",
+      "source_sha256": "ec7d3bfc2a02185c29c3f8aea7711d4580bdde482c565f2d29c28429af0d90e1",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 196,
+      "file": "000196_component_log_snapshots.sql",
+      "object": "component_log_snapshots",
+      "kind": "create_table",
+      "source_sha256": "41f65240bddc91ff103bcae7939714bd513759d74959dae64090d1de6f9fa471",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 197,
+      "file": "000197_api_keys.sql",
+      "object": "api_keys",
+      "kind": "create_table",
+      "source_sha256": "76cab4a069876e78c0dd7a6cd2208b59135c1e32e0bcc6ea2befe02c2b6fb1b3",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 198,
+      "file": "000198_gateway_requests.sql",
+      "object": "gateway_requests",
+      "kind": "create_table",
+      "source_sha256": "f0784471677183727726fb30932aee14b41b0d3be2739e382a96cce1ea0edae8",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 199,
+      "file": "000199_gateway_recoveries.sql",
+      "object": "gateway_recoveries",
+      "kind": "create_table",
+      "source_sha256": "8b6943839e727799a53997c79186a7b1e7eda62efd4abf8a6bf72384ed03a771",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 200,
+      "file": "000200_gateway_active_recovery.sql",
+      "object": "gateway_requests",
+      "kind": "alter_table",
+      "source_sha256": "f5824782eda939e4dd515fe1e68b16374179eb944764f6459d44cf2fae863162",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 201,
+      "file": "000201_model_alias_cutover_intents.sql",
+      "object": "model_alias_cutover_intents",
+      "kind": "create_table",
+      "source_sha256": "5d02a3c2b93614b202785cb223e83992dd1fcb04fc1e365269702186255b8cf1",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 202,
+      "file": "000202_alias_intent_immutable_update.sql",
+      "object": "alias_intent_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "9ef69ee4c507e31ce1fed20cf1d4bd449025bcbd4dc108573e5bc5fa76229a38",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 203,
+      "file": "000203_alias_intent_immutable_delete.sql",
+      "object": "alias_intent_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "0bc1c87a7be9e61d8b51dab899d6a8296d8298feadcee98b7db4c6ef9be85351",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    }
+  ],
+  "acceptance_cases": [
+    "RCL01",
+    "RCL02",
+    "RCL03",
+    "RCL04",
+    "RCL05",
+    "RCL06",
+    "RCL07",
+    "RCL08",
+    "RCL09",
+    "RCL10"
+  ],
+  "pending": [
+    "actual DDL/metadata/canonicalization/migration/constraint/recovery/privilege gates",
+    "complete selected product operator/server/browser and cumulative M01\u2013M30"
+  ]
+}

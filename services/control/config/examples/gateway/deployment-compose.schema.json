@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Existing-node gateway deployment profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "architecture",
+    "configuration_directory",
+    "deployment_name",
+    "gid",
+    "image",
+    "state_directory",
+    "uid"
+  ],
+  "properties": {
+    "architecture": {
+      "description": "Declared Linux image/ELF architecture: amd64 or arm64; never inferred from host.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_ARCHITECTURE",
+      "type": "string",
+      "enum": [
+        "amd64",
+        "arm64"
+      ]
+    },
+    "configuration_directory": {
+      "description": "Existing canonical private0700 host directory containing protected JSON/env/CA/key/credential files; mounted read-only at this exact path.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_CONFIGURATION_DIRECTORY",
+      "type": "string",
+      "pattern": "^/(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+$",
+      "maxLength": 4096,
+      "not": {
+        "anyOf": [
+          {
+            "pattern": "^/(proc|sys|dev|home|root|run)(/|$)"
+          },
+          {
+            "pattern": "(^|/)\\.{1,2}(/|$)"
+          }
+        ]
+      }
+    },
+    "configuration_file": {
+      "description": "Protected startup JSON basename under configuration_directory.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_CONFIGURATION_FILE",
+      "type": "string",
+      "default": "gateway.json",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+      "maxLength": 255
+    },
+    "cpu_millicores": {
+      "description": "Container CPU ceiling in millicores;1000 equals one CPU.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_CPU_MILLICORES",
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 4000,
+      "default": 1000
+    },
+    "deployment_name": {
+      "description": "New scoped deployment name; DNS label,1..63characters. Does not select gateway authority.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_DEPLOYMENT_NAME",
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+      "maxLength": 63
+    },
+    "environment_file": {
+      "description": "Optional protected explicit env-file basename under configuration_directory; empty selects JSON only.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_ENVIRONMENT_FILE",
+      "type": "string",
+      "default": "gateway.env",
+      "pattern": "^$|^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+      "maxLength": 255
+    },
+    "gid": {
+      "description": "Existing numeric service GID; no group is created.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_GID",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647
+    },
+    "image": {
+      "description": "Exact previously loaded gateway image tag or sha256 reference; latest is refused. No image pull.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_IMAGE",
+      "type": "string",
+      "pattern": "^(?:[a-z0-9][A-Za-z0-9./_:-]*@sha256:[a-f0-9]{64}|sha256:[a-f0-9]{64}|[a-z0-9][a-z0-9./_-]*:[A-Za-z0-9_][A-Za-z0-9_.-]*)$",
+      "maxLength": 512,
+      "not": {
+        "pattern": ":latest$"
+      }
+    },
+    "memory_mib": {
+      "description": "Container memory ceiling in MiB.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_MEMORY_MIB",
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 4096,
+      "default": 512
+    },
+    "pids": {
+      "description": "Compose process ceiling; Kubernetes target must separately enforce its node/pod PID policy.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_PIDS",
+      "type": "integer",
+      "minimum": 32,
+      "maximum": 1024,
+      "default": 128
+    },
+    "state_directory": {
+      "description": "Existing canonical private0700 original host spool directory; exclusive scope and persistent fence remain enforced by Rust.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_STATE_DIRECTORY",
+      "type": "string",
+      "pattern": "^/(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+$",
+      "maxLength": 4096,
+      "not": {
+        "anyOf": [
+          {
+            "pattern": "^/(proc|sys|dev|home|root|run)(/|$)"
+          },
+          {
+            "pattern": "(^|/)\\.{1,2}(/|$)"
+          }
+        ]
+      }
+    },
+    "stop_seconds": {
+      "description": "Container/pod graceful stop budget in seconds; must cover the selected Rust shutdown policy.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_STOP_SECONDS",
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 120,
+      "default": 15
+    },
+    "uid": {
+      "description": "Existing nonroot numeric service UID; no account is created.",
+      "x-environment": "PROJECT_ONE_GATEWAY_DEPLOY_UID",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647
+    }
+  }
+}

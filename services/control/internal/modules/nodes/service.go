@@ -1,0 +1,133 @@
+package nodes
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+)
+
+type Service struct {
+	TaskEvents   TaskEventRecorder
+	Preparations PreparationAuthority
+	DB           *pgxpool.Pool
+	Identity     *identity.Service
+	Workspaces   *workspaces.Service
+	Components   ComponentObserver
+	Inference    InferenceObserver
+	Training     TrainingAuthority
+}
+
+// TaskEventRecorder borrows the actual node-task transaction. It must not commit
+// independently or contact the broker; a failure rolls back the task owner.
+type TaskEventRecorder interface {
+	RecordTaskQueuedWithin(context.Context, transaction.Executor, Node, Task) error
+}
+
+// ComponentObserver owns component data while sharing the node authority transaction.
+type ComponentObserver interface {
+	Observe(context.Context, pgx.Tx, Node, wire.ComponentObservation, string) error
+}
+
+// ComponentObserverWithin and ComponentResultObserverWithin must be supplied by
+// the actual selected component owner; missing MySQL implementations fail closed.
+type ComponentObserverWithin interface {
+	ObserveWithin(context.Context, transaction.Executor, Node, wire.ComponentObservation, string) error
+}
+type ComponentResultObserverWithin interface {
+	RecordResultWithin(context.Context, transaction.Executor, Node, Task, wire.Result) error
+}
+
+func fail(code string) error              { return errors.New(code) }
+func isAdmin(a identity.Auth) bool        { return a.Me.Audience == "admin" && a.Me.User.IsPlatformAdmin }
+func digest(purpose, token string) []byte { return security.Digest(purpose + ":v1:" + token) }
+func mapped(e error) error {
+	var p *pgconn.PgError
+	if errors.As(e, &p) && p.ConstraintName == "nodes_live_name_idx" {
+		return fail("NODE_NAME_EXISTS")
+	}
+	return e
+}
+
+const nodeFieldsTemplate = `n.id::text,n.tenant_id::text,n.workspace_id::text,n.name,n.status,n.version,n.protocol_version,n.facts,n.last_heartbeat_at,n.created_at,n.updated_at,CASE WHEN n.last_heartbeat_at>=clock_timestamp()-make_interval(secs=>%d) THEN 'online' WHEN n.last_heartbeat_at>=clock_timestamp()-make_interval(secs=>%d) THEN 'unknown' ELSE 'offline' END,n.execution_profile,n.capabilities`
+
+func scanNode(row pgx.Row) (Node, error) {
+	var n Node
+	var facts, capabilities []byte
+	e := row.Scan(&n.ID, &n.TenantID, &n.WorkspaceID, &n.Name, &n.Status, &n.Version, &n.ProtocolVersion, &facts, &n.LastHeartbeatAt, &n.CreatedAt, &n.UpdatedAt, &n.Connectivity, &n.ExecutionProfile, &capabilities)
+	if errors.Is(e, pgx.ErrNoRows) {
+		return n, fail("RESOURCE_NOT_FOUND")
+	}
+	if e == nil && (json.Unmarshal(facts, &n.Facts) != nil || json.Unmarshal(capabilities, &n.Capabilities) != nil) {
+		return n, fail("STORAGE_UNAVAILABLE")
+	}
+	if e == nil {
+		n.LastHeartbeatAt, n.CreatedAt, n.UpdatedAt = n.LastHeartbeatAt.UTC(), n.CreatedAt.UTC(), n.UpdatedAt.UTC()
+	}
+	return n, e
+}
+func (s *Service) lookup(ctx context.Context, q interface {
+	QueryRow(context.Context, string, ...any) pgx.Row
+}, id string, lock bool) (Node, error) {
+	sql := "SELECT " + s.nodeFields() + " FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id JOIN tenants t ON t.id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND t.status='active' AND n.id=$1"
+	if lock {
+		sql += " FOR UPDATE OF n"
+	}
+	return scanNode(q.QueryRow(ctx, sql, id))
+}
+func (s *Service) audit(ctx context.Context, tx pgx.Tx, actor, audience, tenant, workspace, action, target, id, reason, request string) error {
+	_, e := tx.Exec(ctx, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES($1,clock_timestamp(),NULLIF($2,'')::uuid,$3,$4,$5,$6,'success',$7,$8,NULLIF($9,''),$10)`, uuid.NewString(), actor, tenant, workspace, audience, action, target, id, reason, request)
+	return e
+}
+func (s *Service) adminTransaction(ctx context.Context, a identity.Auth, workspace string, fn func(pgx.Tx, workspaces.Workspace) error) error {
+	if !isAdmin(a) {
+		return fail("ACCESS_DENIED")
+	}
+	tx, e := s.DB.Begin(ctx)
+	if e != nil {
+		return fail("STORAGE_UNAVAILABLE")
+	}
+	defer tx.Rollback(ctx)
+	if e = s.Identity.Recheck(ctx, tx, a); e != nil {
+		return e
+	}
+	w, e := s.Workspaces.RecheckScope(ctx, tx, a, workspace)
+	if e != nil {
+		return e
+	}
+	if e = fn(tx, w); e != nil {
+		return mapped(e)
+	}
+	if tx.Commit(ctx) != nil {
+		return fail("STORAGE_UNAVAILABLE")
+	}
+	return nil
+}
+
+const joinFields = `j.id::text,j.tenant_id::text,j.workspace_id::text,j.node_name,j.created_by::text,j.node_id::text,j.created_at,j.expires_at,CASE WHEN j.revoked_at IS NOT NULL THEN 'revoked' WHEN j.consumed_at IS NOT NULL THEN 'consumed' WHEN j.expires_at<=clock_timestamp() THEN 'expired' ELSE 'pending' END,j.execution_profile`
+
+func scanJoin(row pgx.Row) (JoinToken, error) {
+	var v JoinToken
+	e := row.Scan(&v.ID, &v.TenantID, &v.WorkspaceID, &v.NodeName, &v.CreatedBy, &v.NodeID, &v.CreatedAt, &v.ExpiresAt, &v.Status, &v.ExecutionProfile)
+	if errors.Is(e, pgx.ErrNoRows) {
+		return v, fail("RESOURCE_NOT_FOUND")
+	}
+	if e == nil {
+		v.CreatedAt, v.ExpiresAt = v.CreatedAt.UTC(), v.ExpiresAt.UTC()
+	}
+	return v, e
+}
+func (s *Service) nodeFields() string {
+	p := s.Identity.Config.Policy().Nodes
+	return fmt.Sprintf(nodeFieldsTemplate, p.OnlineSeconds, p.OfflineSeconds)
+}

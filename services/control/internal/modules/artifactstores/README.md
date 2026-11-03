@@ -1,0 +1,13 @@
+# Scoped object storage and ingestion
+
+This module owns object metadata, grants, upload/download admission and ingestion into dataset/model owners. [platform/objectstore](../../platform/objectstore) is its S3-compatible transport; that adapter receives server-resolved tenant, Workspace and object identity, not independent user authorization.
+
+[service.go](service.go), [authorization.go](authorization.go) and [multipart.go](multipart.go) admit object actions. [download.go](download.go) bounds download access. [ingestion.go](ingestion.go), [worker.go](worker.go) and the recovery/maintenance files bind external bytes to the destination domain and preserve incomplete work. Configuration choices and current license checks remain in [configuration.go](configuration.go) and [license.go](license.go).
+
+Migration 000023 owns object, part, grant and ingestion records. Expected length/digest, part size, revision and expiry are persistent state, not hints supplied to an unchecked transport. Private staging, source snapshots, external upload uncertainty and destination publication need their own reconciliation; successful S3 transfer alone does not publish a model or dataset. Whole readback closes its GET body and releases the transfer reservation before the final HEAD/private-access observations, including on a single-transfer profile. A body-close failure returns no verified receipt. The worker's lifecycle is joined by the control composition root.
+
+The repository selects explicit PostgreSQL, MySQL or Dameng statements. Native Dameng uses the existing transaction owner, quoted identifiers, text JSON bindings and UTC microsecond timestamps; it does not rewrite another dialect. [dameng.go](dameng.go) owns positional bindings and [dameng_restore.go](dameng_restore.go) fences restored operations. The [native integration contract](dameng-integration.md) lists the exact schema and shared activation prerequisites. This source path is not yet an activated or verified Dameng deployment.
+
+Adjust deployment settings through control ObjectStorage configuration and [object-storage examples](../../../../../config/examples/object-storage). Synchronize [object-storage contracts](../../../../../contracts/object-storage), datasets/models, [frontend](../../../../../apps/web/packages/artifactstores), [quality harnesses](../../../../../tools/quality/object-storage) and [M22](../../../../../docs/milestones/m22-object-storage). Storage paths must remain disjoint from other artifact owners.
+
+Focused unit check: `go -C services/control test ./internal/modules/artifactstores`. Actual multipart, isolation, license, ingestion and recovery checks require the declared selected database and S3 fixture; unit transport doubles do not qualify a production provider.

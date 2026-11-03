@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit protected training environment mapping",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "PROJECT_ONE_TRAINING_SNAPSHOT_MAXIMUM_FILES": {
+      "type": "integer",
+      "default": 20000,
+      "x-runtime-path": "runtime.training.snapshot_maximum_files",
+      "description": "Integer count; 1..1000000 accepted immutable files, receipts and namespace. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "PROJECT_ONE_TRAINING_SNAPSHOT_MAXIMUM_BYTES": {
+      "type": "integer",
+      "default": 17179869184,
+      "x-runtime-path": "runtime.training.snapshot_maximum_bytes",
+      "description": "Integer bytes; 1048576..1099511627776 total copied bytes. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1048576,
+      "maximum": 1099511627776
+    },
+    "PROJECT_ONE_TRAINING_SNAPSHOT_MANIFEST_BYTES": {
+      "type": "integer",
+      "default": 16777216,
+      "x-runtime-path": "runtime.training.snapshot_manifest_bytes",
+      "description": "Integer bytes; 65536..67108864 exact metadata bytes. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 65536,
+      "maximum": 67108864
+    },
+    "PROJECT_ONE_TRAINING_SNAPSHOT_SECONDS": {
+      "type": "integer",
+      "default": 300,
+      "x-runtime-path": "runtime.training.snapshot_seconds",
+      "description": "Integer seconds; 1..3600 bounded export/import seconds. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1,
+      "maximum": 3600
+    },
+    "PROJECT_ONE_TRAINING_MAX_JOBS_PER_WORKSPACE": {
+      "type": "integer",
+      "default": 1000,
+      "x-runtime-path": "runtime.training.max_jobs_per_workspace",
+      "description": "Integer count; 1..100000 retained jobs; no automatic provenance pruning. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1,
+      "maximum": 100000
+    },
+    "PROJECT_ONE_TRAINING_MAX_ACTIVE_PER_WORKSPACE": {
+      "type": "integer",
+      "default": 10,
+      "x-runtime-path": "runtime.training.max_active_per_workspace",
+      "description": "Integer count; 1..1000 and <=max_jobs_per_workspace; queue/preparing/running/cancelling/recovery_required count. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "PROJECT_ONE_TRAINING_MAX_ATTEMPTS": {
+      "type": "integer",
+      "default": 5,
+      "x-runtime-path": "runtime.training.max_attempts",
+      "description": "Integer count; 1..1000 explicit attempts; never redeliver a possibly running attempt. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "PROJECT_ONE_TRAINING_POLL_MILLISECONDS": {
+      "type": "integer",
+      "default": 1000,
+      "x-runtime-path": "runtime.training.poll_milliseconds",
+      "description": "Integer seconds; 100..60000; queue retry interval, not a progress estimate. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 100,
+      "maximum": 60000
+    },
+    "PROJECT_ONE_TRAINING_TRANSACTION_SECONDS": {
+      "type": "integer",
+      "default": 10,
+      "x-runtime-path": "runtime.training.transaction_seconds",
+      "description": "Integer seconds; 1..60 bounded business transaction budget. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1,
+      "maximum": 60
+    },
+    "PROJECT_ONE_TRAINING_UPLOAD_SECONDS": {
+      "type": "integer",
+      "default": 30,
+      "x-runtime-path": "runtime.training.upload_seconds",
+      "description": "Integer seconds; 1..300 individual stream/ticket seconds; no business locks during body transfer; current authority is rechecked before accounting. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1,
+      "maximum": 300
+    },
+    "PROJECT_ONE_TRAINING_MINIMUM_FREE_BYTES": {
+      "type": "integer",
+      "default": 2147483648,
+      "x-runtime-path": "runtime.training.minimum_free_bytes",
+      "description": "Integer bytes; >=resources.maximum_output_bytes and <=1099511627776. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1048576,
+      "maximum": 1099511627776
+    },
+    "PROJECT_ONE_TRAINING_MINIMUM_HOST_MEMORY_BYTES": {
+      "type": "integer",
+      "default": 12884901888,
+      "x-runtime-path": "runtime.training.minimum_host_memory_bytes",
+      "description": "Integer bytes; >=resources.memory_bytes and <=1099511627776. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 134217728,
+      "maximum": 1099511627776
+    },
+    "PROJECT_ONE_TRAINING_MINIMUM_GPU_MEMORY_MIB": {
+      "type": "integer",
+      "default": 8192,
+      "x-runtime-path": "runtime.training.minimum_gpu_memory_mib",
+      "description": "Integer MiB; 8192..1048576 total observed memory; no capacity claim. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 8192,
+      "maximum": 1048576
+    },
+    "PROJECT_ONE_TRAINING_MINIMUM_DRIVER_MAJOR": {
+      "type": "integer",
+      "default": 580,
+      "x-runtime-path": "runtime.training.minimum_driver_major",
+      "description": "Integer count; 580..999; CUDA/PTX caveats still require target execution. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 580,
+      "maximum": 999
+    },
+    "PROJECT_ONE_TRAINING_MINIMUM_COMPUTE_MAJOR": {
+      "type": "integer",
+      "default": 8,
+      "x-runtime-path": "runtime.training.minimum_compute_major",
+      "description": "Integer count; 8..99; production BF16 device checks also execute in Python. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 8,
+      "maximum": 99
+    },
+    "PROJECT_ONE_TRAINING_RESOURCES_WALL_SECONDS": {
+      "type": "integer",
+      "default": 3600,
+      "x-runtime-path": "runtime.training.resources.wall_seconds",
+      "description": "Integer seconds; 1..86400 wall seconds. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1,
+      "maximum": 86400
+    },
+    "PROJECT_ONE_TRAINING_RESOURCES_CPU_SECONDS": {
+      "type": "integer",
+      "default": 3600,
+      "x-runtime-path": "runtime.training.resources.cpu_seconds",
+      "description": "Integer seconds; 1..172800 process CPU seconds; <=wall_seconds*configuration.threads. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1,
+      "maximum": 172800
+    },
+    "PROJECT_ONE_TRAINING_RESOURCES_MEMORY_BYTES": {
+      "type": "integer",
+      "default": 6442450944,
+      "x-runtime-path": "runtime.training.resources.memory_bytes",
+      "description": "Integer bytes; 134217728..17179869184; actual production cgroup, distinct native parent RSS verification. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 134217728,
+      "maximum": 17179869184
+    },
+    "PROJECT_ONE_TRAINING_RESOURCES_MAXIMUM_OUTPUT_BYTES": {
+      "type": "integer",
+      "default": 1073741824,
+      "x-runtime-path": "runtime.training.resources.maximum_output_bytes",
+      "description": "Integer bytes; 1048576..2147483648 total ordinary output bytes. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 1048576,
+      "maximum": 2147483648
+    },
+    "PROJECT_ONE_TRAINING_RESOURCES_MAXIMUM_OUTPUT_FILES": {
+      "type": "integer",
+      "default": 4096,
+      "x-runtime-path": "runtime.training.resources.maximum_output_files",
+      "description": "Integer count; 16..4096 ordinary output files. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 16,
+      "maximum": 4096
+    },
+    "PROJECT_ONE_TRAINING_RESOURCES_MAXIMUM_RESULT_BYTES": {
+      "type": "integer",
+      "default": 8388608,
+      "x-runtime-path": "runtime.training.resources.maximum_result_bytes",
+      "description": "Integer bytes; 4096..16777216 structured result bytes. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 4096,
+      "maximum": 16777216
+    },
+    "PROJECT_ONE_TRAINING_RESOURCES_MAXIMUM_EVENT_BYTES": {
+      "type": "integer",
+      "default": 8388608,
+      "x-runtime-path": "runtime.training.resources.maximum_event_bytes",
+      "description": "Integer bytes; 65536..16777216 bounded event stream bytes. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 65536,
+      "maximum": 16777216
+    },
+    "PROJECT_ONE_TRAINING_RESOURCES_OPEN_FILES": {
+      "type": "integer",
+      "default": 256,
+      "x-runtime-path": "runtime.training.resources.open_files",
+      "description": "Integer count; 64..4096 worker file descriptors. Explicit protected env-file overrides YAML; nonsecret; restart required.",
+      "minimum": 64,
+      "maximum": 4096
+    },
+    "PROJECT_ONE_TRAINING_ARTIFACT_ROOT": {
+      "type": "string",
+      "minLength": 1,
+      "x-runtime-path": "training.artifact_root",
+      "description": "Required canonical artifact path or exact manufactured identity; no default; nonsecret; protected env-file precedence; restart required."
+    },
+    "PROJECT_ONE_TRAINING_IMAGE_REFERENCE": {
+      "type": "string",
+      "minLength": 1,
+      "x-runtime-path": "training.image_reference",
+      "description": "Required canonical artifact path or exact manufactured identity; no default; nonsecret; protected env-file precedence; restart required.",
+      "pattern": "^projectone/training@sha256:[a-f0-9]{64}$"
+    },
+    "PROJECT_ONE_TRAINING_IMAGE_ID": {
+      "type": "string",
+      "minLength": 1,
+      "x-runtime-path": "training.image_id",
+      "description": "Required canonical artifact path or exact manufactured identity; no default; nonsecret; protected env-file precedence; restart required.",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "PROJECT_ONE_TRAINING_WORKER_SOURCE_SHA256": {
+      "type": "string",
+      "minLength": 1,
+      "x-runtime-path": "training.worker_source_sha256",
+      "description": "Required canonical artifact path or exact manufactured identity; no default; nonsecret; protected env-file precedence; restart required.",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

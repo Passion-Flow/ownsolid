@@ -1,0 +1,40 @@
+{
+  "control_origin": "https://admin.platform.example.invalid",
+  "ca_file": "/etc/projectone/ca.pem",
+  "state_directory": "/var/lib/projectone-inference-agent",
+  "disk_path": "/opt/projectone/inference",
+  "join_token_file": "/etc/projectone/inference-join-token",
+  "execution_profile": "docker_inference",
+  "inference": {
+    "root_directory": "/opt/projectone/inference",
+    "docker_socket": "/run/docker.sock"
+  },
+  "runtime": {
+    "enroll_seconds": 20,
+    "remove_seconds": 120,
+    "control_request_seconds": 15,
+    "control_header_seconds": 10,
+    "tls_handshake_seconds": 5,
+    "idle_connection_seconds": 30,
+    "control_connections": 2,
+    "backoff_initial_seconds": 1,
+    "backoff_max_seconds": 30,
+    "component_task_seconds": 120,
+    "inference_task_seconds": 1740,
+    "systemd_seconds": 25,
+    "maintenance_seconds": 10,
+    "metrics_seconds": 3,
+    "metrics_header_seconds": 2,
+    "docker_seconds": 30,
+    "docker_header_seconds": 25,
+    "docker_dial_seconds": 5,
+    "docker_connections": 2,
+    "probe_seconds": 30,
+    "probe_header_seconds": 5,
+    "probe_dial_seconds": 2,
+    "gpu_probe_seconds": 10,
+    "model_load_seconds": 600,
+    "model_poll_milliseconds": 1000,
+    "docker_stop_seconds": 15
+  }
+}

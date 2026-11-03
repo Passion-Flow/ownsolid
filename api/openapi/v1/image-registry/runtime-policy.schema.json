@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Registry public runtime projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["enabled", "request_timeout_milliseconds", "operation_timeout_milliseconds"],
+  "properties": {
+    "enabled": {"type": "boolean"},
+    "request_timeout_milliseconds": {"type": "integer", "minimum": 0, "maximum": 86400000, "multipleOf": 1000},
+    "operation_timeout_milliseconds": {"type": "integer", "minimum": 0, "maximum": 86400000, "multipleOf": 1000}
+  },
+  "allOf": [{
+    "if": {"properties": {"enabled": {"const": false}}},
+    "then": {"properties": {"request_timeout_milliseconds": {"const": 0}, "operation_timeout_milliseconds": {"const": 0}}},
+    "else": {"properties": {"request_timeout_milliseconds": {"minimum": 1000}, "operation_timeout_milliseconds": {"minimum": 1000}}}
+  }],
+  "$comment": "The owning semantic validator additionally requires request_timeout_milliseconds <= operation_timeout_milliseconds. Values derive from validated component integer seconds; no public credentials, addresses or paths."
+}

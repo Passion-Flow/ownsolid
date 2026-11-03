@@ -1,0 +1,1 @@
+ALTER TABLE task_event_outbox ADD CONSTRAINT task_event_outbox_prepared CHECK(state<>'prepared' OR (NOT outcome_unknown AND publish_attempts=0 AND consume_attempts=0 AND broker_sequence IS NULL AND claim_id IS NULL AND error_code IS NULL));

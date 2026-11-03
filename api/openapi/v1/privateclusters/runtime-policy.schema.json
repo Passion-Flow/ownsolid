@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Private cluster public per-operation policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "enabled",
+    "operation_timeout_milliseconds",
+    "maximum_response_bytes"
+  ],
+  "properties": {
+    "enabled": {
+      "type": "boolean"
+    },
+    "operation_timeout_milliseconds": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3600000,
+      "multipleOf": 1000
+    },
+    "maximum_response_bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16777216
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "enabled": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "operation_timeout_milliseconds": {
+            "const": 0
+          },
+          "maximum_response_bytes": {
+            "const": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "operation_timeout_milliseconds": {
+            "minimum": 1000
+          },
+          "maximum_response_bytes": {
+            "minimum": 4096
+          }
+        }
+      }
+    }
+  ],
+  "description": "Per owning phase timeout, additionally bounded by the original HTTP deadline, and the complete public response byte budget from existing maximum_body_bytes. No credential or endpoint projection."
+}

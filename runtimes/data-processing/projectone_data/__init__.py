@@ -1,0 +1,4 @@
+"""Strict offline text SFT data processing; Go owns business state and authorization."""
+VERSION = "0.8.0"
+SCHEMA = "projectone.text-sft.v1"
+SPLIT_ALGORITHM = "source-union-sha256.v1"

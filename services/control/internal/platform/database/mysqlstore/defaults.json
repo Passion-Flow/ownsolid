@@ -1,0 +1,13 @@
+{
+  "maximum_open_connections": 4,
+  "maximum_idle_connections": 1,
+  "connect_seconds": 5,
+  "read_seconds": 10,
+  "write_seconds": 10,
+  "statement_seconds": 5,
+  "transaction_seconds": 10,
+  "lock_seconds": 3,
+  "maximum_lifetime_seconds": 300,
+  "maximum_idle_seconds": 60,
+  "maximum_packet_bytes": 16777216
+}

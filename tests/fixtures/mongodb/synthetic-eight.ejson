@@ -1,0 +1,8 @@
+{"_id":{"$oid":"000000000000000000000001"},"question":"M21 synthetic prompt 1","answer":"M21 synthetic answer 1"}
+{"_id":{"$oid":"000000000000000000000002"},"question":"M21 synthetic prompt 2","answer":"M21 synthetic answer 2"}
+{"_id":{"$oid":"000000000000000000000003"},"question":"M21 synthetic prompt 3","answer":"M21 synthetic answer 3"}
+{"_id":{"$oid":"000000000000000000000004"},"question":"M21 synthetic prompt 4","answer":"M21 synthetic answer 4"}
+{"_id":{"$oid":"000000000000000000000005"},"question":"M21 synthetic prompt 5","answer":"M21 synthetic answer 5"}
+{"_id":{"$oid":"000000000000000000000006"},"question":"M21 synthetic prompt 6","answer":"M21 synthetic answer 6"}
+{"_id":{"$oid":"000000000000000000000007"},"question":"M21 synthetic prompt 7","answer":"M21 synthetic answer 7"}
+{"_id":{"$oid":"000000000000000000000008"},"question":"M21 synthetic prompt 8","answer":"M21 synthetic answer 8"}

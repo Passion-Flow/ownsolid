@@ -1,0 +1,134 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "917adf33b019391aa80d1673a092b01bdc5ba6fcef469cfe85789cbbc75270af",
+  "after_step": 103,
+  "steps": [
+    {
+      "step": 104,
+      "file": "000104_preparation_immutable_update.sql",
+      "object": "model_preparation_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "e5a02d67d3d9e2be0a021028ed3d3caf142b6fa06dfa9612cac3e1a780258e19",
+      "table": "model_preparations",
+      "event": "UPDATE"
+    },
+    {
+      "step": 105,
+      "file": "000105_preparation_immutable_delete.sql",
+      "object": "model_preparation_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "9edfa45589e137a98cf43ee90912a53ecb34ebdceab8f99218db4c35a586361b",
+      "table": "model_preparations",
+      "event": "DELETE"
+    },
+    {
+      "step": 106,
+      "file": "000106_preparation_attempt_immutable_update.sql",
+      "object": "model_preparation_attempt_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "631830904f837d0c2f9a9af7313a047234a3214144cdf84dceb3bea87b19dc6c",
+      "table": "model_preparation_attempts",
+      "event": "UPDATE"
+    },
+    {
+      "step": 107,
+      "file": "000107_preparation_attempt_immutable_delete.sql",
+      "object": "model_preparation_attempt_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "d90c9beafed8b4991b4a3671bb447f8f0938a82d56e7ae4b17d819bc0e06323e",
+      "table": "model_preparation_attempts",
+      "event": "DELETE"
+    },
+    {
+      "step": 108,
+      "file": "000108_preparation_event_immutable_update.sql",
+      "object": "model_preparation_event_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "40b72735dd3f708d51fcf56123273c6dfb0f3a8738573d63b7deefef9ac1f4ec",
+      "table": "model_preparation_events",
+      "event": "UPDATE"
+    },
+    {
+      "step": 109,
+      "file": "000109_preparation_event_immutable_delete.sql",
+      "object": "model_preparation_event_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "97e8673392dc429456e2a8e2fa7f043bbbbf1e08cb4e5b9a4613fe2c554c794d",
+      "table": "model_preparation_events",
+      "event": "DELETE"
+    },
+    {
+      "step": 110,
+      "file": "000110_preparation_recovery_immutable_update.sql",
+      "object": "model_preparation_recovery_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "fc6cc01f53ec04df325ce5e2b8fd81b49ce2c57babe4fa1620f74ca138b19736",
+      "table": "model_preparation_recoveries",
+      "event": "UPDATE"
+    },
+    {
+      "step": 111,
+      "file": "000111_preparation_recovery_immutable_delete.sql",
+      "object": "model_preparation_recovery_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "260c5a06e7271d64408c6121196a548bfb74c341e2e37e8897e0f9fe25988e56",
+      "table": "model_preparation_recoveries",
+      "event": "DELETE"
+    },
+    {
+      "step": 112,
+      "file": "000112_preparation_upload_immutable_update.sql",
+      "object": "model_preparation_upload_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "07a5a62616abdabf3f9ff2783228c704c39ff2c7c2b9518d4955e7f1e7bc53b1",
+      "table": "model_preparation_uploads",
+      "event": "UPDATE"
+    },
+    {
+      "step": 113,
+      "file": "000113_preparation_upload_immutable_delete.sql",
+      "object": "model_preparation_upload_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "1034476b0fa85ddeed38d42a5a4e4f0fbcf65bfff73bd7a28bed240592fd9e0e",
+      "table": "model_preparation_uploads",
+      "event": "DELETE"
+    },
+    {
+      "step": 114,
+      "file": "000114_preparation_chunk_immutable_update.sql",
+      "object": "model_preparation_chunk_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "12ee7ef2146791c2c2fade4177a3479c8a3e47891161a139a7baff5a925deff5",
+      "table": "model_preparation_upload_chunks",
+      "event": "UPDATE"
+    },
+    {
+      "step": 115,
+      "file": "000115_preparation_chunk_immutable_delete.sql",
+      "object": "model_preparation_chunk_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "9ef0732af4c800e135f3f51c9f04063d65d4db4c34e2c56601619c9011c01534",
+      "table": "model_preparation_upload_chunks",
+      "event": "DELETE"
+    },
+    {
+      "step": 116,
+      "file": "000116_preparation_artifact_immutable_update.sql",
+      "object": "model_preparation_artifact_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "6da492f7b09050d554fa0fdd7302db7a8836f813fede58cf826ee92e030de6cb",
+      "table": "model_preparation_artifacts",
+      "event": "UPDATE"
+    },
+    {
+      "step": 117,
+      "file": "000117_preparation_artifact_immutable_delete.sql",
+      "object": "model_preparation_artifact_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "2fb44a24ecfc71ed59a0aa9f8b4fb9c84a5cab58bfa0b3799ed6d37fc5fdceba",
+      "table": "model_preparation_artifacts",
+      "event": "DELETE"
+    }
+  ]
+}

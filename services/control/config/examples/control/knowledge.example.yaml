@@ -1,0 +1,31 @@
+# Merge through the supported control configuration loader before startup.
+# All listed assets must already exist and match the approved release catalog.
+# This example does not manufacture a CPU runtime or establish target support.
+knowledge:
+  enabled: true
+  python_executable: /opt/projectone/knowledge-venv/bin/python3.12
+  worker_file: /opt/projectone/knowledge/embed.py
+  model_directory: /opt/projectone/knowledge-encoder
+  scratch_root: /var/lib/projectone/knowledge-work
+  # An empty list enables ingestion/retrieval without model answers.
+  # Use the exact current same-Workspace gateway origin; no runtime DNS lookup,
+  # proxy fallback, redirects, runtime certificate installation or paid API call.
+  gateways:
+    - origin: https://gateway.example.invalid:9443
+      dial_addresses: [192.0.2.10]
+      ca_file: /run/projectone/knowledge-gateway-ca.pem
+runtime:
+  http:
+    request_seconds: 90
+    startup_seconds: 60
+    shutdown_seconds: 20
+  # Nondefault bounded example. Other values use the owned typed defaults.
+  knowledge:
+    source_bytes: 262144
+    chunk_tokens: 128
+    overlap_tokens: 16
+    worker_threads: 1
+    worker_batch_size: 4
+    maximum_documents: 50
+    query_count: 20
+    query_window_seconds: 120

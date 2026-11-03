@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "scope_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "operation_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "volume_name": "projectone-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-control-config",
+  "source_root": "/source",
+  "target_root": "/target",
+  "source_uid": 0,
+  "source_gid": 0,
+  "uid": 65532,
+  "gid": 65532,
+  "maximum_file_bytes": 1048576,
+  "maximum_total_bytes": 4194304,
+  "timeout_seconds": 30,
+  "files": [
+    {
+      "name": "control.yaml",
+      "bytes": 32,
+      "sha256": "43b2c17591a95672bd947e912fdbab5305ad045f79f210c7c8c0bf3d11203bf1"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+CREATE TRIGGER middleware_operation_update BEFORE UPDATE ON middleware_operations FOR EACH ROW BEGIN
+ IF NOT(NEW.id<=>OLD.id AND NEW.tenant_id<=>OLD.tenant_id AND NEW.workspace_id<=>OLD.workspace_id AND NEW.instance_id<=>OLD.instance_id AND NEW.kind<=>OLD.kind AND NEW.requested_by<=>OLD.requested_by AND NEW.intent_key<=>OLD.intent_key AND NEW.intent_fingerprint<=>OLD.intent_fingerprint AND NEW.input_json<=>OLD.input_json AND NEW.actor_json<=>OLD.actor_json AND NEW.instance_version<=>OLD.instance_version AND NEW.profile_fingerprint<=>OLD.profile_fingerprint AND NEW.request_id<=>OLD.request_id AND NEW.created_at<=>OLD.created_at) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='MIDDLEWARE_INTENT_IMMUTABLE'; END IF;
+ IF OLD.state IN('succeeded','failed','unknown') THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='MIDDLEWARE_TERMINAL_IMMUTABLE'; END IF;
+END;

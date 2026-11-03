@@ -1,0 +1,9 @@
+# Merge with the active profile. policyEnvironmentFile is a private basename;
+# optional default empty; exact protected env-file mapping; restart/rollout required.
+configuration:
+  policyEnvironmentFile: model-cache.env
+# Preserve all existing profile secret references. Add only these owned files.
+# The projector materializes0600 files in0700 private root owned by runtime.uid.
+# Password remains a secret reference; optional CA can join this list when selected.
+secrets:
+  files: [database-dsn, auth-hmac, mail-keyring.json, certificate.pem, private-key.pem, license-trust.json, model-cache.env, model-cache-password]

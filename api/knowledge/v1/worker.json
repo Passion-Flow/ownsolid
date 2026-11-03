@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "dimension": 384,
+  "maximum_sequence_tokens": 256,
+  "maximum_chunk_tokens": 254,
+  "maximum_source_bytes": 2097152,
+  "maximum_source_tokens": 262144,
+  "maximum_chunks": 4096,
+  "maximum_request_bytes": 12648448,
+  "maximum_result_bytes": 67108864,
+  "maximum_diagnostic_bytes": 65536,
+  "vector_norm_tolerance": 0.001,
+  "pooling": "attention_mask_mean",
+  "normalization": "l2",
+  "encoder_catalog_sha256": "1028bf0db8b14abc61af73d1d1e53cf5a50daff254628421f2593282747cd83e",
+  "requests": {
+    "common": [
+      "schema_version",
+      "operation",
+      "encoder_catalog_sha256",
+      "model_directory",
+      "text",
+      "limits",
+      "resources"
+    ],
+    "operation": [
+      "document",
+      "query"
+    ],
+    "limits": [
+      "source_bytes",
+      "source_tokens",
+      "chunks",
+      "chunk_tokens",
+      "overlap_tokens",
+      "query_tokens",
+      "chunk_bytes"
+    ],
+    "resources": [
+      "threads",
+      "batch_size"
+    ]
+  },
+  "result": {
+    "common": [
+      "schema_version",
+      "encoder_catalog_sha256",
+      "dimension",
+      "source_sha256",
+      "chunks"
+    ],
+    "chunk": [
+      "ordinal",
+      "start_byte",
+      "end_byte",
+      "token_count",
+      "embedding"
+    ]
+  },
+  "errors": [
+    "KNOWLEDGE_WORKER_REQUEST_INVALID",
+    "KNOWLEDGE_ENCODER_ASSET_INVALID",
+    "KNOWLEDGE_ENCODER_LOAD_FAILED",
+    "KNOWLEDGE_SOURCE_LIMIT_EXCEEDED",
+    "KNOWLEDGE_EMPTY_SOURCE",
+    "KNOWLEDGE_QUERY_TOO_LONG",
+    "KNOWLEDGE_WORKER_RESULT_INVALID",
+    "KNOWLEDGE_WORKER_FAILED"
+  ],
+  "maximum_chunk_bytes": 65536,
+  "process_control": {
+    "parent_pid_environment": "PROJECTONE_KNOWLEDGE_PARENT_PID",
+    "wall_seconds_environment": "PROJECTONE_KNOWLEDGE_WALL_SECONDS",
+    "poll_milliseconds_environment": "PROJECTONE_KNOWLEDGE_PARENT_POLL_MILLISECONDS",
+    "maximum_wall_seconds": 610,
+    "termination_signal": "SIGKILL"
+  },
+  "request_metadata_budget_bytes": 65536
+}

@@ -1,0 +1,13 @@
+{
+  "secrets": {
+    "files": [
+      "database-dsn",
+      "auth-hmac",
+      "mail-keyring.json",
+      "certificate.pem",
+      "private-key.pem",
+      "license-trust.json",
+      "license.env"
+    ]
+  }
+}

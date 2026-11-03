@@ -1,0 +1,38 @@
+[
+  {
+    "record": {
+      "source_id": "source-0",
+      "prompt": "Multilingual \u4e2d\u6587 \u0645\u0631\u062d\u0628\u0627",
+      "completion": "Answer <>&"
+    },
+    "canonical_hex": "7b22736f757263655f6964223a22736f757263652d30222c2270726f6d7074223a224d756c74696c696e6775616c20e4b8ade6968720d985d8b1d8add8a8d8a7222c22636f6d706c6574696f6e223a22416e73776572203c3e26227d",
+    "content_sha256": "011a9d63aa3e5e9699f2d70a03ce3b887fb8ec7f51e453f36ba3f7ac03a4db0e"
+  },
+  {
+    "record": {
+      "source_id": "source-1",
+      "prompt": "Real separator: and ",
+      "completion": "Literal escape: \\u2028"
+    },
+    "canonical_hex": "7b22736f757263655f6964223a22736f757263652d31222c2270726f6d7074223a225265616c20736570617261746f723ae280a8616e64e280a9222c22636f6d706c6574696f6e223a224c69746572616c206573636170653a205c5c7532303238227d",
+    "content_sha256": "0f48ee1ab4adf3fc885e525b71d908323c8599df1cd836fcc2f05b856084f043"
+  },
+  {
+    "record": {
+      "source_id": "source-2",
+      "prompt": "Newline\nTab\tCR\r",
+      "completion": "é and \u00e9"
+    },
+    "canonical_hex": "7b22736f757263655f6964223a22736f757263652d32222c2270726f6d7074223a224e65776c696e655c6e5461625c7443525c72222c22636f6d706c6574696f6e223a2265cc8120616e6420c3a9227d",
+    "content_sha256": "06771ca98bd15c0040af422bf6e22716a396606ba6c639bbb37fee4042fca0d2"
+  },
+  {
+    "record": {
+      "source_id": "source-3",
+      "prompt": "Emoji 😀",
+      "completion": "Backslash \\ and quote \""
+    },
+    "canonical_hex": "7b22736f757263655f6964223a22736f757263652d33222c2270726f6d7074223a22456d6f6a6920f09f9880222c22636f6d706c6574696f6e223a224261636b736c617368205c5c20616e642071756f7465205c22227d",
+    "content_sha256": "78659236e102ff54fe4eebac7bacac2283ddc9b31c481007c7cd08fcdd8e39e4"
+  }
+]

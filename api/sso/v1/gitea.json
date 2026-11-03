@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "provider": "gitea",
+  "tested_release": "28.1.0",
+  "authorization_path": "/login/oauth/authorize",
+  "token_path": "/login/oauth/access_token",
+  "introspection_path": "/login/oauth/introspect",
+  "user_path": "/api/v1/user",
+  "version_path": "/api/v1/version",
+  "application_path": "/api/v1/user/applications/oauth2",
+  "scope": "read:user",
+  "pkce_method": "S256",
+  "fixture": {
+    "image_repository": "docker.gitea.com/gitea",
+    "image_index_digest": "sha256:b1a90409ae9afcd5a5725404c3639da7245248848b99e35332968891290b953e",
+    "platform_manifests": {
+      "linux/arm64": "sha256:5a495e6645e37740d05348f88a90952e1d67a335bd54bb5fa1a4a5dd207a5f9e",
+      "linux/amd64": "sha256:a68557a8b1572e87fba119b6a9b93fa244f6cd3fa3609fb08018e197be639335"
+    },
+    "uid": 1000,
+    "gid": 1000,
+    "container_port": 3000,
+    "data_directory": "/var/lib/gitea",
+    "configuration_directory": "/etc/gitea",
+    "executable": "/usr/local/bin/gitea",
+    "memory_bytes": 536870912,
+    "cpus": 1,
+    "pids": 128,
+    "startup_seconds": 90,
+    "command_seconds": 120,
+    "stop_seconds": 15,
+    "maximum_output_bytes": 1048576,
+    "administrator": {
+      "username": "mvp-admin",
+      "email": "admin@provider.example.invalid"
+    },
+    "member": {
+      "username": "mvp-member",
+      "email": "member@provider.example.invalid"
+    },
+    "maximum_client_receipts": 256
+  },
+  "qualification": "Official tag/source and registry descriptors checked2026-10-16. Actual arm64 pull/configuration/UID/version checked; actual amd64 image/provider execution and complete image/dependency notices remain pending. This catalog does not establish provider/session compatibility by itself."
+}

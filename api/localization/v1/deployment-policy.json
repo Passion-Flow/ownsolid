@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "kind": "projectone-localization-deployment-policy-v1",
+  "fields": {
+    "init_memory_bytes": {"default": 268435456, "minimum": 33554432, "maximum": 1073741824, "units": "bytes"},
+    "init_milli_cpu": {"default": 500, "minimum": 100, "maximum": 2000, "units": "millicores"},
+    "init_pids": {"default": 32, "minimum": 16, "maximum": 256, "units": "processes"},
+    "init_timeout_seconds": {"default": 120, "minimum": 5, "maximum": 600, "units": "seconds"}
+  }
+}

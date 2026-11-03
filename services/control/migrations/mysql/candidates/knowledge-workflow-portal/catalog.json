@@ -1,0 +1,308 @@
+{
+  "format": "projectone.mysql.schema-source-candidate.v1",
+  "status": "candidate_source_only_not_measured_not_activated",
+  "start_step": 150,
+  "end_step": 183,
+  "base_step_count": 149,
+  "prefix_manifest_sha256": "3fb8b9206e29b864308936c1a5732408e94bf8e51bc99d119b5d0d983648daff",
+  "steps": [
+    {
+      "step": 150,
+      "file": "000150_knowledge_bases.sql",
+      "object": "knowledge_bases",
+      "kind": "create_table",
+      "source_sha256": "96186587a4d45bccec3a306fd7a8a687b002810355a54537deb54daaa5cbe995",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 151,
+      "file": "000151_knowledge_generations.sql",
+      "object": "knowledge_generations",
+      "kind": "create_table",
+      "source_sha256": "10172701edea361af4c403cd3bb31a2d8242d6fc1aaee428fd8936034be2592a",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 152,
+      "file": "000152_knowledge_base_generation_scope.sql",
+      "object": "knowledge_bases",
+      "kind": "alter_table",
+      "source_sha256": "49a4e049cceb0c4c4835c628a1b50f04a142003aff4f69ff6878db5da8d7d3e8",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 153,
+      "file": "000153_knowledge_documents.sql",
+      "object": "knowledge_documents",
+      "kind": "create_table",
+      "source_sha256": "49857e504d1b6b38f4738fc3577a0b46ab11032ed314329a293461f0c0c8c3bb",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 154,
+      "file": "000154_knowledge_source_versions.sql",
+      "object": "knowledge_source_versions",
+      "kind": "create_table",
+      "source_sha256": "a3cec85a0d4588d462a05c5b7f0fcc5a04460922411527ac62c0fd3d150931aa",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 155,
+      "file": "000155_knowledge_document_sources.sql",
+      "object": "knowledge_documents",
+      "kind": "alter_table",
+      "source_sha256": "3b70bbf03983964ea45e33a2f00c10e653478792760c894265ac7528fbf5bdd8",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 156,
+      "file": "000156_knowledge_attempts.sql",
+      "object": "knowledge_attempts",
+      "kind": "create_table",
+      "source_sha256": "2febaded63406f478c21a7e20f275c793efaf529af92702be2381da8be4ab1e8",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 157,
+      "file": "000157_knowledge_document_attempts.sql",
+      "object": "knowledge_documents",
+      "kind": "alter_table",
+      "source_sha256": "07e0ac1e2f31935088e4ffb6105c9d64e4d7bbf7e528cb2cc749bbf3742de1a4",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 158,
+      "file": "000158_knowledge_chunks.sql",
+      "object": "knowledge_chunks",
+      "kind": "create_table",
+      "source_sha256": "582531436b6eacbbec8cd8e3805d732799d27b94e268c2edeca39573e4eaa70c",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 159,
+      "file": "000159_knowledge_mutation_intents.sql",
+      "object": "knowledge_mutation_intents",
+      "kind": "create_table",
+      "source_sha256": "c5cd8ba377ffb0feebef9026d07d9f5b76091ff1efd088543bbee6acf1511737",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 160,
+      "file": "000160_knowledge_source_retirement.sql",
+      "object": "knowledge_source_retirement",
+      "kind": "create_trigger",
+      "source_sha256": "706ede44ab04a7c0bfe9d64fe39db3adf3e979b148a64d0651165c6fffbf0466",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 161,
+      "file": "000161_knowledge_chunk_immutable.sql",
+      "object": "knowledge_chunk_immutable",
+      "kind": "create_trigger",
+      "source_sha256": "07519756a459edb7218f152f8486b87c07b7afbb3711461d17b0cecd0f8747c8",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 162,
+      "file": "000162_knowledge_generation_identity.sql",
+      "object": "knowledge_generation_identity",
+      "kind": "create_trigger",
+      "source_sha256": "8293edad3925f796ec213e10592d9caba791417a069a720fa2667a5bf1deae8e",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 163,
+      "file": "000163_knowledge_attempt_identity.sql",
+      "object": "knowledge_attempt_identity",
+      "kind": "create_trigger",
+      "source_sha256": "8d62e0bd8bd67956af1b6ea8a48dfffb3198f24c3ba49a5eba980cace3b32d3c",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 164,
+      "file": "000164_knowledge_embedding_insert.sql",
+      "object": "knowledge_embedding_insert",
+      "kind": "create_trigger",
+      "source_sha256": "a2af90901b12e064b393c04bad4d3f99d8ab0f3068dd827e5db1ef3ddaf991bc",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 165,
+      "file": "000165_workflows.sql",
+      "object": "workflows",
+      "kind": "create_table",
+      "source_sha256": "36c56244ea1af82632239d05fc42e91ec74f021534fe5be7ab1a164f032254a8",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 166,
+      "file": "000166_workflow_versions.sql",
+      "object": "workflow_versions",
+      "kind": "create_table",
+      "source_sha256": "f64d87efc45a7f4beb4dc0c51d72a11cb308527ba477e50f160c82edca15133e",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 167,
+      "file": "000167_workflow_current_version_scope.sql",
+      "object": "workflows",
+      "kind": "alter_table",
+      "source_sha256": "08bcd8e5483dbafb1e08a88bc09880fa2b46d9871139e6d5aeb7289ab6441aba",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 168,
+      "file": "000168_workflow_publication_immutable_update.sql",
+      "object": "workflow_publication_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "5c6828e1dffefe1581f66fde777e838b20fae70df99072f1cc72abb6ee54e51b",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 169,
+      "file": "000169_workflow_publication_immutable_delete.sql",
+      "object": "workflow_publication_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "4ee0f04641f9e03037dea157022e6ec6162a2012210ce7c271e22959965eeb5c",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 170,
+      "file": "000170_workflow_conversations.sql",
+      "object": "workflow_conversations",
+      "kind": "create_table",
+      "source_sha256": "f4ffde9de05fdc5501ca5d7f848cdb3d3afc15da11e00dd61c214b097403c6ba",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 171,
+      "file": "000171_workflow_runs.sql",
+      "object": "workflow_runs",
+      "kind": "create_table",
+      "source_sha256": "6c36f08f1093579a55215bbbf04854f410ffce4109f3a83ef6e32bcdd986f088",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 172,
+      "file": "000172_workflow_node_traces.sql",
+      "object": "workflow_node_traces",
+      "kind": "create_table",
+      "source_sha256": "497f15c739e0949dbbdd05728f19651651d67e6cbac5ffd3969fc8b36a025537",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 173,
+      "file": "000173_workflow_mutation_intents.sql",
+      "object": "workflow_mutation_intents",
+      "kind": "create_table",
+      "source_sha256": "4d6eba0d7c8969512dd1965e08e8f637281ab11562026e9e12453340a6f79e47",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 174,
+      "file": "000174_workflow_run_identity_guard.sql",
+      "object": "workflow_run_identity_guard",
+      "kind": "create_trigger",
+      "source_sha256": "b6dbd001c69a3584885fb33b32275a460fe1b7f439154e22dbc78ea1ac00af3a",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 175,
+      "file": "000175_user_preferences.sql",
+      "object": "user_preferences",
+      "kind": "create_table",
+      "source_sha256": "d663aa7c0938943e14dfbdfd37427df1f55c7287954d7fb0e41e58f0b6466ec2",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 176,
+      "file": "000176_user_preferences_seed.sql",
+      "object": "user_preferences_seed",
+      "kind": "seed",
+      "source_sha256": "43f7e974fb580e084e8b4aa1573da8abf2f5d43f57da9e56232540bd14a5fc2c",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 177,
+      "file": "000177_user_preferences_initialize.sql",
+      "object": "user_preferences_initialize",
+      "kind": "create_trigger",
+      "source_sha256": "a6b4bd9bdd5da2d5d3c639358fe292c0ec243f36b6135abc6cd2f18eaa766bcb",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 178,
+      "file": "000178_user_preferences_revision.sql",
+      "object": "user_preferences_revision",
+      "kind": "create_trigger",
+      "source_sha256": "597d9a99101844b4d9410ba528ebbc12254cdfffe2dcab0ecf03525ed95f174c",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 179,
+      "file": "000179_terminal_notifications.sql",
+      "object": "terminal_notifications",
+      "kind": "create_table",
+      "source_sha256": "63b6d4f483fc097c5fc3e80df4dfcc4f3246c90ec840bf1834e02e7cbedfab61",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 180,
+      "file": "000180_workflow_terminal_notification.sql",
+      "object": "workflow_terminal_notification",
+      "kind": "create_trigger",
+      "source_sha256": "c2037bba0ee3e4046052d39b43b64b5720814e0c89162916c81dcc773d44a831",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 181,
+      "file": "000181_terminal_notification_provenance_insert.sql",
+      "object": "terminal_notification_provenance_insert",
+      "kind": "create_trigger",
+      "source_sha256": "f63904e0c832edec3923f19322df8f6d6885a67ff33926d056801f24ff0c1939",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 182,
+      "file": "000182_terminal_notification_immutable.sql",
+      "object": "terminal_notification_immutable",
+      "kind": "create_trigger",
+      "source_sha256": "9b6bedf6adfa8849567be413df88747f931d04adfee7392e0ec98a5b3f4d426b",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 183,
+      "file": "000183_knowledge_base_initialization_guard.sql",
+      "object": "knowledge_base_initialization_guard",
+      "kind": "create_trigger",
+      "source_sha256": "bdb8382a1c835246e71e1dd007999f990846f565d4962844cfe1ed4ab6385ead",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    }
+  ],
+  "required_measured_metadata": [
+    "SHOW CREATE TABLE for each create/alter final state",
+    "INFORMATION_SCHEMA.TRIGGERS under exact authenticated definer/modes/collations/order",
+    "immutable149 source/metadata journal prefix",
+    "actual candidate apply/reconcile/export/fresh restore/readback"
+  ],
+  "activation_blockers": [
+    "actual MySQL metadata is not measured",
+    "existing compiler seed allowlist must explicitly add user_preferences_seed after actual probe",
+    "existing compiler trigger-position allowlist must explicitly add user_preferences_initialize AFTER INSERT order1 and workflow_terminal_notification AFTER UPDATE order1 after actual probe",
+    "parent must reconcile final step numbers before canonical activation"
+  ]
+}

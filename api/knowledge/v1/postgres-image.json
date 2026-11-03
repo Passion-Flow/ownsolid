@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "repository": "pgvector/pgvector",
+  "version": "0.8.7-pg18",
+  "extension_version": "0.8.7",
+  "postgres_version": "18.6",
+  "postgres_version_number": 180006,
+  "index_digest": "sha256:2358fcba361ed2233a5ed81b5fe4ca779ccb304120ce531a3bf51c0ed7e2bc11",
+  "platforms": {
+    "linux-amd64": {
+      "manifest_digest": "sha256:ad249f9fb9572979643a47694e59b9a8cdcdf6abc6accebf49bb80ad5f20ff9b",
+      "qualification": "descriptor_only_actual_version_and_execution_pending"
+    },
+    "linux-arm64": {
+      "manifest_digest": "sha256:b5e31ee64e571957d1835530b98a6d6b8651fea722209e819f2c0d76d487c561",
+      "qualification": "descriptor_only_actual_version_and_execution_pending"
+    }
+  },
+  "source": "https://github.com/pgvector/pgvector/blob/v0.8.7/Dockerfile",
+  "scope": "Pinned official image descriptor. Expected PostgreSQL18.6 and extension0.8.7 must be checked on actual execution before adopting the fixture/deployment; this catalog alone establishes no support."
+}

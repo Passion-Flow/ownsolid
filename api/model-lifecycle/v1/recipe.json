@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "recipe_id": "support_routing_v1",
+  "instruction": "Classify the support request as account, billing, or technical. Reply with exactly one lowercase label.",
+  "instruction_separator": "\n\n",
+  "labels": [
+    "account",
+    "billing",
+    "technical"
+  ],
+  "unknown_prediction": null,
+  "generation": {
+    "do_sample": false,
+    "num_beams": 1,
+    "use_cache": true,
+    "enable_thinking": false
+  },
+  "storage_dtype": "BF16",
+  "configuration": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "device": {
+        "type": "string",
+        "enum": [
+          "nvidia_bfloat16",
+          "cpu_verification"
+        ],
+        "default": "nvidia_bfloat16"
+      },
+      "maximum_input_tokens": {
+        "type": "integer",
+        "minimum": 64,
+        "maximum": 1984,
+        "default": 512
+      },
+      "maximum_new_tokens": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 64,
+        "default": 8
+      },
+      "seed": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2147483647,
+        "default": 42
+      },
+      "threads": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 8,
+        "default": 2
+      },
+      "minimum_accuracy_basis_points": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 10000,
+        "default": 8000
+      },
+      "maximum_regression_basis_points": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 10000,
+        "default": 0
+      }
+    },
+    "required": [
+      "device",
+      "maximum_input_tokens",
+      "maximum_new_tokens",
+      "seed",
+      "threads",
+      "minimum_accuracy_basis_points",
+      "maximum_regression_basis_points"
+    ]
+  },
+  "bounds": {
+    "minimum_rows": 3,
+    "maximum_rows": 256,
+    "maximum_adapter_files": 3,
+    "maximum_adapter_bytes": 67108864,
+    "maximum_adapter_config_bytes": 65536,
+    "maximum_tensor_header_bytes": 1048576,
+    "maximum_output_files": 32,
+    "maximum_output_bytes": 2147483648,
+    "maximum_changed_target_tensors": 56
+  },
+  "native_verification": {
+    "wall_seconds": 300,
+    "maximum_rss_bytes": 6442450944,
+    "maximum_log_bytes": 1048576,
+    "poll_milliseconds": 100,
+    "stop_seconds": 5
+  },
+  "production_device": {
+    "minimum_compute_major": 8,
+    "device_count": 1
+  },
+  "prompt_fingerprint_algorithm": "sha256_utf8_crlf_cr_to_lf_trim_ascii_space_tab_lf_v1",
+  "maximum_context_tokens": 2048,
+  "serialized_tied_weight_aliases": {
+    "lm_head.weight": "model.embed_tokens.weight"
+  },
+  "prediction_whitespace_code_points": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    28,
+    29,
+    30,
+    31,
+    32,
+    133,
+    160,
+    5760,
+    8192,
+    8193,
+    8194,
+    8195,
+    8196,
+    8197,
+    8198,
+    8199,
+    8200,
+    8201,
+    8202,
+    8232,
+    8233,
+    8239,
+    8287,
+    12288
+  ]
+}

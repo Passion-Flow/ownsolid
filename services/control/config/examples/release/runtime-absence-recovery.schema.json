@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit absent runtime creation recovery request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format_version", "scope_id", "runtime_create_operation_id", "reason"],
+  "properties": {
+    "format_version": {"type": "integer", "const": 1},
+    "scope_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+    "runtime_create_operation_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+    "reason": {"type": "string", "minLength": 1, "maxLength": 500, "allOf": [{"pattern": "\\S"}, {"pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"}]}
+  }
+}

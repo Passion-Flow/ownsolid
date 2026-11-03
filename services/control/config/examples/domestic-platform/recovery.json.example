@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "inventory_file": "/opt/projectone/private/dameng-recovery-inventory.json",
+  "inventory_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "connection": {
+    "transport": "linux_unixsocket",
+    "socket_file": "/run/projectone-dameng/private/database.sock",
+    "socket_owner_uid": 1000,
+    "user": "PROJECTONE",
+    "schema": "PROJECTONE",
+    "password_file": "/opt/projectone/private/dameng-recovery-password"
+  },
+  "policy": {
+    "operation_seconds": 1800,
+    "probe_seconds": 30,
+    "termination_grace_seconds": 5,
+    "observation_milliseconds": 100,
+    "maximum_archive_bytes": 17179869184,
+    "maximum_output_bytes": 1048576,
+    "minimum_free_bytes": 34359738368
+  }
+}

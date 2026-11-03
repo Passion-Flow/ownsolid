@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "operation": "model.prepare.v1",
+  "request_fields": [
+    "schema_version",
+    "operation",
+    "tenant_id",
+    "workspace_id",
+    "preparation_id",
+    "attempt_id",
+    "scope_directory",
+    "model_directory",
+    "model_catalog_sha256",
+    "adapter_directory",
+    "adapter_files",
+    "training_configuration",
+    "training_job_id",
+    "training_attempt_id",
+    "heldout_id",
+    "heldout_file",
+    "heldout_sha256",
+    "configuration",
+    "data_limits",
+    "resources",
+    "execution_identity",
+    "output_directory"
+  ],
+  "maximum_request_bytes": 65536,
+  "maximum_marker_bytes": 4096,
+  "maximum_path_bytes": 4096,
+  "maximum_event_bytes": 16384,
+  "maximum_events": 1024,
+  "marker_name": "projectone-preparation.json",
+  "request_name": "request.json",
+  "production_profile": "nvidia_bfloat16",
+  "verification_profile": "native_cpu_verification",
+  "container_paths": {
+    "scopes": "/work/preparations",
+    "model": "/model"
+  },
+  "source_algorithm": "sha256_compact_sorted_relative_runtime_and_contract_file_hash_map_v1",
+  "resource_bounds": {
+    "wall_seconds": [
+      1,
+      7200
+    ],
+    "cpu_seconds": [
+      1,
+      57600
+    ],
+    "memory_bytes": [
+      134217728,
+      17179869184
+    ],
+    "maximum_output_bytes": [
+      1048576,
+      2147483648
+    ],
+    "maximum_output_files": [
+      1,
+      32
+    ],
+    "maximum_result_bytes": [
+      4096,
+      8388608
+    ],
+    "maximum_event_bytes": [
+      65536,
+      16777216
+    ],
+    "open_files": [
+      64,
+      4096
+    ]
+  },
+  "resource_defaults": {
+    "wall_seconds": 3600,
+    "cpu_seconds": 3600,
+    "memory_bytes": 6442450944,
+    "maximum_output_bytes": 2147483648,
+    "maximum_output_files": 32,
+    "maximum_result_bytes": 4194304,
+    "maximum_event_bytes": 1048576,
+    "open_files": 256
+  },
+  "maximum_catalog_bytes": 1048576,
+  "node_profile": "docker_model_lifecycle",
+  "node_protocol_version": "1.5",
+  "derived_inference_operation": "inference.derived.v1",
+  "image_repository": "projectone/model-lifecycle",
+  "maximum_command_bytes": 32768,
+  "maximum_attempt_number": 1000
+}

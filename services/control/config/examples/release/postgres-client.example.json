@@ -1,0 +1,5 @@
+{
+  "format_version": 1,
+  "architecture": "arm64",
+  "package_root": "/path/to/private/approved-postgres-packages"
+}

@@ -1,0 +1,9 @@
+{
+  "package_bytes": 1048576,
+  "font_bytes": 33554432,
+  "aggregate_bytes": 268435456,
+  "maximum_locales": 202,
+  "maximum_messages": 10000,
+  "maximum_fonts": 32,
+  "cache_seconds": 3600
+}

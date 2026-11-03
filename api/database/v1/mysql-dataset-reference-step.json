@@ -1,0 +1,16 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "a74b5d70d3b900dab84e92d1f5244d745e2ff23b8dbc2868b08ba4faea6fd777",
+  "after_step": 58,
+  "steps": [
+    {
+      "step": 59,
+      "file": "000059_dataset_draft_references.sql",
+      "object": "dataset_drafts",
+      "kind": "alter_table",
+      "source_sha256": "2e7a37e7c1835a2569f55d65655165ab9a5d3770daa64c2f50118fac54014515",
+      "previous_definition_sha256": "1b9ead32a77ad1d0c838a57aee7254b700ac165a68a0973fef053ff5d3f3cd70"
+    }
+  ]
+}

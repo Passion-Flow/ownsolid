@@ -1,0 +1,1 @@
+ALTER TABLE task_event_outbox ADD CONSTRAINT task_event_outbox_sent CHECK(state<>'sent' OR outcome_unknown);

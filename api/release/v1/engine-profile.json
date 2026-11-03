@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "api_version": "1.49",
+  "engine_versions": [
+    "29.8.2",
+    "29.9.2"
+  ],
+  "platform": {
+    "os": "linux",
+    "architecture": "amd64"
+  },
+  "store_driver_key": "driver-type",
+  "store_driver_value": "io.containerd.snapshotter.v1",
+  "native_profile": "ubuntu24.04-amd64-containerd",
+  "local_profile": "local-macos-amd64-emulation",
+  "local_operator_platforms": [
+    "darwin/amd64",
+    "darwin/arm64",
+    "linux/amd64",
+    "linux/arm64"
+  ]
+}

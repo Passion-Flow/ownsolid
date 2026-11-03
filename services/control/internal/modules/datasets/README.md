@@ -1,0 +1,112 @@
+# Dataset lifecycle
+
+Snapshot copying uses [snapshotio](../../platform/snapshotio/README.md) for bounded
+writeback. Dataset path/context/size/hash admission, exclusive output, final
+durability, audit and partial-failure retention remain here. See the
+[M17 contract](../../../../../docs/milestones/m17-offline-compose/snapshot-writeback.md).
+
+The fixed [native MongoDB import gate](../../../../../tools/quality/mongodb/README.md)
+adds one actual local TLS/SCRAM source-to-immutable-version path with PostgreSQL
+and CPython. It reuses the original Mongo import assertions while retaining the
+external-source test. Its fixture and retained-source inputs are test-owned;
+runtime dataset/upload authority and migration numbering remain unchanged.
+
+MongoDB receipt reservation binds each retained object identifier as PostgreSQL
+UUID before converting it to JSON text. Both the first insert and recovery update
+reuse that typed parameter; a direct text cast would make PostgreSQL infer
+conflicting UUID/text types before either statement can execute. The actual
+source-to-version gate covers initial reservation and retained-object recovery.
+
+Datasets owns scoped source upload, editable drafts/row history, validation and publication jobs, immutable versions and training-input references. It also imports granted MongoDB or object snapshots through their owning adapters.
+
+The native Dameng source path now has explicit selected SQL for upload, draft/row
+editing, processor claims, immutable publication, retirement, reference inventory
+and coordinated restore invalidation. [dameng_statements.go](dameng_statements.go)
+owns the native statements; [dameng_repository.go](dameng_repository.go) owns the
+native field and exact cursor-time contracts. JSON is bound as text, fingerprint
+bytes remain binary, BIT predicates are explicit, and bounded pagination uses a
+validated integer literal. Native inspection inserts each row/history record in
+the existing acceptance transaction. A statement failure leaves that transaction;
+unknown COMMIT returns no successful projection and never automatically replays.
+The worker retains user → Workspace → dataset → draft → job lock order.
+Claim-time snapshot storage/scan/context failures leave the transaction without
+failure-state writes; only explicitly marked content validation may complete a
+failed job in place. Deferred result-close errors cannot be mistaken for content
+validation. The native active-name index uses conditional virtual scope/name
+columns so every component is NULL for retired datasets.
+
+This is source implementation, not enabled serving or target qualification. The
+native account/Workspace graph, schema registration, runtime grants and
+composition remain coordinator dependencies. The separate owned
+`database/dameng/migrate/contribution_datasets.go` supplies the seven real tables,
+cyclic FK ALTERs, indexes and immutable guards for central registration. Mongo receipt persistence/advisory
+slots still explicitly require PostgreSQL, so native Mongo import is unavailable;
+this increment uses the upload entrance. See the [native contract and schema
+requirements](../../../../../docs/milestones/m08-datasets/dameng-native.md) and
+[wave5 handoff](../../../../../docs/execution/mvp/parallel-wave5-data.md).
+
+[service.go](service.go), upload.go, drafts.go and rows.go form the business input surface. [worker.go](worker.go), worker_authority.go and runtime_repository.go separate claims/state from the [processor](processor.go). Publications and publication_storage.go bind prepared artifacts before making a version usable. Snapshot/initialization/integrity/retirement files handle durable namespace and recovery.
+
+On Linux, a missing owned `/proc/PID/status` with a kernel-confirmed absent PID,
+or terminal Z/X state without RSS,
+permits only bounded reconciliation of that same child's `Cmd.Wait` receipt;
+it is not a successful memory sample or exit. The existing typed child-stop
+budget bounds this wait, still subject to the original wall/cancellation limits.
+Live or malformed RSS reads fail closed, including numeric overflow. Missing
+receipts still fail and join the owned child group; nonzero exits and all result,
+digest and publication fences remain authoritative. The tagged
+`processor_exit_linux_test.go` controls receipt delivery around real rapid
+CPython exits and checks live errors, cancellation and the receipt deadline.
+
+Migration 000008 retains datasets/drafts/rows/jobs/attempts/versions; MongoDB import receipts are separate. Every mutation rechecks current identity/Workspace and uses explicit scoped SQL. Python prepares files without business credentials; Go independently accepts current source/attempt and output hashes. Published training input must not silently change when a draft changes.
+
+Source upload captures its current membership authority when it claims the upload
+lease, before copying immutable bytes outside SQL. Final import admission requires
+the same membership lifetime, a still-uploading draft and the exact live lease;
+removal/regrant cannot authorize an old request. Cancelled, cleared, expired or
+replaced leases refuse late admission with `DATASET_ATTEMPT_STALE`. Retained bytes
+alone do not establish a source receipt or runnable import. A fresh authorized
+upload may reconcile them after the old lease expires; cancellation stays final.
+
+The module is large because import/draft/publication/storage have different state boundaries. If separated later, preserve one version authority and shared transaction/source binding; do not unify all stages into a generic job-success flag.
+
+Synchronize [contracts/datasets](../../../../../contracts/datasets), [data runtime](../../../../../runtimes/data-processing/README.md), training/modelpreparations consumers, [dataset frontend](../../../../../apps/web/packages/datasets), config/examples/control dataset policy, control images and [M08](../../../../../docs/milestones/m08-datasets).
+
+Focused package check: go -C services/control test ./internal/modules/datasets. The processor harness and real selected-SQL publication/retirement/worker tests are separate; a successful JSONL parse is not a published usable dataset.
+
+`TestActualDatasetUploadFencesAcrossSourceCopy` adds selected PostgreSQL/MySQL
+source-copy interleavings under `repository_integration`: current Portal/Admin,
+membership replacement, cancellation and cleared/expired/replaced leases, with
+independent file/SQL/audit readback and explicit reconciliation. Its source does
+not itself establish a passing execution. The fixed [native PostgreSQL entrypoint](../../../../../tools/quality/datasets/upload_fence_native.py)
+binds the [seven exact cases](../../../../../docs/milestones/m08-datasets/upload-fence-cases.json),
+current build sources and the protected installed data-runtime pointer. See the
+[data lane handoff](../../../../../docs/execution/mvp/parallel-20261024-data.md)
+for build/readback commands and the separately pending MySQL execution.
+
+
+The cumulative `datasets` profile enables only the text upload lifecycle. Its integrity/snapshot inventory excludes absent later connector tables. The exact dataset HTTP routes reject Mongo/training paths; original platform connector variants remain separate. Workers join before the exclusive store closes.
+
+The cumulative training profile uses the same dataset-only source inventory as M08: no M21 MongoDB import table or connector owner is present. Readiness, snapshots and source queries select this through DatasetRuntime; source presence elsewhere does not enable an owner.
+
+MongoDB attachment carries an internal context value from the durable export into
+the existing CreateDraft and both Upload transactions. After the ordered identity
+and Workspace checks, `mongodb_attachment.go` locks the dataset and original
+receipt and verifies the current source grant, credential fingerprint, membership
+lifetime, attempt, object, proof and live export lease before mutation. Ordinary
+text uploads have no connector context. Unknown COMMIT retains the original
+checkpoint for explicit reconciliation. `mongodb_attachment_repository_integration_test.go`
+exercises real PostgreSQL draft/upload/job/audit and source-copy interleavings from
+a synthetic exported receipt; it does not read MongoDB or execute the processor.
+The full MongoDB source/immutable-version and integrated HTTP/browser gates remain
+separate. The cumulative datasets/training profiles still exclude the connector.
+
+`OpenStoreForVerification` opens the existing ownership lock descriptor O_RDONLY
+with the same exclusive nonblocking flock and namespace/private-root/link/mode/
+limit checks. It creates or adopts no state. Ordinary `OpenStore` retains O_RDWR.
+This fixed verification operation adds no deployment switch and is not a general
+mutation sandbox; callers use readonly mounts. Native PostgreSQL `VerifyRestore`
+selects it through the [readonly owner contract](../../../../../docs/milestones/m18-kubernetes/postgres-readonly-owners.md).
+Unsupported readonly-exclusive locking fails closed and still needs filesystem/
+CSI qualification. The original readonly failure remains in its dated checkpoint;
+new image/fresh-target execution has separate evidence.

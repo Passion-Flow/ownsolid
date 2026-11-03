@@ -1,0 +1,9 @@
+{
+  "socket_file": "",
+  "profile": "",
+  "dial_seconds": 5,
+  "request_seconds": 30,
+  "load_seconds": 600,
+  "response_bytes": 1048576,
+  "maximum_expanded_image_bytes": 68719476736
+}

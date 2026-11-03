@@ -1,0 +1,40 @@
+{
+  "format_version": 1,
+  "os": "linux",
+  "architecture": "arm64",
+  "server_version": "REPLACE_WITH_EXACT_NATIVE_SERVER_VERSION",
+  "dexp": {
+    "artifact": {
+      "path": "/opt/projectone/dameng/bin/dexp",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "version_line": "version: REPLACE_WITH_EXACT_DEXP_HELP_LINE"
+  },
+  "dimp": {
+    "artifact": {
+      "path": "/opt/projectone/dameng/bin/dimp",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "version_line": "version: REPLACE_WITH_EXACT_DIMP_HELP_LINE"
+  },
+  "libraries": [
+    {
+      "path": "/opt/projectone/dameng/lib/REPLACE_WITH_ACTUAL_NATIVE_LIBRARY_SONAME",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "licenses": [
+    {
+      "path": "/opt/projectone/dameng/licenses/REPLACE_WITH_ORIGINAL_TERMS_FILE",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "terms_review": {
+    "path": "/opt/projectone/private/dameng-artifact-terms-review.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "service_configuration": {
+    "path": "/opt/projectone/private/dameng-client/dm_svc.conf",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}

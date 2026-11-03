@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "M26 native acceptance process budgets",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "build_seconds",
+    "test_seconds",
+    "stability_seconds",
+    "cleanup_seconds"
+  ],
+  "properties": {
+    "build_seconds": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 600,
+      "default": 180,
+      "description": "Test-tool budget in seconds, explicit JSON then private env-file override; restart tool to apply; not a serving deployment policy."
+    },
+    "test_seconds": {
+      "type": "integer",
+      "minimum": 300,
+      "maximum": 7200,
+      "default": 3600,
+      "description": "Test-tool budget in seconds, explicit JSON then private env-file override; restart tool to apply; not a serving deployment policy."
+    },
+    "stability_seconds": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 60,
+      "default": 10,
+      "description": "Test-tool budget in seconds, explicit JSON then private env-file override; restart tool to apply; not a serving deployment policy."
+    },
+    "cleanup_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 5,
+      "description": "Test-tool budget in seconds, explicit JSON then private env-file override; restart tool to apply; not a serving deployment policy."
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "format_version": 1,
+  "administrator_email": "admin@example.invalid",
+  "display_name": "Installation Administrator",
+  "installation_name": "Isolated Validation",
+  "workspace_name": "Default Workspace"
+}

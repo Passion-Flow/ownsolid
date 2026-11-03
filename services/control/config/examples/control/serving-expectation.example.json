@@ -1,0 +1,10 @@
+{
+  "format_version": 1,
+  "transport_mode": "direct_https",
+  "listen_address": "0.0.0.0:8443",
+  "portal_origin": "https://portal.example.invalid",
+  "admin_origin": "https://admin.example.invalid",
+  "tls_certificate_file": "/run/projectone/private/tls-certificate.pem",
+  "tls_private_key_file": "/run/projectone/private/tls-private-key.pem",
+  "trusted_proxy_cidrs": []
+}

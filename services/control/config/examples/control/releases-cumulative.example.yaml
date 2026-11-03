@@ -1,0 +1,173 @@
+# Cumulative M01-M17 inputs. Copy to a private operator/runtime configuration and provision
+# every secret/asset reference below. Restart after edits; no secret bytes belong here.
+server:
+  # Enum account|workspaces|nodes|components|maintenance|models|gateway|datasets|training|lifecycle|sso|knowledge|workflows|plugins|portal|localization|releases|platform; omitted preserves platform. Same artifact, restart required.
+  application_profile: releases
+  # Verified HTTPS for both browser and agent. HTTP browser deployments require
+  # a separate machine_server HTTPS listener/origin; keep advertised origins separate from listen/bind.
+  transport_mode: direct_https
+  # Protected direct TLS files; owner server; PEM; both required; restart after edits.
+  tls_certificate_file: /run/projectone/server.pem
+  tls_private_key_file: /run/projectone/server.key
+  listen_address: 127.0.0.1:8080
+  portal_origin: https://portal.internal:8080
+  admin_origin: https://admin.internal:8080
+  portal_assets: /opt/projectone/portal
+  admin_assets: /opt/projectone/admin
+database:
+  engine: postgresql
+  # Runtime role: schema USAGE, business DML, SELECT-only schema_migrations.
+  # The separate operator copy points to its protected migration/operator DSN.
+  dsn_file: /run/projectone/runtime-dsn
+  max_open_connections: 8
+  max_idle_connections: 1
+  statement_timeout_seconds: 5
+security:
+  auth_hmac_key_file: /run/projectone/auth-hmac
+  mail_keyring_file: /run/projectone/mail-keyring.json
+  password_blocklist_file: /opt/projectone/security/password-blocklist.txt
+smtp:
+  host: smtp.internal
+  port: 587
+  from_address: platform@example.invalid
+  tls_mode: starttls_required
+  ca_file: /run/projectone/smtp-ca.pem
+  connect_timeout_seconds: 5
+  operation_timeout_seconds: 20
+licensing:
+  # Manufacturer public verification trust. Signing keys are never runtime inputs.
+  trust_file: /run/projectone/license-trust.json
+
+components:
+  # Component artifact owner; absolute immutable regular archive path. Optional when
+  # observing only; required for install. Fixed recipe size/SHA-256/ELF are enforced.
+  # Nonsecret file reference; protected --env-file override below, restart required.
+  # The approved maintenance catalog is local; arbitrary URLs/public downloads are refused.
+  # Optional canonical absolute catalog directory; nonsecret, restart required.
+  # Typed owner components.node_exporter_catalog_directory; contains exactly both approved versions.
+  node_exporter_catalog_directory: /opt/projectone/components/node-exporter/catalog
+  node_exporter_archive_file: /opt/projectone/components/node-exporter/catalog/1.12.1/linux-amd64/node_exporter-1.12.1.linux-amd64.tar.gz
+
+models:
+  # Owner models.artifact_root; canonical absolute initialized private store; required in models profile.
+  # Nonsecret path; protected --env-file overrides valid YAML; restart after changes.
+  artifact_root: /var/lib/projectone/models
+
+datasets:
+  # Required canonical private root, separate from models; initialize explicitly.
+  # Nonsecret path; protected --env-file overrides valid YAML; restart required.
+  artifact_root: /var/lib/projectone/datasets
+  # Required protected installed CPython 3.12.15 program, never request-selected.
+  # Nonsecret path; protected --env-file override; restart required.
+  python_executable: /usr/local/bin/python3.12
+  # Required protected installed processor, never user scripts.
+  # Nonsecret path; protected --env-file override; restart required.
+  processor_file: /opt/projectone/data-processing/process.py
+
+training:
+  # Required separate initialized private output root; owner training.artifact_root.
+  # Absolute nonsecret path; explicit protected --env-file overrides YAML; restart required.
+  artifact_root: /var/lib/projectone/training
+  # Required manufactured content reference; nonsecret pinned identity. Replace this
+  # synthetic example digest with the supplied verified training-release.json value.
+  # No mutable tags or runtime pull; protected env-file overrides YAML; restart required.
+  image_reference: projectone/training@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  # Required matching local engine content identity, distinct from archive/config hashes.
+  # Nonsecret; matching training-release.json value; protected env-file precedence; restart.
+  image_id: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  # Required exact manufactured worker-source digest; lowercase SHA256, nonsecret.
+  # Protected env-file overrides YAML; restart; frozen existing jobs retain their recipe.
+  worker_source_sha256: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+model_preparation:
+  # Owner model_preparation.artifact_root; required private canonical absolute path,
+  # separate from all input stores; nonsecret, --env-file overrides YAML; restart.
+  artifact_root: /var/lib/projectone/preparations
+  # Required manufactured immutable reference from lifecycle release; nonsecret
+  # sha256 digest, no mutable tags/runtime pulls; env-file overrides YAML; restart.
+  image_reference: projectone/model-lifecycle@sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+  # Required matching local Engine identity; nonsecret sha256 from release receipt;
+  # explicit env-file overrides YAML; restart; no implicit runtime image acquisition.
+  image_id: sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+  # Required exact worker-source SHA256; nonsecret lowercase hex, env-file overrides
+  # YAML; restart; existing frozen preparation identities never change.
+  worker_source_sha256: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+sso:
+  # Owner sso.enabled; boolean, default false; true requires HTTPS, keyring and providers.
+  # Explicit protected env-file overrides valid YAML; restart; false is local recovery.
+  enabled: false
+  # Owner sso.keyring_file; canonical absolute private current-owner0600 single-link file.
+  # No inline key; optional disabled, required enabled; --env-file overrides; restart.
+  keyring_file: /run/projectone/private/sso-keyring.json
+  # Owner sso.providers; bounded approved HTTPS origin/issuer,1..16 canonical dial addresses.
+  # Optional private CA reference; no secret bytes; env provider file replaces inventory;
+  # enabled requires1..64 unique entries; restart; no ambient/proxy/redirect authority.
+  providers:
+    - origin: https://identity.example.invalid
+      issuer: https://identity.example.invalid
+      dial_addresses: [127.0.0.1]
+      ca_file: /run/projectone/private/provider-ca.pem
+
+# Merge through the supported control configuration loader before startup.
+# All listed assets must already exist and match the approved release catalog.
+# This example does not manufacture a CPU runtime or establish target support.
+knowledge:
+  enabled: true
+  python_executable: /opt/projectone/knowledge-venv/bin/python3.12
+  worker_file: /opt/projectone/knowledge/embed.py
+  model_directory: /opt/projectone/knowledge-encoder
+  scratch_root: /var/lib/projectone/knowledge-work
+  # An empty list enables ingestion/retrieval without model answers.
+  # Use the exact current same-Workspace gateway origin; no runtime DNS lookup,
+  # proxy fallback, redirects, runtime certificate installation or paid API call.
+  gateways:
+    - origin: https://gateway.example.invalid:9443
+      dial_addresses: [192.0.2.10]
+      ca_file: /run/projectone/knowledge-gateway-ca.pem
+runtime:
+  http:
+    request_seconds: 90
+    startup_seconds: 60
+    shutdown_seconds: 20
+  # Nondefault bounded example. Other values use the owned typed defaults.
+  knowledge:
+    source_bytes: 262144
+    chunk_tokens: 128
+    overlap_tokens: 16
+    worker_threads: 1
+    worker_batch_size: 4
+    maximum_documents: 50
+    query_count: 20
+    query_window_seconds: 120
+
+# Owner: Workflows. Boolean; default false. Explicitly enables schema1 execution.
+# Same protected env-file overrides YAML; restart required, no secret values.
+workflows:
+  enabled: true
+
+# Public publisher trust is supplied by the reviewed manufacturer operator.
+# Disabled by default; enable using the protected env-file after trust review.
+plugins:
+  enabled: false
+  trusted_keys: []
+
+# Immutable locale registry owner. Render the component deployment.env.example
+# through tools/deploy/localization/render.py; these keys are typed runtime YAML.
+localization:
+  # Canonical absolute private inventory directory; empty defaults to embedded seeds.
+  # Nonsecret reference; all runtime files must match English source and declared hashes.
+  # Deployment env PACKAGE_DIRECTORY maps here; renderer env overrides base. Restart required.
+  package_directory: /var/lib/projectone/locale-projection/private
+  # Unique bounded locale-tag list; default []; every selected locale must exist at startup.
+  # Nonsecret; component env REQUIRED_LOCALES maps here and overrides base. Restart required.
+  # This explicit partial component needs en/fr/ar; the full release target is unchanged.
+  required_locales: [en, fr, ar]
+
+# Installation projection owner: releases. Absolute protected policy-file reference;
+# required for releases, absent by default for earlier cumulative profiles.
+# The file has directory/scope/manifest/original-config/publisher UID/page/deadline;
+# it contains no operator credentials and uses the exact read-only projection mount.
+# PROJECT_ONE_RELEASE_VIEW_CONFIG_FILE in an explicit protected --env-file overrides
+# this YAML reference; ambient environment is ignored. Restart after changing it.
+release_view_config_file: /run/projectone/admin-view.json

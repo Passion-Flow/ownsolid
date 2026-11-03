@@ -1,0 +1,10 @@
+# Merge into the complete control configuration. Public manufacturer trust only.
+# Do not put the issuer private seed/key in runtime configuration or projections.
+licensing:
+  trust_file: /run/projectone/license-trust.json
+  # Omit or leave empty when no protected component overlay is supplied.
+  environment_file: /run/projectone/license.env
+runtime:
+  licensing:
+    maximum_imports: 64
+    rollback_tolerance_seconds: 30

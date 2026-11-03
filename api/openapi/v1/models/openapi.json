@@ -1,0 +1,1893 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Project-one Model Imports",
+    "version": "0.11.0",
+    "description": "Scoped approved-base imports and explicitly reviewed local derivatives. Inventory is distinct from serving readiness and target qualification."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/v1/admin/models/catalog": {
+      "get": {
+        "operationId": "getApprovedModelCatalog",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelCatalogAvailabilityResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/models": {
+      "get": {
+        "operationId": "listAdminModels",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelListResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/models/{model_id}": {
+      "get": {
+        "operationId": "getAdminModel",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelVersionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/models/{model_id}/retire": {
+      "post": {
+        "operationId": "retireModelVersion",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelRetirementResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/model-imports": {
+      "get": {
+        "operationId": "listModelImports",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelImportListResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "startModelImport",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelImportResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartModelImport"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/model-imports/resolve": {
+      "get": {
+        "operationId": "resolveModelImportIntent",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "idempotency_key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelImportResolutionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/model-imports/{import_id}": {
+      "get": {
+        "operationId": "getModelImport",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelImportResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/model-imports/{import_id}/chunks": {
+      "post": {
+        "operationId": "uploadModelImportChunk",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "X-Chunk-Offset",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            }
+          },
+          {
+            "name": "X-Chunk-SHA256",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          {
+            "name": "Content-Length",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8388608
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelImportResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary",
+                "maxLength": 8388608
+              }
+            }
+          }
+        },
+        "description": "Upload one exact next offset or replay identical bytes. Reuse a current CSRF token across sequential chunks; uncertain results reconcile through import status and the same offset/digest."
+      }
+    },
+    "/api/v1/admin/model-imports/{import_id}/complete": {
+      "post": {
+        "operationId": "queueModelImport",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelImportResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/model-imports/{import_id}/cancel": {
+      "post": {
+        "operationId": "cancelModelImport",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelImportResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reason"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/models": {
+      "get": {
+        "operationId": "listPortalModels",
+        "x-audiences": [
+          "portal"
+        ],
+        "security": [
+          {
+            "portalSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelListResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/models/{model_id}": {
+      "get": {
+        "operationId": "getPortalModel",
+        "x-audiences": [
+          "portal"
+        ],
+        "security": [
+          {
+            "portalSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelVersionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable error; no host paths, raw diagnostics or credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "adminSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-admin_session"
+      },
+      "portalSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-portal_session"
+      }
+    },
+    "schemas": {
+      "ModelFile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "enum": [
+              "LICENSE",
+              "README.md",
+              "config.json",
+              "generation_config.json",
+              "merges.txt",
+              "model.safetensors",
+              "tokenizer.json",
+              "tokenizer_config.json",
+              "vocab.json"
+            ]
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "path",
+          "size_bytes",
+          "sha256"
+        ]
+      },
+      "ModelCatalog": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repository": {
+            "type": "string",
+            "const": "Qwen/Qwen3-0.6B"
+          },
+          "revision": {
+            "type": "string",
+            "const": "c1899de289a04d12100db370d81485cdf75e47ca"
+          },
+          "license": {
+            "type": "string",
+            "const": "Apache-2.0"
+          },
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "model_key": {
+            "type": "string",
+            "const": "qwen3-0.6b"
+          },
+          "format": {
+            "type": "string",
+            "const": "safetensors"
+          },
+          "architecture": {
+            "type": "string",
+            "const": "Qwen3ForCausalLM"
+          },
+          "model_type": {
+            "type": "string",
+            "const": "qwen3"
+          },
+          "max_context": {
+            "type": "integer",
+            "const": 2048
+          },
+          "files": {
+            "type": "array",
+            "minItems": 9,
+            "maxItems": 9,
+            "items": {
+              "$ref": "#/components/schemas/ModelFile"
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "repository",
+          "revision",
+          "license",
+          "schema_version",
+          "model_key",
+          "format",
+          "architecture",
+          "model_type",
+          "max_context",
+          "files"
+        ]
+      },
+      "DerivedModelCatalog": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "kind": {
+            "type": "string",
+            "const": "merged_lora"
+          },
+          "scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tenant_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+              },
+              "workspace_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+              },
+              "preparation_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+              }
+            },
+            "required": [
+              "tenant_id",
+              "workspace_id",
+              "preparation_id"
+            ]
+          },
+          "model_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "base_model_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "attempt_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "artifact_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "base_catalog_sha256": {
+            "type": "string",
+            "const": "4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc"
+          },
+          "report_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "recipe_sha256": {
+            "type": "string",
+            "const": "758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496"
+          },
+          "base_repository": {
+            "type": "string",
+            "const": "Qwen/Qwen3-0.6B"
+          },
+          "base_revision": {
+            "type": "string",
+            "const": "c1899de289a04d12100db370d81485cdf75e47ca"
+          },
+          "license": {
+            "type": "string",
+            "const": "Apache-2.0"
+          },
+          "format": {
+            "type": "string",
+            "const": "safetensors"
+          },
+          "architecture": {
+            "type": "string",
+            "const": "Qwen3ForCausalLM"
+          },
+          "model_type": {
+            "type": "string",
+            "const": "qwen3"
+          },
+          "precision": {
+            "type": "string",
+            "const": "BF16"
+          },
+          "maximum_context_tokens": {
+            "type": "integer",
+            "const": 2048
+          },
+          "files": {
+            "type": "array",
+            "minItems": 9,
+            "maxItems": 9,
+            "prefixItems": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "const": "LICENSE"
+                  },
+                  "size_bytes": {
+                    "type": "integer",
+                    "const": 11343
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "const": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"
+                  }
+                },
+                "required": [
+                  "path",
+                  "size_bytes",
+                  "sha256"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "const": "README.md"
+                  },
+                  "size_bytes": {
+                    "type": "integer",
+                    "const": 13965
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "const": "1ab64a26fcb3b461423b89a433a8c858f1bf8d4086f979cbb3ff878d47cf20e9"
+                  }
+                },
+                "required": [
+                  "path",
+                  "size_bytes",
+                  "sha256"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "const": "config.json"
+                  },
+                  "size_bytes": {
+                    "type": "integer",
+                    "const": 726
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "const": "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd"
+                  }
+                },
+                "required": [
+                  "path",
+                  "size_bytes",
+                  "sha256"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "const": "generation_config.json"
+                  },
+                  "size_bytes": {
+                    "type": "integer",
+                    "const": 239
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "const": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2"
+                  }
+                },
+                "required": [
+                  "path",
+                  "size_bytes",
+                  "sha256"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "const": "merges.txt"
+                  },
+                  "size_bytes": {
+                    "type": "integer",
+                    "const": 1671853
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "const": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5"
+                  }
+                },
+                "required": [
+                  "path",
+                  "size_bytes",
+                  "sha256"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "const": "model.safetensors"
+                  },
+                  "size_bytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483648
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$",
+                    "not": {
+                      "type": "string",
+                      "const": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+                    }
+                  }
+                },
+                "required": [
+                  "path",
+                  "size_bytes",
+                  "sha256"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "const": "tokenizer.json"
+                  },
+                  "size_bytes": {
+                    "type": "integer",
+                    "const": 11422654
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "const": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+                  }
+                },
+                "required": [
+                  "path",
+                  "size_bytes",
+                  "sha256"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "const": "tokenizer_config.json"
+                  },
+                  "size_bytes": {
+                    "type": "integer",
+                    "const": 9732
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "const": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101"
+                  }
+                },
+                "required": [
+                  "path",
+                  "size_bytes",
+                  "sha256"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "const": "vocab.json"
+                  },
+                  "size_bytes": {
+                    "type": "integer",
+                    "const": 2776833
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "const": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+                  }
+                },
+                "required": [
+                  "path",
+                  "size_bytes",
+                  "sha256"
+                ]
+              }
+            ],
+            "items": false
+          }
+        },
+        "required": [
+          "schema_version",
+          "kind",
+          "scope",
+          "model_id",
+          "base_model_id",
+          "attempt_id",
+          "artifact_id",
+          "base_catalog_sha256",
+          "report_sha256",
+          "recipe_sha256",
+          "base_repository",
+          "base_revision",
+          "license",
+          "format",
+          "architecture",
+          "model_type",
+          "precision",
+          "maximum_context_tokens",
+          "files"
+        ]
+      },
+      "ModelVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "model_key": {
+            "type": "string",
+            "const": "qwen3-0.6b"
+          },
+          "catalog_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "approved_base",
+              "merged_lora"
+            ]
+          },
+          "manifest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelCatalog"
+              },
+              {
+                "$ref": "#/components/schemas/DerivedModelCatalog"
+              }
+            ]
+          },
+          "state": {
+            "type": "string",
+            "const": "ready"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "model_key",
+          "catalog_digest",
+          "kind",
+          "manifest",
+          "state",
+          "created_at"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "approved_base"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "manifest": {
+                  "$ref": "#/components/schemas/ModelCatalog"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "merged_lora"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "manifest": {
+                  "$ref": "#/components/schemas/DerivedModelCatalog"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ModelImport": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "catalog_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expected_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483648
+          },
+          "uploaded_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483648
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "uploading",
+              "queued",
+              "verifying",
+              "ready",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "catalog_digest",
+          "expected_bytes",
+          "uploaded_bytes",
+          "state",
+          "error_code",
+          "model_id",
+          "attempts",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "StartModelImport": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "catalog_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expected_bytes": {
+            "type": "integer",
+            "minimum": 1519216128,
+            "maximum": 2147483648
+          },
+          "license_acknowledged": {
+            "type": "boolean",
+            "const": true
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "workspace_id",
+          "name",
+          "catalog_digest",
+          "expected_bytes",
+          "license_acknowledged",
+          "reason"
+        ]
+      },
+      "ModelImportResolution": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "found",
+              "absent"
+            ]
+          },
+          "import": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelImport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "import"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "const": "found"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "import": {
+                  "$ref": "#/components/schemas/ModelImport"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "const": "absent"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "import": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ModelRetirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "state": {
+            "type": "string",
+            "const": "deleted"
+          },
+          "artifact_retention": {
+            "type": "string",
+            "const": "immutable_files_retained"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "state",
+          "artifact_retention"
+        ]
+      },
+      "Reason": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "ModelCatalogAvailability": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "catalog": {
+            "$ref": "#/components/schemas/ModelCatalog"
+          },
+          "catalog_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "chunk_bytes": {
+            "type": "integer",
+            "const": 8388608
+          },
+          "minimum_bundle_bytes": {
+            "type": "integer",
+            "const": 1519216128
+          },
+          "maximum_bundle_bytes": {
+            "type": "integer",
+            "minimum": 1519216128,
+            "maximum": 2147483648
+          },
+          "maximum_attempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "storage_available": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "catalog",
+          "catalog_digest",
+          "chunk_bytes",
+          "minimum_bundle_bytes",
+          "maximum_bundle_bytes",
+          "maximum_attempts",
+          "storage_available"
+        ]
+      },
+      "ModelList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ModelVersion"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ModelImportList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ModelImport"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "Problem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "about:blank"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_FAILED",
+              "INVALID_CURSOR",
+              "TOKEN_UNUSABLE",
+              "AUTH_INVALID_CREDENTIALS",
+              "AUTH_REQUIRED",
+              "AUTH_SESSION_EXPIRED",
+              "ACCESS_DENIED",
+              "CSRF_INVALID",
+              "ORIGIN_REJECTED",
+              "RESOURCE_NOT_FOUND",
+              "ACCOUNT_EXISTS",
+              "INVITATION_EXISTS",
+              "INVITATION_STATE_CONFLICT",
+              "VERSION_CONFLICT",
+              "IDEMPOTENCY_CONFLICT",
+              "PROTECTED_ACCOUNT",
+              "PAYLOAD_TOO_LARGE",
+              "UNSUPPORTED_MEDIA_TYPE",
+              "MISDIRECTED_REQUEST",
+              "PASSWORD_POLICY_VIOLATION",
+              "PASSWORD_BLOCKED",
+              "RATE_LIMITED",
+              "INTERNAL_ERROR",
+              "STORAGE_UNAVAILABLE",
+              "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+              "AUTH_CAPACITY_EXCEEDED",
+              "SERVICE_NOT_READY",
+              "LICENSE_NEW_BUSINESS_UNAVAILABLE",
+              "LICENSE_STORED_STATE_INVALID",
+              "LICENSE_CONFIGURATION_REQUIRED",
+              "MODEL_VERSION_REFERENCED",
+              "MODEL_REFERENCE_CHECK_UNAVAILABLE",
+              "MODEL_STORAGE_UNAVAILABLE",
+              "MODEL_IMPORT_BUSY",
+              "MODEL_ALREADY_EXISTS",
+              "MODEL_IMPORT_STATE_CONFLICT",
+              "MODEL_IMPORT_INCOMPLETE",
+              "MODEL_CHUNK_INVALID",
+              "MODEL_CHUNK_CONFLICT",
+              "MODEL_CHUNK_OFFSET_MISMATCH",
+              "MODEL_CLEANUP_CONFLICT",
+              "MODEL_IO_FAILED",
+              "MODEL_PATH_INVALID",
+              "MODEL_DERIVED_CATALOG_INVALID",
+              "MODEL_DERIVED_STORAGE_INVALID",
+              "MODEL_DERIVED_COPY_BUSY",
+              "MODEL_DERIVED_PARTIAL_COPY_RETAINED",
+              "MODEL_DERIVED_COPY_POLICY_INVALID",
+              "MODEL_DERIVED_COPY_ATTEMPT_LIMIT",
+              "MODEL_DERIVED_DISK_SPACE_LOW",
+              "MODEL_DERIVED_REGISTRATION_UNAVAILABLE",
+              "MODEL_DERIVED_REVIEW_REQUIRED",
+              "MODEL_DERIVED_IDENTITY_CONFLICT",
+              "MODEL_DERIVED_ALREADY_RETIRED"
+            ]
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "fields": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "code": {
+                  "type": "string",
+                  "maxLength": 64
+                }
+              },
+              "required": [
+                "field",
+                "code"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "request_id"
+        ]
+      },
+      "ModelCatalogAvailabilityResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelCatalogAvailability"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ModelListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelList"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ModelVersionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelVersion"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ModelRetirementResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelRetirement"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ModelImportListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelImportList"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ModelImportResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelImport"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "ModelImportResolutionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ModelImportResolution"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  }
+}

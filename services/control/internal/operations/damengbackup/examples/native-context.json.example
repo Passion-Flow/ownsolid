@@ -1,0 +1,15 @@
+{
+  "format_version": 1,
+  "connector_configuration_file": "/opt/projectone/private/dameng-owner.json",
+  "schema_configuration_file": "/opt/projectone/private/dameng-schema.json",
+  "snapshot": {
+    "page_rows": 16,
+    "maximum_rows": 10000000,
+    "maximum_bytes": 17179869184,
+    "maximum_lob_bytes": 1073741824,
+    "lob_chunk_size": 4096,
+    "maximum_tree_bytes": 17179869184,
+    "maximum_tree_files": 1000000,
+    "maximum_tree_metadata_bytes": 67108864
+  }
+}

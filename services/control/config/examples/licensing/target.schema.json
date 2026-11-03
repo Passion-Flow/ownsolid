@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Isolated License API qualification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "profile",
+    "case",
+    "scope_id",
+    "mount_root",
+    "workspace_id",
+    "deployment_id",
+    "portal_origin",
+    "admin_origin",
+    "ca_file",
+    "administrator_credentials_file",
+    "portal_credentials_file",
+    "expected_state",
+    "expected_public_key_fingerprint",
+    "expected_history_head_license_id",
+    "expected_accepted_licenses",
+    "request_seconds",
+    "maximum_seconds",
+    "cleanup_seconds",
+    "maximum_requests",
+    "maximum_response_bytes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "kind": {
+      "type": "string",
+      "const": "projectone-isolated-license-qualification-v1"
+    },
+    "profile": {
+      "type": "string",
+      "const": "ubuntu24.04-linux-amd64"
+    },
+    "case": {
+      "type": "string",
+      "enum": [
+        "snapshot",
+        "denial"
+      ]
+    },
+    "scope_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mount_root": {
+      "type": "string"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "deployment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "portal_origin": {
+      "type": "string"
+    },
+    "admin_origin": {
+      "type": "string"
+    },
+    "ca_file": {
+      "type": "string"
+    },
+    "administrator_credentials_file": {
+      "type": "string"
+    },
+    "portal_credentials_file": {
+      "type": "string"
+    },
+    "expected_state": {
+      "type": "string",
+      "enum": [
+        "missing",
+        "not_yet_valid",
+        "active",
+        "grace",
+        "expired",
+        "clock_suspect"
+      ]
+    },
+    "expected_public_key_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "expected_history_head_license_id": {
+      "type": "string",
+      "anyOf": [
+        {
+          "const": ""
+        },
+        {
+          "format": "uuid",
+          "minLength": 36,
+          "maxLength": 36
+        }
+      ]
+    },
+    "expected_accepted_licenses": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1024
+    },
+    "request_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 120
+    },
+    "maximum_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 1800
+    },
+    "cleanup_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60
+    },
+    "maximum_requests": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 256
+    },
+    "maximum_response_bytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 1048576
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "case": {
+            "const": "denial"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "maximum_requests": {
+            "minimum": 20
+          },
+          "expected_state": {
+            "enum": [
+              "missing",
+              "not_yet_valid",
+              "expired",
+              "clock_suspect"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

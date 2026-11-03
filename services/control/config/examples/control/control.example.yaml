@@ -1,0 +1,348 @@
+server:
+  listen_address: 0.0.0.0:8443
+  portal_origin: https://portal.example.invalid:8443
+  admin_origin: https://admin.example.invalid:8443
+  tls_certificate_file: /run/projectone/certificate.pem
+  tls_private_key_file: /run/projectone/private-key.pem
+  portal_assets: /opt/projectone/portal
+  admin_assets: /opt/projectone/admin
+database:
+  # Control database owner; string postgresql/mysql, optional default postgresql.
+  # Protected PROJECT_ONE_DATABASE_ENGINE overrides valid YAML; no secret; restart/new pool.
+  engine: postgresql
+  # For mysql, remove dsn_file and select an existing protected mysqlstore JSON via
+  # mysql_configuration_file or PROJECT_ONE_MYSQL_CONFIGURATION_FILE. No fallback.
+  # That file alone owns MySQL TLS/password-file references and connection policy.
+  # Optional mysql_migrations budgets are documented in database-selection.env.example.
+  # Optional mysql_backup is MySQL-only local native backup/isolated-restore policy.
+  # Required explicit client_file/client_sha256/dump_file/dump_sha256/artifact_manifest_file
+  # and scratch_root reference pinned offline binaries, their actual GPL artifact manifest
+  # and an existing private0700 scratch directory; there are no path/digest defaults.
+  # operation_seconds default3600 (30..86400), termination_grace_seconds default10 (1..60),
+  # maximum_sql_bytes default17179869184 (1048576..1099511627776), maximum_manifest_bytes
+  # default1048576 (4096..16777216), maximum_store_bytes default137438953472
+  # (1048576..1099511627776), maximum_store_files default1000000 (1..1000000),
+  # minimum_free_bytes default1073741824
+  # (1048576..1099511627776) additionally preserve the fixed30-percent free-space floor.
+  # No credentials here: endpoint/password/CA/version remain in the existing MySQL JSON.
+  # See database-selection.env.example for every explicit protected env mapping/precedence.
+  # Native commands only, no process starts in serve; new command/restart applies changes.
+  # Optional mysql_runtime_access is MySQL-only operator provisioning/recovery policy.
+  # Both account_host (one canonical source DNS/IP, no wildcard/default) and intent_file
+  # (canonical protected private intent path, no default) are required when present.
+  # Runtime User/password/TLS/endpoint remain solely in the protected MySQL JSON.
+  # See database-selection.env.example for protected env mappings/restart behavior.
+  # Runtime role has DML/SELECT rights, never schema ownership or CREATE rights.
+  # Use a separate operator configuration/DSN for migrations.
+  dsn_file: /run/projectone/runtime-dsn
+  max_open_connections: 10
+  max_idle_connections: 2
+  statement_timeout_seconds: 5
+  # Control PostgreSQL session owner; integer milliseconds, optional default 3000.
+  # Permitted 1..30000 and less than statement_timeout_seconds*1000; restart/new pool.
+  # Protected serve --env-file PROJECT_ONE_DATABASE_LOCK_TIMEOUT_MILLISECONDS overrides valid YAML.
+  # Public nonsecret policy; ambient process environment is not read. Zero/null/invalid values fail.
+  lock_timeout_milliseconds: 3000
+security:
+  auth_hmac_key_file: /run/projectone/auth-hmac
+  mail_keyring_file: /run/projectone/mail-keyring.json
+  password_blocklist_file: /opt/projectone/security/password-blocklist.txt
+# Required public manufacturer trust; provision with the same private generation.
+# Helm places all references beneath its selected privateMountPath/private child.
+# Omit environment_file unless the optional component overlay is also projected.
+licensing:
+  trust_file: /run/projectone/license-trust.json
+sso:
+  enabled: false
+  keyring_file: ""
+  providers: []
+smtp:
+  host: smtp.example.invalid
+  port: 587
+  from_address: platform@example.invalid
+  tls_mode: starttls_required
+  ca_file: /run/projectone/smtp-ca.pem
+  connect_timeout_seconds: 5
+  operation_timeout_seconds: 20
+
+components:
+  node_exporter_catalog_directory: /opt/projectone/components/node-exporter/catalog
+  node_exporter_archive_file: /opt/projectone/components/node-exporter/node_exporter-1.12.1.linux-amd64.tar.gz
+
+# Requires the explicit models Compose overlay or an equivalent private persistent mount.
+models:
+  artifact_root: /var/lib/projectone/models
+
+# Optional runtime policy. Omitted fields preserve the previous release defaults.
+# Settings are validated at startup and require a restart.
+# Optional as a complete group; initialize the separate store before enabling it.
+datasets:
+  artifact_root: /var/lib/projectone/datasets
+  python_executable: /usr/local/bin/python3.12
+  processor_file: /opt/projectone/data-processing/process.py
+# Enable only with actual manufactured image/source receipts and an initialized private store.
+training: {}
+# Enable only with a verified lifecycle release receipt and its separate initialized store.
+model_preparation: {}
+runtime:
+  # Workspace allocation policy, optionally overridden by the explicit private --env-file.
+  workspaces:
+    maximum_count: 100
+    maximum_live_notes: 10000
+  model_lifecycle:
+    snapshot_seconds: 300
+    snapshot_manifest_bytes: 33554432
+    snapshot_maximum_bytes: 107374182400
+    snapshot_maximum_files: 100000
+    scan_seconds: 5
+    scan_maximum_bytes: 67108864
+    scan_maximum_rows: 100000
+    scan_maximum_versions: 1000
+    scan_concurrency: 1
+    transaction_seconds: 10
+    max_holdouts_per_workspace: 100
+    max_preparations_per_workspace: 1000
+    max_active_per_workspace: 10
+    max_attempts: 5
+    poll_milliseconds: 1000
+    transfer_seconds: 30
+    output_seconds: 300
+    minimum_free_bytes: 3221225472
+    minimum_host_memory_bytes: 12884901888
+    minimum_gpu_memory_mib: 8192
+    minimum_driver_major: 580
+    minimum_compute_major: 8
+    resources:
+      wall_seconds: 3600
+      cpu_seconds: 3600
+      memory_bytes: 6442450944
+      maximum_output_bytes: 2147483648
+      maximum_output_files: 32
+      maximum_result_bytes: 4194304
+      maximum_event_bytes: 1048576
+      open_files: 256
+  training:
+    snapshot_maximum_files: 20000
+    snapshot_maximum_bytes: 17179869184
+    snapshot_manifest_bytes: 16777216
+    snapshot_seconds: 300
+    resources:
+      wall_seconds: 3600
+      cpu_seconds: 3600
+      memory_bytes: 6442450944
+      maximum_output_bytes: 1073741824
+      maximum_output_files: 4096
+      maximum_result_bytes: 8388608
+      maximum_event_bytes: 8388608
+      open_files: 256
+    max_jobs_per_workspace: 1000
+    max_active_per_workspace: 10
+    max_attempts: 5
+    poll_milliseconds: 1000
+    transaction_seconds: 10
+    upload_seconds: 30
+    minimum_free_bytes: 2147483648
+    minimum_host_memory_bytes: 12884901888
+    minimum_gpu_memory_mib: 8192
+    minimum_driver_major: 580
+    minimum_compute_major: 8
+  datasets:
+    snapshot_maximum_files: 10000
+    snapshot_maximum_bytes: 1073741824
+    snapshot_manifest_bytes: 8388608
+    snapshot_seconds: 120
+    upload_seconds: 30
+    limits:
+      maximum_bytes: 16777216
+      maximum_rows: 2000
+      maximum_line_bytes: 65536
+      maximum_text_bytes: 16384
+      maximum_source_bytes: 512
+      maximum_errors: 200
+    resources:
+      wall_seconds: 15
+      cpu_seconds: 10
+      memory_bytes: 536870912
+      maximum_result_bytes: 33554432
+    poll_milliseconds: 500
+    lease_seconds: 60
+    commit_seconds: 10
+    retry_delay_seconds: 2
+    max_attempts: 3
+    concurrency: 1
+    child_stop_seconds: 2
+    memory_poll_milliseconds: 100
+    minimum_free_bytes: 67108864
+    max_datasets_per_workspace: 100
+    max_active_drafts: 100
+    max_versions_per_dataset: 100
+    validation_basis_points: 2000
+  http:
+    installation_lease_interval_seconds: 5
+    startup_seconds: 20
+    read_header_seconds: 5
+    request_seconds: 15
+    idle_seconds: 60
+    shutdown_seconds: 5
+    max_connections: 128
+    max_active_requests: 64
+    rate_limit_fallback_retry_seconds: 900
+    service_unavailable_retry_seconds: 2
+  identity:
+    invitation_ttl_seconds: 86400
+    reset_ttl_seconds: 900
+    portal_idle_seconds: 1800
+    portal_absolute_seconds: 43200
+    admin_idle_seconds: 900
+    admin_absolute_seconds: 14400
+    csrf_seconds: 900
+    session_touch_seconds: 60
+    idempotency_seconds: 86400
+    hash_workers: 2
+    hash_queue_capacity: 16
+    hash_admission_milliseconds: 2000
+    max_live_reset_tokens: 3
+    reset_minimum_milliseconds: 300
+    reset_jitter_milliseconds: 50
+    audit_default_days: 7
+    audit_max_days: 31
+  mail:
+    poll_milliseconds: 1000
+    attempt_seconds: 25
+    lease_seconds: 60
+    max_attempts: 5
+    retry_1_seconds: 15
+    retry_2_seconds: 60
+    retry_3_seconds: 180
+    retry_4_seconds: 300
+    jitter_percent: 10
+  retention:
+    interval_seconds: 60
+    timeout_seconds: 5
+    batch_size: 100
+    mail_days: 30
+    reset_days: 30
+    invitation_days: 90
+    session_days: 7
+    rate_grace_seconds: 3600
+    audit_days: 180
+  nodes:
+    maximum_live_nodes: 100
+    maximum_live_join_tokens: 100
+    join_ttl_seconds: 600
+    online_seconds: 30
+    offline_seconds: 120
+    task_seconds: 300
+    # Server deployment deadline; integer seconds 120..1800 and >= task_seconds.
+    inference_deploy_seconds: 1800
+    # Physical task lease; integer seconds 10..30 (protocol ceiling).
+    task_lease_seconds: 30
+    # Reclaim ceiling; integer 1..3 (retained schema ceiling).
+    maximum_task_attempts: 3
+    # Maximum node IDs examined in one expiry sweep; integer 1..1000.
+    task_sweep_batch: 100
+    reconcile_seconds: 10
+    reconcile_timeout_seconds: 5
+  models:
+    maximum_attempts: 3
+    maximum_bundle_bytes: 2147483648
+    import_seconds: 600
+    import_poll_seconds: 2
+    cleanup_seconds: 2
+  distribution:
+    recovery_seconds: 600
+    key_ttl_seconds: 86400
+    key_max_ttl_seconds: 7776000
+    key_max_active: 100
+    alias_max_active: 16
+    max_concurrent_requests: 4
+    request_seconds: 90
+    context_tokens: 2048
+    output_tokens: 512
+    requests_per_window: 60
+    rate_window_seconds: 60
+  rates:
+    csrf_count: 60
+    csrf_window_seconds: 60
+    login_email_count: 10
+    login_email_window_seconds: 900
+    login_ip_count: 30
+    login_ip_window_seconds: 300
+    reset_ip_count: 20
+    reset_ip_window_seconds: 900
+    reset_email_count: 3
+    reset_email_window_seconds: 900
+    token_ip_count: 30
+    token_ip_window_seconds: 900
+    admin_invite_count: 30
+    admin_invite_window_seconds: 3600
+    agent_ip_count: 120
+    agent_ip_window_seconds: 60
+    agent_transfer_ip_count: 600
+    agent_transfer_ip_window_seconds: 60
+    agent_enroll_ip_count: 20
+    agent_enroll_ip_window_seconds: 60
+    agent_node_count: 30
+    agent_node_window_seconds: 60
+    agent_transfer_node_count: 240
+    agent_transfer_node_window_seconds: 60
+    reset_cooldown_seconds: 60
+  ui:
+    poll_milliseconds: 5000
+    search_debounce_milliseconds: 150
+    # Shared public UI request size and omitted-limit Admin/Workspace list default; integer 1-100.
+    # YAML runtime.ui.page_size owns this value; changing it requires restart,not a new bundle.
+    page_size: 20
+    lookup_page_size: 100
+
+# Optional private S3 ingestion owner; boolean false/omitted keeps existing local stores authoritative.
+# Owner: typed control ObjectStorage configuration. While false, every other object_storage field must
+# be omitted. Enabling requires the complete object-storage example, real local model/dataset owners,
+# preinitialized private stage and actual qualified private endpoint. Protected --env-file explicitly
+# overrides YAML; ambient process values are ignored. Secrets remain protected file references; restart required.
+object_storage: {enabled: false}
+
+# Optional image registry owner; canonical absolute protected JSON reference, no
+# default. Omit to disable; present empty/null/relative values fail. The private
+# serve --env-file PROJECT_ONE_REGISTRY_CONFIG_FILE overrides valid YAML; ambient
+# environment is ignored. JSON owns endpoint/CA/credential/policies/CAS/prepared
+# paths, with the existing registry/control.schema.json. Restart required.
+# image_registry_config_file: /run/projectone/registry-control.json
+
+# M26 owner: optional canonical absolute protected JSON reference (string).
+# Omission disables maintenance. Must exist0600 under owned0700 parent; no inline
+# credentials. PROJECT_ONE_MIDDLEWARE_CONFIG_FILE in explicit serve --env-file
+# overrides this reference, then middleware.LoadFiles validates it at startup.
+# Restart required. Customer external profiles remain read-only. PostgreSQL
+# control backend only until the independent MySQL catalog is activated.
+# middleware_config_file: /run/projectone/middleware.json
+# M26 owner: optional protected policy env-file reference (string), distinct from
+# JSON. Omit for JSON/default policy; no empty/false values. Explicit serve
+# --env-file PROJECT_ONE_MIDDLEWARE_ENVIRONMENT_FILE overrides YAML. Its declared
+# policy keys override JSON; no ambient reads. Restart required.
+# middleware_environment_file: /run/projectone/middleware-policy.env
+
+# Task-events owner: optional root component; omission or false-only disables.
+# Enabled configuration requires all31 fields from task-events/control.example.yaml.
+# Explicit protected --env-file PROJECT_ONE_TASK_EVENTS_* overrides valid YAML.
+# Runtime serving requires exact installed tenant/schema/broker admission;
+# lifecycle/route qualification remains separately recorded. No broker, credentials or resource is provisioned here.
+task_events:
+  enabled: false
+
+# M30 owner: optional canonical absolute protected JSON file, no default.
+# Omit to disable diagnostics; present empty/null/false/relative values fail.
+# PROJECT_ONE_MONITORING_CONFIG_FILE in explicit serve --env-file overrides valid
+# YAML; ambient environment is ignored. Policy/ranges/defaults are owned by
+# monitoring/monitoring.schema.json. No credential or exporter URL is accepted.
+# Mount privately0600 under owned0700 parent; restart applies policy/resets epoch.
+# Optional private-cluster component reference; protected JSON, explicit env-file override.
+# Omission disables this component; restart applies its policy and protected references.
+# private_cluster_config_file: /run/projectone/config/private-cluster.json
+# monitoring_config_file: /run/projectone/config/monitoring.json
+
+# Owner: release-view Admin readonly projection; optional absolute protected JSON reference.
+# String; omit to keep unavailable, explicit empty/false invalid. See admin-view.schema.json.
+# Same PROJECT_ONE_RELEASE_VIEW_CONFIG_FILE in explicit --env-file overrides this reference.
+# No secrets; preserve private input mode. Changing reference/policy requires restart.
+# release_view_config_file: /run/projectone/config/admin-view.json

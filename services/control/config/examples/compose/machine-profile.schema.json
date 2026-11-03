@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ordinary Compose machine publication and native health public intent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version",
+    "browser_binding",
+    "machine_binding",
+    "policy_environment_basename",
+    "probe_ca_basename",
+    "probe_dial_address",
+    "probe_timeout_seconds",
+    "health_interval_seconds",
+    "health_timeout_seconds",
+    "health_start_period_seconds",
+    "health_retries"
+  ],
+  "properties": {
+    "format_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "browser_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bind_address",
+        "published_port",
+        "target_port"
+      ],
+      "properties": {
+        "bind_address": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Canonical unbracketed numeric IPv4/IPv6 bind, including explicit wildcard. Runtime netip validation is authoritative."
+        },
+        "published_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "target_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    },
+    "machine_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bind_address",
+        "published_port",
+        "target_port"
+      ],
+      "properties": {
+        "bind_address": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Canonical unbracketed numeric IPv4/IPv6 bind, including explicit wildcard. Runtime netip validation is authoritative."
+        },
+        "published_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "target_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    },
+    "policy_environment_basename": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "probe_ca_basename": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "probe_dial_address": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Canonical numeric loopback AddrPort, matching the machine target port; IPv6 requires brackets."
+    },
+    "probe_timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60
+    },
+    "health_interval_seconds": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 3600
+    },
+    "health_timeout_seconds": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 120
+    },
+    "health_start_period_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3600
+    },
+    "health_retries": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    }
+  },
+  "description": "No defaults. Existing typed Go owner additionally enforces canonical IP/dial identity, distinct target/published ports and basenames, reserved control.yaml, probe timeout < health timeout <= interval. This schema is structural; rendering does not verify mounted runtime inputs or installation."
+}

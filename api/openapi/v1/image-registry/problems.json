@@ -1,0 +1,193 @@
+{
+  "format": "projectone.registry.public-problems.v1",
+  "codes": {
+    "REGISTRY_ADDRESS_REJECTED": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_AUTH_REJECTED": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_CAPACITY_REQUIRED": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_CLEANUP_REQUIRED": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_CONTENT_INVALID": {
+      "status": 422,
+      "scope": "server"
+    },
+    "REGISTRY_CONTENT_MISSING": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_CREDENTIAL_INVALID": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_DESCRIPTOR_INVALID": {
+      "status": 422,
+      "scope": "server"
+    },
+    "REGISTRY_DIGEST_MISMATCH": {
+      "status": 422,
+      "scope": "server"
+    },
+    "REGISTRY_GC_TAG_DRIFT": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_GRANT_REVOKED": {
+      "status": 403,
+      "scope": "server"
+    },
+    "REGISTRY_GRANT_STALE": {
+      "status": 403,
+      "scope": "server"
+    },
+    "REGISTRY_IMAGE_INVALID": {
+      "status": 422,
+      "scope": "server"
+    },
+    "REGISTRY_IMPORT_BUSY": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_INTENT_STALE": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_LICENSE_ACK_REQUIRED": {
+      "status": 400,
+      "scope": "server"
+    },
+    "REGISTRY_NEW_SNAPSHOT_REQUIRED": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_OWNER_REQUIRED": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_PATH_REJECTED": {
+      "status": 400,
+      "scope": "server"
+    },
+    "REGISTRY_PIN_UNAVAILABLE": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_PREPARATION_INCOMPLETE": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_RANGE_INVALID": {
+      "status": 416,
+      "scope": "server"
+    },
+    "REGISTRY_RECIPE_MISMATCH": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_RECOVERY_REQUIRED": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_REDIRECT_REJECTED": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_REFERENCE_HELD": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_REFERENCE_MISSING": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_REFERENCE_RELEASED": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_RELEASE_INVALID": {
+      "status": 422,
+      "scope": "server"
+    },
+    "REGISTRY_REMOTE_INVALID": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_REMOTE_OUTCOME_UNKNOWN": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_REMOTE_RECONCILIATION_REQUIRED": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_RETRY_REQUIRED": {
+      "status": 409,
+      "scope": "server"
+    },
+    "REGISTRY_SCHEMA_NOT_ACTIVE": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_SNAPSHOT_INVALID": {
+      "status": 422,
+      "scope": "server"
+    },
+    "REGISTRY_STORAGE_CAPACITY_REQUIRED": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_STORED_STATE_INVALID": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_STORE_INVALID": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_TLS_INVALID": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_TRANSACTION_REQUIRED": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_UNAVAILABLE": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_UPLOAD_LOCATION_REJECTED": {
+      "status": 503,
+      "scope": "server"
+    },
+    "REGISTRY_DISABLED": {
+      "status": 0,
+      "scope": "browser"
+    },
+    "REGISTRY_MANIFEST_INVALID": {
+      "status": 0,
+      "scope": "browser"
+    },
+    "REGISTRY_STREAMING_EXPORT_UNAVAILABLE": {
+      "status": 0,
+      "scope": "browser"
+    },
+    "REGISTRY_EXPORT_COLLISION": {
+      "scope": "browser",
+      "status": 0
+    },
+    "REGISTRY_EXPORT_INCOMPLETE": {
+      "scope": "browser",
+      "status": 0
+    }
+  }
+}

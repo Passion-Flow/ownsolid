@@ -1,0 +1,16 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "75dc646ce9413e21dd0561689e2320bb51ba9e2ea88a16227e5238762e79d1a2",
+  "after_step": 32,
+  "steps": [
+    {
+      "step": 33,
+      "file": "000033_membership_authority.sql",
+      "object": "workspace_memberships",
+      "kind": "alter_table",
+      "source_sha256": "af13374ca47c362f814aaf05740f12df4cf96a4acac449e4a3921b9e0d60b999",
+      "previous_definition_sha256": "928de861d206ec04b1873e3d2f6129a0417d92f2f313dc519d4d4ac327e3ae33"
+    }
+  ]
+}

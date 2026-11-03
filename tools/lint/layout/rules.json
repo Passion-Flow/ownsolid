@@ -5,24 +5,25 @@
   ],
   "top_directories": {
     ".github": ["workflows"],
-    "api": ["openapi", "agent", "schemas"],
+    "api": null,
     "catalog": ["apps"],
-    "deploy": ["compose", "helm", "images", "offline", "systemd"],
+    "deploy": ["components", "compose", "helm", "images", "offline", "systemd"],
     "docs": ["product", "architecture", "operations", "development", "decisions"],
     "pkg": null,
     "runtimes": null,
     "services": ["control", "agent", "gateway"],
-    "tests": ["e2e"],
+    "tests": ["e2e", "fixtures"],
     "tools": ["codegen", "dev", "lint", "release"],
     "web": ["apps", "packages"]
   },
   "top_directory_files": [
-    "README.md", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "tsconfig.base.json"
+    "README.md", "go.mod", "go.sum", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "tsconfig.base.json"
   ],
+  "exempt_directories": ["locales", "third_party"],
   "env_example": "deploy/compose/.env.example",
   "conventional_names": [
     "README.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "NOTICE", "Makefile",
-    "Dockerfile", "Chart.yaml", "Cargo.toml", "Cargo.lock"
+    "Dockerfile", "Chart.yaml", "Cargo.toml", "Cargo.lock", "__init__.py"
   ],
   "hidden_names": [".github", ".gitignore", ".gitattributes", ".editorconfig", ".gitkeep", ".env.example"]
 }

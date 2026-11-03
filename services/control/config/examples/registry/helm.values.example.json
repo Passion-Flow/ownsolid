@@ -1,0 +1,30 @@
+{
+  "configuration": {
+    "policyEnvironmentFile": "registry-policy.env"
+  },
+  "secrets": {
+    "files": [
+      "database-dsn",
+      "auth-hmac",
+      "mail-keyring.json",
+      "certificate.pem",
+      "private-key.pem",
+      "license-trust.json",
+      "registry-policy.env",
+      "registry-control.json",
+      "registry-ca.pem",
+      "registry-credential.json",
+      "release-trust.json"
+    ]
+  },
+  "storage": {
+    "registry-cas": {
+      "existingClaim": "registry-state",
+      "mountPath": "/srv/projectone/registry-root"
+    },
+    "registry-prepared": {
+      "existingClaim": "registry-prepared-input",
+      "mountPath": "/srv/projectone/registry-root/prepared"
+    }
+  }
+}

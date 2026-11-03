@@ -1,0 +1,33 @@
+{
+  "application_profile": "mvp-postgresql-cpu-v1",
+  "format_version": 1,
+  "restore_id": "cccccccccccccccccccccccccccccccc",
+  "target_scope_id": "dddddddddddddddddddddddddddddddd",
+  "source_manifest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "backup_root": "/backup/backups/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "restore_root": "/backup/restores/cccccccccccccccccccccccccccccccc",
+  "target_database": "projectone_restored",
+  "target_operator": "projectone_operator",
+  "runtime_configuration_file": "/operator/target-runtime/control.yaml",
+  "configuration_root": "/operator/target-runtime",
+  "reason": "Explicit source-bound cumulative MVP operation using the original native owner",
+  "policy": {
+    "dump_file": "/usr/local/bin/pg_dump",
+    "dump_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "restore_file": "/usr/local/bin/pg_restore",
+    "restore_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "control_file": "/usr/local/bin/control",
+    "control_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "expected_version": "18.6",
+    "scratch_root": "/operator/scratch",
+    "operation_seconds": 3600,
+    "termination_grace_seconds": 10,
+    "maximum_store_bytes": 137438953472,
+    "maximum_store_files": 1000000,
+    "maximum_sql_bytes": 17179869184,
+    "maximum_configuration_bytes": 1073741824,
+    "maximum_manifest_bytes": 1048576,
+    "minimum_free_bytes": 34359738368,
+    "client_distribution": "pgdg-bookworm-18.6-1.pgdg12+2"
+  }
+}

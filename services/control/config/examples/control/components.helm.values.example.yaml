@@ -1,0 +1,12 @@
+# Control configuration owner: optional basename of the protected env-file.
+# String filename, default empty retains YAML/defaults; no secret literal or ambient env.
+# Existing chart projection maps this into privateMountPath/private; restart required.
+# Merge reviewed complete control YAML with application_profile: components and the
+# image archive path from components.example.yaml. Both origins/PKI remain explicit.
+configuration:
+  policyEnvironmentFile: components-profile.env
+# Secret projection owner; replacement basename list, preserve all other required inputs.
+# Provision private0600 files out of band. Archive/license/provenance belong in the
+# components image; they are not Secret data and need no public runtime download.
+secrets:
+  files: [database-dsn, auth-hmac, mail-keyring.json, certificate.pem, private-key.pem, license-trust.json, components-profile.env]

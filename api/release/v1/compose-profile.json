@@ -1,0 +1,10 @@
+{
+  "format_version": 1,
+  "compose_versions": ["5.5.1"],
+  "command_seconds_default": 30,
+  "command_seconds_minimum": 2,
+  "command_seconds_maximum": 300,
+  "output_bytes_default": 1048576,
+  "output_bytes_minimum": 4096,
+  "output_bytes_maximum": 16777216
+}

@@ -21,7 +21,6 @@ RULES_FILE = Path(__file__).resolve().parent / "rules.json"
 LOWERCASE_SEGMENT = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 DECISION_RECORD = re.compile(r"^\d{4}-[a-z0-9]+(?:-[a-z0-9]+)*\.md$")
 DECISIONS_DIRECTORY = ("docs", "decisions")
-LOCALES_SEGMENT = "locales"
 
 
 @dataclass(frozen=True)
@@ -32,6 +31,7 @@ class Rules:
     env_example: str
     conventional_names: frozenset
     hidden_names: frozenset
+    exempt_directories: frozenset
 
 
 def load_rules(path: Path = RULES_FILE) -> Rules:
@@ -46,6 +46,7 @@ def load_rules(path: Path = RULES_FILE) -> Rules:
         env_example=data["env_example"],
         conventional_names=frozenset(data["conventional_names"]),
         hidden_names=frozenset(data["hidden_names"]),
+        exempt_directories=frozenset(data["exempt_directories"]),
     )
 
 
@@ -55,8 +56,9 @@ def check_paths(paths: Iterable[str], read_text: Callable[[str], Optional[str]],
     for path in sorted(set(paths)):
         parts = path.split("/")
         errors.extend(_check_placement(path, parts, rules))
-        errors.extend(_check_names(path, parts, rules))
-        if LOCALES_SEGMENT not in parts:
+        # Translated text and vendored third-party files keep their original names and language.
+        if rules.exempt_directories.isdisjoint(parts):
+            errors.extend(_check_names(path, parts, rules))
             errors.extend(_check_language(path, read_text(path)))
     return errors
 

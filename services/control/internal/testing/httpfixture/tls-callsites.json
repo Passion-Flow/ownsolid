@@ -1,0 +1,706 @@
+{
+  "format": "projectone.httpfixture.dns-compatibility-source.v1",
+  "baseline_commit": "45eac9f3c250f5c9957486d2367c8d079473b201",
+  "status": "source_only_uncompiled_unrun",
+  "callers": [
+    {
+      "path": "services/control/internal/modules/cloudinventory/http/enabled_integration_test.go",
+      "source_sha256": "1af63f66c0d3271da32e60808cbb1e6a4ba2259c3d781900f40419f288faaf30",
+      "constructor_changes": [
+        {
+          "original_line": 61,
+          "function": "func newEnabledAWSHTTP(t *testing.T) *enabledAWSHTTP",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "c9a8ef7fb3abcca3d297273e89197670706f28f640c5e5a7206d660d5030b807",
+      "source_after_bytes": 11275
+    },
+    {
+      "path": "services/control/internal/modules/cloudinventory/http/integration_test.go",
+      "source_sha256": "53e0768506e593f1b27881cf951fbaf0ae194101ebe9a202e2d5db2c6b40026e",
+      "constructor_changes": [
+        {
+          "original_line": 32,
+          "function": "func TestAWSActualHTTPAuthorityAndRecoveryReads(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "6043a5e1721ac872a5d2debf43262da8c19ffa8450964ecb7c5141ef6e05f621",
+      "source_after_bytes": 3168
+    },
+    {
+      "path": "services/control/internal/modules/components/http/handler_test.go",
+      "source_sha256": "fc36707812093c43add1cdf2b4a37e94795c1039cde2b54b3ae67d6196a51d56",
+      "constructor_changes": [
+        {
+          "original_line": 28,
+          "function": "func TestM04HTTPActionsObservationsAndFencedActualArtifact(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "related_raw_request_origin": "admin",
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 1,
+        "removed_host_only_workarounds": 1
+      },
+      "source_after_sha256": "f7aba51303c0e06886991891c3ae526b35f612c5c4d4c478e8b13de48d01d118",
+      "source_after_bytes": 5625
+    },
+    {
+      "path": "services/control/internal/modules/components/http/license_test.go",
+      "source_sha256": "319ec56d0c1b8734570c5072b0dd41190934b44a197d6c6d9790e37575d2acb0",
+      "constructor_changes": [
+        {
+          "original_line": 27,
+          "function": "func TestM19ExpiredLicenseComponentRecoveryAndAcceptedAgentWork(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "f2a20442e28d7cf7d235a351acd31e2c02feb4b71646efb804932c04ef80ee75",
+      "source_after_bytes": 6450
+    },
+    {
+      "path": "services/control/internal/modules/components/http/maintenance_test.go",
+      "source_sha256": "6d5fcacf77cf8c067c0cbbc4169217fd94a1f6ca6dbf892d837c34a2be4ab40f",
+      "constructor_changes": [
+        {
+          "original_line": 27,
+          "function": "func TestM05StrictHTTPMaintenanceAndVersionBoundArtifacts(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "related_raw_request_origin": "admin",
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 1,
+        "removed_host_only_workarounds": 1
+      },
+      "source_after_sha256": "88a7d439aa1cb94ae12e0fcbf4c47bb58be4fc0117da470701da5da6fe882d32",
+      "source_after_bytes": 7519
+    },
+    {
+      "path": "services/control/internal/modules/datasets/http_integration_test.go",
+      "source_sha256": "13f836131fe734bed126cecf7b375f041fdf101840dc9652a093586d2adf3548",
+      "constructor_changes": [
+        {
+          "original_line": 61,
+          "function": "func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "9d496afceaf745df64f70439c0fc1ed2bce5c4d9cbc5f8d67bb8e0529e3fdbae",
+      "source_after_bytes": 7913
+    },
+    {
+      "path": "services/control/internal/modules/deployments/http_test.go",
+      "source_sha256": "0395b83e86cd14c99646827593a5c6943e000ce533b87fba34ec2f2cc039e823",
+      "constructor_changes": [
+        {
+          "original_line": 41,
+          "function": "func TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "related_raw_request_origin": "admin",
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 1,
+        "removed_host_only_workarounds": 1
+      },
+      "source_after_sha256": "7c076f56b1fa4c98b173256d8cc0321a5e045372c8e37f5e3344f5a655d54556",
+      "source_after_bytes": 4934
+    },
+    {
+      "path": "services/control/internal/modules/deployments/license_http_test.go",
+      "source_sha256": "818d83be1112b1deb95c106da7032910293b1f768f34da2c51d3d91a9b59a184",
+      "constructor_changes": [
+        {
+          "original_line": 24,
+          "function": "func TestM19ExpiredLicenseDeploymentRecoveryHTTPAndAgentCompletion(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "c9226cdc5570ce1e46d96ccfd6fc89818769018f1b9d40e9c376cc041c9d42f6",
+      "source_after_bytes": 5601
+    },
+    {
+      "path": "services/control/internal/modules/distribution/cutovers_http_test.go",
+      "source_sha256": "40a4ef9e7f8a79a7dc2db68f51e67588e57bb00fa74fcd1c185fe6fb5eedb872",
+      "constructor_changes": [
+        {
+          "original_line": 15,
+          "function": "func TestActualAliasCutoverTLSNullableContractCSRFHistoryAndExactReplay(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "24bd59658ba0e6da68a58c77b8c1e18ccf0b8fcba50a43c3c9fb3cbf7c5b4af5",
+      "source_after_bytes": 2880
+    },
+    {
+      "path": "services/control/internal/modules/distribution/human_http_test.go",
+      "source_sha256": "325d38cc4b7ebd88202ecbbc30865d61ca81082539cfb8822f2e178dd215cf5b",
+      "constructor_changes": [
+        {
+          "original_line": 19,
+          "function": "func TestActualHumanDistributionTLSContractsCSRFSecretsHistoryAndRecovery(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "62524a4c40699564ec14bd17273b39c1b8fc24ab675f3b48247bc78b22db14e7",
+      "source_after_bytes": 5839
+    },
+    {
+      "path": "services/control/internal/modules/distribution/license_http_test.go",
+      "source_sha256": "0be1f28b5da8078b1c9833a31ce011a68de51a3ca1e4534d6132f28fdd3685c9",
+      "constructor_changes": [
+        {
+          "original_line": 28,
+          "function": "func TestM19ExpiredLicenseDistributionRevocationAndRecoveryHTTP(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "related_raw_request_origin": "admin",
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 1,
+        "removed_host_only_workarounds": 1
+      },
+      "source_after_sha256": "73b5607163136799885b3f5fac9aaf0e35109e55e6c4b6aa903bb43e123c3b68",
+      "source_after_bytes": 7608
+    },
+    {
+      "path": "services/control/internal/modules/distribution/plugins_http_test.go",
+      "source_sha256": "c5f63152ad6658edb2d76a826bd13e5b2eb39bbff9a075e7d932646ff92ee20f",
+      "constructor_changes": [
+        {
+          "original_line": 43,
+          "function": "func TestM14ActualPluginHumanTLSContractsCSRFStrictInputAndLifecycle(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "d2f3ea76a4b1533cdb9cf1185f5e7db519cea80c10850affa632fb30a5ad1059",
+      "source_after_bytes": 6148
+    },
+    {
+      "path": "services/control/internal/modules/distribution/workflows_http_test.go",
+      "source_sha256": "83e8ae42e0089239adc629da6f04d84c07dc6a0c48382d4f47205a0b70b5a141",
+      "constructor_changes": [
+        {
+          "original_line": 17,
+          "function": "func TestM13ActualWorkflowHumanTLSContractsCSRFStrictInputAndRevision(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "0dee2cfd44f8fc64be3cb7e1821f350d3c25de206723acf160bc132be49d8416",
+      "source_after_bytes": 4727
+    },
+    {
+      "path": "services/control/internal/modules/knowledge/http_integration_test.go",
+      "source_sha256": "1d6434ace750a7813781c374a05ab0a06cac676857385321673a4f578c9b6735",
+      "constructor_changes": [
+        {
+          "original_line": 47,
+          "function": "func TestM12ActualTLSBothAudiencesSourcePUTCSRFExactContractsAndIngestion(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "f2ffa4faee97935302c1880a3e4d22b7b71a664e2dd7f9e65a7459e05a835792",
+      "source_after_bytes": 7647
+    },
+    {
+      "path": "services/control/internal/modules/modelpreparations/http_test.go",
+      "source_sha256": "ce48fb957c66ae94b867d27e89f51436964b37caadc7c8b9c0fbaba0a265a7b5",
+      "constructor_changes": [
+        {
+          "original_line": 24,
+          "function": "func TestActualTLSHoldoutDualEntranceSchemasCSRFStrictIntentAndCurrentScope(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "6239ea8f7dc3128e84ac264ca4e5104b6572478779fc38d0caac78c25396fd26",
+      "source_after_bytes": 4924
+    },
+    {
+      "path": "services/control/internal/modules/models/http/handler_test.go",
+      "source_sha256": "cc57dcb8023bec21df84cca504a21178f29b389e30712dd895ba561ff22c8f6b",
+      "constructor_changes": [
+        {
+          "original_line": 25,
+          "function": "func TestStrictModelImportHTTPChunksCSRFAndPortalBoundary(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "62f64e759c1ef25c83626c90a4f7dbd0f7780b6a101db8a243fcd24a890340b4",
+      "source_after_bytes": 3624
+    },
+    {
+      "path": "services/control/internal/modules/models/http/policy_test.go",
+      "source_sha256": "c0ff811b597deb67d26204ad0e0eb056b1128ad613617dad76f875f25c61ab73",
+      "constructor_changes": [
+        {
+          "original_line": 31,
+          "function": "func TestModelImportHTTPNondefaultAdmissionAndRetryPolicy(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "6a57fbef1338f832d267ad6e99b7417442aa5a9d5f182bb1110bec5d14cd79e5",
+      "source_after_bytes": 2990
+    },
+    {
+      "path": "services/control/internal/modules/models/http/resolution_test.go",
+      "source_sha256": "4fee1f656ec041123d97591f046985c5affef30e78cf68c3d6a972b7b7e504c4",
+      "constructor_changes": [
+        {
+          "original_line": 27,
+          "function": "func TestModelImportHTTPSIntentResolutionStrictScopeAndNoMutation(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "c1ecaa77d38165d67f526646d004cc66b13614d961b657c372d6b3a2c1b2a02e",
+      "source_after_bytes": 3702
+    },
+    {
+      "path": "services/control/internal/modules/nodes/http/handler_test.go",
+      "source_sha256": "c2078c1a807206ae22a67944443b05301059e88ac7e4eeac6cb20be2ff29980b",
+      "constructor_changes": [
+        {
+          "original_line": 22,
+          "function": "func TestM03HTTPContractAndHumanMachineSeparation(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        },
+        {
+          "original_line": 100,
+          "function": "func TestM03UntrustedCredentialCannotPoisonNodeRateBucket(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 2,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "3f37cccc0efb04d192c01bc2578161ccf220c6bc512b634ede4fc53d478f0b22",
+      "source_after_bytes": 7224
+    },
+    {
+      "path": "services/control/internal/modules/nodes/model_lifecycle_test.go",
+      "source_sha256": "cd64183b7dfa66ce4fb8e988a6b03300aa63602dc6fb2e315984ecbf84480805",
+      "constructor_changes": [
+        {
+          "original_line": 55,
+          "function": "func TestM10ExplicitLifecycleEnrollmentRejectsLegacyUpgradeAndGenericPreparationLease(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "8316c476d1e4060a6e8fa2fb69eec56fc81db53f8e0fd6625697db4bec3a93b4",
+      "source_after_bytes": 4328
+    },
+    {
+      "path": "services/control/internal/modules/sso/http/callback_repository_test.go",
+      "source_sha256": "be35fd438a521a4a2b4e89aec4a5a24da9cfaf94adb1ab70ce7a2a3101773ebf",
+      "constructor_changes": [
+        {
+          "original_line": 110,
+          "function": "func callbackTLS(t *testing.T) callbackTLSFixture",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "68c79e970c7df20adb1a78507a8b298a916ee37d344b2fbf8d63d7d2189d85f4",
+      "source_after_bytes": 15743
+    },
+    {
+      "path": "services/control/internal/modules/sso/http/handler_test.go",
+      "source_sha256": "977dbf943a3d335c375a34b20e26ada3a38a1d48da65bc774268da0fdb0c48a6",
+      "constructor_changes": [
+        {
+          "original_line": 83,
+          "function": "func configuredHTTP(t *testing.T, adjust func(*config.RuntimePolicy)) (*httpfixture.Client, *httpfixture.Client, string, *identity.Service)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "6caf0feb36651917dd387e00d9e8fcbc8080618fca1b2ddc0bb126579efe9358",
+      "source_after_bytes": 6398
+    },
+    {
+      "path": "services/control/internal/modules/training/events_test.go",
+      "source_sha256": "e1ffb583c325bbb7416e68be6feed7d0fe9ed09c0fe91152f0aca0bb0a2acb60",
+      "constructor_changes": [
+        {
+          "original_line": 125,
+          "function": "func TestActualTLSOrderedTrainingEventBatchContractAndCancellation(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "cfeed77b79c4c42aa9b99164e2ae7ddf84012dfab4517bf9424cf8af1c7368e5",
+      "source_after_bytes": 6474
+    },
+    {
+      "path": "services/control/internal/modules/training/human_http_test.go",
+      "source_sha256": "a574ccba71f02e5abe7ae8334ac266308a2823ccc139efd3078972e5c2ae415e",
+      "constructor_changes": [
+        {
+          "original_line": 25,
+          "function": "func TestActualTLSDualEntranceTrainingIntentHistoryMetricsRecoveryAndCurrentRoles(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "186f5383bf276ae48ce1f3004592cc0fac8656b9cf10140b62f67eadb3d850c3",
+      "source_after_bytes": 5910
+    },
+    {
+      "path": "services/control/internal/modules/training/license_http_test.go",
+      "source_sha256": "388920d888279af9c232a88f0d2bda32b6e7e984afc1ab92a335de2885ddd071",
+      "constructor_changes": [
+        {
+          "original_line": 28,
+          "function": "func TestM19ExpiredLicenseQueuedTrainingCancellationHTTP(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "a0ed8008fb6fe6b80dd1fb211f47446df76772d135cd35cb485b58c3ee060519",
+      "source_after_bytes": 5398
+    },
+    {
+      "path": "services/control/internal/modules/training/machine_test.go",
+      "source_sha256": "968d4cf67ddf6a3b221decaccf841be662d6f70027fa1f13cf77ad5b256802b9",
+      "constructor_changes": [
+        {
+          "original_line": 222,
+          "function": "func TestActualTLSMachineTrainingClaimAndRenewMatchesGeneratedSchema(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "be8231cac0b67224585a2f7a843569e5fb1d374a85426831393fa7b75757558f",
+      "source_after_bytes": 9694
+    },
+    {
+      "path": "services/control/internal/modules/training/model_preparation_human_http_integration_test.go",
+      "source_sha256": "61e41c0b4652192daf115f8bf2bee30069344ba8b99f12344118ae6c1999e937",
+      "constructor_changes": [
+        {
+          "original_line": 18,
+          "function": "func preparationHumanClients(t *testing.T, g preparationScenario) (*httpfixture.Client, *httpfixture.Client)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "3d7cfbb49403e9f719a91bced7a9860947681d801a99d5d4843e90f947903c8a",
+      "source_after_bytes": 8228
+    },
+    {
+      "path": "services/control/internal/modules/training/model_preparation_transfer_events_integration_test.go",
+      "source_sha256": "e96c56f4e1ebea0aa7b7ac781586e5cd47e3e94a233aa21fb48903b23b34d7aa",
+      "constructor_changes": [
+        {
+          "original_line": 189,
+          "function": "func TestActualCpuModelPreparationTLSMachineSchemasEventsAndActualHeldoutRange(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "related_raw_request_origin": "admin",
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 1,
+        "removed_host_only_workarounds": 1
+      },
+      "source_after_sha256": "0276739a061f691760cde0e1222716c9e0944b5e8c2d1ff91c5ab4c03a361056",
+      "source_after_bytes": 10234
+    },
+    {
+      "path": "services/control/internal/modules/training/model_preparation_upload_http_integration_test.go",
+      "source_sha256": "52b7ed7a1b0223c4ad53ed6820def68770b2e0f8841b6102a2bebbe90cfeb168",
+      "constructor_changes": [
+        {
+          "original_line": 36,
+          "function": "func TestActualCpuModelPreparationTLSUploadSchemaBoundariesExactChunksAndNoIncompleteAcceptance(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        },
+        {
+          "original_line": 98,
+          "function": "func TestActualCpuModelPreparationTLSRestrictedStopExactSchemaAndReplay(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "related_raw_request_origin": "admin",
+      "source_changes": {
+        "constructors": 2,
+        "related_raw_urls": 2,
+        "removed_host_only_workarounds": 2
+      },
+      "source_after_sha256": "5ff608181e32ce68be4cf8fe1dfeef2343baa123ee97729a973bed5794b1dbbd",
+      "source_after_bytes": 5170
+    },
+    {
+      "path": "services/control/internal/modules/training/output_acceptance_integration_test.go",
+      "source_sha256": "61b53b27333f834811883dacad7b3936f947ca4741e63114cbf6011e1e08e776",
+      "constructor_changes": [
+        {
+          "original_line": 423,
+          "function": "func TestActualCpuCheckpointAcceptanceAuditRollbackRetryReplayAndArtifactStillNeedsStop(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "related_raw_request_origin": "portal",
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 1,
+        "removed_host_only_workarounds": 1
+      },
+      "source_after_sha256": "7ebbe37c9efa585de46bf3d90a733aca03377b004ea78b6aad046eba2a00b206",
+      "source_after_bytes": 23972
+    },
+    {
+      "path": "services/control/internal/modules/training/stop_http_test.go",
+      "source_sha256": "450569c5aae0cca296e0a8714deec46cdd6e2e0ceffaf0e27e27f6c8ab5dbca3",
+      "constructor_changes": [
+        {
+          "original_line": 19,
+          "function": "func TestActualTLSRestrictedTrainingStopAfterEpochLossAndStrictReceiptShape(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "7e0747a14f2c21d42123c58e5cbd7dfda245787d925b8c152f8f0913371e583a",
+      "source_after_bytes": 1655
+    },
+    {
+      "path": "services/control/internal/modules/training/upload_http_test.go",
+      "source_sha256": "14eaff4e35d925b6756daeb280a32d97c9201691bf5cf69f50ad3dbaaa89d4b5",
+      "constructor_changes": [
+        {
+          "original_line": 28,
+          "function": "func TestActualTLSTrainingUploadSchemasStrictEnvelopesChunksAndCurrentAuthority(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "related_raw_request_origin": "admin",
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 1,
+        "removed_host_only_workarounds": 1
+      },
+      "source_after_sha256": "9523d8da15c72fbf13ff274d5530691cae6fdb72c0ed26607de6016515a15f78",
+      "source_after_bytes": 5542
+    },
+    {
+      "path": "services/control/internal/modules/workspaces/http/handler_test.go",
+      "source_sha256": "2a19aff746b0f0f950ff083f99c9890fb88121bc4e97de192b870c82acd2bc8a",
+      "constructor_changes": [
+        {
+          "original_line": 28,
+          "function": "func TestM02HTTPContractsAndAuthorization(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "524cc3b91825b24414b222de9eacd6b8d5bca82b730e373a1bfa0a1a9648a793",
+      "source_after_bytes": 6423
+    },
+    {
+      "path": "services/control/internal/testing/localization/database_test.go",
+      "source_sha256": "5e668cd03f0ddfe43a3d107982914bcd0729eff1bf12e33c98bad582c181e2df",
+      "constructor_changes": [
+        {
+          "original_line": 192,
+          "function": "func TestM16ActualTLSAnonymousOfflineCatalogContractsAndCurrentProfileCSRF(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "89b495dffaf1695655fcefddb71f1054cd770a0b027e01696f8709b10a38a04d",
+      "source_after_bytes": 11089
+    },
+    {
+      "path": "services/control/internal/testing/portal/http_test.go",
+      "source_sha256": "ba9b6ac1166ddc7a2bc72d14f208845d0c88e46c14e84b7f20e304d530602229",
+      "constructor_changes": [
+        {
+          "original_line": 36,
+          "function": "func TestM15ActualPortalHumanTLSGeneratedContractsStrictCSRFAndPersistence(t *testing.T)",
+          "change": "control_listener_constructor_before_start"
+        }
+      ],
+      "source_changes": {
+        "constructors": 1,
+        "related_raw_urls": 0,
+        "removed_host_only_workarounds": 0
+      },
+      "source_after_sha256": "7299bbf80782f2709590c79e5b2a3353d9f14969e441bf3129f5e5b2810a8af3",
+      "source_after_bytes": 6644
+    }
+  ],
+  "excluded": [
+    "services/control/internal/modules/identity/http/transport_repository_integration_test.go",
+    "services/control/internal/modules/nodes/http/handler.go",
+    "all provider TLS doubles",
+    "training/upload_http_test.go raw slow socket test",
+    "identity private client families and tests not using the shared Client"
+  ],
+  "shared_owner_files": [
+    {
+      "path": "services/control/internal/testing/httpfixture/client.go",
+      "source_sha256": "8456d57d19592f0dde2c7a2addbd04d6935efe01689eaefa163c17e55350f721",
+      "bytes": 4695,
+      "baseline_sha256": "d2a908a7e85b51293ae45498720ef88b093b647ad15a620c77ae19e5badf5801"
+    },
+    {
+      "path": "services/control/internal/testing/httpfixture/redirect.go",
+      "source_sha256": "370ee72b69c43570013fbcf3941312941747e6066112f23feb517b4e62cb806f",
+      "bytes": 1431,
+      "baseline_sha256": "f587f60662c8be0d6798a523cb2d477ce9f47c3786119f0549476481b61b4006"
+    },
+    {
+      "path": "services/control/internal/testing/httpfixture/tls.go",
+      "source_sha256": "bd539d57afb95b7eca7d4e4a38efa0f356f920b6d0ac9357c6c4c80da14eec2e",
+      "bytes": 5585
+    },
+    {
+      "path": "services/control/internal/testing/httpfixture/tls_test.go",
+      "source_sha256": "2db724216d132df3846f121dbec01b001d1981748ce7a3f74cc017a6ba93c550",
+      "bytes": 7401
+    },
+    {
+      "path": "services/control/internal/testing/httpfixture/README.md",
+      "source_sha256": "a8163acf8dfbf4b0cc543902da08195956cee23314e8e5340bd84b67fc7444b4",
+      "bytes": 6346
+    }
+  ],
+  "unit_test_roots": [
+    "TestTLSFixtureActualDNSAuthorityAndPrivateCA",
+    "TestTLSFixtureExactDialAndAudienceRedirectRefusals",
+    "TestTLSFixtureNormalTrustAndPeerVerificationFailures",
+    "TestTLSFixtureRedirectReadsClearsCookiesWithoutFollowing",
+    "TestTLSFixtureConfigurationAndOwnedListenerClosure"
+  ],
+  "verification": {
+    "gofmt": "parse_and_format_only",
+    "source_json_hash_diff_checks": "static_only",
+    "compiled": false,
+    "tests_run": false,
+    "services_started": false,
+    "historical_receipts_modified": false
+  }
+}

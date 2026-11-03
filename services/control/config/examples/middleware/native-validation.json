@@ -1,0 +1,6 @@
+{
+  "build_seconds": 180,
+  "test_seconds": 3600,
+  "stability_seconds": 10,
+  "cleanup_seconds": 5
+}

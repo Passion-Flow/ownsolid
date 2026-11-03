@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/configuration/v1/control-knowledge",
+  "title": "Knowledge typed runtime policy and installed asset references",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "query_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 30,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_QUERY_COUNT",
+      "x-runtime-path": "runtime.knowledge.query_count"
+    },
+    "query_window_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 60,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_QUERY_WINDOW_SECONDS",
+      "x-runtime-path": "runtime.knowledge.query_window_seconds"
+    },
+    "chunk_bytes": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 65536,
+      "default": 16384,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_CHUNK_BYTES",
+      "x-runtime-path": "runtime.knowledge.chunk_bytes"
+    },
+    "source_bytes": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 2097152,
+      "default": 524288,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_SOURCE_BYTES",
+      "x-runtime-path": "runtime.knowledge.source_bytes"
+    },
+    "source_tokens": {
+      "type": "integer",
+      "minimum": 32,
+      "maximum": 262144,
+      "default": 131072,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_SOURCE_TOKENS",
+      "x-runtime-path": "runtime.knowledge.source_tokens"
+    },
+    "maximum_chunks": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096,
+      "default": 2048,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_MAXIMUM_CHUNKS",
+      "x-runtime-path": "runtime.knowledge.maximum_chunks"
+    },
+    "chunk_tokens": {
+      "type": "integer",
+      "minimum": 8,
+      "maximum": 254,
+      "default": 192,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_CHUNK_TOKENS",
+      "x-runtime-path": "runtime.knowledge.chunk_tokens"
+    },
+    "overlap_tokens": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 253,
+      "default": 32,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_OVERLAP_TOKENS",
+      "x-runtime-path": "runtime.knowledge.overlap_tokens"
+    },
+    "query_bytes": {
+      "type": "integer",
+      "minimum": 32,
+      "maximum": 32768,
+      "default": 4096,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_QUERY_BYTES",
+      "x-runtime-path": "runtime.knowledge.query_bytes"
+    },
+    "query_tokens": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 254,
+      "default": 128,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_QUERY_TOKENS",
+      "x-runtime-path": "runtime.knowledge.query_tokens"
+    },
+    "top_k": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 5,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_TOP_K",
+      "x-runtime-path": "runtime.knowledge.top_k"
+    },
+    "maximum_top_k": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 20,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_MAXIMUM_TOP_K",
+      "x-runtime-path": "runtime.knowledge.maximum_top_k"
+    },
+    "minimum_score": {
+      "type": "number",
+      "minimum": -1,
+      "maximum": 1,
+      "default": 0.2,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_MINIMUM_SCORE",
+      "x-runtime-path": "runtime.knowledge.minimum_score"
+    },
+    "maximum_bases": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 32,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_MAXIMUM_BASES",
+      "x-runtime-path": "runtime.knowledge.maximum_bases"
+    },
+    "maximum_documents": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_MAXIMUM_DOCUMENTS",
+      "x-runtime-path": "runtime.knowledge.maximum_documents"
+    },
+    "maximum_generations": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 1000,
+      "default": 32,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_MAXIMUM_GENERATIONS",
+      "x-runtime-path": "runtime.knowledge.maximum_generations"
+    },
+    "maximum_attempts": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 3,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_MAXIMUM_ATTEMPTS",
+      "x-runtime-path": "runtime.knowledge.maximum_attempts"
+    },
+    "worker_threads": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "default": 2,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_WORKER_THREADS",
+      "x-runtime-path": "runtime.knowledge.worker_threads"
+    },
+    "worker_batch_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 32,
+      "default": 8,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_WORKER_BATCH_SIZE",
+      "x-runtime-path": "runtime.knowledge.worker_batch_size"
+    },
+    "worker_memory_bytes": {
+      "type": "integer",
+      "minimum": 536870912,
+      "maximum": 4294967296,
+      "default": 1610612736,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_WORKER_MEMORY_BYTES",
+      "x-runtime-path": "runtime.knowledge.worker_memory_bytes"
+    },
+    "concurrency": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2,
+      "default": 1,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_CONCURRENCY",
+      "x-runtime-path": "runtime.knowledge.concurrency"
+    },
+    "query_seconds": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 120,
+      "default": 60,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_QUERY_SECONDS",
+      "x-runtime-path": "runtime.knowledge.query_seconds"
+    },
+    "ingest_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 600,
+      "default": 240,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_INGEST_SECONDS",
+      "x-runtime-path": "runtime.knowledge.ingest_seconds"
+    },
+    "lease_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 900,
+      "default": 300,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_LEASE_SECONDS",
+      "x-runtime-path": "runtime.knowledge.lease_seconds"
+    },
+    "poll_milliseconds": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 10000,
+      "default": 1000,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_POLL_MILLISECONDS",
+      "x-runtime-path": "runtime.knowledge.poll_milliseconds"
+    },
+    "memory_poll_milliseconds": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 2000,
+      "default": 500,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_MEMORY_POLL_MILLISECONDS",
+      "x-runtime-path": "runtime.knowledge.memory_poll_milliseconds"
+    },
+    "child_stop_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 3,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_CHILD_STOP_SECONDS",
+      "x-runtime-path": "runtime.knowledge.child_stop_seconds"
+    },
+    "commit_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "default": 10,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_COMMIT_SECONDS",
+      "x-runtime-path": "runtime.knowledge.commit_seconds"
+    },
+    "key_cleanup_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 5,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_KEY_CLEANUP_SECONDS",
+      "x-runtime-path": "runtime.knowledge.key_cleanup_seconds"
+    },
+    "key_ttl_seconds": {
+      "type": "integer",
+      "minimum": 300,
+      "maximum": 900,
+      "default": 300,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_KEY_TTL_SECONDS",
+      "x-runtime-path": "runtime.knowledge.key_ttl_seconds"
+    },
+    "gateway_connect_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 3,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_GATEWAY_CONNECT_SECONDS",
+      "x-runtime-path": "runtime.knowledge.gateway_connect_seconds"
+    },
+    "gateway_response_bytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 1048576,
+      "default": 65536,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_GATEWAY_RESPONSE_BYTES",
+      "x-runtime-path": "runtime.knowledge.gateway_response_bytes"
+    },
+    "context_bytes": {
+      "type": "integer",
+      "minimum": 256,
+      "maximum": 32768,
+      "default": 4096,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_CONTEXT_BYTES",
+      "x-runtime-path": "runtime.knowledge.context_bytes"
+    },
+    "output_tokens": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 512,
+      "default": 256,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_OUTPUT_TOKENS",
+      "x-runtime-path": "runtime.knowledge.output_tokens"
+    },
+    "cleanup_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 60,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_CLEANUP_SECONDS",
+      "x-runtime-path": "runtime.knowledge.cleanup_seconds"
+    },
+    "cleanup_batch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_CLEANUP_BATCH",
+      "x-runtime-path": "runtime.knowledge.cleanup_batch"
+    },
+    "retention_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365,
+      "default": 7,
+      "x-environment": "PROJECT_ONE_KNOWLEDGE_RETENTION_DAYS",
+      "x-runtime-path": "runtime.knowledge.retention_days"
+    }
+  },
+  "description": "Policy subset; full Config.Validate also enforces chunk/overlap, topK, lease/deadline and HTTP lifetime relationships. Asset inventory is independently owned by KnowledgeConfiguration."
+}

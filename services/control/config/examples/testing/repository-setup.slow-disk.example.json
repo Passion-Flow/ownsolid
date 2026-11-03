@@ -1,0 +1,10 @@
+{
+  "format_version": 1,
+  "setup_seconds": 180,
+  "mysql": {
+    "lock_wait_seconds": 1,
+    "step_seconds": 30,
+    "total_seconds": 120,
+    "cleanup_seconds": 5
+  }
+}

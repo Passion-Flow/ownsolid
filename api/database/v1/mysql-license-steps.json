@@ -1,0 +1,30 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "bcd04b932a64b07f8d848960f699d0431c450a818035212f65fe15cf0afc74ea",
+  "after_step": 38,
+  "steps": [
+    {
+      "step": 39,
+      "file": "000039_platform_license_state.sql",
+      "source_sha256": "05902457e53b23f5fda3af5f687ae9002b3f1b29961f071dbdb8f6a3b2dfd21d",
+      "object": "platform_license_state",
+      "kind": "create_table"
+    },
+    {
+      "step": 40,
+      "file": "000040_platform_license_seed.sql",
+      "source_sha256": "02502da61b410c176947ef4799d2dabaff79ca1731403803e0d889009e323136",
+      "object": "license_state_seed",
+      "kind": "seed",
+      "definition": "EXISTS platform_license_state id=1"
+    },
+    {
+      "step": 41,
+      "file": "000041_platform_license_artifacts.sql",
+      "source_sha256": "f95d0763592de55e357c06ceb5fcecbe31ac4712c8a0e56f51a5fddb67b58a72",
+      "object": "platform_license_artifacts",
+      "kind": "create_table"
+    }
+  ]
+}

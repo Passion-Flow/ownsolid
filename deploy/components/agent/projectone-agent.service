@@ -1,0 +1,30 @@
+[Unit]
+Description=Project-one read-only discovery agent
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=projectone-agent
+Group=projectone-agent
+ExecStart=/opt/projectone/agent/agent run --config /etc/projectone/agent.json
+Restart=on-failure
+RestartSec=5
+RestartPreventExitStatus=77
+TimeoutStopSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ReadWritePaths=/var/lib/projectone-agent
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryMax=128M
+CPUQuota=100%
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

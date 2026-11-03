@@ -1,0 +1,31 @@
+[Unit]
+Description=Project-one explicitly privileged component management agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/local/bin/projectone-agent run --config /etc/projectone/agent-management.json
+Restart=on-failure
+RestartPreventExitStatus=77
+RestartSec=5s
+TimeoutStopSec=20s
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/projectone-agent /opt/projectone/components /etc/systemd/system
+MemoryMax=256M
+CPUQuota=100%
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

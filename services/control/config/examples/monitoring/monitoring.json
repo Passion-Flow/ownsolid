@@ -1,0 +1,13 @@
+{
+  "format_version": 1,
+  "operation_seconds": 10,
+  "lookback_seconds": 3600,
+  "maximum_gateway_rows": 1000,
+  "node_page_size": 25,
+  "concurrent_snapshots": 2,
+  "http": {
+    "latency_milliseconds": [1, 5, 10, 25, 50, 100, 250, 500, 1000, 5000, 30000],
+    "structured_logging": false,
+    "maximum_logs_per_second": 2
+  }
+}

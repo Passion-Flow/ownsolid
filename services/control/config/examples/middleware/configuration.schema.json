@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Protected middleware maintenance configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format_version", "profiles"],
+  "properties": {
+    "format_version": {"const": 1},
+    "policy": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "request_seconds": {"type":"integer","default":30,"minimum":1,"maximum":300},
+        "probe_seconds": {"type":"integer","default":10,"minimum":1,"maximum":120},
+        "operation_seconds": {"type":"integer","default":7200,"minimum":30,"maximum":86400},
+        "lease_seconds": {"type":"integer","default":120,"minimum":10,"maximum":3600},
+        "renew_seconds": {"type":"integer","default":30,"minimum":1,"maximum":1200},
+        "poll_milliseconds": {"type":"integer","default":1000,"minimum":100,"maximum":60000},
+        "maximum_instances": {"type":"integer","default":100,"minimum":1,"maximum":10000},
+        "page_size": {"type":"integer","default":50,"minimum":1,"maximum":200},
+        "maximum_evidence_bytes": {"type":"integer","default":1048576,"minimum":4096,"maximum":16777216}
+      }
+    },
+    "profiles": {"type":"array","minItems":1,"maxItems":10000,"items":{"$ref":"#/$defs/profile"}}
+  },
+  "$defs": {
+    "key": {"type":"string","pattern":"^[a-z][a-z0-9_]{0,62}$"},
+    "path": {"type":"string","pattern":"^/[^\\u0000\\r\\n]+$"},
+    "id": {"type":"string","format":"uuid"},
+    "scope_id": {"type":"string","pattern":"^[a-f0-9]{32}$"},
+    "profile": {
+      "type":"object","additionalProperties":false,
+      "required":["key","kind"],
+      "properties": {
+        "key":{"$ref":"#/$defs/key"},"kind":{"enum":["platform_owned","customer_external"]},
+        "engine":{"enum":["postgresql","mysql"],"description":"Omission retains the PostgreSQL profile and historical fingerprint."},
+        "mysql_configuration_file":{"$ref":"#/$defs/path"},
+        "mysql_environment_file":{"$ref":"#/$defs/path"},
+        "expected_mysql_server_uuid":{"$ref":"#/$defs/id"},
+        "host":{"type":"string","minLength":1,"maxLength":253},
+        "port":{"type":"integer","minimum":1,"maximum":65535},
+        "database":{"$ref":"#/$defs/key"},"user":{"$ref":"#/$defs/key"},
+        "password_file":{"$ref":"#/$defs/path"},"ca_file":{"$ref":"#/$defs/path"},
+        "expected_major":{"type":"integer","minimum":14,"maximum":18},
+        "operator_configuration_file":{"$ref":"#/$defs/path"},
+        "backup_request_file":{"$ref":"#/$defs/path"},
+        "expected_scope_id":{"$ref":"#/$defs/scope_id"},"expected_tenant_id":{"$ref":"#/$defs/id"},
+        "artifact_root":{"$ref":"#/$defs/path"},
+        "restore_targets":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["key","operator_configuration_file","expected_scope_id"],"properties":{"key":{"$ref":"#/$defs/key"},"operator_configuration_file":{"$ref":"#/$defs/path"},"expected_scope_id":{"$ref":"#/$defs/scope_id"}}}}
+      },
+      "allOf":[
+        {"if":{"properties":{"kind":{"const":"platform_owned"}}},"then":{"required":["operator_configuration_file","backup_request_file","expected_scope_id","expected_tenant_id","artifact_root"]},"else":{"not":{"anyOf":[{"required":["operator_configuration_file"]},{"required":["backup_request_file"]},{"required":["expected_scope_id"]},{"required":["expected_tenant_id"]},{"required":["artifact_root"]},{"required":["restore_targets"]}]}}},
+        {"if":{"required":["engine"],"properties":{"engine":{"const":"mysql"}}},"then":{"required":["mysql_configuration_file","expected_mysql_server_uuid"],"properties":{"kind":{"const":"customer_external"}},"not":{"anyOf":[{"required":["host"]},{"required":["port"]},{"required":["database"]},{"required":["user"]},{"required":["password_file"]},{"required":["ca_file"]},{"required":["expected_major"]}]}},"else":{"required":["host","port","database","user","password_file","ca_file","expected_major"],"not":{"anyOf":[{"required":["mysql_configuration_file"]},{"required":["mysql_environment_file"]},{"required":["expected_mysql_server_uuid"]}]}}}
+      ]
+    }
+  }
+}

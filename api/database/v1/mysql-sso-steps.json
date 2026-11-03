@@ -1,0 +1,44 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "839911c133881242c652fedc608e22a3b5fbbbcc25dfc9757094118705e83fd6",
+  "after_step": 18,
+  "steps": [
+    {
+      "step": 19,
+      "file": "000019_sso_connectors.sql",
+      "object": "sso_connectors",
+      "kind": "create_table",
+      "source_sha256": "973d15657a4ffae4bb1b93a6b302a29237cd39111ab7edbdd2ee68c31b721f8d"
+    },
+    {
+      "step": 20,
+      "file": "000020_sso_bindings.sql",
+      "object": "sso_bindings",
+      "kind": "create_table",
+      "source_sha256": "6910a8470be14e685b5d97948db761726d6edf50823ed85485890f06d09bcf66"
+    },
+    {
+      "step": 21,
+      "file": "000021_sso_flows.sql",
+      "object": "sso_flows",
+      "kind": "create_table",
+      "source_sha256": "832f90b6ca42f7a8fd02105a534d90e980d787dae72dc5963b28b74e2887efa0"
+    },
+    {
+      "step": 22,
+      "file": "000022_sessions_sso.sql",
+      "object": "sessions",
+      "kind": "alter_table",
+      "source_sha256": "f4b4c971bf836f24c10772c828e6a8addd9b9f2d89c5a20f4525b2ed83f3c4a2",
+      "previous_definition_sha256": "2ddcbf3fdde74a398b5ee57e0cb06ce73749bb197ba394e0359174da38fc8e37"
+    },
+    {
+      "step": 23,
+      "file": "000023_sso_mutation_intents.sql",
+      "object": "sso_mutation_intents",
+      "kind": "create_table",
+      "source_sha256": "3a69cc2b72b58242be31b30fa7ae082d1ffe5600707d404f1d42a3a28af3726a"
+    }
+  ]
+}

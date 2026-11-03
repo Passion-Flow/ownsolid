@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit existing Linux Knowledge CPU manufacturing inputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_root",
+    "state_root",
+    "runtime_tmp",
+    "docker_binary",
+    "python_binary",
+    "preflight_script",
+    "format_version",
+    "kind",
+    "input_roots",
+    "peak_memory_bytes",
+    "policy",
+    "resource_plan"
+  ],
+  "properties": {
+    "source_root": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/",
+      "description": "Manufacturer-owned existing canonical source directory; must equal the actual factory source root. Required absolute path with no aliases/group writes. Read only; change requires a new process and receipt."
+    },
+    "state_root": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/",
+      "description": "Required exclusive existing0700 manufacturer state directory for new outputs/context/receipts. No credentials or customer data. Change requires new process; never a substitute mount."
+    },
+    "runtime_tmp": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/",
+      "description": "Required existing0700 durable scratch strictly below state_root. Maps only to child TMPDIR; GOTMPDIR and loader/credential environment are absent. Change requires new process."
+    },
+    "docker_binary": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/",
+      "description": "Required canonical existing executable Docker CLI; reused read only with exact file identity. It selects only the existing local Unix context/Engine, never downloads or changes daemon configuration."
+    },
+    "python_binary": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/",
+      "description": "Required canonical existing executable manufacturer Python, equal to the current interpreter after resolving its invocation. This is not the runtime-version authority: actual target Python is the pinned image. Reused read only; no host installation."
+    },
+    "preflight_script": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/",
+      "description": "Required canonical owned single-link existing executable Linux admission script. Runs with sanitized PATH/LANG before allocation. No secrets or interpolation; change requires a new process/receipt."
+    },
+    "format_version": {
+      "const": 1,
+      "type": "integer",
+      "description": "Fixed input protocol version; not a deployment toggle."
+    },
+    "kind": {
+      "const": "projectone-knowledge-cpu-manufacturing-environment-v1",
+      "description": "Fixed typed manufacturer boundary. It never patches workstation Settings."
+    },
+    "input_roots": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^/"
+      },
+      "description": "Required explicit existing canonical protected roots for read-only public wheels/model/installer/receipt inputs. Root filesystem is forbidden. No secret references or implicit search; change requires a new process."
+    },
+    "peak_memory_bytes": {
+      "type": "integer",
+      "minimum": 1073741824,
+      "maximum": 8589934592,
+      "description": "Required total admitted peak bytes including selector/runtime and manufacturer coexistence; must cover policy.memory_bytes. Preserve30percent host headroom, and separately coordinate aggregate Engine consumers. No default; change requires new admission/process."
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "build_seconds": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 7200,
+          "description": "Maximum foreground image/archive operation wall seconds; default runtimes/knowledge/runtime.json manufacturing.build_seconds. Optional override through this input only; booleans are rejected. No secrets. Effective values are recorded; change requires a fresh process/receipt."
+        },
+        "import_seconds": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 1200,
+          "description": "Maximum actual installed CPU probe wall seconds; default current runtime manufacturing.import_seconds. Optional override through this input only; booleans are rejected. No secrets. Effective values are recorded; change requires a fresh process/receipt."
+        },
+        "threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Positive CPU/thread count for current runtime probe; default current runtime manufacturing.threads. Must fit actual process affinity; selector stays at1CPU. Optional override through this input only; booleans are rejected. No secrets. Effective values are recorded; change requires a fresh process/receipt."
+        },
+        "maximum_log_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 67108864,
+          "description": "Maximum retained log bytes per operation; default current runtime manufacturing.maximum_log_bytes. Optional override through this input only; booleans are rejected. No secrets. Effective values are recorded; change requires a fresh process/receipt."
+        },
+        "memory_bytes": {
+          "type": "integer",
+          "minimum": 1073741824,
+          "maximum": 8589934592,
+          "description": "Runtime-probe memory limit in bytes; default current runtime manufacturing.memory_bytes. Must not exceed peak_memory_bytes; offline selector independently uses1GiB. Optional override through this input only; booleans are rejected. No secrets. Effective values are recorded; change requires a fresh process/receipt."
+        },
+        "pids_limit": {
+          "type": "integer",
+          "minimum": 32,
+          "maximum": 512,
+          "description": "Runtime-probe process count limit; default current runtime manufacturing.pids_limit. Selector independently uses128. Optional override through this input only; booleans are rejected. No secrets. Effective values are recorded; change requires a fresh process/receipt."
+        },
+        "stop_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "description": "Owned process/container normal-stop grace seconds; default current runtime manufacturing.stop_seconds. Uncertain state remains retained. Optional override through this input only; booleans are rejected. No secrets. Effective values are recorded; change requires a fresh process/receipt."
+        },
+        "docker_operation_timeout_seconds": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 120,
+          "description": "Bounded metadata/CLI operation seconds; default15. Container stop adds its explicit stop grace. No daemon timeout change. Optional override through this input only; booleans are rejected. No secrets. Effective values are recorded; change requires a fresh process/receipt."
+        }
+      },
+      "description": "Required object, may be empty to inherit original named runtime defaults. Overrides affect manufacturer children only, not customer runtime configuration or artifact pins."
+    },
+    "resource_plan": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "path",
+          "storage_role",
+          "mount_root",
+          "mount_source",
+          "filesystem",
+          "peak_additional_bytes",
+          "safety_reserve_bytes"
+        ],
+        "properties": {
+          "role": {
+            "enum": [
+              "source_return",
+              "context",
+              "docker",
+              "runtime",
+              "evidence"
+            ],
+            "description": "Each role exactly once; all allocated peaks sharing a physical device are summed. Context includes formal copied wheels/licenses/cache/staging; evidence includes retained archives/failed outputs."
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/",
+            "description": "Existing canonical allocation path. Source/context/runtime/evidence must match the respective selected path; docker must match actual local DockerRootDir."
+          },
+          "storage_role": {
+            "enum": [
+              "internal",
+              "external"
+            ],
+            "description": "Explicit actual storage role; internal retains max30percent/fixed reserve, external needs a genuinely distinct nonroot mount/device. No tmpfs runtime or fake external directory."
+          },
+          "mount_root": {
+            "type": "string",
+            "pattern": "^/",
+            "description": "Actual existing kernel mount root, checked by findmnt/device identity. Not a pathname alias."
+          },
+          "mount_source": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact actual kernel mount source from findmnt. No secret or interpolation; mismatch refuses."
+          },
+          "filesystem": {
+            "enum": [
+              "ext4",
+              "xfs",
+              "btrfs"
+            ],
+            "description": "Actual durable Linux filesystem reported by the live kernel; runtime tmpfs/overlay is refused."
+          },
+          "peak_additional_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1099511627776,
+            "description": "Required projected additional peak bytes including coexistence for this role. No boolean, zero or unverified cleanup credit. Re-admitted before substantive operations."
+          },
+          "safety_reserve_bytes": {
+            "type": "integer",
+            "minimum": 34359738368,
+            "maximum": 1099511627776,
+            "description": "Required fixed reserve bytes, at least32GiB; internal also retains30percent total. Same-device roles use the maximum reserve, not repeated reserve sums."
+          }
+        }
+      },
+      "description": "Required complete explicit plan; exact allocation identity and real disk capacity checked before effects. A wheel-only preparation uses its own smaller honest peaks, not a future image approval."
+    }
+  },
+  "description": "Public path/budget input carried by --manufacturing-environment. The input file must be0600/single-link/owned with an existing0700 parent. No env interpolation, secrets, global settings, network downloads or arbitrary source variants. Every change requires fresh admission and a new receipt; no customer artifact rebuild is needed just to select deployment policy."
+}

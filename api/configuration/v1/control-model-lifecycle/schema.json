@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit protected lifecycle policy environment mapping",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "PROJECT_ONE_MODEL_LIFECYCLE_SNAPSHOT_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 300,
+      "x-runtime-path": "runtime.model_lifecycle.snapshot_seconds"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_SNAPSHOT_MANIFEST_BYTES": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 67108864,
+      "default": 33554432,
+      "x-runtime-path": "runtime.model_lifecycle.snapshot_manifest_bytes"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_SNAPSHOT_MAXIMUM_BYTES": {
+      "type": "integer",
+      "minimum": 2147483648,
+      "maximum": 10995116277760,
+      "default": 107374182400,
+      "x-runtime-path": "runtime.model_lifecycle.snapshot_maximum_bytes"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_SNAPSHOT_MAXIMUM_FILES": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 1000000,
+      "default": 100000,
+      "x-runtime-path": "runtime.model_lifecycle.snapshot_maximum_files"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_SCAN_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 5,
+      "x-runtime-path": "runtime.model_lifecycle.scan_seconds"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_SCAN_MAXIMUM_BYTES": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 1073741824,
+      "default": 67108864,
+      "x-runtime-path": "runtime.model_lifecycle.scan_maximum_bytes"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_SCAN_MAXIMUM_ROWS": {
+      "type": "integer",
+      "minimum": 3,
+      "maximum": 1000000,
+      "default": 100000,
+      "x-runtime-path": "runtime.model_lifecycle.scan_maximum_rows"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_SCAN_MAXIMUM_VERSIONS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 1000,
+      "x-runtime-path": "runtime.model_lifecycle.scan_maximum_versions"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_SCAN_CONCURRENCY": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "default": 1,
+      "x-runtime-path": "runtime.model_lifecycle.scan_concurrency"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_TRANSACTION_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "default": 10,
+      "x-runtime-path": "runtime.model_lifecycle.transaction_seconds"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_MAX_HOLDOUTS_PER_WORKSPACE": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 100,
+      "x-runtime-path": "runtime.model_lifecycle.max_holdouts_per_workspace"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_MAX_PREPARATIONS_PER_WORKSPACE": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000,
+      "default": 1000,
+      "x-runtime-path": "runtime.model_lifecycle.max_preparations_per_workspace"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_MAX_ACTIVE_PER_WORKSPACE": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 10,
+      "x-runtime-path": "runtime.model_lifecycle.max_active_per_workspace"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_MAX_ATTEMPTS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 5,
+      "x-runtime-path": "runtime.model_lifecycle.max_attempts"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_POLL_MILLISECONDS": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 60000,
+      "default": 1000,
+      "x-runtime-path": "runtime.model_lifecycle.poll_milliseconds"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_TRANSFER_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 30,
+      "x-runtime-path": "runtime.model_lifecycle.transfer_seconds"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_OUTPUT_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 300,
+      "x-runtime-path": "runtime.model_lifecycle.output_seconds"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_MINIMUM_FREE_BYTES": {
+      "type": "integer",
+      "minimum": 2147483648,
+      "maximum": 1099511627776,
+      "default": 3221225472,
+      "x-runtime-path": "runtime.model_lifecycle.minimum_free_bytes"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_MINIMUM_HOST_MEMORY_BYTES": {
+      "type": "integer",
+      "minimum": 6442450944,
+      "maximum": 1099511627776,
+      "default": 12884901888,
+      "x-runtime-path": "runtime.model_lifecycle.minimum_host_memory_bytes"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_MINIMUM_GPU_MEMORY_MIB": {
+      "type": "integer",
+      "minimum": 8192,
+      "maximum": 1048576,
+      "default": 8192,
+      "x-runtime-path": "runtime.model_lifecycle.minimum_gpu_memory_mib"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_MINIMUM_DRIVER_MAJOR": {
+      "type": "integer",
+      "minimum": 580,
+      "maximum": 999,
+      "default": 580,
+      "x-runtime-path": "runtime.model_lifecycle.minimum_driver_major"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_MINIMUM_COMPUTE_MAJOR": {
+      "type": "integer",
+      "minimum": 8,
+      "maximum": 99,
+      "default": 8,
+      "x-runtime-path": "runtime.model_lifecycle.minimum_compute_major"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_RESOURCES_WALL_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7200,
+      "default": 3600,
+      "x-runtime-path": "runtime.model_lifecycle.resources.wall_seconds"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_RESOURCES_CPU_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 57600,
+      "default": 3600,
+      "x-runtime-path": "runtime.model_lifecycle.resources.cpu_seconds"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_RESOURCES_MEMORY_BYTES": {
+      "type": "integer",
+      "minimum": 134217728,
+      "maximum": 17179869184,
+      "default": 6442450944,
+      "x-runtime-path": "runtime.model_lifecycle.resources.memory_bytes"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_RESOURCES_MAXIMUM_OUTPUT_BYTES": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 2147483648,
+      "default": 2147483648,
+      "x-runtime-path": "runtime.model_lifecycle.resources.maximum_output_bytes"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_RESOURCES_MAXIMUM_OUTPUT_FILES": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 32,
+      "default": 32,
+      "x-runtime-path": "runtime.model_lifecycle.resources.maximum_output_files"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_RESOURCES_MAXIMUM_RESULT_BYTES": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 8388608,
+      "default": 4194304,
+      "x-runtime-path": "runtime.model_lifecycle.resources.maximum_result_bytes"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_RESOURCES_MAXIMUM_EVENT_BYTES": {
+      "type": "integer",
+      "minimum": 65536,
+      "maximum": 16777216,
+      "default": 1048576,
+      "x-runtime-path": "runtime.model_lifecycle.resources.maximum_event_bytes"
+    },
+    "PROJECT_ONE_MODEL_LIFECYCLE_RESOURCES_OPEN_FILES": {
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 4096,
+      "default": 256,
+      "x-runtime-path": "runtime.model_lifecycle.resources.open_files"
+    },
+    "PROJECT_ONE_MODEL_PREPARATION_ARTIFACT_ROOT": {
+      "type": "string",
+      "minLength": 1,
+      "x-runtime-path": "model_preparation.artifact_root"
+    },
+    "PROJECT_ONE_MODEL_PREPARATION_IMAGE_REFERENCE": {
+      "type": "string",
+      "minLength": 1,
+      "x-runtime-path": "model_preparation.image_reference"
+    },
+    "PROJECT_ONE_MODEL_PREPARATION_IMAGE_ID": {
+      "type": "string",
+      "minLength": 1,
+      "x-runtime-path": "model_preparation.image_id"
+    },
+    "PROJECT_ONE_MODEL_PREPARATION_WORKER_SOURCE_SHA256": {
+      "type": "string",
+      "minLength": 1,
+      "x-runtime-path": "model_preparation.worker_source_sha256"
+    }
+  }
+}

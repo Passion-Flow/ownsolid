@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/configuration/control-http-policy/v1",
+  "title": "Effective control HTTP policy",
+  "description": "Complete effective runtime.http after owned defaults and explicit overlays; the typed loader additionally enforces cross-field relations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "installation_lease_interval_seconds",
+    "startup_seconds",
+    "read_header_seconds",
+    "request_seconds",
+    "idle_seconds",
+    "shutdown_seconds",
+    "max_connections",
+    "max_active_requests",
+    "rate_limit_fallback_retry_seconds",
+    "service_unavailable_retry_seconds"
+  ],
+  "properties": {
+    "installation_lease_interval_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "default": 5,
+      "description": "mandatory original installation lease check interval; request_seconds bounds each probe; shutdown_seconds bounds lifecycle join"
+    },
+    "startup_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 20,
+      "description": "startup readiness budget"
+    },
+    "read_header_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "default": 5,
+      "description": "request header deadline"
+    },
+    "request_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 15,
+      "description": "request and captured transaction deadline"
+    },
+    "idle_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 600,
+      "default": 60,
+      "description": "idle connection deadline"
+    },
+    "shutdown_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 120,
+      "default": 5,
+      "description": "bounded listener shutdown"
+    },
+    "max_connections": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096,
+      "default": 128,
+      "description": "shared browser/machine connection capacity"
+    },
+    "max_active_requests": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2048,
+      "default": 64,
+      "description": "shared active request admission capacity"
+    },
+    "rate_limit_fallback_retry_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 900,
+      "description": "429 retry advice when positive typed wait is absent"
+    },
+    "service_unavailable_retry_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 2,
+      "description": "503 temporary failure retry advice"
+    }
+  }
+}

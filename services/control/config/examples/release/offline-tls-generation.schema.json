@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Complete offline TLS operation after explicit environment overlay",
+  "description": "Canonical materialized operation. V1 historical omitted/base overlay acceptance remains in the Go loader; V2 requires complete independent base. Canonical paths, distinct references, UTF8/control rules and private filesystem ownership are enforced by the typed runtime boundary.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format_version",
+        "certificate_file",
+        "private_key_file",
+        "trust_bundle_file",
+        "reason"
+      ],
+      "properties": {
+        "format_version": {
+          "const": 1
+        },
+        "certificate_file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^/"
+        },
+        "private_key_file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^/"
+        },
+        "trust_bundle_file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^/"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format_version",
+        "certificate_file",
+        "private_key_file",
+        "trust_bundle_file",
+        "reason",
+        "target"
+      ],
+      "properties": {
+        "format_version": {
+          "const": 2
+        },
+        "certificate_file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^/"
+        },
+        "private_key_file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^/"
+        },
+        "trust_bundle_file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^/"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "target": {
+          "enum": [
+            "browser",
+            "machine"
+          ]
+        }
+      }
+    }
+  ]
+}

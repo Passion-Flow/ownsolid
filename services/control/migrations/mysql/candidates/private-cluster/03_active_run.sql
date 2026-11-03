@@ -1,0 +1,1 @@
+ALTER TABLE private_cluster_connections ADD CONSTRAINT private_cluster_active_run FOREIGN KEY(tenant_id,workspace_id,id,active_run_id) REFERENCES private_cluster_runs(tenant_id,workspace_id,connection_id,id);

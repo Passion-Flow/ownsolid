@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Protected offline release factory configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "description": "Optional fields overlay embedded owned defaults; explicit env-file then overrides. Runtime enforces maximum_total_bytes>=maximum_asset_bytes, canonical reference ownership, signatures, real mount identity and command-specific required paths. Reject null/aliases/duplicate fields.",
+  "properties": {
+    "mount_root": {
+      "type": "string",
+      "default": "",
+      "description": "Explicit canonical protected reference; command-specific real mount/ownership checks apply. No secret value belongs here."
+    },
+    "artifact_root": {
+      "type": "string",
+      "default": "",
+      "description": "Explicit canonical protected reference; command-specific real mount/ownership checks apply. No secret value belongs here."
+    },
+    "manifest_file": {
+      "type": "string",
+      "default": "",
+      "description": "Explicit canonical protected reference; command-specific real mount/ownership checks apply. No secret value belongs here."
+    },
+    "trust_file": {
+      "type": "string",
+      "default": "",
+      "description": "Explicit canonical protected reference; command-specific real mount/ownership checks apply. No secret value belongs here."
+    },
+    "private_key_file": {
+      "type": "string",
+      "default": "",
+      "description": "Explicit canonical protected reference; command-specific real mount/ownership checks apply. No secret value belongs here."
+    },
+    "output_file": {
+      "type": "string",
+      "default": "",
+      "description": "Explicit canonical protected reference; command-specific real mount/ownership checks apply. No secret value belongs here."
+    },
+    "maximum_manifest_bytes": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 4194304,
+      "default": 1048576
+    },
+    "maximum_assets": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096,
+      "default": 512
+    },
+    "maximum_asset_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1099511627776,
+      "default": 34359738368
+    },
+    "maximum_total_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4398046511104,
+      "default": 68719476736
+    },
+    "maximum_metadata_bytes": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 16777216,
+      "default": 4194304
+    },
+    "maximum_archive_entries": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 131072,
+      "default": 16384
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 86400,
+      "default": 1800
+    },
+    "compression_level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9,
+      "default": 1
+    },
+    "minimum_free_bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1125899906842624,
+      "default": 0,
+      "description": "0 preserves legacy30percent selected-filesystem floor; positive bytes selects projected allocation plus fixed reserve. Actual host/internal backing/RAM/CPU admission remains separate."
+    },
+    "allow_test_fixture": {
+      "type": "boolean",
+      "default": false,
+      "description": "Synthetic fixture profile only; never production qualification."
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "projectone.mysql-backup-policy.v1",
+  "title": "MySQLBackupConfiguration explicit JSON projection; Go owner validates canonical paths/relationships",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_manifest_file",
+    "client_file",
+    "client_sha256",
+    "dump_file",
+    "dump_sha256",
+    "maximum_manifest_bytes",
+    "maximum_sql_bytes",
+    "maximum_store_bytes",
+    "maximum_store_files",
+    "minimum_free_bytes",
+    "operation_seconds",
+    "scratch_root",
+    "termination_grace_seconds"
+  ],
+  "properties": {
+    "client_file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dump_file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_manifest_file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scratch_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "client_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "dump_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "operation_seconds": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 86400
+    },
+    "termination_grace_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60
+    },
+    "maximum_store_bytes": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 1099511627776
+    },
+    "maximum_store_files": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "maximum_sql_bytes": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 1099511627776
+    },
+    "maximum_manifest_bytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 16777216
+    },
+    "minimum_free_bytes": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 1099511627776
+    }
+  }
+}
