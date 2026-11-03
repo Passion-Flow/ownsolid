@@ -23,6 +23,11 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 - [ ] DEL-107 Helm chart with values schema, image-address rewrite, secret references, ingress and TLS (P1) - Catalog: F216, F228, F492
 - [ ] DEL-108 In-site OCI registry bootstrapped from the bundle; images pinned by digest (P1) - Catalog: F494
 - [ ] DEL-109 Offline license activation, renewal and migration with the ownsolid-entitlement file format (P1) - Catalog: F443, F501, F646
+  - Before starting this item: freeze the license format in `pkg/license`, then tell the
+    owner it is time to start `ownsolid-entitlement` in a separate chat. That repository
+    first gets its own roadmap (customers, issue, renew, revoke, export, audit, console),
+    starting from the old issuer CLI in project-one `tools/release/licensing`. Test this
+    item against licenses signed by that issuer.
 - [ ] DEL-110 Third-party license and notice inventory shipped in every bundle (P1) - Catalog: F226, F356, F535
 
 ## P2 Fleet operations
