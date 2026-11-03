@@ -9,6 +9,11 @@ Read this file before changing anything. `CLAUDE.md` imports it.
    the product decisions, the work order and the tick rule.
 2. Open only the module file you will work on and take the next open item of the
    current phase whose dependencies are done.
+   - **Before the first item of a module**, review that module: check its item list
+     against current upstream documentation and comparable products, confirm the
+     technical approach is still current, and add any missing capability as new items
+     (with the next free IDs) before writing code. Commit the roadmap change on its own,
+     and record the date of the review at the top of the module file.
 3. Read [`docs/development/environment.md`](docs/development/environment.md) before
    using toolchains, servers or the tunnel.
 4. When an item meets the definition of done, tick it with its evidence link, run
