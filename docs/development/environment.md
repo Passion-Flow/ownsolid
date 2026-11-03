@@ -33,8 +33,9 @@ runs userspace Tailscale built from source:
 - Binaries in `~/.local/bin`, state in `~/.local/state/tailscale-userspace`.
 - `~/.ssh/config` defines `Host ownsolid-cpu` with a `ProxyCommand` through
   `tailscale --socket=<state>/tailscaled.sock nc %h %p`. Use `ssh ownsolid-cpu`.
-- After a reboot, start the daemon again:
-  `nohup ~/.local/bin/tailscaled --tun=userspace-networking --statedir=$HOME/.local/state/tailscale-userspace --socket=$HOME/.local/state/tailscale-userspace/tailscaled.sock --port=0 >/dev/null 2>&1 &`
+- The daemon runs as the launch agent `com.ownsolid.tailscaled`
+  (`~/Library/LaunchAgents/com.ownsolid.tailscaled.plist`). It starts at login and
+  restarts if it exits. Check it with `launchctl print gui/$(id -u)/com.ownsolid.tailscaled`.
 - Browsers cannot reach tunnel addresses directly; use SSH port forwarding.
 
 ## Network notes for China
