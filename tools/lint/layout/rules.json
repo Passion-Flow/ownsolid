@@ -1,0 +1,28 @@
+{
+  "root_files": [
+    "README.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "Makefile", "go.work", "go.work.sum",
+    ".gitignore", ".gitattributes", ".editorconfig"
+  ],
+  "top_directories": {
+    ".github": ["workflows"],
+    "api": ["openapi", "agent", "schemas"],
+    "catalog": ["apps"],
+    "deploy": ["compose", "helm", "images", "offline", "systemd"],
+    "docs": ["product", "architecture", "operations", "development", "decisions"],
+    "pkg": null,
+    "runtimes": null,
+    "services": ["control", "agent", "gateway"],
+    "tests": ["e2e"],
+    "tools": ["codegen", "dev", "lint", "release"],
+    "web": ["apps", "packages"]
+  },
+  "top_directory_files": [
+    "README.md", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "tsconfig.base.json"
+  ],
+  "env_example": "deploy/compose/.env.example",
+  "conventional_names": [
+    "README.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "NOTICE", "Makefile",
+    "Dockerfile", "Chart.yaml", "Cargo.toml", "Cargo.lock"
+  ],
+  "hidden_names": [".github", ".gitignore", ".gitattributes", ".editorconfig", ".gitkeep", ".env.example"]
+}

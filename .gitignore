@@ -1,0 +1,33 @@
+# Operating system and editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local environment and secrets (examples live in deploy/compose/.env.example)
+.env
+.env.*
+!deploy/compose/.env.example
+*.pem
+*.key
+
+# Build output
+/bin/
+/dist/
+/out/
+**/target/
+**/node_modules/
+**/dist/
+**/.vite/
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
+*.egg-info/
+
+# Runtime data, models and datasets never enter Git
+/data/
+/models/
+/datasets/
+*.safetensors
+*.gguf
+*.tar.gz
