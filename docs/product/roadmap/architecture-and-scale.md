@@ -18,7 +18,8 @@ agents is not.
 - [x] ARC-002 Backend moved into the ownsolid layout with behavior unchanged (P0) - Evidence: commit df6fbd5
 - [x] ARC-003 Merge the dozen deployment profiles into one topology model with sizes: single node, HA, cell, multi-cell, multi-site; remove profile branches from code, configuration and UI (P0) - Evidence: commits 17e8506, e38f5cf (ADR 0003, 0005)
   - Scope of the evidence: only `single-node` is accepted today. `api/release` keeps one release profile, still named `mvp-postgresql-cpu-v1`; DEL-101 renames it.
-- [ ] ARC-004 Cell ID and site ID in every resource key, table and API path, even with one cell (P0)
+- [x] ARC-004 Cell ID and site ID in every resource key, table and API path, even with one cell (P0) - Evidence: commit 4d36bfa (ADR 0006)
+  - Scope of the evidence: PostgreSQL only; MySQL and Dameng chains lack the columns until CMP-201 and CMP-202. Site and cell are fixed to `default` until ARC-202.
 - [ ] ARC-005 Agent protocol v1: agent-initiated long-lived gRPC stream over HTTP/2 through a stateless gateway tier, with long-poll fallback (P0)
 - [ ] ARC-006 Task semantics: per-node sequence numbers, idempotent tasks, acknowledgements, resume from last ack, rate-limited full resync (P0)
 - [ ] ARC-007 Server-paced heartbeat interval, jitter and reconnect delay, changeable at runtime; full-jitter backoff; retry at one layer only (P0)
