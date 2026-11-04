@@ -40,6 +40,11 @@ images:
 network:
   bind_address: 127.0.0.1
   https_port: 8443
+  # Optional, default 172.31.254.0/26. Private IPv4 subnet, /16 to /28, of the internal
+  # network that carries database traffic; it must not overlap a network this host
+  # reaches. PostgreSQL takes its second address, so the database is never looked up in
+  # DNS. Changing it on an existing installation needs `docker compose down` first.
+  state_subnet: 172.31.254.0/26
 
 # Required. Browser origins, https only, and different from each other: the host name
 # selects the audience. Use your real host names or IP addresses.

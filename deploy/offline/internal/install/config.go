@@ -4,11 +4,13 @@ package install
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/mail"
+	"net/netip"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -72,7 +74,32 @@ type ImagesConfig struct {
 type NetworkConfig struct {
 	BindAddress string `yaml:"bind_address"`
 	HTTPSPort   int    `yaml:"https_port"`
+	// StateSubnet is the private IPv4 subnet of the internal network that carries
+	// database traffic. PostgreSQL takes a fixed address in it, so no service ever asks
+	// DNS for the database: a lookup while the database is stopped would otherwise be
+	// forwarded to the site resolvers, with the host's search domains appended.
+	StateSubnet string `yaml:"state_subnet"`
 }
+
+// State subnet sizes: large enough for every service of a node, small enough to fit
+// beside the site's own networks.
+const (
+	stateSubnetMinBits = 16
+	stateSubnetMaxBits = 28
+)
+
+// stateAddresses splits the state subnet: Docker's bridge takes the first host address,
+// PostgreSQL the second, and containers without a fixed address draw from the upper
+// half so they can never take the database's address.
+func (n NetworkConfig) stateAddresses() (postgres netip.Addr, dynamic netip.Prefix) {
+	subnet := netip.MustParsePrefix(n.StateSubnet)
+	postgres = subnet.Addr().Next().Next()
+	base := subnet.Addr().As4()
+	var upper [4]byte
+	binary.BigEndian.PutUint32(upper[:], binary.BigEndian.Uint32(base[:])+1<<(31-subnet.Bits()))
+	return postgres, netip.PrefixFrom(netip.AddrFrom4(upper), subnet.Bits()+1)
+}
+
 type OriginsConfig struct {
 	Portal string `yaml:"portal"`
 	Admin  string `yaml:"admin"`
@@ -116,6 +143,7 @@ func defaults() Config {
 	c.Runtime = RuntimeConfig{UID: 10001, GID: 10001, PostgresUID: 999}
 	c.Network.BindAddress = "127.0.0.1"
 	c.Network.HTTPSPort = 8443
+	c.Network.StateSubnet = "172.31.254.0/26"
 	c.TLS.Source = "generate"
 	c.SMTP.Port = 587
 	c.SMTP.TLSMode = "starttls_required"
@@ -188,6 +216,10 @@ func (c Config) Validate() error {
 	}
 	if c.Network.HTTPSPort < 1 || c.Network.HTTPSPort > 65535 {
 		return invalid("network.https_port", "must be 1 to 65535")
+	}
+	if subnet, e := netip.ParsePrefix(c.Network.StateSubnet); e != nil || !subnet.Addr().Is4() || subnet.Masked() != subnet ||
+		!subnet.Addr().IsPrivate() || subnet.Bits() < stateSubnetMinBits || subnet.Bits() > stateSubnetMaxBits {
+		return invalid("network.state_subnet", fmt.Sprintf("must be a private IPv4 network address with a prefix of /%d to /%d, for example 172.31.254.0/26", stateSubnetMinBits, stateSubnetMaxBits))
 	}
 	if e := c.validateOrigins(); e != nil {
 		return e

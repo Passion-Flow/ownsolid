@@ -1,5 +1,6 @@
 // Package e2e drives the real installer and control plane. run-single-node.sh runs it
-// inside a container with no network route, so everything it proves works offline.
+// inside a container whose only way off the host is the egress recorder, so everything
+// it proves works offline and any outbound attempt fails the run.
 package e2e
 
 import (
@@ -13,6 +14,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/netip"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,6 +33,7 @@ const (
 
 type environment struct {
 	installer, composeFile, controlImage, postgresImage, archive, root, agent string
+	egress                                                                    egressWatch
 	// licenseKey signs the test's license; its trust file is in every configuration.
 	licenseKey license.PrivateKey
 	trust      license.Trust
@@ -42,10 +45,14 @@ func loadEnvironment(t *testing.T) environment {
 		installer: os.Getenv("OWNSOLID_E2E_INSTALLER"), composeFile: os.Getenv("OWNSOLID_E2E_COMPOSE_FILE"),
 		controlImage: os.Getenv("OWNSOLID_E2E_CONTROL_IMAGE"), postgresImage: os.Getenv("OWNSOLID_E2E_POSTGRES_IMAGE"),
 		archive: os.Getenv("OWNSOLID_E2E_IMAGE_ARCHIVE"), root: os.Getenv("OWNSOLID_E2E_ROOT"),
-		agent: os.Getenv("OWNSOLID_E2E_AGENT"),
+		agent:  os.Getenv("OWNSOLID_E2E_AGENT"),
+		egress: egressWatch{log: os.Getenv("OWNSOLID_E2E_EGRESS_LOG"), iface: os.Getenv("OWNSOLID_E2E_EGRESS_INTERFACE")},
 	}
 	if e.installer == "" {
 		t.Skip("needs tests/e2e/run-single-node.sh, which sets OWNSOLID_E2E_INSTALLER")
+	}
+	if e.egress.log == "" || e.egress.iface == "" {
+		t.Fatal("OWNSOLID_E2E_EGRESS_LOG and OWNSOLID_E2E_EGRESS_INTERFACE must name the egress recorder")
 	}
 	var err error
 	if e.licenseKey, e.trust, err = license.GenerateKey("e2e-issuer"); err != nil {
@@ -236,17 +243,7 @@ func TestSingleNodeInstall(t *testing.T) {
 	directory := t.TempDir()
 	config := e.configuration(t, directory, "single-node", e.controlImage)
 
-	t.Run("host has no network route", func(t *testing.T) {
-		raw, err := os.ReadFile("/proc/net/route")
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, line := range strings.Split(string(raw), "\n") {
-			if fields := strings.Fields(line); len(fields) > 1 && fields[1] == "00000000" {
-				t.Fatalf("a default route exists: %s", line)
-			}
-		}
-	})
+	t.Run("host reaches nothing but the egress recorder", e.egress.assertIsolated)
 
 	t.Run("configuration is validated", func(t *testing.T) {
 		if output, err := run(t, e.installer, "validate", "--config", config); err != nil || !strings.Contains(output, "INSTALL_CONFIG_VALID") {
@@ -321,12 +318,14 @@ func TestSingleNodeInstall(t *testing.T) {
 		}
 	})
 
-	t.Run("workloads have no route out", func(t *testing.T) {
+	t.Run("workload egress is recorded and refused", func(t *testing.T) {
 		// Exits zero only when the connection fails.
-		probe := "import socket,sys;s=socket.socket();s.settimeout(3);sys.exit(0 if s.connect_ex(('1.1.1.1',443)) else 1)"
+		target := netip.MustParseAddrPort("192.0.2.2:443")
+		probe := fmt.Sprintf("import socket,sys;s=socket.socket();s.settimeout(3);sys.exit(0 if s.connect_ex(('%s',%d)) else 1)", target.Addr(), target.Port())
 		if output, err := e.compose(t, "exec", "--no-TTY", "control", "python3", "-c", probe); err != nil {
-			t.Fatalf("control reached the internet: %v %s", err, output)
+			t.Fatalf("control reached %s: %v %s", target, err, output)
 		}
+		e.egress.expectRecorded(t, target)
 	})
 
 	t.Run("state survives a restart", func(t *testing.T) {

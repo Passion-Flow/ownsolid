@@ -18,5 +18,8 @@ Rules a change must keep:
 - Only `control-operator` mounts the operator directory, which holds the privileged
   database identity. Serving uses a restricted role.
 - The `state` network stays internal. Only `control` joins `edge`.
+- PostgreSQL keeps its fixed address on `state`, and clients connect by that address,
+  never by name: Docker forwards unknown names to the site resolvers whenever the
+  database is stopped ([ADR 0008](../../docs/decisions/0008-zero-egress-harness.md)).
 - A new variable is added to `.env.example` and to `ComposeVariables` in
   `deploy/offline/internal/install`. A test compares all three.

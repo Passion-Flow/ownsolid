@@ -260,7 +260,7 @@ func (a *agentProcess) runTask(t *testing.T, within time.Duration) {
 	t.Fatalf("task %s did not succeed within %s\n%s", task.ID, within, a.output())
 }
 
-func (a *agentProcess) output() string      { return a.log.String() }
+func (a *agentProcess) output() string       { return a.log.String() }
 func (a *agentProcess) logged(s string) bool { return strings.Contains(a.output(), s) }
 
 func (a *agentProcess) running() bool {

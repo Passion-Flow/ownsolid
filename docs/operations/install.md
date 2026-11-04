@@ -6,7 +6,10 @@ Compose. Other sizes are refused until their roadmap items land.
 
 ## What you need
 
-- Linux amd64 with Docker Engine and the Compose plugin. No network connection is needed.
+- Linux amd64 with Docker Engine and the Compose plugin. No network connection is needed:
+  the installed platform makes no outbound connection, not even a DNS lookup of its own
+  services. The database network uses `network.state_subnet` (default
+  `172.31.254.0/26`); choose another private subnet if the host already reaches that one.
 - `ownsolid-install`, `compose.yaml` and an image archive holding the control and
   PostgreSQL images.
 - The license issuer's public trust file.

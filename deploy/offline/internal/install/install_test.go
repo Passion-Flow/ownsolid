@@ -68,6 +68,26 @@ func TestDecodeAppliesDefaults(t *testing.T) {
 	}
 }
 
+func TestStateSubnetFixesTheDatabaseAddressOutsideTheDynamicRange(t *testing.T) {
+	for subnet, want := range map[string][2]string{
+		"172.31.254.0/26": {"172.31.254.2", "172.31.254.32/27"},
+		"10.20.0.0/16":    {"10.20.0.2", "10.20.128.0/17"},
+		"192.168.7.16/28": {"192.168.7.18", "192.168.7.24/29"},
+	} {
+		postgres, dynamic := NetworkConfig{StateSubnet: subnet}.stateAddresses()
+		if postgres.String() != want[0] || dynamic.String() != want[1] {
+			t.Errorf("%s: got %s and %s, want %v", subnet, postgres, dynamic, want)
+		}
+		if dynamic.Contains(postgres) {
+			t.Errorf("%s: the dynamic range holds the database address", subnet)
+		}
+	}
+	rendered := validConfig(t).ComposeVariables()
+	if rendered["OWNSOLID_STATE_SUBNET"] != "172.31.254.0/26" || rendered["OWNSOLID_POSTGRES_ADDRESS"] != "172.31.254.2" || rendered["OWNSOLID_STATE_DYNAMIC_RANGE"] != "172.31.254.32/27" {
+		t.Fatalf("default network variables: %v", rendered)
+	}
+}
+
 func TestDecodeRefusals(t *testing.T) {
 	base := validYAML(t, "/srv/ownsolid")
 	for name, test := range map[string]struct{ old, new, want string }{
@@ -93,6 +113,12 @@ func TestDecodeRefusals(t *testing.T) {
 		"admin email":        {"email: admin@ownsolid.test", "email: nobody", "administrator.email"},
 		"owned setting":      {"format_version: 1\n", "format_version: 1\ncontrol_settings: {server: {}}\n", "control_settings.server"},
 		"memory":             {"format_version: 1\n", "format_version: 1\nresources: {control_memory: lots}\n", "resources"},
+		"subnet not cidr":    {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 172.31.254.0}\n", "network.state_subnet"},
+		"subnet host bits":   {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 172.31.254.1/26}\n", "network.state_subnet"},
+		"subnet public":      {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 8.8.8.0/24}\n", "network.state_subnet"},
+		"subnet ipv6":        {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: \"fd00::/64\"}\n", "network.state_subnet"},
+		"subnet too small":   {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 10.0.0.0/29}\n", "network.state_subnet"},
+		"subnet too large":   {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 10.0.0.0/8}\n", "network.state_subnet"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			if !strings.Contains(base, test.old) {
@@ -173,7 +199,7 @@ func TestSecretsMeetControlFormatsAndStayOutOfCompose(t *testing.T) {
 		t.Fatalf("runtime password format: %v %d", e, len(decoded))
 	}
 	dsn, _ := os.ReadFile(filepath.Join(l.Config, "runtime-dsn"))
-	if !strings.Contains(string(dsn), runtimeRole+":"+strings.TrimSpace(string(password))+"@postgres:5432/ownsolid?sslmode=disable") {
+	if !strings.Contains(string(dsn), runtimeRole+":"+strings.TrimSpace(string(password))+"@172.31.254.2:5432/ownsolid?sslmode=disable") {
 		t.Fatal("runtime DSN does not carry the runtime identity")
 	}
 	operator, _ := os.ReadFile(filepath.Join(l.Secrets, "postgres-password"))

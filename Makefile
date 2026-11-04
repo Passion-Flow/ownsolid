@@ -39,10 +39,11 @@ image-control: ## Build the control plane image from source (CONTROL_IMAGE, DOCK
 		| COPYFILE_DISABLE=1 tar --format=ustar --no-xattrs --null -T - -cf - \
 		| $(DOCKER) build -t $(CONTROL_IMAGE) -f deploy/images/control/Dockerfile -
 
-e2e-binaries: ## Build the Linux amd64 installer, agent and end-to-end test for tests/e2e/run-single-node.sh
+e2e-binaries: ## Build the Linux amd64 installer, agent, egress recorder and end-to-end test for tests/e2e/run-single-node.sh
 	@mkdir -p $(E2E_BIN)
 	@cd services/agent && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o ../../$(E2E_BIN)/agent ./cmd/agent
 	@cd deploy/offline && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o ../../$(E2E_BIN)/ownsolid-install ./cmd/install
+	@cd tests/e2e && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o ../../$(E2E_BIN)/egress-recorder ./cmd/egress-recorder
 	@cd tests/e2e && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c -o ../../$(E2E_BIN)/e2e.test .
 	@cp deploy/compose/compose.yaml $(E2E_BIN)/compose.yaml
 

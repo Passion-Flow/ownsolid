@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -24,7 +25,7 @@ const (
 	imageAdminAssets     = "/opt/projectone/admin"
 	imageBlocklist       = "/opt/projectone/security/password-blocklist.txt"
 	containerListen      = "0.0.0.0:8443"
-	databaseHost         = "postgres:5432"
+	databasePort         = "5432"
 	databaseName         = "ownsolid"
 	migratorRole         = "ownsolid_migrator"
 	runtimeRole          = "ownsolid_runtime"
@@ -99,8 +100,9 @@ func Materialize(c Config) error {
 			return e
 		}
 	}
+	postgresAddress, _ := c.Network.stateAddresses()
 	dsn := func(role, password string) []byte {
-		u := url.URL{Scheme: "postgres", User: url.UserPassword(role, password), Host: databaseHost, Path: "/" + databaseName, RawQuery: "sslmode=disable"}
+		u := url.URL{Scheme: "postgres", User: url.UserPassword(role, password), Host: net.JoinHostPort(postgresAddress.String(), databasePort), Path: "/" + databaseName, RawQuery: "sslmode=disable"}
 		return []byte(u.String() + "\n")
 	}
 	if e = writeFile(filepath.Join(l.Config, "runtime-dsn"), dsn(runtimeRole, runtimePassword), c, true); e != nil {
@@ -203,8 +205,11 @@ func (c Config) renderControl(dsnFile string) ([]byte, error) {
 // ComposeVariables are the values compose.yaml consumes.
 func (c Config) ComposeVariables() map[string]string {
 	l := c.Layout()
+	postgresAddress, dynamicRange := c.Network.stateAddresses()
 	return map[string]string{
-		"OWNSOLID_PROJECT": c.Project, "OWNSOLID_CONTROL_IMAGE": c.Images.Control, "OWNSOLID_POSTGRES_IMAGE": c.Images.Postgres,
+		"OWNSOLID_STATE_SUBNET": c.Network.StateSubnet, "OWNSOLID_STATE_DYNAMIC_RANGE": dynamicRange.String(),
+		"OWNSOLID_POSTGRES_ADDRESS": postgresAddress.String(),
+		"OWNSOLID_PROJECT":          c.Project, "OWNSOLID_CONTROL_IMAGE": c.Images.Control, "OWNSOLID_POSTGRES_IMAGE": c.Images.Postgres,
 		"OWNSOLID_RUNTIME_UID": strconv.Itoa(c.Runtime.UID), "OWNSOLID_RUNTIME_GID": strconv.Itoa(c.Runtime.GID),
 		"OWNSOLID_BIND_ADDRESS": c.Network.BindAddress, "OWNSOLID_HTTPS_PORT": strconv.Itoa(c.Network.HTTPSPort),
 		"OWNSOLID_CONFIG_DIR": l.Config, "OWNSOLID_OPERATOR_DIR": l.Operator, "OWNSOLID_POSTGRES_DATA": l.Postgres,

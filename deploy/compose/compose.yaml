@@ -16,7 +16,9 @@ services:
         source: ${OWNSOLID_POSTGRES_DATA:?}
         target: /var/lib/postgresql
         bind: {create_host_path: false}
-    networks: [state]
+    networks:
+      # A fixed address: clients connect by address and never look the database up.
+      state: {ipv4_address: "${OWNSOLID_POSTGRES_ADDRESS:?}"}
     mem_limit: ${OWNSOLID_POSTGRES_MEMORY:?}
     cpus: ${OWNSOLID_POSTGRES_CPUS:?}
     pids_limit: 256
@@ -81,8 +83,14 @@ services:
     security_opt: [no-new-privileges:true]
     restart: "no"
 networks:
-  # The database network has no route out of the host.
-  state: {internal: true}
+  # The database network has no route out of the host. Containers without a fixed
+  # address draw from the dynamic range, which excludes the database address.
+  state:
+    internal: true
+    ipam:
+      config:
+        - subnet: "${OWNSOLID_STATE_SUBNET:?}"
+          ip_range: "${OWNSOLID_STATE_DYNAMIC_RANGE:?}"
   # Carries the published port and the configured SMTP relay.
   edge: {}
 secrets:

@@ -58,7 +58,10 @@ and `PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA` for the repository tests, and use `
 
 `tests/e2e/run-single-node.sh` runs the real installer in a Docker-in-Docker container
 started with `--network none`, so the installer, its Docker daemon and every workload have
-no route anywhere. It needs a Linux amd64 host with Docker and takes about two minutes.
+no route anywhere. Its default route is a TUN interface held by `egress-recorder`
+([ADR 0008](../decisions/0008-zero-egress-harness.md)): every packet that tries to leave,
+including DNS queries, is logged and refused, and the run fails listing each attempt.
+It needs a Linux amd64 host with Docker and takes about two minutes.
 
 ```sh
 make image-control DOCKER='ssh ownsolid-cpu docker' CONTROL_IMAGE=ownsolid/control:e2e
