@@ -7,7 +7,7 @@ today and what is known to fail.
 | Capability | Implemented | Run end to end | Customer verified | Known failures |
 | --- | --- | --- | --- | --- |
 | Repository layout checks | Yes | Yes | n/a | None |
-| Single-node install (`ownsolid-install`, control image, Compose) | Yes | Yes: installed, signed in, restarted and reinstalled with no network route, Docker-in-Docker on `ownsolid-cpu` | No | Web console not included; both origins serve a static page until UX-001 |
+| Single-node install (`ownsolid-install`, control image, Compose) | Partly: no web console | API only: installed, signed in, restarted and reinstalled with no network route, Docker-in-Docker on `ownsolid-cpu` | No | No console or portal: both origins serve a placeholder page. Not complete until UX-001 (DEL-001) |
 
 Backend code from the previous `project-one` repository now lives in this layout. The
 control plane runs one complete platform with one PostgreSQL lineage and a

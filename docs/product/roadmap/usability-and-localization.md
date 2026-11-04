@@ -8,6 +8,7 @@ The new console and portal, built to the design system, and the localization pip
 ## P0 Foundation
 
 - [ ] UX-001 Web workspace: `web/apps/console`, `web/apps/portal`, `web/packages/{ui,api,i18n,config}`, ESLint, Prettier, Vitest, Playwright (P0)
+  - Also build `web/` into `deploy/images/control` in place of the placeholder page. DEL-001 waits for this.
 - [ ] UX-002 Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0)
 - [ ] UX-003 Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427
 - [ ] UX-004 Typed API client generated from `api/openapi` (P0) - Catalog: F540

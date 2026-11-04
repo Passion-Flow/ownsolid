@@ -37,10 +37,10 @@ which optional integrations are configured.
   never mounts the privileged database identity.
 - **Proof runs with no network.** `tests/e2e/run-single-node.sh` runs the real installer in a
   Docker-in-Docker container started with `--network none`.
-- **Web assets come later.** `web/` does not exist yet, and `serve` needs both asset roots. The
-  image carries a static page stating that the console is not included, and the API is the
-  interface until UX-001 replaces it. This is stated on the page, in the install guide and
-  in the status table.
+- **The web build is part of this path.** `web/` does not exist yet, and `serve` needs both
+  asset roots. Until UX-001 the image carries a placeholder page so the installer can be tested.
+  That is not a delivered state: DEL-001 stays open until the image serves the console and
+  portal built from `web/`.
 - **Stores stay optional when serving.** This settles the rule ADR 0003 left open:
   `serve` does not require the model, dataset, training or preparation stores, because a
   fresh installation has to serve before those stores exist. The owning roadmap items set

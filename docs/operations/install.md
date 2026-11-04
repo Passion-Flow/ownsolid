@@ -91,8 +91,9 @@ instead of issuing a second one.
 
 ## Limits of this release
 
-- The console and portal pages are not in the image yet: until the web workspace lands,
-  both origins serve a page saying so, and the API is the interface.
+- The console and portal are not in the image yet: both origins serve a placeholder page,
+  and the API is the only interface. This install path is not complete until they land
+  (DEL-001, UX-001).
 - Upgrades, rollback and signed bundles are separate roadmap items (DEL-101, DEL-104,
   DEL-105). Do not reuse an install root across versions.
 - Model, dataset and training stores are not set up by the installer.
