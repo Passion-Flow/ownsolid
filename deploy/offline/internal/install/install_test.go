@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -34,6 +35,8 @@ runtime: {uid: ` + itoa(os.Getuid()) + `, gid: ` + itoa(os.Getgid()) + `}
 images:
   control: ownsolid/control:1.2.3
   postgres: pgvector/pgvector@sha256:` + strings.Repeat("a", 64) + `
+  metrics: victoriametrics/victoria-metrics:v1.155.0
+  logs: victoriametrics/victoria-logs:v1.53.0
 origins:
   portal: https://portal.ownsolid.test:8443
   admin: https://admin.ownsolid.test:8443
@@ -74,12 +77,17 @@ func TestStateSubnetFixesTheDatabaseAddressOutsideTheDynamicRange(t *testing.T) 
 		"10.20.0.0/16":    {"10.20.0.2", "10.20.128.0/17"},
 		"192.168.7.16/28": {"192.168.7.18", "192.168.7.24/29"},
 	} {
-		postgres, dynamic := NetworkConfig{StateSubnet: subnet}.stateAddresses()
-		if postgres.String() != want[0] || dynamic.String() != want[1] {
-			t.Errorf("%s: got %s and %s, want %v", subnet, postgres, dynamic, want)
+		a := NetworkConfig{StateSubnet: subnet}.stateAddresses()
+		if a.Postgres.String() != want[0] || a.Dynamic.String() != want[1] {
+			t.Errorf("%s: got %s and %s, want %v", subnet, a.Postgres, a.Dynamic, want)
 		}
-		if dynamic.Contains(postgres) {
-			t.Errorf("%s: the dynamic range holds the database address", subnet)
+		if a.Metrics != a.Postgres.Next() || a.Logs != a.Metrics.Next() {
+			t.Errorf("%s: store addresses are not consecutive: %+v", subnet, a)
+		}
+		for _, store := range []netip.Addr{a.Postgres, a.Metrics, a.Logs} {
+			if a.Dynamic.Contains(store) {
+				t.Errorf("%s: the dynamic range holds store address %s", subnet, store)
+			}
 		}
 	}
 	rendered := validConfig(t).ComposeVariables()
@@ -113,6 +121,11 @@ func TestDecodeRefusals(t *testing.T) {
 		"admin email":        {"email: admin@ownsolid.test", "email: nobody", "administrator.email"},
 		"owned setting":      {"format_version: 1\n", "format_version: 1\ncontrol_settings: {server: {}}\n", "control_settings.server"},
 		"memory":             {"format_version: 1\n", "format_version: 1\nresources: {control_memory: lots}\n", "resources"},
+		"metrics image":      {"victoriametrics/victoria-metrics:v1.155.0", "victoriametrics/victoria-metrics:latest", "images.metrics"},
+		"logs image":         {"victoriametrics/victoria-logs:v1.53.0", "victoriametrics/victoria-logs", "images.logs"},
+		"retention":          {"format_version: 1\n", "format_version: 1\ntelemetry: {logs_retention: 1y}\n", "telemetry"},
+		"store memory":       {"format_version: 1\n", "format_version: 1\nresources: {metrics_memory: lots}\n", "resources"},
+		"store cpus":         {"format_version: 1\n", "format_version: 1\nresources: {logs_cpus: many}\n", "resources"},
 		"subnet not cidr":    {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 172.31.254.0}\n", "network.state_subnet"},
 		"subnet host bits":   {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 172.31.254.1/26}\n", "network.state_subnet"},
 		"subnet public":      {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 8.8.8.0/24}\n", "network.state_subnet"},
@@ -340,7 +353,7 @@ func TestApplyRunsTheStepsInOrder(t *testing.T) {
 	if e := testInstaller(c, runner, &out).apply(context.Background()); e != nil {
 		t.Fatal(e)
 	}
-	order := []string{"docker version", "compose version", "load --input /bundle/images.tar", "image inspect", "stop control", "up --detach --wait --no-build postgres", "CREATE EXTENSION", " migrate ", "prepare-runtime-access", "check-schema", "bootstrap-admin-file", "up --detach --wait --no-build control"}
+	order := []string{"docker version", "compose version", "load --input /bundle/images.tar", "image inspect", "stop control", "up --detach --wait --no-build postgres", "up --detach --wait --no-build metrics", "up --detach --wait --no-build logs", "/health", "CREATE EXTENSION", " migrate ", "prepare-runtime-access", "check-schema", "bootstrap-admin-file", "up --detach --wait --no-build control"}
 	position := 0
 	for _, command := range runner.commands {
 		if position < len(order) && strings.Contains(command, order[position]) {
@@ -480,13 +493,13 @@ func TestStatusReportsWhatIsRunning(t *testing.T) {
 	if e := Materialize(c); e != nil {
 		t.Fatal(e)
 	}
-	healthy := `{"Service":"postgres","State":"running","Health":"healthy"}` + "\n" + `{"Service":"control","State":"running","Health":"healthy"}` + "\n"
+	healthy := `{"Service":"postgres","State":"running","Health":"healthy"}` + "\n" + `{"Service":"metrics","State":"running","Health":"healthy"}` + "\n" + `{"Service":"control","State":"running","Health":"healthy"}` + "\n"
 	ok := func(context.Context, Config, string) error { return nil }
 	var out bytes.Buffer
 	if e := status(context.Background(), c, &fakeRunner{answer: func(string) (string, error) { return healthy, nil }}, ok, &out); e != nil {
 		t.Fatalf("%v\n%s", e, out.String())
 	}
-	stopped := `{"Service":"postgres","State":"running","Health":"healthy"}` + "\n" + `{"Service":"control","State":"exited","Health":""}` + "\n"
+	stopped := `{"Service":"postgres","State":"running","Health":"healthy"}` + "\n" + `{"Service":"metrics","State":"running","Health":"healthy"}` + "\n" + `{"Service":"control","State":"exited","Health":""}` + "\n"
 	if e := status(context.Background(), c, &fakeRunner{answer: func(string) (string, error) { return stopped, nil }}, ok, &out); e == nil || !strings.Contains(e.Error(), "control") {
 		t.Fatalf("stopped control reported healthy: %v", e)
 	}
@@ -576,6 +589,55 @@ func TestComposeNeverGivesServingThePrivilegedIdentity(t *testing.T) {
 		if strings.Contains(volume.Source, "OPERATOR") {
 			t.Fatal("the serving container mounts the operator directory")
 		}
+	}
+}
+
+func TestTelemetryWaitsForTheLogsStoreAndNamesItsFailure(t *testing.T) {
+	c := validConfig(t)
+	probes := 0
+	ready := &fakeRunner{answer: func(line string) (string, error) {
+		if strings.Contains(line, "/health") {
+			if probes++; probes < 3 {
+				return "connection refused", errors.New("exit status 1")
+			}
+		}
+		return "", nil
+	}}
+	if e := testInstaller(c, ready, &bytes.Buffer{}).telemetry(context.Background()); e != nil || probes != 3 {
+		t.Fatalf("probes %d, error %v", probes, e)
+	}
+
+	never := &fakeRunner{answer: func(line string) (string, error) {
+		if strings.Contains(line, "/health") {
+			return "connection refused", errors.New("exit status 1")
+		}
+		return "", nil
+	}}
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	var step *StepError
+	e := testInstaller(c, never, &bytes.Buffer{}).telemetry(ctx)
+	if !errors.As(e, &step) || step.Code != "INSTALL_LOGS_START_FAILED" || !strings.Contains(step.Detail, "connection refused") {
+		t.Fatalf("got %v", e)
+	}
+}
+
+func TestStatusReportsAStoppedLogsStore(t *testing.T) {
+	c := validConfig(t)
+	if e := Materialize(c); e != nil {
+		t.Fatal(e)
+	}
+	healthy := `{"Service":"postgres","State":"running","Health":"healthy"}` + "\n" + `{"Service":"metrics","State":"running","Health":"healthy"}` + "\n" + `{"Service":"control","State":"running","Health":"healthy"}` + "\n"
+	runner := &fakeRunner{answer: func(line string) (string, error) {
+		if strings.Contains(line, "/health") {
+			return "connection refused", errors.New("exit status 1")
+		}
+		return healthy, nil
+	}}
+	ok := func(context.Context, Config, string) error { return nil }
+	var out bytes.Buffer
+	if e := status(context.Background(), c, runner, ok, &out); e == nil || !strings.Contains(e.Error(), "logs is not ready") {
+		t.Fatalf("got %v\n%s", e, out.String())
 	}
 }
 

@@ -58,6 +58,20 @@ Set `PROJECT_ONE_TEST_DSN`. Add `-tags repository_integration` with
 `PROJECT_ONE_REPOSITORY_ENGINE=postgresql`, `PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE`
 and `PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA` for the repository tests, and use `umask 077`.
 
+## Log store integration tests
+
+The telemetry client has tests against a real log store, behind a build tag:
+
+```sh
+docker run -d --name vl -p 127.0.0.1:59428:9428 victoriametrics/victoria-logs:v1.53.0
+OWNSOLID_TEST_LOGS_ADDRESS=http://127.0.0.1:59428 \
+  go -C services/control test -tags telemetry_integration ./internal/platform/telemetrystore/
+```
+
+Component tests against PostgreSQL also need the pinned `node_exporter` archives, 1.12.1
+and 1.12.0, under `$PROJECT_ONE_STATE_ROOT/dependencies/components/node-exporter/<version>/linux-amd64/`.
+Without them the tests stop at `COMPONENT_ASSET_UNAVAILABLE` before reaching their subject.
+
 ## End-to-end install
 
 `tests/e2e/run-single-node.sh` runs the real installer in a Docker-in-Docker container
@@ -72,7 +86,8 @@ make image-control DOCKER='ssh ownsolid-cpu docker' CONTROL_IMAGE=ownsolid/contr
 make e2e-binaries
 scp bin/e2e/* tests/e2e/run-single-node.sh ownsolid-cpu:/root/e2e/
 ssh ownsolid-cpu 'cd /root/e2e && bash run-single-node.sh /root/e2e ownsolid/control:e2e \
-  pgvector/pgvector:0.8.7-pg18-bookworm docker:29.1.3-dind'
+  pgvector/pgvector:0.8.7-pg18-bookworm victoriametrics/victoria-metrics:v1.155.0 \
+  victoriametrics/victoria-logs:v1.53.0 docker:29.1.3-dind'
 ```
 
 `make test` skips this test without those inputs.

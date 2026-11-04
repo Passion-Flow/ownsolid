@@ -341,6 +341,13 @@ object_storage: {enabled: false}
 task_events:
   enabled: false
 
+# Optional. Log store of ADR 0009; ownsolid-install writes this section. Without it,
+# component logs report STORAGE_UNAVAILABLE and the rest of the platform runs normally.
+# telemetry:
+#   logs_address: http://172.31.254.4:9428
+#   request_timeout_seconds: 5
+#   queue_capacity: 4096
+
 # M30 owner: optional canonical absolute protected JSON file, no default.
 # Omit to disable diagnostics; present empty/null/false/relative values fail.
 # PROJECT_ONE_MONITORING_CONFIG_FILE in explicit serve --env-file overrides valid

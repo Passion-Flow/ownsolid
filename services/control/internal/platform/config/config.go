@@ -21,6 +21,7 @@ const MinimumDatabaseConnections int32 = 1
 const MaximumDatabaseConnections int32 = 32
 
 type Config struct {
+	Telemetry                 *TelemetryConfiguration       `yaml:"telemetry,omitempty"`
 	Topology                  TopologyConfiguration         `yaml:"topology,omitempty" json:"topology"`
 	ReleaseViewConfigFile     string                        `yaml:"release_view_config_file,omitempty" json:"-"`
 	MachineServer             *MachineServerConfiguration   `yaml:"machine_server,omitempty" json:"machine_server,omitempty"`
@@ -233,6 +234,9 @@ func decodeWithEnvironment(b []byte, environmentFile string) (Config, error) {
 	return c, nil
 }
 func (c Config) Validate() error {
+	if e := c.Telemetry.Validate(); e != nil {
+		return e
+	}
 	if e := c.ValidateReleaseViewReference(); e != nil {
 		return e
 	}

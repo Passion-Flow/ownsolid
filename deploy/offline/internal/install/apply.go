@@ -19,7 +19,10 @@ import (
 	"time"
 )
 
-const maximumDetailBytes = 2000
+const (
+	maximumDetailBytes    = 2000
+	readinessPollInterval = 500 * time.Millisecond
+)
 
 // Runner executes one external command and returns its combined output.
 type Runner interface {
@@ -87,6 +90,7 @@ func (i *installer) apply(ctx context.Context) error {
 		{"images", i.images},
 		{"stop-control", i.stopControl},
 		{"database", i.database},
+		{"telemetry", i.telemetry},
 		{"vector-extension", i.vectorExtension},
 		{"schema", i.schema},
 		{"runtime-access", i.runtimeAccess},
@@ -135,7 +139,7 @@ func (i *installer) images(ctx context.Context) error {
 			return &StepError{Code: "INSTALL_IMAGE_LOAD_FAILED", Detail: lastLines(output)}
 		}
 	}
-	for _, image := range []string{i.config.Images.Control, i.config.Images.Postgres} {
+	for _, image := range []string{i.config.Images.Control, i.config.Images.Postgres, i.config.Images.Metrics, i.config.Images.Logs} {
 		if _, e := i.runner.Run(ctx, "docker", "image", "inspect", "--format", "{{.Id}}", image); e != nil {
 			return &StepError{Code: "INSTALL_IMAGE_MISSING", Detail: image + " is not loaded on this host"}
 		}
@@ -158,6 +162,35 @@ func (i *installer) stopControl(ctx context.Context) error {
 
 func (i *installer) database(ctx context.Context) error {
 	return i.start(ctx, "postgres", "INSTALL_DATABASE_START_FAILED")
+}
+
+// telemetry starts both stores. The logs image has no shell, so Compose cannot health
+// check it; readiness is read from the metrics container, which shares its network.
+func (i *installer) telemetry(ctx context.Context) error {
+	if e := i.start(ctx, "metrics", "INSTALL_METRICS_START_FAILED"); e != nil {
+		return e
+	}
+	if e := i.start(ctx, "logs", "INSTALL_LOGS_START_FAILED"); e != nil {
+		return e
+	}
+	for {
+		output, e := logsReady(ctx, i.config, i.runner)
+		if e == nil {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return &StepError{Code: "INSTALL_LOGS_START_FAILED", Detail: lastLines(output)}
+		case <-time.After(readinessPollInterval):
+		}
+	}
+}
+
+// logsReady asks the logs store for its health from inside the state network.
+func logsReady(ctx context.Context, c Config, runner Runner) (string, error) {
+	l := c.Layout()
+	address := net.JoinHostPort(c.Network.stateAddresses().Logs.String(), logsPort)
+	return runner.Run(ctx, "docker", "compose", "--env-file", l.ComposeEnv, "-f", l.ComposeFile, "exec", "--no-TTY", "metrics", "wget", "-q", "-T", "3", "-O", "/dev/null", "http://"+address+"/health")
 }
 
 // The migrations verify the vector extension but leave installing it to the operator.
@@ -317,10 +350,14 @@ func status(ctx context.Context, c Config, runner Runner, probe Probe, out io.Wr
 		fmt.Fprintf(out, "service %s: state=%s health=%s\n", service.Service, service.State, service.Health)
 	}
 	problem := ""
-	for _, service := range []string{"postgres", "control"} {
+	for _, service := range []string{"postgres", "metrics", "control"} {
 		if !healthy[service] {
 			problem = service + " is not healthy"
 		}
+	}
+	if output, e := logsReady(ctx, c, runner); e != nil {
+		fmt.Fprintf(out, "service logs: not ready: %s\n", lastLines(output))
+		problem = "logs is not ready"
 	}
 	for _, origin := range []string{c.Origins.Portal, c.Origins.Admin} {
 		if e = probe(ctx, c, origin); e != nil {

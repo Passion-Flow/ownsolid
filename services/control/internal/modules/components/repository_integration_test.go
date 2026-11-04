@@ -51,7 +51,7 @@ func pairedComponentSetup(t *testing.T) pairedComponentStory {
 	owner.Config.Server.AdminOrigin = "https://admin.example.invalid"
 	owner.Config.Server.PortalOrigin = "https://portal.example.invalid"
 	n := &nodes.Service{DB: f.PostgreSQL, Identity: owner, Workspaces: &workspaces.Service{DB: f.PostgreSQL, Identity: owner}}
-	s := &components.Service{Nodes: n}
+	s := &components.Service{Nodes: n, LogStore: &memoryLogStore{}}
 	n.Components = s
 	g := pairedComponentStory{f: f, ctx: ctx, owner: owner, s: s}
 	g.exec(t, "INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role) VALUES($1,$2,$3,'owner')", "INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role) VALUES(?,?,?,'owner')", f.User, f.Tenant, f.Workspace)
@@ -180,7 +180,7 @@ func (g pairedComponentStory) wrapped(store transaction.Store) *components.Servi
 	owner.DB = nil
 	owner.Storage = store
 	n := &nodes.Service{Identity: &owner, Workspaces: &workspaces.Service{Identity: &owner}}
-	s := &components.Service{Nodes: n, ArchiveFile: g.s.ArchiveFile, CatalogDirectory: g.s.CatalogDirectory}
+	s := &components.Service{Nodes: n, LogStore: g.s.LogStore, ArchiveFile: g.s.ArchiveFile, CatalogDirectory: g.s.CatalogDirectory}
 	n.Components = s
 	return s
 }
@@ -363,8 +363,8 @@ func TestActualPairedComponentRuntime(t *testing.T) {
 		if e == nil || out != "" {
 			t.Fatal("failed audit acknowledged", e)
 		}
-		if g.count(t, "SELECT count(*) FROM component_log_snapshots", "SELECT count(*) FROM component_log_snapshots") != 0 {
-			t.Fatal("logs survived rollback")
+		if view, e := g.s.Logs(g.ctx, g.admin, g.node.NodeID); e != nil || view.Snapshot != nil {
+			t.Fatal("logs survived rollback", e)
 		}
 		drop()
 		if _, e = g.s.Nodes.Complete(g.ctx, g.node.NodeID, g.node.Credential, task.ID, result, uuid.NewString()); e != nil {
