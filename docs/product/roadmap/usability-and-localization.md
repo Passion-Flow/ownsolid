@@ -15,7 +15,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-116.
   - Also build `web/` into `deploy/images/control` in place of the placeholder page. DEL-001 waits for this.
 - [x] UX-002 Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0) - Evidence: d12d0ff; real-browser run on `ownsolid-cpu`, 2026-11-04
 - [x] UX-003 Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427 - Evidence: ff9561a; real-browser run on `ownsolid-cpu`, 2026-11-04
-- [ ] UX-004 Typed API client generated from `api/openapi` (P0) - Catalog: F540
+- [x] UX-004 Typed API client generated from `api/openapi` (P0) - Catalog: F540 - Evidence: 2bfea74; real-browser run on `ownsolid-cpu`, 2026-11-04
 - [ ] UX-005 Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0)
 
 ## P1 Enterprise release
