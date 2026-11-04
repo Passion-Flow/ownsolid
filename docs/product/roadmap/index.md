@@ -13,6 +13,22 @@ Read this page, then only the module file you work on.
 4. Update the **Progress** table on this page and commit with the item ID in the message,
    for example `SCH-004: Add hierarchical quota tree`.
 
+## Parallel lanes
+
+Items in different lanes touch different code and can run in separate sessions at the
+same time; items inside a lane run in order. A session told to work on a lane takes the
+next open item of that lane; a session without a lane works in lane A. Each extra lane
+works in its own worktree (AGENTS.md section 10).
+
+| Lane | Items, in order | Code it owns |
+| --- | --- | --- |
+| A. Fleet core | ARC-006 to ARC-016, then REL-001 | `api/agent`, agent client and runtime, control platform and node modules, `tools/dev/simulator` |
+| B. Web console | UX-001 to UX-005, then tick DEL-001 | `web/`, `deploy/images/control` web build, `docs/development/design-system.md` |
+| C. Delivery and telemetry | DEL-002, OBS-001, OBS-002, REL-002, DEL-003 | `tests/e2e` egress harness, `deploy/`, monitoring modules, `services/control/internal/operations` |
+
+DEL-003 changes agent container networking: coordinate with lane A by keeping the change
+inside the runtime's network setup. Lanes for P1 are defined when P0 closes.
+
 ## Definition of done (the tick rule)
 
 Tick a box only when all of these hold. Never tick partly done work.

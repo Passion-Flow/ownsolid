@@ -233,6 +233,15 @@ are in Chinese.
   never `git add .` or `git add -A`. Check for secrets and large files.
 - Another session may be working in the same checkout. Leave changes you did not make
   untouched and uncommitted; commit only your own paths.
+- **Parallel lanes** (roadmap index, "Parallel lanes"): lane A uses this checkout.
+  Lane B or C first creates or reuses its own worktree next to it:
+  `git worktree add ../ownsolid-lane-b -b lane-b origin/main`. After each item: commit,
+  `git fetch origin && git rebase origin/main`, rerun
+  `python3 tools/dev/roadmap_progress.py` and the checks, then
+  `git push origin HEAD:main` (fast-forward; on rejection, rebase and retry). Lane
+  branches are never pushed under their own name; delete branch and worktree when the
+  lane is finished. On `ownsolid-cpu`, use a lane-named directory, Compose project and
+  ports so lanes do not collide.
 - Commit messages are English, imperative, and state what was verified.
 - Push at meaningful stages with a fast-forward update. Never force-push or rewrite history.
 - Models, datasets, databases, dependencies and build output never enter Git.
