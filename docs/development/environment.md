@@ -69,6 +69,10 @@ OWNSOLID_TEST_LOGS_ADDRESS=http://127.0.0.1:59428 OWNSOLID_TEST_METRICS_ADDRESS=
   go -C services/control test -tags telemetry_integration ./internal/platform/telemetrystore/
 ```
 
+`TestComponentLogsThroughARealStore` in `internal/modules/components` uses the same tag and
+also needs the PostgreSQL settings above: settled tasks write through the queue to the real
+log store, and the reader confirms each record against PostgreSQL.
+
 Component tests against PostgreSQL also need the pinned `node_exporter` archives, 1.12.1
 and 1.12.0, under `$PROJECT_ONE_STATE_ROOT/dependencies/components/node-exporter/<version>/linux-amd64/`.
 Without them the tests stop at `COMPONENT_ASSET_UNAVAILABLE` before reaching their subject.

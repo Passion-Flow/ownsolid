@@ -6,7 +6,6 @@ package databaseaccess
 var applicationTables = [...]string{
 	"api_keys",
 	"audit_events",
-	"component_log_snapshots",
 	"dataset_drafts",
 	"dataset_job_attempts",
 	"dataset_jobs",

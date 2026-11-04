@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -99,7 +100,8 @@ func TestUpgradeFromDeliveredPrefixPreservesRoleAndData(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	oldTables := existingTables(t, f)
+	// Migration 32 drops the log table: the telemetry stores own that data (ADR 0012).
+	oldTables := slices.DeleteFunc(existingTables(t, f), func(name string) bool { return name == "component_log_snapshots" })
 	data := upgradeDataFingerprint(t, f, oldTables)
 	if state, e := Upgrade(ctx, f.service.DB, f.lease, f.input); e != nil || state != UpgradeComplete {
 		t.Fatal(state, e)

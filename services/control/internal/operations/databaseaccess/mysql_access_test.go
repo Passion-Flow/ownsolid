@@ -32,7 +32,7 @@ func mysqlLiteralInput(t *testing.T) MySQLRuntimeInput {
 
 func TestMySQLRuntimeExactGrantMatrixAndLiteralRefusal(t *testing.T) {
 	expected := mysqlExpectedGrants()
-	if len(applicationTables) != 85 || len(mysqlVariantTables) != 22 || len(mysqlTables()) != 108 || len(expected) != 433 {
+	if len(applicationTables) != 84 || len(mysqlVariantTables) != 22 || len(mysqlTables()) != 108 || len(expected) != 433 {
 		t.Fatal("duplicate/missing explicit table grants")
 	}
 	if !expected["schema_migrations:SELECT"] || !expected["model_publications:UPDATE"] {

@@ -26,7 +26,8 @@ const maximumMySQLAttributeBytes = 1024
 
 func mysqlTables() []string {
 	names := append([]string{}, applicationTables[:]...)
-	names = append(names, "model_publications")
+	// The MySQL chain keeps its log table; PostgreSQL dropped it in migration 32.
+	names = append(names, "model_publications", "component_log_snapshots")
 	names = append(names, mysqlVariantTables[:]...)
 	sort.Strings(names)
 	return names

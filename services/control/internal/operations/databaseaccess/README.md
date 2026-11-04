@@ -81,7 +81,7 @@ readback and repeat recovery for schema-committed/grants-pending interruptions.
 Use the [component runbook](../../../../../docs/runbooks/components/README.md).
 
 
-`maintenance.go` owns upgrade-maintenance from the exact delivered M04catalog. Only component_log_snapshots DML is added to the existing role. Exact old/new grants are accepted for schema-committed/grants-pending recovery; role OID/password and all prior grants remain. Runtime migration metadata is SELECT-only and DDL is denied.
+`maintenance.go` owns upgrade-maintenance from the exact delivered M04catalog. Only component_log_snapshots DML is added to the existing role. Migration 32 later drops that table from PostgreSQL: component logs live in the log store ([ADR 0012](../../../../../docs/decisions/0012-telemetry-store-boundary.md)). Exact old/new grants are accepted for schema-committed/grants-pending recovery; role OID/password and all prior grants remain. Runtime migration metadata is SELECT-only and DDL is denied.
 
 
 M06 cumulative integration (2026-10-26): explicit `models` extends maintenance

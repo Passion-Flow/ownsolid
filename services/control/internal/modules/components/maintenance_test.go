@@ -13,6 +13,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/logstorefixture"
 	"strings"
 	"testing"
 	"time"
@@ -32,7 +33,7 @@ func maintenanceSetup(t *testing.T) maintenanceScenario {
 	a := fixture.Login(t, account, "admin@example.invalid", password, "admin")
 	portal := fixture.Login(t, account, "admin@example.invalid", password, "portal")
 	n := &nodes.Service{DB: account.DB, Identity: account, Workspaces: &workspaces.Service{DB: account.DB, Identity: account}}
-	s := &components.Service{Nodes: n, LogStore: &memoryLogStore{}, CatalogDirectory: filepath.Join(os.Getenv("PROJECT_ONE_STATE_ROOT"), "dependencies/components/node-exporter")}
+	s := &components.Service{Nodes: n, LogStore: &logstorefixture.Memory{}, CatalogDirectory: filepath.Join(os.Getenv("PROJECT_ONE_STATE_ROOT"), "dependencies/components/node-exporter")}
 	n.Components = s
 	join, e := n.MintForProfile(context.Background(), a, a.Me.Workspace.ID, "Synthetic maintenance node", wire.SystemdMaintenanceProfile, uuid.NewString())
 	if e != nil {
@@ -207,11 +208,11 @@ func TestM05LatestLogsAreAdminScopedAndAuditAtomic(t *testing.T) {
 func TestLogsReportAnUnavailableStoreAndRecoverWhenItReturns(t *testing.T) {
 	f := maintenanceSetup(t)
 	ctx := context.Background()
-	store := f.service.LogStore.(*memoryLogStore)
-	store.failing(true)
+	store := f.service.LogStore.(*logstorefixture.Memory)
+	store.SetFailing(true)
 	_, e := f.service.Logs(ctx, f.admin, f.node.NodeID)
 	expect(t, e, "STORAGE_UNAVAILABLE")
-	store.failing(false)
+	store.SetFailing(false)
 	if view, e := f.service.Logs(ctx, f.admin, f.node.NodeID); e != nil || view.Snapshot != nil || !view.Stale {
 		t.Fatal("logs did not recover with the store", e)
 	}
@@ -224,7 +225,7 @@ func TestLogsReportAnUnavailableStoreAndRecoverWhenItReturns(t *testing.T) {
 func TestLogsSkipRecordsWhoseTaskDidNotSucceed(t *testing.T) {
 	f := maintenanceSetup(t)
 	ctx := context.Background()
-	store := f.service.LogStore.(*memoryLogStore)
+	store := f.service.LogStore.(*logstorefixture.Memory)
 	scope := telemetrystore.Scope{NodeID: f.node.NodeID, Component: wire.NodeExporter}
 	if e := f.service.Nodes.DB.QueryRow(ctx, "SELECT tenant_id::text,workspace_id::text FROM managed_nodes WHERE id=$1", f.node.NodeID).Scan(&scope.TenantID, &scope.WorkspaceID); e != nil {
 		t.Fatal(e)

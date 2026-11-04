@@ -35,6 +35,7 @@ import (
 	closure "github.com/Passion-Flow/ownsolid/services/control/migrations/mysql/candidates/runtime-owner-closure"
 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	licensewire "github.com/Passion-Flow/ownsolid/pkg/license/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/logstorefixture"
 )
 
 // Reused explicit schema/authority fixture arrangements from the existing paired
@@ -66,7 +67,7 @@ func pairedComponentSetup(t *testing.T) pairedComponentStory {
 	owner.Config.Server.AdminOrigin = "https://admin.example.invalid"
 	owner.Config.Server.PortalOrigin = "https://portal.example.invalid"
 	n := &nodes.Service{DB: f.PostgreSQL, Identity: owner, Workspaces: &workspaces.Service{DB: f.PostgreSQL, Identity: owner}}
-	s := &components.Service{Nodes: n}
+	s := &components.Service{Nodes: n, LogStore: &logstorefixture.Memory{}}
 	n.Components = s
 	g := pairedComponentStory{f: f, ctx: ctx, owner: owner, s: s}
 	g.exec(t, "INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role) VALUES($1,$2,$3,'owner')", "INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role) VALUES(?,?,?,'owner')", f.User, f.Tenant, f.Workspace)
@@ -195,7 +196,7 @@ func (g pairedComponentStory) wrapped(store transaction.Store) *components.Servi
 	owner.DB = nil
 	owner.Storage = store
 	n := &nodes.Service{Identity: &owner, Workspaces: &workspaces.Service{Identity: &owner}}
-	s := &components.Service{Nodes: n, ArchiveFile: g.s.ArchiveFile, CatalogDirectory: g.s.CatalogDirectory}
+	s := &components.Service{Nodes: n, LogStore: g.s.LogStore, ArchiveFile: g.s.ArchiveFile, CatalogDirectory: g.s.CatalogDirectory}
 	n.Components = s
 	return s
 }
