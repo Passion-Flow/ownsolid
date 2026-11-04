@@ -11,7 +11,7 @@ recovery and support tooling.
 ## P0 Foundation
 
 - [ ] REL-001 Control-plane restart and crash recovery without losing tasks (P0)
-- [ ] REL-002 Database-aware backup and restore of the control plane (P0) - Catalog: F204
+- [x] REL-002 Database-aware backup and restore of the control plane (P0) - Catalog: F204 - Evidence: commit e18beae (ADR 0014)
 
 ## P1 Enterprise release
 
