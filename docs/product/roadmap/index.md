@@ -30,6 +30,10 @@ Item format: `- [ ] ID Title (phase) - Catalog: Fnnn` and when done
 **Scale and hardware results are their own items.** "Load tested with N simulated
 nodes" and "Verified on <named hardware or customer environment>" are separate boxes.
 Status records only what was actually run; no item claims more than its evidence shows.
+A capability counts as supported once its implementation items are ticked (AGENTS.md
+section 4). Verification boxes for hardware, customers or scale that no available
+environment can run never block other items, a phase or a support claim: skip them,
+keep them open, and tick them when the run happens.
 
 ## Product decisions
 
