@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 	"strings"
 	"time"
 )
@@ -179,34 +181,75 @@ func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, nodeID st
 func componentStale(s *Service, n nodes.Node, received time.Time) bool {
 	return n.Connectivity != "online" || n.Status != "active" || time.Since(received) > config.Seconds(s.Nodes.Identity.Config.Policy().Nodes.OnlineSeconds)
 }
+// recentLogRecords is how far back Logs looks past records of rolled-back settlements.
+const recentLogRecords = 16
+
+// settledRecord returns the newest record whose task succeeded. PostgreSQL decides: the
+// store also holds records from settlements that rolled back.
+func (s *Service) settledRecord(ctx context.Context, a identity.Auth, nodeID string, records []telemetrystore.Record) (*telemetrystore.Record, error) {
+	if len(records) == 0 {
+		return nil, nil
+	}
+	var settled *telemetrystore.Record
+	e := s.within(ctx, a, "", nodeID, func(ctx context.Context, q transaction.Executor, n nodes.Node) error {
+		for i := range records {
+			if uuid.Validate(records[i].TaskID) != nil {
+				continue
+			}
+			var state string
+			e := q.QueryRow(ctx, componentSQL(q, "SELECT state FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4", "SELECT state FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?", "SELECT state FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?", n.TenantID, n.WorkspaceID, n.ID, records[i].TaskID)).Scan(&state)
+			if errors.Is(e, sql.ErrNoRows) {
+				continue
+			}
+			if e != nil {
+				return e
+			}
+			if state == "succeeded" {
+				settled = &records[i]
+				return nil
+			}
+		}
+		return nil
+	})
+	return settled, e
+}
+
 func (s *Service) Logs(ctx context.Context, a identity.Auth, nodeID string) (LogSnapshot, error) {
 	if a.Me.Audience != "admin" || !a.Me.User.IsPlatformAdmin {
 		return LogSnapshot{}, errors.New("ACCESS_DENIED")
 	}
-	var out LogSnapshot
-	e := s.within(ctx, a, "", nodeID, func(ctx context.Context, q transaction.Executor, n nodes.Node) error {
-		out = LogSnapshot{NodeID: n.ID, Stale: true}
-		var body []byte
-		var received time.Time
-		e := q.QueryRow(ctx, componentSQL(q, "SELECT task_id::text,snapshot,received_at FROM component_log_snapshots WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND component='node_exporter'", "SELECT task_id,snapshot,received_at FROM component_log_snapshots WHERE tenant_id=? AND workspace_id=? AND node_id=? AND component='node_exporter'", `SELECT task_id,snapshot,received_at FROM component_log_snapshots WHERE tenant_id=? AND workspace_id=? AND node_id=? AND component='node_exporter'`, n.TenantID, n.WorkspaceID, n.ID)).Scan(&out.TaskID, &body, &received)
-		if errors.Is(e, sql.ErrNoRows) {
-			return nil
-		}
-		if e != nil {
-			return e
-		}
-		var value wire.ComponentLogs
-		if json.Unmarshal(body, &value) != nil || value.Validate() != nil {
-			return errors.New("STORAGE_UNAVAILABLE")
-		}
-		received = received.UTC()
-		out.Snapshot = &value
-		out.ReceivedAt = &received
-		out.Stale = componentStale(s, n, received)
+	// The node is read in the transaction; the store is asked after it ends, so no
+	// database connection waits on the network.
+	var n nodes.Node
+	if e := s.within(ctx, a, "", nodeID, func(_ context.Context, _ transaction.Executor, current nodes.Node) error {
+		n = current
 		return nil
-	})
+	}); e != nil {
+		return LogSnapshot{}, e
+	}
+	if s.LogStore == nil {
+		return LogSnapshot{}, errors.New("STORAGE_UNAVAILABLE")
+	}
+	records, e := s.LogStore.Recent(ctx, logScope(n), recentLogRecords)
+	if e != nil {
+		return LogSnapshot{}, errors.New("STORAGE_UNAVAILABLE")
+	}
+	record, e := s.settledRecord(ctx, a, nodeID, records)
 	if e != nil {
 		return LogSnapshot{}, e
 	}
+	out := LogSnapshot{NodeID: n.ID, Stale: true}
+	if record == nil || record.Removed {
+		return out, nil
+	}
+	var value wire.ComponentLogs
+	if json.Unmarshal(record.Body, &value) != nil || value.Validate() != nil {
+		return LogSnapshot{}, errors.New("STORAGE_UNAVAILABLE")
+	}
+	received := record.Time.UTC()
+	out.Snapshot = &value
+	out.ReceivedAt = &received
+	out.TaskID = &record.TaskID
+	out.Stale = componentStale(s, n, received)
 	return out, nil
 }

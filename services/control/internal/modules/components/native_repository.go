@@ -23,11 +23,8 @@ func componentJSON(q transaction.Executor, raw []byte) any {
 // The caller already holds the current node's exclusive lock. Native upserts
 // inspect then insert/update under that lock; an unexpected SQL conflict aborts
 // the transaction. A poisoned native connection is never reused for a retry.
-func componentNativeExists(ctx context.Context, q transaction.Executor, n nodes.Node, logs bool) (bool, error) {
+func componentNativeExists(ctx context.Context, q transaction.Executor, n nodes.Node) (bool, error) {
 	query := `SELECT component FROM managed_components WHERE tenant_id=? AND workspace_id=? AND node_id=? AND component='node_exporter' FOR UPDATE`
-	if logs {
-		query = `SELECT component FROM component_log_snapshots WHERE tenant_id=? AND workspace_id=? AND node_id=? AND component='node_exporter' FOR UPDATE`
-	}
 	var component string
 	e := q.QueryRow(ctx, transaction.SQL(transaction.Dameng, query, n.TenantID, n.WorkspaceID, n.ID)).Scan(&component)
 	if errors.Is(e, sql.ErrNoRows) {
@@ -45,7 +42,7 @@ func nativeComponentWrite(ctx context.Context, q transaction.Executor, statement
 }
 
 func (s *Service) requestNativeWithin(ctx context.Context, q transaction.Executor, n nodes.Node, t nodes.Task, c wire.ComponentCommand, desired string, configuration *wire.ComponentConfig, preserve, replace bool) error {
-	exists, e := componentNativeExists(ctx, q, n, false)
+	exists, e := componentNativeExists(ctx, q, n)
 	if e != nil {
 		return e
 	}
@@ -57,7 +54,7 @@ func (s *Service) requestNativeWithin(ctx context.Context, q transaction.Executo
 }
 
 func (s *Service) observeNativeWithin(ctx context.Context, q transaction.Executor, n nodes.Node, o wire.ComponentObservation, desired string, body []byte, task string, dc, ac *wire.ComponentConfig, previous string, managed, absent bool) error {
-	exists, e := componentNativeExists(ctx, q, n, false)
+	exists, e := componentNativeExists(ctx, q, n)
 	if e != nil {
 		return e
 	}
@@ -68,13 +65,3 @@ func (s *Service) observeNativeWithin(ctx context.Context, q transaction.Executo
 	return nativeComponentWrite(ctx, q, transaction.SQL(transaction.Dameng, `UPDATE managed_components SET version=CASE WHEN ?=1 THEN ? ELSE version END,observed_state=?,managed=?,observation=?,observed_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),last_task_id=COALESCE(NULLIF(?,''),last_task_id),applied_config=CASE WHEN ?=1 THEN TO_CLOB(?) ELSE applied_config END,previous_version=CASE WHEN ?=1 THEN NULLIF(?,'') ELSE previous_version END,last_verified_at=CASE WHEN ?=1 THEN SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) ELSE last_verified_at END WHERE tenant_id=? AND workspace_id=? AND node_id=? AND component='node_exporter'`, managed, o.Version, o.State, o.Managed, componentJSON(q, body), task, verified, componentJSON(q, encodeConfig(ac)), verified, previous, verified, n.TenantID, n.WorkspaceID, n.ID))
 }
 
-func (s *Service) logsNativeWithin(ctx context.Context, q transaction.Executor, n nodes.Node, task string, body []byte) error {
-	exists, e := componentNativeExists(ctx, q, n, true)
-	if e != nil {
-		return e
-	}
-	if !exists {
-		return nativeComponentWrite(ctx, q, transaction.SQL(transaction.Dameng, `INSERT INTO component_log_snapshots(tenant_id,workspace_id,node_id,component,task_id,snapshot) VALUES(?,?,?,'node_exporter',?,?)`, n.TenantID, n.WorkspaceID, n.ID, task, componentJSON(q, body)))
-	}
-	return nativeComponentWrite(ctx, q, transaction.SQL(transaction.Dameng, `UPDATE component_log_snapshots SET task_id=?,snapshot=?,received_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND component='node_exporter'`, task, componentJSON(q, body), n.TenantID, n.WorkspaceID, n.ID))
-}

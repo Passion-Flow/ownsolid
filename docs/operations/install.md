@@ -8,10 +8,10 @@ Compose. Other sizes are refused until their roadmap items land.
 
 - Linux amd64 with Docker Engine and the Compose plugin. No network connection is needed:
   the installed platform makes no outbound connection, not even a DNS lookup of its own
-  services. The database network uses `network.state_subnet` (default
-  `172.31.254.0/26`); choose another private subnet if the host already reaches that one.
-- `ownsolid-install`, `compose.yaml` and an image archive holding the control and
-  PostgreSQL images.
+  services. The internal network uses `network.state_subnet` (default `172.31.254.0/26`);
+  choose another private subnet if the host already reaches that one.
+- `ownsolid-install`, `compose.yaml` and an image archive holding the control, PostgreSQL,
+  metrics store and logs store images.
 - The license issuer's public trust file.
 - An internal SMTP relay for account mail.
 
@@ -52,6 +52,7 @@ Compose. Other sizes are refused until their roadmap items land.
 | `images` | Loads `images.archive_file` if set and confirms each image is local. Nothing is pulled |
 | `stop-control` | Stops serving, because schema tasks hold the installation lock |
 | `database` | Starts PostgreSQL and waits until it is healthy |
+| `telemetry` | Starts the metrics and logs stores and waits until both answer |
 | `vector-extension` | Installs pgvector 0.8.7 |
 | `schema` | Applies migrations |
 | `runtime-access` | Creates the restricted role that serving uses |
@@ -69,10 +70,20 @@ Compose. Other sizes are refused until their roadmap items land.
 ├── operator/                   Privileged database identity and administrator credential.
 │                               Serving never mounts this directory
 ├── secrets/                    PostgreSQL and runtime passwords, generated CA key
-└── data/postgres/              Database files
+└── data/                       Database files in postgres/, telemetry in metrics/ and logs/
 ```
 
 Every directory is mode 0700 and every file 0600.
+
+## Telemetry
+
+Metrics and logs live in their own stores, never in the control-plane database
+([ADR 0009](../decisions/0009-telemetry-and-log-stores.md)). They keep data for
+`telemetry.metrics_retention` and `telemetry.logs_retention`, 30 days by default.
+
+If a store stops, the platform keeps serving. `ownsolid-install status` reports it,
+`apply` restarts it, and reading component logs returns `STORAGE_UNAVAILABLE` until it is
+back. Telemetry is not backed up yet (OBS-113).
 
 ## Node agents
 
@@ -97,7 +108,7 @@ instead of issuing a second one.
 | `INSTALL_ROOT_REQUIRED` | Run `apply` as root |
 | `INSTALL_DOCKER_UNAVAILABLE`, `INSTALL_COMPOSE_UNAVAILABLE` | Install or start Docker and the Compose plugin |
 | `INSTALL_IMAGE_MISSING` | The named image is not loaded. Check `images.archive_file` and the image names |
-| `INSTALL_DATABASE_START_FAILED`, `INSTALL_CONTROL_START_FAILED` | The service did not become healthy; read the log in the message |
+| `INSTALL_DATABASE_START_FAILED`, `INSTALL_METRICS_START_FAILED`, `INSTALL_LOGS_START_FAILED`, `INSTALL_CONTROL_START_FAILED` | The service did not become healthy; read the log in the message |
 | `INSTALL_OPERATOR_TASK_FAILED` | A schema or administrator task failed; its code is in the message |
 | `INSTALL_HEALTH_FAILED` | Serving is up but an origin does not answer through the published port |
 

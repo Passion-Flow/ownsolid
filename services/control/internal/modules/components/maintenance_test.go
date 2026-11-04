@@ -10,6 +10,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"strings"
@@ -31,7 +32,7 @@ func maintenanceSetup(t *testing.T) maintenanceScenario {
 	a := fixture.Login(t, account, "admin@example.invalid", password, "admin")
 	portal := fixture.Login(t, account, "admin@example.invalid", password, "portal")
 	n := &nodes.Service{DB: account.DB, Identity: account, Workspaces: &workspaces.Service{DB: account.DB, Identity: account}}
-	s := &components.Service{Nodes: n, CatalogDirectory: filepath.Join(os.Getenv("PROJECT_ONE_STATE_ROOT"), "dependencies/components/node-exporter")}
+	s := &components.Service{Nodes: n, LogStore: &memoryLogStore{}, CatalogDirectory: filepath.Join(os.Getenv("PROJECT_ONE_STATE_ROOT"), "dependencies/components/node-exporter")}
 	n.Components = s
 	join, e := n.MintForProfile(context.Background(), a, a.Me.Workspace.ID, "Synthetic maintenance node", wire.SystemdMaintenanceProfile, uuid.NewString())
 	if e != nil {
@@ -177,9 +178,6 @@ func TestM05LatestLogsAreAdminScopedAndAuditAtomic(t *testing.T) {
 		t.Fatal("old replay replaced latest logs", e)
 	}
 	var count int
-	if e = n.DB.QueryRow(ctx, "SELECT count(*) FROM component_log_snapshots WHERE node_id=$1", f.node.NodeID).Scan(&count); e != nil || count != 1 {
-		t.Fatal("unbounded snapshot history", e)
-	}
 	for _, table := range []string{"audit_events", "node_tasks"} {
 		if e = n.DB.QueryRow(ctx, "SELECT count(*) FROM "+table+" t WHERE to_jsonb(t)::text LIKE '%SYNTHETIC_LOG_SENTINEL%'").Scan(&count); e != nil || count != 0 {
 			t.Fatal("log message retained outside bounded snapshot", table, e)
@@ -206,6 +204,39 @@ func TestM05LatestLogsAreAdminScopedAndAuditAtomic(t *testing.T) {
 		t.Fatal("fetched snapshot did not follow explicit removal policy", e)
 	}
 }
+func TestLogsReportAnUnavailableStoreAndRecoverWhenItReturns(t *testing.T) {
+	f := maintenanceSetup(t)
+	ctx := context.Background()
+	store := f.service.LogStore.(*memoryLogStore)
+	store.failing(true)
+	_, e := f.service.Logs(ctx, f.admin, f.node.NodeID)
+	expect(t, e, "STORAGE_UNAVAILABLE")
+	store.failing(false)
+	if view, e := f.service.Logs(ctx, f.admin, f.node.NodeID); e != nil || view.Snapshot != nil || !view.Stale {
+		t.Fatal("logs did not recover with the store", e)
+	}
+	unconfigured := *f.service
+	unconfigured.LogStore = nil
+	_, e = unconfigured.Logs(ctx, f.admin, f.node.NodeID)
+	expect(t, e, "STORAGE_UNAVAILABLE")
+}
+
+func TestLogsSkipRecordsWhoseTaskDidNotSucceed(t *testing.T) {
+	f := maintenanceSetup(t)
+	ctx := context.Background()
+	store := f.service.LogStore.(*memoryLogStore)
+	scope := telemetrystore.Scope{NodeID: f.node.NodeID, Component: wire.NodeExporter}
+	if e := f.service.Nodes.DB.QueryRow(ctx, "SELECT tenant_id::text,workspace_id::text FROM managed_nodes WHERE id=$1", f.node.NodeID).Scan(&scope.TenantID, &scope.WorkspaceID); e != nil {
+		t.Fatal(e)
+	}
+	for _, task := range []string{"not-a-uuid", uuid.NewString()} {
+		store.Enqueue(telemetrystore.Record{Scope: scope, Time: time.Now(), TaskID: task, Body: []byte(`{}`)})
+	}
+	if view, e := f.service.Logs(ctx, f.admin, f.node.NodeID); e != nil || view.Snapshot != nil {
+		t.Fatal("a record without a succeeded task was shown", e)
+	}
+}
+
 func TestM05UnknownObservationRetainsVerifiedMetadataForRecovery(t *testing.T) {
 	f := maintenanceSetup(t)
 	s := f.service
@@ -288,10 +319,6 @@ func TestM05MaintenanceScopeBindingsAndStoredAuthorityRemainEnforced(t *testing.
 	o := maintenanceObservation("1.12.0", &configuration)
 	if _, e = s.Nodes.Complete(ctx, node.NodeID, node.Credential, task.ID, wire.Result{LeaseToken: claim.Lease.LeaseToken, Outcome: "success", Component: &o, Logs: &logs}, uuid.NewString()); e == nil {
 		t.Fatal("another node completed maintenance task")
-	}
-	raw, _ := json.Marshal(logs)
-	if _, e = s.Nodes.DB.Exec(ctx, `INSERT INTO component_log_snapshots(tenant_id,workspace_id,node_id,component,task_id,snapshot) VALUES($1,$2,$3,'node_exporter',$4,$5)`, f.admin.Me.Workspace.TenantID, other.ID, node.NodeID, task.ID, raw); e == nil {
-		t.Fatal("cross-scope log task foreign key accepted")
 	}
 	if _, e = s.Nodes.DB.Exec(ctx, `UPDATE managed_nodes SET capabilities=$1 WHERE id=$2`, []byte(`["collect_facts.v1"]`), f.node.NodeID); e == nil {
 		t.Fatal("database admitted capability tampering")

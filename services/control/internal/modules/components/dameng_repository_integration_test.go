@@ -108,7 +108,7 @@ func nativeComponentSetup(t *testing.T) pairedComponentStory {
 	owner.Config.Server.AdminOrigin = "https://admin.example.invalid"
 	owner.Config.Server.PortalOrigin = "https://portal.example.invalid"
 	n := &nodes.Service{Identity: owner, Workspaces: &workspaces.Service{Identity: owner}}
-	s := &components.Service{Nodes: n}
+	s := &components.Service{Nodes: n, LogStore: &memoryLogStore{}}
 	n.Components = s
 	g := pairedComponentStory{f: f, ctx: ctx, owner: owner, s: s}
 	g.admin, g.portal = g.session(t, "admin"), g.session(t, "portal")
