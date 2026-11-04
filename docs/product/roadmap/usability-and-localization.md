@@ -2,6 +2,10 @@
 
 The new console and portal, built to the design system, and the localization pipeline.
 
+Reviewed 2026-11-04 against current React, TanStack, Vite, Tailwind CSS and Playwright
+releases and comparable consoles. The stack in ADR 0002 stands; the pins that differ from
+the newest releases are in ADR 0010. The review added UX-113 to UX-116.
+
 - Owns: `web/`, `docs/development/design-system.md`.
 - Depends on: architecture-and-scale for API shapes; every module for its pages.
 
@@ -28,6 +32,10 @@ The new console and portal, built to the design system, and the localization pip
 - [ ] UX-110 Locale formatting for dates, numbers and units (P1) - Catalog: F555
 - [ ] UX-111 In-product help and API documentation available offline (P1) - Catalog: F431
 - [ ] UX-112 Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569
+- [ ] UX-113 Warn before a session ends from inactivity, with one action to stay signed in (P1)
+- [ ] UX-114 Shareable links: filters, sort order and the open drawer live in the URL (P1)
+- [ ] UX-115 Route-level code splitting and a bundle size budget enforced in CI (P1)
+- [ ] UX-116 Automated accessibility checks in the browser tests of every page (P1)
 
 ## P2 Fleet operations
 
