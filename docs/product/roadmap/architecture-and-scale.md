@@ -20,7 +20,8 @@ agents is not.
   - Scope of the evidence: only `single-node` is accepted today. `api/release` keeps one release profile, still named `mvp-postgresql-cpu-v1`; DEL-101 renames it.
 - [x] ARC-004 Cell ID and site ID in every resource key, table and API path, even with one cell (P0) - Evidence: commit 4d36bfa (ADR 0006)
   - Scope of the evidence: PostgreSQL only; MySQL and Dameng chains lack the columns until CMP-201 and CMP-202. Site and cell are fixed to `default` until ARC-202.
-- [ ] ARC-005 Agent protocol v1: agent-initiated long-lived gRPC stream over HTTP/2 through a stateless gateway tier, with long-poll fallback (P0)
+- [x] ARC-005 Agent protocol v1: agent-initiated long-lived gRPC stream over HTTP/2 through a stateless gateway tier, with long-poll fallback (P0) - Evidence: commit 0a8e805 (ADR 0007)
+  - Scope of the evidence: the stream carries heartbeats and claims; results, renewals and transfers stay on HTTPS until ARC-006. The gateway runs in the control process (separate replicas are ARC-102), and the task wake is per process until ARC-011.
 - [ ] ARC-006 Task semantics: per-node sequence numbers, idempotent tasks, acknowledgements, resume from last ack, rate-limited full resync (P0)
 - [ ] ARC-007 Server-paced heartbeat interval, jitter and reconnect delay, changeable at runtime; full-jitter backoff; retry at one layer only (P0)
 - [ ] ARC-008 Per-operation limits and priority classes (quarantine above heartbeat above telemetry above bulk) with retry hints (P0)
