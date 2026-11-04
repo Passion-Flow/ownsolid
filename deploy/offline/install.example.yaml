@@ -109,6 +109,9 @@ telemetry:
 # Optional, default 600. Time limit of each install step, 30 to 7200 seconds.
 step_seconds: 600
 
+# Optional, default 3600. Time limit of a whole backup or restore, 60 to 86400 seconds.
+backup_seconds: 3600
+
 # Optional. Further control plane settings, as documented in
 # services/control/config/examples/control/control.example.yaml. The control process
 # validates them. topology, server, database, security, licensing and smtp are set from

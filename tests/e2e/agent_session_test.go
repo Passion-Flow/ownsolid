@@ -363,3 +363,13 @@ func (e environment) assertTasksAcknowledged(t *testing.T, node string, n int) {
 		t.Fatalf("task delivery record %q, want %s: %v", strings.TrimSpace(output), want, err)
 	}
 }
+
+// sql runs one query as the database owner and returns its single trimmed answer.
+func (e environment) sql(t *testing.T, query string) string {
+	t.Helper()
+	output, err := e.compose(t, "exec", "--no-TTY", "postgres", "psql", "-X", "-tA", "-v", "ON_ERROR_STOP=1", "-U", "ownsolid_migrator", "-d", "ownsolid", "-c", query)
+	if err != nil {
+		t.Fatalf("%s: %v %s", query, err, output)
+	}
+	return strings.TrimSpace(output)
+}

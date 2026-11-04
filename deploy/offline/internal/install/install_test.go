@@ -353,7 +353,7 @@ func (r *fakeRunner) Run(_ context.Context, name string, args ...string) (string
 
 func successOutput(line string) string {
 	for word, output := range map[string]string{
-		" migrate ": "MIGRATION_COMPLETE", "prepare-runtime-access": "RUNTIME_ACCESS_VERIFIED", "check-schema": "SCHEMA_CURRENT",
+		" migrate ": "MIGRATION_COMPLETE", "prepare-runtime-access": "RUNTIME_ACCESS_VERIFIED", "check-schema": "SCHEMA_CURRENT", "invalidate-restored-auth": "RESTORED_AUTH_INVALIDATED",
 		"bootstrap-admin-file": "BOOTSTRAP_FILE_VERIFIED", "reconcile-bootstrap-file": "BOOTSTRAP_FILE_VERIFIED", "resume-bootstrap-file": "BOOTSTRAP_FILE_VERIFIED",
 	} {
 		if strings.Contains(line, word) {
