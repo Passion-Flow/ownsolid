@@ -376,6 +376,8 @@ export interface components {
         Lease: {
             /** Format: uuid */
             task_id: string;
+            /** @description Per-node task sequence; grows by one per task of the node (ADR 0011). */
+            sequence: number;
             /** @enum {string} */
             operation: "collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1";
             lease_token: string;
@@ -389,6 +391,7 @@ export interface components {
         } & (unknown & unknown & unknown & unknown & unknown);
         Claim: {
             lease: components["schemas"]["Lease"] | null;
+            resync?: components["schemas"]["Resync"];
         };
         TaskResult: {
             lease_token: string;
@@ -1945,6 +1948,10 @@ export interface components {
         };
         InferenceNodeStateResponse: {
             data: components["schemas"]["InferenceNodeState"];
+        };
+        /** @description Recover all local work, then use acknowledged_sequence as the cursor (ADR 0011). */
+        Resync: {
+            acknowledged_sequence: number;
         };
     };
     responses: never;

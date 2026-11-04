@@ -4,7 +4,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 )
@@ -47,6 +50,99 @@ func TestLineageUpgradeKeepsBootstrappedInstallation(t *testing.T) {
 	}
 }
 
+// Migration 000031 numbers the tasks that already exist. They ran under the old rules, so
+// they count as delivered, and the first task of the new rules continues the sequence.
+func TestLineageUpgradeNumbersExistingTasks(t *testing.T) {
+	s := fixture.NewAtVersion(t, 30)
+	fixture.Bootstrap(t, s)
+	ctx := t.Context()
+	seed := newTaskSeed(t, s)
+	node, task := seed.node, seed.task
+	busy, waiting, idle := node("Busy"), node("Waiting"), node("Idle")
+	// Created out of order on purpose: the sequence follows created_at, not insertion.
+	last := task(busy, "running", 2, 1)
+	first := task(busy, "succeeded", 1, 3)
+	middle := task(busy, "failed", 3, 2)
+	pending := task(waiting, "pending", 0, 1)
+	if e := database.Migrate(ctx, s.DB); e != nil {
+		t.Fatal(e)
+	}
+	for id, want := range map[string][3]int{first: {1, 1, 1}, middle: {2, 3, 3}, last: {3, 2, 2}, pending: {1, 0, 0}} {
+		var got [3]int
+		if e := s.DB.QueryRow(ctx, "SELECT sequence,acknowledged_attempt,deliveries FROM node_tasks WHERE id=$1", id).Scan(&got[0], &got[1], &got[2]); e != nil || got != want {
+			t.Fatal("task after upgrade", got, want, e)
+		}
+	}
+	for id, want := range map[string][2]int{busy: {3, 3}, waiting: {1, 1}, idle: {0, 0}} {
+		var got [2]int
+		if e := s.DB.QueryRow(ctx, "SELECT task_sequence,task_acknowledged_sequence FROM managed_nodes WHERE id=$1", id).Scan(&got[0], &got[1]); e != nil || got != want {
+			t.Fatal("node after upgrade", got, want, e)
+		}
+	}
+	next := task(idle, "pending", 0, 0)
+	var sequence int
+	if e := s.DB.QueryRow(ctx, "SELECT sequence FROM node_tasks WHERE id=$1", next).Scan(&sequence); e != nil || sequence != 1 {
+		t.Fatal("first new task", sequence, e)
+	}
+}
+
+// A lease that was never acknowledged reached no executing agent, so delivering its task
+// again may bind a new stop authority. Once the task is acknowledged, or the attempt has
+// moved on, the stop authority is immutable as before (ADR 0011).
+func TestStopAuthorityRebindsOnlyWhileTheTaskIsUnacknowledged(t *testing.T) {
+	for _, c := range []struct{ table, insert, refusal string }{
+		{"training_attempts", `INSERT INTO training_attempts(id,tenant_id,workspace_id,job_id,node_id,task_id,attempt_number,state,requested_by,requested_audience,requested_epoch,input_inventory,stop_token_hash) VALUES($1,$2,$3,gen_random_uuid(),$4,$5,1,'preparing',$6,'admin',1,'{}',sha256('first'))`, "TRAINING_ATTEMPT_INPUTS_IMMUTABLE"},
+		{"model_preparation_attempts", `INSERT INTO model_preparation_attempts(id,tenant_id,workspace_id,preparation_id,node_id,task_id,attempt_number,state,requested_by,requested_audience,requested_epoch,command_sha256,stop_token_hash) VALUES($1,$2,$3,gen_random_uuid(),$4,$5,1,'preparing',$6,'admin',1,repeat('a',64),sha256('first'))`, "MODEL_PREPARATION_STOP_AUTHORITY_IMMUTABLE"},
+	} {
+		t.Run(c.table, func(t *testing.T) {
+			s := fixture.New(t)
+			fixture.Bootstrap(t, s)
+			ctx := t.Context()
+			seed := newTaskSeed(t, s)
+			// The fixture schema is disposable. Without foreign keys the attempt needs no
+			// job or preparation graph, and the trigger under test stays in place.
+			var keys []string
+			rows, e := s.DB.Query(ctx, "SELECT conname FROM pg_constraint WHERE conrelid=$1::regclass AND contype='f'", c.table)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if keys, e = pgx.CollectRows(rows, pgx.RowTo[string]); e != nil {
+				t.Fatal(e)
+			}
+			for _, key := range keys {
+				if _, e = s.DB.Exec(ctx, "ALTER TABLE "+c.table+" DROP CONSTRAINT "+key); e != nil {
+					t.Fatal(e)
+				}
+			}
+			node := seed.node("Stop authority")
+			task := seed.task(node, "running", 1, 0)
+			attempt := uuid.NewString()
+			if _, e = s.DB.Exec(ctx, c.insert, attempt, seed.tenant, seed.workspace, node, task, seed.user); e != nil {
+				t.Fatal(e)
+			}
+			change := func(set string) error {
+				_, e := s.DB.Exec(ctx, "UPDATE "+c.table+" SET "+set+" WHERE id=$1", attempt)
+				return e
+			}
+			refused := func(e error) {
+				t.Helper()
+				if e == nil || !strings.Contains(e.Error(), c.refusal) {
+					t.Fatal("stop authority changed", e)
+				}
+			}
+			if e = change("stop_token_hash=sha256('second')"); e != nil {
+				t.Fatal("rebind while unacknowledged", e)
+			}
+			refused(change("stop_token_hash=NULL"))
+			refused(change("state='running',stop_token_hash=sha256('third')"))
+			if _, e = s.DB.Exec(ctx, "UPDATE node_tasks SET acknowledged_attempt=1 WHERE id=$1", task); e != nil {
+				t.Fatal(e)
+			}
+			refused(change("stop_token_hash=sha256('fourth')"))
+		})
+	}
+}
+
 func TestLineageRejectsForeignLedger(t *testing.T) {
 	s := fixture.NewAtVersion(t, 4)
 	if _, e := s.DB.Exec(t.Context(), "UPDATE schema_migrations SET checksum=repeat('0',64) WHERE version=2"); e != nil {
@@ -55,6 +151,42 @@ func TestLineageRejectsForeignLedger(t *testing.T) {
 	if e := database.Migrate(t.Context(), s.DB); e == nil || e.Error() != "MIGRATION_CHECKSUM_MISMATCH" {
 		t.Fatal(e)
 	}
+}
+
+// taskSeed writes nodes and tasks with plain SQL, so it works on any schema version.
+type taskSeed struct {
+	t                       *testing.T
+	db                      *pgxpool.Pool
+	tenant, workspace, user string
+}
+
+func newTaskSeed(t *testing.T, s *identity.Service) taskSeed {
+	t.Helper()
+	seed := taskSeed{t: t, db: s.DB}
+	if e := s.DB.QueryRow(t.Context(), "SELECT i.tenant_id::text,i.default_workspace_id::text,(SELECT id::text FROM users LIMIT 1) FROM installation_state i WHERE i.id=1").Scan(&seed.tenant, &seed.workspace, &seed.user); e != nil {
+		t.Fatal(e)
+	}
+	return seed
+}
+
+func (s taskSeed) node(name string) string {
+	s.t.Helper()
+	id := uuid.NewString()
+	if _, e := s.db.Exec(s.t.Context(), `INSERT INTO managed_nodes(id,tenant_id,workspace_id,name,status,credential_hash,protocol_version,facts,last_heartbeat_at) VALUES($1,$2,$3,$4,'active',sha256($5::bytea),'1','{}',clock_timestamp())`, id, s.tenant, s.workspace, name, []byte(id)); e != nil {
+		s.t.Fatal(e)
+	}
+	return id
+}
+
+func (s taskSeed) task(node, state string, attempt, age int) string {
+	s.t.Helper()
+	id := uuid.NewString()
+	if _, e := s.db.Exec(s.t.Context(), `INSERT INTO node_tasks(id,tenant_id,workspace_id,node_id,operation,state,idempotency_key,requested_by,attempt,lease_token_hash,lease_expires_at,created_at,deadline_at,completed_at)
+ VALUES($1,$2,$3,$4,'collect_facts.v1',$5::varchar,$6,$7,$8,CASE WHEN $5::varchar='running' THEN sha256($9::bytea) END,CASE WHEN $5::varchar='running' THEN clock_timestamp()+interval '1 minute' END,clock_timestamp()-make_interval(hours=>$10),clock_timestamp()+interval '1 hour',CASE WHEN $5::varchar IN ('succeeded','failed') THEN clock_timestamp() END)`,
+		id, s.tenant, s.workspace, node, state, uuid.NewString(), s.user, attempt, []byte(id), age); e != nil {
+		s.t.Fatal(e)
+	}
+	return id
 }
 
 func installationIdentity(t *testing.T, p *pgxpool.Pool) string {

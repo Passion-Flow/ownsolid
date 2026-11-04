@@ -47,6 +47,10 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 		if j.State != "preparing" && j.State != "running" && j.State != "cancelling" && j.State != "recovery_required" || j.CurrentAttemptID == nil {
 			return nil
 		}
+		// An expired lease nobody acknowledged was never delivered (ADR 0011).
+		if e := s.Nodes.ReleaseUnacknowledgedWithin(ctx, tx, n, uuid.NewString()); e != nil {
+			return e
+		}
 		var task, storedSHA string
 		var stopHash []byte
 		var events int64
@@ -91,7 +95,7 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 		} else if j.CancelRequestedAt != nil {
 			code = "MODEL_PREPARATION_CANCEL_PENDING_STOP"
 		}
-		if t.state == "pending" && t.deliveries == 0 && len(stopHash) == 0 && events == 0 && !hasOutcome {
+		if nodes.NeverDelivered(t.state, t.errorCode, t.attempt, events, hasOutcome) {
 			sha, e := command.Digest()
 			if e != nil {
 				return e

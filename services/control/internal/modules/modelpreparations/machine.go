@@ -115,8 +115,10 @@ func (s *Service) ClaimPreparation(ctx context.Context, node, credential, reques
 		if e = bindAttempt(ctx, tx, p, *out.Lease.Preparation, task); e != nil {
 			return e
 		}
+		// A lease delivered again after it was never acknowledged binds a new stop
+		// authority; the schema allows that only while the task is unacknowledged.
 		hash := stopTokenHash(out.Lease.LeaseToken)
-		tag, e := tx.Exec(ctx, preparationSelectedRuntimeSQL(tx, preparationDM(`UPDATE "MODEL_PREPARATION_ATTEMPTS" SET "STATE"='preparing',"STOP_TOKEN_HASH"=?,"STARTED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "ID"=? AND "STOP_TOKEN_HASH" IS NULL`), "UPDATE model_preparation_attempts SET state='preparing',stop_token_hash=$2,started_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND stop_token_hash IS NULL", `UPDATE model_preparation_attempts SET state='preparing',stop_token_hash=?,started_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE id=? AND stop_token_hash IS NULL`, []any{*p.CurrentAttemptID, hash[:]}, []any{hash[:], *p.CurrentAttemptID}))
+		tag, e := tx.Exec(ctx, preparationSelectedRuntimeSQL(tx, preparationDM(`UPDATE "MODEL_PREPARATION_ATTEMPTS" SET "STATE"='preparing',"STOP_TOKEN_HASH"=?,"STARTED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "ID"=? AND ("STOP_TOKEN_HASH" IS NULL OR "STATE"='preparing')`), "UPDATE model_preparation_attempts SET state='preparing',stop_token_hash=$2,started_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND (stop_token_hash IS NULL OR state='preparing')", `UPDATE model_preparation_attempts SET state='preparing',stop_token_hash=?,started_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE id=? AND (stop_token_hash IS NULL OR state='preparing')`, []any{*p.CurrentAttemptID, hash[:]}, []any{hash[:], *p.CurrentAttemptID}))
 		if e == nil && tag != 1 {
 			return fail("MODEL_PREPARATION_ATTEMPT_STALE")
 		}

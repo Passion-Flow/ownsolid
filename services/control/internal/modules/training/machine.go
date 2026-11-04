@@ -145,8 +145,10 @@ func (s *Service) ClaimTraining(ctx context.Context, node, credential, request s
 		if e = bindAttempt(ctx, tx, j, *out.Lease.Training, task); e != nil {
 			return e
 		}
+		// A lease delivered again after it was never acknowledged binds a new stop
+		// authority; the schema allows that only while the task is unacknowledged.
 		hash := stopTokenHash(out.Lease.LeaseToken)
-		affected, e := tx.Exec(ctx, transferStatement(tx, "UPDATE training_attempts SET state='preparing',stop_token_hash=$2,started_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND stop_token_hash IS NULL", "UPDATE training_attempts SET state='preparing',stop_token_hash=?,started_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE id=? AND stop_token_hash IS NULL", []any{*j.CurrentAttemptID, hash[:]}, []any{hash[:], *j.CurrentAttemptID}))
+		affected, e := tx.Exec(ctx, transferStatement(tx, "UPDATE training_attempts SET state='preparing',stop_token_hash=$2,started_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND (stop_token_hash IS NULL OR state='preparing')", "UPDATE training_attempts SET state='preparing',stop_token_hash=?,started_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE id=? AND (stop_token_hash IS NULL OR state='preparing')", []any{*j.CurrentAttemptID, hash[:]}, []any{hash[:], *j.CurrentAttemptID}))
 		if e == nil && affected != 1 {
 			return fail("TRAINING_ATTEMPT_STALE")
 		}

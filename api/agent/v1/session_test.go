@@ -23,6 +23,12 @@ func TestAgentMessageValidation(t *testing.T) {
 		{"two exchanges", AgentMessage{ID: 1, Heartbeat: &Handshake{}, Claim: &ClaimRequest{}}, 0, false},
 		{"negative wait", AgentMessage{ID: 1, Claim: &ClaimRequest{WaitSeconds: -1}}, 0, false},
 		{"wait above interval", AgentMessage{ID: 1, Claim: &ClaimRequest{WaitSeconds: MaxClaimWaitSeconds + 1}}, 0, false},
+		{"claim with cursor", AgentMessage{ID: 2, Claim: &ClaimRequest{AcknowledgedSequence: 7}}, 1, true},
+		{"cursor above the JSON range", AgentMessage{ID: 2, Claim: &ClaimRequest{AcknowledgedSequence: MaxTaskSequence + 1}}, 1, false},
+		{"ack", AgentMessage{ID: 3, Ack: &TaskAcknowledgement{TaskID: "0b5d7a52-6a5e-4d40-9b7e-0d9a3c1f2e44", Sequence: 4, LeaseToken: strings.Repeat("a", 43)}}, 2, true},
+		{"ack without token", AgentMessage{ID: 3, Ack: &TaskAcknowledgement{TaskID: "0b5d7a52-6a5e-4d40-9b7e-0d9a3c1f2e44", Sequence: 4}}, 2, false},
+		{"ack with bad task", AgentMessage{ID: 3, Ack: &TaskAcknowledgement{TaskID: "task", Sequence: 4, LeaseToken: strings.Repeat("a", 43)}}, 2, false},
+		{"ack and claim", AgentMessage{ID: 3, Claim: &ClaimRequest{}, Ack: &TaskAcknowledgement{TaskID: "0b5d7a52-6a5e-4d40-9b7e-0d9a3c1f2e44", Sequence: 4, LeaseToken: strings.Repeat("a", 43)}}, 2, false},
 	}
 	for _, c := range cases {
 		if e := c.message.Validate(c.previous); (e == nil) != c.valid {
@@ -34,6 +40,7 @@ func TestAgentMessageValidation(t *testing.T) {
 func TestControlMessageAnswersItsRequest(t *testing.T) {
 	heartbeat := AgentMessage{ID: 4, Heartbeat: &Handshake{}}
 	claim := AgentMessage{ID: 5, Claim: &ClaimRequest{}}
+	ack := AgentMessage{ID: 6, Ack: &TaskAcknowledgement{}}
 	cases := []struct {
 		name    string
 		reply   ControlMessage
@@ -50,6 +57,11 @@ func TestControlMessageAnswersItsRequest(t *testing.T) {
 		{"empty", ControlMessage{ReplyTo: 4}, heartbeat, false},
 		{"success status", ControlMessage{ReplyTo: 4, Problem: &SessionProblem{Code: "X", Status: 200}}, heartbeat, false},
 		{"empty code", ControlMessage{ReplyTo: 4, Problem: &SessionProblem{Status: 503}}, heartbeat, false},
+		{"acknowledged", ControlMessage{ReplyTo: 6, Acknowledged: &RenewedLease{}}, ack, true},
+		{"claim for ack", ControlMessage{ReplyTo: 6, Claim: &Claim{}}, ack, false},
+		{"acknowledged for claim", ControlMessage{ReplyTo: 5, Acknowledged: &RenewedLease{}}, claim, false},
+		{"resync", ControlMessage{ReplyTo: 5, Claim: &Claim{Resync: &Resync{AcknowledgedSequence: 3}}}, claim, true},
+		{"lease and resync", ControlMessage{ReplyTo: 5, Claim: &Claim{Lease: &Lease{}, Resync: &Resync{}}}, claim, false},
 	}
 	for _, c := range cases {
 		if e := c.reply.Validate(c.request); (e == nil) != c.valid {
@@ -110,7 +122,7 @@ func TestSessionSchemaMatchesTypes(t *testing.T) {
 	if e = json.Unmarshal(raw, &schema); e != nil {
 		t.Fatal(e)
 	}
-	for name, value := range map[string]any{"AgentMessage": AgentMessage{}, "ControlMessage": ControlMessage{}, "ClaimRequest": ClaimRequest{}, "SessionProblem": SessionProblem{}} {
+	for name, value := range map[string]any{"AgentMessage": AgentMessage{}, "ControlMessage": ControlMessage{}, "ClaimRequest": ClaimRequest{}, "SessionProblem": SessionProblem{}, "Claim": Claim{}, "TaskAcknowledgement": TaskAcknowledgement{}, "TaskAcknowledgementRequest": TaskAcknowledgementRequest{}, "Resync": Resync{}} {
 		declared, ok := schema.Components.Schemas[name]
 		if !ok {
 			t.Fatalf("schema.json has no %s", name)

@@ -10,3 +10,8 @@ Do not extend this package into a shared credential manager or move account/keyc
 
 The identity records the site and cell returned at enrollment. Load and SaveNew refuse an
 identity without them, and the client addresses that cell on every node path (ADR 0006).
+
+[cursor.go](cursor.go) keeps the task cursor, the highest task sequence this agent
+acknowledged, in `task-cursor.json`. A missing file reads as 0. SaveCursor replaces the
+file atomically and syncs the directory; the runtime saves the cursor before it
+acknowledges a lease (ADR 0011).

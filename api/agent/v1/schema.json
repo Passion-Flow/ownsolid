@@ -895,6 +895,12 @@
             "type": "string",
             "format": "uuid"
           },
+          "sequence": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Per-node task sequence; grows by one per task of the node (ADR 0011)."
+          },
           "operation": {
             "type": "string",
             "enum": [
@@ -970,6 +976,7 @@
         },
         "required": [
           "task_id",
+          "sequence",
           "operation",
           "lease_token",
           "lease_expires_at",
@@ -1146,6 +1153,9 @@
                 "type": "null"
               }
             ]
+          },
+          "resync": {
+            "$ref": "#/components/schemas/Resync"
           }
         },
         "required": [
@@ -6949,13 +6959,19 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 10
+          },
+          "acknowledged_sequence": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Highest task sequence the agent acknowledged."
           }
         }
       },
       "AgentMessage": {
         "type": "object",
         "additionalProperties": false,
-        "description": "One agent message on the session stream; exactly one exchange is set (ADR 0007).",
+        "description": "One agent message on the session stream; exactly one exchange is set (ADR 0007, ADR 0011).",
         "properties": {
           "id": {
             "type": "integer",
@@ -6966,6 +6982,9 @@
           },
           "claim": {
             "$ref": "#/components/schemas/ClaimRequest"
+          },
+          "ack": {
+            "$ref": "#/components/schemas/TaskAcknowledgement"
           }
         },
         "required": [
@@ -6980,6 +6999,11 @@
           {
             "required": [
               "claim"
+            ]
+          },
+          {
+            "required": [
+              "ack"
             ]
           }
         ]
@@ -7019,6 +7043,9 @@
           "claim": {
             "$ref": "#/components/schemas/Claim"
           },
+          "acknowledged": {
+            "$ref": "#/components/schemas/RenewedLease"
+          },
           "problem": {
             "$ref": "#/components/schemas/SessionProblem"
           }
@@ -7039,9 +7066,74 @@
           },
           {
             "required": [
+              "acknowledged"
+            ]
+          },
+          {
+            "required": [
               "problem"
             ]
           }
+        ]
+      },
+      "TaskAcknowledgement": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "The agent holds this lease and will execute it once control confirms (ADR 0011).",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "lease_token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "task_id",
+          "sequence",
+          "lease_token"
+        ]
+      },
+      "TaskAcknowledgementRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "HTTPS form of TaskAcknowledgement; the task ID is in the path.",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "lease_token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "sequence",
+          "lease_token"
+        ]
+      },
+      "Resync": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Recover all local work, then use acknowledged_sequence as the cursor (ADR 0011).",
+        "properties": {
+          "acknowledged_sequence": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "acknowledged_sequence"
         ]
       }
     }

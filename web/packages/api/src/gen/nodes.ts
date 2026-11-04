@@ -228,6 +228,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/tasks/{task_id}/acknowledgements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["acknowledgeAgentTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter": {
         parameters: {
             query?: never;
@@ -851,6 +870,8 @@ export interface components {
         Lease: {
             /** Format: uuid */
             task_id: string;
+            /** @description Per-node task sequence; grows by one per task of the node (ADR 0011). */
+            sequence: number;
             /** @enum {string} */
             operation: "collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1";
             lease_token: string;
@@ -864,10 +885,13 @@ export interface components {
         } & (unknown & unknown & unknown & unknown & unknown);
         Claim: {
             lease: components["schemas"]["Lease"] | null;
+            resync?: components["schemas"]["Resync"];
         };
         ClaimRequest: {
             /** @description Seconds control may hold the claim for new work; at most the heartbeat interval. */
             wait_seconds?: number;
+            /** @description Highest task sequence the agent acknowledged. */
+            acknowledged_sequence?: number;
         };
         TaskResult: {
             lease_token: string;
@@ -2362,6 +2386,15 @@ export interface components {
             /** @constant */
             serving_recipe_sha256: "e9088769c0e9bcc91e1b8227d1101b85fe63ebc8561006b3822738a0d001ed31";
         };
+        /** @description Recover all local work, then use acknowledged_sequence as the cursor (ADR 0011). */
+        Resync: {
+            acknowledged_sequence: number;
+        };
+        /** @description The agent holds this lease and executes it once control confirms (ADR 0011). */
+        TaskAcknowledgementRequest: {
+            sequence: number;
+            lease_token: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -2905,6 +2938,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CompletedResponse"];
+                };
+            };
+            /** @description Structured failure; no fake success */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    acknowledgeAgentTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                node_id: string;
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskAcknowledgementRequest"];
+            };
+        };
+        responses: {
+            /** @description Committed response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RenewedLeaseResponse"];
                 };
             };
             /** @description Structured failure; no fake success */

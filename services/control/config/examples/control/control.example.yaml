@@ -248,6 +248,12 @@ runtime:
     task_sweep_batch: 100
     reconcile_seconds: 10
     reconcile_timeout_seconds: 5
+    # Deliveries of a lease the agent never acknowledged before the task fails; integer 1..100.
+    maximum_task_deliveries: 10
+    # Shortest time between two full resyncs of one node; integer seconds 10..86400.
+    resync_interval_seconds: 300
+    # Full resyncs granted per second across the fleet; integer 1..10000.
+    resync_per_second: 20
   models:
     maximum_attempts: 3
     maximum_bundle_bytes: 2147483648

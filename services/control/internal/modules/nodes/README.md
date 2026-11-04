@@ -8,6 +8,8 @@ Migration 000003 stores node/join-token/task state. Each operation retains insta
 
 [claim_wait.go](claim_wait.go) lets a claim wait for up to one heartbeat interval: it watches the node, claims, and claims again when a task insert for that node announces itself. The agent session stream and the HTTPS long-poll both use it ([ADR 0007](../../../../../docs/decisions/0007-agent-session-protocol.md)); [http/session_backend.go](http/session_backend.go) gives the stream gateway the same rate limits and node calls as the HTTPS paths. The wake is local to this process until ARC-011.
 
+[task_delivery.go](task_delivery.go) owns task delivery ([ADR 0011](../../../../../docs/decisions/0011-task-delivery-semantics.md)): leases carry the per-node sequence the insert trigger assigns, `Acknowledge` records that the agent took a lease, every claim first releases a lease that was never acknowledged without spending an attempt, and a claim whose cursor disagrees with the node's record is answered with a resync, bounded per node and across the fleet.
+
 Task-event publication is recorded through the same-transaction hook; delivery of a broker message does not itself claim a task. Preserve ownership and lock ordering when extending cross-domain callbacks.
 
 [updates.go](updates.go) uses the selected PostgreSQL or MySQL transaction for
