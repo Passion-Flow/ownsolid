@@ -12,11 +12,12 @@
   },
   "dependencies": {
     "@ownsolid/api": "workspace:*",
-    "@ownsolid/shell": "workspace:*",
     "@ownsolid/i18n": "workspace:*",
+    "@ownsolid/shell": "workspace:*",
     "@ownsolid/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
+    "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

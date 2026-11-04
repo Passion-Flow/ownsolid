@@ -55,6 +55,16 @@ before writing new markup: `Button`, `TextField`, `Card`, `StatusPill`, `Tag`, `
 7. **When something breaks, show the answer.** Diagnostics, exact commands and a
    downloadable diagnostic bundle sit next to the failure.
 
+## Application frame
+
+`AppFrame` in `web/packages/shell` is the same on every signed-in page. Add a page by
+giving its navigation item a `to` in the application's `navigation.ts`; until then the
+item shows disabled, as in the prototype. Page navigation and new actions appear in the
+command menu from the same list. Below 1024 pixels the sidebar moves into a drawer.
+
+The workspace switcher only chooses what the interface shows, remembered per user in
+this browser. The server checks access to the workspace on every request.
+
 ## Page patterns
 
 - **List pages:** filter bar, table and detail drawer.

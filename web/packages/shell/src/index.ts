@@ -1,4 +1,6 @@
+export { AppFrame, type AppFrameProps } from './app-frame.tsx';
 export { createApplication, startApplication, type StartOptions } from './application.tsx';
+export { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
 export { safeRedirect, signInPath } from './redirect.ts';
 export {
   authenticatedRoute,

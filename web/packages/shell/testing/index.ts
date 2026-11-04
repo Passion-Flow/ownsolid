@@ -1,5 +1,6 @@
 export {
   account,
+  failedRun,
   mockControlPlane,
   type ControlPlane,
   type ScriptedProblem,

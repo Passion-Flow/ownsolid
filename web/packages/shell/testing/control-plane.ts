@@ -37,6 +37,34 @@ const runtimeConfig = {
   },
 };
 
+const defaultWorkspace = {
+  ...workspace,
+  status: 'active',
+  version: 1,
+  is_default: true,
+  created_at: '2026-11-04T00:00:00Z',
+  updated_at: '2026-11-04T00:00:00Z',
+};
+
+const secondWorkspace = {
+  ...defaultWorkspace,
+  id: '6f1c7a1e-0000-4000-8000-000000000004',
+  name: 'Platform Team',
+  is_default: false,
+};
+
+/** A notification the mock lists while it is unread. */
+export const failedRun = {
+  id: '6f1c7a1e-0000-4000-8000-000000000005',
+  workspace_id: workspace.id,
+  workflow_id: '6f1c7a1e-0000-4000-8000-000000000006',
+  run_id: '6f1c7a1e-0000-4000-8000-000000000007',
+  outcome: 'failed',
+  error_code: 'MODEL_UNAVAILABLE',
+  occurred_at: '2026-11-04T08:00:00Z',
+  read_at: null as string | null,
+};
+
 /** A scripted failure for one path. */
 export interface ScriptedProblem {
   status: number;
@@ -54,6 +82,11 @@ export interface ControlPlane {
   nextSignIn: ScriptedProblem | null;
   /** Fails sign-out with this problem while set. */
   signOutProblem: ScriptedProblem | null;
+  /** Fails the notification list with this problem while set. */
+  notificationsProblem: ScriptedProblem | null;
+  /** Fails the workspace list with this problem while set. */
+  workspacesProblem: ScriptedProblem | null;
+  notifications: (typeof failedRun)[];
 }
 
 function problem(route: Route, { status, code, headers }: ScriptedProblem): Promise<void> {
@@ -86,6 +119,9 @@ export async function mockControlPlane(
     unreachable: false,
     nextSignIn: null,
     signOutProblem: null,
+    notificationsProblem: null,
+    workspacesProblem: null,
+    notifications: [],
   };
   const identity = () => ({ user, workspace, audience: state.audience });
 
@@ -128,5 +164,35 @@ export async function mockControlPlane(
     state.signedIn = false;
     return route.fulfill({ status: 204 });
   });
+  // Each origin serves only its own workspace list, as the control plane does.
+  const workspaces = (owner: ControlPlane['audience']) => (route: Route) => {
+    if (state.audience !== owner)
+      return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+    if (state.workspacesProblem) return problem(route, state.workspacesProblem);
+    return data(route, { items: [defaultWorkspace, secondWorkspace], next_cursor: null });
+  };
+  await page.route('**/api/v1/admin/workspaces?*', workspaces('admin'));
+  await page.route('**/api/v1/workspaces?*', workspaces('portal'));
+  await page.route('**/api/v1/notifications/configuration', (route) =>
+    data(route, {
+      available: true,
+      unread_count: state.notifications.filter((item) => !item.read_at).length,
+      retention_days: 30,
+    }),
+  );
+  await page.route('**/api/v1/notifications?*', (route) =>
+    state.notificationsProblem
+      ? problem(route, state.notificationsProblem)
+      : data(route, { items: state.notifications, next_cursor: null }),
+  );
+  await page.route('**/api/v1/notifications/*/read', (route) => {
+    const item = state.notifications[0];
+    if (!item) return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+    item.read_at = '2026-11-04T09:00:00Z';
+    return data(route, item);
+  });
+  await page.route('**/api/v1/license/status', (route) =>
+    data(route, { state: 'active', new_business_allowed: true, warning: false }),
+  );
   return state;
 }

@@ -2,12 +2,17 @@
 // and the offline guarantee. Each application's e2e/ directory runs them.
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import { expect, test, type Page } from '@playwright/test';
-import { account, mockControlPlane, type ControlPlane } from './control-plane.ts';
+import { account, failedRun, mockControlPlane, type ControlPlane } from './control-plane.ts';
 
 /** The wording that differs between the applications. */
 export interface SessionFlowOptions {
   audience: ControlPlane['audience'];
   subtitle: string;
+}
+
+async function signOut(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Account menu' }).click();
+  await page.getByRole('menuitem', { name: 'Sign out' }).click();
 }
 
 async function signIn(page: Page, password = account.password): Promise<void> {
@@ -55,8 +60,8 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Welcome, Ada Lovelace' })).toBeVisible();
     await page.reload();
-    await expect(page.getByText('Research Lab')).toBeVisible();
-    await page.getByRole('button', { name: 'Sign out' }).click();
+    await expect(page.getByRole('main').getByText('Research Lab')).toBeVisible();
+    await signOut(page);
     await expect(page).toHaveURL(/\/sign-in$/);
     await page.goto('/');
     await expect(page).toHaveURL(/\/sign-in/);
@@ -109,7 +114,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     control.signedIn = true;
     control.signOutProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
     await page.goto('/');
-    await page.getByRole('button', { name: 'Sign out' }).click();
+    await signOut(page);
     await expect(page.getByRole('alert')).toContainText('The database is unavailable');
     control.signOutProblem = null;
     await page.getByRole('button', { name: 'Try again' }).click();
@@ -164,6 +169,117 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     });
     expect(loaded.join()).toContain('Figtree Variable');
     await expect(page.locator('body')).toHaveCSS('font-family', /^"Figtree Variable"/);
+  });
+
+  test('opens the command menu from the keyboard and runs an action', async ({ page }) => {
+    control.signedIn = true;
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    await page.getByRole('main').waitFor();
+    await page.keyboard.press('ControlOrMeta+k');
+    const input = page.getByPlaceholder('Type a command or a page name');
+    await expect(input).toBeFocused();
+    await input.fill('dark');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(input).toBeHidden();
+  });
+
+  test('closes the command menu with Escape and says when nothing matches', async ({ page }) => {
+    control.signedIn = true;
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Search and commands' }).click();
+    const input = page.getByPlaceholder('Type a command or a page name');
+    await input.fill('no such thing');
+    await expect(page.getByText('No results')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(input).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Search and commands' })).toBeFocused();
+  });
+
+  test('signs out from the command menu', async ({ page }) => {
+    control.signedIn = true;
+    await page.goto('/');
+    await page.getByRole('main').waitFor();
+    await page.keyboard.press('ControlOrMeta+k');
+    await page.getByPlaceholder('Type a command or a page name').fill('sign out');
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/sign-in$/);
+  });
+
+  test('switches workspace and remembers it', async ({ page }) => {
+    control.signedIn = true;
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Workspace: Research Lab/ }).click();
+    await page.getByRole('menuitem', { name: 'Platform Team' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Switched to' })).toContainText(
+      'Switched to Platform Team',
+    );
+    await page.reload();
+    await expect(page.getByRole('button', { name: /^Workspace: Platform Team/ })).toBeVisible();
+  });
+
+  test('offers a retry when workspaces do not load', async ({ page }) => {
+    control.signedIn = true;
+    control.workspacesProblem = { status: 403, code: 'ACCESS_DENIED' };
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Workspace: Research Lab/ }).click();
+    const retry = page.getByRole('menuitem', { name: /did not load/ });
+    await expect(retry).toBeVisible();
+    control.workspacesProblem = null;
+    await retry.click();
+    await expect(page.getByRole('menuitem', { name: 'Platform Team' })).toBeVisible();
+  });
+
+  test('lists notifications and marks them read', async ({ page }) => {
+    control.signedIn = true;
+    control.notifications = [{ ...failedRun }];
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Notifications: 1 unread' }).click();
+    const drawer = page.getByRole('dialog', { name: 'Notifications' });
+    await expect(drawer).toContainText('Workflow run failed');
+    await expect(drawer).toContainText('MODEL_UNAVAILABLE');
+    await drawer.getByRole('button', { name: 'Mark as read' }).click();
+    await expect(drawer.getByRole('button', { name: 'Mark as read' })).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Notifications: 0 unread' })).toBeVisible();
+  });
+
+  test('explains an empty and a failed notification list', async ({ page }) => {
+    control.signedIn = true;
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Notifications/ }).click();
+    const drawer = page.getByRole('dialog', { name: 'Notifications' });
+    await expect(drawer).toContainText('No notifications');
+    await page.keyboard.press('Escape');
+    control.notificationsProblem = { status: 403, code: 'ACCESS_DENIED' };
+    await page.reload();
+    await page.getByRole('button', { name: /^Notifications/ }).click();
+    await expect(page.getByRole('alert')).toContainText('You do not have access');
+  });
+
+  test('uses a drawer for navigation on a narrow screen', async ({ page }) => {
+    control.signedIn = true;
+    await page.setViewportSize({ width: 600, height: 800 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Open navigation' }).click();
+    const panel = page.getByRole('dialog', { name: 'Main navigation' });
+    await expect(panel.getByRole('link').first()).toBeVisible();
+    await panel.getByRole('link').first().click();
+    await expect(panel).toBeHidden();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    );
+    expect(overflow).toBe(false);
+  });
+
+  test('switches language from the account menu', async ({ page }) => {
+    control.signedIn = true;
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Account menu' }).click();
+    await page.getByRole('menuitem', { name: chinese['locale.zh-CN'] }).click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
+    await expect(page.getByRole('button', { name: chinese['user.menu'] })).toBeVisible();
   });
 
   test('switches to Chinese and remembers the choice', async ({ page }) => {

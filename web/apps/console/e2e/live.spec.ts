@@ -65,7 +65,18 @@ test('signs in and out of a real installation', async ({ page }) => {
   await page.getByRole('button', { name: 'Use the dark theme' }).click();
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(22, 21, 19)');
 
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.keyboard.press('ControlOrMeta+k');
+  await page.getByPlaceholder('Type a command or a page name').fill('compact');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
+  await page.getByRole('button', { name: /^Notifications/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Notifications' })).toContainText(
+    'No notifications',
+  );
+  await page.keyboard.press('Escape');
+
+  await page.getByRole('button', { name: 'Account menu' }).click();
+  await page.getByRole('menuitem', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
   await page.goto('/');
   await expect(page).toHaveURL(/\/sign-in/);

@@ -98,6 +98,11 @@ OWNSOLID_LIVE_ORIGIN=https://<admin host>:<port> OWNSOLID_LIVE_EMAIL=<administra
 The certificate's public key is pinned, so the browser still refuses any other certificate.
 The spec ignores the Mac's system proxy, which cannot reach a forwarded port.
 
+The tunnel can drop to about 20 KB/s, and pages then time out. Run the spec on
+`ownsolid-cpu` instead, with `--network host` in a `node` container that installs
+`@playwright/test` and `playwright install --with-deps chromium`. The server cannot pull
+`mcr.microsoft.com/playwright`: the connection is reset.
+
 ## Factory tests on Linux
 
 `make test-offline HOST=ownsolid-cpu` builds the Linux test binaries here and runs them on

@@ -31,3 +31,16 @@ export {
   type User,
   type Workspace,
 } from './identity.ts';
+export {
+  getLicenseStatus,
+  getNotificationSummary,
+  listNotifications,
+  listWorkspaces,
+  markNotificationRead,
+  type LicenseStatus,
+  type NotificationSummary,
+  type Page,
+  type RunNotification,
+  type RunOutcome,
+  type WorkspaceSummary,
+} from './platform.ts';

@@ -21,6 +21,7 @@ catalog:
   '@vitejs/plugin-react': 6.2.1
   class-variance-authority: 0.7.1
   clsx: 2.1.1
+  cmdk: 1.1.1
   eslint-plugin-jsx-a11y-x: 0.2.0
   eslint-plugin-react-hooks: 7.1.1
   eslint: 10.14.0

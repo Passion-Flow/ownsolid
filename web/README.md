@@ -4,15 +4,15 @@ The console (Admin entrance) and the portal, built with React, TanStack and Tail
 [ADR 0002](../docs/decisions/0002-frontend-stack.md) records the stack and
 [the design system](../docs/development/design-system.md) is the visual standard.
 
-| Path              | Holds                                                                           |
-| ----------------- | ------------------------------------------------------------------------------- |
-| `apps/console`    | The console. Served on the admin origin                                         |
-| `apps/portal`     | The portal. Served on the portal origin                                         |
-| `packages/shell`  | What both applications share: startup, session, sign-in, status pages           |
-| `packages/ui`     | Design tokens, fonts and components                                             |
-| `packages/api`    | Transport to the control plane: CSRF, timeouts, problems, runtime configuration |
-| `packages/i18n`   | Translation runtime and the `locales/` catalogs                                 |
-| `packages/config` | ESLint, Prettier, Vite, Vitest and Playwright settings                          |
+| Path              | Holds                                                                                         |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| `apps/console`    | The console. Served on the admin origin                                                       |
+| `apps/portal`     | The portal. Served on the portal origin                                                       |
+| `packages/shell`  | What both applications share: startup, session, sign-in, status pages and the signed-in frame |
+| `packages/ui`     | Design tokens, fonts and components                                                           |
+| `packages/api`    | Transport to the control plane: CSRF, timeouts, problems, runtime configuration               |
+| `packages/i18n`   | Translation runtime and the `locales/` catalogs                                               |
+| `packages/config` | ESLint, Prettier, Vite, Vitest and Playwright settings                                        |
 
 ## Working here
 
