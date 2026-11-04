@@ -1,5 +1,7 @@
 # Observability and alerting
 
+Module reviewed: 2026-11-04.
+
 Metrics, logs, traces and alerts for the platform and the fleet, in their own stores,
 fully offline.
 
@@ -21,6 +23,11 @@ fully offline.
 - [ ] OBS-106 Dashboards for platform health, fleet, GPU and model usage (P1)
 - [ ] OBS-107 Export to customer Prometheus, Grafana and log systems (P1) - Catalog: F235
 - [ ] OBS-108 Load tested at about 17 million active series (P1)
+- [ ] OBS-109 Retention tiers and long-range rollups built on recording rules, because downsampling and multiple retentions are Enterprise-only in the selected store (P1)
+- [ ] OBS-110 Series cardinality explorer with per-tenant and per-agent limits (P1)
+- [ ] OBS-111 Log-based alert rules and SLO burn-rate alerts (P1)
+- [ ] OBS-112 Black-box probes of platform endpoints and model routes (P1)
+- [ ] OBS-113 Telemetry store backup and restore with the open-source tools, scheduled by ownsolid (P1)
 
 ## P2 Fleet operations
 
@@ -28,6 +35,7 @@ fully offline.
 - [ ] OBS-202 SMS and voice alert gateways (P2)
 - [ ] OBS-203 Capacity planning reports and forecasts (P2)
 - [ ] OBS-204 Platform fault drills and a support status board (P2) - Catalog: F652
+- [ ] OBS-205 Authenticated, encrypted traffic between telemetry store nodes in a cell, because mTLS between cluster components is Enterprise-only in the selected store (P2)
 
 ## P3 Multi-site
 
