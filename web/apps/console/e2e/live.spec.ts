@@ -56,6 +56,15 @@ test('signs in and out of a real installation', async ({ page }) => {
   await page.reload();
   await expect(page.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
 
+  await expect(page.locator('body')).toHaveCSS('font-family', /^"Figtree Variable"/);
+  const fonts = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return [...document.fonts].filter((font) => font.status === 'loaded').length;
+  });
+  expect(fonts).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'Use the dark theme' }).click();
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(22, 21, 19)');
+
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
   await page.goto('/');

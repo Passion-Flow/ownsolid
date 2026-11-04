@@ -9,7 +9,7 @@ export function LocaleSelect({ className }: { className?: string | undefined }) 
   const id = useId();
   return (
     <div className={cn('inline-flex items-center gap-1.5 text-text-3', className)}>
-      <Languages aria-hidden className="size-4" strokeWidth={1.75} />
+      <Languages aria-hidden className="size-4" />
       <label htmlFor={id} className="sr-only">
         {t('locale.label')}
       </label>

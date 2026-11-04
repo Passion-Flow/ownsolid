@@ -1,7 +1,9 @@
 // Shared Vite and Vitest configuration for the console, the portal and the packages.
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import type { Plugin } from 'vite';
 import { defineConfig, type TestUserConfig, type ViteUserConfig } from 'vitest/config';
 
 const setupFile = fileURLToPath(new URL('./vitest-setup.ts', import.meta.url));
@@ -34,6 +36,37 @@ export interface AppOptions {
 export const contentSecurityPolicy =
   "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
 
+// The bundled fonts and icons; their licenses require the notices to ship with them.
+const noticedPackages = [
+  '@fontsource-variable/figtree',
+  '@fontsource-variable/jetbrains-mono',
+  'lucide-react',
+];
+
+/** The license texts of the bundled fonts and icons. */
+export function thirdPartyNotices(): string {
+  return noticedPackages
+    .map((name) => {
+      const file = new URL(`../../ui/node_modules/${name}/LICENSE`, import.meta.url);
+      return `${name}\n\n${readFileSync(file, 'utf8').trim()}\n`;
+    })
+    .join('\n---\n\n');
+}
+
+function noticesPlugin(): Plugin {
+  return {
+    name: 'ownsolid-third-party-notices',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'assets/third-party-notices.txt',
+        source: thirdPartyNotices(),
+      });
+    },
+  };
+}
+
 // The control plane answers these paths; the development server forwards them.
 const controlPaths = ['/api', '/runtime-config.json', '/health'];
 
@@ -57,7 +90,7 @@ export function appConfig({ port }: AppOptions): ViteUserConfig {
       )
     : undefined;
   return defineConfig({
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), noticesPlugin()],
     build: {
       target: 'es2023',
       sourcemap: false,

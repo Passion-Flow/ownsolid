@@ -69,6 +69,13 @@
   --gap: 14px;
 }
 
+/* Before the preference script runs, avoid a light flash on a dark system. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #161513;
+  }
+}
+
 @theme inline {
   --font-sans:
     'Figtree Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'PingFang SC',
@@ -128,6 +135,19 @@
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  /* Lucide icons: 18 px with a 1.75 stroke. A size-* utility overrides the size. */
+  .lucide {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    stroke-width: 1.75;
+  }
+
+  /* An open modal leaves the page behind it still. */
+  html:has(dialog[open]) {
+    overflow: hidden;
   }
 
   code,
