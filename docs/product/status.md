@@ -9,7 +9,8 @@ today and what is known to fail.
 | Repository layout checks | Yes | Yes | n/a | None |
 | Cell and site scope on tables, API paths and shared keys | Yes, PostgreSQL only; identity fixed to `default` until ARC-202 | See the single-node install row | n/a | MySQL and Dameng chains lack the columns (CMP-201, CMP-202) |
 | Agent session protocol v1: gRPC stream on HTTP/2 for heartbeats and claims, HTTPS long-poll fallback (ADR 0007) | Yes; stream gateway runs in the control process, task wake is per process until ARC-011 | Yes: a real agent enrolled into the offline single-node install, ran tasks over the stream and reconnected after a control restart, Docker-in-Docker on `ownsolid-cpu`. The fallback ran against the real handler and PostgreSQL on the Mac | n/a | None |
-| Single-node install (`ownsolid-install`, control image, Compose) | Partly: no web console | API only: installed, signed in, restarted and reinstalled with no network route, Docker-in-Docker on `ownsolid-cpu` | No | No console or portal: both origins serve a placeholder page. Not complete until UX-001 (DEL-001) |
+| Single-node install (`ownsolid-install`, control image, Compose) | Yes, with the web console and portal from `web/` | Installed, signed in, restarted and reinstalled with no network route, Docker-in-Docker on `ownsolid-cpu`; the image's console and portal load with every asset | No | None |
+| Web console and portal: sign-in, sign-out, session, failure states, English and Simplified Chinese | Yes; other pages land with their roadmap items | Real Chromium signed in and out of both entrances of an installation on `ownsolid-cpu`, through its TLS, cookies, CSRF checks and Content-Security-Policy | No | None |
 | Zero-egress end-to-end harness: every outbound packet, DNS included, recorded and refused (ADR 0008) | Yes | Yes: the single-node install run recorded no outbound attempt besides its own probes, from the host and from the control container, Docker-in-Docker on `ownsolid-cpu` | n/a | None |
 
 Backend code from the previous `project-one` repository now lives in this layout. The
@@ -19,7 +20,8 @@ are listed above once they are usable from the new interface.
 
 ## Tests
 
-`make test` passes on macOS. The factory tests need a non-root user and a real mounted
+`make test` passes on macOS and includes the web workspace: Vitest for every package and
+Playwright for the console and portal against a scripted control plane. The factory tests need a non-root user and a real mounted
 filesystem, so they skip there; `make test-offline HOST=ownsolid-cpu` runs them on Linux.
 `tests/e2e/run-single-node.sh` is the end-to-end install, see
 [environment](../development/environment.md). Database integration tests carry build tags

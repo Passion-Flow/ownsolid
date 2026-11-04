@@ -77,6 +77,27 @@ ssh ownsolid-cpu 'cd /root/e2e && bash run-single-node.sh /root/e2e ownsolid/con
 
 `make test` skips this test without those inputs.
 
+## Browser test against an installation
+
+`web/apps/console/e2e/live.spec.ts` signs in and out in real Chromium, through an
+installation's own TLS, cookies, CSRF checks and Content-Security-Policy. Install on
+`ownsolid-cpu` with a `project`, `install_root`, `network.https_port` and
+`network.state_subnet` of your own, copy `operator/admin-credential` to a private file,
+forward the port with `ssh -N -L <port>:127.0.0.1:<port> ownsolid-cpu`, then:
+
+```sh
+spki=$(openssl s_client -connect 127.0.0.1:<port> -servername <admin host> </dev/null 2>/dev/null \
+  | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der \
+  | openssl dgst -sha256 -binary | base64)
+cd web/apps/console
+OWNSOLID_LIVE_ORIGIN=https://<admin host>:<port> OWNSOLID_LIVE_EMAIL=<administrator> \
+  OWNSOLID_LIVE_PASSWORD_FILE=<credential file> OWNSOLID_LIVE_SPKI="$spki" \
+  OWNSOLID_LIVE_HOST_RULES='MAP <admin host> 127.0.0.1' pnpm exec playwright test live
+```
+
+The certificate's public key is pinned, so the browser still refuses any other certificate.
+The spec ignores the Mac's system proxy, which cannot reach a forwarded port.
+
 ## Factory tests on Linux
 
 `make test-offline HOST=ownsolid-cpu` builds the Linux test binaries here and runs them on
