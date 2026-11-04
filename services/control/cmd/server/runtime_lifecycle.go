@@ -351,6 +351,12 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 	if h.TelemetryLogs != nil {
 		g.Go("TELEMETRY_WRITER", h.TelemetryLogs.Run)
 	}
+	if h.TelemetryMetrics != nil {
+		if selected.postgres != nil {
+			h.TelemetryMetrics.Add(databasePoolSamples(selected.postgres))
+		}
+		g.Go("TELEMETRY_METRICS", h.TelemetryMetrics.Run)
+	}
 	g.Go("RETENTION_WORKER", func(ctx context.Context) error {
 		return retention.RunSelected(ctx, selected.store, c.Policy().Retention)
 	})

@@ -66,7 +66,7 @@ const (
 	removedMessage = "removed"
 )
 
-// Client talks to the log store.
+// Client talks to one telemetry store over HTTP.
 type Client struct {
 	base *url.URL
 	http *http.Client
@@ -76,10 +76,10 @@ type Client struct {
 func NewClient(address string, timeout time.Duration) (*Client, error) {
 	base, e := url.Parse(address)
 	if e != nil || base.Scheme != "http" || base.Host == "" || base.Path != "" || base.RawQuery != "" || base.User != nil {
-		return nil, fmt.Errorf("logs store address %q must be an http URL without a path", address)
+		return nil, fmt.Errorf("telemetry store address %q must be an http URL without a path", address)
 	}
 	if timeout <= 0 {
-		return nil, errors.New("logs store timeout must be positive")
+		return nil, errors.New("telemetry store timeout must be positive")
 	}
 	// No redirects: the address is fixed configuration, so a redirect is never expected.
 	client := &http.Client{Timeout: timeout, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}

@@ -345,8 +345,10 @@ task_events:
 # component logs report STORAGE_UNAVAILABLE and the rest of the platform runs normally.
 # telemetry:
 #   logs_address: http://172.31.254.4:9428
+#   metrics_address: http://172.31.254.3:8428
 #   request_timeout_seconds: 5
 #   queue_capacity: 4096
+#   metrics_push_interval_seconds: 15
 
 # M30 owner: optional canonical absolute protected JSON file, no default.
 # Omit to disable diagnostics; present empty/null/false/relative values fail.

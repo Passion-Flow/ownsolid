@@ -7,11 +7,13 @@ import (
 	"time"
 )
 
-// Settings size the log store connection. config.TelemetryConfiguration validates them.
+// Settings describe the store connections. config.TelemetryConfiguration validates them.
 type Settings struct {
-	LogsAddress    string
-	RequestTimeout time.Duration
-	QueueCapacity  int
+	LogsAddress         string
+	MetricsAddress      string
+	RequestTimeout      time.Duration
+	QueueCapacity       int
+	MetricsPushInterval time.Duration
 }
 
 // Logs is the log store as the control plane uses it: writes through the queue and

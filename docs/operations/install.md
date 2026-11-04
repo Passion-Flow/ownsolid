@@ -81,6 +81,13 @@ Metrics and logs live in their own stores, never in the control-plane database
 ([ADR 0009](../decisions/0009-telemetry-and-log-stores.md)). They keep data for
 `telemetry.metrics_retention` and `telemetry.logs_retention`, 30 days by default.
 
+`control` pushes its process metrics to the metrics store every 15 seconds: names starting
+with `ownsolid_`, labelled `service` and `instance`. They cover uptime, Go runtime memory
+and garbage collection, database connection pool use, and the log queue, including records
+dropped or given up on. If the store is down, control logs
+`telemetry_metrics_push_failed` once, `telemetry_metrics_push_recovered` when it returns,
+and keeps serving.
+
 If a store stops, the platform keeps serving. `ownsolid-install status` reports it,
 `apply` restarts it, and reading component logs returns `STORAGE_UNAVAILABLE` until it is
 back. Telemetry is not backed up yet (OBS-113).

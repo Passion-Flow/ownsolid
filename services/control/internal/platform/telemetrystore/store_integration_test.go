@@ -6,6 +6,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
+	"net/http"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -104,5 +108,51 @@ func TestRealStoreReturnsNothingForAnUnknownScope(t *testing.T) {
 	c := storeClient(t)
 	if got, e := c.Recent(context.Background(), uniqueScope(t, "nobody"), 16); e != nil || len(got) != 0 {
 		t.Fatalf("got %+v, %v", got, e)
+	}
+}
+
+// TestMetricsReachARealStore runs against OWNSOLID_TEST_METRICS_ADDRESS and asks the store
+// for a series only this run can have written.
+func TestMetricsReachARealStore(t *testing.T) {
+	address := os.Getenv("OWNSOLID_TEST_METRICS_ADDRESS")
+	if address == "" {
+		t.Fatal("OWNSOLID_TEST_METRICS_ADDRESS must name a metrics store")
+	}
+	client, e := NewClient(address, 5*time.Second)
+	if e != nil {
+		t.Fatal(e)
+	}
+	service := fmt.Sprintf("integration-%d", time.Now().UnixNano())
+	p, e := NewMetricsPusher(client, 200*time.Millisecond, service, `host"1`, slog.New(slog.DiscardHandler))
+	if e != nil {
+		t.Fatal(e)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go p.Run(ctx)
+	query := url.Values{"match[]": {fmt.Sprintf(`ownsolid_go_goroutines{service=%q}`, service)}}
+	deadline := time.Now().Add(30 * time.Second)
+	for {
+		var answer struct {
+			Data []map[string]string `json:"data"`
+		}
+		request, e := http.NewRequestWithContext(ctx, http.MethodGet, client.endpoint("/api/v1/series", query), nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		e = client.exchange(request, func(body io.Reader) error { return json.NewDecoder(body).Decode(&answer) })
+		if e == nil && len(answer.Data) == 1 {
+			if got := answer.Data[0]["instance"]; got != `host"1` {
+				t.Fatalf("instance label %q: the escaped value did not survive", got)
+			}
+			if p.failed.Load() != 0 {
+				t.Fatalf("%d pushes failed against a healthy store", p.failed.Load())
+			}
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("the series never appeared: %v %+v", e, answer)
+		}
+		time.Sleep(200 * time.Millisecond)
 	}
 }

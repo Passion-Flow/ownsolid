@@ -54,6 +54,15 @@ func (w *Writer) Dropped() uint64 { return w.dropped.Load() }
 // Failed counts records given up on after every attempt failed.
 func (w *Writer) Failed() uint64 { return w.failed.Load() }
 
+// Samples reports the queue for the metrics store.
+func (w *Writer) Samples() []Sample {
+	return []Sample{
+		{"ownsolid_telemetry_log_queue_length", float64(len(w.queue))},
+		{"ownsolid_telemetry_log_records_dropped_total", float64(w.dropped.Load())},
+		{"ownsolid_telemetry_log_records_failed_total", float64(w.failed.Load())},
+	}
+}
+
 // Run delivers records until ctx ends, then spends a bounded time on what is queued.
 func (w *Writer) Run(ctx context.Context) {
 	defer close(w.done)

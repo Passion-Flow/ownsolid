@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -234,5 +235,98 @@ func TestRunDrainsQueuedRecordsOnShutdown(t *testing.T) {
 	w.Run(ctx)
 	if store.count() != 5 {
 		t.Fatalf("drained %d of 5", store.count())
+	}
+}
+
+// newPusher returns a pusher against handler, with one fixed source.
+func newPusher(t *testing.T, handler http.HandlerFunc, logs *bytes.Buffer) *MetricsPusher {
+	t.Helper()
+	p, e := NewMetricsPusher(testClient(t, handler), time.Millisecond, "control", `host"1`, quietLogger(logs))
+	if e != nil {
+		t.Fatal(e)
+	}
+	p.Add(func() []Sample { return []Sample{{"ownsolid_test_value", 2.5}} })
+	return p
+}
+
+func TestPushSendsPrometheusTextWithEscapedLabels(t *testing.T) {
+	var path, contentType, body string
+	p := newPusher(t, func(w http.ResponseWriter, r *http.Request) {
+		path, contentType = r.URL.Path, r.Header.Get("Content-Type")
+		raw, _ := io.ReadAll(r.Body)
+		body = string(raw)
+		w.WriteHeader(http.StatusNoContent)
+	}, &bytes.Buffer{})
+	if e := p.push(context.Background()); e != nil {
+		t.Fatal(e)
+	}
+	if path != metricsImportPath || !strings.HasPrefix(contentType, "text/plain") {
+		t.Fatalf("%s %q", path, contentType)
+	}
+	if !strings.Contains(body, `ownsolid_test_value{service="control",instance="host\"1"} 2.5`+"\n") {
+		t.Fatalf("value line missing from:\n%s", body)
+	}
+	if !strings.Contains(body, "ownsolid_go_goroutines{") || !strings.Contains(body, "ownsolid_telemetry_metric_pushes_failed_total{") {
+		t.Fatalf("process values missing from:\n%s", body)
+	}
+}
+
+func TestPushFailureIsCountedLoggedOnceAndRecovers(t *testing.T) {
+	var healthy atomic.Bool
+	var logs bytes.Buffer
+	p := newPusher(t, func(w http.ResponseWriter, r *http.Request) {
+		if !healthy.Load() {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+	}, &logs)
+	ctx := context.Background()
+	for range 3 {
+		p.pushAndReport(ctx)
+	}
+	if p.failed.Load() != 3 || strings.Count(logs.String(), "telemetry_metrics_push_failed") != 1 {
+		t.Fatalf("failed %d, logs:\n%s", p.failed.Load(), logs.String())
+	}
+	healthy.Store(true)
+	p.pushAndReport(ctx)
+	p.pushAndReport(ctx)
+	if p.failed.Load() != 3 || strings.Count(logs.String(), "telemetry_metrics_push_recovered") != 1 {
+		t.Fatalf("failed %d, logs:\n%s", p.failed.Load(), logs.String())
+	}
+}
+
+func TestRunPushesUntilCancelledAndShutdownIsNotAFailure(t *testing.T) {
+	var pushes atomic.Int64
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	var logs bytes.Buffer
+	p := newPusher(t, func(http.ResponseWriter, *http.Request) {
+		if pushes.Add(1) == 3 {
+			cancel()
+		}
+	}, &logs)
+	if e := p.Run(ctx); e != nil {
+		t.Fatal(e)
+	}
+	if pushes.Load() < 3 || p.failed.Load() != 0 || logs.Len() != 0 {
+		t.Fatalf("pushes %d, failed %d, logs: %s", pushes.Load(), p.failed.Load(), logs.String())
+	}
+}
+
+func TestNewMetricsPusherRefusesAZeroInterval(t *testing.T) {
+	if _, e := NewMetricsPusher(nil, 0, "control", "x", nil); e == nil {
+		t.Fatal("accepted a zero interval")
+	}
+}
+
+func TestWriterSamplesReportTheQueue(t *testing.T) {
+	w := NewWriter(&fakeStore{}, 1, quietLogger(&bytes.Buffer{}))
+	w.Enqueue(Record{Scope: scope})
+	w.Enqueue(Record{Scope: scope})
+	got := map[string]float64{}
+	for _, s := range w.Samples() {
+		got[s.Name] = s.Value
+	}
+	if got["ownsolid_telemetry_log_queue_length"] != 1 || got["ownsolid_telemetry_log_records_dropped_total"] != 1 || got["ownsolid_telemetry_log_records_failed_total"] != 0 {
+		t.Fatalf("%v", got)
 	}
 }
