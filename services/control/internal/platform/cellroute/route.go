@@ -18,7 +18,7 @@ const (
 // Families below /api/v1/admin and /api/v1/workspaces/{id} whose resources a cell owns.
 // Everything else in those trees belongs to the global layer: identity, tenancy, audit
 // aggregation, licensing and release state.
-var cellAdmin = families("artifact-objects", "datasets", "deployments", "distribution", "image-registry",
+var cellAdmin = families("agent-pacing", "artifact-objects", "datasets", "deployments", "distribution", "image-registry",
 	"knowledge-bases", "model-holdouts", "model-imports", "model-preparations", "models", "monitoring",
 	"node-join-tokens", "nodes", "plugins", "private-clusters", "task-delivery-quarantine", "training", "workflows")
 var cellWorkspace = families("artifact-objects", "aws", "datasets", "deployments", "distribution", "image-registry",

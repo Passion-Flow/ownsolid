@@ -11,7 +11,7 @@ import (
 
 func TestMVPSourceMetadataPreservesOriginalOmittedBytes(t *testing.T) {
 	m := mvpBindingManifestFixture()
-	legacy := `{"application_profile":"mvp-postgresql-cpu-v1","schema_version":32,"system_identifier":"7702686790272344104","database_oid":16384,"backend_pid":400,"runtime_principal":"synthetic_runtime","principal_oid":16385,"principal_verifier_sha256":"` + strings.Repeat("a", 64) + `","external_artifacts":[{"owner":"artifactstores","records":0,"content_sha256":"` + strings.Repeat("b", 64) + `","payload_authority":"original-owner-external-payload-and-reconciliation-required"},{"owner":"imageregistry","records":0,"content_sha256":"` + strings.Repeat("b", 64) + `","payload_authority":"original-owner-external-payload-and-reconciliation-required"}],"registry_configured":false}` + "\n"
+	legacy := `{"application_profile":"mvp-postgresql-cpu-v1","schema_version":33,"system_identifier":"7702686790272344104","database_oid":16384,"backend_pid":400,"runtime_principal":"synthetic_runtime","principal_oid":16385,"principal_verifier_sha256":"` + strings.Repeat("a", 64) + `","external_artifacts":[{"owner":"artifactstores","records":0,"content_sha256":"` + strings.Repeat("b", 64) + `","payload_authority":"original-owner-external-payload-and-reconciliation-required"},{"owner":"imageregistry","records":0,"content_sha256":"` + strings.Repeat("b", 64) + `","payload_authority":"original-owner-external-payload-and-reconciliation-required"}],"registry_configured":false}` + "\n"
 	raw, e := canonical(m.MVPSource)
 	if e != nil || !bytes.Equal(raw, []byte(legacy)) {
 		t.Fatal("old omitted source metadata bytes changed", e)

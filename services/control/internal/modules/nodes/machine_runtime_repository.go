@@ -114,6 +114,8 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 		return wire.Disposition{}, e
 	}
 	out.ServerTime = out.ServerTime.UTC()
+	pacing := s.currentPacing(ctx)
+	out.Pacing = &pacing
 	return out, nil
 }
 func (s *Service) leasedTaskWithin(ctx context.Context, q transaction.Executor, n Node, taskID, lease string) (Task, error) {

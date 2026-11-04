@@ -99,10 +99,10 @@ func CheckPrefixWithin(ctx context.Context, q transaction.Executor) (int, error)
 }
 
 // SchemaVersion is the number of migrations in the one PostgreSQL lineage.
-const SchemaVersion = 32
+const SchemaVersion = 33
 
 // TableCount is the number of public tables the complete lineage creates.
-const TableCount = 109
+const TableCount = 110
 
 // ordered reads the one migration lineage. File names carry a contiguous
 // version prefix; the checksum covers the exact file bytes.

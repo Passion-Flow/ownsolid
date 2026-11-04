@@ -191,7 +191,9 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 			}
 		}
 	}()
-	idle := time.NewTimer(idleTimeout)
+	// A session may stay silent for as long as its pacing allows (ADR 0013).
+	idleAfter := idleTimeout
+	idle := time.NewTimer(idleAfter)
 	defer idle.Stop()
 	var last uint64
 	for {
@@ -209,7 +211,6 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 			}
 			return status.Error(codes.Unavailable, "SERVICE_NOT_READY")
 		}
-		idle.Reset(idleTimeout)
 		if e := m.Validate(last); e != nil || last == 0 && m.Heartbeat == nil {
 			return status.Error(codes.InvalidArgument, "AGENT_SESSION_MESSAGE_INVALID")
 		}
@@ -229,6 +230,11 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 		if e := stream.SendMsg(&reply); e != nil {
 			return nil
 		}
+		if reply.Disposition != nil && reply.Disposition.Pacing != nil {
+			idleAfter = max(idleTimeout, time.Duration(reply.Disposition.Pacing.IdleSeconds())*time.Second)
+		}
+		// Silence counts from the reply: a held claim is control's time, not the agent's.
+		idle.Reset(idleAfter)
 	}
 }
 

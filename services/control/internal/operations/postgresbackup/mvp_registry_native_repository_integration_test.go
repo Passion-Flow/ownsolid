@@ -155,7 +155,7 @@ func TestActualMVPInitializedStoresSupplementNativeFreshRestore(t *testing.T) {
 	if _, e = readPrivateDocument("/fixture/backups/authority-source/candidate.json", 1<<20, &m); e != nil {
 		t.Fatal(e)
 	}
-	if m.Database.SchemaVersion != 32 || m.Database.Tables != 109 || len(m.Stores) != 4 || m.MVPSource == nil || m.MVPSource.Registry == nil || m.MVPSource.Registry.Receipt.Pins != 2 || m.MVPSource.Registry.Receipt.Files < 12 {
+	if m.Database.SchemaVersion != 33 || m.Database.Tables != 110 || len(m.Stores) != 4 || m.MVPSource == nil || m.MVPSource.Registry == nil || m.MVPSource.Registry.Receipt.Pins != 2 || m.MVPSource.Registry.Receipt.Files < 12 {
 		t.Fatal("complete native MVP and supplementary proofs required")
 	}
 	var r release.PostgreSQLRestoreRequest

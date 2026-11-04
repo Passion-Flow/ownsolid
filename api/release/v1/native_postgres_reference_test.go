@@ -8,7 +8,7 @@ import (
 
 func nativeBackupReferenceFixture() NativePostgreSQLBackupReference {
 	d := strings.Repeat("a", 64)
-	return NativePostgreSQLBackupReference{FormatVersion: 1, ApplicationProfile: MVPPostgreSQLCPUApplicationProfile, SourceManifestSHA256: d, SchemaVersion: 32, TableCount: 109, RequestSHA256: d, CandidateSHA256: d, CompletionSHA256: d, ReadbackSHA256: d, MVPSourceSHA256: d}
+	return NativePostgreSQLBackupReference{FormatVersion: 1, ApplicationProfile: MVPPostgreSQLCPUApplicationProfile, SourceManifestSHA256: d, SchemaVersion: 33, TableCount: 110, RequestSHA256: d, CandidateSHA256: d, CompletionSHA256: d, ReadbackSHA256: d, MVPSourceSHA256: d}
 }
 
 func nativeRestoreReferenceFixture() NativePostgreSQLRestoreReference {

@@ -3,7 +3,6 @@ package runtime
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -237,7 +236,7 @@ func Enroll(ctx context.Context, c Config) error {
 	if e = connection.Post(ctx, "/agent/v1/enroll", wire.Enrollment{JoinToken: join, Handshake: handshake(f, c)}, &response); e != nil {
 		return e
 	}
-	if !idPattern.MatchString(response.NodeID) || !token(response.Credential) || response.ProtocolVersion != wire.ProfileVersion(profile(c)) || response.HeartbeatSeconds != wire.HeartbeatSeconds || !(wire.Scope{SiteID: response.SiteID, CellID: response.CellID}).Valid() {
+	if !idPattern.MatchString(response.NodeID) || !token(response.Credential) || response.ProtocolVersion != wire.ProfileVersion(profile(c)) || response.HeartbeatSeconds < wire.MinHeartbeatSeconds || response.HeartbeatSeconds > wire.MaxHeartbeatSeconds || !(wire.Scope{SiteID: response.SiteID, CellID: response.CellID}).Valid() {
 		return errors.New("ENROLLMENT_RESPONSE_INVALID")
 	}
 	if e = state.SaveNew(c.StateDirectory, state.Identity{NodeID: response.NodeID, SiteID: response.SiteID, CellID: response.CellID, Credential: response.Credential, ControlOrigin: c.ControlOrigin, ProtocolVersion: wire.ProfileVersion(profile(c)), ExecutionProfile: profile(c)}); e != nil {
@@ -321,8 +320,8 @@ func claimAndRun(ctx context.Context, c Config, connection *client.Client, sessi
 	if e != nil {
 		return e
 	}
-	// Control holds the claim for up to one interval and answers as soon as work arrives.
-	claim, e := session.Claim(ctx, wire.MaxClaimWaitSeconds, cursor)
+	// Control holds the claim for most of the interval and answers as soon as work arrives.
+	claim, e := session.Claim(ctx, session.Pacing().ClaimWaitSeconds(), cursor)
 	if e != nil {
 		return e
 	}
@@ -482,7 +481,7 @@ func Run(ctx context.Context, c Config) error {
 	}
 	session := connection.Session(identity.NodeID)
 	defer session.Close()
-	backoff := settings.Seconds(c.Policy().BackoffInitialSeconds)
+	pace := newPacer()
 	transport := ""
 	for {
 		started := time.Now()
@@ -494,29 +493,19 @@ func Run(ctx context.Context, c Config) error {
 			slog.Info("agent_session_transport", "transport", current)
 			transport = current
 		}
-		// The claim wait is part of the interval, so a cycle starts once per interval when
-		// idle and right away after a task.
-		delay := max(0, time.Duration(wire.HeartbeatSeconds)*time.Second-time.Since(started))
+		var delay time.Duration
 		if e != nil {
 			var p *client.Problem
 			if errors.As(e, &p) && p.Status == 401 {
 				return errors.New("AGENT_CREDENTIAL_REVOKED")
 			}
 			slog.Warn("agent_cycle_failed", "code", e.Error())
-			delay = backoff
-			if backoff < settings.Seconds(c.Policy().BackoffMaxSeconds) {
-				backoff *= 2
-				if backoff > settings.Seconds(c.Policy().BackoffMaxSeconds) {
-					backoff = settings.Seconds(c.Policy().BackoffMaxSeconds)
-				}
-			}
+			delay = pace.afterFailure(session.Pacing())
 		} else {
-			backoff = settings.Seconds(c.Policy().BackoffInitialSeconds)
+			// The claim wait is part of the interval, so a cycle starts once per interval
+			// when idle and right away after a task.
+			delay = pace.afterSuccess(session.Pacing(), time.Since(started))
 		}
-		// Bounded jitter avoids synchronized reconnects without introducing another dependency.
-		var random [1]byte
-		rand.Read(random[:])
-		delay += time.Duration(random[0]) * time.Millisecond
 		timer := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():
