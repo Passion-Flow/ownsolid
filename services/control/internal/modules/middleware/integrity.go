@@ -79,14 +79,10 @@ func (s *Service) VerifyStored(ctx context.Context) error {
 						if evidence.MySQLObservation != nil && !evidence.MySQLObservation.valid() {
 							return fail("MIDDLEWARE_STORED_EVIDENCE_INVALID")
 						}
-					} else if evidence.Observation != nil || evidence.MySQLObservation != nil || len(evidence.Stages) == 0 {
+					} else {
 						return fail("MIDDLEWARE_STORED_EVIDENCE_INVALID")
 					}
-					if c.Kind == "reconcile" {
-						if evidence.OriginalOperationID != c.input.OriginalOperationID {
-							return fail("MIDDLEWARE_STORED_EVIDENCE_INVALID")
-						}
-					} else if evidence.Kind != c.Kind || evidence.OriginalOperationID != "" {
+					if evidence.Kind != c.Kind {
 						return fail("MIDDLEWARE_STORED_EVIDENCE_INVALID")
 					}
 					if !json.Valid([]byte(*result)) {

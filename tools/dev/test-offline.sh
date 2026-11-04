@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Runs the offline packaging tests on a Linux amd64 host. They need a non-root user and
-# a real mounted private filesystem, which macOS and `make test` do not provide, so they
-# skip there. Builds the test binaries here and runs them over SSH as `nobody`.
+# Runs the offline packaging tests on a Linux amd64 host. The factory tests need a non-root
+# user and a real mounted private filesystem, which macOS does not provide, so they skip
+# there. Builds the test binaries here and runs them over SSH as `nobody`.
 #
 # Usage: test-offline.sh <ssh-host>
 set -euo pipefail
@@ -17,16 +17,7 @@ trap 'rm -rf -- "$binaries"' EXIT
 packages=(
 	tools/release/offline/internal/factory
 	tools/release/offline/pkg/bundle
-	deploy/offline/cmd/operator
-	deploy/offline/internal/compose
-	deploy/offline/internal/composeprofile
-	deploy/offline/internal/configuration
-	deploy/offline/internal/engine
 	deploy/offline/internal/install
-	deploy/offline/internal/prepare
-	deploy/offline/internal/scope
-	deploy/offline/internal/tlsidentity
-	deploy/offline/pkg/maintenance
 )
 
 for package in "${packages[@]}"; do

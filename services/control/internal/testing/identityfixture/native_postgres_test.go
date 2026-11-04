@@ -201,7 +201,8 @@ func TestNativePostgresRestartHandshakeWithExplicitOwnerDouble(t *testing.T) {
 		defer close(done)
 		for {
 			raw, e := os.ReadFile(input.RestartRequest)
-			if e == nil {
+			// The owner creates the file and then writes it: an incomplete read means not yet.
+			if e == nil && json.Valid(raw) {
 				var request map[string]string
 				if json.Unmarshal(raw, &request) != nil || len(request) != 4 || request["format"] != "projectone.identity.native-restart-request.v1" || request["nonce"] != input.Nonce || request["source_schema"] != input.SourceSchema || request["system_identifier"] != input.SystemIdentifier {
 					finished <- context.Canceled
@@ -217,7 +218,7 @@ func TestNativePostgresRestartHandshakeWithExplicitOwnerDouble(t *testing.T) {
 				finished <- e
 				return
 			}
-			if !os.IsNotExist(e) {
+			if e != nil && !os.IsNotExist(e) {
 				finished <- e
 				return
 			}

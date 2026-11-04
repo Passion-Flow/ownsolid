@@ -15,7 +15,6 @@ import (
 	"strings"
 )
 
-const PlatformProfile = "ubuntu24.04-linux-amd64"
 const FixtureProfile = "test-fixture-linux-amd64"
 const SignatureAlgorithm = "Ed25519"
 const LicenseCapability = "M19"
@@ -158,7 +157,7 @@ func (m Manifest) Validate(maximumAssets int, maximumAsset, maximumTotal int64, 
 		return errors.New("RELEASE_MANIFEST_INVALID")
 	}
 	fixture := m.Profile == FixtureProfile
-	if m.Profile != PlatformProfile && !IsCumulativeCPUProfile(m.Profile) && (!fixture || !allowFixture) {
+	if m.Profile != MVPPostgreSQLCPUProfile && (!fixture || !allowFixture) {
 		return errors.New("RELEASE_PROFILE_UNSUPPORTED")
 	}
 	if err := m.validateCumulative(); err != nil {
@@ -227,20 +226,7 @@ func (m Manifest) Validate(maximumAssets int, maximumAsset, maximumTotal int64, 
 	if fixture {
 		return nil
 	}
-	lastCapability := 16
-	if IsCumulativeCPUProfile(m.Profile) {
-		lastCapability = len(m.Capabilities)
-	}
-	if m.Profile == CumulativeCacheCPUProfile {
-		// The selected cache slice does not activate intermediate M18-M22 owners.
-		lastCapability = 17
-	}
-	if capabilities[LicenseCapability] {
-		lastCapability = 19
-	}
-	if m.Profile == MVPPostgreSQLCPUProfile {
-		lastCapability = 30
-	}
+	const lastCapability = 30
 	for i := 1; i <= lastCapability; i++ {
 		if !capabilities[fmt.Sprintf("M%02d", i)] {
 			return errors.New("RELEASE_CAPABILITY_MISSING")
@@ -262,37 +248,13 @@ func (m Manifest) Validate(maximumAssets int, maximumAsset, maximumTotal int64, 
 	return nil
 }
 
-// RequiredAssets binds additional requirements to the exact signed capability
-// declaration without relabeling historical profiles or mutating shared maps.
-func (m Manifest) RequiredAssets() map[string]string {
-	required := RequiredAssets(m.Profile)
-	if m.Profile == PlatformProfile {
-		for _, capability := range m.Capabilities {
-			if capability == LicenseCapability {
-				required[LicenseTrustAssetID] = LicenseTrustAssetKind
-				required[LicenseValidationAssetID] = "operator"
-			}
-			if capability == PrivateClusterCapability {
-				required[PrivateClusterProbeAMD64AssetID] = "image_archive"
-			}
-		}
-	}
-	return required
-}
+// RequiredAssets returns the signed asset requirements of this manifest's profile.
+func (m Manifest) RequiredAssets() map[string]string { return RequiredAssets(m.Profile) }
 
-// RequiredAssets returns a fresh immutable-profile requirement map, never a user override.
+// RequiredAssets returns a fresh requirement map, never a user override.
 func RequiredAssets(profile string) map[string]string {
 	if profile == MVPPostgreSQLCPUProfile {
 		return mvpPostgreSQLCPURequiredAssets()
 	}
-	if profile == CumulativeKubernetesCPUProfile {
-		return kubernetesRequiredAssets()
-	}
-	if IsCumulativeCPUProfile(profile) {
-		return cumulativeRequiredAssets()
-	}
-	if profile != PlatformProfile {
-		return map[string]string{}
-	}
-	return map[string]string{"control-image": "image_archive", "gateway-image": "image_archive", "agent-image": "image_archive", "training-image": "image_archive", "postgres-image": "image_archive", "compose": "compose", "operator": "operator", "runtime-config-schema": "config_schema", "configuration-example": "config_example", "locales": "locale", "base-model": "model", "embedding-model": "model", "builtin-plugin": "plugin", "os-packages-lock": "dependency_lock", "docker-engine": "deb", "docker-cli": "deb", "containerd": "deb", "compose-plugin": "deb", "source-evidence": "source_evidence", "operator-runbook": "runbook", "platform-license": "license"}
+	return map[string]string{}
 }

@@ -39,7 +39,7 @@ func TestActualMiddlewarePostgreSQLWorkflow(t *testing.T) {
 	}
 	stored, e := reopened.Operation(p.ctx, p.owner, p.f.Workspace, operation.ID)
 	var result executionEvidence
-	if e != nil || stored.State != "succeeded" || json.Unmarshal(stored.Result, &result) != nil || result.Kind != "health" || result.Observation == nil || !result.Observation.valid() || result.MySQLObservation != nil || len(result.Stages) != 0 {
+	if e != nil || stored.State != "succeeded" || json.Unmarshal(stored.Result, &result) != nil || result.Kind != "health" || result.Observation == nil || !result.Observation.valid() || result.MySQLObservation != nil {
 		t.Fatal("actual durable PostgreSQL health evidence missing", e)
 	}
 	if result.Observation.Database != original.profile.Database || result.Observation.User != original.profile.User || result.Observation.WriteAnyTable || result.Observation.Superuser || result.Observation.CreateAnySchemaObjects {

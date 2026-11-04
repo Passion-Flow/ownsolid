@@ -63,7 +63,7 @@ func TestMySQLProfileOwnsOnlyExternalHealthInputs(t *testing.T) {
 			t.Fatal("mixed/unknown authority accepted", field)
 		}
 	}
-	for _, mutate := range []func(*Profile){func(p *Profile) { p.Kind = PlatformOwned }, func(p *Profile) { p.Engine = "mariadb" }, func(p *Profile) { p.ExpectedMySQLServerUUID = "" }, func(p *Profile) { p.MySQLEnvironmentFile = p.MySQLConfigurationFile }, func(p *Profile) { p.ExpectedMajor = 18 }} {
+	for _, mutate := range []func(*Profile){func(p *Profile) { p.Kind = platformOwned }, func(p *Profile) { p.Engine = "mariadb" }, func(p *Profile) { p.ExpectedMySQLServerUUID = "" }, func(p *Profile) { p.MySQLEnvironmentFile = p.MySQLConfigurationFile }, func(p *Profile) { p.ExpectedMajor = 18 }} {
 		bad := p
 		mutate(&bad)
 		if bad.Validate() == nil {

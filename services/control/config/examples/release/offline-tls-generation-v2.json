@@ -1,8 +1,0 @@
-{
-  "format_version": 2,
-  "certificate_file": "/verified-external/operator/tls/serving-chain.pem",
-  "private_key_file": "/verified-external/operator/tls/serving-key.pem",
-  "trust_bundle_file": "/verified-external/operator/tls/explicit-ca.pem",
-  "reason": "Rotate the isolated machine serving certificate with durable generation custody",
-  "target": "machine"
-}

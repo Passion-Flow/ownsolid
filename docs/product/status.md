@@ -16,18 +16,16 @@ are listed above once they are usable from the new interface.
 
 ## Tests
 
-`make test` passes on macOS. The offline packaging tests need a non-root user and a real
-mounted filesystem, so they skip there; `make test-offline HOST=ownsolid-cpu` runs them on
-Linux. `tests/e2e/run-single-node.sh` is the end-to-end install, see
-[environment](../development/environment.md).
-
-Database integration tests and the inherited operator's Engine journeys carry build tags
+`make test` passes on macOS. The factory tests need a non-root user and a real mounted
+filesystem, so they skip there; `make test-offline HOST=ownsolid-cpu` runs them on Linux.
+`tests/e2e/run-single-node.sh` is the end-to-end install, see
+[environment](../development/environment.md). Database integration tests carry build tags
 and are not part of these runs.
 
 ## Not supported
 
 | Capability | Why |
 | --- | --- |
-| Installing through `deploy/offline/cmd/operator` | Needs a signed bundle, and the tools that manufacture one are not in this repository. Use `ownsolid-install` (ADR 0004) |
 | Sizes other than `single-node` | Refused with `CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED` until their roadmap items land |
-| Upgrades | DEL-104 |
+| Backup and restore of the platform | Removed with the offline operator (ADR 0005); REL-002 |
+| Upgrades and signed bundles | DEL-104, DEL-101 |

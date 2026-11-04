@@ -70,10 +70,10 @@ ssh ownsolid-cpu 'cd /root/e2e && bash run-single-node.sh /root/e2e ownsolid/con
 
 `make test` skips this test without those inputs.
 
-## Offline packaging tests
+## Factory tests on Linux
 
 `make test-offline HOST=ownsolid-cpu` builds the Linux test binaries here and runs them on
-that host as `nobody` with a mounted tmpfs. Allow about 40 minutes.
+that host as `nobody` with a mounted tmpfs. It takes a few minutes.
 
 ## Network notes for China
 

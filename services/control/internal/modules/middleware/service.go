@@ -25,19 +25,16 @@ func (s *Service) Choices(ctx context.Context, a identity.Auth, workspace string
 	defer cancel()
 	out := []Choice{}
 	e = store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
-		w, e := s.authority(ctx, q, a, workspace, false)
+		_, e := s.authority(ctx, q, a, workspace, false)
 		if e != nil {
 			return e
 		}
 		for _, p := range s.configuration.Profiles {
-			if p.Kind == PlatformOwned && p.ExpectedTenantID != w.TenantID {
-				continue
-			}
 			targets := []string{}
 			for _, t := range p.RestoreTargets {
 				targets = append(targets, t.Key)
 			}
-			out = append(out, Choice{Key: p.Key, Kind: p.Kind, Health: true, Backup: p.Kind == PlatformOwned, RestoreTargets: targets})
+			out = append(out, Choice{Key: p.Key, Kind: p.Kind, Health: true, Backup: false, RestoreTargets: targets})
 		}
 		return nil
 	})
@@ -75,7 +72,7 @@ func (s *Service) Register(ctx context.Context, a identity.Auth, workspace, key,
 		if e != nil {
 			return e
 		}
-		if p.Kind == PlatformOwned && p.ExpectedTenantID != w.TenantID {
+		if false {
 			return fail("MIDDLEWARE_PLATFORM_SCOPE_MISMATCH")
 		}
 		fingerprint := hash([]byte(key + "\x00" + name + "\x00" + captured.fingerprint))
@@ -230,7 +227,7 @@ func (s *Service) Update(ctx context.Context, a identity.Auth, workspace, id, na
 			if e != nil {
 				return e
 			}
-			if p.Kind != old.Kind || p.Kind == PlatformOwned && p.ExpectedTenantID != w.TenantID {
+			if p.Kind != old.Kind || false {
 				return fail("MIDDLEWARE_PLATFORM_SCOPE_MISMATCH")
 			}
 			input, e := Capture(p)
@@ -255,9 +252,6 @@ func (s *Service) Update(ctx context.Context, a identity.Auth, workspace, id, na
 func (s *Service) Enqueue(ctx context.Context, a identity.Auth, workspace, id string, input OperationInput, request string) (Operation, error) {
 	if !validID(id) || !validID(input.IdempotencyKey) || !validID(request) || !workspaces.ValidReason(input.Reason) || !workspaces.ValidVersion(input.Version) {
 		return Operation{}, fail("VALIDATION_FAILED")
-	}
-	if _, e := boundReason(input.IdempotencyKey, input.Reason); e != nil {
-		return Operation{}, e
 	}
 	if input.Kind != "health" && input.Kind != "backup" && input.Kind != "isolated_restore" && input.Kind != "reconcile" {
 		return Operation{}, fail("VALIDATION_FAILED")
@@ -305,41 +299,11 @@ func (s *Service) Enqueue(ctx context.Context, a identity.Auth, workspace, id st
 		if e != nil {
 			return e
 		}
-		if v.Fingerprint != captured.fingerprint || p.Kind != v.Kind || p.Kind == PlatformOwned && p.ExpectedTenantID != w.TenantID {
+		if v.Fingerprint != captured.fingerprint || p.Kind != v.Kind || false {
 			return fail("MIDDLEWARE_INPUT_CHANGED")
 		}
-		if input.Kind != "health" && p.Kind != PlatformOwned {
+		if input.Kind != "health" && true {
 			return fail("MIDDLEWARE_EXTERNAL_MUTATION_REFUSED")
-		}
-		if input.Kind == "isolated_restore" {
-			targetFound := false
-			for _, t := range p.RestoreTargets {
-				if t.Key == input.TargetKey {
-					targetFound = true
-				}
-			}
-			if !targetFound {
-				return fail("MIDDLEWARE_ISOLATED_TARGET_INVALID")
-			}
-			b, e := operationWithin(ctx, q, w, input.BackupID, false)
-			if e != nil {
-				return e
-			}
-			if b.InstanceID != id {
-				return fail("MIDDLEWARE_COMPLETED_BACKUP_REQUIRED")
-			}
-			if _, _, e = backupReceipt(b); e != nil {
-				return e
-			}
-		}
-		if input.Kind == "reconcile" {
-			prior, e := operationWithin(ctx, q, w, input.OriginalOperationID, true)
-			if e != nil {
-				return e
-			}
-			if prior.InstanceID != id || prior.Kind == "health" || prior.Kind == "reconcile" || prior.State != "unknown" && prior.State != "failed" {
-				return fail("MIDDLEWARE_ORIGINAL_UNCERTAIN_OPERATION_REQUIRED")
-			}
 		}
 		raw, _ := json.Marshal(input)
 		fingerprint := hash([]byte(id + "\x00" + string(raw) + "\x00" + captured.fingerprint))

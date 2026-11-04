@@ -4,7 +4,7 @@ GO_MODULES := api pkg/license tools/release/offline deploy/offline services/agen
 DOCKER ?= docker
 CONTROL_IMAGE ?= ownsolid/control:dev
 E2E_BIN ?= bin/e2e
-IMAGE_PATHS := api pkg/license deploy/offline deploy/images/control tools/release/offline services/control runtimes/data-processing
+IMAGE_PATHS := api pkg/license deploy/images/control tools/release/offline services/control runtimes/data-processing
 
 .PHONY: help check check-layout check-roadmap test-tools build test image-control e2e-binaries test-offline
 
@@ -45,5 +45,5 @@ e2e-binaries: ## Build the Linux amd64 installer and end-to-end test for tests/e
 	@cd tests/e2e && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c -o ../../$(E2E_BIN)/e2e.test .
 	@cp deploy/compose/compose.yaml $(E2E_BIN)/compose.yaml
 
-test-offline: ## Run the offline packaging tests that need Linux (HOST=ownsolid-cpu)
+test-offline: ## Run the release factory tests that need Linux (HOST=ownsolid-cpu)
 	@tools/dev/test-offline.sh $(HOST)

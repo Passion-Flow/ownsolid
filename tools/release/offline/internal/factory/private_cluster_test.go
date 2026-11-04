@@ -1,8 +1,8 @@
 package factory
 
 import (
+	"github.com/Passion-Flow/ownsolid/api/release/releasetest"
 	"context"
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -11,17 +11,10 @@ import (
 )
 
 func TestPrivateClusterFactoryRefusesOldSchemaAndMissingTargetBeforePackaging(t *testing.T) {
-	for _, kind := range []string{"schema26", "missing-target", "local-only", "wrong-kind"} {
+	for _, kind := range []string{"missing-target", "local-only", "wrong-kind"} {
 		t.Run(kind, func(t *testing.T) {
 			c, m, _ := setup(t)
-			m.Profile = wire.PlatformProfile
-			m.SchemaVersion, m.MaximumPredecessor = wire.PrivateClusterSchemaVersion, wire.PrivateClusterSchemaVersion
-			m.Prerequisites = []string{"Synthetic negative metadata only; no real M28 release assets"}
-			m.Capabilities = nil
-			for i := 1; i <= 19; i++ {
-				m.Capabilities = append(m.Capabilities, fmt.Sprintf("M%02d", i))
-			}
-			m.Capabilities = append(m.Capabilities, wire.PrivateClusterCapability)
+			releasetest.Select(&m)
 			m.Assets = nil
 			for id, assetKind := range m.RequiredAssets() {
 				// Explicit synthetic metadata reaches only the early refusal; no
@@ -46,10 +39,7 @@ func TestPrivateClusterFactoryRefusesOldSchemaAndMissingTargetBeforePackaging(t 
 				m.Assets = append(m.Assets, a)
 			}
 			expected, issues := "RELEASE_REQUIRED_ASSET_MISSING", 1
-			if kind == "schema26" {
-				m.SchemaVersion, m.MaximumPredecessor = 26, 26
-				expected, issues = "RELEASE_PRIVATE_CLUSTER_SCHEMA_REQUIRED", 0
-			}
+			releasetest.Pin(&m)
 			put(t, c.ManifestFile, Encode(m))
 			validation, e := Validate(context.Background(), c)
 			if e == nil || e.Error() != expected || len(validation.Issues) != issues {

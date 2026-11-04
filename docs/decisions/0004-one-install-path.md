@@ -53,7 +53,4 @@ which optional integrations are configured.
   the backup tooling binds to those exact paths. Renaming them is separate work.
 - PostgreSQL and the control plane share one host, and the connection between them is
   unencrypted on an internal Docker network. HA (REL-101) has to revisit this.
-- The inherited operator is not an install path and is unsupported for installing. It stays
-  because `modules/middleware` backup and restore call its scope engine through
-  `deploy/offline/pkg/maintenance`. DEL-114 removes what remains once REL-002 and DEL-104
-  replace those uses.
+- ADR 0005 removes the inherited operator.

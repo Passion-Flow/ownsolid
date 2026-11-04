@@ -10,39 +10,46 @@ import (
 
 // Only signed metadata doubles: no synthetic asset is a manufactured runtime.
 func mvpManifestDouble() Manifest {
-	m := cumulativeManifestDouble()
+	m := fixtureManifest()
 	m.Profile = MVPPostgreSQLCPUProfile
-	m.SchemaVersion, m.MaximumPredecessor = MVPPostgreSQLCPUV1SchemaVersion, MVPPostgreSQLCPUV1SchemaVersion
-	m.Cumulative.ApplicationProfile, m.Cumulative.SchemaLineage = MVPPostgreSQLCPUApplicationProfile, MVPPostgreSQLCPUApplicationProfile
-	for _, owner := range []string{"inference", "kubernetes", "native-postgres", "private-cluster-probe"} {
-		m.Cumulative.ComponentVersions[owner] = "v1"
-	}
-	m.Cumulative.ComponentVersions["inference"], m.Cumulative.ComponentVersions["native-postgres"] = "0.31.0", "18.6"
+	m.SchemaVersion, m.MinimumPredecessor, m.MaximumPredecessor = MVPPostgreSQLCPUV1SchemaVersion, 22, MVPPostgreSQLCPUV1SchemaVersion
+	m.Prerequisites = []string{"Explicit installed local Engine/Compose and private DNS/NTP/CA; no runtime downloads"}
 	m.Capabilities = nil
 	for i := 1; i <= 30; i++ {
 		m.Capabilities = append(m.Capabilities, fmt.Sprintf("M%02d", i))
 	}
-	for id, kind := range RequiredAssets(m.Profile) {
-		found := false
-		for _, asset := range m.Assets {
-			found = found || asset.ID == id
-		}
-		if found {
-			continue
-		}
-		a := Asset{ID: id, Kind: kind, Path: id, Size: 1, SHA256: strings.Repeat("c", 64), Licenses: []string{"platform-license"}}
-		if kind == "license" {
+	m.Cumulative = &CumulativeSelection{ApplicationProfile: MVPPostgreSQLCPUApplicationProfile, SchemaLineage: MVPPostgreSQLCPUApplicationProfile, SourceCommit: strings.Repeat("a", 40), ComponentVersions: map[string]string{}, LocaleSourceSHA256: strings.Repeat("b", 64), InstalledLocales: []string{"ar", "en", "fr"}, LocaleTarget: 202, PendingLocales: 199, EmbeddedSeed: "zh-CN", LocaleInventory: "locales"}
+	for _, owner := range []string{"control", "gateway", "agent", "python", "postgres", "pgvector", "training", "preparation", "knowledge", "compose", "operator", "kubernetes", "private-cluster-probe"} {
+		m.Cumulative.ComponentVersions[owner] = "v1"
+	}
+	m.Cumulative.ComponentVersions["control"] = m.Cumulative.SourceCommit
+	m.Cumulative.ComponentVersions["postgres"], m.Cumulative.ComponentVersions["pgvector"], m.Cumulative.ComponentVersions["compose"] = "18.6", "0.8.7", "5.5.1"
+	m.Cumulative.ComponentVersions["inference"], m.Cumulative.ComponentVersions["native-postgres"] = "0.31.0", "18.6"
+	required := RequiredAssets(m.Profile)
+	ids := []string{}
+	for id := range required {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	m.Assets = nil
+	for _, id := range ids {
+		a := Asset{ID: id, Path: id, Kind: required[id], Size: 1, SHA256: strings.Repeat("c", 64), Licenses: []string{"platform-license"}}
+		if a.Kind == "license" {
 			a.Licenses = nil
 		}
-		if kind == "image_archive" {
-			a.ImageID, a.ImageConfigDigest, a.Architecture = "sha256:"+strings.Repeat("d", 64), "sha256:"+strings.Repeat("e", 64), "amd64"
+		if a.Kind == "image_archive" {
+			a.ImageID = "sha256:" + strings.Repeat("d", 64)
+			a.ImageConfigDigest = "sha256:" + strings.Repeat("e", 64)
+			a.Architecture = "amd64"
+		}
+		if id == "source-evidence" {
+			a.SHA256 = m.SourceSHA256
 		}
 		if id == MVPPostgreSQLCPULineageAssetID {
 			a.SHA256 = MVPPostgreSQLCPULineageSHA256()
 		}
 		m.Assets = append(m.Assets, a)
 	}
-	sort.Slice(m.Assets, func(i, j int) bool { return m.Assets[i].ID < m.Assets[j].ID })
 	return m
 }
 
@@ -70,7 +77,6 @@ func TestMVPSelectionRequiresEveryCapabilityAssetAndExactIndependentLineage(t *t
 		"old-platform-lineage":      func(m *Manifest) { m.Cumulative.SchemaLineage = "platform27" },
 		"old-platform-schema":       func(m *Manifest) { m.SchemaVersion, m.MaximumPredecessor = 27, 27 },
 		"old-runtime":               func(m *Manifest) { m.Cumulative.ApplicationProfile = "releases" },
-		"old-cache-runtime":         func(m *Manifest) { m.Cumulative.ApplicationProfile = CumulativeCacheApplicationProfile },
 		"old-predecessor":           func(m *Manifest) { m.MinimumPredecessor = 21 },
 		"future-predecessor":        func(m *Manifest) { m.MaximumPredecessor = 30 },
 		"partial-capabilities":      func(m *Manifest) { m.Capabilities = m.Capabilities[:29] },
@@ -92,11 +98,6 @@ func TestMVPSelectionRequiresEveryCapabilityAssetAndExactIndependentLineage(t *t
 				t.Fatal("invalid final selection admitted")
 			}
 		})
-	}
-	for _, legacy := range []Manifest{cumulativeManifestDouble(), cacheDeliveryDouble()} {
-		if err := check(legacy); err != nil {
-			t.Fatal("legacy profile changed", err)
-		}
 	}
 }
 

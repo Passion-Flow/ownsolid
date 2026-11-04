@@ -4,7 +4,6 @@ ENV CGO_ENABLED=0 GOWORK=off GOFLAGS=-mod=readonly
 WORKDIR /src/services/control
 COPY api/ /src/api/
 COPY pkg/license/ /src/pkg/license/
-COPY deploy/offline/ /src/deploy/offline/
 COPY tools/release/offline/ /src/tools/release/offline/
 COPY services/control/ /src/services/control/
 RUN go build -trimpath -ldflags='-s -w' -o /out/control ./cmd/server

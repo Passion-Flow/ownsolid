@@ -3,6 +3,7 @@
 package postgresbackup
 
 import (
+	"github.com/Passion-Flow/ownsolid/api/release/releasetest"
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
@@ -247,10 +248,8 @@ func nativeMVPSyntheticRegistry(t *testing.T, c *imageregistry.Config, ids []str
 		t.Fatal(e)
 	}
 	asset := release.Asset{ID: "synthetic-snapshot-image", Path: "images/synthetic.tar", Kind: "image_archive", Size: int64(archive.Len()), SHA256: release.Digest(archive.Bytes()), Licenses: []string{"platform-license"}, ImageID: manifestDigest, ImageConfigDigest: configDigest, Architecture: "amd64"}
-	m := release.Manifest{FormatVersion: 1, ReleaseID: "explicit-synthetic-operator-snapshot", Profile: release.PlatformProfile, SourceSHA256: strings.Repeat("a", 64), SchemaVersion: 16, MinimumPredecessor: 16, MaximumPredecessor: 16, Prerequisites: []string{"Synthetic declaration-only release; no runtime qualification"}, Assets: []release.Asset{asset}}
-	for i := 1; i <= 16; i++ {
-		m.Capabilities = append(m.Capabilities, fmt.Sprintf("M%02d", i))
-	}
+	m := release.Manifest{FormatVersion: 1, ReleaseID: "explicit-synthetic-operator-snapshot", Profile: release.MVPPostgreSQLCPUProfile, SourceSHA256: strings.Repeat("a", 64), SchemaVersion: 16, MinimumPredecessor: 16, MaximumPredecessor: 16, Prerequisites: []string{"Synthetic declaration-only release; no runtime qualification"}, Assets: []release.Asset{asset}}
+	releasetest.Select(&m)
 	required := release.RequiredAssets(m.Profile)
 	requiredIDs := []string{}
 	for id := range required {
@@ -269,6 +268,7 @@ func nativeMVPSyntheticRegistry(t *testing.T, c *imageregistry.Config, ids []str
 		}
 		m.Assets = append(m.Assets, a)
 	}
+	releasetest.Pin(&m)
 	if e := m.Validate(c.Verification.MaximumAssets, c.Verification.MaximumAssetBytes, c.Verification.MaximumTotalBytes, false); e != nil {
 		t.Fatal(e)
 	}

@@ -1,6 +1,0 @@
-{
-  "format_version": 1,
-  "expected_current_bytes": 2097152,
-  "maximum_journal_bytes": 8388608,
-  "reason": "Extend this isolated installation journal before further recorded recovery operations"
-}

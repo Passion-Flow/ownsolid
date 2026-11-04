@@ -1,11 +1,11 @@
 package factory
 
 import (
+	"github.com/Passion-Flow/ownsolid/api/release/releasetest"
 	"bytes"
 	"context"
 	"crypto/ed25519"
 	"encoding/base64"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -101,16 +101,12 @@ func TestM19FactoryActualPublicTrustArchiveAndMissingAssetRefusal(t *testing.T) 
 
 func TestM19FactoryReportsMissingCurrentReleaseAssetsBeforePackaging(t *testing.T) {
 	c, m, _ := setup(t)
-	m.Profile = wire.PlatformProfile
-	m.SchemaVersion = wire.LicenseSchemaVersion
-	m.MaximumPredecessor = wire.LicenseSchemaVersion
-	m.Prerequisites = []string{"Synthetic metadata only; actual complete assets are unavailable"}
-	m.Capabilities = nil
-	for i := 1; i <= 19; i++ {
-		m.Capabilities = append(m.Capabilities, fmt.Sprintf("M%02d", i))
-	}
+	releasetest.Select(&m)
 	m.Assets = nil
 	for id, kind := range wire.RequiredAssets(m.Profile) {
+		if id == wire.LicenseTrustAssetID || id == wire.LicenseValidationAssetID {
+			continue
+		}
 		a := wire.Asset{ID: id, Path: id, Kind: kind, Size: 1, SHA256: strings.Repeat("a", 64), Licenses: []string{}}
 		if kind != "license" {
 			a.Licenses = []string{"platform-license"}
@@ -122,6 +118,7 @@ func TestM19FactoryReportsMissingCurrentReleaseAssetsBeforePackaging(t *testing.
 		}
 		m.Assets = append(m.Assets, a)
 	}
+	releasetest.Pin(&m)
 	put(t, c.ManifestFile, Encode(m))
 	v, e := Validate(context.Background(), c)
 	if e == nil || e.Error() != "RELEASE_REQUIRED_ASSET_MISSING" || len(v.Issues) != 2 {

@@ -1,6 +1,0 @@
-{
-  "format_version": 1,
-  "bind_address": "::1",
-  "published_port": 19443,
-  "target_port": 9443
-}

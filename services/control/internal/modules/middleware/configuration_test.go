@@ -90,25 +90,21 @@ func TestExternalProfileCannotAcquireMutationAuthority(t *testing.T) {
 		t.Fatal("path-like host accepted")
 	}
 	p = externalFixture().Profiles[0]
-	p.Kind = PlatformOwned
+	p.Kind = platformOwned
 	if p.Validate() == nil {
 		t.Fatal("platform scope inferred from external profile")
 	}
 }
 
-func TestPlatformProfilePreservesOriginalM17ScopeIdentity(t *testing.T) {
+func TestPlatformOwnedProfilesAreNotSupported(t *testing.T) {
 	p := externalFixture().Profiles[0]
-	p.Kind = PlatformOwned
+	p.Kind = platformOwned
 	p.OperatorConfigurationFile = "/private/operator/scope.json"
 	p.BackupRequestFile = "/private/operator/backup.json"
 	p.ArtifactRoot = "/private/artifacts"
 	p.ExpectedTenantID = "11111111-1111-1111-1111-111111111111"
 	p.ExpectedScopeID = "0123456789abcdef0123456789abcdef"
-	if e := p.Validate(); e != nil {
-		t.Fatal("original M17 nonce rejected", e)
-	}
-	p.ExpectedScopeID = p.ExpectedTenantID
-	if p.Validate() == nil {
-		t.Fatal("UUID relabeled as M17 scope identity")
+	if e := p.Validate(); e == nil || e.Error() != "MIDDLEWARE_PLATFORM_OWNED_NOT_SUPPORTED" {
+		t.Fatal("platform-owned profile admitted", e)
 	}
 }

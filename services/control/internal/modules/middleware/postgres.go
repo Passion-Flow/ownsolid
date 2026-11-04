@@ -54,7 +54,7 @@ func Capture(p Profile) (*CapturedInputs, error) {
 		return nil, fail("MIDDLEWARE_CA_INPUT_INVALID")
 	}
 	c := &CapturedInputs{profile: p, password: password, ca: ca, targets: map[string][]byte{}}
-	if p.Kind == PlatformOwned {
+	if p.Kind == platformOwned {
 		c.operator, e = readPrivate(p.OperatorConfigurationFile)
 		if e != nil {
 			return nil, e
@@ -165,7 +165,7 @@ func Probe(ctx context.Context, c *CapturedInputs, policy Policy) (Observation, 
 	if e != nil {
 		return Observation{}, fail("MIDDLEWARE_PRIVILEGE_OBSERVATION_FAILED")
 	}
-	if c.profile.Kind == PlatformOwned {
+	if c.profile.Kind == platformOwned {
 		var complete bool
 		e = tx.QueryRow(ctx, `SELECT tenant_id::text,bootstrap_complete FROM public.installation_state WHERE id=1`).Scan(&out.PlatformTenantID, &complete)
 		if e != nil || !complete || out.PlatformTenantID != c.profile.ExpectedTenantID {

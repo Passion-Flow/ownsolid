@@ -22,10 +22,7 @@ func (s Snapshot) validInstalledRelease() bool {
 	if i == nil {
 		return true
 	}
-	profileValid := i.Profile == wire.CumulativeCPUProfile && i.SchemaVersion == 22
-	if i.Profile == wire.MVPPostgreSQLCPUProfile {
-		profileValid = s.Profile == wire.CumulativeCPUProfile && i.SchemaVersion == wire.MVPPostgreSQLCPUV1SchemaVersion
-	}
+	profileValid := i.Profile == wire.MVPPostgreSQLCPUProfile && i.SchemaVersion == wire.MVPPostgreSQLCPUV1SchemaVersion
 	if !releaseID.MatchString(i.ReleaseID) || i.ReleaseID == s.ReleaseID || !profileValid || !wire.ValidSHA256(i.ArchiveSHA256) || !wire.ValidSHA256(i.ManifestSHA256) || i.ManifestSHA256 == s.ManifestSHA256 || !regexp.MustCompile(`^[a-f0-9]{40}$`).MatchString(i.SourceCommit) || i.ActivationSequence < 1 || i.ActivationSequence > s.Sequence {
 		return false
 	}

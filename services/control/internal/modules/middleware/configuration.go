@@ -20,7 +20,7 @@ import (
 	wire "github.com/Passion-Flow/ownsolid/api/release/v1"
 )
 
-const PlatformOwned = "platform_owned"
+const platformOwned = "platform_owned"
 const CustomerExternal = "customer_external"
 const maximumPrivateInputBytes = 1 << 20
 
@@ -106,7 +106,7 @@ func (p Profile) Validate() error {
 		return fail("MIDDLEWARE_PROFILE_INVALID")
 	}
 	host := p.Host
-	if !profileKey.MatchString(p.Key) || p.Kind != PlatformOwned && p.Kind != CustomerExternal || host == "" || len(host) > 253 || strings.ContainsAny(host, " /\\\x00\r\n[],:;") && net.ParseIP(host) == nil || p.Port == 0 || !profileKey.MatchString(p.Database) || !profileKey.MatchString(p.User) || !pathValid(p.PasswordFile) || !pathValid(p.CAFile) || p.PasswordFile == p.CAFile || p.ExpectedMajor < 14 || p.ExpectedMajor > 18 {
+	if !profileKey.MatchString(p.Key) || p.Kind != CustomerExternal && p.Kind != platformOwned || host == "" || len(host) > 253 || strings.ContainsAny(host, " /\\\x00\r\n[],:;") && net.ParseIP(host) == nil || p.Port == 0 || !profileKey.MatchString(p.Database) || !profileKey.MatchString(p.User) || !pathValid(p.PasswordFile) || !pathValid(p.CAFile) || p.PasswordFile == p.CAFile || p.ExpectedMajor < 14 || p.ExpectedMajor > 18 {
 		return fail("MIDDLEWARE_PROFILE_INVALID")
 	}
 	if p.Kind == CustomerExternal {
@@ -115,17 +115,7 @@ func (p Profile) Validate() error {
 		}
 		return nil
 	}
-	if !pathValid(p.OperatorConfigurationFile) || !pathValid(p.BackupRequestFile) || !scopeIdentity.MatchString(p.ExpectedScopeID) || !validID(p.ExpectedTenantID) || !pathValid(p.ArtifactRoot) {
-		return fail("MIDDLEWARE_PLATFORM_SCOPE_REQUIRED")
-	}
-	seen := map[string]bool{}
-	for _, t := range p.RestoreTargets {
-		if !profileKey.MatchString(t.Key) || seen[t.Key] || !pathValid(t.OperatorConfigurationFile) || t.OperatorConfigurationFile == p.OperatorConfigurationFile || !scopeIdentity.MatchString(t.ExpectedScopeID) || t.ExpectedScopeID == p.ExpectedScopeID {
-			return fail("MIDDLEWARE_ISOLATED_TARGET_INVALID")
-		}
-		seen[t.Key] = true
-	}
-	return nil
+	return fail("MIDDLEWARE_PLATFORM_OWNED_NOT_SUPPORTED")
 }
 
 func (c Configuration) Validate() error {
@@ -133,7 +123,6 @@ func (c Configuration) Validate() error {
 		return fail("MIDDLEWARE_CONFIGURATION_INVALID")
 	}
 	seen := map[string]bool{}
-	sources := map[string]bool{}
 	for _, p := range c.Profiles {
 		if seen[p.Key] {
 			return fail("MIDDLEWARE_PROFILE_DUPLICATE")
@@ -141,21 +130,6 @@ func (c Configuration) Validate() error {
 		seen[p.Key] = true
 		if e := p.Validate(); e != nil {
 			return e
-		}
-		if p.Kind == PlatformOwned {
-			if sources[p.ExpectedScopeID] {
-				return fail("MIDDLEWARE_PLATFORM_SCOPE_DUPLICATE")
-			}
-			sources[p.ExpectedScopeID] = true
-		}
-	}
-	targets := map[string]bool{}
-	for _, p := range c.Profiles {
-		for _, t := range p.RestoreTargets {
-			if sources[t.ExpectedScopeID] || targets[t.ExpectedScopeID] {
-				return fail("MIDDLEWARE_ISOLATED_TARGET_INVALID")
-			}
-			targets[t.ExpectedScopeID] = true
 		}
 	}
 	return nil

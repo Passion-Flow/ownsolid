@@ -35,7 +35,6 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 - [ ] DEL-111 Diagnostic support bundle command that collects host, cluster and application state with secrets redacted and works while the console is down (P1)
 - [ ] DEL-112 Bundle signature verification against a pinned offline trust root, with signed root rotation and a clear refusal for expired or unknown roots (P1)
 - [ ] DEL-113 Upgrade bundle upload through the console as well as the command line, both ending at the same preflight screen (P1)
-- [ ] DEL-114 Remove the inherited offline operator and its scope engine once REL-002 and DEL-104 replace the backup and upgrade uses (P1)
 
 ## P2 Fleet operations
 

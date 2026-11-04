@@ -6,13 +6,6 @@ import (
 	"strings"
 )
 
-const CumulativeCPUProfile = "m17-postgresql-cpu-linux-amd64"
-const CumulativePredecessorCPUProfile = "m16-postgresql-cpu-linux-amd64"
-
-func IsCumulativeCPUProfile(profile string) bool {
-	return profile == CumulativeCPUProfile || profile == CumulativePredecessorCPUProfile || profile == CumulativeKubernetesCPUProfile || profile == CumulativeCacheCPUProfile || profile == MVPPostgreSQLCPUProfile
-}
-
 type CumulativeSelection struct {
 	ApplicationProfile string            `json:"application_profile"`
 	SchemaLineage      string            `json:"schema_lineage"`
@@ -43,36 +36,19 @@ func cumulativeRequiredAssets() map[string]string {
 
 func (m Manifest) validateCumulative() error {
 	bad := errors.New("RELEASE_CUMULATIVE_SELECTION_INVALID")
-	if !IsCumulativeCPUProfile(m.Profile) {
+	if m.Profile != MVPPostgreSQLCPUProfile {
 		if m.Cumulative != nil {
 			return bad
 		}
 		return nil
 	}
 	c := m.Cumulative
-	application, maximumCapability, capabilityCount := "releases", "M17", 17
-	minimumPredecessor, maximumPredecessor, schemaVersion, lineage := 22, 22, 22, "account22"
-	if m.Profile == CumulativePredecessorCPUProfile {
-		application, maximumCapability, capabilityCount = "localization", "M16", 16
-	}
-	if m.Profile == CumulativeKubernetesCPUProfile {
-		application, maximumCapability, capabilityCount = "localization", "M18", 18
-		minimumPredecessor = 21
-	}
-	if m.Profile == CumulativeCacheCPUProfile {
-		application, maximumCapability, capabilityCount = CumulativeCacheApplicationProfile, ModelCacheCapability, 18
-	}
-	if m.Profile == MVPPostgreSQLCPUProfile {
-		application, maximumCapability, capabilityCount = MVPPostgreSQLCPUApplicationProfile, "M30", 30
-		maximumPredecessor, schemaVersion, lineage = MVPPostgreSQLCPUV1SchemaVersion, MVPPostgreSQLCPUV1SchemaVersion, MVPPostgreSQLCPUApplicationProfile
-	}
+	application, maximumCapability, capabilityCount := MVPPostgreSQLCPUApplicationProfile, "M30", 30
+	minimumPredecessor, maximumPredecessor, schemaVersion, lineage := 22, MVPPostgreSQLCPUV1SchemaVersion, MVPPostgreSQLCPUV1SchemaVersion, MVPPostgreSQLCPUApplicationProfile
 	if c == nil || c.ApplicationProfile != application || c.SchemaLineage != lineage || m.SchemaVersion != schemaVersion || m.MinimumPredecessor != minimumPredecessor || m.MaximumPredecessor != maximumPredecessor || !regexp.MustCompile(`^[a-f0-9]{40}$`).MatchString(c.SourceCommit) || !ValidSHA256(c.LocaleSourceSHA256) || c.EmbeddedSeed != "zh-CN" || c.LocaleInventory != "locales" {
 		return bad
 	}
-	owners := []string{"control", "gateway", "agent", "python", "postgres", "pgvector", "training", "preparation", "knowledge", "compose", "operator"}
-	if m.Profile == MVPPostgreSQLCPUProfile {
-		owners = append(owners, "inference", "kubernetes", "native-postgres", "private-cluster-probe")
-	}
+	owners := []string{"control", "gateway", "agent", "python", "postgres", "pgvector", "training", "preparation", "knowledge", "compose", "operator", "inference", "kubernetes", "native-postgres", "private-cluster-probe"}
 	if len(c.ComponentVersions) != len(owners) {
 		return bad
 	}
@@ -96,25 +72,25 @@ func (m Manifest) validateCumulative() error {
 		return bad
 	}
 	for _, capability := range m.Capabilities {
-		if capability > maximumCapability || m.Profile == CumulativeCacheCPUProfile && capability > "M17" && capability != ModelCacheCapability {
+		if capability > maximumCapability {
 			return bad
 		}
 	}
 	for _, asset := range m.Assets {
-		if m.Profile == MVPPostgreSQLCPUProfile && asset.ID == MVPPostgreSQLCPULineageAssetID && asset.SHA256 != MVPPostgreSQLCPULineageSHA256() {
+		if asset.ID == MVPPostgreSQLCPULineageAssetID && asset.SHA256 != MVPPostgreSQLCPULineageSHA256() {
 			return bad
 		}
 		if asset.ID == "source-evidence" && asset.SHA256 != m.SourceSHA256 {
 			return bad
 		}
-		if asset.Kind == "image_archive" && (m.Profile == MVPPostgreSQLCPUProfile && !validImageArchitecture(asset) || m.Profile != MVPPostgreSQLCPUProfile && asset.Architecture != "amd64") {
+		if asset.Kind == "image_archive" && !validImageArchitecture(asset) {
 			return bad
 		}
 		if strings.Contains(strings.ToLower(asset.ID), "private-key") {
 			return bad
 		}
 	}
-	if m.Profile == MVPPostgreSQLCPUProfile && (c.ComponentVersions["inference"] != "0.31.0" || c.ComponentVersions["native-postgres"] != "18.6") {
+	if c.ComponentVersions["inference"] != "0.31.0" || c.ComponentVersions["native-postgres"] != "18.6" {
 		return bad
 	}
 	return nil

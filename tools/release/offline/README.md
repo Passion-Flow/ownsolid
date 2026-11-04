@@ -19,12 +19,6 @@ no historical refusal becomes a success. See the current contract for new tests.
 
 # Offline release factory and shared bundle verification
 
-`cmd/restore-compatibility-issuer` signs a reviewed exact source-backup/target
-binding with a protected release key, then exclusively publishes and reads back
-a private certificate. It performs no data migration or compatibility discovery.
-Its flags and qualification boundary are documented in the
-[restore compatibility contract](../../../docs/milestones/m17-offline-compose/restore-compatibility.md).
-
 This Go module owns the existing `cmd/factory` executable and `internal/factory`
 manufacturing, inspection, import and prepared-inventory mechanics. The public
 `pkg/bundle` facade is also used by control/agent/deployment consumers. Its source

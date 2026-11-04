@@ -20,7 +20,7 @@ func Prepare(t *testing.T, ctx context.Context, f repositoryfixture.Fixture, sou
 	t.Helper()
 	profile := os.Getenv(Environment)
 	if profile == "" {
-		profile = "candidate"
+		profile = "active"
 	}
 	if _, ok := ctx.Deadline(); !ok {
 		t.Fatal("bounded schema test context required")

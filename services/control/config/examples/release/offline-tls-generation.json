@@ -1,7 +1,0 @@
-{
-  "format_version": 1,
-  "certificate_file": "/verified-external/operator/tls/serving-chain.pem",
-  "private_key_file": "/verified-external/operator/tls/serving-key.pem",
-  "trust_bundle_file": "/verified-external/operator/tls/explicit-ca.pem",
-  "reason": "Replace the restored isolated serving certificate"
-}

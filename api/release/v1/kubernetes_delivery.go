@@ -1,8 +1,6 @@
 package release
 
 // This is a prepared-cluster delivery contract, not a host/Kubernetes installer.
-// Legacy Ubuntu, M16 and M17 profiles retain their exact requirements.
-const CumulativeKubernetesCPUProfile = "m18-postgresql-cpu-kubernetes-linux-amd64"
 
 const KubernetesChartAssetID = "kubernetes-chart"
 const KubernetesOperatorAMD64AssetID = "kubernetes-operator-amd64"

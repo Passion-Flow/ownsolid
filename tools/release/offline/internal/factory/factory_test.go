@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Passion-Flow/ownsolid/api/release/releasetest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -448,17 +449,12 @@ func TestConcurrentManufacturingHasOneDurableWinner(t *testing.T) {
 		t.Fatal("winner journal corrupted", e)
 	}
 }
-func TestAllRequiredPlatformAssetsAreReported(t *testing.T) {
+func TestAllRequiredAssetsAreReported(t *testing.T) {
 	c, m, _ := setup(t)
-	m.Profile = wire.PlatformProfile
-	m.Capabilities = []string{}
-	for i := 1; i <= 16; i++ {
-		m.Capabilities = append(m.Capabilities, fmt.Sprintf("M%02d", i))
-	}
-	m.Prerequisites = []string{"Native isolated Ubuntu24.04 amd64 qualification required"}
+	releasetest.Select(&m)
 	put(t, c.ManifestFile, Encode(m))
 	v, e := Validate(context.Background(), c)
-	if e == nil || len(v.Issues) != len(wire.RequiredAssets(wire.PlatformProfile)) {
+	if e == nil || len(v.Issues) != len(wire.RequiredAssets(m.Profile)) {
 		t.Fatal("missing production artifacts concealed", len(v.Issues), e)
 	}
 }

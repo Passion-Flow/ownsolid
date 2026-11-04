@@ -52,7 +52,7 @@ func TestPostgresNativeApplicationSelectionPreservesLegacyOmission(t *testing.T)
 
 func TestPostgresNativeApplicationSelectionRefusesAmbiguousOrUnknownInputs(t *testing.T) {
 	backup, restore := postgresApplicationRequestFixture()
-	for _, value := range []string{"platform", "localization", CumulativeCacheApplicationProfile, "mvp-postgresql-cpu-v2", "MVP-POSTGRESQL-CPU-V1", "releases "} {
+	for _, value := range []string{"platform", "localization", "releases-cache-v1", "mvp-postgresql-cpu-v2", "MVP-POSTGRESQL-CPU-V1", "releases "} {
 		backup.ApplicationProfile, restore.ApplicationProfile = value, value
 		if backup.Valid() || restore.Valid() || backup.EffectiveApplicationProfile() != "" || restore.EffectiveApplicationProfile() != "" {
 			t.Fatal("unknown selector supplied native authority", value)
