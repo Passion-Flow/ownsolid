@@ -503,4 +503,103 @@ sys.exit("control pushed no process metrics to the metrics store")`
 			t.Fatalf("%v %s", err, output)
 		}
 	})
+
+	backups := filepath.Join(directory, "backups")
+	var backup string
+	t.Run("backup writes a verified copy while serving continues", func(t *testing.T) {
+		if err := os.MkdirAll(backups, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		output, err := run(t, e.installer, "backup", "--config", config, "--output", backups)
+		if err != nil || !strings.Contains(output, "BACKUP_COMPLETE") || !strings.Contains(output, "step verify: ok") {
+			t.Fatalf("%v %s", err, output)
+		}
+		_, backup, _ = strings.Cut(output, "BACKUP_COMPLETE path=")
+		backup = strings.TrimSpace(backup)
+		if _, err = os.Stat(filepath.Join(backup, "manifest.json")); err != nil {
+			t.Fatal(err)
+		}
+		e.assertLogin(t, password)
+	})
+
+	t.Run("restore brings back the backup's data and revokes later sessions", func(t *testing.T) {
+		if backup == "" {
+			t.Skip("no backup was written")
+		}
+		tasks := e.sql(t, "SELECT count(*)||'/'||coalesce(max(sequence),0) FROM node_tasks")
+		// A session created after the backup is a write the restore must undo.
+		later := e.newBrowser(t, adminOrigin)
+		if status := later.login(t, password); status != http.StatusOK {
+			t.Fatalf("login: %d", status)
+		}
+		sessions := e.sql(t, "SELECT count(*) FROM sessions")
+		output, err := run(t, e.installer, "restore", "--config", config, "--from", backup)
+		if err != nil || !strings.Contains(output, "RESTORE_COMPLETE") {
+			t.Fatalf("%v %s", err, output)
+		}
+		if got := e.sql(t, "SELECT count(*) FROM sessions"); got == sessions {
+			t.Fatalf("sessions %s: the session created after the backup survived", got)
+		}
+		if got := e.sql(t, "SELECT count(*) FROM sessions WHERE revoked_at IS NULL"); got != "0" {
+			t.Fatalf("%s sessions from the backup are still valid", got)
+		}
+		if got := e.sql(t, "SELECT count(*)||'/'||coalesce(max(sequence),0) FROM node_tasks"); got != tasks {
+			t.Fatalf("node tasks %s, want %s", got, tasks)
+		}
+		if status, _ := later.request(t, http.MethodGet, "/api/v1/me", nil, ""); status != http.StatusUnauthorized {
+			t.Fatalf("a session from after the backup answered %d", status)
+		}
+		e.assertLogin(t, password)
+		if output, err = run(t, e.installer, "status", "--config", config); err != nil {
+			t.Fatalf("%v %s", err, output)
+		}
+	})
+
+	t.Run("restore refuses a damaged backup and leaves serving alone", func(t *testing.T) {
+		if backup == "" {
+			t.Skip("no backup was written")
+		}
+		damaged := backup + "-damaged"
+		if output, err := run(t, "cp", "-a", backup, damaged); err != nil {
+			t.Fatalf("%v %s", err, output)
+		}
+		dump := filepath.Join(damaged, "database.dump")
+		raw, err := os.ReadFile(dump)
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw[len(raw)/2] ^= 0xff
+		if err = os.WriteFile(dump, raw, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		output, err := run(t, e.installer, "restore", "--config", config, "--from", damaged)
+		if err == nil || !strings.Contains(output, "INSTALL_BACKUP_CORRUPT") {
+			t.Fatalf("%v %s", err, output)
+		}
+		e.assertLogin(t, password)
+	})
+
+	t.Run("restore rebuilds a lost installation from the backup alone", func(t *testing.T) {
+		if backup == "" {
+			t.Skip("no backup was written")
+		}
+		if output, err := e.compose(t, "down"); err != nil {
+			t.Fatalf("%v %s", err, output)
+		}
+		if err := os.Rename(e.root, e.root+"-lost"); err != nil {
+			t.Fatal(err)
+		}
+		output, err := run(t, e.installer, "restore", "--config", config, "--from", backup)
+		if err != nil || !strings.Contains(output, "RESTORE_COMPLETE") {
+			t.Fatalf("%v %s", err, output)
+		}
+		// The administrator credential comes back with the backup's files.
+		if e.password(t) != password {
+			t.Fatal("the restored installation has another administrator credential")
+		}
+		e.assertLogin(t, password)
+		if output, err = run(t, e.installer, "status", "--config", config); err != nil {
+			t.Fatalf("%v %s", err, output)
+		}
+	})
 }

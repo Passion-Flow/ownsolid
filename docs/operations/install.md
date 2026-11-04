@@ -141,6 +141,7 @@ instead of issuing a second one.
 | `INSTALL_DATABASE_START_FAILED`, `INSTALL_METRICS_START_FAILED`, `INSTALL_LOGS_START_FAILED`, `INSTALL_CONTROL_START_FAILED` | The service did not become healthy; read the log in the message |
 | `INSTALL_OPERATOR_TASK_FAILED` | A schema or administrator task failed; its code is in the message |
 | `INSTALL_HEALTH_FAILED` | Serving is up but an origin does not answer through the published port |
+| `INSTALL_BUSY` | A backup or restore is running on this installation; apply again when it ends |
 
 ## Limits of this release
 
@@ -151,3 +152,4 @@ instead of issuing a second one.
 - Upgrades, rollback and signed bundles are separate roadmap items (DEL-101, DEL-104,
   DEL-105). Do not reuse an install root across versions.
 - Model, dataset and training stores are not set up by the installer.
+- Back up with `ownsolid-install backup`; see [Backup and restore](backup-and-restore.md).

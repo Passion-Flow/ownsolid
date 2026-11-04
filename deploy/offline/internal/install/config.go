@@ -56,6 +56,7 @@ type Config struct {
 	Resources     ResourceConfig  `yaml:"resources"`
 	Telemetry     TelemetryConfig `yaml:"telemetry"`
 	StepSeconds   int             `yaml:"step_seconds"`
+	BackupSeconds int             `yaml:"backup_seconds"`
 	// ControlSettings are further control plane settings, which the control process
 	// validates when it first reads them. Keys the installer owns are refused here.
 	ControlSettings map[string]any `yaml:"control_settings"`
@@ -177,6 +178,7 @@ func defaults() Config {
 	}
 	c.Telemetry = TelemetryConfig{MetricsRetention: "30d", LogsRetention: "30d"}
 	c.StepSeconds = 600
+	c.BackupSeconds = 3600
 	return c
 }
 
@@ -283,6 +285,9 @@ func (c Config) Validate() error {
 	}
 	if c.StepSeconds < 30 || c.StepSeconds > 7200 {
 		return invalid("step_seconds", "must be 30 to 7200")
+	}
+	if c.BackupSeconds < 60 || c.BackupSeconds > 86400 {
+		return invalid("backup_seconds", "must be 60 to 86400")
 	}
 	for _, key := range controlOwnedKeys {
 		if _, present := c.ControlSettings[key]; present {
