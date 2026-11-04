@@ -76,7 +76,7 @@ func projectMVPNativeConfiguration(p preparedInputs, model compose.Model, d conf
 		} `json:"model_preparation"`
 		RegistryFile string `json:"image_registry_config_file"`
 	}
-	if wire.UniqueJSON(runtime, &envelope) != nil || envelope.Server.Profile != wire.MVPPostgreSQLCPUApplicationProfile || envelope.RegistryFile == "" || [4]string{envelope.Models.Root, envelope.Datasets.Root, envelope.Training.Root, envelope.Preparations.Root} != d.StoreRoots {
+	if wire.UniqueJSON(runtime, &envelope) != nil || envelope.Server.Profile != "" || envelope.RegistryFile == "" || [4]string{envelope.Models.Root, envelope.Datasets.Root, envelope.Training.Root, envelope.Preparations.Root} != d.StoreRoots {
 		return out, bad
 	}
 	roots := map[string]string{"operator-config": engine.DatabaseTaskDestination}

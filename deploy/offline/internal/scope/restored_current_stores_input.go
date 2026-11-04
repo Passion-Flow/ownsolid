@@ -140,7 +140,7 @@ func currentSelectedStoreProfile(files []engine.ConfigurationFile, profiles ...s
 			application = wire.CumulativeCacheApplicationProfile
 		}
 		if profiles[0] == wire.MVPPostgreSQLCPUProfile {
-			application = wire.MVPPostgreSQLCPUApplicationProfile
+			application = ""
 		}
 		if envelope.Server.Profile != application || envelope.Models.ArtifactRoot != "/var/lib/projectone/models/private" || envelope.Datasets.ArtifactRoot != "/var/lib/projectone/datasets/private" || envelope.Training.ArtifactRoot != "/var/lib/projectone/training/private" || envelope.Preparation.ArtifactRoot != "/var/lib/projectone/preparations/private" {
 			return failure("OFFLINE_SCOPE_CURRENT_STORE_ACTIVE_PROFILE_UNSUPPORTED")

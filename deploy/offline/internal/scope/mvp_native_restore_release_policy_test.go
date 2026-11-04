@@ -26,7 +26,7 @@ func mvpNativeRestorePolicyFixture() (*locked, preparedInputs, compose.Model, mv
 	files := func(role string) []engine.ConfigurationFile {
 		out := policyRoleFiles(role, current)
 		for i := range out {
-			out[i].Contents = bytes.ReplaceAll(out[i].Contents, []byte(`"application_profile":"releases"`), []byte(`"application_profile":"mvp-postgresql-cpu-v1"`))
+			out[i].Contents = bytes.ReplaceAll(out[i].Contents, []byte(`"application_profile":"releases"`), []byte(`"application_profile":""`))
 		}
 		return out
 	}

@@ -24,4 +24,4 @@ are listed above once they are usable from the new interface.
 | `license_target_test` | Needs a pinned Python |
 | Identity hash admission timer test | Timing sensitive under load |
 | `deploy/offline` and `tools/release/offline` engine packages | Need a Linux Docker host |
-| Offline install and upgrade through `deploy/offline` | Writes `server.application_profile`, which the control plane now refuses, and calls the removed `upgrade-releases`; not supported until DEL-001 |
+| Offline install and upgrade through `deploy/offline` | Not run since ADR 0003: no image definitions exist in this repository, so no bundle can be built. Upgrades from M16 `releases` call the removed `upgrade-releases`. Not supported until DEL-001 |

@@ -14,142 +14,142 @@
     },
     {
       "version": 2,
-      "source_path": "services/control/migrations/account/000002_local_session_source.up.sql",
+      "source_path": "services/control/migrations/postgresql/000002_local_session_source.up.sql",
       "sha256": "8eb5ba9a9415f20aa190ab3045f4a2671b56583c2bcf4d82e504a9ca7464e616"
     },
     {
       "version": 3,
-      "source_path": "services/control/migrations/postgresql/000017_licensing.up.sql",
+      "source_path": "services/control/migrations/postgresql/000003_licensing.up.sql",
       "sha256": "f79788dcbbfefd20b19d1096617f8f824ed0ca99a7b917aff7372bb7d9a5888f"
     },
     {
       "version": 4,
-      "source_path": "services/control/migrations/postgresql/000018_audit_operation_lookup.up.sql",
+      "source_path": "services/control/migrations/postgresql/000004_audit_operation_lookup.up.sql",
       "sha256": "08576ce8973aa582bd38d64f33eee7485e037753afb6e08ffbec0ec27bc1a755"
     },
     {
       "version": 5,
-      "source_path": "services/control/migrations/postgresql/000002_workspaces.up.sql",
+      "source_path": "services/control/migrations/postgresql/000005_workspaces.up.sql",
       "sha256": "d108d424591ad71ca5dcac5d5738d93f46e00ecb2d9b634ca9c2f9eff5439f2b"
     },
     {
       "version": 6,
-      "source_path": "services/control/migrations/account/000006_workspace_authority.up.sql",
+      "source_path": "services/control/migrations/postgresql/000006_workspace_authority.up.sql",
       "sha256": "f95313b32548304658242a6314669d1920a0059f7cf110b6aee37fa0745fd73f"
     },
     {
       "version": 7,
-      "source_path": "services/control/migrations/postgresql/000003_nodes.up.sql",
+      "source_path": "services/control/migrations/postgresql/000007_nodes.up.sql",
       "sha256": "dd8809e3e02f77296120c430eb6480da5d83cacd9293e66c0e175d2f15367dd8"
     },
     {
       "version": 8,
-      "source_path": "services/control/migrations/account/000008_node_protocol.up.sql",
+      "source_path": "services/control/migrations/postgresql/000008_node_protocol.up.sql",
       "sha256": "e2f175558817a63403fe7459d4719d6d6fc7e6314a6e98f076b9d417485aa224"
     },
     {
       "version": 9,
-      "source_path": "services/control/migrations/account/000009_components.up.sql",
+      "source_path": "services/control/migrations/postgresql/000009_components.up.sql",
       "sha256": "998ba6c066c8ac50e0a1fa281b8e22867a8987cfef493fbdaec863fbac3c8938"
     },
     {
       "version": 10,
-      "source_path": "services/control/migrations/account/000010_maintenance.up.sql",
+      "source_path": "services/control/migrations/postgresql/000010_maintenance.up.sql",
       "sha256": "c24b9dc8e7064436413792f9a308ded7aa2bf4613bfc86c24b941d5937ea41c1"
     },
     {
       "version": 11,
-      "source_path": "services/control/migrations/account/000011_models.up.sql",
+      "source_path": "services/control/migrations/postgresql/000011_models.up.sql",
       "sha256": "50e93d068fc0eb2b145990f93f6e0086f7971e018516aafefa05aded7e88c1cd"
     },
     {
       "version": 12,
-      "source_path": "services/control/migrations/account/000012_gateway.up.sql",
+      "source_path": "services/control/migrations/postgresql/000012_gateway.up.sql",
       "sha256": "179c0c58e295575dc88c956b96742e0458a490568626b3edaf36991b1c5beb22"
     },
     {
       "version": 13,
-      "source_path": "services/control/migrations/postgresql/000008_datasets.up.sql",
+      "source_path": "services/control/migrations/postgresql/000013_datasets.up.sql",
       "sha256": "25f65a1c1824b863ae6ca42f7123c025b101dcc903800cd4c9ad89ebd4f332f1"
     },
     {
       "version": 14,
-      "source_path": "services/control/migrations/postgresql/000019_dataset_retirement_reason.up.sql",
+      "source_path": "services/control/migrations/postgresql/000014_dataset_retirement_reason.up.sql",
       "sha256": "662444cdb343b16c610af6ee82bfcc8faca8d9822feff572ea4b2d93ee8b68cc"
     },
     {
       "version": 15,
-      "source_path": "services/control/migrations/account/000015_training.up.sql",
+      "source_path": "services/control/migrations/postgresql/000015_training.up.sql",
       "sha256": "7317a1664c39d6cacf53715ac5c7f44b835a08f2d8c8ce6ea85b46e418cc1b87"
     },
     {
       "version": 16,
-      "source_path": "services/control/migrations/account/000016_lifecycle.up.sql",
+      "source_path": "services/control/migrations/postgresql/000016_lifecycle.up.sql",
       "sha256": "bbee01cd26cc6c5e32260ca0c787e8ded1c1601e3e650ab07b611997d13bc1ff"
     },
     {
       "version": 17,
-      "source_path": "services/control/migrations/account/000017_sso.up.sql",
+      "source_path": "services/control/migrations/postgresql/000017_sso.up.sql",
       "sha256": "7b4b1a5126f0aea4a36bf58d0e2a978588e5875fbf03ed962d8e79e523c3ec42"
     },
     {
       "version": 18,
-      "source_path": "services/control/migrations/account/000018_knowledge.up.sql",
+      "source_path": "services/control/migrations/postgresql/000018_knowledge.up.sql",
       "sha256": "07ec9a499bff9bb4e12137e49cd7243b0439edaa3d0dcd87472f40dcad31a85a"
     },
     {
       "version": 19,
-      "source_path": "services/control/migrations/account/000019_workflows.up.sql",
+      "source_path": "services/control/migrations/postgresql/000019_workflows.up.sql",
       "sha256": "72d708808e284a7da92332f3d4c8303cedaf17cdcd7142387dcbfabb25ba47ec"
     },
     {
       "version": 20,
-      "source_path": "services/control/migrations/account/000020_plugins.up.sql",
+      "source_path": "services/control/migrations/postgresql/000020_plugins.up.sql",
       "sha256": "1599c8237e70b649c792452858f0b80dcd8cf123dc1f33a3bcc52309be8d4318"
     },
     {
       "version": 21,
-      "source_path": "services/control/migrations/account/000021_portal.up.sql",
+      "source_path": "services/control/migrations/postgresql/000021_portal.up.sql",
       "sha256": "84f937a94229d4adbee4669031878c27421364e2d821938c4a2e5346c09917f8"
     },
     {
       "version": 22,
-      "source_path": "services/control/migrations/account/000022_localization.up.sql",
+      "source_path": "services/control/migrations/postgresql/000022_localization.up.sql",
       "sha256": "016fb8991d3f25a346bc24a1baa529dcc8c00259fdd177eda8956516dc2095c6"
     },
     {
       "version": 23,
-      "source_path": "services/control/migrations/postgresql/mvp-postgresql-cpu-v1/000023_cumulative_catalog.up.sql",
+      "source_path": "services/control/migrations/postgresql/000023_cumulative_catalog.up.sql",
       "sha256": "67b7498071723346f9a002e895d4aa80744452381716dc2237c7e05227e307c9"
     },
     {
       "version": 24,
-      "source_path": "services/control/migrations/postgresql/mvp-postgresql-cpu-v1/000024_external_imports.up.sql",
+      "source_path": "services/control/migrations/postgresql/000024_external_imports.up.sql",
       "sha256": "0b0cda98b40b8c9f55d797c146f6a793020438a755423a58949cc7b713742216"
     },
     {
       "version": 25,
-      "source_path": "services/control/migrations/postgresql/mvp-postgresql-cpu-v1/000025_artifact_objects.up.sql",
+      "source_path": "services/control/migrations/postgresql/000025_artifact_objects.up.sql",
       "sha256": "300d17abc81eb2a93254bb1bc2a5e89a4742ef33a53bb5ee7c62210ae477fd43"
     },
     {
       "version": 26,
-      "source_path": "services/control/migrations/postgresql/mvp-postgresql-cpu-v1/000026_image_registry.up.sql",
+      "source_path": "services/control/migrations/postgresql/000026_image_registry.up.sql",
       "sha256": "05e3f965f43c22591f6ecafa425611e0ea8c7b4c65baa230cd21cdcf7804c364"
     },
     {
       "version": 27,
-      "source_path": "services/control/migrations/postgresql/mvp-postgresql-cpu-v1/000027_task_events.up.sql",
+      "source_path": "services/control/migrations/postgresql/000027_task_events.up.sql",
       "sha256": "5884a82776a568457ec1508e2a23bf9c6ef7f81477dcde3f6c2a2fcf3f54b3a3"
     },
     {
       "version": 28,
-      "source_path": "services/control/migrations/postgresql/mvp-postgresql-cpu-v1/000028_middleware.up.sql",
+      "source_path": "services/control/migrations/postgresql/000028_middleware.up.sql",
       "sha256": "c19a744462bfdbdf4ee0d54237a77d51efda10d9ed3a22d8e05a95fc5d68ddc1"
     },
     {
       "version": 29,
-      "source_path": "services/control/migrations/postgresql/mvp-postgresql-cpu-v1/000029_private_cluster.up.sql",
+      "source_path": "services/control/migrations/postgresql/000029_private_cluster.up.sql",
       "sha256": "27313006716fbffba85f5baa4ea964ffcf6fa1b30d796fed93ba78a097ed363b"
     }
   ]

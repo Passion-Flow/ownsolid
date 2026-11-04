@@ -64,11 +64,12 @@ profile, workflow graph versions) and two extra unique constraints.
 - `application_profile` is now an unknown configuration key, and the
   `PROJECT_ONE_APPLICATION_PROFILE` environment key is refused. An existing
   installation keeps a valid database but must drop that key to start.
-- **The inherited offline delivery does not work until DEL-001.** `deploy/offline`
-  still writes `server.application_profile` into the control configuration, which
-  the control plane now refuses, and `upgrade-releases` no longer exists. Its
-  contracts in `api/release` also still name the lineage `mvp-postgresql-cpu-v1` and
-  carry milestone delivery profiles; the control plane accepts only that lineage
-  name there. DEL-001 replaces them with one typed configuration and one install
-  path. This repairs nothing by itself: it must land before the P0 exit criterion
-  "one install path produces every former profile" can hold.
+- **Offline delivery is not proven until DEL-001.** `deploy/offline` no longer writes
+  `server.application_profile` for the current lineage and requires it to be absent,
+  and its Linux unit tests match their earlier results. No offline bundle has been
+  built or installed since this change: this repository has no image definitions yet,
+  so a real install has not run. Upgrades from M16 `releases` installations stay
+  unsupported because `upgrade-releases` is gone. `api/release` still names the lineage
+  `mvp-postgresql-cpu-v1` and carries milestone delivery profiles; the control plane
+  accepts only that lineage name there. DEL-001 replaces them with one typed
+  configuration and one install path, which the P0 exit criterion needs.

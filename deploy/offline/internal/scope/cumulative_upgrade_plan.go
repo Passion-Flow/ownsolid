@@ -103,7 +103,8 @@ func cumulativeMVPProfile(raw []byte, policyReference string) ([]byte, error) {
 	if wire.StrictJSON(raw, &values) != nil || wire.StrictJSON(values["server"], &server) != nil || json.Unmarshal(server["application_profile"], &application) != nil || application != "releases" || json.Unmarshal(values["release_view_config_file"], &reference) != nil || reference == "" || reference != policyReference {
 		return nil, bad
 	}
-	server["application_profile"], _ = json.Marshal(wire.MVPPostgreSQLCPUApplicationProfile)
+	// The control plane no longer has a profile selector and refuses this key.
+	delete(server, "application_profile")
 	values["server"], _ = json.Marshal(server)
 	return encode(values), nil
 }

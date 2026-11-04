@@ -91,7 +91,7 @@ func validateMVPInitialCapabilities(files map[string][]engine.ConfigurationFile,
 					Profile string `json:"application_profile"`
 				}
 			}
-			if wire.UniqueJSON(raw, &server) != nil || server.Server.Profile != wire.MVPPostgreSQLCPUApplicationProfile {
+			if wire.UniqueJSON(raw, &server) != nil || server.Server.Profile != "" {
 				return failure("OFFLINE_SCOPE_MVP_CONFIGURATION_INVALID")
 			}
 		}

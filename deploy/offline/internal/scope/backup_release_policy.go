@@ -25,7 +25,7 @@ func releasePolicyPayloadForProfile(files []engine.ConfigurationFile, configurat
 	bad := failure("OFFLINE_SCOPE_RESTORE_RELEASE_POLICY_INVALID")
 	application := "releases"
 	if profile == wire.MVPPostgreSQLCPUProfile {
-		application = wire.MVPPostgreSQLCPUApplicationProfile
+		application = ""
 	} else if !hasRecordedReleasePolicy(profile) {
 		return "", policy, bad
 	}

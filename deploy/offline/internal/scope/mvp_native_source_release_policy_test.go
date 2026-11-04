@@ -17,7 +17,7 @@ func TestMVPNativeReleasePolicyPayloadReusesOriginalParserAndLegacySelection(t *
 	filesFor := func(application string) []engine.ConfigurationFile {
 		return []engine.ConfigurationFile{{Name: "runtime.yaml", Contents: encode(map[string]any{"server": map[string]any{"application_profile": application}, "release_view_config_file": "/run/projectone/control/private/view.json"})}, {Name: "view.json", Contents: encode(policy)}}
 	}
-	for _, selection := range []struct{ profile, application string }{{wire.MVPPostgreSQLCPUProfile, wire.MVPPostgreSQLCPUApplicationProfile}, {wire.CumulativeCPUProfile, "releases"}, {wire.CumulativeCacheCPUProfile, wire.CumulativeCacheApplicationProfile}} {
+	for _, selection := range []struct{ profile, application string }{{wire.MVPPostgreSQLCPUProfile, ""}, {wire.CumulativeCPUProfile, "releases"}, {wire.CumulativeCacheCPUProfile, wire.CumulativeCacheApplicationProfile}} {
 		name, parsed, e := releasePolicyPayloadForProfile(filesFor(selection.application), "runtime.yaml", selection.profile)
 		if e != nil || name != "view.json" || !reflect.DeepEqual(parsed, policy) {
 			t.Fatal("original nondefault policy changed", selection.profile, e)
@@ -28,12 +28,12 @@ func TestMVPNativeReleasePolicyPayloadReusesOriginalParserAndLegacySelection(t *
 	}
 	for _, fault := range []string{"legacy-header", "alias", "unknown-policy", "missing-policy-field", "null-policy", "false-seconds"} {
 		t.Run(fault, func(t *testing.T) {
-			files := filesFor(wire.MVPPostgreSQLCPUApplicationProfile)
+			files := filesFor("")
 			switch fault {
 			case "legacy-header":
 				files = filesFor("releases")
 			case "alias":
-				files[0].Contents = encode(map[string]any{"server": map[string]any{"application_profile": wire.MVPPostgreSQLCPUApplicationProfile}, "release_view_config_file": "/run/projectone/control/private/view.json", "other_file": "/different/private/view.json"})
+				files[0].Contents = encode(map[string]any{"server": map[string]any{}, "release_view_config_file": "/run/projectone/control/private/view.json", "other_file": "/different/private/view.json"})
 			case "null-policy":
 				files[1].Contents = []byte("null\n")
 			default:
@@ -60,7 +60,7 @@ func mvpNativeReleasePolicyFixture() (mvpNativeBackupPlan, map[string][]engine.C
 	p := mvpNativeSourcePlanFixture()
 	files := map[string][]engine.ConfigurationFile{}
 	for _, role := range []string{"control-config", "operator-config"} {
-		envelope := encode(map[string]any{"server": map[string]any{"application_profile": wire.MVPPostgreSQLCPUApplicationProfile}, "release_view_config_file": "/run/projectone/" + role + "/private/view.json"})
+		envelope := encode(map[string]any{"server": map[string]any{}, "release_view_config_file": "/run/projectone/" + role + "/private/view.json"})
 		files[role] = []engine.ConfigurationFile{{Name: "runtime.yaml", Contents: envelope}, {Name: "view.json", Contents: encode(*p.ReleaseViewBinding)}}
 		if role == "operator-config" {
 			files[role] = append(files[role], engine.ConfigurationFile{Name: "control.yaml", Contents: envelope})

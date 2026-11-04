@@ -22,7 +22,7 @@ func TestMVPConfigurationPreservesEveryM17PrivateValueAndViewReference(t *testin
 	var before, after map[string]any
 	json.Unmarshal(original, &before)
 	json.Unmarshal(target, &after)
-	if after["server"].(map[string]any)["application_profile"] != wire.MVPPostgreSQLCPUApplicationProfile {
+	if _, present := after["server"].(map[string]any)["application_profile"]; present {
 		t.Fatal("new application missing")
 	}
 	after["server"].(map[string]any)["application_profile"] = "releases"

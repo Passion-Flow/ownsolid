@@ -121,7 +121,7 @@ func TestMVPLineageDescriptorIsCompletePrivateCopy(t *testing.T) {
 		t.Fatal("lineage identity or count differs")
 	}
 	for i, entry := range descriptor.Entries {
-		if entry.Version != i+1 || !SafePath(entry.Path) || !ValidSHA256(entry.SHA) || i >= 22 && !strings.Contains(entry.Path, "/mvp-postgresql-cpu-v1/") {
+		if entry.Version != i+1 || !SafePath(entry.Path) || !ValidSHA256(entry.SHA) {
 			t.Fatal("lineage entry invalid", i)
 		}
 	}
