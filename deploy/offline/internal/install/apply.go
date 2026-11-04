@@ -35,14 +35,19 @@ type ExecRunner struct{}
 
 func (ExecRunner) Run(ctx context.Context, name string, args ...string) (string, error) {
 	command := exec.CommandContext(ctx, name, args...)
-	command.Env = []string{}
-	for _, key := range []string{"PATH", "HOME", "DOCKER_HOST", "DOCKER_CONFIG", "XDG_RUNTIME_DIR"} {
-		if value, present := os.LookupEnv(key); present {
-			command.Env = append(command.Env, key+"="+value)
-		}
-	}
+	command.Env = closedEnvironment()
 	output, e := command.CombinedOutput()
 	return string(output), e
+}
+
+func closedEnvironment() []string {
+	environment := []string{}
+	for _, key := range []string{"PATH", "HOME", "DOCKER_HOST", "DOCKER_CONFIG", "XDG_RUNTIME_DIR"} {
+		if value, present := os.LookupEnv(key); present {
+			environment = append(environment, key+"="+value)
+		}
+	}
+	return environment
 }
 
 // StepError names the failed step, so the operator can fix it and apply again.
@@ -50,6 +55,8 @@ type StepError struct {
 	Step   string
 	Code   string
 	Detail string
+	// Command is what to run again after fixing the cause; empty means apply.
+	Command string
 }
 
 func (e *StepError) Error() string {
@@ -57,7 +64,20 @@ func (e *StepError) Error() string {
 	if e.Detail != "" {
 		message += ": " + e.Detail
 	}
-	return message + ". Fix the cause and run apply again; finished work is kept."
+	command := e.Command
+	if command == "" {
+		command = "apply"
+	}
+	return message + ". Fix the cause and run " + command + " again; finished work is kept."
+}
+
+// retryWith names the command to run again in every step error inside e.
+func retryWith(e error, command string) error {
+	var step *StepError
+	if errors.As(e, &step) {
+		step.Command = command
+	}
+	return e
 }
 
 // Probe checks that a browser origin answers ready through the published port.
@@ -77,6 +97,11 @@ func Apply(ctx context.Context, c Config, runner Runner, out io.Writer) error {
 	if os.Geteuid() != 0 {
 		return errors.New("INSTALL_ROOT_REQUIRED: apply creates files owned by the service users; run it as root")
 	}
+	unlock, e := lockOperation(c)
+	if e != nil {
+		return e
+	}
+	defer unlock()
 	return (&installer{c, runner, ProbeOrigin, out}).apply(ctx)
 }
 

@@ -14,7 +14,9 @@ import (
 	"github.com/Passion-Flow/ownsolid/deploy/offline/internal/install"
 )
 
-const usage = "usage: ownsolid-install validate|apply|status --config <install.yaml>"
+const usage = "usage: ownsolid-install validate|apply|status --config <install.yaml>\n" +
+	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
+	"       ownsolid-install restore --config <install.yaml> --from <backup directory>"
 
 func main() {
 	if e := run(os.Args[1:], os.Stdout); e != nil {
@@ -30,7 +32,12 @@ func run(args []string, out io.Writer) error {
 	flags := flag.NewFlagSet("ownsolid-install", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	path := flags.String("config", "", "typed install configuration")
+	output := flags.String("output", "", "existing directory that receives the backup")
+	from := flags.String("from", "", "backup directory to restore")
 	if e := flags.Parse(args[1:]); e != nil || flags.NArg() != 0 || *path == "" {
+		return errors.New(usage)
+	}
+	if (args[0] == "backup") != (*output != "") || (args[0] == "restore") != (*from != "") {
 		return errors.New(usage)
 	}
 	c, e := install.Load(*path)
@@ -47,6 +54,10 @@ func run(args []string, out io.Writer) error {
 		return install.Apply(ctx, c, install.ExecRunner{}, out)
 	case "status":
 		return install.Status(ctx, c, install.ExecRunner{}, out)
+	case "backup":
+		return install.Backup(ctx, c, install.ExecRunner{}, *output, out)
+	case "restore":
+		return install.Restore(ctx, c, install.ExecRunner{}, *from, out)
 	}
 	return errors.New(usage)
 }
