@@ -25,12 +25,15 @@ const (
 
 // agentProcess is a real agent binary enrolled into the installed control plane.
 type agentProcess struct {
-	cmd    *exec.Cmd
-	log    *lockedBuffer
-	done   chan struct{}
-	admin  *browser
-	csrf   string
-	nodeID string
+	cmd            *exec.Cmd
+	log            *lockedBuffer
+	done           chan struct{}
+	admin          *browser
+	csrf           string
+	nodeID         string
+	binary         string
+	configFile     string
+	stateDirectory string
 }
 
 type lockedBuffer struct {
@@ -192,13 +195,8 @@ func (e environment) startAgent(t, owner *testing.T, password string) *agentProc
 		t.Fatalf("enroll: %v\n%s", err, output)
 	}
 
-	a := &agentProcess{log: &lockedBuffer{}, done: make(chan struct{}), admin: admin, csrf: csrf}
-	a.cmd = exec.Command(e.agent, "run", "--config", configFile)
-	a.cmd.Stdout, a.cmd.Stderr = a.log, a.log
-	if err = a.cmd.Start(); err != nil {
-		t.Fatal(err)
-	}
-	go func() { a.cmd.Wait(); close(a.done) }()
+	a := &agentProcess{log: &lockedBuffer{}, admin: admin, csrf: csrf, binary: e.agent, configFile: configFile, stateDirectory: stateDirectory}
+	a.start(t)
 	owner.Cleanup(func() { a.stop(owner) })
 
 	var nodes struct {
@@ -260,6 +258,49 @@ func (a *agentProcess) runTask(t *testing.T, within time.Duration) {
 	t.Fatalf("task %s did not succeed within %s\n%s", task.ID, within, a.output())
 }
 
+// start runs the enrolled agent; start again after stop resumes from its state directory.
+func (a *agentProcess) start(t *testing.T) {
+	t.Helper()
+	a.done = make(chan struct{})
+	a.cmd = exec.Command(a.binary, "run", "--config", a.configFile)
+	a.cmd.Stdout, a.cmd.Stderr = a.log, a.log
+	if err := a.cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	done := a.done
+	go func() { a.cmd.Wait(); close(done) }()
+}
+
+// cursor reads the highest task sequence the agent acknowledged (ADR 0011).
+func (a *agentProcess) cursor(t *testing.T) uint64 {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(a.stateDirectory, "task-cursor.json"))
+	if err != nil {
+		t.Fatalf("task cursor: %v", err)
+	}
+	var value struct {
+		AcknowledgedSequence uint64 `json:"acknowledged_sequence"`
+	}
+	if err = json.Unmarshal(raw, &value); err != nil {
+		t.Fatal(err)
+	}
+	return value.AcknowledgedSequence
+}
+
+// waitFor waits until the agent logged s.
+func (a *agentProcess) waitFor(t *testing.T, s string, within time.Duration) {
+	t.Helper()
+	for started := time.Now(); time.Since(started) < within; time.Sleep(200 * time.Millisecond) {
+		if a.logged(s) {
+			return
+		}
+		if !a.running() {
+			t.Fatalf("agent exited:\n%s", a.output())
+		}
+	}
+	t.Fatalf("agent did not log %q within %s:\n%s", s, within, a.output())
+}
+
 func (a *agentProcess) output() string       { return a.log.String() }
 func (a *agentProcess) logged(s string) bool { return strings.Contains(a.output(), s) }
 
@@ -283,5 +324,17 @@ func (a *agentProcess) stop(t *testing.T) {
 	case <-time.After(30 * time.Second):
 		a.cmd.Process.Kill()
 		<-a.done
+	}
+}
+
+// assertTasksAcknowledged checks control's record for the node: every task succeeded on
+// an acknowledged attempt, and the sequences are 1 to n.
+func (e environment) assertTasksAcknowledged(t *testing.T, node string, n int) {
+	t.Helper()
+	query := "SELECT count(*) FILTER (WHERE state='succeeded' AND attempt>0 AND acknowledged_attempt=attempt)||'/'||count(*)||'/'||COALESCE(max(sequence),0)||'/'||(SELECT task_acknowledged_sequence FROM managed_nodes WHERE id='" + node + "') FROM node_tasks WHERE node_id='" + node + "'"
+	output, err := e.compose(t, "exec", "--no-TTY", "postgres", "psql", "-X", "-tA", "-U", "ownsolid_migrator", "-d", "ownsolid", "-c", query)
+	want := fmt.Sprintf("%d/%d/%d/%d", n, n, n, n)
+	if err != nil || strings.TrimSpace(output) != want {
+		t.Fatalf("task delivery record %q, want %s: %v", strings.TrimSpace(output), want, err)
 	}
 }

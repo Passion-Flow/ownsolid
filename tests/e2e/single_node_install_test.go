@@ -328,6 +328,10 @@ func TestSingleNodeInstall(t *testing.T) {
 	t.Run("an agent enrolls and runs tasks over the session stream", func(t *testing.T) {
 		agent = e.startAgent(t, outer, password)
 		agent.runTask(t, 5*time.Second)
+		if cursor := agent.cursor(t); cursor != 1 {
+			t.Fatalf("agent cursor %d after its first task", cursor)
+		}
+		e.assertTasksAcknowledged(t, agent.nodeID, 1)
 		if !agent.logged("agent_session_transport transport=stream") {
 			t.Fatalf("agent did not use the session stream:\n%s", agent.output())
 		}
@@ -380,6 +384,26 @@ func TestSingleNodeInstall(t *testing.T) {
 		if !agent.running() {
 			t.Fatalf("agent exited:\n%s", agent.output())
 		}
+		if cursor := agent.cursor(t); cursor != 2 {
+			t.Fatalf("agent cursor %d after its second task", cursor)
+		}
+		agent.stop(t)
+	})
+
+	t.Run("an agent that lost its task cursor resyncs", func(t *testing.T) {
+		if agent == nil {
+			t.Skip("no agent is running")
+		}
+		if err := os.Remove(filepath.Join(agent.stateDirectory, "task-cursor.json")); err != nil {
+			t.Fatal(err)
+		}
+		agent.start(t)
+		agent.waitFor(t, "agent_task_resync acknowledged_sequence=2", 60*time.Second)
+		agent.runTask(t, 30*time.Second)
+		if cursor := agent.cursor(t); cursor != 3 {
+			t.Fatalf("agent cursor %d after a resync and one task", cursor)
+		}
+		e.assertTasksAcknowledged(t, agent.nodeID, 3)
 		agent.stop(t)
 	})
 

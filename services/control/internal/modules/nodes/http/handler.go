@@ -9,7 +9,6 @@ import (
 	"os"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"strings"
-	"time"
 	"unicode/utf8"
 
 	"github.com/google/uuid"
@@ -253,7 +252,15 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 		if e := input.Validate(); e != nil {
 			return nil, 0, e
 		}
-		out, e := h.Service.ClaimWaiting(r.Context(), parts[1], credential, request, time.Duration(input.WaitSeconds)*time.Second)
+		out, e := h.Service.ClaimWaiting(r.Context(), parts[1], credential, request, input)
+		return out, 200, e
+	}
+	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && parts[4] == wire.TaskAcknowledgementsPath {
+		var input wire.TaskAcknowledgementRequest
+		if e := httpserver.DecodeJSON(r, &input); e != nil {
+			return nil, 0, e
+		}
+		out, e := h.Service.Acknowledge(r.Context(), parts[1], credential, parts[3], input, request)
 		return out, 200, e
 	}
 	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && (parts[4] == "renewals" || parts[4] == "artifact") {

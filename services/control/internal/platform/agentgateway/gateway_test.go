@@ -27,6 +27,8 @@ type fakeBackend struct {
 	heartbeat error
 	claim     error
 	waits     []time.Duration
+	cursors   []uint64
+	acks      []wire.TaskAcknowledgement
 	lease     *wire.Lease
 }
 
@@ -44,9 +46,10 @@ func (b *fakeBackend) Heartbeat(context.Context, string, string, wire.Handshake)
 	return wire.Disposition{Status: "active", ServerTime: time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)}, nil
 }
 
-func (b *fakeBackend) Claim(_ context.Context, _, _, request string, wait time.Duration) (wire.Claim, error) {
+func (b *fakeBackend) Claim(_ context.Context, _, _, request string, input wire.ClaimRequest) (wire.Claim, error) {
 	b.mu.Lock()
-	b.waits = append(b.waits, wait)
+	b.waits = append(b.waits, time.Duration(input.WaitSeconds)*time.Second)
+	b.cursors = append(b.cursors, input.AcknowledgedSequence)
 	b.mu.Unlock()
 	if b.claim != nil {
 		return wire.Claim{}, b.claim
@@ -55,6 +58,16 @@ func (b *fakeBackend) Claim(_ context.Context, _, _, request string, wait time.D
 		return wire.Claim{}, errors.New("VALIDATION_FAILED")
 	}
 	return wire.Claim{Lease: b.lease}, nil
+}
+
+func (b *fakeBackend) Acknowledge(_ context.Context, _, _, request string, ack wire.TaskAcknowledgement) (wire.RenewedLease, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if request == "" {
+		return wire.RenewedLease{}, errors.New("VALIDATION_FAILED")
+	}
+	b.acks = append(b.acks, ack)
+	return wire.RenewedLease{LeaseExpiresAt: time.Date(2026, 11, 4, 0, 0, 30, 0, time.UTC), ValidForMilliseconds: 30000}, nil
 }
 
 func problem(e error) (string, int) {
@@ -141,6 +154,35 @@ func TestSessionCarriesHeartbeatsAndClaims(t *testing.T) {
 	}
 	if len(backend.admitted) != 2 || backend.admitted[0] != "192.0.2.10|"+testNode+"|credential" {
 		t.Fatalf("every exchange is admitted with the client address: %v", backend.admitted)
+	}
+}
+
+func TestSessionCarriesCursorsAndAcknowledgements(t *testing.T) {
+	backend := &fakeBackend{lease: &wire.Lease{TaskID: testNode, Sequence: 8, Operation: wire.CollectFacts, LeaseToken: strings.Repeat("t", 43), Attempt: 1}}
+	_, conn := start(t, backend, 4)
+	stream := open(t, conn)
+	if reply, e := exchange(t, stream, heartbeat(1)); e != nil || reply.Disposition == nil {
+		t.Fatalf("heartbeat reply %+v %v", reply, e)
+	}
+	claim := wire.AgentMessage{ID: 2, Claim: &wire.ClaimRequest{AcknowledgedSequence: 7}}
+	reply, e := exchange(t, stream, claim)
+	if e != nil || reply.Validate(claim) != nil || reply.Claim.Lease.Sequence != 8 {
+		t.Fatalf("claim reply %+v %v", reply, e)
+	}
+	ack := wire.AgentMessage{ID: 3, Ack: &wire.TaskAcknowledgement{TaskID: testNode, Sequence: 8, LeaseToken: strings.Repeat("t", 43)}}
+	reply, e = exchange(t, stream, ack)
+	if e != nil || reply.Validate(ack) != nil || reply.Acknowledged.ValidForMilliseconds != 30000 {
+		t.Fatalf("ack reply %+v %v", reply, e)
+	}
+	// An acknowledgement that fails validation closes nothing but is refused in band.
+	bad := wire.AgentMessage{ID: 4, Ack: &wire.TaskAcknowledgement{TaskID: "task", Sequence: 8, LeaseToken: strings.Repeat("t", 43)}}
+	if reply, e = exchange(t, stream, bad); e == nil && reply.Problem == nil {
+		t.Fatalf("invalid ack accepted: %+v", reply)
+	}
+	backend.mu.Lock()
+	defer backend.mu.Unlock()
+	if len(backend.cursors) != 1 || backend.cursors[0] != 7 || len(backend.acks) != 1 || backend.acks[0] != *ack.Ack {
+		t.Fatalf("cursor %v acks %v", backend.cursors, backend.acks)
 	}
 }
 

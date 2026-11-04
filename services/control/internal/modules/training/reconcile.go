@@ -57,6 +57,10 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 		if e != nil {
 			return e
 		}
+		// An expired lease nobody acknowledged was never delivered (ADR 0011).
+		if e = s.Nodes.ReleaseUnacknowledgedWithin(ctx, tx, n, uuid.NewString()); e != nil {
+			return e
+		}
 		var task string
 		var stopHash []byte
 		var events int64
@@ -100,7 +104,7 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 		} else if j.CancelRequestedAt != nil {
 			code = "TRAINING_CANCEL_PENDING_STOP"
 		}
-		if t.Attempt == 0 && len(stopHash) == 0 && events == 0 && !hasOutcome {
+		if nodes.NeverDelivered(t.State, t.ErrorCode, t.Attempt, events, hasOutcome) {
 			sha, e := command.Digest()
 			if e != nil {
 				return e

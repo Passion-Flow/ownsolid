@@ -98,6 +98,46 @@ func TestParallelMySQLPreparationRecovery(t *testing.T) {
 		}
 		parallelPreparationState(t, g, "recovery_required", "recovery_required", false, 1)
 	})
+	// ADR 0011. The delivery columns exist on the PostgreSQL lineage only.
+	deliveryCase := func(t *testing.T) reviewStory {
+		t.Helper()
+		g, _, _ := parallelPreparationRuntime(t, true)
+		if g.f.Store.Dialect() != transaction.PostgreSQL {
+			t.Skip("task delivery columns are PostgreSQL only until CMP-201 and CMP-202")
+		}
+		g.exec(t, `UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1`, ``, g.task)
+		return g
+	}
+	t.Run("expired_unacknowledged_lease_returns_for_delivery", func(t *testing.T) {
+		g := deliveryCase(t)
+		if _, e := g.s.ReconcileNext(g.ctx); e != nil {
+			t.Fatal(e)
+		}
+		parallelPreparationState(t, g, "preparing", "held", false, 0)
+		var state string
+		var attempt int
+		if e := g.f.Store.QueryRow(g.ctx, g.f.Statement(`SELECT state,attempt FROM node_tasks WHERE id=$1`, ``, g.task)).Scan(&state, &attempt); e != nil || state != "pending" || attempt != 0 {
+			t.Fatal("released task", state, attempt, e)
+		}
+	})
+	t.Run("exhausted_deliveries_are_proven_never_delivered", func(t *testing.T) {
+		g := deliveryCase(t)
+		g.exec(t, `UPDATE node_tasks SET deliveries=$1 WHERE id=$2`, ``, g.s.Identity.Config.Policy().Nodes.MaximumTaskDeliveries, g.task)
+		worked, e := g.s.ReconcileNext(g.ctx)
+		if e != nil || !worked {
+			t.Fatal(worked, e)
+		}
+		parallelPreparationState(t, g, "failed", "released", true, 1)
+	})
+	t.Run("expired_acknowledged_lease_keeps_the_physical_owner", func(t *testing.T) {
+		g := deliveryCase(t)
+		g.exec(t, `UPDATE node_tasks SET acknowledged_attempt=1 WHERE id=$1`, ``, g.task)
+		worked, e := g.s.ReconcileNext(g.ctx)
+		if e != nil || !worked {
+			t.Fatal(worked, e)
+		}
+		parallelPreparationState(t, g, "recovery_required", "recovery_required", false, 1)
+	})
 	t.Run("frozen_command_tamper_aborts_without_release", func(t *testing.T) {
 		g, _, _ := parallelPreparationRuntime(t, false, func(c *wire.Command) { c.GPUUUID = "GPU-" + uuid.NewString() })
 		worked, e := g.s.ReconcileNext(g.ctx)

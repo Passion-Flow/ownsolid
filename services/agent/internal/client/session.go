@@ -128,19 +128,27 @@ func (s *Session) Heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 }
 
 // Claim asks for the next lease, letting control hold the claim for up to wait seconds.
-func (s *Session) Claim(ctx context.Context, wait int) (wire.Claim, error) {
+// acknowledged is the agent's cursor, the highest task sequence it acknowledged; control
+// answers with a lease, a resync or neither (ADR 0011).
+func (s *Session) Claim(ctx context.Context, wait int, acknowledged uint64) (wire.Claim, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	request := wire.ClaimRequest{WaitSeconds: wait}
+	request := wire.ClaimRequest{WaitSeconds: wait, AcknowledgedSequence: acknowledged}
 	if e := request.Validate(); e != nil {
 		return wire.Claim{}, e
 	}
 	if s.stream == nil {
 		var out wire.Claim
-		e := s.client.post(ctx, s.longPollClient(), s.base()+"/tasks/claims", request, &out)
-		return out, e
+		if e := s.client.post(ctx, s.longPollClient(), s.base()+"/tasks/claims", request, &out); e != nil {
+			return wire.Claim{}, e
+		}
+		if out.Validate() != nil {
+			return wire.Claim{}, errors.New("CONTROL_RESPONSE_INVALID")
+		}
+		return out, nil
 	}
-	// A claim is not repeated: a lease whose reply was lost expires and is claimed again.
+	// A claim is not repeated: control delivers a lease whose reply was lost again on the
+	// next claim, because the agent never acknowledged it.
 	reply, e := s.exchange(ctx, wire.AgentMessage{Claim: &request})
 	if e != nil {
 		s.dropStream()
@@ -150,6 +158,31 @@ func (s *Session) Claim(ctx context.Context, wait int) (wire.Claim, error) {
 		return wire.Claim{}, remoteProblem(reply.Problem.Code, reply.Problem.Status)
 	}
 	return *reply.Claim, nil
+}
+
+// Acknowledge confirms that the agent holds lease and is about to execute it. The agent
+// executes only after control confirms. An acknowledgement is idempotent, so when the
+// stream fails it is sent once more over HTTPS.
+func (s *Session) Acknowledge(ctx context.Context, lease wire.Lease) (wire.RenewedLease, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	ack := wire.TaskAcknowledgement{TaskID: lease.TaskID, Sequence: lease.Sequence, LeaseToken: lease.LeaseToken}
+	if e := ack.Validate(); e != nil {
+		return wire.RenewedLease{}, e
+	}
+	if s.stream != nil {
+		reply, e := s.exchange(ctx, wire.AgentMessage{Ack: &ack})
+		if e == nil {
+			if reply.Problem != nil {
+				return wire.RenewedLease{}, remoteProblem(reply.Problem.Code, reply.Problem.Status)
+			}
+			return *reply.Acknowledged, nil
+		}
+		s.dropStream()
+	}
+	var out wire.RenewedLease
+	e := s.client.post(ctx, s.client.HTTP, s.base()+"/tasks/"+url.PathEscape(lease.TaskID)+"/"+wire.TaskAcknowledgementsPath, wire.TaskAcknowledgementRequest{Sequence: ack.Sequence, LeaseToken: ack.LeaseToken}, &out)
+	return out, e
 }
 
 func (s *Session) disposition(reply wire.ControlMessage) (wire.Disposition, error) {

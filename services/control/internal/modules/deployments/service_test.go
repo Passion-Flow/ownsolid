@@ -281,7 +281,7 @@ func TestExplicitOperatorFenceReceiptAndAuditRollback(t *testing.T) {
 		t.Fatal(e)
 	}
 	lease := c.claim(t)
-	receipt := wire.InferenceRemovalReceipt{SchemaVersion: 1, ReceiptID: uuid.NewString(), NodeID: c.node.NodeID, DeploymentID: d.ID, ModelID: c.model, CatalogDigest: wire.ModelCatalogDigest(), GPUUUID: gpuID, LocalRevision: d.Revision, OwnedContainerAbsent: true, RuntimeCacheAbsent: true, ModelCachePresent: true, CompletedAt: time.Now().UTC()}
+	receipt := wire.InferenceRemovalReceipt{SchemaVersion: 1, ReceiptID: uuid.NewString(), NodeID: c.node.NodeID, DeploymentID: d.ID, ModelID: c.model, CatalogDigest: wire.ModelCatalogDigest(), GPUUUID: gpuID, LocalRevision: d.Revision, OwnedContainerAbsent: true, RuntimeCacheAbsent: true, ModelCachePresent: true, CompletedAt: time.Now().UTC().Add(-time.Minute)}
 	// This synthetic receipt tests operator/database fencing only, not actual machine cleanup.
 	check(t, recovery.ReconcileInferenceRemoval(ctx, c.s.Nodes.Identity, receipt, "Reject before fencing"), "RECOVERY_NODE_NOT_FENCED")
 	if e = recovery.FenceInferenceNode(ctx, c.s.Nodes.Identity, c.node.NodeID, "Synthetic isolated node fence"); e != nil {
