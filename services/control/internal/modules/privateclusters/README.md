@@ -32,7 +32,7 @@ New creation requires current business/license admission. Safety cleanup retains
 
 ## Changing and checking this owner
 
-Synchronize [M28 contracts and cases](../../../../../docs/milestones/m28-private-cluster), [frontend request journal/recovery](../../../../../apps/web/packages/privateclusters), release manifest/image proof, [probe deployment](../../../../../deploy/private-cluster), schema catalogs/grants and the actual server/readiness/restore wiring. Preserve original request identity across browser refresh and explicit retries; a frontend remount must never resend an uncertain mutation.
+Synchronize [M28 contracts and cases](../../../../../docs/milestones/m28-private-cluster), [frontend request journal/recovery](../../../../../web/README.md), release manifest/image proof, [probe deployment](../../../../../deploy/private-cluster), schema catalogs/grants and the actual server/readiness/restore wiring. Preserve original request identity across browser refresh and explicit retries; a frontend remount must never resend an uncertain mutation.
 
 Focused native check, after pinned-toolchain and external resource admission:
 

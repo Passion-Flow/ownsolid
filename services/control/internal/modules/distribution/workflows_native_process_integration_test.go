@@ -103,8 +103,8 @@ func nativeWorkflow(t *testing.T, ctx context.Context, s *identity.Service, data
 	c.Server.AdminOrigin = "https://localhost:" + port
 	c.Server.TLSCertificateFile = certificate
 	c.Server.TLSPrivateKeyFile = key
-	c.Server.PortalAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/portal/dist")
-	c.Server.AdminAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/admin/dist")
+	c.Server.PortalAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "web/apps/portal/dist")
+	c.Server.AdminAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "web/apps/console/dist")
 	c.Database.DSNFile = write("operator-dsn", []byte(dsn.String()))
 	c.Database.MaxOpenConnections = 10
 	c.Database.MaxIdleConnections = 1

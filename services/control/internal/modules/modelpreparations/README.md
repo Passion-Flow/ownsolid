@@ -13,7 +13,7 @@ Migration 000010 stores held-outs, attempts, reviews, artifacts, derivations and
 
 This large module should only be split along held-out source, attempt/result and review/publication ownership after cross-domain transactions and snapshot consumers are enumerated. Domain policy must not move into the Python evaluator.
 
-Synchronize [contracts/model-lifecycle](../../../../../contracts/model-lifecycle), [preparation runtime](../../../../../runtimes/model-lifecycle/README.md), agent/modelpreparations, training/models/distribution, [model-lifecycle frontend](../../../../../apps/web/packages/model-lifecycle), [model lifecycle image](../../../../../deploy/images/model-lifecycle/Dockerfile) and [agent assets](../../../../../deploy/model-lifecycle/agent) and [M10](../../../../../docs/milestones/m10-model-lifecycle).
+Synchronize [contracts/model-lifecycle](../../../../../contracts/model-lifecycle), [preparation runtime](../../../../../runtimes/model-lifecycle/README.md), agent/modelpreparations, training/models/distribution, [model-lifecycle frontend](../../../../../web/README.md), [model lifecycle image](../../../../../deploy/images/model-lifecycle/Dockerfile) and [agent assets](../../../../../deploy/model-lifecycle/agent) and [M10](../../../../../docs/milestones/m10-model-lifecycle).
 
 Focused native check: go -C services/control test ./internal/modules/modelpreparations. Real SQL source/review/cutover, worker process integrity and target merge/inference are separate evidence, with original failures retained.
 

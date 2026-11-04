@@ -4,9 +4,9 @@ export { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
 export { safeRedirect, signInPath } from './redirect.ts';
 export {
   authenticatedRoute,
+  publicRoutes,
   rootRoute,
   runtimeConfigQuery,
-  signInRoute,
   useAppContext,
   type AppContext,
 } from './routes.tsx';

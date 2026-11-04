@@ -110,8 +110,8 @@ func runRealCPUModelGateway(t *testing.T, workflowMode bool) {
 	if os.Getenv("PROJECT_ONE_RAG_BROWSER") == "1" {
 		_, port, _ := net.SplitHostPort(control.Listener.Addr().String())
 		c.s.Identity.Config.Server.PortalOrigin = "https://localhost:" + port
-		c.s.Identity.Config.Server.PortalAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/portal/dist")
-		c.s.Identity.Config.Server.AdminAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/admin/dist")
+		c.s.Identity.Config.Server.PortalAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "web/apps/portal/dist")
+		c.s.Identity.Config.Server.AdminAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "web/apps/console/dist")
 	}
 	handler := identityhttp.New(c.s.Identity)
 	if e = handler.Knowledge.Service.OpenConfiguredProcessor(ctx); e != nil {

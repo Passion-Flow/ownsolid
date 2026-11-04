@@ -194,10 +194,10 @@ func testProductionBrowser(t *testing.T, script, evidence string, workspace bool
 		t.Fatal(e)
 	}
 	browserAssets := make(map[string]string)
-	for _, app := range []string{"portal", "admin"} {
+	for app, directory := range map[string]string{"portal": "portal", "admin": "console"} {
 		assets := os.Getenv("PROJECT_ONE_BROWSER_" + strings.ToUpper(app) + "_ASSETS")
 		if assets == "" {
-			assets = filepath.Join(root, "apps/web/apps", app, "dist")
+			assets = filepath.Join(root, "web/apps", directory, "dist")
 		}
 		if !filepath.IsAbs(assets) || filepath.Clean(assets) != assets {
 			t.Fatal("canonical production asset reference required")

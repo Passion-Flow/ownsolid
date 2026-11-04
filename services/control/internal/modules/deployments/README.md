@@ -6,7 +6,7 @@ Deployments connects verified model versions to admitted nodes and hardware rese
 
 Nodes and models remain the authority for node/profile and artifact identity. Migration 000006 includes deployments and GPU leases. Creating a deployment or accepting desired state does not mean a container is ready; current observations, stale attempts, unknown results and removal/fencing must preserve existing reconciliation.
 
-Synchronize [nodes](../nodes/README.md), [models](../models/README.md), [distribution](../distribution/README.md), agent/inference, contracts/agent deployment recipe and HTTP interfaces, deploy/inference and [deployments frontend](../../../../../apps/web/packages/deployments).
+Synchronize [nodes](../nodes/README.md), [models](../models/README.md), [distribution](../distribution/README.md), agent/inference, contracts/agent deployment recipe and HTTP interfaces, deploy/inference and [deployments frontend](../../../../../web/README.md).
 
 Focused native check: go -C services/control test ./internal/modules/deployments. Real SQL reservation/concurrency, daemon/image and actual NVIDIA backend qualification are separate; fixtures must not silently replace the declared target architecture.
 

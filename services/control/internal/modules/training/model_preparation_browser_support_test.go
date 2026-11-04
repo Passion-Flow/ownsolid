@@ -32,8 +32,8 @@ func runPreparationBrowser(t *testing.T, g preparationScenario, script, evidence
 	if e != nil {
 		t.Fatal(e)
 	}
-	for _, app := range []string{"admin", "portal"} {
-		if _, e = os.Stat(filepath.Join(repo, "apps/web/apps", app, "dist/index.html")); e != nil {
+	for _, app := range []string{"console", "portal"} {
+		if _, e = os.Stat(filepath.Join(repo, "web/apps", app, "dist/index.html")); e != nil {
 			t.Fatal("production UI build required")
 		}
 	}
@@ -46,8 +46,8 @@ func runPreparationBrowser(t *testing.T, g preparationScenario, script, evidence
 	defer func() { identity.Config.Server = original }()
 	identity.Config.Server.AdminOrigin = "https://127.0.0.1:" + port
 	identity.Config.Server.PortalOrigin = "https://localhost:" + port
-	identity.Config.Server.AdminAssets = filepath.Join(repo, "apps/web/apps/admin/dist")
-	identity.Config.Server.PortalAssets = filepath.Join(repo, "apps/web/apps/portal/dist")
+	identity.Config.Server.AdminAssets = filepath.Join(repo, "web/apps/console/dist")
+	identity.Config.Server.PortalAssets = filepath.Join(repo, "web/apps/portal/dist")
 	server.StartTLS()
 	defer server.Close()
 	for _, start := range afterConfiguration {

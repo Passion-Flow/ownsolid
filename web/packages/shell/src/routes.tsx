@@ -11,9 +11,12 @@ import {
   useRouter,
 } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
+import { ForgotPasswordPage, ResetPasswordPage } from './password-pages.tsx';
 import { safeRedirect, signInPath } from './redirect.ts';
+import { RegisterPage } from './register-page.tsx';
 import { sessionQuery } from './session.ts';
 import { SignInPage } from './sign-in-page.tsx';
+import { SsoResultPage, parseSsoResult } from './sso.tsx';
 import { NotFoundPage, RouteErrorPage } from './status-pages.tsx';
 
 /** Router context every application provides. */
@@ -47,7 +50,7 @@ interface SignInSearch {
 }
 
 /** `/sign-in`. A signed-in visitor goes straight to the requested page. */
-export const signInRoute = createRoute({
+const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: signInPath,
   validateSearch: (search: Record<string, unknown>): SignInSearch =>
@@ -81,6 +84,61 @@ function SignInRoute(): ReactNode {
     />
   );
 }
+
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/forgot-password',
+  component: ForgotPasswordPage,
+});
+
+// The next three paths are fixed by the control plane: it puts them in account emails
+// (platform/mail) and redirects to them after single sign-on (modules/sso/http).
+const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reset-password',
+  component: ResetPasswordPage,
+});
+
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  // Invitations belong to the portal; the admin origin refuses them.
+  component: function RegisterRoute() {
+    return useAppContext().audience === 'portal' ? <RegisterPage /> : <NotFoundPage />;
+  },
+});
+
+const signInResultRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login/sso-result',
+  validateSearch: parseSsoResult,
+  beforeLoad: ({ search }) => {
+    // The session cookie is set; the start page loads the identity.
+    if (!search.error) redirect({ to: '/', replace: true, throw: true });
+  },
+  component: function SignInResultRoute() {
+    return <SsoResultPage search={signInResultRoute.useSearch()} />;
+  },
+});
+
+const linkResultRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/account/sso-result',
+  validateSearch: parseSsoResult,
+  component: function LinkResultRoute() {
+    return <SsoResultPage search={linkResultRoute.useSearch()} />;
+  },
+});
+
+/** Every page reachable before sign-in. */
+export const publicRoutes = [
+  signInRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
+  registerRoute,
+  signInResultRoute,
+  linkResultRoute,
+] as const;
 
 /** Layout for every page that needs a session; it sends visitors to sign-in first. */
 export const authenticatedRoute = createRoute({

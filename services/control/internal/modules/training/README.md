@@ -15,7 +15,7 @@ Migration 000009 stores jobs, attempts, checkpoints, artifacts, recoveries and u
 
 This owner has separate admission, execution, transfer and accepted-artifact areas. Any future extraction must retain current creator/Workspace/license checks and lock ordering, without inventing a second scheduler or artifact acceptance path.
 
-Synchronize [contracts/training](../../../../../contracts/training), contracts/agent, [Python training](../../../../../runtimes/training/README.md), agent/training, modelpreparations, [training frontend](../../../../../apps/web/packages/training), [training image](../../../../../deploy/images/training/Dockerfile) and [agent assets](../../../../../deploy/training/agent) and [M09](../../../../../docs/milestones/m09-training).
+Synchronize [contracts/training](../../../../../contracts/training), contracts/agent, [Python training](../../../../../runtimes/training/README.md), agent/training, modelpreparations, [training frontend](../../../../../web/README.md), [training image](../../../../../deploy/images/training/Dockerfile) and [agent assets](../../../../../deploy/training/agent) and [M09](../../../../../docs/milestones/m09-training).
 
 Focused native check: go -C services/control test ./internal/modules/training. Real selected-SQL dispatch/recovery, actual CPU worker, target container/cgroup and NVIDIA execution are distinct gates. Run heavy profiles only after explicit resource admission.
 

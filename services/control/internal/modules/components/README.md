@@ -13,7 +13,7 @@ renewal or completion authority. Removed credentials cannot report state. The
 observer rechecks stored scope/profile/status in the caller's selected SQL
 transaction; recovery observations preserve desired intent and prior task history.
 
-Coordinate with [nodes](../nodes/README.md), agent/components, contracts/agent, [M04](../../../../../docs/milestones/m04-components), [M05](../../../../../docs/milestones/m05-maintenance), deploy/components and [component frontend](../../../../../apps/web/packages/components). Source/catalog/image changes need their exact checksums and deployment projections updated.
+Coordinate with [nodes](../nodes/README.md), agent/components, contracts/agent, [M04](../../../../../docs/milestones/m04-components), [M05](../../../../../docs/milestones/m05-maintenance), deploy/components and [component frontend](../../../../../web/README.md). Source/catalog/image changes need their exact checksums and deployment projections updated.
 
 Focused native check: go -C services/control test ./internal/modules/components. Actual service-manager/node-exporter maintenance and selected SQL require the owning fixtures; model/component observations do not establish target host qualification.
 

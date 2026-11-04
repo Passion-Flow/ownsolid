@@ -6,7 +6,7 @@ Distribution owns gateway identity, Workspace API keys, model aliases and target
 
 Migration 000007 holds gateways, aliases/history, API keys, requests and recovery records; lifecycle migrations extend target versions/intents. Keep request/gateway identity, canonical outcome digest and current alias/model target consistent. A response stream is not proof that accounting was acknowledged; revoked keys, stale alias targets, duplicate outcomes and fenced recovery stay explicit.
 
-Synchronize [Rust gateway](../../../../gateway/README.md), contracts/gateway and HTTP/public gateway generators, nodes/deployments/modelpreparations, [distribution frontend](../../../../../apps/web/packages/distribution), [M07](../../../../../docs/milestones/m07-gateway) and gateway deployment/config.
+Synchronize [Rust gateway](../../../../gateway/README.md), contracts/gateway and HTTP/public gateway generators, nodes/deployments/modelpreparations, [distribution frontend](../../../../../web/README.md), [M07](../../../../../docs/milestones/m07-gateway) and gateway deployment/config.
 
 Focused native check: go -C services/control test ./internal/modules/distribution. Actual admission, SQL concurrency/cutover and Rust/backend streaming faults are separate profiles; neither a synthetic gateway nor an alias row establishes real model serving.
 

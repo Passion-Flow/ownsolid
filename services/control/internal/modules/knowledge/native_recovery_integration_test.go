@@ -97,8 +97,8 @@ func nativeKnowledge(t *testing.T, ctx context.Context, s *Service, databaseName
 	c.Server.AdminOrigin = "https://localhost:" + port
 	c.Server.TLSCertificateFile = certificate
 	c.Server.TLSPrivateKeyFile = key
-	c.Server.PortalAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/portal/dist")
-	c.Server.AdminAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/admin/dist")
+	c.Server.PortalAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "web/apps/portal/dist")
+	c.Server.AdminAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "web/apps/console/dist")
 	{
 		c.Datasets.PythonExecutable = os.Getenv("PROJECT_ONE_DATA_PYTHON")
 		c.Datasets.ProcessorFile = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "runtimes/data-processing/process.py")

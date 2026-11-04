@@ -13,7 +13,7 @@ Light/dark remain fixed protocol values. See the
 [cumulative operation](../../../../../docs/milestones/m15-portal/cumulative-operation.md)
 and [current exact-root queue](../../../../../tools/quality/portal/README.md).
 
-Synchronize [preferences frontend](../../../../../apps/web/packages/preferences), the identity shell/theme consumer, [HTTP contracts](../../../../../contracts/http), [M15](../../../../../docs/milestones/m15-portal), initialization and both database dialects. A future preference field needs explicit schema, privacy and concurrency decisions; it should not be inserted into this record merely because it is user-facing.
+Synchronize [preferences frontend](../../../../../web/README.md), the identity shell/theme consumer, [HTTP contracts](../../../../../contracts/http), [M15](../../../../../docs/milestones/m15-portal), initialization and both database dialects. A future preference field needs explicit schema, privacy and concurrency decisions; it should not be inserted into this record merely because it is user-facing.
 
 Focused native check: `go -C services/control test ./internal/modules/preferences`. Selected database tests must exercise current identity, stale revisions, audit/commit outcomes and restart integrity. Browser appearance and independent locale-resource loading are separate checks.
 

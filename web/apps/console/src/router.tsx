@@ -3,8 +3,8 @@ import {
   WelcomePage,
   authenticatedRoute,
   createApplication,
+  publicRoutes,
   rootRoute,
-  signInRoute,
 } from '@ownsolid/shell';
 import { Outlet, createRoute } from '@tanstack/react-router';
 import { navigation } from './navigation.ts';
@@ -26,7 +26,7 @@ const homeRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-  signInRoute,
+  ...publicRoutes,
   authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute])]),
 ]);
 

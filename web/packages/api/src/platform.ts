@@ -1,6 +1,11 @@
 // Workspaces, notifications and license status, which the application frame shows.
 import { createClient, type Success } from './client.ts';
-import type { licensingContract, notificationsContract, workspacesContract } from './gen/index.ts';
+import type {
+  licensingContract,
+  notificationsContract,
+  ssoContract,
+  workspacesContract,
+} from './gen/index.ts';
 import type { Audience } from './identity.ts';
 import type { RequestOptions } from './transport.ts';
 
@@ -27,6 +32,10 @@ export type NotificationPage =
 /** License condition every signed-in user may read. */
 export type LicenseStatus = licensingContract.components['schemas']['PortalLicenseState'];
 
+/** A single sign-on provider offered on the sign-in page. */
+export type SsoConnector = ssoContract.components['schemas']['PublicSSOConnector'];
+
+const sso = createClient<ssoContract.paths>();
 const workspaces = createClient<workspacesContract.paths>();
 const notifications = createClient<notificationsContract.paths>();
 const licensing = createClient<licensingContract.paths>();
@@ -72,4 +81,18 @@ export function markNotificationRead(id: string): Promise<RunNotification> {
 /** Reads the license condition. */
 export function getLicenseStatus(options?: RequestOptions): Promise<LicenseStatus> {
   return licensing.get('/api/v1/license/status', options);
+}
+
+/** Lists the single sign-on providers this entrance offers. */
+export async function listSsoConnectors(options?: RequestOptions): Promise<SsoConnector[]> {
+  return (await sso.get('/api/v1/auth/sso/connectors', options)).items;
+}
+
+/** Starts single sign-on and returns the provider's address to go to. */
+export async function startSsoLogin(connectorId: string): Promise<string> {
+  const started = await sso.post('/api/v1/auth/sso/{connector_id}/starts', {
+    path: { connector_id: connectorId },
+    body: { mode: 'login', password: null, reason: null },
+  });
+  return started.authorization_url;
 }

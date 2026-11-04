@@ -80,5 +80,28 @@ test('signs in and out of a real installation', async ({ page }) => {
   await expect(page).toHaveURL(/\/sign-in$/);
   await page.goto('/');
   await expect(page).toHaveURL(/\/sign-in/);
+
+  // The account pages emails and sign-in providers link to, against the real API.
+  await page.getByRole('link', { name: 'Forgot your password?' }).click();
+  await page.getByLabel('Email').fill(email);
+  await page.getByRole('button', { name: 'Send the reset link' }).click();
+  await expect(page.getByText('If this address has an account')).toBeVisible();
+
+  const unusable = 'b'.repeat(43);
+  await page.goto(`/reset-password#token=${unusable}`);
+  await page.getByLabel('New password').fill('a sufficiently long password for this test');
+  await page.getByLabel('Confirm the password').fill('a sufficiently long password for this test');
+  await page.getByRole('button', { name: 'Set the new password' }).click();
+  await expect(page.getByRole('alert')).toContainText('This reset link cannot be used');
+
+  await page.goto('/login/sso-result?error=SSO_PROVIDER_DENIED');
+  await expect(page.getByRole('alert')).toContainText('The provider refused the sign-in');
+
+  await page.goto(`/register#token=${unusable}`);
+  if (origin.includes('portal')) {
+    await expect(page.getByRole('alert')).toContainText('This invitation cannot be used');
+  } else {
+    await expect(page.getByText('Page not found')).toBeVisible();
+  }
   expect(problems).toEqual([]);
 });

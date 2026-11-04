@@ -14,7 +14,7 @@ The frontend cannot manufacture a successful run from an unread count or row.
 See [cumulative operations](../../../../../docs/milestones/m15-portal/cumulative-operation.md)
 and the [current exact-root queue](../../../../../tools/quality/portal/README.md).
 
-Policy comes from the typed control Portal policy. Synchronize [workflow terminal paths](../workflows/README.md), [notifications frontend](../../../../../apps/web/packages/notifications), [HTTP contracts](../../../../../contracts/http), [M15](../../../../../docs/milestones/m15-portal), both database repositories and maintenance integration tests. A new notice kind needs a versioned outcome/source contract rather than arbitrary messages inserted by unrelated modules.
+Policy comes from the typed control Portal policy. Synchronize [workflow terminal paths](../workflows/README.md), [notifications frontend](../../../../../web/README.md), [HTTP contracts](../../../../../contracts/http), [M15](../../../../../docs/milestones/m15-portal), both database repositories and maintenance integration tests. A new notice kind needs a versioned outcome/source contract rather than arbitrary messages inserted by unrelated modules.
 
 Focused native check: `go -C services/control test ./internal/modules/notifications`. Selected SQL tests verify private rows/read conflicts; lifecycle tests must cover maintenance failure, readiness recovery and joined stop. Neither source review nor package compilation is a fresh notification-delivery acceptance result.
 

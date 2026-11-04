@@ -9,7 +9,7 @@ account/000017 adds them after the immutable M10 prefix, retaining local session
 
 Failures, replay, stale connector revisions, result loss and keyring changes retain explicit outcomes; never resend uncertain authentication mutations or accept another callback origin to “repair” a failure.
 
-Synchronize [contracts/sso](../../../../../contracts/sso), [M11](../../../../../docs/milestones/m11-sso), identity/session authority, config/examples/control SSO inputs, [SSO frontend](../../../../../apps/web/packages/sso), HTTP/provider generators and deployment callback mapping.
+Synchronize [contracts/sso](../../../../../contracts/sso), [M11](../../../../../docs/milestones/m11-sso), identity/session authority, config/examples/control SSO inputs, [SSO frontend](../../../../../web/README.md), HTTP/provider generators and deployment callback mapping.
 
 Focused unit check: go -C services/control test ./internal/modules/sso. Real provider/browser/SQL/maintenance and start/completion commit-loss cases require their separate fixtures; a provider double is not live provider qualification.
 
