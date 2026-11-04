@@ -37,6 +37,7 @@ runs userspace Tailscale built from source:
   (`~/Library/LaunchAgents/com.ownsolid.tailscaled.plist`). It starts at login and
   restarts if it exits. Check it with `launchctl print gui/$(id -u)/com.ownsolid.tailscaled`.
 - Browsers cannot reach tunnel addresses directly; use SSH port forwarding.
+- `ssh ownsolid-cpu` logs in with the key `~/.ssh/ownsolid_cpu_ed25519`, set in `~/.ssh/config`.
 
 `ownsolid-cpu` runs Docker 29.1.3 and Compose 2.40.3 from the Ubuntu packages and has no
 Go. Docker Hub pulls worked from it on 2026-11-04. Build test binaries on the workstation with
