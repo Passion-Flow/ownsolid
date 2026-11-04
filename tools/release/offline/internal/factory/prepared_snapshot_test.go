@@ -228,6 +228,8 @@ func TestPreparedSnapshotRejectsPostreadChanges(t *testing.T) {
 			defer cancel()
 			switch kind {
 			case "rewrite_restored_mtime", "rewrite_restored_bytes":
+				// Change time has kernel-tick granularity: step past it so the rewrite is observable.
+				time.Sleep(20 * time.Millisecond)
 				put(t, payload, bytes.Repeat([]byte("x"), len(releaseInputTestBody)))
 				if kind == "rewrite_restored_bytes" {
 					put(t, payload, releaseInputTestBody)

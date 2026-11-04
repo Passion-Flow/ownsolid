@@ -7,31 +7,27 @@ today and what is known to fail.
 | Capability | Implemented | Run end to end | Customer verified | Known failures |
 | --- | --- | --- | --- | --- |
 | Repository layout checks | Yes | Yes | n/a | None |
+| Single-node install (`ownsolid-install`, control image, Compose) | Yes | Yes: installed, signed in, restarted and reinstalled with no network route, Docker-in-Docker on `ownsolid-cpu` | No | Web console not included; both origins serve a static page until UX-001 |
 
 Backend code from the previous `project-one` repository now lives in this layout. The
 control plane runs one complete platform with one PostgreSQL lineage and a
 `topology.size` setting instead of application profiles (ADR 0003). Capabilities
 are listed above once they are usable from the new interface.
 
-## Known failing tests on macOS
+## Tests
 
-| Test | Cause |
+`make test` passes on macOS. The offline packaging tests need a non-root user and a real
+mounted filesystem, so they skip there; `make test-offline HOST=ownsolid-cpu` runs them on
+Linux. `tests/e2e/run-single-node.sh` is the end-to-end install, see
+[environment](../development/environment.md).
+
+Database integration tests and the inherited operator's Engine journeys carry build tags
+and are not part of these runs.
+
+## Not supported
+
+| Capability | Why |
 | --- | --- |
-| `TestInferenceTaskPolicyExistingDeploymentMapping` | Reads a Compose file that is not migrated yet |
-| `TestMySQLKnowledgeWorkflowPortalCandidateSource` | Reads a milestone document left in `project-one` |
-| `taskdeliveries` contract test | The OpenAPI file disagrees with central license error codes |
-| Artifact license reconcile case in `licensing/http` | Inherited, not yet analyzed |
-| `license_target_test` | Needs a pinned Python |
-| Identity hash admission timer test | Timing sensitive under load |
-| `deploy/offline` and `tools/release/offline` packages | Fail on macOS; need Linux, a non-root user and a mounted temporary directory. See the Linux results below |
-| Offline install and upgrade through `deploy/offline` | Not run since ADR 0003: no image definitions exist in this repository, so no bundle can be built. Upgrades from M16 `releases` call the removed `upgrade-releases`. Not supported until DEL-001 |
-
-## Linux amd64 results for offline packages
-
-Run on `ownsolid-cpu` as `nobody` with a mounted tmpfs, from test binaries built on the
-workstation. Ten of twelve packages pass.
-
-| Package | Result |
-| --- | --- |
-| `tools/release/offline/internal/factory` | One failure: `TestPreparedSnapshotRejectsPostreadChanges/rewrite_restored_bytes`, not analyzed |
-| `deploy/offline/internal/scope` | Incomplete: hit the 20 minute limit after 330 tests. Six failures: five temporary directory cleanup errors, which also fail before ADR 0003, and `TestScopePrivateSnapshotRejectsLeafMutation`, not analyzed, which passes in a Linux arm64 container |
+| Installing through `deploy/offline/cmd/operator` | Needs a signed bundle, and the tools that manufacture one are not in this repository. Use `ownsolid-install` (ADR 0004) |
+| Sizes other than `single-node` | Refused with `CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED` until their roadmap items land |
+| Upgrades | DEL-104 |

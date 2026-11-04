@@ -37,7 +37,7 @@ func preparedReleaseFixture(t *testing.T) PreparedReleaseRequest {
 			break
 		}
 		if mount == "/" {
-			t.Fatal("actual nonroot mounted TMPDIR required")
+			t.Skip("actual nonroot mounted TMPDIR required; run make test-offline on Linux")
 		}
 		mount = filepath.Dir(mount)
 	}

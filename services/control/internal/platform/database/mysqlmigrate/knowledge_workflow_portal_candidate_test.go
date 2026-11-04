@@ -101,7 +101,7 @@ func TestMySQLKnowledgeWorkflowPortalCandidateSource(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	prefixPath := filepath.Join("..", "..", "..", "..", "..", "..", "docs", "milestones", "m20-mysql", "knowledge-workflow-portal-schema-prefix.json")
+	prefixPath := filepath.Join("testdata", "knowledge-workflow-portal-schema-prefix.json")
 	raw, e := os.ReadFile(prefixPath)
 	if e != nil || hash(string(raw)) != d.PrefixSHA256 {
 		t.Fatal("frozen149-prefix binding", e)

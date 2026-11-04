@@ -1,0 +1,318 @@
+// Package install owns the one install path: a typed configuration, the files it
+// produces under install_root and the ordered steps that bring the platform up.
+package install
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
+	"net"
+	"net/mail"
+	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+
+	"go.yaml.in/yaml/v3"
+)
+
+const FormatVersion = 1
+
+// Topology sizes share one configuration format. A size is accepted only when this
+// release can run it; the others are refused before anything changes on the host.
+const SingleNode = "single-node"
+
+var topologySizes = map[string]bool{SingleNode: true, "ha": true, "cell": true, "multi-cell": true, "multi-site": true}
+
+var (
+	projectPattern = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,62}$`)
+	memoryPattern  = regexp.MustCompile(`^[1-9][0-9]{0,5}[mg]$`)
+	cpusPattern    = regexp.MustCompile(`^[1-9][0-9]{0,2}(\.[0-9]{1,2})?$`)
+)
+
+// controlOwnedKeys are written by the installer and cannot be set through control_settings.
+var controlOwnedKeys = []string{"topology", "server", "database", "security", "licensing", "smtp"}
+
+type Config struct {
+	FormatVersion int            `yaml:"format_version"`
+	Topology      TopologyConfig `yaml:"topology"`
+	InstallRoot   string         `yaml:"install_root"`
+	ComposeFile   string         `yaml:"compose_file"`
+	Project       string         `yaml:"project"`
+	Runtime       RuntimeConfig  `yaml:"runtime"`
+	Images        ImagesConfig   `yaml:"images"`
+	Network       NetworkConfig  `yaml:"network"`
+	Origins       OriginsConfig  `yaml:"origins"`
+	TLS           TLSConfig      `yaml:"tls"`
+	License       LicenseConfig  `yaml:"license"`
+	SMTP          SMTPConfig     `yaml:"smtp"`
+	Administrator AdminConfig    `yaml:"administrator"`
+	Resources     ResourceConfig `yaml:"resources"`
+	StepSeconds   int            `yaml:"step_seconds"`
+	// ControlSettings are further control plane settings, which the control process
+	// validates when it first reads them. Keys the installer owns are refused here.
+	ControlSettings map[string]any `yaml:"control_settings"`
+}
+type TopologyConfig struct {
+	Size string `yaml:"size"`
+}
+type RuntimeConfig struct {
+	UID int `yaml:"uid"`
+	GID int `yaml:"gid"`
+	// PostgresUID is the user the PostgreSQL image runs as. It reads the password file.
+	PostgresUID int `yaml:"postgres_uid"`
+}
+type ImagesConfig struct {
+	ArchiveFile string `yaml:"archive_file"`
+	Control     string `yaml:"control"`
+	Postgres    string `yaml:"postgres"`
+}
+type NetworkConfig struct {
+	BindAddress string `yaml:"bind_address"`
+	HTTPSPort   int    `yaml:"https_port"`
+}
+type OriginsConfig struct {
+	Portal string `yaml:"portal"`
+	Admin  string `yaml:"admin"`
+}
+type TLSConfig struct {
+	Source          string `yaml:"source"`
+	CertificateFile string `yaml:"certificate_file"`
+	PrivateKeyFile  string `yaml:"private_key_file"`
+	CAFile          string `yaml:"ca_file"`
+}
+type LicenseConfig struct {
+	TrustFile string `yaml:"trust_file"`
+}
+type SMTPConfig struct {
+	Host         string `yaml:"host"`
+	Port         int    `yaml:"port"`
+	FromAddress  string `yaml:"from_address"`
+	TLSMode      string `yaml:"tls_mode"`
+	CAFile       string `yaml:"ca_file"`
+	Username     string `yaml:"username"`
+	PasswordFile string `yaml:"password_file"`
+}
+type AdminConfig struct {
+	Email            string `yaml:"email"`
+	DisplayName      string `yaml:"display_name"`
+	InstallationName string `yaml:"installation_name"`
+	WorkspaceName    string `yaml:"workspace_name"`
+}
+type ResourceConfig struct {
+	ControlMemory          string `yaml:"control_memory"`
+	ControlCPUs            string `yaml:"control_cpus"`
+	PostgresMemory         string `yaml:"postgres_memory"`
+	PostgresCPUs           string `yaml:"postgres_cpus"`
+	PostgresMaxConnections int    `yaml:"postgres_max_connections"`
+}
+
+func defaults() Config {
+	var c Config
+	c.Topology.Size = SingleNode
+	c.Project = "ownsolid"
+	c.Runtime = RuntimeConfig{UID: 10001, GID: 10001, PostgresUID: 999}
+	c.Network.BindAddress = "127.0.0.1"
+	c.Network.HTTPSPort = 8443
+	c.TLS.Source = "generate"
+	c.SMTP.Port = 587
+	c.SMTP.TLSMode = "starttls_required"
+	c.Resources = ResourceConfig{ControlMemory: "1g", ControlCPUs: "2", PostgresMemory: "2g", PostgresCPUs: "2", PostgresMaxConnections: 50}
+	c.StepSeconds = 600
+	return c
+}
+
+// Load reads and validates the configuration. Unknown keys and invalid values fail.
+func Load(path string) (Config, error) {
+	raw, e := os.ReadFile(path)
+	if e != nil {
+		return Config{}, errors.New("INSTALL_CONFIG_UNREADABLE")
+	}
+	return Decode(raw)
+}
+
+func Decode(raw []byte) (Config, error) {
+	c := defaults()
+	decoder := yaml.NewDecoder(bytes.NewReader(raw))
+	decoder.KnownFields(true)
+	if e := decoder.Decode(&c); e != nil {
+		return Config{}, fmt.Errorf("INSTALL_CONFIG_INVALID: %s", firstLine(e.Error()))
+	}
+	if e := decoder.Decode(&struct{}{}); !errors.Is(e, io.EOF) {
+		return Config{}, errors.New("INSTALL_CONFIG_INVALID: more than one document")
+	}
+	if e := c.Validate(); e != nil {
+		return Config{}, e
+	}
+	return c, nil
+}
+
+func invalid(field, rule string) error {
+	return fmt.Errorf("INSTALL_CONFIG_INVALID: %s %s", field, rule)
+}
+
+func (c Config) Validate() error {
+	if c.FormatVersion != FormatVersion {
+		return invalid("format_version", fmt.Sprintf("must be %d", FormatVersion))
+	}
+	if !topologySizes[c.Topology.Size] {
+		return invalid("topology.size", "must be single-node, ha, cell, multi-cell or multi-site")
+	}
+	if c.Topology.Size != SingleNode {
+		return fmt.Errorf("CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED: this release runs %s only, not %s", SingleNode, c.Topology.Size)
+	}
+	if !canonicalPath(c.InstallRoot) || c.InstallRoot == "/" {
+		return invalid("install_root", "must be an absolute clean path below /")
+	}
+	if !canonicalPath(c.ComposeFile) {
+		return invalid("compose_file", "must be an absolute clean path")
+	}
+	if !projectPattern.MatchString(c.Project) {
+		return invalid("project", "must be lowercase letters, digits, hyphen or underscore")
+	}
+	if c.Runtime.UID < 1 || c.Runtime.GID < 1 || c.Runtime.PostgresUID < 1 {
+		return invalid("runtime", "uid, gid and postgres_uid must be positive: the platform never runs as root")
+	}
+	if c.Images.ArchiveFile != "" && !canonicalPath(c.Images.ArchiveFile) {
+		return invalid("images.archive_file", "must be an absolute clean path")
+	}
+	for field, image := range map[string]string{"images.control": c.Images.Control, "images.postgres": c.Images.Postgres} {
+		if !pinnedImage(image) {
+			return invalid(field, "must name an image by tag or digest, and never latest")
+		}
+	}
+	if net.ParseIP(c.Network.BindAddress) == nil {
+		return invalid("network.bind_address", "must be an IP address")
+	}
+	if c.Network.HTTPSPort < 1 || c.Network.HTTPSPort > 65535 {
+		return invalid("network.https_port", "must be 1 to 65535")
+	}
+	if e := c.validateOrigins(); e != nil {
+		return e
+	}
+	if e := c.validateTLS(); e != nil {
+		return e
+	}
+	if !canonicalPath(c.License.TrustFile) {
+		return invalid("license.trust_file", "must name the issuer trust file by absolute clean path")
+	}
+	if e := c.validateSMTP(); e != nil {
+		return e
+	}
+	if e := c.validateAdministrator(); e != nil {
+		return e
+	}
+	r := c.Resources
+	if !memoryPattern.MatchString(r.ControlMemory) || !memoryPattern.MatchString(r.PostgresMemory) {
+		return invalid("resources", "memory must look like 512m or 2g")
+	}
+	if !cpusPattern.MatchString(r.ControlCPUs) || !cpusPattern.MatchString(r.PostgresCPUs) {
+		return invalid("resources", "cpus must look like 2 or 0.5")
+	}
+	if r.PostgresMaxConnections < 20 || r.PostgresMaxConnections > 1000 {
+		return invalid("resources.postgres_max_connections", "must be 20 to 1000")
+	}
+	if c.StepSeconds < 30 || c.StepSeconds > 7200 {
+		return invalid("step_seconds", "must be 30 to 7200")
+	}
+	for _, key := range controlOwnedKeys {
+		if _, present := c.ControlSettings[key]; present {
+			return invalid("control_settings."+key, "is set by the installer from the typed fields")
+		}
+	}
+	return nil
+}
+
+func (c Config) validateOrigins() error {
+	for field, origin := range map[string]string{"origins.portal": c.Origins.Portal, "origins.admin": c.Origins.Admin} {
+		if _, e := originURL(origin); e != nil {
+			return invalid(field, "must be an https origin without a path, for example https://portal.example.invalid:8443")
+		}
+	}
+	if c.Origins.Portal == c.Origins.Admin {
+		return invalid("origins", "portal and admin must differ: the host selects the audience")
+	}
+	return nil
+}
+
+func (c Config) validateTLS() error {
+	t := c.TLS
+	switch t.Source {
+	case "generate":
+		if t.CertificateFile != "" || t.PrivateKeyFile != "" || t.CAFile != "" {
+			return invalid("tls", "file references apply only when source is files")
+		}
+	case "files":
+		if !canonicalPath(t.CertificateFile) || !canonicalPath(t.PrivateKeyFile) || !canonicalPath(t.CAFile) {
+			return invalid("tls", "certificate_file, private_key_file and ca_file must be absolute clean paths")
+		}
+	default:
+		return invalid("tls.source", "must be generate or files")
+	}
+	return nil
+}
+
+func (c Config) validateSMTP() error {
+	s := c.SMTP
+	if s.Host == "" || strings.ContainsAny(s.Host, " /\r\n") {
+		return invalid("smtp.host", "must name the internal relay")
+	}
+	if s.Port < 1 || s.Port > 65535 {
+		return invalid("smtp.port", "must be 1 to 65535")
+	}
+	if a, e := mail.ParseAddress(s.FromAddress); e != nil || a.Address != s.FromAddress {
+		return invalid("smtp.from_address", "must be a bare email address")
+	}
+	if s.TLSMode != "starttls_required" && s.TLSMode != "implicit_tls" {
+		return invalid("smtp.tls_mode", "must be starttls_required or implicit_tls")
+	}
+	if s.CAFile != "" && !canonicalPath(s.CAFile) {
+		return invalid("smtp.ca_file", "must be an absolute clean path")
+	}
+	if (s.Username == "") != (s.PasswordFile == "") || s.PasswordFile != "" && !canonicalPath(s.PasswordFile) {
+		return invalid("smtp", "username and password_file go together, and password_file must be an absolute clean path")
+	}
+	return nil
+}
+
+func (c Config) validateAdministrator() error {
+	a := c.Administrator
+	if parsed, e := mail.ParseAddress(a.Email); e != nil || parsed.Address != a.Email {
+		return invalid("administrator.email", "must be a bare email address")
+	}
+	if a.DisplayName == "" || a.InstallationName == "" || a.WorkspaceName == "" {
+		return invalid("administrator", "display_name, installation_name and workspace_name are required")
+	}
+	return nil
+}
+
+func canonicalPath(value string) bool {
+	return value != "" && filepath.IsAbs(value) && filepath.Clean(value) == value && !strings.ContainsAny(value, "\x00\r\n")
+}
+
+func pinnedImage(image string) bool {
+	if image == "" || strings.ContainsAny(image, " \t\r\n") {
+		return false
+	}
+	if name, digest, found := strings.Cut(image, "@"); found {
+		return name != "" && regexp.MustCompile(`^sha256:[a-f0-9]{64}$`).MatchString(digest)
+	}
+	slash := strings.LastIndex(image, "/")
+	colon := strings.LastIndex(image, ":")
+	return colon > slash && colon < len(image)-1 && image[colon+1:] != "latest"
+}
+
+func originURL(origin string) (*url.URL, error) {
+	u, e := url.Parse(origin)
+	if e != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" {
+		return nil, errors.New("origin invalid")
+	}
+	return u, nil
+}
+
+func firstLine(s string) string {
+	line, _, _ := strings.Cut(s, "\n")
+	return line
+}

@@ -15,7 +15,7 @@ agents is not.
 - [x] ARC-001 Repository layout, language and tooling checks enforced in CI (P0) - Evidence: commit 96f3e9f
 - [x] ARC-002 Backend moved into the ownsolid layout with behavior unchanged (P0) - Evidence: commit df6fbd5
 - [ ] ARC-003 Merge the dozen deployment profiles into one topology model with sizes: single node, HA, cell, multi-cell, multi-site; remove profile branches from code, configuration and UI (P0)
-  - In progress (ADR 0003). Not done: `deploy/offline` and `api/release` still carry milestone delivery profiles and no offline install has run (DEL-001); `make test` is not green.
+  - In progress (ADR 0003). Not done: `deploy/offline` and `api/release` still carry milestone delivery profiles (DEL-001).
 - [ ] ARC-004 Cell ID and site ID in every resource key, table and API path, even with one cell (P0)
 - [ ] ARC-005 Agent protocol v1: agent-initiated long-lived gRPC stream over HTTP/2 through a stateless gateway tier, with long-poll fallback (P0)
 - [ ] ARC-006 Task semantics: per-node sequence numbers, idempotent tasks, acknowledgements, resume from last ack, rate-limited full resync (P0)

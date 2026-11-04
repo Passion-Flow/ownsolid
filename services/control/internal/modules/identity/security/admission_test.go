@@ -16,6 +16,8 @@ import (
 
 func TestM01ActualHashAdmissionDeadline(t *testing.T) {
 	policy := config.DefaultRuntimePolicy()
+	// The synthetic hash must outlast the window: about 800 ms on an M4 Max against the 2000 ms default.
+	policy.Identity.HashAdmissionMilliseconds = 200
 	dir := t.TempDir()
 	if os.Chmod(dir, 0700) != nil {
 		t.Fatal("HASH_ADMISSION_PRIVATE_FIXTURE_FAILED")
@@ -58,7 +60,7 @@ func TestM01ActualHashAdmissionDeadline(t *testing.T) {
 		}()
 	}
 	close(ready)
-	until := time.Now().Add(config.Milliseconds(policy.Identity.HashAdmissionMilliseconds))
+	until := time.Now().Add(10 * time.Second)
 	for len(p.slots) != 2 && time.Now().Before(until) {
 		time.Sleep(time.Millisecond)
 	}

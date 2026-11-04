@@ -25,7 +25,7 @@ func fixture(t *testing.T, body string) (configuration.Config, *Client) {
 	for !mountpoint(mount) {
 		next := filepath.Dir(mount)
 		if next == mount {
-			t.Fatal("external mounted TMPDIR required")
+			t.Skip("external mounted TMPDIR required; run make test-offline on Linux")
 		}
 		mount = next
 	}

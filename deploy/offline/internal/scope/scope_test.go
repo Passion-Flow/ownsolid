@@ -34,7 +34,7 @@ func fixtureWithAssets(t *testing.T, extra []wire.Asset, extraPayloads [][]byte)
 	for !mounted(mount) {
 		parent := filepath.Dir(mount)
 		if parent == mount {
-			t.Fatal("actual external mounted TMPDIR required")
+			t.Skip("actual external mounted TMPDIR required; run make test-offline on Linux")
 		}
 		mount = parent
 	}

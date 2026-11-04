@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/Passion-Flow/ownsolid/deploy/offline/internal/configuration"
 )
@@ -125,6 +126,8 @@ func TestScopePrivateSnapshotLimitsAndReferences(t *testing.T) {
 
 func mutatePrivateLeaf(t *testing.T, path, fault string, before os.FileInfo) {
 	t.Helper()
+	// Change time has kernel-tick granularity: step past it so the mutation is observable.
+	time.Sleep(20 * time.Millisecond)
 	var e error
 	switch fault {
 	case "replacement":

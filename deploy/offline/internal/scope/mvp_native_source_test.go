@@ -61,9 +61,23 @@ func TestMVPNativeSourcePlanKeepsOriginalAuthoritiesDistinct(t *testing.T) {
 	}
 }
 
+// unsealOnCleanup makes a sealed tree removable before TempDir cleanup runs.
+func unsealOnCleanup(t *testing.T, dir string) {
+	t.Helper()
+	t.Cleanup(func() {
+		_ = filepath.WalkDir(dir, func(path string, entry os.DirEntry, _ error) error {
+			if entry != nil && entry.IsDir() {
+				_ = os.Chmod(path, 0700)
+			}
+			return nil
+		})
+	})
+}
+
 func mvpNativeInventoryFixture(t *testing.T) (string, *os.Root) {
 	t.Helper()
 	dir := t.TempDir()
+	unsealOnCleanup(t, dir)
 	if e := os.Chmod(dir, 0700); e != nil {
 		t.Fatal(e)
 	}

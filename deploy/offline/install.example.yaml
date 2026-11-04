@@ -1,0 +1,102 @@
+# Typed configuration for ownsolid-install. Unknown keys and invalid values are refused
+# before anything changes on the host. Secrets are generated under install_root, or
+# referenced by file path; none belong in this file. Changes apply on the next `apply`.
+
+# Required. Always 1 for this format.
+format_version: 1
+
+topology:
+  # Optional, default single-node. Enum single-node, ha, cell, multi-cell, multi-site.
+  # This release runs single-node only; the others fail with
+  # CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED and change nothing.
+  size: single-node
+
+# Required. Absolute path owned by the installer; holds configuration, secrets and data.
+install_root: /srv/ownsolid
+
+# Required. Absolute path of the delivered compose.yaml, copied under install_root.
+compose_file: /opt/ownsolid-bundle/compose.yaml
+
+# Optional, default ownsolid. Compose project name; lowercase letters, digits, - and _.
+project: ownsolid
+
+# Optional. Numeric users; the platform never runs as root. Defaults match the images.
+runtime:
+  uid: 10001
+  gid: 10001
+  postgres_uid: 999
+
+images:
+  # Optional. docker save archive loaded before start. Without it the images must already
+  # be on this host. Nothing is ever pulled.
+  archive_file: /opt/ownsolid-bundle/images.tar
+  # Required. Tag or digest; latest is refused.
+  control: ownsolid/control:0.0.0-example
+  # Required. PostgreSQL 18.6 with pgvector 0.8.7.
+  postgres: pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+
+# Optional. Host address and port of the HTTPS listener. Defaults 127.0.0.1 and 8443.
+# Separate from the advertised origins below.
+network:
+  bind_address: 127.0.0.1
+  https_port: 8443
+
+# Required. Browser origins, https only, and different from each other: the host name
+# selects the audience. Use your real host names or IP addresses.
+origins:
+  portal: https://portal.example.invalid:8443
+  admin: https://admin.example.invalid:8443
+
+tls:
+  # Optional, default generate: a private CA under install_root issues a certificate for
+  # the origin hosts and reissues it when they change. Clients must trust config/ca.pem.
+  # Use files to supply your own; certificate_file, private_key_file and ca_file are then
+  # required, and ca_file must be the CA that issued the certificate.
+  source: generate
+
+license:
+  # Required. Public trust file from the license issuer. Never a signing key.
+  trust_file: /opt/ownsolid-bundle/license-trust.json
+
+smtp:
+  # Required. Internal relay used for account mail.
+  host: smtp.example.invalid
+  # Optional, default 587.
+  port: 587
+  # Required.
+  from_address: platform@example.invalid
+  # Optional, default starttls_required. Enum starttls_required, implicit_tls.
+  tls_mode: starttls_required
+  # Optional. CA file for the relay. username and password_file go together, and the
+  # password is read from the file.
+  # ca_file: /opt/ownsolid-bundle/smtp-ca.pem
+  # username: platform
+  # password_file: /opt/ownsolid-bundle/smtp-password
+
+# Required. First administrator and tenant. The password is generated once and written to
+# <install_root>/operator/admin-credential; a later apply never replaces it.
+administrator:
+  email: admin@example.invalid
+  display_name: Installation Administrator
+  installation_name: Example
+  workspace_name: Default Workspace
+
+# Optional. Container limits. Defaults as shown.
+resources:
+  control_memory: 1g
+  control_cpus: "2"
+  postgres_memory: 2g
+  postgres_cpus: "2"
+  postgres_max_connections: 50
+
+# Optional, default 600. Time limit of each install step, 30 to 7200 seconds.
+step_seconds: 600
+
+# Optional. Further control plane settings, as documented in
+# services/control/config/examples/control/control.example.yaml. The control process
+# validates them. topology, server, database, security, licensing and smtp are set from
+# the fields above and are refused here.
+# control_settings:
+#   runtime:
+#     workspaces:
+#       maximum_count: 100

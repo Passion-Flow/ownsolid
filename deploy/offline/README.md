@@ -1,3 +1,14 @@
+# Offline delivery
+
+`cmd/install` is `ownsolid-install`, the install path; see
+[Install](../../docs/operations/install.md) and
+[`install.example.yaml`](install.example.yaml). `internal/install` holds its typed
+configuration and steps.
+
+The rest of this module is the inherited operator. It is not an install path (ADR 0004).
+`modules/middleware` calls its scope engine through `pkg/maintenance`, and DEL-114 removes
+what is left. The notes below describe it and are historical.
+
 # M17 current45 local delivery ready for independent review — 2026-10-30
 
 The [qualified delivery record](../../../docs/execution/mvp/m17-current45-local-delivery-20261030.md) closes signed45 external archive custody, four equal bindings, actual final external-only normal0/restart/180seconds/20 phase-frozen GETs, full installed-model hashes and exact internal/key/helper cleanup. Original mixed final stop during real host I/O failure remains failed; separate recovery and ordinary post-expiry authentication are explicit. The ten-case ledger preserves source-bound reuse, target/translation/M10 limits and all28 foreign entries. Coordinator acceptance remains pending; no M18/extensions/Goal/monitor starts.

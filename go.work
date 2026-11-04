@@ -6,5 +6,6 @@ use (
 	./pkg/license
 	./services/agent
 	./services/control
+	./tests/e2e
 	./tools/release/offline
 )

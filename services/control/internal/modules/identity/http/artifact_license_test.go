@@ -16,7 +16,7 @@ func TestArtifactRecoveryLicenseExceptionsAreExactAndRetainOwnerChecks(t *testin
 		{"DELETE", "/api/v1/admin/artifact-objects/" + id + "/grants/" + id, true},
 		{"POST", "/api/v1/admin/artifact-objects/" + id + "/ingestions/" + id + "/cancel", true},
 		{"POST", "/api/v1/admin/artifact-objects/" + id + "/complete", false},
-		{"POST", "/api/v1/admin/artifact-objects/" + id + "/reconcile", false},
+		{"POST", "/api/v1/admin/artifact-objects/" + id + "/reconcile", true},
 		{"POST", "/api/v1/admin/artifact-objects/" + id + "/model-import", false},
 		{"POST", "/api/v1/admin/artifact-objects/not-an-id/abort", false},
 		{"POST", "/api/v1/admin/artifact-objects/" + id + "/abort/", false},

@@ -60,8 +60,6 @@ func TestInferenceTaskPolicyOverridesAndRefusal(t *testing.T) {
 func TestInferenceTaskPolicyExistingDeploymentMapping(t *testing.T) {
 	root := filepath.Clean("../../../../../")
 	checks := map[string][]string{
-		"deploy/compose/base/workspace-policy.yaml":                    {"--env-file", "PROJECT_ONE_POLICY_ENVIRONMENT_BASENAME"},
-		"deploy/helm/projectone/templates/_pod.tpl":                    {"configuration.policyEnvironmentFile", "--env-file"},
 		"services/control/config/examples/control/node-policy.helm.values.example.yaml": {"policyEnvironmentFile: node-policy.env", "node-policy.env"},
 		"services/control/config/examples/control/node-policy.env.example":              {nodeInferenceDeployEnvironment, nodeTaskLeaseEnvironment, nodeMaximumTaskAttemptsEnvironment, nodeTaskSweepBatchEnvironment},
 	}

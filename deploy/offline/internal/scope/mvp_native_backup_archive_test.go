@@ -18,6 +18,7 @@ import (
 func mvpNativeArchiveFixture(t *testing.T) (*os.Root, *os.File, engine.NativePostgreSQLArchiveArtifact, configuration.BackupRequest) {
 	t.Helper()
 	dir := t.TempDir()
+	unsealOnCleanup(t, dir)
 	os.Chmod(dir, 0700)
 	root, e := os.OpenRoot(dir)
 	if e != nil {

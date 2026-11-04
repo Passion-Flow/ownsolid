@@ -40,7 +40,8 @@ runs userspace Tailscale built from source:
 - `ssh ownsolid-cpu` logs in with the key `~/.ssh/ownsolid_cpu_ed25519`, set in `~/.ssh/config`.
 
 `ownsolid-cpu` runs Docker 29.1.3 and Compose 2.40.3 from the Ubuntu packages and has no
-Go. Docker Hub pulls worked from it on 2026-11-04. Build test binaries on the workstation with
+Go. Docker Hub pulls from it work but can stall or drop, so retry them; `timeout` around a
+pull keeps a stalled one from blocking a session. Build test binaries on the workstation with
 `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c` and run them there. Offline packages
 need a non-root user and a mounted temporary directory.
 
@@ -52,6 +53,27 @@ These tests need PostgreSQL 18.6 with pgvector 0.8.7, for example the image
 Set `PROJECT_ONE_TEST_DSN`. Add `-tags repository_integration` with
 `PROJECT_ONE_REPOSITORY_ENGINE=postgresql`, `PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE`
 and `PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA` for the repository tests, and use `umask 077`.
+
+## End-to-end install
+
+`tests/e2e/run-single-node.sh` runs the real installer in a Docker-in-Docker container
+started with `--network none`, so the installer, its Docker daemon and every workload have
+no route anywhere. It needs a Linux amd64 host with Docker and takes about two minutes.
+
+```sh
+make image-control DOCKER='ssh ownsolid-cpu docker' CONTROL_IMAGE=ownsolid/control:e2e
+make e2e-binaries
+scp bin/e2e/* tests/e2e/run-single-node.sh ownsolid-cpu:/root/e2e/
+ssh ownsolid-cpu 'cd /root/e2e && bash run-single-node.sh /root/e2e ownsolid/control:e2e \
+  pgvector/pgvector:0.8.7-pg18-bookworm docker:29.1.3-dind'
+```
+
+`make test` skips this test without those inputs.
+
+## Offline packaging tests
+
+`make test-offline HOST=ownsolid-cpu` builds the Linux test binaries here and runs them on
+that host as `nobody` with a mounted tmpfs. Allow about 40 minutes.
 
 ## Network notes for China
 
