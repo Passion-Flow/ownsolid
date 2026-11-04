@@ -105,6 +105,12 @@ is short, finish fewer items at this standard rather than more items below it.
   Simplified Chinese complete; no layout breaks at common widths.
 - **Docs:** operator and user documentation updated with the change, written for the
   reader, accurate to what the code does.
+- **Improve while migrating.** Most items carry inherited `project-one` code. Never
+  move it as-is: in the code an item touches, fix weak design, duplication, missing
+  tests, poor errors, slow paths and anything below this bar, and shape it so later
+  roadmap items (scale, cells, more engines and devices) build on it without rework.
+  Do these improvements in the same item, with tests, and note significant ones in the
+  commit body or an ADR. Larger redesigns outside the item become new roadmap items.
 
 ## 4. Support claims
 
