@@ -1,5 +1,7 @@
 # Architecture and scale
 
+Module reviewed: 2026-11-04.
+
 The invariants that let one control plane run 10,000+ GPU servers, and the simulator
 that proves them. Getting these right early is cheap; retrofitting them across installed
 agents is not.
@@ -38,6 +40,7 @@ agents is not.
 - [ ] ARC-104 One Kubernetes cluster per cell installed and managed by ownsolid, with the agent on every node (P1)
 - [ ] ARC-105 Load tested with 1,000 simulated nodes per cell at twice the load, including a Kubernetes cell simulated with KWOK (P1)
 - [ ] ARC-106 Published fleet KPIs: dispatch p99, reconnect time, database writes per second at measured scale (P1)
+- [ ] ARC-107 Gateway connection lifecycle: maximum connection age with jitter, GOAWAY drain, and rebalancing after a gateway roll so long-lived streams do not pile onto old gateways (P1)
 
 ## P2 Fleet operations
 
@@ -46,6 +49,8 @@ agents is not.
 - [ ] ARC-203 Load tested with 10,000 simulated nodes across at least two cells (P2)
 - [ ] ARC-204 Failure drills: gateway roll, database failover, mass GPU error storm triggering the remediation breaker (P2)
 - [ ] ARC-205 Unified middleware contract for state stores and messaging behind adapters (P2) - Catalog: F350, F351, F352, F353, F354, F355
+- [ ] ARC-206 Cell router: agents and API clients reach their cell from an in-memory mapping that keeps working when the global layer is down (P2)
+- [ ] ARC-207 Move a node between cells without stopping its running work (P2)
 
 ## P3 Multi-site
 
