@@ -372,6 +372,7 @@ export interface components {
             status: "active" | "disabled";
             /** Format: date-time */
             server_time: string;
+            pacing?: components["schemas"]["Pacing"];
         };
         Lease: {
             /** Format: uuid */
@@ -1952,6 +1953,17 @@ export interface components {
         /** @description Recover all local work, then use acknowledged_sequence as the cursor (ADR 0011). */
         Resync: {
             acknowledged_sequence: number;
+        };
+        /** @description How control paces an agent at runtime (ADR 0013). */
+        Pacing: {
+            /** @description Mean time between two heartbeats of an idle agent. */
+            heartbeat_seconds: number;
+            /** @description Spreads each interval evenly around heartbeat_seconds. */
+            jitter_percent: number;
+            /** @description Ceiling of the full-jitter delay after the first failed cycle. */
+            reconnect_base_seconds: number;
+            /** @description Largest ceiling of the full-jitter delay; not below reconnect_base_seconds. */
+            reconnect_max_seconds: number;
         };
     };
     responses: never;
