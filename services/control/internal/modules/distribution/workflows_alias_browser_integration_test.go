@@ -43,8 +43,8 @@ func TestM13WorkflowProfileAdminAliasDisableBrowser(t *testing.T) {
 			accounts.Config.Server.AdminOrigin = "https://" + server.Listener.Addr().String()
 			_, port, _ := net.SplitHostPort(server.Listener.Addr().String())
 			accounts.Config.Server.PortalOrigin = "https://localhost:" + port
-			accounts.Config.Server.PortalAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/portal/dist")
-			accounts.Config.Server.AdminAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/admin/dist")
+			accounts.Config.Server.PortalAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "web/apps/portal/dist")
+			accounts.Config.Server.AdminAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "web/apps/console/dist")
 			scratch := filepath.Join(root, "encoder-scratch")
 			if e := os.Mkdir(scratch, 0700); e != nil {
 				t.Fatal(e)

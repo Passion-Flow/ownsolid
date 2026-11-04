@@ -114,8 +114,10 @@ instead of issuing a second one.
 
 ## Limits of this release
 
-- The console and portal currently offer sign-in, sign-out and account details. Other
-  capabilities are reached through the API until their pages land.
+- The console and portal currently offer sign-in, sign-out, password reset, registration
+  by invitation (portal), single sign-on and the application frame. Other capabilities,
+  including installing a license and inviting users, are reached through the API until
+  their pages land.
 - Upgrades, rollback and signed bundles are separate roadmap items (DEL-101, DEL-104,
   DEL-105). Do not reuse an install root across versions.
 - Model, dataset and training stores are not set up by the installer.

@@ -1,17 +1,12 @@
 import { isProblem, signIn, type Audience, type Me } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
-import {
-  Brand,
-  Button,
-  LocaleSelect,
-  Notice,
-  ProblemNotice,
-  Spinner,
-  TextField,
-} from '@ownsolid/ui';
+import { Button, Notice, Spinner, TextField } from '@ownsolid/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { useRef, useState, type SubmitEvent } from 'react';
+import { AuthLayout, FailureNotice } from './auth-layout.tsx';
 import { sessionKey } from './session.ts';
+import { SsoButtons } from './sso.tsx';
 
 /** Props for {@link SignInPage}. */
 export interface SignInPageProps {
@@ -62,71 +57,65 @@ export function SignInPage({ audience, onSignedIn }: SignInPageProps) {
 
   const error = mutation.error;
   return (
-    <main className="flex min-h-full flex-col items-center justify-center px-5 py-10">
-      <div className="w-full max-w-[400px]">
-        <Brand className="mb-8 justify-center" />
-        <div className="rounded-card border border-border bg-surface p-7 shadow-2">
-          <h1 className="m-0 text-[22px] font-bold tracking-[-0.02em]">{t('signIn.title')}</h1>
-          <p className="mt-1 mb-6 text-text-2">{t(`signIn.subtitle.${audience}`)}</p>
-          <form noValidate onSubmit={submit} className="flex flex-col gap-4">
-            {error ? (
-              isProblem(error, 'AUTH_INVALID_CREDENTIALS') ? (
-                <Notice tone="critical" title={t('signIn.invalidCredentials.title')}>
-                  {t('signIn.invalidCredentials.detail')}
-                </Notice>
-              ) : isProblem(error) ? (
-                <ProblemNotice problem={error} />
-              ) : (
-                <Notice tone="critical" title={t('problem.UNKNOWN.title')} />
-              )
-            ) : null}
-            <TextField
-              label={t('signIn.email')}
-              type="email"
-              name="email"
-              autoComplete="username"
-              inputMode="email"
-              autoCapitalize="none"
-              spellCheck={false}
-              maxLength={320}
-              required
-              value={email}
-              error={fieldErrors.email}
-              onChange={(event) => {
-                setEmail(event.target.value);
-              }}
-            />
-            <TextField
-              ref={passwordInput}
-              label={t('signIn.password')}
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              maxLength={4096}
-              required
-              value={password}
-              error={fieldErrors.password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-              }}
-            />
-            <Button
-              type="submit"
-              variant="primary"
-              className="mt-2 w-full"
-              disabled={mutation.isPending}
-            >
-              {mutation.isPending ? (
-                <Spinner label={t('signIn.submitting')} className="text-white" />
-              ) : null}
-              {mutation.isPending ? t('signIn.submitting') : t('signIn.submit')}
-            </Button>
-          </form>
-        </div>
-        <div className="mt-5 flex justify-center">
-          <LocaleSelect />
-        </div>
-      </div>
-    </main>
+    <AuthLayout title={t('signIn.title')} subtitle={t(`signIn.subtitle.${audience}`)}>
+      <form noValidate onSubmit={submit} className="flex flex-col gap-4">
+        {error ? (
+          isProblem(error, 'AUTH_INVALID_CREDENTIALS') ? (
+            <Notice tone="critical" title={t('signIn.invalidCredentials.title')}>
+              {t('signIn.invalidCredentials.detail')}
+            </Notice>
+          ) : (
+            <FailureNotice error={error} />
+          )
+        ) : null}
+        <TextField
+          label={t('signIn.email')}
+          type="email"
+          name="email"
+          autoComplete="username"
+          inputMode="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          maxLength={320}
+          required
+          value={email}
+          error={fieldErrors.email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+          }}
+        />
+        <TextField
+          ref={passwordInput}
+          label={t('signIn.password')}
+          type="password"
+          name="password"
+          autoComplete="current-password"
+          maxLength={4096}
+          required
+          value={password}
+          error={fieldErrors.password}
+          onChange={(event) => {
+            setPassword(event.target.value);
+          }}
+        />
+        <Button
+          type="submit"
+          variant="primary"
+          className="mt-2 w-full"
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending ? (
+            <Spinner label={t('signIn.submitting')} className="text-white" />
+          ) : null}
+          {mutation.isPending ? t('signIn.submitting') : t('signIn.submit')}
+        </Button>
+      </form>
+      <p className="m-0 mt-4 text-center text-[13px]">
+        <Link to="/forgot-password" className="font-[550] text-accent-ink hover:underline">
+          {t('signIn.forgot')}
+        </Link>
+      </p>
+      <SsoButtons />
+    </AuthLayout>
   );
 }

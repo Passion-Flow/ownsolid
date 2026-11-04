@@ -8,7 +8,7 @@ Model/version/import state originates in migration 000006. Bytes and SQL must ag
 
 This is a large owner with distinct import, verified storage and derived-model areas. A future split should preserve one authority and the exact acceptance/retirement transaction; do not create parallel “base” and “derived” authorization systems just to reduce file count.
 
-Synchronize contracts/agent model catalogs and model-lifecycle references, [M06](../../../../../docs/milestones/m06-models), control/deployment consumers, [models frontend](../../../../../apps/web/packages/models), model-cache policy/examples and offline/image source manifests.
+Synchronize contracts/agent model catalogs and model-lifecycle references, [M06](../../../../../docs/milestones/m06-models), control/deployment consumers, [models frontend](../../../../../web/README.md), model-cache policy/examples and offline/image source manifests.
 
 Focused native check: go -C services/control test ./internal/modules/models. Actual import, empty-store identity, derived transfer and SQL tests have separate fixture requirements. Imported bytes do not establish inference/GPU performance.
 

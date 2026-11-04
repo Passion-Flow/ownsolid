@@ -13,7 +13,7 @@ must not produce a usable cached application view. See the
 [cumulative operation](../../../../../docs/milestones/m15-portal/cumulative-operation.md)
 and [current queue](../../../../../tools/quality/portal/README.md).
 
-When changing the projection, synchronize [HTTP contracts](../../../../../contracts/http), [applications frontend](../../../../../apps/web/packages/applications), workflow publication/conversation repositories and [M15 Portal contracts](../../../../../docs/milestones/m15-portal). Preserve both database dialects and caller-private history.
+When changing the projection, synchronize [HTTP contracts](../../../../../contracts/http), [applications frontend](../../../../../web/README.md), workflow publication/conversation repositories and [M15 Portal contracts](../../../../../docs/milestones/m15-portal). Preserve both database dialects and caller-private history.
 
 Focused native check: `go -C services/control test ./internal/modules/applications`. The local repository/Portal integration tests require their declared selected SQL fixture and build tags; package compilation alone does not verify current visibility or actual execution.
 

@@ -8,7 +8,7 @@ Never resolve authority from a client tenant ID or from a membership snapshot ob
 
 Workspace/member state starts in migration 000001; notes and subsequent Workspace changes use their owning migrations and explicit PostgreSQL/MySQL queries. Preserve revision conflicts, membership-removal behavior, no cross-Workspace disclosure and commit-unknown readback.
 
-Changes must synchronize [M02](../../../../../docs/milestones/m02-workspaces), [Workspace frontend](../../../../../apps/web/packages/workspaces), HTTP contracts, config policy/env mappings and dependent module scope tests.
+Changes must synchronize [M02](../../../../../docs/milestones/m02-workspaces), [Workspace frontend](../../../../../web/README.md), HTTP contracts, config policy/env mappings and dependent module scope tests.
 
 Focused native check: go -C services/control test ./internal/modules/workspaces. Real SQL mutation/reconciliation checks are retained in the repository integration tests, including [commit acknowledgements](commit_ack_repository_integration_test.go), and require their declared database fixture.
 

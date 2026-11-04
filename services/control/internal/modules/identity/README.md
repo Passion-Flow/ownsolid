@@ -12,7 +12,7 @@ Persistent identity state begins in PostgreSQL migration 000001, with selected M
 
 ## Related surfaces and checks
 
-Synchronize [account contract/runbooks](../../../../../docs/milestones/m01-account), [HTTP contracts](../../../../../contracts/http/v1), [identity frontend](../../../../../apps/web/packages/identity), [typed config](../../platform/config), mail/localization and schema changes. SSO session-source changes also require the [sso owner](../sso/README.md).
+Synchronize [account contract/runbooks](../../../../../docs/milestones/m01-account), [HTTP contracts](../../../../../contracts/http/v1), [identity frontend](../../../../../web/README.md), [typed config](../../platform/config), mail/localization and schema changes. SSO session-source changes also require the [sso owner](../sso/README.md).
 
 Focused native checks: go -C services/control test ./internal/modules/identity ./internal/modules/identity/http. Current SQL, cookie/origin, mail, SSO, audience isolation and commit-loss tests require their explicit fixtures/build tags. Native tests alone do not establish those paths.
 

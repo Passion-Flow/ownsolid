@@ -6,7 +6,7 @@ Use [service.go](service.go), document/base/generation paths for lifecycle; [pro
 
 Migration 000012 stores bases, generations, documents, source versions, attempts, chunks and mutation intents. Search checks current authority before encoding and rechecks the active generation afterward. PostgreSQL uses its vector query path; MySQL streams the full authorized active candidate set with bounded top-K memory and cosine scoring. The latter is not ANN and must not gain a hidden scan cap that silently changes results.
 
-Keep the typed Knowledge configuration, protected scratch paths, [knowledge contracts](../../../../../contracts/knowledge), [frontend](../../../../../apps/web/packages/knowledge), [M12](../../../../../docs/milestones/m12-knowledge) and [SQL/encoder/browser harnesses](../../../../../tools/quality/knowledge) synchronized. A future split should retain generation/publication authority in this owner and isolate mechanical encoding transport, not move authorization into Python.
+Keep the typed Knowledge configuration, protected scratch paths, [knowledge contracts](../../../../../contracts/knowledge), [frontend](../../../../../web/README.md), [M12](../../../../../docs/milestones/m12-knowledge) and [SQL/encoder/browser harnesses](../../../../../tools/quality/knowledge) synchronized. A future split should retain generation/publication authority in this owner and isolate mechanical encoding transport, not move authorization into Python.
 
 Focused native check: `go -C services/control test ./internal/modules/knowledge`. Actual selected-SQL generation races, encoder failure/cleanup and browser answer paths require their own admitted fixtures and source-bound receipts; a model file or generated vector is not accepted ingestion.
 

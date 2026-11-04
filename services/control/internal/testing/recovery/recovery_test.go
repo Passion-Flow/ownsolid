@@ -171,7 +171,7 @@ func TestM01ActualProcessRestartAndLogicalRestore(t *testing.T) {
 	_, port, _ := net.SplitHostPort(address)
 	origin := "https://127.0.0.1:" + port
 	conf := map[string]any{
-		"server":   map[string]any{"listen_address": address, "portal_origin": origin, "admin_origin": "https://localhost:" + port, "tls_certificate_file": certFile, "tls_private_key_file": keyFile, "portal_assets": filepath.Join(root, "apps/web/apps/portal/dist"), "admin_assets": filepath.Join(root, "apps/web/apps/admin/dist")},
+		"server":   map[string]any{"listen_address": address, "portal_origin": origin, "admin_origin": "https://localhost:" + port, "tls_certificate_file": certFile, "tls_private_key_file": keyFile, "portal_assets": filepath.Join(root, "web/apps/portal/dist"), "admin_assets": filepath.Join(root, "web/apps/console/dist")},
 		"database": map[string]any{"dsn_file": dsnFile, "max_open_connections": 10, "max_idle_connections": 1, "statement_timeout_seconds": 5},
 		"security": map[string]any{"auth_hmac_key_file": hmacFile, "mail_keyring_file": keyringFile, "password_blocklist_file": blocklist},
 		"smtp":     map[string]any{"host": "127.0.0.1", "port": 1, "from_address": "platform@example.invalid", "tls_mode": "starttls_required", "connect_timeout_seconds": 1, "operation_timeout_seconds": 2},

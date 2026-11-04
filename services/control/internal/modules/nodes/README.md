@@ -25,7 +25,7 @@ reusing the name must not reuse the removed node's identity or credential. The
 paired recovery tests attach native domain observers, but do not establish a
 physical workload stop or systemd qualification.
 
-Synchronize [contracts/agent](../../../../../contracts/agent), [agent](../../../../agent/README.md), [M03](../../../../../docs/milestones/m03-nodes), node policy/examples and deployment service profiles, [nodes frontend](../../../../../apps/web/packages/nodes), SQL schemas and workload result validators.
+Synchronize [contracts/agent](../../../../../contracts/agent), [agent](../../../../agent/README.md), [M03](../../../../../docs/milestones/m03-nodes), node policy/examples and deployment service profiles, [nodes frontend](../../../../../web/README.md), SQL schemas and workload result validators.
 
 Focused native check: go -C services/control test ./internal/modules/nodes. Enrollment races, current lease/result authority and selected vendor persistence need real SQL tests; daemon/profile and hardware execution are distinct gates.
 

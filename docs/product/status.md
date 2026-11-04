@@ -10,7 +10,7 @@ today and what is known to fail.
 | Cell and site scope on tables, API paths and shared keys | Yes, PostgreSQL only; identity fixed to `default` until ARC-202 | See the single-node install row | n/a | MySQL and Dameng chains lack the columns (CMP-201, CMP-202) |
 | Agent session protocol v1: gRPC stream on HTTP/2 for heartbeats and claims, HTTPS long-poll fallback (ADR 0007) | Yes; stream gateway runs in the control process, task wake is per process until ARC-011 | Yes: a real agent enrolled into the offline single-node install, ran tasks over the stream and reconnected after a control restart, Docker-in-Docker on `ownsolid-cpu`. The fallback ran against the real handler and PostgreSQL on the Mac | n/a | None |
 | Single-node install (`ownsolid-install`, control image, Compose) | Yes, with the web console and portal from `web/` | Installed, signed in, restarted and reinstalled with no network route, Docker-in-Docker on `ownsolid-cpu`; the image's console and portal load with every asset | No | None |
-| Web console and portal: sign-in, sign-out, session, failure states, frame with navigation, workspace switcher, command menu, notifications and user menu, light and dark themes, density, bundled fonts, English and Simplified Chinese | Yes; other pages land with their roadmap items | Real Chromium signed in and out of both entrances of an installation on `ownsolid-cpu`, through its TLS, cookies, CSRF checks and Content-Security-Policy | No | None |
+| Web console and portal: sign-in, sign-out, password reset, registration by invitation, single sign-on, session, failure states, frame with navigation, workspace switcher, command menu, notifications and user menu, light and dark themes, density, bundled fonts, English and Simplified Chinese | Yes; other pages land with their roadmap items | Real Chromium signed in and out of both entrances of an installation on `ownsolid-cpu`, through its TLS, cookies, CSRF checks and Content-Security-Policy | No | None |
 | Telemetry stores (VictoriaMetrics, VictoriaLogs; ADR 0009, 0012) | Partly: both installed, component logs stored in the log store. Process metrics are not pushed to the metrics store yet, and the old log table is still in the schema, unused (OBS-002) | Stores installed, stopped and repaired by the single-node install. Log client tested against the real store. A real agent writing component logs through to the store has not run: the test node has no systemd | n/a | OBS-002 is open |
 | Zero-egress end-to-end harness: every outbound packet, DNS included, recorded and refused (ADR 0008) | Yes | Yes: the single-node install run recorded no outbound attempt besides its own probes, from the host and from the control container, Docker-in-Docker on `ownsolid-cpu` | n/a | None |
 | Task delivery semantics: per-node sequences, acknowledgement before execution, release of undelivered leases without spending an attempt, cursor-based resync limited per node and per fleet (ADR 0011) | Yes, PostgreSQL only | Yes: a real agent in the offline single-node install acknowledged every task, kept its cursor, and resynced after its cursor file was deleted, Docker-in-Docker on `ownsolid-cpu`. Release, redelivery, delivery bound, resync rate limits, the race between an acknowledgement and a redelivery, and the upgrade of existing tasks ran against PostgreSQL 18.6 on the Mac, including training and model preparation leases and their stop-authority triggers | n/a | MySQL and Dameng chains lack the columns (CMP-201, CMP-202). Model preparation ran with synthetic command envelopes; the scenarios that claim through the full preparation service need a retained CPU training output and have not run |
@@ -34,6 +34,13 @@ Database integration tests on the Mac (PostgreSQL 18.6, `go test -p 1`, with and
 data-processing Python and component assets are not installed there. The ARC-004 change
 was checked against that baseline and adds no failure. ARC-005 was checked the same way
 on the packages it touches (nodes, identity HTTP, machine composition, agent tests).
+
+`deploy/images/control/assets/index.html`, the old placeholder page, is unused and awaits
+removal by the owner: no image build copies it.
+
+The inherited browser suite in `services/control/internal/testing/browser` cannot run: its
+`tests/acceptance` scripts did not move to this repository (UX-117). It skips unless
+`PROJECT_ONE_BROWSER=1`, and it is not part of these runs.
 
 ## Not supported
 

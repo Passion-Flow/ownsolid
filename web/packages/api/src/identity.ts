@@ -51,3 +51,35 @@ export async function signOut(options?: RequestOptions): Promise<void> {
     resetCsrf();
   }
 }
+
+/** The address and language an invitation was issued for. */
+export type InvitationDetails = Success<identityContract.operations['validateInvitation']>;
+
+/** What {@link register} sends. */
+export type Registration = Schemas['RegisterRequest'];
+
+/** Checks an invitation link. Fails with `TOKEN_UNUSABLE` when it expired or was used. */
+export function validateInvitation(
+  token: string,
+  options?: RequestOptions,
+): Promise<InvitationDetails> {
+  return client.post('/api/v1/auth/invitation-validations', { ...options, body: { token } });
+}
+
+/** Creates the invited account. It then signs in like any other. */
+export async function register(registration: Registration): Promise<void> {
+  await client.post('/api/v1/auth/register', { body: registration });
+}
+
+/**
+ * Asks for a password reset email. The server answers the same whether or not the
+ * address has an account, so this call cannot be used to find accounts.
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+  await client.post('/api/v1/auth/password-reset-requests', { body: { email } });
+}
+
+/** Sets a new password with the token from a reset email. */
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await client.post('/api/v1/auth/password-resets', { body: { token, password } });
+}

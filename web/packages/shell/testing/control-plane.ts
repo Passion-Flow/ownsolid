@@ -53,6 +53,9 @@ const secondWorkspace = {
   is_default: false,
 };
 
+/** The token of a valid emailed link. */
+export const linkToken = 'a'.repeat(43);
+
 /** A notification the mock lists while it is unread. */
 export const failedRun = {
   id: '6f1c7a1e-0000-4000-8000-000000000005',
@@ -87,6 +90,14 @@ export interface ControlPlane {
   /** Fails the workspace list with this problem while set. */
   workspacesProblem: ScriptedProblem | null;
   notifications: (typeof failedRun)[];
+  /** Single sign-on providers the sign-in page offers. */
+  ssoConnectors: { id: string; name: string; provider: string }[];
+  /** Where starting single sign-on sends the browser. */
+  ssoAddress: string;
+  /** Failure of the next password reset or registration, instead of succeeding. */
+  nextAccountWrite: ScriptedProblem | null;
+  /** The password the last reset or registration set. */
+  lastPassword: string | null;
 }
 
 function problem(route: Route, { status, code, headers }: ScriptedProblem): Promise<void> {
@@ -122,6 +133,10 @@ export async function mockControlPlane(
     notificationsProblem: null,
     workspacesProblem: null,
     notifications: [],
+    ssoConnectors: [],
+    ssoAddress: '',
+    nextAccountWrite: null,
+    lastPassword: null,
   };
   const identity = () => ({ user, workspace, audience: state.audience });
 
@@ -164,6 +179,44 @@ export async function mockControlPlane(
     state.signedIn = false;
     return route.fulfill({ status: 204 });
   });
+  const accountWrite = (route: Route, answer: unknown) => {
+    if (state.nextAccountWrite) {
+      const scripted = state.nextAccountWrite;
+      state.nextAccountWrite = null;
+      return problem(route, scripted);
+    }
+    const body = route.request().postDataJSON() as { token?: string; password?: string };
+    if (body.token !== linkToken) return problem(route, { status: 400, code: 'TOKEN_UNUSABLE' });
+    state.lastPassword = body.password ?? null;
+    return data(route, answer);
+  };
+  await page.route('**/api/v1/auth/password-reset-requests', (route) =>
+    data(route, { accepted: true }),
+  );
+  await page.route('**/api/v1/auth/password-resets', (route) =>
+    accountWrite(route, { reset: true }),
+  );
+  await page.route('**/api/v1/auth/register', (route) => accountWrite(route, { registered: true }));
+  await page.route('**/api/v1/auth/invitation-validations', (route) => {
+    const body = route.request().postDataJSON() as { token?: string };
+    return body.token === linkToken
+      ? data(route, {
+          email: account.email,
+          locale: 'en',
+          expires_at: '2026-11-05T00:00:00Z',
+        })
+      : problem(route, { status: 400, code: 'TOKEN_UNUSABLE' });
+  });
+  await page.route('**/api/v1/auth/sso/connectors', (route) =>
+    data(route, { items: state.ssoConnectors }),
+  );
+  await page.route('**/api/v1/auth/sso/*/starts', (route) =>
+    data(route, {
+      authorization_url: state.ssoAddress,
+      expires_at: '2026-11-05T00:00:00Z',
+    }),
+  );
+
   // Each origin serves only its own workspace list, as the control plane does.
   const workspaces = (owner: ControlPlane['audience']) => (route: Route) => {
     if (state.audience !== owner)

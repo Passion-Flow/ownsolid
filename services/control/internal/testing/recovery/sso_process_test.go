@@ -63,7 +63,7 @@ func verifySSONativeProcessRestarts(t *testing.T, ctx context.Context, accounts 
 		t.Fatal("explicit source root required")
 	}
 	configuration := map[string]any{
-		"server":   map[string]any{"listen_address": address, "admin_origin": origin, "portal_origin": "https://localhost:" + port, "tls_certificate_file": certificate, "tls_private_key_file": privateKey, "portal_assets": filepath.Join(repo, "apps/web/apps/portal/dist"), "admin_assets": filepath.Join(repo, "apps/web/apps/admin/dist")},
+		"server":   map[string]any{"listen_address": address, "admin_origin": origin, "portal_origin": "https://localhost:" + port, "tls_certificate_file": certificate, "tls_private_key_file": privateKey, "portal_assets": filepath.Join(repo, "web/apps/portal/dist"), "admin_assets": filepath.Join(repo, "web/apps/console/dist")},
 		"database": map[string]any{"dsn_file": write("native-sso-dsn", []byte(dsn.String())), "max_open_connections": 8, "max_idle_connections": 1, "statement_timeout_seconds": 5},
 		"security": map[string]any{"auth_hmac_key_file": write("native-auth-hmac", accounts.HMACKey), "mail_keyring_file": write("native-mail-ring.json", mailKeys), "password_blocklist_file": write("native-blocklist", []byte("passwordpassword\n"))},
 		"smtp":     map[string]any{"host": "127.0.0.1", "port": 1, "from_address": "platform@example.invalid", "tls_mode": "starttls_required", "connect_timeout_seconds": 1, "operation_timeout_seconds": 2},

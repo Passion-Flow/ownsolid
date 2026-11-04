@@ -6,7 +6,7 @@ This module owns durable signed platform-license history and current admission. 
 
 Migration 000017 stores license state/artifacts. Import binds expected current license and writes its audit in the same selected transaction. Expiry, grace, missing/invalid history and commit-unknown must preserve existing admission/reconciliation behavior. Diagnostic or recovery exceptions remain explicit; adding a new feature must not introduce a blanket bypass.
 
-Synchronize [contracts/licensing](../../../../../contracts/licensing), [M19](../../../../../docs/milestones/m19-license), protected config/schema and deployment inputs, [licensing frontend](../../../../../apps/web/packages/licensing), offline release trust and dependent owner admission tests.
+Synchronize [contracts/licensing](../../../../../contracts/licensing), [M19](../../../../../docs/milestones/m19-license), protected config/schema and deployment inputs, [licensing frontend](../../../../../web/README.md), offline release trust and dependent owner admission tests.
 
 Focused native check: go -C services/control test ./internal/modules/licensing. The real repository safety/commit-ack tests require a selected isolated SQL fixture; source verification does not establish a customer license installation.
 

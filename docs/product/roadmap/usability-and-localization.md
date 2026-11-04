@@ -4,7 +4,7 @@ The new console and portal, built to the design system, and the localization pip
 
 Reviewed 2026-11-04 against current React, TanStack, Vite, Tailwind CSS and Playwright
 releases and comparable consoles. The stack in ADR 0002 stands; the pins that differ from
-the newest releases are in ADR 0010. The review added UX-113 to UX-116.
+the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 
 - Owns: `web/`, `docs/development/design-system.md`.
 - Depends on: architecture-and-scale for API shapes; every module for its pages.
@@ -17,6 +17,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-116.
 - [x] UX-003 Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427 - Evidence: ff9561a; real-browser run on `ownsolid-cpu`, 2026-11-04
 - [x] UX-004 Typed API client generated from `api/openapi` (P0) - Catalog: F540 - Evidence: 2bfea74; real-browser run on `ownsolid-cpu`, 2026-11-04
 - [ ] UX-005 Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0)
+  - `apps/web` lived in the archived `project-one` repository and never entered this one, so this item removes what still pointed at it. The pages that emails and sign-in providers link to moved here: registration by invitation, password reset and the single sign-on return. Every other old page moves with its module's P1 item.
 
 ## P1 Enterprise release
 
@@ -36,6 +37,10 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-116.
 - [ ] UX-114 Shareable links: filters, sort order and the open drawer live in the URL (P1)
 - [ ] UX-115 Route-level code splitting and a bundle size budget enforced in CI (P1)
 - [ ] UX-116 Automated accessibility checks in the browser tests of every page (P1)
+- [ ] UX-117 Replace the inherited browser suite in `services/control/internal/testing/browser` with Playwright flows as pages land; its `tests/acceptance` scripts did not move here, so it cannot run (P1)
+- [ ] UX-118 Theme and density follow the user across browsers through `/api/v1/preferences` (P1)
+- [ ] UX-119 Account page: profile, password change and linked sign-in providers (P1)
+- [ ] UX-120 Mail delivery status for administrators, so a failed invitation or reset email can be seen and resent (P1)
 
 ## P2 Fleet operations
 

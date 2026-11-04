@@ -2,7 +2,13 @@
 // and the offline guarantee. Each application's e2e/ directory runs them.
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import { expect, test, type Page } from '@playwright/test';
-import { account, failedRun, mockControlPlane, type ControlPlane } from './control-plane.ts';
+import {
+  account,
+  failedRun,
+  linkToken,
+  mockControlPlane,
+  type ControlPlane,
+} from './control-plane.ts';
 
 /** The wording that differs between the applications. */
 export interface SessionFlowOptions {
@@ -25,9 +31,11 @@ async function signIn(page: Page, password = account.password): Promise<void> {
 export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
   let control: ControlPlane;
   const failures: string[] = [];
+  const allowOutside: string[] = [];
 
   test.beforeEach(async ({ page, baseURL }) => {
     failures.length = 0;
+    allowOutside.length = 0;
     control = await mockControlPlane(page, audience);
     page.on('console', (message) => {
       if (message.type() === 'error' && message.text().includes('Content Security Policy')) {
@@ -35,7 +43,9 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
       }
     });
     page.on('request', (request) => {
-      if (!request.url().startsWith(baseURL ?? '') && !request.url().startsWith('data:')) {
+      const url = request.url();
+      const expected = [baseURL ?? '', 'data:', ...allowOutside];
+      if (!expected.some((prefix) => url.startsWith(prefix))) {
         failures.push(`outside request: ${request.url()}`);
       }
     });
@@ -282,6 +292,82 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await expect(page.getByRole('button', { name: chinese['user.menu'] })).toBeVisible();
   });
 
+  test('asks for a reset link without revealing whether the account exists', async ({ page }) => {
+    await page.goto('/sign-in');
+    await page.getByRole('link', { name: 'Forgot your password?' }).click();
+    await page.getByRole('button', { name: 'Send the reset link' }).click();
+    await expect(page.getByText('Enter your email address.')).toBeVisible();
+    await page.getByLabel('Email').fill(account.email);
+    await page.getByRole('button', { name: 'Send the reset link' }).click();
+    await expect(page.getByText('If this address has an account')).toBeVisible();
+    await page.getByRole('link', { name: 'Back to sign-in' }).click();
+    await expect(page).toHaveURL(/\/sign-in$/);
+  });
+
+  test('sets a new password from an emailed link', async ({ page }) => {
+    await page.goto(`/reset-password#token=${linkToken}`);
+    await expect(page.getByLabel('New password')).toBeVisible();
+    // The token must not stay in the address or the history.
+    await expect.poll(() => page.url()).not.toContain('token');
+    await page.getByLabel('New password').fill('a sufficiently long password');
+    await page.getByLabel('Confirm the password').fill('a different password');
+    await page.getByRole('button', { name: 'Set the new password' }).click();
+    await expect(page.getByText('The two passwords do not match.')).toBeVisible();
+    control.nextAccountWrite = { status: 422, code: 'PASSWORD_BLOCKED' };
+    await page.getByLabel('Confirm the password').fill('a sufficiently long password');
+    await page.getByRole('button', { name: 'Set the new password' }).click();
+    await expect(page.getByRole('alert')).toContainText('This password is too common');
+    await page.getByRole('button', { name: 'Set the new password' }).click();
+    await expect(page.getByText('Your password was changed')).toBeVisible();
+    expect(control.lastPassword).toBe('a sufficiently long password');
+  });
+
+  test('explains a reset link that cannot be used', async ({ page }) => {
+    await page.goto('/reset-password');
+    await expect(page.getByRole('alert')).toContainText('This reset link cannot be used');
+    await page.goto(`/reset-password#token=${'b'.repeat(43)}`);
+    await page.getByLabel('New password').fill('a sufficiently long password');
+    await page.getByLabel('Confirm the password').fill('a sufficiently long password');
+    await page.getByRole('button', { name: 'Set the new password' }).click();
+    await expect(page.getByRole('alert')).toContainText('This reset link cannot be used');
+    await page.getByRole('link', { name: 'Request a new link' }).click();
+    await expect(page).toHaveURL(/\/forgot-password$/);
+  });
+
+  test('offers single sign-on and sends the browser to the provider', async ({ page }) => {
+    control.ssoConnectors = [
+      { id: '6f1c7a1e-0000-4000-8000-000000000008', name: 'Company Gitea', provider: 'gitea' },
+    ];
+    await page.route('**/idp.example/**', (route) =>
+      route.fulfill({ contentType: 'text/html', body: 'provider' }),
+    );
+    control.ssoAddress = 'https://idp.example/authorize';
+    allowOutside.push('https://idp.example/');
+    await page.goto('/sign-in');
+    await page.getByRole('button', { name: 'Continue with Company Gitea' }).click();
+    await expect(page).toHaveURL('https://idp.example/authorize');
+  });
+
+  test('finishes single sign-on at the start page', async ({ page }) => {
+    control.signedIn = true;
+    await page.goto('/login/sso-result?result=authenticated');
+    await expect(page.getByRole('heading', { name: 'Welcome, Ada Lovelace' })).toBeVisible();
+    expect(new URL(page.url()).pathname).toBe('/');
+  });
+
+  test('explains a failed single sign-on', async ({ page }) => {
+    await page.goto('/login/sso-result?error=SSO_PROVIDER_DENIED');
+    await expect(page.getByRole('alert')).toContainText('The provider refused the sign-in');
+    await page.getByRole('link', { name: 'Back to sign-in' }).click();
+    await expect(page).toHaveURL(/\/sign-in$/);
+  });
+
+  test('never shows text from the address on the result page', async ({ page }) => {
+    await page.goto('/login/sso-result?error=%3Cb%3Einjected%3C%2Fb%3E');
+    await expect(page.getByRole('alert')).toContainText('Single sign-on could not finish');
+    await expect(page.getByRole('alert')).not.toContainText('injected');
+  });
+
   test('switches to Chinese and remembers the choice', async ({ page }) => {
     await page.goto('/sign-in');
     await page.getByLabel('Language').selectOption('zh-CN');
@@ -289,5 +375,45 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
     await page.reload();
     await expect(page.getByRole('heading', { name: chinese['signIn.title'] })).toBeVisible();
+  });
+}
+
+/** The invitation flows: the portal creates accounts, and the console has no such page. */
+export function registrationFlows(audience: ControlPlane['audience']): void {
+  test.describe('registration', () => {
+    test.beforeEach(async ({ page }) => {
+      await mockControlPlane(page, audience);
+    });
+
+    if (audience === 'admin') {
+      test('has no registration page', async ({ page }) => {
+        await page.goto(`/register#token=${linkToken}`);
+        await expect(page.getByText('Page not found')).toBeVisible();
+      });
+      return;
+    }
+
+    test('creates an account from an invitation', async ({ page }) => {
+      await page.goto(`/register#token=${linkToken}`);
+      await expect(page.getByLabel('Email')).toHaveValue(account.email);
+      await expect(page.getByLabel('Email')).not.toBeEditable();
+      await expect.poll(() => page.url()).not.toContain('token');
+      await page.getByRole('button', { name: 'Create the account' }).click();
+      await expect(page.getByText('Enter your name.')).toBeVisible();
+      await page.getByLabel('Your name').fill('Ada Lovelace');
+      await page.getByLabel('New password').fill('a sufficiently long password');
+      await page.getByLabel('Confirm the password').fill('a sufficiently long password');
+      await page.getByRole('button', { name: 'Create the account' }).click();
+      await expect(page.getByText('Your account is ready')).toBeVisible();
+      await page.getByRole('link', { name: 'Sign in' }).click();
+      await expect(page).toHaveURL(/\/sign-in$/);
+    });
+
+    test('explains an invitation that cannot be used', async ({ page }) => {
+      await page.goto(`/register#token=${'b'.repeat(43)}`);
+      await expect(page.getByRole('alert')).toContainText('This invitation cannot be used');
+      await page.goto('/register');
+      await expect(page.getByRole('alert')).toContainText('This invitation cannot be used');
+    });
   });
 }

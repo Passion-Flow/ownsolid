@@ -70,7 +70,7 @@ upload may reconcile them after the old lease expires; cancellation stays final.
 
 The module is large because import/draft/publication/storage have different state boundaries. If separated later, preserve one version authority and shared transaction/source binding; do not unify all stages into a generic job-success flag.
 
-Synchronize [contracts/datasets](../../../../../contracts/datasets), [data runtime](../../../../../runtimes/data-processing/README.md), training/modelpreparations consumers, [dataset frontend](../../../../../apps/web/packages/datasets), config/examples/control dataset policy, control images and [M08](../../../../../docs/milestones/m08-datasets).
+Synchronize [contracts/datasets](../../../../../contracts/datasets), [data runtime](../../../../../runtimes/data-processing/README.md), training/modelpreparations consumers, [dataset frontend](../../../../../web/README.md), config/examples/control dataset policy, control images and [M08](../../../../../docs/milestones/m08-datasets).
 
 Focused package check: go -C services/control test ./internal/modules/datasets. The processor harness and real selected-SQL publication/retirement/worker tests are separate; a successful JSONL parse is not a published usable dataset.
 
