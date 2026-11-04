@@ -11,7 +11,7 @@ fully offline.
 ## P0 Foundation
 
 - [x] OBS-001 Select the time-series and log stores by license, offline packaging and single-binary operation (P0) - Evidence: commit e11ba81 (ADR 0009)
-- [ ] OBS-002 Telemetry and logs separated from the control-plane database (P0)
+- [x] OBS-002 Telemetry and logs separated from the control-plane database (P0) - Evidence: commits f329a1a, 32df90d, 33061e5 (ADR 0012)
 
 ## P1 Enterprise release
 
