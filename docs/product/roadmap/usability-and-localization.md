@@ -16,7 +16,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [x] UX-002 Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0) - Evidence: d12d0ff; real-browser run on `ownsolid-cpu`, 2026-11-04
 - [x] UX-003 Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427 - Evidence: ff9561a; real-browser run on `ownsolid-cpu`, 2026-11-04
 - [x] UX-004 Typed API client generated from `api/openapi` (P0) - Catalog: F540 - Evidence: 2bfea74; real-browser run on `ownsolid-cpu`, 2026-11-04
-- [ ] UX-005 Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0)
+- [x] UX-005 Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0) - Evidence: 3eed593; real-browser run and zero-egress install on `ownsolid-cpu`, 2026-11-04
   - `apps/web` lived in the archived `project-one` repository and never entered this one, so this item removes what still pointed at it. The pages that emails and sign-in providers link to moved here: registration by invitation, password reset and the single sign-on return. Every other old page moves with its module's P1 item.
 
 ## P1 Enterprise release
