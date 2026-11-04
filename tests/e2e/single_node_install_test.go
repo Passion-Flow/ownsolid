@@ -404,13 +404,13 @@ func TestSingleNodeInstall(t *testing.T) {
 		script := `import json,sys,time,urllib.parse,urllib.request as u
 base="http://172.31.254.4:9428"
 line=json.dumps({"_msg":"e2e-marker","tenant_id":"e2e","workspace_id":"e2e","node_id":"e2e","component":"e2e"}).encode()+b"\n"
-u.urlopen(u.Request(base+"/insert/jsonline?_stream_fields=tenant_id,component",data=line),timeout=5)
+u.urlopen(u.Request(base+"/insert/jsonline?_stream_fields=tenant_id,component",data=line,headers={"Content-Type":"application/stream+json"}),timeout=5)
 form=urllib.parse.urlencode({"query":'{tenant_id="e2e"} e2e-marker'}).encode()
 for _ in range(30):
     if b"e2e-marker" in u.urlopen(u.Request(base+"/select/logsql/query",data=form),timeout=5).read():
         sys.exit(0)
     time.sleep(1)
-sys.exit(1)`
+sys.exit("the log store accepted the record but never returned it")`
 		if output, err := e.compose(t, "exec", "--no-TTY", "control", "python3", "-c", script); err != nil {
 			t.Fatalf("%v %s", err, output)
 		}

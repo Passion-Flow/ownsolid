@@ -110,6 +110,8 @@ func (c *Client) Insert(ctx context.Context, r Record) error {
 	if e != nil {
 		return fmt.Errorf("build telemetry request: %w", e)
 	}
+	// A form content type makes the store read the body as a form: it answers 200 and
+	// stores nothing, so this header decides whether the record is kept.
 	request.Header.Set("Content-Type", "application/stream+json")
 	return c.exchange(request, nil)
 }
