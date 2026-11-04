@@ -4,6 +4,11 @@ How ownsolid looks and behaves. The stack and visual decisions are recorded in
 [ADR 0002](../decisions/0002-frontend-stack.md); this guide is the working standard
 for every page in `web/apps/console` and `web/apps/portal`.
 
+The owner approved the [UI prototype](design-prototype/index.html) on 2026-11-04; open
+it in a browser (it runs offline) and match its look and layout. Ease of use is a core
+product value. The owner rejected a Claude-like palette, serif headings and playful or
+cartoon icons; keep the warm neutral, teal and Figtree direction below.
+
 ## Tokens
 
 | Token | Light | Dark |

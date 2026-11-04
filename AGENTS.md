@@ -47,7 +47,8 @@ applications, an application catalog, identity, permissions and audit, with Admi
 - **No built-in knowledge base.** Knowledge capabilities come from DeepParser,
   integrated as a catalog application that uses ownsolid models, identity, status
   and logs. Do not build document parsing, chunking, vector storage or knowledge
-  management features.
+  management features, and do not present knowledge as an ownsolid capability:
+  DeepParser is a partner's product.
 - **Whole-platform license.** No paid feature modules or tiers. License issuance
   lives in the separate `ownsolid-entitlement` repository; this repository only
   verifies licenses and never contains signing keys or signing code.
@@ -58,6 +59,15 @@ Make every capability genuinely usable through one complete path before adding
 variants. Example: node management ships Linux amd64 first; arm64, other operating
 systems and other accelerators come later. Prefer finishing a usable feature over
 adding new verification layers, receipts or ledgers.
+
+- **Scope only grows.** Never drop, merge away or defer a roadmap capability to save
+  time; the owner may add more. There is no deadline: keep the pace the quality bar
+  allows.
+- **Think about the whole product.** The owner names examples, not the full list.
+  When a capability that a leading product in this space would have is missing, add
+  it to the roadmap with the next free ID.
+- **Product only.** Company, sales, pricing and partner matters belong to the owner
+  and stay out of this repository.
 
 ## 3. Definition of done
 
@@ -215,6 +225,8 @@ are in Chinese.
   Parallel work uses separate worktrees with explicit path ownership.
 - Commit each coherent change. Review the diff first and stage explicit paths;
   never `git add .` or `git add -A`. Check for secrets and large files.
+- Another session may be working in the same checkout. Leave changes you did not make
+  untouched and uncommitted; commit only your own paths.
 - Commit messages are English, imperative, and state what was verified.
 - Push at meaningful stages with a fast-forward update. Never force-push or rewrite history.
 - Models, datasets, databases, dependencies and build output never enter Git.
