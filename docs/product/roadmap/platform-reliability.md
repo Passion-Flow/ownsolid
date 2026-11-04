@@ -1,5 +1,7 @@
 # Platform reliability
 
+Module reviewed: 2026-11-04.
+
 ownsolid keeping itself running: high availability, backup and recovery, disaster
 recovery and support tooling.
 
@@ -20,6 +22,10 @@ recovery and support tooling.
 - [ ] REL-105 Diagnostic bundle: redacted logs, configuration and state for support (P1) - Catalog: F647
 - [ ] REL-106 Long-running tasks idempotent, retryable and resumable after any component restart (P1) - Catalog: F530
 - [ ] REL-107 Self-monitoring of control-plane components with alerts (P1)
+- [ ] REL-108 Scheduled backups with retention, run by ownsolid (P1)
+- [ ] REL-109 Point-in-time recovery from a base backup and archived WAL, including incremental base backups (P1)
+- [ ] REL-110 Encrypted backups with the key held outside the archive (P1)
+- [ ] REL-111 Backup history, status and failure alerts in the console (P1)
 
 ## P2 Fleet operations
 
