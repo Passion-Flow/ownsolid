@@ -6,6 +6,8 @@
 
 The run loop sends heartbeats and claims through one [client session](../client/README.md) per process, the session stream with an HTTPS long-poll fallback ([ADR 0007](../../../../docs/decisions/0007-agent-session-protocol.md)). A claim waits up to one interval for work, and that wait counts toward the interval, so an idle agent reports once per interval and a busy one starts its next cycle at once. The loop logs `agent_session_transport` when the transport changes. Before it runs a lease, the cycle saves the task cursor and acknowledges the lease, and it runs nothing control did not confirm; a lease older than the cursor is refused, and a resync recovers local work and adopts control's cursor ([ADR 0011](../../../../docs/decisions/0011-task-delivery-semantics.md)).
 
+[pacing.go](pacing.go) decides the wait between cycles from the pacing control last sent: what is left of a jittered interval after a success, a full-jitter backoff after a failure ([ADR 0013](../../../../docs/decisions/0013-agent-pacing.md)).
+
 Runtime borrows [state](../state/README.md) for identity and process locking, [settings](../settings/README.md) for bounded policy, and [client](../client/README.md) for control transport. Managers own their local journals and resource checks. A failed enrollment acknowledgement or lost lease must not erase identity/workload evidence or silently create a replacement attempt.
 
 [component_recovery.go](component_recovery.go) invokes the same component manager

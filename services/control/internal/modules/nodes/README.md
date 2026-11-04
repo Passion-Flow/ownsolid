@@ -6,9 +6,11 @@ Start at [enrollment.go](enrollment.go), [join_writes.go](join_writes.go), [task
 
 Migration 000003 stores node/join-token/task state. Each operation retains installed tenant/Workspace/node/task/attempt identity, current profile and credential state. A node observation is not successful work; stale lease, revoked credentials, heartbeat loss or unacknowledged result requires the existing reconciliation/fencing behavior.
 
-[claim_wait.go](claim_wait.go) lets a claim wait for up to one heartbeat interval: it watches the node, claims, and claims again when a task insert for that node announces itself. The agent session stream and the HTTPS long-poll both use it ([ADR 0007](../../../../../docs/decisions/0007-agent-session-protocol.md)); [http/session_backend.go](http/session_backend.go) gives the stream gateway the same rate limits and node calls as the HTTPS paths. The wake is local to this process until ARC-011.
+[claim_wait.go](claim_wait.go) lets a claim wait for up to the longest heartbeat interval: it watches the node, claims, and claims again when a task insert for that node announces itself. The agent session stream and the HTTPS long-poll both use it ([ADR 0007](../../../../../docs/decisions/0007-agent-session-protocol.md)); [http/session_backend.go](http/session_backend.go) gives the stream gateway the same rate limits and node calls as the HTTPS paths. The wake is local to this process until ARC-011.
 
 [task_delivery.go](task_delivery.go) owns task delivery ([ADR 0011](../../../../../docs/decisions/0011-task-delivery-semantics.md)): leases carry the per-node sequence the insert trigger assigns, `Acknowledge` records that the agent took a lease, every claim first releases a lease that was never acknowledged without spending an attempt, and a claim whose cursor disagrees with the node's record is answered with a resync, bounded per node and across the fleet.
+
+[pacing.go](pacing.go) owns the pacing of this cell's agents ([ADR 0013](../../../../../docs/decisions/0013-agent-pacing.md)): the row, the administrator API, and the per-process copy heartbeat replies read.
 
 Task-event publication is recorded through the same-transaction hook; delivery of a broker message does not itself claim a task. Preserve ownership and lock ordering when extending cross-domain callbacks.
 

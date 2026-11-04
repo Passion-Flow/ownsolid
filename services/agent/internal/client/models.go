@@ -14,7 +14,12 @@ import (
 	"strings"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 )
+
+// modelRangeAttempts bounds how often one range is requested while control answers 503.
+// The task is not retried on top of this, so these attempts are the only retry layer.
+const modelRangeAttempts = 3
 
 var modelTaskPath = regexp.MustCompile(`^/agent/v1/nodes/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/tasks/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/model-files$`)
 
@@ -61,7 +66,10 @@ func (c *Client) downloadModelFile(ctx context.Context, path, lease string, appr
 		}
 		input := wire.ModelFileRequest{LeaseToken: lease, File: approved.Path, Offset: offset, Length: min(wire.ModelTransferChunkBytes, approved.SizeBytes-offset)}
 		var content []byte
-		for attempt := 0; attempt < 3; attempt++ {
+		for attempt := 0; attempt < modelRangeAttempts; attempt++ {
+			if attempt > 0 && !sleep(ctx, FullJitter(settings.Seconds(c.Policy().BackoffInitialSeconds), settings.Seconds(c.Policy().BackoffMaxSeconds), attempt-1)) {
+				break
+			}
 			content, e = c.modelRange(ctx, path, input)
 			if e == nil || ctx.Err() != nil {
 				break
