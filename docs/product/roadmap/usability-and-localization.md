@@ -13,7 +13,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-116.
 
 - [x] UX-001 Web workspace: `web/apps/console`, `web/apps/portal`, `web/packages/{ui,api,i18n,config}`, ESLint, Prettier, Vitest, Playwright (P0) - Evidence: ed470b5, 799ed29; zero-egress install and real-browser sign-in on `ownsolid-cpu`, 2026-11-04
   - Also build `web/` into `deploy/images/control` in place of the placeholder page. DEL-001 waits for this.
-- [ ] UX-002 Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0)
+- [x] UX-002 Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0) - Evidence: d12d0ff; real-browser run on `ownsolid-cpu`, 2026-11-04
 - [ ] UX-003 Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427
 - [ ] UX-004 Typed API client generated from `api/openapi` (P0) - Catalog: F540
 - [ ] UX-005 Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0)
