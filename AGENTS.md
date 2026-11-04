@@ -72,6 +72,30 @@ A feature is done only when all of the following hold:
 Compiling is not done. Interface shells, TODOs and fake success responses are not
 implementations.
 
+### Quality bar
+
+The owner requires the quality of a leading commercial infrastructure product for
+both ownsolid and ownsolid-entitlement. Speed never justifies a lower bar; when time
+is short, finish fewer items at this standard rather than more items below it.
+
+- **Code:** idiomatic, small cohesive packages; no dead code, copy-paste duplication
+  or unexplained magic values; linters and formatters clean; every exported API
+  documented. Review your own diff as a strict senior reviewer before committing.
+- **Tests:** unit tests for logic, integration tests against real PostgreSQL and real
+  protocols, end-to-end tests for each user flow; failure, retry, concurrency,
+  permission-denied and cross-tenant cases, not only the happy path. No flaky tests.
+- **APIs:** consistent resource naming, pagination, filtering, idempotency keys for
+  writes, stable error codes with actionable messages, versioned contracts.
+- **Security:** least privilege, input validation at every boundary, secrets never
+  logged, OWASP Top 10 and supply-chain checks considered for every change.
+- **Operations:** structured logs, metrics and traces on every new path; timeouts,
+  bounded retries and graceful shutdown; safe upgrades and migrations.
+- **UI:** follows `docs/development/design-system.md` exactly; loading, empty, error
+  and permission states on every page; keyboard and screen-reader usable; English and
+  Simplified Chinese complete; no layout breaks at common widths.
+- **Docs:** operator and user documentation updated with the change, written for the
+  reader, accurate to what the code does.
+
 ## 4. Support claims
 
 - Write "supported" when the code is complete, tests pass and no failure is known,
