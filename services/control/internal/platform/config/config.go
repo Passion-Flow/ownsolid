@@ -380,7 +380,8 @@ func tlsConfigForOrigins(certificateFile, privateKeyFile string, origins []strin
 			return nil, errors.New("TLS_HOSTNAME_INVALID")
 		}
 	}
-	return &tls.Config{MinVersion: tls.VersionTLS12, Certificates: []tls.Certificate{cert}}, nil
+	// HTTP/2 is offered for the agent session stream (ADR 0007); HTTP/1.1 stays available.
+	return &tls.Config{MinVersion: tls.VersionTLS12, Certificates: []tls.Certificate{cert}, NextProtos: []string{"h2", "http/1.1"}}, nil
 }
 
 // DecodeWithEnvironment validates an immutable configuration snapshot and the

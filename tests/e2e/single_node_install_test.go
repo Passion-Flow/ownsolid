@@ -30,7 +30,10 @@ const (
 )
 
 type environment struct {
-	installer, composeFile, controlImage, postgresImage, archive, root string
+	installer, composeFile, controlImage, postgresImage, archive, root, agent string
+	// licenseKey signs the test's license; its trust file is in every configuration.
+	licenseKey license.PrivateKey
+	trust      license.Trust
 }
 
 func loadEnvironment(t *testing.T) environment {
@@ -39,20 +42,21 @@ func loadEnvironment(t *testing.T) environment {
 		installer: os.Getenv("OWNSOLID_E2E_INSTALLER"), composeFile: os.Getenv("OWNSOLID_E2E_COMPOSE_FILE"),
 		controlImage: os.Getenv("OWNSOLID_E2E_CONTROL_IMAGE"), postgresImage: os.Getenv("OWNSOLID_E2E_POSTGRES_IMAGE"),
 		archive: os.Getenv("OWNSOLID_E2E_IMAGE_ARCHIVE"), root: os.Getenv("OWNSOLID_E2E_ROOT"),
+		agent: os.Getenv("OWNSOLID_E2E_AGENT"),
 	}
 	if e.installer == "" {
 		t.Skip("needs tests/e2e/run-single-node.sh, which sets OWNSOLID_E2E_INSTALLER")
+	}
+	var err error
+	if e.licenseKey, e.trust, err = license.GenerateKey("e2e-issuer"); err != nil {
+		t.Fatal(err)
 	}
 	return e
 }
 
 func (e environment) configuration(t *testing.T, directory, size, controlImage string) string {
 	t.Helper()
-	_, trust, err := license.GenerateKey("e2e-issuer")
-	if err != nil {
-		t.Fatal(err)
-	}
-	raw, err := json.Marshal(trust)
+	raw, err := json.Marshal(e.trust)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,6 +141,11 @@ func (e environment) newBrowser(t *testing.T, origin string) *browser {
 
 func (b *browser) request(t *testing.T, method, path string, body any, csrf string) (int, []byte) {
 	t.Helper()
+	return b.requestWith(t, method, path, body, csrf, nil)
+}
+
+func (b *browser) requestWith(t *testing.T, method, path string, body any, csrf string, headers map[string]string) (int, []byte) {
+	t.Helper()
 	var reader io.Reader
 	if body != nil {
 		raw, err := json.Marshal(body)
@@ -153,6 +162,9 @@ func (b *browser) request(t *testing.T, method, path string, body any, csrf stri
 		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("Origin", b.origin)
 		request.Header.Set("X-CSRF-Token", csrf)
+	}
+	for name, value := range headers {
+		request.Header.Set(name, value)
 	}
 	response, err := b.client.Do(request)
 	if err != nil {
@@ -219,6 +231,7 @@ func (e environment) assertLogin(t *testing.T, password string) {
 }
 
 func TestSingleNodeInstall(t *testing.T) {
+	outer := t
 	e := loadEnvironment(t)
 	directory := t.TempDir()
 	config := e.configuration(t, directory, "single-node", e.controlImage)
@@ -281,6 +294,18 @@ func TestSingleNodeInstall(t *testing.T) {
 		}
 	})
 
+	var agent *agentProcess
+	t.Run("an agent enrolls and runs tasks over the session stream", func(t *testing.T) {
+		agent = e.startAgent(t, outer, password)
+		agent.runTask(t, 5*time.Second)
+		if !agent.logged("agent_session_transport transport=stream") {
+			t.Fatalf("agent did not use the session stream:\n%s", agent.output())
+		}
+		if output, err := e.compose(t, "logs", "control"); err != nil || !strings.Contains(output, "agent_session_opened") {
+			t.Fatalf("control did not open a session: %v", err)
+		}
+	})
+
 	t.Run("serving holds no privileged database identity", func(t *testing.T) {
 		output, err := e.compose(t, "exec", "--no-TTY", "control", "python3", "-c", "import os,sys;sys.exit(os.path.exists('/run/projectone-operator'))")
 		if err != nil {
@@ -312,6 +337,18 @@ func TestSingleNodeInstall(t *testing.T) {
 			t.Fatalf("%v %s", err, output)
 		}
 		e.assertLogin(t, password)
+	})
+
+	t.Run("the agent reconnects after a control restart", func(t *testing.T) {
+		if agent == nil {
+			t.Skip("no agent is running")
+		}
+		// The agent keeps running through the restart and reopens its stream.
+		agent.runTask(t, 90*time.Second)
+		if !agent.running() {
+			t.Fatalf("agent exited:\n%s", agent.output())
+		}
+		agent.stop(t)
 	})
 
 	t.Run("stopped database is reported and repaired by apply", func(t *testing.T) {

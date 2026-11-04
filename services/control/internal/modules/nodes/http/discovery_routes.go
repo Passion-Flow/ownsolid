@@ -16,6 +16,12 @@ func DiscoveryHumanOwns(path string) bool {
 	}
 	return p[0] == "workspaces" && len(p) >= 3 && p[2] == "nodes" && (len(p) == 3 || len(p) == 4 || len(p) == 5 && p[4] == "tasks")
 }
+// ClaimRoute reports the claims path, which may long-poll for up to MaxClaimWaitSeconds.
+func ClaimRoute(path, method string) bool {
+	p := strings.Split(strings.TrimPrefix(path, "/agent/v1/nodes/"), "/")
+	return method == "POST" && strings.HasPrefix(path, "/agent/v1/nodes/") && len(p) == 3 && p[1] == "tasks" && p[2] == "claims"
+}
+
 func DiscoveryMachineOwns(path string) bool {
 	if path == "/agent/v1/enroll" {
 		return true

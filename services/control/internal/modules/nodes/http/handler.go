@@ -9,13 +9,13 @@ import (
 	"os"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
@@ -72,15 +72,7 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 	host := httpserver.RequestClientIP(r)
 	transfer := strings.HasSuffix(r.URL.Path, "/model-preparation-input-files") || strings.HasSuffix(r.URL.Path, "/model-preparation-events") || strings.HasSuffix(r.URL.Path, "/model-files") || strings.HasSuffix(r.URL.Path, "/training-input-files") || strings.HasSuffix(r.URL.Path, "/training-events") || TrainingUpload(r.URL.Path, r.Method) || PreparationUpload(r.URL.Path, r.Method)
 	policy := h.Service.Identity.Config.Policy().Rates
-	requestLimit := policy.AgentIPCount
-	requestWindow := policy.AgentIPWindowSeconds
-	ipPurpose := "agent.request.ip"
-	if transfer {
-		requestLimit = policy.AgentTransferIPCount
-		requestWindow = policy.AgentTransferIPWindowSeconds
-		ipPurpose = "agent.transfer.ip"
-	}
-	if _, e := h.Service.Identity.Admit(r.Context(), identity.Limit{Purpose: ipPurpose, Identifier: host, Count: requestLimit, Window: config.Seconds(requestWindow)}); e != nil {
+	if e := h.admitAddress(r.Context(), host, transfer); e != nil {
 		return nil, 0, e
 	}
 	path := r.URL.Path
@@ -104,19 +96,7 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 		return nil, 0, errors.New("AGENT_UNAUTHORIZED")
 	}
 	credential := strings.TrimPrefix(values[0], "Bearer ")
-	if !security.ValidToken(credential) {
-		return nil, 0, errors.New("AGENT_UNAUTHORIZED")
-	}
-	// Admit persists only an HMAC; an untrusted credential cannot fill the real node's bucket.
-	purpose := "agent.node.requests"
-	limit := policy.AgentNodeCount
-	window := policy.AgentNodeWindowSeconds
-	if transfer {
-		purpose = "agent.node.model_files"
-		limit = policy.AgentTransferNodeCount
-		window = policy.AgentTransferNodeWindowSeconds
-	}
-	if _, e := h.Service.Identity.Admit(r.Context(), identity.Limit{Purpose: purpose, Identifier: parts[1] + ":" + credential, Count: limit, Window: config.Seconds(window)}); e != nil {
+	if e := h.admitNode(r.Context(), parts[1], credential, transfer); e != nil {
 		return nil, 0, e
 	}
 	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && parts[4] == "model-preparation-input-files" {
@@ -265,11 +245,15 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 		return out, 200, e
 	}
 	if len(parts) == 4 && parts[2] == "tasks" && parts[3] == "claims" {
-		var input struct{}
+		// An empty object claims at once; wait_seconds long-polls, the session fallback.
+		var input wire.ClaimRequest
 		if e := httpserver.DecodeJSON(r, &input); e != nil {
 			return nil, 0, e
 		}
-		out, e := h.Service.Claim(r.Context(), parts[1], credential, request)
+		if e := input.Validate(); e != nil {
+			return nil, 0, e
+		}
+		out, e := h.Service.ClaimWaiting(r.Context(), parts[1], credential, request, time.Duration(input.WaitSeconds)*time.Second)
 		return out, 200, e
 	}
 	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && (parts[4] == "renewals" || parts[4] == "artifact") {

@@ -10,6 +10,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores"
 	artifacthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores/http"
 	releasehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/releases/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentgateway"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"strings"
@@ -101,7 +102,9 @@ type Handler struct {
 	active            chan struct{}
 	Workspaces        *workspacehttp.Handler
 	Nodes             *nodehttp.Handler
-	Components        *componenthttp.Handler
+	// AgentSessions serves the agent session stream (ADR 0007).
+	AgentSessions *agentgateway.Gateway
+	Components    *componenthttp.Handler
 	Models            *modelhttp.Handler
 	Deployments       *deploymenthttp.Handler
 	Distribution      *distributionhttp.Handler
@@ -153,6 +156,7 @@ func New(s *identity.Service) *Handler {
 		return preparationService.Referenced(ctx, tx, tenant, workspace, model)
 	}
 	machine := &nodehttp.Handler{Service: n, OpenArtifact: c.OpenArtifact, Artifact: c.TaskArtifact, ComponentArtifact: c.DownloadArtifact}
+	sessions, sessionError := agentgateway.New(nodehttp.SessionBackend{Handler: machine}, agentgateway.Policy{MaxSessions: s.Config.Policy().Nodes.MaximumLiveNodes, ExchangeSeconds: s.Config.Policy().HTTP.RequestSeconds}, httpserver.PublicProblem)
 	if preparationService != nil {
 		machine.PreparationInputFile = preparationService.InputFile
 		machine.PreparationEvents = preparationService.RecordEvents
@@ -197,7 +201,7 @@ func New(s *identity.Service) *Handler {
 	pluginService := &plugins.Service{DB: s.DB, Identity: s, Workspaces: w, Models: m}
 	workflowService := &workflows.Service{Plugins: pluginService, DB: s.DB, Identity: s, Workspaces: w, Knowledge: knowledgeService, Distribution: distributionService}
 	localeRegistry, localeError := s.LocaleRegistry()
-	return &Handler{AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, preparationError, localeError, n.CheckRecoveryOwners()), Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}}
+	return &Handler{AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, preparationError, localeError, sessionError, n.CheckRecoveryOwners()), AgentSessions: sessions, Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}}
 }
 
 func Problem(w http.ResponseWriter, requestID string, e error) { httpserver.Problem(w, requestID, e) }
@@ -265,7 +269,7 @@ func withCellRelativePath(r *http.Request, inner string) *http.Request {
 }
 
 func machineRoute(path string) bool {
-	return strings.HasPrefix(path, "/agent/v1/") || strings.HasPrefix(path, "/gateway/v1/")
+	return strings.HasPrefix(path, "/agent/v1/") || strings.HasPrefix(path, "/gateway/v1/") || path == wire.SessionPath
 }
 
 func machineHealthRequest(r *http.Request) bool {
@@ -316,12 +320,36 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 	}
 	r = httpserver.WithRequestTransport(r, connection)
 	audience, origin := connection.Audience, connection.Origin
-	select {
-	case h.active <- struct{}{}:
-		defer func() { <-h.active }()
-	default:
-		h.problem(w, requestID, errors.New("AUTH_CAPACITY_EXCEEDED"))
+	// An agent session lives for hours, so it holds no request slot or request deadline.
+	// The gateway bounds sessions itself and checks every exchange like the HTTPS paths.
+	if agentgateway.Owns(r) {
+		if connection.Scheme != "https" {
+			h.problem(w, requestID, errors.New("ORIGIN_REJECTED"))
+			return
+		}
+		if audience != "admin" || h.AgentSessions == nil {
+			h.problem(w, requestID, errors.New("RESOURCE_NOT_FOUND"))
+			return
+		}
+		h.AgentSessions.ServeHTTP(w, r, httpserver.RequestClientIP(r))
 		return
+	}
+	// A long-polled claim mostly waits, so it is bounded by the session slots instead.
+	if nodehttp.ClaimRoute(r.URL.Path, r.Method) && h.AgentSessions != nil {
+		release, ok := h.AgentSessions.Hold()
+		if !ok {
+			h.problem(w, requestID, errors.New("AUTH_CAPACITY_EXCEEDED"))
+			return
+		}
+		defer release()
+	} else {
+		select {
+		case h.active <- struct{}{}:
+			defer func() { <-h.active }()
+		default:
+			h.problem(w, requestID, errors.New("AUTH_CAPACITY_EXCEEDED"))
+			return
+		}
 	}
 	requestSeconds := c.Policy().HTTP.RequestSeconds
 	if datasethttp.SourceUpload(r.URL.Path, r.Method) {
@@ -389,6 +417,14 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 			return
 		}
 		if e := controller.SetWriteDeadline(deadline); e != nil && !errors.Is(e, http.ErrNotSupported) {
+			h.problem(w, requestID, errors.New("SERVICE_NOT_READY"))
+			return
+		}
+	}
+	if nodehttp.ClaimRoute(r.URL.Path, r.Method) {
+		// A long-polled claim holds the request open for its wait before it answers.
+		requestSeconds += wire.MaxClaimWaitSeconds
+		if e := http.NewResponseController(w).SetWriteDeadline(time.Now().Add(config.Seconds(requestSeconds))); e != nil && !errors.Is(e, http.ErrNotSupported) {
 			h.problem(w, requestID, errors.New("SERVICE_NOT_READY"))
 			return
 		}

@@ -11,6 +11,9 @@ import (
 
 	"github.com/felixge/httpsnoop"
 	"github.com/google/uuid"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentgateway"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
+	nodehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/mysqlmigrate"
@@ -155,20 +158,29 @@ func installationLeaseMiddleware(g *runtimeLifecycle, d *selectedDatabase, p con
 				next.ServeHTTP(w, r)
 				return
 			}
+			// An agent session lives for hours and a long-polled claim mostly waits. Both are
+			// checked when they open but hold none of the shared request slots; the gateway
+			// bounds them, and a lost lease stops the process and its sessions.
+			if agentgateway.Owns(r) || nodehttp.ClaimRoute(cellroute.Relative(r.URL.Path), r.Method) {
+				serveInstallationLeaseResponse(w, r, p, nil, check, next)
+				return
+			}
 			serveInstallationLeaseResponse(w, r, p, admission, check, next)
 		})
 	}
 
 }
 func serveInstallationLeaseResponse(w http.ResponseWriter, r *http.Request, p config.HTTPPolicy, admission chan struct{}, check func() error, next http.Handler) {
-	select {
-	case admission <- struct{}{}:
-		defer func() { <-admission }()
-	default:
-		w.Header().Set("Cache-Control", "no-store")
-		w.Header().Set("X-Request-ID", uuid.NewString())
-		httpserver.ProblemWithPolicy(w, w.Header().Get("X-Request-ID"), errors.New("AUTH_CAPACITY_EXCEEDED"), p)
-		return
+	if admission != nil {
+		select {
+		case admission <- struct{}{}:
+			defer func() { <-admission }()
+		default:
+			w.Header().Set("Cache-Control", "no-store")
+			w.Header().Set("X-Request-ID", uuid.NewString())
+			httpserver.ProblemWithPolicy(w, w.Header().Get("X-Request-ID"), errors.New("AUTH_CAPACITY_EXCEEDED"), p)
+			return
+		}
 	}
 	refuse := func() {
 		for _, name := range []string{"Content-Length", "Content-Disposition", "Content-Range", "Content-Encoding", "ETag", "Last-Modified", "Accept-Ranges", "X-Artifact-SHA256", "Set-Cookie"} {

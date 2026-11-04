@@ -106,6 +106,7 @@ func (s *Service) CreateComponentTaskBoundWithin(ctx context.Context, q transact
 	if _, e = q.Exec(ctx, nodeSQL(q, `INSERT INTO node_tasks(id,tenant_id,workspace_id,node_id,operation,state,idempotency_key,requested_by,deadline_at,payload,request_fingerprint) VALUES($1,$2,$3,$4,$5,'pending',$6,$7,clock_timestamp()+make_interval(secs=>$10),$8,$9)`, `INSERT INTO node_tasks(id,tenant_id,workspace_id,node_id,operation,state,idempotency_key,requested_by,deadline_at,payload,request_fingerprint) VALUES(?,?,?,?,?,'pending',?,?,TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),CAST(? AS JSON),?)`, `INSERT INTO node_tasks(id,tenant_id,workspace_id,node_id,operation,state,idempotency_key,requested_by,deadline_at,payload,request_fingerprint) VALUES(?,?,?,?,?,'pending',?,?,DATEADD(SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))),?,?)`, componentInsertArgs(q, taskID, n, operation, key, a.Me.User.ID, raw, fingerprint, s.Identity.Config.Policy().Nodes.TaskSeconds)...)); e != nil {
 		return Task{}, e
 	}
+	s.taskWritten(n.ID)
 	out, e := scanTask(q.QueryRow(ctx, nodeSQL(q, "SELECT "+taskFields+" FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4", "SELECT "+mysqlTaskFields+" FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?", `SELECT `+damengTaskFields+` FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, n.TenantID, n.WorkspaceID, n.ID, taskID)))
 	if e != nil {
 		return Task{}, e

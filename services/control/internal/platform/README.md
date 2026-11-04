@@ -4,6 +4,7 @@ Platform packages provide bounded shared mechanisms. Domain owners still decide 
 
 | Package | Owner boundary |
 | --- | --- |
+| agentgateway | Stateless gateway for the agent session stream: holds open streams and passes each heartbeat and claim to the node service ([ADR 0007](../../../../docs/decisions/0007-agent-session-protocol.md)) |
 | cellroute | Maps scoped public paths to the cell-relative paths modules route on ([ADR 0006](../../../../docs/decisions/0006-cell-and-site-scope.md)) |
 | [config](config/README.md) | Main typed configuration, defaults, explicit env-file overlays and protected references |
 | [database](database/README.md) | PostgreSQL installation/migration plus MySQL pool, migration journal and selected transaction adapters |

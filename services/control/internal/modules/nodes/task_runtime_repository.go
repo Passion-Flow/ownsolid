@@ -129,6 +129,7 @@ func (s *Service) insertTaskWithin(ctx context.Context, q transaction.Executor, 
 	if e != nil {
 		return Task{}, e
 	}
+	s.taskWritten(n.ID)
 	task, e := s.taskByIDWithin(ctx, q, n, id, false)
 	if e != nil {
 		return Task{}, e

@@ -4,6 +4,8 @@
 
 [lease.go](lease.go) validates complete operation/profile/task/token/attempt/payload bindings before dispatch. Training and preparation runtime files coordinate lease renewal, events, transfers and terminal outcomes; recovery files retain fenced work and operator cleanup obligations. Registry operations are separately selected, not arbitrary background image downloads.
 
+The run loop sends heartbeats and claims through one [client session](../client/README.md) per process, the session stream with an HTTPS long-poll fallback ([ADR 0007](../../../../docs/decisions/0007-agent-session-protocol.md)). A claim waits up to one interval for work, and that wait counts toward the interval, so an idle agent reports once per interval and a busy one starts its next cycle at once. The loop logs `agent_session_transport` when the transport changes.
+
 Runtime borrows [state](../state/README.md) for identity and process locking, [settings](../settings/README.md) for bounded policy, and [client](../client/README.md) for control transport. Managers own their local journals and resource checks. A failed enrollment acknowledgement or lost lease must not erase identity/workload evidence or silently create a replacement attempt.
 
 [component_recovery.go](component_recovery.go) invokes the same component manager

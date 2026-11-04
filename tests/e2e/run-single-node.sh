@@ -21,8 +21,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-cp "$binaries/ownsolid-install" "$binaries/e2e.test" "$binaries/compose.yaml" "$work/"
-chmod 755 "$work" "$work/ownsolid-install" "$work/e2e.test"
+cp "$binaries/ownsolid-install" "$binaries/e2e.test" "$binaries/agent" "$binaries/compose.yaml" "$work/"
+chmod 755 "$work" "$work/ownsolid-install" "$work/e2e.test" "$work/agent"
 echo "saving images"
 docker save --output "$work/images.tar" "$control_image" "$postgres_image"
 
@@ -40,6 +40,7 @@ docker exec "$name" docker info >/dev/null
 
 docker exec \
 	--env OWNSOLID_E2E_INSTALLER=/bundle/ownsolid-install \
+	--env OWNSOLID_E2E_AGENT=/bundle/agent \
 	--env OWNSOLID_E2E_COMPOSE_FILE=/bundle/compose.yaml \
 	--env OWNSOLID_E2E_IMAGE_ARCHIVE=/bundle/images.tar \
 	--env OWNSOLID_E2E_CONTROL_IMAGE="$control_image" \

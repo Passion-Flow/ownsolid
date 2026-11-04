@@ -71,6 +71,15 @@ Compose. Other sizes are refused until their roadmap items land.
 
 Every directory is mode 0700 and every file 0600.
 
+## Node agents
+
+Agents connect to the admin origin over HTTPS. They keep one long-lived HTTP/2 stream for
+heartbeats and task claims ([ADR 0007](../decisions/0007-agent-session-protocol.md)).
+Anything between agents and control must pass HTTP/2 to keep that stream; through a proxy
+that speaks only HTTP/1.1, agents fall back to HTTPS long-polling, which works but uses
+more requests. An agent logs `agent_session_transport` with `stream` or `https` when its
+transport changes, and `agent_session_fallback` when it falls back.
+
 ## When a step fails
 
 The message names the step and the cause, followed by the end of the service log when one

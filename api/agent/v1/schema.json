@@ -6940,6 +6940,109 @@
           "model_kind",
           "serving_recipe_sha256"
         ]
+      },
+      "ClaimRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "wait_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          }
+        }
+      },
+      "AgentMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "One agent message on the session stream; exactly one exchange is set (ADR 0007).",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "heartbeat": {
+            "$ref": "#/components/schemas/Handshake"
+          },
+          "claim": {
+            "$ref": "#/components/schemas/ClaimRequest"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "heartbeat"
+            ]
+          },
+          {
+            "required": [
+              "claim"
+            ]
+          }
+        ]
+      },
+      "SessionProblem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          }
+        },
+        "required": [
+          "code",
+          "status"
+        ]
+      },
+      "ControlMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Control's answer to the agent message named by reply_to.",
+        "properties": {
+          "reply_to": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "disposition": {
+            "$ref": "#/components/schemas/Disposition"
+          },
+          "claim": {
+            "$ref": "#/components/schemas/Claim"
+          },
+          "problem": {
+            "$ref": "#/components/schemas/SessionProblem"
+          }
+        },
+        "required": [
+          "reply_to"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "disposition"
+            ]
+          },
+          {
+            "required": [
+              "claim"
+            ]
+          },
+          {
+            "required": [
+              "problem"
+            ]
+          }
+        ]
       }
     }
   }

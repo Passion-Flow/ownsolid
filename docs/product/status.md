@@ -8,6 +8,7 @@ today and what is known to fail.
 | --- | --- | --- | --- | --- |
 | Repository layout checks | Yes | Yes | n/a | None |
 | Cell and site scope on tables, API paths and shared keys | Yes, PostgreSQL only; identity fixed to `default` until ARC-202 | See the single-node install row | n/a | MySQL and Dameng chains lack the columns (CMP-201, CMP-202) |
+| Agent session protocol v1: gRPC stream on HTTP/2 for heartbeats and claims, HTTPS long-poll fallback (ADR 0007) | Yes; stream gateway runs in the control process, task wake is per process until ARC-011 | Yes: a real agent enrolled into the offline single-node install, ran tasks over the stream and reconnected after a control restart, Docker-in-Docker on `ownsolid-cpu`. The fallback ran against the real handler and PostgreSQL on the Mac | n/a | None |
 | Single-node install (`ownsolid-install`, control image, Compose) | Partly: no web console | API only: installed, signed in, restarted and reinstalled with no network route, Docker-in-Docker on `ownsolid-cpu` | No | No console or portal: both origins serve a placeholder page. Not complete until UX-001 (DEL-001) |
 
 Backend code from the previous `project-one` repository now lives in this layout. The
@@ -26,7 +27,8 @@ and are not part of these runs.
 Database integration tests on the Mac (PostgreSQL 18.6, `go test -p 1`, with and without
 `-tags repository_integration`) have known failures: 132 tests, mostly because the pinned
 data-processing Python and component assets are not installed there. The ARC-004 change
-was checked against that baseline and adds no failure.
+was checked against that baseline and adds no failure. ARC-005 was checked the same way
+on the packages it touches (nodes, identity HTTP, machine composition, agent tests).
 
 ## Not supported
 

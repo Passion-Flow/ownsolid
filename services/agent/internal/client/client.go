@@ -24,6 +24,8 @@ type Client struct {
 	Credential      string
 	runtime         *settings.Policy
 	preparationHTTP *http.Client
+	// tls verifies control for the session stream with the same roots as HTTP.
+	tls *tls.Config
 }
 
 // Artifact uses the fixed control path and current lease; redirects/proxies remain disabled.
@@ -87,8 +89,9 @@ func New(origin, caFile string, policies ...settings.Policy) (*Client, error) {
 			return nil, errors.New("CONTROL_CA_INVALID")
 		}
 	}
-	transport := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, MaxIdleConns: 1, MaxIdleConnsPerHost: 1, MaxConnsPerHost: policy.ControlConnections, IdleConnTimeout: settings.Seconds(policy.IdleConnectionSeconds), TLSHandshakeTimeout: settings.Seconds(policy.TLSHandshakeSeconds), ResponseHeaderTimeout: settings.Seconds(policy.ControlHeaderSeconds)}
-	return &Client{runtime: &policy, Scope: wire.LocalScope(), Origin: origin, HTTP: &http.Client{Transport: transport, Timeout: settings.Seconds(policy.ControlRequestSeconds), CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("CONTROL_REDIRECT_REJECTED") }}}, nil
+	verify := &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}
+	transport := &http.Transport{TLSClientConfig: verify.Clone(), MaxIdleConns: 1, MaxIdleConnsPerHost: 1, MaxConnsPerHost: policy.ControlConnections, IdleConnTimeout: settings.Seconds(policy.IdleConnectionSeconds), TLSHandshakeTimeout: settings.Seconds(policy.TLSHandshakeSeconds), ResponseHeaderTimeout: settings.Seconds(policy.ControlHeaderSeconds)}
+	return &Client{tls: verify, runtime: &policy, Scope: wire.LocalScope(), Origin: origin, HTTP: &http.Client{Transport: transport, Timeout: settings.Seconds(policy.ControlRequestSeconds), CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("CONTROL_REDIRECT_REJECTED") }}}, nil
 }
 
 // target addresses a cell-relative path in this node's cell. Paths stay cell-relative in
@@ -106,6 +109,18 @@ func (c *Client) Close() {
 	}
 }
 func (c *Client) Post(ctx context.Context, path string, value, out any) error {
+	return c.post(ctx, c.HTTP, path, value, out)
+}
+
+// remoteProblem keeps a control failure only when its code is one the agent acts on.
+func remoteProblem(code string, status int) error {
+	if !strings.HasPrefix(code, "AGENT_") && code != "STORAGE_UNAVAILABLE" && code != "RATE_LIMITED" && code != "ACCESS_DENIED" && code != "VALIDATION_FAILED" && code != "TOKEN_UNUSABLE" {
+		return errors.New("CONTROL_RESPONSE_REJECTED")
+	}
+	return &Problem{Code: code, Status: status}
+}
+
+func (c *Client) post(ctx context.Context, client *http.Client, path string, value, out any) error {
 	if !strings.HasPrefix(path, "/agent/v1/") || strings.ContainsAny(path, "?#") {
 		return errors.New("AGENT_PATH_INVALID")
 	}
@@ -121,7 +136,7 @@ func (c *Client) Post(ctx context.Context, path string, value, out any) error {
 	if c.Credential != "" {
 		r.Header.Set("Authorization", "Bearer "+c.Credential)
 	}
-	response, e := c.HTTP.Do(r)
+	response, e := client.Do(r)
 	if e != nil {
 		return errors.New("CONTROL_CONNECTION_FAILED")
 	}
@@ -135,11 +150,10 @@ func (c *Client) Post(ctx context.Context, path string, value, out any) error {
 		if path == "/agent/v1/enroll" && json.Unmarshal(b, &p) == nil && p.Code == enrollmentCommitUnknown {
 			return enrollmentUnknown(response, b)
 		}
-		if json.Unmarshal(b, &p) != nil || !strings.HasPrefix(p.Code, "AGENT_") && p.Code != "STORAGE_UNAVAILABLE" && p.Code != "RATE_LIMITED" && p.Code != "ACCESS_DENIED" && p.Code != "VALIDATION_FAILED" && p.Code != "TOKEN_UNUSABLE" {
+		if json.Unmarshal(b, &p) != nil {
 			return errors.New("CONTROL_RESPONSE_REJECTED")
 		}
-		p.Status = response.StatusCode
-		return &p
+		return remoteProblem(p.Code, response.StatusCode)
 	}
 	var envelope struct {
 		Data json.RawMessage `json:"data"`

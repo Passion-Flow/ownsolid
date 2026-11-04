@@ -1086,7 +1086,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Empty"
+                "$ref": "#/components/schemas/ClaimRequest"
               }
             }
           }
@@ -1096,7 +1096,8 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "description": "Leases the next task. With wait_seconds, control holds the claim until work arrives or the wait ends; this long-poll is the fallback when the agent session stream cannot be opened (ADR 0007). An empty object claims at once."
       },
       "parameters": [
         {
@@ -5042,6 +5043,18 @@
         "required": [
           "lease"
         ]
+      },
+      "ClaimRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "wait_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "Seconds control may hold the claim for new work; at most the heartbeat interval."
+          }
+        }
       },
       "TaskResult": {
         "anyOf": [

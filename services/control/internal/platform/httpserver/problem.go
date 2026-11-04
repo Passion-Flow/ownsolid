@@ -470,6 +470,10 @@ var problemStatuses = map[string]int{
 // PublicErrorCode reduces failures to the existing canonical public registry.
 // Private SQL, filesystem and provider diagnostics never become run/audit text.
 func PublicErrorCode(e error) string { code, _ := publicProblem(e); return code }
+
+// PublicProblem returns the public code and HTTP status for a failure, for transports
+// such as the agent session that report problems without an HTTP response.
+func PublicProblem(e error) (string, int) { return publicProblem(e) }
 func publicProblem(e error) (string, int) {
 	if e == nil {
 		return "STORAGE_UNAVAILABLE", 503

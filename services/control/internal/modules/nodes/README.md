@@ -6,6 +6,8 @@ Start at [enrollment.go](enrollment.go), [join_writes.go](join_writes.go), [task
 
 Migration 000003 stores node/join-token/task state. Each operation retains installed tenant/Workspace/node/task/attempt identity, current profile and credential state. A node observation is not successful work; stale lease, revoked credentials, heartbeat loss or unacknowledged result requires the existing reconciliation/fencing behavior.
 
+[claim_wait.go](claim_wait.go) lets a claim wait for up to one heartbeat interval: it watches the node, claims, and claims again when a task insert for that node announces itself. The agent session stream and the HTTPS long-poll both use it ([ADR 0007](../../../../../docs/decisions/0007-agent-session-protocol.md)); [http/session_backend.go](http/session_backend.go) gives the stream gateway the same rate limits and node calls as the HTTPS paths. The wake is local to this process until ARC-011.
+
 Task-event publication is recorded through the same-transaction hook; delivery of a broker message does not itself claim a task. Preserve ownership and lock ordering when extending cross-domain callbacks.
 
 [updates.go](updates.go) uses the selected PostgreSQL or MySQL transaction for

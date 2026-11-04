@@ -26,6 +26,8 @@ type Service struct {
 	Components   ComponentObserver
 	Inference    InferenceObserver
 	Training     TrainingAuthority
+	// wake lets claims held open for new work (ClaimWaiting) see tasks as they are written.
+	wake wakeHub
 }
 
 // TaskEventRecorder borrows the actual node-task transaction. It must not commit

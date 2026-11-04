@@ -245,7 +245,19 @@ func Enroll(ctx context.Context, c Config) error {
 	}
 	return nil
 }
+// cycle runs one cycle on a session of its own, for callers outside the run loop.
 func cycle(ctx context.Context, c Config, connection *client.Client, identity state.Identity, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
+	var session *client.Session
+	if connection != nil {
+		session = connection.Session(identity.NodeID)
+		defer session.Close()
+	}
+	return sessionCycle(ctx, c, connection, session, identity, m, im, tm, pm, rm)
+}
+
+// sessionCycle recovers interrupted work, reports the node, then claims and runs at most
+// one task. Heartbeats and claims use the session; task traffic uses HTTPS.
+func sessionCycle(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
 	// An expired lease or cancelled maintenance can leave a durable transition
 	// in this process. Reconcile it before publishing state or claiming more work.
 	if e := recoverComponent(ctx, c, m); e != nil {
@@ -272,7 +284,6 @@ func cycle(ctx context.Context, c Config, connection *client.Client, identity st
 		return e
 	}
 	base := "/agent/v1/nodes/" + url.PathEscape(identity.NodeID)
-	var disposition wire.Disposition
 	h := handshake(f, c)
 	if m != nil {
 		o := m.Observe(ctx)
@@ -282,7 +293,8 @@ func cycle(ctx context.Context, c Config, connection *client.Client, identity st
 		o := registryObservation(im.Observe(ctx, identity.NodeID), rm)
 		h.Inference = &o
 	}
-	if e = connection.Post(ctx, base+"/heartbeat", h, &disposition); e != nil {
+	disposition, e := session.Heartbeat(ctx, h)
+	if e != nil {
 		return e
 	}
 	if disposition.Status == "disabled" {
@@ -291,8 +303,9 @@ func cycle(ctx context.Context, c Config, connection *client.Client, identity st
 	if disposition.Status != "active" {
 		return errors.New("AGENT_DISPOSITION_INVALID")
 	}
-	var claim wire.Claim
-	if e = connection.Post(ctx, base+"/tasks/claims", struct{}{}, &claim); e != nil {
+	// Control holds the claim for up to one interval and answers as soon as work arrives.
+	claim, e := session.Claim(ctx, wire.MaxClaimWaitSeconds)
+	if e != nil {
 		return e
 	}
 	if claim.Lease == nil {
@@ -425,13 +438,23 @@ func Run(ctx context.Context, c Config) error {
 			return e
 		}
 	}
+	session := connection.Session(identity.NodeID)
+	defer session.Close()
 	backoff := settings.Seconds(c.Policy().BackoffInitialSeconds)
+	transport := ""
 	for {
-		e = cycle(ctx, c, connection, identity, m, im, tm, pm, rm)
+		started := time.Now()
+		e = sessionCycle(ctx, c, connection, session, identity, m, im, tm, pm, rm)
 		if ctx.Err() != nil {
 			return nil
 		}
-		delay := time.Duration(wire.HeartbeatSeconds) * time.Second
+		if current := session.Transport(); current != transport && current != "" {
+			slog.Info("agent_session_transport", "transport", current)
+			transport = current
+		}
+		// The claim wait is part of the interval, so a cycle starts once per interval when
+		// idle and right away after a task.
+		delay := max(0, time.Duration(wire.HeartbeatSeconds)*time.Second-time.Since(started))
 		if e != nil {
 			var p *client.Problem
 			if errors.As(e, &p) && p.Status == 401 {
