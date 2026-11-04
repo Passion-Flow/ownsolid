@@ -880,6 +880,9 @@
           "server_time": {
             "type": "string",
             "format": "date-time"
+          },
+          "pacing": {
+            "$ref": "#/components/schemas/Pacing"
           }
         },
         "required": [
@@ -7134,6 +7137,43 @@
         },
         "required": [
           "acknowledged_sequence"
+        ]
+      },
+      "Pacing": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "How control paces an agent at runtime (ADR 0013).",
+        "properties": {
+          "heartbeat_seconds": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 120,
+            "description": "Mean time between two heartbeats of an idle agent."
+          },
+          "jitter_percent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "description": "Spreads each interval evenly around heartbeat_seconds."
+          },
+          "reconnect_base_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "description": "Ceiling of the full-jitter delay after the first failed cycle."
+          },
+          "reconnect_max_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 900,
+            "description": "Largest ceiling of the full-jitter delay; not below reconnect_base_seconds."
+          }
+        },
+        "required": [
+          "heartbeat_seconds",
+          "jitter_percent",
+          "reconnect_base_seconds",
+          "reconnect_max_seconds"
         ]
       }
     }

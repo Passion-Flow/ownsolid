@@ -20,6 +20,7 @@ firmware, facility and spares.
 - [ ] FLT-110 Agent self-upgrade in rings with automatic rollback (P1)
 - [ ] FLT-111 Kubernetes cell lifecycle: create, add nodes, upgrade, certificate rotation (P1) - Catalog: F400, F624
 - [ ] FLT-112 Fleet batch actions with staged rollout and stop on failure (P1)
+- [ ] FLT-113 Console page for agent pacing: current values, change with a reason, the online-window refusal explained (P1)
 
 ## P2 Fleet operations
 

@@ -46,8 +46,31 @@ type Handler struct {
 	TrainingStop            func(context.Context, string, string, string, string, trainingwire.StopReceipt, []byte) (trainingwire.StopAcceptance, error)
 }
 
+// pacingPath is the pacing of this cell's agents (ADR 0013).
+const pacingPath = "/api/v1/admin/agent-pacing"
+
+func (h *Handler) agentPacing(r *http.Request, a identity.Auth, request string) (any, int, error) {
+	switch r.Method {
+	case http.MethodGet:
+		out, e := h.Service.AgentPacing(r.Context(), a)
+		return out, 200, e
+	case http.MethodPut:
+		var input struct {
+			wire.Pacing
+			Version int64  `json:"version"`
+			Reason  string `json:"reason"`
+		}
+		if e := httpserver.DecodeJSON(r, &input); e != nil {
+			return nil, 0, e
+		}
+		out, e := h.Service.UpdateAgentPacing(r.Context(), a, input.Pacing, input.Version, input.Reason, request)
+		return out, 200, e
+	}
+	return nil, 0, errors.New("RESOURCE_NOT_FOUND")
+}
+
 func Owns(path string) bool {
-	for _, prefix := range []string{"/api/v1/admin/nodes", "/api/v1/admin/node-join-tokens"} {
+	for _, prefix := range []string{"/api/v1/admin/nodes", "/api/v1/admin/node-join-tokens", pacingPath} {
 		if path == prefix || strings.HasPrefix(path, prefix+"/") {
 			return true
 		}
@@ -335,6 +358,9 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 	}
 	if !admin && a.Me.Audience != "portal" {
 		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
+	}
+	if path == pacingPath {
+		return h.agentPacing(r, a, request)
 	}
 	tokens := "/api/v1/admin/node-join-tokens"
 	if path == tokens {

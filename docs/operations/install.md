@@ -83,6 +83,29 @@ that speaks only HTTP/1.1, agents fall back to HTTPS long-polling, which works b
 more requests. An agent logs `agent_session_transport` with `stream` or `https` when its
 transport changes, and `agent_session_fallback` when it falls back.
 
+### Pacing the agents
+
+Control tells every agent how often to report and how to back off, in each heartbeat
+reply. To take load off control, a platform administrator changes the pacing with
+`PUT /api/v1/sites/default/cells/default/admin/agent-pacing`. Agents follow within one
+interval, with no restart.
+
+| Field | Range | Default | Meaning |
+| --- | --- | --- | --- |
+| `heartbeat_seconds` | 5 to 120 | 10 | Mean time between two heartbeats of an idle agent |
+| `jitter_percent` | 0 to 50 | 10 | Spreads each interval around the mean |
+| `reconnect_base_seconds` | 1 to 60 | 1 | Ceiling of the random delay after the first failure |
+| `reconnect_max_seconds` | base to 900 | 60 | Largest ceiling of that delay as failures continue |
+
+Send the `version` from `GET` on the same path and a `reason`, which goes into the audit
+log. `VERSION_CONFLICT` means somebody else changed it: read it again.
+
+`AGENT_PACING_EXCEEDS_ONLINE_WINDOW` means healthy nodes would look offline and lose
+inference. One and a half of the longest interval, `heartbeat_seconds` plus its jitter,
+must fit inside `nodes.online_seconds`, 30 by default, which allows up to 20 seconds with
+no jitter. To go slower, raise `nodes.online_seconds` first. With more than one control
+process, the others follow within five seconds.
+
 ## When a step fails
 
 The message names the step and the cause, followed by the end of the service log when one

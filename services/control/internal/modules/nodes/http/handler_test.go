@@ -72,6 +72,24 @@ func TestM03HTTPContractAndHumanMachineSeparation(t *testing.T) {
 	admin.Write("PATCH", "/api/v1/admin/nodes/"+id, map[string]any{"name": "HTTP renamed", "status": "disabled", "version": node["version"], "reason": "Synthetic disable"}, 200, "NodeResponse")
 	machine.Call("POST", base+"/heartbeat", h, 200, "DispositionResponse")
 	machine.Call("POST", base+"/tasks/claims", map[string]any{}, 403, "Problem")
+	// Agent pacing belongs to platform administrators; a change needs the current version
+	// and a reason, and may not mark healthy nodes offline.
+	pacingPath := "/api/v1/admin/agent-pacing"
+	pacing := admin.Call("GET", pacingPath, nil, 200, "AgentPacingResponse")
+	machine.Call("GET", pacingPath, nil, 401, "Problem")
+	portal.Call("GET", pacingPath, nil, 404, "Problem")
+	portal.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 15, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Portal attempt"}, 404, "Problem")
+	admin.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 120, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Too slow"}, 409, "Problem")
+	admin.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 1, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Too fast"}, 400, "Problem")
+	changed := admin.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 15, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Reducing heartbeat load"}, 200, "AgentPacingResponse")
+	if changed["heartbeat_seconds"].(float64) != 15 || changed["version"].(float64) != pacing["version"].(float64)+1 {
+		t.Fatal("pacing update", changed)
+	}
+	admin.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 16, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Stale version"}, 409, "Problem")
+	admin.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 15, "unknown": true, "version": changed["version"], "reason": "Unknown field"}, 400, "Problem")
+	if told := machine.Call("POST", base+"/heartbeat", h, 200, "DispositionResponse"); told["pacing"].(map[string]any)["heartbeat_seconds"].(float64) != 15 {
+		t.Fatal("the next heartbeat reply did not carry the change", told)
+	}
 	h.ProtocolVersion = "999"
 	machine.Call("POST", base+"/heartbeat", h, 400, "Problem")
 	h.ProtocolVersion = wire.Version

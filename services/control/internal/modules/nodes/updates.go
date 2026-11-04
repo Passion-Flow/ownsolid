@@ -22,7 +22,7 @@ func updateError(e error) error {
 		return fail("NODE_NAME_EXISTS")
 	}
 	switch e.Error() {
-	case "VERSION_CONFLICT", "NODE_REMOVED", "NODE_NAME_EXISTS", "RESOURCE_LIMIT_REACHED":
+	case "VERSION_CONFLICT", "NODE_REMOVED", "NODE_NAME_EXISTS", "RESOURCE_LIMIT_REACHED", "AGENT_PACING_UNSUPPORTED":
 		return fail(e.Error())
 	default:
 		return nodeRepositoryError(e)

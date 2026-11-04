@@ -157,7 +157,7 @@ func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request str
 		if e != nil {
 			return e
 		}
-		out = wire.Enrolled{NodeID: id, SiteID: wire.DefaultSiteID, CellID: wire.DefaultCellID, Credential: credential, ProtocolVersion: input.ProtocolVersion, HeartbeatSeconds: wire.HeartbeatSeconds}
+		out = wire.Enrolled{NodeID: id, SiteID: wire.DefaultSiteID, CellID: wire.DefaultCellID, Credential: credential, ProtocolVersion: input.ProtocolVersion, HeartbeatSeconds: s.currentPacing(ctx).HeartbeatSeconds}
 		return nil
 	})
 	if e != nil {
