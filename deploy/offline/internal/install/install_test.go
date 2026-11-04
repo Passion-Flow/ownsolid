@@ -246,6 +246,28 @@ func TestControlConfigurationSeparatesDatabaseIdentities(t *testing.T) {
 	}
 }
 
+func TestControlConfigurationNamesBothTelemetryStoresByAddress(t *testing.T) {
+	c := validConfig(t)
+	raw, e := c.renderControl(containerConfigDir + "/runtime-dsn")
+	if e != nil {
+		t.Fatal(e)
+	}
+	var document struct {
+		Telemetry struct {
+			LogsAddress                string `yaml:"logs_address"`
+			MetricsAddress             string `yaml:"metrics_address"`
+			MetricsPushIntervalSeconds int    `yaml:"metrics_push_interval_seconds"`
+		} `yaml:"telemetry"`
+	}
+	if e = yaml.Unmarshal(raw, &document); e != nil {
+		t.Fatal(e)
+	}
+	addresses := c.Network.stateAddresses()
+	if document.Telemetry.LogsAddress != "http://"+addresses.Logs.String()+":"+logsPort || document.Telemetry.MetricsAddress != "http://"+addresses.Metrics.String()+":"+metricsPort || document.Telemetry.MetricsPushIntervalSeconds != telemetryMetricsPushSeconds {
+		t.Fatalf("rendered: %s", raw)
+	}
+}
+
 func TestMaterializeRefusesSymlinkedDirectory(t *testing.T) {
 	c := validConfig(t)
 	if e := os.MkdirAll(c.InstallRoot, 0o700); e != nil {

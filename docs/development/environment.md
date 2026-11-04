@@ -58,13 +58,14 @@ Set `PROJECT_ONE_TEST_DSN`. Add `-tags repository_integration` with
 `PROJECT_ONE_REPOSITORY_ENGINE=postgresql`, `PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE`
 and `PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA` for the repository tests, and use `umask 077`.
 
-## Log store integration tests
+## Telemetry store integration tests
 
-The telemetry client has tests against a real log store, behind a build tag:
+The telemetry client has tests against the real stores, behind a build tag:
 
 ```sh
 docker run -d --name vl -p 127.0.0.1:59428:9428 victoriametrics/victoria-logs:v1.53.0
-OWNSOLID_TEST_LOGS_ADDRESS=http://127.0.0.1:59428 \
+docker run -d --name vm -p 127.0.0.1:58428:8428 victoriametrics/victoria-metrics:v1.155.0
+OWNSOLID_TEST_LOGS_ADDRESS=http://127.0.0.1:59428 OWNSOLID_TEST_METRICS_ADDRESS=http://127.0.0.1:58428 \
   go -C services/control test -tags telemetry_integration ./internal/platform/telemetrystore/
 ```
 

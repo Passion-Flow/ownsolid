@@ -27,10 +27,12 @@ const (
 	containerListen      = "0.0.0.0:8443"
 	databasePort         = "5432"
 	logsPort             = "9428"
+	metricsPort          = "8428"
 	// Control-plane client limits for the log store. They size a local connection, not
 	// a site policy, so they are not install settings.
 	telemetryRequestTimeoutSeconds = 5
 	telemetryQueueCapacity         = 4096
+	telemetryMetricsPushSeconds    = 15
 	databaseName                   = "ownsolid"
 	migratorRole                   = "ownsolid_migrator"
 	runtimeRole                    = "ownsolid_runtime"
@@ -189,7 +191,9 @@ func (c Config) renderControl(dsnFile string) ([]byte, error) {
 	document["database"] = map[string]any{"dsn_file": dsnFile}
 	document["telemetry"] = map[string]any{
 		"logs_address":            "http://" + net.JoinHostPort(c.Network.stateAddresses().Logs.String(), logsPort),
+		"metrics_address":         "http://" + net.JoinHostPort(c.Network.stateAddresses().Metrics.String(), metricsPort),
 		"request_timeout_seconds": telemetryRequestTimeoutSeconds, "queue_capacity": telemetryQueueCapacity,
+		"metrics_push_interval_seconds": telemetryMetricsPushSeconds,
 	}
 	document["security"] = map[string]any{
 		"auth_hmac_key_file": containerConfigDir + "/auth-hmac", "mail_keyring_file": containerConfigDir + "/mail-keyring.json",

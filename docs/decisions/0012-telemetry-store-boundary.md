@@ -32,6 +32,11 @@ A post-commit hook in the transaction layer was the alternative. It would touch 
 settlement path in the node module for one consumer, and a process crash between commit
 and hook would still lose the record, so it gives no stronger guarantee.
 
+**Metrics are pushed, not scraped.** `control` sends its process values to the metrics
+store on a fixed interval. A scrape would need the store to reach into control and would
+add a metrics listener to secure. Values are current readings, so a failed push is counted
+and not retried: the next one carries newer values.
+
 **No service looks a store up by name.** Each store has a fixed address on the internal
 `state` network ([ADR 0008](0008-zero-egress-harness.md)).
 

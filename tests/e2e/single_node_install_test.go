@@ -440,6 +440,22 @@ sys.exit("the log store accepted the record but never returned it")`
 		}
 	})
 
+	t.Run("control pushes its process metrics to the metrics store", func(t *testing.T) {
+		// The fixed address of the default state subnet. A series is listed once indexed,
+		// and control pushes every 15 seconds.
+		script := `import json,sys,time,urllib.parse,urllib.request as u
+names=["ownsolid_go_goroutines","ownsolid_database_pool_total_connections","ownsolid_telemetry_log_queue_length"]
+query=urllib.parse.urlencode([("match[]",n+'{service="control"}') for n in names])
+for _ in range(60):
+    if len(json.load(u.urlopen("http://172.31.254.3:8428/api/v1/series?"+query,timeout=5))["data"])==len(names):
+        sys.exit(0)
+    time.sleep(1)
+sys.exit("control pushed no process metrics to the metrics store")`
+		if output, err := e.compose(t, "exec", "--no-TTY", "control", "python3", "-c", script); err != nil {
+			t.Fatalf("%v %s", err, output)
+		}
+	})
+
 	t.Run("losing the telemetry stores leaves the platform serving", func(t *testing.T) {
 		if output, err := e.compose(t, "stop", "metrics", "logs"); err != nil {
 			t.Fatalf("%v %s", err, output)
