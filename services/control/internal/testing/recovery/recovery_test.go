@@ -26,6 +26,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/logstorefixture"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/smtpsink"
 )
 
@@ -76,7 +77,9 @@ func TestM01ActualProcessRestartAndLogicalRestore(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	componentService := &components.Service{Nodes: nodeService}
+	// Component logs live in the log store, which a database restore leaves in place (ADR 0012).
+	logStore := &logstorefixture.Memory{}
+	componentService := &components.Service{Nodes: nodeService, LogStore: logStore}
 	nodeService.Components = componentService
 	componentJoin, e := nodeService.MintForProfile(ctx, a, workspace.ID, "Component restore node", wire.SystemdComponentsProfile, uuid.NewString())
 	if e != nil {
@@ -334,7 +337,7 @@ func TestM01ActualProcessRestartAndLogicalRestore(t *testing.T) {
 		if e = restored.QueryRow(ctx, "SELECT state FROM node_tasks WHERE id=$1", componentTask.ID).Scan(&restoredTaskState); e != nil || restoredTaskState != "cancelled" {
 			t.Fatal("restored component task remained executable", e)
 		}
-		restoredComponents := &components.Service{Nodes: restoredNodes}
+		restoredComponents := &components.Service{Nodes: restoredNodes, LogStore: logStore}
 		freshPortal := fixture.Login(t, &recovered, "admin@example.invalid", password, "portal")
 		componentView, e := restoredComponents.Get(ctx, freshPortal, workspace.ID, componentNode.NodeID)
 		if e != nil || componentView.DesiredState != "stopped" || componentView.Observation == nil || componentView.Observation.Metrics == nil || componentView.Observation.Metrics.MemoryTotalBytes != 1024 || !componentView.Stale || componentView.ManagementAvailable {
@@ -349,7 +352,7 @@ func TestM01ActualProcessRestartAndLogicalRestore(t *testing.T) {
 			t.Fatal("restored maintenance task executable", e)
 		}
 		freshAdmin := fixture.Login(t, &recovered, "admin@example.invalid", password, "admin")
-		restoredComponents := &components.Service{Nodes: restoredNodes}
+		restoredComponents := &components.Service{Nodes: restoredNodes, LogStore: logStore}
 		view, e := restoredComponents.Get(ctx, freshAdmin, "", maintenanceNode.NodeID)
 		if e != nil || view.Version != "1.12.0" || view.DesiredVersion != "1.12.1" || view.AppliedConfig == nil || *view.AppliedConfig != configuration || view.LastVerifiedAt == nil || view.PreviousVersion == nil || *view.PreviousVersion != "1.12.1" || !view.Stale || view.MaintenanceAvailable {
 			t.Fatal("maintenance restore lost data or fabricated authority", e)
