@@ -11,7 +11,7 @@
     }
   ],
   "paths": {
-    "/api/v1/admin/nodes/{node_id}/components/node-exporter": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter": {
       "get": {
         "operationId": "getAdminComponent",
         "x-audiences": [
@@ -60,9 +60,29 @@
           "maintenance",
           "platform"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/nodes/{node_id}/components/node-exporter/actions": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/actions": {
       "post": {
         "operationId": "requestComponentAction",
         "x-audiences": [
@@ -140,9 +160,29 @@
           "maintenance",
           "platform"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/nodes/{node_id}/components/node-exporter": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/components/node-exporter": {
       "get": {
         "operationId": "getPortalComponent",
         "x-audiences": [
@@ -200,9 +240,29 @@
           "maintenance",
           "platform"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/agent/v1/nodes/{node_id}/tasks/{task_id}/renewals": {
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/tasks/{task_id}/renewals": {
       "post": {
         "operationId": "renewAgentTask",
         "x-audiences": [
@@ -270,9 +330,29 @@
           "maintenance",
           "platform"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/agent/v1/nodes/{node_id}/tasks/{task_id}/artifact": {
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/tasks/{task_id}/artifact": {
       "post": {
         "operationId": "downloadApprovedComponent",
         "x-audiences": [
@@ -341,9 +421,29 @@
           "maintenance",
           "platform"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/nodes/{node_id}/components/node-exporter/logs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/logs": {
       "get": {
         "operationId": "getLatestAdminComponentLogs",
         "x-audiences": [
@@ -391,7 +491,27 @@
           "maintenance",
           "platform"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

@@ -26,7 +26,7 @@ func TestPrivateObjectRequiresAnonymousAndWrongSignatureDenial(t *testing.T) {
 	var calls atomic.Int32
 	client, _ := protocolS3(t, func(w http.ResponseWriter, r *http.Request) {
 		calls.Add(1)
-		if r.URL.Path != "/synthetic-artifact-fixture/artifacts/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/content" {
+		if r.URL.Path != "/synthetic-artifact-fixture/sites/default/cells/default/artifacts/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333/content" {
 			t.Error("nonexact object request")
 		}
 		w.WriteHeader(http.StatusForbidden)

@@ -64,7 +64,7 @@ func startSyntheticComponentMachine(t *testing.T, server *httptest.Server, s *no
 		firstInstall := true
 		observation := wire.ComponentObservation{Component: wire.NodeExporter, Version: wire.NodeExporterVersion, State: "not_installed", ObservedAt: time.Now().UTC()}
 		for {
-			base := "/agent/v1/nodes/" + enrolled.NodeID
+			base := "/agent/v1/sites/default/cells/default/nodes/" + enrolled.NodeID
 			good := true
 			if time.Since(lastHeartbeat) >= 10*time.Second {
 				h.Facts.ObservedAt = time.Now().UTC()

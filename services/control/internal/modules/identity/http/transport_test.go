@@ -115,7 +115,7 @@ func TestTransportDispatcherProjectionAndRefusalBeforeSQL(t *testing.T) {
 				}
 				if mode == config.TransportHTTP {
 					status, code := http.StatusForbidden, "ORIGIN_REJECTED"
-					for _, route := range []string{"/agent/v1/nodes/unknown", "/gateway/v1/admissions"} {
+					for _, route := range []string{"/agent/v1/sites/default/cells/default/nodes/unknown", "/gateway/v1/admissions"} {
 						w := httptest.NewRecorder()
 						h.ServeHTTP(w, request("admin", http.MethodPost, route))
 						var problem struct {

@@ -6,6 +6,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"io"
 	"net/http"
@@ -35,7 +37,7 @@ func (c *Client) Call(method, path string, body any, status int, schema string) 
 	} else if body != nil {
 		b, _ = json.Marshal(body)
 	}
-	r, e := http.NewRequestWithContext(c.t.Context(), method, c.origin+path, bytes.NewReader(b))
+	r, e := http.NewRequestWithContext(c.t.Context(), method, c.origin+cellroute.Public(path, wire.LocalScope()), bytes.NewReader(b))
 	if e != nil {
 		c.t.Fatal("HTTP_FIXTURE_REQUEST_INVALID")
 	}

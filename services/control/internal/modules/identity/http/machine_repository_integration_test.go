@@ -150,7 +150,7 @@ func TestTransportActualHTTPWithIndependentMachineHTTPS(t *testing.T) {
 	if !security.ValidToken(node.Credential) || node.ProtocolVersion != wire.Version || transportCount(t, owner, "SELECT count(*) FROM managed_nodes WHERE id=$1 AND tenant_id=$2 AND workspace_id=$3 AND credential_hash=$4 AND status='active'", node.NodeID, tenantID, workspaceID, security.Digest("node-credential:v1:"+node.Credential)) != 1 || transportCount(t, owner, "SELECT count(*) FROM node_join_tokens WHERE id=$1 AND node_id=$2 AND consumed_at IS NOT NULL", joinID, node.NodeID) != 1 {
 		t.Fatal("actual enrollment scope/credential/consumption mismatch")
 	}
-	base := "/agent/v1/nodes/" + node.NodeID
+	base := "/agent/v1/sites/default/cells/default/nodes/" + node.NodeID
 	var heartbeat wire.Disposition
 	machineSQLDecode(t, call(base+"/heartbeat", enrollment.Handshake, node.Credential, 200, "", nil, "", machine), &heartbeat)
 	if heartbeat.Status != "active" || heartbeat.ServerTime.IsZero() || transportCount(t, owner, "SELECT count(*) FROM managed_nodes WHERE id=$1 AND last_heartbeat_at IS NOT NULL", node.NodeID) != 1 {

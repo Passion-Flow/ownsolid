@@ -58,7 +58,7 @@ func TestRealTLSDerivedRangesFullHashAndPrivateIncompleteFailure(t *testing.T) {
 	corrupt := false
 	path := "/agent/v1/nodes/12345678-1234-1234-1234-123456789abc/tasks/22345678-1234-1234-1234-123456789abc/model-files"
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" || r.URL.Path != path || r.Header.Get("Authorization") != "Bearer "+credential {
+		if r.Method != "POST" || r.URL.Path != onWire(path) || r.Header.Get("Authorization") != "Bearer "+credential {
 			t.Error("unbound transport")
 			w.WriteHeader(400)
 			return
@@ -83,7 +83,7 @@ func TestRealTLSDerivedRangesFullHashAndPrivateIncompleteFailure(t *testing.T) {
 		w.Write(body)
 	}))
 	defer server.Close()
-	connection := &Client{Origin: server.URL, HTTP: server.Client(), Credential: credential}
+	connection := &Client{Scope: localScopeForTest(), Origin: server.URL, HTTP: server.Client(), Credential: credential}
 	defer connection.Close()
 	root := t.TempDir()
 	destination := filepath.Join(root, "verified")

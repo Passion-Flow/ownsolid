@@ -10,8 +10,26 @@
     }
   ],
   "paths": {
-    "/workspaces/{workspace}/aws": {
+    "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace}/aws": {
       "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
         {
           "name": "workspace",
           "in": "path",
@@ -82,8 +100,26 @@
         }
       }
     },
-    "/workspaces/{workspace}/aws/imports": {
+    "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace}/aws/imports": {
       "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
         {
           "name": "workspace",
           "in": "path",
@@ -155,8 +191,26 @@
         }
       }
     },
-    "/workspaces/{workspace}/aws/imports/{key}": {
+    "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace}/aws/imports/{key}": {
       "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
         {
           "name": "workspace",
           "in": "path",
@@ -191,7 +245,7 @@
         }
       ],
       "get": {
-        "summary": "Reconcile the current actor\u2019s immutable import receipt",
+        "summary": "Reconcile the current actor’s immutable import receipt",
         "responses": {
           "200": {
             "description": "Committed result or authorized retained read",
@@ -216,8 +270,26 @@
         }
       }
     },
-    "/admin/workspaces/{workspace}/aws": {
+    "/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws": {
       "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
         {
           "name": "workspace",
           "in": "path",
@@ -288,8 +360,26 @@
         }
       }
     },
-    "/admin/workspaces/{workspace}/aws/imports": {
+    "/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws/imports": {
       "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
         {
           "name": "workspace",
           "in": "path",
@@ -361,8 +451,26 @@
         }
       }
     },
-    "/admin/workspaces/{workspace}/aws/imports/{key}": {
+    "/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws/imports/{key}": {
       "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
         {
           "name": "workspace",
           "in": "path",
@@ -397,7 +505,7 @@
         }
       ],
       "get": {
-        "summary": "Reconcile the current actor\u2019s immutable import receipt",
+        "summary": "Reconcile the current actor’s immutable import receipt",
         "responses": {
           "200": {
             "description": "Committed result or authorized retained read",

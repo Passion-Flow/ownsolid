@@ -48,7 +48,7 @@ func TestActualNativeTaskBusTransport(t *testing.T) {
 	if !t.Run("canonical_publish_lookup_pull_double_ack", func(t *testing.T) {
 		for i, p := range f.Profiles {
 			now := time.Now().UTC().Truncate(time.Microsecond)
-			canaries[i] = taskbus.Envelope{Event: taskbus.Event{Schema: taskbus.EventSchema, ID: uuid.NewString(), NamespaceID: p.Configuration.NamespaceID, TenantID: p.Tenant, WorkspaceID: uuid.NewString(), NodeID: uuid.NewString(), TaskID: uuid.NewString(), Kind: taskbus.NodeTaskQueued, Operation: "collect_facts.v1", TaskCreatedAt: now, CreatedAt: now}, DeliveryID: uuid.NewString()}
+			canaries[i] = taskbus.Envelope{Event: taskbus.Event{Schema: taskbus.EventSchema, ID: uuid.NewString(), SiteID: "default", CellID: "default", NamespaceID: p.Configuration.NamespaceID, TenantID: p.Tenant, WorkspaceID: uuid.NewString(), NodeID: uuid.NewString(), TaskID: uuid.NewString(), Kind: taskbus.NodeTaskQueued, Operation: "collect_facts.v1", TaskCreatedAt: now, CreatedAt: now}, DeliveryID: uuid.NewString()}
 			published, e := buses[i].Publish(ctx, canaries[i])
 			if e != nil || published.Sequence != 1 || published.Identity != buses[i].Identity() {
 				t.Fatal("actual canonical publish", published, e)

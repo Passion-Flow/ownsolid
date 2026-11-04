@@ -64,7 +64,7 @@ func startSyntheticInferenceMachineProfile(t *testing.T, server *httptest.Server
 		return out == nil || json.Unmarshal(envelope.Data, out) == nil
 	}
 	observation := wire.InferenceObservation{GPUs: []wire.NVIDIAGPU{{UUID: "GPU-12345678-1234-1234-1234-123456789abc", Name: "Synthetic NVIDIA GPU", DriverVersion: "580.1", MemoryTotalMiB: 16384, MemoryFreeMiB: 16384, ComputeCapability: 8, MIGMode: "Disabled", ObservedAt: time.Now().UTC()}}, ObservedAt: time.Now().UTC()}
-	base := "/agent/v1/nodes/" + enrolled.NodeID
+	base := "/agent/v1/sites/default/cells/default/nodes/" + enrolled.NodeID
 	h.Inference = &observation
 	if !post(base+"/heartbeat", h, nil) {
 		t.Fatal("synthetic inference heartbeat failed")

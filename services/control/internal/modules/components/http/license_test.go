@@ -41,7 +41,7 @@ func TestM19ExpiredLicenseComponentRecoveryAndAcceptedAgentWork(t *testing.T) {
 	enrolled := machine.Call("POST", "/agent/v1/enroll", wire.Enrollment{JoinToken: join["token"].(string), Handshake: facts}, 201, "EnrolledResponse")
 	id := enrolled["node_id"].(string)
 	machine.Headers = map[string]string{"Authorization": "Bearer " + enrolled["credential"].(string)}
-	base := "/agent/v1/nodes/" + id
+	base := "/agent/v1/sites/default/cells/default/nodes/" + id
 	path := "/api/v1/admin/nodes/" + id + "/components/node-exporter"
 	admin.Headers = map[string]string{"Idempotency-Key": uuid.NewString()}
 	accepted := admin.Write("POST", path+"/actions", map[string]any{"action": "install", "reason": "Synthetic previously accepted component task"}, 202, "TaskResponse")

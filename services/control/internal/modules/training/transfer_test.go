@@ -69,7 +69,7 @@ func TestActualTLSLeasedTrainingInputDownloadAndStrictBodyRefusal(t *testing.T) 
 	body, _ := json.Marshal(input)
 	call := func(body []byte, status int) {
 		t.Helper()
-		request, e := http.NewRequest("POST", httpfixture.AdminOrigin+"/agent/v1/nodes/"+f.input.NodeID+"/tasks/"+l.TaskID+"/training-input-files", bytes.NewReader(body))
+		request, e := http.NewRequest("POST", httpfixture.AdminOrigin+"/agent/v1/sites/default/cells/default/nodes/"+f.input.NodeID+"/tasks/"+l.TaskID+"/training-input-files", bytes.NewReader(body))
 		if e != nil {
 			t.Fatal(e)
 		}

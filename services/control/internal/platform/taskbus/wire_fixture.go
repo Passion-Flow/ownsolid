@@ -249,7 +249,7 @@ func (p *WireFixture) serve(raw net.Conn) {
 			}
 			kind := ""
 			if client && (frame.command == "PUB" || frame.command == "HPUB") {
-				if strings.HasPrefix(frame.subject, subjectPrefix+"."+p.configuration.NamespaceID+".") {
+				if strings.HasPrefix(frame.subject, subjectPrefix+"."+wire.DefaultSiteID+"."+wire.DefaultCellID+"."+p.configuration.NamespaceID+".") {
 					kind = "publish"
 				}
 				if strings.HasPrefix(frame.subject, "$JS.ACK.") && strings.Contains(frame.subject, "."+p.configuration.Stream+"."+p.configuration.Consumer+".") && bytes.Equal(frame.payload(), []byte("+ACK")) {

@@ -329,7 +329,7 @@ impl Fixture {
         let control_server_handle = control_handle.clone();
         let control_router = Router::new()
             .route(
-                "/gateway/v1/instances/{gateway}/{operation}",
+                "/gateway/v1/sites/default/cells/default/instances/{gateway}/{operation}",
                 axum::routing::post(control),
             )
             .with_state(state.clone());
@@ -359,6 +359,8 @@ impl Fixture {
             listen_address,
             backend_address,
             control_origin: format!("https://{control_address}"),
+            site_id: "default".to_owned(),
+            cell_id: "default".to_owned(),
             control_ca_file: root.join("ca.pem"),
             gateway_credential_file: root.join("credential"),
             tls_certificate_file: root.join("certificate.pem"),

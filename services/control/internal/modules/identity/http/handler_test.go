@@ -9,6 +9,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"io"
 	"math/big"
 	"net"
@@ -23,14 +25,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 type client struct {
@@ -81,6 +83,7 @@ func accountTLSServer(t *testing.T, handler http.Handler) *httptest.Server {
 }
 func (c *client) request(method, path string, body any, status int, schema string, headers map[string]string) map[string]any {
 	c.t.Helper()
+	path = cellroute.Public(path, wire.LocalScope())
 	var payload []byte
 	if body != nil {
 		switch b := body.(type) {

@@ -42,7 +42,7 @@ async fn synthetic_admission(
     match state.mode.load(Ordering::SeqCst) {
         1 => return (StatusCode::UNAUTHORIZED, Json(json!({"code":"API_KEY_INVALID","detail":"synthetic private diagnostics must never escape"}))).into_response(),
         6 => return (StatusCode::FORBIDDEN, Json(json!({"code":"LICENSE_NEW_BUSINESS_UNAVAILABLE","detail":"synthetic customer data must never escape"}))).into_response(),
-        2 => return (StatusCode::TEMPORARY_REDIRECT, [(header::LOCATION, format!("/gateway/v1/instances/{gateway}/admissions"))]).into_response(),
+        2 => return (StatusCode::TEMPORARY_REDIRECT, [(header::LOCATION, format!("/gateway/v1/sites/default/cells/default/instances/{gateway}/admissions"))]).into_response(),
         4 => return ([(header::CONTENT_TYPE,"application/json")], "x".repeat(262_145)).into_response(),
         5 => tokio::time::sleep(Duration::from_secs(2)).await,
         _ => {}
@@ -104,7 +104,7 @@ impl Fixture {
         };
         let router = Router::new()
             .route(
-                "/gateway/v1/instances/{gateway}/admissions",
+                "/gateway/v1/sites/default/cells/default/instances/{gateway}/admissions",
                 post(synthetic_admission),
             )
             .with_state(state.clone());
@@ -127,6 +127,8 @@ impl Fixture {
             listen_address: SocketAddrV4::new(*address.ip(), 19443),
             backend_address: SocketAddrV4::new(*address.ip(), 19001),
             control_origin: format!("https://{address}"),
+            site_id: "default".to_owned(),
+            cell_id: "default".to_owned(),
             control_ca_file: root.join("ca.pem"),
             gateway_credential_file: root.join("credential"),
             tls_certificate_file: root.join("certificate.pem"),

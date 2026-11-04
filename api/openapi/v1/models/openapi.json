@@ -11,7 +11,7 @@
     }
   ],
   "paths": {
-    "/api/v1/admin/models/catalog": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/catalog": {
       "get": {
         "operationId": "getApprovedModelCatalog",
         "x-audiences": [
@@ -45,9 +45,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/models": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models": {
       "get": {
         "operationId": "listAdminModels",
         "x-audiences": [
@@ -92,9 +112,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/models/{model_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}": {
       "get": {
         "operationId": "getAdminModel",
         "x-audiences": [
@@ -139,9 +179,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/models/{model_id}/retire": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}/retire": {
       "post": {
         "operationId": "retireModelVersion",
         "x-audiences": [
@@ -216,9 +276,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/model-imports": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports": {
       "get": {
         "operationId": "listModelImports",
         "x-audiences": [
@@ -338,9 +418,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/model-imports/resolve": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/resolve": {
       "get": {
         "operationId": "resolveModelImportIntent",
         "x-audiences": [
@@ -395,9 +495,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/model-imports/{import_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}": {
       "get": {
         "operationId": "getModelImport",
         "x-audiences": [
@@ -442,9 +562,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/model-imports/{import_id}/chunks": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/chunks": {
       "post": {
         "operationId": "uploadModelImportChunk",
         "x-audiences": [
@@ -550,9 +690,29 @@
           }
         },
         "description": "Upload one exact next offset or replay identical bytes. Reuse a current CSRF token across sequential chunks; uncertain results reconcile through import status and the same offset/digest."
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/model-imports/{import_id}/complete": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/complete": {
       "post": {
         "operationId": "queueModelImport",
         "x-audiences": [
@@ -627,9 +787,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/model-imports/{import_id}/cancel": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/cancel": {
       "post": {
         "operationId": "cancelModelImport",
         "x-audiences": [
@@ -704,9 +884,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/models": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models": {
       "get": {
         "operationId": "listPortalModels",
         "x-audiences": [
@@ -751,9 +951,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/models/{model_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models/{model_id}": {
       "get": {
         "operationId": "getPortalModel",
         "x-audiences": [
@@ -808,7 +1028,27 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

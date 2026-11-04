@@ -55,7 +55,7 @@ func actualDerivedTransfer(t *testing.T, g preparationScenario, catalog wire.Der
 	for _, offset := range []int64{0, last} {
 		length := min(agentwire.ModelTransferChunkBytes, asset.SizeBytes-offset)
 		body, _ := json.Marshal(agentwire.ModelFileRequest{LeaseToken: claim.Lease.LeaseToken, File: asset.Path, Offset: offset, Length: length})
-		request, _ := http.NewRequest("POST", httpfixture.AdminOrigin+"/agent/v1/nodes/"+g.node.NodeID+"/tasks/"+task.ID+"/model-files", bytes.NewReader(body))
+		request, _ := http.NewRequest("POST", httpfixture.AdminOrigin+"/agent/v1/sites/default/cells/default/nodes/"+g.node.NodeID+"/tasks/"+task.ID+"/model-files", bytes.NewReader(body))
 		request.Header.Set("Authorization", "Bearer "+g.node.Credential)
 		request.Header.Set("Content-Type", "application/json")
 		response, e := server.Client().Do(request)

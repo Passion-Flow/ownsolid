@@ -71,7 +71,7 @@ func TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer(t *testing.T) {
 		}
 		return response.StatusCode, body, response.Header
 	}
-	base := "/agent/v1/nodes/" + c.node.NodeID + "/tasks/" + lease.TaskID
+	base := "/agent/v1/sites/default/cells/default/nodes/" + c.node.NodeID + "/tasks/" + lease.TaskID
 	status, body, _ := post(base+"/model-manifest", c.node.Credential, wire.LeaseRenewal{LeaseToken: lease.LeaseToken})
 	if status != 200 || !bytes.Contains(body, []byte(wire.ApprovedModel().Revision)) {
 		t.Fatal("manifest not authorized", status, string(body))

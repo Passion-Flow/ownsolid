@@ -427,7 +427,7 @@ func TestActualCpuCheckpointAcceptanceAuditRollbackRetryReplayAndArtifactStillNe
 	defer server.Close()
 	client := httpfixture.New(t, server, "admin", httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json"))
 	client.Headers = map[string]string{"Authorization": "Bearer " + f.credential}
-	path := "/agent/v1/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-stops"
+	path := "/agent/v1/sites/default/cells/default/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-stops"
 	body := wire.StopSubmission{LeaseToken: l.LeaseToken, Receipt: stop, Outcome: json.RawMessage("null")}
 	response := client.Call("POST", path, body, 200, "TrainingStopAcceptanceResponse")
 	if response["state"] != "succeeded" || response["duplicate"] != false || count(t, f, "SELECT count(*) FROM training_jobs WHERE state='succeeded' AND accepted_artifact_id IS NOT NULL") != 1 || count(t, f, "SELECT count(*) FROM gpu_leases WHERE state='released'") != 1 {

@@ -19,7 +19,7 @@ func TestActualTLSRestrictedTrainingStopAfterEpochLossAndStrictReceiptShape(t *t
 	defer server.Close()
 	client := httpfixture.New(t, server, "admin", httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json"))
 	client.Headers = map[string]string{"Authorization": "Bearer " + f.credential}
-	path := "/agent/v1/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-stops"
+	path := "/agent/v1/sites/default/cells/default/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-stops"
 	body := wire.StopSubmission{LeaseToken: l.LeaseToken, Receipt: stopFixture(t, f, l), Outcome: json.RawMessage("null")}
 	raw, _ := json.Marshal(body)
 	client.Call("POST", path, append([]byte(`{"unknown":true,`), raw[1:]...), 400, "Problem")

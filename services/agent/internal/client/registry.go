@@ -23,7 +23,7 @@ func (c *Client) RegistryManifest(ctx context.Context, path, lease string, comma
 		return wire.RegistryManifest{}, errors.New("AGENT_PATH_INVALID")
 	}
 	raw, _ := json.Marshal(wire.LeaseRenewal{LeaseToken: lease})
-	request, e := http.NewRequestWithContext(ctx, http.MethodPost, c.Origin+path+"/manifest", bytes.NewReader(raw))
+	request, e := http.NewRequestWithContext(ctx, http.MethodPost, c.target(path)+"/manifest", bytes.NewReader(raw))
 	if e != nil {
 		return wire.RegistryManifest{}, errors.New("CONTROL_REQUEST_INVALID")
 	}
@@ -69,7 +69,7 @@ func (c *Client) RegistryArchive(ctx context.Context, path, lease string, m wire
 			wire.RegistryRange
 		}{lease, wire.RegistryRange{GrantID: m.GrantID, Offset: offset, Length: length}}
 		raw, _ := json.Marshal(input)
-		req, e := http.NewRequestWithContext(ctx, http.MethodPost, c.Origin+path+"/ranges", bytes.NewReader(raw))
+		req, e := http.NewRequestWithContext(ctx, http.MethodPost, c.target(path)+"/ranges", bytes.NewReader(raw))
 		if e != nil {
 			return errors.New("CONTROL_REQUEST_INVALID")
 		}

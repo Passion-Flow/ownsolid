@@ -64,11 +64,11 @@ func TestM10ExplicitLifecycleEnrollmentRejectsLegacyUpgradeAndGenericPreparation
 			t.Fatal("wrong negotiated TLS response")
 		}
 		client.Headers = map[string]string{"Authorization": "Bearer " + result["credential"].(string)}
-		base := "/agent/v1/nodes/" + result["node_id"].(string)
+		base := "/agent/v1/sites/default/cells/default/nodes/" + result["node_id"].(string)
 		client.Call("POST", base+"/heartbeat", current, 200, "DispositionResponse")
 		client.Call("POST", base+"/heartbeat", old, 403, "Problem")
 		client.Headers = map[string]string{"Authorization": "Bearer " + enrolled.Credential}
-		problem := client.Call("POST", "/agent/v1/nodes/"+enrolled.NodeID+"/tasks/claims", map[string]any{}, 403, "Problem")
+		problem := client.Call("POST", "/agent/v1/sites/default/cells/default/nodes/"+enrolled.NodeID+"/tasks/claims", map[string]any{}, 403, "Problem")
 		if problem["code"] != "MODEL_PREPARATION_AUTHORITY_REQUIRED" {
 			t.Fatal("generic TLS lease exposed preparation", problem["code"])
 		}

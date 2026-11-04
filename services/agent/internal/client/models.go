@@ -90,7 +90,7 @@ func (c *Client) downloadModelFile(ctx context.Context, path, lease string, appr
 
 func (c *Client) modelRange(ctx context.Context, path string, input wire.ModelFileRequest) ([]byte, error) {
 	b, _ := json.Marshal(input)
-	r, e := http.NewRequestWithContext(ctx, "POST", c.Origin+path, bytes.NewReader(b))
+	r, e := http.NewRequestWithContext(ctx, "POST", c.target(path), bytes.NewReader(b))
 	if e != nil {
 		return nil, errors.New("CONTROL_REQUEST_INVALID")
 	}

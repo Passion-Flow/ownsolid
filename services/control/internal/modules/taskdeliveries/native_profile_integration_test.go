@@ -44,7 +44,7 @@ func actualOwnedNativeTaskEventProfile(t *testing.T) (string, func(), func(func(
 			t.Fatal("actual peer admission", e)
 		}
 		now := time.Now().UTC().Truncate(time.Microsecond)
-		canary := taskbus.Envelope{Event: taskbus.Event{Schema: taskbus.EventSchema, ID: uuid.NewString(), NamespaceID: peer.Configuration.NamespaceID, TenantID: peer.Tenant, WorkspaceID: uuid.NewString(), NodeID: uuid.NewString(), TaskID: uuid.NewString(), Kind: taskbus.NodeTaskQueued, Operation: "collect_facts.v1", TaskCreatedAt: now, CreatedAt: now}, DeliveryID: uuid.NewString()}
+		canary := taskbus.Envelope{Event: taskbus.Event{Schema: taskbus.EventSchema, ID: uuid.NewString(), SiteID: "default", CellID: "default", NamespaceID: peer.Configuration.NamespaceID, TenantID: peer.Tenant, WorkspaceID: uuid.NewString(), NodeID: uuid.NewString(), TaskID: uuid.NewString(), Kind: taskbus.NodeTaskQueued, Operation: "collect_facts.v1", TaskCreatedAt: now, CreatedAt: now}, DeliveryID: uuid.NewString()}
 		_, publish := bus.Publish(ctx, canary)
 		_, found, read := bus.Lookup(ctx, canary)
 		closed := bus.Close()

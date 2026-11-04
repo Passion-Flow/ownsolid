@@ -49,14 +49,14 @@ func TestActualLinuxLifecycleConcreteCycleAndNativeEngineArchitectureRefusal(t *
 		}
 		w.Header().Set("Content-Type", "application/json")
 		switch r.URL.Path {
-		case "/agent/v1/nodes/" + id + "/heartbeat":
+		case "/agent/v1/sites/default/cells/default/nodes/" + id + "/heartbeat":
 			var h wire.Handshake
 			if json.NewDecoder(r.Body).Decode(&h) != nil || h.Validate() != nil || h.ExecutionProfile != wire.DockerModelLifecycleProfile || h.ProtocolVersion != wire.ModelLifecycleVersion || h.Facts.Architecture != "amd64" || h.Inference == nil || h.Inference.ProbeErrorCode == "" {
 				t.Error("actual device-free lifecycle handshake missing concrete discovery/inference or exact capabilities")
 			}
 			heartbeats.Add(1)
 			json.NewEncoder(w).Encode(map[string]any{"data": wire.Disposition{Status: "active", ServerTime: time.Now().UTC()}})
-		case "/agent/v1/nodes/" + id + "/tasks/claims":
+		case "/agent/v1/sites/default/cells/default/nodes/" + id + "/tasks/claims":
 			claims.Add(1)
 			json.NewEncoder(w).Encode(map[string]any{"data": wire.Claim{}})
 			cancel()
@@ -80,7 +80,7 @@ func TestActualLinuxLifecycleConcreteCycleAndNativeEngineArchitectureRefusal(t *
 	if e != nil {
 		t.Fatal("complete explicit execution configuration", e)
 	}
-	identity := state.Identity{NodeID: id, Credential: credential, ControlOrigin: c.ControlOrigin, ExecutionProfile: wire.DockerModelLifecycleProfile, ProtocolVersion: wire.ModelLifecycleVersion}
+	identity := state.Identity{SiteID: "default", CellID: "default", NodeID: id, Credential: credential, ControlOrigin: c.ControlOrigin, ExecutionProfile: wire.DockerModelLifecycleProfile, ProtocolVersion: wire.ModelLifecycleVersion}
 	if e = state.SaveNew(c.StateDirectory, identity); e != nil {
 		t.Fatal(e)
 	}

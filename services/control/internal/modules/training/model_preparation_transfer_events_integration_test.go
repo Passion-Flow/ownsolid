@@ -190,7 +190,7 @@ func TestActualCpuModelPreparationTLSMachineSchemasEventsAndActualHeldoutRange(t
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json")
 	machine := httpfixture.New(t, server, "admin", schemas)
 	machine.Headers = map[string]string{"Authorization": "Bearer " + g.node.Credential}
-	base := "/agent/v1/nodes/" + g.node.NodeID + "/tasks/"
+	base := "/agent/v1/sites/default/cells/default/nodes/" + g.node.NodeID + "/tasks/"
 	claimed := machine.Call("POST", base+"claims", map[string]any{}, 200, "ClaimResponse")
 	raw, _ := json.Marshal(claimed["lease"])
 	var l agentwire.Lease

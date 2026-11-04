@@ -129,7 +129,7 @@ func TestActualTLSOrderedTrainingEventBatchContractAndCancellation(t *testing.T)
 	values := prelude(*l.Training)
 	events := []json.RawMessage{values[0], values[1]}
 	body := map[string]any{"lease_token": l.LeaseToken, "events": events}
-	path := "/agent/v1/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-events"
+	path := "/agent/v1/sites/default/cells/default/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-events"
 	first := client.Call("POST", path, body, 200, "TrainingEventBatchResponse")
 	if len(first["items"].([]any)) != 2 {
 		t.Fatal("actual event batch response")

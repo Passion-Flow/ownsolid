@@ -37,7 +37,7 @@ func TestActualCpuModelPreparationTLSUploadSchemaBoundariesExactChunksAndNoIncom
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json")
 	machine := httpfixture.New(t, server, "admin", schemas)
 	machine.Headers = map[string]string{"Authorization": "Bearer " + g.node.Credential}
-	base := "/agent/v1/nodes/" + g.node.NodeID + "/tasks/" + l.TaskID + "/model-preparation-uploads"
+	base := "/agent/v1/sites/default/cells/default/nodes/" + g.node.NodeID + "/tasks/" + l.TaskID + "/model-preparation-uploads"
 	value := machine.Call("POST", base, map[string]any{"lease_token": l.LeaseToken, "metadata": json.RawMessage(metadata)}, 201, "ModelPreparationUploadResponse")
 	upload := value["id"].(string)
 	machine.Call("POST", base+"/"+upload+"/finish", map[string]any{"lease_token": l.LeaseToken}, 409, "Problem")
@@ -97,7 +97,7 @@ func TestActualCpuModelPreparationTLSRestrictedStopExactSchemaAndReplay(t *testi
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json")
 	machine := httpfixture.New(t, server, "admin", schemas)
 	machine.Headers = map[string]string{"Authorization": "Bearer " + g.node.Credential}
-	path := "/agent/v1/nodes/" + g.node.NodeID + "/tasks/" + l.TaskID + "/model-preparation-stops"
+	path := "/agent/v1/sites/default/cells/default/nodes/" + g.node.NodeID + "/tasks/" + l.TaskID + "/model-preparation-stops"
 	value := machine.Call("POST", path, wire.StopSubmission{LeaseToken: l.LeaseToken, Receipt: receipt}, 200, "ModelPreparationStopAcceptanceResponse")
 	if value["state"] != "failed" || value["gpu_released"] != true || value["duplicate"] != false {
 		t.Fatal("TLS restricted cleanup state")

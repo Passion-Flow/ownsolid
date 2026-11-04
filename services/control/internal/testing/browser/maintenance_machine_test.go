@@ -78,7 +78,7 @@ func startSyntheticMaintenanceMachine(t *testing.T, server *httptest.Server, s *
 			return o
 		}
 		for {
-			base := "/agent/v1/nodes/" + node.NodeID
+			base := "/agent/v1/sites/default/cells/default/nodes/" + node.NodeID
 			good := true
 			if time.Since(lastHeartbeat) >= 10*time.Second {
 				o := observation()

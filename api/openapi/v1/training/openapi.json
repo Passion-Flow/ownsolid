@@ -11,7 +11,7 @@
     }
   ],
   "paths": {
-    "/api/v1/admin/training/capabilities": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/capabilities": {
       "get": {
         "operationId": "adminGetCapabilities",
         "x-audiences": [
@@ -56,9 +56,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/training/jobs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs": {
       "get": {
         "operationId": "adminListJobs",
         "x-audiences": [
@@ -201,9 +221,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/training/jobs/{job_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}": {
       "get": {
         "operationId": "adminGetJob",
         "x-audiences": [
@@ -258,9 +298,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/training/jobs/{job_id}/cancellations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/cancellations": {
       "post": {
         "operationId": "adminCancelJob",
         "x-audiences": [
@@ -334,9 +394,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/training/jobs/{job_id}/recoveries": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/recoveries": {
       "post": {
         "operationId": "adminRecoverJob",
         "x-audiences": [
@@ -492,9 +572,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/training/jobs/{job_id}/attempts": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/attempts": {
       "get": {
         "operationId": "adminListAttempts",
         "x-audiences": [
@@ -566,9 +666,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/training/jobs/{job_id}/checkpoints": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/checkpoints": {
       "get": {
         "operationId": "adminListCheckpoints",
         "x-audiences": [
@@ -640,9 +760,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/training/jobs/{job_id}/metrics": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/metrics": {
       "get": {
         "operationId": "adminListMetrics",
         "x-audiences": [
@@ -724,9 +864,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/training/jobs/{job_id}/files/{asset}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/files/{asset}": {
       "get": {
         "operationId": "adminExportAcceptedAdapter",
         "x-audiences": [
@@ -808,9 +968,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/training/nodes/{node_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/nodes/{node_id}": {
       "get": {
         "operationId": "adminGetTrainingTarget",
         "x-audiences": [
@@ -865,9 +1045,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/capabilities": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/capabilities": {
       "get": {
         "operationId": "portalGetCapabilities",
         "x-audiences": [
@@ -912,9 +1112,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/jobs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs": {
       "get": {
         "operationId": "portalListJobs",
         "x-audiences": [
@@ -1067,9 +1287,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/jobs/{job_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}": {
       "get": {
         "operationId": "portalGetJob",
         "x-audiences": [
@@ -1124,9 +1364,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/jobs/{job_id}/cancellations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/cancellations": {
       "post": {
         "operationId": "portalCancelJob",
         "x-audiences": [
@@ -1200,9 +1460,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/jobs/{job_id}/recoveries": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/recoveries": {
       "post": {
         "operationId": "portalRecoverJob",
         "x-audiences": [
@@ -1358,9 +1638,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/jobs/{job_id}/attempts": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/attempts": {
       "get": {
         "operationId": "portalListAttempts",
         "x-audiences": [
@@ -1432,9 +1732,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/jobs/{job_id}/checkpoints": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/checkpoints": {
       "get": {
         "operationId": "portalListCheckpoints",
         "x-audiences": [
@@ -1506,9 +1826,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/jobs/{job_id}/metrics": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/metrics": {
       "get": {
         "operationId": "portalListMetrics",
         "x-audiences": [
@@ -1590,9 +1930,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/jobs/{job_id}/files/{asset}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/files/{asset}": {
       "get": {
         "operationId": "portalExportAcceptedAdapter",
         "x-audiences": [
@@ -1674,9 +2034,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/training/nodes/{node_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/nodes/{node_id}": {
       "get": {
         "operationId": "portalGetTrainingTarget",
         "x-audiences": [
@@ -1731,7 +2111,27 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

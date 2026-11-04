@@ -11,7 +11,7 @@
     }
   ],
   "paths": {
-    "/api/v1/admin/workflows/configuration": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/configuration": {
       "get": {
         "operationId": "adminWorkflowConfiguration",
         "x-audiences": [
@@ -56,9 +56,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows": {
       "get": {
         "operationId": "adminWorkflowPage",
         "x-audiences": [
@@ -196,9 +216,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}": {
       "get": {
         "operationId": "adminGetWorkflow",
         "x-audiences": [
@@ -318,9 +358,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/validations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/validations": {
       "post": {
         "operationId": "adminValidateWorkflow",
         "x-audiences": [
@@ -395,9 +455,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/publications": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/publications": {
       "post": {
         "operationId": "adminPublishWorkflow",
         "x-audiences": [
@@ -482,9 +562,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/versions": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/versions": {
       "get": {
         "operationId": "adminWorkflowVersionPage",
         "x-audiences": [
@@ -547,9 +647,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/debug-runs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/debug-runs": {
       "post": {
         "operationId": "adminDebugWorkflow",
         "x-audiences": [
@@ -634,9 +754,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/conversations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations": {
       "get": {
         "operationId": "adminWorkflowConversationPage",
         "x-audiences": [
@@ -784,9 +924,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/conversations/{conversation_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}": {
       "get": {
         "operationId": "adminGetWorkflowConversation",
         "x-audiences": [
@@ -926,9 +1086,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/conversations/{conversation_id}/runs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}/runs": {
       "get": {
         "operationId": "adminWorkflowConversationRunPage",
         "x-audiences": [
@@ -1096,9 +1276,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/runs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/runs": {
       "get": {
         "operationId": "adminWorkflowRunPage",
         "x-audiences": [
@@ -1161,9 +1361,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/runs/{run_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/runs/{run_id}": {
       "get": {
         "operationId": "adminGetWorkflowRun",
         "x-audiences": [
@@ -1218,9 +1438,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workflows/{workflow_id}/runs/{run_id}/cancellations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/runs/{run_id}/cancellations": {
       "post": {
         "operationId": "adminCancelWorkflowRun",
         "x-audiences": [
@@ -1305,9 +1545,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/configuration": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/configuration": {
       "get": {
         "operationId": "portalWorkflowConfiguration",
         "x-audiences": [
@@ -1352,9 +1612,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows": {
       "get": {
         "operationId": "portalWorkflowPage",
         "x-audiences": [
@@ -1502,9 +1782,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}": {
       "get": {
         "operationId": "portalGetWorkflow",
         "x-audiences": [
@@ -1644,9 +1944,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/validations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/validations": {
       "post": {
         "operationId": "portalValidateWorkflow",
         "x-audiences": [
@@ -1731,9 +2051,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/publications": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/publications": {
       "post": {
         "operationId": "portalPublishWorkflow",
         "x-audiences": [
@@ -1828,9 +2168,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/versions": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/versions": {
       "get": {
         "operationId": "portalWorkflowVersionPage",
         "x-audiences": [
@@ -1903,9 +2263,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/debug-runs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/debug-runs": {
       "post": {
         "operationId": "portalDebugWorkflow",
         "x-audiences": [
@@ -2000,9 +2380,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/conversations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/conversations": {
       "get": {
         "operationId": "portalWorkflowConversationPage",
         "x-audiences": [
@@ -2170,9 +2570,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/conversations/{conversation_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/conversations/{conversation_id}": {
       "get": {
         "operationId": "portalGetWorkflowConversation",
         "x-audiences": [
@@ -2332,9 +2752,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/conversations/{conversation_id}/runs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/conversations/{conversation_id}/runs": {
       "get": {
         "operationId": "portalWorkflowConversationRunPage",
         "x-audiences": [
@@ -2522,9 +2962,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/runs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/runs": {
       "get": {
         "operationId": "portalWorkflowRunPage",
         "x-audiences": [
@@ -2597,9 +3057,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/runs/{run_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/runs/{run_id}": {
       "get": {
         "operationId": "portalGetWorkflowRun",
         "x-audiences": [
@@ -2664,9 +3144,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/workflows/{workflow_id}/runs/{run_id}/cancellations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/runs/{run_id}/cancellations": {
       "post": {
         "operationId": "portalCancelWorkflowRun",
         "x-audiences": [
@@ -2761,7 +3261,27 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

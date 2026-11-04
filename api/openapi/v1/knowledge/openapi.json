@@ -11,7 +11,7 @@
     }
   ],
   "paths": {
-    "/api/v1/admin/knowledge-bases/configuration": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases/configuration": {
       "get": {
         "operationId": "adminKnowledgeConfiguration",
         "x-audiences": [
@@ -56,9 +56,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/knowledge-bases": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases": {
       "get": {
         "operationId": "adminKnowledgeBasePage",
         "x-audiences": [
@@ -196,9 +216,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/knowledge-bases/{base_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases/{base_id}": {
       "get": {
         "operationId": "adminGetKnowledgeBase",
         "x-audiences": [
@@ -318,9 +358,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/knowledge-bases/{base_id}/documents": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases/{base_id}/documents": {
       "get": {
         "operationId": "adminKnowledgeDocumentPage",
         "x-audiences": [
@@ -468,9 +528,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/knowledge-bases/{base_id}/documents/{document_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases/{base_id}/documents/{document_id}": {
       "get": {
         "operationId": "adminGetKnowledgeDocument",
         "x-audiences": [
@@ -610,9 +690,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/knowledge-bases/{base_id}/documents/{document_id}/source": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases/{base_id}/documents/{document_id}/source": {
       "get": {
         "operationId": "adminKnowledgeSource",
         "x-audiences": [
@@ -772,9 +872,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/knowledge-bases/{base_id}/documents/{document_id}/retries": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases/{base_id}/documents/{document_id}/retries": {
       "post": {
         "operationId": "adminRetryKnowledgeDocument",
         "x-audiences": [
@@ -869,9 +989,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/knowledge-bases/{base_id}/searches": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases/{base_id}/searches": {
       "post": {
         "operationId": "adminSearchKnowledge",
         "x-audiences": [
@@ -946,9 +1086,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/knowledge-bases/{base_id}/answers": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases/{base_id}/answers": {
       "post": {
         "operationId": "adminAskKnowledge",
         "x-audiences": [
@@ -1023,9 +1183,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/knowledge-bases/{base_id}/rebuilds": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/knowledge-bases/{base_id}/rebuilds": {
       "post": {
         "operationId": "adminRebuildKnowledgeBase",
         "x-audiences": [
@@ -1110,9 +1290,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases/configuration": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases/configuration": {
       "get": {
         "operationId": "portalKnowledgeConfiguration",
         "x-audiences": [
@@ -1157,9 +1357,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases": {
       "get": {
         "operationId": "portalKnowledgeBasePage",
         "x-audiences": [
@@ -1307,9 +1527,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases/{base_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases/{base_id}": {
       "get": {
         "operationId": "portalGetKnowledgeBase",
         "x-audiences": [
@@ -1449,9 +1689,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases/{base_id}/documents": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases/{base_id}/documents": {
       "get": {
         "operationId": "portalKnowledgeDocumentPage",
         "x-audiences": [
@@ -1619,9 +1879,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases/{base_id}/documents/{document_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases/{base_id}/documents/{document_id}": {
       "get": {
         "operationId": "portalGetKnowledgeDocument",
         "x-audiences": [
@@ -1781,9 +2061,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases/{base_id}/documents/{document_id}/source": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases/{base_id}/documents/{document_id}/source": {
       "get": {
         "operationId": "portalKnowledgeSource",
         "x-audiences": [
@@ -1963,9 +2263,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases/{base_id}/documents/{document_id}/retries": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases/{base_id}/documents/{document_id}/retries": {
       "post": {
         "operationId": "portalRetryKnowledgeDocument",
         "x-audiences": [
@@ -2070,9 +2390,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases/{base_id}/searches": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases/{base_id}/searches": {
       "post": {
         "operationId": "portalSearchKnowledge",
         "x-audiences": [
@@ -2157,9 +2497,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases/{base_id}/answers": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases/{base_id}/answers": {
       "post": {
         "operationId": "portalAskKnowledge",
         "x-audiences": [
@@ -2244,9 +2604,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/knowledge-bases/{base_id}/rebuilds": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/knowledge-bases/{base_id}/rebuilds": {
       "post": {
         "operationId": "portalRebuildKnowledgeBase",
         "x-audiences": [
@@ -2341,7 +2721,27 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

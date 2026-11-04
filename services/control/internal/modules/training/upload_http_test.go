@@ -29,7 +29,7 @@ func TestActualTLSTrainingUploadSchemasStrictEnvelopesChunksAndCurrentAuthority(
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json")
 	client := httpfixture.New(t, server, "admin", schemas)
 	client.Headers = map[string]string{"Authorization": "Bearer " + f.credential}
-	path := "/agent/v1/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-uploads"
+	path := "/agent/v1/sites/default/cells/default/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-uploads"
 	var metadata []byte
 	if e := f.s.DB.QueryRow(context.Background(), "SELECT manifest_bytes FROM training_uploads WHERE id=$1", u.ID).Scan(&metadata); e != nil {
 		t.Fatal(e)
@@ -117,7 +117,7 @@ func TestActualTLSIncompleteTrainingBodyHonorsTypedReadDeadlineWithoutAcceptingB
 	if e = connection.SetDeadline(time.Now().Add(5 * time.Second)); e != nil {
 		t.Fatal(e)
 	}
-	path := "/agent/v1/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-uploads/" + u.ID + "/chunks"
+	path := "/agent/v1/sites/default/cells/default/nodes/" + f.input.NodeID + "/tasks/" + l.TaskID + "/training-uploads/" + u.ID + "/chunks"
 	request := "POST " + path + " HTTP/1.1\r\nHost: admin.example.invalid\r\nAuthorization: Bearer " + f.credential + "\r\nContent-Type: application/octet-stream\r\nContent-Length: 1\r\nX-Training-Lease-Token: " + l.LeaseToken + "\r\nX-Training-Asset: " + input.Asset + "\r\nX-Training-Offset: 0\r\nX-Training-SHA256: " + input.SHA256 + "\r\n\r\n"
 	started := time.Now()
 	if _, e = io.WriteString(connection, request); e != nil {

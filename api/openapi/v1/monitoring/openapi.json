@@ -10,7 +10,7 @@
     }
   ],
   "paths": {
-    "/api/v1/admin/monitoring": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/monitoring": {
       "get": {
         "operationId": "adminMonitoring",
         "security": [
@@ -60,7 +60,27 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

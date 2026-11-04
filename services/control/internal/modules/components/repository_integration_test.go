@@ -442,7 +442,7 @@ func TestActualPairedComponentRuntime(t *testing.T) {
 			t.Fatal("unknown HTTP property accepted")
 		}
 		machine := &nodehttp.Handler{Service: g.s.Nodes, ComponentArtifact: g.s.DownloadArtifact}
-		r = httptest.NewRequest("POST", "/agent/v1/nodes/"+g.node.NodeID+"/tasks/"+uuid.NewString()+"/artifact", strings.NewReader(`{"lease_token":"wrong"}`))
+		r = httptest.NewRequest("POST", "/agent/v1/sites/default/cells/default/nodes/"+g.node.NodeID+"/tasks/"+uuid.NewString()+"/artifact", strings.NewReader(`{"lease_token":"wrong"}`))
 		r.Header.Set("Authorization", "Bearer "+g.node.Credential)
 		if _, _, e = machine.Machine(r, uuid.NewString()); e == nil {
 			t.Fatal("invalid machine lease accepted")

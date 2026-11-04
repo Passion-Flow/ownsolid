@@ -48,7 +48,7 @@ func TestM04HTTPActionsObservationsAndFencedActualArtifact(t *testing.T) {
 	id := enrolled["node_id"].(string)
 	credential := enrolled["credential"].(string)
 	machine.Headers = map[string]string{"Authorization": "Bearer " + credential}
-	base := "/agent/v1/nodes/" + id
+	base := "/agent/v1/sites/default/cells/default/nodes/" + id
 	path := "/api/v1/admin/nodes/" + id + "/components/node-exporter"
 	admin.Call("GET", path, nil, 200, "ComponentStateResponse")
 	admin.Call("GET", "/api/v1/alias/nodes/"+id+"/components/node-exporter", nil, 404, "Problem")
@@ -97,7 +97,7 @@ func TestM04HTTPActionsObservationsAndFencedActualArtifact(t *testing.T) {
 		t.Fatal("approved artifact transfer failed", e)
 	}
 
-	machine.Call("POST", "/agent/v1/nodes/"+uuid.NewString()+"/tasks/"+task["id"].(string)+"/artifact", wire.LeaseRenewal{LeaseToken: lease["lease_token"].(string)}, 401, "Problem")
+	machine.Call("POST", "/agent/v1/sites/default/cells/default/nodes/"+uuid.NewString()+"/tasks/"+task["id"].(string)+"/artifact", wire.LeaseRenewal{LeaseToken: lease["lease_token"].(string)}, 401, "Problem")
 	o := wire.ComponentObservation{Component: wire.NodeExporter, Version: wire.NodeExporterVersion, State: "unknown", ObservedAt: time.Now().UTC(), ErrorCode: "COMPONENT_SYSTEMD_UNAVAILABLE"}
 	machine.Call("POST", taskBase+"/results", wire.Result{LeaseToken: lease["lease_token"].(string), Outcome: "failure", ErrorCode: o.ErrorCode, Component: &o}, 200, "CompletedResponse")
 	machine.Call("POST", taskBase+"/artifact", wire.LeaseRenewal{LeaseToken: lease["lease_token"].(string)}, 409, "Problem")

@@ -8,11 +8,12 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/client"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/client"
 )
 
 func TestRegistryFinalAuthorityChecksRenewedGrantAndImmutableIntent(t *testing.T) {
@@ -40,7 +41,7 @@ func TestRegistryFinalAuthorityChecksRenewedGrantAndImmutableIntent(t *testing.T
 			// is synthetic; this does not prove a real server grant or signed image.
 			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				calls++
-				if r.Method != "POST" || r.URL.Path != path+"/manifest" || r.Header.Get("Authorization") != "Bearer explicit_contract_double_credential" {
+				if r.Method != "POST" || r.URL.Path != strings.Replace(path, "/agent/v1/nodes/", "/agent/v1/sites/default/cells/default/nodes/", 1)+"/manifest" || r.Header.Get("Authorization") != "Bearer explicit_contract_double_credential" {
 					t.Error("authority request changed")
 					w.WriteHeader(400)
 					return

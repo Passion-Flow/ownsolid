@@ -13,6 +13,8 @@ import (
 	"embed"
 	"encoding/json"
 	"encoding/pem"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -21,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
+	license "github.com/Passion-Flow/ownsolid/pkg/license/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
@@ -31,7 +33,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
-	license "github.com/Passion-Flow/ownsolid/pkg/license/v1"
+	"github.com/google/uuid"
 )
 
 // The exact owning candidate DDL, not a toy replacement or active catalog claim.
@@ -213,7 +215,7 @@ func (p httpFixture) call(t *testing.T, a httpActor, method, path string, input 
 			t.Fatal(e)
 		}
 	}
-	r := httptest.NewRequest(method, p.origin(a)+path, bytes.NewReader(body)).WithContext(p.ctx)
+	r := httptest.NewRequest(method, p.origin(a)+cellroute.Public(path, wire.LocalScope()), bytes.NewReader(body)).WithContext(p.ctx)
 	r.AddCookie(&http.Cookie{Name: "__Host-" + a.audience + "_session", Value: a.session})
 	if contextCookie != nil {
 		r.AddCookie(contextCookie)

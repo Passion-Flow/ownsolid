@@ -125,6 +125,8 @@ impl Fixture {
             listen_address: "127.0.0.1:19443".parse().unwrap(),
             backend_address: address,
             control_origin: "https://control.example.invalid".into(),
+            site_id: "default".to_owned(),
+            cell_id: "default".to_owned(),
             control_ca_file: root.join("ca.pem"),
             gateway_credential_file: root.join("credential"),
             tls_certificate_file: root.join("cert.pem"),

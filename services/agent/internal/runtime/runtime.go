@@ -237,10 +237,10 @@ func Enroll(ctx context.Context, c Config) error {
 	if e = connection.Post(ctx, "/agent/v1/enroll", wire.Enrollment{JoinToken: join, Handshake: handshake(f, c)}, &response); e != nil {
 		return e
 	}
-	if !idPattern.MatchString(response.NodeID) || !token(response.Credential) || response.ProtocolVersion != wire.ProfileVersion(profile(c)) || response.HeartbeatSeconds != wire.HeartbeatSeconds {
+	if !idPattern.MatchString(response.NodeID) || !token(response.Credential) || response.ProtocolVersion != wire.ProfileVersion(profile(c)) || response.HeartbeatSeconds != wire.HeartbeatSeconds || !(wire.Scope{SiteID: response.SiteID, CellID: response.CellID}).Valid() {
 		return errors.New("ENROLLMENT_RESPONSE_INVALID")
 	}
-	if e = state.SaveNew(c.StateDirectory, state.Identity{NodeID: response.NodeID, Credential: response.Credential, ControlOrigin: c.ControlOrigin, ProtocolVersion: wire.ProfileVersion(profile(c)), ExecutionProfile: profile(c)}); e != nil {
+	if e = state.SaveNew(c.StateDirectory, state.Identity{NodeID: response.NodeID, SiteID: response.SiteID, CellID: response.CellID, Credential: response.Credential, ControlOrigin: c.ControlOrigin, ProtocolVersion: wire.ProfileVersion(profile(c)), ExecutionProfile: profile(c)}); e != nil {
 		return errors.New("ENROLLMENT_COMMITTED_LOCAL_STATE_FAILED")
 	}
 	return nil
@@ -370,6 +370,7 @@ func Run(ctx context.Context, c Config) error {
 	}
 	defer connection.Close()
 	connection.Credential = identity.Credential
+	connection.Scope = identity.Scope()
 	m, e := manager(c)
 	if e != nil {
 		return e

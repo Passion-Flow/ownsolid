@@ -11,7 +11,7 @@
     }
   ],
   "paths": {
-    "/admin/nodes/{node_id}/task-deliveries": {
+    "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries": {
       "get": {
         "operationId": "adminListTaskDeliveries",
         "parameters": [
@@ -160,9 +160,29 @@
             "adminCookie": []
           }
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/admin/nodes/{node_id}/task-deliveries/{event_id}": {
+    "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}": {
       "get": {
         "operationId": "adminReadTaskDelivery",
         "parameters": [
@@ -300,9 +320,29 @@
             "adminCookie": []
           }
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/admin/nodes/{node_id}/task-deliveries/{event_id}/dead-letters": {
+    "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}/dead-letters": {
       "get": {
         "operationId": "adminReadTaskDeadLetters",
         "parameters": [
@@ -460,9 +500,29 @@
             "adminCookie": []
           }
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/admin/nodes/{node_id}/task-deliveries/{event_id}/retry": {
+    "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}/retry": {
       "post": {
         "operationId": "adminRetryTaskDelivery",
         "description": "Current Admin, current task scope, exact dead generation, reason and immutable replay receipt. Creates no physical task execution. Requires root origin/CSRF/License middleware.",
@@ -620,9 +680,29 @@
             "adminCookie": []
           }
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries": {
+    "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries": {
       "get": {
         "operationId": "portalListTaskDeliveries",
         "parameters": [
@@ -771,9 +851,29 @@
             "portalCookie": []
           }
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries/{event_id}": {
+    "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries/{event_id}": {
       "get": {
         "operationId": "portalReadTaskDelivery",
         "parameters": [
@@ -911,9 +1011,29 @@
             "portalCookie": []
           }
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries/{event_id}/dead-letters": {
+    "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries/{event_id}/dead-letters": {
       "get": {
         "operationId": "portalReadTaskDeadLetters",
         "parameters": [
@@ -1071,9 +1191,29 @@
             "portalCookie": []
           }
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/admin/task-delivery-quarantine": {
+    "/sites/{site_id}/cells/{cell_id}/admin/task-delivery-quarantine": {
       "get": {
         "operationId": "adminReadTaskDeliveryQuarantine",
         "parameters": [
@@ -1204,7 +1344,27 @@
             "adminCookie": []
           }
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

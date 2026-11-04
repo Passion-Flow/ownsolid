@@ -10,7 +10,7 @@
     }
   ],
   "paths": {
-    "/api/v1/workspaces/{workspace_id}/middleware": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware": {
       "get": {
         "operationId": "portalListMiddleware",
         "security": [
@@ -133,9 +133,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/middleware/profiles": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/profiles": {
       "get": {
         "operationId": "portalMiddlewareProfiles",
         "security": [
@@ -177,9 +197,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/middleware/{instance_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}": {
       "get": {
         "operationId": "portalReadMiddleware",
         "security": [
@@ -313,9 +353,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/middleware/{instance_id}/operations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}/operations": {
       "get": {
         "operationId": "portalMiddlewareHistory",
         "security": [
@@ -458,9 +518,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}": {
       "get": {
         "operationId": "portalMiddlewareRegistrationIntent",
         "security": [
@@ -512,9 +592,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}": {
       "get": {
         "operationId": "portalMiddlewareOperationIntent",
         "security": [
@@ -566,9 +666,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/middleware/operations/{operation_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operations/{operation_id}": {
       "get": {
         "operationId": "portalMiddlewareOperation",
         "security": [
@@ -620,9 +740,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workspaces/{workspace_id}/middleware": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware": {
       "get": {
         "operationId": "adminListMiddleware",
         "security": [
@@ -745,9 +885,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workspaces/{workspace_id}/middleware/profiles": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/profiles": {
       "get": {
         "operationId": "adminMiddlewareProfiles",
         "security": [
@@ -789,9 +949,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workspaces/{workspace_id}/middleware/{instance_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}": {
       "get": {
         "operationId": "adminReadMiddleware",
         "security": [
@@ -925,9 +1105,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workspaces/{workspace_id}/middleware/{instance_id}/operations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}/operations": {
       "get": {
         "operationId": "adminMiddlewareHistory",
         "security": [
@@ -1070,9 +1270,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}": {
       "get": {
         "operationId": "adminMiddlewareRegistrationIntent",
         "security": [
@@ -1124,9 +1344,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}": {
       "get": {
         "operationId": "adminMiddlewareOperationIntent",
         "security": [
@@ -1178,9 +1418,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/workspaces/{workspace_id}/middleware/operations/{operation_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operations/{operation_id}": {
       "get": {
         "operationId": "adminMiddlewareOperation",
         "security": [
@@ -1232,7 +1492,27 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

@@ -100,6 +100,10 @@ func schemaOwners(t *testing.T, f repositoryfixture.Fixture) {
 		expected["model_publications"] = true
 	}
 	expected["schema_migrations"] = true
+	if f.Store.Dialect() == transaction.PostgreSQL {
+		// The cell registry is PostgreSQL-only until CMP-201 and CMP-202 (ADR 0006).
+		expected["sites"], expected["cells"] = true, true
+	}
 	equalNames(t, stringsFrom(t, f, "SELECT table_name FROM information_schema.tables WHERE table_schema=current_schema() AND table_type='BASE TABLE'", "SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'"), expected)
 	sqlNames, e := fs.Glob(closure.Files, "*.sql")
 	if e != nil {
@@ -124,6 +128,9 @@ func schemaOwners(t *testing.T, f repositoryfixture.Fixture) {
 		}
 		if len(columns) == 0 {
 			t.Fatal("declared owner source has no parsed columns", table)
+		}
+		if f.Store.Dialect() == transaction.PostgreSQL && table != "schema_migrations" {
+			columns["site_id"], columns["cell_id"] = true, true
 		}
 		equalNames(t, stringsFrom(t, f, "SELECT column_name FROM information_schema.columns WHERE table_schema=current_schema() AND table_name=$1", "SELECT column_name FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=?", table), columns)
 		if f.Store.Dialect() != transaction.MySQL {

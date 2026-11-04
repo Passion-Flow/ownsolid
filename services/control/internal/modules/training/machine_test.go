@@ -223,7 +223,7 @@ func TestActualTLSMachineTrainingClaimAndRenewMatchesGeneratedSchema(t *testing.
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json")
 	machine := httpfixture.New(t, server, "admin", schemas)
 	machine.Headers = map[string]string{"Authorization": "Bearer " + f.credential}
-	base := "/agent/v1/nodes/" + f.input.NodeID
+	base := "/agent/v1/sites/default/cells/default/nodes/" + f.input.NodeID
 	result := machine.Call("POST", base+"/tasks/claims", map[string]any{}, 200, "ClaimResponse")
 	lease := result["lease"].(map[string]any)
 	if lease["training"] == nil {

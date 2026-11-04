@@ -10,6 +10,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores"
 	artifacthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores/http"
 	releasehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/releases/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"strings"
 	"time"
@@ -252,6 +253,17 @@ func (h *Handler) MachineHandler() http.Handler {
 	})
 }
 
+// withCellRelativePath gives modules the path they route on. A percent-encoded scope never
+// resolves, so RawPath, when set, ends in the same cell-relative text.
+func withCellRelativePath(r *http.Request, inner string) *http.Request {
+	out := r.Clone(r.Context())
+	if out.URL.RawPath != "" {
+		out.URL.RawPath = cellroute.Relative(out.URL.RawPath)
+	}
+	out.URL.Path = inner
+	return out
+}
+
 func machineRoute(path string) bool {
 	return strings.HasPrefix(path, "/agent/v1/") || strings.HasPrefix(path, "/gateway/v1/")
 }
@@ -291,6 +303,12 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 	if transportError != nil {
 		h.problem(w, requestID, transportError)
 		return
+	}
+	if inner, ok := cellroute.Resolve(r.URL.Path, wire.LocalScope()); !ok {
+		h.problem(w, requestID, errors.New("RESOURCE_NOT_FOUND"))
+		return
+	} else if inner != r.URL.Path {
+		r = withCellRelativePath(r, inner)
 	}
 	if machineIngress && !machineRoute(r.URL.Path) && !machineHealthRequest(r) || !machineIngress && c.MachineServer != nil && machineRoute(r.URL.Path) {
 		h.problem(w, requestID, errors.New("RESOURCE_NOT_FOUND"))

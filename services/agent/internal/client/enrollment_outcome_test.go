@@ -55,7 +55,7 @@ func TestEnrollmentUncertaintyTrustedTLSAndMalformedProblems(t *testing.T) {
 			// loopback TLS. Actual backend COMMIT evidence is a separate SQL gate.
 			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				requests.Add(1)
-				if r.Method != "POST" || r.URL.Path != path {
+				if r.Method != "POST" || r.URL.Path != onWire(path) {
 					t.Error("unexpected enrollment retry or route")
 				}
 				w.Header().Set("Content-Type", "application/problem+json")

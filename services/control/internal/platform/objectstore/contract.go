@@ -9,6 +9,7 @@ import (
 	"io"
 	"strings"
 
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/google/uuid"
 )
 
@@ -26,7 +27,7 @@ func (r Ref) Key() (string, error) {
 			return "", failure("OBJECT_SCOPE_INVALID")
 		}
 	}
-	return "artifacts/" + r.Tenant + "/" + r.Workspace + "/" + r.Object + "/content", nil
+	return strings.TrimPrefix(wire.LocalScope().Path(), "/") + "/artifacts/" + r.Tenant + "/" + r.Workspace + "/" + r.Object + "/content", nil
 }
 func ValidDigest(v string) bool {
 	b, e := hex.DecodeString(v)

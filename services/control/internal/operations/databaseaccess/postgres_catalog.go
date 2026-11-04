@@ -17,6 +17,7 @@ var postgreSQLVariantTables = [...]string{
 func postgreSQLTables() []string {
 	names := append([]string{}, applicationTables[:]...)
 	names = append(names, postgreSQLVariantTables[:]...)
+	names = append(names, "cells", "sites")
 	sort.Strings(names)
 	return names
 }

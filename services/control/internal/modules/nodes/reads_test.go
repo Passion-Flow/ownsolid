@@ -124,7 +124,7 @@ type nodeReadTimeRow struct{ stamp time.Time }
 
 func (r nodeReadTimeRow) Scan(dest ...any) error {
 	switch len(dest) {
-	case 14:
+	case 16:
 		*dest[7].(*[]byte), *dest[13].(*[]byte) = []byte(`{}`), []byte(`["collect_facts.v1"]`)
 		for _, i := range []int{8, 9, 10} {
 			*dest[i].(*time.Time) = r.stamp

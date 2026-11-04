@@ -10,6 +10,7 @@ product". Each entry gets its own box for real-environment verification.
 
 - [ ] CMP-201 Domestic business databases: Dameng, KingbaseES, openGauss and its family (P2) - Catalog: F244, F245, F247, F518
 - [ ] CMP-202 MySQL as the business database (P2) - Catalog: F238
+  - CMP-201 and CMP-202 must add the `site_id` and `cell_id` columns their chains lack (ADR 0006).
 - [ ] CMP-203 Domestic CPUs and operating systems: Kunpeng, Hygon, Kylin, UOS, openEuler (P2) - Catalog: F512 to F517
 - [ ] CMP-204 Harbor registry (P2) - Catalog: F212
 - [ ] CMP-205 MinIO, Ceph RGW and SeaweedFS object storage (P2) - Catalog: F211, F320, F321

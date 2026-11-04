@@ -25,6 +25,10 @@ pub struct Configuration {
     pub listen_address: SocketAddrV4,
     pub backend_address: SocketAddrV4,
     pub control_origin: String,
+    #[serde(default = "default_scope_id")]
+    pub site_id: String,
+    #[serde(default = "default_scope_id")]
+    pub cell_id: String,
     pub control_ca_file: PathBuf,
     pub gateway_credential_file: PathBuf,
     pub tls_certificate_file: PathBuf,
@@ -320,9 +324,27 @@ impl Configuration {
         {
             return Err("GATEWAY_CONTROL_ORIGIN_INVALID");
         }
+        if !valid_scope_id(&self.site_id) || !valid_scope_id(&self.cell_id) {
+            return Err("GATEWAY_SCOPE_INVALID");
+        }
         private_directory(&self.state_directory)?;
         Ok(())
     }
+}
+
+fn default_scope_id() -> String {
+    "default".to_owned()
+}
+
+/// The immutable site and cell identifier form, `^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$`.
+fn valid_scope_id(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    let edge = |b: &u8| b.is_ascii_lowercase() || b.is_ascii_digit();
+    !bytes.is_empty()
+        && bytes.len() <= 32
+        && edge(&bytes[0])
+        && edge(&bytes[bytes.len() - 1])
+        && bytes.iter().all(|b| edge(b) || *b == b'-')
 }
 
 #[cfg(test)]

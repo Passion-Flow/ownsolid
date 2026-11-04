@@ -7,6 +7,8 @@ import (
 
 type Node struct {
 	ID               string     `json:"id"`
+	SiteID           string     `json:"site_id"`
+	CellID           string     `json:"cell_id"`
 	TenantID         string     `json:"tenant_id"`
 	WorkspaceID      string     `json:"workspace_id"`
 	Name             string     `json:"name"`

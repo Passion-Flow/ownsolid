@@ -43,6 +43,8 @@ type Enrollment struct {
 }
 type Enrolled struct {
 	NodeID           string `json:"node_id"`
+	SiteID           string `json:"site_id"`
+	CellID           string `json:"cell_id"`
 	Credential       string `json:"credential"`
 	ProtocolVersion  string `json:"protocol_version"`
 	HeartbeatSeconds int    `json:"heartbeat_seconds"`

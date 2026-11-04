@@ -114,7 +114,7 @@ func TestActualPairedComponentArtifacts(t *testing.T) {
 			t.Fatal("wrong lease got package", e)
 		}
 		h := &nodehttp.Handler{Service: g.s.Nodes, ComponentArtifact: g.s.DownloadArtifact}
-		r := httptest.NewRequest("POST", "/agent/v1/nodes/"+g.node.NodeID+"/tasks/"+task.ID+"/artifact", strings.NewReader(`{"lease_token":"`+claim.Lease.LeaseToken+`"}`))
+		r := httptest.NewRequest("POST", "/agent/v1/sites/default/cells/default/nodes/"+g.node.NodeID+"/tasks/"+task.ID+"/artifact", strings.NewReader(`{"lease_token":"`+claim.Lease.LeaseToken+`"}`))
 		r.Header.Set("Authorization", "Bearer "+g.node.Credential)
 		out, status, e := h.Machine(r, uuid.NewString())
 		if e != nil || status != 200 {

@@ -57,7 +57,7 @@ func (c *Client) preparationSend(ctx context.Context, path, media string, body [
 	if !preparationPath.MatchString(path) {
 		return nil, errors.New("AGENT_PATH_INVALID")
 	}
-	r, e := http.NewRequestWithContext(ctx, "POST", c.Origin+path, bytes.NewReader(body))
+	r, e := http.NewRequestWithContext(ctx, "POST", c.target(path), bytes.NewReader(body))
 	if e != nil {
 		return nil, errors.New("AGENT_REQUEST_INVALID")
 	}

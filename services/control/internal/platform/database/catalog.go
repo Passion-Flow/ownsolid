@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
@@ -32,14 +33,8 @@ SELECT jsonb_build_object('table_count',(SELECT count(*) FROM pg_tables WHERE sc
    FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid WHERE t.tgrelid=o.oid AND NOT t.tgisinternal)) ORDER BY o.relname) FROM owned o))::text`
 
 // Exact native fresh and logical dump/reparse forms from pinned PostgreSQL18.6.
-const catalogFreshSHA256 = "f75b1420fc752fb6a26abad8f0f59bc7431083476dbf39aa71ae96cc9808bd8c"
-const catalogRestoredSHA256 = "84a8a30e56a76ecbd0a70802d9376933a5e0cf3c99ab8d913c8f101db0bdcba7"
-
-// A previously restored accepted account22 precursor keeps its native reparse
-// forms while the appended22 variant tables are freshly parsed. All102 changed
-// scalars are original-table CHECK/partial-index casts already present in the
-// complete native reparse witness; every other catalog field is identical.
-const catalogRestoredPrecursorSHA256 = "b62e804f80505293af0bb218b1e1cce2a056339e07c78f289d455e1ee51b173e"
+const catalogFreshSHA256 = "44243d95f1dcbd0fb2dfd37ff9def9073684ae38235fccb9a19571022dd17b84"
+const catalogRestoredSHA256 = "5eda0a698e499b64bf014b4ae79dcae8a99292fb96e748258e5df17a7661a349"
 
 func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
 	var raw string
@@ -48,9 +43,22 @@ func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
 	}
 	digest := sha256.Sum256([]byte(raw))
 	switch hex.EncodeToString(digest[:]) {
-	case catalogFreshSHA256, catalogRestoredSHA256, catalogRestoredPrecursorSHA256:
-		return nil
+	case catalogFreshSHA256, catalogRestoredSHA256:
 	default:
 		return errors.New("SCHEMA_CATALOG_INCOMPATIBLE")
 	}
+	return checkLocalCellWithin(ctx, q)
+}
+
+// checkLocalCellWithin refuses a database that serves a cell other than the one this
+// release can run. Multi-cell installs replace the constant with configuration (ARC-202).
+func checkLocalCellWithin(ctx context.Context, q transaction.Executor) error {
+	var site, cell string
+	if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT site_id,id FROM cells WHERE is_local")).Scan(&site, &cell); err != nil {
+		return errors.New("SCHEMA_CELL_IDENTITY_INVALID")
+	}
+	if site != wire.DefaultSiteID || cell != wire.DefaultCellID {
+		return errors.New("SCHEMA_CELL_IDENTITY_INVALID")
+	}
+	return nil
 }

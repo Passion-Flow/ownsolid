@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/felixge/httpsnoop"
 	"github.com/google/uuid"
 )
@@ -81,6 +82,7 @@ func method(v string) string {
 	return "OTHER"
 }
 func route(v string) string {
+	v = cellroute.Relative(v)
 	switch {
 	case strings.HasPrefix(v, "/api/v1/admin/monitoring"):
 		return "monitoring"

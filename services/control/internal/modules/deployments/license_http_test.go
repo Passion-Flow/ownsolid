@@ -30,7 +30,7 @@ func TestM19ExpiredLicenseDeploymentRecoveryHTTPAndAgentCompletion(t *testing.T)
 		client.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": c.password}, 200, "")
 	}
 	machine.Headers = map[string]string{"Authorization": "Bearer " + c.node.Credential}
-	base := "/agent/v1/nodes/" + c.node.NodeID
+	base := "/agent/v1/sites/default/cells/default/nodes/" + c.node.NodeID
 	claim := func() wire.Lease {
 		t.Helper()
 		value := machine.Call("POST", base+"/tasks/claims", map[string]any{}, 200, "ClaimResponse")

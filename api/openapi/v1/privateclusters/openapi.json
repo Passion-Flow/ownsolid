@@ -10,7 +10,7 @@
     }
   ],
   "paths": {
-    "/api/v1/admin/private-clusters/connections": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections": {
       "get": {
         "operationId": "adminPrivateClusterConnections",
         "security": [
@@ -148,9 +148,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}": {
       "get": {
         "operationId": "adminPrivateClusterConnection",
         "security": [
@@ -209,9 +229,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/runs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs": {
       "get": {
         "operationId": "adminPrivateClusterRuns",
         "security": [
@@ -367,9 +407,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/runs/{run_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}": {
       "get": {
         "operationId": "adminPrivateClusterRun",
         "security": [
@@ -437,9 +497,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/runs/{run_id}/proof": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/proof": {
       "get": {
         "operationId": "adminPrivateClusterProof",
         "security": [
@@ -507,9 +587,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/runs/{run_id}/continue": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/continue": {
       "post": {
         "operationId": "adminPrivateClusterContinue",
         "security": [
@@ -606,9 +706,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/runs/{run_id}/reconcile": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/reconcile": {
       "post": {
         "operationId": "adminPrivateClusterReconcile",
         "security": [
@@ -705,9 +825,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/runs/{run_id}/cancel": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/cancel": {
       "post": {
         "operationId": "adminPrivateClusterCancel",
         "security": [
@@ -804,9 +944,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/runs/{run_id}/cleanup": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/cleanup": {
       "post": {
         "operationId": "adminPrivateClusterCleanup",
         "security": [
@@ -903,9 +1063,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/private-clusters/connections": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections": {
       "get": {
         "operationId": "portalPrivateClusterConnections",
         "security": [
@@ -964,9 +1144,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/private-clusters/connections/{connection_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}": {
       "get": {
         "operationId": "portalPrivateClusterConnection",
         "security": [
@@ -1025,9 +1225,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs": {
       "get": {
         "operationId": "portalPrivateClusterRuns",
         "security": [
@@ -1183,9 +1403,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}": {
       "get": {
         "operationId": "portalPrivateClusterRun",
         "security": [
@@ -1253,9 +1493,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/proof": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/proof": {
       "get": {
         "operationId": "portalPrivateClusterProof",
         "security": [
@@ -1323,9 +1583,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/continue": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/continue": {
       "post": {
         "operationId": "portalPrivateClusterContinue",
         "security": [
@@ -1422,9 +1702,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/reconcile": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/reconcile": {
       "post": {
         "operationId": "portalPrivateClusterReconcile",
         "security": [
@@ -1521,9 +1821,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/cancel": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/cancel": {
       "post": {
         "operationId": "portalPrivateClusterCancel",
         "security": [
@@ -1620,9 +1940,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/cleanup": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/cleanup": {
       "post": {
         "operationId": "portalPrivateClusterCleanup",
         "security": [
@@ -1719,9 +2059,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/profiles": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/profiles": {
       "get": {
         "operationId": "adminPrivateClusterProfiles",
         "security": [
@@ -1771,9 +2131,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/observe": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/observe": {
       "post": {
         "operationId": "adminPrivateClusterObserve",
         "security": [
@@ -1861,9 +2241,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/rebind": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/rebind": {
       "post": {
         "operationId": "adminPrivateClusterRebind",
         "security": [
@@ -1951,9 +2351,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/private-clusters/connections/{connection_id}/disable": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/disable": {
       "post": {
         "operationId": "adminPrivateClusterDisable",
         "security": [
@@ -2041,7 +2461,27 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

@@ -61,7 +61,7 @@ func TestMachineDispatcherClosesHumanRoutesAndBrowserMachineFallback(t *testing.
 				machineIngressTestProblem(t, w, http.StatusNotFound, "RESOURCE_NOT_FOUND")
 			}
 			for _, origin := range []string{h.Service.Config.Server.PortalOrigin, h.Service.Config.Server.AdminOrigin} {
-				for _, path := range []string{"/agent/v1/enroll", "/gateway/v1/admissions", "/agent/v1/nodes/node/tasks/task/image-registry/manifest"} {
+				for _, path := range []string{"/agent/v1/enroll", "/gateway/v1/admissions", "/agent/v1/sites/default/cells/default/nodes/node/tasks/task/image-registry/manifest"} {
 					r := machineIngressTestRequest(origin, path)
 					if mode == config.TransportTrustedProxyHTTPS {
 						r.TLS = nil
@@ -82,7 +82,7 @@ func TestMachineDispatcherClosesHumanRoutesAndBrowserMachineFallback(t *testing.
 func TestMachineDispatcherSharesCapacityAndRejectsClientIngressSelection(t *testing.T) {
 	h := machineIngressTestHandler(config.TransportHTTP)
 	h.active <- struct{}{}
-	for _, path := range []string{"/agent/v1/enroll", "/gateway/v1/admissions", "/agent/v1/nodes/node/tasks/task/image-registry/manifest"} {
+	for _, path := range []string{"/agent/v1/enroll", "/gateway/v1/admissions", "/agent/v1/sites/default/cells/default/nodes/node/tasks/task/image-registry/manifest"} {
 		w := httptest.NewRecorder()
 		h.MachineHandler().ServeHTTP(w, machineIngressTestRequest(h.Service.Config.MachineServer.Origin, path))
 		machineIngressTestProblem(t, w, http.StatusServiceUnavailable, "AUTH_CAPACITY_EXCEEDED")

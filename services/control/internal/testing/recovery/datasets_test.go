@@ -198,7 +198,7 @@ func TestM08ActualNativeDatasetRestartFileSnapshotAndLogicalRestore(t *testing.T
 	}
 	assertVersion := func() {
 		t.Helper()
-		response, e := client.Get(origin + "/api/v1/workspaces/" + a.Me.Workspace.ID + "/datasets/" + data.ID + "/versions/" + *job.VersionID)
+		response, e := client.Get(origin + "/api/v1/sites/default/cells/default/workspaces/" + a.Me.Workspace.ID + "/datasets/" + data.ID + "/versions/" + *job.VersionID)
 		if e != nil {
 			t.Fatal(e)
 		}

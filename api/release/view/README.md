@@ -13,6 +13,6 @@ bindings. Historical snapshots omit it unchanged. See the M17 Admin view contrac
 The additive Kubernetes frame references one actual original-lock ordered index,
 its prepared plan and last original event. Its optional nested installed release
 requires a real installation/restored/upgrade serving terminal with outcome
-`serving_verified`, schema29 and same signed profile. It does not define a new
+`serving_verified`, schema 30 and same signed profile. It does not define a new
 manufacturer class. Source order is independent of wall-clock monotonicity. The
 legacy format and InstalledRelease predicate retain their original bytes/rules.

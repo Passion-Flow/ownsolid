@@ -41,7 +41,7 @@ func TestM05StrictHTTPMaintenanceAndVersionBoundArtifacts(t *testing.T) {
 	id := node["node_id"].(string)
 	credential := node["credential"].(string)
 	machine.Headers = map[string]string{"Authorization": "Bearer " + credential}
-	base := "/agent/v1/nodes/" + id
+	base := "/agent/v1/sites/default/cells/default/nodes/" + id
 	path := "/api/v1/admin/nodes/" + id + "/components/node-exporter"
 	configuration := wire.DefaultComponentConfig()
 	// Machine observations below are explicit wire-contract fixtures, not real service evidence.

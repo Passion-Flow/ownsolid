@@ -153,7 +153,10 @@ impl Control {
             .map_err(|_| "GATEWAY_CONTROL_CLIENT_INVALID")?;
         Ok(Self {
             client,
-            base: configuration.control_origin.clone(),
+            base: format!(
+                "{}/gateway/v1/sites/{}/cells/{}",
+                configuration.control_origin, configuration.site_id, configuration.cell_id
+            ),
             gateway_id: configuration.gateway_id,
             node_id: configuration.node_id,
         })
@@ -165,7 +168,7 @@ impl Control {
         payload: &impl Serialize,
     ) -> Result<T> {
         let url = format!(
-            "{}/gateway/v1/instances/{}/{}",
+            "{}/instances/{}/{}",
             self.base,
             self.gateway_id,
             operation.path()

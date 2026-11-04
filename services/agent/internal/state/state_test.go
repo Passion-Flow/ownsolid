@@ -6,12 +6,22 @@ import (
 	"testing"
 )
 
+func TestIdentityRequiresItsScope(t *testing.T) {
+	dir := t.TempDir()
+	if e := os.Chmod(dir, 0o700); e != nil {
+		t.Fatal(e)
+	}
+	if e := SaveNew(dir, Identity{NodeID: "synthetic-id", Credential: "synthetic-secret"}); e == nil || e.Error() != "IDENTITY_INVALID" {
+		t.Fatal(e)
+	}
+}
+
 func TestProtectedIdentityAndExclusiveProcessLock(t *testing.T) {
 	dir := t.TempDir()
 	if e := os.Chmod(dir, 0700); e != nil {
 		t.Fatal(e)
 	}
-	value := Identity{NodeID: "synthetic-id", Credential: "synthetic-secret", ControlOrigin: "https://control.invalid", ProtocolVersion: "1.0"}
+	value := Identity{NodeID: "synthetic-id", SiteID: "default", CellID: "default", Credential: "synthetic-secret", ControlOrigin: "https://control.invalid", ProtocolVersion: "1.0"}
 	if e := SaveNew(dir, value); e != nil {
 		t.Fatal(e)
 	}

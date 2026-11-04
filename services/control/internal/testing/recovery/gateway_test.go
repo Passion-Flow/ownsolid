@@ -304,7 +304,7 @@ func testNativeCombinedRecovery(t *testing.T, data bool) {
 	}
 	assertModel := func() {
 		t.Helper()
-		response, e := client.Get(origin + "/api/v1/workspaces/" + a.Me.Workspace.ID + "/models")
+		response, e := client.Get(origin + "/api/v1/sites/default/cells/default/workspaces/" + a.Me.Workspace.ID + "/models")
 		if e != nil {
 			t.Fatal(e)
 		}

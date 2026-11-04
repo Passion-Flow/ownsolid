@@ -7,17 +7,18 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/components"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/components"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
-	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"strings"
 )
 
 type Client struct {
+	Scope           wire.Scope
 	Origin          string
 	HTTP            *http.Client
 	Credential      string
@@ -38,7 +39,7 @@ func (c *Client) ArtifactVersion(ctx context.Context, path, lease, destination, 
 		return errors.New("AGENT_PATH_INVALID")
 	}
 	b, _ := json.Marshal(wire.LeaseRenewal{LeaseToken: lease})
-	r, e := http.NewRequestWithContext(ctx, "POST", c.Origin+path, bytes.NewReader(b))
+	r, e := http.NewRequestWithContext(ctx, "POST", c.target(path), bytes.NewReader(b))
 	if e != nil {
 		return errors.New("COMPONENT_ASSET_UNAVAILABLE")
 	}
@@ -87,7 +88,16 @@ func New(origin, caFile string, policies ...settings.Policy) (*Client, error) {
 		}
 	}
 	transport := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, MaxIdleConns: 1, MaxIdleConnsPerHost: 1, MaxConnsPerHost: policy.ControlConnections, IdleConnTimeout: settings.Seconds(policy.IdleConnectionSeconds), TLSHandshakeTimeout: settings.Seconds(policy.TLSHandshakeSeconds), ResponseHeaderTimeout: settings.Seconds(policy.ControlHeaderSeconds)}
-	return &Client{runtime: &policy, Origin: origin, HTTP: &http.Client{Transport: transport, Timeout: settings.Seconds(policy.ControlRequestSeconds), CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("CONTROL_REDIRECT_REJECTED") }}}, nil
+	return &Client{runtime: &policy, Scope: wire.LocalScope(), Origin: origin, HTTP: &http.Client{Transport: transport, Timeout: settings.Seconds(policy.ControlRequestSeconds), CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("CONTROL_REDIRECT_REJECTED") }}}, nil
+}
+
+// target addresses a cell-relative path in this node's cell. Paths stay cell-relative in
+// the agent, and only enrollment, which happens before a node has a cell, has no scope.
+func (c *Client) target(path string) string {
+	if rest, found := strings.CutPrefix(path, "/agent/v1/nodes/"); found {
+		return c.Origin + "/agent/v1" + c.Scope.Path() + "/nodes/" + rest
+	}
+	return c.Origin + path
 }
 func (c *Client) Close() {
 	c.HTTP.CloseIdleConnections()
@@ -103,7 +113,7 @@ func (c *Client) Post(ctx context.Context, path string, value, out any) error {
 	if e != nil || len(b) > 16384 {
 		return errors.New("AGENT_PAYLOAD_INVALID")
 	}
-	r, e := http.NewRequestWithContext(ctx, "POST", c.Origin+path, bytes.NewReader(b))
+	r, e := http.NewRequestWithContext(ctx, "POST", c.target(path), bytes.NewReader(b))
 	if e != nil {
 		return errors.New("AGENT_REQUEST_INVALID")
 	}

@@ -208,6 +208,14 @@ func (e environment) assertLogin(t *testing.T, password string) {
 	if status, raw := b.request(t, http.MethodGet, "/api/v1/me", nil, ""); status != http.StatusOK || !strings.Contains(string(raw), adminEmail) {
 		t.Fatalf("session read: status %d", status)
 	}
+	if status, _ := b.request(t, http.MethodGet, "/api/v1/sites/default/cells/default/admin/nodes", nil, ""); status != http.StatusOK {
+		t.Fatalf("scoped node list: status %d", status)
+	}
+	for _, path := range []string{"/api/v1/admin/nodes", "/api/v1/sites/default/cells/other/admin/nodes"} {
+		if status, _ := b.request(t, http.MethodGet, path, nil, ""); status != http.StatusNotFound {
+			t.Fatalf("%s: status %d, want 404", path, status)
+		}
+	}
 }
 
 func TestSingleNodeInstall(t *testing.T) {

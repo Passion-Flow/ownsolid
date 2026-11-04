@@ -50,7 +50,7 @@ func TestActualTLSBoundTrainingRangesRawMetadataChunksAndRestrictedStop(t *testi
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]any{"data": value})
 		}
-		switch strings.TrimPrefix(r.URL.Path, base) {
+		switch strings.TrimPrefix(r.URL.Path, onWire(base)) {
 		case "/training-input-files":
 			var input wire.InputFileRequest
 			if json.NewDecoder(r.Body).Decode(&input) != nil || input.ValidateAsset(asset) != nil || input.LeaseToken != lease || input.Kind != "dataset" {

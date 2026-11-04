@@ -64,7 +64,7 @@ const nodeFieldsTemplate = `n.id::text,n.tenant_id::text,n.workspace_id::text,n.
 func scanNode(row pgx.Row) (Node, error) {
 	var n Node
 	var facts, capabilities []byte
-	e := row.Scan(&n.ID, &n.TenantID, &n.WorkspaceID, &n.Name, &n.Status, &n.Version, &n.ProtocolVersion, &facts, &n.LastHeartbeatAt, &n.CreatedAt, &n.UpdatedAt, &n.Connectivity, &n.ExecutionProfile, &capabilities)
+	e := row.Scan(&n.ID, &n.TenantID, &n.WorkspaceID, &n.Name, &n.Status, &n.Version, &n.ProtocolVersion, &facts, &n.LastHeartbeatAt, &n.CreatedAt, &n.UpdatedAt, &n.Connectivity, &n.ExecutionProfile, &capabilities, &n.SiteID, &n.CellID)
 	if errors.Is(e, pgx.ErrNoRows) {
 		return n, fail("RESOURCE_NOT_FOUND")
 	}

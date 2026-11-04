@@ -5,7 +5,7 @@
     "version": "m22-source-candidate"
   },
   "paths": {
-    "/api/v1/admin/artifact-objects": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects": {
       "get": {
         "operationId": "adminget_objects",
         "parameters": [
@@ -147,9 +147,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/configuration": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/configuration": {
       "get": {
         "operationId": "adminget_configuration",
         "parameters": [
@@ -195,9 +215,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/expire": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/expire": {
       "post": {
         "operationId": "adminpost_expire",
         "parameters": [
@@ -262,9 +302,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}": {
       "get": {
         "operationId": "adminget__object_id_",
         "parameters": [
@@ -328,9 +388,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/parts": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/parts": {
       "get": {
         "operationId": "adminget__object_id__parts",
         "parameters": [
@@ -388,9 +468,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/parts/{part_number}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/parts/{part_number}": {
       "put": {
         "operationId": "adminput__object_id__parts__part_number_",
         "parameters": [
@@ -484,9 +584,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/complete": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/complete": {
       "post": {
         "operationId": "adminpost__object_id__complete",
         "parameters": [
@@ -560,9 +680,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/abort": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/abort": {
       "post": {
         "operationId": "adminpost__object_id__abort",
         "parameters": [
@@ -636,9 +776,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/delete": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/delete": {
       "post": {
         "operationId": "adminpost__object_id__delete",
         "parameters": [
@@ -712,9 +872,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/reconcile": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/reconcile": {
       "post": {
         "operationId": "adminpost__object_id__reconcile",
         "parameters": [
@@ -788,9 +968,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/grants": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/grants": {
       "get": {
         "operationId": "adminget__object_id__grants",
         "parameters": [
@@ -950,9 +1150,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/grants/{grant_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/grants/{grant_id}": {
       "delete": {
         "operationId": "admindelete__object_id__grants__grant_id_",
         "parameters": [
@@ -1019,9 +1239,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/content": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/content": {
       "get": {
         "operationId": "adminget__object_id__content",
         "parameters": [
@@ -1077,9 +1317,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/model-import": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/model-import": {
       "post": {
         "operationId": "adminpost__object_id__model_import",
         "parameters": [
@@ -1171,9 +1431,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/dataset-import": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/dataset-import": {
       "post": {
         "operationId": "adminpost__object_id__dataset_import",
         "parameters": [
@@ -1265,9 +1545,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}": {
       "get": {
         "operationId": "adminget__object_id__ingestions__ingestion_id_",
         "parameters": [
@@ -1331,9 +1631,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile": {
       "post": {
         "operationId": "adminpost__object_id__ingestions__ingestion_id__reconcile",
         "parameters": [
@@ -1425,9 +1745,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/staging": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/staging": {
       "get": {
         "operationId": "adminget_staging",
         "parameters": [
@@ -1544,9 +1884,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/snapshot": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/snapshot": {
       "get": {
         "operationId": "adminget__object_id__snapshot",
         "parameters": [
@@ -1593,9 +1953,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects": {
       "get": {
         "operationId": "portalget_objects",
         "parameters": [
@@ -1737,9 +2117,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/configuration": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/configuration": {
       "get": {
         "operationId": "portalget_configuration",
         "parameters": [
@@ -1785,9 +2185,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/expire": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/expire": {
       "post": {
         "operationId": "portalpost_expire",
         "parameters": [
@@ -1852,9 +2272,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}": {
       "get": {
         "operationId": "portalget__object_id_",
         "parameters": [
@@ -1918,9 +2358,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/parts": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts": {
       "get": {
         "operationId": "portalget__object_id__parts",
         "parameters": [
@@ -1978,9 +2438,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/parts/{part_number}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts/{part_number}": {
       "put": {
         "operationId": "portalput__object_id__parts__part_number_",
         "parameters": [
@@ -2074,9 +2554,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/complete": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/complete": {
       "post": {
         "operationId": "portalpost__object_id__complete",
         "parameters": [
@@ -2150,9 +2650,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/abort": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/abort": {
       "post": {
         "operationId": "portalpost__object_id__abort",
         "parameters": [
@@ -2226,9 +2746,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/delete": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/delete": {
       "post": {
         "operationId": "portalpost__object_id__delete",
         "parameters": [
@@ -2302,9 +2842,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/reconcile": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/reconcile": {
       "post": {
         "operationId": "portalpost__object_id__reconcile",
         "parameters": [
@@ -2378,9 +2938,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/grants": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants": {
       "get": {
         "operationId": "portalget__object_id__grants",
         "parameters": [
@@ -2540,9 +3120,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/grants/{grant_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants/{grant_id}": {
       "delete": {
         "operationId": "portaldelete__object_id__grants__grant_id_",
         "parameters": [
@@ -2609,9 +3209,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/content": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/content": {
       "get": {
         "operationId": "portalget__object_id__content",
         "parameters": [
@@ -2667,9 +3287,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/model-import": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/model-import": {
       "post": {
         "operationId": "portalpost__object_id__model_import",
         "parameters": [
@@ -2761,9 +3401,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/dataset-import": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/dataset-import": {
       "post": {
         "operationId": "portalpost__object_id__dataset_import",
         "parameters": [
@@ -2855,9 +3515,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}": {
       "get": {
         "operationId": "portalget__object_id__ingestions__ingestion_id_",
         "parameters": [
@@ -2921,9 +3601,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile": {
       "post": {
         "operationId": "portalpost__object_id__ingestions__ingestion_id__reconcile",
         "parameters": [
@@ -3015,9 +3715,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/ingestions": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions": {
       "get": {
         "operationId": "adminget__object_id__ingestions",
         "parameters": [
@@ -3094,9 +3814,29 @@
         "x-audiences": [
           "admin"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions": {
       "get": {
         "operationId": "portalget__object_id__ingestions",
         "parameters": [
@@ -3173,9 +3913,29 @@
         "x-audiences": [
           "portal"
         ]
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel": {
       "post": {
         "operationId": "adminpost__object_id__ingestions__ingestion_id__cancel",
         "parameters": [
@@ -3259,9 +4019,29 @@
           "admin"
         ],
         "summary": "Cancel only an unclaimed ingestion intent"
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel": {
       "post": {
         "operationId": "portalpost__object_id__ingestions__ingestion_id__cancel",
         "parameters": [
@@ -3345,7 +4125,27 @@
           "portal"
         ],
         "summary": "Cancel only an unclaimed ingestion intent"
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

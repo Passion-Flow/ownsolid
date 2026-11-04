@@ -130,7 +130,7 @@ func TestActualTaskEventsPostgreSQLSchema(t *testing.T) {
 		if e = f.PostgreSQL.QueryRow(ctx, `SELECT clock_timestamp()`).Scan(&now); e != nil {
 			t.Fatal(e)
 		}
-		event = taskbus.Event{Schema: taskbus.EventSchema, ID: uuid.NewString(), NamespaceID: uuid.NewString(), TenantID: f.Tenant, WorkspaceID: f.Workspace, NodeID: node, TaskID: task, Kind: taskbus.NodeTaskQueued, Operation: "collect_facts.v1", TaskCreatedAt: taskTime.UTC(), CreatedAt: now.UTC()}
+		event = taskbus.Event{Schema: taskbus.EventSchema, ID: uuid.NewString(), SiteID: "default", CellID: "default", NamespaceID: uuid.NewString(), TenantID: f.Tenant, WorkspaceID: f.Workspace, NodeID: node, TaskID: task, Kind: taskbus.NodeTaskQueued, Operation: "collect_facts.v1", TaskCreatedAt: taskTime.UTC(), CreatedAt: now.UTC()}
 		raw, e = event.Canonical()
 		if e != nil {
 			t.Fatal(e)

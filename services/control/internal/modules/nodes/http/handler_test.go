@@ -46,14 +46,14 @@ func TestM03HTTPContractAndHumanMachineSeparation(t *testing.T) {
 	machine.Headers = map[string]string{"Authorization": "Bearer " + credential}
 	admin.Call("GET", "/api/v1/admin/nodes", nil, 200, "NodeListResponse")
 	node := admin.Call("GET", "/api/v1/admin/nodes/"+id, nil, 200, "NodeResponse")
-	base := "/agent/v1/nodes/" + id
+	base := "/agent/v1/sites/default/cells/default/nodes/" + id
 	machine.Call("POST", base+"/heartbeat", h, 200, "DispositionResponse")
 	admin.Call("POST", base+"/heartbeat", h, 401, "Problem")
 	portal.Call("POST", base+"/heartbeat", h, 404, "Problem")
 	machine.Call("GET", "/api/v1/admin/nodes", nil, 401, "Problem")
 	wrong := httpfixture.New(t, server, "admin", schemas)
 	wrong.Headers = map[string]string{"Authorization": "Bearer " + credential}
-	wrong.Call("POST", "/agent/v1/nodes/"+uuid.NewString()+"/heartbeat", h, 401, "Problem")
+	wrong.Call("POST", "/agent/v1/sites/default/cells/default/nodes/"+uuid.NewString()+"/heartbeat", h, 401, "Problem")
 	portalPath := "/api/v1/workspaces/" + workspace + "/nodes"
 	portal.Call("GET", portalPath, nil, 200, "NodeListResponse")
 	portal.Call("GET", portalPath+"/"+id, nil, 200, "NodeResponse")
@@ -102,7 +102,7 @@ func TestM03UntrustedCredentialCannotPoisonNodeRateBucket(t *testing.T) {
 	schemas := httpfixture.Schemas(t, "../../../../../../api/openapi/v1/nodes/openapi.json")
 	attacker := httpfixture.New(t, server, "admin", schemas)
 	attacker.Headers = map[string]string{"Authorization": "Bearer " + security.Token()}
-	path := "/agent/v1/nodes/" + node.NodeID + "/heartbeat"
+	path := "/agent/v1/sites/default/cells/default/nodes/" + node.NodeID + "/heartbeat"
 	for i := 0; i < 30; i++ {
 		attacker.Call("POST", path, h, 401, "Problem")
 	}
@@ -158,7 +158,7 @@ func testMinimalHTTPStorageAndAudit(t *testing.T, components bool, maintenance .
 		t.Fatal(e)
 	}
 	admin.Write("POST", "/api/v1/admin/node-join-tokens", map[string]any{"workspace_id": auth.Me.Workspace.ID, "node_name": "Must not persist"}, 503, "Problem")
-	machine.Call("POST", "/agent/v1/nodes/"+enrolled.NodeID+"/tasks/claims", map[string]any{}, 503, "Problem")
+	machine.Call("POST", "/agent/v1/sites/default/cells/default/nodes/"+enrolled.NodeID+"/tasks/claims", map[string]any{}, 503, "Problem")
 	var state string
 	var attempt int
 	if e = s.DB.QueryRow(ctx, "SELECT state,attempt FROM node_tasks WHERE id=$1", task.ID).Scan(&state, &attempt); e != nil || state != "pending" || attempt != 0 {
@@ -171,7 +171,7 @@ func testMinimalHTTPStorageAndAudit(t *testing.T, components bool, maintenance .
 	if _, e = s.DB.Exec(ctx, "DROP TRIGGER reject_m03_http_audit ON audit_events"); e != nil {
 		t.Fatal(e)
 	}
-	machine.Call("POST", "/agent/v1/nodes/"+enrolled.NodeID+"/tasks/claims", map[string]any{}, 200, "ClaimResponse")
+	machine.Call("POST", "/agent/v1/sites/default/cells/default/nodes/"+enrolled.NodeID+"/tasks/claims", map[string]any{}, 200, "ClaimResponse")
 	if _, e = s.DB.Exec(ctx, "ALTER TABLE managed_nodes RENAME TO unavailable_m03_nodes"); e != nil {
 		t.Fatal(e)
 	}
@@ -184,7 +184,7 @@ func testMinimalHTTPStorageAndAudit(t *testing.T, components bool, maintenance .
 		}
 	})
 	admin.Call("GET", "/api/v1/admin/nodes", nil, 503, "Problem")
-	machine.Call("POST", "/agent/v1/nodes/"+enrolled.NodeID+"/heartbeat", handshake, 503, "Problem")
+	machine.Call("POST", "/agent/v1/sites/default/cells/default/nodes/"+enrolled.NodeID+"/heartbeat", handshake, 503, "Problem")
 	if _, e = s.DB.Exec(ctx, "ALTER TABLE unavailable_m03_nodes RENAME TO managed_nodes"); e != nil {
 		t.Fatal(e)
 	}

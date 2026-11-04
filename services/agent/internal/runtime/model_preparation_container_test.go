@@ -51,7 +51,7 @@ func TestActualLinuxPreparationCleanupExecutableNeverCreatedJournal(t *testing.T
 	id := fmt.Sprintf("%x-%x-%x-%x-%x", random[:4], random[4:6], random[6:8], random[8:10], random[10:])
 	lease.TaskID = id
 	lease.Preparation.AttemptID = id
-	if e = state.SaveNew(c.StateDirectory, state.Identity{NodeID: id, Credential: lease.LeaseToken, ControlOrigin: c.ControlOrigin, ExecutionProfile: wire.DockerModelLifecycleProfile, ProtocolVersion: wire.ModelLifecycleVersion}); e != nil {
+	if e = state.SaveNew(c.StateDirectory, state.Identity{SiteID: "default", CellID: "default", NodeID: id, Credential: lease.LeaseToken, ControlOrigin: c.ControlOrigin, ExecutionProfile: wire.DockerModelLifecycleProfile, ProtocolVersion: wire.ModelLifecycleVersion}); e != nil {
 		t.Fatal(e)
 	}
 	m, e := modelpreparations.New(c.Preparation, c.StateDirectory, c.Policy())

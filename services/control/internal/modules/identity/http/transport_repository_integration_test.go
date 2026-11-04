@@ -8,6 +8,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"io"
 	"log/slog"
 	"net"
@@ -20,8 +22,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
@@ -30,6 +30,8 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/mail"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 const transportHTTPTimeout = 10 * time.Second
@@ -255,7 +257,7 @@ func (c *transportBrowser) call(method, path string, body any, status int, schem
 			c.t.Fatal(e)
 		}
 	}
-	r, e := http.NewRequest(method, c.origin+path, bytes.NewReader(raw))
+	r, e := http.NewRequest(method, c.origin+cellroute.Public(path, wire.LocalScope()), bytes.NewReader(raw))
 	if e != nil {
 		c.t.Fatal(e)
 	}
@@ -579,8 +581,8 @@ func TestTransportAgentProxyRateIdentity(t *testing.T) {
 		purpose, path, code string
 		status              int
 	}{
-		{"agent.request.ip", "/agent/v1/nodes/" + node + "/heartbeat", "AGENT_UNAUTHORIZED", 401},
-		{"agent.transfer.ip", "/agent/v1/nodes/" + node + "/tasks/" + task + "/model-files", "AGENT_UNAUTHORIZED", 401},
+		{"agent.request.ip", "/agent/v1/sites/default/cells/default/nodes/" + node + "/heartbeat", "AGENT_UNAUTHORIZED", 401},
+		{"agent.transfer.ip", "/agent/v1/sites/default/cells/default/nodes/" + node + "/tasks/" + task + "/model-files", "AGENT_UNAUTHORIZED", 401},
 		{"agent.enroll.ip", "/agent/v1/enroll", "TOKEN_UNUSABLE", 400},
 	} {
 		if family.purpose == "agent.enroll.ip" {

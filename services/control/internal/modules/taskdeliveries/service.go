@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/taskbus"
+	"github.com/google/uuid"
 )
 
 // RecordTaskQueuedWithin is the approved same-transaction node hook. There is no
@@ -63,7 +64,7 @@ func (s *Service) RecordTaskQueuedWithin(ctx context.Context, q transaction.Exec
 	if err != nil {
 		return safe(err)
 	}
-	event := taskbus.Event{Schema: taskbus.EventSchema, ID: uuid.NewString(), NamespaceID: s.Configuration.NamespaceID, TenantID: task.TenantID, WorkspaceID: task.WorkspaceID, NodeID: task.NodeID, TaskID: task.ID, Kind: taskbus.NodeTaskQueued, Operation: task.Operation, TaskCreatedAt: task.CreatedAt.UTC(), CreatedAt: now}
+	event := taskbus.Event{Schema: taskbus.EventSchema, ID: uuid.NewString(), SiteID: wire.DefaultSiteID, CellID: wire.DefaultCellID, NamespaceID: s.Configuration.NamespaceID, TenantID: task.TenantID, WorkspaceID: task.WorkspaceID, NodeID: task.NodeID, TaskID: task.ID, Kind: taskbus.NodeTaskQueued, Operation: task.Operation, TaskCreatedAt: task.CreatedAt.UTC(), CreatedAt: now}
 	raw, err := event.Canonical()
 	if err != nil {
 		return err

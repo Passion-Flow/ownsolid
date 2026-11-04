@@ -32,7 +32,7 @@ func TestActualTLSMachineRoutesStrictFieldsReceiptsAndAudienceIsolation(t *testi
 				t.Fatal(e)
 			}
 		}
-		r, e := http.NewRequest(http.MethodPost, httpfixture.AdminOrigin+"/gateway/v1/instances/"+access.gateway.Gateway.ID+"/"+operation, bytes.NewReader(b))
+		r, e := http.NewRequest(http.MethodPost, httpfixture.AdminOrigin+"/gateway/v1/sites/default/cells/default/instances/"+access.gateway.Gateway.ID+"/"+operation, bytes.NewReader(b))
 		if e != nil {
 			t.Fatal(e)
 		}

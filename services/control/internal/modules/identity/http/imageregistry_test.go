@@ -72,12 +72,16 @@ func TestRegistryEntrancesRetainMiddlewareAndMachineDispatch(t *testing.T) {
 		status                   int
 		code                     string
 	}{
-		{"machine_admin", "admin.example.invalid", "/agent/v1/nodes/n/tasks/t/image-registry/manifest", "", false, 404, "RESOURCE_NOT_FOUND"},
-		{"machine_portal", "portal.example.invalid", "/agent/v1/nodes/n/tasks/t/image-registry/ranges", "", false, 404, "RESOURCE_NOT_FOUND"},
+		{"machine_admin", "admin.example.invalid", "/agent/v1/sites/default/cells/default/nodes/n/tasks/t/image-registry/manifest", "", false, 404, "RESOURCE_NOT_FOUND"},
+		{"machine_portal", "portal.example.invalid", "/agent/v1/sites/default/cells/default/nodes/n/tasks/t/image-registry/ranges", "", false, 404, "RESOURCE_NOT_FOUND"},
 		{"admin_wrong_entrance", "portal.example.invalid", "/api/v1/admin/image-registry/pins", "", false, 404, "RESOURCE_NOT_FOUND"},
-		{"human_missing_session", "admin.example.invalid", "/api/v1/admin/image-registry/pins", "", false, 401, "AUTH_REQUIRED"},
-		{"human_wrong_origin", "admin.example.invalid", "/api/v1/admin/image-registry/pins", "https://foreign.example.invalid", true, 403, "ORIGIN_REJECTED"},
-		{"human_missing_csrf", "admin.example.invalid", "/api/v1/admin/image-registry/pins", "https://admin.example.invalid", true, 403, "CSRF_INVALID"},
+		{"no_scope", "admin.example.invalid", "/api/v1/admin/image-registry/pins", "", false, 404, "RESOURCE_NOT_FOUND"},
+		{"another_cell", "admin.example.invalid", "/api/v1/sites/default/cells/other/admin/image-registry/pins", "", false, 404, "RESOURCE_NOT_FOUND"},
+		{"another_site", "admin.example.invalid", "/api/v1/sites/other/cells/default/admin/image-registry/pins", "", false, 404, "RESOURCE_NOT_FOUND"},
+		{"scope_on_global_path", "admin.example.invalid", "/api/v1/sites/default/cells/default/me", "", false, 404, "RESOURCE_NOT_FOUND"},
+		{"human_missing_session", "admin.example.invalid", "/api/v1/sites/default/cells/default/admin/image-registry/pins", "", false, 401, "AUTH_REQUIRED"},
+		{"human_wrong_origin", "admin.example.invalid", "/api/v1/sites/default/cells/default/admin/image-registry/pins", "https://foreign.example.invalid", true, 403, "ORIGIN_REJECTED"},
+		{"human_missing_csrf", "admin.example.invalid", "/api/v1/sites/default/cells/default/admin/image-registry/pins", "https://admin.example.invalid", true, 403, "CSRF_INVALID"},
 	} {
 		t.Run(item.name, func(t *testing.T) {
 			method := http.MethodPost

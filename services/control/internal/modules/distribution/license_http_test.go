@@ -44,7 +44,7 @@ func TestM19ExpiredLicenseDistributionRevocationAndRecoveryHTTP(t *testing.T) {
 	machine := func(operation string, body any, status int) []byte {
 		t.Helper()
 		raw, _ := json.Marshal(body)
-		request, _ := http.NewRequestWithContext(ctx, "POST", httpfixture.AdminOrigin+"/gateway/v1/instances/"+a.gateway.Gateway.ID+"/"+operation, bytes.NewReader(raw))
+		request, _ := http.NewRequestWithContext(ctx, "POST", httpfixture.AdminOrigin+"/gateway/v1/sites/default/cells/default/instances/"+a.gateway.Gateway.ID+"/"+operation, bytes.NewReader(raw))
 		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("Authorization", "Bearer "+*a.gateway.Secret)
 		response, e := server.Client().Do(request)

@@ -11,7 +11,7 @@
     }
   ],
   "paths": {
-    "/api/v1/admin/plugins/configuration": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/configuration": {
       "get": {
         "operationId": "adminPluginConfiguration",
         "x-audiences": [
@@ -45,9 +45,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/plugins": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins": {
       "get": {
         "operationId": "adminPluginVersionPage",
         "x-audiences": [
@@ -100,9 +120,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/plugins/imports": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/imports": {
       "post": {
         "operationId": "adminImportPlugin",
         "x-audiences": [
@@ -177,9 +217,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/plugins/versions/{version_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/versions/{version_id}": {
       "get": {
         "operationId": "adminGetPluginVersion",
         "x-audiences": [
@@ -224,9 +284,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/plugins/versions/{version_id}/installations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/versions/{version_id}/installations": {
       "post": {
         "operationId": "adminInstallPluginVersion",
         "x-audiences": [
@@ -311,9 +391,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/plugins/versions/{version_id}/references": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/versions/{version_id}/references": {
       "get": {
         "operationId": "adminPluginReferences",
         "x-audiences": [
@@ -358,9 +458,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/plugins/versions/{version_id}/uninstallations": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/versions/{version_id}/uninstallations": {
       "post": {
         "operationId": "adminUninstallPluginVersion",
         "x-audiences": [
@@ -445,9 +565,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/plugins/workspaces/{workspace_id}/grants": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/workspaces/{workspace_id}/grants": {
       "get": {
         "operationId": "adminPluginGrantPage",
         "x-audiences": [
@@ -595,9 +735,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/plugins/workspaces/{workspace_id}/grants/{grant_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/workspaces/{workspace_id}/grants/{grant_id}": {
       "patch": {
         "operationId": "adminUpdatePluginGrant",
         "x-audiences": [
@@ -692,9 +852,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/plugins": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/plugins": {
       "get": {
         "operationId": "portalAvailablePluginPage",
         "x-audiences": [
@@ -757,7 +937,27 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

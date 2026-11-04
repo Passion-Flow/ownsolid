@@ -24,8 +24,8 @@ func TestComponentCycleRecoversBeforeHeartbeatAndDisabledClaimGate(t *testing.T)
 	events := []string{}
 	record := func(event string) { mu.Lock(); defer mu.Unlock(); events = append(events, event) }
 	status := "disabled"
-	identity := state.Identity{NodeID: "00000000-0000-0000-0000-000000000001", Credential: strings.Repeat("B", 43)}
-	base := "/agent/v1/nodes/" + identity.NodeID
+	identity := state.Identity{SiteID: "default", CellID: "default", NodeID: "00000000-0000-0000-0000-000000000001", Credential: strings.Repeat("B", 43)}
+	base := "/agent/v1/sites/default/cells/default/nodes/" + identity.NodeID
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost || r.Header.Get("Authorization") != "Bearer "+identity.Credential {
 			t.Error("cycle lost machine identity")

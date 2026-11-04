@@ -66,7 +66,7 @@ func TestActualTLSPreparationRangesOriginalUnicodeMetadataAndRestrictedStop(t *t
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]any{"data": v})
 		}
-		switch strings.TrimPrefix(r.URL.Path, base) {
+		switch strings.TrimPrefix(r.URL.Path, onWire(base)) {
 		case "/model-preparation-input-files":
 			var input wire.InputFileRequest
 			if json.NewDecoder(r.Body).Decode(&input) != nil || input.ValidateAsset(asset) != nil || input.LeaseToken != lease || input.Kind != "heldout" {

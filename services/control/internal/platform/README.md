@@ -4,6 +4,7 @@ Platform packages provide bounded shared mechanisms. Domain owners still decide 
 
 | Package | Owner boundary |
 | --- | --- |
+| cellroute | Maps scoped public paths to the cell-relative paths modules route on ([ADR 0006](../../../../docs/decisions/0006-cell-and-site-scope.md)) |
 | [config](config/README.md) | Main typed configuration, defaults, explicit env-file overlays and protected references |
 | [database](database/README.md) | PostgreSQL installation/migration plus MySQL pool, migration journal and selected transaction adapters |
 | [httpserver](httpserver/README.md) | Bounded listener, request decoding, static/download responses and structured problems |

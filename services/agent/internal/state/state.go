@@ -9,15 +9,22 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 )
 
 type Identity struct {
 	NodeID           string `json:"node_id"`
+	SiteID           string `json:"site_id"`
+	CellID           string `json:"cell_id"`
 	Credential       string `json:"credential"`
 	ControlOrigin    string `json:"control_origin"`
 	ProtocolVersion  string `json:"protocol_version"`
 	ExecutionProfile string `json:"execution_profile,omitempty"`
 }
+
+// Scope is the site and cell that enrolled this node.
+func (i Identity) Scope() wire.Scope { return wire.Scope{SiteID: i.SiteID, CellID: i.CellID} }
 
 func owned(info os.FileInfo) bool {
 	s, ok := info.Sys().(*syscall.Stat_t)
@@ -77,7 +84,7 @@ func Load(dir string) (Identity, error) {
 	}
 	d := json.NewDecoder(strings.NewReader(string(b)))
 	d.DisallowUnknownFields()
-	if d.Decode(&value) != nil || d.Decode(new(any)) != io.EOF {
+	if d.Decode(&value) != nil || d.Decode(new(any)) != io.EOF || !value.Scope().Valid() {
 		return value, errors.New("IDENTITY_INVALID")
 	}
 	return value, nil
@@ -111,6 +118,9 @@ func SaveNew(dir string, value Identity) error {
 	}
 	if Exists(dir) {
 		return errors.New("IDENTITY_ALREADY_EXISTS")
+	}
+	if !value.Scope().Valid() {
+		return errors.New("IDENTITY_INVALID")
 	}
 	b, e := json.Marshal(value)
 	if e != nil {

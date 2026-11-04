@@ -11,7 +11,7 @@
     }
   ],
   "paths": {
-    "/api/v1/admin/datasets/configuration": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/configuration": {
       "get": {
         "operationId": "adminDatasetConfiguration",
         "x-audiences": [
@@ -56,9 +56,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets": {
       "get": {
         "operationId": "adminDatasetPage",
         "x-audiences": [
@@ -196,9 +216,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}": {
       "get": {
         "operationId": "adminGetDataset",
         "x-audiences": [
@@ -243,9 +283,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/retire": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/retire": {
       "post": {
         "operationId": "adminRetireDataset",
         "x-audiences": [
@@ -320,9 +380,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/drafts": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts": {
       "get": {
         "operationId": "adminDatasetDraftPage",
         "x-audiences": [
@@ -470,9 +550,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/drafts/{draft_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}": {
       "get": {
         "operationId": "adminGetDatasetDraft",
         "x-audiences": [
@@ -527,9 +627,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/drafts/{draft_id}/cancel": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/cancel": {
       "post": {
         "operationId": "adminCancelDatasetDraft",
         "x-audiences": [
@@ -614,9 +734,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/drafts/{draft_id}/source": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/source": {
       "post": {
         "operationId": "adminUploadDatasetSource",
         "x-audiences": [
@@ -722,9 +862,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/drafts/{draft_id}/rows": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows": {
       "get": {
         "operationId": "adminDatasetRowPage",
         "x-audiences": [
@@ -882,9 +1042,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}": {
       "patch": {
         "operationId": "adminReplaceDatasetRow",
         "x-audiences": [
@@ -1067,9 +1247,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/drafts/{draft_id}/publications": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/publications": {
       "post": {
         "operationId": "adminPublishDataset",
         "x-audiences": [
@@ -1164,9 +1364,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/jobs/{job_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}": {
       "get": {
         "operationId": "adminGetDatasetJob",
         "x-audiences": [
@@ -1221,9 +1441,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/jobs/{job_id}/cancel": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}/cancel": {
       "post": {
         "operationId": "adminCancelDatasetJob",
         "x-audiences": [
@@ -1308,9 +1548,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/jobs/{job_id}/retry": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}/retry": {
       "post": {
         "operationId": "adminRetryDatasetJob",
         "x-audiences": [
@@ -1405,9 +1665,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/versions": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions": {
       "get": {
         "operationId": "adminDatasetVersionPage",
         "x-audiences": [
@@ -1470,9 +1750,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/versions/{version_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}": {
       "get": {
         "operationId": "adminGetDatasetVersion",
         "x-audiences": [
@@ -1527,9 +1827,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/versions/{version_id}/files/{asset}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}/files/{asset}": {
       "get": {
         "operationId": "adminDatasetVersionFile",
         "x-audiences": [
@@ -1629,9 +1949,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/versions/{version_id}/retire": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}/retire": {
       "post": {
         "operationId": "adminRetireDatasetVersion",
         "x-audiences": [
@@ -1716,9 +2056,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/admin/datasets/{dataset_id}/versions/{version_id}/drafts": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}/drafts": {
       "post": {
         "operationId": "adminCloneDatasetVersion",
         "x-audiences": [
@@ -1813,9 +2173,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/configuration": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/configuration": {
       "get": {
         "operationId": "portalDatasetConfiguration",
         "x-audiences": [
@@ -1860,9 +2240,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets": {
       "get": {
         "operationId": "portalDatasetPage",
         "x-audiences": [
@@ -2010,9 +2410,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}": {
       "get": {
         "operationId": "portalGetDataset",
         "x-audiences": [
@@ -2067,9 +2487,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/retire": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/retire": {
       "post": {
         "operationId": "portalRetireDataset",
         "x-audiences": [
@@ -2154,9 +2594,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/drafts": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts": {
       "get": {
         "operationId": "portalDatasetDraftPage",
         "x-audiences": [
@@ -2324,9 +2784,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}": {
       "get": {
         "operationId": "portalGetDatasetDraft",
         "x-audiences": [
@@ -2391,9 +2871,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/cancel": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/cancel": {
       "post": {
         "operationId": "portalCancelDatasetDraft",
         "x-audiences": [
@@ -2488,9 +2988,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/source": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/source": {
       "post": {
         "operationId": "portalUploadDatasetSource",
         "x-audiences": [
@@ -2606,9 +3126,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/rows": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/rows": {
       "get": {
         "operationId": "portalDatasetRowPage",
         "x-audiences": [
@@ -2786,9 +3326,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}": {
       "patch": {
         "operationId": "portalReplaceDatasetRow",
         "x-audiences": [
@@ -2991,9 +3551,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/publications": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/publications": {
       "post": {
         "operationId": "portalPublishDataset",
         "x-audiences": [
@@ -3098,9 +3678,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}": {
       "get": {
         "operationId": "portalGetDatasetJob",
         "x-audiences": [
@@ -3165,9 +3765,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}/cancel": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}/cancel": {
       "post": {
         "operationId": "portalCancelDatasetJob",
         "x-audiences": [
@@ -3262,9 +3882,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}/retry": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}/retry": {
       "post": {
         "operationId": "portalRetryDatasetJob",
         "x-audiences": [
@@ -3369,9 +4009,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/versions": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions": {
       "get": {
         "operationId": "portalDatasetVersionPage",
         "x-audiences": [
@@ -3444,9 +4104,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}": {
       "get": {
         "operationId": "portalGetDatasetVersion",
         "x-audiences": [
@@ -3511,9 +4191,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}/files/{asset}": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}/files/{asset}": {
       "get": {
         "operationId": "portalDatasetVersionFile",
         "x-audiences": [
@@ -3623,9 +4323,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}/retire": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}/retire": {
       "post": {
         "operationId": "portalRetireDatasetVersion",
         "x-audiences": [
@@ -3720,9 +4440,29 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     },
-    "/api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}/drafts": {
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}/drafts": {
       "post": {
         "operationId": "portalCloneDatasetVersion",
         "x-audiences": [
@@ -3827,7 +4567,27 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {

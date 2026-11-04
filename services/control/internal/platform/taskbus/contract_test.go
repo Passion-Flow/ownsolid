@@ -12,7 +12,7 @@ import (
 
 func syntheticEnvelope() Envelope {
 	now := time.Date(2026, 10, 22, 0, 0, 1, 123456000, time.UTC)
-	return Envelope{DeliveryID: uuid.NewString(), Event: Event{Schema: EventSchema, ID: uuid.NewString(), NamespaceID: uuid.NewString(), TenantID: uuid.NewString(), WorkspaceID: uuid.NewString(), NodeID: uuid.NewString(), TaskID: uuid.NewString(), Kind: NodeTaskQueued, Operation: wire.CollectFacts, TaskCreatedAt: now.Add(-time.Second), CreatedAt: now}}
+	return Envelope{DeliveryID: uuid.NewString(), Event: Event{Schema: EventSchema, ID: uuid.NewString(), SiteID: "default", CellID: "default", NamespaceID: uuid.NewString(), TenantID: uuid.NewString(), WorkspaceID: uuid.NewString(), NodeID: uuid.NewString(), TaskID: uuid.NewString(), Kind: NodeTaskQueued, Operation: wire.CollectFacts, TaskCreatedAt: now.Add(-time.Second), CreatedAt: now}}
 }
 
 func TestTaskEventCanonicalEnvelopeScopeAndStableLogicalDigest(t *testing.T) {
@@ -29,12 +29,12 @@ func TestTaskEventCanonicalEnvelopeScopeAndStableLogicalDigest(t *testing.T) {
 	if err != nil || !e.MatchesSubject(subject) {
 		t.Fatal("exact subject refused", err)
 	}
-	want := "projectone.tasks.v1." + e.Event.NamespaceID + "." + e.Event.TenantID + "." + e.Event.WorkspaceID + "." + e.Event.NodeID + ".queued." + e.Event.ID + "." + e.DeliveryID
+	want := "projectone.tasks.v1.default.default." + e.Event.NamespaceID + "." + e.Event.TenantID + "." + e.Event.WorkspaceID + "." + e.Event.NodeID + ".queued." + e.Event.ID + "." + e.DeliveryID
 	if subject != want {
 		t.Fatal("wire subject contract changed")
 	}
 	filter, err := FilterSubject(e.Event.NamespaceID, e.Event.TenantID)
-	if err != nil || filter != "projectone.tasks.v1."+e.Event.NamespaceID+"."+e.Event.TenantID+".*.*.queued.*.*" {
+	if err != nil || filter != "projectone.tasks.v1.default.default."+e.Event.NamespaceID+"."+e.Event.TenantID+".*.*.queued.*.*" {
 		t.Fatal("namespace filter changed", err)
 	}
 	original, err := e.Event.Digest()
