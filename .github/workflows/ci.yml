@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Layout, language and tooling checks
-        run: make check PYTHON=python3
+        run: make check-layout check-roadmap test-tools PYTHON=python3
 
   build:
     runs-on: ubuntu-24.04
@@ -29,5 +29,28 @@ jobs:
           cache: false
       - name: Install the pinned Rust toolchain
         run: rustup toolchain install 1.99.1 --profile minimal && rustup default 1.99.1
-      - name: Build Go modules and the gateway
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26.13.0"
+      - name: Install the pinned pnpm
+        run: npm install --global pnpm@12.16.1
+      - name: Build Go modules, the gateway and the web applications
         run: make build
+
+  web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26.13.0"
+      - name: Install the pinned pnpm
+        run: npm install --global pnpm@12.16.1
+      - name: Lint, format and type checks
+        run: make check-web
+      - name: Unit tests
+        run: cd web && pnpm test
+      - name: Install Chromium for browser tests
+        run: cd web/apps/console && pnpm exec playwright install --with-deps chromium
+      - name: Browser tests
+        run: make test-web-browser

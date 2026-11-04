@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -28,6 +29,9 @@ const (
 	adminOrigin  = "https://admin.ownsolid.test:8443"
 	adminEmail   = "admin@ownsolid.test"
 )
+
+// webAsset matches the bundled files an application's page refers to.
+var webAsset = regexp.MustCompile(`(?:src|href)="(/assets/[^"]+)"`)
 
 type environment struct {
 	installer, composeFile, controlImage, postgresImage, archive, root, agent string
@@ -230,6 +234,30 @@ func (e environment) assertLogin(t *testing.T, password string) {
 	}
 }
 
+// assertWebApplication loads an application the way a browser does: the page, every
+// script, stylesheet and icon it names, and a deep link, which answers with the same page.
+func (e environment) assertWebApplication(t *testing.T, origin string) {
+	t.Helper()
+	b := e.newBrowser(t, origin)
+	status, page := b.request(t, http.MethodGet, "/", nil, "")
+	if status != http.StatusOK || !bytes.Contains(page, []byte(`<div id="root">`)) {
+		t.Fatalf("%s: status %d, page %q", origin, status, page)
+	}
+	assets := webAsset.FindAllSubmatch(page, -1)
+	if len(assets) == 0 {
+		t.Fatalf("%s: the page names no assets: %q", origin, page)
+	}
+	for _, asset := range assets {
+		if status, _ = b.request(t, http.MethodGet, string(asset[1]), nil, ""); status != http.StatusOK {
+			t.Fatalf("%s%s: status %d", origin, asset[1], status)
+		}
+	}
+	status, deep := b.request(t, http.MethodGet, "/sign-in", nil, "")
+	if status != http.StatusOK || !bytes.Equal(deep, page) {
+		t.Fatalf("%s/sign-in: status %d, page %q", origin, status, deep)
+	}
+}
+
 func TestSingleNodeInstall(t *testing.T) {
 	outer := t
 	e := loadEnvironment(t)
@@ -281,6 +309,11 @@ func TestSingleNodeInstall(t *testing.T) {
 		if err != nil || !strings.Contains(output, portalOrigin+": ready") || !strings.Contains(output, adminOrigin+": ready") {
 			t.Fatalf("%v %s", err, output)
 		}
+	})
+
+	t.Run("the image serves the console and the portal", func(t *testing.T) {
+		e.assertWebApplication(t, adminOrigin)
+		e.assertWebApplication(t, portalOrigin)
 	})
 
 	t.Run("administrator signs in and authentication is enforced", func(t *testing.T) {

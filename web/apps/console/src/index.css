@@ -1,0 +1,5 @@
+@import '@ownsolid/ui/styles.css';
+
+/* Tailwind scans these for class names; workspace packages are symlinks it skips. */
+@source '../../../packages/shell/src';
+@source './';
