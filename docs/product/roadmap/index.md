@@ -105,7 +105,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 17 | App catalog | [app-catalog.md](app-catalog.md) | - | 0/8 | 0/6 | - | - |
 | 18 | Tenancy, metering and commerce | [tenancy-metering-commerce.md](tenancy-metering-commerce.md) | - | 0/9 | 0/8 | 0/2 | - |
 | 19 | Audit and compliance | [audit-and-compliance.md](audit-and-compliance.md) | - | 0/8 | 0/4 | - | - |
-| 20 | Observability and alerting | [observability-and-alerting.md](observability-and-alerting.md) | 0/2 | 0/13 | 0/5 | 0/1 | - |
+| 20 | Observability and alerting | [observability-and-alerting.md](observability-and-alerting.md) | 1/2 | 0/13 | 0/5 | 0/1 | - |
 | 21 | Platform reliability | [platform-reliability.md](platform-reliability.md) | 0/2 | 0/7 | 0/4 | 0/2 | - |
 | 22 | Network and storage | [network-and-storage.md](network-and-storage.md) | - | 0/5 | 0/7 | - | 0/1 |
 | 23 | Developer experience | [developer-experience.md](developer-experience.md) | - | 0/7 | 0/4 | - | 0/1 |
