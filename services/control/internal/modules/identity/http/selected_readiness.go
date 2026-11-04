@@ -15,9 +15,6 @@ func (h *Handler) InitializationError() error {
 // VerifyStored composes actual owning checks. The server calls it after opening
 // stores/processors and starting owners with tracked lifecycle prerequisites.
 func (h *Handler) VerifyStored(ctx context.Context) error {
-	if h != nil && h.Service != nil && h.Service.Config.AccountRuntime() {
-		return h.verifyAccount(ctx)
-	}
 	if h == nil || h.initializationError != nil || h.Service == nil || h.Licensing == nil || h.Licensing.Service == nil ||
 		h.Preferences == nil || h.Preferences.Service == nil || h.Notifications == nil || h.Notifications.Service == nil ||
 		h.Models == nil || h.Models.Service == nil || h.Datasets == nil || h.Datasets.Service == nil || h.Training == nil ||

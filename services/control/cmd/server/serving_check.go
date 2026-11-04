@@ -41,7 +41,7 @@ func runServingCheckCommand(args []string, output io.Writer) error {
 	flags := flag.NewFlagSet(servingCheckCommand, flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	values := map[string]*servingCheckFlag{}
-	for _, name := range []string{"config", "env-file", "expected-server-json", "expected-machine-json", "expected-application-profile", "expected-release-view-json"} {
+	for _, name := range []string{"config", "env-file", "expected-server-json", "expected-machine-json", "expected-release-view-json"} {
 		value := &servingCheckFlag{}
 		values[name] = value
 		flags.Var(value, name, "Explicit serving transport verification input")
@@ -60,9 +60,6 @@ func runServingCheckCommand(args []string, output io.Writer) error {
 	if values["expected-machine-json"].seen && values["expected-machine-json"].value == "" {
 		return argumentError
 	}
-	if values["expected-application-profile"].seen && values["expected-application-profile"].value != config.MVPPostgreSQLCPUV1Profile {
-		return argumentError
-	}
 	expected, e := servingcheck.ParseExpected([]byte(values["expected-server-json"].value))
 	if e != nil {
 		return e
@@ -78,9 +75,6 @@ func runServingCheckCommand(args []string, output io.Writer) error {
 	c, e := config.LoadProtectedWithEnvironment(values["config"].value, values["env-file"].value)
 	if e != nil {
 		return errors.New("SERVING_TRANSPORT_CONFIGURATION_INVALID")
-	}
-	if values["expected-application-profile"].seen && c.Server.Profile() != values["expected-application-profile"].value {
-		return errors.New("SERVING_APPLICATION_PROFILE_MISMATCH")
 	}
 	if values["expected-release-view-json"].seen {
 		policy, err := view.ParseConfiguration([]byte(values["expected-release-view-json"].value))

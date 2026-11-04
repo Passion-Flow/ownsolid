@@ -1,8 +1,6 @@
 # Cumulative M01-M07 inputs. Copy to a private operator/runtime configuration and provision
 # every secret/asset reference below. Restart after edits; no secret bytes belong here.
 server:
-  # Enum account|workspaces|nodes|components|maintenance|models|gateway|platform; omitted preserves platform. Same artifact, restart required.
-  application_profile: datasets
   # Verified HTTPS for both browser and agent. HTTP browser deployments require
   # a separate machine_server HTTPS listener/origin; keep advertised origins separate from listen/bind.
   transport_mode: direct_https

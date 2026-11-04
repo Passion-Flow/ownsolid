@@ -258,7 +258,7 @@ func TestM02InactiveAndUnknownMembershipAssignment(t *testing.T) {
 }
 func setup(t *testing.T) (*workspaces.Service, identity.Auth, identity.Auth, identity.Auth, string) {
 	t.Helper()
-	s := fixture.NewM02(t)
+	s := fixture.New(t)
 	p := fixture.Bootstrap(t, s)
 	admin := fixture.Login(t, s, "admin@example.invalid", p, "admin")
 	password := fixture.Password()

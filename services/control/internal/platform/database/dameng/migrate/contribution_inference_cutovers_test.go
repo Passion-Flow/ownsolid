@@ -142,7 +142,7 @@ func TestInferenceCutoversExactScopedForeignKeys(t *testing.T) {
 func TestInferenceCutoversMatchFrozenPostgreSQLContracts(t *testing.T) {
 	c, _ := inferenceCutoversCatalog(t)
 	p := c.project(len(c.steps))
-	root := filepath.Join("..", "..", "..", "..", "..", "migrations", "postgresql")
+	root := filepath.Join("..", "..", "testdata", "platform-lineage")
 	pg6, err := os.ReadFile(filepath.Join(root, "000006_models.up.sql"))
 	if err != nil {
 		t.Fatal(err)

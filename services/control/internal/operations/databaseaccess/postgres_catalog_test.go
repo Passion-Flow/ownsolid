@@ -11,7 +11,7 @@ import (
 
 func TestPostgreSQLVariantRuntimeGrantsMatchActualMigrations(t *testing.T) {
 	var actual []string
-	for _, path := range []string{"postgresql/000021_mongodb_dataset_imports.up.sql", "postgresql/000022_aws_inventory.up.sql", "postgresql/000023_artifact_objects.up.sql", "postgresql/000024_image_registry.up.sql", "postgresql/000025_task_events.up.sql", "postgresql/000026_middleware.up.sql", "postgresql/000027_private_cluster.up.sql"} {
+	for _, path := range []string{"postgresql/000024_external_imports.up.sql", "postgresql/000025_artifact_objects.up.sql", "postgresql/000026_image_registry.up.sql", "postgresql/000027_task_events.up.sql", "postgresql/000028_middleware.up.sql", "postgresql/000029_private_cluster.up.sql"} {
 		raw, err := migrations.Files.ReadFile(path)
 		if err != nil {
 			t.Fatal(err)

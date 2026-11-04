@@ -24,16 +24,6 @@ For a changed setting, update its schema, [commented examples](../../../../../co
 
 Focused native check: `go -C services/control test ./internal/platform/config`. Then use the affected full-server/deployment profile to prove that the same target artifact accepts the nondefault configuration and preserves authentication, storage and shutdown behavior. Parsing alone is not deployment acceptance.
 
-`releases-cache-v1` is an explicit versioned post-M17 slice: the original bounded
-release graph plus optional model directory cache. `ReleasesOnly` remains exact;
-`ReleasesRuntime` includes this slice for inherited routes/readiness. All earlier
-profiles retain their cache refusal, PostgreSQL/account22 remains required and
-every other later owner remains closed. The existing model-cache typed policy
-and explicit environment mappings are reused; no ambient setting, new authority
-or database selector is introduced. The paired schema/config tests and
-[complete example](../../../../../config/examples/control/releases-cache-v1.example.yaml)
-cover selection, false/invalid/nondefault inputs and the canonical profile enum.
-
 `tls_material.go` owns the actual startup certificate/private-key snapshot. Both
 canonical directory and regular-file descriptors remain pinned through bounded
 reads and metadata checks, then `TLSConfig` parses the byte pair once. Public
@@ -140,19 +130,6 @@ values fail. See `config/examples/release/admin-view.env.example` and schema.
 
 ## Account application profile
 
-`server.application_profile` selects `platform` (omitted legacy default) or
-`account`. Explicit empty/null/unknown values fail. The protected env-file key
-`PROJECT_ONE_APPLICATION_PROFILE` maps to this same field; ambient variables have
-no authority. Account mode requires PostgreSQL and refuses configured later
-workers, stores, providers or machine ingress. Its public profile projection
-keeps the React shell within account/license routes. Restart with the same binary;
-never switch an existing schema's profile to evade its migration checksum.
-
-`server.application_profile` accepts `platform` (legacy default), `account`, `workspaces` and `nodes` (M01+M02). The protected `PROJECT_ONE_APPLICATION_PROFILE` mapping
-uses this same owner. Both minimal profiles reject later providers/stores/workers
-and non-PostgreSQL engines. A runtime selection is not a migration; use the
-versioned Workspace upgrade operator before serving an M01 installation.
-
 The `nodes` application profile extends `workspaces` with M03 discovery only.
 Use `config/examples/control/nodes.example.yaml` and `nodes-profile.env.example`.
 It requires PostgreSQL and the exact eight-entry minimal ledger, rejects later
@@ -160,45 +137,9 @@ configured services, and supports the existing dedicated machine_server group.
 Browser HTTP requires that independent verified HTTPS listener; direct/proxy
 HTTPS may use the exact Admin HTTPS origin. Credentials remain separate.
 
-The `components` profile adds only M04to that cumulative graph.
-`components.example.yaml` and `components-http.example.yaml` retain the separate
-browser/machine origins. `components-profile.env.example` documents the existing
-protected env-file mapping, including `PROJECT_ONE_COMPONENT_NODE_EXPORTER_ARCHIVE_FILE`
-to `components.node_exporter_archive_file`. Paths must be absolute/canonical;
-ambient environment has no authority. A maintenance catalog conflicts with this
-profile. The9-entry catalog and operator upgrade are mandatory before serving.
-
-
-The cumulative `maintenance` profile extends components with explicit M05 protocol1.2 operations and Admin-only bounded logs. `maintenance.example.yaml` / `maintenance-http.example.yaml` and `maintenance-profile.env.example` map the canonical absolute catalog directory through `PROJECT_ONE_COMPONENT_NODE_EXPORTER_CATALOG_DIRECTORY`; the protected env-file overrides independently valid YAML, never ambient values. The exact ten-entry catalog and upgrade-maintenance are required. Later providers/workers remain refused.
-
-
-M06 cumulative integration (2026-10-26): explicit `models` extends maintenance
-through entry11 and `upgrade-models`, retaining the installed prefix/principal.
-Only approved immutable import, deployment/GPU ownership, exact leased file
-transfer and bounded model worker are added. Later owners remain structurally
-inactive. Minimal restore invalidates imports and preserves uncertain GPU leases;
-see [current integration](../../../../../docs/execution/mvp/m06-cumulative-integration-20261026.md).
-
-The cumulative `gateway` application profile includes M01-M07 only, requires the initialized model root and retains models HTTP/machine constraints. Gateway/browser profile examples use the same protected control `--env-file` owner; later module settings remain rejected.
-
 `distribution_environment.go` maps every DistributionPolicy field through the existing protected policy input. Defaults/bounds stay in DistributionPolicy; distribution-policy.env.example documents units, ranges and restart/precedence. No additional environment reader is introduced.
 
-
-The explicit cumulative `datasets` profile adds M08 only. `datasets_environment.go` maps every DatasetPolicy field and three installed/private paths through the existing protected --env-file loader. [Example](../../../../../config/examples/control/datasets-policy.env.example) and [schema](../../../../../contracts/configuration/v1/control-datasets/schema.json) retain DefaultDatasetPolicy as sole default owner.
-
-
-The explicit cumulative `lifecycle` profile requires model, dataset, training and preparation storage with distinct typed paths and manufactured worker identities. `model-lifecycle-policy.env.example` and contracts/configuration/v1/control-model-lifecycle/schema.json map all30 lifecycle policy integers and4 preparation artifact inputs through the same protected --env-file loader. Go owns defaults/validation; absent/future owners remain refused. Restart applies valid changes without rebuilding.
-
-
 ## Current cumulative M11 source integration — 2026-10-26
-
-The explicit `sso` profile extends the accepted M10 lifecycle graph with only
-Gitea account linking/sign-in. `LifecycleRuntime` retains preparation, holdout and
-four-store behavior in both profiles. The exact forward catalog is67 tables/17
-entries; use `upgrade-sso` with the existing runtime principal. The immutable
-sixteen-entry prefix remains unchanged. Current execution and limitations are in
-[the integration contract](../../../../../docs/execution/mvp/m11-cumulative-integration-20261026.md);
-source integration alone is not current provider/build/installation acceptance.
 
 All18 SSO policy fields plus enabled/keyring/provider-inventory inputs map through
 [sso-policy.env.example](../../../../../config/examples/control/sso-policy.env.example).
@@ -208,29 +149,7 @@ Disabled recovery does not load absent keyring/CA assets or open provider socket
 
 ## Cumulative M12 source integration
 
-The explicit `knowledge` profile retains M01–M11 (SSO source validation and joined
-maintenance, preparation/holdout and all four stores) and adds only the existing
-knowledge owner. `SSORuntime`/`LifecycleRuntime` select inherited responsibilities;
-exact `SSOOnly`/`LifecycleOnly` predicates remain distinct. Forward account18 and
-`upgrade-knowledge` preserve the17-entry prefix/existing principal; the expected
-catalog is74tables/18entries, subject to actual current SQL verification.
-Protected `knowledge-policy.env.example` maps every installed reference/policy
-through the existing typed `--env-file`, with strict booleans and a protected
-gateway inventory. The cumulative restore calls knowledge last in the same
-transaction. See the [current integration contract](../../../../../docs/execution/mvp/m12-cumulative-integration-20261026.md)
-for pending executable evidence; source integration alone is not acceptance.
-
 ## Current cumulative M13 source integration
-
-The explicit `workflows` profile extends accepted knowledge through forward
-account19, six schema1 workflow tables and `upgrade-workflows`. KnowledgeRuntime
-retains knowledge plus all inherited SSO/lifecycle/four-store owners. Current
-workflow SQL uses the original schema1 fields; later plugin/tool result columns
-are absent and schema2 is refused. Startup owns the joined workflow executor;
-readiness and exact HTTP routes use this owner. Common restore appends workflow
-invalidation last in its existing transaction. The expected80table/19entry
-catalog, role-preserving interrupted upgrade and late-owner rollback require
-actual current SQL evidence. See [the current integration](../../../../../docs/execution/mvp/m13-cumulative-integration-20261026.md); source availability is not acceptance.
 
 `workflows_environment.go` maps every WorkflowPolicy integer and the strict boolean
 `PROJECT_ONE_WORKFLOWS_ENABLED` to the existing protected `--env-file` owner.
@@ -243,44 +162,19 @@ not ambient policy variables. Restart changes the same compiled artifact.
 
 ## Current cumulative M14 source boundary — 2026-10-27
 
-`plugins` is the bounded cumulative M01–M14 profile. `PluginsOnly` selects it;
-`WorkflowsRuntime` and inherited runtime predicates retain the M13 owners.
-`plugins.enabled` and Workflows/Knowledge dependencies are validated before
-serving. The protected env-file maps every PluginPolicy limit, explicit boolean
-and reviewed public trust JSON through `plugins_environment.go`; ambient process
-environment and manufacturer signing keys are not application authority. Unknown,
-duplicate, null, invalid, empty-required and contradictory inputs refuse. The
-configuration schema and complete examples remain synchronized. Restart applies
-supported policy changes to the same target artifact.
-
 Implementation and current local execution evidence are recorded separately in the
 [current M14 handoff](../../../../../docs/execution/mvp/m14-closeout-current.md).
 Physical qualification and real manufacturer approval remain separate.
 
 ## Cumulative Portal composition — 2026-10-27
 
-The explicit `portal` profile extends `plugins` with application projections,
-private terminal notices and fixed user theme preferences. Account21 adds only
-two tables; `upgrade-portal` retains the existing principal. `PluginsRuntime`
-retains inherited tools; Portal maintenance joins startup/readiness/stop. Later
-owners remain closed. See the [integration contract](../../../../../docs/execution/mvp/m15-cumulative-integration-20261027.md) for current evidence status; source availability is not acceptance.
-
-
 ## Cumulative localization composition — 2026-10-27
-
-The explicit `localization` profile extends `portal` through forward account22,
-retaining all M01–M15 owners, 86 tables and the immutable21-entry prefix.
-`PortalRuntime` includes both profiles; exact `PortalOnly`/`LocalizationOnly`
-predicates remain distinct. `upgrade-localization` preserves the installed
-principal and identical DML grants. Runtime locale packages remain immutable,
-source-bound configuration inputs. See the [current M16 contract](../../../../../docs/execution/mvp/m16-cumulative-integration-20261027.md).
-Current upgrade, runtime, actual installed-font browser, native recovery and
-same-image cold-install controls pass their declared local profile. Final offline
-package/source/publication binding is retained by the current M16 delivery receipt.
-The exact202 resource release, native human review and physical qualification
-remain pending; a partial component never establishes those results.
-
 
 ## Cumulative M17 source boundary — 2026-10-27
 
-The explicit `releases` profile extends localization through `LocalizationRuntime`, retaining all inherited owners. It requires the existing protected release-view policy reference and continues to refuse every later optional owner. Its example and explicit environment mapping are `config/examples/control/releases-cumulative.example.yaml` and `releases-profile.env.example`; no ambient policy is read.
+## Topology and serving rules
+
+`topology.size` is the only deployment shape: `single-node`, `ha`, `cell`, `multi-cell`
+or `multi-site`, defaulting to `single-node`. Only `single-node` is accepted today; see
+[topology.go](topology.go) and ADR 0003. `Config.ValidateServing` holds the rules that
+must pass before `serve` accepts traffic.

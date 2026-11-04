@@ -62,9 +62,6 @@ func Owns(path string) bool {
 func id(v string) bool     { _, e := uuid.Parse(v); return e == nil && len(v) == 36 }
 func reason(v string) bool { return strings.TrimSpace(v) != "" && utf8.RuneCountInString(v) <= 500 }
 func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
-	if (h.Service.Identity.Config.NodesOnly() && !DiscoveryMachineOwns(r.URL.Path)) || (h.Service.Identity.Config.ComponentRuntime() && !h.Service.Identity.Config.ModelsRuntime() && !ComponentsMachineOwns(r.URL.Path)) || (h.Service.Identity.Config.ModelsRuntime() && !ModelsMachineOwns(r.URL.Path) && !(h.Service.Identity.Config.TrainingRuntime() && TrainingMachineOwns(r.URL.Path)) && !(h.Service.Identity.Config.LifecycleRuntime() && LifecycleMachineOwns(r.URL.Path))) {
-		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
-	}
 	bad := errors.New("VALIDATION_FAILED")
 	if r.Method != "POST" {
 		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
@@ -340,9 +337,6 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 }
 func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, int, error) {
 	path := r.URL.Path
-	if h.Service.Identity.Config.NodesOnly() && !DiscoveryHumanOwns(r.URL.Path) {
-		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
-	}
 	bad := errors.New("VALIDATION_FAILED")
 	admin := strings.HasPrefix(path, "/api/v1/admin/")
 	if admin && (a.Me.Audience != "admin" || !a.Me.User.IsPlatformAdmin) {

@@ -15,12 +15,6 @@ func TestGatewayProvisionAcceptsOnlyExplicitInferenceCapableEnrollmentProfiles(t
 	for _, profile := range []string{wire.ReadOnlyProfile, wire.SystemdComponentsProfile, wire.SystemdMaintenanceProfile, wire.DockerInferenceProfile, wire.DockerAIProfile, wire.DockerModelLifecycleProfile} {
 		t.Run(profile, func(t *testing.T) {
 			join, e := c.s.Nodes.MintForProfile(ctx, c.a, c.a.Me.Workspace.ID, "Explicit gateway profile "+profile, profile, uuid.NewString())
-			if c.s.Identity.Config.GatewayOnly() && (profile == wire.DockerAIProfile || profile == wire.DockerModelLifecycleProfile) {
-				if e == nil || e.Error() != "AGENT_PROFILE_REJECTED" {
-					t.Fatal("later profile admitted", e)
-				}
-				return
-			}
 			if e != nil {
 				t.Fatal(e)
 			}

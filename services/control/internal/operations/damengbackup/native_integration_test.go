@@ -64,7 +64,7 @@ func openActualRecoveryTarget(t *testing.T, ctx context.Context, recoveryFile, c
 		t.Fatal(e)
 	}
 	out.application, e = config.Decode(raw)
-	if e != nil || out.application.Server.Profile() != "platform" || out.application.DatabaseEngine() != config.DamengDatabaseEngine {
+	if e != nil || out.application.DatabaseEngine() != config.DamengDatabaseEngine {
 		t.Fatal("protected complete Dameng platform configuration required")
 	}
 

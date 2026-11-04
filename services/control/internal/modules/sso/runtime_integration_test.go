@@ -20,7 +20,7 @@ func TestM11ActualRestrictedDatabaseRoleSupportsSSOLifecycleWithoutSchemaOwnersh
 	role := "m11_runtime_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 	password := security.Token()
 	// Only a generated safe identifier and base64url synthetic password enter DDL.
-	if _, e := f.s.Identity.DB.Exec(ctx, "CREATE ROLE "+role+" LOGIN PASSWORD '"+password+"'"); e != nil {
+	if _, e := f.s.Identity.DB.Exec(ctx, "CREATE ROLE "+role+" LOGIN NOINHERIT CONNECTION LIMIT 32 PASSWORD '"+password+"'"); e != nil {
 		t.Fatal("isolated runtime role creation failed")
 	}
 	defer func() {

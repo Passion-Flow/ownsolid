@@ -53,7 +53,7 @@ func postgresMaintenancePaths(args []string) (string, string, error) {
 }
 
 func observePostgresMaintenance(ctx context.Context, c config.Config) (out postgresmaintenance.Observation, result error) {
-	if c.DatabaseEngine() != config.PostgreSQLDatabaseEngine || c.Server.Profile() != postgresmaintenance.ApplicationProfile && !c.MVPPostgreSQLCPUV1Only() {
+	if c.DatabaseEngine() != config.PostgreSQLDatabaseEngine {
 		return out, errors.New("POSTGRES_MAINTENANCE_RELEASES_CONTEXT_REQUIRED")
 	}
 	selected, e := openSelectedDatabase(ctx, c, postgresMaintenanceCheckCommand)
@@ -80,7 +80,7 @@ func observePostgresMaintenance(ctx context.Context, c config.Config) (out postg
 			result = errors.Join(result, errors.New("POSTGRES_MAINTENANCE_TRANSACTION_CLOSE_UNCONFIRMED"))
 		}
 	}()
-	out, e = postgresmaintenance.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx), c.Server.Profile())
+	out, e = postgresmaintenance.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx))
 	if e != nil {
 		return postgresmaintenance.Observation{}, e
 	}

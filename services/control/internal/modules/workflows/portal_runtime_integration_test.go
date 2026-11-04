@@ -21,24 +21,6 @@ import (
 func verifyPortalRestrictedRuntime(t *testing.T, h *identityhttp.Handler, a identity.Auth, workflow, run, outcome string) {
 	t.Helper()
 	ctx := context.Background()
-	if h.Service.Config.PluginsOnly() {
-		if h.Notifications != nil || h.Preferences != nil || h.Applications != nil {
-			t.Fatal("later runtime owner activated")
-		}
-		var count int
-		if e := h.Service.DB.QueryRow(ctx, "SELECT count(*) FROM pg_tables WHERE schemaname=current_schema() AND tablename IN ('terminal_notifications','user_preferences','applications')").Scan(&count); e != nil || count != 0 {
-			t.Fatal("future SQL owner activated", e)
-		}
-		current, e := h.Workflows.Service.GetRun(ctx, a, a.Me.Workspace.ID, workflow, run)
-		if e != nil || current.State != outcome || current.Answer != nil || current.Usage != nil {
-			t.Fatal("restricted cumulative tool read", e)
-		}
-		if outcome == "succeeded" && (!current.ResultAvailable || current.ToolResult == nil) {
-			t.Fatal("restricted cumulative tool result absent")
-		}
-		return
-	}
-
 	s := h.Notifications.Service
 	if e := s.Start(ctx); e != nil {
 		t.Fatal("DML-only notice maintenance start", e)

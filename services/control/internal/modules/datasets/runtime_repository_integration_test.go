@@ -48,7 +48,6 @@ func runtimeSetup(t *testing.T, processor bool) datasetRuntimeStory {
 	t.Cleanup(cancel)
 	account := &identity.Service{Storage: f.Store}
 	if profile := os.Getenv("PROJECT_ONE_TEST_APPLICATION_PROFILE"); profile != "" {
-		account.Config.Server.ApplicationProfile = &profile
 	}
 	if f.PostgreSQL != nil {
 		account.Storage = nil

@@ -78,7 +78,7 @@ func restoredHTTPConfiguration(ctx context.Context, in restoredHTTPInputs, reque
 	if e != nil {
 		return zero, "", nil, e
 	}
-	if c.Server.Profile() != "releases" || !c.Knowledge.Enabled || !c.Workflows.Enabled || request.TargetScopeID != in.TargetScopeID || complete.ManifestSHA256 != in.SourceManifestSHA256 || manifest.Archive.SHA256 != in.SourceArchiveSHA256 || manifest.Request.Policy.ControlSHA256 != in.NativeControlSHA256 {
+	if !c.Knowledge.Enabled || !c.Workflows.Enabled || request.TargetScopeID != in.TargetScopeID || complete.ManifestSHA256 != in.SourceManifestSHA256 || manifest.Archive.SHA256 != in.SourceArchiveSHA256 || manifest.Request.Policy.ControlSHA256 != in.NativeControlSHA256 {
 		return zero, "", nil, errors.New("M18_FULL_RESTORED_HTTP_PROFILE_REQUIRED")
 	}
 	root := filepath.Join("/fixture", "http-"+in.RunID)

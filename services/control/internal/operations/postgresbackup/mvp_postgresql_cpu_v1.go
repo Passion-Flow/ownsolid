@@ -7,7 +7,6 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/operations/databaseaccess"
 	release "github.com/Passion-Flow/ownsolid/api/release/v1"
 
-	"github.com/Passion-Flow/ownsolid/services/control/internal/operations/postgresmaintenance"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 )
 
@@ -16,14 +15,10 @@ type backupSchema struct{ version, tables int }
 // The request selects a real lineage, not an arbitrary version/table-count
 // pair. Historical omitted requests retain exact releases22/86 semantics.
 func selectedBackupSchema(profile string) (backupSchema, error) {
-	switch profile {
-	case postgresmaintenance.ApplicationProfile:
-		return backupSchema{postgresmaintenance.SchemaVersion, 86}, nil
-	case postgresmaintenance.MVPApplicationProfile:
-		return backupSchema{database.MVPPostgreSQLCPUV1SchemaVersion, database.MVPPostgreSQLCPUV1TableCount}, nil
-	default:
+	if profile != database.LineageName {
 		return backupSchema{}, errors.New("POSTGRES_BACKUP_APPLICATION_PROFILE_INVALID")
 	}
+	return backupSchema{database.SchemaVersion, database.TableCount}, nil
 }
 func matchesDatabaseProfile(profile string, data DatabaseReadback) bool {
 	spec, e := selectedBackupSchema(profile)
@@ -34,7 +29,7 @@ func matchesDatabaseProfile(profile string, data DatabaseReadback) bool {
 // held installation session. An explicit runtime env file is part of the same
 // typed input; no second credential parser or runtime connection is opened.
 func verifyMVPPrincipal(ctx context.Context, pool *pgxpool.Pool, lease *pgxpool.Conn, r release.PostgreSQLBackupRequest) error {
-	if r.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile {
+	if r.EffectiveApplicationProfile() != database.LineageName {
 		return nil
 	}
 	if ctx == nil || pool == nil || lease == nil {
@@ -44,5 +39,5 @@ func verifyMVPPrincipal(ctx context.Context, pool *pgxpool.Pool, lease *pgxpool.
 	if e != nil {
 		return e
 	}
-	return databaseaccess.VerifyMVPPostgreSQLCPUV1Principal(ctx, pool, lease, input)
+	return databaseaccess.VerifyRuntimePrincipal(ctx, pool, lease, input)
 }

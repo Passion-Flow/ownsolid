@@ -99,7 +99,7 @@ func nativeKnowledge(t *testing.T, ctx context.Context, s *Service, databaseName
 	c.Server.TLSPrivateKeyFile = key
 	c.Server.PortalAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/portal/dist")
 	c.Server.AdminAssets = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "apps/web/apps/admin/dist")
-	if c.KnowledgeOnly() {
+	{
 		c.Datasets.PythonExecutable = os.Getenv("PROJECT_ONE_DATA_PYTHON")
 		c.Datasets.ProcessorFile = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "runtimes/data-processing/process.py")
 		if _, e := os.Stat(c.Datasets.ArtifactRoot); os.IsNotExist(e) {
@@ -330,8 +330,8 @@ func TestM12ActualNativeRestartsAtomicLogicalRestoreOldLeaseFenceAndRecovery(t *
 	if os.WriteFile(archiveFile, archive, 0600) != nil {
 		t.Fatal("private actual database archive")
 	}
-	restored := owned.RestoreFresh(t, ctx, s.DB, archive, s.Identity.Config.AccountRuntime())
-	if e = database.Check(ctx, restored, s.Identity.Config.Server.Profile()); e != nil {
+	restored := owned.RestoreFresh(t, ctx, s.DB, archive, true)
+	if e = database.Check(ctx, restored); e != nil {
 		t.Fatal("restored exact schema", e)
 	}
 	accounts := *s.Identity

@@ -11,7 +11,6 @@ import (
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
@@ -23,11 +22,6 @@ func reconcileInferenceRemovalSelected(ctx context.Context, accounts *identity.S
 		return errors.New("RECOVERY_RECEIPT_EXPIRED")
 	}
 	return restoreTransaction(ctx, accounts, func(ctx context.Context, q transaction.Executor) error {
-		if accounts.Config.ModelsRuntime() {
-			if e := database.CheckAccountProfileWithin(ctx, q, accounts.Config.Server.Profile()); e != nil {
-				return e
-			}
-		}
 		var tenant, workspace string
 		e := q.QueryRow(ctx, recoverySQL(q, `SELECT n.tenant_id::text,n.workspace_id::text FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND n.id=$1 AND n.execution_profile IN ($2,$3,$4)`, `SELECT n.tenant_id,n.workspace_id FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND n.id=? AND n.execution_profile IN (?,?,?)`, receipt.NodeID, wire.DockerInferenceProfile, wire.DockerAIProfile, wire.DockerModelLifecycleProfile)).Scan(&tenant, &workspace)
 		if errors.Is(e, sql.ErrNoRows) {

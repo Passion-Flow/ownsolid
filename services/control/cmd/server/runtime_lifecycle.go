@@ -162,13 +162,11 @@ func (g *runtimeLifecycle) Close(ctx context.Context) error {
 }
 
 func serveSelected(ctx, startup context.Context, c config.Config, selected *selectedDatabase, service *identity.Service, outbox *mail.Outbox) (result error) {
-	if c.AccountRuntime() {
-		return serveAccount(ctx, startup, c, selected, service, outbox)
+	if e := c.ValidateServing(); e != nil {
+		return e
 	}
-	if c.MVPPostgreSQLCPUV1Only() {
-		if e := verifyServingDatabase(startup, c, selected); e != nil {
-			return e
-		}
+	if e := verifyServingDatabase(startup, c, selected); e != nil {
+		return e
 	}
 	g := newRuntimeLifecycle(ctx)
 	selected.workers = g.joined

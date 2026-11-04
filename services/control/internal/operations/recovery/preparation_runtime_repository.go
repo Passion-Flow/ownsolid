@@ -11,7 +11,6 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"time"
 )
@@ -63,11 +62,6 @@ func fenceInferenceNode(ctx context.Context, accounts *identity.Service, node, r
 		return e
 	}
 	return store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
-		if accounts.Config.ModelsRuntime() {
-			if e := database.CheckAccountProfileWithin(ctx, tx, accounts.Config.Server.Profile()); e != nil {
-				return e
-			}
-		}
 		var lockedWorkspace string
 		if e = tx.QueryRow(ctx, recoverySQL(tx, `SELECT w.id::text FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w`, `SELECT w.id FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=? AND w.id=? FOR UPDATE`, tenant, workspace)).Scan(&lockedWorkspace); e != nil {
 			return e
@@ -88,7 +82,7 @@ func fenceInferenceNode(ctx context.Context, accounts *identity.Service, node, r
 				return e
 			}
 		}
-		if !accounts.Config.ModelsRuntime() {
+		{
 			if e = modelpreparations.InvalidateNodeWithin(ctx, tx, tenant, workspace, node); e != nil {
 				return e
 			}

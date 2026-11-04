@@ -18,7 +18,6 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/sso"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
@@ -45,72 +44,6 @@ func InvalidateRestoredWithin(ctx context.Context, accounts *identity.Service, q
 	if e != nil || store.Dialect() != q.Dialect() {
 		return errors.New("STORAGE_UNAVAILABLE")
 	}
-	if e := accounts.Config.ValidateApplicationProfile(); e != nil {
-		return e
-	}
-	if accounts.Config.AccountRuntime() {
-		if e := database.CheckAccountProfileWithin(ctx, q, accounts.Config.Server.Profile()); e != nil {
-			return e
-		}
-		if e := accounts.InvalidateAccountAuthoritiesWithin(ctx, q, reason); e != nil {
-			return e
-		}
-		if accounts.Config.NodeRuntime() {
-			if e := nodes.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-				return e
-			}
-		}
-		if accounts.Config.ModelsRuntime() {
-			if e := models.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-				return e
-			}
-			if e := deployments.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-				return e
-			}
-			if accounts.Config.GatewayRuntime() {
-				if e := distribution.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-					return e
-				}
-			}
-			if accounts.Config.DatasetRuntime() {
-				if e := datasets.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-					return e
-				}
-			}
-			if accounts.Config.TrainingRuntime() {
-				if e := training.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-					return e
-				}
-			}
-			if accounts.Config.LifecycleRuntime() {
-				if e := modelpreparations.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-					return e
-				}
-			}
-			if accounts.Config.SSORuntime() {
-				if e := sso.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-					return e
-				}
-			}
-			if accounts.Config.KnowledgeRuntime() {
-				if e := knowledge.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-					return e
-				}
-			}
-			if accounts.Config.PluginsRuntime() {
-				if e := plugins.InvalidateAuthoritiesWithin(ctx, q); e != nil {
-					return e
-				}
-				return workflows.InvalidateAuthoritiesWithin(ctx, q)
-			}
-			if accounts.Config.WorkflowsOnly() {
-				return workflows.InvalidateKnowledgeAuthoritiesWithin(ctx, q)
-			}
-			return nil
-		}
-		return nil
-	}
-
 	if e := accounts.InvalidateAccountAuthoritiesWithin(ctx, q, reason); e != nil {
 		return e
 	}

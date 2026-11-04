@@ -38,7 +38,6 @@ const (
 
 // ServerConfiguration is the sole control authority for browser origins and transport.
 type ServerConfiguration struct {
-	ApplicationProfile *string       `yaml:"application_profile,omitempty"`
 	ListenAddress      string        `yaml:"listen_address"`
 	PortalOrigin       string        `yaml:"portal_origin"`
 	AdminOrigin        string        `yaml:"admin_origin"`
@@ -252,7 +251,10 @@ func (s ServerConfiguration) ValidateTransport() error {
 }
 
 func (c Config) validateServerTransport() error {
-	if e := c.ValidateApplicationProfile(); e != nil {
+	if e := c.Topology.Validate(); e != nil {
+		return e
+	}
+	if e := c.validateComponentReferences(); e != nil {
 		return e
 	}
 	if e := c.Server.ValidateTransport(); e != nil {
@@ -266,11 +268,6 @@ func (c Config) validateServerTransport() error {
 
 func (s *ServerConfiguration) UnmarshalYAML(node *yaml.Node) error {
 	bad := errors.New("CONFIG_TRANSPORT_INVALID")
-	for i := 0; i+1 < len(node.Content); i += 2 {
-		if node.Content[i].Value == "application_profile" && (node.Content[i+1].Tag != "!!str" || (node.Content[i+1].Value != "account" && node.Content[i+1].Value != "platform" && node.Content[i+1].Value != "workspaces" && node.Content[i+1].Value != "nodes" && node.Content[i+1].Value != "components" && node.Content[i+1].Value != "maintenance" && node.Content[i+1].Value != "models" && node.Content[i+1].Value != "gateway" && node.Content[i+1].Value != "datasets" && node.Content[i+1].Value != "training" && node.Content[i+1].Value != "lifecycle" && node.Content[i+1].Value != "sso" && node.Content[i+1].Value != "knowledge" && node.Content[i+1].Value != "workflows" && node.Content[i+1].Value != "plugins" && node.Content[i+1].Value != "portal" && node.Content[i+1].Value != "localization" && node.Content[i+1].Value != "releases" && node.Content[i+1].Value != ReleasesCacheV1Profile && node.Content[i+1].Value != MVPPostgreSQLCPUV1Profile)) {
-			return errors.New("CONFIG_APPLICATION_PROFILE_INVALID")
-		}
-	}
 	if strictKnowledgeYAML(node, reflect.TypeOf(*s)) != nil {
 		return bad
 	}
@@ -308,14 +305,6 @@ func validateServerTransportYAML(raw []byte) error {
 		if root.Content[i].Value == "server" && strictKnowledgeYAML(root.Content[i+1], reflect.TypeOf(ServerConfiguration{})) != nil {
 			return bad
 		}
-		if root.Content[i].Value == "server" {
-			child := root.Content[i+1]
-			for j := 0; j+1 < len(child.Content); j += 2 {
-				if child.Content[j].Value == "application_profile" && (child.Content[j+1].Tag != "!!str" || (child.Content[j+1].Value != "account" && child.Content[j+1].Value != "platform" && child.Content[j+1].Value != "workspaces" && child.Content[j+1].Value != "nodes" && child.Content[j+1].Value != "components" && child.Content[j+1].Value != "maintenance" && child.Content[j+1].Value != "models" && child.Content[j+1].Value != "gateway" && child.Content[j+1].Value != "datasets" && child.Content[j+1].Value != "training" && child.Content[j+1].Value != "lifecycle" && child.Content[j+1].Value != "sso" && child.Content[j+1].Value != "knowledge" && child.Content[j+1].Value != "workflows" && child.Content[j+1].Value != "plugins" && child.Content[j+1].Value != "portal" && child.Content[j+1].Value != "localization" && child.Content[j+1].Value != "releases" && child.Content[j+1].Value != ReleasesCacheV1Profile && child.Content[j+1].Value != MVPPostgreSQLCPUV1Profile)) {
-					return errors.New("CONFIG_APPLICATION_PROFILE_INVALID")
-				}
-			}
-		}
 		if root.Content[i].Value == "machine_server" {
 			if seenMachine || root.Content[i].Tag != "!!str" || strictKnowledgeYAML(root.Content[i+1], reflect.TypeOf(MachineServerConfiguration{})) != nil {
 				return errors.New("CONFIG_MACHINE_SERVER_INVALID")
@@ -328,7 +317,7 @@ func validateServerTransportYAML(raw []byte) error {
 
 func serverTransportEnvironment(key string) bool {
 	switch key {
-	case "PROJECT_ONE_APPLICATION_PROFILE", transportModeEnvironment, listenAddressEnvironment, portalOriginEnvironment, adminOriginEnvironment, tlsCertificateEnvironment, tlsPrivateKeyEnvironment, trustedProxyEnvironment:
+	case transportModeEnvironment, listenAddressEnvironment, portalOriginEnvironment, adminOriginEnvironment, tlsCertificateEnvironment, tlsPrivateKeyEnvironment, trustedProxyEnvironment:
 		return true
 	}
 	return false
@@ -340,8 +329,6 @@ func (s *ServerConfiguration) applyTransportEnvironment(key, value string) error
 		return bad
 	}
 	switch key {
-	case "PROJECT_ONE_APPLICATION_PROFILE":
-		s.ApplicationProfile = &value
 	case transportModeEnvironment:
 		s.TransportMode = TransportMode(value)
 	case listenAddressEnvironment:

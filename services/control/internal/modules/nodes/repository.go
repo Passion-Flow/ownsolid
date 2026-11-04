@@ -161,17 +161,15 @@ func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, id string
 	return out, nil
 }
 
-// CheckRecoveryOwners validates the enabled production graph before readiness.
-// Minimal profiles require only their original owners; platform requires every
-// recovery owner even when the inspected node currently has no workload rows.
-// It performs no SQL and grants no authority to a later node mutation.
+// CheckRecoveryOwners validates the production graph before readiness. Every
+// recovery owner is required even when the inspected node currently has no
+// workload rows. It performs no SQL and grants no authority to a later node
+// mutation.
 func (s *Service) CheckRecoveryOwners() error {
 	store, e := s.repository()
 	if e != nil {
 		return e
 	}
-	c := s.Identity.Config
-	platform := c.FullPlatformRuntime()
 	present := func(owner any) bool {
 		if owner == nil {
 			return false
@@ -184,7 +182,7 @@ func (s *Service) CheckRecoveryOwners() error {
 			return true
 		}
 	}
-	if platform || c.ComponentRuntime() {
+	{
 		if !present(s.Components) {
 			return fail("STORAGE_UNAVAILABLE")
 		}
@@ -197,7 +195,7 @@ func (s *Service) CheckRecoveryOwners() error {
 			}
 		}
 	}
-	if platform || c.ModelsRuntime() {
+	{
 		if !present(s.Inference) {
 			return fail("STORAGE_UNAVAILABLE")
 		}
@@ -207,10 +205,10 @@ func (s *Service) CheckRecoveryOwners() error {
 			}
 		}
 	}
-	if (platform || c.TrainingRuntime()) && !present(s.Training) {
+	if !present(s.Training) {
 		return fail("STORAGE_UNAVAILABLE")
 	}
-	if (platform || c.LifecycleRuntime()) && !present(s.Preparations) {
+	if !present(s.Preparations) {
 		return fail("STORAGE_UNAVAILABLE")
 	}
 	return nil

@@ -89,7 +89,7 @@ func actualMaintenanceCheck(t *testing.T, ctx context.Context, lease *pgxpool.Co
 			t.Fatal("owned session setup")
 		}
 	}
-	out, result := CheckWithin(ctx, transaction.PostgreSQLTransaction(tx), ApplicationProfile)
+	out, result := CheckWithin(ctx, transaction.PostgreSQLTransaction(tx))
 	// The production reader has no commit/rollback authority over its caller.
 	if result == nil {
 		var alive int
@@ -107,7 +107,7 @@ func TestActualPostgresMaintenanceCompleteCatalogAuthorityAndSameSessionGate(t *
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
 	pool := actualMaintenancePool(t, "full")
-	if e := database.Migrate(ctx, pool, ApplicationProfile); e != nil {
+	if e := database.Migrate(ctx, pool); e != nil {
 		t.Fatal("actual complete releases migration", e)
 	}
 	lease := actualMaintenanceLease(t, ctx, pool)
@@ -129,7 +129,7 @@ func TestActualPostgresMaintenanceCompleteCatalogAuthorityAndSameSessionGate(t *
 		}
 	}
 	out, e := actualMaintenanceCheck(t, ctx, lease, pgx.ReadOnly, "")
-	if e != nil || !out.CurrentLockHeld || out.TenantID != tenant || out.SchemaVersion != 22 || len(out.Checks) != 14 || out.ApplicationProfile != ApplicationProfile {
+	if e != nil || !out.CurrentLockHeld || out.TenantID != tenant || out.SchemaVersion != database.SchemaVersion || len(out.Checks) != 22 {
 		t.Fatal("actual full catalog/quiescence", out, e)
 	}
 	if _, e = actualMaintenanceCheck(t, ctx, lease, pgx.ReadWrite, ""); e == nil || e.Error() != "POSTGRES_MAINTENANCE_LOCKED_READ_ONLY_SESSION_REQUIRED" {

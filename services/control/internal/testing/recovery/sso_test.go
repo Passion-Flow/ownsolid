@@ -230,7 +230,7 @@ func TestM11ActualServiceRestartLogicalExportRestoreAndSourceAuthorityRecovery(t
 		t.Fatal("isolated restored pool failed")
 	}
 	defer restoredDB.Close()
-	if e = database.Check(ctx, restoredDB, accounts.Config.Server.Profile()); e != nil {
+	if e = database.Check(ctx, restoredDB); e != nil {
 		t.Fatal(e)
 	}
 	restored := *accounts

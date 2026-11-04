@@ -1,6 +1,7 @@
 package postgresbackup
 
 import (
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"bytes"
 	"context"
 	"errors"
@@ -187,7 +188,7 @@ func captureRestoreRootsInspection(ctx context.Context, configuration, environme
 		}
 	}
 	c, e := config.LoadProtectedWithEnvironment(configuration, environment)
-	if e != nil || c.DatabaseEngine() != config.PostgreSQLDatabaseEngine || c.Server.Profile() != r.ApplicationProfile {
+	if e != nil || c.DatabaseEngine() != config.PostgreSQLDatabaseEngine || r.ApplicationProfile != database.LineageName {
 		return config.Config{}, bad
 	}
 	if validateStoreRoots(c, r.RuntimeConfigurationRoot) != nil {

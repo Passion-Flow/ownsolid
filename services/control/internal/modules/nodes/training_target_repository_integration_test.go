@@ -88,24 +88,20 @@ func TestActualPairedTrainingTarget(t *testing.T) {
 			t.Fatal(e)
 		}
 		x.exec(t, "UPDATE managed_nodes SET protocol_version=$1 WHERE id=$2", "UPDATE managed_nodes SET protocol_version=? WHERE id=?", wire.ModelLifecycleVersion, n.ID)
-		raw, _ := json.Marshal(wire.Capabilities(wire.ReadOnlyProfile))
-		if x.f.Store.Dialect() == transaction.PostgreSQL {
-			x.exec(t, "UPDATE managed_nodes SET capabilities=$2 WHERE id=$1", "", n.ID, raw)
-		} else {
+		// PostgreSQL ties capabilities to the execution profile with a CHECK, so this
+		// mismatch cannot exist there; only the other engines need the runtime refusal.
+		if x.f.Store.Dialect() != transaction.PostgreSQL {
+			raw, _ := json.Marshal(wire.Capabilities(wire.ReadOnlyProfile))
 			x.exec(t, "", "UPDATE managed_nodes SET capabilities=CAST(? AS JSON) WHERE id=?", raw, n.ID)
-		}
-		e = trainingTargetWithin(x, func(ctx context.Context, q transaction.Executor) error {
-			got, e := x.s.TrainingTargetWithin(ctx, q, x.f.Tenant, x.f.Workspace, n.ID)
-			trainingTargetRefused(t, got, e, "AGENT_PROFILE_REJECTED")
-			return nil
-		})
-		if e != nil {
-			t.Fatal(e)
-		}
-		raw, _ = json.Marshal(wire.Capabilities(wire.DockerModelLifecycleProfile))
-		if x.f.Store.Dialect() == transaction.PostgreSQL {
-			x.exec(t, "UPDATE managed_nodes SET capabilities=$2 WHERE id=$1", "", n.ID, raw)
-		} else {
+			e = trainingTargetWithin(x, func(ctx context.Context, q transaction.Executor) error {
+				got, e := x.s.TrainingTargetWithin(ctx, q, x.f.Tenant, x.f.Workspace, n.ID)
+				trainingTargetRefused(t, got, e, "AGENT_PROFILE_REJECTED")
+				return nil
+			})
+			if e != nil {
+				t.Fatal(e)
+			}
+			raw, _ = json.Marshal(wire.Capabilities(wire.DockerModelLifecycleProfile))
 			x.exec(t, "", "UPDATE managed_nodes SET capabilities=CAST(? AS JSON) WHERE id=?", raw, n.ID)
 		}
 		for _, state := range []string{"disabled", "removed"} {

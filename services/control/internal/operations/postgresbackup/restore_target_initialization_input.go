@@ -1,6 +1,7 @@
 package postgresbackup
 
 import (
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -93,7 +94,7 @@ func captureTargetInitializationInputs(ctx context.Context, c config.Config, ope
 	if e := RefuseAmbient(); e != nil {
 		return out, e
 	}
-	if c.Server.ApplicationProfile != nil && *c.Server.ApplicationProfile != r.ApplicationProfile {
+	if r.ApplicationProfile != database.LineageName {
 		return out, bad
 	}
 	loaded, e := config.LoadProtectedWithEnvironment(operatorPath, operatorEnvironment)

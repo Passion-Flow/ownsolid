@@ -27,7 +27,7 @@ func (s *Service) withExecution(ctx context.Context, execution *runExecution, pe
 		return failure("STORAGE_UNAVAILABLE")
 	}
 	defer tx.Rollback(ctx)
-	q := s.selectedExecutor(transaction.PostgreSQLTransaction(tx))
+	q := transaction.PostgreSQLTransaction(tx)
 	w, e := s.scopeWithin(ctx, q, execution.actor, execution.workspace, false)
 	if e != nil {
 		return workflowRepositoryError(e)

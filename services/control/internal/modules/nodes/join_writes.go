@@ -94,18 +94,6 @@ func (s *Service) MintForProfile(ctx context.Context, a identity.Auth, workspace
 	if profile == "" {
 		profile = wire.ReadOnlyProfile
 	}
-	if s.Identity.Config.NodesOnly() && profile != wire.ReadOnlyProfile {
-		return MintedToken{}, fail("AGENT_PROFILE_REJECTED")
-	}
-	if s.Identity.Config.ModelsRuntime() && profile != wire.ReadOnlyProfile && profile != wire.SystemdComponentsProfile && profile != wire.SystemdMaintenanceProfile && profile != wire.DockerInferenceProfile && !(s.Identity.Config.TrainingRuntime() && profile == wire.DockerAIProfile) && !(s.Identity.Config.LifecycleRuntime() && profile == wire.DockerModelLifecycleProfile) {
-		return MintedToken{}, fail("AGENT_PROFILE_REJECTED")
-	}
-	if s.Identity.Config.MaintenanceOnly() && profile != wire.ReadOnlyProfile && profile != wire.SystemdComponentsProfile && profile != wire.SystemdMaintenanceProfile {
-		return MintedToken{}, fail("AGENT_PROFILE_REJECTED")
-	}
-	if s.Identity.Config.ComponentsOnly() && profile != wire.ReadOnlyProfile && profile != wire.SystemdComponentsProfile {
-		return MintedToken{}, fail("AGENT_PROFILE_REJECTED")
-	}
 	if !wire.KnownProfile(profile) {
 		return MintedToken{}, fail("VALIDATION_FAILED")
 	}

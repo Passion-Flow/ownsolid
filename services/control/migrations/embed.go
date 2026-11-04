@@ -3,5 +3,5 @@ package migrations
 
 import "embed"
 
-//go:embed postgresql/*.sql account/*.sql postgresql/mvp-postgresql-cpu-v1/*.sql
+//go:embed postgresql/*.sql
 var Files embed.FS

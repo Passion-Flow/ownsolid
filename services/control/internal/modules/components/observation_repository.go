@@ -94,7 +94,7 @@ func (s *Service) RecordResultWithin(ctx context.Context, q transaction.Executor
 			return e
 		}
 	}
-	if t.Operation == wire.ComponentOperation("remove") && !s.Nodes.Identity.Config.ComponentsOnly() {
+	if t.Operation == wire.ComponentOperation("remove") {
 		_, e := q.Exec(ctx, componentSQL(q, "DELETE FROM component_log_snapshots WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3", "DELETE FROM component_log_snapshots WHERE tenant_id=? AND workspace_id=? AND node_id=?", `DELETE FROM component_log_snapshots WHERE tenant_id=? AND workspace_id=? AND node_id=?`, n.TenantID, n.WorkspaceID, n.ID))
 		return e
 	}

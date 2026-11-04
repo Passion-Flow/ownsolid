@@ -61,6 +61,51 @@ type migration struct {
 	SQL      []byte
 }
 
+// LineageName names the one PostgreSQL lineage in offline delivery contracts
+// inherited from project-one, which still carry it as application_profile.
+const LineageName = "mvp-postgresql-cpu-v1"
+
+// CheckPrefixWithin reports how many lineage migrations the ledger holds. The
+// ledger must be an exact prefix of the lineage, with matching checksums.
+func CheckPrefixWithin(ctx context.Context, q transaction.Executor) (int, error) {
+	if ctx == nil || q == nil || q.Dialect() != transaction.PostgreSQL {
+		return 0, errors.New("SCHEMA_INCOMPATIBLE")
+	}
+	list, e := ordered()
+	if e != nil {
+		return 0, e
+	}
+	rows, e := q.Query(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT version,checksum FROM schema_migrations ORDER BY version"))
+	if e != nil {
+		return 0, errors.New("SCHEMA_UNAVAILABLE")
+	}
+	defer rows.Close()
+	applied := 0
+	for rows.Next() {
+		var version int
+		var checksum string
+		if rows.Scan(&version, &checksum) != nil {
+			return 0, errors.New("SCHEMA_UNAVAILABLE")
+		}
+		if applied >= len(list) || version != list[applied].Version || checksum != list[applied].Checksum {
+			return 0, errors.New("SCHEMA_INCOMPATIBLE")
+		}
+		applied++
+	}
+	if rows.Err() != nil {
+		return 0, errors.New("SCHEMA_UNAVAILABLE")
+	}
+	return applied, nil
+}
+
+// SchemaVersion is the number of migrations in the one PostgreSQL lineage.
+const SchemaVersion = 29
+
+// TableCount is the number of public tables the complete lineage creates.
+const TableCount = 108
+
+// ordered reads the one migration lineage. File names carry a contiguous
+// version prefix; the checksum covers the exact file bytes.
 func ordered() ([]migration, error) {
 	entries, e := migrations.Files.ReadDir("postgresql")
 	if e != nil {
@@ -83,20 +128,21 @@ func ordered() ([]migration, error) {
 		h := sha256.Sum256(b)
 		list = append(list, migration{version, hex.EncodeToString(h[:]), b})
 	}
-	if len(list) == 0 {
+	if len(list) != SchemaVersion {
 		return nil, errors.New("MIGRATION_ASSET_MISSING")
 	}
 	return list, nil
 }
-func Migrate(ctx context.Context, connection MigrationConnection, profiles ...string) error {
-	if len(profiles) == 1 && profiles[0] == MVPPostgreSQLCPUV1Profile {
-		return migrateMVPPostgreSQLCPUV1(ctx, connection)
-	}
-	profiles = schemaProfiles(profiles)
-	if connection == nil {
+
+// Migrate applies the one ordered PostgreSQL lineage under the migration lock.
+// The applied ledger must be an exact prefix of the lineage; anything else is
+// rejected instead of being reinterpreted. The finished schema must match the
+// expected catalog and grants before the transaction commits.
+func Migrate(ctx context.Context, connection MigrationConnection) error {
+	if ctx == nil || connection == nil {
 		return errors.New("MIGRATION_CONNECTION_REQUIRED")
 	}
-	list, e := orderedProfile(profiles...)
+	list, e := ordered()
 	if e != nil {
 		return e
 	}
@@ -104,15 +150,13 @@ func Migrate(ctx context.Context, connection MigrationConnection, profiles ...st
 	if e != nil {
 		return e
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(context.WithoutCancel(ctx))
 	if _, e = tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", migrationTransactionLockID); e != nil {
 		return e
 	}
-	if len(profiles) == 1 && (profiles[0] == "knowledge" || profiles[0] == "workflows" || profiles[0] == "plugins" || profiles[0] == "portal" || profiles[0] == "localization") {
-		var valid bool
-		if e = tx.QueryRow(ctx, ApprovedKnowledgeVectorSQL).Scan(&valid); e != nil || !valid {
-			return errors.New("KNOWLEDGE_APPROVED_VECTOR_EXTENSION_REQUIRED")
-		}
+	q := transaction.PostgreSQLTransaction(tx)
+	if e = CheckKnowledgeVectorWithin(ctx, q); e != nil {
+		return e
 	}
 	if _, e = tx.Exec(ctx, "CREATE TABLE IF NOT EXISTS schema_migrations(version integer PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP)"); e != nil {
 		return e
@@ -121,40 +165,30 @@ func Migrate(ctx context.Context, connection MigrationConnection, profiles ...st
 	if e != nil {
 		return e
 	}
-	applied := map[int]string{}
+	applied := 0
 	for rows.Next() {
-		var v int
-		var h string
-		if e = rows.Scan(&v, &h); e != nil {
+		var version int
+		var checksum string
+		if e = rows.Scan(&version, &checksum); e != nil {
 			rows.Close()
 			return e
 		}
-		if v != len(applied)+1 {
+		if applied >= len(list) {
 			rows.Close()
-			return errors.New("MIGRATION_SEQUENCE_INVALID")
+			return errors.New("SCHEMA_INCOMPATIBLE")
 		}
-		applied[v] = h
+		if version != list[applied].Version || checksum != list[applied].Checksum {
+			rows.Close()
+			return errors.New("MIGRATION_CHECKSUM_MISMATCH")
+		}
+		applied++
 	}
 	e = rows.Err()
 	rows.Close()
 	if e != nil {
 		return e
 	}
-	if len(applied) > len(list) {
-		return errors.New("SCHEMA_INCOMPATIBLE")
-	}
-	for _, m := range list {
-		if h, ok := applied[m.Version]; ok {
-			if h != m.Checksum {
-				return errors.New("MIGRATION_CHECKSUM_MISMATCH")
-			}
-			continue
-		}
-		for v := range applied {
-			if v > m.Version {
-				return errors.New("MIGRATION_SEQUENCE_INVALID")
-			}
-		}
+	for _, m := range list[applied:] {
 		if _, e = tx.Exec(ctx, string(m.SQL)); e != nil {
 			return e
 		}
@@ -162,95 +196,58 @@ func Migrate(ctx context.Context, connection MigrationConnection, profiles ...st
 			return e
 		}
 	}
-	if len(profiles) == 1 && profiles[0] == "workflows" {
-		if e = CheckWorkflowsCatalogWithin(ctx, transaction.PostgreSQLTransaction(tx)); e != nil {
-			return e
-		}
+	if e = CheckWithin(ctx, q); e != nil {
+		return e
 	}
-	if len(profiles) == 1 && profiles[0] == "plugins" {
-		if e = CheckPluginsCatalogWithin(ctx, transaction.PostgreSQLTransaction(tx)); e != nil {
-			return e
+	if e = tx.Commit(ctx); e != nil {
+		if errors.Is(e, pgx.ErrTxCommitRollback) {
+			return &transaction.Error{Kind: transaction.CommitRolledBack}
 		}
+		return &transaction.Error{Kind: transaction.CommitUnknown}
 	}
-	if len(profiles) == 1 && profiles[0] == "portal" {
-		if e = CheckPortalCatalogWithin(ctx, transaction.PostgreSQLTransaction(tx)); e != nil {
-			return e
-		}
-	}
-	if len(profiles) == 1 && profiles[0] == "localization" {
-		if e = CheckLocalizationCatalogWithin(ctx, transaction.PostgreSQLTransaction(tx)); e != nil {
-			return e
-		}
-	}
-	if len(profiles) == 1 && profiles[0] == "localization" {
-		if e = tx.Commit(ctx); e != nil {
-			if errors.Is(e, pgx.ErrTxCommitRollback) {
-				return &transaction.Error{Kind: transaction.CommitRolledBack}
-			}
-			return &transaction.Error{Kind: transaction.CommitUnknown}
-		}
-		return nil
-	}
-	return tx.Commit(ctx)
+	return nil
 }
-func Check(ctx context.Context, p *pgxpool.Pool, profiles ...string) error {
-	if len(profiles) == 1 && profiles[0] == MVPPostgreSQLCPUV1Profile {
-		q, err := transaction.FromPostgreSQL(p)
-		if err != nil {
-			return err
-		}
-		return CheckMVPPostgreSQLCPUV1Within(ctx, q)
+
+// Check verifies the complete lineage, catalog and grants on a pool.
+func Check(ctx context.Context, p *pgxpool.Pool) error {
+	if ctx == nil || p == nil {
+		return errors.New("SCHEMA_UNAVAILABLE")
 	}
-	profiles = schemaProfiles(profiles)
-	list, e := orderedProfile(profiles...)
+	q, e := transaction.FromPostgreSQL(p)
 	if e != nil {
 		return e
 	}
-	if len(profiles) == 1 && (profiles[0] == "knowledge" || profiles[0] == "workflows" || profiles[0] == "plugins" || profiles[0] == "portal" || profiles[0] == "localization") {
-		var valid bool
-		if e = p.QueryRow(ctx, ApprovedKnowledgeVectorSQL).Scan(&valid); e != nil || !valid {
-			return errors.New("KNOWLEDGE_APPROVED_VECTOR_EXTENSION_REQUIRED")
-		}
+	return CheckWithin(ctx, q)
+}
+
+// CheckWithin verifies the complete lineage, catalog and grants on a borrowed
+// PostgreSQL executor, so restore and maintenance bind the check to their own
+// transaction. Operator principals are accepted; serving admission uses
+// CheckRuntimeWithin.
+func CheckWithin(ctx context.Context, q transaction.Executor) error {
+	if ctx == nil || q == nil || q.Dialect() != transaction.PostgreSQL {
+		return errors.New("SCHEMA_INCOMPATIBLE")
 	}
-	rows, e := p.Query(ctx, "SELECT version,checksum FROM schema_migrations ORDER BY version")
+	if e := CheckKnowledgeVectorWithin(ctx, q); e != nil {
+		return e
+	}
+	list, e := ordered()
+	if e != nil {
+		return e
+	}
+	rows, e := q.Query(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT version,checksum FROM schema_migrations ORDER BY version"))
 	if e != nil {
 		return errors.New("SCHEMA_UNAVAILABLE")
 	}
-	defer rows.Close()
 	e = checkMigrationRows(rows, list)
 	rows.Close()
 	if e != nil {
 		return e
 	}
-	if len(profiles) == 1 && profiles[0] == "workflows" {
-		store, e := transaction.FromPostgreSQL(p)
-		if e != nil {
-			return e
-		}
-		return CheckWorkflowsCatalogWithin(ctx, store)
+	if e = checkCatalogWithin(ctx, q); e != nil {
+		return e
 	}
-	if len(profiles) == 1 && profiles[0] == "plugins" {
-		store, e := transaction.FromPostgreSQL(p)
-		if e != nil {
-			return e
-		}
-		return CheckPluginsCatalogWithin(ctx, store)
-	}
-	if len(profiles) == 1 && profiles[0] == "portal" {
-		store, e := transaction.FromPostgreSQL(p)
-		if e != nil {
-			return e
-		}
-		return CheckPortalCatalogWithin(ctx, store)
-	}
-	if len(profiles) == 1 && profiles[0] == "localization" {
-		store, e := transaction.FromPostgreSQL(p)
-		if e != nil {
-			return e
-		}
-		return CheckLocalizationCatalogWithin(ctx, store)
-	}
-	return nil
+	return checkCurrentPrivileges(ctx, q, true)
 }
 
 func checkMigrationRows(rows transaction.Rows, list []migration) error {

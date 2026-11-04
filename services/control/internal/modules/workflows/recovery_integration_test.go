@@ -109,12 +109,12 @@ func TestM13ActualExpiredRunRecoveryIsBoundedAtomicAndPreservesLiveOwner(t *test
 }
 
 func TestM13ActualLogicalRestoreCatalogEquivalence(t *testing.T) {
-	account := fixture.NewM13(t)
+	account := fixture.New(t)
 	fixture.Bootstrap(t, account)
 	ctx := t.Context()
 	owned := fixture.OwnedPostgres(t, account.DB)
 	var before, after string
-	if e := account.DB.QueryRow(ctx, database.WorkflowCatalogSQL).Scan(&before); e != nil {
+	if e := account.DB.QueryRow(ctx, database.CatalogSQL).Scan(&before); e != nil {
 		t.Fatal(e)
 	}
 	archive := owned.DumpSchema(t, ctx)
@@ -124,7 +124,7 @@ func TestM13ActualLogicalRestoreCatalogEquivalence(t *testing.T) {
 		}
 	}
 	restored := owned.RestoreFresh(t, ctx, account.DB, archive)
-	if e := restored.QueryRow(ctx, database.WorkflowCatalogSQL).Scan(&after); e != nil {
+	if e := restored.QueryRow(ctx, database.CatalogSQL).Scan(&after); e != nil {
 		t.Fatal(e)
 	}
 	if output := os.Getenv("PROJECT_ONE_EVIDENCE_ROOT"); output != "" {
@@ -151,7 +151,7 @@ func TestM13ActualLogicalRestoreCatalogEquivalence(t *testing.T) {
 			tx.Rollback(ctx)
 			t.Fatal(e)
 		}
-		if database.CheckAccountProfileWithin(ctx, transaction.PostgreSQLTransaction(tx), "workflows") == nil {
+		if database.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx)) == nil {
 			tx.Rollback(ctx)
 			t.Fatal("malformed restored catalog accepted")
 		}
@@ -160,7 +160,7 @@ func TestM13ActualLogicalRestoreCatalogEquivalence(t *testing.T) {
 		}
 	}
 
-	if e := database.Check(ctx, restored, "workflows"); e != nil {
+	if e := database.Check(ctx, restored); e != nil {
 		t.Fatal(e)
 	}
 }

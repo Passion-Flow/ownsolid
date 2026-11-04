@@ -25,7 +25,6 @@ import (
 const completeMySQLSchemaSteps = 265
 
 type selectedDatabase struct {
-	profile   string
 	native    damengserving.Runtime
 	postgres  *pgxpool.Pool
 	pgLease   *pgxpool.Conn
@@ -90,7 +89,7 @@ func openSelectedDatabase(ctx context.Context, c config.Config, command string) 
 	if e := validateSelectedCommand(c, command); e != nil {
 		return nil, e
 	}
-	d := &selectedDatabase{profile: c.Server.Profile(), cleanup: c.MySQLMigrationPolicy().CleanupSeconds, verify: make(chan struct{}, 1)}
+	d := &selectedDatabase{cleanup: c.MySQLMigrationPolicy().CleanupSeconds, verify: make(chan struct{}, 1)}
 	if c.DatabaseEngine() == config.DamengDatabaseEngine {
 		minimumConnections := 2 // One pinned installation lease plus one business/readback connection.
 		if c.MongoDB.Enabled {
@@ -240,7 +239,7 @@ func (d *selectedDatabase) Verify(ctx context.Context) error {
 		if e := d.verifyPostgreSQLLeaseWithin(ctx); e != nil {
 			return e
 		}
-		return database.Check(ctx, d.postgres, d.profile)
+		return database.Check(ctx, d.postgres)
 	}
 	_, e := mysqlmigrate.VerifyRuntimeLedger(ctx, d.myLease, d.catalog, d.options)
 	return e

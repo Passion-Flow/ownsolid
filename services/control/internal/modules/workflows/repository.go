@@ -92,7 +92,6 @@ func (s *Service) transaction(ctx context.Context, a identity.Auth, workspace st
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(s.policy().CommitSeconds))
 	defer cancel()
 	e = store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
-		q = s.selectedExecutor(q)
 		w, e := s.scopeWithin(ctx, q, a, workspace, write)
 		if e != nil {
 			return e
@@ -122,7 +121,7 @@ func (s *Service) maintenanceWithin(ctx context.Context, fn func(context.Context
 	}
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(s.policy().CommitSeconds))
 	defer cancel()
-	return workflowRepositoryError(store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error { return fn(ctx, s.selectedExecutor(q)) }))
+	return workflowRepositoryError(store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error { return fn(ctx, q) }))
 }
 
 func workflowExecOne(ctx context.Context, q transaction.Executor, statement transaction.Statement) error {

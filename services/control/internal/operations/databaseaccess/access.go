@@ -61,28 +61,40 @@ func lockedTarget(ctx context.Context, p *pgxpool.Pool, lease *pgxpool.Conn, inp
 	return t, nil
 }
 
-func inspectRole(ctx context.Context, q queryer, t target, input RuntimeInput) (bool, error) {
+// inspectRoleIdentity checks the principal itself: attributes, credential and
+// memberships. Upgrade uses it before any DDL, when table grants are still
+// those of the earlier version.
+func inspectRoleIdentity(ctx context.Context, q queryer, t target, input RuntimeInput) (uint32, bool, error) {
 	var oid uint32
 	var super, inherit, createRole, createDB, login, replication, bypass, unlimitedValidity bool
 	var limit int
 	var verifier string
 	e := q.QueryRow(ctx, `SELECT oid,rolsuper,rolinherit,rolcreaterole,rolcreatedb,rolcanlogin,rolreplication,rolbypassrls,rolconnlimit,rolvaliduntil IS NULL,COALESCE(rolpassword,'') FROM pg_authid WHERE rolname=$1`, input.connection.ConnConfig.User).Scan(&oid, &super, &inherit, &createRole, &createDB, &login, &replication, &bypass, &limit, &unlimitedValidity, &verifier)
 	if errors.Is(e, pgx.ErrNoRows) {
-		return false, nil
+		return 0, false, nil
 	}
 	if e != nil {
-		return false, errors.New("RUNTIME_ACCESS_ROLE_UNAVAILABLE")
+		return 0, false, errors.New("RUNTIME_ACCESS_ROLE_UNAVAILABLE")
 	}
 	if super || inherit || createRole || createDB || !login || replication || bypass || !unlimitedValidity || limit != int(input.configuration.Database.MaxOpenConnections) || !verifyCredential(verifier, input.connection.ConnConfig.Password) {
-		return true, errors.New("RUNTIME_ACCESS_ROLE_OR_CREDENTIAL_CONFLICT")
+		return 0, true, errors.New("RUNTIME_ACCESS_ROLE_OR_CREDENTIAL_CONFLICT")
 	}
 	var forbidden bool
 	e = q.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM pg_auth_members WHERE member=$1::oid OR roleid=$1::oid) OR EXISTS(SELECT 1 FROM pg_shdepend WHERE refclassid='pg_authid'::regclass AND refobjid=$1::oid AND deptype='o') OR has_database_privilege($1::oid,current_database(),'CREATE') OR has_schema_privilege($1::oid,$2::oid,'CREATE,USAGE WITH GRANT OPTION') OR NOT has_schema_privilege($1::oid,$2::oid,'USAGE') OR NOT has_database_privilege($1::oid,current_database(),'CONNECT')`, oid, t.SchemaOID).Scan(&forbidden)
 	if e != nil || forbidden {
-		return true, errors.New("RUNTIME_ACCESS_ELEVATED_OR_SCHEMA_PRIVILEGE_CONFLICT")
+		return 0, true, errors.New("RUNTIME_ACCESS_ELEVATED_OR_SCHEMA_PRIVILEGE_CONFLICT")
 	}
+	return oid, true, nil
+}
+
+func inspectRole(ctx context.Context, q queryer, t target, input RuntimeInput) (bool, error) {
+	oid, exists, e := inspectRoleIdentity(ctx, q, t, input)
+	if e != nil || !exists {
+		return exists, e
+	}
+	var forbidden bool
 	known := map[string]bool{"schema_migrations": true}
-	for _, name := range runtimeTables(input) {
+	for _, name := range postgreSQLTables() {
 		known[name] = true
 	}
 	seen := map[string]bool{}
@@ -137,7 +149,7 @@ func checkRuntimeConnection(ctx context.Context, t target, input RuntimeInput) e
 	if e = p.QueryRow(ctx, "SELECT current_user").Scan(&user); e != nil || user != pc.ConnConfig.User {
 		return errors.New("RUNTIME_ACCESS_LOGIN_IDENTITY_MISMATCH")
 	}
-	if e = database.Check(ctx, p, input.configuration.Server.Profile()); e != nil {
+	if e = database.Check(ctx, p); e != nil {
 		return errors.New("RUNTIME_ACCESS_SCHEMA_INCOMPATIBLE")
 	}
 	return nil
@@ -182,7 +194,7 @@ func prepare(ctx context.Context, p *pgxpool.Pool, lease *pgxpool.Conn, input Ru
 	if e != nil || status == Verified {
 		return status, e
 	}
-	if e = database.Check(ctx, p, input.configuration.Server.Profile()); e != nil {
+	if e = database.Check(ctx, p); e != nil {
 		return "", errors.New("RUNTIME_ACCESS_SCHEMA_INCOMPATIBLE")
 	}
 	if restored == nil {
@@ -221,7 +233,7 @@ func prepare(ctx context.Context, p *pgxpool.Pool, lease *pgxpool.Conn, input Ru
 	if _, e = tx.Exec(ctx, "GRANT USAGE ON SCHEMA "+pgx.Identifier{t.Schema}.Sanitize()+" TO "+role); e != nil {
 		return "", errors.New("RUNTIME_ACCESS_GRANT_FAILED")
 	}
-	for _, name := range runtimeTables(input) {
+	for _, name := range postgreSQLTables() {
 		if _, e = tx.Exec(ctx, "GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE "+pgx.Identifier{t.Schema, name}.Sanitize()+" TO "+role); e != nil {
 			return "", errors.New("RUNTIME_ACCESS_GRANT_FAILED")
 		}

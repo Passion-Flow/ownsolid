@@ -49,9 +49,9 @@ func testNativeCombinedRecovery(t *testing.T, data bool) {
 	fixture.PreflightOwnedPostgres(t)
 	var s *identity.Service
 	if data {
-		s = fixture.NewM08(t)
+		s = fixture.New(t)
 	} else {
-		s = fixture.NewM07(t)
+		s = fixture.New(t)
 	}
 	ownedDatabase := fixture.OwnedPostgres(t, s.DB)
 	var e error

@@ -33,7 +33,7 @@ func TestM03ActualAgentUbuntuAMD64Emulation(t *testing.T) {
 	if !filepath.IsAbs(binary) {
 		t.Fatal("absolute agent binary required")
 	}
-	s := fixture.NewM03(t)
+	s := fixture.New(t)
 	password := fixture.Bootstrap(t, s)
 	ctx, cancel := context.WithTimeout(context.Background(), 175*time.Second)
 	defer cancel()

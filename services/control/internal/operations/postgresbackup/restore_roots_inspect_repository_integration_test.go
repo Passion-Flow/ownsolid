@@ -28,7 +28,6 @@ func newRootsInspectionFixture(t *testing.T) rootsInspectionFixture {
 	t.Helper()
 	f := newRestoreInputFixture(t)
 	profile := release.MVPPostgreSQLCPUApplicationProfile
-	f.runtime.Server.ApplicationProfile = &profile
 	raw, e := yaml.Marshal(f.runtime)
 	if e != nil || os.WriteFile(f.request.RuntimeConfigurationFile, raw, 0600) != nil {
 		t.Fatal("typed runtime fixture")

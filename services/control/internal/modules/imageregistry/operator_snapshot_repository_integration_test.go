@@ -56,7 +56,7 @@ func TestActualRegistryOperatorAllWorkspaceSnapshotAndOriginalSession(t *testing
 	if pool.QueryRow(ctx, `SELECT count(*) FROM pg_catalog.pg_tables WHERE schemaname='public'`).Scan(&tables) != nil || tables != 0 {
 		t.Fatal("fresh fixture required; retain failed setup without reset")
 	}
-	if e = database.Migrate(ctx, pool, operatorApplicationProfile); e != nil {
+	if e = database.Migrate(ctx, pool); e != nil {
 		t.Fatal("actual current forward lineage", e)
 	}
 	tenant, user := uuid.NewString(), uuid.NewString()

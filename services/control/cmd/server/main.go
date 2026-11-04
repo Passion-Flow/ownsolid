@@ -111,7 +111,7 @@ func run() (result error) {
 	if e := flags.Parse(os.Args[2:]); e != nil {
 		return e
 	}
-	if e := validateMVPActivationFlags(command, flags, os.Args[2:]); e != nil {
+	if e := validateSchemaUpgradeFlags(command, flags, os.Args[2:]); e != nil {
 		return e
 	}
 	if e := validateMySQLNativeFlags(flags, command, *path, *runtimeConfig, *backupRoot, *restoredContext, *reason, *isolatedRestore); e != nil {
@@ -143,7 +143,7 @@ func run() (result error) {
 		fmt.Println(bootstrap.PacketCreated)
 		return nil
 	}
-	runtimeContextCommand := mvpDatabaseCommand(command) || command == databaseaccess.ReleasesUpgradeCommand || command == databaseaccess.LocalizationUpgradeCommand || command == databaseaccess.PortalUpgradeCommand || command == databaseaccess.PluginsUpgradeCommand || command == databaseaccess.WorkflowsUpgradeCommand || command == databaseaccess.KnowledgeUpgradeCommand || command == databaseaccess.SSOUpgradeCommand || command == databaseaccess.LifecycleUpgradeCommand || command == databaseaccess.TrainingUpgradeCommand || command == databaseaccess.DatasetsUpgradeCommand || command == databaseaccess.GatewayUpgradeCommand || command == databaseaccess.ModelsUpgradeCommand || command == databaseaccess.MaintenanceUpgradeCommand || command == databaseaccess.ComponentsUpgradeCommand || command == databaseaccess.NodesUpgradeCommand || command == databaseaccess.WorkspacesUpgradeCommand || command == "prepare-runtime-access" || command == "check-runtime-access" || databaseaccess.MySQLRestoredCommand(command) || command == databaseaccess.ReconcileMySQLCommand || command == databaseaccess.ResumeMySQLCommand || command == databaseaccess.MigrationCommand || command == bootstrap.PrepareMySQLPacketCommand || bootstrap.PacketCommand(command)
+	runtimeContextCommand := schemaUpgradeCommand(command) || command == "prepare-runtime-access" || command == "check-runtime-access" || databaseaccess.MySQLRestoredCommand(command) || command == databaseaccess.ReconcileMySQLCommand || command == databaseaccess.ResumeMySQLCommand || command == databaseaccess.MigrationCommand || command == bootstrap.PrepareMySQLPacketCommand || bootstrap.PacketCommand(command)
 	if !runtimeContextCommand && *runtimeConfig != "" {
 		return errors.New("RUNTIME_ACCESS_COMMAND_INVALID")
 	}
@@ -177,7 +177,7 @@ func run() (result error) {
 	var e error
 	if command == configuredModelInitializationCommand {
 		c, e = config.LoadProtected(*path)
-	} else if mvpDatabaseCommand(command) {
+	} else if schemaUpgradeCommand(command) {
 		c, e = config.LoadProtectedWithEnvironment(*path, *policyEnvironment)
 	} else {
 		c, e = config.LoadWithEnvironment(*path, *policyEnvironment)
@@ -185,8 +185,8 @@ func run() (result error) {
 	if e != nil {
 		return e
 	}
-	if mvpDatabaseCommand(command) && (!c.MVPPostgreSQLCPUV1Only() || c.DatabaseEngine() != config.PostgreSQLDatabaseEngine) {
-		return errors.New("MVP_POSTGRESQL_UPGRADE_PROFILE_REQUIRED")
+	if schemaUpgradeCommand(command) && c.DatabaseEngine() != config.PostgreSQLDatabaseEngine {
+		return errors.New("SCHEMA_UPGRADE_POSTGRESQL_REQUIRED")
 	}
 	if c.DatabaseEngine() == config.MySQLDatabaseEngine && command != "serve" {
 		c, e = config.LoadProtected(*path)
@@ -264,12 +264,12 @@ func run() (result error) {
 		fmt.Println("MYSQL_INSTALLATION_METADATA_VERIFIED")
 		return nil
 	}
-	if mvpDatabaseCommand(command) {
+	if schemaUpgradeCommand(command) {
 		var status string
-		if command == databaseaccess.MVPPostgreSQLCPUV1InspectCommand {
-			status, e = databaseaccess.InspectMVPPostgreSQLCPUV1(startup, db, lease, runtimeInput)
+		if command == databaseaccess.UpgradeInspectCommand {
+			status, e = databaseaccess.InspectUpgrade(startup, db, lease, runtimeInput)
 		} else {
-			status, e = databaseaccess.UpgradeMVPPostgreSQLCPUV1(startup, db, lease, runtimeInput)
+			status, e = databaseaccess.Upgrade(startup, db, lease, runtimeInput)
 		}
 		if e != nil {
 			return e
@@ -281,141 +281,10 @@ func run() (result error) {
 		fmt.Println(status)
 		return nil
 	}
-	if command == databaseaccess.ReleasesUpgradeCommand {
-		status, err := databaseaccess.UpgradeReleases(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.LocalizationUpgradeCommand {
-		status, err := databaseaccess.UpgradeLocalization(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.PortalUpgradeCommand {
-		status, err := databaseaccess.UpgradePortal(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.PluginsUpgradeCommand {
-		status, err := databaseaccess.UpgradePlugins(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.WorkflowsUpgradeCommand {
-		status, err := databaseaccess.UpgradeWorkflows(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.KnowledgeUpgradeCommand {
-		status, err := databaseaccess.UpgradeKnowledge(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.SSOUpgradeCommand {
-		status, err := databaseaccess.UpgradeSSO(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.LifecycleUpgradeCommand {
-		status, err := databaseaccess.UpgradeLifecycle(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.TrainingUpgradeCommand {
-		status, err := databaseaccess.UpgradeTraining(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.DatasetsUpgradeCommand {
-		status, err := databaseaccess.UpgradeDatasets(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.GatewayUpgradeCommand {
-		status, err := databaseaccess.UpgradeGateway(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.ModelsUpgradeCommand {
-		status, err := databaseaccess.UpgradeModels(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.MaintenanceUpgradeCommand {
-		status, err := databaseaccess.UpgradeMaintenance(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.ComponentsUpgradeCommand {
-		status, err := databaseaccess.UpgradeComponents(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.NodesUpgradeCommand {
-		status, err := databaseaccess.UpgradeNodes(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
-	if command == databaseaccess.WorkspacesUpgradeCommand {
-		if !c.WorkspacesOnly() {
-			return errors.New("WORKSPACES_UPGRADE_PROFILE_REQUIRED")
-		}
-		status, err := databaseaccess.UpgradeWorkspaces(startup, db, lease, runtimeInput)
-		if err != nil {
-			return err
-		}
-		fmt.Println(status)
-		return nil
-	}
 	if command == "migrate" || command == databaseaccess.MigrationCommand {
 		if command == databaseaccess.MigrationCommand {
 			e = databaseaccess.MigrateWithRuntimeContext(startup, db, lease, runtimeInput)
-		} else if e = database.Migrate(startup, lease, c.Server.Profile()); e != nil {
+		} else if e = database.Migrate(startup, lease); e != nil {
 			e = errors.New("MIGRATION_FAILED")
 		}
 		if e != nil {

@@ -47,66 +47,47 @@ func NewRecoverableWithSetup(t *testing.T, setup SetupOptions) *identity.Service
 
 func newSelectedWithSetup(t *testing.T, setup SetupOptions, retainFailed bool) *identity.Service {
 	t.Helper()
-	if profile := os.Getenv("PROJECT_ONE_TEST_APPLICATION_PROFILE"); profile != "" {
-		if profile != "models" && profile != "gateway" && profile != "datasets" && profile != "training" && profile != "lifecycle" && profile != "sso" && profile != "knowledge" && profile != "workflows" && profile != "plugins" && profile != "portal" && profile != "localization" {
-			t.Fatal("TEST_APPLICATION_PROFILE_INVALID")
-		}
-		return newSchemaWithCustody(t, setup, retainFailed, false, true, profile)
+	return newSchemaWithCustody(t, setup, retainFailed, 0, true)
+}
+
+// NewAtVersion creates an isolated schema migrated through the given lineage
+// version, for verifying the next migration against real earlier data.
+func NewAtVersion(t *testing.T, version int) *identity.Service {
+	t.Helper()
+	if version < 1 || version > database.SchemaVersion {
+		t.Fatal("FIXTURE_SCHEMA_VERSION_INVALID")
 	}
-	return newSchemaWithCustody(t, setup, retainFailed, false, true)
+	return newSchema(t, version, true)
 }
 
-// NewM01 creates an isolated historical schema for actual upgrade verification.
-// NewAccount/NewM02 use the delivered minimal catalogs, never the full platform.
-func NewAccount(t *testing.T) *identity.Service { return newSchema(t, false, true, "account") }
-func NewM02(t *testing.T) *identity.Service     { return newSchema(t, false, true, "workspaces") }
-func NewM03(t *testing.T) *identity.Service     { return newSchema(t, false, true, "nodes") }
-func NewM16(t *testing.T) *identity.Service     { return newSchema(t, false, true, "localization") }
-
-// NewM16WithSetup preserves the delivered account22 catalog and ordinary runtime
-// pool while allowing an explicitly bounded creation/migration phase.
-func NewM16WithSetup(t *testing.T, setup SetupOptions) *identity.Service {
+// NewAtVersionWithSetup is NewAtVersion with an explicit construction budget.
+func NewAtVersionWithSetup(t *testing.T, setup SetupOptions, version int) *identity.Service {
 	t.Helper()
-	return newSchemaWithSetup(t, setup, false, true, "localization")
+	if version < 1 || version > database.SchemaVersion {
+		t.Fatal("FIXTURE_SCHEMA_VERSION_INVALID")
+	}
+	return newSchemaWithSetup(t, setup, version, true)
 }
 
-// NewM16RecoverableWithSetup retains this fixture's exact owned SQL schema only
-// when its test has already failed at cleanup. The caller must stop its consumers
-// before fixture cleanup; pools are still closed and joined on every outcome.
-func NewM16RecoverableWithSetup(t *testing.T, setup SetupOptions) *identity.Service {
-	t.Helper()
-	return newSchemaWithCustody(t, setup, true, false, true, "localization")
-}
-
-func NewM15(t *testing.T) *identity.Service { return newSchema(t, false, true, "portal") }
-func NewM14(t *testing.T) *identity.Service { return newSchema(t, false, true, "plugins") }
-func NewM13(t *testing.T) *identity.Service { return newSchema(t, false, true, "workflows") }
-func NewM12(t *testing.T) *identity.Service { return newSchema(t, false, true, "knowledge") }
-func NewM11(t *testing.T) *identity.Service { return newSchema(t, false, true, "sso") }
-func NewM10(t *testing.T) *identity.Service { return newSchema(t, false, true, "lifecycle") }
-func NewM09(t *testing.T) *identity.Service { return newSchema(t, false, true, "training") }
-func NewM08(t *testing.T) *identity.Service { return newSchema(t, false, true, "datasets") }
-func NewM07(t *testing.T) *identity.Service { return newSchema(t, false, true, "gateway") }
-func NewM06(t *testing.T) *identity.Service { return newSchema(t, false, true, "models") }
-func NewM05(t *testing.T) *identity.Service { return newSchema(t, false, true, "maintenance") }
-func NewM04(t *testing.T) *identity.Service { return newSchema(t, false, true, "components") }
+// NewM01 creates an isolated schema holding only the first migration.
 func NewM01(t *testing.T) *identity.Service {
-	return newSchema(t, true, false)
+	return newSchema(t, 1, false)
 }
 
 // NewUnlicensed supplies real public trust and an empty license history.
-func NewUnlicensed(t *testing.T) *identity.Service { return newSchema(t, false, false) }
-func newSchema(t *testing.T, historical, licensed bool, profiles ...string) *identity.Service {
+func NewUnlicensed(t *testing.T) *identity.Service { return newSchema(t, 0, false) }
+// newSchema migrates through version, or the complete lineage when version is 0.
+func newSchema(t *testing.T, version int, licensed bool) *identity.Service {
 	t.Helper()
-	return newSchemaWithSetup(t, SetupOptions{}, historical, licensed, profiles...)
+	return newSchemaWithSetup(t, SetupOptions{}, version, licensed)
 }
 
-func newSchemaWithSetup(t *testing.T, options SetupOptions, historical, licensed bool, profiles ...string) *identity.Service {
+func newSchemaWithSetup(t *testing.T, options SetupOptions, version int, licensed bool) *identity.Service {
 	t.Helper()
-	return newSchemaWithCustody(t, options, false, historical, licensed, profiles...)
+	return newSchemaWithCustody(t, options, false, version, licensed)
 }
 
-func newSchemaWithCustody(t *testing.T, options SetupOptions, retainFailed bool, historical, licensed bool, profiles ...string) *identity.Service {
+func newSchemaWithCustody(t *testing.T, options SetupOptions, retainFailed bool, version int, licensed bool) *identity.Service {
 	t.Helper()
 	setup, e := options.plan()
 	if e != nil {
@@ -200,19 +181,9 @@ func newSchemaWithCustody(t *testing.T, options SetupOptions, retainFailed bool,
 	if setupPool != nil {
 		migrationPool = setupPool
 	}
-	if historical {
-		b, e := migrations.Files.ReadFile("postgresql/000001_identity.up.sql")
-		if e != nil {
-			t.Fatal(e)
-		}
-		h := sha256.Sum256(b)
-		if _, e = migrationPool.Exec(setupContext, "CREATE TABLE schema_migrations(version integer PRIMARY KEY,checksum text NOT NULL,applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP);"+string(b)); e != nil {
-			t.Fatal(e)
-		}
-		if _, e = migrationPool.Exec(setupContext, "INSERT INTO schema_migrations(version,checksum) VALUES(1,$1)", hex.EncodeToString(h[:])); e != nil {
-			t.Fatal(e)
-		}
-	} else if e = database.Migrate(setupContext, migrationPool, profiles...); e != nil {
+	if version > 0 {
+		migrateThrough(t, setupContext, migrationPool, version)
+	} else if e = database.Migrate(setupContext, migrationPool); e != nil {
 		t.Fatal(e)
 	}
 	// Close waits for every setup connection before any business owner is built.
@@ -220,28 +191,10 @@ func newSchemaWithCustody(t *testing.T, options SetupOptions, retainFailed bool,
 	closeSetup()
 	cancelSetup()
 	c := config.Config{}
-	if len(profiles) == 1 {
-		c.Server.ApplicationProfile = &profiles[0]
-	}
 	c.Server.PortalOrigin = "https://portal.example.invalid"
 	c.Server.AdminOrigin = "https://admin.example.invalid"
 	c.SMTP.FromAddress = "platform@example.invalid"
 	dir := t.TempDir()
-	if len(profiles) == 1 && (profiles[0] == "models" || profiles[0] == "gateway" || profiles[0] == "datasets" || profiles[0] == "training" || profiles[0] == "lifecycle" || profiles[0] == "sso" || profiles[0] == "knowledge" || profiles[0] == "workflows" || profiles[0] == "plugins" || profiles[0] == "portal" || profiles[0] == "localization") {
-		c.Models.ArtifactRoot = filepath.Join(dir, "models")
-		if e := os.Mkdir(c.Models.ArtifactRoot, 0700); e != nil {
-			t.Fatal(e)
-		}
-	}
-	if len(profiles) == 1 && (profiles[0] == "datasets" || profiles[0] == "training" || profiles[0] == "lifecycle" || profiles[0] == "sso" || profiles[0] == "knowledge" || profiles[0] == "workflows" || profiles[0] == "plugins" || profiles[0] == "portal" || profiles[0] == "localization") {
-		c.Datasets = config.DatasetConfiguration{ArtifactRoot: filepath.Join(dir, "datasets"), PythonExecutable: "/usr/local/bin/python3.12", ProcessorFile: "/opt/projectone/data-processing/process.py"}
-	}
-	if len(profiles) == 1 && (profiles[0] == "training" || profiles[0] == "lifecycle" || profiles[0] == "sso" || profiles[0] == "knowledge" || profiles[0] == "workflows" || profiles[0] == "plugins" || profiles[0] == "portal" || profiles[0] == "localization") {
-		c.Training = config.TrainingConfiguration{ArtifactRoot: filepath.Join(dir, "training"), ImageReference: "projectone/training@sha256:" + strings.Repeat("a", 64), ImageID: "sha256:" + strings.Repeat("b", 64), WorkerSourceSHA256: strings.Repeat("c", 64)}
-	}
-	if len(profiles) == 1 && (profiles[0] == "lifecycle" || profiles[0] == "sso" || profiles[0] == "knowledge" || profiles[0] == "workflows" || profiles[0] == "plugins" || profiles[0] == "portal" || profiles[0] == "localization") {
-		c.ModelPreparation = config.ModelPreparationConfiguration{ArtifactRoot: filepath.Join(dir, "preparations"), ImageReference: "projectone/model-lifecycle@sha256:" + strings.Repeat("d", 64), ImageID: "sha256:" + strings.Repeat("e", 64), WorkerSourceSHA256: strings.Repeat("f", 64)}
-	}
 	configureLicense(t, &c, dir, licensed)
 	blocklist := filepath.Join(dir, "blocklist")
 	os.WriteFile(blocklist, []byte("passwordpassword\n"), 0600)
@@ -328,4 +281,41 @@ func ResetToken(t *testing.T, s *identity.Service, email string) string {
 	var p mail.Payload
 	json.Unmarshal(raw, &p)
 	return strings.Split(p.Link, "#token=")[1]
+}
+
+// migrateThrough applies the first version migrations of the lineage with
+// their ledger rows, exactly as Migrate would have recorded them.
+func migrateThrough(t *testing.T, ctx context.Context, pool *pgxpool.Pool, version int) {
+	t.Helper()
+	if _, e := pool.Exec(ctx, "CREATE TABLE schema_migrations(version integer PRIMARY KEY,checksum text NOT NULL,applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP)"); e != nil {
+		t.Fatal(e)
+	}
+	entries, e := migrations.Files.ReadDir("postgresql")
+	if e != nil {
+		t.Fatal(e)
+	}
+	applied := 0
+	for _, entry := range entries {
+		if applied == version {
+			break
+		}
+		if !strings.HasSuffix(entry.Name(), ".up.sql") {
+			continue
+		}
+		b, e := migrations.Files.ReadFile("postgresql/" + entry.Name())
+		if e != nil {
+			t.Fatal(e)
+		}
+		applied++
+		h := sha256.Sum256(b)
+		if _, e = pool.Exec(ctx, string(b)); e != nil {
+			t.Fatal(entry.Name(), e)
+		}
+		if _, e = pool.Exec(ctx, "INSERT INTO schema_migrations(version,checksum) VALUES($1,$2)", applied, hex.EncodeToString(h[:])); e != nil {
+			t.Fatal(e)
+		}
+	}
+	if applied != version {
+		t.Fatal("FIXTURE_SCHEMA_VERSION_INVALID")
+	}
 }

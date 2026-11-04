@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	nodehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	"strings"
 	"unicode/utf8"
@@ -18,9 +17,6 @@ func Owns(path string) bool {
 	return (strings.HasPrefix(path, "/api/v1/admin/nodes/") || strings.HasPrefix(path, "/api/v1/workspaces/")) && strings.Contains(path, "/nodes/") && strings.Contains(path, "/components/")
 }
 func (h *Handler) Handle(r *http.Request, a identity.Auth, request string) (any, int, error) {
-	if (h.Service.Nodes.Identity.Config.ComponentsOnly() && !nodehttp.ComponentsHumanOwns(r.URL.Path)) || (h.Service.Nodes.Identity.Config.MaintenanceOnly() && !nodehttp.MaintenanceHumanOwns(r.URL.Path)) {
-		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
-	}
 	bad := errors.New("VALIDATION_FAILED")
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	workspace := ""

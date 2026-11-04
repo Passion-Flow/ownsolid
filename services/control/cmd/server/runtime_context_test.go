@@ -10,7 +10,7 @@ import (
 func TestRuntimeConfigurationCommandBoundaryRefusesBeforeConfigurationOrDatabase(t *testing.T) {
 	original := os.Args
 	defer func() { os.Args = original }()
-	for _, command := range []string{databaseaccess.NodesUpgradeCommand, databaseaccess.WorkspacesUpgradeCommand, databaseaccess.MigrationCommand, "prepare-runtime-access", "check-runtime-access", databaseaccess.ReconcileMySQLCommand, databaseaccess.ResumeMySQLCommand} {
+	for _, command := range []string{databaseaccess.MigrationCommand, "prepare-runtime-access", "check-runtime-access", databaseaccess.ReconcileMySQLCommand, databaseaccess.ResumeMySQLCommand} {
 		os.Args = []string{"server", command, "--config", "missing-must-not-be-opened"}
 		if e := run(); e == nil || safeError(e) != "RUNTIME_ACCESS_CONFIGURATION_REQUIRED" {
 			t.Fatal("missing runtime reference reached configuration or DB", command, e)

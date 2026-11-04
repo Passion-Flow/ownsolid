@@ -1,6 +1,7 @@
 package postgresbackup
 
 import (
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"context"
 	"errors"
 	"os"
@@ -91,7 +92,7 @@ func Backup(ctx context.Context, pool *pgxpool.Pool, lease *pgxpool.Conn, operat
 	if e != nil {
 		return out, e
 	}
-	if r.EffectiveApplicationProfile() == release.MVPPostgreSQLCPUApplicationProfile {
+	if r.EffectiveApplicationProfile() == database.LineageName {
 		if e = registryConfigurationClosure(ctx, runtime, r); e != nil {
 			return out, e
 		}
@@ -187,7 +188,7 @@ func Backup(ctx context.Context, pool *pgxpool.Pool, lease *pgxpool.Conn, operat
 	if root.Mkdir("stores", 0700) != nil {
 		return out, errors.New("POSTGRES_BACKUP_EXCLUSIVE_CREATE_FAILED")
 	}
-	if r.EffectiveApplicationProfile() == release.MVPPostgreSQLCPUApplicationProfile {
+	if r.EffectiveApplicationProfile() == database.LineageName {
 		if root.Mkdir(mvpArtifactsDirectory, 0700) != nil {
 			return out, errors.New("POSTGRES_BACKUP_EXCLUSIVE_CREATE_FAILED")
 		}

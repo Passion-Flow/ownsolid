@@ -14,9 +14,6 @@ type workflowQuery struct {
 }
 
 func workflowStatement(q transaction.Executor, query workflowQuery, args ...any) transaction.Statement {
-	if _, schema1 := q.(knowledgeExecutor); schema1 {
-		return knowledgeStatement(query, args...)
-	}
 	if q.Dialect() == transaction.Dameng {
 		return workflowDamengStatement(query, args...)
 	}
@@ -78,9 +75,6 @@ func conversationFieldsWithin(q transaction.Executor) string {
 const runFieldsMySQL = "r.id,r.workflow_id,r.conversation_id,r.version_id,r.draft_revision,r.graph_sha256,r.state,r.question,r.answer,r.error_code,r.cancellation_requested_at,r.created_at,r.started_at,r.finished_at,r.deadline_at,r.lease_expires_at,r.owner_id,r.requested_audience,r.execution_authority,r.membership_authority,r.graph_snapshot,r.evidence,r.alias_snapshot,r.`usage`,r.process_owner,r.lease_id,r.result_kind,r.tool_result,r.tool_proof"
 
 func runFieldsWithin(q transaction.Executor) string {
-	if _, schema1 := q.(knowledgeExecutor); schema1 {
-		return knowledgeRunFields
-	}
 	if q.Dialect() == transaction.Dameng {
 		return runFieldsDameng
 	}

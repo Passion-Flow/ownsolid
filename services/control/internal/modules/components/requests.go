@@ -53,9 +53,6 @@ func (s *Service) RequestDetailed(ctx context.Context, a identity.Auth, node str
 	if _, e := s.repository(); e != nil {
 		return nodes.Task{}, e
 	}
-	if s.Nodes.Identity.Config.ComponentsOnly() && (wire.Command(input.Action).Validate(wire.ComponentOperation(input.Action)) != nil || input.Config != nil || input.Version != "") {
-		return nodes.Task{}, errors.New("AGENT_OPERATION_UNSUPPORTED")
-	}
 	if input.Config != nil {
 		copy := *input.Config
 		input.Config = &copy

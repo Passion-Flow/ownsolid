@@ -92,7 +92,7 @@ func TestRuntimeInputUsesOriginalProtectedExplicitEnvironment(t *testing.T) {
 		t.Fatal(e)
 	}
 	empty, e := LoadRuntimeWithEnvironment(file, "")
-	if e != nil || empty.configuration.Server.Profile() != legacy.configuration.Server.Profile() || empty.connection.MaxConns != legacy.connection.MaxConns {
+	if e != nil || empty.configuration.Topology != legacy.configuration.Topology || empty.connection.MaxConns != legacy.connection.MaxConns {
 		t.Fatal("legacy empty environment changed", e)
 	}
 	environment := filepath.Join(root, "runtime.env")
@@ -102,13 +102,13 @@ func TestRuntimeInputUsesOriginalProtectedExplicitEnvironment(t *testing.T) {
 			t.Fatal(e)
 		}
 	}
-	write("PROJECT_ONE_APPLICATION_PROFILE=account\nPROJECT_ONE_DATABASE_LOCK_TIMEOUT_MILLISECONDS=1234\nPROJECT_ONE_MODEL_CACHE_ENABLED=false\n")
+	write("PROJECT_ONE_DATABASE_LOCK_TIMEOUT_MILLISECONDS=1234\nPROJECT_ONE_MODEL_CACHE_ENABLED=false\n")
 	effective, e := LoadRuntimeWithEnvironment(file, environment)
-	if e != nil || !effective.configuration.AccountOnly() || effective.configuration.DatabaseLockTimeoutMilliseconds() != 1234 || effective.configuration.ModelCache.Enabled || effective.connection.MaxConns != legacy.connection.MaxConns {
+	if e != nil || effective.configuration.DatabaseLockTimeoutMilliseconds() != 1234 || effective.configuration.ModelCache.Enabled || effective.connection.MaxConns != legacy.connection.MaxConns {
 		t.Fatal("effective policy/principal boundary", e)
 	}
 	expected, e := config.LoadProtectedWithEnvironment(file, environment)
-	if e != nil || expected.Server.Profile() != effective.configuration.Server.Profile() || expected.DatabaseLockTimeoutMilliseconds() != effective.configuration.DatabaseLockTimeoutMilliseconds() {
+	if e != nil || expected.Topology != effective.configuration.Topology || expected.DatabaseLockTimeoutMilliseconds() != effective.configuration.DatabaseLockTimeoutMilliseconds() {
 		t.Fatal("configuration authorities disagree", e)
 	}
 	for _, body := range []string{"PROJECT_ONE_APPLICATION_PROFILE=unknown\n", "PROJECT_ONE_MODEL_CACHE_ENABLED=FALSE\n", "PROJECT_ONE_DATABASE_DSN_FILE=/unsupported\n", "PROJECT_ONE_APPLICATION_PROFILE=account\nPROJECT_ONE_APPLICATION_PROFILE=platform\n"} {

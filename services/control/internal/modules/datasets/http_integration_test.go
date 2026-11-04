@@ -46,7 +46,7 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 		t.Fatal(e)
 	}
 	account.Config.Datasets = config.DatasetConfiguration{ArtifactRoot: root, PythonExecutable: binary, ProcessorFile: script}
-	if account.Config.ModelsRuntime() {
+	if account.Config.Models.ArtifactRoot != "" {
 		if e = models.InitializeStore(account.Config.Models.ArtifactRoot, os.Geteuid(), os.Getegid()); e != nil {
 			t.Fatal(e)
 		}

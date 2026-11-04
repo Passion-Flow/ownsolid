@@ -17,28 +17,14 @@ import (
 // successful authentication. SQL, real login and browser journeys have their
 // separate executable acceptance gate.
 func TestTransportDispatcherProjectionAndRefusalBeforeSQL(t *testing.T) {
-	account := "account"
-	workspaces := "workspaces"
-	maintenance := "maintenance"
-	models := "models"
-	sso := "sso"
-	knowledge := "knowledge"
 	for _, profile := range []struct {
 		name, expected string
-		configured     *string
 	}{
-		{name: "default-platform", expected: "platform"},
-		{name: "account", expected: "account", configured: &account},
-		{name: "workspaces", expected: "workspaces", configured: &workspaces},
-		{name: "maintenance", expected: "maintenance", configured: &maintenance},
-		{name: "models", expected: "models", configured: &models},
-		{name: "sso", expected: "sso", configured: &sso},
-		{name: "knowledge", expected: "knowledge", configured: &knowledge},
+		{name: "single-node", expected: "single-node"},
 	} {
 		for _, mode := range []config.TransportMode{config.TransportHTTP, config.TransportDirectHTTPS, config.TransportTrustedProxyHTTPS} {
 			t.Run(profile.name+"/"+string(mode), func(t *testing.T) {
 				var c config.Config
-				c.Server.ApplicationProfile = profile.configured
 				c.Server.TransportMode = mode
 				scheme := "https"
 				if mode == config.TransportHTTP {
@@ -71,7 +57,7 @@ func TestTransportDispatcherProjectionAndRefusalBeforeSQL(t *testing.T) {
 						Data map[string]json.RawMessage `json:"data"`
 					}
 					publicFields := []string{
-						"application_profile", "sso_callback_origins", "transport", "private_clusters", "monitoring",
+						"topology", "sso_callback_origins", "transport", "private_clusters", "monitoring",
 						"middleware", "task_events", "image_registry", "artifact_storage",
 						"workspaces", "ui", "request_timeout_milliseconds", "component_default_version",
 						"component_max_scrapes", "component_default_config",
@@ -84,13 +70,15 @@ func TestTransportDispatcherProjectionAndRefusalBeforeSQL(t *testing.T) {
 							t.Fatal("missing public runtime field", field)
 						}
 					}
-					var applicationProfile string
-					if json.Unmarshal(response.Data["application_profile"], &applicationProfile) != nil || applicationProfile != profile.expected {
-						t.Fatal("public application profile projection", applicationProfile, profile.expected)
+					var topology struct {
+						Size string `json:"size"`
+					}
+					if json.Unmarshal(response.Data["topology"], &topology) != nil || topology.Size != profile.expected {
+						t.Fatal("public topology projection", topology.Size, profile.expected)
 					}
 					callbacks := []string{}
 					expectedCallbacks := []string{}
-					if (profile.expected == "platform" || profile.expected == "sso" || profile.expected == "knowledge") && mode != config.TransportHTTP {
+					if mode != config.TransportHTTP {
 						expectedCallbacks = []string{"https://portal.test", "https://admin.test"}
 					}
 					if json.Unmarshal(response.Data["sso_callback_origins"], &callbacks) != nil || !reflect.DeepEqual(callbacks, expectedCallbacks) {
@@ -125,11 +113,8 @@ func TestTransportDispatcherProjectionAndRefusalBeforeSQL(t *testing.T) {
 						}
 					}
 				}
-				if mode == config.TransportHTTP || profile.expected != "platform" {
+				if mode == config.TransportHTTP {
 					status, code := http.StatusForbidden, "ORIGIN_REJECTED"
-					if profile.expected != "platform" {
-						status, code = http.StatusNotFound, "RESOURCE_NOT_FOUND"
-					}
 					for _, route := range []string{"/agent/v1/nodes/unknown", "/gateway/v1/admissions"} {
 						w := httptest.NewRecorder()
 						h.ServeHTTP(w, request("admin", http.MethodPost, route))

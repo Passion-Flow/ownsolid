@@ -33,9 +33,6 @@ func TestM13WorkflowProfileAdminAliasDisableBrowser(t *testing.T) {
 		t.Run(locale, func(t *testing.T) {
 			ctx := t.Context()
 			c := setup(t)
-			if !c.s.Identity.Config.WorkflowsRuntime() {
-				t.Fatal("explicit cumulative workflows profile required")
-			}
 			a := c.access(t)
 			root := t.TempDir()
 			certificate, caFile, _, _ := smtpsink.Certificate(t, root)
@@ -110,7 +107,7 @@ func TestM13WorkflowProfileAdminAliasDisableBrowser(t *testing.T) {
 			if e = os.Mkdir(output, 0700); e != nil {
 				t.Fatal(e)
 			}
-			payload, _ := json.Marshal(map[string]any{"admin": accounts.Config.Server.AdminOrigin, "admin_email": "admin@example.invalid", "admin_password": c.password, "browser_locale": locale, "application_profile": *accounts.Config.Server.ApplicationProfile, "workspace_id": workspace, "alias_id": a.alias.ID, "alias_revision": a.alias.Revision, "workflow_id": draft.ID, "workflow_name": draft.Name, "spki": base64.StdEncoding.EncodeToString(pin[:]), "output": output})
+			payload, _ := json.Marshal(map[string]any{"admin": accounts.Config.Server.AdminOrigin, "admin_email": "admin@example.invalid", "admin_password": c.password, "browser_locale": locale, "workspace_id": workspace, "alias_id": a.alias.ID, "alias_revision": a.alias.Revision, "workflow_id": draft.ID, "workflow_name": draft.Name, "spki": base64.StdEncoding.EncodeToString(pin[:]), "output": output})
 			file := filepath.Join(root, "browser.json")
 			if e = os.WriteFile(file, payload, 0600); e != nil {
 				t.Fatal(e)

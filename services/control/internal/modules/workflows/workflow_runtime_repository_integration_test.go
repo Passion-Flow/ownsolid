@@ -59,7 +59,6 @@ func workflowRuntimeSetup(t *testing.T) workflowRuntimeStory {
 	}
 	owner := &identity.Service{Storage: f.Store, HMACKey: macKey}
 	if profile := os.Getenv("PROJECT_ONE_TEST_APPLICATION_PROFILE"); profile == "plugins" || profile == "portal" || profile == "localization" {
-		owner.Config.Server.ApplicationProfile = &profile
 	}
 	owner.Config.Workflows.Enabled = true
 	public, private, e := ed25519.GenerateKey(nil)

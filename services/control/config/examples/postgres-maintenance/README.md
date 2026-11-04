@@ -1,9 +1,8 @@
-# Cumulative MVP PostgreSQL maintenance selection
+# PostgreSQL maintenance selection
 
 Use the existing complete [MVP typed Control configuration](../control/mvp-postgresql-cpu-v1.example.yaml)
 and its [explicit environment mapping](../control/mvp-postgresql-cpu-v1.env.example).
-The source-bound native operator configuration must select
-`server.application_profile: mvp-postgresql-cpu-v1`; retain PostgreSQL and the
+The source-bound native operator configuration must use PostgreSQL and the
 same installation identity, credentials, four roots and original lock session.
 No additional boolean, worker, listener, scheduler or configuration authority is
 created by this owner. A stored maintenance DTO grants no future lock authority.

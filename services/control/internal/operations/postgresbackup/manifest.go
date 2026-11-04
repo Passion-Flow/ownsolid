@@ -1,6 +1,7 @@
 package postgresbackup
 
 import (
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"context"
 	"errors"
 	"os"
@@ -111,7 +112,7 @@ func snapshotTrees(ctx context.Context, r release.PostgreSQLBackupRequest) ([]St
 }
 
 func expectedRoot(root *os.Root, complete bool) error {
-	return expectedRootProfile(root, complete, "releases")
+	return expectedRootProfile(root, complete, database.LineageName)
 }
 
 func expectedRootProfile(root *os.Root, complete bool, profile string) error {
@@ -121,7 +122,7 @@ func expectedRootProfile(root *os.Root, complete bool, profile string) error {
 	}
 	defer f.Close()
 	expected := map[string]bool{"stores": true, "configuration": true, candidateName: true, archiveName: true, effectiveName: true}
-	if profile == release.MVPPostgreSQLCPUApplicationProfile {
+	if profile == database.LineageName {
 		expected[mvpArtifactsDirectory] = true
 	}
 	if complete {

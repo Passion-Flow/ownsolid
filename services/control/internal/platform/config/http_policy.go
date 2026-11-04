@@ -9,7 +9,7 @@ import (
 // DefaultHTTPPolicy is the single owner of default listener and retry budgets.
 func DefaultHTTPPolicy() HTTPPolicy {
 	return HTTPPolicy{InstallationLeaseIntervalSeconds: 5, StartupSeconds: 20, ReadHeaderSeconds: 5, RequestSeconds: 15,
-		IdleSeconds: 60, ShutdownSeconds: 5, MaxConnections: 128, MaxActiveRequests: 64,
+		IdleSeconds: 60, ShutdownSeconds: 20, MaxConnections: 128, MaxActiveRequests: 64,
 		RateLimitFallbackRetrySeconds: 900, ServiceUnavailableRetrySeconds: 2}
 }
 

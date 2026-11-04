@@ -41,7 +41,7 @@ func TestActualPostgresMaintenanceNativeProtectedCheckReleasesOriginalSQLLock(t 
 	}
 	file := os.Getenv("PROJECT_ONE_TEST_POSTGRES_MAINTENANCE_CONFIGURATION")
 	c, e := config.LoadProtectedWithEnvironment(file, "")
-	if e != nil || c.Server.Profile() != postgresmaintenance.ApplicationProfile {
+	if e != nil {
 		t.Fatal("protected current releases fixture configuration required", e)
 	}
 	dsn, e := config.Secret(c.Database.DSNFile)

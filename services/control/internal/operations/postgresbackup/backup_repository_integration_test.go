@@ -110,8 +110,6 @@ func newActualPostgresBackupFixtureWithTools(t *testing.T, deadline time.Duratio
 		if tools.applicationProfile != release.MVPPostgreSQLCPUApplicationProfile {
 			t.Fatal("unknown explicit fixture lineage")
 		}
-		profile := tools.applicationProfile
-		c.Server.ApplicationProfile = &profile
 	}
 	if tools.configure != nil {
 		tools.configure(&c)
@@ -279,7 +277,7 @@ func newActualPostgresBackupFixtureWithTools(t *testing.T, deadline time.Duratio
 	if pool.QueryRow(ctx, `SELECT pg_catalog.shobj_description((SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database()),'pg_database')`).Scan(&marker) != nil || marker != "projectone:m18-backup:"+scope+":source" || pool.QueryRow(ctx, `SELECT count(*) FROM pg_catalog.pg_tables WHERE schemaname='public'`).Scan(&tables) != nil || tables != 0 {
 		t.Fatal("fresh exact disposable database marker required")
 	}
-	if e = database.Migrate(ctx, pool, r.EffectiveApplicationProfile()); e != nil {
+	if e = database.Migrate(ctx, pool); e != nil {
 		t.Fatal("complete selected fixture migration", e)
 	}
 	lease, e := pool.Acquire(ctx)

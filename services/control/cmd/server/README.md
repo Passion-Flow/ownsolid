@@ -16,7 +16,6 @@ See the [machine verification contract](../../../../docs/engineering/deployment-
 An old browser-only init cannot qualify a configured machine group. Projection,
 probe and installed lifecycle forwarding remain separate delivery gates.
 
-
 [main.go](main.go) is the executable boundary for serving and explicit installation, schema, bootstrap, storage and recovery commands. It selects protected inputs before opening dependencies. Business rules remain in [modules](../../internal/modules/README.md); privileged maintenance mechanics remain in [operations](../../internal/operations/README.md).
 
 [selected_database.go](selected_database.go) owns one selected database, its installation lock and complete schema readiness. [selected_operator.go](selected_operator.go) and mysql_native_commands.go route database-specific operator behavior. Do not construct a second pool inside a domain or treat a candidate migration directory as an activated schema.
@@ -38,19 +37,6 @@ Configuration comes from [platform/config](../../internal/platform/config/README
 When changing construction, update configuration/schema/examples, actual HTTP mounting, worker shutdown and [release builders](../../../../tools/release). New modules must be wired into current-authority, readiness/restore and both selected-database paths as needed. Source-only imports are not completed composition.
 
 Focused native check: `go -C services/control test ./cmd/server`. Tagged selected-repository, native-command, runtime/broker and full-server tests require their declared isolated fixtures and resource admission. This documentation does not assert those profiles were run.
-
-The explicit `releases-cache-v1` profile keeps the M01–M17 account22 graph,
-release-view routes and existing worker lifecycle while optionally attaching the
-M23 directory cache to the same model owner. `model_directory_cache.go` validates
-protected local inputs without dialing; each cache operation owns its bounded
-connection and SQL remains authoritative on unavailability. It adds no worker,
-DDL, table, listener or readiness dependency on Valkey. Historical profiles keep
-their cache rejection. Other post-M17 features remain closed. Use the new
-[YAML](../../../../config/examples/control/releases-cache-v1.example.yaml) and
-[explicit environment mapping](../../../../config/examples/control/releases-cache-v1.env.example).
-`upgrade-releases` checks the same existing principal/catalog for this profile;
-source/configuration, selected SQL, installed image and signed delivery evidence
-remain distinct.
 
 The selected-repository HTTPS fixture uses each configured Portal/Admin origin
 in request URLs and maps only those two socket destinations to its private
@@ -140,45 +126,6 @@ missing, foreign or same-UID projections; no worker or new pool is created. See 
 
 ## Account composition
 
-`account.go` owns `server.application_profile: account`: current identity and
-license authorization, embedded locales, SMTP outbox, retention and the same
-transport/listener/shutdown owners. It opens only the selected account schema;
-no node/gateway/training/SSO/cache/broker/Kubernetes worker or vector extension is
-constructed. `migrate`, bootstrap, restricted runtime grants, schema checks and
-recovery consume the same profile. Later-feature settings are rejected, not
-silently ignored. The default platform composition remains in runtime_lifecycle.go.
-
-The minimal M01+M02 `workspaces` profile follows `serveAccount` with only the
-Workspace handler added. `upgrade-workspaces --config <operator> --runtime-config
-<runtime>` runs before normal schema readiness, holding the existing installation
-lease and requiring both profiles explicitly. It never constructs later workers.
-See [the M02 runbook](../../../../docs/runbooks/workspaces/README.md).
-
-`account.go` also composes `server.application_profile: nodes`: identity/license/
-locales/mail/retention, Workspaces and the existing node service/sweep only.
-`upgrade-nodes --config <operator> --runtime-config <runtime>` extends populated
-M02 plus its existing runtime role under the installation lock. Machine routes
-are the closed discovery subset; later descendants return structured404.
-
-`server.application_profile: components` constructs only M01-M04, reusing the
-account lifecycle, Workspace/node services, bounded node sweep and component
-callbacks/artifact handler. `upgrade-components --config <operator>
---runtime-config <runtime>` requires the exact installed M03ledger and principal.
-Keep serving stopped until schema/grants/access checks pass. Fresh installations
-use migrate/prepare-runtime-access/check-runtime-access/bootstrap-admin; no
-platform selection, rebootstrap or reset is needed for an existing installation.
-
-
-The cumulative maintenance profile uses the existing component owner/callbacks/sweep with its approved catalog. upgrade-maintenance --config <operator> --runtime-config <runtime> extends only the exact M04installation with the same restricted principal. Exact human/machine routers refuse M06+ descendants before optional dispatch. No additional daemon is started.
-
-
-`upgrade-datasets` upgrades only the accepted M07 installation to the cumulative42-table/14-entry datasets profile. It retains the original runtime principal and supports schema-committed/grants-pending recovery. Serve starts and joins only the enabled dataset processor alongside earlier owners.
-
-`upgrade-training` extends an installed accepted M08 database to training without rebootstrap or principal rotation. Serve opens the separate initialized training output store and joins the bounded training worker before releasing store locks. Earlier minimal profiles remain independent.
-
-
-The cumulative `lifecycle` profile extends training with its real preparation store, joined worker and current holdout guard. `upgrade-lifecycle` extends only an installed M09 catalog and its existing runtime principal; it never selects the historical platform schema. Store initialization, readiness, exact route mounting and coordinated restore use the same profile.
-
 The explicit policy-file admission also covers the six preparation file/store
 operators: export/import/verify-preparation-files and initialize/check/record-
 preparation-store initialization. They use the same LoadWithEnvironment boundary
@@ -191,42 +138,11 @@ correct environment override.
 
 ## Cumulative M12 source integration
 
-The explicit `knowledge` profile retains M01–M11 (SSO source validation and joined
-maintenance, preparation/holdout and all four stores) and adds only the existing
-knowledge owner. `SSORuntime`/`LifecycleRuntime` select inherited responsibilities;
-exact `SSOOnly`/`LifecycleOnly` predicates remain distinct. Forward account18 and
-`upgrade-knowledge` preserve the17-entry prefix/existing principal; the expected
-catalog is74tables/18entries, subject to actual current SQL verification.
-Protected `knowledge-policy.env.example` maps every installed reference/policy
-through the existing typed `--env-file`, with strict booleans and a protected
-gateway inventory. The cumulative restore calls knowledge last in the same
-transaction. See the [current integration contract](../../../../docs/execution/mvp/m12-cumulative-integration-20261026.md)
-for pending executable evidence; source integration alone is not acceptance.
-
 ## Cumulative Portal composition — 2026-10-27
-
-The explicit `portal` profile extends `plugins` with application projections,
-private terminal notices and fixed user theme preferences. Account21 adds only
-two tables; `upgrade-portal` retains the existing principal. `PluginsRuntime`
-retains inherited tools; Portal maintenance joins startup/readiness/stop. Later
-owners remain closed. See the [integration contract](../../../../docs/execution/mvp/m15-cumulative-integration-20261027.md) for current evidence status; source availability is not acceptance.
-
 
 ## Cumulative localization composition — 2026-10-27
 
-The explicit `localization` profile extends `portal` through forward account22,
-retaining all M01–M15 owners, 86 tables and the immutable21-entry prefix.
-`PortalRuntime` includes both profiles; exact `PortalOnly`/`LocalizationOnly`
-predicates remain distinct. `upgrade-localization` preserves the installed
-principal and identical DML grants. Runtime locale packages remain immutable,
-source-bound configuration inputs. See the [current M16 contract](../../../../docs/execution/mvp/m16-cumulative-integration-20261027.md).
-This source checkpoint is incomplete pending current upgrade, runtime, browser
-and offline delivery evidence; historical M16 receipts do not establish it.
-
-
 ## Cumulative M17 source boundary — 2026-10-27
-
-The cumulative `releases` profile retains the M16 account graph and opens the existing release view before readiness. It shares the selected PostgreSQL pool and ordinary Admin read-audit authority. Missing/dirty/unbound projection fails readiness. Later platform-only owners remain closed; `upgrade-releases` verifies the existing account22 principal without altering schema or passwords.
 
 `check-kubernetes-maintenance` is an early strict protected-config/environment-only
 dispatcher. It uses the same selected PostgreSQL installation lock and read-only
@@ -255,13 +171,6 @@ foreign owners. MySQL still requires the identical selected Store. Middleware,
 private-cluster, monitoring and release-view assembly share that check without
 opening any backend or extending an activated catalog. Ordinary module
 configuration, installed tenant and current graph checks still apply.
-
-The original generic HTTP graph checks enabled node recovery owners during
-initialization through `CheckRecoveryOwners`; missing recovery ownership remains
-a startup/readiness error. The imported producer guard preserves minimal profile
-requirements and current mutation transactions. Startup graph tests and the
-selected PostgreSQL monitoring assembly gate are separate from actual recovery,
-unknown COMMIT and installed backup/restore qualification.
 
 ## PostgreSQL installation lease request fence
 
@@ -315,21 +224,6 @@ an explicit durable runtime TMPDIR and no inherited compiler GOTMPDIR.
 
 ## Full PostgreSQL CPU MVP activation
 
-`mvp-postgresql-cpu-v1` selects the full existing `serveSelected` graph and the
-independent account22-derived29-entry/108-table lineage. It stays outside the
-bounded AccountRuntime/ReleasesRuntime selectors. Startup and schema readiness
-first verify the exact selected original lease/catalog, then require the strict
-current DML-only runtime principal; superuser operator credentials and incomplete
-grants cannot serve. The existing mandatory joined observer/request fence and
-unknown-COMMIT/unlock diagnostics remain unchanged.
-
-`upgrade-mvp-postgresql-cpu-v1` and `inspect-mvp-postgresql-cpu-v1` reuse the
-original selected pool/installation session and protected effective runtime input.
-Only canonical explicit --config/--runtime-config/optional --env-file are admitted;
-foreign/duplicate/empty path flags fail before SQL. Both operator and runtime use
-the same existing typed protected overlay parser. Output follows confirmed original
-lease close, and an unknown schema/grant outcome emits no terminal success.
-
 Native maintenance admits only the exact legacy releases or new MVP profile.
 Backup operator/runtime/request profiles must match the request's effective
 profile, and MVP principal verification borrows the held session without opening
@@ -343,3 +237,10 @@ See the [activation contract](../../../../docs/engineering/deployment-transport/
 for exact commands, cold-path restrictions and recovery. Source wiring and focused
 CLI/SQL checks are separate from a complete serving/artifact/browser/native-backup
 or target-environment gate; the profile flag alone establishes none of them.
+
+## Schema upgrade
+
+`upgrade-schema` and `inspect-schema-upgrade` take `--config`, `--runtime-config` and an
+optional `--env-file`. They accept an installation whose ledger is a prefix of the one
+lineage, migrate it, then grant the existing runtime principal the application tables.
+`serve` requires the DML-only runtime principal and refuses a superuser. See ADR 0003.

@@ -645,7 +645,7 @@ func TestM01RuntimeCredentialCannotExecuteDDL(t *testing.T) {
 	role := "m01_runtime_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 	password := uuid.NewString()
 	schema := s.DB.Config().ConnConfig.RuntimeParams["search_path"]
-	if _, e := s.DB.Exec(ctx, "CREATE ROLE "+role+" LOGIN PASSWORD '"+password+"'"); e != nil {
+	if _, e := s.DB.Exec(ctx, "CREATE ROLE "+role+" LOGIN NOINHERIT CONNECTION LIMIT 32 PASSWORD '"+password+"'"); e != nil {
 		t.Fatal("fixture role creation failed")
 	}
 	defer func() { s.DB.Exec(ctx, "DROP OWNED BY "+role); s.DB.Exec(ctx, "DROP ROLE "+role) }()

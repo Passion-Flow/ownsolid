@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"context"
 	"encoding/json"
 	"errors"
@@ -68,7 +69,7 @@ func createPostgresBackup(ctx context.Context, a postgresBackupArguments, r rele
 	if e != nil {
 		return out, errors.New("POSTGRES_BACKUP_RUNTIME_CONFIGURATION_INVALID")
 	}
-	if c.DatabaseEngine() != config.PostgreSQLDatabaseEngine || runtime.DatabaseEngine() != config.PostgreSQLDatabaseEngine || c.Server.Profile() != r.EffectiveApplicationProfile() || runtime.Server.Profile() != r.EffectiveApplicationProfile() {
+	if c.DatabaseEngine() != config.PostgreSQLDatabaseEngine || runtime.DatabaseEngine() != config.PostgreSQLDatabaseEngine || r.EffectiveApplicationProfile() != database.LineageName {
 		return out, errors.New("POSTGRES_BACKUP_RELEASES_CONFIGURATION_REQUIRED")
 	}
 	if e = postgresbackup.AdmitConnection(c.Database.DSNFile, r); e != nil {
@@ -93,12 +94,7 @@ func createPostgresBackup(ctx context.Context, a postgresBackupArguments, r rele
 	if selected.postgres == nil || selected.pgLease == nil {
 		return out, errors.New("POSTGRES_BACKUP_LOCKED_CONTEXT_REQUIRED")
 	}
-	if c.MVPPostgreSQLCPUV1Only() {
-		e = databaseaccess.VerifyMVPPostgreSQLCPUV1Principal(ctx, selected.postgres, selected.pgLease, input)
-	} else {
-		_, e = databaseaccess.Check(ctx, selected.postgres, selected.pgLease, input)
-	}
-	if e != nil {
+	if e = databaseaccess.VerifyRuntimePrincipal(ctx, selected.postgres, selected.pgLease, input); e != nil {
 		return out, e
 	}
 	return postgresbackup.Backup(ctx, selected.postgres, selected.pgLease, c, runtime, a.configuration, a.request, a.policyEnvironment, r)
@@ -120,7 +116,7 @@ func runPostgresBackup(command string, args []string, output io.Writer) error {
 	var result any
 	if command == postgresBackupCommand {
 		result, e = createPostgresBackup(ctx, a, r)
-	} else if command == postgresBackupVerifyCommand && r.EffectiveApplicationProfile() == config.MVPPostgreSQLCPUV1Profile {
+	} else if command == postgresBackupVerifyCommand {
 		result, e = postgresbackup.ObserveBackup(ctx, r, a.manifest)
 	} else {
 		result, e = postgresbackup.Verify(ctx, r, a.manifest, command == postgresBackupVerifyCommand)

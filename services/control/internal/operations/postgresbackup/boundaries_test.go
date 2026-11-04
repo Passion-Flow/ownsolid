@@ -138,7 +138,7 @@ func TestPostgresBackupNativeCancellationJoinsAndRedacts(t *testing.T) {
 }
 
 func requestFixture() release.PostgreSQLBackupRequest {
-	return release.PostgreSQLBackupRequest{FormatVersion: 1, BackupID: strings.Repeat("a", 32), SourceScopeID: strings.Repeat("b", 32), MaintenanceSHA256: strings.Repeat("a", 64), SourceManifestSHA256: strings.Repeat("b", 64), ControlImageSHA256: strings.Repeat("c", 64), PostgresImageSHA256: strings.Repeat("d", 64), TenantID: "11111111-1111-4111-8111-111111111111", Database: "synthetic_database", Operator: "synthetic_operator", RuntimeConfigurationFile: "/private/config/runtime.yaml", ConfigurationRoot: "/private/config", BackupRoot: "/private/backup", Reason: "Synthetic request", Policy: policyFixture()}
+	return release.PostgreSQLBackupRequest{FormatVersion: 1, ApplicationProfile: release.MVPPostgreSQLCPUApplicationProfile, BackupID: strings.Repeat("a", 32), SourceScopeID: strings.Repeat("b", 32), MaintenanceSHA256: strings.Repeat("a", 64), SourceManifestSHA256: strings.Repeat("b", 64), ControlImageSHA256: strings.Repeat("c", 64), PostgresImageSHA256: strings.Repeat("d", 64), TenantID: "11111111-1111-4111-8111-111111111111", Database: "synthetic_database", Operator: "synthetic_operator", RuntimeConfigurationFile: "/private/config/runtime.yaml", ConfigurationRoot: "/private/config", BackupRoot: "/private/backup", Reason: "Synthetic request", Policy: policyFixture()}
 }
 
 func TestPostgresBackupConnectionRefusesAmbientAndImplicitTransportBeforeSQL(t *testing.T) {

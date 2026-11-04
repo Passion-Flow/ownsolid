@@ -1,6 +1,7 @@
 package postgresbackup
 
 import (
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"errors"
 	"os"
 	"path/filepath"
@@ -23,14 +24,14 @@ func contained(root, path string) bool {
 
 func configurationSnapshot(operator, runtime config.Config, operatorPath string, r release.PostgreSQLBackupRequest) ([]byte, error) {
 	bad := errors.New("POSTGRES_BACKUP_CONFIGURATION_CLOSURE_REQUIRED")
-	if operator.DatabaseEngine() != config.PostgreSQLDatabaseEngine || runtime.DatabaseEngine() != config.PostgreSQLDatabaseEngine || operator.Server.Profile() != r.EffectiveApplicationProfile() || runtime.Server.Profile() != r.EffectiveApplicationProfile() {
+	if operator.DatabaseEngine() != config.PostgreSQLDatabaseEngine || runtime.DatabaseEngine() != config.PostgreSQLDatabaseEngine || r.EffectiveApplicationProfile() != database.LineageName {
 		return nil, bad
 	}
 	if _, e := selectedBackupSchema(r.EffectiveApplicationProfile()); e != nil {
 		return nil, e
 	}
 	// An enabled registry must have its original typed supplementary payload owner.
-	if r.EffectiveApplicationProfile() == release.MVPPostgreSQLCPUApplicationProfile && (operator.ImageRegistryConfigFile != "" && operator.ImageRegistry == nil || runtime.ImageRegistryConfigFile != "" && runtime.ImageRegistry == nil) {
+	if r.EffectiveApplicationProfile() == database.LineageName && (operator.ImageRegistryConfigFile != "" && operator.ImageRegistry == nil || runtime.ImageRegistryConfigFile != "" && runtime.ImageRegistry == nil) {
 		return nil, errors.New("POSTGRES_BACKUP_MVP_REGISTRY_PAYLOAD_OWNER_REQUIRED")
 	}
 	compare := operator

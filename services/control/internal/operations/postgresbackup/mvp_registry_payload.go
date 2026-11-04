@@ -1,6 +1,7 @@
 package postgresbackup
 
 import (
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"context"
 	"errors"
 	"io"
@@ -60,7 +61,7 @@ func registryConfigurationClosure(ctx context.Context, c config.Config, r releas
 }
 
 func mvpRegistrySourceTree(ctx context.Context, c config.Config, r release.PostgreSQLBackupRequest, usedBytes int64, usedFiles int) (*TreeReadback, error) {
-	if r.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile || c.ImageRegistry == nil {
+	if r.EffectiveApplicationProfile() != database.LineageName || c.ImageRegistry == nil {
 		return nil, nil
 	}
 	if e := registryConfigurationClosure(ctx, c, r); e != nil {
@@ -76,14 +77,14 @@ func mvpRegistrySourceTree(ctx context.Context, c config.Config, r release.Postg
 // The native caller lends its actual exported-snapshot transaction. This owner
 // creates no SQL authority and does not start a browser session or transport.
 func exportMVPRegistryWithin(ctx context.Context, tx pgx.Tx, c config.Config, r release.PostgreSQLBackupRequest, b *MVPSourceBinding) (*MVPRegistryPayload, error) {
-	if r.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile || c.ImageRegistry == nil {
+	if r.EffectiveApplicationProfile() != database.LineageName || c.ImageRegistry == nil {
 		return nil, nil
 	}
 	if b == nil || !b.RegistryConfigured {
 		return nil, errors.New("POSTGRES_BACKUP_MVP_REGISTRY_SOURCE_REQUIRED")
 	}
 	q := transaction.PostgreSQLTransaction(tx)
-	if _, e := postgresmaintenance.CheckWithin(ctx, q, r.EffectiveApplicationProfile()); e != nil {
+	if _, e := postgresmaintenance.CheckWithin(ctx, q); e != nil {
 		return nil, e
 	}
 	owner, e := imageregistry.NewOperatorSnapshot(*c.ImageRegistry, registryBinding(b, r))
@@ -106,14 +107,14 @@ func exportMVPRegistryWithin(ctx context.Context, tx pgx.Tx, c config.Config, r 
 	if e != nil {
 		return nil, e
 	}
-	if _, e = postgresmaintenance.CheckWithin(ctx, q, r.EffectiveApplicationProfile()); e != nil {
+	if _, e = postgresmaintenance.CheckWithin(ctx, q); e != nil {
 		return nil, e
 	}
 	return &MVPRegistryPayload{Receipt: receipt, Tree: tree, ConfigurationFileSHA256: configuration.SHA256}, nil
 }
 
 func verifyMVPRegistrySource(ctx context.Context, lease *pgxpool.Conn, c config.Config, r release.PostgreSQLBackupRequest, b *MVPSourceBinding, expected *TreeReadback) (result error) {
-	if r.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile || c.ImageRegistry == nil {
+	if r.EffectiveApplicationProfile() != database.LineageName || c.ImageRegistry == nil {
 		return nil
 	}
 	current, e := mvpRegistrySourceTree(ctx, c, r, 0, 0)
@@ -128,7 +129,7 @@ func verifyMVPRegistrySource(ctx context.Context, lease *pgxpool.Conn, c config.
 		result = errors.Join(result, closeRestoreTransaction(ctx, tx, r.Policy.TerminationGraceSeconds))
 	}()
 	q := transaction.PostgreSQLTransaction(tx)
-	if _, e = postgresmaintenance.CheckWithin(ctx, q, r.EffectiveApplicationProfile()); e != nil {
+	if _, e = postgresmaintenance.CheckWithin(ctx, q); e != nil {
 		return e
 	}
 	owner, e := imageregistry.NewOperatorSnapshot(*c.ImageRegistry, registryBinding(b, r))
@@ -138,7 +139,7 @@ func verifyMVPRegistrySource(ctx context.Context, lease *pgxpool.Conn, c config.
 	if e = owner.VerifyStoredWithin(ctx, q); e != nil {
 		return e
 	}
-	_, e = postgresmaintenance.CheckWithin(ctx, q, r.EffectiveApplicationProfile())
+	_, e = postgresmaintenance.CheckWithin(ctx, q)
 	return e
 }
 
@@ -174,7 +175,7 @@ func sourceRegistryConfiguration(ctx context.Context, m Manifest) (imageregistry
 }
 
 func verifyMVPRegistryPayload(ctx context.Context, m Manifest) error {
-	if m.Request.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile {
+	if m.Request.EffectiveApplicationProfile() != database.LineageName {
 		return nil
 	}
 	root, e := openPrivateRoot(filepath.Join(m.Request.BackupRoot, mvpArtifactsDirectory))
@@ -243,7 +244,7 @@ func mvpRegistryPayloadLimits(m Manifest) error {
 }
 
 func mvpRegistryTargetRoot(c config.Config, m Manifest, r release.PostgreSQLRestoreRequest, empty bool) (*RootIdentity, error) {
-	if r.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile {
+	if r.EffectiveApplicationProfile() != database.LineageName {
 		return nil, nil
 	}
 	payload := m.MVPSource.Registry
@@ -296,7 +297,7 @@ func registryTargetBinding(i RestoreIntent) imageregistry.OperatorSnapshotBindin
 }
 
 func importMVPRegistry(ctx context.Context, lease *pgxpool.Conn, c config.Config, m Manifest, i RestoreIntent) (out *imageregistry.OperatorSnapshotImportReceipt, result error) {
-	if i.Request.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile || m.MVPSource.Registry == nil {
+	if i.Request.EffectiveApplicationProfile() != database.LineageName || m.MVPSource.Registry == nil {
 		return nil, nil
 	}
 	identity, e := mvpRegistryTargetRoot(c, m, i.Request, true)
@@ -314,7 +315,7 @@ func importMVPRegistry(ctx context.Context, lease *pgxpool.Conn, c config.Config
 		}
 	}()
 	q := transaction.PostgreSQLTransaction(tx)
-	if _, e = postgresmaintenance.CheckWithin(ctx, q, i.Request.EffectiveApplicationProfile()); e != nil {
+	if _, e = postgresmaintenance.CheckWithin(ctx, q); e != nil {
 		return nil, e
 	}
 	owner, e := imageregistry.NewOperatorSnapshot(*c.ImageRegistry, registryTargetBinding(i))
@@ -331,14 +332,14 @@ func importMVPRegistry(ctx context.Context, lease *pgxpool.Conn, c config.Config
 	if e = owner.VerifyStoredWithin(ctx, q); e != nil {
 		return nil, e
 	}
-	if _, e = postgresmaintenance.CheckWithin(ctx, q, i.Request.EffectiveApplicationProfile()); e != nil {
+	if _, e = postgresmaintenance.CheckWithin(ctx, q); e != nil {
 		return nil, e
 	}
 	return &receipt, nil
 }
 
 func readbackMVPRegistryImport(ctx context.Context, c config.Config, m Manifest, i RestoreIntent, f RestoreFiles) error {
-	if i.Request.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile {
+	if i.Request.EffectiveApplicationProfile() != database.LineageName {
 		if f.Registry != nil || i.RegistryRoot != nil {
 			return errors.New("POSTGRES_RESTORE_MVP_REGISTRY_RECORD_MISMATCH")
 		}
@@ -363,7 +364,7 @@ func readbackMVPRegistryImport(ctx context.Context, c config.Config, m Manifest,
 // Source principal admission belongs only to backup. A genuinely fresh restore
 // imports SQL before its original separate runtime-role preparation stage.
 func readMVPBackupDatabase(ctx context.Context, lease *pgxpool.Conn, r release.PostgreSQLBackupRequest) (DatabaseReadback, error) {
-	if r.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile {
+	if r.EffectiveApplicationProfile() != database.LineageName {
 		return readDatabase(ctx, lease, r)
 	}
 	return withDatabaseSnapshot(ctx, lease, r, func(tx pgx.Tx, data DatabaseReadback) error {
@@ -376,8 +377,11 @@ func readMVPBackupDatabase(ctx context.Context, lease *pgxpool.Conn, r release.P
 }
 
 func admitMVPRegistryTargetConfiguration(ctx context.Context, c config.Config, m Manifest, r release.PostgreSQLRestoreRequest) error {
-	if r.EffectiveApplicationProfile() != postgresmaintenance.MVPApplicationProfile {
+	if r.EffectiveApplicationProfile() != database.LineageName {
 		return nil
+	}
+	if m.MVPSource == nil {
+		return errors.New("POSTGRES_RESTORE_SOURCE_BINDING_REQUIRED")
 	}
 	if m.MVPSource.Registry == nil {
 		return nil
@@ -412,14 +416,14 @@ func admitMVPRegistryTargetConfiguration(ctx context.Context, c config.Config, m
 	return nil
 }
 func mvpRegistryRestoreBytes(m Manifest) int64 {
-	if m.Request.EffectiveApplicationProfile() == postgresmaintenance.MVPApplicationProfile && m.MVPSource != nil && m.MVPSource.Registry != nil {
+	if m.Request.EffectiveApplicationProfile() == database.LineageName && m.MVPSource != nil && m.MVPSource.Registry != nil {
 		return m.MVPSource.Registry.Receipt.Bytes
 	}
 	return 0
 }
 func mvpRestoreAllocationRoots(c config.Config, m Manifest) []string {
 	roots := storeRoots(c)
-	if m.Request.EffectiveApplicationProfile() == postgresmaintenance.MVPApplicationProfile && m.MVPSource != nil && m.MVPSource.Registry != nil && c.ImageRegistry != nil {
+	if m.Request.EffectiveApplicationProfile() == database.LineageName && m.MVPSource != nil && m.MVPSource.Registry != nil && c.ImageRegistry != nil {
 		roots = append(roots, c.ImageRegistry.StoreRoot)
 	}
 	return roots

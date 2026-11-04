@@ -107,9 +107,6 @@ type Handler struct {
 }
 
 func New(s *identity.Service) *Handler {
-	if s.Config.AccountRuntime() {
-		return newAccount(s)
-	}
 	licenseService, licenseError := licensing.FromConfig(s)
 	s.BusinessAdmission = licenseService
 	if licenseError != nil {
@@ -395,15 +392,11 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 			h.problem(w, requestID, errors.New("RESOURCE_NOT_FOUND"))
 			return
 		}
-		success(w, http.StatusOK, map[string]any{"application_profile": c.Server.Profile(), "sso_callback_origins": ssoCallbackOrigins(c), "transport": map[string]any{"mode": c.Server.EffectiveTransportMode(), "plaintext": c.Server.EffectiveTransportMode() == config.TransportHTTP}, "private_clusters": h.privateClusterPublicPolicy(), "monitoring": h.monitoringPublicPolicy(audience), "middleware": h.middlewarePublicPolicy(), "task_events": taskDeliveryPublicPolicy(c), "image_registry": registryPublicPolicy(c), "artifact_storage": artifactPublicPolicy(c), "workspaces": c.Policy().Workspaces, "ui": c.Policy().UI, "request_timeout_milliseconds": c.Policy().HTTP.RequestSeconds * 1000, "component_default_version": wire.NodeExporterVersion, "component_max_scrapes": wire.MaxComponentScrapeRequests, "component_default_config": wire.DefaultComponentConfig()})
+		success(w, http.StatusOK, map[string]any{"topology": map[string]any{"size": c.Topology.EffectiveSize()}, "sso_callback_origins": ssoCallbackOrigins(c), "transport": map[string]any{"mode": c.Server.EffectiveTransportMode(), "plaintext": c.Server.EffectiveTransportMode() == config.TransportHTTP}, "private_clusters": h.privateClusterPublicPolicy(), "monitoring": h.monitoringPublicPolicy(audience), "middleware": h.middlewarePublicPolicy(), "task_events": taskDeliveryPublicPolicy(c), "image_registry": registryPublicPolicy(c), "artifact_storage": artifactPublicPolicy(c), "workspaces": c.Policy().Workspaces, "ui": c.Policy().UI, "request_timeout_milliseconds": c.Policy().HTTP.RequestSeconds * 1000, "component_default_version": wire.NodeExporterVersion, "component_max_scrapes": wire.MaxComponentScrapeRequests, "component_default_config": wire.DefaultComponentConfig()})
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/v1/localization/") {
 		h.Locales.ServeHTTPWithPolicy(w, r, h.Service.Config.Policy().HTTP)
-		return
-	}
-	if c.AccountRuntime() && machineRoute(r.URL.Path) && !((c.NodesOnly() && nodehttp.DiscoveryMachineOwns(r.URL.Path)) || (c.ComponentRuntime() && !c.ModelsRuntime() && nodehttp.ComponentsMachineOwns(r.URL.Path)) || (c.ModelsRuntime() && nodehttp.ModelsMachineOwns(r.URL.Path)) || (c.GatewayRuntime() && gatewayMachineOwns(r.URL.Path)) || (c.TrainingRuntime() && nodehttp.TrainingMachineOwns(r.URL.Path)) || (c.LifecycleRuntime() && nodehttp.LifecycleMachineOwns(r.URL.Path))) {
-		h.problem(w, requestID, errors.New("RESOURCE_NOT_FOUND"))
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/agent/v1/") {
@@ -492,14 +485,6 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 		}
 		return health.CheckSelected(ctx, store, h.SchemaReadiness, r.Method, path)
 	}
-	disabledAccountPath := s.Config.AccountRuntime() && !accountAPI(path) && !(s.Config.ReleasesRuntime() && releasehttp.Owns(path)) && !(s.Config.PortalRuntime() && (applicationhttp.Owns(path) || notificationhttp.Owns(path) || preferencehttp.Owns(path))) && !(s.Config.PluginsRuntime() && pluginhttp.Owns(path)) && !(s.Config.SSORuntime() && ssohttp.Owns(path)) && !(s.Config.KnowledgeRuntime() && knowledgehttp.Owns(path)) && !(s.Config.WorkflowsRuntime() && workflowhttp.Owns(path)) && !(s.Config.WorkspaceRuntime() && workspaceAPI(path)) && !((s.Config.NodesOnly() && nodehttp.DiscoveryHumanOwns(path)) || (s.Config.ComponentsOnly() && nodehttp.ComponentsHumanOwns(path)) || (s.Config.MaintenanceRuntime() && nodehttp.MaintenanceHumanOwns(path)) || (s.Config.ModelsRuntime() && modelsHumanOwns(path)) || (s.Config.GatewayRuntime() && gatewayHumanOwns(path)) || (s.Config.DatasetRuntime() && datasetsHumanOwns(path)) || (s.Config.TrainingRuntime() && trainingHumanOwns(path)) || (s.Config.LifecycleRuntime() && lifecycleHumanOwns(path)))
-	// Preserve the established CSRF refusal for writes below the Workspace
-	// namespace. The exact disabled route is still rejected before authentication
-	// or dispatch can query an absent domain owner.
-	workspaceWrite := s.Config.WorkspaceRuntime() && (strings.HasPrefix(path, "/api/v1/workspaces/") || strings.HasPrefix(path, "/api/v1/admin/workspaces/")) && (r.Method == "POST" || r.Method == "PUT" || r.Method == "PATCH" || r.Method == "DELETE")
-	if disabledAccountPath && !workspaceWrite {
-		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
-	}
 	if strings.HasPrefix(path, "/api/v1/admin/") && audience != "admin" {
 		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
 	}
@@ -534,9 +519,6 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 			return nil, 0, errors.New("CSRF_INVALID")
 		}
 	}
-	if disabledAccountPath {
-		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
-	}
 	if monitoringhttp.Owns(path) {
 		if r.Method != http.MethodGet {
 			return nil, 0, errors.New("RESOURCE_NOT_FOUND")
@@ -552,44 +534,6 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 	}
 	if e := h.licenseAdmission(r, audience, session); e != nil {
 		return nil, 0, e
-	}
-	// Later platform owners also claim descendants of this namespace. In the
-	// minimal profiles, only the constructed Workspace/discovery owners interpret them.
-	if s.Config.AccountRuntime() && s.Config.WorkspaceRuntime() && (workspaceAPI(path) || nodehttp.DiscoveryHumanOwns(path) || (s.Config.ComponentsOnly() && nodehttp.ComponentsHumanOwns(path)) || (s.Config.MaintenanceRuntime() && nodehttp.MaintenanceHumanOwns(path)) || (s.Config.ModelsRuntime() && modelsHumanOwns(path)) || (s.Config.GatewayRuntime() && gatewayHumanOwns(path)) || (s.Config.DatasetRuntime() && datasetsHumanOwns(path)) || (s.Config.TrainingRuntime() && trainingHumanOwns(path)) || (s.Config.LifecycleRuntime() && lifecycleHumanOwns(path))) {
-		a, e := s.Authenticate(ctx, session, audience)
-		if e != nil {
-			return nil, 0, e
-		}
-		if s.Config.LifecycleRuntime() && lifecycleHumanOwns(path) {
-			if preparationhttp.Owns(path) {
-				return (&preparationhttp.Handler{Service: h.ModelPreparations}).Handle(r, a, requestID)
-			}
-			return h.Distribution.Human(r, a, requestID)
-		}
-		if s.Config.TrainingRuntime() && trainingHumanOwns(path) {
-			return (&traininghttp.Handler{Service: h.Training}).Handle(r, a, requestID)
-		}
-		if s.Config.DatasetRuntime() && datasetsHumanOwns(path) {
-			return h.Datasets.Handle(r, a, requestID)
-		}
-		if s.Config.GatewayRuntime() && gatewayHumanOwns(path) {
-			return h.Distribution.Human(r, a, requestID)
-		}
-		if s.Config.ModelsRuntime() {
-			if modelhttp.Owns(path) {
-				return h.Models.Handle(r, a, requestID)
-			}
-			if deploymenthttp.Owns(path) {
-				return h.Deployments.Handle(r, a, requestID)
-			}
-		}
-		if s.Config.ComponentRuntime() && componenthttp.Owns(path) {
-			return h.Components.Handle(r, a, requestID)
-		}
-		if s.Config.NodeRuntime() && nodehttp.DiscoveryHumanOwns(path) {
-			return h.Nodes.Human(r, a, requestID)
-		}
-		return h.Workspaces.Handle(w, r, a, requestID)
 	}
 	if privateclusterhttp.Owns(path) {
 		if r.Header.Get("Origin") != "" && r.Header.Get("Origin") != origin {

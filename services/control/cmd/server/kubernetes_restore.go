@@ -90,7 +90,7 @@ func operatePostgresRestore(ctx context.Context, command string, a postgresResto
 	if command == postgresRestoreCommand {
 		return postgresbackup.Restore(ctx, selected.postgres, selected.pgLease, c, runtime, a.configuration, a.environment, a.request, a.policyEnvironment, r)
 	}
-	if command == postgresRestoreVerifyCommand && r.EffectiveApplicationProfile() == config.MVPPostgreSQLCPUV1Profile {
+	if command == postgresRestoreVerifyCommand {
 		return postgresbackup.ObserveRestore(ctx, selected.postgres, selected.pgLease, c, runtime, a.configuration, a.environment, a.request, a.policyEnvironment, r)
 	}
 	return postgresbackup.VerifyRestore(ctx, selected.postgres, selected.pgLease, c, runtime, a.configuration, a.environment, a.request, a.policyEnvironment, r)

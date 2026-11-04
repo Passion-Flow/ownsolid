@@ -23,11 +23,6 @@ type HoldoutGuard interface {
 
 // A custom composition may omit the guard only while its scoped registry is empty.
 func (s *Service) requireEmptyHoldoutsWithin(ctx context.Context, q transaction.Executor, w workspaces.Workspace) error {
-	// The checked cumulative M09 catalog has no M10 holdout owner or table.
-	// Platform compositions still require the existing reservation guard below.
-	if s.Identity.Config.TrainingOnly() {
-		return nil
-	}
 	var exists bool
 	if e := q.QueryRow(ctx, acceptedAdapterSQL(q, "SELECT EXISTS(SELECT 1 FROM model_holdouts WHERE tenant_id=$1 AND workspace_id=$2)", "SELECT EXISTS(SELECT 1 FROM model_holdouts WHERE tenant_id=? AND workspace_id=?)", w.TenantID, w.ID)).Scan(&exists); e != nil {
 		return e

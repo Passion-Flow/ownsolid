@@ -82,7 +82,7 @@ func TestLocalizationActualRendererConfigurationFalseNondefaultAndUID(t *testing
 			if err != nil {
 				t.Fatal("renderer not accepted by actual Go loader", err)
 			}
-			if (current.Localization.PackageDirectory != "") != enabled || current.Policy().Localization.CacheSeconds != 0 || current.Server.PortalOrigin != c.Server.PortalOrigin || current.Server.Profile() != c.Server.Profile() {
+			if (current.Localization.PackageDirectory != "") != enabled || current.Policy().Localization.CacheSeconds != 0 || current.Server.PortalOrigin != c.Server.PortalOrigin {
 				t.Fatal("false, nondefault or inherited authority changed")
 			}
 			if enabled && (current.Localization.PackageDirectory != runtimeDirectory || len(current.Localization.RequiredLocales) != 2) {

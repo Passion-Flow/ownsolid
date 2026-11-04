@@ -48,7 +48,7 @@ func TestActualLogicalDistributionBackupRestorePreservesUnknownHistoryAndInvalid
 	if e = os.WriteFile(filepath.Join(output, "distribution-backup.dump"), archive, 0600); e != nil {
 		t.Fatal(e)
 	}
-	restored := fixture.RestoreFresh(t, ctx, c.s.DB, archive, c.s.Identity.Config.AccountRuntime())
+	restored := fixture.RestoreFresh(t, ctx, c.s.DB, archive, true)
 	var held, reported, challenged int
 	if e = restored.QueryRow(ctx, "SELECT count(*) FILTER(WHERE capacity_held),count(*) FILTER(WHERE outcome IS NOT NULL),count(*) FILTER(WHERE active_recovery_id IS NOT NULL) FROM gateway_requests").Scan(&held, &reported, &challenged); e != nil || held != 1 || reported != 1 || challenged != 1 {
 		t.Fatal("actual dump/restore lost history or cyclic recovery references", e)

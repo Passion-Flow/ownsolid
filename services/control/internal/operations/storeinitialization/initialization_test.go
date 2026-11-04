@@ -177,13 +177,13 @@ func TestActualAuditSQLTimeoutPreservesNamespaceForExplicitRecovery(t *testing.T
 		t.Fatal(e)
 	}
 	defer tx.Rollback(context.Background())
-	if _, e = tx.Exec(ctx, "LOCK TABLE audit_events IN ACCESS EXCLUSIVE MODE"); e != nil {
+	if _, e = tx.Exec(ctx, "LOCK TABLE audit_events IN SHARE ROW EXCLUSIVE MODE"); e != nil {
 		t.Fatal(e)
 	}
 	bounded, stop := context.WithTimeout(ctx, 500*time.Millisecond)
 	_, e = Run(bounded, s.DB, lease, c, o)
 	stop()
-	if e == nil || e.Error() != "STORE_INITIALIZATION_AUDIT_UNAVAILABLE" {
+	if e == nil || e.Error() != "STORE_INITIALIZATION_AUDIT_WRITE_UNCERTAIN" {
 		t.Fatal("blocked audit did not fail", e)
 	}
 	before, e := os.ReadFile(filepath.Join(o.Root, "namespace.json"))

@@ -1,3 +1,8 @@
+# Deployment size. Optional; omitted selects single-node. Enum single-node, ha, cell,
+# multi-cell, multi-site. This release runs single-node only; the others fail startup
+# with CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED. No secret; restart applies.
+topology:
+  size: single-node
 server:
   listen_address: 0.0.0.0:8443
   portal_origin: https://portal.example.invalid:8443
@@ -183,7 +188,7 @@ runtime:
     read_header_seconds: 5
     request_seconds: 15
     idle_seconds: 60
-    shutdown_seconds: 5
+    shutdown_seconds: 20
     max_connections: 128
     max_active_requests: 64
     rate_limit_fallback_retry_seconds: 900

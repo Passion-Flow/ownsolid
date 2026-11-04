@@ -1,8 +1,6 @@
 # Minimal M01+M02 inputs. Copy to a private operator/runtime configuration and provision
 # every secret/asset reference below. Restart after edits; no secret bytes belong here.
 server:
-  # Enum account|workspaces|platform; omitted preserves platform. Same artifact, restart required.
-  application_profile: workspaces
   # Explicit local plaintext profile. Use direct_https with protected certificate/key
   # references for production; keep advertised origins separate from listen/bind.
   transport_mode: http

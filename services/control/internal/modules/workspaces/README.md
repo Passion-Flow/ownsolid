@@ -27,18 +27,10 @@ for source status and coordinator-only execution. The lane's schema contribution
 adds scope-page indexes and immutable membership/note identities; the central
 migration owner registers the contribution and verifies fresh/upgrade catalogs.
 
-The minimal M01+M02 composition selects `server.application_profile: workspaces`.
-It uses the account migration prefix plus two versioned extensions, with no
-later capability owners. `identityfixture.NewM02` exercises this17-table schema;
-`database/workspaces_upgrade_test.go` covers real populated account evolution and
-isolated logical restore. Use the current M02 runbook rather than legacy full
-platform upgrade instructions.
-
 `http/disabled_routes_test.go` retains authenticated PostgreSQL controls for the
 minimal runtime's exclusive route ownership, disabled descendants and original
 platform dispatch. The selected native delivery test also checks the shipped
 executable before/after restart.
-
 
 Current PostgreSQL actor/session/membership fences use `FOR NO KEY UPDATE` on
 immutable user identities. This still serializes status/epoch/profile/session

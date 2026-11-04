@@ -79,7 +79,7 @@ func pluginCandidateLoad(t *testing.T) pluginCandidateDocument {
 }
 func TestMySQLPluginToolCandidateSource(t *testing.T) {
 	d := pluginCandidateLoad(t)
-	raw, e := os.ReadFile(filepath.Join("..", "..", "..", "..", "migrations", "postgresql", "000014_plugins.up.sql"))
+	raw, e := os.ReadFile(filepath.Join("..", "testdata", "platform-lineage", "000014_plugins.up.sql"))
 	if e != nil || hash(string(raw)) != d.PostgreSQLSHA256 {
 		t.Fatal("frozen real PG14 source binding", e)
 	}

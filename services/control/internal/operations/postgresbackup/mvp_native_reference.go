@@ -1,6 +1,7 @@
 package postgresbackup
 
 import (
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"context"
 	"errors"
 	"os"
@@ -109,7 +110,7 @@ func backupReferenceRecords(root string, maximum int64) []nativeReferenceRecord 
 // The reference contains declarations/hashes, not an independent signed-profile
 // verdict; the scope must retain its own signed release and class verification.
 func ObserveBackup(ctx context.Context, r release.PostgreSQLBackupRequest, expected string) (BackupObservation, error) {
-	if r.EffectiveApplicationProfile() != release.MVPPostgreSQLCPUApplicationProfile {
+	if r.EffectiveApplicationProfile() != database.LineageName {
 		b, e := Verify(ctx, r, expected, true)
 		return BackupObservation{Readback: b}, e
 	}
@@ -176,7 +177,7 @@ func projectNativeBackupReference(r release.PostgreSQLBackupRequest, expected st
 // An absent historical completion remains a valid readonly observation with no
 // completed-restore reference. It never imports, invalidates, grants or publishes.
 func ObserveRestore(ctx context.Context, pool *pgxpool.Pool, lease *pgxpool.Conn, operator, runtime config.Config, operatorPath, operatorEnvironment, requestPath, policyEnvironment string, r release.PostgreSQLRestoreRequest) (RestoreObservationWithReference, error) {
-	if r.EffectiveApplicationProfile() != release.MVPPostgreSQLCPUApplicationProfile {
+	if r.EffectiveApplicationProfile() != database.LineageName {
 		b, e := VerifyRestore(ctx, pool, lease, operator, runtime, operatorPath, operatorEnvironment, requestPath, policyEnvironment, r)
 		return RestoreObservationWithReference{RestoreObservation: b}, e
 	}

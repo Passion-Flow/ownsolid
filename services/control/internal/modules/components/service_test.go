@@ -2,15 +2,14 @@ package components_test
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"os"
-	"path/filepath"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -22,22 +21,16 @@ type scenario struct {
 	handshake     wire.Handshake
 }
 
-func setup(t *testing.T) scenario    { return setupWithProfile(t, false) }
-func setupM04(t *testing.T) scenario { return setupWithProfile(t, true) }
-func setupWithProfile(t *testing.T, minimal bool) scenario {
+func setup(t *testing.T) scenario    { return setupComposed(t) }
+func setupM04(t *testing.T) scenario { return setupComposed(t) }
+func setupComposed(t *testing.T) scenario {
 	t.Helper()
-	var s *identity.Service
-	if minimal {
-		s = fixture.NewM04(t)
-	} else {
-		s = fixture.New(t)
-	}
+	s := fixture.New(t)
 	p := fixture.Bootstrap(t, s)
 	a := fixture.Login(t, s, "admin@example.invalid", p, "admin")
 	portal := fixture.Login(t, s, "admin@example.invalid", p, "portal")
-	n := &nodes.Service{DB: s.DB, Identity: s, Workspaces: &workspaces.Service{DB: s.DB, Identity: s}}
-	c := &components.Service{Nodes: n}
-	n.Components = c
+	composed := identityhttp.New(s)
+	n, c := composed.Nodes.Service, composed.Components.Service
 	join, e := n.MintForProfile(context.Background(), a, a.Me.Workspace.ID, "Synthetic management node", wire.SystemdComponentsProfile, uuid.NewString())
 	if e != nil {
 		t.Fatal(e)

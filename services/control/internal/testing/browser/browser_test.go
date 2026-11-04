@@ -103,13 +103,13 @@ func testProductionBrowser(t *testing.T, script, evidence string, workspace bool
 	}
 	var s *identity.Service
 	if strings.HasPrefix(script, "nodes/") {
-		s = fixture.NewM03(t)
+		s = fixture.New(t)
 	} else if script == "components/maintenance-flow.mjs" {
-		s = fixture.NewM05(t)
+		s = fixture.New(t)
 	} else if script == "components/component-flow.mjs" {
-		s = fixture.NewM04(t)
+		s = fixture.New(t)
 	} else if strings.HasPrefix(script, "workspaces/") {
-		s = fixture.NewM02(t)
+		s = fixture.New(t)
 	} else {
 		s = fixture.New(t)
 	}
@@ -344,7 +344,7 @@ func testProductionBrowser(t *testing.T, script, evidence string, workspace bool
 	os.Mkdir(inbox, 0700)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	if !s.Config.AccountRuntime() || s.Config.PortalRuntime() {
+	{
 		if e = handler.Notifications.Service.Start(ctx); e != nil {
 			t.Fatal(e)
 		}
@@ -430,7 +430,7 @@ func testProductionBrowser(t *testing.T, script, evidence string, workspace bool
 	}
 	output = filepath.Join(output, evidence)
 	os.MkdirAll(output, 0700)
-	manifest := map[string]any{"browser_locale": os.Getenv("PROJECT_ONE_BROWSER_LOCALE"), "application_profile": s.Config.Server.Profile(), "portal_assets": s.Config.Server.PortalAssets, "portal": s.Config.Server.PortalOrigin, "admin": s.Config.Server.AdminOrigin, "admin_email": "admin@example.invalid", "admin_password": password, "member_email": "alice@example.invalid", "member_password": memberPassword, "second_email": "bob@example.invalid", "new_password": fixture.Password(), "inbox": inbox, "spki": base64.StdEncoding.EncodeToString(pin[:]), "output": output}
+	manifest := map[string]any{"browser_locale": os.Getenv("PROJECT_ONE_BROWSER_LOCALE"), "topology": s.Config.Topology.EffectiveSize(), "portal_assets": s.Config.Server.PortalAssets, "portal": s.Config.Server.PortalOrigin, "admin": s.Config.Server.AdminOrigin, "admin_email": "admin@example.invalid", "admin_password": password, "member_email": "alice@example.invalid", "member_password": memberPassword, "second_email": "bob@example.invalid", "new_password": fixture.Password(), "inbox": inbox, "spki": base64.StdEncoding.EncodeToString(pin[:]), "output": output}
 	if staticLocalizationMode {
 		manifest["static_locale_directory"] = os.Getenv("PROJECT_ONE_STATIC_LOCALE_PACKAGE_DIRECTORY")
 		manifest["transport"] = "http"

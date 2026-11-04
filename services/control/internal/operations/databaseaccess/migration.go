@@ -19,7 +19,7 @@ func MigrateWithRuntimeContext(ctx context.Context, pool *pgxpool.Pool, lease *p
 	if _, e := lockedTarget(ctx, pool, lease, input); e != nil {
 		return e
 	}
-	if e := database.Migrate(ctx, lease, input.configuration.Server.Profile()); e != nil {
+	if e := database.Migrate(ctx, lease); e != nil {
 		// An unknown final COMMIT takes precedence over generic cancellation or
 		// failure. The caller must observe the original ledger before recovery.
 		if outcome, ok := transaction.CommitOutcome(e); ok {

@@ -37,7 +37,7 @@ func verifyActualWorkflows(t *testing.T, ctx context.Context, c scenario, handle
 	policy := accounts.Config.Policy()
 	policy.HTTP.ShutdownSeconds = 30
 	accounts.Config.Runtime = &policy
-	if accounts.Config.PluginsOnly() {
+	{
 		public, _, e := ed25519.GenerateKey(nil)
 		if e != nil {
 			t.Fatal(e)

@@ -13,9 +13,6 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
-const ApplicationProfile = "releases"
-const SchemaVersion = 22
-
 // Each predicate names a current cumulative owner and keeps uncertain authority
 // blocking. Terminal accepted history and pending human review remain retained.
 const remoteWorkSQL = `SELECT
@@ -32,9 +29,18 @@ const remoteWorkSQL = `SELECT
  EXISTS(SELECT 1 FROM public.model_preparation_uploads WHERE state NOT IN ('accepted','failed')),
  EXISTS(SELECT 1 FROM public.workflow_runs WHERE state IN ('pending','running') OR lease_id IS NOT NULL),
  EXISTS(SELECT 1 FROM public.workflow_node_traces WHERE state='running'),
- EXISTS(SELECT 1 FROM public.model_imports WHERE state NOT IN ('ready','cancelled'))`
+ EXISTS(SELECT 1 FROM public.model_imports WHERE state NOT IN ('ready','cancelled')),
+ EXISTS(SELECT 1 FROM public.mongodb_dataset_imports WHERE state IN ('reading','exported') OR lease_expires_at IS NOT NULL),
+ EXISTS(SELECT 1 FROM public.artifact_objects WHERE operation_id IS NOT NULL OR state NOT IN ('ready','deleted','aborted')),
+ EXISTS(SELECT 1 FROM public.artifact_object_ingestions WHERE state IN ('intent','running')),
+ EXISTS(SELECT 1 FROM public.image_registry_pins WHERE state IN ('importing','unknown','deleting')),
+ EXISTS(SELECT 1 FROM public.image_registry_imports WHERE phase IN ('prepared','remote','unknown')),
+ EXISTS(SELECT 1 FROM public.task_event_outbox WHERE claim_id IS NOT NULL OR outcome_unknown OR state IN ('prepared','sent','published')),
+ EXISTS(SELECT 1 FROM public.middleware_operations WHERE state IN ('queued','running') OR lease_expires_at IS NOT NULL),
+ EXISTS(SELECT 1 FROM public.private_cluster_connections WHERE active_run_id IS NOT NULL)
+  OR EXISTS(SELECT 1 FROM public.private_cluster_runs WHERE phase<>'cleaned')`
 
-var checkKinds = [...]string{"NODE_TASKS", "COMPONENTS", "GPU_LEASES", "INFERENCE", "GATEWAY_REQUESTS", "TRAINING_JOBS", "TRAINING_ATTEMPTS", "TRAINING_UPLOADS", "PREPARATIONS", "PREPARATION_ATTEMPTS", "PREPARATION_UPLOADS", "WORKFLOWS", "WORKFLOW_TRACES", "MODEL_IMPORTS"}
+var checkKinds = [...]string{"NODE_TASKS", "COMPONENTS", "GPU_LEASES", "INFERENCE", "GATEWAY_REQUESTS", "TRAINING_JOBS", "TRAINING_ATTEMPTS", "TRAINING_UPLOADS", "PREPARATIONS", "PREPARATION_ATTEMPTS", "PREPARATION_UPLOADS", "WORKFLOWS", "WORKFLOW_TRACES", "MODEL_IMPORTS", "MONGODB_IMPORTS", "ARTIFACT_OBJECTS", "ARTIFACT_INGESTIONS", "IMAGE_REGISTRY", "IMAGE_REGISTRY_IMPORTS", "TASK_EVENTS", "MIDDLEWARE", "PRIVATE_CLUSTERS"}
 
 const heldReadOnlySQL = `SELECT
  EXISTS(SELECT 1 FROM pg_catalog.pg_locks WHERE locktype='advisory' AND pid=pg_catalog.pg_backend_pid() AND classid=0::oid AND objid=$1::bigint::oid AND objsubid=1 AND mode='ExclusiveLock' AND granted),
@@ -51,7 +57,6 @@ const installationSQL = `SELECT pg_catalog.pg_backend_pid(),pg_catalog.current_d
 type Observation struct {
 	FormatVersion      int      `json:"format_version"`
 	Status             string   `json:"status"`
-	ApplicationProfile string   `json:"application_profile"`
 	SchemaVersion      int      `json:"schema_version"`
 	Database           string   `json:"database"`
 	Operator           string   `json:"operator"`
@@ -99,15 +104,15 @@ func checkRemoteWorkWithin(ctx context.Context, q transaction.Executor) error {
 // installation-lock session. The caller owns its transaction and lock lifetime.
 // It neither commits nor releases either. A later backup must recheck while its
 // own continuous lock is held; this DTO cannot authorize that later operation.
-func CheckWithin(ctx context.Context, q transaction.Executor, profile string) (Observation, error) {
+func CheckWithin(ctx context.Context, q transaction.Executor) (Observation, error) {
 	refuse := func(code string) (Observation, error) { return Observation{}, errors.New(code) }
-	if ctx == nil || q == nil || q.Dialect() != transaction.PostgreSQL || !supportedProfile(profile) {
+	if ctx == nil || q == nil || q.Dialect() != transaction.PostgreSQL {
 		return refuse("POSTGRES_MAINTENANCE_RELEASES_CONTEXT_REQUIRED")
 	}
 	if e := checkHeldReadOnly(ctx, q); e != nil {
 		return Observation{}, e
 	}
-	if e := database.CheckAccountProfileWithin(ctx, q, profile); e != nil {
+	if e := database.CheckWithin(ctx, q); e != nil {
 		return refuse("POSTGRES_MAINTENANCE_SCHEMA_INCOMPATIBLE")
 	}
 	var out Observation
@@ -123,27 +128,15 @@ func CheckWithin(ctx context.Context, q transaction.Executor, profile string) (O
 	if e = checkRemoteWorkWithin(ctx, q); e != nil {
 		return Observation{}, e
 	}
-	if profile == MVPApplicationProfile {
-		if e = checkMVPRemoteWorkWithin(ctx, q); e != nil {
-			return Observation{}, e
-		}
-	}
 	if e = checkHeldReadOnly(ctx, q); e != nil {
 		return Observation{}, e
 	}
 	out.FormatVersion = 1
 	out.Status = "observed_quiescent_under_installation_lock"
-	out.ApplicationProfile = profile
-	out.SchemaVersion, e = checkedSchemaVersion(ctx, q, profile)
-	if e != nil {
-		return Observation{}, e
-	}
+	out.SchemaVersion = database.SchemaVersion
 	out.ObservedAt = at.UTC().Format(time.RFC3339Nano)
 	out.CurrentLockHeld = true
 	out.Checks = append([]string{}, checkKinds[:]...)
-	if profile == MVPApplicationProfile {
-		out.Checks = append(out.Checks, mvpCheckKinds[:]...)
-	}
 	out.Qualification = "SQL-declared workload and capacity quiescence during this exact locked read-only transaction only. No physical removal, file consistency, backup, later mutation authority or target qualification."
 	return out, nil
 }

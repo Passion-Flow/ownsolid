@@ -11,7 +11,7 @@ import (
 )
 
 func TestM02HTTPContractsAndAuthorization(t *testing.T) {
-	s := fixture.NewM02(t)
+	s := fixture.New(t)
 	p := fixture.Bootstrap(t, s)
 	ctx := context.Background()
 	a := fixture.Login(t, s, "admin@example.invalid", p, "admin")

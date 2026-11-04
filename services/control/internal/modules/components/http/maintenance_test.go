@@ -20,7 +20,7 @@ import (
 )
 
 func TestM05StrictHTTPMaintenanceAndVersionBoundArtifacts(t *testing.T) {
-	s := fixture.NewM05(t)
+	s := fixture.New(t)
 	password := fixture.Bootstrap(t, s)
 	s.Config.Components.NodeExporterCatalogDirectory = filepath.Join(os.Getenv("PROJECT_ONE_STATE_ROOT"), "dependencies/components/node-exporter")
 	server := httpfixture.NewTLSServer(t, transport.New(s))

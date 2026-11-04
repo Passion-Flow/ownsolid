@@ -88,7 +88,7 @@ func TestActualNativeTrainingPairedLogicalRestoreRestartAndReadiness(t *testing.
 	if e = os.WriteFile(filepath.Join(backupParent, "database.dump"), archive, 0600); e != nil {
 		t.Fatal(e)
 	}
-	restored := owned.RestoreFresh(t, ctx, f.s.DB, archive, f.s.Identity.Config.AccountRuntime())
+	restored := owned.RestoreFresh(t, ctx, f.s.DB, archive, true)
 	target := restored.Config().ConnConfig.Database
 	rawDSN := os.Getenv("PROJECT_ONE_TEST_DSN")
 	if rawDSN == "" {

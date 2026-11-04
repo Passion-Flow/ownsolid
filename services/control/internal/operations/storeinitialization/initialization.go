@@ -60,9 +60,6 @@ func describe(c config.Config, command string) (definition, error) {
 	default:
 		return d, errors.New("STORE_INITIALIZATION_COMMAND_INVALID")
 	}
-	if c.AccountRuntime() && (!(c.DatasetRuntime() && d.kind == "dataset") && !(c.TrainingRuntime() && d.kind == "training") && !(c.LifecycleRuntime() && d.kind == "preparation")) {
-		return d, errors.New("STORE_INITIALIZATION_PROFILE_DISABLED")
-	}
 	return d, nil
 }
 func Supported(command string) bool { _, e := describe(config.Config{}, command); return e == nil }
@@ -96,7 +93,7 @@ func Run(ctx context.Context, db *pgxpool.Pool, lease *pgxpool.Conn, c config.Co
 	if e = requireLease(ctx, db, lease); e != nil {
 		return "", e
 	}
-	if e = database.Check(ctx, db, c.Server.Profile()); e != nil {
+	if e = database.Check(ctx, db); e != nil {
 		return "", e
 	}
 	if d.root == "" || o.Root != d.root {

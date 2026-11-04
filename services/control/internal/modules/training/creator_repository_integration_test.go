@@ -47,7 +47,6 @@ func trainingCreatorSetup(t *testing.T) trainingCreatorStory {
 	t.Cleanup(cancel)
 	account := &identity.Service{Storage: f.Store}
 	if profile := os.Getenv("PROJECT_ONE_TEST_APPLICATION_PROFILE"); profile == "training" {
-		account.Config.Server.ApplicationProfile = &profile
 	}
 	if f.PostgreSQL != nil {
 		account.Storage, account.DB = nil, f.PostgreSQL

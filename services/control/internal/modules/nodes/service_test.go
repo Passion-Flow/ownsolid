@@ -30,9 +30,9 @@ func setup(t *testing.T) (*nodes.Service, identity.Auth) {
 func setupProfile(t *testing.T, minimal bool, component ...bool) (*nodes.Service, identity.Auth) {
 	var s *identity.Service
 	if len(component) > 0 && component[0] {
-		s = fixture.NewM04(t)
+		s = fixture.New(t)
 	} else if minimal {
-		s = fixture.NewM03(t)
+		s = fixture.New(t)
 	} else {
 		s = fixture.New(t)
 	}

@@ -77,7 +77,7 @@ func localeMIMEParts(t *testing.T, header string, raw []byte) map[string][]byte 
 }
 
 func TestM16ActualInstalledStaticLocaleIdentityAndLoadedSMTPFallback(t *testing.T) {
-	s := fixture.NewM16(t)
+	s := fixture.New(t)
 	password := fixture.Bootstrap(t, s)
 	s.Locales = staticRegistry(t)
 	templates, e := mail.LoadTemplatesWithRegistry(s.Locales)

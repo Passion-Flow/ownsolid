@@ -37,7 +37,7 @@ func TestM06ActualNativeRestartModelFileAndLogicalDatabaseRestore(t *testing.T) 
 		t.Fatal("EXPLICIT_NATIVE_BINARY_REQUIRED")
 	}
 	fixture.PreflightOwnedPostgres(t)
-	s := fixture.NewM06(t)
+	s := fixture.New(t)
 	ownedDatabase := fixture.OwnedPostgres(t, s.DB)
 	var e error
 	password := fixture.Bootstrap(t, s)

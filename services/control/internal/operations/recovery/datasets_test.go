@@ -12,7 +12,7 @@ import (
 )
 
 func TestM08RestoreInvalidationRollsBackEveryEarlierOwner(t *testing.T) {
-	s := fixture.NewM08(t)
+	s := fixture.New(t)
 	password := fixture.Bootstrap(t, s)
 	ctx := t.Context()
 	a := fixture.Login(t, s, "admin@example.invalid", password, "admin")

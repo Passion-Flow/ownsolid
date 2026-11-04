@@ -1,6 +1,7 @@
 package postgresbackup
 
 import (
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"context"
 	"errors"
 	"net/url"
@@ -162,7 +163,7 @@ func restoreInputClosure(ctx context.Context, operator, runtime config.Config, o
 
 // Reusable bound-input validation, distinct from one-time fresh record admission.
 func restoreInputBindings(ctx context.Context, operator, runtime config.Config, operatorPath string, m Manifest, r release.PostgreSQLRestoreRequest) error {
-	if r.EffectiveApplicationProfile() == release.MVPPostgreSQLCPUApplicationProfile {
+	if r.EffectiveApplicationProfile() == database.LineageName {
 		if e := registryConfigurationClosure(ctx, runtime, targetContext(m, r)); e != nil {
 			return e
 		}

@@ -121,9 +121,6 @@ func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, nodeID st
 	}
 	// Archive hashing is bounded and precedes the final current-authority read.
 	versions := []string{"1.12.0", wire.NodeExporterVersion}
-	if s.Nodes.Identity.Config.ComponentsOnly() {
-		versions = []string{wire.NodeExporterVersion}
-	}
 	availability := map[string]bool{}
 	for _, v := range versions {
 		f, _, e := s.OpenArtifactVersionContext(ctx, v)

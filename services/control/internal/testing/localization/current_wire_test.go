@@ -56,7 +56,7 @@ func TestM16ActualLocaleAndRestoreCommitTLSOutcomes(t *testing.T) {
 			committed bool
 		}{{"acknowledged", commitfault.Pass, true}, {"commit_not_forwarded", commitfault.DropBeforeCommit, false}, {"server_ack_suppressed", commitfault.DropCommitAcknowledgement, true}} {
 			t.Run(operation+"/"+fault.name, func(t *testing.T) {
-				s := fixture.NewM16(t)
+				s := fixture.New(t)
 				policy := s.Config.Policy()
 				policy.HTTP.ShutdownSeconds = 20
 				s.Config.Runtime = &policy
@@ -152,7 +152,7 @@ func TestM16ActualForwardMigrationCommitTLSOutcomes(t *testing.T) {
 		committed bool
 	}{{"acknowledged", commitfault.Pass, true}, {"commit_not_forwarded", commitfault.DropBeforeCommit, false}, {"server_ack_suppressed", commitfault.DropCommitAcknowledgement, true}} {
 		t.Run(fault.name, func(t *testing.T) {
-			s := fixture.NewM15(t)
+			s := fixture.New(t)
 			fixture.Bootstrap(t, s)
 			p, proxy := localeWire(t, s)
 			if fault.mode != commitfault.Pass {
@@ -160,7 +160,7 @@ func TestM16ActualForwardMigrationCommitTLSOutcomes(t *testing.T) {
 					t.Fatal(e)
 				}
 			}
-			e := database.Migrate(t.Context(), p, "localization")
+			e := database.Migrate(t.Context(), p)
 			if fault.mode == commitfault.Pass {
 				if e != nil {
 					t.Fatal(e)
@@ -183,11 +183,7 @@ func TestM16ActualForwardMigrationCommitTLSOutcomes(t *testing.T) {
 				t.Fatal("automatic schema replay")
 			}
 			for read := 0; read < 2; read++ {
-				profile := "portal"
-				if fault.committed {
-					profile = "localization"
-				}
-				if e = database.Check(t.Context(), s.DB, profile); e != nil {
+				if e = database.Check(t.Context(), s.DB); e != nil {
 					t.Fatal("direct ledger read", e)
 				}
 			}

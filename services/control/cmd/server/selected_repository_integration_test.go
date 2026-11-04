@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"go.yaml.in/yaml/v3"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
@@ -91,7 +92,20 @@ func serverCompositionSetup(t *testing.T, unbootstrapped bool) *serverCompositio
 		if len(cc.Fallbacks) != 0 {
 			t.Fatal("explicit isolated PostgreSQL profile without transport fallback required")
 		}
-		u := url.URL{Scheme: "postgres", User: url.UserPassword(cc.User, cc.Password), Host: net.JoinHostPort(cc.Host, strconv.Itoa(int(cc.Port))), Path: "/" + cc.Database}
+		// Serving refuses a superuser, so the story serves as a real runtime principal.
+		role := "story_runtime_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+		schema := cc.RuntimeParams["search_path"]
+		quoted, scope := pgx.Identifier{role}.Sanitize(), pgx.Identifier{schema}.Sanitize()
+		for _, statement := range []string{"CREATE ROLE " + quoted + " LOGIN NOINHERIT CONNECTION LIMIT 32", "GRANT USAGE ON SCHEMA " + scope + " TO " + quoted, "GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA " + scope + " TO " + quoted, "REVOKE INSERT,UPDATE,DELETE ON " + scope + ".schema_migrations FROM " + quoted} {
+			if _, e := f.PostgreSQL.Exec(ctx, statement); e != nil {
+				t.Fatal("story runtime principal", e)
+			}
+		}
+		t.Cleanup(func() {
+			f.PostgreSQL.Exec(context.Background(), "DROP OWNED BY "+quoted)
+			f.PostgreSQL.Exec(context.Background(), "DROP ROLE "+quoted)
+		})
+		u := url.URL{Scheme: "postgres", User: url.UserPassword(role, cc.Password), Host: net.JoinHostPort(cc.Host, strconv.Itoa(int(cc.Port))), Path: "/" + cc.Database}
 		q := url.Values{"sslmode": {"disable"}}
 		if cc.TLSConfig != nil {
 			raw, e := config.Secret(os.Getenv("PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE"))

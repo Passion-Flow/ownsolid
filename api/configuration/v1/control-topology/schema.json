@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/configuration/v1/control-topology",
+  "title": "Control topology",
+  "type": "object",
+  "properties": {
+    "topology": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "string",
+          "enum": [
+            "single-node",
+            "ha",
+            "cell",
+            "multi-cell",
+            "multi-site"
+          ],
+          "default": "single-node"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

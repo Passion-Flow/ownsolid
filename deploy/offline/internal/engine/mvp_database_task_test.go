@@ -29,7 +29,7 @@ func TestMVPUpgradeTaskFixedCommandAndLegacyCompatibility(t *testing.T) {
 			t.Fatal("fixed upgrade command/input custody changed")
 		}
 	}
-	if DatabaseCumulativeMVP != "upgrade-mvp-postgresql-cpu-v1" || DatabaseCumulativeReleases != "upgrade-releases" {
+	if DatabaseCumulativeMVP != "upgrade-schema" || DatabaseCumulativeReleases != "upgrade-releases" {
 		t.Fatal("original CLI command changed")
 	}
 }
@@ -60,7 +60,7 @@ func TestMVPUpgradeTaskUnixRequiredInputsAndOneStart(t *testing.T) {
 		t.Run(fault, func(t *testing.T) {
 			task := mvpUpgradeTaskFixture()
 			files := []ConfigurationFile{{Name: "control.yaml", Contents: []byte("synthetic operator")}, {Name: "runtime.yaml", Contents: []byte("synthetic runtime")}}
-			c, task, _, effects, files := mvpFixedTaskLifecycleFixture(t, task, fault, files, []string{"upgrade-mvp-postgresql-cpu-v1", "--config", DatabaseTaskDestination + "/private/control.yaml", "--runtime-config", DatabaseTaskDestination + "/private/runtime.yaml"}, task.NetworkID)
+			c, task, _, effects, files := mvpFixedTaskLifecycleFixture(t, task, fault, files, []string{"upgrade-schema", "--config", DatabaseTaskDestination + "/private/control.yaml", "--runtime-config", DatabaseTaskDestination + "/private/runtime.yaml"}, task.NetworkID)
 			ctx := context.Background()
 			created, e := c.CreateDatabaseTask(ctx, task)
 			if e != nil {

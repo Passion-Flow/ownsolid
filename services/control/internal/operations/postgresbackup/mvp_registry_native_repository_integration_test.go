@@ -128,7 +128,7 @@ func TestActualMVPInitializedStoresSupplementNativeFreshRestore(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	maintenance, e := postgresmaintenance.CheckWithin(f.ctx, transaction.PostgreSQLTransaction(tx), f.request.EffectiveApplicationProfile())
+	maintenance, e := postgresmaintenance.CheckWithin(f.ctx, transaction.PostgreSQLTransaction(tx))
 	closeError := tx.Rollback(f.ctx)
 	if e != nil || closeError != nil {
 		t.Fatal("original full maintenance gate before backup", e, closeError)

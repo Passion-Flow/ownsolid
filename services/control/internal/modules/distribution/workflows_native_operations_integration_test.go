@@ -79,9 +79,6 @@ func verifyWorkflowNativeOperations(t *testing.T, ctx context.Context, c scenari
 	}
 	accounts := *c.s.Identity
 	accounts.Config.Models.ArtifactRoot = workflowNativeModelStore(t, ctx, c)
-	if !accounts.Config.WorkflowsRuntime() {
-		t.Fatal("current cumulative workflows profile required")
-	}
 	accounts.Config.Datasets.ArtifactRoot = t.TempDir()
 	accounts.Config.Datasets.PythonExecutable = os.Getenv("PROJECT_ONE_WORKFLOW_DATASET_PYTHON")
 	accounts.Config.Datasets.ProcessorFile = filepath.Join(os.Getenv("PROJECT_ONE_REPOSITORY_ROOT"), "runtimes/data-processing/process.py")
@@ -214,11 +211,11 @@ func verifyWorkflowNativeOperations(t *testing.T, ctx context.Context, c scenari
 	// freshness checks and all persisted source/lease assertions unchanged.
 	quiesceMachine()
 	owned.RestartNative(t, ctx)
-	if e = database.Check(ctx, accounts.DB, accounts.Config.Server.Profile()); e != nil {
+	if e = database.Check(ctx, accounts.DB); e != nil {
 		t.Fatal("actual PostgreSQL restart lost current workflow catalog", e)
 	}
 	restored := owned.RestoreFresh(t, ctx, accounts.DB, archive)
-	if e = database.Check(ctx, restored, accounts.Config.Server.Profile()); e != nil {
+	if e = database.Check(ctx, restored); e != nil {
 		t.Fatal("actual restored workflow schema", e)
 	}
 	restoredAccounts := accounts

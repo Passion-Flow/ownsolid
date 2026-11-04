@@ -17,7 +17,7 @@ import (
 // database, and each mutation rolls back. The retained native fixture's public
 // extension and all original data are never altered.
 func TestM12CatalogWrongExtensionTypeOperatorAndOwnerRefuseBeforeMigration(t *testing.T) {
-	s := fixture.NewM12(t)
+	s := fixture.NewAtVersion(t, 18)
 	ctx := t.Context()
 	name := "m12_vector_" + strings.ReplaceAll(uuid.NewString(), "-", "") + "_test"
 	c := s.DB.Config().Copy()
@@ -47,7 +47,7 @@ func TestM12CatalogWrongExtensionTypeOperatorAndOwnerRefuseBeforeMigration(t *te
 	if _, e = p.Exec(ctx, "CREATE SCHEMA m12_vector_scope; CREATE SCHEMA vector_wrong_scope"); e != nil {
 		t.Fatal(e)
 	}
-	if e = database.Migrate(ctx, p, "knowledge"); e == nil || e.Error() != "KNOWLEDGE_APPROVED_VECTOR_EXTENSION_REQUIRED" {
+	if e = database.Migrate(ctx, p); e == nil || e.Error() != "KNOWLEDGE_APPROVED_VECTOR_EXTENSION_REQUIRED" {
 		t.Fatal("missing extension admitted", e)
 	}
 	var exists bool
@@ -90,10 +90,10 @@ func TestM12CatalogWrongExtensionTypeOperatorAndOwnerRefuseBeforeMigration(t *te
 			}
 		})
 	}
-	if e = database.Migrate(ctx, p, "knowledge"); e != nil {
+	if e = database.Migrate(ctx, p); e != nil {
 		t.Fatal("pristine catalog after fault rollback", e)
 	}
-	if e = database.Check(ctx, p, "knowledge"); e != nil {
+	if e = database.Check(ctx, p); e != nil {
 		t.Fatal(e)
 	}
 	t.Log("Missing/wrong-version/schema/PUBLIC-create/type-owner/type-membership/C-function/operator-membership refuse; every fault rolled back in one exact disposable database; fresh74/18 migration then check passed")

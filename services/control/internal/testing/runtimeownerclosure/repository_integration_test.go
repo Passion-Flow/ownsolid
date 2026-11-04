@@ -24,7 +24,6 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
-	pgassets "github.com/Passion-Flow/ownsolid/services/control/migrations"
 	closure "github.com/Passion-Flow/ownsolid/services/control/migrations/mysql/candidates/runtime-owner-closure"
 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 )
@@ -63,7 +62,9 @@ func equalNames(t *testing.T, actual []string, expected map[string]bool) {
 }
 func schemaOwners(t *testing.T, f repositoryfixture.Fixture) {
 	t.Helper()
-	names, e := fs.Glob(pgassets.Files, "postgresql/*.up.sql")
+	// MySQL was translated from the former platform chain; compare against those bytes.
+	frozen := os.DirFS("../../platform/database/testdata/platform-lineage")
+	names, e := fs.Glob(frozen, "*.up.sql")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -72,7 +73,7 @@ func schemaOwners(t *testing.T, f repositoryfixture.Fixture) {
 	expected := map[string]bool{}
 	create := regexp.MustCompile(`CREATE TABLE ([a-z][a-z0-9_]*)\s*\(`)
 	for _, name := range names {
-		raw, e := fs.ReadFile(pgassets.Files, name)
+		raw, e := fs.ReadFile(frozen, name)
 		if e != nil {
 			t.Fatal(e)
 		}

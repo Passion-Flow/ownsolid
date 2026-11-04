@@ -17,7 +17,7 @@ func TestDistributionActualRuntimeDMLCredentialServesAuthorityWithoutDDL(t *test
 	role := "m07_runtime_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 	password := uuid.NewString()
 	schema := operator.Config().ConnConfig.RuntimeParams["search_path"]
-	if _, e := operator.Exec(ctx, "CREATE ROLE "+role+" LOGIN PASSWORD '"+password+"'"); e != nil {
+	if _, e := operator.Exec(ctx, "CREATE ROLE "+role+" LOGIN NOINHERIT CONNECTION LIMIT 32 PASSWORD '"+password+"'"); e != nil {
 		t.Fatal("isolated runtime role creation failed")
 	}
 	defer func() { operator.Exec(ctx, "DROP OWNED BY "+role); operator.Exec(ctx, "DROP ROLE "+role) }()
@@ -32,7 +32,7 @@ func TestDistributionActualRuntimeDMLCredentialServesAuthorityWithoutDDL(t *test
 		t.Fatal(e)
 	}
 	defer runtime.Close()
-	if e = database.Check(ctx, runtime, c.s.Identity.Config.Server.Profile()); e != nil {
+	if e = database.Check(ctx, runtime); e != nil {
 		t.Fatal("runtime schema read", e)
 	}
 	c.s.DB = runtime

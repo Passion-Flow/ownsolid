@@ -135,7 +135,7 @@ func loadRestoredHTTPPrepared(ctx context.Context, in restoredHTTPInputs, pool *
 		return zero, "", nil, nil, false, errors.New("M18_HTTP_PREPARED_CONFIGURATION_CHANGED")
 	}
 	c, e := config.LoadProtected(path)
-	if e != nil || c.Licensing == nil || c.Server.Profile() != "releases" || !c.Knowledge.Enabled || !c.Workflows.Enabled {
+	if e != nil || c.Licensing == nil || !c.Knowledge.Enabled || !c.Workflows.Enabled {
 		return zero, "", nil, nil, false, errors.Join(e, errors.New("M18_HTTP_FULL_PREPARED_PROFILE_REQUIRED"))
 	}
 	expected := preparedHTTPFiles(c, path, root)

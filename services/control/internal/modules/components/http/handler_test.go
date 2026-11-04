@@ -21,7 +21,7 @@ import (
 )
 
 func TestM04HTTPActionsObservationsAndFencedActualArtifact(t *testing.T) {
-	s := fixture.NewM04(t)
+	s := fixture.New(t)
 	password := fixture.Bootstrap(t, s)
 	s.Config.Components.NodeExporterArchiveFile = filepath.Join(os.Getenv("PROJECT_ONE_STATE_ROOT"), "dependencies/components/node-exporter/1.12.1/linux-amd64/node_exporter-1.12.1.linux-amd64.tar.gz")
 	handler := transport.New(s)

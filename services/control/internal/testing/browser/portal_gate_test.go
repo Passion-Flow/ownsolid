@@ -72,5 +72,5 @@ func portalBrowserGate(t *testing.T, s *identity.Service, output string) func(co
 	}
 	s.DB = nil
 	s.Storage = &portalScheduleStore{Store: store, output: output}
-	return func(ctx context.Context) error { return database.Check(ctx, pool, s.Config.Server.Profile()) }
+	return func(ctx context.Context) error { return database.Check(ctx, pool) }
 }

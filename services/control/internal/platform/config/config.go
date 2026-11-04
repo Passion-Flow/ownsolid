@@ -21,6 +21,7 @@ const MinimumDatabaseConnections int32 = 1
 const MaximumDatabaseConnections int32 = 32
 
 type Config struct {
+	Topology                  TopologyConfiguration         `yaml:"topology,omitempty" json:"topology"`
 	ReleaseViewConfigFile     string                        `yaml:"release_view_config_file,omitempty" json:"-"`
 	MachineServer             *MachineServerConfiguration   `yaml:"machine_server,omitempty" json:"machine_server,omitempty"`
 	PrivateClusterConfigFile  string                        `yaml:"private_cluster_config_file,omitempty" json:"-"`
@@ -126,6 +127,9 @@ func Decode(b []byte) (Config, error) { return decodeWithEnvironment(b, "") }
 func decodeWithEnvironment(b []byte, environmentFile string) (Config, error) {
 	c := defaultConfiguration()
 	var e error
+	if e = validateTopologyYAML(b); e != nil {
+		return c, e
+	}
 	if e = validateServerTransportYAML(b); e != nil {
 		return c, e
 	}
@@ -377,4 +381,11 @@ func tlsConfigForOrigins(certificateFile, privateKeyFile string, origins []strin
 		}
 	}
 	return &tls.Config{MinVersion: tls.VersionTLS12, Certificates: []tls.Certificate{cert}}, nil
+}
+
+// DecodeWithEnvironment validates an immutable configuration snapshot and the
+// same explicit protected policy file used by LoadProtectedWithEnvironment.
+// The caller owns reading/protecting the snapshot; ambient values have no authority.
+func DecodeWithEnvironment(raw []byte, environmentFile string) (Config, error) {
+	return decodeWithEnvironment(raw, environmentFile)
 }

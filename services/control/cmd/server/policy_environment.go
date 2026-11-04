@@ -17,7 +17,7 @@ func validatePolicyEnvironmentFlags(command string, flags *flag.FlagSet, path st
 	trainingOperator := command == "export-training-files" || command == "import-training-files" || command == "verify-training-files" || command == "initialize-training-store" || command == "check-training-store-initialization" || command == "record-training-store-initialization"
 	preparationOperator := command == "export-preparation-files" || command == "import-preparation-files" || command == "verify-preparation-files" || command == "initialize-preparation-store" || command == "check-preparation-store-initialization" || command == "record-preparation-store-initialization"
 	datasetOperator := command == "export-dataset-files" || command == "import-dataset-files" || command == "verify-dataset-store" || command == "initialize-dataset-store"
-	if supplied && ((!datasetOperator && !trainingOperator && !preparationOperator && !mvpDatabaseCommand(command) && command != "serve") || path == "" || !filepath.IsAbs(path) || filepath.Clean(path) != path) {
+	if supplied && ((!datasetOperator && !trainingOperator && !preparationOperator && !schemaUpgradeCommand(command) && command != "serve") || path == "" || !filepath.IsAbs(path) || filepath.Clean(path) != path) {
 		return errors.New("POLICY_ENVIRONMENT_FLAG_INVALID")
 	}
 	return nil

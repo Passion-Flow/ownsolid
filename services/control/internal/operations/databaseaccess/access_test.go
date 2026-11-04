@@ -120,44 +120,13 @@ type actualFixture struct {
 	role    string
 }
 
-func newActualFixture(t *testing.T, profiles ...string) actualFixture {
+func newActualFixture(t *testing.T) actualFixture {
 	t.Helper()
-	var s *identity.Service
-	if len(profiles) == 1 && profiles[0] == "localization" {
-		s = identityfixture.NewM16(t)
-	} else if len(profiles) == 1 && profiles[0] == "portal" {
-		s = identityfixture.NewM15(t)
-	} else if len(profiles) == 1 && profiles[0] == "plugins" {
-		s = identityfixture.NewM14(t)
-	} else if len(profiles) == 1 && profiles[0] == "workflows" {
-		s = identityfixture.NewM13(t)
-	} else if len(profiles) == 1 && profiles[0] == "knowledge" {
-		s = identityfixture.NewM12(t)
-	} else if len(profiles) == 1 && profiles[0] == "sso" {
-		s = identityfixture.NewM11(t)
-	} else if len(profiles) == 1 && profiles[0] == "lifecycle" {
-		s = identityfixture.NewM10(t)
-	} else if len(profiles) == 1 && profiles[0] == "training" {
-		s = identityfixture.NewM09(t)
-	} else if len(profiles) == 1 && profiles[0] == "datasets" {
-		s = identityfixture.NewM08(t)
-	} else if len(profiles) == 1 && profiles[0] == "gateway" {
-		s = identityfixture.NewM07(t)
-	} else if len(profiles) == 1 && profiles[0] == "models" {
-		s = identityfixture.NewM06(t)
-	} else if len(profiles) == 1 && profiles[0] == "maintenance" {
-		s = identityfixture.NewM05(t)
-	} else if len(profiles) == 1 && profiles[0] == "components" {
-		s = identityfixture.NewM04(t)
-	} else if len(profiles) == 1 && profiles[0] == "nodes" {
-		s = identityfixture.NewM03(t)
-	} else if len(profiles) == 1 && profiles[0] == "account" {
-		s = identityfixture.NewAccount(t)
-	} else if len(profiles) == 1 && profiles[0] == "workspaces" {
-		s = identityfixture.NewM02(t)
-	} else {
-		s = identityfixture.New(t)
-	}
+	return actualFixtureFor(t, identityfixture.New(t))
+}
+
+func actualFixtureFor(t *testing.T, s *identity.Service) actualFixture {
+	t.Helper()
 	ctx := context.Background()
 	role := "m17_runtime_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 	password, e := NewCredential()
@@ -195,9 +164,6 @@ func TestActualRuntimeAccessPreparationAccountWorkspaceDMLAndNoDDL(t *testing.T)
 	ctx := context.Background()
 	if status, e := Check(ctx, f.service.DB, f.lease, f.input); e != nil || status != NotCommitted {
 		t.Fatal(status, e)
-	}
-	if _, e := f.service.DB.Exec(ctx, "CREATE TABLE unrelated_fixture_table(id integer)"); e != nil {
-		t.Fatal(e)
 	}
 	status, e := Prepare(ctx, f.service.DB, f.lease, f.input)
 	if e != nil || status != Verified {
@@ -348,63 +314,8 @@ func TestActualRuntimeAccessDetectsCredentialAndPrivilegeDriftWithoutRepair(t *t
 	}
 }
 
-func TestM02RuntimeUpgradePreservesRoleAndResumesGrants(t *testing.T) {
-	for _, interrupted := range []bool{false, true} {
-		t.Run(map[bool]string{false: "complete", true: "resume-after-schema"}[interrupted], func(t *testing.T) {
-			f := newActualFixture(t, "account")
-			ctx := t.Context()
-			if status, e := Prepare(ctx, f.service.DB, f.lease, f.input); e != nil || status != Verified {
-				t.Fatal(status, e)
-			}
-			password := identityfixture.Bootstrap(t, f.service)
-			var oid uint32
-			var verifier string
-			if e := f.lease.QueryRow(ctx, "SELECT oid,rolpassword FROM pg_authid WHERE rolname=$1", f.role).Scan(&oid, &verifier); e != nil {
-				t.Fatal(e)
-			}
-			profile := "workspaces"
-			f.input.configuration.Server.ApplicationProfile = &profile
-			if interrupted {
-				if e := database.Migrate(ctx, f.lease, "workspaces"); e != nil {
-					t.Fatal(e)
-				}
-				if _, e := Check(ctx, f.service.DB, f.lease, f.input); e == nil {
-					t.Fatal("missing grants accepted")
-				}
-			}
-			for i := 0; i < 2; i++ {
-				if status, e := UpgradeWorkspaces(ctx, f.service.DB, f.lease, f.input); e != nil || status != WorkspacesUpgradeComplete {
-					t.Fatal(status, e)
-				}
-			}
-			var after uint32
-			var hash string
-			if e := f.lease.QueryRow(ctx, "SELECT oid,rolpassword FROM pg_authid WHERE rolname=$1", f.role).Scan(&after, &hash); e != nil || after != oid || hash != verifier {
-				t.Fatal("runtime principal changed", e)
-			}
-			runtime, e := pgxpool.NewWithConfig(ctx, f.input.connection.Copy())
-			if e != nil {
-				t.Fatal(e)
-			}
-			defer runtime.Close()
-			clone := *f.service
-			clone.DB = runtime
-			clone.Config.Server.ApplicationProfile = &profile
-			a := identityfixture.Login(t, &clone, "admin@example.invalid", password, "portal")
-			w := workspaces.Service{DB: runtime, Identity: &clone}
-			if _, e = w.CreateNote(ctx, a, a.Me.Workspace.ID, "Upgraded runtime note", "synthetic", uuid.NewString()); e != nil {
-				t.Fatal(e)
-			}
-			for _, sql := range []string{"CREATE TABLE forbidden_m02(id integer)", "DELETE FROM schema_migrations"} {
-				if _, e = runtime.Exec(ctx, sql); e == nil {
-					t.Fatal("runtime DDL/ledger mutation allowed")
-				}
-			}
-		})
-	}
-}
-func TestM02FreshRuntimeGrants(t *testing.T) {
-	f := newActualFixture(t, "workspaces")
+func TestFreshRuntimeGrants(t *testing.T) {
+	f := newActualFixture(t)
 	if status, e := Prepare(t.Context(), f.service.DB, f.lease, f.input); e != nil || status != Verified {
 		t.Fatal(status, e)
 	}

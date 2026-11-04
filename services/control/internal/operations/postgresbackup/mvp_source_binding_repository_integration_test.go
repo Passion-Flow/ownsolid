@@ -53,7 +53,7 @@ func TestActualMVPSourceBindingOriginalPrincipalAndFullContents(t *testing.T) {
 	if pool.QueryRow(ctx, `SELECT pg_catalog.shobj_description((SELECT oid FROM pg_catalog.pg_database WHERE datname=pg_catalog.current_database()),'pg_database')`).Scan(&marker) != nil || marker != "projectone:mvp-native-binding:"+scope || pool.QueryRow(ctx, `SELECT count(*) FROM pg_catalog.pg_tables WHERE schemaname='public'`).Scan(&tables) != nil || tables != 0 {
 		t.Fatal("fresh marked fixture required, never reset/replay")
 	}
-	if e = database.Migrate(ctx, pool, database.MVPPostgreSQLCPUV1Profile); e != nil {
+	if e = database.Migrate(ctx, pool); e != nil {
 		t.Fatal(e)
 	}
 	lease, e := pool.Acquire(ctx)
@@ -75,9 +75,7 @@ func TestActualMVPSourceBindingOriginalPrincipalAndFullContents(t *testing.T) {
 		lease.Release()
 	}()
 	f := newRestoreInputFixture(t)
-	profile := database.MVPPostgreSQLCPUV1Profile
-	f.operator.Server.ApplicationProfile = &profile
-	f.runtime.Server.ApplicationProfile = &profile
+	profile := database.LineageName
 	endpoint, e := url.Parse(strings.TrimSpace(string(raw)))
 	if e != nil {
 		t.Fatal(e)

@@ -1,7 +1,7 @@
 # Control configuration owner: optional basename of the protected env-file.
 # String filename, default empty retains YAML/defaults; no secret literal or ambient env.
 # Existing chart projection maps this into privateMountPath/private; restart required.
-# Merge reviewed complete control YAML with application_profile: maintenance and the
+# Merge reviewed complete control YAML and the
 # image archive path from maintenance.example.yaml. Both origins/PKI remain explicit.
 configuration:
   policyEnvironmentFile: maintenance-profile.env

@@ -18,7 +18,7 @@ import (
 )
 
 func restoreRequestFixture() release.PostgreSQLRestoreRequest {
-	return release.PostgreSQLRestoreRequest{FormatVersion: 1, RestoreID: strings.Repeat("c", 32), TargetScopeID: strings.Repeat("d", 32), SourceManifestSHA256: strings.Repeat("e", 64), BackupRoot: "/private/backups/source", RestoreRoot: "/private/restores/target", TargetDatabase: "synthetic_target", TargetOperator: "synthetic_operator", RuntimeConfigurationFile: "/private/config/runtime.yaml", ConfigurationRoot: "/private/config", Reason: "Synthetic new target restoration", Policy: policyFixture()}
+	return release.PostgreSQLRestoreRequest{FormatVersion: 1, ApplicationProfile: release.MVPPostgreSQLCPUApplicationProfile, RestoreID: strings.Repeat("c", 32), TargetScopeID: strings.Repeat("d", 32), SourceManifestSHA256: strings.Repeat("e", 64), BackupRoot: "/private/backups/source", RestoreRoot: "/private/restores/target", TargetDatabase: "synthetic_target", TargetOperator: "synthetic_operator", RuntimeConfigurationFile: "/private/config/runtime.yaml", ConfigurationRoot: "/private/config", Reason: "Synthetic new target restoration", Policy: policyFixture()}
 }
 
 func TestPostgresRestoreAuditUsesCanonicalSQLUUIDs(t *testing.T) {
@@ -300,7 +300,7 @@ func newRestoreInputFixture(t *testing.T) restoreInputFixture {
 	source := requestFixture()
 	source.ConfigurationRoot = r.ConfigurationRoot
 	source.BackupRoot = r.BackupRoot
-	m := Manifest{Request: source}
+	m := Manifest{Request: source, MVPSource: mvpBindingManifestFixture().MVPSource}
 	if _, e = copyTree(context.Background(), r.ConfigurationRoot, filepath.Join(r.BackupRoot, "configuration"), r.Policy.MaximumConfigurationBytes, r.Policy.MaximumStoreFiles, r.Policy.MaximumManifestBytes, r.Policy.MinimumFreeBytes); e != nil {
 		t.Fatal(e)
 	}

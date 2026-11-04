@@ -69,7 +69,7 @@ func verifySSONativeProcessRestarts(t *testing.T, ctx context.Context, accounts 
 		"smtp":     map[string]any{"host": "127.0.0.1", "port": 1, "from_address": "platform@example.invalid", "tls_mode": "starttls_required", "connect_timeout_seconds": 1, "operation_timeout_seconds": 2},
 		"sso":      map[string]any{"enabled": true, "keyring_file": keyring, "providers": []map[string]any{{"origin": "https://provider.recovery.example.invalid", "issuer": "https://provider.recovery.example.invalid", "dial_addresses": []string{"127.0.0.1"}, "ca_file": ""}}},
 	}
-	if accounts.Config.SSOOnly() {
+	{
 		// Empty fixture stores are real initialized namespaces. Accepted artifact
 		// byte recovery remains the separate cumulative training/four-store gate.
 		c := accounts.Config

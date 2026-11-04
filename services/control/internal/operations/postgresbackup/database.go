@@ -65,14 +65,14 @@ func withDatabaseSnapshot(ctx context.Context, lease *pgxpool.Conn, r release.Po
 			return DatabaseReadback{}, e
 		}
 	}
-	if _, e = postgresmaintenance.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx), r.EffectiveApplicationProfile()); e != nil {
+	if _, e = postgresmaintenance.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx)); e != nil {
 		return DatabaseReadback{}, e
 	}
 	return out, nil
 }
 
 func readDatabaseWithin(ctx context.Context, tx pgx.Tx, r release.PostgreSQLBackupRequest) (out DatabaseReadback, result error) {
-	observed, e := postgresmaintenance.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx), r.EffectiveApplicationProfile())
+	observed, e := postgresmaintenance.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx))
 	if e != nil {
 		return out, e
 	}
@@ -88,7 +88,7 @@ func readDatabaseWithin(ctx context.Context, tx pgx.Tx, r release.PostgreSQLBack
 		return out, e
 	}
 	out = data
-	if _, e = postgresmaintenance.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx), r.EffectiveApplicationProfile()); e != nil {
+	if _, e = postgresmaintenance.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx)); e != nil {
 		return DatabaseReadback{}, e
 	}
 	out.TenantID = observed.TenantID
@@ -104,7 +104,7 @@ func readDatabaseWithin(ctx context.Context, tx pgx.Tx, r release.PostgreSQLBack
 // one explicitly bound restore audit is checked separately, avoiding a circular
 // digest that would contain its own post-image hash.
 func readDatabaseContents(ctx context.Context, tx pgx.Tx, p release.PostgreSQLBackupPolicy, excludedRestoreAudit string) (DatabaseReadback, error) {
-	return readProfileDatabaseContents(ctx, tx, p, excludedRestoreAudit, postgresmaintenance.ApplicationProfile)
+	return readProfileDatabaseContents(ctx, tx, p, excludedRestoreAudit, database.LineageName)
 }
 
 func readProfileDatabaseContents(ctx context.Context, tx pgx.Tx, p release.PostgreSQLBackupPolicy, excludedRestoreAudit, profile string) (out DatabaseReadback, result error) {
@@ -121,7 +121,7 @@ func readProfileDatabaseContents(ctx context.Context, tx pgx.Tx, p release.Postg
 	if e != nil {
 		return out, e
 	}
-	if e := database.CheckAccountProfileWithin(ctx, transaction.PostgreSQLTransaction(tx), profile); e != nil {
+	if e := database.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx)); e != nil {
 		return out, errors.New("POSTGRES_RESTORE_CONTENT_SCHEMA_INVALID")
 	}
 	tables, e := tx.Query(ctx, `SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public' ORDER BY tablename COLLATE "C"`)

@@ -246,20 +246,26 @@ func TestActualPreparedBootstrapPacketRollbackAndLeaseRuntimeRefusal(t *testing.
 	if _, e := f.service.DB.Exec(ctx, "DELETE FROM tenants WHERE id=$1", tenant); e != nil {
 		t.Fatal(e)
 	}
-	if _, e := f.service.DB.Exec(ctx, `CREATE FUNCTION reject_prepared_bootstrap() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'SYNTHETIC_PACKET_ROLLBACK'; END $$; CREATE TRIGGER reject_prepared_bootstrap BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_prepared_bootstrap()`); e != nil {
+	// A held table lock fails the audit write without changing the catalog,
+	// which the schema check would refuse.
+	blocker, e := f.service.DB.Begin(ctx)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = blocker.Exec(ctx, "LOCK TABLE audit_events IN SHARE ROW EXCLUSIVE MODE"); e != nil {
 		t.Fatal(e)
 	}
 	if _, e := RunPacket(ctx, f.service, f.lease, ApplyPacketCommand, path, f.runtime); e == nil || e.Error() != "BOOTSTRAP_MUTATION_UNCERTAIN_RECONCILE_REQUIRED" {
 		t.Fatal("actual transaction failure", e)
+	}
+	if e = blocker.Rollback(ctx); e != nil {
+		t.Fatal(e)
 	}
 	if count(t, f.service, "SELECT count(*) FROM users") != 0 || count(t, f.service, "SELECT count(*) FROM tenants") != 0 || count(t, f.service, "SELECT count(*) FROM workspaces") != 0 || count(t, f.service, "SELECT count(*) FROM audit_events") != 0 {
 		t.Fatal("failed packet left partial state")
 	}
 	if status, e := RunPacket(ctx, f.service, f.lease, CheckPacketCommand, path, f.runtime); e != nil || status != NotCommitted {
 		t.Fatal("rollback not observable", e)
-	}
-	if _, e := f.service.DB.Exec(ctx, `DROP TRIGGER reject_prepared_bootstrap ON audit_events;DROP FUNCTION reject_prepared_bootstrap()`); e != nil {
-		t.Fatal(e)
 	}
 	if status, e := RunPacket(ctx, f.service, f.lease, ApplyPacketCommand, path, f.runtime); e != nil || status != Verified {
 		t.Fatal("explicit proven rollback continuation", e)

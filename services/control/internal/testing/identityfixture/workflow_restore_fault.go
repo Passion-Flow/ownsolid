@@ -26,7 +26,7 @@ func ArmLateWorkflowRestoreFailure(t *testing.T, pool *pgxpool.Pool) func() {
 // so its strict catalog still passes and all real authority writes roll back.
 func ArmLateLocalizationRestoreFailure(t *testing.T, pool *pgxpool.Pool) func() {
 	clear := armLateWorkflowRestoreFailure(t, pool, "sessions")
-	if e := database.Check(t.Context(), pool, "localization"); e != nil {
+	if e := database.Check(t.Context(), pool); e != nil {
 		t.Fatal("fault must retain exact prechecked catalog", e)
 	}
 	return clear

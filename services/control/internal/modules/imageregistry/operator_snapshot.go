@@ -77,7 +77,7 @@ type operatorManifest struct {
 	Files                 []operatorFile          `json:"files"`
 }
 
-const operatorApplicationProfile = database.MVPPostgreSQLCPUV1Profile
+const operatorApplicationProfile = database.LineageName
 const operatorManifestName = "registry-snapshot.json"
 const operatorManifestFormat = "projectone.imageregistry.installation-snapshot.v1"
 
@@ -157,7 +157,7 @@ func (o *OperatorSnapshot) checkWithin(ctx context.Context, q transaction.Execut
 	if q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT (SELECT system_identifier::text FROM pg_catalog.pg_control_system()),d.oid,pg_catalog.pg_backend_pid(),d.datname,CURRENT_USER,(SELECT rolsuper FROM pg_catalog.pg_roles WHERE rolname=CURRENT_USER),i.tenant_id::text,EXISTS(SELECT 1 FROM pg_catalog.pg_locks WHERE locktype='advisory' AND pid=pg_catalog.pg_backend_pid() AND classid=0::oid AND objid=$1::bigint::oid AND objsubid=1 AND mode='ExclusiveLock' AND granted AND database=d.oid),pg_catalog.current_setting('transaction_read_only')='on' AND pg_catalog.current_schemas(true)=ARRAY['pg_catalog','public']::name[] FROM pg_catalog.pg_database d CROSS JOIN public.installation_state i JOIN public.tenants t ON t.id=i.tenant_id AND t.status='active' WHERE d.datname=pg_catalog.current_database() AND i.id=1 AND i.bootstrap_complete`, database.InstallationLockID)).Scan(&system, &oid, &pid, &db, &principal, &super, &tenant, &held, &readonly) != nil || system != b.SystemIdentifier || oid != b.DatabaseOID || pid != b.BackendPID || db != b.Database || principal != b.Operator || tenant != b.TenantID || !super || !held || !readonly {
 		return failure("REGISTRY_OPERATOR_ROLE_IDENTITY_REQUIRED")
 	}
-	if e := database.CheckAccountProfileWithin(ctx, q, o.binding.ApplicationProfile); e != nil {
+	if e := database.CheckWithin(ctx, q); e != nil {
 		return failure("REGISTRY_OPERATOR_PROFILE_REQUIRED")
 	}
 	r, id, e := operatorRoot(o.config.StoreRoot)

@@ -87,17 +87,16 @@ func newNativeTrainingOperator(t *testing.T, f scenario) nativeTrainingHarness {
 	}
 	trainingConfig := map[string]any{"artifact_root": f.s.Identity.Config.Training.ArtifactRoot, "image_reference": f.s.Identity.Config.Training.ImageReference, "image_id": f.s.Identity.Config.Training.ImageID, "worker_source_sha256": f.s.Identity.Config.Training.WorkerSourceSHA256}
 	values := map[string]any{"server": map[string]any{"listen_address": address, "portal_origin": "https://127.0.0.1:" + port, "admin_origin": "https://localhost:" + port, "tls_certificate_file": cert, "tls_private_key_file": key, "portal_assets": filepath.Join(repo, "apps/web/apps/portal/dist"), "admin_assets": filepath.Join(repo, "apps/web/apps/admin/dist")}, "database": map[string]any{"dsn_file": dsnFile, "max_open_connections": 8, "max_idle_connections": 1, "statement_timeout_seconds": 5}, "security": map[string]any{"auth_hmac_key_file": hmac, "mail_keyring_file": keyring, "password_blocklist_file": blocklist}, "smtp": map[string]any{"host": "127.0.0.1", "port": 1, "from_address": "platform@example.invalid", "tls_mode": "starttls_required", "connect_timeout_seconds": 1, "operation_timeout_seconds": 2}, "training": trainingConfig}
-	if f.s.Identity.Config.AccountRuntime() {
-		values["server"].(map[string]any)["application_profile"] = f.s.Identity.Config.Server.Profile()
+	{
 		values["models"] = map[string]any{"artifact_root": f.s.Identity.Config.Models.ArtifactRoot}
 		values["datasets"] = map[string]any{"artifact_root": f.s.Identity.Config.Datasets.ArtifactRoot, "python_executable": os.Getenv("PROJECT_ONE_DATA_PYTHON"), "processor_file": filepath.Join(repo, "runtimes/data-processing/process.py")}
 		values["licensing"] = map[string]any{"trust_file": f.s.Identity.Config.Licensing.TrustFile}
 	}
-	if f.s.Identity.Config.LifecycleRuntime() {
+	{
 		c := f.s.Identity.Config.ModelPreparation
 		values["model_preparation"] = map[string]any{"artifact_root": c.ArtifactRoot, "image_reference": c.ImageReference, "image_id": c.ImageID, "worker_source_sha256": c.WorkerSourceSHA256}
 	}
-	if f.s.Identity.Config.SSORuntime() {
+	{
 		c := f.s.Identity.Config.SSO
 		providers := []map[string]any{}
 		for _, p := range c.Providers {
@@ -105,20 +104,20 @@ func newNativeTrainingOperator(t *testing.T, f scenario) nativeTrainingHarness {
 		}
 		values["sso"] = map[string]any{"enabled": c.Enabled, "keyring_file": c.KeyringFile, "providers": providers}
 	}
-	if f.s.Identity.Config.KnowledgeRuntime() {
+	{
 		c := f.s.Identity.Config.Knowledge
 		http := f.s.Identity.Config.Policy().HTTP
 		values["runtime"] = map[string]any{"http": map[string]any{"request_seconds": http.RequestSeconds, "startup_seconds": http.StartupSeconds, "shutdown_seconds": http.ShutdownSeconds}}
 		values["knowledge"] = map[string]any{"enabled": c.Enabled, "python_executable": c.PythonExecutable, "worker_file": c.WorkerFile, "model_directory": c.ModelDirectory, "scratch_root": c.ScratchRoot, "gateways": []any{}}
 	}
-	if f.s.Identity.Config.WorkflowsRuntime() {
+	{
 		values["workflows"] = map[string]any{"enabled": f.s.Identity.Config.Workflows.Enabled}
 	}
-	if f.s.Identity.Config.PluginsRuntime() {
+	{
 		c := f.s.Identity.Config.Plugins
 		values["plugins"] = map[string]any{"enabled": c.Enabled, "trusted_keys": c.TrustedKeys}
 	}
-	if f.s.Identity.Config.LocalizationOnly() {
+	{
 		c := f.s.Identity.Config.Localization
 		values["localization"] = map[string]any{"package_directory": c.PackageDirectory, "required_locales": c.RequiredLocales}
 	}

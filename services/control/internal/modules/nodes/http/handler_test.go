@@ -17,7 +17,7 @@ import (
 )
 
 func TestM03HTTPContractAndHumanMachineSeparation(t *testing.T) {
-	s := fixture.NewM03(t)
+	s := fixture.New(t)
 	password := fixture.Bootstrap(t, s)
 	server := httpfixture.NewTLSServer(t, transport.New(s))
 	defer server.Close()
@@ -83,7 +83,7 @@ func TestM03HTTPContractAndHumanMachineSeparation(t *testing.T) {
 }
 
 func TestM03UntrustedCredentialCannotPoisonNodeRateBucket(t *testing.T) {
-	s := fixture.NewM03(t)
+	s := fixture.New(t)
 	password := fixture.Bootstrap(t, s)
 	ctx := context.Background()
 	admin := fixture.Login(t, s, "admin@example.invalid", password, "admin")
@@ -124,11 +124,11 @@ func TestM05HTTPStorageAndAuditRefuseWithoutSuccess(t *testing.T) {
 func testMinimalHTTPStorageAndAudit(t *testing.T, components bool, maintenance ...bool) {
 	var s *identity.Service
 	if len(maintenance) > 0 && maintenance[0] {
-		s = fixture.NewM05(t)
+		s = fixture.New(t)
 	} else if components {
-		s = fixture.NewM04(t)
+		s = fixture.New(t)
 	} else {
-		s = fixture.NewM03(t)
+		s = fixture.New(t)
 	}
 	password := fixture.Bootstrap(t, s)
 	handler := transport.New(s)

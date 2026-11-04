@@ -21,17 +21,14 @@ func TestPostgresMaintenanceRejectsForeignOrMissingAuthorityBeforeQueries(t *tes
 		name    string
 		ctx     context.Context
 		q       transaction.Executor
-		profile string
 	}{
-		{"nil-context", nil, noQueryExecutor{dialect: transaction.PostgreSQL}, ApplicationProfile},
-		{"nil-owner", context.Background(), nil, ApplicationProfile},
-		{"mysql", context.Background(), noQueryExecutor{dialect: transaction.MySQL}, ApplicationProfile},
-		{"dameng", context.Background(), noQueryExecutor{dialect: transaction.Dameng}, ApplicationProfile},
-		{"platform", context.Background(), noQueryExecutor{dialect: transaction.PostgreSQL}, "platform"},
-		{"old-profile", context.Background(), noQueryExecutor{dialect: transaction.PostgreSQL}, "plugins"},
+		{"nil-context", nil, noQueryExecutor{dialect: transaction.PostgreSQL}},
+		{"nil-owner", context.Background(), nil},
+		{"mysql", context.Background(), noQueryExecutor{dialect: transaction.MySQL}},
+		{"dameng", context.Background(), noQueryExecutor{dialect: transaction.Dameng}},
 	} {
 		t.Run(v.name, func(t *testing.T) {
-			result, e := CheckWithin(v.ctx, v.q, v.profile)
+			result, e := CheckWithin(v.ctx, v.q)
 			if e == nil || e.Error() != "POSTGRES_MAINTENANCE_RELEASES_CONTEXT_REQUIRED" || result.CurrentLockHeld || result.Status != "" || len(result.Checks) != 0 {
 				t.Fatal("foreign/missing maintenance authority", result, e)
 			}

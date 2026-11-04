@@ -227,7 +227,7 @@ func liveRestrictedPostgres(t *testing.T, x *serverCompositionStory) string {
 			t.Fatal("LIVE_BROWSER_REAL_RUNTIME_PERMISSION_REFUSAL_REQUIRED")
 		}
 	}
-	if e = database.Check(x.ctx, x.d.postgres, x.c.Server.Profile()); e != nil {
+	if e = database.Check(x.ctx, x.d.postgres); e != nil {
 		t.Fatal("LIVE_BROWSER_REFUSAL_CHANGED_SCHEMA")
 	}
 	t.Log("LIVE_BROWSER_RUNTIME_ROLE_ASSERTIONS protected_prepare_repeat_check=true separate_TLS_login=true DDL_TRUNCATE_journal_trigger_refusals=4")
@@ -254,11 +254,6 @@ func TestActualFullServeHTTPAccountBrowser(t *testing.T) {
 func liveActualAccountBrowser(t *testing.T, pagination bool) {
 	input := liveBrowserInput(t)
 	x := serverCompositionSetup(t, true)
-	if input.ApplicationProfile == "account" || input.ApplicationProfile == "workspaces" {
-		liveAccountOnlySchema(t, x, input)
-	} else if input.ApplicationProfile != "" && input.ApplicationProfile != "platform" {
-		t.Fatal("LIVE_BROWSER_APPLICATION_PROFILE_INVALID")
-	}
 	if pagination {
 		policy := x.c.Policy()
 		policy.UI.PageSize = livePaginationPageSize

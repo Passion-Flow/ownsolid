@@ -66,7 +66,9 @@ func TestActualParallelNodeRecoveryComposition(t *testing.T) {
 // schema. These rows prove recovery retention, not physical inference execution.
 func nodeRecoveryInferenceRows(t *testing.T, x nodeReadActual, node nodes.Node) (string, string) {
 	t.Helper()
-	model, deployment, lease, gpu := uuid.NewString(), uuid.NewString(), uuid.NewString(), "GPU-"+uuid.NewString()
+	model, deployment, gpu := uuid.NewString(), uuid.NewString(), "GPU-"+uuid.NewString()
+	// The inference lease shares its deployment identity (gpu_lease_inference_identity).
+	lease := deployment
 	manifest, e := json.Marshal(wire.ApprovedModel())
 	if e != nil {
 		t.Fatal(e)

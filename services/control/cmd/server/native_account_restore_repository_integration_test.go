@@ -29,7 +29,6 @@ import (
 	"golang.org/x/term"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/operations/databaseaccess"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/operations/recovery"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
@@ -185,17 +184,6 @@ func nativeRestoreRecoverAdmin(t *testing.T, x *serverCompositionStory, input na
 func TestActualNativeAccountPostgresRestore(t *testing.T) {
 	input := nativeAccountInput(t, "postgres_restore")
 	x := serverCompositionSetup(t, true)
-	if input.ApplicationProfile == "account" || input.ApplicationProfile == "workspaces" {
-		profile := input.ApplicationProfile
-		x.owner.Config.Server.ApplicationProfile = &profile
-		if e := recovery.InvalidateRestored(x.ctx, x.owner, "Synthetic cross-profile refusal"); e == nil {
-			t.Fatal("ACCOUNT_RESTORE_MUST_REFUSE_PLATFORM_LEDGER")
-		}
-		x.owner.Config.Server.ApplicationProfile = nil
-		liveAccountOnlySchema(t, x, liveAccountBrowserInput{ApplicationProfile: input.ApplicationProfile, ControlFile: input.ControlFile, ControlSHA256: input.ControlSHA256})
-	} else if input.ApplicationProfile != "" && input.ApplicationProfile != "platform" {
-		t.Fatal("ACCOUNT_RESTORE_PROFILE_INVALID")
-	}
 	source := x.f.PostgreSQL
 	_, port, e := net.SplitHostPort(x.c.Server.ListenAddress)
 	if e != nil {
@@ -259,8 +247,8 @@ func TestActualNativeAccountPostgresRestore(t *testing.T) {
 	archiveFile := x.private(t, "native-account-backup.dump", archive)
 	backupFacts, _ := json.Marshal(map[string]any{"format": "projectone.native-account-backup-facts.v1", "database": owned.Database, "schema": owned.Schema, "archive_sha256": liveBootstrapDigest(archive), "archive_bytes": len(archive), "state_sha256": before, "tenant_id": x.f.Tenant})
 	backupFile := x.private(t, "native-account-backup-facts.json", backupFacts)
-	restored := owned.RestoreFresh(t, x.ctx, source, archive, x.c.AccountRuntime())
-	if e = database.Check(x.ctx, restored, x.c.Server.Profile()); e != nil || nativeRestoreSnapshot(t, x.ctx, restored) != before {
+	restored := owned.RestoreFresh(t, x.ctx, source, archive, true)
+	if e = database.Check(x.ctx, restored); e != nil || nativeRestoreSnapshot(t, x.ctx, restored) != before {
 		t.Fatal("NATIVE_ACCOUNT_RESTORE_DATA_MISMATCH")
 	}
 	var version, initialAudits int

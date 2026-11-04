@@ -144,14 +144,7 @@ func newFixture(t *testing.T, seed, preserveOnFailure bool) Fixture {
 			}
 			operator.Close()
 		})
-		profiles := []string{}
-		if profile := os.Getenv("PROJECT_ONE_TEST_APPLICATION_PROFILE"); profile != "" {
-			if profile != "datasets" && profile != "training" && profile != "lifecycle" && profile != "sso" && profile != "knowledge" && profile != "workflows" && profile != "plugins" && profile != "portal" && profile != "localization" {
-				t.Fatal("REPOSITORY_APPLICATION_PROFILE_INVALID")
-			}
-			profiles = append(profiles, profile)
-		}
-		if e = database.Migrate(ctx, f.PostgreSQL, profiles...); e != nil {
+		if e = database.Migrate(ctx, f.PostgreSQL); e != nil {
 			t.Fatal("actual PostgreSQL fixture migration", e)
 		}
 		f.Store, e = transaction.FromPostgreSQL(f.PostgreSQL)

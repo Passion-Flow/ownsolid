@@ -26,7 +26,7 @@ type maintenanceScenario struct {
 
 func maintenanceSetup(t *testing.T) maintenanceScenario {
 	t.Helper()
-	account := fixture.NewM05(t)
+	account := fixture.New(t)
 	password := fixture.Bootstrap(t, account)
 	a := fixture.Login(t, account, "admin@example.invalid", password, "admin")
 	portal := fixture.Login(t, account, "admin@example.invalid", password, "portal")
