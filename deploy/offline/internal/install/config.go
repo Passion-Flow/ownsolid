@@ -32,27 +32,30 @@ var (
 	projectPattern = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,62}$`)
 	memoryPattern  = regexp.MustCompile(`^[1-9][0-9]{0,5}[mg]$`)
 	cpusPattern    = regexp.MustCompile(`^[1-9][0-9]{0,2}(\.[0-9]{1,2})?$`)
+	// Both stores read a retention period with this syntax.
+	retentionPattern = regexp.MustCompile(`^[1-9][0-9]{0,3}d$`)
 )
 
 // controlOwnedKeys are written by the installer and cannot be set through control_settings.
-var controlOwnedKeys = []string{"topology", "server", "database", "security", "licensing", "smtp"}
+var controlOwnedKeys = []string{"topology", "server", "database", "security", "licensing", "smtp", "telemetry"}
 
 type Config struct {
-	FormatVersion int            `yaml:"format_version"`
-	Topology      TopologyConfig `yaml:"topology"`
-	InstallRoot   string         `yaml:"install_root"`
-	ComposeFile   string         `yaml:"compose_file"`
-	Project       string         `yaml:"project"`
-	Runtime       RuntimeConfig  `yaml:"runtime"`
-	Images        ImagesConfig   `yaml:"images"`
-	Network       NetworkConfig  `yaml:"network"`
-	Origins       OriginsConfig  `yaml:"origins"`
-	TLS           TLSConfig      `yaml:"tls"`
-	License       LicenseConfig  `yaml:"license"`
-	SMTP          SMTPConfig     `yaml:"smtp"`
-	Administrator AdminConfig    `yaml:"administrator"`
-	Resources     ResourceConfig `yaml:"resources"`
-	StepSeconds   int            `yaml:"step_seconds"`
+	FormatVersion int             `yaml:"format_version"`
+	Topology      TopologyConfig  `yaml:"topology"`
+	InstallRoot   string          `yaml:"install_root"`
+	ComposeFile   string          `yaml:"compose_file"`
+	Project       string          `yaml:"project"`
+	Runtime       RuntimeConfig   `yaml:"runtime"`
+	Images        ImagesConfig    `yaml:"images"`
+	Network       NetworkConfig   `yaml:"network"`
+	Origins       OriginsConfig   `yaml:"origins"`
+	TLS           TLSConfig       `yaml:"tls"`
+	License       LicenseConfig   `yaml:"license"`
+	SMTP          SMTPConfig      `yaml:"smtp"`
+	Administrator AdminConfig     `yaml:"administrator"`
+	Resources     ResourceConfig  `yaml:"resources"`
+	Telemetry     TelemetryConfig `yaml:"telemetry"`
+	StepSeconds   int             `yaml:"step_seconds"`
 	// ControlSettings are further control plane settings, which the control process
 	// validates when it first reads them. Keys the installer owns are refused here.
 	ControlSettings map[string]any `yaml:"control_settings"`
@@ -70,14 +73,17 @@ type ImagesConfig struct {
 	ArchiveFile string `yaml:"archive_file"`
 	Control     string `yaml:"control"`
 	Postgres    string `yaml:"postgres"`
+	// Metrics and Logs are the telemetry stores of ADR 0009.
+	Metrics string `yaml:"metrics"`
+	Logs    string `yaml:"logs"`
 }
 type NetworkConfig struct {
 	BindAddress string `yaml:"bind_address"`
 	HTTPSPort   int    `yaml:"https_port"`
 	// StateSubnet is the private IPv4 subnet of the internal network that carries
-	// database traffic. PostgreSQL takes a fixed address in it, so no service ever asks
-	// DNS for the database: a lookup while the database is stopped would otherwise be
-	// forwarded to the site resolvers, with the host's search domains appended.
+	// database and telemetry traffic. Each store takes a fixed address in it, so no
+	// service ever asks DNS for one: a lookup while a store is stopped would otherwise
+	// be forwarded to the site resolvers, with the host's search domains appended.
 	StateSubnet string `yaml:"state_subnet"`
 }
 
@@ -88,16 +94,24 @@ const (
 	stateSubnetMaxBits = 28
 )
 
+// StateAddresses is the fixed layout of the state subnet.
+type StateAddresses struct {
+	Postgres, Metrics, Logs netip.Addr
+	// Dynamic is the range for containers without a fixed address.
+	Dynamic netip.Prefix
+}
+
 // stateAddresses splits the state subnet: Docker's bridge takes the first host address,
-// PostgreSQL the second, and containers without a fixed address draw from the upper
-// half so they can never take the database's address.
-func (n NetworkConfig) stateAddresses() (postgres netip.Addr, dynamic netip.Prefix) {
+// the stores the next ones, and containers without a fixed address draw from the upper
+// half so they can never take a store's address.
+func (n NetworkConfig) stateAddresses() StateAddresses {
 	subnet := netip.MustParsePrefix(n.StateSubnet)
-	postgres = subnet.Addr().Next().Next()
+	postgres := subnet.Addr().Next().Next()
+	metrics := postgres.Next()
 	base := subnet.Addr().As4()
 	var upper [4]byte
 	binary.BigEndian.PutUint32(upper[:], binary.BigEndian.Uint32(base[:])+1<<(31-subnet.Bits()))
-	return postgres, netip.PrefixFrom(netip.AddrFrom4(upper), subnet.Bits()+1)
+	return StateAddresses{Postgres: postgres, Metrics: metrics, Logs: metrics.Next(), Dynamic: netip.PrefixFrom(netip.AddrFrom4(upper), subnet.Bits()+1)}
 }
 
 type OriginsConfig struct {
@@ -134,6 +148,16 @@ type ResourceConfig struct {
 	PostgresMemory         string `yaml:"postgres_memory"`
 	PostgresCPUs           string `yaml:"postgres_cpus"`
 	PostgresMaxConnections int    `yaml:"postgres_max_connections"`
+	MetricsMemory          string `yaml:"metrics_memory"`
+	MetricsCPUs            string `yaml:"metrics_cpus"`
+	LogsMemory             string `yaml:"logs_memory"`
+	LogsCPUs               string `yaml:"logs_cpus"`
+}
+
+// TelemetryConfig sets how long the stores keep data, as a number of days like 30d.
+type TelemetryConfig struct {
+	MetricsRetention string `yaml:"metrics_retention"`
+	LogsRetention    string `yaml:"logs_retention"`
 }
 
 func defaults() Config {
@@ -147,7 +171,11 @@ func defaults() Config {
 	c.TLS.Source = "generate"
 	c.SMTP.Port = 587
 	c.SMTP.TLSMode = "starttls_required"
-	c.Resources = ResourceConfig{ControlMemory: "1g", ControlCPUs: "2", PostgresMemory: "2g", PostgresCPUs: "2", PostgresMaxConnections: 50}
+	c.Resources = ResourceConfig{
+		ControlMemory: "1g", ControlCPUs: "2", PostgresMemory: "2g", PostgresCPUs: "2", PostgresMaxConnections: 50,
+		MetricsMemory: "2g", MetricsCPUs: "2", LogsMemory: "1g", LogsCPUs: "1",
+	}
+	c.Telemetry = TelemetryConfig{MetricsRetention: "30d", LogsRetention: "30d"}
 	c.StepSeconds = 600
 	return c
 }
@@ -206,7 +234,7 @@ func (c Config) Validate() error {
 	if c.Images.ArchiveFile != "" && !canonicalPath(c.Images.ArchiveFile) {
 		return invalid("images.archive_file", "must be an absolute clean path")
 	}
-	for field, image := range map[string]string{"images.control": c.Images.Control, "images.postgres": c.Images.Postgres} {
+	for field, image := range map[string]string{"images.control": c.Images.Control, "images.postgres": c.Images.Postgres, "images.metrics": c.Images.Metrics, "images.logs": c.Images.Logs} {
 		if !pinnedImage(image) {
 			return invalid(field, "must name an image by tag or digest, and never latest")
 		}
@@ -237,11 +265,18 @@ func (c Config) Validate() error {
 		return e
 	}
 	r := c.Resources
-	if !memoryPattern.MatchString(r.ControlMemory) || !memoryPattern.MatchString(r.PostgresMemory) {
-		return invalid("resources", "memory must look like 512m or 2g")
+	for _, memory := range []string{r.ControlMemory, r.PostgresMemory, r.MetricsMemory, r.LogsMemory} {
+		if !memoryPattern.MatchString(memory) {
+			return invalid("resources", "memory must look like 512m or 2g")
+		}
 	}
-	if !cpusPattern.MatchString(r.ControlCPUs) || !cpusPattern.MatchString(r.PostgresCPUs) {
-		return invalid("resources", "cpus must look like 2 or 0.5")
+	for _, cpus := range []string{r.ControlCPUs, r.PostgresCPUs, r.MetricsCPUs, r.LogsCPUs} {
+		if !cpusPattern.MatchString(cpus) {
+			return invalid("resources", "cpus must look like 2 or 0.5")
+		}
+	}
+	if !retentionPattern.MatchString(c.Telemetry.MetricsRetention) || !retentionPattern.MatchString(c.Telemetry.LogsRetention) {
+		return invalid("telemetry", "metrics_retention and logs_retention must be whole days like 30d")
 	}
 	if r.PostgresMaxConnections < 20 || r.PostgresMaxConnections > 1000 {
 		return invalid("resources.postgres_max_connections", "must be 20 to 1000")

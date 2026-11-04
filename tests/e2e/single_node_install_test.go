@@ -37,6 +37,7 @@ var webAsset = regexp.MustCompile(`(?:src|href)="(/assets/[^"]+)"`)
 
 type environment struct {
 	installer, composeFile, controlImage, postgresImage, archive, root, agent string
+	metricsImage, logsImage                                                   string
 	egress                                                                    egressWatch
 	// licenseKey signs the test's license; its trust file is in every configuration.
 	licenseKey license.PrivateKey
@@ -49,7 +50,8 @@ func loadEnvironment(t *testing.T) environment {
 		installer: os.Getenv("OWNSOLID_E2E_INSTALLER"), composeFile: os.Getenv("OWNSOLID_E2E_COMPOSE_FILE"),
 		controlImage: os.Getenv("OWNSOLID_E2E_CONTROL_IMAGE"), postgresImage: os.Getenv("OWNSOLID_E2E_POSTGRES_IMAGE"),
 		archive: os.Getenv("OWNSOLID_E2E_IMAGE_ARCHIVE"), root: os.Getenv("OWNSOLID_E2E_ROOT"),
-		agent:  os.Getenv("OWNSOLID_E2E_AGENT"),
+		agent:        os.Getenv("OWNSOLID_E2E_AGENT"),
+		metricsImage: os.Getenv("OWNSOLID_E2E_METRICS_IMAGE"), logsImage: os.Getenv("OWNSOLID_E2E_LOGS_IMAGE"),
 		egress: egressWatch{log: os.Getenv("OWNSOLID_E2E_EGRESS_LOG"), iface: os.Getenv("OWNSOLID_E2E_EGRESS_INTERFACE")},
 	}
 	if e.installer == "" {
@@ -84,6 +86,8 @@ images:
   archive_file: %s
   control: %s
   postgres: %s
+  metrics: %s
+  logs: %s
 origins: {portal: %s, admin: %s}
 license: {trust_file: %s}
 smtp: {host: smtp.ownsolid.test, from_address: platform@ownsolid.test}
@@ -92,7 +96,7 @@ administrator:
   display_name: Installation Administrator
   installation_name: End To End
   workspace_name: Default Workspace
-`, size, e.root, e.composeFile, e.archive, controlImage, e.postgresImage, portalOrigin, adminOrigin, trustFile, adminEmail)
+`, size, e.root, e.composeFile, e.archive, controlImage, e.postgresImage, e.metricsImage, e.logsImage, portalOrigin, adminOrigin, trustFile, adminEmail)
 	if err = os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -393,6 +397,38 @@ func TestSingleNodeInstall(t *testing.T) {
 		}
 		e.apply(t, config)
 		e.assertLogin(t, password)
+	})
+
+	t.Run("control reaches the log store on the internal network", func(t *testing.T) {
+		// The fixed address of the default state subnet.
+		script := `import json,sys,time,urllib.parse,urllib.request as u
+base="http://172.31.254.4:9428"
+line=json.dumps({"_msg":"e2e-marker","tenant_id":"e2e","workspace_id":"e2e","node_id":"e2e","component":"e2e"}).encode()+b"\n"
+u.urlopen(u.Request(base+"/insert/jsonline?_stream_fields=tenant_id,component",data=line),timeout=5)
+form=urllib.parse.urlencode({"query":'{tenant_id="e2e"} e2e-marker'}).encode()
+for _ in range(30):
+    if b"e2e-marker" in u.urlopen(u.Request(base+"/select/logsql/query",data=form),timeout=5).read():
+        sys.exit(0)
+    time.sleep(1)
+sys.exit(1)`
+		if output, err := e.compose(t, "exec", "--no-TTY", "control", "python3", "-c", script); err != nil {
+			t.Fatalf("%v %s", err, output)
+		}
+	})
+
+	t.Run("losing the telemetry stores leaves the platform serving", func(t *testing.T) {
+		if output, err := e.compose(t, "stop", "metrics", "logs"); err != nil {
+			t.Fatalf("%v %s", err, output)
+		}
+		e.assertLogin(t, password)
+		output, err := run(t, e.installer, "status", "--config", config)
+		if err == nil || !strings.Contains(output, "INSTALL_NOT_HEALTHY") {
+			t.Fatalf("%v %s", err, output)
+		}
+		e.apply(t, config)
+		if output, err = run(t, e.installer, "status", "--config", config); err != nil {
+			t.Fatalf("%v %s", err, output)
+		}
 	})
 
 	t.Run("reinstalling over existing data keeps it", func(t *testing.T) {

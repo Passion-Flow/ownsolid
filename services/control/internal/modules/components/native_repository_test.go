@@ -70,9 +70,6 @@ func TestNativeComponentConflictAbortsWithoutReread(t *testing.T) {
 		{"observation", func(q *nativeComponentProbe) error {
 			return s.observeNativeWithin(context.Background(), q, n, wire.ComponentObservation{Version: wire.NodeExporterVersion, State: "running", Managed: true}, "running", []byte(`{}`), "task", &c, &c, "", true, false)
 		}},
-		{"logs", func(q *nativeComponentProbe) error {
-			return s.logsNativeWithin(context.Background(), q, n, "task", []byte(`{}`))
-		}},
 	}
 	for _, operation := range operations {
 		t.Run(operation.name, func(t *testing.T) {

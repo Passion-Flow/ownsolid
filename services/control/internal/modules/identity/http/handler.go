@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"mime"
 	"net/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores"
@@ -13,6 +14,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentgateway"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -108,6 +110,8 @@ type Handler struct {
 	Models            *modelhttp.Handler
 	Deployments       *deploymenthttp.Handler
 	Distribution      *distributionhttp.Handler
+	// TelemetryLogs is nil when no log store is configured.
+	TelemetryLogs *telemetrystore.Logs
 }
 
 func New(s *identity.Service) *Handler {
@@ -124,6 +128,13 @@ func New(s *identity.Service) *Handler {
 	w := &workspaces.Service{DB: s.DB, Identity: s}
 	n := &nodes.Service{DB: s.DB, Identity: s, Workspaces: w}
 	c := &components.Service{Nodes: n, ArchiveFile: s.Config.Components.NodeExporterArchiveFile, CatalogDirectory: s.Config.Components.NodeExporterCatalogDirectory}
+	var telemetryLogs *telemetrystore.Logs
+	if s.Config.Telemetry != nil {
+		// The address was validated with the configuration, so this cannot fail here.
+		if telemetryLogs, _ = telemetrystore.Open(s.Config.Telemetry.Settings(), slog.Default()); telemetryLogs != nil {
+			c.LogStore = telemetryLogs
+		}
+	}
 	n.Components = c
 	m := &models.Service{DB: s.DB, Identity: s, Workspaces: w, RootDirectory: s.Config.Models.ArtifactRoot}
 	d := &deployments.Service{Nodes: n, Models: m}
@@ -201,7 +212,7 @@ func New(s *identity.Service) *Handler {
 	pluginService := &plugins.Service{DB: s.DB, Identity: s, Workspaces: w, Models: m}
 	workflowService := &workflows.Service{Plugins: pluginService, DB: s.DB, Identity: s, Workspaces: w, Knowledge: knowledgeService, Distribution: distributionService}
 	localeRegistry, localeError := s.LocaleRegistry()
-	return &Handler{AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, preparationError, localeError, sessionError, n.CheckRecoveryOwners()), AgentSessions: sessions, Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}}
+	return &Handler{TelemetryLogs: telemetryLogs, AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, preparationError, localeError, sessionError, n.CheckRecoveryOwners()), AgentSessions: sessions, Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}}
 }
 
 func Problem(w http.ResponseWriter, requestID string, e error) { httpserver.Problem(w, requestID, e) }

@@ -348,6 +348,9 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 		ssoService.Run(ctx, func(error) { g.Fail(errors.New("SSO_MAINTENANCE_FAILED")) })
 	})
 	g.Loop("MAIL_WORKER", outbox.Run)
+	if h.TelemetryLogs != nil {
+		g.Go("TELEMETRY_WRITER", h.TelemetryLogs.Run)
+	}
 	g.Go("RETENTION_WORKER", func(ctx context.Context) error {
 		return retention.RunSelected(ctx, selected.store, c.Policy().Retention)
 	})

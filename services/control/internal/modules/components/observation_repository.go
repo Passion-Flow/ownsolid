@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
+
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 )
 
 func (s *Service) ObserveWithin(ctx context.Context, q transaction.Executor, n nodes.Node, o wire.ComponentObservation, taskID string) error {
@@ -95,22 +98,33 @@ func (s *Service) RecordResultWithin(ctx context.Context, q transaction.Executor
 		}
 	}
 	if t.Operation == wire.ComponentOperation("remove") {
-		_, e := q.Exec(ctx, componentSQL(q, "DELETE FROM component_log_snapshots WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3", "DELETE FROM component_log_snapshots WHERE tenant_id=? AND workspace_id=? AND node_id=?", `DELETE FROM component_log_snapshots WHERE tenant_id=? AND workspace_id=? AND node_id=?`, n.TenantID, n.WorkspaceID, n.ID))
-		return e
+		s.enqueueLogs(telemetrystore.Record{Scope: logScope(n), Time: time.Now(), TaskID: t.ID, Removed: true})
+		return nil
 	}
 	if t.Operation == wire.ComponentOperation("logs") {
 		if result.Logs == nil || result.Logs.Validate() != nil {
 			return errors.New("VALIDATION_FAILED")
 		}
-		body, _ := json.Marshal(result.Logs)
-		if q.Dialect() == transaction.Dameng {
-			return s.logsNativeWithin(ctx, q, n, t.ID, body)
+		body, e := json.Marshal(result.Logs)
+		if e != nil {
+			return errors.New("VALIDATION_FAILED")
 		}
-		_, e := q.Exec(ctx, componentSQL(q, "INSERT INTO component_log_snapshots(tenant_id,workspace_id,node_id,component,task_id,snapshot) VALUES($1,$2,$3,'node_exporter',$4,$5) ON CONFLICT(node_id,component) DO UPDATE SET task_id=EXCLUDED.task_id,snapshot=EXCLUDED.snapshot,received_at=clock_timestamp()", "INSERT INTO component_log_snapshots(tenant_id,workspace_id,node_id,component,task_id,snapshot) VALUES(?,?,?,'node_exporter',?,CAST(? AS JSON)) AS incoming ON DUPLICATE KEY UPDATE task_id=incoming.task_id,snapshot=incoming.snapshot,received_at=UTC_TIMESTAMP(6)", "", n.TenantID, n.WorkspaceID, n.ID, t.ID, body))
-		return e
+		s.enqueueLogs(telemetrystore.Record{Scope: logScope(n), Time: time.Now(), TaskID: t.ID, Body: body})
 	}
 	return nil
 }
+
+// logScope is the node's own scope, read from the server's record of it.
+func logScope(n nodes.Node) telemetrystore.Scope {
+	return telemetrystore.Scope{TenantID: n.TenantID, WorkspaceID: n.WorkspaceID, NodeID: n.ID, Component: wire.NodeExporter}
+}
+
+func (s *Service) enqueueLogs(r telemetrystore.Record) {
+	if s.LogStore != nil {
+		s.LogStore.Enqueue(r)
+	}
+}
+
 func rollbackArgs(q transaction.Executor, n nodes.Node, c *wire.ComponentConfig, v string) []any {
 	if q.Dialect() == transaction.MySQL || q.Dialect() == transaction.Dameng {
 		return []any{componentJSON(q, encodeConfig(c)), v, n.TenantID, n.WorkspaceID, n.ID}

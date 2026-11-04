@@ -34,6 +34,9 @@ images:
   control: ownsolid/control:0.0.0-example
   # Required. PostgreSQL 18.6 with pgvector 0.8.7.
   postgres: pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+  # Required. Telemetry stores, VictoriaMetrics v1.155.0 and VictoriaLogs v1.53.0.
+  metrics: victoriametrics/victoria-metrics@sha256:f60dc268b54ecf87f6e09d740c2b732838aa9193090cc741417c9f6386a130df
+  logs: victoriametrics/victoria-logs@sha256:251121fa882af99b95ba0c230a4a2f412ea602d2698c64a96c58dc9842bb755d
 
 # Optional. Host address and port of the HTTPS listener. Defaults 127.0.0.1 and 8443.
 # Separate from the advertised origins below.
@@ -41,9 +44,9 @@ network:
   bind_address: 127.0.0.1
   https_port: 8443
   # Optional, default 172.31.254.0/26. Private IPv4 subnet, /16 to /28, of the internal
-  # network that carries database traffic; it must not overlap a network this host
-  # reaches. PostgreSQL takes its second address, so the database is never looked up in
-  # DNS. Changing it on an existing installation needs `docker compose down` first.
+  # network that carries database and telemetry traffic; it must not overlap a network
+  # this host reaches. The stores take fixed addresses in it, so none is ever looked up
+  # in DNS. Changing it on an existing installation needs `docker compose down` first.
   state_subnet: 172.31.254.0/26
 
 # Required. Browser origins, https only, and different from each other: the host name
@@ -93,6 +96,15 @@ resources:
   postgres_memory: 2g
   postgres_cpus: "2"
   postgres_max_connections: 50
+  metrics_memory: 2g
+  metrics_cpus: "2"
+  logs_memory: 1g
+  logs_cpus: "1"
+
+# Optional. How long the telemetry stores keep data, in whole days. Defaults as shown.
+telemetry:
+  metrics_retention: 30d
+  logs_retention: 30d
 
 # Optional, default 600. Time limit of each install step, 30 to 7200 seconds.
 step_seconds: 600

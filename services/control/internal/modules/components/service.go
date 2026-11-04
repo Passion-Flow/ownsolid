@@ -9,12 +9,23 @@ import (
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 )
+
+// LogStore keeps component log snapshots outside the control-plane database. Enqueue
+// never blocks, so it is safe inside a transaction, but it cannot see a rollback: Logs
+// confirms each record against its task before showing it.
+type LogStore interface {
+	Enqueue(telemetrystore.Record)
+	Recent(context.Context, telemetrystore.Scope, int) ([]telemetrystore.Record, error)
+}
 
 type Service struct {
 	Nodes            *nodes.Service
 	ArchiveFile      string
 	CatalogDirectory string
+	// LogStore is nil when none is configured; component logs are then unavailable.
+	LogStore LogStore
 }
 
 func decodeConfig(raw []byte) (*wire.ComponentConfig, error) {
