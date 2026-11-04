@@ -38,6 +38,19 @@ runs userspace Tailscale built from source:
   restarts if it exits. Check it with `launchctl print gui/$(id -u)/com.ownsolid.tailscaled`.
 - Browsers cannot reach tunnel addresses directly; use SSH port forwarding.
 
+`ownsolid-cpu` has no Docker or Go. Build test binaries on the workstation with
+`GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c` and run them there. Offline packages
+need a non-root user and a mounted temporary directory.
+
+## Database integration tests
+
+These tests need PostgreSQL 18.6 with pgvector 0.8.7, for example the image
+`pgvector/pgvector:0.8.7-pg18-bookworm`, and a loopback database whose name ends in
+`_test`. Run them serially: `go test -p 1`, because packages share the migration lock.
+Set `PROJECT_ONE_TEST_DSN`. Add `-tags repository_integration` with
+`PROJECT_ONE_REPOSITORY_ENGINE=postgresql`, `PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE`
+and `PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA` for the repository tests, and use `umask 077`.
+
 ## Network notes for China
 
 Hugging Face and Docker Hub are blocked from mainland servers. Use hf-mirror or
