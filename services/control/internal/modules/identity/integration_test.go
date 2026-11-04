@@ -3,15 +3,15 @@ package identity_test
 import (
 	"context"
 	"fmt"
+	recovery "github.com/Passion-Flow/ownsolid/services/control/internal/operations/recovery"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/logstorefixture"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/url"
-	recovery "github.com/Passion-Flow/ownsolid/services/control/internal/operations/recovery"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
@@ -21,6 +21,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/retention"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
 )
 
 func expect(t *testing.T, e error, code string) {
@@ -150,7 +151,10 @@ func TestM01InvitationRegistrationLifecycle(t *testing.T) {
 	barrier := make(chan struct{})
 	results := make(chan error, 2)
 	for n := 0; n < 2; n++ {
-		go func() { <-barrier; results <- s.Register(ctx, token, "\u6d4b\u8bd5 Member", password, uuid.NewString()) }()
+		go func() {
+			<-barrier
+			results <- s.Register(ctx, token, "\u6d4b\u8bd5 Member", password, uuid.NewString())
+		}()
 	}
 	close(barrier)
 	wins := 0
@@ -701,7 +705,8 @@ func TestM01RuntimeCredentialCannotExecuteDDL(t *testing.T) {
 	if _, e = nodeService.Complete(ctx, node.NodeID, node.Credential, task.ID, wire.Result{LeaseToken: lease.Lease.LeaseToken, Outcome: "success", Facts: &facts}, uuid.NewString()); e != nil {
 		t.Fatal(e)
 	}
-	componentService := &components.Service{Nodes: nodeService}
+	// Component logs live in the log store (ADR 0012); the runtime role needs no grant for them.
+	componentService := &components.Service{Nodes: nodeService, LogStore: &logstorefixture.Memory{}}
 	nodeService.Components = componentService
 	componentJoin, e := nodeService.MintForProfile(ctx, a, workspace.ID, "Runtime component node", wire.SystemdComponentsProfile, uuid.NewString())
 	if e != nil {
@@ -756,7 +761,7 @@ func TestM01RuntimeCredentialCannotExecuteDDL(t *testing.T) {
 		t.Fatal("maintenance runtime DML failed", e)
 	}
 	if snapshot, e := componentService.Logs(ctx, a, maintenanceNode.NodeID); e != nil || snapshot.Snapshot == nil {
-		t.Fatal("runtime log grant failed", e)
+		t.Fatal("runtime log read failed", e)
 	}
 	for _, sql := range []string{"CREATE TABLE forbidden(id integer)", "ALTER TABLE users ADD COLUMN forbidden integer", "DROP TABLE users", "DELETE FROM schema_migrations"} {
 		if _, e = runtimeDB.Exec(ctx, sql); e == nil {
