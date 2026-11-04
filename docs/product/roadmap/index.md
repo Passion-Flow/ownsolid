@@ -65,7 +65,7 @@ keep them open, and tick them when the run happens.
 | Product agent | Navigate, read and plan-then-confirm writes in P1; second-approver tiers in P2; autonomous runbooks later. A deterministic command layer works without any model. |
 | Knowledge | DeepParser only, installed through the app catalog. ownsolid builds no knowledge base. |
 | Models | Every model type over time; embeddings and rerank count as model serving. |
-| Telemetry and logs | A dedicated time-series store and log store, never the control-plane database. Chosen by license, offline packaging and a load test at about 17 million series. |
+| Telemetry and logs | A dedicated time-series store and log store, never the control-plane database. Chosen by license, offline packaging and a load test at about 17 million series: VictoriaMetrics and VictoriaLogs, open-source editions (ADR 0009). |
 | Demo | Decided later. Build and polish first. |
 
 ## Phases
