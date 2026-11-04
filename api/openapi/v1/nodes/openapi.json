@@ -3236,6 +3236,128 @@
           }
         }
       ]
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-pacing": {
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getAgentPacing",
+        "x-audiences": [
+          "admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "Current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPacingResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ]
+      },
+      "put": {
+        "operationId": "updateAgentPacing",
+        "x-audiences": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committed response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPacingResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAgentPacing"
+              }
+            }
+          }
+        },
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ]
+      }
     }
   },
   "components": {
@@ -3944,7 +4066,9 @@
               "MONGODB_SOURCE_EMPTY",
               "MONGODB_FIELD_INVALID",
               "MONGODB_TYPE_INVALID",
-              "MONGODB_RECORD_INVALID"
+              "MONGODB_RECORD_INVALID",
+              "AGENT_PACING_EXCEEDS_ONLINE_WINDOW",
+              "AGENT_PACING_UNSUPPORTED"
             ]
           },
           "request_id": {
@@ -4863,6 +4987,9 @@
           "server_time": {
             "type": "string",
             "format": "date-time"
+          },
+          "pacing": {
+            "$ref": "#/components/schemas/Pacing"
           }
         },
         "required": [
@@ -12040,6 +12167,151 @@
         "required": [
           "sequence",
           "lease_token"
+        ]
+      },
+      "Pacing": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "How control paces an agent at runtime (ADR 0013).",
+        "properties": {
+          "heartbeat_seconds": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 120,
+            "description": "Mean time between two heartbeats of an idle agent."
+          },
+          "jitter_percent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "description": "Spreads each interval evenly around heartbeat_seconds."
+          },
+          "reconnect_base_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "description": "Ceiling of the full-jitter delay after the first failed cycle."
+          },
+          "reconnect_max_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 900,
+            "description": "Largest ceiling of the full-jitter delay; not below reconnect_base_seconds."
+          }
+        },
+        "required": [
+          "heartbeat_seconds",
+          "jitter_percent",
+          "reconnect_base_seconds",
+          "reconnect_max_seconds"
+        ]
+      },
+      "AgentPacing": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "The stored pacing of this cell's agents (ADR 0013).",
+        "properties": {
+          "heartbeat_seconds": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 120,
+            "description": "Mean time between two heartbeats of an idle agent."
+          },
+          "jitter_percent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "description": "Spreads each interval evenly around heartbeat_seconds."
+          },
+          "reconnect_base_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "description": "Ceiling of the full-jitter delay after the first failed cycle."
+          },
+          "reconnect_max_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 900,
+            "description": "Largest ceiling of the full-jitter delay; not below reconnect_base_seconds."
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "heartbeat_seconds",
+          "jitter_percent",
+          "reconnect_base_seconds",
+          "reconnect_max_seconds",
+          "version",
+          "updated_at"
+        ]
+      },
+      "AgentPacingResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AgentPacing"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "UpdateAgentPacing": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "heartbeat_seconds": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 120,
+            "description": "Mean time between two heartbeats of an idle agent."
+          },
+          "jitter_percent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "description": "Spreads each interval evenly around heartbeat_seconds."
+          },
+          "reconnect_base_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "description": "Ceiling of the full-jitter delay after the first failed cycle."
+          },
+          "reconnect_max_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 900,
+            "description": "Largest ceiling of the full-jitter delay; not below reconnect_base_seconds."
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "heartbeat_seconds",
+          "jitter_percent",
+          "reconnect_base_seconds",
+          "reconnect_max_seconds",
+          "version",
+          "reason"
         ]
       }
     },

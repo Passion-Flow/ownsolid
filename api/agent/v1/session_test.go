@@ -101,9 +101,6 @@ func TestSessionPathIsTheGRPCMethod(t *testing.T) {
 	if SessionPath != "/ownsolid.agent.v1.AgentSession/Connect" {
 		t.Fatal(SessionPath)
 	}
-	if MaxClaimWaitSeconds != HeartbeatSeconds || SessionIdleSeconds <= MaxClaimWaitSeconds {
-		t.Fatal("a held claim must end before the session counts as idle")
-	}
 }
 
 // TestSessionSchemaMatchesTypes keeps schema.json and the Go session types in step.
