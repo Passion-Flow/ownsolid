@@ -1,5 +1,7 @@
 # Delivery and upgrades
 
+Module reviewed: 2026-11-04.
+
 Fully offline installation, upgrades and supply-chain integrity, for Docker Compose on a
 single host and Helm on Kubernetes cells, from the same artifacts and configuration.
 
@@ -29,6 +31,9 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
     starting from the old issuer CLI in project-one `tools/release/licensing`. Test this
     item against licenses signed by that issuer.
 - [ ] DEL-110 Third-party license and notice inventory shipped in every bundle (P1) - Catalog: F226, F356, F535
+- [ ] DEL-111 Diagnostic support bundle command that collects host, cluster and application state with secrets redacted and works while the console is down (P1)
+- [ ] DEL-112 Bundle signature verification against a pinned offline trust root, with signed root rotation and a clear refusal for expired or unknown roots (P1)
+- [ ] DEL-113 Upgrade bundle upload through the console as well as the command line, both ending at the same preflight screen (P1)
 
 ## P2 Fleet operations
 
