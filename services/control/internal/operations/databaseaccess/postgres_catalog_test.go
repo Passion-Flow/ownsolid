@@ -29,7 +29,7 @@ func TestPostgreSQLVariantRuntimeGrantsMatchActualMigrations(t *testing.T) {
 }
 
 func TestPostgreSQLVariantCatalogRemainsIndependentOfSharedTables(t *testing.T) {
-	if len(applicationTables) != 85 {
+	if len(applicationTables) != 84 {
 		t.Fatal("vendor variants expanded the shared initial catalog")
 	}
 	for _, required := range postgreSQLVariantTables {

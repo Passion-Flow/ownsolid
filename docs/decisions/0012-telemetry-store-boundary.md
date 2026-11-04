@@ -40,6 +40,13 @@ and not retried: the next one carries newer values.
 **No service looks a store up by name.** Each store has a fixed address on the internal
 `state` network ([ADR 0008](0008-zero-egress-harness.md)).
 
+**Bounded records stay in PostgreSQL.** The old log table is dropped in migration 32, and
+`TestTelemetryStaysOutOfTheDatabase` fails any migration that adds a table named like logs,
+metrics or traces. Records with a fixed bound that belong to one run or job stay where they
+are, because they are that run's own state and later steps read them: `training_events`
+(at most 1000 steps per attempt, hash-chained into the training record),
+`model_preparation_events`, `workflow_node_traces` and the task events.
+
 ## Consequences
 
 - A snapshot can be lost if control stops before delivering it, or if the store is down

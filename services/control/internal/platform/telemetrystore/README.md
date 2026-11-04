@@ -1,7 +1,8 @@
 # Telemetry stores
 
 Clients for the dedicated stores of [ADR 0009](../../../../../docs/decisions/0009-telemetry-and-log-stores.md).
-Telemetry and logs never enter the control-plane database.
+Telemetry and logs never enter the control-plane database. `TestTelemetryStaysOutOfTheDatabase` fails a
+migration that adds a table named like logs, metrics or traces.
 
 - [Client](client.go) writes to and reads from the log store over its HTTP API. A query
   always carries the tenant, workspace and node scope the caller was authorized for.

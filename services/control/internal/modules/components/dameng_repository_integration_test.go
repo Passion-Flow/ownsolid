@@ -22,6 +22,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/dameng"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/logstorefixture"
 )
 
 // This profile requires a separately provisioned, empty, disposable native DM
@@ -108,7 +109,7 @@ func nativeComponentSetup(t *testing.T) pairedComponentStory {
 	owner.Config.Server.AdminOrigin = "https://admin.example.invalid"
 	owner.Config.Server.PortalOrigin = "https://portal.example.invalid"
 	n := &nodes.Service{Identity: owner, Workspaces: &workspaces.Service{Identity: owner}}
-	s := &components.Service{Nodes: n, LogStore: &memoryLogStore{}}
+	s := &components.Service{Nodes: n, LogStore: &logstorefixture.Memory{}}
 	n.Components = s
 	g := pairedComponentStory{f: f, ctx: ctx, owner: owner, s: s}
 	g.admin, g.portal = g.session(t, "admin"), g.session(t, "portal")

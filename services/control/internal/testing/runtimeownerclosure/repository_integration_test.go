@@ -3,7 +3,6 @@
 package runtimeownerclosure_test
 
 import (
-	"encoding/json"
 	"errors"
 	"io/fs"
 	"net/url"
@@ -26,6 +25,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
 	closure "github.com/Passion-Flow/ownsolid/services/control/migrations/mysql/candidates/runtime-owner-closure"
 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/logstorefixture"
 )
 
 func stringsFrom(t *testing.T, f repositoryfixture.Fixture, pg, my string, args ...any) []string {
@@ -101,6 +101,8 @@ func schemaOwners(t *testing.T, f repositoryfixture.Fixture) {
 	}
 	expected["schema_migrations"] = true
 	if f.Store.Dialect() == transaction.PostgreSQL {
+		// Migration 32 dropped this table from the frozen lineage's PostgreSQL schema (ADR 0012).
+		delete(expected, "component_log_snapshots")
 		// The cell registry is PostgreSQL-only until CMP-201 and CMP-202 (ADR 0006).
 		expected["sites"], expected["cells"] = true, true
 	}
@@ -118,7 +120,7 @@ func schemaOwners(t *testing.T, f repositoryfixture.Fixture) {
 		}
 		sql := string(raw)
 		match := create.FindStringSubmatch(sql)
-		if match == nil {
+		if match == nil || !expected[match[1]] {
 			continue
 		}
 		table := match[1]
@@ -277,14 +279,9 @@ func TestActualRuntimeOwnerClosure(t *testing.T) {
 			t.Fatal(e)
 		}
 		got, e := g.s.Logs(g.ctx, g.admin, g.node.NodeID)
-		if e != nil || got.Snapshot == nil || got.TaskID == nil || *got.TaskID != task.ID || got.Snapshot.Entries[0].Message != logs.Entries[0].Message || g.count(t, "SELECT COUNT(*) FROM component_log_snapshots", "SELECT COUNT(*) FROM component_log_snapshots") != 1 {
+		if e != nil || got.Snapshot == nil || got.TaskID == nil || *got.TaskID != task.ID || got.Snapshot.Entries[0].Message != logs.Entries[0].Message {
 			t.Fatal("actual latest snapshot", e)
 		}
-		refusal(t, g.f, "UPDATE component_log_snapshots SET snapshot='[]'::jsonb WHERE node_id=$1", "UPDATE component_log_snapshots SET snapshot=CAST('[]' AS JSON) WHERE node_id=?", g.node.NodeID)
-		oversized, _ := json.Marshal(map[string]string{"message": strings.Repeat("x", 17000)})
-		refusal(t, g.f, "UPDATE component_log_snapshots SET snapshot=$1::jsonb WHERE node_id=$2", "UPDATE component_log_snapshots SET snapshot=CAST(? AS JSON) WHERE node_id=?", oversized, g.node.NodeID)
-		_, foreign := g.foreignTask(t)
-		refusal(t, g.f, "UPDATE component_log_snapshots SET task_id=$1 WHERE node_id=$2", "UPDATE component_log_snapshots SET task_id=? WHERE node_id=?", foreign.ID, g.node.NodeID)
 		if _, e = g.s.Logs(g.ctx, g.portal, g.node.NodeID); e == nil {
 			t.Fatal("Portal read private journal")
 		}
@@ -489,7 +486,7 @@ func TestActualRuntimeOwnerClosureProtectedRuntime(t *testing.T) {
 func rclComponentForDistribution(t *testing.T, g pairedDistributionStory) pairedComponentStory {
 	t.Helper()
 	n := &nodes.Service{Identity: g.owner, Workspaces: g.s.Workspaces}
-	c := &components.Service{Nodes: n}
+	c := &components.Service{Nodes: n, LogStore: &logstorefixture.Memory{}}
 	n.Components = c
 	join, e := n.MintForProfile(g.ctx, g.admin, g.f.Workspace, "RCL protected component", agent.SystemdMaintenanceProfile, uuid.NewString())
 	if e != nil {

@@ -25,7 +25,8 @@ func TestCatalogMatchesImmutableMigrations(t *testing.T) {
 		t.Fatal(e)
 	}
 	pattern := regexp.MustCompile(`(?m)^CREATE TABLE(?: IF NOT EXISTS)? ([a-z][a-z0-9_]*)`)
-	found := []string{}
+	dropped := regexp.MustCompile(`(?m)^DROP TABLE(?: IF EXISTS)? ([a-z][a-z0-9_]*)`)
+	tables := map[string]bool{}
 	for _, entry := range entries {
 		if !strings.HasSuffix(entry.Name(), ".up.sql") {
 			continue
@@ -35,11 +36,18 @@ func TestCatalogMatchesImmutableMigrations(t *testing.T) {
 			t.Fatal(e)
 		}
 		for _, m := range pattern.FindAllStringSubmatch(string(b), -1) {
-			found = append(found, m[1])
+			tables[m[1]] = true
+		}
+		for _, m := range dropped.FindAllStringSubmatch(string(b), -1) {
+			delete(tables, m[1])
 		}
 		if regexp.MustCompile(`(?i)\b(SERIAL|CREATE SEQUENCE|GENERATED .*IDENTITY)\b`).Match(b) {
 			t.Fatal("sequence contract must be declared before runtime qualification")
 		}
+	}
+	found := []string{}
+	for name := range tables {
+		found = append(found, name)
 	}
 	sort.Strings(found)
 	if strings.Join(found, "\n") != strings.Join(postgreSQLTables(), "\n") {

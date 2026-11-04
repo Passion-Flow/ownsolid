@@ -23,6 +23,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/logstorefixture"
 )
 
 type pairedComponentStory struct {
@@ -51,7 +52,7 @@ func pairedComponentSetup(t *testing.T) pairedComponentStory {
 	owner.Config.Server.AdminOrigin = "https://admin.example.invalid"
 	owner.Config.Server.PortalOrigin = "https://portal.example.invalid"
 	n := &nodes.Service{DB: f.PostgreSQL, Identity: owner, Workspaces: &workspaces.Service{DB: f.PostgreSQL, Identity: owner}}
-	s := &components.Service{Nodes: n, LogStore: &memoryLogStore{}}
+	s := &components.Service{Nodes: n, LogStore: &logstorefixture.Memory{}}
 	n.Components = s
 	g := pairedComponentStory{f: f, ctx: ctx, owner: owner, s: s}
 	g.exec(t, "INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role) VALUES($1,$2,$3,'owner')", "INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role) VALUES(?,?,?,'owner')", f.User, f.Tenant, f.Workspace)
