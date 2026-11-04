@@ -8,10 +8,12 @@
   },
   "scripts": {
     "build": "pnpm --filter ./apps/console --filter ./apps/portal run build",
+    "generate": "node ../tools/codegen/web-api.mjs",
+    "generate:check": "node ../tools/codegen/web-api.mjs --check",
     "typecheck": "pnpm --recursive run typecheck",
     "lint": "eslint --config packages/config/eslint.config.js --max-warnings 0 .",
-    "format": "prettier --ignore-path ../.gitignore --write . '!pnpm-lock.yaml'",
-    "format:check": "prettier --ignore-path ../.gitignore --check . '!pnpm-lock.yaml'",
+    "format": "prettier --ignore-path ../.gitignore --write . '!pnpm-lock.yaml' '!**/gen/**'",
+    "format:check": "prettier --ignore-path ../.gitignore --check . '!pnpm-lock.yaml' '!**/gen/**'",
     "test": "pnpm --recursive run test",
     "test:browser": "pnpm --filter ./apps/console --filter ./apps/portal run test:browser"
   },

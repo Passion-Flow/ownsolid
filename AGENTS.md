@@ -188,7 +188,8 @@ ownsolid/
   Deployment variables live only in `deploy/`.
 - **Tests:** unit tests sit beside the code (`_test.go`, `*.test.ts`, Python `tests/`).
   Test data used by one component goes in a `testdata/` directory next to its test.
-- **Generated code:** only in directories named `gen/`, marked "do not edit".
+- **Generated code:** only in directories named `gen/`, marked "do not edit". After
+  changing `api/openapi`, run `make generate`; `make check` fails until the result is committed.
 - **Names:** lowercase paths. Directories and docs use kebab-case; Go and Python
   files use snake_case; TypeScript files use kebab-case. Conventional names such as
   `README.md`, `Makefile`, `Dockerfile` and `Cargo.toml` keep their usual spelling.

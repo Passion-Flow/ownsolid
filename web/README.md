@@ -40,6 +40,24 @@ OWNSOLID_DEV_ORIGIN=https://admin.ownsolid.test:8443 \
   NODE_EXTRA_CA_CERTS=/path/to/ca.pem pnpm --filter @ownsolid/console dev
 ```
 
+## Calling the API
+
+`packages/api/src/gen` holds types generated from `api/openapi`; change a contract, then run
+`make generate` and commit the result. `make check` fails until they match. Call an endpoint
+through a client for its contract, so the compiler checks the path, parameters and body:
+
+```ts
+const nodes = createClient<nodesContract.paths>();
+const page = await nodes.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes', {
+  path: { site_id: 'default', cell_id: 'default' },
+  query: { limit: 20 },
+});
+```
+
+Writes carry the CSRF token and retry once when it is stale. Where the contract requires
+`Idempotency-Key`, `idempotencyKey` is required: create it when the user starts the action
+and reuse it for retries.
+
 ## Rules
 
 - **Text:** every user-visible string is a key in `packages/i18n/locales/en.json` and

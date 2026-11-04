@@ -6,7 +6,7 @@ CONTROL_IMAGE ?= ownsolid/control:dev
 E2E_BIN ?= bin/e2e
 IMAGE_PATHS := api pkg/license deploy/images/control tools/release/offline services/control runtimes/data-processing web
 
-.PHONY: help check check-layout check-roadmap check-web test-tools web-install build test test-web-browser image-control e2e-binaries test-offline
+.PHONY: help check check-layout check-roadmap check-web test-tools web-install generate build test test-web-browser image-control e2e-binaries test-offline
 
 help: ## Show available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -25,8 +25,11 @@ test-tools: ## Run tests for repository tooling
 web-install: ## Install the web workspace's locked dependencies; install scripts never run
 	@cd web && pnpm install --frozen-lockfile --ignore-scripts
 
-check-web: web-install ## Lint, format-check and type-check the web workspace
-	@cd web && pnpm lint && pnpm format:check && pnpm typecheck
+check-web: web-install ## Lint, format-check and type-check the web workspace; check generated API types
+	@cd web && pnpm generate:check && pnpm lint && pnpm format:check && pnpm typecheck
+
+generate: web-install ## Regenerate the web API types after changing api/openapi
+	@cd web && pnpm generate
 
 build: web-install ## Build every Go module, the gateway and the web applications
 	@for module in $(GO_MODULES); do (cd $$module && go build ./...) || exit 1; done

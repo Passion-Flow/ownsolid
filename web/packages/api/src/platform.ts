@@ -1,25 +1,35 @@
 // Workspaces, notifications and license status, which the application frame shows.
+import { createClient, type Success } from './client.ts';
+import type { licensingContract, notificationsContract, workspacesContract } from './gen/index.ts';
 import type { Audience } from './identity.ts';
-import { get, write, type RequestOptions } from './transport.ts';
-
-/** One page of a list; `next_cursor` is null on the last page. */
-export interface Page<T> {
-  items: T[];
-  next_cursor: string | null;
-}
+import type { RequestOptions } from './transport.ts';
 
 /** A workspace in a list. */
-export interface WorkspaceSummary {
-  id: string;
-  tenant_id: string;
-  name: string;
-  status: string;
-  version: number;
-  is_default: boolean;
-  role: 'owner' | 'member' | 'viewer' | null;
-  created_at: string;
-  updated_at: string;
-}
+export type WorkspaceSummary = workspacesContract.components['schemas']['Workspace'];
+
+/** One page of workspaces. */
+export type WorkspacePage = Success<workspacesContract.operations['listPortalWorkspaces']>;
+
+/** Whether notifications are on, and how many are unread. */
+export type NotificationSummary =
+  notificationsContract.components['schemas']['NotificationConfiguration'];
+
+/** A notification that a workflow run finished. */
+export type RunNotification = notificationsContract.components['schemas']['TerminalNotification'];
+
+/** How a finished workflow run ended. */
+export type RunOutcome = RunNotification['outcome'];
+
+/** One page of notifications. */
+export type NotificationPage =
+  notificationsContract.components['schemas']['TerminalNotificationPage'];
+
+/** License condition every signed-in user may read. */
+export type LicenseStatus = licensingContract.components['schemas']['PortalLicenseState'];
+
+const workspaces = createClient<workspacesContract.paths>();
+const notifications = createClient<notificationsContract.paths>();
+const licensing = createClient<licensingContract.paths>();
 
 /**
  * Lists workspaces the session may use. Administrators list from the admin API, which
@@ -29,36 +39,14 @@ export function listWorkspaces(
   audience: Audience,
   limit: number,
   options?: RequestOptions,
-): Promise<Page<WorkspaceSummary>> {
-  const root = audience === 'admin' ? '/api/v1/admin/workspaces' : '/api/v1/workspaces';
-  return get<Page<WorkspaceSummary>>(`${root}?limit=${limit}`, options);
-}
-
-/** Whether notifications are on, and how many are unread. */
-export interface NotificationSummary {
-  available: boolean;
-  unread_count: number;
-  retention_days: number;
-}
-
-/** How a finished workflow run ended. */
-export type RunOutcome = 'succeeded' | 'failed' | 'cancelled' | 'interrupted';
-
-/** A notification that a workflow run finished. */
-export interface RunNotification {
-  id: string;
-  workspace_id: string;
-  workflow_id: string;
-  run_id: string;
-  outcome: RunOutcome;
-  error_code: string | null;
-  occurred_at: string;
-  read_at: string | null;
+): Promise<WorkspacePage> {
+  const path = audience === 'admin' ? '/api/v1/admin/workspaces' : '/api/v1/workspaces';
+  return workspaces.get(path, { ...options, query: { limit } });
 }
 
 /** Reads the unread count. */
 export function getNotificationSummary(options?: RequestOptions): Promise<NotificationSummary> {
-  return get<NotificationSummary>('/api/v1/notifications/configuration', options);
+  return notifications.get('/api/v1/notifications/configuration', options);
 }
 
 /** Lists notifications, newest first. */
@@ -66,25 +54,22 @@ export function listNotifications(
   limit: number,
   cursor: string | null,
   options?: RequestOptions,
-): Promise<Page<RunNotification>> {
-  const query = new URLSearchParams({ limit: String(limit) });
-  if (cursor) query.set('cursor', cursor);
-  return get<Page<RunNotification>>(`/api/v1/notifications?${query.toString()}`, options);
+): Promise<NotificationPage> {
+  return notifications.get('/api/v1/notifications', {
+    ...options,
+    query: { limit, ...(cursor ? { cursor } : {}) },
+  });
 }
 
 /** Marks one notification as read. */
 export function markNotificationRead(id: string): Promise<RunNotification> {
-  return write<RunNotification>('POST', `/api/v1/notifications/${encodeURIComponent(id)}/read`, {});
-}
-
-/** License condition every signed-in user may read. */
-export interface LicenseStatus {
-  state: 'missing' | 'not_yet_valid' | 'active' | 'grace' | 'expired' | 'clock_suspect';
-  new_business_allowed: boolean;
-  warning: boolean;
+  return notifications.post('/api/v1/notifications/{notification_id}/read', {
+    path: { notification_id: id },
+    body: {},
+  });
 }
 
 /** Reads the license condition. */
 export function getLicenseStatus(options?: RequestOptions): Promise<LicenseStatus> {
-  return get<LicenseStatus>('/api/v1/license/status', options);
+  return licensing.get('/api/v1/license/status', options);
 }

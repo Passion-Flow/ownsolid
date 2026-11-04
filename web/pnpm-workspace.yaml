@@ -28,6 +28,7 @@ catalog:
   globals: 17.14.0
   jsdom: 30.1.3
   lucide-react: 1.66.0
+  openapi-typescript: 7.13.0
   prettier: 3.9.10
   radix-ui: 1.8.1
   react-dom: 19.3.1
@@ -38,3 +39,9 @@ catalog:
   typescript: 6.0.3
   vite: 8.3.5
   vitest: 5.1.0
+
+# openapi-typescript asks for TypeScript 5 but generates correctly with 6; the drift check
+# and the compiler verify its output on every run.
+peerDependencyRules:
+  allowedVersions:
+    openapi-typescript>typescript: '6'

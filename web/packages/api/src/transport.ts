@@ -5,12 +5,12 @@ import { ApiProblem, type FieldProblem } from './problem.ts';
 /** Options for a single API call. */
 export interface RequestOptions {
   /** Cancels the call, for example when the page that started it closes. */
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
   /**
    * Identifies one logical write so the server applies it once even when it is
    * retried. Generate it when the user starts the action and reuse it for retries.
    */
-  idempotencyKey?: string;
+  idempotencyKey?: string | undefined;
 }
 
 /** HTTP methods that change state; they carry a CSRF token. */

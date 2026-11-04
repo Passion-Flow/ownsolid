@@ -30,6 +30,12 @@ differ from what the newest releases suggest.
   because 9 is deprecated, with the maintained `eslint-plugin-jsx-a11y-x` fork, because
   `eslint-plugin-jsx-a11y` has no release for it. pnpm's default minimum release age stays
   on, so a dependency is at least a day old when it is adopted.
+- **One generated module and one client per contract,** not a merged `paths` type: six
+  paths appear in both the `components` and `nodes` contracts. Generated types are committed
+  under `packages/api/src/gen`, and `make check` fails when they differ from `api/openapi`.
+  `openapi-typescript` asks for TypeScript 5; a peer rule allows 6 because the drift check and
+  the compiler verify its output. The client covers JSON endpoints; file transfers and event
+  streams use their own code when their pages arrive.
 - **The control image builds `web/` itself,** from `pnpm-lock.yaml`, with install scripts
   disabled. Only building an image needs a registry; a running installation never does.
 

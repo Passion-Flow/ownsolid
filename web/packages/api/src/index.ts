@@ -21,6 +21,16 @@ export {
   type UiPolicy,
 } from './runtime-config.ts';
 export {
+  buildUrl,
+  createClient,
+  type Client,
+  type Options,
+  type PathsWith,
+  type Query,
+  type Success,
+} from './client.ts';
+export type * from './gen/index.ts';
+export {
   getMe,
   signIn,
   signOut,
@@ -38,9 +48,10 @@ export {
   listWorkspaces,
   markNotificationRead,
   type LicenseStatus,
+  type NotificationPage,
   type NotificationSummary,
-  type Page,
   type RunNotification,
   type RunOutcome,
+  type WorkspacePage,
   type WorkspaceSummary,
 } from './platform.ts';
