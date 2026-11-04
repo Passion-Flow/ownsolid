@@ -130,6 +130,42 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await expect(page).toHaveURL(/\/sign-in/);
   });
 
+  test('remembers the theme and the density', async ({ page }) => {
+    control.signedIn = true;
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    const root = page.locator('html');
+    await expect(root).toHaveAttribute('data-theme', 'light');
+    await page.getByRole('button', { name: 'Use the dark theme' }).click();
+    await expect(root).toHaveAttribute('data-theme', 'dark');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(22, 21, 19)');
+    await page.getByRole('button', { name: 'Use compact spacing' }).click();
+    await expect(root).toHaveAttribute('data-density', 'compact');
+    await page.reload();
+    await expect(root).toHaveAttribute('data-theme', 'dark');
+    await expect(root).toHaveAttribute('data-density', 'compact');
+    await expect(page.getByRole('button', { name: 'Use the light theme' })).toBeVisible();
+  });
+
+  test('follows the system theme until the user chooses', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto('/sign-in');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await page.emulateMedia({ colorScheme: 'light' });
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  });
+
+  test('loads the bundled fonts from its own origin', async ({ page }) => {
+    await page.goto('/sign-in');
+    await page.getByLabel('Email').waitFor();
+    const loaded = await page.evaluate(async () => {
+      await document.fonts.ready;
+      return [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family);
+    });
+    expect(loaded.join()).toContain('Figtree Variable');
+    await expect(page.locator('body')).toHaveCSS('font-family', /^"Figtree Variable"/);
+  });
+
   test('switches to Chinese and remembers the choice', async ({ page }) => {
     await page.goto('/sign-in');
     await page.getByLabel('Language').selectOption('zh-CN');

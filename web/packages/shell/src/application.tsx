@@ -1,7 +1,7 @@
 // Creates and starts an application: router, query client and providers.
 import type { Audience } from '@ownsolid/api';
 import { I18nProvider } from '@ownsolid/i18n';
-import { applyTheme } from '@ownsolid/ui';
+import { PreferencesProvider, ToastProvider } from '@ownsolid/ui';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import {
   RouterProvider,
@@ -52,14 +52,17 @@ export interface StartOptions {
 
 /** Renders an application created with {@link createApplication}. */
 export function startApplication({ router, queryClient, root }: StartOptions): void {
-  applyTheme('system');
   createRoot(root).render(
     <StrictMode>
-      <I18nProvider>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-        </QueryClientProvider>
-      </I18nProvider>
+      <PreferencesProvider>
+        <I18nProvider>
+          <ToastProvider>
+            <QueryClientProvider client={queryClient}>
+              <RouterProvider router={router} />
+            </QueryClientProvider>
+          </ToastProvider>
+        </I18nProvider>
+      </PreferencesProvider>
     </StrictMode>,
   );
 }

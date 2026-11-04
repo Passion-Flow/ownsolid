@@ -1,5 +1,13 @@
 import { useI18n } from '@ownsolid/i18n';
-import { Brand, Button, LocaleSelect, ProblemNotice, Spinner } from '@ownsolid/ui';
+import {
+  Brand,
+  Button,
+  DensityToggle,
+  LocaleSelect,
+  ProblemNotice,
+  Spinner,
+  ThemeToggle,
+} from '@ownsolid/ui';
 import { isProblem } from '@ownsolid/api';
 import { useRouter } from '@tanstack/react-router';
 import { signInPath } from './redirect.ts';
@@ -23,6 +31,8 @@ export function WelcomePage() {
         <span className="text-text-3">{t(`app.${me.audience}`)}</span>
         <div className="ml-auto flex items-center gap-2">
           <LocaleSelect />
+          <DensityToggle />
+          <ThemeToggle />
           <Button
             variant="ghost"
             disabled={signOut.isPending}

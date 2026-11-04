@@ -1,12 +1,20 @@
 import { I18nProvider } from '@ownsolid/i18n';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Server } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Button } from './button.tsx';
+import { Segmented, Switch } from './controls.tsx';
+import { CopyText } from './copy-text.tsx';
+import { Dialog, Drawer } from './dialog.tsx';
+import { EmptyState } from './empty-state.tsx';
+import { Meter } from './meter.tsx';
 import { Notice } from './notice.tsx';
 import { ProblemNotice } from './problem-notice.tsx';
+import { StatusPill } from './status-pill.tsx';
 import { TextField } from './text-field.tsx';
+import { ToastProvider, useToast } from './toast.tsx';
 
 const inEnglish = (node: ReactNode) => render(<I18nProvider locale="en">{node}</I18nProvider>);
 
@@ -80,5 +88,167 @@ describe('ProblemNotice', () => {
   it('shows how long to wait when the server said so', () => {
     inEnglish(<ProblemNotice problem={{ ...base, code: 'RATE_LIMITED', retryAfterSeconds: 1 }} />);
     expect(screen.getByRole('alert')).toHaveTextContent('You can try again in 1 second.');
+  });
+});
+
+describe('Dialog', () => {
+  beforeAll(() => {
+    // jsdom has no top layer; these stand in for the browser's behavior.
+    Object.assign(HTMLDialogElement.prototype, {
+      showModal(this: HTMLDialogElement) {
+        this.open = true;
+      },
+      close(this: HTMLDialogElement) {
+        this.open = false;
+      },
+    });
+  });
+
+  it('opens with its title as the accessible name and closes from the button', async () => {
+    const onClose = vi.fn();
+    inEnglish(
+      <Dialog open onClose={onClose} title="Add node">
+        <p>Body</p>
+      </Dialog>,
+    );
+    expect(screen.getByRole('dialog', { name: 'Add node' })).toHaveAttribute('open');
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('renders no content while closed', () => {
+    inEnglish(
+      <Dialog open={false} onClose={() => undefined} title="Add node">
+        <p>Body</p>
+      </Dialog>,
+    );
+    expect(screen.queryByText('Body')).not.toBeInTheDocument();
+  });
+
+  it('closes on Escape, which the browser reports as cancel', () => {
+    const onClose = vi.fn();
+    inEnglish(
+      <Drawer open onClose={onClose} title="gpu-a01">
+        <p>Body</p>
+      </Drawer>,
+    );
+    fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('closes on a backdrop click but not on a click inside', async () => {
+    const onClose = vi.fn();
+    inEnglish(
+      <Dialog open onClose={onClose} title="Add node">
+        <p>Body</p>
+      </Dialog>,
+    );
+    await userEvent.click(screen.getByText('Body'));
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('dialog'));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+});
+
+describe('Toast', () => {
+  function Trigger({ undo }: { undo?: () => void }) {
+    const toast = useToast();
+    return (
+      <Button
+        onClick={() => {
+          toast({ message: 'Node drained', undo });
+        }}
+      >
+        Go
+      </Button>
+    );
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('offers undo, then confirms it', async () => {
+    const undo = vi.fn();
+    inEnglish(
+      <ToastProvider>
+        <Trigger undo={undo} />
+      </ToastProvider>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Go' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Node drained');
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(undo).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status')).toHaveTextContent('Change undone');
+  });
+
+  it('disappears on its own', () => {
+    vi.useFakeTimers();
+    inEnglish(
+      <ToastProvider>
+        <Trigger />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Go' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Node drained');
+    act(() => {
+      vi.advanceTimersByTime(2_500);
+    });
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+});
+
+describe('small components', () => {
+  it('StatusPill always shows its label', () => {
+    render(<StatusPill tone="critical">Offline</StatusPill>);
+    expect(screen.getByText('Offline')).toBeInTheDocument();
+  });
+
+  it('Meter clamps its value and reports it', () => {
+    render(<Meter value={140} label="CPU" />);
+    expect(screen.getByRole('meter', { name: 'CPU' })).toHaveAttribute('aria-valuenow', '100');
+  });
+
+  it('Segmented marks the current choice and reports changes', async () => {
+    const onChange = vi.fn();
+    render(
+      <Segmented
+        label="View"
+        value="list"
+        onChange={onChange}
+        options={[
+          { value: 'list', label: 'List' },
+          { value: 'grid', label: 'Grid' },
+        ]}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(screen.getByRole('button', { name: 'Grid' }));
+    expect(onChange).toHaveBeenCalledWith('grid');
+  });
+
+  it('Switch toggles', async () => {
+    const onChange = vi.fn();
+    render(<Switch label="Offline mode" checked={false} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('switch', { name: 'Offline mode' }));
+    expect(onChange).toHaveBeenCalledWith(true);
+  });
+
+  it('CopyText copies and confirms', async () => {
+    const user = userEvent.setup();
+    inEnglish(<CopyText text="gpu-a01" />);
+    await user.click(screen.getByRole('button', { name: 'Copy' }));
+    expect(await navigator.clipboard.readText()).toBe('gpu-a01');
+    expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
+  });
+
+  it('EmptyState names the next action', () => {
+    render(
+      <EmptyState icon={Server} title="No nodes" action={<Button>Add node</Button>}>
+        Add a node to run workloads.
+      </EmptyState>,
+    );
+    expect(screen.getByRole('heading', { name: 'No nodes' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add node' })).toBeInTheDocument();
   });
 });

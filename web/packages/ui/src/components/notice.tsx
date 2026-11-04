@@ -35,7 +35,6 @@ export function Notice({ tone = 'info', title, children, actions, className }: N
           'mt-0.5 size-4 shrink-0',
           tone === 'critical' ? 'text-critical' : 'text-accent',
         )}
-        strokeWidth={1.75}
       />
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-text">{title}</p>

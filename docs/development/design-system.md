@@ -9,6 +9,11 @@ it in a browser (it runs offline) and match its look and layout. Ease of use is 
 product value. The owner rejected a Claude-like palette, serif headings and playful or
 cartoon icons; keep the warm neutral, teal and Figtree direction below.
 
+The tokens, fonts and components live in `web/packages/ui`. Reach for its components
+before writing new markup: `Button`, `TextField`, `Card`, `StatusPill`, `Tag`, `Kbd`,
+`Meter`, `Segmented`, `Switch`, `Checkbox`, `CopyText`, `EmptyState`, `Skeleton`, `Table`,
+`Menu`, `Dialog`, `Drawer`, `Notice`, `ProblemNotice` and `useToast`.
+
 ## Tokens
 
 | Token | Light | Dark |
@@ -27,7 +32,10 @@ cartoon icons; keep the warm neutral, teal and Figtree direction below.
   18 px for dialogs.
 - Typography: Figtree, 14 px base, page titles 27 px at weight 750; JetBrains Mono
   for identifiers, code and logs. Numbers in tables use tabular figures.
-- Icons: Lucide at 18 px with a 1.75 stroke.
+- Icons: Lucide at 18 px with a 1.75 stroke, set once in the stylesheet; import them
+  from `lucide-react` and mark decorative ones `aria-hidden`.
+- Theme and density are per browser, chosen with `ThemeToggle` and `DensityToggle`.
+  The theme follows the operating system until the user picks one.
 - Chart colors pass the dataviz palette validator in both themes before use.
 
 ## Interaction principles
@@ -58,4 +66,13 @@ cartoon icons; keep the warm neutral, teal and Figtree direction below.
 ## Offline rule
 
 Fonts, icons, help content and every other asset ship inside the product. Pages never
-load anything from the internet.
+load anything from the internet. The license texts of the fonts and icons ship in each
+build as `/assets/third-party-notices.txt`.
+
+## Known gaps
+
+White text on the accent color has a contrast of 3.7 to 1 in the light theme and 3.1 to 1
+in the dark theme, below the 4.5 to 1 that WCAG AA asks of 14-pixel text, and tertiary
+text is below it too. Both are the approved
+palette; UX-112 decides how to close the gap. A test holds primary and secondary text
+and `accent-ink` at AA on every surface in both themes.
