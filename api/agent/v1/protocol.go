@@ -52,6 +52,8 @@ type Enrolled struct {
 type Disposition struct {
 	Status     string    `json:"status"`
 	ServerTime time.Time `json:"server_time"`
+	// Pacing is how control wants this agent paced from now on (ADR 0013).
+	Pacing *Pacing `json:"pacing,omitempty"`
 }
 type Lease struct {
 	Preparation    *lifecycle.Command `json:"model_preparation,omitempty"`
