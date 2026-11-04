@@ -13,7 +13,7 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 - [ ] DEL-001 One typed configuration and one install path produce every topology size; delete per-profile Compose files and Dockerfiles (P0) - Catalog: F217
   - Waits for UX-001 (owner decision, 2026-11-04). Tick only when the image serves the console and portal built from `web/` and the end-to-end install passes on that image. A placeholder page does not count.
   - Done so far: `ownsolid-install` installs `single-node` with no network route, API only (commit e38f5cf). `ha`, `cell`, `multi-cell` and `multi-site` are refused until REL-101, ARC-104, ARC-202 and ARC-301.
-- [ ] DEL-002 Zero-egress test harness: install and run with no network route, recording any outbound attempt (P0) - Catalog: F502, F510
+- [x] DEL-002 Zero-egress test harness: install and run with no network route, recording any outbound attempt (P0) - Catalog: F502, F510 - Evidence: commit 1d8fcdd (ADR 0008)
 - [ ] DEL-003 Real egress denial for workload containers on nodes, not only offline flags (found on real GPU, 2026-11-04) (P0) - Catalog: F234
 
 ## P1 Enterprise release
