@@ -74,8 +74,8 @@ func TestComponentLogsThroughARealStore(t *testing.T) {
 		}
 	}
 
-	first := complete("real store first é\"{}")
-	waitForLogs(t, f, showing(first, "real store first é\"{}"))
+	first := complete("real store first \u00e9\"{}")
+	waitForLogs(t, f, showing(first, "real store first \u00e9\"{}"))
 	second := complete("real store second")
 	waitForLogs(t, f, showing(second, "real store second"))
 

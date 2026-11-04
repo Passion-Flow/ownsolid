@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -135,15 +134,8 @@ func (p *MetricsPusher) render() []byte {
 }
 
 func (p *MetricsPusher) processSamples() []Sample {
-	var memory runtime.MemStats
-	runtime.ReadMemStats(&memory)
 	return []Sample{
 		{"ownsolid_process_uptime_seconds", time.Since(p.started).Seconds()},
-		{"ownsolid_go_goroutines", float64(runtime.NumGoroutine())},
-		{"ownsolid_go_heap_alloc_bytes", float64(memory.HeapAlloc)},
-		{"ownsolid_go_sys_bytes", float64(memory.Sys)},
-		{"ownsolid_go_gc_cycles_total", float64(memory.NumGC)},
-		{"ownsolid_go_gc_pause_seconds_total", time.Duration(memory.PauseTotalNs).Seconds()},
 		{"ownsolid_telemetry_metric_pushes_failed_total", float64(p.failed.Load())},
 	}
 }

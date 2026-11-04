@@ -266,7 +266,7 @@ func TestPushSendsPrometheusTextWithEscapedLabels(t *testing.T) {
 	if !strings.Contains(body, `ownsolid_test_value{service="control",instance="host\"1"} 2.5`+"\n") {
 		t.Fatalf("value line missing from:\n%s", body)
 	}
-	if !strings.Contains(body, "ownsolid_go_goroutines{") || !strings.Contains(body, "ownsolid_telemetry_metric_pushes_failed_total{") {
+	if !strings.Contains(body, "ownsolid_process_uptime_seconds{") || !strings.Contains(body, "ownsolid_telemetry_metric_pushes_failed_total{") {
 		t.Fatalf("process values missing from:\n%s", body)
 	}
 }

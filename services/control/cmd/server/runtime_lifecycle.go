@@ -352,6 +352,7 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 		g.Go("TELEMETRY_WRITER", h.TelemetryLogs.Run)
 	}
 	if h.TelemetryMetrics != nil {
+		h.TelemetryMetrics.Add(runtimeSamples)
 		if selected.postgres != nil {
 			h.TelemetryMetrics.Add(databasePoolSamples(selected.postgres))
 		}

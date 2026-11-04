@@ -37,6 +37,11 @@ store on a fixed interval. A scrape would need the store to reach into control a
 add a metrics listener to secure. Values are current readings, so a failed push is counted
 and not retried: the next one carries newer values.
 
+Runtime values come from `monitoringmetrics.Runtime`, the reader behind the Admin monitoring
+snapshot, so both views agree. The HTTP request series that package records are not pushed
+yet: its recorder runs only with a monitoring configuration file, which the installer does
+not write, and those series need labels. OBS-101 pushes them.
+
 **No service looks a store up by name.** Each store has a fixed address on the internal
 `state` network ([ADR 0008](0008-zero-egress-harness.md)).
 

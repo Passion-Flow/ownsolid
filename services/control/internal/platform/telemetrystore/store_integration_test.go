@@ -130,7 +130,7 @@ func TestMetricsReachARealStore(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go p.Run(ctx)
-	query := url.Values{"match[]": {fmt.Sprintf(`ownsolid_go_goroutines{service=%q}`, service)}}
+	query := url.Values{"match[]": {fmt.Sprintf(`ownsolid_process_uptime_seconds{service=%q}`, service)}}
 	deadline := time.Now().Add(30 * time.Second)
 	for {
 		var answer struct {
