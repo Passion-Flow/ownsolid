@@ -41,9 +41,9 @@ func TestNewClientRefusesBadAddresses(t *testing.T) {
 
 func TestInsertSendsOneScopedLine(t *testing.T) {
 	var got wireRecord
-	var path, fields string
+	var path, fields, contentType string
 	c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
-		path, fields = r.URL.Path, r.URL.Query().Get("_stream_fields")
+		path, fields, contentType = r.URL.Path, r.URL.Query().Get("_stream_fields"), r.Header.Get("Content-Type")
 		raw, _ := io.ReadAll(r.Body)
 		if e := json.Unmarshal(raw, &got); e != nil {
 			t.Error(e)
@@ -55,6 +55,9 @@ func TestInsertSendsOneScopedLine(t *testing.T) {
 	}
 	if path != insertPath || fields != streamFields || got.Message != `{"a":1}` || got.TenantID != "t1" || got.TaskID != "task" || !got.Time.Equal(when) {
 		t.Fatalf("%s %s %+v", path, fields, got)
+	}
+	if contentType != "application/stream+json" {
+		t.Fatalf("content type %q: the store silently discards a body it reads as a form", contentType)
 	}
 }
 
