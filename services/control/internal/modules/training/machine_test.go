@@ -32,13 +32,61 @@ func dispatched(t *testing.T, f scenario) training.Job {
 	}
 	return j
 }
+// claimed claims and acknowledges the training lease, as the agent does before it starts.
 func claimed(t *testing.T, f scenario) agentwire.Lease {
+	t.Helper()
+	l := delivered(t, f)
+	if _, e := f.s.Nodes.Acknowledge(context.Background(), f.input.NodeID, f.credential, l.TaskID, agentwire.TaskAcknowledgementRequest{Sequence: l.Sequence, LeaseToken: l.LeaseToken}, uuid.NewString()); e != nil {
+		t.Fatal("actual acknowledgement", e)
+	}
+	return l
+}
+
+// delivered claims the training lease without acknowledging it.
+func delivered(t *testing.T, f scenario) agentwire.Lease {
 	t.Helper()
 	claim, e := f.s.Nodes.Claim(context.Background(), f.input.NodeID, f.credential, uuid.NewString())
 	if e != nil || claim.Lease == nil || claim.Lease.Training == nil {
 		t.Fatal("actual delegated claim", e)
 	}
 	return *claim.Lease
+}
+
+// A training lease whose reply was lost is delivered again on the same attempt with a new
+// stop authority; the lost token is fenced (ADR 0011).
+func TestActualTrainingLeaseLostBeforeAcknowledgementIsDeliveredAgain(t *testing.T) {
+	f := setup(t)
+	j := dispatched(t, f)
+	ctx := context.Background()
+	lost := delivered(t, f)
+	var before []byte
+	if e := f.s.DB.QueryRow(ctx, "SELECT stop_token_hash FROM training_attempts WHERE id=$1", *j.CurrentAttemptID).Scan(&before); e != nil || len(before) != 32 {
+		t.Fatal("first stop authority", e)
+	}
+	l := claimed(t, f)
+	if l.TaskID != lost.TaskID || l.Attempt != 1 || l.Sequence != lost.Sequence || l.LeaseToken == lost.LeaseToken || l.Training.AttemptID != *j.CurrentAttemptID {
+		t.Fatal("training lease not delivered again")
+	}
+	var after []byte
+	if e := f.s.DB.QueryRow(ctx, "SELECT stop_token_hash FROM training_attempts WHERE id=$1", *j.CurrentAttemptID).Scan(&after); e != nil || len(after) != 32 || string(after) == string(before) {
+		t.Fatal("stop authority not bound to the delivered lease", e)
+	}
+	_, e := f.s.Nodes.Renew(ctx, f.input.NodeID, f.credential, lost.TaskID, lost.LeaseToken)
+	expected(t, e, "AGENT_LEASE_STALE")
+	if _, e = f.s.Nodes.Renew(ctx, f.input.NodeID, f.credential, l.TaskID, l.LeaseToken); e != nil {
+		t.Fatal("delivered lease does not renew", e)
+	}
+	again, e := f.s.Nodes.Claim(ctx, f.input.NodeID, f.credential, uuid.NewString())
+	if e != nil || again.Lease != nil {
+		t.Fatal("acknowledged attempt delivered twice", e)
+	}
+	// Once acknowledged, the stop authority is immutable again.
+	if _, e = f.s.DB.Exec(ctx, "UPDATE training_attempts SET stop_token_hash=$2 WHERE id=$1", *j.CurrentAttemptID, before); e == nil {
+		t.Fatal("acknowledged stop authority changed")
+	}
+	if count(t, f, "SELECT count(*) FROM gpu_leases WHERE state='held'") != 1 {
+		t.Fatal("redelivery changed physical ownership")
+	}
 }
 
 func TestActualTrainingNodeClaimRenewExpiryAndGenericLeaseBypassRefusal(t *testing.T) {
@@ -230,4 +278,73 @@ func TestActualTLSMachineTrainingClaimAndRenewMatchesGeneratedSchema(t *testing.
 		t.Fatal("typed training command absent")
 	}
 	machine.Call("POST", base+"/tasks/"+lease["task_id"].(string)+"/renewals", map[string]any{"lease_token": lease["lease_token"]}, 200, "RenewedLeaseResponse")
+}
+
+// A training lease that expired before any acknowledgement is still never delivered: a
+// cancelled job is stopped by control's own proof, with no agent stop, whether the node
+// sweep or the training reconciler sees the expiry first (ADR 0011).
+// A task whose deliveries ran out without an acknowledgement failed, but no agent ever
+// executed it. The GPU must come back without manual recovery (ADR 0011).
+func TestActualTrainingExhaustedDeliveriesAreProvenNeverDelivered(t *testing.T) {
+	f := setup(t)
+	j := dispatched(t, f)
+	ctx := context.Background()
+	var lost agentwire.Lease
+	for range f.s.Nodes.Identity.Config.Policy().Nodes.MaximumTaskDeliveries {
+		lost = delivered(t, f)
+	}
+	// This claim finds the bound reached: it fails the task instead of delivering it again.
+	if claim, e := f.s.Nodes.Claim(ctx, f.input.NodeID, f.credential, uuid.NewString()); e != nil || claim.Lease != nil {
+		t.Fatal("delivered beyond the bound", claim, e)
+	}
+	if count(t, f, "SELECT count(*) FROM node_tasks WHERE id=$1 AND state='failed' AND attempt=0 AND error_code='TASK_ATTEMPTS_EXHAUSTED'", lost.TaskID) != 1 {
+		t.Fatal("exhausted task")
+	}
+	worked, e := f.s.ReconcileNext(ctx)
+	if e != nil || !worked {
+		t.Fatal("exhausted delivery reconciliation", worked, e)
+	}
+	if count(t, f, "SELECT count(*) FROM gpu_leases WHERE state='released'") != 1 || count(t, f, "SELECT count(*) FROM training_attempts WHERE physical_stop_receipt->>'proof'='control_never_delivered'") != 1 {
+		t.Fatal("exhausted delivery did not end as never delivered")
+	}
+	current, e := f.s.Get(ctx, f.portal, f.input.WorkspaceID, j.ID)
+	if e != nil || current.State == "recovery_required" {
+		t.Fatal("exhausted delivery needs manual recovery", current.State, e)
+	}
+}
+
+func TestActualTrainingReleasedUnacknowledgedLeaseIsProvenNeverDelivered(t *testing.T) {
+	for _, mode := range []string{"sweep", "reconcile"} {
+		t.Run(mode, func(t *testing.T) {
+			f := setup(t)
+			j := dispatched(t, f)
+			ctx := context.Background()
+			lost := delivered(t, f)
+			if _, e := f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", lost.TaskID); e != nil {
+				t.Fatal(e)
+			}
+			if mode == "sweep" {
+				if e := f.s.Nodes.Sweep(ctx); e != nil {
+					t.Fatal(e)
+				}
+				if count(t, f, "SELECT count(*) FROM node_tasks WHERE id=$1 AND state='pending' AND attempt=0", lost.TaskID) != 1 {
+					t.Fatal("expired unacknowledged training lease was not released")
+				}
+			}
+			current, e := f.s.Get(ctx, f.portal, f.input.WorkspaceID, j.ID)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if _, e = f.s.Cancel(ctx, f.portal, f.input.WorkspaceID, j.ID, training.ActionRequest{ExpectedRevision: current.Revision, Reason: "Cancel after a lost delivery"}, uuid.NewString()); e != nil {
+				t.Fatal(e)
+			}
+			worked, e := f.s.ReconcileNext(ctx)
+			if e != nil || !worked {
+				t.Fatal("released delivery reconciliation", e)
+			}
+			if count(t, f, "SELECT count(*) FROM gpu_leases WHERE state='released'") != 1 || count(t, f, "SELECT count(*) FROM training_attempts WHERE physical_stop_receipt->>'proof'='control_never_delivered'") != 1 || count(t, f, "SELECT count(*) FROM node_tasks WHERE id=$1 AND attempt=0 AND state='cancelled'", lost.TaskID) != 1 {
+				t.Fatal("released delivery did not end as never delivered")
+			}
+		})
+	}
 }

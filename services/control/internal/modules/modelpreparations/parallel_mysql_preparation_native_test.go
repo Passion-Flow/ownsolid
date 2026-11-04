@@ -38,17 +38,17 @@ func (*parallelRetainedRead) Query(context.Context, transaction.Statement) (tran
 }
 
 type parallelRetainedRow struct {
-	raw        []byte
-	deliveries int
-	expiry     int64
-	err        error
+	raw     []byte
+	attempt int
+	expiry  int64
+	err     error
 }
 
 func (r parallelRetainedRow) Scan(dest ...any) error {
 	if r.err != nil {
 		return r.err
 	}
-	if len(dest) != 4 {
+	if len(dest) != 5 {
 		return errors.New("unexpected retained projection")
 	}
 	expired, e := driver.Bool.ConvertValue(r.expiry)
@@ -56,9 +56,10 @@ func (r parallelRetainedRow) Scan(dest ...any) error {
 		return e
 	}
 	*dest[0].(*string) = "running"
-	*dest[1].(*int) = r.deliveries
-	*dest[2].(*[]byte) = append([]byte(nil), r.raw...)
-	*dest[3].(*bool) = expired.(bool)
+	*dest[1].(**string) = nil
+	*dest[2].(*int) = r.attempt
+	*dest[3].(*[]byte) = append([]byte(nil), r.raw...)
+	*dest[4].(*bool) = expired.(bool)
 	return nil
 }
 
@@ -96,15 +97,15 @@ func TestParallelMySQLPreparationRetainedTaskSelectedDialect(t *testing.T) {
 	n := nodes.Node{TenantID: c.Scope.TenantID, WorkspaceID: c.Scope.WorkspaceID, ID: "33333333-3333-4333-8333-333333333333"}
 	task := "44444444-4444-4444-8444-444444444444"
 	queries := map[transaction.Dialect]string{
-		transaction.PostgreSQL: `SELECT state,attempt,payload,deadline_at<=clock_timestamp() OR state='running' AND COALESCE(lease_expires_at<=clock_timestamp(),true) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4 AND operation=$5 FOR UPDATE`,
-		transaction.MySQL:      `SELECT state,attempt,payload,deadline_at<=UTC_TIMESTAMP(6) OR state='running' AND COALESCE(lease_expires_at<=UTC_TIMESTAMP(6),true) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND operation=? FOR UPDATE`,
-		transaction.Dameng:     `SELECT "STATE","ATTEMPT","PAYLOAD",CASE WHEN "DEADLINE_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR ("STATE"='running' AND ("LEASE_EXPIRES_AT" IS NULL OR "LEASE_EXPIRES_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)))) THEN 1 ELSE 0 END FROM "NODE_TASKS" WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "NODE_ID"=? AND "ID"=? AND "OPERATION"=? FOR UPDATE`,
+		transaction.PostgreSQL: `SELECT state,error_code,attempt,payload,deadline_at<=clock_timestamp() OR state='running' AND COALESCE(lease_expires_at<=clock_timestamp(),true) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4 AND operation=$5 FOR UPDATE`,
+		transaction.MySQL:      `SELECT state,error_code,attempt,payload,deadline_at<=UTC_TIMESTAMP(6) OR state='running' AND COALESCE(lease_expires_at<=UTC_TIMESTAMP(6),true) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND operation=? FOR UPDATE`,
+		transaction.Dameng:     `SELECT "STATE","ERROR_CODE","ATTEMPT","PAYLOAD",CASE WHEN "DEADLINE_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR ("STATE"='running' AND ("LEASE_EXPIRES_AT" IS NULL OR "LEASE_EXPIRES_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)))) THEN 1 ELSE 0 END FROM "NODE_TASKS" WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "NODE_ID"=? AND "ID"=? AND "OPERATION"=? FOR UPDATE`,
 	}
 	for dialect, text := range queries {
 		t.Run(string(dialect), func(t *testing.T) {
-			q := &parallelRetainedRead{dialect: dialect, row: parallelRetainedRow{raw: raw, deliveries: 1, expiry: 1}}
+			q := &parallelRetainedRead{dialect: dialect, row: parallelRetainedRow{raw: raw, attempt: 1, expiry: 1}}
 			got, e := retainedPreparationTask(context.Background(), q, n, task)
-			if e != nil || got.state != "running" || got.deliveries != 1 || !got.expired || !wire.SameCommand(got.command, c) {
+			if e != nil || got.state != "running" || got.attempt != 1 || !got.expired || !wire.SameCommand(got.command, c) {
 				t.Fatal("retained command/projection changed", e)
 			}
 			expected := transaction.SQL(dialect, text, n.TenantID, n.WorkspaceID, n.ID, task, wire.RunOperation)
@@ -121,7 +122,7 @@ func TestParallelMySQLPreparationRetainedTaskSelectedDialect(t *testing.T) {
 		}
 	})
 	for name, row := range map[string]parallelRetainedRow{
-		"native_error": {err: errors.New("native metadata retained")}, "cancelled": {err: context.Canceled}, "invalid_clob": {raw: []byte(`{"scope":{}}`)}, "foreign_tenant": {raw: raw}, "negative_delivery": {raw: raw, deliveries: -1}, "extra_delivery": {raw: raw, deliveries: 2}, "invalid_expiry_integer": {raw: raw, expiry: 2},
+		"native_error": {err: errors.New("native metadata retained")}, "cancelled": {err: context.Canceled}, "invalid_clob": {raw: []byte(`{"scope":{}}`)}, "foreign_tenant": {raw: raw}, "negative_attempt": {raw: raw, attempt: -1}, "extra_attempt": {raw: raw, attempt: 2}, "invalid_expiry_integer": {raw: raw, expiry: 2},
 	} {
 		t.Run(name, func(t *testing.T) {
 			current := n

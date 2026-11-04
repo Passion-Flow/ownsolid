@@ -66,11 +66,15 @@ func preparationDispatched(t *testing.T, g preparationScenario) modelpreparation
 	return p
 }
 
+// preparationClaimed claims and acknowledges the lease, as the agent does before it starts.
 func preparationClaimed(t *testing.T, g preparationScenario) agentwire.Lease {
 	t.Helper()
 	claim, e := g.f.s.Nodes.Claim(context.Background(), g.node.NodeID, g.node.Credential, uuid.NewString())
 	if e != nil || claim.Lease == nil || claim.Lease.Preparation == nil {
 		t.Fatal("actual preparation authority claim", e)
+	}
+	if _, e = g.f.s.Nodes.Acknowledge(context.Background(), g.node.NodeID, g.node.Credential, claim.Lease.TaskID, agentwire.TaskAcknowledgementRequest{Sequence: claim.Lease.Sequence, LeaseToken: claim.Lease.LeaseToken}, uuid.NewString()); e != nil {
+		t.Fatal("actual preparation acknowledgement", e)
 	}
 	return *claim.Lease
 }
@@ -167,14 +171,21 @@ func TestActualCpuModelPreparationConcurrentClaimRenewAndGenericBypassRefusal(t 
 		}(i)
 	}
 	group.Wait()
+	// Claims serialize on the node. A later claim delivers an unacknowledged lease again
+	// with a new token, so exactly one delivered lease can be acknowledged (ADR 0011).
 	var lease *agentwire.Lease
-	for i, c := range claims {
-		if errs[i] != nil {
-			t.Fatal(errs[i])
+	for _, e := range errs {
+		if e != nil {
+			t.Fatal(e)
 		}
-		if c.Lease != nil {
+	}
+	for _, c := range claims {
+		if c.Lease == nil {
+			continue
+		}
+		if _, e := g.f.s.Nodes.Acknowledge(ctx, g.node.NodeID, g.node.Credential, c.Lease.TaskID, agentwire.TaskAcknowledgementRequest{Sequence: c.Lease.Sequence, LeaseToken: c.Lease.LeaseToken}, uuid.NewString()); e == nil {
 			if lease != nil {
-				t.Fatal("delivered twice")
+				t.Fatal("two delivered leases acknowledged")
 			}
 			lease = c.Lease
 		}

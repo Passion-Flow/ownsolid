@@ -30,7 +30,7 @@ func DiscoveryMachineOwns(path string) bool {
 		return false
 	}
 	p := strings.Split(strings.TrimPrefix(path, "/agent/v1/nodes/"), "/")
-	return len(p) == 2 && p[1] == "heartbeat" || len(p) == 3 && p[1] == "tasks" && p[2] == "claims" || len(p) == 4 && p[1] == "tasks" && p[3] == "results"
+	return len(p) == 2 && p[1] == "heartbeat" || len(p) == 3 && p[1] == "tasks" && p[2] == "claims" || len(p) == 4 && p[1] == "tasks" && (p[3] == "results" || p[3] == "acknowledgements")
 }
 
 // ComponentsHumanOwns adds only M04 state and Admin actions to discovery.

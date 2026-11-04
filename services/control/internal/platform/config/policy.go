@@ -96,6 +96,13 @@ type NodesPolicy struct {
 	TaskSweepBatch          int `yaml:"task_sweep_batch"`
 	ReconcileSeconds        int `yaml:"reconcile_seconds"`
 	ReconcileTimeoutSeconds int `yaml:"reconcile_timeout_seconds"`
+	// MaximumTaskDeliveries bounds how often a lease that was never acknowledged is
+	// delivered again before the task fails (ADR 0011).
+	MaximumTaskDeliveries int `yaml:"maximum_task_deliveries"`
+	// ResyncIntervalSeconds is the shortest time between two full resyncs of one node;
+	// ResyncPerSecond is the fleet-wide rate at which control grants them (ADR 0011).
+	ResyncIntervalSeconds int `yaml:"resync_interval_seconds"`
+	ResyncPerSecond       int `yaml:"resync_per_second"`
 }
 type DistributionPolicy struct {
 	RecoverySeconds       int `yaml:"recovery_seconds"`
@@ -155,7 +162,7 @@ func DefaultRuntimePolicy() RuntimePolicy {
 		Identity:       IdentityPolicy{InvitationTTLSeconds: 86400, ResetTTLSeconds: 900, PortalIdleSeconds: 1800, PortalAbsoluteSeconds: 43200, AdminIdleSeconds: 900, AdminAbsoluteSeconds: 14400, CSRFSeconds: 900, SessionTouchSeconds: 60, IdempotencySeconds: 86400, HashWorkers: 2, HashQueueCapacity: 16, HashAdmissionMilliseconds: 2000, MaxLiveResetTokens: 3, ResetMinimumMilliseconds: 300, ResetJitterMilliseconds: 50, AuditDefaultDays: 7, AuditMaxDays: 31},
 		Mail:           MailPolicy{PollMilliseconds: 1000, AttemptSeconds: 25, LeaseSeconds: 60, MaxAttempts: 5, Retry1Seconds: 15, Retry2Seconds: 60, Retry3Seconds: 180, Retry4Seconds: 300, JitterPercent: 10},
 		Retention:      RetentionPolicy{IntervalSeconds: 60, TimeoutSeconds: 5, BatchSize: 100, MailDays: 30, ResetDays: 30, InvitationDays: 90, SessionDays: 7, RateGraceSeconds: 3600, AuditDays: 180},
-		Nodes:          NodesPolicy{MaximumLiveNodes: 100, MaximumLiveJoinTokens: 100, JoinTTLSeconds: 600, OnlineSeconds: 30, OfflineSeconds: 120, TaskSeconds: 300, InferenceDeploySeconds: 1800, TaskLeaseSeconds: 30, MaximumTaskAttempts: 3, TaskSweepBatch: 100, ReconcileSeconds: 10, ReconcileTimeoutSeconds: 5},
+		Nodes:          NodesPolicy{MaximumLiveNodes: 100, MaximumLiveJoinTokens: 100, JoinTTLSeconds: 600, OnlineSeconds: 30, OfflineSeconds: 120, TaskSeconds: 300, InferenceDeploySeconds: 1800, TaskLeaseSeconds: 30, MaximumTaskAttempts: 3, TaskSweepBatch: 100, ReconcileSeconds: 10, ReconcileTimeoutSeconds: 5, MaximumTaskDeliveries: 10, ResyncIntervalSeconds: 300, ResyncPerSecond: 20},
 		Models:         DefaultModelsPolicy(),
 		Distribution:   DistributionPolicy{RecoverySeconds: 600, KeyTTLSeconds: 86400, KeyMaxTTLSeconds: 7776000, KeyMaxActive: 100, AliasMaxActive: 16, MaxConcurrentRequests: 4, RequestSeconds: 90, ContextTokens: 2048, OutputTokens: 512, RequestsPerWindow: 60, RateWindowSeconds: 60},
 		Rates:          RatesPolicy{CSRFCount: 60, CSRFWindowSeconds: 60, LoginEmailCount: 10, LoginEmailWindowSeconds: 900, LoginIPCount: 30, LoginIPWindowSeconds: 300, ResetIPCount: 20, ResetIPWindowSeconds: 900, ResetEmailCount: 3, ResetEmailWindowSeconds: 900, TokenIPCount: 30, TokenIPWindowSeconds: 900, AdminInviteCount: 30, AdminInviteWindowSeconds: 3600, AgentIPCount: 120, AgentIPWindowSeconds: 60, AgentTransferIPCount: 600, AgentTransferIPWindowSeconds: 60, AgentEnrollIPCount: 20, AgentEnrollIPWindowSeconds: 60, AgentNodeCount: 30, AgentNodeWindowSeconds: 60, AgentTransferNodeCount: 240, AgentTransferNodeWindowSeconds: 60, ResetCooldownSeconds: 60},
@@ -346,6 +353,9 @@ func (p RuntimePolicy) Validate() error {
 		return errors.New("CONFIG_NODES_BOUNDS_INVALID")
 	}
 	if p.Nodes.ReconcileTimeoutSeconds < 1 || p.Nodes.ReconcileTimeoutSeconds > 30 {
+		return errors.New("CONFIG_NODES_BOUNDS_INVALID")
+	}
+	if p.Nodes.MaximumTaskDeliveries < 1 || p.Nodes.MaximumTaskDeliveries > 100 || p.Nodes.ResyncIntervalSeconds < 10 || p.Nodes.ResyncIntervalSeconds > 86400 || p.Nodes.ResyncPerSecond < 1 || p.Nodes.ResyncPerSecond > 10000 {
 		return errors.New("CONFIG_NODES_BOUNDS_INVALID")
 	}
 	if e := p.Models.Validate(); e != nil {

@@ -61,9 +61,16 @@ func (s *Service) componentCommandWithin(ctx context.Context, q transaction.Exec
 	return s.ReadComponentCommandWithin(ctx, q, n, t)
 }
 
-func (s *Service) claimSelected(ctx context.Context, id, credential, request string) (wire.Claim, error) {
+func (s *Service) claimSelected(ctx context.Context, id, credential, request string, cursor *uint64) (wire.Claim, error) {
 	if !nodeID(request) {
 		return wire.Claim{}, fail("VALIDATION_FAILED")
+	}
+	resync, e := s.claimPreflight(ctx, id, credential, request, cursor)
+	if e != nil {
+		return wire.Claim{}, e
+	}
+	if resync != nil {
+		return wire.Claim{Resync: resync}, nil
 	}
 	if s.Preparations != nil {
 		if out, handled, e := s.Preparations.ClaimPreparation(ctx, id, credential, request); handled || e != nil {
@@ -82,7 +89,7 @@ func (s *Service) claimSelected(ctx context.Context, id, credential, request str
 		}
 	}
 	var out wire.Claim
-	e := s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
+	e = s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
 		if !active || n.Status != "active" {
 			return fail("ACCESS_DENIED")
 		}
@@ -141,7 +148,7 @@ func (s *Service) claimSelected(ctx context.Context, id, credential, request str
 		if changed != 1 {
 			return fail("AGENT_LEASE_STALE")
 		}
-		if e = q.QueryRow(ctx, nodeSQL(q, "SELECT lease_expires_at FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4", "SELECT lease_expires_at FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?", `SELECT lease_expires_at FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, n.TenantID, n.WorkspaceID, n.ID, task.ID)).Scan(&lease.LeaseExpiresAt); e != nil {
+		if e = deliveredLeaseWithin(ctx, q, n, task.ID, &lease); e != nil {
 			return e
 		}
 		if e = s.taskAuditWithin(ctx, q, "", "system", n, "node.task_claimed", task.ID, "", request); e != nil {
@@ -293,7 +300,7 @@ func (s *Service) sweepSelected(ctx context.Context) error {
 	policy := s.Identity.Config.Policy().Nodes
 	bounded, cancel := context.WithTimeout(ctx, config.Seconds(policy.ReconcileTimeoutSeconds))
 	defer cancel()
-	rows, e := store.Query(bounded, nodeSQL(store, `SELECT DISTINCT tenant_id::text,workspace_id::text,node_id::text FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete) AND state IN ('pending','running') AND (deadline_at<=clock_timestamp() OR (state='running' AND lease_expires_at<=clock_timestamp() AND attempt>=$1)) ORDER BY node_id::text LIMIT $2`, `SELECT DISTINCT tenant_id,workspace_id,node_id FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete=1) AND state IN ('pending','running') AND (deadline_at<=UTC_TIMESTAMP(6) OR (state='running' AND lease_expires_at<=UTC_TIMESTAMP(6) AND attempt>=?)) ORDER BY node_id LIMIT ?`, `SELECT DISTINCT tenant_id,workspace_id,node_id FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete=1) AND state IN ('pending','running') AND (deadline_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR (state='running' AND lease_expires_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND attempt>=?)) ORDER BY node_id LIMIT ?`, policy.MaximumTaskAttempts, policy.TaskSweepBatch))
+	rows, e := store.Query(bounded, nodeSQL(store, `SELECT DISTINCT tenant_id::text,workspace_id::text,node_id::text FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete) AND state IN ('pending','running') AND (deadline_at<=clock_timestamp() OR (state='running' AND lease_expires_at<=clock_timestamp() AND (attempt>=$1 OR acknowledged_attempt<attempt))) ORDER BY node_id::text LIMIT $2`, `SELECT DISTINCT tenant_id,workspace_id,node_id FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete=1) AND state IN ('pending','running') AND (deadline_at<=UTC_TIMESTAMP(6) OR (state='running' AND lease_expires_at<=UTC_TIMESTAMP(6) AND attempt>=?)) ORDER BY node_id LIMIT ?`, `SELECT DISTINCT tenant_id,workspace_id,node_id FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete=1) AND state IN ('pending','running') AND (deadline_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR (state='running' AND lease_expires_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND attempt>=?)) ORDER BY node_id LIMIT ?`, policy.MaximumTaskAttempts, policy.TaskSweepBatch))
 	if e != nil {
 		return taskRuntimeError(e)
 	}

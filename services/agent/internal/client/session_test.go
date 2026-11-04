@@ -29,6 +29,9 @@ type control struct {
 	mu        sync.Mutex
 	exchanges []string
 	waits     []int
+	cursors   []uint64
+	acks      []string
+	dropAck   bool
 	headers   metadata.MD
 	refuse    codes.Code
 	problem   *wire.SessionProblem
@@ -71,10 +74,23 @@ func (c *control) connect(stream grpc.ServerStream) error {
 		case m.Heartbeat != nil:
 			c.record("stream heartbeat")
 			reply.Disposition = &wire.Disposition{Status: "active", ServerTime: time.Now().UTC()}
+		case m.Ack != nil:
+			c.mu.Lock()
+			drop := c.dropAck
+			c.mu.Unlock()
+			if drop {
+				return status.Error(codes.Unavailable, "CONNECTION_LOST")
+			}
+			c.record("stream ack")
+			c.mu.Lock()
+			c.acks = append(c.acks, m.Ack.TaskID)
+			c.mu.Unlock()
+			reply.Acknowledged = &wire.RenewedLease{LeaseExpiresAt: time.Now().UTC().Add(30 * time.Second), ValidForMilliseconds: 30000}
 		default:
 			c.record("stream claim")
 			c.mu.Lock()
 			c.waits = append(c.waits, m.Claim.WaitSeconds)
+			c.cursors = append(c.cursors, m.Claim.AcknowledgedSequence)
 			reply.Claim = &wire.Claim{Lease: c.lease}
 			c.mu.Unlock()
 		}
@@ -108,8 +124,20 @@ func (c *control) http(w http.ResponseWriter, r *http.Request) {
 		c.record("https claim")
 		c.mu.Lock()
 		c.waits = append(c.waits, request.WaitSeconds)
+		c.cursors = append(c.cursors, request.AcknowledgedSequence)
 		c.mu.Unlock()
 		json.NewEncoder(w).Encode(map[string]any{"data": wire.Claim{Lease: c.lease}})
+	case base + "/tasks/" + sessionNode + "/acknowledgements":
+		var request wire.TaskAcknowledgementRequest
+		if json.Unmarshal(body, &request) != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		c.record("https ack")
+		c.mu.Lock()
+		c.acks = append(c.acks, sessionNode)
+		c.mu.Unlock()
+		json.NewEncoder(w).Encode(map[string]any{"data": wire.RenewedLease{LeaseExpiresAt: time.Now().UTC().Add(30 * time.Second), ValidForMilliseconds: 30000}})
 	default:
 		http.NotFound(w, r)
 	}
@@ -173,7 +201,7 @@ func TestSessionUsesTheStream(t *testing.T) {
 	if d, e := s.Heartbeat(ctx, wire.Handshake{ProtocolVersion: wire.Version}); e != nil || d.Status != "active" {
 		t.Fatalf("heartbeat %+v %v", d, e)
 	}
-	claim, e := s.Claim(ctx, wire.MaxClaimWaitSeconds)
+	claim, e := s.Claim(ctx, wire.MaxClaimWaitSeconds, 0)
 	if e != nil || claim.Lease == nil || claim.Lease.LeaseToken != "lease" {
 		t.Fatalf("claim %+v %v", claim, e)
 	}
@@ -200,7 +228,7 @@ func TestSessionFallsBackToLongPolling(t *testing.T) {
 	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
 		t.Fatal(e)
 	}
-	if _, e := s.Claim(ctx, wire.MaxClaimWaitSeconds); e != nil {
+	if _, e := s.Claim(ctx, wire.MaxClaimWaitSeconds, 0); e != nil {
 		t.Fatal(e)
 	}
 	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
@@ -276,7 +304,7 @@ func TestSessionReportsControlProblems(t *testing.T) {
 		t.Fatalf("problem %v", e)
 	}
 	c.problem = &wire.SessionProblem{Code: "PRIVATE_DETAIL", Status: 503}
-	if _, e = s.Claim(t.Context(), 0); e == nil || e.Error() != "CONTROL_RESPONSE_REJECTED" {
+	if _, e = s.Claim(t.Context(), 0, 0); e == nil || e.Error() != "CONTROL_RESPONSE_REJECTED" {
 		t.Fatalf("unknown code %v", e)
 	}
 }
@@ -294,7 +322,52 @@ func TestRefusedSessionDoesNotFallBack(t *testing.T) {
 
 func TestClaimWaitIsBounded(t *testing.T) {
 	s := serve(t, &control{}, true)
-	if _, e := s.Claim(t.Context(), wire.MaxClaimWaitSeconds+1); e == nil {
+	if _, e := s.Claim(t.Context(), wire.MaxClaimWaitSeconds+1, 0); e == nil {
 		t.Fatal("wait above the interval accepted")
+	}
+}
+
+func TestSessionCarriesTheCursorAndAcknowledges(t *testing.T) {
+	lease := wire.Lease{TaskID: sessionNode, Sequence: 4, Operation: wire.CollectFacts, LeaseToken: strings.Repeat("l", 43), Attempt: 1}
+	for _, http2 := range []bool{true, false} {
+		c := &control{lease: &lease}
+		s := serve(t, c, http2)
+		ctx := t.Context()
+		if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
+			t.Fatal(e)
+		}
+		claim, e := s.Claim(ctx, 0, 3)
+		if e != nil || claim.Lease == nil || claim.Lease.Sequence != 4 {
+			t.Fatalf("claim %+v %v", claim, e)
+		}
+		renewed, e := s.Acknowledge(ctx, *claim.Lease)
+		if e != nil || renewed.ValidForMilliseconds != 30000 {
+			t.Fatalf("ack %+v %v", renewed, e)
+		}
+		want := []string{"stream heartbeat", "stream claim", "stream ack"}
+		if !http2 {
+			want = []string{"https heartbeat", "https claim", "https ack"}
+		}
+		if got := c.log(); !equal(got, want) || c.cursors[0] != 3 {
+			t.Fatalf("exchanges %v cursors %v", got, c.cursors)
+		}
+	}
+}
+
+func TestAcknowledgementRetriesOverHTTPSWhenTheStreamBreaks(t *testing.T) {
+	lease := wire.Lease{TaskID: sessionNode, Sequence: 1, Operation: wire.CollectFacts, LeaseToken: strings.Repeat("l", 43), Attempt: 1}
+	c := &control{lease: &lease, dropAck: true}
+	s := serve(t, c, true)
+	if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := s.Acknowledge(t.Context(), lease); e != nil {
+		t.Fatal(e)
+	}
+	if got := c.log(); !equal(got, []string{"stream heartbeat", "https ack"}) {
+		t.Fatalf("exchanges %v", got)
+	}
+	if _, e := s.Acknowledge(t.Context(), wire.Lease{TaskID: "task", LeaseToken: lease.LeaseToken}); e == nil {
+		t.Fatal("an invalid acknowledgement was sent")
 	}
 }

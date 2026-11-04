@@ -56,6 +56,7 @@ type Disposition struct {
 type Lease struct {
 	Preparation    *lifecycle.Command `json:"model_preparation,omitempty"`
 	TaskID         string             `json:"task_id"`
+	Sequence       uint64             `json:"sequence"`
 	Operation      string             `json:"operation"`
 	LeaseToken     string             `json:"lease_token"`
 	LeaseExpiresAt time.Time          `json:"lease_expires_at"`
@@ -65,7 +66,8 @@ type Lease struct {
 	Training       *training.Command  `json:"training,omitempty"`
 }
 type Claim struct {
-	Lease *Lease `json:"lease"`
+	Lease  *Lease  `json:"lease"`
+	Resync *Resync `json:"resync,omitempty"`
 }
 type Result struct {
 	LeaseToken string                `json:"lease_token"`

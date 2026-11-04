@@ -256,8 +256,22 @@ func cycle(ctx context.Context, c Config, connection *client.Client, identity st
 }
 
 // sessionCycle recovers interrupted work, reports the node, then claims and runs at most
-// one task. Heartbeats and claims use the session; task traffic uses HTTPS.
+// one task. Heartbeats, claims and acknowledgements use the session; task traffic uses
+// HTTPS.
 func sessionCycle(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
+	if e := recoverLocalWork(ctx, c, connection, identity, m, tm, pm); e != nil {
+		return e
+	}
+	f, e := discovery.Collect(c.DiskPath)
+	if e != nil {
+		return e
+	}
+	return claimAndRun(ctx, c, connection, session, identity, f, m, im, tm, pm, rm)
+}
+
+// recoverLocalWork reconciles interrupted work from the local journals. It runs at the
+// start of every cycle and for a full resync.
+func recoverLocalWork(ctx context.Context, c Config, connection *client.Client, identity state.Identity, m componentLifecycle, tm *training.Manager, pm *modelpreparations.Manager) error {
 	// An expired lease or cancelled maintenance can leave a durable transition
 	// in this process. Reconcile it before publishing state or claiming more work.
 	if e := recoverComponent(ctx, c, m); e != nil {
@@ -279,10 +293,10 @@ func sessionCycle(ctx context.Context, c Config, connection *client.Client, sess
 			return e
 		}
 	}
-	f, e := discovery.Collect(c.DiskPath)
-	if e != nil {
-		return e
-	}
+	return nil
+}
+
+func claimAndRun(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, f wire.Facts, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
 	base := "/agent/v1/nodes/" + url.PathEscape(identity.NodeID)
 	h := handshake(f, c)
 	if m != nil {
@@ -303,16 +317,44 @@ func sessionCycle(ctx context.Context, c Config, connection *client.Client, sess
 	if disposition.Status != "active" {
 		return errors.New("AGENT_DISPOSITION_INVALID")
 	}
-	// Control holds the claim for up to one interval and answers as soon as work arrives.
-	claim, e := session.Claim(ctx, wire.MaxClaimWaitSeconds)
+	cursor, e := state.LoadCursor(c.StateDirectory)
 	if e != nil {
 		return e
+	}
+	// Control holds the claim for up to one interval and answers as soon as work arrives.
+	claim, e := session.Claim(ctx, wire.MaxClaimWaitSeconds, cursor)
+	if e != nil {
+		return e
+	}
+	if claim.Resync != nil {
+		// Control's record and this cursor disagree (ADR 0011). Recover all local work
+		// from the journals, then adopt control's cursor; the next cycle reports a full
+		// heartbeat and claims from there.
+		if e := recoverLocalWork(ctx, c, connection, identity, m, tm, pm); e != nil {
+			return e
+		}
+		slog.Info("agent_task_resync", "acknowledged_sequence", claim.Resync.AcknowledgedSequence)
+		return state.SaveCursor(c.StateDirectory, claim.Resync.AcknowledgedSequence)
 	}
 	if claim.Lease == nil {
 		return nil
 	}
 	lease := claim.Lease
 	if e := validateExecutionLease(profile(c), *lease); e != nil {
+		return e
+	}
+	// Acknowledge before executing anything, and execute only once control confirms. The
+	// cursor is saved first, so it is never behind what control recorded. A lease that is
+	// not acknowledged is delivered again on the next claim without spending an attempt.
+	if e := wire.AcceptLease(cursor, *lease); e != nil {
+		return e
+	}
+	if lease.Sequence > cursor {
+		if e := state.SaveCursor(c.StateDirectory, lease.Sequence); e != nil {
+			return e
+		}
+	}
+	if _, e := session.Acknowledge(ctx, *lease); e != nil {
 		return e
 	}
 	if lease.Operation == wire.ModelPreparationRunOperation {

@@ -176,6 +176,10 @@ func (g deploymentRuntimeStory) claim(t *testing.T) wire.Lease {
 	if e != nil || c.Lease == nil || c.Lease.Inference == nil {
 		t.Fatal("actual inference claim", e)
 	}
+	// The agent acknowledges a lease before it starts (ADR 0011).
+	if _, e = g.s.Nodes.Acknowledge(g.ctx, g.node.NodeID, g.node.Credential, c.Lease.TaskID, wire.TaskAcknowledgementRequest{Sequence: c.Lease.Sequence, LeaseToken: c.Lease.LeaseToken}, uuid.NewString()); e != nil {
+		t.Fatal("actual acknowledgement", e)
+	}
 	return *c.Lease
 }
 func deploymentRuntimeResult(l wire.Lease, state string) wire.Result {

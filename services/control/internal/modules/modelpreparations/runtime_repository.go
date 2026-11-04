@@ -24,10 +24,11 @@ func preparationRuntimeSQL(q transaction.Executor, pg, my string, postgresArgs, 
 }
 
 type preparationReconciliationTask struct {
-	state      string
-	deliveries int
-	expired    bool
-	command    wire.Command
+	state     string
+	errorCode *string
+	attempt   int
+	expired   bool
+	command   wire.Command
 }
 
 // Control reconciliation borrows the already locked retained node and preparation.
@@ -37,15 +38,15 @@ func retainedPreparationTask(ctx context.Context, q transaction.Executor, n node
 	var out preparationReconciliationTask
 	var raw []byte
 	e := q.QueryRow(ctx, preparationSelectedRuntimeSQL(q,
-		preparationDM(`SELECT "STATE","ATTEMPT","PAYLOAD",CASE WHEN "DEADLINE_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR ("STATE"='running' AND ("LEASE_EXPIRES_AT" IS NULL OR "LEASE_EXPIRES_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)))) THEN 1 ELSE 0 END FROM "NODE_TASKS" WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "NODE_ID"=? AND "ID"=? AND "OPERATION"=? FOR UPDATE`),
-		`SELECT state,attempt,payload,deadline_at<=clock_timestamp() OR state='running' AND COALESCE(lease_expires_at<=clock_timestamp(),true) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4 AND operation=$5 FOR UPDATE`,
-		`SELECT state,attempt,payload,deadline_at<=UTC_TIMESTAMP(6) OR state='running' AND COALESCE(lease_expires_at<=UTC_TIMESTAMP(6),true) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND operation=? FOR UPDATE`,
-		[]any{n.TenantID, n.WorkspaceID, n.ID, id, wire.RunOperation}, []any{n.TenantID, n.WorkspaceID, n.ID, id, wire.RunOperation})).Scan(&out.state, &out.deliveries, &raw, &out.expired)
+		preparationDM(`SELECT "STATE","ERROR_CODE","ATTEMPT","PAYLOAD",CASE WHEN "DEADLINE_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR ("STATE"='running' AND ("LEASE_EXPIRES_AT" IS NULL OR "LEASE_EXPIRES_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)))) THEN 1 ELSE 0 END FROM "NODE_TASKS" WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "NODE_ID"=? AND "ID"=? AND "OPERATION"=? FOR UPDATE`),
+		`SELECT state,error_code,attempt,payload,deadline_at<=clock_timestamp() OR state='running' AND COALESCE(lease_expires_at<=clock_timestamp(),true) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4 AND operation=$5 FOR UPDATE`,
+		`SELECT state,error_code,attempt,payload,deadline_at<=UTC_TIMESTAMP(6) OR state='running' AND COALESCE(lease_expires_at<=UTC_TIMESTAMP(6),true) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND operation=? FOR UPDATE`,
+		[]any{n.TenantID, n.WorkspaceID, n.ID, id, wire.RunOperation}, []any{n.TenantID, n.WorkspaceID, n.ID, id, wire.RunOperation})).Scan(&out.state, &out.errorCode, &out.attempt, &raw, &out.expired)
 	if e != nil {
 		return preparationReconciliationTask{}, e
 	}
 	out.command, e = wire.DecodeCommand(raw)
-	if e != nil || out.command.Scope.TenantID != n.TenantID || out.command.Scope.WorkspaceID != n.WorkspaceID || out.deliveries < 0 || out.deliveries > 1 {
+	if e != nil || out.command.Scope.TenantID != n.TenantID || out.command.Scope.WorkspaceID != n.WorkspaceID || out.attempt < 0 || out.attempt > 1 {
 		return preparationReconciliationTask{}, fail("MODEL_PREPARATION_COMMAND_INVALID")
 	}
 	return out, nil
