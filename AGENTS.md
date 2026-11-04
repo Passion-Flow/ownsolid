@@ -20,6 +20,18 @@ Read this file before changing anything. `CLAUDE.md` imports it.
    `python3 tools/dev/roadmap_progress.py` to refresh the progress table, and commit
    with the item ID in the message.
 5. Work through several items per session when context allows; stop at a clean commit.
+6. **Decide on your own.** The owner wants sessions to finish work, not to ask.
+   - Settle technical, scope, ordering and roadmap-reading questions yourself: choose
+     what best fits this file and the roadmap, act, and record significant choices as an
+     ADR in `docs/decisions/`. When unsure whether an item is done, apply the stricter
+     reading and leave it unticked.
+   - Stop and ask only before spending money, publishing or sending anything outside
+     the repository and its test servers, deleting data you did not create, or when a
+     credential is genuinely unavailable. Test-server access is in the environment doc.
+   - Diagnose and fix failures yourself. If something cannot be fixed in the session,
+     record it in `docs/product/status.md` and move to the next item you can do.
+   - End a session with a short report: items finished, how they were verified, and the
+     next item. Do not end with questions or suggestions the owner must answer.
 
 ## 1. Product
 
