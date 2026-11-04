@@ -26,6 +26,8 @@ type fakeBackend struct {
 	admitted  []string
 	heartbeat error
 	claim     error
+	pacing    *wire.Pacing
+	hold      time.Duration
 	waits     []time.Duration
 	cursors   []uint64
 	acks      []wire.TaskAcknowledgement
@@ -43,7 +45,7 @@ func (b *fakeBackend) Heartbeat(context.Context, string, string, wire.Handshake)
 	if b.heartbeat != nil {
 		return wire.Disposition{}, b.heartbeat
 	}
-	return wire.Disposition{Status: "active", ServerTime: time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC)}, nil
+	return wire.Disposition{Status: "active", ServerTime: time.Date(2026, 11, 4, 0, 0, 0, 0, time.UTC), Pacing: b.pacing}, nil
 }
 
 func (b *fakeBackend) Claim(_ context.Context, _, _, request string, input wire.ClaimRequest) (wire.Claim, error) {
@@ -51,6 +53,7 @@ func (b *fakeBackend) Claim(_ context.Context, _, _, request string, input wire.
 	b.waits = append(b.waits, time.Duration(input.WaitSeconds)*time.Second)
 	b.cursors = append(b.cursors, input.AcknowledgedSequence)
 	b.mu.Unlock()
+	time.Sleep(b.hold)
 	if b.claim != nil {
 		return wire.Claim{}, b.claim
 	}
@@ -325,6 +328,43 @@ func TestNewRefusesIncompletePolicy(t *testing.T) {
 	}
 	if _, e := New(nil, Policy{MaxSessions: 1, ExchangeSeconds: 1}, problem); e == nil {
 		t.Fatal("missing backend accepted")
+	}
+}
+
+// A session is as long-lived as its pacing asks for: a slow agent is not closed between
+// two heartbeats even though it stays silent longer than the default.
+func TestSlowlyPacedSessionOutlivesTheDefaultIdleTime(t *testing.T) {
+	saved := idleTimeout
+	idleTimeout = 200 * time.Millisecond
+	t.Cleanup(func() { idleTimeout = saved })
+	_, conn := start(t, &fakeBackend{pacing: &wire.Pacing{HeartbeatSeconds: wire.MaxHeartbeatSeconds, ReconnectBaseSeconds: 1, ReconnectMaxSeconds: 1}}, 4)
+	stream := open(t, conn)
+	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
+		t.Fatal(e)
+	}
+	time.Sleep(4 * idleTimeout)
+	if _, e := exchange(t, stream, heartbeat(2)); e != nil {
+		t.Fatalf("session closed while its pacing allowed the silence: %v", e)
+	}
+}
+
+// Silence counts from the reply, so a claim held for longer than the idle time is not
+// the agent's silence.
+func TestHeldClaimDoesNotCountAsSilence(t *testing.T) {
+	saved := idleTimeout
+	idleTimeout = 200 * time.Millisecond
+	t.Cleanup(func() { idleTimeout = saved })
+	b := &fakeBackend{hold: 3 * idleTimeout}
+	_, conn := start(t, b, 4)
+	stream := open(t, conn)
+	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := exchange(t, stream, wire.AgentMessage{ID: 2, Claim: &wire.ClaimRequest{WaitSeconds: 1}}); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := exchange(t, stream, heartbeat(3)); e != nil {
+		t.Fatalf("session closed right after a held claim: %v", e)
 	}
 }
 

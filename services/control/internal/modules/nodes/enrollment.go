@@ -157,7 +157,13 @@ func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request str
 		if e != nil {
 			return e
 		}
-		out = wire.Enrolled{NodeID: id, SiteID: wire.DefaultSiteID, CellID: wire.DefaultCellID, Credential: credential, ProtocolVersion: input.ProtocolVersion, HeartbeatSeconds: wire.HeartbeatSeconds}
+		// Read in this transaction: enrollment is rare, and a second one would hold two
+		// connections while the token row is locked.
+		pacing, e := readPacingWithin(ctx, q, "")
+		if e != nil {
+			return e
+		}
+		out = wire.Enrolled{NodeID: id, SiteID: wire.DefaultSiteID, CellID: wire.DefaultCellID, Credential: credential, ProtocolVersion: input.ProtocolVersion, HeartbeatSeconds: s.effectivePacing(pacing.Pacing).HeartbeatSeconds}
 		return nil
 	})
 	if e != nil {

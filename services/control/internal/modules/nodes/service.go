@@ -30,6 +30,8 @@ type Service struct {
 	wake wakeHub
 	// resync bounds full resyncs granted by this process (ADR 0011).
 	resync resyncBucket
+	// pacing caches what heartbeat replies tell agents (ADR 0013).
+	pacing pacingCache
 }
 
 // TaskEventRecorder borrows the actual node-task transaction. It must not commit
