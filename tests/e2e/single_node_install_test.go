@@ -394,6 +394,24 @@ func TestSingleNodeInstall(t *testing.T) {
 		agent.stop(t)
 	})
 
+	t.Run("an administrator paces the agent at runtime", func(t *testing.T) {
+		if agent == nil {
+			t.Skip("no agent is running")
+		}
+		agent.start(t)
+		agent.waitFor(t, "agent_session_transport transport=stream", 60*time.Second)
+		admin, csrf := e.adminSession(t, password)
+		mark := len(agent.output())
+		e.setPacing(t, admin, csrf, 7, 0, 2, 30, "Slowing heartbeats in the end-to-end test")
+		agent.waitForAfter(t, mark, "agent_pacing_changed heartbeat_seconds=7 jitter_percent=0 reconnect_base_seconds=2 reconnect_max_seconds=30", 30*time.Second)
+		// The change applies to the running agent: one interval later it still runs tasks.
+		agent.runTask(t, 30*time.Second)
+		mark = len(agent.output())
+		e.setPacing(t, admin, csrf, 10, 10, 1, 60, "Restoring the default pacing")
+		agent.waitForAfter(t, mark, "agent_pacing_changed heartbeat_seconds=10 jitter_percent=10 reconnect_base_seconds=1 reconnect_max_seconds=60", 30*time.Second)
+		agent.stop(t)
+	})
+
 	t.Run("an agent that lost its task cursor resyncs", func(t *testing.T) {
 		if agent == nil {
 			t.Skip("no agent is running")
@@ -402,12 +420,12 @@ func TestSingleNodeInstall(t *testing.T) {
 			t.Fatal(err)
 		}
 		agent.start(t)
-		agent.waitFor(t, "agent_task_resync acknowledged_sequence=2", 60*time.Second)
+		agent.waitFor(t, "agent_task_resync acknowledged_sequence=3", 60*time.Second)
 		agent.runTask(t, 30*time.Second)
-		if cursor := agent.cursor(t); cursor != 3 {
+		if cursor := agent.cursor(t); cursor != 4 {
 			t.Fatalf("agent cursor %d after a resync and one task", cursor)
 		}
-		e.assertTasksAcknowledged(t, agent.nodeID, 3)
+		e.assertTasksAcknowledged(t, agent.nodeID, 4)
 		agent.stop(t)
 	})
 

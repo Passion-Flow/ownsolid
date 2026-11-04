@@ -39,6 +39,7 @@ type control struct {
 	streams   int
 	lease     *wire.Lease
 	httpDown  bool
+	pacing    *wire.Pacing
 }
 
 func (c *control) record(kind string) {
@@ -73,7 +74,9 @@ func (c *control) connect(stream grpc.ServerStream) error {
 			reply.Problem = problem
 		case m.Heartbeat != nil:
 			c.record("stream heartbeat")
-			reply.Disposition = &wire.Disposition{Status: "active", ServerTime: time.Now().UTC()}
+			c.mu.Lock()
+			reply.Disposition = &wire.Disposition{Status: "active", ServerTime: time.Now().UTC(), Pacing: c.pacing}
+			c.mu.Unlock()
 		case m.Ack != nil:
 			c.mu.Lock()
 			drop := c.dropAck
@@ -114,7 +117,10 @@ func (c *control) http(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case base + "/heartbeat":
 		c.record("https heartbeat")
-		json.NewEncoder(w).Encode(map[string]any{"data": wire.Disposition{Status: "active", ServerTime: time.Now().UTC()}})
+		c.mu.Lock()
+		pacing := c.pacing
+		c.mu.Unlock()
+		json.NewEncoder(w).Encode(map[string]any{"data": wire.Disposition{Status: "active", ServerTime: time.Now().UTC(), Pacing: pacing}})
 	case base + "/tasks/claims":
 		var request wire.ClaimRequest
 		if json.Unmarshal(body, &request) != nil {
@@ -225,6 +231,13 @@ func TestSessionFallsBackToLongPolling(t *testing.T) {
 	current := time.Now()
 	s.now = func() time.Time { return current }
 	ctx := t.Context()
+	// One attempt makes one request: the stream fails, and the next attempt tries HTTPS.
+	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e == nil {
+		t.Fatal("the attempt on the stream succeeded")
+	}
+	if got := c.log(); len(got) != 0 {
+		t.Fatalf("a failed stream attempt also made %v", got)
+	}
 	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
 		t.Fatal(e)
 	}
@@ -240,8 +253,12 @@ func TestSessionFallsBackToLongPolling(t *testing.T) {
 	if s.Transport() != TransportHTTPS || c.waits[0] != wire.MaxClaimWaitSeconds {
 		t.Fatalf("transport %q waits %v", s.Transport(), c.waits)
 	}
-	// After the retry window the stream is tried again; it still fails, so HTTPS continues.
+	// After the retry window the stream is tried again; it still fails, so HTTPS continues
+	// on the next attempt.
 	current = current.Add(time.Duration(wire.SessionFallbackRetrySeconds) * time.Second)
+	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e == nil {
+		t.Fatal("the stream worked after the window")
+	}
 	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
 		t.Fatal(e)
 	}
@@ -271,27 +288,120 @@ func TestSessionReturnsToTheStreamAfterTheWindow(t *testing.T) {
 func TestSessionDoesNotFallBackWhenControlIsDown(t *testing.T) {
 	c := &control{httpDown: true}
 	s := serve(t, c, false)
-	if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e == nil {
-		t.Fatal("heartbeat succeeded with control down")
-	}
-	if !s.fallbackUntil.IsZero() {
-		t.Fatal("an unreachable control is not a reason to leave the stream")
+	// The attempts alternate between the transports, one request each, and neither leaves
+	// the stream: an unreachable control says nothing about the path to it.
+	for attempt := range 4 {
+		if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e == nil {
+			t.Fatalf("attempt %d succeeded with control down", attempt)
+		}
+		if want := attempt%2 == 0; s.probeHTTPS != want {
+			t.Fatalf("attempt %d: next attempt on HTTPS %v", attempt, s.probeHTTPS)
+		}
+		if !s.fallbackUntil.IsZero() {
+			t.Fatal("an unreachable control is not a reason to leave the stream")
+		}
 	}
 }
 
-func TestSessionReopensAStreamClosedWhileIdle(t *testing.T) {
+func TestSessionUsesHTTPSWhenItCannotOpenAStream(t *testing.T) {
+	c := &control{}
+	s := serve(t, c, true)
+	s.client.tls = nil
+	if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e != nil {
+		t.Fatal(e)
+	}
+	if s.Transport() != TransportHTTPS || s.fallbackUntil.IsZero() || c.streams != 0 {
+		t.Fatalf("transport %q streams %d", s.Transport(), c.streams)
+	}
+}
+
+func TestSessionDoesNotRetryABrokenStream(t *testing.T) {
 	c := &control{closeAt: 1}
 	s := serve(t, c, true)
-	for i := 0; i < 3; i++ {
+	if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e != nil {
+		t.Fatal(e)
+	}
+	// The break is the run loop's to retry, after its backoff.
+	if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e == nil {
+		t.Fatal("the broken stream was retried inside the heartbeat")
+	}
+	if c.streams != 1 {
+		t.Fatalf("streams %d", c.streams)
+	}
+	if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e != nil {
+		t.Fatal(e)
+	}
+	if c.streams != 2 || s.Transport() != TransportStream {
+		t.Fatalf("streams %d transport %q", c.streams, s.Transport())
+	}
+	if got := c.log(); !equal(got, []string{"stream heartbeat", "stream heartbeat"}) {
+		t.Fatalf("exchanges %v", got)
+	}
+}
+
+func TestSessionReplacesAStreamControlHasClosedForIdleness(t *testing.T) {
+	c := &control{closeAt: 1}
+	s := serve(t, c, true)
+	current := time.Now()
+	s.now = func() time.Time { return current }
+	for i := range 3 {
 		if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e != nil {
 			t.Fatalf("heartbeat %d: %v", i, e)
 		}
+		// A task ran for longer than control keeps a silent session.
+		current = current.Add(time.Duration(s.Pacing().IdleSeconds()) * time.Second)
 	}
-	if c.streams != 3 || s.Transport() != TransportStream {
-		t.Fatalf("streams %d transport %q", c.streams, s.Transport())
+	if c.streams != 3 {
+		t.Fatalf("streams %d", c.streams)
 	}
-	if got := c.log(); !equal(got, []string{"stream heartbeat", "stream heartbeat", "stream heartbeat"}) {
-		t.Fatalf("exchanges %v", got)
+}
+
+func TestSessionAdoptsPacingFromControl(t *testing.T) {
+	c := &control{}
+	s := serve(t, c, true)
+	policy := s.client.Policy()
+	initial := s.Pacing()
+	if initial.HeartbeatSeconds != wire.HeartbeatSeconds || initial.ReconnectBaseSeconds != policy.BackoffInitialSeconds || initial.ReconnectMaxSeconds != policy.BackoffMaxSeconds || initial.Validate() != nil {
+		t.Fatalf("pacing before control spoke %+v", initial)
+	}
+	if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e != nil {
+		t.Fatal(e)
+	}
+	if s.Pacing() != initial {
+		t.Fatal("a reply without pacing changed it")
+	}
+	slow := wire.Pacing{HeartbeatSeconds: 60, JitterPercent: 20, ReconnectBaseSeconds: 5, ReconnectMaxSeconds: 300}
+	c.mu.Lock()
+	c.pacing = &slow
+	c.mu.Unlock()
+	if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e != nil {
+		t.Fatal(e)
+	}
+	if s.Pacing() != slow {
+		t.Fatalf("pacing %+v", s.Pacing())
+	}
+	for _, invalid := range []wire.Pacing{{}, {HeartbeatSeconds: 1, ReconnectBaseSeconds: 1, ReconnectMaxSeconds: 1}, {HeartbeatSeconds: 10, ReconnectBaseSeconds: 9, ReconnectMaxSeconds: 1}} {
+		c.mu.Lock()
+		c.pacing = &invalid
+		c.mu.Unlock()
+		if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e != nil {
+			t.Fatal(e)
+		}
+		if s.Pacing() != slow {
+			t.Fatalf("invalid pacing %+v was adopted", invalid)
+		}
+	}
+}
+
+func TestSessionAdoptsPacingOverHTTPS(t *testing.T) {
+	c := &control{pacing: &wire.Pacing{HeartbeatSeconds: 30, ReconnectBaseSeconds: 2, ReconnectMaxSeconds: 60}}
+	s := serve(t, c, true)
+	s.fallbackUntil = time.Now().Add(time.Minute)
+	if _, e := s.Heartbeat(t.Context(), wire.Handshake{}); e != nil {
+		t.Fatal(e)
+	}
+	if s.Transport() != TransportHTTPS || s.Pacing() != *c.pacing {
+		t.Fatalf("transport %q pacing %+v", s.Transport(), s.Pacing())
 	}
 }
 
@@ -333,6 +443,12 @@ func TestSessionCarriesTheCursorAndAcknowledges(t *testing.T) {
 		c := &control{lease: &lease}
 		s := serve(t, c, http2)
 		ctx := t.Context()
+		if !http2 {
+			// The first attempt finds that the stream does not work.
+			if _, e := s.Heartbeat(ctx, wire.Handshake{}); e == nil {
+				t.Fatal("stream worked without HTTP/2")
+			}
+		}
 		if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
 			t.Fatal(e)
 		}

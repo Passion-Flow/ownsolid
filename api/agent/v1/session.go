@@ -28,9 +28,11 @@ const (
 	// MaxSessionMessageBytes bounds one encoded session message in either direction.
 	MaxSessionMessageBytes = 65536
 	// MaxClaimWaitSeconds bounds how long control holds a claim open for new work. It is
-	// the heartbeat interval, so an idle agent still reports once per interval.
-	MaxClaimWaitSeconds = HeartbeatSeconds
-	// SessionIdleSeconds closes a session that sends nothing for three intervals.
+	// the longest heartbeat interval; an agent waits only as long as Pacing allows, so an
+	// idle agent still reports once per interval.
+	MaxClaimWaitSeconds = MaxHeartbeatSeconds
+	// SessionIdleSeconds closes a session that sends nothing for three default intervals.
+	// Pacing.IdleSeconds extends it for an agent paced more slowly.
 	SessionIdleSeconds = 3 * HeartbeatSeconds
 	// SessionFallbackRetrySeconds is how long an agent stays on HTTPS long-polling after
 	// the stream could not be opened before it tries the stream again.

@@ -290,8 +290,14 @@ func (a *agentProcess) cursor(t *testing.T) uint64 {
 // waitFor waits until the agent logged s.
 func (a *agentProcess) waitFor(t *testing.T, s string, within time.Duration) {
 	t.Helper()
+	a.waitForAfter(t, 0, s, within)
+}
+
+// waitForAfter waits until the agent logged s past the first mark bytes of its output.
+func (a *agentProcess) waitForAfter(t *testing.T, mark int, s string, within time.Duration) {
+	t.Helper()
 	for started := time.Now(); time.Since(started) < within; time.Sleep(200 * time.Millisecond) {
-		if a.logged(s) {
+		if strings.Contains(a.output()[mark:], s) {
 			return
 		}
 		if !a.running() {
@@ -324,6 +330,25 @@ func (a *agentProcess) stop(t *testing.T) {
 	case <-time.After(30 * time.Second):
 		a.cmd.Process.Kill()
 		<-a.done
+	}
+}
+
+// setPacing changes the pacing of this cell's agents through the administrator API.
+func (e environment) setPacing(t *testing.T, admin *browser, csrf string, heartbeat, jitter, base, limit int, reason string) {
+	t.Helper()
+	path := "/api/v1/sites/default/cells/default/admin/agent-pacing"
+	status, raw := admin.request(t, http.MethodGet, path, nil, "")
+	var current struct {
+		Data struct {
+			Version int64 `json:"version"`
+		} `json:"data"`
+	}
+	if status != http.StatusOK || json.Unmarshal(raw, &current) != nil {
+		t.Fatalf("read pacing: %d %s", status, raw)
+	}
+	status, raw = admin.request(t, http.MethodPut, path, map[string]any{"heartbeat_seconds": heartbeat, "jitter_percent": jitter, "reconnect_base_seconds": base, "reconnect_max_seconds": limit, "version": current.Data.Version, "reason": reason}, csrf)
+	if status != http.StatusOK {
+		t.Fatalf("change pacing: %d %s", status, raw)
 	}
 }
 
