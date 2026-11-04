@@ -38,7 +38,8 @@ runs userspace Tailscale built from source:
   restarts if it exits. Check it with `launchctl print gui/$(id -u)/com.ownsolid.tailscaled`.
 - Browsers cannot reach tunnel addresses directly; use SSH port forwarding.
 
-`ownsolid-cpu` has no Docker or Go. Build test binaries on the workstation with
+`ownsolid-cpu` runs Docker 29.1.3 and Compose 2.40.3 from the Ubuntu packages and has no
+Go. Docker Hub pulls worked from it on 2026-11-04. Build test binaries on the workstation with
 `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c` and run them there. Offline packages
 need a non-root user and a mounted temporary directory.
 
