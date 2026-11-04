@@ -4,14 +4,14 @@ GO_MODULES := api pkg/license tools/release/offline deploy/offline services/agen
 DOCKER ?= docker
 CONTROL_IMAGE ?= ownsolid/control:dev
 E2E_BIN ?= bin/e2e
-IMAGE_PATHS := api pkg/license deploy/images/control tools/release/offline services/control runtimes/data-processing
+IMAGE_PATHS := api pkg/license deploy/images/control tools/release/offline services/control runtimes/data-processing web
 
-.PHONY: help check check-layout check-roadmap test-tools build test image-control e2e-binaries test-offline
+.PHONY: help check check-layout check-roadmap check-web test-tools web-install build test test-web-browser image-control e2e-binaries test-offline
 
 help: ## Show available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
 
-check: check-layout check-roadmap test-tools ## Run all repository checks
+check: check-layout check-roadmap test-tools check-web ## Run all repository checks
 
 check-layout: ## Verify the repository layout and language rules
 	@$(PYTHON) tools/lint/layout/check_layout.py .
@@ -22,15 +22,27 @@ check-roadmap: ## Verify roadmap item IDs and the progress table
 test-tools: ## Run tests for repository tooling
 	@$(PYTHON) -m unittest discover -s tools/lint/layout/tests -p 'test_*.py'
 
-build: ## Build every Go module and the gateway
+web-install: ## Install the web workspace's locked dependencies; install scripts never run
+	@cd web && pnpm install --frozen-lockfile --ignore-scripts
+
+check-web: web-install ## Lint, format-check and type-check the web workspace
+	@cd web && pnpm lint && pnpm format:check && pnpm typecheck
+
+build: web-install ## Build every Go module, the gateway and the web applications
 	@for module in $(GO_MODULES); do (cd $$module && go build ./...) || exit 1; done
 	@cd services/gateway && cargo build --locked
+	@cd web && pnpm build
 
 # Temporary paths must not contain symlinks; macOS links /var to /private/var.
-test: ## Run Go and gateway unit tests
+test: web-install test-web-browser ## Run Go, gateway and web tests
 	@export TMPDIR="$$(cd "$${TMPDIR:-/tmp}" && pwd -P)/"; \
 	for module in $(GO_MODULES); do (cd $$module && go test ./... -count=1) || exit 1; done
 	@cd services/gateway && cargo test --locked
+	@cd web && pnpm test
+
+# Needs Chromium once per machine: cd web/apps/console && pnpm exec playwright install chromium
+test-web-browser: web-install ## Run the browser tests of the console and portal
+	@cd web && pnpm test:browser
 
 # The build context is a tar of tracked files, so local build output and secrets cannot
 # enter an image. DOCKER may be remote: make image-control DOCKER='ssh ownsolid-cpu docker'

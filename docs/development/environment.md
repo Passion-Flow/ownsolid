@@ -16,6 +16,10 @@ Toolchains are installed in the home directory and are on `PATH` through `~/.zpr
 | uv and Python | 0.13.7 and 3.12 | `~/.local/bin`; `uv python find 3.12` |
 | GitHub CLI | logged in as Passion-Flow | `../.tools/github-cli/gh` relative to this repository |
 
+`make check`, `make build` and `make test` include the web workspace. Browser tests need
+Chromium once per machine: `cd web/apps/console && pnpm exec playwright install chromium`.
+The console and portal use ports 4310 and 4311 for `vite dev` and `vite preview`.
+
 macOS links `/var` to `/private/var`, and some tests reject symlinked temporary paths;
 `make test` exports a resolved `TMPDIR`. Docker Desktop is available for local
 containers.

@@ -1,0 +1,148 @@
+/*
+ * ownsolid design tokens and base styles. The values match
+ * docs/development/design-system.md and the approved prototype; change them there
+ * first. Applications import this file once and add their own @source lines.
+ */
+@import 'tailwindcss';
+@import '@fontsource-variable/figtree/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+
+@source './';
+
+/* Theme follows the operating system unless the user picked one (data-theme). */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+  color-scheme: light;
+  --bg: #f6f4ef;
+  --surface: #fffefb;
+  --surface-2: #f1eee7;
+  --surface-3: #e7e3da;
+  --border: #e5e0d5;
+  --border-strong: #d3cdc0;
+  --text: #1d1b18;
+  --text-2: #59544b;
+  --text-3: #8c8679;
+  --deemph: #d8d2c5;
+  --good: #0ca30c;
+  --warning: #fab219;
+  --warning-ink: #8a5a00;
+  --critical: #d03b3b;
+  --accent: #0d9488;
+  --accent-hover: #0b8378;
+  --accent-soft: #e2f2ee;
+  --accent-ink: #0a6f65;
+  --shadow-1: 0 1px 2px rgb(40 32 20 / 5%);
+  --shadow-2: 0 8px 28px rgb(40 32 20 / 10%), 0 1px 3px rgb(40 32 20 / 6%);
+  --shadow-3: 0 24px 64px rgb(40 32 20 / 18%), 0 2px 8px rgb(40 32 20 / 8%);
+  --log-bg: #1b1916;
+  --log-text: #ebe7df;
+  --row: 52px;
+  --gap: 20px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #161513;
+  --surface: #211f1c;
+  --surface-2: #2a2824;
+  --surface-3: #33302b;
+  --border: #36332e;
+  --border-strong: #46423b;
+  --text: #f3f0ea;
+  --text-2: #bdb7ac;
+  --text-3: #868074;
+  --deemph: #46423b;
+  --warning-ink: #fab219;
+  --accent: #14a394;
+  --accent-hover: #1ab3a3;
+  --accent-soft: #15302b;
+  --accent-ink: #74d3c6;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 35%);
+  --shadow-2: 0 8px 28px rgb(0 0 0 / 40%), 0 1px 3px rgb(0 0 0 / 30%);
+  --shadow-3: 0 24px 64px rgb(0 0 0 / 55%), 0 2px 8px rgb(0 0 0 / 40%);
+  --log-bg: #100f0d;
+}
+
+:root[data-density='compact'] {
+  --row: 40px;
+  --gap: 14px;
+}
+
+@theme inline {
+  --font-sans:
+    'Figtree Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', 'Noto Sans CJK SC', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-deemph: var(--deemph);
+  --color-good: var(--good);
+  --color-warning: var(--warning);
+  --color-warning-ink: var(--warning-ink);
+  --color-critical: var(--critical);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-log-bg: var(--log-bg);
+  --color-log-text: var(--log-text);
+
+  --radius-control: 8px;
+  --radius-field: 10px;
+  --radius-card: 14px;
+  --radius-dialog: 18px;
+
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+  --shadow-3: var(--shadow-3);
+
+  --spacing-row: var(--row);
+  --spacing-gap: var(--gap);
+
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font: 14px/1.5 var(--font-sans);
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
