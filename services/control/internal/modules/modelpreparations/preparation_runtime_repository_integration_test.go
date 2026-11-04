@@ -197,6 +197,10 @@ func (g *runtimeStory) claim(t *testing.T) {
 		t.Fatal("actual claim", owned, e)
 	}
 	g.lease = *c.Lease
+	// The agent acknowledges a lease before it starts (ADR 0011).
+	if _, e = g.g.s.Nodes.Acknowledge(g.g.ctx, g.input.NodeID, g.credential, g.lease.TaskID, agent.TaskAcknowledgementRequest{Sequence: g.lease.Sequence, LeaseToken: g.lease.LeaseToken}, uuid.NewString()); e != nil {
+		t.Fatal("actual acknowledgement", e)
+	}
 }
 func (g *runtimeStory) refresh(t *testing.T) {
 	t.Helper()

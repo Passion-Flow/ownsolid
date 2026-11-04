@@ -60,8 +60,9 @@ func (s *Service) taskWritten(node string) { s.wake.wake(node) }
 // ClaimWaiting leases the next task like Claim. When there is none, it holds the claim
 // for up to wait and claims again as soon as a task for the node is written. A claim
 // that ends without work returns an empty lease.
-func (s *Service) ClaimWaiting(ctx context.Context, id, credential, request string, wait time.Duration) (wire.Claim, error) {
-	return waitForClaim(ctx, &s.wake, id, wait, func() (wire.Claim, error) { return s.Claim(ctx, id, credential, request) })
+func (s *Service) ClaimWaiting(ctx context.Context, id, credential, request string, input wire.ClaimRequest) (wire.Claim, error) {
+	wait := time.Duration(input.WaitSeconds) * time.Second
+	return waitForClaim(ctx, &s.wake, id, wait, func() (wire.Claim, error) { return s.ClaimFrom(ctx, id, credential, request, input) })
 }
 
 func waitForClaim(ctx context.Context, hub *wakeHub, node string, wait time.Duration, claim func() (wire.Claim, error)) (wire.Claim, error) {
@@ -74,7 +75,7 @@ func waitForClaim(ctx context.Context, hub *wakeHub, node string, wait time.Dura
 		// Watch before claiming, so a task written between the two is not missed.
 		woken := hub.watch(node)
 		out, e := claim()
-		if e != nil || out.Lease != nil {
+		if e != nil || out.Lease != nil || out.Resync != nil {
 			hub.release(node, woken)
 			return out, e
 		}

@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"errors"
-	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
@@ -52,6 +51,10 @@ func (b SessionBackend) Heartbeat(ctx context.Context, node, credential string, 
 	return b.Handler.Service.Heartbeat(ctx, node, credential, h)
 }
 
-func (b SessionBackend) Claim(ctx context.Context, node, credential, request string, wait time.Duration) (wire.Claim, error) {
-	return b.Handler.Service.ClaimWaiting(ctx, node, credential, request, wait)
+func (b SessionBackend) Claim(ctx context.Context, node, credential, request string, input wire.ClaimRequest) (wire.Claim, error) {
+	return b.Handler.Service.ClaimWaiting(ctx, node, credential, request, input)
+}
+
+func (b SessionBackend) Acknowledge(ctx context.Context, node, credential, request string, ack wire.TaskAcknowledgement) (wire.RenewedLease, error) {
+	return b.Handler.Service.Acknowledge(ctx, node, credential, ack.TaskID, wire.TaskAcknowledgementRequest{Sequence: ack.Sequence, LeaseToken: ack.LeaseToken}, request)
 }

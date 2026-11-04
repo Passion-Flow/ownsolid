@@ -1558,7 +1558,9 @@
                 "node.task_claimed",
                 "node.task_succeeded",
                 "node.task_failed",
-                "node.task_cancelled"
+                "node.task_cancelled",
+                "node.task_released",
+                "node.resync_granted"
               ]
             }
           },

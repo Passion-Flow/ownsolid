@@ -39,8 +39,16 @@ func (s *Service) expireTasks(ctx context.Context, tx pgx.Tx, n Node, request st
 func (s *Service) CreateTask(ctx context.Context, a identity.Auth, id, operation, key, request string) (Task, error) {
 	return s.createTaskSelected(ctx, a, id, operation, key, request)
 }
+// Claim leases the next task without a delivery cursor, so it never asks for a resync.
 func (s *Service) Claim(ctx context.Context, id, credential, request string) (wire.Claim, error) {
-	return s.claimSelected(ctx, id, credential, request)
+	return s.claimSelected(ctx, id, credential, request, nil)
+}
+
+// ClaimFrom leases the next task for an agent whose cursor is input's acknowledged
+// sequence; the answer is a lease, a resync or neither (ADR 0011).
+func (s *Service) ClaimFrom(ctx context.Context, id, credential, request string, input wire.ClaimRequest) (wire.Claim, error) {
+	cursor := input.AcknowledgedSequence
+	return s.claimSelected(ctx, id, credential, request, &cursor)
 }
 func (s *Service) Complete(ctx context.Context, id, credential, taskID string, input wire.Result, request string) (string, error) {
 	return s.completeSelected(ctx, id, credential, taskID, input, request)

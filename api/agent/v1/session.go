@@ -8,8 +8,8 @@ import (
 )
 
 // The agent session is the v1 control channel: one long-lived, agent-initiated gRPC
-// stream over HTTP/2 that carries heartbeats and task claims. Bulk transfers, results and
-// lease renewals stay on the HTTPS paths. When the stream cannot be opened, for example
+// stream over HTTP/2 that carries heartbeats, task claims and task acknowledgements. Bulk
+// transfers, results and lease renewals stay on the HTTPS paths. When the stream cannot be opened, for example
 // behind a proxy that speaks only HTTP/1.1, the agent uses the same exchanges over HTTPS
 // and long-polls the claims path. ADR 0007 records the design.
 const (
@@ -39,12 +39,14 @@ const (
 
 // ClaimRequest asks for the next task lease. With WaitSeconds above zero, control holds
 // the claim until work arrives or the wait ends. An empty object claims without waiting.
+// AcknowledgedSequence is the highest task sequence the agent acknowledged (ADR 0011).
 type ClaimRequest struct {
-	WaitSeconds int `json:"wait_seconds,omitempty"`
+	WaitSeconds          int    `json:"wait_seconds,omitempty"`
+	AcknowledgedSequence uint64 `json:"acknowledged_sequence,omitempty"`
 }
 
 func (c ClaimRequest) Validate() error {
-	if c.WaitSeconds < 0 || c.WaitSeconds > MaxClaimWaitSeconds {
+	if c.WaitSeconds < 0 || c.WaitSeconds > MaxClaimWaitSeconds || c.AcknowledgedSequence > MaxTaskSequence {
 		return errors.New("VALIDATION_FAILED")
 	}
 	return nil
@@ -53,28 +55,43 @@ func (c ClaimRequest) Validate() error {
 // AgentMessage is one agent-to-control message. ID increases by one per message within a
 // session, starting at 1, and exactly one exchange is set.
 type AgentMessage struct {
-	ID        uint64        `json:"id"`
-	Heartbeat *Handshake    `json:"heartbeat,omitempty"`
-	Claim     *ClaimRequest `json:"claim,omitempty"`
+	ID        uint64               `json:"id"`
+	Heartbeat *Handshake           `json:"heartbeat,omitempty"`
+	Claim     *ClaimRequest        `json:"claim,omitempty"`
+	Ack       *TaskAcknowledgement `json:"ack,omitempty"`
+}
+
+func (m AgentMessage) exchanges() int {
+	set := 0
+	for _, present := range []bool{m.Heartbeat != nil, m.Claim != nil, m.Ack != nil} {
+		if present {
+			set++
+		}
+	}
+	return set
 }
 
 func (m AgentMessage) Validate(previous uint64) error {
-	if m.ID != previous+1 || (m.Heartbeat == nil) == (m.Claim == nil) {
+	if m.ID != previous+1 || m.exchanges() != 1 {
 		return errors.New("AGENT_SESSION_MESSAGE_INVALID")
 	}
 	if m.Claim != nil {
 		return m.Claim.Validate()
 	}
+	if m.Ack != nil {
+		return m.Ack.Validate()
+	}
 	return nil
 }
 
 // ControlMessage answers the agent message named by ReplyTo with exactly one of a
-// disposition, a claim or a problem.
+// disposition, a claim, an acknowledged lease or a problem.
 type ControlMessage struct {
-	ReplyTo     uint64          `json:"reply_to"`
-	Disposition *Disposition    `json:"disposition,omitempty"`
-	Claim       *Claim          `json:"claim,omitempty"`
-	Problem     *SessionProblem `json:"problem,omitempty"`
+	ReplyTo      uint64          `json:"reply_to"`
+	Disposition  *Disposition    `json:"disposition,omitempty"`
+	Claim        *Claim          `json:"claim,omitempty"`
+	Acknowledged *RenewedLease   `json:"acknowledged,omitempty"`
+	Problem      *SessionProblem `json:"problem,omitempty"`
 }
 
 // SessionProblem carries the code and HTTP-equivalent status the HTTPS path would return,
@@ -88,7 +105,7 @@ type SessionProblem struct {
 func (m ControlMessage) Validate(request AgentMessage) error {
 	bad := errors.New("CONTROL_RESPONSE_INVALID")
 	set := 0
-	for _, present := range []bool{m.Disposition != nil, m.Claim != nil, m.Problem != nil} {
+	for _, present := range []bool{m.Disposition != nil, m.Claim != nil, m.Acknowledged != nil, m.Problem != nil} {
 		if present {
 			set++
 		}
@@ -102,7 +119,10 @@ func (m ControlMessage) Validate(request AgentMessage) error {
 		}
 		return nil
 	}
-	if request.Heartbeat != nil && m.Disposition == nil || request.Claim != nil && m.Claim == nil {
+	if request.Heartbeat != nil && m.Disposition == nil || request.Claim != nil && m.Claim == nil || request.Ack != nil && m.Acknowledged == nil {
+		return bad
+	}
+	if m.Claim != nil && m.Claim.Validate() != nil {
 		return bad
 	}
 	return nil

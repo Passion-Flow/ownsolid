@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -73,7 +74,11 @@ func TestComponentCycleRecoversBeforeHeartbeatAndDisabledClaimGate(t *testing.T)
 			return wire.ComponentObservation{Component: wire.NodeExporter, Version: wire.NodeExporterVersion, State: "stopped", Managed: true, ObservedAt: time.Now().UTC()}
 		},
 	}
-	c := Config{DiskPath: t.TempDir(), ExecutionProfile: wire.SystemdMaintenanceProfile}
+	stateDirectory := t.TempDir()
+	if e := os.Chmod(stateDirectory, 0o700); e != nil {
+		t.Fatal(e)
+	}
+	c := Config{DiskPath: t.TempDir(), StateDirectory: stateDirectory, ExecutionProfile: wire.SystemdMaintenanceProfile}
 	if e := cycle(t.Context(), c, connection, identity, m, nil, nil, nil, nil); !errors.Is(e, failure) {
 		t.Fatal("failed recovery reached heartbeat", e)
 	}

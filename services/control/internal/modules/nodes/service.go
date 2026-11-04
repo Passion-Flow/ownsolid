@@ -28,6 +28,8 @@ type Service struct {
 	Training     TrainingAuthority
 	// wake lets claims held open for new work (ClaimWaiting) see tasks as they are written.
 	wake wakeHub
+	// resync bounds full resyncs granted by this process (ADR 0011).
+	resync resyncBucket
 }
 
 // TaskEventRecorder borrows the actual node-task transaction. It must not commit

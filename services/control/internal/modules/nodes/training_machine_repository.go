@@ -76,7 +76,8 @@ func (s *Service) TrainingStopTaskWithin(ctx context.Context, q transaction.Exec
 	return s.trainingTaskWithin(ctx, q, n, id, false)
 }
 
-// ClaimTrainingWithin never reissues delivered work. The caller publishes the
+// ClaimTrainingWithin never reissues acknowledged work; a lease that was never
+// acknowledged returns to pending first (ADR 0011). The caller publishes the
 // secret only after the entire authority/GPU/audit transaction commits.
 func (s *Service) ClaimTrainingWithin(ctx context.Context, q transaction.Executor, n Node, id, request string) (wire.Claim, error) {
 	var out wire.Claim
@@ -111,7 +112,7 @@ func (s *Service) ClaimTrainingWithin(ctx context.Context, q transaction.Executo
 	if changed != 1 {
 		return out, fail("AGENT_LEASE_STALE")
 	}
-	if e = q.QueryRow(ctx, nodeSQL(q, "SELECT lease_expires_at FROM node_tasks WHERE id=$1", "SELECT lease_expires_at FROM node_tasks WHERE id=?", `SELECT lease_expires_at FROM node_tasks WHERE id=?`, id)).Scan(&lease.LeaseExpiresAt); e != nil {
+	if e = deliveredLeaseWithin(ctx, q, n, id, &lease); e != nil {
 		return out, e
 	}
 	if _, e = q.Exec(ctx, nodeSQL(q, "INSERT INTO audit_events(id,occurred_at,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,request_id) VALUES($1,clock_timestamp(),$2,$3,'system','node.task_claimed','success','node_task',$4,$5)", "INSERT INTO audit_events(id,occurred_at,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,request_id) VALUES(?,UTC_TIMESTAMP(6),?,?,'system','node.task_claimed','success','node_task',?,?)", `INSERT INTO audit_events(id,occurred_at,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,request_id) VALUES(?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),?,?,'system','node.task_claimed','success','node_task',?,?)`, uuid.NewString(), n.TenantID, n.WorkspaceID, id, request)); e != nil {

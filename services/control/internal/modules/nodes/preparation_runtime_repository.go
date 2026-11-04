@@ -87,7 +87,7 @@ func (s *Service) ClaimPreparationWithin(ctx context.Context, q transaction.Exec
 	if affected != 1 {
 		return out, fail("AGENT_LEASE_STALE")
 	}
-	if e = q.QueryRow(ctx, nodeSQL(q, `SELECT lease_expires_at FROM node_tasks WHERE id=$1`, `SELECT lease_expires_at FROM node_tasks WHERE id=?`, `SELECT lease_expires_at FROM node_tasks WHERE id=?`, id)).Scan(&lease.LeaseExpiresAt); e != nil {
+	if e = deliveredLeaseWithin(ctx, q, current, id, &lease); e != nil {
 		return out, e
 	}
 	lease.LeaseExpiresAt = lease.LeaseExpiresAt.UTC()

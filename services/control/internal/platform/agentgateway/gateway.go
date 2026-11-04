@@ -28,8 +28,10 @@ type Backend interface {
 	// paths and validates the credential form. It runs for every exchange.
 	Admit(ctx context.Context, address, node, credential string) error
 	Heartbeat(ctx context.Context, node, credential string, h wire.Handshake) (wire.Disposition, error)
-	// Claim leases the next task, holding the claim open for up to wait.
-	Claim(ctx context.Context, node, credential, request string, wait time.Duration) (wire.Claim, error)
+	// Claim leases the next task, holding the claim open for up to input's wait.
+	Claim(ctx context.Context, node, credential, request string, input wire.ClaimRequest) (wire.Claim, error)
+	// Acknowledge confirms a lease before the agent executes it (ADR 0011).
+	Acknowledge(ctx context.Context, node, credential, request string, ack wire.TaskAcknowledgement) (wire.RenewedLease, error)
 }
 
 // Policy bounds the gateway. All values come from the control configuration.
@@ -255,7 +257,15 @@ func (g *Gateway) exchange(ctx context.Context, address, node, credential string
 		reply.Disposition = &disposition
 		return reply
 	}
-	claim, e := g.backend.Claim(bounded, node, credential, uuid.NewString(), wait)
+	if m.Ack != nil {
+		acknowledged, e := g.backend.Acknowledge(bounded, node, credential, uuid.NewString(), *m.Ack)
+		if e != nil {
+			return fail(e)
+		}
+		reply.Acknowledged = &acknowledged
+		return reply
+	}
+	claim, e := g.backend.Claim(bounded, node, credential, uuid.NewString(), *m.Claim)
 	if e != nil {
 		return fail(e)
 	}

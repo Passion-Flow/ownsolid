@@ -60,6 +60,14 @@ func enroll(t *testing.T, s *nodes.Service, a identity.Auth, name string) wire.E
 	return result
 }
 
+// acknowledge confirms a lease, as the agent does before it executes one.
+func acknowledge(t *testing.T, s *nodes.Service, node wire.Enrolled, claim wire.Claim) {
+	t.Helper()
+	if _, e := s.Acknowledge(context.Background(), node.NodeID, node.Credential, claim.Lease.TaskID, wire.TaskAcknowledgementRequest{Sequence: claim.Lease.Sequence, LeaseToken: claim.Lease.LeaseToken}, uuid.NewString()); e != nil {
+		t.Fatal("acknowledgement failed", e)
+	}
+}
+
 func TestM03EnrollmentReplayAndCredentialBoundaries(t *testing.T) {
 	s, a := setupProfile(t, true)
 	ctx := context.Background()
@@ -174,9 +182,25 @@ func TestM03DurableTaskLeasesFencingAndIdempotentResults(t *testing.T) {
 	expected(t, e, "AGENT_OPERATION_UNSUPPORTED")
 	_, e = s.CreateTask(ctx, a, node.NodeID, wire.CollectFacts, uuid.NewString(), uuid.NewString())
 	expected(t, e, "NODE_BUSY")
-	claim, e := s.Claim(ctx, node.NodeID, node.Credential, uuid.NewString())
-	if e != nil || claim.Lease == nil || claim.Lease.Attempt != 1 {
+	lost, e := s.Claim(ctx, node.NodeID, node.Credential, uuid.NewString())
+	if e != nil || lost.Lease == nil || lost.Lease.Attempt != 1 || lost.Lease.Sequence != 1 {
 		t.Fatal("claim failed", e)
+	}
+	// A claim while the lease is unacknowledged means the agent never received it: the
+	// same task is delivered again on the same attempt with a new token (ADR 0011).
+	claim, e := s.Claim(ctx, node.NodeID, node.Credential, uuid.NewString())
+	if e != nil || claim.Lease == nil || claim.Lease.TaskID != task.ID || claim.Lease.Attempt != 1 || claim.Lease.Sequence != 1 || claim.Lease.LeaseToken == lost.Lease.LeaseToken {
+		t.Fatal("unacknowledged lease was not delivered again", e)
+	}
+	_, e = s.Acknowledge(ctx, node.NodeID, node.Credential, task.ID, wire.TaskAcknowledgementRequest{Sequence: 1, LeaseToken: lost.Lease.LeaseToken}, uuid.NewString())
+	expected(t, e, "AGENT_LEASE_STALE")
+	_, e = s.Acknowledge(ctx, node.NodeID, node.Credential, task.ID, wire.TaskAcknowledgementRequest{Sequence: 2, LeaseToken: claim.Lease.LeaseToken}, uuid.NewString())
+	expected(t, e, "AGENT_LEASE_STALE")
+	for range 2 {
+		renewed, e := s.Acknowledge(ctx, node.NodeID, node.Credential, task.ID, wire.TaskAcknowledgementRequest{Sequence: 1, LeaseToken: claim.Lease.LeaseToken}, uuid.NewString())
+		if e != nil || renewed.ValidForMilliseconds < 1 || renewed.ValidForMilliseconds > 30000 {
+			t.Fatal("acknowledgement failed", renewed, e)
+		}
 	}
 	duplicate, e := s.Claim(ctx, node.NodeID, node.Credential, uuid.NewString())
 	if e != nil || duplicate.Lease != nil {
@@ -189,6 +213,7 @@ func TestM03DurableTaskLeasesFencingAndIdempotentResults(t *testing.T) {
 	if e != nil || newLease.Lease == nil || newLease.Lease.Attempt != 2 {
 		t.Fatal("expired lease did not recover", e)
 	}
+	acknowledge(t, s, node, newLease)
 	f := facts()
 	input := wire.Result{LeaseToken: claim.Lease.LeaseToken, Outcome: "success", Facts: &f}
 	_, e = s.Complete(ctx, node.NodeID, node.Credential, task.ID, input, uuid.NewString())
@@ -228,6 +253,7 @@ func TestM03DurableTaskLeasesFencingAndIdempotentResults(t *testing.T) {
 		if e != nil || lease.Lease == nil || lease.Lease.Attempt != attempt {
 			t.Fatal("attempt budget not enforced", e)
 		}
+		acknowledge(t, s, node, lease)
 		if _, e = s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", exhausted.ID); e != nil {
 			t.Fatal(e)
 		}
