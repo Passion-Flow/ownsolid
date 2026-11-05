@@ -2,11 +2,11 @@ package http
 
 import (
 	"errors"
-	"net/http"
-	"net/url"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/preferences"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+	"net/http"
+	"net/url"
 )
 
 type Handler struct{ Service *preferences.Service }
@@ -27,7 +27,7 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, request string) (any,
 		return v, 200, e
 	case http.MethodPatch:
 		var input preferences.UpdateRequest
-		if e := httpserver.DecodeRequiredObject(r, &input, httpserver.MaxJSONBytes); e != nil {
+		if e := httpserver.DecodePatchObject(r, &input, httpserver.MaxJSONBytes); e != nil {
 			return nil, 0, e
 		}
 		v, e := h.Service.Update(r.Context(), a, input, request)

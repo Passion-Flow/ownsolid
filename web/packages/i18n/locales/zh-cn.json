@@ -92,6 +92,7 @@
   "password.reset.title": "设置新密码",
   "password.reset.unusable.detail": "链接已过期、已被使用或不完整。请重新获取。",
   "password.reset.unusable.title": "此重置链接无法使用",
+  "preferences.saveFailed": "主题或密度未能保存到账户，但在此浏览器中仍然生效。",
   "preferences.useComfortable": "使用宽松间距",
   "preferences.useCompact": "使用紧凑间距",
   "preferences.useDarkTheme": "使用深色主题",
