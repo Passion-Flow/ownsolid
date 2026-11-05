@@ -26,7 +26,7 @@ func capturePortalNativeState(t *testing.T, p *nativeWorkflowProcess, run string
 	if json.Unmarshal(p.call("GET", "/api/v1/preferences", nil, "", 200), &out.Preference) != nil {
 		t.Fatal("native preference read")
 	}
-	if json.Unmarshal(p.call("PATCH", "/api/v1/preferences", preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: out.Preference.Revision}, "", 200), &out.Preference) != nil || out.Preference.Theme != preferences.DarkTheme {
+	if json.Unmarshal(p.call("PATCH", "/api/v1/preferences", preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: out.Preference.Revision}, "", 200), &out.Preference) != nil || out.Preference.Theme != preferences.DarkTheme {
 		t.Fatal("native persisted fixed theme")
 	}
 	var page notifications.Page

@@ -11,13 +11,18 @@ import {
 } from 'react';
 
 const plainMilliseconds = 2_400;
-const undoMilliseconds = 6_000;
+const actionMilliseconds = 6_000;
+
+const actionClasses =
+  'h-7 cursor-pointer rounded-control border-0 bg-[color-mix(in_srgb,var(--bg)_14%,transparent)] px-2.5 font-semibold text-bg';
 
 /** Options for a toast. */
 export interface ToastOptions {
   message: string;
   /** Reverses the action; the toast stays longer and offers an undo button. */
   undo?: (() => void) | undefined;
+  /** Repeats what failed; the toast stays longer and offers a retry button. */
+  retry?: (() => void) | undefined;
 }
 
 type ShowToast = (options: ToastOptions) => void;
@@ -37,7 +42,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       () => {
         setCurrent(null);
       },
-      options.undo ? undoMilliseconds : plainMilliseconds,
+      options.undo || options.retry ? actionMilliseconds : plainMilliseconds,
     );
   }, []);
 
@@ -61,13 +66,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             {current.undo ? (
               <button
                 type="button"
-                className="h-7 cursor-pointer rounded-control border-0 bg-[color-mix(in_srgb,var(--bg)_14%,transparent)] px-2.5 font-semibold text-bg"
+                className={actionClasses}
                 onClick={() => {
                   current.undo?.();
                   show({ message: t('action.undone') });
                 }}
               >
                 {t('action.undo')}
+              </button>
+            ) : null}
+            {current.retry ? (
+              <button
+                type="button"
+                className={actionClasses}
+                onClick={() => {
+                  current.retry?.();
+                  setCurrent(null);
+                }}
+              >
+                {t('action.retry')}
               </button>
             ) : null}
           </div>

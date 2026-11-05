@@ -47,7 +47,7 @@ func verifyPortalRestrictedRuntime(t *testing.T, h *identityhttp.Handler, a iden
 	if before.Theme == theme {
 		theme = preferences.LightTheme
 	}
-	changed, e := h.Preferences.Service.Update(ctx, a, preferences.UpdateRequest{Theme: theme, ExpectedRevision: before.Revision}, uuid.NewString())
+	changed, e := h.Preferences.Service.Update(ctx, a, preferences.UpdateRequest{Theme: &theme, ExpectedRevision: before.Revision}, uuid.NewString())
 	if e != nil || changed.Revision != before.Revision+1 || changed.Theme != theme {
 		t.Fatal("DML-only preference update", e)
 	}

@@ -48,3 +48,34 @@ func TestRequiredObjectDecoderSeparatesEmptyNullUnknownDuplicateAndExplicitValue
 		t.Fatal("media contract", e)
 	}
 }
+
+func TestPatchObjectDecoderAllowsOnlyOptionalFieldsToBeAbsent(t *testing.T) {
+	type request struct {
+		Theme            *string `json:"theme,omitempty"`
+		Density          *string `json:"density,omitempty"`
+		ExpectedRevision int64   `json:"expected_revision"`
+	}
+	decode := func(raw string, value *request) error {
+		r := httptest.NewRequest("PATCH", "/api/v1/preferences", strings.NewReader(raw))
+		r.Header.Set("Content-Type", "application/json")
+		return DecodePatchObject(r, value, 1024)
+	}
+	var value request
+	if e := decode(`{"density":"compact","expected_revision":2}`, &value); e != nil || value.Theme != nil || value.Density == nil || *value.Density != "compact" || value.ExpectedRevision != 2 {
+		t.Fatal("partial update", e, value)
+	}
+	for name, raw := range map[string]string{
+		"missing_required": `{"density":"compact"}`,
+		"null_optional":    `{"theme":null,"density":"compact","expected_revision":2}`,
+		"unknown":          `{"density":"compact","expected_revision":2,"user_id":"other"}`,
+		"case_variant":     `{"Density":"compact","expected_revision":2}`,
+		"duplicate":        `{"density":"compact","density":"cozy","expected_revision":2}`,
+		"array":            `[]`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			if e := decode(raw, &request{}); e == nil {
+				t.Fatal("ambiguous partial update accepted")
+			}
+		})
+	}
+}

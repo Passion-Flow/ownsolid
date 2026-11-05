@@ -92,7 +92,7 @@ func TestM15ActualEveryPortalServiceRechecksRevokedSSOSource(t *testing.T) {
 				t.Fatal(e)
 			}
 			checks := map[string]func() error{"preference_get": func() error { _, e := pref.Get(ctx, a); return e }, "preference_update": func() error {
-				_, e := pref.Update(ctx, a, preferences.UpdateRequest{Theme: "dark", ExpectedRevision: 1}, uuid.NewString())
+				_, e := pref.Update(ctx, a, preferences.UpdateRequest{Theme: new("dark"), ExpectedRevision: 1}, uuid.NewString())
 				return e
 			}, "notice_list": func() error { _, e := notice.List(ctx, a, url.Values{}); return e }, "notice_configuration": func() error { _, e := notice.Configuration(ctx, a); return e }, "notice_get": func() error { _, e := notice.Get(ctx, a, uuid.NewString()); return e }, "notice_read": func() error { _, e := notice.Read(ctx, a, uuid.NewString(), uuid.NewString()); return e }}
 			for name, check := range checks {

@@ -92,6 +92,7 @@
   "password.reset.title": "Set a new password",
   "password.reset.unusable.detail": "The link expired, was already used or is incomplete. Request a new one.",
   "password.reset.unusable.title": "This reset link cannot be used",
+  "preferences.saveFailed": "Your theme or density was not saved to your account. It still applies in this browser.",
   "preferences.useComfortable": "Use comfortable spacing",
   "preferences.useCompact": "Use compact spacing",
   "preferences.useDarkTheme": "Use the dark theme",

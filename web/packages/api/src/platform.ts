@@ -3,6 +3,7 @@ import { createClient, type Success } from './client.ts';
 import type {
   licensingContract,
   notificationsContract,
+  preferencesContract,
   ssoContract,
   workspacesContract,
 } from './gen/index.ts';
@@ -35,10 +36,17 @@ export type LicenseStatus = licensingContract.components['schemas']['PortalLicen
 /** A single sign-on provider offered on the sign-in page. */
 export type SsoConnector = ssoContract.components['schemas']['PublicSSOConnector'];
 
+/** The theme and density saved on the account. */
+export type Preference = preferencesContract.components['schemas']['Preference'];
+
+/** The account fields to change; fields left out keep their saved value. */
+export type PreferenceChange = Partial<Pick<Preference, 'theme' | 'density'>>;
+
 const sso = createClient<ssoContract.paths>();
 const workspaces = createClient<workspacesContract.paths>();
 const notifications = createClient<notificationsContract.paths>();
 const licensing = createClient<licensingContract.paths>();
+const preferences = createClient<preferencesContract.paths>();
 
 /**
  * Lists workspaces the session may use. Administrators list from the admin API, which
@@ -81,6 +89,21 @@ export function markNotificationRead(id: string): Promise<RunNotification> {
 /** Reads the license condition. */
 export function getLicenseStatus(options?: RequestOptions): Promise<LicenseStatus> {
   return licensing.get('/api/v1/license/status', options);
+}
+
+/** Reads the theme and density saved on the account. */
+export function getPreferences(options?: RequestOptions): Promise<Preference> {
+  return preferences.get('/api/v1/preferences', options);
+}
+
+/**
+ * Saves a change on top of `revision`. Fails with `PREFERENCE_REVISION_CONFLICT` when
+ * another browser saved first.
+ */
+export function updatePreferences(change: PreferenceChange, revision: number): Promise<Preference> {
+  return preferences.patch('/api/v1/preferences', {
+    body: { ...change, expected_revision: revision },
+  });
 }
 
 /** Lists the single sign-on providers this entrance offers. */

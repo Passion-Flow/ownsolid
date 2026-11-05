@@ -100,7 +100,7 @@ func TestM15ActualPortalPublishedDiscoveryPrivateConversationNoticeAndAuditRollb
 	if _, e = notices.Read(ctx, portal, notice, uuid.NewString()); e != nil {
 		t.Fatal("actual deep link read state", e)
 	}
-	preference, e := h.Preferences.Service.Update(ctx, portal, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: 1}, uuid.NewString())
+	preference, e := h.Preferences.Service.Update(ctx, portal, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, uuid.NewString())
 	if e != nil || preference.Theme != preferences.DarkTheme {
 		t.Fatal(e)
 	}

@@ -101,7 +101,11 @@ func TestUpgradeFromDeliveredPrefixPreservesRoleAndData(t *testing.T) {
 		t.Fatal(e)
 	}
 	// Migration 32 drops the log table: the telemetry stores own that data (ADR 0012).
-	oldTables := slices.DeleteFunc(existingTables(t, f), func(name string) bool { return name == "component_log_snapshots" })
+	// Migration 34 moves seeded preferences to `system` on purpose (ADR 0019), which
+	// TestLineageUpgradeKeepsChosenThemesOnly covers.
+	oldTables := slices.DeleteFunc(existingTables(t, f), func(name string) bool {
+		return name == "component_log_snapshots" || name == "user_preferences"
+	})
 	data := upgradeDataFingerprint(t, f, oldTables)
 	if state, e := Upgrade(ctx, f.service.DB, f.lease, f.input); e != nil || state != UpgradeComplete {
 		t.Fatal(state, e)

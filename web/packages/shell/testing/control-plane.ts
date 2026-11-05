@@ -98,6 +98,12 @@ export interface ControlPlane {
   nextAccountWrite: ScriptedProblem | null;
   /** The password the last reset or registration set. */
   lastPassword: string | null;
+  /** The theme and density saved on the account. */
+  preferences: { theme: string; density: string; revision: number };
+  /** Fails saving preferences with this problem while set. */
+  preferencesProblem: ScriptedProblem | null;
+  /** Bodies of the preference saves the server received, in order. */
+  preferenceWrites: Record<string, unknown>[];
 }
 
 function problem(route: Route, { status, code, headers }: ScriptedProblem): Promise<void> {
@@ -137,6 +143,9 @@ export async function mockControlPlane(
     ssoAddress: '',
     nextAccountWrite: null,
     lastPassword: null,
+    preferences: { theme: 'system', density: 'comfortable', revision: 1 },
+    preferencesProblem: null,
+    preferenceWrites: [],
   };
   const identity = () => ({ user, workspace, audience: state.audience });
 
@@ -247,5 +256,27 @@ export async function mockControlPlane(
   await page.route('**/api/v1/license/status', (route) =>
     data(route, { state: 'active', new_business_allowed: true, warning: false }),
   );
+  await page.route('**/api/v1/preferences', (route) => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      return data(route, { ...state.preferences, updated_at: '2026-11-04T00:00:00Z' });
+    }
+    if (request.headers()['x-csrf-token'] !== 'csrf-token') {
+      return problem(route, { status: 403, code: 'CSRF_INVALID' });
+    }
+    if (state.preferencesProblem) return problem(route, state.preferencesProblem);
+    const body = request.postDataJSON() as Record<string, unknown>;
+    state.preferenceWrites.push(body);
+    const { expected_revision: expected, ...change } = body;
+    if (expected !== state.preferences.revision) {
+      return problem(route, { status: 409, code: 'PREFERENCE_REVISION_CONFLICT' });
+    }
+    state.preferences = {
+      ...state.preferences,
+      ...change,
+      revision: state.preferences.revision + 1,
+    };
+    return data(route, { ...state.preferences, updated_at: '2026-11-04T00:00:00Z' });
+  });
   return state;
 }

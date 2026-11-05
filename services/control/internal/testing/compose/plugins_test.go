@@ -175,7 +175,7 @@ func exerciseComposePlugins(t *testing.T, client *http.Client, portalOrigin, adm
 			t.Fatal("installed exact published application projection")
 		}
 		portal.call("GET", "/api/v1/preferences", nil, &savedPreference, 200)
-		portal.call("PATCH", "/api/v1/preferences", preferences.UpdateRequest{Theme: "dark", ExpectedRevision: savedPreference.Revision}, &savedPreference, 200)
+		portal.call("PATCH", "/api/v1/preferences", preferences.UpdateRequest{Theme: new("dark"), ExpectedRevision: savedPreference.Revision}, &savedPreference, 200)
 		var notices notifications.Page
 		portal.call("GET", "/api/v1/notifications?limit=100", nil, &notices, 200)
 		for _, n := range notices.Items {
