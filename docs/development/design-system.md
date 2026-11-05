@@ -89,6 +89,20 @@ test in each application fails when a route has no state in its `e2e/pages.ts`. 
 adds its states there: the empty, loading, error and filled views and each dialog or
 drawer it opens.
 
+Keyboard and screen-reader use is part of that standard, and
+`packages/shell/testing/keyboard-flows.ts` checks it on the same page states:
+
+- **Every control is reachable with Tab and shows focus.** The test walks each state with
+  Tab and fails on a control that is off screen or looks the same focused and unfocused.
+  Use the global focus outline; a control that removes it draws a ring of its own.
+- **Menus move with the arrow keys** and close with Escape; dialogs, drawers and the
+  command menu close with Escape. Each returns focus to what opened it.
+- **Each page has one `h1` and names the browser tab.** `AuthLayout` and the frame set the
+  tab from the page title; status pages title their notice as the heading.
+- **Navigation moves focus to the new page's `h1`,** so a screen reader announces it and
+  the next Tab starts in the page. A change of only the query or hash keeps focus, so
+  filters and drawers stay usable. A skip link leads past the navigation.
+
 Text needs 4.5 to 1 against what it sits on, so three tokens differ from the prototype:
 
 - **Tertiary text** is darker (`#706a60`, dark `#969084`); the prototype's reached only

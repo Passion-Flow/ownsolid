@@ -49,6 +49,11 @@ describe('TextField', () => {
 });
 
 describe('Notice', () => {
+  it('can title the page as its heading', () => {
+    render(<Notice title="Page not found" titleAs="h1" />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
+  });
+
   it('announces critical messages as alerts and others as status', () => {
     const { rerender } = render(<Notice tone="critical" title="Failed" />);
     expect(screen.getByRole('alert')).toHaveTextContent('Failed');

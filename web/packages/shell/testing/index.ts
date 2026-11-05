@@ -12,4 +12,5 @@ export {
   type ControlPlane,
   type ScriptedProblem,
 } from './control-plane.ts';
+export { expectFocusVisible, keyboardFlows, type KeyboardFlowOptions } from './keyboard-flows.ts';
 export { registrationFlows, sessionFlows, type SessionFlowOptions } from './session-flows.ts';

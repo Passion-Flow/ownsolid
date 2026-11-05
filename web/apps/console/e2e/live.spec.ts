@@ -2,7 +2,7 @@
 // control plane's own TLS, cookies, CSRF checks and Content-Security-Policy. Skipped
 // unless the environment describes an installation; docs/development/environment.md
 // has the recipe.
-import { expectAccessible } from '@ownsolid/shell/testing';
+import { expectAccessible, expectFocusVisible } from '@ownsolid/shell/testing';
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
@@ -51,7 +51,9 @@ test('signs in and out of a real installation', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/\/sign-in/);
   await page.getByLabel('Email').waitFor();
+  await expect(page).toHaveTitle('Sign in - ownsolid');
   await expectAccessible(page);
+  await expectFocusVisible(page);
 
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(`${password}-wrong`);
@@ -62,7 +64,10 @@ test('signs in and out of a real installation', async ({ page }) => {
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
   await expect(page.getByText(`Signed in as ${email}.`)).toBeVisible();
+  // Signing in is a navigation: focus moves to the start page's heading.
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   await expectAccessible(page);
+  await expectFocusVisible(page);
 
   await page.reload();
   await expect(page.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
@@ -96,7 +101,7 @@ test('signs in and out of a real installation', async ({ page }) => {
   // The account pages emails and sign-in providers link to, against the real API.
   await page.getByRole('link', { name: 'Forgot your password?' }).click();
   // The sign-in page stays until the next page's code has loaded.
-  await expect(page.getByRole('heading', { name: 'Reset your password' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Reset your password' })).toBeFocused();
   await page.getByLabel('Email').fill(email);
   await page.getByRole('button', { name: 'Send the reset link' }).click();
   await expect(page.getByText('If this address has an account')).toBeVisible();

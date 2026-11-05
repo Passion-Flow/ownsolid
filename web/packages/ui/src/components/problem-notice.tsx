@@ -15,6 +15,8 @@ export interface ProblemNoticeProps {
   problem: ProblemLike;
   /** Offered as "Try again" when the failure may pass on its own. */
   onRetry?: (() => void) | undefined;
+  /** The title's element: a heading when the notice is all the page shows. */
+  titleAs?: 'p' | 'h1' | 'h2' | undefined;
   className?: string | undefined;
 }
 
@@ -22,7 +24,7 @@ export interface ProblemNoticeProps {
  * Explains a failed request: what happened, the likely cause and the next step, with
  * the request ID for support. Unknown codes get a generic explanation.
  */
-export function ProblemNotice({ problem, onRetry, className }: ProblemNoticeProps) {
+export function ProblemNotice({ problem, onRetry, titleAs, className }: ProblemNoticeProps) {
   const { t } = useI18n();
   const base = `problem.${problem.code}`;
   const title = `${base}.title`;
@@ -31,6 +33,7 @@ export function ProblemNotice({ problem, onRetry, className }: ProblemNoticeProp
   return (
     <Notice
       tone="critical"
+      titleAs={titleAs}
       className={className}
       title={known ? t(title) : t('problem.UNKNOWN.title')}
       actions={

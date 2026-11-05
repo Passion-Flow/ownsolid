@@ -73,8 +73,9 @@ and reuse it for retries.
   Each build checks the bundle budget in `packages/config/src/vite.ts`
   ([ADR 0016](../docs/decisions/0016-route-level-code-splitting.md)) and fails when the
   first download or a later chunk is over it.
-- **Accessibility:** every page state is listed in the application's `e2e/pages.ts`, and
-  the browser tests run axe-core on each in both themes against WCAG 2.2 AA. A route
+- **Accessibility:** every page state is listed in the application's `e2e/pages.ts`. The
+  browser tests run axe-core on each in both themes against WCAG 2.2 AA and walk each
+  with Tab, failing on a control that cannot be reached or does not show focus. A route
   without a state fails the application's unit tests.
 - **Errors:** show failures with `ProblemNotice`, which gives the cause, the next step and
   the request ID. New server error codes get `problem.<CODE>.title` and `.detail` keys.
