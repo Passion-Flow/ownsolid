@@ -52,6 +52,7 @@ type IdentityPolicy struct {
 	AdminAbsoluteSeconds      int `yaml:"admin_absolute_seconds"`
 	CSRFSeconds               int `yaml:"csrf_seconds"`
 	SessionTouchSeconds       int `yaml:"session_touch_seconds"`
+	SessionWarningSeconds     int `yaml:"session_warning_seconds"`
 	IdempotencySeconds        int `yaml:"idempotency_seconds"`
 	HashWorkers               int `yaml:"hash_workers"`
 	HashQueueCapacity         int `yaml:"hash_queue_capacity"`
@@ -152,7 +153,7 @@ func DefaultRuntimePolicy() RuntimePolicy {
 		Datasets:       DefaultDatasetPolicy(),
 		UI:             UIPolicy{PollMilliseconds: 5000, SearchDebounceMilliseconds: 150, PageSize: 20, LookupPageSize: 100},
 		HTTP:           DefaultHTTPPolicy(),
-		Identity:       IdentityPolicy{InvitationTTLSeconds: 86400, ResetTTLSeconds: 900, PortalIdleSeconds: 1800, PortalAbsoluteSeconds: 43200, AdminIdleSeconds: 900, AdminAbsoluteSeconds: 14400, CSRFSeconds: 900, SessionTouchSeconds: 60, IdempotencySeconds: 86400, HashWorkers: 2, HashQueueCapacity: 16, HashAdmissionMilliseconds: 2000, MaxLiveResetTokens: 3, ResetMinimumMilliseconds: 300, ResetJitterMilliseconds: 50, AuditDefaultDays: 7, AuditMaxDays: 31},
+		Identity:       IdentityPolicy{InvitationTTLSeconds: 86400, ResetTTLSeconds: 900, PortalIdleSeconds: 1800, PortalAbsoluteSeconds: 43200, AdminIdleSeconds: 900, AdminAbsoluteSeconds: 14400, CSRFSeconds: 900, SessionTouchSeconds: 60, SessionWarningSeconds: 120, IdempotencySeconds: 86400, HashWorkers: 2, HashQueueCapacity: 16, HashAdmissionMilliseconds: 2000, MaxLiveResetTokens: 3, ResetMinimumMilliseconds: 300, ResetJitterMilliseconds: 50, AuditDefaultDays: 7, AuditMaxDays: 31},
 		Mail:           MailPolicy{PollMilliseconds: 1000, AttemptSeconds: 25, LeaseSeconds: 60, MaxAttempts: 5, Retry1Seconds: 15, Retry2Seconds: 60, Retry3Seconds: 180, Retry4Seconds: 300, JitterPercent: 10},
 		Retention:      RetentionPolicy{IntervalSeconds: 60, TimeoutSeconds: 5, BatchSize: 100, MailDays: 30, ResetDays: 30, InvitationDays: 90, SessionDays: 7, RateGraceSeconds: 3600, AuditDays: 180},
 		Nodes:          NodesPolicy{MaximumLiveNodes: 100, MaximumLiveJoinTokens: 100, JoinTTLSeconds: 600, OnlineSeconds: 30, OfflineSeconds: 120, TaskSeconds: 300, InferenceDeploySeconds: 1800, TaskLeaseSeconds: 30, MaximumTaskAttempts: 3, TaskSweepBatch: 100, ReconcileSeconds: 10, ReconcileTimeoutSeconds: 5, MaximumTaskDeliveries: 10, ResyncIntervalSeconds: 300, ResyncPerSecond: 20},
@@ -237,6 +238,9 @@ func (p RuntimePolicy) Validate() error {
 		return errors.New("CONFIG_IDENTITY_BOUNDS_INVALID")
 	}
 	if p.Identity.SessionTouchSeconds < 1 || p.Identity.SessionTouchSeconds > 300 {
+		return errors.New("CONFIG_IDENTITY_BOUNDS_INVALID")
+	}
+	if p.Identity.SessionWarningSeconds < 10 || p.Identity.SessionWarningSeconds > 3600 {
 		return errors.New("CONFIG_IDENTITY_BOUNDS_INVALID")
 	}
 	if p.Identity.IdempotencySeconds < 60 || p.Identity.IdempotencySeconds > 604800 {

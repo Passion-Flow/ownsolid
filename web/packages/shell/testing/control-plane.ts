@@ -73,6 +73,14 @@ export const giteaBinding = {
   updated_at: '2026-11-04T00:00:00Z',
 };
 
+/** What is left of a session nobody has touched for a moment. */
+export const freshSession = {
+  idle_timeout_seconds: 900,
+  idle_remaining_seconds: 900,
+  absolute_remaining_seconds: 14_400,
+  warning_seconds: 120,
+};
+
 /** The token of a valid emailed link. */
 export const linkToken = 'a'.repeat(43);
 
@@ -162,6 +170,12 @@ export interface ControlPlane {
   ssoStarts: Record<string, unknown>[];
   /** How many CSRF tokens the page has fetched. */
   csrfFetches: number;
+  /** What the session reports having left. A read that is not background extends it. */
+  session: typeof freshSession;
+  /** Whether each session read was marked as background, in order. */
+  sessionReads: boolean[];
+  /** Whether each notification count read was marked as background, in order. */
+  notificationPolls: boolean[];
   /** Fails `/runtime-config.json` with a dropped connection while true. */
   unreachable: boolean;
   /** Answers the next sign-in with this failure instead of checking credentials. */
@@ -235,6 +249,9 @@ export async function mockControlPlane(
     unlinkKeys: [],
     ssoStarts: [],
     csrfFetches: 0,
+    session: { ...freshSession },
+    sessionReads: [],
+    notificationPolls: [],
     unreachable: false,
     nextSignIn: null,
     signOutProblem: null,
@@ -287,6 +304,18 @@ export async function mockControlPlane(
       version: state.user.version + 1,
     };
     return data(route, identity());
+  });
+  await page.route('**/api/v1/me/session', (route) => {
+    if (!state.signedIn) return problem(route, { status: 401, code: 'AUTH_SESSION_EXPIRED' });
+    const background = route.request().headers()['x-ownsolid-background'] === 'true';
+    state.sessionReads.push(background);
+    if (!background) {
+      state.session = {
+        ...state.session,
+        idle_remaining_seconds: state.session.idle_timeout_seconds,
+      };
+    }
+    return data(route, state.session);
   });
   await page.route('**/api/v1/me/password-changes', (route) => {
     const request = route.request();
@@ -422,13 +451,14 @@ export async function mockControlPlane(
   };
   await page.route('**/api/v1/admin/workspaces?*', workspaces('admin'));
   await page.route('**/api/v1/workspaces?*', workspaces('portal'));
-  await page.route('**/api/v1/notifications/configuration', (route) =>
-    data(route, {
+  await page.route('**/api/v1/notifications/configuration', (route) => {
+    state.notificationPolls.push(route.request().headers()['x-ownsolid-background'] === 'true');
+    return data(route, {
       available: true,
       unread_count: state.notifications.filter((item) => !item.read_at).length,
       retention_days: 30,
-    }),
-  );
+    });
+  });
   await page.route('**/api/v1/notifications?*', (route) =>
     state.notificationsProblem
       ? problem(route, state.notificationsProblem)

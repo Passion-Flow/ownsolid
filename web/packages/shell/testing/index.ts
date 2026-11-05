@@ -9,6 +9,7 @@ export {
   account,
   failedMail,
   failedRun,
+  freshSession,
   giteaBinding,
   giteaConnector,
   linkToken,
@@ -20,3 +21,4 @@ export {
 } from './control-plane.ts';
 export { expectFocusVisible, keyboardFlows, type KeyboardFlowOptions } from './keyboard-flows.ts';
 export { registrationFlows, sessionFlows, type SessionFlowOptions } from './session-flows.ts';
+export { sessionWarningFlows } from './session-warning-flows.ts';
