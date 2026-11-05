@@ -29,8 +29,8 @@ trap cleanup EXIT
 egress_interface=egress0
 egress_log=/var/log/ownsolid-egress.jsonl
 
-cp "$binaries/ownsolid-install" "$binaries/e2e.test" "$binaries/agent" "$binaries/egress-recorder" "$binaries/compose.yaml" "$work/"
-chmod 755 "$work" "$work/ownsolid-install" "$work/e2e.test" "$work/agent" "$work/egress-recorder"
+cp "$binaries/ownsolid-install" "$binaries/e2e.test" "$binaries/agent" "$binaries/inference-egress.test" "$binaries/egress-recorder" "$binaries/compose.yaml" "$work/"
+chmod 755 "$work" "$work/ownsolid-install" "$work/e2e.test" "$work/agent" "$work/inference-egress.test" "$work/egress-recorder"
 echo "saving images"
 docker save --output "$work/images.tar" "$control_image" "$postgres_image" "$metrics_image" "$logs_image"
 
@@ -66,6 +66,7 @@ docker exec "$name" sh -euc "
 docker exec \
 	--env OWNSOLID_E2E_INSTALLER=/bundle/ownsolid-install \
 	--env OWNSOLID_E2E_AGENT=/bundle/agent \
+	--env OWNSOLID_E2E_INFERENCE_EGRESS_TEST=/bundle/inference-egress.test \
 	--env OWNSOLID_E2E_COMPOSE_FILE=/bundle/compose.yaml \
 	--env OWNSOLID_E2E_IMAGE_ARCHIVE=/bundle/images.tar \
 	--env OWNSOLID_E2E_CONTROL_IMAGE="$control_image" \

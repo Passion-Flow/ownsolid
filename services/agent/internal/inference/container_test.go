@@ -23,6 +23,9 @@ func TestApprovedContainerCannotEscapeRecipeOrExposePublicPort(t *testing.T) {
 	if value.Image != wire.ApprovedInferenceRecipe().ImageConfigDigest || value.User != "2000:0" || value.HostConfig.Privileged || !value.HostConfig.ReadonlyRootfs || value.HostConfig.AutoRemove || value.HostConfig.NetworkMode != network {
 		t.Fatal("container privilege/image/ownership policy drift")
 	}
+	if len(value.HostConfig.Dns) != 1 || value.HostConfig.Dns[0] != unreachableResolver {
+		t.Fatal("embedded resolver may forward through the host's loopback resolver", value.HostConfig.Dns)
+	}
 	if binding := value.HostConfig.PortBindings["8000/tcp"]; len(binding) != 1 || binding[0].HostIP != "127.0.0.1" || binding[0].HostPort != "18000" {
 		t.Fatal("public backend exposure")
 	}

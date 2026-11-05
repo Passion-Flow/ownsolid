@@ -105,9 +105,18 @@ administrator:
 
 func run(t *testing.T, name string, args ...string) (string, error) {
 	t.Helper()
+	return runWithEnvironment(t, nil, name, args...)
+}
+
+// runWithEnvironment runs a command with variables added to the test's environment and
+// returns its combined output.
+func runWithEnvironment(t *testing.T, variables []string, name string, args ...string) (string, error) {
+	t.Helper()
 	ctx, cancel := context.WithTimeout(t.Context(), 15*time.Minute)
 	defer cancel()
-	output, err := exec.CommandContext(ctx, name, args...).CombinedOutput()
+	command := exec.CommandContext(ctx, name, args...)
+	command.Env = append(os.Environ(), variables...)
+	output, err := command.CombinedOutput()
 	return string(output), err
 }
 

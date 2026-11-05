@@ -54,9 +54,10 @@ image-control: ## Build the control plane image from source (CONTROL_IMAGE, DOCK
 		| COPYFILE_DISABLE=1 tar --format=ustar --no-xattrs --null -T - -cf - \
 		| $(DOCKER) build -t $(CONTROL_IMAGE) -f deploy/images/control/Dockerfile -
 
-e2e-binaries: ## Build the Linux amd64 installer, agent, egress recorder and end-to-end test for tests/e2e/run-single-node.sh
+e2e-binaries: ## Build the Linux amd64 installer, agent, agent egress guard test, egress recorder and end-to-end test for tests/e2e/run-single-node.sh
 	@mkdir -p $(E2E_BIN)
 	@cd services/agent && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o ../../$(E2E_BIN)/agent ./cmd/agent
+	@cd services/agent && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c -trimpath -tags 'docker_integration egress_integration' -o ../../$(E2E_BIN)/inference-egress.test ./internal/inference
 	@cd deploy/offline && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o ../../$(E2E_BIN)/ownsolid-install ./cmd/install
 	@cd tests/e2e && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o ../../$(E2E_BIN)/egress-recorder ./cmd/egress-recorder
 	@cd tests/e2e && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c -o ../../$(E2E_BIN)/e2e.test .
