@@ -32,6 +32,9 @@ before writing new markup: `Button`, `TextField`, `Card`, `StatusPill`, `Tag`, `
 
 - Spacing follows a 4-pixel scale. Radii: 8 px for controls, 12 to 14 px for cards,
   18 px for dialogs.
+- Dates, numbers and units go through `format` from `useI18n()`, which follows the interface
+  language; times show in the browser's time zone. Sizes use decimal units, as in the
+  prototype. A lint rule rejects direct `Intl` and `toLocaleString` calls in pages.
 - Typography: Figtree, 14 px base, page titles 27 px at weight 750; JetBrains Mono
   for identifiers, code and logs. Numbers in tables use tabular figures.
 - Icons: Lucide at 18 px with a 1.75 stroke, set once in the stylesheet; import them

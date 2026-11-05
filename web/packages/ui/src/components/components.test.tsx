@@ -91,8 +91,10 @@ describe('ProblemNotice', () => {
   });
 
   it('shows how long to wait when the server said so', () => {
-    inEnglish(<ProblemNotice problem={{ ...base, code: 'RATE_LIMITED', retryAfterSeconds: 1 }} />);
-    expect(screen.getByRole('alert')).toHaveTextContent('You can try again in 1 second.');
+    inEnglish(
+      <ProblemNotice problem={{ ...base, code: 'RATE_LIMITED', retryAfterSeconds: 526 }} />,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('You can try again in 8m 46s.');
   });
 });
 

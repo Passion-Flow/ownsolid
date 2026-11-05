@@ -10,14 +10,14 @@ describe('createTranslator', () => {
   });
 
   it('picks the plural form from count and formats the number', () => {
-    expect(t('problem.retryAfter', { count: 1 })).toBe('You can try again in 1 second.');
-    expect(t('problem.retryAfter', { count: 1200 })).toBe('You can try again in 1,200 seconds.');
+    expect(t('workspace.truncated', { count: 1 })).toBe('Showing the first 1 workspace');
+    expect(t('workspace.truncated', { count: 1200 })).toBe('Showing the first 1,200 workspaces');
   });
 
   it('formats numbers for the locale', () => {
     const german = createTranslator('de', englishCatalog);
-    expect(german('problem.retryAfter', { count: 1200 })).toBe(
-      'You can try again in 1.200 seconds.',
+    expect(german('workspace.truncated', { count: 1200 })).toBe(
+      'Showing the first 1.200 workspaces',
     );
   });
 
@@ -36,7 +36,7 @@ describe('createTranslator', () => {
 describe('isTranslationKey', () => {
   it('accepts plain keys and plural bases', () => {
     expect(isTranslationKey('signIn.title')).toBe(true);
-    expect(isTranslationKey('problem.retryAfter')).toBe(true);
+    expect(isTranslationKey('workspace.truncated')).toBe(true);
     expect(isTranslationKey('problem.NOPE.title')).toBe(false);
   });
 });

@@ -60,19 +60,16 @@ const reasons: Record<string, TranslationKey> = {
 const listKey = ['mail-deliveries'] as const;
 
 function Reason({ delivery }: { delivery: MailDelivery }) {
-  const { t, locale } = useI18n();
+  const { t, format } = useI18n();
   if (delivery.state === 'queued' && delivery.next_attempt_at && delivery.attempt_count > 0) {
-    const at = new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(
-      new Date(delivery.next_attempt_at),
-    );
-    return <>{t('mail.retryAt', { time: at })}</>;
+    return <>{t('mail.retryAt', { time: format.time(delivery.next_attempt_at) })}</>;
   }
   if (!delivery.error_category) return <span className="text-text-3">-</span>;
   return <>{t(reasons[delivery.error_category] ?? 'mail.reason.other')}</>;
 }
 
 function Rows({ items }: { items: readonly MailDelivery[] }) {
-  const { t, locale } = useI18n();
+  const { t, format } = useI18n();
   const toast = useToast();
   const queryClient = useQueryClient();
   // One key per email until its resend succeeds, so retrying a failed request cannot
@@ -90,7 +87,6 @@ function Rows({ items }: { items: readonly MailDelivery[] }) {
       return queryClient.invalidateQueries({ queryKey: listKey });
     },
   });
-  const format = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' });
   return (
     <>
       {resend.error && isProblem(resend.error) ? (
@@ -132,8 +128,8 @@ function Rows({ items }: { items: readonly MailDelivery[] }) {
                   <Td className="whitespace-normal text-text-2">
                     <Reason delivery={delivery} />
                   </Td>
-                  <Td className="text-right">{delivery.attempt_count}</Td>
-                  <Td className="text-text-2">{format.format(new Date(delivery.created_at))}</Td>
+                  <Td className="text-right">{format.number(delivery.attempt_count)}</Td>
+                  <Td className="text-text-2">{format.dateTime(delivery.created_at)}</Td>
                   <Td className="text-right">
                     {delivery.state === 'failed' ? (
                       <Button

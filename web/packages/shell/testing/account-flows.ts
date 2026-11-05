@@ -310,11 +310,14 @@ export function accountFlows(audience: ControlPlane['audience']): void {
 
   test('is complete in Chinese', async ({ page }) => {
     await page.goto('/account');
+    await expect(page.getByText(/Nov [34], 2026/)).toBeVisible();
     await page.getByRole('button', { name: 'Account menu' }).click();
     await page.getByRole('menuitem', { name: chinese['locale.zh-CN'] }).click();
     await expect(
       page.getByRole('heading', { name: chinese['account.title'], level: 1 }),
     ).toBeVisible();
     await expect(page.getByLabel(chinese['account.password.current'])).toBeVisible();
+    // The date follows the language: the mock's account dates from 2026-11-04.
+    await expect(page.getByText(/2026\u5e7411\u6708[34]\u65e5/)).toBeVisible();
   });
 }
