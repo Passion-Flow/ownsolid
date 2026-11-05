@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
@@ -20,12 +19,12 @@ func TestPublicConfigurationIsAllowlistedAndConfiguredRateApplies(t *testing.T) 
 	s.Config.Runtime = &policy
 	s.Config.Database.DSNFile = "synthetic-private-dsn-location"
 	s.Config.Security.AuthHMACKeyFile = "synthetic-private-key-location"
-	server := httptest.NewTLSServer(transport.New(s))
-	defer server.Close()
+	server := accountTLSServer(t, transport.New(s))
+	portal := newClient(t, server, "portal", nil)
 	get := func(path string) *http.Response {
 		r, _ := http.NewRequest("GET", server.URL+path, nil)
 		r.Host = "portal.example.invalid"
-		response, err := server.Client().Do(r)
+		response, err := portal.http.Do(r)
 		if err != nil {
 			t.Fatal(err)
 		}
