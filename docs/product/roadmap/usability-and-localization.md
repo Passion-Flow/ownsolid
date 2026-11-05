@@ -36,7 +36,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [ ] UX-113 Warn before a session ends from inactivity, with one action to stay signed in (P1)
 - [ ] UX-114 Shareable links: filters, sort order and the open drawer live in the URL (P1)
 - [x] UX-115 Route-level code splitting and a bundle size budget enforced in CI (P1) - Evidence: 13b789e, 13034a0; real-browser run on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05
-- [ ] UX-116 Automated accessibility checks in the browser tests of every page (P1)
+- [x] UX-116 Automated accessibility checks in the browser tests of every page (P1) - Evidence: 31e5343; axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05
 - [ ] UX-117 Replace the inherited browser suite in `services/control/internal/testing/browser` with Playwright flows as pages land; its `tests/acceptance` scripts did not move here, so it cannot run (P1)
 - [ ] UX-118 Theme and density follow the user across browsers through `/api/v1/preferences` (P1)
 - [ ] UX-119 Account page: profile, password change and linked sign-in providers (P1)
