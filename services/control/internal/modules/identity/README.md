@@ -19,6 +19,10 @@ Changing a password while signed in ([password_change.go](password_change.go), A
 every session of the account and issues the caller a new one in the same transaction, so the
 HTTP handler replaces its cookie. The route needs no license, like password reset.
 
+A read marked `X-Ownsolid-Background: true` authenticates without moving the session's last
+activity, and `GET /api/v1/me/session` says what is left ([session_status.go](session_status.go),
+ADR 0024). A new poll in a page must send the header, or it defeats the idle timeout.
+
 ## Related surfaces and checks
 
 Synchronize [account contract/runbooks](../../../../../docs/milestones/m01-account), [HTTP contracts](../../../../../contracts/http/v1), [identity frontend](../../../../../web/README.md), [typed config](../../platform/config), mail/localization and schema changes. SSO session-source changes also require the [sso owner](../sso/README.md).

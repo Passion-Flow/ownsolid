@@ -73,14 +73,18 @@ export const rootRoute = createRootRouteWithContext<AppContext>()({
 
 interface SignInSearch {
   redirect?: string;
+  /** The session ended while a page was open, so the page says why. */
+  ended?: boolean;
 }
 
 /** `/sign-in`. A signed-in visitor goes straight to the requested page. */
 const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: signInPath,
-  validateSearch: (search: Record<string, unknown>): SignInSearch =>
-    typeof search.redirect === 'string' ? { redirect: search.redirect } : {},
+  validateSearch: (search: Record<string, unknown>): SignInSearch => ({
+    ...(typeof search.redirect === 'string' ? { redirect: search.redirect } : {}),
+    ...(search.ended === true ? { ended: true } : {}),
+  }),
   beforeLoad: async ({ context, search }) => {
     const me = await context.queryClient.query(sessionQuery());
     if (me) redirect({ href: safeRedirect(search.redirect), replace: true, throw: true });
@@ -104,6 +108,7 @@ function SignInRoute(): ReactNode {
   return (
     <SignInPage
       audience={audience}
+      sessionEnded={search.ended ?? false}
       onSignedIn={() => {
         void router.navigate({ href: safeRedirect(target), replace: true });
       }}

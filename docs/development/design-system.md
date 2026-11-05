@@ -68,6 +68,12 @@ giving its navigation item a `to` in the application's `navigation.ts`; until th
 item shows disabled, as in the prototype. Page navigation and new actions appear in the
 command menu from the same list. Below 1024 pixels the sidebar moves into a drawer.
 
+The frame also watches the session: while someone is active it keeps the session going, and
+once they stop it warns before the session ends, with one action to stay signed in
+([ADR 0024](../decisions/0024-warning-before-a-session-ends.md)). A request the person did
+not ask for, such as a poll, passes `background: true`; otherwise an open tab holds the
+session forever.
+
 The workspace switcher only chooses what the interface shows, remembered per user in
 this browser. The server checks access to the workspace on every request.
 

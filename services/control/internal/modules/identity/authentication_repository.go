@@ -42,6 +42,9 @@ func (s *Service) Authenticate(ctx context.Context, token, audience string) (Aut
 		return Auth{}, sessionError(e)
 	}
 	a.Me, a.TokenHash = Me{u, w, audience}, security.Digest(token)
+	if !touchesSession(ctx) {
+		return a, nil
+	}
 	_, e = store.Exec(ctx, identitySQL(store,
 		`UPDATE sessions SET last_seen_at=clock_timestamp() WHERE id=$1 AND user_id=$2 AND token_hash=$3 AND audience=$4 AND auth_epoch=$5 AND revoked_at IS NULL AND absolute_expires_at>clock_timestamp() AND last_seen_at>clock_timestamp()-$6::bigint*interval '1 microsecond' AND last_seen_at<clock_timestamp()-$7::bigint*interval '1 microsecond'`,
 		`UPDATE sessions SET last_seen_at=UTC_TIMESTAMP(6) WHERE id=? AND user_id=? AND token_hash=? AND audience=? AND auth_epoch=? AND revoked_at IS NULL AND absolute_expires_at>UTC_TIMESTAMP(6) AND last_seen_at>TIMESTAMPADD(MICROSECOND,-?,UTC_TIMESTAMP(6)) AND last_seen_at<TIMESTAMPADD(MICROSECOND,-?,UTC_TIMESTAMP(6))`, `UPDATE SESSIONS SET LAST_SEEN_AT=CURRENT_TIMESTAMP(6) WHERE ID=? AND USER_ID=? AND TOKEN_HASH=? AND AUDIENCE=? AND AUTH_EPOCH=? AND REVOKED_AT IS NULL AND ABSOLUTE_EXPIRES_AT>CURRENT_TIMESTAMP(6) AND LAST_SEEN_AT>CURRENT_TIMESTAMP(6)-NUMTODSINTERVAL(?/1000000.0,'SECOND') AND LAST_SEEN_AT<CURRENT_TIMESTAMP(6)-NUMTODSINTERVAL(?/1000000.0,'SECOND')`, a.SessionID, u.ID, a.TokenHash, audience, a.Epoch, s.Idle(audience).Microseconds(), config.Seconds(s.Config.Policy().Identity.SessionTouchSeconds).Microseconds()))

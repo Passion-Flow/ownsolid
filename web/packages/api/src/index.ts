@@ -32,6 +32,7 @@ export {
 export type * from './gen/index.ts';
 export {
   getMe,
+  getSessionStatus,
   register,
   requestPasswordReset,
   resetPassword,
@@ -43,6 +44,7 @@ export {
   type InvitationDetails,
   type Me,
   type Registration,
+  type SessionStatus,
   type SignInResult,
   type User,
   type Workspace,

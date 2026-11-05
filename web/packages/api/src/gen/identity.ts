@@ -139,6 +139,26 @@ export interface paths {
         patch: operations["updateMe"];
         trace?: never;
     };
+    "/api/v1/me/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read how long the current session has left
+         * @description Answers in seconds rather than times, so a browser with a wrong clock still counts down correctly. Like any authenticated request, a read counts as activity and extends the idle timeout, unless it carries X-Ownsolid-Background: true. Every GET accepts that header: a page sends it on requests the person did not ask for, such as polls, so an open tab cannot hold a session past its idle timeout. Writes always count as activity.
+         */
+        get: operations["getSessionStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/password-changes": {
         parameters: {
             query?: never;
@@ -474,6 +494,19 @@ export interface components {
         };
         MeResponse: {
             data: components["schemas"]["MeData"];
+        };
+        SessionStatus: {
+            /** @description How long the session survives without activity. */
+            idle_timeout_seconds: number;
+            /** @description How long until it ends if nothing else happens. */
+            idle_remaining_seconds: number;
+            /** @description How long until it ends regardless of activity. */
+            absolute_remaining_seconds: number;
+            /** @description How long before the end to warn the person: the configured time, shortened to fit a short idle timeout. */
+            warning_seconds: number;
+        };
+        SessionStatusResponse: {
+            data: components["schemas"]["SessionStatus"];
         };
         UpdateMeRequest: {
             /** @description Trim and NFC-normalize; final 1-100 code points, at most 400 UTF-8 bytes; reject control characters. */
@@ -936,6 +969,35 @@ export interface operations {
             403: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+            default: components["responses"]["Problem"];
+        };
+    };
+    getSessionStatus: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description true when the person did not ask for this read, so it does not count as activity. */
+                "X-Ownsolid-Background"?: "true";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description How long the session has left. */
+            200: {
+                headers: {
+                    /** @description Server-generated correlation UUID. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionStatusResponse"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
             default: components["responses"]["Problem"];
         };
