@@ -194,7 +194,11 @@ instead of issuing a second one.
 ## Limits of this release
 
 - The console and portal currently offer sign-in, sign-out, password reset, registration
-  by invitation (portal), single sign-on and the application frame. Other capabilities,
+  by invitation (portal), single sign-on and the application frame. The console's
+  **Email delivery** page shows every invitation and password email, why one failed (for
+  example an unreachable SMTP host or a refused sign-in), and sends a failed one again
+  once the mail server works. A failed email is retried four times over about ten minutes
+  before it shows as failed. Other capabilities,
   including installing a license and inviting users, are reached through the API until
   their pages land.
 - Upgrades, rollback and signed bundles are separate roadmap items (DEL-101, DEL-104,

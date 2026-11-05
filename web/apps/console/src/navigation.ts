@@ -12,6 +12,7 @@ import {
   KeyRound,
   LayoutDashboard,
   Library,
+  Mail,
   Network,
   Package,
   Plug,
@@ -80,6 +81,7 @@ export const navigation: readonly NavGroup[] = [
     heading: 'nav.group.system',
     items: [
       { label: 'nav.license', icon: BadgeCheck },
+      { label: 'nav.mail', icon: Mail, to: '/mail' },
       { label: 'nav.settings', icon: Settings },
     ],
   },
