@@ -53,7 +53,7 @@ func TestLineageUpgradeKeepsBootstrappedInstallation(t *testing.T) {
 // Migration 000034 keeps a theme the user chose and moves seeded rows, which nobody chose,
 // to following the operating system.
 func TestLineageUpgradeKeepsChosenThemesOnly(t *testing.T) {
-	s := fixture.NewAtVersion(t, 33)
+	s := fixture.NewAtVersion(t, 33) // before 000034
 	fixture.Bootstrap(t, s)
 	ctx := t.Context()
 	var seeded string

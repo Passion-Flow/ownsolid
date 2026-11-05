@@ -68,6 +68,47 @@ export const failedRun = {
   read_at: null as string | null,
 };
 
+/** An email in the delivery list. */
+export interface ScriptedMail {
+  id: string;
+  purpose: 'invitation' | 'password_reset' | 'password_changed';
+  recipient_email: string;
+  locale: string;
+  state: 'queued' | 'sending' | 'sent' | 'failed' | 'cancelled';
+  attempt_count: number;
+  next_attempt_at: string | null;
+  error_category: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+/** A failed invitation email, which the console offers to send again. */
+export const failedMail: ScriptedMail = {
+  id: '6f1c7a1e-0000-4000-8000-000000000010',
+  purpose: 'invitation',
+  recipient_email: 'grace@example.test',
+  locale: 'en',
+  state: 'failed',
+  attempt_count: 5,
+  next_attempt_at: null,
+  error_category: 'smtp_unavailable',
+  created_at: '2026-11-04T08:00:00Z',
+  updated_at: '2026-11-04T09:00:00Z',
+  completed_at: '2026-11-04T09:00:00Z',
+};
+
+/** A delivered password reset email. */
+export const sentMail: ScriptedMail = {
+  ...failedMail,
+  id: '6f1c7a1e-0000-4000-8000-000000000011',
+  purpose: 'password_reset',
+  recipient_email: account.email,
+  state: 'sent',
+  attempt_count: 1,
+  error_category: null,
+};
+
 /** A scripted failure for one path. */
 export interface ScriptedProblem {
   status: number;
@@ -104,6 +145,14 @@ export interface ControlPlane {
   preferencesProblem: ScriptedProblem | null;
   /** Bodies of the preference saves the server received, in order. */
   preferenceWrites: Record<string, unknown>[];
+  /** Emails in the delivery list, newest first. */
+  mail: ScriptedMail[];
+  /** Fails the delivery list with this problem while set. */
+  mailProblem: ScriptedProblem | null;
+  /** Fails the next resend with this problem, instead of queuing a new email. */
+  nextResend: ScriptedProblem | null;
+  /** Idempotency-Key of each resend request, in order. */
+  resendKeys: string[];
 }
 
 function problem(route: Route, { status, code, headers }: ScriptedProblem): Promise<void> {
@@ -146,6 +195,10 @@ export async function mockControlPlane(
     preferences: { theme: 'system', density: 'comfortable', revision: 1 },
     preferencesProblem: null,
     preferenceWrites: [],
+    mail: [],
+    mailProblem: null,
+    nextResend: null,
+    resendKeys: [],
   };
   const identity = () => ({ user, workspace, audience: state.audience });
 
@@ -277,6 +330,42 @@ export async function mockControlPlane(
       revision: state.preferences.revision + 1,
     };
     return data(route, { ...state.preferences, updated_at: '2026-11-04T00:00:00Z' });
+  });
+  await page.route('**/api/v1/admin/mail-deliveries?*', (route) => {
+    if (state.audience !== 'admin')
+      return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+    if (state.mailProblem) return problem(route, state.mailProblem);
+    const wanted = new URL(route.request().url()).searchParams.get('state');
+    const items = state.mail.filter((item) => !wanted || item.state === wanted);
+    return data(route, { items, next_cursor: null });
+  });
+  await page.route('**/api/v1/admin/mail-deliveries/*/resends', (route) => {
+    const request = route.request();
+    if (request.headers()['x-csrf-token'] !== 'csrf-token') {
+      return problem(route, { status: 403, code: 'CSRF_INVALID' });
+    }
+    state.resendKeys.push(request.headers()['idempotency-key'] ?? '');
+    if (state.nextResend) {
+      const scripted = state.nextResend;
+      state.nextResend = null;
+      return problem(route, scripted);
+    }
+    const id = new URL(request.url()).pathname.split('/').at(-2);
+    const original = state.mail.find((item) => item.id === id);
+    if (original?.state !== 'failed') {
+      return problem(route, { status: 409, code: 'MAIL_DELIVERY_NOT_RESENDABLE' });
+    }
+    const queued: ScriptedMail = {
+      ...original,
+      id: `6f1c7a1e-0000-4000-8000-${String(100 + state.mail.length).padStart(12, '0')}`,
+      state: 'queued',
+      attempt_count: 0,
+      next_attempt_at: '2026-11-04T10:00:00Z',
+      error_category: null,
+      completed_at: null,
+    };
+    state.mail = [queued, ...state.mail];
+    return data(route, queued);
   });
   return state;
 }

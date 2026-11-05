@@ -127,6 +127,32 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
   }).toPass();
   await elsewhere.close();
 
+  // Email delivery is a console page. A failed email from an earlier run, the installation
+  // having no reachable mail server, is sent again and shows as waiting.
+  if (!origin.includes('portal')) {
+    await page.getByRole('link', { name: 'Email delivery' }).click();
+    await expect(page.getByRole('heading', { name: 'Email delivery', level: 1 })).toBeFocused();
+    await page
+      .getByRole('group', { name: 'Show emails' })
+      .getByRole('button', { name: 'Failed' })
+      .click();
+    const failed = page
+      .getByRole('row')
+      .filter({ hasText: 'The mail server could not be reached' });
+    await expect(failed.first()).toBeVisible();
+    await expectAccessible(page);
+    await failed
+      .first()
+      .getByRole('button', { name: /^Send again to / })
+      .click();
+    await expect(page.getByRole('status')).toContainText('Email queued again');
+    await page
+      .getByRole('group', { name: 'Show emails' })
+      .getByRole('button', { name: 'Waiting' })
+      .click();
+    await expect(page.getByRole('row').filter({ hasText: 'Password reset' }).first()).toBeVisible();
+  }
+
   await page.getByRole('button', { name: 'Account menu' }).click();
   await page.getByRole('menuitem', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
