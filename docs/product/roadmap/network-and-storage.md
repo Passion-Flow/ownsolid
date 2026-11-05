@@ -12,6 +12,7 @@ Fabric and storage operations for GPU clusters, and the storage contracts ownsol
 - [ ] NET-103 Network interface, link and RDMA status per node (P1)
 - [ ] NET-104 Shared file system mounts for jobs (NFS first) (P1) - Catalog: F329
 - [ ] NET-105 Storage credential mapping per tenant (P1)
+- [ ] NET-106 Default-deny egress for workloads on Kubernetes cells: network policy for every workload namespace, the same denial DEL-003 gives Docker nodes, proven with the zero-egress harness (P1)
 
 ## P2 Fleet operations
 
