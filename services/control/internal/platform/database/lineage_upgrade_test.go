@@ -50,6 +50,38 @@ func TestLineageUpgradeKeepsBootstrappedInstallation(t *testing.T) {
 	}
 }
 
+// Migration 000034 keeps a theme the user chose and moves seeded rows, which nobody chose,
+// to following the operating system.
+func TestLineageUpgradeKeepsChosenThemesOnly(t *testing.T) {
+	s := fixture.NewAtVersion(t, 33)
+	fixture.Bootstrap(t, s)
+	ctx := t.Context()
+	var seeded string
+	if e := s.DB.QueryRow(ctx, "SELECT user_id::text FROM user_preferences LIMIT 1").Scan(&seeded); e != nil {
+		t.Fatal(e)
+	}
+	chosen := uuid.NewString()
+	if _, e := s.DB.Exec(ctx, "INSERT INTO users(id,email_canonical,email_display,display_name,locale,status) VALUES($1,'chosen@example.invalid','chosen@example.invalid','Chosen','en','active')", chosen); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := s.DB.Exec(ctx, "UPDATE user_preferences SET theme='dark',revision=2 WHERE user_id=$1", chosen); e != nil {
+		t.Fatal(e)
+	}
+	if e := database.Migrate(ctx, s.DB); e != nil {
+		t.Fatal(e)
+	}
+	for user, want := range map[string]string{seeded: "system", chosen: "dark"} {
+		var theme, density string
+		var revision int64
+		if e := s.DB.QueryRow(ctx, "SELECT theme,density,revision FROM user_preferences WHERE user_id=$1", user).Scan(&theme, &density, &revision); e != nil {
+			t.Fatal(e)
+		}
+		if theme != want || density != "comfortable" || revision != 2 {
+			t.Fatal(want, theme, density, revision)
+		}
+	}
+}
+
 // Migration 000031 numbers the tasks that already exist. They ran under the old rules, so
 // they count as delivered, and the first task of the new rules continues the sequence.
 func TestLineageUpgradeNumbersExistingTasks(t *testing.T) {

@@ -14,6 +14,7 @@ import {
 import { Link, useRouter, useRouterState } from '@tanstack/react-router';
 import { ChevronRight, Menu as MenuIcon, Search } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
+import { AccountPreferences } from './account-preferences.tsx';
 import { CommandMenu } from './command-menu.tsx';
 import { LicenseStatus } from './license-status.tsx';
 import { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
@@ -147,6 +148,7 @@ export function AppFrame({ navigation, showLicense = false, children }: AppFrame
 
   return (
     <div className="grid h-dvh grid-cols-1 lg:grid-cols-[248px_1fr]">
+      <AccountPreferences />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-control focus:bg-surface focus:px-3 focus:py-2"

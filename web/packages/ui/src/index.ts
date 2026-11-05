@@ -3,6 +3,8 @@ export { applyTheme, resolveTheme, type ThemePreference } from './theme.ts';
 export {
   PreferencesProvider,
   usePreferences,
+  type Appearance,
+  type AppearanceSaver,
   type Density,
   type Preferences,
 } from './preferences.tsx';

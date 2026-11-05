@@ -36,8 +36,12 @@ before writing new markup: `Button`, `TextField`, `Card`, `StatusPill`, `Tag`, `
   for identifiers, code and logs. Numbers in tables use tabular figures.
 - Icons: Lucide at 18 px with a 1.75 stroke, set once in the stylesheet; import them
   from `lucide-react` and mark decorative ones `aria-hidden`.
-- Theme and density are per browser, chosen with `ThemeToggle` and `DensityToggle`.
-  The theme follows the operating system until the user picks one.
+- Theme and density belong to the account, chosen with `ThemeToggle` and `DensityToggle`.
+  The theme follows the operating system until the user picks one. Signed in, the account
+  decides: its values apply when a page opens and when the user returns to the window, and
+  a change saves at once. The browser remembers the last values so pages open without a
+  flash and pages before sign-in match. A failed save keeps the choice in this browser and
+  shows a toast with a retry; the next change sends it too.
 - Chart colors pass the dataviz palette validator in both themes before use.
 
 ## Interaction principles

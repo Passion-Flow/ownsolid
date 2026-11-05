@@ -1,21 +1,33 @@
-// Package preferences owns the authenticated user's persisted fixed theme.
+// Package preferences owns the authenticated user's persisted theme and density.
 package preferences
 
 import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
 
 const MaximumRevision int64 = 9007199254740991
-const LightTheme = "light"
-const DarkTheme = "dark"
+
+// Themes a user can choose. SystemTheme leaves the choice to the browser's operating
+// system, so it can differ between the user's machines.
+const (
+	SystemTheme = "system"
+	LightTheme  = "light"
+	DarkTheme   = "dark"
+)
+
+// Densities a user can choose.
+const (
+	ComfortableDensity = "comfortable"
+	CompactDensity     = "compact"
+)
 
 type Service struct {
 	DB       *pgxpool.Pool
@@ -23,25 +35,60 @@ type Service struct {
 }
 type Preference struct {
 	Theme     string    `json:"theme"`
+	Density   string    `json:"density"`
 	Revision  int64     `json:"revision"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+// UpdateRequest changes the fields it names and keeps the others, so two browsers that
+// change different fields do not overwrite each other.
 type UpdateRequest struct {
-	Theme            string `json:"theme"`
-	ExpectedRevision int64  `json:"expected_revision"`
+	Theme            *string `json:"theme,omitempty"`
+	Density          *string `json:"density,omitempty"`
+	ExpectedRevision int64   `json:"expected_revision"`
+}
+
+func validTheme(theme string) bool {
+	return theme == SystemTheme || theme == LightTheme || theme == DarkTheme
+}
+func validDensity(density string) bool {
+	return density == ComfortableDensity || density == CompactDensity
+}
+func (r UpdateRequest) valid() bool {
+	return (r.Theme != nil || r.Density != nil) &&
+		(r.Theme == nil || validTheme(*r.Theme)) &&
+		(r.Density == nil || validDensity(*r.Density)) &&
+		r.ExpectedRevision >= 1 && r.ExpectedRevision < MaximumRevision
+}
+func (r UpdateRequest) applyTo(p Preference) Preference {
+	if r.Theme != nil {
+		p.Theme = *r.Theme
+	}
+	if r.Density != nil {
+		p.Density = *r.Density
+	}
+	return p
 }
 
 func failure(code string) error { return errors.New(code) }
+
+// current reads and locks the user's row. Chains without the density column (CMP-201,
+// CMP-202) store only a fixed theme and read as comfortable.
 func current(ctx context.Context, tx transaction.Executor, user string) (Preference, error) {
-	var p Preference
-	e := tx.QueryRow(ctx, preferenceSQL(tx, "SELECT theme,revision,updated_at FROM user_preferences WHERE user_id=$1 FOR UPDATE", "SELECT theme,revision,updated_at FROM user_preferences WHERE user_id=? FOR UPDATE", "SELECT theme,revision,updated_at FROM user_preferences WHERE user_id=? FOR UPDATE", user)).Scan(&p.Theme, &p.Revision, &p.UpdatedAt)
+	p := Preference{Density: ComfortableDensity}
+	var e error
+	if tx.Dialect() == transaction.PostgreSQL {
+		e = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT theme,density,revision,updated_at FROM user_preferences WHERE user_id=$1 FOR UPDATE", user)).Scan(&p.Theme, &p.Density, &p.Revision, &p.UpdatedAt)
+	} else {
+		e = tx.QueryRow(ctx, preferenceSQL(tx, "", "SELECT theme,revision,updated_at FROM user_preferences WHERE user_id=? FOR UPDATE", "SELECT theme,revision,updated_at FROM user_preferences WHERE user_id=? FOR UPDATE", user)).Scan(&p.Theme, &p.Revision, &p.UpdatedAt)
+	}
 	if errors.Is(e, sql.ErrNoRows) {
 		return Preference{}, failure("PREFERENCE_UNAVAILABLE")
 	}
 	if e != nil {
 		return Preference{}, e
 	}
-	if p.Theme != LightTheme && p.Theme != DarkTheme || p.Revision < 1 || p.Revision > MaximumRevision || p.UpdatedAt.IsZero() {
+	if !validTheme(p.Theme) || !validDensity(p.Density) || p.Revision < 1 || p.Revision > MaximumRevision || p.UpdatedAt.IsZero() {
 		return Preference{}, failure("PREFERENCE_UNAVAILABLE")
 	}
 	p.UpdatedAt = p.UpdatedAt.UTC()
@@ -61,7 +108,7 @@ func (s *Service) Get(ctx context.Context, a identity.Auth) (Preference, error) 
 }
 func (s *Service) Update(ctx context.Context, a identity.Auth, input UpdateRequest, request string) (Preference, error) {
 	var p Preference
-	if input.Theme != LightTheme && input.Theme != DarkTheme || input.ExpectedRevision < 1 || input.ExpectedRevision >= MaximumRevision {
+	if !input.valid() {
 		return p, failure("VALIDATION_FAILED")
 	}
 	e := s.transaction(ctx, a, func(ctx context.Context, tx transaction.Executor, tenant string) error {
@@ -88,9 +135,13 @@ func updateWithin(ctx context.Context, tx transaction.Executor, a identity.Auth,
 		if old.Revision != input.ExpectedRevision {
 			return failure("PREFERENCE_REVISION_CONFLICT")
 		}
+		next := input.applyTo(old)
 		switch tx.Dialect() {
 		case transaction.MySQL, transaction.Dameng:
-			changed, e := tx.Exec(ctx, preferenceSQL(tx, "", "UPDATE user_preferences SET theme=?,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE user_id=? AND revision=?", "UPDATE user_preferences SET theme=?,revision=revision+1,updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE user_id=? AND revision=?", input.Theme, a.Me.User.ID, old.Revision))
+			if next.Theme == SystemTheme || next.Density != ComfortableDensity {
+				return failure("PREFERENCE_UNAVAILABLE")
+			}
+			changed, e := tx.Exec(ctx, preferenceSQL(tx, "", "UPDATE user_preferences SET theme=?,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE user_id=? AND revision=?", "UPDATE user_preferences SET theme=?,revision=revision+1,updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE user_id=? AND revision=?", next.Theme, a.Me.User.ID, old.Revision))
 			if e != nil {
 				return e
 			}
@@ -102,17 +153,17 @@ func updateWithin(ctx context.Context, tx transaction.Executor, a identity.Auth,
 				return e
 			}
 		case transaction.PostgreSQL:
-			if e = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "UPDATE user_preferences SET theme=$1,revision=revision+1,updated_at=clock_timestamp() WHERE user_id=$2 AND revision=$3 RETURNING theme,revision,updated_at", input.Theme, a.Me.User.ID, old.Revision)).Scan(&p.Theme, &p.Revision, &p.UpdatedAt); e != nil {
+			if e = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "UPDATE user_preferences SET theme=$1,density=$2,revision=revision+1,updated_at=clock_timestamp() WHERE user_id=$3 AND revision=$4 RETURNING theme,density,revision,updated_at", next.Theme, next.Density, a.Me.User.ID, old.Revision)).Scan(&p.Theme, &p.Density, &p.Revision, &p.UpdatedAt); e != nil {
 				return e
 			}
 			p.UpdatedAt = p.UpdatedAt.UTC()
 		default:
 			return failure("STORAGE_UNAVAILABLE")
 		}
-		if p.Theme != input.Theme || p.Revision != old.Revision+1 {
+		if p.Theme != next.Theme || p.Density != next.Density || p.Revision != old.Revision+1 {
 			return failure("PREFERENCE_UNAVAILABLE")
 		}
-		changed, e := tx.Exec(ctx, preferenceSQL(tx, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES($1,clock_timestamp(),$2,$3,$4,'preference.updated','success','user_preference',$2,'User fixed theme preference',$5)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,UTC_TIMESTAMP(6),?,?,?,'preference.updated','success','user_preference',?,'User fixed theme preference',?)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),?,?,?,'preference.updated','success','user_preference',?,'User fixed theme preference',?)`, preferenceAuditArgs(tx, uuid.NewString(), a.Me.User.ID, tenant, a.Me.Audience, request)...))
+		changed, e := tx.Exec(ctx, preferenceSQL(tx, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES($1,clock_timestamp(),$2,$3,$4,'preference.updated','success','user_preference',$2,'User appearance preference',$5)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,UTC_TIMESTAMP(6),?,?,?,'preference.updated','success','user_preference',?,'User appearance preference',?)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),?,?,?,'preference.updated','success','user_preference',?,'User appearance preference',?)`, preferenceAuditArgs(tx, uuid.NewString(), a.Me.User.ID, tenant, a.Me.Audience, request)...))
 		if e != nil {
 			return e
 		}
@@ -143,7 +194,7 @@ func (s *Service) VerifyStored(ctx context.Context) error {
 			return e
 		}
 		var invalid bool
-		e := q.QueryRow(ctx, preferenceSQL(q, `SELECT EXISTS(SELECT 1 FROM users u LEFT JOIN user_preferences p ON p.user_id=u.id WHERE p.user_id IS NULL OR p.theme NOT IN('light','dark') OR p.revision NOT BETWEEN 1 AND 9007199254740991 OR p.updated_at IS NULL) OR EXISTS(SELECT 1 FROM user_preferences p LEFT JOIN users u ON u.id=p.user_id WHERE u.id IS NULL)`, `SELECT EXISTS(SELECT 1 FROM users u LEFT JOIN user_preferences p ON p.user_id=u.id WHERE p.user_id IS NULL OR p.theme NOT IN('light','dark') OR p.revision NOT BETWEEN 1 AND 9007199254740991 OR p.updated_at IS NULL) OR EXISTS(SELECT 1 FROM user_preferences p LEFT JOIN users u ON u.id=p.user_id WHERE u.id IS NULL)`, `SELECT CASE WHEN EXISTS(SELECT 1 FROM users u LEFT JOIN user_preferences p ON p.user_id=u.id WHERE p.user_id IS NULL OR p.theme NOT IN('light','dark') OR p.revision NOT BETWEEN 1 AND 9007199254740991 OR p.updated_at IS NULL) OR EXISTS(SELECT 1 FROM user_preferences p LEFT JOIN users u ON u.id=p.user_id WHERE u.id IS NULL) THEN 1 ELSE 0 END FROM DUAL`)).Scan(&invalid)
+		e := q.QueryRow(ctx, preferenceSQL(q, `SELECT EXISTS(SELECT 1 FROM users u LEFT JOIN user_preferences p ON p.user_id=u.id WHERE p.user_id IS NULL OR p.theme NOT IN('system','light','dark') OR p.density NOT IN('comfortable','compact') OR p.revision NOT BETWEEN 1 AND 9007199254740991 OR p.updated_at IS NULL) OR EXISTS(SELECT 1 FROM user_preferences p LEFT JOIN users u ON u.id=p.user_id WHERE u.id IS NULL)`, `SELECT EXISTS(SELECT 1 FROM users u LEFT JOIN user_preferences p ON p.user_id=u.id WHERE p.user_id IS NULL OR p.theme NOT IN('light','dark') OR p.revision NOT BETWEEN 1 AND 9007199254740991 OR p.updated_at IS NULL) OR EXISTS(SELECT 1 FROM user_preferences p LEFT JOIN users u ON u.id=p.user_id WHERE u.id IS NULL)`, `SELECT CASE WHEN EXISTS(SELECT 1 FROM users u LEFT JOIN user_preferences p ON p.user_id=u.id WHERE p.user_id IS NULL OR p.theme NOT IN('light','dark') OR p.revision NOT BETWEEN 1 AND 9007199254740991 OR p.updated_at IS NULL) OR EXISTS(SELECT 1 FROM user_preferences p LEFT JOIN users u ON u.id=p.user_id WHERE u.id IS NULL) THEN 1 ELSE 0 END FROM DUAL`)).Scan(&invalid)
 		if e != nil {
 			return e
 		}

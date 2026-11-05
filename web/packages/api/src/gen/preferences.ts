@@ -38,15 +38,26 @@ export interface components {
             }[];
         };
         Preference: {
+            /**
+             * @description `system` leaves the choice to the operating system of each browser.
+             * @enum {string}
+             */
+            theme: "system" | "light" | "dark";
             /** @enum {string} */
-            theme: "light" | "dark";
+            density: "comfortable" | "compact";
             revision: number;
             /** Format: date-time */
             updated_at: string;
         };
+        /** @description Changes the named fields and keeps the others. At least one of `theme` and `density` is required. */
         UpdatePreference: {
+            /**
+             * @description `system` leaves the choice to the operating system of each browser.
+             * @enum {string}
+             */
+            theme?: "system" | "light" | "dark";
             /** @enum {string} */
-            theme: "light" | "dark";
+            density?: "comfortable" | "compact";
             expected_revision: number;
         };
         PreferenceResponse: {

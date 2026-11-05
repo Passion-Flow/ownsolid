@@ -8,11 +8,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"github.com/Passion-Flow/ownsolid/services/control/migrations"
+	"github.com/google/uuid"
 )
 
 func requireCode(t *testing.T, e error, code string) {
@@ -46,11 +46,11 @@ func TestM15ActualPreferenceOwnerConcurrencyAuditRollbackAndDisabledIdentity(t *
 	s := &Service{DB: account.DB, Identity: account}
 	ctx := context.Background()
 	initial, e := s.Get(ctx, user)
-	if e != nil || initial.Theme != LightTheme || initial.Revision != 1 {
+	if e != nil || initial.Theme != SystemTheme || initial.Revision != 1 {
 		t.Fatal("new account default", e, initial)
 	}
 	t.Run("invalid_fixed_enum_and_revision_never_mutates", func(t *testing.T) {
-		for _, v := range []UpdateRequest{{Theme: "url(javascript:alert(1))", ExpectedRevision: 1}, {Theme: "dark", ExpectedRevision: 0}, {Theme: "dark", ExpectedRevision: MaximumRevision}} {
+		for _, v := range []UpdateRequest{{Theme: new("url(javascript:alert(1))"), ExpectedRevision: 1}, {Theme: new("dark"), ExpectedRevision: 0}, {Theme: new("dark"), ExpectedRevision: MaximumRevision}} {
 			_, e := s.Update(ctx, user, v, uuid.NewString())
 			requireCode(t, e, "VALIDATION_FAILED")
 		}
@@ -64,7 +64,7 @@ func TestM15ActualPreferenceOwnerConcurrencyAuditRollbackAndDisabledIdentity(t *
 			go func(theme string) {
 				defer wg.Done()
 				<-start
-				_, e := s.Update(ctx, user, UpdateRequest{Theme: theme, ExpectedRevision: 1}, uuid.NewString())
+				_, e := s.Update(ctx, user, UpdateRequest{Theme: &theme, ExpectedRevision: 1}, uuid.NewString())
 				results <- e
 			}(theme)
 		}
@@ -93,7 +93,7 @@ func TestM15ActualPreferenceOwnerConcurrencyAuditRollbackAndDisabledIdentity(t *
 			t.Fatal("mutation/audit cardinality", e, count)
 		}
 		own, e := s.Get(ctx, admin)
-		if e != nil || own.Revision != 1 || own.Theme != LightTheme {
+		if e != nil || own.Revision != 1 || own.Theme != SystemTheme {
 			t.Fatal("other recipient changed", e, own)
 		}
 	})
@@ -105,7 +105,7 @@ func TestM15ActualPreferenceOwnerConcurrencyAuditRollbackAndDisabledIdentity(t *
 		if _, e = account.DB.Exec(ctx, `CREATE FUNCTION portal_preference_reject_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action='preference.updated' THEN RAISE EXCEPTION 'SYNTHETIC_PREFERENCE_AUDIT_REFUSAL';END IF;RETURN NEW;END;$$;CREATE TRIGGER portal_preference_reject_audit BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION portal_preference_reject_audit()`); e != nil {
 			t.Fatal(e)
 		}
-		_, e = s.Update(ctx, user, UpdateRequest{Theme: DarkTheme, ExpectedRevision: before.Revision}, uuid.NewString())
+		_, e = s.Update(ctx, user, UpdateRequest{Theme: new(DarkTheme), ExpectedRevision: before.Revision}, uuid.NewString())
 		requireCode(t, e, "STORAGE_UNAVAILABLE")
 		fresh := &Service{DB: account.DB, Identity: account}
 		after, e := fresh.Get(ctx, user)
@@ -134,7 +134,7 @@ func TestM15ActualPreferenceOwnerConcurrencyAuditRollbackAndDisabledIdentity(t *
 		if _, e = s.Get(ctx, user); e == nil {
 			t.Fatal("disabled identity read preference")
 		}
-		if _, e = s.Update(ctx, user, UpdateRequest{Theme: LightTheme, ExpectedRevision: 2}, uuid.NewString()); e == nil {
+		if _, e = s.Update(ctx, user, UpdateRequest{Theme: new(LightTheme), ExpectedRevision: 2}, uuid.NewString()); e == nil {
 			t.Fatal("disabled identity changed preference")
 		}
 	})
@@ -151,7 +151,7 @@ func TestM15ActualPopulated14MigrationRollbackRepeatUpgradeAndUsedDowngradeRefus
 	portal := fixture.Login(t, account, "admin@example.invalid", password, "portal")
 	s := &Service{DB: account.DB, Identity: account}
 	initial, e := s.Get(ctx, portal)
-	if e != nil || initial.Theme != LightTheme || initial.Revision != 1 {
+	if e != nil || initial.Theme != SystemTheme || initial.Revision != 2 {
 		t.Fatal("existing user backfill", e, initial)
 	}
 	down, e := migrations.Files.ReadFile("postgresql/000015_portal.down.sql")
@@ -191,7 +191,7 @@ func TestM15ActualPopulated14MigrationRollbackRepeatUpgradeAndUsedDowngradeRefus
 	if e = database.Check(ctx, account.DB); e != nil {
 		t.Fatal(e)
 	}
-	if _, e = s.Update(ctx, portal, UpdateRequest{Theme: DarkTheme, ExpectedRevision: 1}, uuid.NewString()); e != nil {
+	if _, e = s.Update(ctx, portal, UpdateRequest{Theme: new(DarkTheme), ExpectedRevision: 1}, uuid.NewString()); e != nil {
 		t.Fatal(e)
 	}
 	tx, e = account.DB.Begin(ctx)

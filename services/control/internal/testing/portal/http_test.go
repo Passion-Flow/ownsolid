@@ -46,8 +46,8 @@ func TestM15ActualPortalHumanTLSGeneratedContractsStrictCSRFAndPersistence(t *te
 		client.Write("POST", "/api/v1/auth/login", map[string]string{"email": "admin@example.invalid", "password": password}, 200, "")
 	}
 	p := portal.Call("GET", "/api/v1/preferences", nil, 200, "PreferenceResponse")
-	if p["theme"] != "light" || p["revision"] != float64(1) {
-		t.Fatal("initial persisted theme")
+	if p["theme"] != "system" || p["density"] != "comfortable" || p["revision"] != float64(1) {
+		t.Fatal("initial persisted appearance")
 	}
 	body := map[string]any{"theme": "dark", "expected_revision": 1}
 	portal.CSRF = ""
@@ -67,10 +67,18 @@ func TestM15ActualPortalHumanTLSGeneratedContractsStrictCSRFAndPersistence(t *te
 		t.Fatal("actual theme update")
 	}
 	portal.Write("PATCH", "/api/v1/preferences", body, 409, "Problem")
+	// A change of one field keeps the other, which another browser may have set.
+	p = portal.Write("PATCH", "/api/v1/preferences", map[string]any{"density": "compact", "expected_revision": 2}, 200, "PreferenceResponse")
+	if p["theme"] != "dark" || p["density"] != "compact" || p["revision"] != float64(3) {
+		t.Fatal("density update must keep the theme")
+	}
+	for _, raw := range []string{`{"density":"cozy","expected_revision":3}`, `{"theme":"auto","expected_revision":3}`, `{"expected_revision":3}`, `{"theme":null,"density":"compact","expected_revision":3}`} {
+		portal.Write("PATCH", "/api/v1/preferences", []byte(raw), 400, "Problem")
+	}
 	portal.Call("GET", "/api/v1/preferences?user_id="+uuid.NewString(), nil, 400, "Problem")
 	// Both entrances address the same current account, without a caller override.
-	if admin.Call("GET", "/api/v1/preferences", nil, 200, "PreferenceResponse")["theme"] != "dark" {
-		t.Fatal("same account theme not durable")
+	if shared := admin.Call("GET", "/api/v1/preferences", nil, 200, "PreferenceResponse"); shared["theme"] != "dark" || shared["density"] != "compact" {
+		t.Fatal("same account appearance not durable")
 	}
 	workspace := actor.Me.Workspace.ID
 	portal.Call("GET", "/api/v1/applications?workspace_id="+workspace, nil, 200, "ApplicationPageResponse")

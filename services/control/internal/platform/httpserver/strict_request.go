@@ -15,6 +15,18 @@ import (
 // Explicit empty objects are supported; null, duplicate/case variants, trailing
 // values and unknown fields never become default-valued mutation requests.
 func DecodeRequiredObject(r *http.Request, value any, maximum int64) error {
+	return decodeObject(r, value, maximum, func(reflect.StructField) bool { return true })
+}
+
+// DecodePatchObject is DecodeRequiredObject for partial updates: a field tagged omitempty
+// may be absent. A field that is present still follows the same rules and is never null.
+func DecodePatchObject(r *http.Request, value any, maximum int64) error {
+	return decodeObject(r, value, maximum, func(field reflect.StructField) bool {
+		return !strings.Contains(field.Tag.Get("json"), ",omitempty")
+	})
+}
+
+func decodeObject(r *http.Request, value any, maximum int64, required func(reflect.StructField) bool) error {
 	if r == nil || r.Body == nil {
 		return errors.New("VALIDATION_FAILED")
 	}
@@ -34,17 +46,22 @@ func DecodeRequiredObject(r *http.Request, value any, maximum int64) error {
 		return errors.New("PAYLOAD_TOO_LARGE")
 	}
 	var fields map[string]json.RawMessage
-	if strict.DecodeStrict(raw, &fields) != nil || fields == nil || len(fields) != typ.Elem().NumField() {
+	if strict.DecodeStrict(raw, &fields) != nil || fields == nil {
 		return errors.New("VALIDATION_FAILED")
 	}
+	known := 0
 	for i := 0; i < typ.Elem().NumField(); i++ {
-		name := strings.Split(typ.Elem().Field(i).Tag.Get("json"), ",")[0]
+		field := typ.Elem().Field(i)
+		name := strings.Split(field.Tag.Get("json"), ",")[0]
 		v, ok := fields[name]
-		if name == "" || name == "-" || !ok || string(v) == "null" {
+		if name == "" || name == "-" || !ok && required(field) || ok && string(v) == "null" {
 			return errors.New("VALIDATION_FAILED")
 		}
+		if ok {
+			known++
+		}
 	}
-	if strict.DecodeStrict(raw, value) != nil {
+	if known != len(fields) || strict.DecodeStrict(raw, value) != nil {
 		return errors.New("VALIDATION_FAILED")
 	}
 	return nil

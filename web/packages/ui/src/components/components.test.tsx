@@ -156,12 +156,12 @@ describe('Dialog', () => {
 });
 
 describe('Toast', () => {
-  function Trigger({ undo }: { undo?: () => void }) {
+  function Trigger({ undo, retry }: { undo?: () => void; retry?: () => void }) {
     const toast = useToast();
     return (
       <Button
         onClick={() => {
-          toast({ message: 'Node drained', undo });
+          toast({ message: 'Node drained', undo, retry });
         }}
       >
         Go
@@ -185,6 +185,19 @@ describe('Toast', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Undo' }));
     expect(undo).toHaveBeenCalledOnce();
     expect(screen.getByRole('status')).toHaveTextContent('Change undone');
+  });
+
+  it('offers a retry, then steps aside', async () => {
+    const retry = vi.fn();
+    inEnglish(
+      <ToastProvider>
+        <Trigger retry={retry} />
+      </ToastProvider>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Go' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(retry).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
   it('disappears on its own', () => {

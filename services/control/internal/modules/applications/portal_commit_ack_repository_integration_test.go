@@ -197,7 +197,7 @@ func TestActualPairedPortalCommitAcknowledgementLoss(t *testing.T) {
 				}
 				var mutationError error
 				if operation == "preference" {
-					value, e := prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: 1}, request)
+					value, e := prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, request)
 					mutationError = e
 					if fault.mode == commitfault.Pass {
 						if e != nil || value.Theme != preferences.DarkTheme || value.Revision != 2 {
@@ -261,7 +261,7 @@ func TestActualPairedPortalCommitAcknowledgementLoss(t *testing.T) {
 				if fault.committed {
 					recoveryRequest := uuid.NewString()
 					if operation == "preference" {
-						got, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: 1}, recoveryRequest)
+						got, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, recoveryRequest)
 						if e == nil || e.Error() != "PREFERENCE_REVISION_CONFLICT" || got != (preferences.Preference{}) {
 							t.Fatal("stale recovery revision changed preference", e)
 						}
@@ -330,7 +330,7 @@ func TestActualPairedPreferenceAuditCountRollback(t *testing.T) {
 	}
 	request := uuid.NewString()
 	_, fault := g.wrapped(portalAuditCountStore{g.f.Store})
-	got, e := fault.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: before.Revision}, request)
+	got, e := fault.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: before.Revision}, request)
 	if e == nil || e.Error() != string(transaction.Unavailable) || got != (preferences.Preference{}) {
 		t.Fatal("non-single audit acknowledgement accepted", e)
 	}
@@ -339,7 +339,7 @@ func TestActualPairedPreferenceAuditCountRollback(t *testing.T) {
 		t.Fatal("audit count refusal did not roll back preference and audit", e)
 	}
 	// A fresh acknowledged operation still succeeds after the known rollback.
-	got, e = g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: before.Revision}, request)
+	got, e = g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: before.Revision}, request)
 	if e != nil || got.Revision != before.Revision+1 || portalRequestAudits(t, g, request) != 1 {
 		t.Fatal("ordinary update after known rollback", e)
 	}
