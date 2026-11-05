@@ -853,6 +853,7 @@
         "additionalProperties": false,
         "required": [
           "theme",
+          "density",
           "revision",
           "updated_at"
         ],
@@ -860,8 +861,17 @@
           "theme": {
             "type": "string",
             "enum": [
+              "system",
               "light",
               "dark"
+            ],
+            "description": "`system` leaves the choice to the operating system of each browser."
+          },
+          "density": {
+            "type": "string",
+            "enum": [
+              "comfortable",
+              "compact"
             ]
           },
           "revision": {
@@ -879,15 +889,23 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "theme",
           "expected_revision"
         ],
         "properties": {
           "theme": {
             "type": "string",
             "enum": [
+              "system",
               "light",
               "dark"
+            ],
+            "description": "`system` leaves the choice to the operating system of each browser."
+          },
+          "density": {
+            "type": "string",
+            "enum": [
+              "comfortable",
+              "compact"
             ]
           },
           "expected_revision": {
@@ -895,7 +913,8 @@
             "minimum": 1,
             "maximum": 9007199254740990
           }
-        }
+        },
+        "description": "Changes the named fields and keeps the others. At least one of `theme` and `density` is required."
       },
       "PreferenceResponse": {
         "type": "object",

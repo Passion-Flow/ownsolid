@@ -28,7 +28,7 @@ test.use({
   },
 });
 
-test('signs in and out of a real installation', async ({ page }) => {
+test('signs in and out of a real installation', async ({ page, browser }) => {
   const problems: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error' && message.text().includes('Content Security Policy')) {
@@ -47,6 +47,14 @@ test('signs in and out of a real installation', async ({ page }) => {
   });
   const password = (JSON.parse(readFileSync(passwordFile, 'utf8')) as { password: string })
     .password;
+  let preferenceSaves = 0;
+  page.on('response', (response) => {
+    const request = response.request();
+    if (request.method() === 'PATCH' && request.url().endsWith('/api/v1/preferences')) {
+      expect(response.status()).toBe(200);
+      preferenceSaves += 1;
+    }
+  });
 
   await page.goto('/');
   await expect(page).toHaveURL(/\/sign-in/);
@@ -91,6 +99,33 @@ test('signs in and out of a real installation', async ({ page }) => {
     'No notifications',
   );
   await page.keyboard.press('Escape');
+
+  // A second browser remembers nothing, so what it shows comes from the account.
+  await expect.poll(() => preferenceSaves).toBe(2);
+  const elsewhere = await browser.newContext({ baseURL: origin });
+  const second = await elsewhere.newPage();
+  await second.goto('/');
+  await second.getByLabel('Email').fill(email);
+  await second.getByLabel('Password').fill(password);
+  await second.getByRole('button', { name: 'Sign in' }).click();
+  await expect(second.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
+  await expect(second.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(second.locator('html')).toHaveAttribute('data-density', 'compact');
+
+  // What changes there reaches this browser when the user comes back to it. This also
+  // leaves the account as the next run expects it.
+  await second.getByRole('button', { name: 'Use the light theme' }).click();
+  await second.getByRole('button', { name: 'Use comfortable spacing' }).click();
+  await expect(async () => {
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light', { timeout: 500 });
+    await expect(page.locator('html')).toHaveAttribute('data-density', 'comfortable', {
+      timeout: 500,
+    });
+  }).toPass();
+  await elsewhere.close();
 
   await page.getByRole('button', { name: 'Account menu' }).click();
   await page.getByRole('menuitem', { name: 'Sign out' }).click();

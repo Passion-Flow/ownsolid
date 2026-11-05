@@ -1,15 +1,15 @@
-# Authenticated user theme preference
+# Authenticated user appearance preference
 
-This small owner persists the current user's fixed light/dark theme. It is not the locale registry, an arbitrary preference JSON store or deployment configuration.
+This small owner persists the current user's theme (`system`, `light` or `dark`) and density (`comfortable` or `compact`), which follow the account across browsers. `system` leaves the choice to the operating system of each browser and is what a new account starts with. It is not the locale registry, an arbitrary preference JSON store or deployment configuration.
 
-[service.go](service.go) defines Get, Update and VerifyStored. Updates require a valid theme and expected revision, lock/read the existing row, advance the revision and write audit in the selected transaction. [repository.go](repository.go) rechecks current identity; a request cannot select another user's preference. Revision conflict is an explicit outcome for the client to reconcile.
+[service.go](service.go) defines Get, Update and VerifyStored. An update names the fields it changes and keeps the others, so browsers changing different fields do not overwrite each other. Updates require valid values and an expected revision, lock/read the existing row, advance the revision and write audit in the selected transaction. [repository.go](repository.go) rechecks current identity; a request cannot select another user's preference. Revision conflict is an explicit outcome for the client to reconcile.
 
 The historical domain migration15 defines preferences; current cumulative
 `portal` adds them through account21, preserving the exact M14 prefix. VerifyStored
 rejects missing, orphaned or malformed state and never silently recreates defaults.
 Matched restore retains theme/revision data while invalidating execution authority.
 Portal timeouts come from typed policy and documented protected env overlays.
-Light/dark remain fixed protocol values. See the
+Themes and densities are fixed protocol values. See the
 [cumulative operation](../../../../../docs/milestones/m15-portal/cumulative-operation.md)
 and [current exact-root queue](../../../../../tools/quality/portal/README.md).
 
@@ -32,6 +32,10 @@ FOR UPDATE locks in the same existing write transaction. Unknown dialects do not
 fall back to PostgreSQL. The native schema must seed one preference per existing
 user, initialize future users atomically, and preserve owner/revision constraints.
 Missing seed state remains an error, never a lazy default insert.
+
+The MySQL and Dameng chains have no density column and accept only light and dark
+(CMP-201, CMP-202): they read as comfortable and refuse a value they cannot store with
+`PREFERENCE_UNAVAILABLE`, before any write.
 
 Language remains the identity owner's `users.locale`/`UpdateMe` contract and
 version, independent of the theme revision. The Dameng identity/account path,

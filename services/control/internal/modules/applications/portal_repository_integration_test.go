@@ -383,12 +383,12 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		other := g.other(t)
 		for _, a := range []identity.Auth{g.a, g.admin, other} {
 			p, e := g.prefs.Get(g.ctx, a)
-			if e != nil || p.Theme != preferences.LightTheme || p.Revision != 1 || p.UpdatedAt.Location() != time.UTC {
+			if e != nil || p.Theme != preferences.SystemTheme || p.Revision != 1 || p.UpdatedAt.Location() != time.UTC {
 				t.Fatal("real existing/new user seed", e)
 			}
 		}
 		before := g.audits(t)
-		p, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: 1}, uuid.NewString())
+		p, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, uuid.NewString())
 		if e != nil || p.Revision != 2 || p.Theme != preferences.DarkTheme {
 			t.Fatal(e)
 		}
@@ -397,7 +397,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 			t.Fatal("dual entrance same recipient persistence", e)
 		}
 		unchanged, e := g.prefs.Get(g.ctx, other)
-		if e != nil || unchanged.Theme != preferences.LightTheme || unchanged.Revision != 1 {
+		if e != nil || unchanged.Theme != preferences.SystemTheme || unchanged.Revision != 1 {
 			t.Fatal("other recipient preference changed", e)
 		}
 		if e = g.prefs.VerifyStored(g.ctx); e != nil {
@@ -406,7 +406,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 	})
 	t.Run("preference_invalid_exact_revision_concurrency_and_privacy", func(t *testing.T) {
 		g := portalSetup(t)
-		for _, input := range []preferences.UpdateRequest{{Theme: "false", ExpectedRevision: 1}, {Theme: "dark", ExpectedRevision: 0}, {Theme: "light", ExpectedRevision: preferences.MaximumRevision}} {
+		for _, input := range []preferences.UpdateRequest{{Theme: new("false"), ExpectedRevision: 1}, {Theme: new("dark"), ExpectedRevision: 0}, {Theme: new("light"), ExpectedRevision: preferences.MaximumRevision}} {
 			p, e := g.prefs.Update(g.ctx, g.a, input, uuid.NewString())
 			portalWant(t, e, "VALIDATION_FAILED")
 			if p != (preferences.Preference{}) {
@@ -422,7 +422,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 			go func(theme string) {
 				defer wg.Done()
 				<-start
-				_, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: theme, ExpectedRevision: 1}, uuid.NewString())
+				_, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: &theme, ExpectedRevision: 1}, uuid.NewString())
 				results <- e
 			}(theme)
 		}
@@ -443,7 +443,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		if e != nil || p.Revision != 2 || passed != 1 || conflict != 1 || g.audits(t) != before+1 {
 			t.Fatal("real lost revision or audit", e, passed, conflict)
 		}
-		p, e = g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: p.Theme, ExpectedRevision: p.Revision}, uuid.NewString())
+		p, e = g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: &p.Theme, ExpectedRevision: p.Revision}, uuid.NewString())
 		if e != nil || p.Revision != 3 {
 			t.Fatal("same-theme revision behavior changed", e)
 		}
@@ -456,7 +456,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		}
 		audits := g.audits(t)
 		remove := g.refuseAudit(t)
-		p, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: before.Revision}, uuid.NewString())
+		p, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: before.Revision}, uuid.NewString())
 		if e == nil || p != (preferences.Preference{}) {
 			t.Fatal("audit refusal returned value")
 		}
@@ -477,7 +477,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		g := portalSetup(t)
 		_, bad := g.wrapped(&portalFaultStore{Store: g.f.Store, unknown: true})
 		before := g.audits(t)
-		p, e := bad.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: 1}, uuid.NewString())
+		p, e := bad.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, uuid.NewString())
 		portalWant(t, e, string(transaction.CommitUnknown))
 		if p != (preferences.Preference{}) {
 			t.Fatal("unknown mutation disclosed result")
@@ -486,7 +486,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		if e != nil || actual.Theme != preferences.DarkTheme || actual.Revision != 2 || g.audits(t) != before+1 {
 			t.Fatal("exact actual durability readback", e)
 		}
-		_, e = g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: 1}, uuid.NewString())
+		_, e = g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, uuid.NewString())
 		portalWant(t, e, "PREFERENCE_REVISION_CONFLICT")
 		p, e = bad.Get(g.ctx, g.a)
 		portalWant(t, e, string(transaction.CommitUnknown))
@@ -535,7 +535,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 			t.Fatal("revoked current session disclosed")
 		}
 		g.exec(t, `UPDATE tenants SET status='disabled' WHERE id=$1`, `UPDATE tenants SET status='disabled' WHERE id=?`, g.f.Tenant)
-		p, e = g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: preferences.DarkTheme, ExpectedRevision: 1}, uuid.NewString())
+		p, e = g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, uuid.NewString())
 		if e == nil || p != (preferences.Preference{}) {
 			t.Fatal("inactive installed tenant mutated")
 		}

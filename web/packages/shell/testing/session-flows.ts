@@ -162,6 +162,62 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await expect(page.getByRole('button', { name: 'Use the light theme' })).toBeVisible();
   });
 
+  test('applies what the account saved, over what this browser remembers', async ({ page }) => {
+    control.signedIn = true;
+    control.preferences = { theme: 'dark', density: 'compact', revision: 4 };
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.addInitScript(() => {
+      localStorage.setItem('ownsolid.theme', 'light');
+    });
+    await page.goto('/');
+    const root = page.locator('html');
+    await expect(root).toHaveAttribute('data-theme', 'dark');
+    await expect(root).toHaveAttribute('data-density', 'compact');
+    expect(control.preferenceWrites).toEqual([]);
+  });
+
+  test('saves a change on the account and picks up one made elsewhere', async ({ page }) => {
+    control.signedIn = true;
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    const root = page.locator('html');
+    await page.getByRole('button', { name: 'Use the dark theme' }).click();
+    await expect.poll(() => control.preferences.theme).toBe('dark');
+    expect(control.preferenceWrites).toEqual([{ theme: 'dark', expected_revision: 1 }]);
+
+    control.preferences = { theme: 'light', density: 'compact', revision: 9 };
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(root).toHaveAttribute('data-theme', 'light');
+    await expect(root).toHaveAttribute('data-density', 'compact');
+  });
+
+  test('keeps the latest choice when another browser saved first', async ({ page }) => {
+    control.signedIn = true;
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: 'Use compact spacing' })).toBeVisible();
+    control.preferences = { theme: 'system', density: 'comfortable', revision: 7 };
+    await page.getByRole('button', { name: 'Use the dark theme' }).click();
+    await expect.poll(() => control.preferences.theme).toBe('dark');
+    expect(control.preferences.revision).toBe(8);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  });
+
+  test('says when a change was not saved and saves it on retry', async ({ page }) => {
+    control.signedIn = true;
+    control.preferencesProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Use the dark theme' }).click();
+    await expect(page.getByText('was not saved to your account')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    control.preferencesProblem = null;
+    await page.getByRole('button', { name: 'Try again' }).click();
+    await expect.poll(() => control.preferences.theme).toBe('dark');
+  });
+
   test('follows the system theme until the user chooses', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.goto('/sign-in');

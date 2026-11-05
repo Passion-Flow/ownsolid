@@ -60,7 +60,8 @@ func (q *nativePreferenceExecutor) Exec(_ context.Context, statement transaction
 
 func TestDamengPreferenceRevisionAuditAndFailureBoundary(t *testing.T) {
 	at := time.Date(2026, 10, 24, 7, 0, 0, 123456000, time.UTC)
-	old, updated := Preference{LightTheme, 1, at}, Preference{DarkTheme, 2, at.Add(time.Second)}
+	old := Preference{Theme: LightTheme, Density: ComfortableDensity, Revision: 1, UpdatedAt: at}
+	updated := Preference{Theme: DarkTheme, Density: ComfortableDensity, Revision: 2, UpdatedAt: at.Add(time.Second)}
 	unknown := errors.Join(context.Canceled, &transaction.Error{Kind: transaction.CommitUnknown})
 	for _, tc := range []struct {
 		name           string
@@ -88,7 +89,7 @@ func TestDamengPreferenceRevisionAuditAndFailureBoundary(t *testing.T) {
 			a := identity.Auth{}
 			a.Me.User.ID = "actor"
 			a.Me.Audience = "portal"
-			got, err := updateWithin(t.Context(), q, a, "tenant", UpdateRequest{DarkTheme, tc.expected}, "request")
+			got, err := updateWithin(t.Context(), q, a, "tenant", UpdateRequest{Theme: new(DarkTheme), ExpectedRevision: tc.expected}, "request")
 			err = preferenceError(err)
 			if tc.wantCode == "" {
 				if err != nil || got != updated {
@@ -99,6 +100,27 @@ func TestDamengPreferenceRevisionAuditAndFailureBoundary(t *testing.T) {
 			}
 			if q.queries != tc.wantQueries || q.executes != tc.wantExecutions {
 				t.Fatal("statement continued after failure or audit was skipped")
+			}
+		})
+	}
+}
+
+// Chains without the density column refuse what they cannot store, before any write.
+func TestDamengPreferenceRefusesWhatItsChainCannotStore(t *testing.T) {
+	at := time.Date(2026, 10, 24, 7, 0, 0, 0, time.UTC)
+	old := Preference{Theme: LightTheme, Density: ComfortableDensity, Revision: 1, UpdatedAt: at}
+	for name, input := range map[string]UpdateRequest{
+		"system_theme":    {Theme: new(SystemTheme), ExpectedRevision: 1},
+		"compact_density": {Density: new(CompactDensity), ExpectedRevision: 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			q := &nativePreferenceExecutor{t: t, rows: []nativePreferenceRow{{old, nil}}}
+			a := identity.Auth{}
+			a.Me.User.ID = "actor"
+			a.Me.Audience = "portal"
+			_, e := updateWithin(t.Context(), q, a, "tenant", input, "request")
+			if e == nil || e.Error() != "PREFERENCE_UNAVAILABLE" || q.executes != 0 {
+				t.Fatal("native chain accepted a value it cannot store", e, q.executes)
 			}
 		})
 	}

@@ -1,11 +1,14 @@
-// Theme and density choices, remembered in this browser. The resolved values are
-// written to <html data-theme data-density>, which the tokens in styles.css read.
+// Theme and density. This browser remembers them so a page opens without a flash; the
+// signed-in shell connects them to the account, which decides across browsers. The
+// resolved values are written to <html data-theme data-density>, which the tokens in
+// styles.css read.
 import {
   createContext,
   use,
   useCallback,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -43,12 +46,23 @@ function storedDensity(): Density {
   return read(densityKey) === 'compact' ? 'compact' : 'comfortable';
 }
 
-/** What {@link usePreferences} returns. */
-export interface Preferences {
+/** The choices a user can save. */
+export interface Appearance {
   theme: ThemePreference;
-  setTheme: (theme: ThemePreference) => void;
   density: Density;
+}
+
+/** Receives what the user changes, to save it beyond this browser. */
+export type AppearanceSaver = (change: Partial<Appearance>) => void;
+
+/** What {@link usePreferences} returns. */
+export interface Preferences extends Appearance {
+  setTheme: (theme: ThemePreference) => void;
   setDensity: (density: Density) => void;
+  /** Applies values saved elsewhere. Unlike the setters, this saves nothing. */
+  adopt: (saved: Appearance) => void;
+  /** Sends later changes to `saver` and returns a function that stops. */
+  connect: (saver: AppearanceSaver) => () => void;
 }
 
 const PreferencesContext = createContext<Preferences | null>(null);
@@ -57,24 +71,47 @@ const PreferencesContext = createContext<Preferences | null>(null);
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState(storedTheme);
   const [density, setDensityState] = useState(storedDensity);
+  const saver = useRef<AppearanceSaver | null>(null);
 
   useLayoutEffect(() => applyTheme(theme), [theme]);
   useLayoutEffect(() => {
     document.documentElement.dataset.density = density;
   }, [density]);
 
-  const setTheme = useCallback((value: ThemePreference) => {
-    write(themeKey, value);
-    setThemeState(value);
+  const applyChoice = useCallback(({ theme, density }: Partial<Appearance>) => {
+    if (theme) {
+      write(themeKey, theme);
+      setThemeState(theme);
+    }
+    if (density) {
+      write(densityKey, density);
+      setDensityState(density);
+    }
   }, []);
-  const setDensity = useCallback((value: Density) => {
-    write(densityKey, value);
-    setDensityState(value);
+  const setTheme = useCallback(
+    (value: ThemePreference) => {
+      applyChoice({ theme: value });
+      saver.current?.({ theme: value });
+    },
+    [applyChoice],
+  );
+  const setDensity = useCallback(
+    (value: Density) => {
+      applyChoice({ density: value });
+      saver.current?.({ density: value });
+    },
+    [applyChoice],
+  );
+  const connect = useCallback((next: AppearanceSaver) => {
+    saver.current = next;
+    return () => {
+      saver.current = null;
+    };
   }, []);
 
   const value = useMemo(
-    () => ({ theme, setTheme, density, setDensity }),
-    [theme, setTheme, density, setDensity],
+    () => ({ theme, setTheme, density, setDensity, adopt: applyChoice, connect }),
+    [theme, setTheme, density, setDensity, applyChoice, connect],
   );
   return <PreferencesContext value={value}>{children}</PreferencesContext>;
 }
