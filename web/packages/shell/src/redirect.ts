@@ -4,6 +4,9 @@
 /** The sign-in path of every application. */
 export const signInPath = '/sign-in';
 
+/** The account page of every application. */
+export const accountPath = '/account';
+
 /**
  * Returns `target` when it is a path inside this application, otherwise `/`.
  * Rejects absolute URLs, protocol-relative `//host` paths, backslash tricks and

@@ -107,6 +107,7 @@ func recoveryMutation(r *http.Request) (bool, error) {
 	}
 	for _, pattern := range []string{
 		"/api/v1/notifications/:id/read",
+		passwordChangesPath,
 		"/api/v1/account/sso/bindings/:id/unlink",
 		"/api/v1/admin/invitations/:id/revocations",
 		"/api/v1/admin/node-join-tokens/:id/revocations",

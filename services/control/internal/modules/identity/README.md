@@ -15,6 +15,10 @@ carried: invitations go through `inviteWithin`, reset emails get a new token tha
 the unused one. Writes that take an `Idempotency-Key` use `idempotentWithin`; a new
 operation also needs its name in the `idempotency_records` check constraint.
 
+Changing a password while signed in ([password_change.go](password_change.go), ADR 0023) ends
+every session of the account and issues the caller a new one in the same transaction, so the
+HTTP handler replaces its cookie. The route needs no license, like password reset.
+
 ## Related surfaces and checks
 
 Synchronize [account contract/runbooks](../../../../../docs/milestones/m01-account), [HTTP contracts](../../../../../contracts/http/v1), [identity frontend](../../../../../web/README.md), [typed config](../../platform/config), mail/localization and schema changes. SSO session-source changes also require the [sso owner](../sso/README.md).

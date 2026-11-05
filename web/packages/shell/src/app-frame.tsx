@@ -12,15 +12,15 @@ import {
   cn,
 } from '@ownsolid/ui';
 import { Link, useRouter, useRouterState } from '@tanstack/react-router';
-import { ChevronRight, Menu as MenuIcon, Search } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { ChevronRight, Menu as MenuIcon, Search, UserRound } from 'lucide-react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AccountPreferences } from './account-preferences.tsx';
 import { CommandMenu } from './command-menu.tsx';
 import { LicenseStatus } from './license-status.tsx';
 import { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
 import { NotificationBell } from './notifications.tsx';
 import { useDocumentTitle } from './page-focus.ts';
-import { signInPath } from './redirect.ts';
+import { accountPath, signInPath } from './redirect.ts';
 import { useSignOut } from './sign-out.ts';
 import { UserMenu } from './user-menu.tsx';
 import { WorkspaceSwitcher } from './workspace-switcher.tsx';
@@ -105,6 +105,11 @@ function SidebarContent({
 
 const macLike = /Mac|iPhone|iPad/.test(navigator.userAgent);
 
+// The account page is reached from the user menu and the command menu, not the sidebar.
+const accountPage: NavGroup = {
+  items: [{ label: 'account.title', icon: UserRound, to: accountPath }],
+};
+
 /** Props for {@link AppFrame}. */
 export interface AppFrameProps {
   navigation: readonly NavGroup[];
@@ -123,7 +128,8 @@ export function AppFrame({ navigation, showLicense = false, children }: AppFrame
   const signOut = useSignOut(() => {
     void router.navigate({ to: signInPath, replace: true });
   });
-  const current = findNavItem(navigation, pathname);
+  const pages = useMemo(() => [...navigation, accountPage], [navigation]);
+  const current = findNavItem(pages, pathname);
   const pageTitle = current ? t(current.item.label) : undefined;
 
   useDocumentTitle(pageTitle);
@@ -237,7 +243,7 @@ export function AppFrame({ navigation, showLicense = false, children }: AppFrame
         onClose={() => {
           setCommandOpen(false);
         }}
-        navigation={navigation}
+        navigation={pages}
         onSignOut={startSignOut}
       />
     </div>

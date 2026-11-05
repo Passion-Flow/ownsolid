@@ -138,6 +138,16 @@ func (s *Service) checkSourceWithin(ctx context.Context, q transaction.Executor,
 // IssueSessionWithin shares actual rotation,source claim,session and audit commit.
 // The caller validates its credential/provider claim and owns the transaction.
 func (s *Service) IssueSessionWithin(ctx context.Context, q transaction.Executor, user string, epoch int64, audience, previous, request string, source *SessionSource) (IssuedSession, error) {
+	action := "auth.login_succeeded"
+	if source != nil {
+		action = "auth.sso_login_succeeded"
+	}
+	return s.issueSessionWithin(ctx, q, user, epoch, audience, previous, request, source, action)
+}
+
+// issueSessionWithin issues the session and records action as its audit event. An empty
+// action leaves the audit to the caller, which records why the session was issued.
+func (s *Service) issueSessionWithin(ctx context.Context, q transaction.Executor, user string, epoch int64, audience, previous, request string, source *SessionSource, action string) (IssuedSession, error) {
 	var out IssuedSession
 	if epoch < 1 {
 		return out, failure("AUTH_INVALID_CREDENTIALS")
@@ -171,10 +181,8 @@ func (s *Service) IssueSessionWithin(ctx context.Context, q transaction.Executor
 	}
 	out.Me, out.Token, out.SessionID = Me{u, w, audience}, security.Token(), uuid.NewString()
 	var tenant, connector, binding, flow, version any
-	action := "auth.login_succeeded"
 	if source != nil {
 		tenant, connector, binding, flow, version = source.TenantID, source.ConnectorID, source.BindingID, source.FlowID, source.AuthVersion
-		action = "auth.sso_login_succeeded"
 	}
 	args := []any{out.SessionID, user, audience, security.Digest(out.Token), epoch, s.Absolute(audience).Microseconds(), tenant, connector, binding, version, flow}
 	n, e := q.Exec(ctx, identitySQL(q,
@@ -188,6 +196,9 @@ func (s *Service) IssueSessionWithin(ctx context.Context, q transaction.Executor
 	}
 	if e = q.QueryRow(ctx, identitySQL(q, "SELECT absolute_expires_at FROM sessions WHERE id=$1 AND user_id=$2", "SELECT absolute_expires_at FROM sessions WHERE id=? AND user_id=?", `SELECT ABSOLUTE_EXPIRES_AT FROM SESSIONS WHERE ID=? AND USER_ID=?`, out.SessionID, user)).Scan(&out.ExpiresAt); e != nil {
 		return IssuedSession{}, e
+	}
+	if action == "" {
+		return out, nil
 	}
 	if e = audit.WriteWithin(ctx, q, user, user, audience, action, "success", "user", user, "", request); e != nil {
 		return IssuedSession{}, e

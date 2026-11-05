@@ -53,6 +53,26 @@ const secondWorkspace = {
   is_default: false,
 };
 
+/** A provider connector the account page offers to link. */
+export const giteaConnector = {
+  id: '6f1c7a1e-0000-4000-8000-000000000008',
+  name: 'Company Gitea',
+  provider: 'gitea',
+};
+
+/** A provider account already linked to the signed-in account. */
+export const giteaBinding = {
+  id: '6f1c7a1e-0000-4000-8000-000000000009',
+  connector_id: giteaConnector.id,
+  name: giteaConnector.name,
+  provider: giteaConnector.provider,
+  subject: '4242',
+  active: true,
+  revision: 3,
+  created_at: '2026-11-04T00:00:00Z',
+  updated_at: '2026-11-04T00:00:00Z',
+};
+
 /** The token of a valid emailed link. */
 export const linkToken = 'a'.repeat(43);
 
@@ -120,6 +140,26 @@ export interface ScriptedProblem {
 export interface ControlPlane {
   audience: 'admin' | 'portal';
   signedIn: boolean;
+  /** The signed-in account, which profile saves and password changes update. */
+  user: typeof user;
+  /** The password sign-in and password changes check. */
+  password: string;
+  /** Answers the next profile save with this failure instead of saving. */
+  nextProfileSave: ScriptedProblem | null;
+  /** Answers the next password change with this failure instead of checking it. */
+  nextPasswordChange: ScriptedProblem | null;
+  /** Provider accounts linked to the account, past links included. */
+  ssoBindings: (typeof giteaBinding)[];
+  /** Fails the linked provider list with this problem while set. */
+  ssoBindingsProblem: ScriptedProblem | null;
+  /** Answers the next unlink with this failure instead of unlinking. */
+  nextUnlink: ScriptedProblem | null;
+  /** Idempotency-Key of each unlink request, in order. */
+  unlinkKeys: string[];
+  /** Bodies of the single sign-on starts the server received, in order. */
+  ssoStarts: Record<string, unknown>[];
+  /** How many CSRF tokens the page has fetched. */
+  csrfFetches: number;
   /** Fails `/runtime-config.json` with a dropped connection while true. */
   unreachable: boolean;
   /** Answers the next sign-in with this failure instead of checking credentials. */
@@ -182,6 +222,16 @@ export async function mockControlPlane(
   const state: ControlPlane = {
     audience,
     signedIn: false,
+    user: { ...user },
+    password: account.password,
+    nextProfileSave: null,
+    nextPasswordChange: null,
+    ssoBindings: [],
+    ssoBindingsProblem: null,
+    nextUnlink: null,
+    unlinkKeys: [],
+    ssoStarts: [],
+    csrfFetches: 0,
     unreachable: false,
     nextSignIn: null,
     signOutProblem: null,
@@ -200,22 +250,66 @@ export async function mockControlPlane(
     nextResend: null,
     resendKeys: [],
   };
-  const identity = () => ({ user, workspace, audience: state.audience });
+  const identity = () => ({ user: state.user, workspace, audience: state.audience });
 
   await page.route('**/runtime-config.json', (route) =>
     state.unreachable ? route.abort('connectionrefused') : data(route, runtimeConfig),
   );
-  await page.route('**/api/v1/auth/csrf', (route) =>
-    data(route, {
+  await page.route('**/api/v1/auth/csrf', (route) => {
+    state.csrfFetches += 1;
+    return data(route, {
       token: 'csrf-token',
       expires_at: new Date(Date.now() + 3_600_000).toISOString(),
-    }),
-  );
-  await page.route('**/api/v1/me', (route) =>
-    state.signedIn
-      ? data(route, identity())
-      : problem(route, { status: 401, code: 'AUTH_REQUIRED' }),
-  );
+    });
+  });
+  await page.route('**/api/v1/me', (route) => {
+    if (!state.signedIn) return problem(route, { status: 401, code: 'AUTH_REQUIRED' });
+    const request = route.request();
+    if (request.method() === 'GET') return data(route, identity());
+    if (request.headers()['x-csrf-token'] !== 'csrf-token') {
+      return problem(route, { status: 403, code: 'CSRF_INVALID' });
+    }
+    if (state.nextProfileSave) {
+      const scripted = state.nextProfileSave;
+      state.nextProfileSave = null;
+      return problem(route, scripted);
+    }
+    const body = request.postDataJSON() as { display_name: string; version: number };
+    if (body.version !== state.user.version) {
+      return problem(route, { status: 409, code: 'VERSION_CONFLICT' });
+    }
+    state.user = {
+      ...state.user,
+      display_name: body.display_name,
+      version: state.user.version + 1,
+    };
+    return data(route, identity());
+  });
+  await page.route('**/api/v1/me/password-changes', (route) => {
+    const request = route.request();
+    if (!state.signedIn) return problem(route, { status: 401, code: 'AUTH_REQUIRED' });
+    if (request.headers()['x-csrf-token'] !== 'csrf-token') {
+      return problem(route, { status: 403, code: 'CSRF_INVALID' });
+    }
+    if (state.nextPasswordChange) {
+      const scripted = state.nextPasswordChange;
+      state.nextPasswordChange = null;
+      return problem(route, scripted);
+    }
+    const body = request.postDataJSON() as { current_password: string; new_password: string };
+    if (body.current_password !== state.password) {
+      return problem(route, { status: 403, code: 'PASSWORD_CURRENT_INVALID' });
+    }
+    if (body.new_password === state.password) {
+      return problem(route, { status: 422, code: 'PASSWORD_UNCHANGED' });
+    }
+    if (body.new_password.length < 15) {
+      return problem(route, { status: 422, code: 'PASSWORD_POLICY_VIOLATION' });
+    }
+    state.password = body.new_password;
+    state.user = { ...state.user, version: state.user.version + 1 };
+    return data(route, identity());
+  });
   await page.route('**/api/v1/auth/login', (route) => {
     const request = route.request();
     if (request.headers()['x-csrf-token'] !== 'csrf-token') {
@@ -227,7 +321,7 @@ export async function mockControlPlane(
       return problem(route, scripted);
     }
     const body = request.postDataJSON() as { email?: string; password?: string };
-    if (body.email !== account.email || body.password !== account.password) {
+    if (body.email !== account.email || body.password !== state.password) {
       return problem(route, { status: 401, code: 'AUTH_INVALID_CREDENTIALS' });
     }
     state.signedIn = true;
@@ -272,12 +366,47 @@ export async function mockControlPlane(
   await page.route('**/api/v1/auth/sso/connectors', (route) =>
     data(route, { items: state.ssoConnectors }),
   );
-  await page.route('**/api/v1/auth/sso/*/starts', (route) =>
-    data(route, {
+  await page.route('**/api/v1/auth/sso/*/starts', (route) => {
+    const body = route.request().postDataJSON() as { mode: string; password: string | null };
+    state.ssoStarts.push(body);
+    if (body.mode === 'link' && body.password !== state.password) {
+      return problem(route, { status: 403, code: 'SSO_PASSWORD_REQUIRED' });
+    }
+    return data(route, {
       authorization_url: state.ssoAddress,
       expires_at: '2026-11-05T00:00:00Z',
-    }),
+    });
+  });
+  await page.route('**/api/v1/account/sso/bindings', (route) =>
+    state.ssoBindingsProblem
+      ? problem(route, state.ssoBindingsProblem)
+      : data(route, { items: state.ssoBindings }),
   );
+  await page.route('**/api/v1/account/sso/bindings/*/unlink', (route) => {
+    const request = route.request();
+    if (request.headers()['x-csrf-token'] !== 'csrf-token') {
+      return problem(route, { status: 403, code: 'CSRF_INVALID' });
+    }
+    state.unlinkKeys.push(request.headers()['idempotency-key'] ?? '');
+    if (state.nextUnlink) {
+      const scripted = state.nextUnlink;
+      state.nextUnlink = null;
+      return problem(route, scripted);
+    }
+    const body = request.postDataJSON() as { revision: number; password: string };
+    const id = new URL(request.url()).pathname.split('/').at(-2);
+    const binding = state.ssoBindings.find((item) => item.id === id);
+    if (!binding) return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+    if (body.password !== state.password) {
+      return problem(route, { status: 403, code: 'SSO_PASSWORD_REQUIRED' });
+    }
+    if (body.revision !== binding.revision) {
+      return problem(route, { status: 409, code: 'SSO_REVISION_CONFLICT' });
+    }
+    const unlinked = { ...binding, active: false, revision: binding.revision + 1 };
+    state.ssoBindings = state.ssoBindings.map((item) => (item.id === id ? unlinked : item));
+    return data(route, unlinked);
+  });
 
   // Each origin serves only its own workspace list, as the control plane does.
   const workspaces = (owner: ControlPlane['audience']) => (route: Route) => {

@@ -2,7 +2,7 @@
 // focus trap, Escape and an inert page without injecting styles at runtime.
 import { useI18n } from '@ownsolid/i18n';
 import { X } from 'lucide-react';
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { cn } from '../cn.ts';
 import { Button } from './button.tsx';
 
@@ -34,6 +34,15 @@ export function ModalSurface({
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
   }, [open]);
+
+  // A dialog removed from the page while open gives focus back to nothing. Layout effects
+  // clean up before the element leaves, so closing here returns focus to what opened it.
+  useLayoutEffect(() => {
+    const dialog = element.current;
+    return () => {
+      if (dialog?.open) dialog.close();
+    };
+  }, []);
 
   useEffect(() => {
     const dialog = element.current;

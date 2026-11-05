@@ -4,10 +4,13 @@ export {
   wcagTags,
   type AccessibilityFlowOptions,
 } from './accessibility-flows.ts';
+export { accountFlows } from './account-flows.ts';
 export {
   account,
   failedMail,
   failedRun,
+  giteaBinding,
+  giteaConnector,
   linkToken,
   mockControlPlane,
   sentMail,

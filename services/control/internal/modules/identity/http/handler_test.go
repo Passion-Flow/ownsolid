@@ -311,7 +311,7 @@ func TestM01TransportBoundaries(t *testing.T) {
 	}
 	id := uuid.NewString()
 	routes := []struct{ method, path string }{
-		{"POST", "/api/v1/auth/login"}, {"POST", "/api/v1/auth/logout"}, {"POST", "/api/v1/auth/invitation-validations"}, {"POST", "/api/v1/auth/register"}, {"POST", "/api/v1/auth/password-reset-requests"}, {"POST", "/api/v1/auth/password-resets"}, {"PATCH", "/api/v1/me"},
+		{"POST", "/api/v1/auth/login"}, {"POST", "/api/v1/auth/logout"}, {"POST", "/api/v1/auth/invitation-validations"}, {"POST", "/api/v1/auth/register"}, {"POST", "/api/v1/auth/password-reset-requests"}, {"POST", "/api/v1/auth/password-resets"}, {"PATCH", "/api/v1/me"}, {"POST", "/api/v1/me/password-changes"},
 		{"POST", "/api/v1/admin/invitations"}, {"POST", "/api/v1/admin/invitations/" + id + "/resends"}, {"POST", "/api/v1/admin/invitations/" + id + "/revocations"}, {"PATCH", "/api/v1/admin/users/" + id + "/status"},
 	}
 	for _, route := range routes {

@@ -13,6 +13,11 @@ const passwordFile = process.env.OWNSOLID_LIVE_PASSWORD_FILE ?? '';
 // refuses any other certificate. The host names resolve through the same flags.
 const spki = process.env.OWNSOLID_LIVE_SPKI ?? '';
 const hostRules = process.env.OWNSOLID_LIVE_HOST_RULES ?? '';
+// A real provider for the link round trip; its steps are skipped without one.
+const providerName = process.env.OWNSOLID_LIVE_PROVIDER_NAME ?? '';
+const providerOrigin = process.env.OWNSOLID_LIVE_PROVIDER_ORIGIN ?? '';
+const providerUser = process.env.OWNSOLID_LIVE_PROVIDER_USER ?? '';
+const providerPasswordFile = process.env.OWNSOLID_LIVE_PROVIDER_PASSWORD_FILE ?? '';
 
 test.skip(origin === '', 'needs OWNSOLID_LIVE_ORIGIN');
 test.use({
@@ -36,7 +41,9 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
     }
   });
   page.on('request', (request) => {
-    if (!request.url().startsWith(origin)) problems.push(`outside request: ${request.url()}`);
+    const url = request.url();
+    const expected = providerOrigin !== '' && url.startsWith(providerOrigin);
+    if (!url.startsWith(origin) && !expected) problems.push(`outside request: ${url}`);
   });
   // Pages load their code with their route; every file must come from this installation.
   const scripts = new Map<string, number>();
@@ -125,7 +132,6 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
       timeout: 500,
     });
   }).toPass();
-  await elsewhere.close();
 
   // Email delivery is a console page. A failed email from an earlier run, the installation
   // having no reachable mail server, is sent again and shows as waiting.
@@ -151,6 +157,90 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
       .getByRole('button', { name: 'Waiting' })
       .click();
     await expect(page.getByRole('row').filter({ hasText: 'Password reset' }).first()).toBeVisible();
+  }
+
+  // The account page: a rename, then the password and back, so the next run still signs in.
+  await page.getByRole('button', { name: 'Account menu' }).click();
+  await page.getByRole('menuitem', { name: 'Account' }).click();
+  await expect(page.getByRole('heading', { name: 'Account', level: 1 })).toBeFocused();
+  await expect(page).toHaveTitle('Account - ownsolid');
+  await expect(page.getByText(email)).toBeVisible();
+  await expectAccessible(page);
+  await expectFocusVisible(page);
+  const nameField = page.getByLabel('Display name');
+  const originalName = await nameField.inputValue();
+  const saveName = async (name: string) => {
+    await nameField.fill(name);
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByRole('button', { name: 'Account menu' })).toHaveAttribute('title', name);
+  };
+  await saveName(`${originalName} renamed`);
+  await page.reload();
+  await expect(nameField).toHaveValue(`${originalName} renamed`);
+  await saveName(originalName);
+
+  const changePassword = async (current: string, next: string) => {
+    await page.getByLabel('Current password').fill(current);
+    await page.getByLabel('New password').fill(next);
+    await page.getByLabel('Confirm the password').fill(next);
+    await page.getByRole('button', { name: 'Change password' }).click();
+  };
+  const changedPassword = `${password} changed`;
+  await changePassword(`${password}-wrong`, changedPassword);
+  await expect(page.getByText('The current password is not correct')).toBeVisible();
+  await changePassword(password, changedPassword);
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Other sessions were signed out' }),
+  ).toBeVisible();
+  // This browser holds the new session and can still write; the other browser's has ended.
+  await page.reload();
+  await expect(nameField).toHaveValue(originalName);
+  await second.reload();
+  await expect(second).toHaveURL(/\/sign-in/);
+  await second.getByLabel('Email').fill(email);
+  await second.getByLabel('Password').fill(changedPassword);
+  await second.getByRole('button', { name: 'Sign in' }).click();
+  await expect(second.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
+  await elsewhere.close();
+  await changePassword(changedPassword, password);
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Other sessions were signed out' }),
+  ).toBeVisible();
+
+  if (providerName === '') {
+    await expect(page.getByText('No providers to link')).toBeVisible();
+  } else {
+    // A real provider round trip: link at the provider, come back, then unlink.
+    const providerPassword = readFileSync(providerPasswordFile, 'utf8').trim();
+    await page.getByRole('button', { name: `Link ${providerName}` }).click();
+    const linkDialog = page.getByRole('dialog', { name: `Link ${providerName}` });
+    await linkDialog.getByLabel('Current password').fill(password);
+    await expectAccessible(page);
+    await linkDialog.getByRole('button', { name: 'Continue to the provider' }).click();
+    await page.waitForURL(`${providerOrigin}/**`);
+    await page.locator('input[name="user_name"]').fill(providerUser);
+    await page.locator('input[name="password"]').fill(providerPassword);
+    await page.locator('form[action*="login"] button.primary').click();
+    const authorize = page.locator('button#authorize-app');
+    await authorize.click();
+    await page.waitForURL(`${origin}/account/sso-result*`);
+    await expect(page.getByText('The account is linked')).toBeVisible();
+    await page.getByRole('link', { name: 'Back to your account' }).click();
+    await expect(page.getByRole('heading', { name: 'Account', level: 1 })).toBeVisible();
+    await expect(page.getByText(/^Provider account \d+/)).toBeVisible();
+    await expectAccessible(page);
+
+    await page.getByRole('button', { name: `Unlink ${providerName}` }).click();
+    const unlinkDialog = page.getByRole('dialog', { name: `Unlink ${providerName}` });
+    await unlinkDialog.getByLabel('Current password').fill(`${password}-wrong`);
+    await unlinkDialog.getByRole('button', { name: 'Unlink' }).click();
+    await expect(unlinkDialog.getByText('The password is not correct')).toBeVisible();
+    await unlinkDialog.getByLabel('Current password').fill(password);
+    await unlinkDialog.getByRole('button', { name: 'Unlink' }).click();
+    await expect(
+      page.getByRole('status').filter({ hasText: `${providerName} unlinked` }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: `Link ${providerName}` })).toBeVisible();
   }
 
   await page.getByRole('button', { name: 'Account menu' }).click();
@@ -184,7 +274,13 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
     await expect(page.getByText('Page not found')).toBeVisible();
   }
   expect([...scripts].filter(([, status]) => status >= 400)).toEqual([]);
-  for (const chunk of ['/sign-in-page-', '/app-frame-', '/welcome-page-', '/password-pages-']) {
+  for (const chunk of [
+    '/sign-in-page-',
+    '/app-frame-',
+    '/welcome-page-',
+    '/password-pages-',
+    '/account-page-',
+  ]) {
     expect([...scripts.keys()].some((path) => path.includes(chunk))).toBe(true);
   }
   expect(problems).toEqual([]);
