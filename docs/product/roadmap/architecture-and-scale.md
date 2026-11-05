@@ -26,7 +26,8 @@ agents is not.
   - Scope of the evidence: PostgreSQL only; MySQL and Dameng leases carry sequence 0 until CMP-201 and CMP-202. Model preparation scenarios ran on synthetic command envelopes; those claiming through the full preparation service need a retained CPU training output and have not run. Resync limits are per control process until separate gateway replicas (ARC-102).
 - [x] ARC-007 Server-paced heartbeat interval, jitter and reconnect delay, changeable at runtime; full-jitter backoff; retry at one layer only (P0) - Evidence: commit eaa67f6 (ADR 0013)
   - Scope of the evidence: PostgreSQL only; MySQL and Dameng serve the default pacing until CMP-201 and CMP-202. Changed through the API; the console page is FLT-113. `Retry-After` hints are ARC-008.
-- [ ] ARC-008 Per-operation limits and priority classes (quarantine above heartbeat above telemetry above bulk) with retry hints (P0)
+- [x] ARC-008 Per-operation limits and priority classes (quarantine above heartbeat above telemetry above bulk) with retry hints (P0) - Evidence: commit 6c04ac4 (ADR 0018)
+  - Scope of the evidence: limits and seats apply per control process until separate gateway replicas (ARC-102). Settings go through `control_settings`; the console page is FLT-113. Shedding ran with one agent; fleet-scale load is ARC-015.
 - [ ] ARC-009 Cost rule: every agent call declares its server cost; calls whose cost grows with fleet size fail review (P0)
 - [ ] ARC-010 Liveness kept in gateway memory plus a small replicated store; PostgreSQL stores only state transitions and batched last-seen (P0)
 - [ ] ARC-011 Transactional outbox with batched delivery replaces LISTEN/NOTIFY; low-frequency reconciliation (P0)

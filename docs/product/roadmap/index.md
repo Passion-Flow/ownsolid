@@ -86,7 +86,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 
 | # | Module | File | P0 | P1 | P2 | P3 | P4 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Architecture and scale | [architecture-and-scale.md](architecture-and-scale.md) | 7/16 | 0/7 | 0/7 | 0/4 | - |
+| 1 | Architecture and scale | [architecture-and-scale.md](architecture-and-scale.md) | 8/16 | 0/7 | 0/7 | 0/4 | - |
 | 2 | Delivery and upgrades | [delivery-and-upgrades.md](delivery-and-upgrades.md) | 3/3 | 0/13 | 0/4 | 0/1 | 0/1 |
 | 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 0/12 | 0/5 | 0/1 | 0/1 |
 | 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 3/21 | 0/3 | - | 0/2 |
