@@ -220,7 +220,7 @@ func (s *Session) Claim(ctx context.Context, wait int, acknowledged uint64) (wir
 		return wire.Claim{}, e
 	}
 	if reply.Problem != nil {
-		return wire.Claim{}, remoteProblem(reply.Problem.Code, reply.Problem.Status)
+		return wire.Claim{}, sessionProblem(reply.Problem)
 	}
 	return *reply.Claim, nil
 }
@@ -240,7 +240,7 @@ func (s *Session) Acknowledge(ctx context.Context, lease wire.Lease) (wire.Renew
 		reply, e := s.exchange(ctx, wire.AgentMessage{Ack: &ack})
 		if e == nil {
 			if reply.Problem != nil {
-				return wire.RenewedLease{}, remoteProblem(reply.Problem.Code, reply.Problem.Status)
+				return wire.RenewedLease{}, sessionProblem(reply.Problem)
 			}
 			return *reply.Acknowledged, nil
 		}
@@ -253,9 +253,14 @@ func (s *Session) Acknowledge(ctx context.Context, lease wire.Lease) (wire.Renew
 
 func (s *Session) disposition(reply wire.ControlMessage) (wire.Disposition, error) {
 	if reply.Problem != nil {
-		return wire.Disposition{}, remoteProblem(reply.Problem.Code, reply.Problem.Status)
+		return wire.Disposition{}, sessionProblem(reply.Problem)
 	}
 	return *reply.Disposition, nil
+}
+
+// sessionProblem is the error of a problem control answered on the stream.
+func sessionProblem(p *wire.SessionProblem) error {
+	return remoteProblem(p.Code, p.Status, time.Duration(p.RetryAfterSeconds)*time.Second)
 }
 
 func (s *Session) dropStream() {

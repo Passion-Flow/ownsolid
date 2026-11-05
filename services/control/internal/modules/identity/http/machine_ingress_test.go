@@ -1,14 +1,20 @@
 package http
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
+	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	nodehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentadmission"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 )
@@ -79,18 +85,55 @@ func TestMachineDispatcherClosesHumanRoutesAndBrowserMachineFallback(t *testing.
 	}
 }
 
-func TestMachineDispatcherSharesCapacityAndRejectsClientIngressSelection(t *testing.T) {
+func TestMachineDispatcherSeparatesAgentSeatsFromRequestSlots(t *testing.T) {
 	h := machineIngressTestHandler(config.TransportHTTP)
-	h.active <- struct{}{}
-	for _, path := range []string{"/agent/v1/enroll", "/gateway/v1/admissions", "/agent/v1/sites/default/cells/default/nodes/node/tasks/task/image-registry/manifest"} {
-		w := httptest.NewRecorder()
-		h.MachineHandler().ServeHTTP(w, machineIngressTestRequest(h.Service.Config.MachineServer.Origin, path))
-		machineIngressTestProblem(t, w, http.StatusServiceUnavailable, "AUTH_CAPACITY_EXCEEDED")
+	policy := config.DefaultAgentAdmissionPolicy()
+	policy.Bulk.MaxSeats, policy.Bulk.WaitMilliseconds = 1, 0
+	admission, e := agentadmission.New(policy, slog.Default())
+	if e != nil {
+		t.Fatal(e)
 	}
+	h.Nodes = &nodehttp.Handler{Admission: admission}
+	heartbeat := "/agent/v1/sites/default/cells/default/nodes/node/heartbeat"
+	registry := "/agent/v1/sites/default/cells/default/nodes/node/tasks/task/image-registry/manifest"
+	// Full request slots refuse the model gateway and the console, not agent calls (ADR 0018).
+	h.active <- struct{}{}
 	w := httptest.NewRecorder()
+	h.MachineHandler().ServeHTTP(w, machineIngressTestRequest(h.Service.Config.MachineServer.Origin, "/gateway/v1/admissions"))
+	machineIngressTestProblem(t, w, http.StatusServiceUnavailable, "AUTH_CAPACITY_EXCEEDED")
+	w = httptest.NewRecorder()
 	h.ServeHTTP(w, machineIngressTestRequest(h.Service.Config.Server.PortalOrigin, "/runtime-config.json"))
 	machineIngressTestProblem(t, w, http.StatusServiceUnavailable, "AUTH_CAPACITY_EXCEEDED")
+	w = httptest.NewRecorder()
+	h.MachineHandler().ServeHTTP(w, machineIngressTestRequest(h.Service.Config.MachineServer.Origin, heartbeat))
+	machineIngressTestProblem(t, w, http.StatusBadRequest, "VALIDATION_FAILED")
 	<-h.active
+	// Full bulk seats refuse transfers with the bulk retry hint and leave heartbeats alone.
+	release, e := admission.Enter(context.Background(), agentwire.PriorityBulk)
+	if e != nil {
+		t.Fatal(e)
+	}
+	w = httptest.NewRecorder()
+	h.MachineHandler().ServeHTTP(w, machineIngressTestRequest(h.Service.Config.MachineServer.Origin, registry))
+	machineIngressTestProblem(t, w, http.StatusServiceUnavailable, "AGENT_OVERLOADED")
+	if w.Header().Get("Retry-After") != strconv.Itoa(policy.Bulk.RetrySeconds) {
+		t.Fatalf("Retry-After %q", w.Header().Get("Retry-After"))
+	}
+	w = httptest.NewRecorder()
+	h.MachineHandler().ServeHTTP(w, machineIngressTestRequest(h.Service.Config.MachineServer.Origin, heartbeat))
+	machineIngressTestProblem(t, w, http.StatusBadRequest, "VALIDATION_FAILED")
+	release()
+	w = httptest.NewRecorder()
+	h.MachineHandler().ServeHTTP(w, machineIngressTestRequest(h.Service.Config.MachineServer.Origin, registry))
+	machineIngressTestProblem(t, w, http.StatusNotFound, "RESOURCE_NOT_FOUND")
+	// A path that is no agent call is not found before admission.
+	w = httptest.NewRecorder()
+	h.MachineHandler().ServeHTTP(w, machineIngressTestRequest(h.Service.Config.MachineServer.Origin, "/agent/v1/sites/default/cells/default/nodes/node/unknown"))
+	machineIngressTestProblem(t, w, http.StatusNotFound, "RESOURCE_NOT_FOUND")
+}
+
+func TestMachineDispatcherRejectsClientIngressSelection(t *testing.T) {
+	h := machineIngressTestHandler(config.TransportHTTP)
 	for _, name := range []string{"Origin", "Cookie", "Forwarded", "X-Forwarded-Proto"} {
 		r := machineIngressTestRequest(h.Service.Config.MachineServer.Origin, "/agent/v1/enroll")
 		r.Header[name] = []string{""}
@@ -104,7 +147,7 @@ func TestMachineDispatcherSharesCapacityAndRejectsClientIngressSelection(t *test
 	// A private-looking header cannot move an HTTP browser request onto machine policy.
 	r := machineIngressTestRequest(h.Service.Config.Server.AdminOrigin, "/agent/v1/enroll")
 	r.Header.Set("X-Projectone-Machine-Ingress", "true")
-	w = httptest.NewRecorder()
+	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	machineIngressTestProblem(t, w, http.StatusNotFound, "RESOURCE_NOT_FOUND")
 	h.Service.Config.MachineServer = nil

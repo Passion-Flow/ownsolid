@@ -30,7 +30,7 @@ func trainingProblem(response *http.Response, b []byte) error {
 	if json.Unmarshal(b, &p) != nil || !safeTrainingCode.MatchString(p.Code) {
 		return errors.New("CONTROL_RESPONSE_REJECTED")
 	}
-	p.Status = response.StatusCode
+	p.Status, p.RetryAfter = response.StatusCode, retryAfter(response.Header)
 	return &p
 }
 func (c *Client) trainingSend(ctx context.Context, path, media string, body []byte, headers map[string]string) (*http.Response, error) {

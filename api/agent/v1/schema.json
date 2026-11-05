@@ -7029,6 +7029,12 @@
             "type": "integer",
             "minimum": 400,
             "maximum": 599
+          },
+          "retry_after_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 900,
+            "description": "Retry-After hint of a refused call (ADR 0018). The agent waits at least this long before it repeats the call."
           }
         },
         "required": [

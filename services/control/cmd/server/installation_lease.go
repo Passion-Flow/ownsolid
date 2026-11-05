@@ -7,13 +7,13 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/felixge/httpsnoop"
 	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentgateway"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
-	nodehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/mysqlmigrate"
@@ -158,10 +158,11 @@ func installationLeaseMiddleware(g *runtimeLifecycle, d *selectedDatabase, p con
 				next.ServeHTTP(w, r)
 				return
 			}
-			// An agent session lives for hours and a long-polled claim mostly waits. Both are
-			// checked when they open but hold none of the shared request slots; the gateway
-			// bounds them, and a lost lease stops the process and its sessions.
-			if agentgateway.Owns(r) || nodehttp.ClaimRoute(cellroute.Relative(r.URL.Path), r.Method) {
+			// Agent calls hold none of the shared request slots: agent admission bounds them
+			// (ADR 0018), and the gateway bounds sessions, which live for hours. They are
+			// still checked when they open, and a lost lease stops the process and its
+			// sessions.
+			if agentgateway.Owns(r) || strings.HasPrefix(cellroute.Relative(r.URL.Path), "/agent/v1/") {
 				serveInstallationLeaseResponse(w, r, p, nil, check, next)
 				return
 			}

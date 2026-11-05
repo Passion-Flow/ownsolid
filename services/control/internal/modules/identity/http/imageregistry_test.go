@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
+	nodehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentadmission"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/registryconfig"
 )
@@ -63,9 +66,13 @@ func TestRegistryEntrancesRetainMiddlewareAndMachineDispatch(t *testing.T) {
 	c.Server.AdminOrigin = "https://admin.example.invalid"
 	c.Server.PortalOrigin = "https://portal.example.invalid"
 	i := &identity.Service{Config: c, HMACKey: make([]byte, 32)}
-	h := &Handler{Service: i, active: make(chan struct{}, 1)}
-	// This unit owner has no node/registry/database implementation. A dispatch
-	// regression to generic node handling would panic instead of passing safely.
+	admission, e := agentadmission.New(config.DefaultAgentAdmissionPolicy(), slog.Default())
+	if e != nil {
+		t.Fatal(e)
+	}
+	// This unit owner has no node/registry/database implementation, only agent admission.
+	// A dispatch regression to generic node handling would panic instead of passing safely.
+	h := &Handler{Service: i, active: make(chan struct{}, 1), Nodes: &nodehttp.Handler{Admission: admission}}
 	for _, item := range []struct {
 		name, host, path, origin string
 		cookie                   bool

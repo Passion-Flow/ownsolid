@@ -24,9 +24,10 @@ import (
 
 // Backend is the node service as the gateway sees it. Errors carry public codes.
 type Backend interface {
-	// Admit applies the per-address and per-node request limits of the HTTPS machine
-	// paths and validates the credential form. It runs for every exchange.
-	Admit(ctx context.Context, address, node, credential string) error
+	// Admit validates the credential form and admits the exchange as call (ADR 0018),
+	// as the HTTPS machine paths are admitted. It runs for every exchange, and release
+	// runs when the exchange ends.
+	Admit(ctx context.Context, address, node, credential string, call wire.Call) (release func(), err error)
 	Heartbeat(ctx context.Context, node, credential string, h wire.Handshake) (wire.Disposition, error)
 	// Claim leases the next task, holding the claim open for up to input's wait.
 	Claim(ctx context.Context, node, credential, request string, input wire.ClaimRequest) (wire.Claim, error)
@@ -238,6 +239,15 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 	}
 }
 
+// retryAfter is the retry hint an error carries, bounded by the protocol.
+func retryAfter(e error) int {
+	var hint interface{ RetrySeconds() int }
+	if errors.As(e, &hint) {
+		return min(max(hint.RetrySeconds(), 0), wire.MaxRetryAfterSeconds)
+	}
+	return 0
+}
+
 func (g *Gateway) exchange(ctx context.Context, address, node, credential string, m wire.AgentMessage) wire.ControlMessage {
 	reply := wire.ControlMessage{ReplyTo: m.ID}
 	budget := time.Duration(g.policy.ExchangeSeconds) * time.Second
@@ -249,12 +259,14 @@ func (g *Gateway) exchange(ctx context.Context, address, node, credential string
 	defer cancel()
 	fail := func(e error) wire.ControlMessage {
 		code, status := g.problem(e)
-		reply.Problem = &wire.SessionProblem{Code: code, Status: status}
+		reply.Problem = &wire.SessionProblem{Code: code, Status: status, RetryAfterSeconds: retryAfter(e)}
 		return reply
 	}
-	if e := g.backend.Admit(bounded, address, node, credential); e != nil {
+	release, e := g.backend.Admit(bounded, address, node, credential, m.Call())
+	if e != nil {
 		return fail(e)
 	}
+	defer release()
 	if m.Heartbeat != nil {
 		disposition, e := g.backend.Heartbeat(bounded, node, credential, *m.Heartbeat)
 		if e != nil {

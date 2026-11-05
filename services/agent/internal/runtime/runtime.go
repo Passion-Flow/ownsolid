@@ -500,7 +500,7 @@ func Run(ctx context.Context, c Config) error {
 				return errors.New("AGENT_CREDENTIAL_REVOKED")
 			}
 			slog.Warn("agent_cycle_failed", "code", e.Error())
-			delay = pace.afterFailure(session.Pacing())
+			delay = pace.afterFailure(session.Pacing(), e)
 		} else {
 			// The claim wait is part of the interval, so a cycle starts once per interval
 			// when idle and right away after a task.
@@ -570,56 +570,13 @@ func fencedExecution(ctx context.Context, connection *client.Client, base string
 	bounded, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	taskBase := base + "/tasks/" + lease.TaskID
-	renew := func(renewContext context.Context) (time.Time, error) {
-		started := time.Now()
-		var out wire.RenewedLease
-		if e := connection.Post(renewContext, taskBase+"/renewals", wire.LeaseRenewal{LeaseToken: lease.LeaseToken}, &out); e != nil {
-			return time.Time{}, e
-		}
-		return renewalDeadline(started, out)
-	}
+	renew := leaseRenewal(connection, taskBase, lease)
 	expiry, e := renew(bounded)
 	if e != nil {
 		return e
 	}
-	done := make(chan struct{})
 	stopRenewal := make(chan struct{})
-	renewed := make(chan error, 1)
-	go func() {
-		defer close(done)
-		ticker := time.NewTicker(time.Duration(wire.LeaseRenewalSeconds) * time.Second)
-		defer ticker.Stop()
-		watchdog := time.NewTimer(time.Until(expiry))
-		defer watchdog.Stop()
-		fail := func(e error) { renewed <- e; cancel() }
-		for {
-			select {
-			case <-bounded.Done():
-				return
-			case <-stopRenewal:
-				return
-			case <-watchdog.C:
-				fail(errors.New("AGENT_LEASE_STALE"))
-				return
-			case <-ticker.C:
-				renewalContext, stop := context.WithDeadline(bounded, expiry)
-				next, e := renew(renewalContext)
-				stop()
-				if e != nil {
-					fail(e)
-					return
-				}
-				expiry = next
-				if !watchdog.Stop() {
-					select {
-					case <-watchdog.C:
-					default:
-					}
-				}
-				watchdog.Reset(time.Until(expiry))
-			}
-		}
-	}()
+	done, renewed := renewWhileRunning(bounded, cancel, renew, lease.TaskID, expiry, stopRenewal)
 	result, executionError := execute(bounded, taskBase)
 	if executionError != nil {
 		close(stopRenewal)

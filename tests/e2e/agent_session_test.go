@@ -373,3 +373,24 @@ func (e environment) sql(t *testing.T, query string) string {
 	}
 	return strings.TrimSpace(output)
 }
+
+// refusalTimes returns when the agent logged each heartbeat cycle that control refused
+// over its limit, from the timestamps of its standard log lines.
+func refusalTimes(t *testing.T, output string) []time.Time {
+	t.Helper()
+	var times []time.Time
+	for _, line := range strings.Split(output, "\n") {
+		if !strings.Contains(line, "agent_cycle_failed code=RATE_LIMITED") || len(line) < 19 {
+			continue
+		}
+		at, err := time.ParseInLocation("2006/01/02 15:04:05", line[:19], time.Local)
+		if err != nil {
+			t.Fatalf("log line without a timestamp: %q", line)
+		}
+		times = append(times, at)
+	}
+	if len(times) < 2 {
+		t.Fatalf("%d refused heartbeats logged:\n%s", len(times), output)
+	}
+	return times
+}

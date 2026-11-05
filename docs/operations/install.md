@@ -124,6 +124,38 @@ must fit inside `nodes.online_seconds`, 30 by default, which allows up to 20 sec
 no jitter. To go slower, raise `nodes.online_seconds` first. With more than one control
 process, the others follow within five seconds.
 
+### Limits on agent calls
+
+Control admits every agent call in memory before it touches the database
+([ADR 0018](../decisions/0018-agent-call-admission.md)). Each node has its own limit for
+each kind of call, each client address has one more, and calls wait for one of a fixed
+number of serving seats. When seats run short, control refuses bulk transfers first, then
+progress events, then heartbeats, and serves task results and stop receipts longest.
+Agent calls do not use the request slots of the console, so a busy fleet cannot lock
+operators out, and the other way round.
+
+A refused call carries a retry hint: `429 RATE_LIMITED` when the node or address is over
+its limit, `503 AGENT_OVERLOADED` when control sheds the call. The agent waits at least the
+hint before it calls again and logs `agent_cycle_failed` with the code; control logs
+`agent_call_refused` with the priority and reason at most every ten seconds, and pushes
+`ownsolid_agent_admission_*` counters to the metrics store. A running task whose lease
+renewal is shed keeps running and renews at the next try.
+
+The defaults fit the default pacing. Change them under `control_settings.runtime.agent_admission`
+in the install configuration and run `apply`; the fields and their ranges are in
+[`control.example.yaml`](../../services/control/config/examples/control/control.example.yaml).
+For example, to allow 600 transfer requests a minute per node:
+
+```yaml
+control_settings:
+  runtime:
+    agent_admission:
+      calls:
+        download: {per_minute: 600, burst: 120}
+```
+
+Limits apply per control process.
+
 ### Model containers have no network
 
 A model container on a node can answer requests but cannot open a connection to

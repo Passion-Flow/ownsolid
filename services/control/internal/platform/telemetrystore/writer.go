@@ -57,9 +57,9 @@ func (w *Writer) Failed() uint64 { return w.failed.Load() }
 // Samples reports the queue for the metrics store.
 func (w *Writer) Samples() []Sample {
 	return []Sample{
-		{"ownsolid_telemetry_log_queue_length", float64(len(w.queue))},
-		{"ownsolid_telemetry_log_records_dropped_total", float64(w.dropped.Load())},
-		{"ownsolid_telemetry_log_records_failed_total", float64(w.failed.Load())},
+		{Name: "ownsolid_telemetry_log_queue_length", Value: float64(len(w.queue))},
+		{Name: "ownsolid_telemetry_log_records_dropped_total", Value: float64(w.dropped.Load())},
+		{Name: "ownsolid_telemetry_log_records_failed_total", Value: float64(w.failed.Load())},
 	}
 }
 

@@ -15,8 +15,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentadmission"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	lifecyclewire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
@@ -33,6 +35,9 @@ type Handler struct {
 	PreparationInputFile    func(context.Context, string, string, string, lifecyclewire.InputFileRequest) (httpserver.Download, error)
 	PreparationEvents       func(context.Context, string, string, string, string, [][]byte) ([]lifecyclewire.EventAcceptance, error)
 	Service                 *nodes.Service
+	// Admission admits every agent call before it reaches the service (ADR 0018). The
+	// caller of Machine admits HTTPS calls; the handler uses it for claim seats.
+	Admission *agentadmission.Controller
 	ComponentArtifact       func(context.Context, string, string, string, string) (httpserver.Download, error)
 	OpenArtifact            func() (*os.File, error)
 	Artifact                func(context.Context, pgx.Tx, nodes.Node, nodes.Task) (httpserver.Download, error)
@@ -91,14 +96,12 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 	if r.URL.RawQuery != "" {
 		return nil, 0, bad
 	}
-	host := httpserver.RequestClientIP(r)
-	transfer := strings.HasSuffix(r.URL.Path, "/model-preparation-input-files") || strings.HasSuffix(r.URL.Path, "/model-preparation-events") || strings.HasSuffix(r.URL.Path, "/model-files") || strings.HasSuffix(r.URL.Path, "/training-input-files") || strings.HasSuffix(r.URL.Path, "/training-events") || TrainingUpload(r.URL.Path, r.Method) || PreparationUpload(r.URL.Path, r.Method)
-	policy := h.Service.Identity.Config.Policy().Rates
-	if e := h.admitAddress(r.Context(), host, transfer); e != nil {
-		return nil, 0, e
-	}
 	path := r.URL.Path
 	if path == "/agent/v1/enroll" {
+		// Join tokens are guessable only by trying, so enrollment keeps a limit shared by
+		// every control process, on top of its admission.
+		policy := h.Service.Identity.Config.Policy().Rates
+		host := httpserver.RequestClientIP(r)
 		if _, e := h.Service.Identity.Admit(r.Context(), identity.Limit{Purpose: "agent.enroll.ip", Identifier: host, Count: policy.AgentEnrollIPCount, Window: config.Seconds(policy.AgentEnrollIPWindowSeconds)}); e != nil {
 			return nil, 0, e
 		}
@@ -118,8 +121,8 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 		return nil, 0, errors.New("AGENT_UNAUTHORIZED")
 	}
 	credential := strings.TrimPrefix(values[0], "Bearer ")
-	if e := h.admitNode(r.Context(), parts[1], credential, transfer); e != nil {
-		return nil, 0, e
+	if !security.ValidToken(credential) {
+		return nil, 0, errors.New("AGENT_UNAUTHORIZED")
 	}
 	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && parts[4] == "model-preparation-input-files" {
 		return h.preparationInput(r, parts, credential)
@@ -275,7 +278,7 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 		if e := input.Validate(); e != nil {
 			return nil, 0, e
 		}
-		out, e := h.Service.ClaimWaiting(r.Context(), parts[1], credential, request, input)
+		out, e := h.Service.ClaimWaiting(r.Context(), parts[1], credential, request, input, h.claimSeat)
 		return out, 200, e
 	}
 	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && parts[4] == wire.TaskAcknowledgementsPath {

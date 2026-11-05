@@ -245,7 +245,9 @@ func newPusher(t *testing.T, handler http.HandlerFunc, logs *bytes.Buffer) *Metr
 	if e != nil {
 		t.Fatal(e)
 	}
-	p.Add(func() []Sample { return []Sample{{"ownsolid_test_value", 2.5}} })
+	p.Add(func() []Sample {
+		return []Sample{{Name: "ownsolid_test_value", Value: 2.5}, {Name: "ownsolid_test_labelled", Value: 1, Labels: []Label{{Name: "priority", Value: `bulk"x`}}}}
+	})
 	return p
 }
 
@@ -265,6 +267,9 @@ func TestPushSendsPrometheusTextWithEscapedLabels(t *testing.T) {
 	}
 	if !strings.Contains(body, `ownsolid_test_value{service="control",instance="host\"1"} 2.5`+"\n") {
 		t.Fatalf("value line missing from:\n%s", body)
+	}
+	if !strings.Contains(body, `ownsolid_test_labelled{service="control",instance="host\"1",priority="bulk\"x"} 1`+"\n") {
+		t.Fatalf("labelled line missing from:\n%s", body)
 	}
 	if !strings.Contains(body, "ownsolid_process_uptime_seconds{") || !strings.Contains(body, "ownsolid_telemetry_metric_pushes_failed_total{") {
 		t.Fatalf("process values missing from:\n%s", body)

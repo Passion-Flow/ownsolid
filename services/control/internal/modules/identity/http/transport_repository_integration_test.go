@@ -561,11 +561,9 @@ func TestTransportAgentProxyRateIdentity(t *testing.T) {
 	transportConfigure(s, config.TransportTrustedProxyHTTPS)
 	fixture.Bootstrap(t, s)
 	policy := s.Config.Policy()
-	policy.Rates.AgentIPCount = 1
-	policy.Rates.AgentTransferIPCount = 1
+	// One agent call per client address, so a second call shows which address was charged.
+	policy.AgentAdmission.Address = config.AgentCallLimit{PerMinute: 1, Burst: 1}
 	policy.Rates.AgentEnrollIPCount = 1
-	policy.Rates.AgentIPWindowSeconds = 300
-	policy.Rates.AgentTransferIPWindowSeconds = 300
 	policy.Rates.AgentEnrollIPWindowSeconds = 300
 	if e := policy.Validate(); e != nil {
 		t.Fatal("typed synthetic rate policy", e)
@@ -577,19 +575,21 @@ func TestTransportAgentProxyRateIdentity(t *testing.T) {
 	t.Cleanup(func() { slog.SetDefault(original) })
 	x := transportOpen(t, s)
 	node, task := uuid.NewString(), uuid.NewString()
+	// The heartbeat and transfer calls are limited in memory by admission (ADR 0018);
+	// enrollment also keeps its database limit, whose bucket the test reads.
 	for index, family := range []struct {
 		purpose, path, code string
 		status              int
 	}{
-		{"agent.request.ip", "/agent/v1/sites/default/cells/default/nodes/" + node + "/heartbeat", "AGENT_UNAUTHORIZED", 401},
-		{"agent.transfer.ip", "/agent/v1/sites/default/cells/default/nodes/" + node + "/tasks/" + task + "/model-files", "AGENT_UNAUTHORIZED", 401},
+		{"", "/agent/v1/sites/default/cells/default/nodes/" + node + "/heartbeat", "AGENT_UNAUTHORIZED", 401},
+		{"", "/agent/v1/sites/default/cells/default/nodes/" + node + "/tasks/" + task + "/model-files", "AGENT_UNAUTHORIZED", 401},
 		{"agent.enroll.ip", "/agent/v1/enroll", "TOKEN_UNUSABLE", 400},
 	} {
 		if family.purpose == "agent.enroll.ip" {
 			// Change the typed fixture policy between sequential phases. This is
 			// not evidence of a running production policy reload.
 			x.close()
-			policy.Rates.AgentIPCount = 3
+			policy.AgentAdmission.Address.Burst = 3
 			if e := policy.Validate(); e != nil {
 				t.Fatal(e)
 			}
@@ -603,15 +603,18 @@ func TestTransportAgentProxyRateIdentity(t *testing.T) {
 			browser.schemas["AgentProblem"] = agentProblem
 			transportProblem(t, browser.call("POST", family.path, map[string]any{}, family.status, "AgentProblem", map[string]string{"X-Forwarded-For": "203.0.113.250", "Forwarded": "for=203.0.113.250;proto=http", "X-Real-IP": "203.0.113.250"}), family.code)
 			log.provenance(t, browser.request, clientIP)
+			// The forwarded headers name one address for every client; only the proxy's
+			// resolved client address may be charged, so each client is refused on its own.
 			transportProblem(t, browser.call("POST", family.path, map[string]any{}, 429, "Problem", nil), "RATE_LIMITED")
-			transportBucket(t, s, family.purpose, clientIP, 1)
-			transportBucket(t, s, family.purpose, "203.0.113.250", 0)
-			if family.purpose == "agent.enroll.ip" {
-				transportBucket(t, s, "agent.request.ip", clientIP, 2)
+			if family.purpose != "" {
+				transportBucket(t, s, family.purpose, clientIP, 1)
+				transportBucket(t, s, family.purpose, "203.0.113.250", 0)
 			}
 			server.Close()
 		}
-		transportBucket(t, s, family.purpose, "127.0.0.1", 0)
+		if family.purpose != "" {
+			transportBucket(t, s, family.purpose, "127.0.0.1", 0)
+		}
 	}
 	// A direct call to the actual HTTP backend cannot supply an alternate IP
 	// without the required trusted proxy protocol. No agent bucket may change.
