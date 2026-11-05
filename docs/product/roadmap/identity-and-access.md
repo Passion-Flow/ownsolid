@@ -20,6 +20,7 @@ agents. Every check happens on the server.
 - [ ] IAM-110 Group-to-role mapping from upstream identity with preview (P1) - Catalog: F453
 - [ ] IAM-111 Session management: idle and absolute timeout, device list, forced sign-out, revocation propagation (P1) - Catalog: F454, F571
 - [ ] IAM-112 Separate Admin and Portal entrances with audience-bound sessions (P1) - Catalog: F424, F432, F545
+- [ ] IAM-113 Enable single sign-on from the typed install configuration: `ownsolid-install` has no input for providers, their CA or the keyring, so an installed product cannot turn it on (P1)
 
 ## P2 Fleet operations
 

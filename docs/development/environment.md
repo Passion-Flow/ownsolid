@@ -138,9 +138,11 @@ The spec also renames the account, changes its password and changes it back; a f
 between leaves the changed password on the account. It checks the page shows no providers
 unless `OWNSOLID_LIVE_PROVIDER_NAME` is set. With that, `OWNSOLID_LIVE_PROVIDER_ORIGIN`,
 `OWNSOLID_LIVE_PROVIDER_USER` and `OWNSOLID_LIVE_PROVIDER_PASSWORD_FILE` it links and unlinks a
-real Gitea. `ownsolid-install` cannot enable single sign-on yet (IAM-102), so that run adds
+real Gitea. `ownsolid-install` cannot enable single sign-on yet (IAM-113), so that run adds
 an `sso` section to the installation's `control.yaml` by hand and restarts control; `apply`
-removes it again. Add the provider's public key to `OWNSOLID_LIVE_SPKI` (comma-separated) and
+removes it again. The issuer is Gitea's root URL with no trailing slash, the release is the
+one `GiteaTestedRelease` names, and a live run spends about four of the ten sign-ins allowed
+in 15 minutes. Add the provider's public key to `OWNSOLID_LIVE_SPKI` (comma-separated) and
 its host to `OWNSOLID_LIVE_HOST_RULES`.
 
 The tunnel can drop to about 20 KB/s, and pages then time out. Run the spec on
