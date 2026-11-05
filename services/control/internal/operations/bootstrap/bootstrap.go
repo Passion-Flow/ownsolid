@@ -75,15 +75,18 @@ func target(ctx context.Context, s *identity.Service, q queryer) (string, error)
 	if e != nil {
 		return "", errors.New("BOOTSTRAP_TARGET_UNAVAILABLE")
 	}
+	// The target is the database the intent was made for, not the rest of the control
+	// configuration: an operator who changes origins or runtime limits after install
+	// still resumes and verifies the same administrator, as the MySQL and Dameng
+	// intents already do.
 	c := s.DB.Config().ConnConfig
 	b, e := json.Marshal(struct {
-		Configuration                        any
 		Host, Database, User, PasswordDigest string
 		Port                                 uint16
 		DatabaseName, Schema, Server         string
 		DatabaseOID, SchemaOID, TableOID     uint32
 		ServerPort                           int
-	}{s.Config, c.Host, c.Database, c.User, digest([]byte(c.Password)), c.Port, databaseName, schema, server, databaseOID, schemaOID, tableOID, port})
+	}{c.Host, c.Database, c.User, digest([]byte(c.Password)), c.Port, databaseName, schema, server, databaseOID, schemaOID, tableOID, port})
 	if e != nil {
 		return "", errors.New("BOOTSTRAP_TARGET_INVALID")
 	}

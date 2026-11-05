@@ -207,11 +207,17 @@ func TestActualBootstrapFilePersistenceReconciliationAndConflicts(t *testing.T) 
 	for _, audience := range []string{"portal", "admin"} {
 		identityfixture.Login(t, s, i.Request.AdministratorEmail, i.Password, audience)
 	}
+	// Settings outside the database target may change after install; the same
+	// administrator still verifies.
 	s.Config.Server.AdminOrigin = "https://changed.example.invalid"
-	if _, e = Run(ctx, s, c, "reconcile-bootstrap-file", input, output); e == nil {
-		t.Fatal("changed configuration accepted")
+	previous, policy := s.Config.Runtime, s.Config.Policy()
+	policy.AgentAdmission.Seats++
+	s.Config.Runtime = &policy
+	if status, e := Run(ctx, s, c, "reconcile-bootstrap-file", input, output); e != nil || status != Verified {
+		t.Fatal("changed configuration refused", status, e)
 	}
 	s.Config.Server.AdminOrigin = "https://admin.example.invalid"
+	s.Config.Runtime = previous
 	os.WriteFile(input, append(mustRead(t, input), '\n'), 0600)
 	if _, e = Run(ctx, s, c, "reconcile-bootstrap-file", input, output); e == nil {
 		t.Fatal("changed request bytes accepted")
