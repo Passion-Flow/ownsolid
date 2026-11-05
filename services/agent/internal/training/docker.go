@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/inference"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 )
 
 type Docker struct {
@@ -189,7 +189,6 @@ type HostConfig struct {
 	GroupAdd        []string
 	ExtraHosts      []string
 	Links           []string
-	Dns             []string
 }
 type ContainerConfig struct {
 	Image        string
