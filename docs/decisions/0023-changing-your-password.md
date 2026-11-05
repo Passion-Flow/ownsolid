@@ -36,6 +36,9 @@ The account page shows the sign-in providers through the existing binding API. L
 unlinking keep that API's password and reason requirements. The page fills in the reason, so
 the person only confirms a password, and they can change the text recorded in the audit log.
 
+A finished link leaves the browser in a session started through that provider, so unlinking
+it from that session ends the session and the person signs in again, as the dialog says.
+
 ## Consequences
 
 - A request already in flight with the old cookie can come back as signed out just after a

@@ -152,6 +152,8 @@ export interface ControlPlane {
   ssoBindings: (typeof giteaBinding)[];
   /** Fails the linked provider list with this problem while set. */
   ssoBindingsProblem: ScriptedProblem | null;
+  /** This session started through the provider, so unlinking it ends the session. */
+  sessionFromProvider: boolean;
   /** Answers the next unlink with this failure instead of unlinking. */
   nextUnlink: ScriptedProblem | null;
   /** Idempotency-Key of each unlink request, in order. */
@@ -228,6 +230,7 @@ export async function mockControlPlane(
     nextPasswordChange: null,
     ssoBindings: [],
     ssoBindingsProblem: null,
+    sessionFromProvider: false,
     nextUnlink: null,
     unlinkKeys: [],
     ssoStarts: [],
@@ -377,11 +380,12 @@ export async function mockControlPlane(
       expires_at: '2026-11-05T00:00:00Z',
     });
   });
-  await page.route('**/api/v1/account/sso/bindings', (route) =>
-    state.ssoBindingsProblem
+  await page.route('**/api/v1/account/sso/bindings', (route) => {
+    if (!state.signedIn) return problem(route, { status: 401, code: 'AUTH_SESSION_EXPIRED' });
+    return state.ssoBindingsProblem
       ? problem(route, state.ssoBindingsProblem)
-      : data(route, { items: state.ssoBindings }),
-  );
+      : data(route, { items: state.ssoBindings });
+  });
   await page.route('**/api/v1/account/sso/bindings/*/unlink', (route) => {
     const request = route.request();
     if (request.headers()['x-csrf-token'] !== 'csrf-token') {
@@ -405,6 +409,7 @@ export async function mockControlPlane(
     }
     const unlinked = { ...binding, active: false, revision: binding.revision + 1 };
     state.ssoBindings = state.ssoBindings.map((item) => (item.id === id ? unlinked : item));
+    if (state.sessionFromProvider) state.signedIn = false;
     return data(route, unlinked);
   });
 

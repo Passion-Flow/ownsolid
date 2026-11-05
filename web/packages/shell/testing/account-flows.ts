@@ -257,6 +257,21 @@ export function accountFlows(audience: ControlPlane['audience']): void {
     await expect(page.getByRole('button', { name: 'Unlink Company Gitea' })).toHaveCount(0);
   });
 
+  test('sends the person to sign in when unlinking ended their session', async ({ page }) => {
+    control.ssoBindings = [giteaBinding];
+    control.sessionFromProvider = true;
+    await page.goto('/account');
+    await page.getByRole('button', { name: 'Unlink Company Gitea' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Unlink Company Gitea' });
+    await dialog.getByLabel('Current password').fill(account.password);
+    await dialog.getByRole('button', { name: 'Unlink' }).click();
+    await expect(page).toHaveURL(/\/sign-in/);
+    await page.getByLabel('Email').fill(account.email);
+    await page.getByLabel('Password').fill(account.password);
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Account', level: 1 })).toBeVisible();
+  });
+
   test('requires a reason and closes without changing anything', async ({ page }) => {
     control.ssoBindings = [giteaBinding];
     await page.goto('/account');
