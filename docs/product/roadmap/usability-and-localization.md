@@ -41,6 +41,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [ ] UX-118 Theme and density follow the user across browsers through `/api/v1/preferences` (P1)
 - [ ] UX-119 Account page: profile, password change and linked sign-in providers (P1)
 - [ ] UX-120 Mail delivery status for administrators, so a failed invitation or reset email can be seen and resent (P1)
+- [ ] UX-121 Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1)
 
 ## P2 Fleet operations
 
