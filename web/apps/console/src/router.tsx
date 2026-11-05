@@ -1,6 +1,7 @@
 import {
   WelcomePage,
   authenticatedRoute,
+  createAccountRoute,
   createApplication,
   createFrameRoute,
   publicRoutes,
@@ -23,9 +24,11 @@ const mailRoute = createRoute({
   component: lazyRouteComponent(() => import('./mail-deliveries-page.tsx'), 'MailDeliveriesPage'),
 });
 
+const accountRoute = createAccountRoute(frameRoute);
+
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
-  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute, mailRoute])]),
+  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute, accountRoute, mailRoute])]),
 ]);
 
 /** The console application: its router and query client. */

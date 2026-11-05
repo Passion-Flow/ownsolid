@@ -4,6 +4,7 @@ import { loadRuntimeConfig, type Audience, type RuntimeConfig } from '@ownsolid/
 import type { QueryClient } from '@tanstack/react-query';
 import { queryOptions } from '@tanstack/react-query';
 import {
+  type AnyRoute,
   Outlet,
   createRootRouteWithContext,
   createRoute,
@@ -15,7 +16,7 @@ import type { ReactNode } from 'react';
 import type { AppFrameProps } from './app-frame.tsx';
 import { preloading } from './lazy-route.ts';
 import { usePageFocus } from './page-focus.ts';
-import { safeRedirect, signInPath } from './redirect.ts';
+import { accountPath, safeRedirect, signInPath } from './redirect.ts';
 import { sessionQuery } from './session.ts';
 import { parseSsoResult } from './sso-search.ts';
 import { NotFoundPage, RouteErrorPage } from './status-pages.tsx';
@@ -37,6 +38,9 @@ const AppFrame = lazyRouteComponent(() => import('./app-frame.tsx'), 'AppFrame')
 
 /** The signed-in start page. Its code loads with the route that shows it. */
 export const WelcomePage = lazyRouteComponent(() => import('./welcome-page.tsx'), 'WelcomePage');
+
+/** The account page. Its code loads with the route that shows it. */
+const AccountPage = lazyRouteComponent(() => import('./account-page.tsx'), 'AccountPage');
 
 /** Router context every application provides. */
 export interface AppContext {
@@ -148,7 +152,7 @@ const linkResultRoute = createRoute({
   path: '/account/sso-result',
   validateSearch: parseSsoResult,
   component: preloading(function LinkResultRoute() {
-    return <SsoResultPage search={linkResultRoute.useSearch()} />;
+    return <SsoResultPage linking search={linkResultRoute.useSearch()} />;
   }, SsoResultPage),
 });
 
@@ -174,6 +178,15 @@ export const authenticatedRoute = createRoute({
   },
   component: Outlet,
 });
+
+/** The `/account` page every application adds under its frame route. */
+export function createAccountRoute(frameRoute: AnyRoute) {
+  return createRoute({
+    getParentRoute: () => frameRoute,
+    path: accountPath,
+    component: AccountPage,
+  });
+}
 
 /**
  * The signed-in frame as a layout route under {@link authenticatedRoute}; an

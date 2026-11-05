@@ -1,6 +1,7 @@
 import {
   WelcomePage,
   authenticatedRoute,
+  createAccountRoute,
   createApplication,
   createFrameRoute,
   publicRoutes,
@@ -17,9 +18,11 @@ const homeRoute = createRoute({
   component: WelcomePage,
 });
 
+const accountRoute = createAccountRoute(frameRoute);
+
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
-  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute])]),
+  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute, accountRoute])]),
 ]);
 
 /** The portal application: its router and query client. */

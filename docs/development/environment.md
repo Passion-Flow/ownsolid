@@ -134,6 +134,15 @@ The spec signs in once with a wrong password, so a few runs in a row against the
 account trip the installation's sign-in rate limit; the failure then says how many
 seconds to wait.
 
+The spec also renames the account, changes its password and changes it back; a failure in
+between leaves the changed password on the account. It checks the page shows no providers
+unless `OWNSOLID_LIVE_PROVIDER_NAME` is set. With that, `OWNSOLID_LIVE_PROVIDER_ORIGIN`,
+`OWNSOLID_LIVE_PROVIDER_USER` and `OWNSOLID_LIVE_PROVIDER_PASSWORD_FILE` it links and unlinks a
+real Gitea. `ownsolid-install` cannot enable single sign-on yet (IAM-102), so that run adds
+an `sso` section to the installation's `control.yaml` by hand and restarts control; `apply`
+removes it again. Add the provider's public key to `OWNSOLID_LIVE_SPKI` (comma-separated) and
+its host to `OWNSOLID_LIVE_HOST_RULES`.
+
 The tunnel can drop to about 20 KB/s, and pages then time out. Run the spec on
 `ownsolid-cpu` instead, with `--network host` in a `node` container that installs
 `@playwright/test` and `playwright install --with-deps chromium`. The server cannot pull

@@ -139,6 +139,26 @@ export interface paths {
         patch: operations["updateMe"];
         trace?: never;
     };
+    "/api/v1/me/password-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change the current password and keep only this session
+         * @description Checks the current password, applies the password policy and replaces the password. Every session of the account ends and unused reset links stop working; the response sets a new session cookie for this browser, so CSRF tokens must be fetched again. The account receives a password-changed email. Attempts share the sign-in rate limits per account and per address. There is no Idempotency-Key: a retry after a lost response finds the old session ended and signs in with the new password.
+         */
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -340,7 +360,7 @@ export interface components {
             title: string;
             status: number;
             /** @enum {string} */
-            code: "VALIDATION_FAILED" | "INVALID_CURSOR" | "TOKEN_UNUSABLE" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "ACCESS_DENIED" | "CSRF_INVALID" | "ORIGIN_REJECTED" | "RESOURCE_NOT_FOUND" | "ACCOUNT_EXISTS" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "VERSION_CONFLICT" | "IDEMPOTENCY_CONFLICT" | "PROTECTED_ACCOUNT" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "MISDIRECTED_REQUEST" | "PASSWORD_POLICY_VIOLATION" | "PASSWORD_BLOCKED" | "RATE_LIMITED" | "INTERNAL_ERROR" | "STORAGE_UNAVAILABLE" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "AUTH_CAPACITY_EXCEEDED" | "SERVICE_NOT_READY" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "LICENSE_CONFIGURATION_REQUIRED" | "MAIL_DELIVERY_NOT_RESENDABLE" | "MAIL_RESEND_UNSUPPORTED";
+            code: "VALIDATION_FAILED" | "INVALID_CURSOR" | "TOKEN_UNUSABLE" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "ACCESS_DENIED" | "CSRF_INVALID" | "ORIGIN_REJECTED" | "RESOURCE_NOT_FOUND" | "ACCOUNT_EXISTS" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "VERSION_CONFLICT" | "IDEMPOTENCY_CONFLICT" | "PROTECTED_ACCOUNT" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "MISDIRECTED_REQUEST" | "PASSWORD_POLICY_VIOLATION" | "PASSWORD_BLOCKED" | "PASSWORD_CURRENT_INVALID" | "PASSWORD_UNCHANGED" | "RATE_LIMITED" | "INTERNAL_ERROR" | "STORAGE_UNAVAILABLE" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "AUTH_CAPACITY_EXCEEDED" | "SERVICE_NOT_READY" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "LICENSE_CONFIGURATION_REQUIRED" | "MAIL_DELIVERY_NOT_RESENDABLE" | "MAIL_RESEND_UNSUPPORTED";
             /** Format: uuid */
             request_id: string;
             detail?: string;
@@ -460,6 +480,12 @@ export interface components {
             display_name: string;
             locale: string;
             version: number;
+        };
+        ChangePasswordRequest: {
+            /** @description The password the account signs in with now, as typed. Never trim or truncate. */
+            current_password: string;
+            /** @description NFC-normalize before semantic validation: 15-128 code points and <=512 UTF-8 bytes, local blocklist, different from the current password. Never trim or truncate. */
+            new_password: string;
         };
         UserResponse: {
             data: components["schemas"]["User"];
@@ -909,6 +935,44 @@ export interface operations {
             401: components["responses"]["Problem"];
             403: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+            default: components["responses"]["Problem"];
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Signed, audience/session/context-bound token from getCsrf. */
+                "X-CSRF-Token": components["parameters"]["Csrf"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description The password changed; this browser holds the account's only session. */
+            200: {
+                headers: {
+                    /** @description Server-generated correlation UUID. */
+                    "X-Request-ID"?: string;
+                    /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
             default: components["responses"]["Problem"];

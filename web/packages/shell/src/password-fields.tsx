@@ -11,6 +11,8 @@ export interface NewPassword {
   /** Shows errors from now on, and returns true when the two entries can be sent. */
   validate: () => boolean;
   showErrors: boolean;
+  /** Empties both entries and hides errors, for a form that stays on the page. */
+  reset: () => void;
 }
 
 /** Holds a new password. Policy is the server's; this only catches empty and mistyped entries. */
@@ -27,6 +29,11 @@ export function useNewPassword(): NewPassword {
     validate: () => {
       setShowErrors(true);
       return password !== '' && password === confirmation;
+    },
+    reset: () => {
+      setPassword('');
+      setConfirmation('');
+      setShowErrors(false);
     },
   };
 }

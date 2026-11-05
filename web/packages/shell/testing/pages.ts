@@ -3,7 +3,13 @@
 // fail when a route has no state here.
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import type { Page } from '@playwright/test';
-import { account, linkToken, type ControlPlane } from './control-plane.ts';
+import {
+  account,
+  giteaBinding,
+  giteaConnector,
+  linkToken,
+  type ControlPlane,
+} from './control-plane.ts';
 
 /** One state of one page: how to reach it, and the route path it belongs to. */
 export interface PageState {
@@ -21,6 +27,12 @@ async function signedIn(page: Page, control: ControlPlane): Promise<void> {
   control.signedIn = true;
   await page.goto('/');
   await page.getByRole('heading', { name: 'Welcome, Ada Lovelace' }).waitFor();
+}
+
+async function openAccount(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/account');
+  await page.getByRole('heading', { name: 'Account', level: 1 }).waitFor();
 }
 
 /** The pages the shell defines, in every state worth checking on its own. */
@@ -171,6 +183,92 @@ export const shellPages: readonly PageState[] = [
     open: async (page) => {
       await page.goto('/account/sso-result?result=linked');
       await page.getByRole('link').first().waitFor();
+    },
+  },
+  {
+    name: 'account with no providers',
+    path: '/account',
+    open: async (page, control) => {
+      await openAccount(page, control);
+      await page.getByText('No providers to link').waitFor();
+    },
+  },
+  {
+    name: 'account with linked and available providers',
+    path: '/account',
+    open: async (page, control) => {
+      control.ssoBindings = [giteaBinding];
+      control.ssoConnectors = [
+        giteaConnector,
+        { ...giteaConnector, id: '6f1c7a1e-0000-4000-8000-00000000000a', name: 'Lab Gitea' },
+      ];
+      await openAccount(page, control);
+      await page.getByRole('button', { name: 'Unlink Company Gitea' }).waitFor();
+      await page.getByRole('button', { name: 'Link Lab Gitea' }).waitFor();
+    },
+  },
+  {
+    name: 'account with providers unavailable',
+    path: '/account',
+    open: async (page, control) => {
+      control.ssoBindingsProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await openAccount(page, control);
+      await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
+    name: 'account with a refused profile save',
+    path: '/account',
+    open: async (page, control) => {
+      control.nextProfileSave = { status: 409, code: 'VERSION_CONFLICT' };
+      await openAccount(page, control);
+      await page.getByLabel('Display name').fill('Ada King');
+      await page.getByRole('button', { name: 'Save' }).click();
+      await page.getByRole('alert').waitFor();
+    },
+  },
+  {
+    name: 'account with a wrong current password',
+    path: '/account',
+    open: async (page, control) => {
+      await openAccount(page, control);
+      await page.getByLabel('Current password').fill('wrong password');
+      await page.getByLabel('New password').fill('a sufficiently long password');
+      await page.getByLabel('Confirm the password').fill('a sufficiently long password');
+      await page.getByRole('button', { name: 'Change password' }).click();
+      await page.getByText('The current password is not correct').waitFor();
+    },
+  },
+  {
+    name: 'account with empty password fields',
+    path: '/account',
+    open: async (page, control) => {
+      await openAccount(page, control);
+      await page.getByRole('button', { name: 'Change password' }).click();
+      await page.getByText('Enter your current password.').waitFor();
+    },
+  },
+  {
+    name: 'account link dialog',
+    path: '/account',
+    open: async (page, control) => {
+      control.ssoConnectors = [giteaConnector];
+      await openAccount(page, control);
+      await page.getByRole('button', { name: 'Link Company Gitea' }).click();
+      await page.getByRole('dialog', { name: 'Link Company Gitea' }).waitFor();
+    },
+  },
+  {
+    name: 'account unlink dialog with a wrong password',
+    path: '/account',
+    open: async (page, control) => {
+      control.ssoBindings = [giteaBinding];
+      await openAccount(page, control);
+      await page.getByRole('button', { name: 'Unlink Company Gitea' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Unlink Company Gitea' });
+      await dialog.getByLabel('Current password').fill('wrong password');
+      await dialog.getByRole('button', { name: 'Unlink' }).click();
+      await dialog.getByText('The password is not correct').waitFor();
     },
   },
   { name: 'start page', path: '/', open: signedIn },

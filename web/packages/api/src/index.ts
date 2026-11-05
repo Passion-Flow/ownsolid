@@ -69,6 +69,15 @@ export {
   type WorkspaceSummary,
 } from './platform.ts';
 export {
+  changePassword,
+  listSsoBindings,
+  startSsoLink,
+  unlinkSsoBinding,
+  updateProfile,
+  type ProfileChange,
+  type SsoBinding,
+} from './account.ts';
+export {
   listMailDeliveries,
   resendMailDelivery,
   type MailDelivery,

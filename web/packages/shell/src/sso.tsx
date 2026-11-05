@@ -5,13 +5,13 @@ import { Button, Notice, ProblemNotice } from '@ownsolid/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { AuthLayout, FailureNotice } from './auth-layout.tsx';
-import { signInPath } from './redirect.ts';
+import { accountPath, signInPath } from './redirect.ts';
 import type { SsoResultSearch } from './sso-search.ts';
 
 const problemCode = /^[A-Z][A-Z0-9_]{0,99}$/;
 
 /** Sends the browser to a provider; an address that is not http(s) is refused. */
-function leaveFor(address: string): void {
+export function leaveFor(address: string): void {
   const url = new URL(address);
   if (url.protocol !== 'https:' && url.protocol !== 'http:') {
     throw new ApiProblem('RESPONSE_INVALID');
@@ -51,10 +51,23 @@ export function SsoButtons() {
   );
 }
 
+/** Props for {@link SsoResultPage}. */
+export interface SsoResultPageProps {
+  search: SsoResultSearch;
+  /** The round trip linked an account, so it returns to the account page. */
+  linking?: boolean | undefined;
+}
+
 /** `/login/sso-result` and `/account/sso-result`: the outcome of a provider round trip. */
-export function SsoResultPage({ search }: { search: SsoResultSearch }) {
+export function SsoResultPage({ search, linking = false }: SsoResultPageProps) {
   const { t } = useI18n();
   const code = search.error ?? '';
+  let target = code === '' ? '/' : signInPath;
+  let label = code === '' ? t('status.notFound.home') : t('password.backToSignIn');
+  if (linking) {
+    target = accountPath;
+    label = t('account.backToAccount');
+  }
   return (
     <AuthLayout title={t('sso.result.title')}>
       {code === '' ? (
@@ -65,9 +78,7 @@ export function SsoResultPage({ search }: { search: SsoResultSearch }) {
         />
       )}
       <Button asChild className="mt-4 w-full">
-        <Link to={code === '' ? '/' : signInPath}>
-          {code === '' ? t('status.notFound.home') : t('password.backToSignIn')}
-        </Link>
+        <Link to={target}>{label}</Link>
       </Button>
     </AuthLayout>
   );

@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "M01 Account Lifecycle API",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Canonical implemented account HTTP contract. Relative paths resolve on the configured portal/admin HTTPS origin; x-audiences is normative. Runtime behavior, local evidence and independent target qualification are recorded in the English milestone and execution documentation."
   },
   "servers": [
@@ -746,6 +746,118 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateMeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/password-changes": {
+      "post": {
+        "operationId": "changePassword",
+        "summary": "Change the current password and keep only this session",
+        "description": "Checks the current password, applies the password policy and replaces the password. Every session of the account ends and unused reset links stop working; the response sets a new session cookie for this browser, so CSRF tokens must be fetched again. The account receives a password-changed email. Attempts share the sign-in rate limits per account and per address. There is no Idempotency-Key: a retry after a lost response finds the old session ended and signs in with the new password.",
+        "tags": [
+          "Identity"
+        ],
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "PASSWORD_CURRENT_INVALID"
+          ],
+          "422": [
+            "PASSWORD_POLICY_VIOLATION",
+            "PASSWORD_BLOCKED",
+            "PASSWORD_UNCHANGED"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "AUTH_CAPACITY_EXCEEDED"
+          ]
+        },
+        "security": [
+          {
+            "PortalSession": []
+          },
+          {
+            "AdminSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The password changed; this browser holds the account's only session.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Server-generated correlation UUID.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "Set-Cookie": {
+                "description": "May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
               }
             }
           }
@@ -1954,6 +2066,8 @@
               "MISDIRECTED_REQUEST",
               "PASSWORD_POLICY_VIOLATION",
               "PASSWORD_BLOCKED",
+              "PASSWORD_CURRENT_INVALID",
+              "PASSWORD_UNCHANGED",
               "RATE_LIMITED",
               "INTERNAL_ERROR",
               "STORAGE_UNAVAILABLE",
@@ -2466,6 +2580,30 @@
           "display_name",
           "locale",
           "version"
+        ]
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "writeOnly": true,
+            "description": "The password the account signs in with now, as typed. Never trim or truncate."
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "writeOnly": true,
+            "description": "NFC-normalize before semantic validation: 15-128 code points and <=512 UTF-8 bytes, local blocklist, different from the current password. Never trim or truncate."
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
         ]
       },
       "UserResponse": {
