@@ -1,20 +1,18 @@
 package identity
 
 import (
-	"bytes"
 	"context"
-	"crypto/sha256"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/mail"
+	"github.com/google/uuid"
 )
 
 type Invitation struct {
@@ -140,152 +138,18 @@ func (s *Service) Invite(ctx context.Context, a Auth, id, operation, key, email,
 	ctx, cancel := s.sessionContext(ctx)
 	defer cancel()
 	payload, _ := json.Marshal([]any{id, email, locale, version})
-	hash := sha256.Sum256(payload)
 	var result Invitation
 	e = store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
 		if e := s.RecheckWithin(ctx, tx, a); e != nil {
 			return e
 		}
-		if _, e := tx.Exec(ctx, identitySQL(tx, "DELETE FROM idempotency_records WHERE actor_user_id=$1 AND operation_id=$2 AND idempotency_key=$3 AND expires_at<=clock_timestamp()", "DELETE FROM idempotency_records WHERE actor_user_id=? AND operation_id=? AND idempotency_key=? AND expires_at<=UTC_TIMESTAMP(6)", `DELETE FROM IDEMPOTENCY_RECORDS WHERE ACTOR_USER_ID=? AND OPERATION_ID=? AND IDEMPOTENCY_KEY=? AND EXPIRES_AT<=CURRENT_TIMESTAMP(6)`, a.Me.User.ID, operation, key)); e != nil {
-			return e
-		}
-		var saved, body []byte
-		e := tx.QueryRow(ctx, identitySQL(tx, "SELECT request_hash,response_body FROM idempotency_records WHERE actor_user_id=$1 AND operation_id=$2 AND idempotency_key=$3", "SELECT request_hash,response_body FROM idempotency_records WHERE actor_user_id=? AND operation_id=? AND idempotency_key=?", `SELECT REQUEST_HASH,RESPONSE_BODY FROM IDEMPOTENCY_RECORDS WHERE ACTOR_USER_ID=? AND OPERATION_ID=? AND IDEMPOTENCY_KEY=?`, a.Me.User.ID, operation, key)).Scan(&saved, &body)
-		if e == nil {
-			if !bytes.Equal(saved, hash[:]) {
-				return failure("IDEMPOTENCY_CONFLICT")
-			}
-			return json.Unmarshal(body, &result)
-		}
-		if !errors.Is(e, sql.ErrNoRows) {
-			return e
-		}
-		if _, e = s.AdmitWithin(ctx, tx, Limit{Purpose: "admin.invite", Identifier: a.Me.User.ID, Count: s.Config.Policy().Rates.AdminInviteCount, Window: config.Seconds(s.Config.Policy().Rates.AdminInviteWindowSeconds)}); e != nil {
-			return e
-		}
-		var tenant, workspace string
+		status := 200
 		if operation == createInvitation {
-			e = tx.QueryRow(ctx, identitySQL(tx, "SELECT tenant_id::text,default_workspace_id::text FROM installation_state WHERE id=1 AND bootstrap_complete", "SELECT tenant_id,default_workspace_id FROM installation_state WHERE id=1 AND bootstrap_complete=1", `SELECT TENANT_ID,DEFAULT_WORKSPACE_ID FROM INSTALLATION_STATE WHERE ID=1 AND BOOTSTRAP_COMPLETE=1`)).Scan(&tenant, &workspace)
-			if errors.Is(e, sql.ErrNoRows) {
-				return failure("SERVICE_NOT_READY")
-			}
-			if e != nil {
-				return e
-			}
-		} else {
-			tenant, workspace, e = s.invitationLocation(ctx, tx, id)
-			if e != nil {
-				return e
-			}
+			status = 201
 		}
-		if e = s.invitationScope(ctx, tx, tenant, workspace, true, "RESOURCE_NOT_FOUND"); e != nil {
-			return e
-		}
-		generation, action, httpStatus := 1, "invitation.created", 201
-		if operation == resendInvitation {
-			var locked string
-			e = tx.QueryRow(ctx, identitySQL(tx, "SELECT id::text FROM invitations WHERE id=$1 FOR UPDATE", "SELECT id FROM invitations WHERE id=? FOR UPDATE", `SELECT ID FROM INVITATIONS WHERE ID=? FOR UPDATE`, id)).Scan(&locked)
-			if e != nil {
-				return e
-			}
-			i, e := s.invitation(ctx, tx, id)
-			if e != nil {
-				return e
-			}
-			if i.Version != version {
-				return failure("VERSION_CONFLICT")
-			}
-			if i.Status != "pending" && i.Status != "expired" {
-				return failure("INVITATION_STATE_CONFLICT")
-			}
-			email, locale, action, httpStatus = i.Email, i.Locale, "invitation.resent", 200
-			if e = tx.QueryRow(ctx, identitySQL(tx, "SELECT token_generation+1 FROM invitations WHERE id=$1", "SELECT token_generation+1 FROM invitations WHERE id=?", `SELECT TOKEN_GENERATION+1 FROM INVITATIONS WHERE ID=?`, id)).Scan(&generation); e != nil {
-				return e
-			}
-		} else {
-			var current bool
-			if e = tx.QueryRow(ctx, identitySQL(tx, "SELECT default_workspace_id=$1 FROM installation_state WHERE id=1", "SELECT default_workspace_id=? FROM installation_state WHERE id=1", `SELECT CASE WHEN DEFAULT_WORKSPACE_ID=? THEN 1 ELSE 0 END FROM INSTALLATION_STATE WHERE ID=1`, workspace)).Scan(&current); e != nil {
-				return e
-			}
-			if !current {
-				return failure("SERVICE_NOT_READY")
-			}
-		}
-		var exists bool
-		if e = tx.QueryRow(ctx, identitySQL(tx, "SELECT EXISTS(SELECT 1 FROM users WHERE email_canonical=$1)", "SELECT EXISTS(SELECT 1 FROM users WHERE email_canonical=?)", `SELECT CASE WHEN EXISTS(SELECT 1 FROM USERS WHERE EMAIL_CANONICAL=?) THEN 1 ELSE 0 END FROM DUAL`, email)).Scan(&exists); e != nil {
-			return e
-		}
-		if exists {
-			return failure("ACCOUNT_EXISTS")
-		}
-		rows, e := tx.Query(ctx, identitySQL(tx, `SELECT id::text FROM invitations WHERE email_canonical=$1 AND status='pending' AND expires_at<=clock_timestamp() AND id::text<>$2 AND tenant_id=$3 ORDER BY id FOR UPDATE`, `SELECT id FROM invitations WHERE email_canonical=? AND status='pending' AND expires_at<=UTC_TIMESTAMP(6) AND id<>? AND tenant_id=? ORDER BY id FOR UPDATE`, `SELECT ID FROM INVITATIONS WHERE EMAIL_CANONICAL=? AND STATUS='pending' AND EXPIRES_AT<=CURRENT_TIMESTAMP(6) AND ID<>COALESCE(?, '-') AND TENANT_ID=? ORDER BY ID FOR UPDATE`, email, id, tenant))
-		if e != nil {
-			return e
-		}
-		var expired []string
-		for rows.Next() {
-			var x string
-			if e = rows.Scan(&x); e != nil {
-				rows.Close()
-				return e
-			}
-			expired = append(expired, x)
-		}
-		e = rows.Err()
-		rows.Close()
-		if e != nil {
-			return e
-		}
-		for _, x := range expired {
-			if _, e = tx.Exec(ctx, identitySQL(tx, "UPDATE invitations SET status='expired',token_hash=NULL,version=version+1,updated_at=clock_timestamp() WHERE id=$1", "UPDATE invitations SET status='expired',token_hash=NULL,version=version+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?", `UPDATE INVITATIONS SET STATUS='expired',TOKEN_HASH=NULL,VERSION=VERSION+1,UPDATED_AT=CURRENT_TIMESTAMP(6) WHERE ID=?`, x)); e != nil {
-				return e
-			}
-			if e = mail.CancelInvitationWithin(ctx, tx, x); e != nil {
-				return e
-			}
-			if e = audit.WriteWithin(ctx, tx, a.Me.User.ID, "", "admin", "invitation.expired", "success", "invitation", x, "", request); e != nil {
-				return e
-			}
-		}
-		if e = tx.QueryRow(ctx, identitySQL(tx, "SELECT EXISTS(SELECT 1 FROM invitations WHERE email_canonical=$1 AND status='pending' AND id::text<>$2)", "SELECT EXISTS(SELECT 1 FROM invitations WHERE email_canonical=? AND status='pending' AND id<>?)", `SELECT CASE WHEN EXISTS(SELECT 1 FROM INVITATIONS WHERE EMAIL_CANONICAL=? AND STATUS='pending' AND ID<>COALESCE(?, '-')) THEN 1 ELSE 0 END FROM DUAL`, email, id)).Scan(&exists); e != nil {
-			return e
-		}
-		if exists {
-			return failure("INVITATION_EXISTS")
-		}
-		token := security.Token()
-		if operation == createInvitation {
-			id = uuid.NewString()
-			_, e = tx.Exec(ctx, identitySQL(tx, `INSERT INTO invitations(id,tenant_id,workspace_id,email_canonical,locale,status,token_hash,created_by,created_at,updated_at,expires_at) VALUES($1,$2,$3,$4,$5,'pending',$6,$7,clock_timestamp(),clock_timestamp(),clock_timestamp()+$8::bigint*interval '1 second')`, `INSERT INTO invitations(id,tenant_id,workspace_id,email_canonical,locale,status,token_hash,created_by,created_at,updated_at,expires_at) VALUES(?,?,?,?,?,'pending',?,?,UTC_TIMESTAMP(6),UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)))`, `INSERT INTO INVITATIONS(ID,TENANT_ID,WORKSPACE_ID,EMAIL_CANONICAL,LOCALE,STATUS,TOKEN_HASH,CREATED_BY,CREATED_AT,UPDATED_AT,EXPIRES_AT) VALUES(?,?,?,?,?,'pending',?,?,CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6)+NUMTODSINTERVAL(?,'SECOND'))`, id, tenant, workspace, email, locale, security.Digest(token), a.Me.User.ID, s.Config.Policy().Identity.InvitationTTLSeconds))
-		} else {
-			if e = mail.CancelInvitationWithin(ctx, tx, id); e != nil {
-				return e
-			}
-			_, e = tx.Exec(ctx, identitySQL(tx, `UPDATE invitations SET status='pending',token_hash=$1,token_generation=$2,version=version+1,updated_at=clock_timestamp(),expires_at=clock_timestamp()+$3::bigint*interval '1 second' WHERE id=$4`, `UPDATE invitations SET status='pending',token_hash=?,token_generation=?,version=version+1,updated_at=UTC_TIMESTAMP(6),expires_at=TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)) WHERE id=?`, `UPDATE INVITATIONS SET STATUS='pending',TOKEN_HASH=?,TOKEN_GENERATION=?,VERSION=VERSION+1,UPDATED_AT=CURRENT_TIMESTAMP(6),EXPIRES_AT=CURRENT_TIMESTAMP(6)+NUMTODSINTERVAL(?,'SECOND') WHERE ID=?`, security.Digest(token), generation, s.Config.Policy().Identity.InvitationTTLSeconds, id))
-		}
-		if e != nil {
-			var se *transaction.Error
-			if errors.As(e, &se) && se.Kind == transaction.UniqueConflict {
-				return failure("INVITATION_EXISTS")
-			}
-			return e
-		}
-		if _, e = s.Mail.EnqueueWithin(ctx, tx, mail.Input{Purpose: "invitation", Recipient: email, Locale: locale, InvitationID: id, Generation: generation, Token: token, Audience: "portal"}); e != nil {
-			return e
-		}
-		if e = audit.WriteWithin(ctx, tx, a.Me.User.ID, "", "admin", action, "success", "invitation", id, "", request); e != nil {
-			return e
-		}
-		result, e = s.invitation(ctx, tx, id)
-		if e != nil {
-			return e
-		}
-		body, e = json.Marshal(result)
-		if e != nil {
-			return e
-		}
-		_, e = tx.Exec(ctx, identitySQL(tx, `INSERT INTO idempotency_records(actor_user_id,operation_id,idempotency_key,request_hash,response_status,response_body,created_at,expires_at) VALUES($1,$2,$3,$4,$5,$6,clock_timestamp(),clock_timestamp()+$7::bigint*interval '1 second')`, `INSERT INTO idempotency_records(actor_user_id,operation_id,idempotency_key,request_hash,response_status,response_body,created_at,expires_at) VALUES(?,?,?,?,?,?,UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)))`, `INSERT INTO IDEMPOTENCY_RECORDS(ACTOR_USER_ID,OPERATION_ID,IDEMPOTENCY_KEY,REQUEST_HASH,RESPONSE_STATUS,RESPONSE_BODY,CREATED_AT,EXPIRES_AT) VALUES(?,?,?,?,?,?,CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6)+NUMTODSINTERVAL(?,'SECOND'))`, a.Me.User.ID, operation, key, hash[:], httpStatus, identityJSON(tx, body), s.Config.Policy().Identity.IdempotencySeconds))
-		return e
+		return s.idempotentWithin(ctx, tx, a.Me.User.ID, operation, key, payload, status, &result, func() error {
+			return s.inviteWithin(ctx, tx, a, operation, id, email, locale, version, request, &result)
+		})
 	})
 	if e != nil {
 		return Invitation{}, sessionError(e)
@@ -421,4 +285,128 @@ func (s *Service) Register(ctx context.Context, token, name, password, request s
 		return audit.WriteWithin(ctx, tx, "", user, "portal", "invitation.accepted", "success", "invitation", id, "", request)
 	})
 	return sessionError(e)
+}
+
+// inviteWithin creates an invitation or issues a new link for an existing one. It runs
+// inside the caller's transaction, after the actor recheck and the idempotency lookup.
+func (s *Service) inviteWithin(ctx context.Context, tx transaction.Executor, a Auth, operation, id, email, locale string, version int64, request string, result *Invitation) error {
+	var e error
+	if _, e := s.AdmitWithin(ctx, tx, Limit{Purpose: "admin.invite", Identifier: a.Me.User.ID, Count: s.Config.Policy().Rates.AdminInviteCount, Window: config.Seconds(s.Config.Policy().Rates.AdminInviteWindowSeconds)}); e != nil {
+		return e
+	}
+	var tenant, workspace string
+	if operation == createInvitation {
+		e = tx.QueryRow(ctx, identitySQL(tx, "SELECT tenant_id::text,default_workspace_id::text FROM installation_state WHERE id=1 AND bootstrap_complete", "SELECT tenant_id,default_workspace_id FROM installation_state WHERE id=1 AND bootstrap_complete=1", `SELECT TENANT_ID,DEFAULT_WORKSPACE_ID FROM INSTALLATION_STATE WHERE ID=1 AND BOOTSTRAP_COMPLETE=1`)).Scan(&tenant, &workspace)
+		if errors.Is(e, sql.ErrNoRows) {
+			return failure("SERVICE_NOT_READY")
+		}
+		if e != nil {
+			return e
+		}
+	} else {
+		tenant, workspace, e = s.invitationLocation(ctx, tx, id)
+		if e != nil {
+			return e
+		}
+	}
+	if e = s.invitationScope(ctx, tx, tenant, workspace, true, "RESOURCE_NOT_FOUND"); e != nil {
+		return e
+	}
+	generation, action := 1, "invitation.created"
+	if operation == resendInvitation {
+		var locked string
+		e = tx.QueryRow(ctx, identitySQL(tx, "SELECT id::text FROM invitations WHERE id=$1 FOR UPDATE", "SELECT id FROM invitations WHERE id=? FOR UPDATE", `SELECT ID FROM INVITATIONS WHERE ID=? FOR UPDATE`, id)).Scan(&locked)
+		if e != nil {
+			return e
+		}
+		i, e := s.invitation(ctx, tx, id)
+		if e != nil {
+			return e
+		}
+		if i.Version != version {
+			return failure("VERSION_CONFLICT")
+		}
+		if i.Status != "pending" && i.Status != "expired" {
+			return failure("INVITATION_STATE_CONFLICT")
+		}
+		email, locale, action = i.Email, i.Locale, "invitation.resent"
+		if e = tx.QueryRow(ctx, identitySQL(tx, "SELECT token_generation+1 FROM invitations WHERE id=$1", "SELECT token_generation+1 FROM invitations WHERE id=?", `SELECT TOKEN_GENERATION+1 FROM INVITATIONS WHERE ID=?`, id)).Scan(&generation); e != nil {
+			return e
+		}
+	} else {
+		var current bool
+		if e = tx.QueryRow(ctx, identitySQL(tx, "SELECT default_workspace_id=$1 FROM installation_state WHERE id=1", "SELECT default_workspace_id=? FROM installation_state WHERE id=1", `SELECT CASE WHEN DEFAULT_WORKSPACE_ID=? THEN 1 ELSE 0 END FROM INSTALLATION_STATE WHERE ID=1`, workspace)).Scan(&current); e != nil {
+			return e
+		}
+		if !current {
+			return failure("SERVICE_NOT_READY")
+		}
+	}
+	var exists bool
+	if e = tx.QueryRow(ctx, identitySQL(tx, "SELECT EXISTS(SELECT 1 FROM users WHERE email_canonical=$1)", "SELECT EXISTS(SELECT 1 FROM users WHERE email_canonical=?)", `SELECT CASE WHEN EXISTS(SELECT 1 FROM USERS WHERE EMAIL_CANONICAL=?) THEN 1 ELSE 0 END FROM DUAL`, email)).Scan(&exists); e != nil {
+		return e
+	}
+	if exists {
+		return failure("ACCOUNT_EXISTS")
+	}
+	rows, e := tx.Query(ctx, identitySQL(tx, `SELECT id::text FROM invitations WHERE email_canonical=$1 AND status='pending' AND expires_at<=clock_timestamp() AND id::text<>$2 AND tenant_id=$3 ORDER BY id FOR UPDATE`, `SELECT id FROM invitations WHERE email_canonical=? AND status='pending' AND expires_at<=UTC_TIMESTAMP(6) AND id<>? AND tenant_id=? ORDER BY id FOR UPDATE`, `SELECT ID FROM INVITATIONS WHERE EMAIL_CANONICAL=? AND STATUS='pending' AND EXPIRES_AT<=CURRENT_TIMESTAMP(6) AND ID<>COALESCE(?, '-') AND TENANT_ID=? ORDER BY ID FOR UPDATE`, email, id, tenant))
+	if e != nil {
+		return e
+	}
+	var expired []string
+	for rows.Next() {
+		var x string
+		if e = rows.Scan(&x); e != nil {
+			rows.Close()
+			return e
+		}
+		expired = append(expired, x)
+	}
+	e = rows.Err()
+	rows.Close()
+	if e != nil {
+		return e
+	}
+	for _, x := range expired {
+		if _, e = tx.Exec(ctx, identitySQL(tx, "UPDATE invitations SET status='expired',token_hash=NULL,version=version+1,updated_at=clock_timestamp() WHERE id=$1", "UPDATE invitations SET status='expired',token_hash=NULL,version=version+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?", `UPDATE INVITATIONS SET STATUS='expired',TOKEN_HASH=NULL,VERSION=VERSION+1,UPDATED_AT=CURRENT_TIMESTAMP(6) WHERE ID=?`, x)); e != nil {
+			return e
+		}
+		if e = mail.CancelInvitationWithin(ctx, tx, x); e != nil {
+			return e
+		}
+		if e = audit.WriteWithin(ctx, tx, a.Me.User.ID, "", "admin", "invitation.expired", "success", "invitation", x, "", request); e != nil {
+			return e
+		}
+	}
+	if e = tx.QueryRow(ctx, identitySQL(tx, "SELECT EXISTS(SELECT 1 FROM invitations WHERE email_canonical=$1 AND status='pending' AND id::text<>$2)", "SELECT EXISTS(SELECT 1 FROM invitations WHERE email_canonical=? AND status='pending' AND id<>?)", `SELECT CASE WHEN EXISTS(SELECT 1 FROM INVITATIONS WHERE EMAIL_CANONICAL=? AND STATUS='pending' AND ID<>COALESCE(?, '-')) THEN 1 ELSE 0 END FROM DUAL`, email, id)).Scan(&exists); e != nil {
+		return e
+	}
+	if exists {
+		return failure("INVITATION_EXISTS")
+	}
+	token := security.Token()
+	if operation == createInvitation {
+		id = uuid.NewString()
+		_, e = tx.Exec(ctx, identitySQL(tx, `INSERT INTO invitations(id,tenant_id,workspace_id,email_canonical,locale,status,token_hash,created_by,created_at,updated_at,expires_at) VALUES($1,$2,$3,$4,$5,'pending',$6,$7,clock_timestamp(),clock_timestamp(),clock_timestamp()+$8::bigint*interval '1 second')`, `INSERT INTO invitations(id,tenant_id,workspace_id,email_canonical,locale,status,token_hash,created_by,created_at,updated_at,expires_at) VALUES(?,?,?,?,?,'pending',?,?,UTC_TIMESTAMP(6),UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)))`, `INSERT INTO INVITATIONS(ID,TENANT_ID,WORKSPACE_ID,EMAIL_CANONICAL,LOCALE,STATUS,TOKEN_HASH,CREATED_BY,CREATED_AT,UPDATED_AT,EXPIRES_AT) VALUES(?,?,?,?,?,'pending',?,?,CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6)+NUMTODSINTERVAL(?,'SECOND'))`, id, tenant, workspace, email, locale, security.Digest(token), a.Me.User.ID, s.Config.Policy().Identity.InvitationTTLSeconds))
+	} else {
+		if e = mail.CancelInvitationWithin(ctx, tx, id); e != nil {
+			return e
+		}
+		_, e = tx.Exec(ctx, identitySQL(tx, `UPDATE invitations SET status='pending',token_hash=$1,token_generation=$2,version=version+1,updated_at=clock_timestamp(),expires_at=clock_timestamp()+$3::bigint*interval '1 second' WHERE id=$4`, `UPDATE invitations SET status='pending',token_hash=?,token_generation=?,version=version+1,updated_at=UTC_TIMESTAMP(6),expires_at=TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)) WHERE id=?`, `UPDATE INVITATIONS SET STATUS='pending',TOKEN_HASH=?,TOKEN_GENERATION=?,VERSION=VERSION+1,UPDATED_AT=CURRENT_TIMESTAMP(6),EXPIRES_AT=CURRENT_TIMESTAMP(6)+NUMTODSINTERVAL(?,'SECOND') WHERE ID=?`, security.Digest(token), generation, s.Config.Policy().Identity.InvitationTTLSeconds, id))
+	}
+	if e != nil {
+		var se *transaction.Error
+		if errors.As(e, &se) && se.Kind == transaction.UniqueConflict {
+			return failure("INVITATION_EXISTS")
+		}
+		return e
+	}
+	if _, e = s.Mail.EnqueueWithin(ctx, tx, mail.Input{Purpose: "invitation", Recipient: email, Locale: locale, InvitationID: id, Generation: generation, Token: token, Audience: "portal"}); e != nil {
+		return e
+	}
+	if e = audit.WriteWithin(ctx, tx, a.Me.User.ID, "", "admin", action, "success", "invitation", id, "", request); e != nil {
+		return e
+	}
+	*result, e = s.invitation(ctx, tx, id)
+	return e
 }

@@ -10,12 +10,12 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/mail"
+	"github.com/google/uuid"
 )
 
 const maximumOperatorReasonRunes = 500
@@ -70,13 +70,7 @@ func (s *Service) RequestReset(ctx context.Context, email, audience, ip, request
 				return e
 			}
 			if count < policy.Identity.MaxLiveResetTokens {
-				id, token := uuid.NewString(), security.Token()
-				if _, e = tx.Exec(ctx, identitySQL(tx,
-					`INSERT INTO password_reset_tokens(id,user_id,audience,token_hash,created_at,expires_at) VALUES($1,$2,$3,$4,clock_timestamp(),clock_timestamp()+$5::bigint*interval '1 second')`,
-					`INSERT INTO password_reset_tokens(id,user_id,audience,token_hash,created_at,expires_at) VALUES(?,?,?,?,UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)))`, `INSERT INTO PASSWORD_RESET_TOKENS(ID,USER_ID,AUDIENCE,TOKEN_HASH,CREATED_AT,EXPIRES_AT) VALUES(?,?,?,?,CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6)+NUMTODSINTERVAL(?,'SECOND'))`, id, user, audience, security.Digest(token), policy.Identity.ResetTTLSeconds)); e != nil {
-					return e
-				}
-				if _, e = s.Mail.EnqueueWithin(ctx, tx, mail.Input{Purpose: "password_reset", Recipient: canonical, Locale: locale, ResetID: id, UserID: user, Token: token, Audience: audience}); e != nil {
+				if _, e = s.issueResetWithin(ctx, tx, user, audience, canonical, locale); e != nil {
 					return e
 				}
 			}
@@ -296,4 +290,17 @@ func (s *Service) InvalidateAccountAuthoritiesWithin(ctx context.Context, tx tra
 		}
 	}
 	return audit.WriteWithin(ctx, tx, "", "", "operator", "operator.auth_invalidated", "success", "installation", "", reason, "")
+}
+
+// issueResetWithin stores a new reset token for the user and queues the email that carries
+// its link. It returns the email's delivery ID.
+func (s *Service) issueResetWithin(ctx context.Context, tx transaction.Executor, user, audience, canonical, locale string) (string, error) {
+	id, token := uuid.NewString(), security.Token()
+	if _, e := tx.Exec(ctx, identitySQL(tx,
+		`INSERT INTO password_reset_tokens(id,user_id,audience,token_hash,created_at,expires_at) VALUES($1,$2,$3,$4,clock_timestamp(),clock_timestamp()+$5::bigint*interval '1 second')`,
+		`INSERT INTO password_reset_tokens(id,user_id,audience,token_hash,created_at,expires_at) VALUES(?,?,?,?,UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)))`, `INSERT INTO PASSWORD_RESET_TOKENS(ID,USER_ID,AUDIENCE,TOKEN_HASH,CREATED_AT,EXPIRES_AT) VALUES(?,?,?,?,CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6)+NUMTODSINTERVAL(?,'SECOND'))`, id, user, audience, security.Digest(token), s.Config.Policy().Identity.ResetTTLSeconds)); e != nil {
+		return "", e
+	}
+	sent, e := s.Mail.EnqueueWithin(ctx, tx, mail.Input{Purpose: "password_reset", Recipient: canonical, Locale: locale, ResetID: id, UserID: user, Token: token, Audience: audience})
+	return sent.ID, e
 }

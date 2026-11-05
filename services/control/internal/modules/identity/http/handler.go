@@ -962,6 +962,18 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 				data, e := s.SetStatus(ctx, a, parts[1], v.Status, v.Version, v.Reason, requestID)
 				return data, 200, e
 			}
+			if parts[0] == "mail-deliveries" && len(parts) == 3 && parts[2] == "resends" && r.Method == "POST" {
+				key := r.Header.Get("Idempotency-Key")
+				if !validUUID(key) {
+					return nil, 0, bad
+				}
+				var v struct{}
+				if e = decode(r, &v); e != nil {
+					return nil, 0, e
+				}
+				data, e := s.ResendMail(ctx, a, parts[1], key, requestID)
+				return data, 200, e
+			}
 			if parts[0] == "invitations" && r.Method == "POST" {
 				key := r.Header.Get("Idempotency-Key")
 				if (len(parts) == 1 || (len(parts) == 3 && parts[2] == "resends")) && !validUUID(key) {

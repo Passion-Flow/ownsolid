@@ -68,3 +68,11 @@ export {
   type WorkspacePage,
   type WorkspaceSummary,
 } from './platform.ts';
+export {
+  listMailDeliveries,
+  resendMailDelivery,
+  type MailDelivery,
+  type MailDeliveryPage,
+  type MailPurpose,
+  type MailState,
+} from './mail.ts';
