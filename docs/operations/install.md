@@ -124,6 +124,22 @@ must fit inside `nodes.online_seconds`, 30 by default, which allows up to 20 sec
 no jitter. To go slower, raise `nodes.online_seconds` first. With more than one control
 process, the others follow within five seconds.
 
+### Model containers have no network
+
+A model container on a node can answer requests but cannot open a connection to
+anything: not the site network, not the internet, not a service on the node, and not a
+DNS server ([ADR 0017](../decisions/0017-workload-egress-guard.md)). The inference agent
+enforces this with its own nftables table, `inet ownsolid_workload_egress`, before it
+starts a model, and restores it after a reboot or a firewall reload. Leave the table in
+place; the agent rebuilds it if it is changed. `nft list table inet ownsolid_workload_egress`
+shows one commented group of rules per model network.
+
+The inference agent therefore runs as root in the host's network namespace, with the
+`CAP_NET_ADMIN` capability and the `AF_NETLINK` address family allowed, on a kernel with
+nf_tables (every supported distribution). It needs no `nft` or `iptables` binary. When it
+cannot install the rules, the deployment fails with `INFERENCE_EGRESS_GUARD_UNAVAILABLE`
+and the model does not start: fix the agent's privileges and retry the deployment.
+
 ## When a step fails
 
 The message names the step and the cause, followed by the end of the service log when one
