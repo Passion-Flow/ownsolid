@@ -145,6 +145,19 @@ one `GiteaTestedRelease` names, and a live run spends about four of the ten sign
 in 15 minutes. Add the provider's public key to `OWNSOLID_LIVE_SPKI` (comma-separated) and
 its host to `OWNSOLID_LIVE_HOST_RULES`.
 
+`live-idle.spec.ts` waits out a real idle timeout with the page's poll running, so it needs a
+short one. Add this to the installation's `control.yaml`, restart control, and run it with
+`OWNSOLID_LIVE_IDLE_SECONDS=60 OWNSOLID_LIVE_WARNING_SECONDS=30`. It takes about three minutes,
+and `apply` removes the section again:
+
+```yaml
+runtime:
+    identity:
+        admin_idle_seconds: 60
+        session_touch_seconds: 15
+        session_warning_seconds: 30
+```
+
 The tunnel can drop to about 20 KB/s, and pages then time out. Run the spec on
 `ownsolid-cpu` instead, with `--network host` in a `node` container that installs
 `@playwright/test` and `playwright install --with-deps chromium`. The server cannot pull

@@ -202,6 +202,8 @@ runtime:
     admin_absolute_seconds: 14400
     csrf_seconds: 900
     session_touch_seconds: 60
+    # Warn this long before a session ends; shortened to fit a short idle timeout.
+    session_warning_seconds: 120
     idempotency_seconds: 86400
     hash_workers: 2
     hash_queue_capacity: 16

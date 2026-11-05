@@ -30,6 +30,17 @@ export function getMe(options?: RequestOptions): Promise<Me> {
   return client.get('/api/v1/me', options);
 }
 
+/** How long the session has left, in seconds, so a wrong browser clock does not matter. */
+export type SessionStatus = Schemas['SessionStatus'];
+
+/**
+ * Reads what is left of the session. Pass `background` for a check nobody asked for;
+ * without it the read counts as activity and extends the session.
+ */
+export function getSessionStatus(options?: RequestOptions): Promise<SessionStatus> {
+  return client.get('/api/v1/me/session', options);
+}
+
 /** Signs in on the current origin. The session cookie is set by the server. */
 export async function signIn(
   credentials: Credentials,

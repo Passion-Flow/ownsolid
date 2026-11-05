@@ -21,6 +21,7 @@ import { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
 import { NotificationBell } from './notifications.tsx';
 import { useDocumentTitle } from './page-focus.ts';
 import { accountPath, signInPath } from './redirect.ts';
+import { SessionWarningDialog } from './session-warning.tsx';
 import { useSignOut } from './sign-out.ts';
 import { UserMenu } from './user-menu.tsx';
 import { WorkspaceSwitcher } from './workspace-switcher.tsx';
@@ -155,6 +156,7 @@ export function AppFrame({ navigation, showLicense = false, children }: AppFrame
   return (
     <div className="grid h-dvh grid-cols-1 lg:grid-cols-[248px_1fr]">
       <AccountPreferences />
+      <SessionWarningDialog onSignOut={startSignOut} />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-control focus:bg-surface focus:px-3 focus:py-2"

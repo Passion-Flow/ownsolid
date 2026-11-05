@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "M01 Account Lifecycle API",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Canonical implemented account HTTP contract. Relative paths resolve on the configured portal/admin HTTPS origin; x-audiences is normative. Runtime behavior, local evidence and independent target qualification are recorded in the English milestone and execution documentation."
   },
   "servers": [
@@ -748,6 +748,87 @@
                 "$ref": "#/components/schemas/UpdateMeRequest"
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/me/session": {
+      "get": {
+        "operationId": "getSessionStatus",
+        "summary": "Read how long the current session has left",
+        "description": "Answers in seconds rather than times, so a browser with a wrong clock still counts down correctly. Like any authenticated request, a read counts as activity and extends the idle timeout, unless it carries X-Ownsolid-Background: true. Every GET accepts that header: a page sends it on requests the person did not ask for, such as polls, so an open tab cannot hold a session past its idle timeout. Writes always count as activity.",
+        "tags": [
+          "Identity"
+        ],
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        },
+        "security": [
+          {
+            "PortalSession": []
+          },
+          {
+            "AdminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Ownsolid-Background",
+            "in": "header",
+            "required": false,
+            "description": "true when the person did not ask for this read, so it does not count as activity.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "How long the session has left.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Server-generated correlation UUID.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
           }
         }
       }
@@ -2548,6 +2629,54 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/MeData"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "SessionStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "idle_timeout_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "How long the session survives without activity."
+          },
+          "idle_remaining_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "How long until it ends if nothing else happens."
+          },
+          "absolute_remaining_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "How long until it ends regardless of activity."
+          },
+          "warning_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "How long before the end to warn the person: the configured time, shortened to fit a short idle timeout."
+          }
+        },
+        "required": [
+          "idle_timeout_seconds",
+          "idle_remaining_seconds",
+          "absolute_remaining_seconds",
+          "warning_seconds"
+        ]
+      },
+      "SessionStatusResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SessionStatus"
           }
         },
         "required": [

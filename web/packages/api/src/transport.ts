@@ -11,6 +11,11 @@ export interface RequestOptions {
    * retried. Generate it when the user starts the action and reuse it for retries.
    */
   idempotencyKey?: string | undefined;
+  /**
+   * Marks a read the person did not ask for, such as a poll, so it does not count as
+   * activity: an open tab must not hold a session past its idle timeout.
+   */
+  background?: boolean | undefined;
 }
 
 /** HTTP methods that change state; they carry a CSRF token. */
@@ -101,7 +106,10 @@ async function read<T>(response: Response): Promise<T> {
 
 /** Reads a resource. `path` is absolute, such as `/api/v1/me`. */
 export async function get<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  return read<T>(await send(path, { method: 'GET' }, options.signal));
+  const init: RequestInit = options.background
+    ? { method: 'GET', headers: { 'X-Ownsolid-Background': 'true' } }
+    : { method: 'GET' };
+  return read<T>(await send(path, init, options.signal));
 }
 
 function csrfToken(signal?: AbortSignal): Promise<CsrfToken> {

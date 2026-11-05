@@ -143,7 +143,7 @@ export function NotificationBell() {
   const config = useQuery(runtimeConfigQuery()).data;
   const summary = useQuery({
     queryKey: summaryKey,
-    queryFn: ({ signal }) => getNotificationSummary({ signal }),
+    queryFn: ({ signal }) => getNotificationSummary({ signal, background: true }),
     refetchInterval: config?.ui.pollMilliseconds ?? false,
   });
   if (summary.data && !summary.data.available) return null;

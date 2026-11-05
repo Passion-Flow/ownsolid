@@ -254,6 +254,7 @@ func TestM01EveryHTTPResponseSchema(t *testing.T) {
 	admin.mutate("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": p}, 200, "LoginResponse")
 	me := admin.request("GET", "/api/v1/me", nil, 200, "MeResponse", nil)
 	user := me["user"].(map[string]any)
+	admin.request("GET", "/api/v1/me/session", nil, 200, "SessionStatusResponse", nil)
 	admin.request("GET", "/api/v1/admin/users", nil, 200, "UserListResponse", nil)
 	admin.request("GET", "/api/v1/admin/users/"+user["id"].(string), nil, 200, "UserResponse", nil)
 	invite := admin.mutate("POST", "/api/v1/admin/invitations", map[string]any{"email": "alice@example.invalid", "locale": "en"}, 201, "InvitationResponse")

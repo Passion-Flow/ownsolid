@@ -5,14 +5,8 @@
 import { expectAccessible, expectFocusVisible } from '@ownsolid/shell/testing';
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { adminPassword, email, liveOptions, origin } from './live-install.ts';
 
-const origin = process.env.OWNSOLID_LIVE_ORIGIN ?? '';
-const email = process.env.OWNSOLID_LIVE_EMAIL ?? '';
-const passwordFile = process.env.OWNSOLID_LIVE_PASSWORD_FILE ?? '';
-// A private CA is trusted by pinning the certificate's public key, so the browser still
-// refuses any other certificate. The host names resolve through the same flags.
-const spki = process.env.OWNSOLID_LIVE_SPKI ?? '';
-const hostRules = process.env.OWNSOLID_LIVE_HOST_RULES ?? '';
 // A real provider for the link round trip; its steps are skipped without one.
 const providerName = process.env.OWNSOLID_LIVE_PROVIDER_NAME ?? '';
 const providerOrigin = process.env.OWNSOLID_LIVE_PROVIDER_ORIGIN ?? '';
@@ -20,18 +14,7 @@ const providerUser = process.env.OWNSOLID_LIVE_PROVIDER_USER ?? '';
 const providerPasswordFile = process.env.OWNSOLID_LIVE_PROVIDER_PASSWORD_FILE ?? '';
 
 test.skip(origin === '', 'needs OWNSOLID_LIVE_ORIGIN');
-test.use({
-  baseURL: origin,
-  // The default headless shell ignores --host-resolver-rules.
-  channel: 'chromium',
-  launchOptions: {
-    args: [
-      '--no-proxy-server',
-      `--ignore-certificate-errors-spki-list=${spki}`,
-      `--host-resolver-rules=${hostRules}`,
-    ],
-  },
-});
+test.use(liveOptions);
 
 test('signs in and out of a real installation', async ({ page, browser }) => {
   const problems: string[] = [];
@@ -52,8 +35,7 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
       scripts.set(new URL(response.url()).pathname, response.status());
     }
   });
-  const password = (JSON.parse(readFileSync(passwordFile, 'utf8')) as { password: string })
-    .password;
+  const password = adminPassword();
   let preferenceSaves = 0;
   page.on('response', (response) => {
     const request = response.request();

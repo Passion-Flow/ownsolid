@@ -568,6 +568,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 	}
 }
 func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, requestID string) (any, int, error) {
+	r = backgroundRead(r)
 	s := h.Service
 	ctx := r.Context()
 	path := r.URL.Path
@@ -905,7 +906,7 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 		cookies.ClearIdentity(w, audience)
 		return map[string]bool{"reset": true}, 200, nil
 	}
-	if path == "/api/v1/me" || path == passwordChangesPath || strings.HasPrefix(path, "/api/v1/admin/") {
+	if path == "/api/v1/me" || path == passwordChangesPath || path == sessionPath || strings.HasPrefix(path, "/api/v1/admin/") {
 		a, e := s.Authenticate(ctx, session, audience)
 		if e != nil {
 			if e.Error() == "AUTH_SESSION_EXPIRED" {
@@ -933,6 +934,10 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 		}
 		if route == "POST "+passwordChangesPath {
 			return h.changePassword(w, r, cookies, a, requestID)
+		}
+		if route == "GET "+sessionPath {
+			data, e := s.SessionStatus(ctx, a)
+			return data, 200, e
 		}
 		if strings.HasPrefix(path, "/api/v1/admin/") {
 			if !a.Me.User.IsPlatformAdmin {

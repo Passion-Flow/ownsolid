@@ -2,1390 +2,1527 @@
 // Change the contract, then run `make generate`.
 
 export interface paths {
-    "/api/v1/auth/csrf": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a CSRF context and token */
-        get: operations["getCsrf"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/v1/auth/csrf': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Authenticate on the selected origin */
-        post: operations["login"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get a CSRF context and token */
+    get: operations['getCsrf'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Revoke the current-origin session */
-        post: operations["logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Authenticate on the selected origin */
+    post: operations['login'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/invitation-validations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Inspect a usable invitation without consumption */
-        post: operations["validateInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Revoke the current-origin session */
+    post: operations['logout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/invitation-validations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Consume an invitation and create an account */
-        post: operations["register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Inspect a usable invitation without consumption */
+    post: operations['validateInvitation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/register': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/password-reset-requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Accept a recovery request without account disclosure */
-        post: operations["requestPasswordReset"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Consume an invitation and create an account */
+    post: operations['register'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/password-reset-requests': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/password-resets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Consume a reset token and revoke all sessions */
-        post: operations["resetPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Accept a recovery request without account disclosure */
+    post: operations['requestPasswordReset'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/password-resets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read the current identity and default Workspace */
-        get: operations["getMe"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update the current profile */
-        patch: operations["updateMe"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Consume a reset token and revoke all sessions */
+    post: operations['resetPassword'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/me/password-changes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Change the current password and keep only this session
-         * @description Checks the current password, applies the password policy and replaces the password. Every session of the account ends and unused reset links stop working; the response sets a new session cookie for this browser, so CSRF tokens must be fetched again. The account receives a password-changed email. Attempts share the sign-in rate limits per account and per address. There is no Idempotency-Key: a retry after a lost response finds the old session ended and signs in with the new password.
-         */
-        post: operations["changePassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Read the current identity and default Workspace */
+    get: operations['getMe'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update the current profile */
+    patch: operations['updateMe'];
+    trace?: never;
+  };
+  '/api/v1/me/session': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List accounts */
-        get: operations["listUsers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Read how long the current session has left
+     * @description Answers in seconds rather than times, so a browser with a wrong clock still counts down correctly. Like any authenticated request, a read counts as activity and extends the idle timeout, unless it carries X-Ownsolid-Background: true. Every GET accepts that header: a page sends it on requests the person did not ask for, such as polls, so an open tab cannot hold a session past its idle timeout. Writes always count as activity.
+     */
+    get: operations['getSessionStatus'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/password-changes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/users/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read account detail */
-        get: operations["getUser"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Change the current password and keep only this session
+     * @description Checks the current password, applies the password policy and replaces the password. Every session of the account ends and unused reset links stop working; the response sets a new session cookie for this browser, so CSRF tokens must be fetched again. The account receives a password-changed email. Attempts share the sign-in rate limits per account and per address. There is no Idempotency-Key: a retry after a lost response finds the old session ended and signs in with the new password.
+     */
+    post: operations['changePassword'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/users': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/users/{user_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Disable or re-enable an ordinary account */
-        patch: operations["setUserStatus"];
-        trace?: never;
+    /** List accounts */
+    get: operations['listUsers'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/users/{user_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/invitations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List invitations and latest delivery state */
-        get: operations["listInvitations"];
-        put?: never;
-        /** Create and enqueue an invitation */
-        post: operations["createInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Read account detail */
+    get: operations['getUser'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/users/{user_id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/invitations/{invitation_id}/resends": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Rotate invitation token and enqueue replacement mail */
-        post: operations["resendInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Disable or re-enable an ordinary account */
+    patch: operations['setUserStatus'];
+    trace?: never;
+  };
+  '/api/v1/admin/invitations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/invitations/{invitation_id}/revocations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Revoke an invitation */
-        post: operations["revokeInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List invitations and latest delivery state */
+    get: operations['listInvitations'];
+    put?: never;
+    /** Create and enqueue an invitation */
+    post: operations['createInvitation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/invitations/{invitation_id}/resends': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/audit-events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List safe audit metadata */
-        get: operations["listAuditEvents"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Rotate invitation token and enqueue replacement mail */
+    post: operations['resendInvitation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/invitations/{invitation_id}/revocations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/mail-deliveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List safe mail delivery metadata */
-        get: operations["listMailDeliveries"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Revoke an invitation */
+    post: operations['revokeInvitation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/audit-events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/health/live": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read process liveness */
-        get: operations["getLiveness"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List safe audit metadata */
+    get: operations['listAuditEvents'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/mail-deliveries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/health/ready": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read installation readiness */
-        get: operations["getReadiness"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List safe mail delivery metadata */
+    get: operations['listMailDeliveries'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/health/live': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/mail-deliveries/{mail_delivery_id}/resends": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Send a failed email again
-         * @description Issues anew what the email carried: a new invitation link, a new password reset link that replaces the unused one, or the same password-changed notice. Only the newest failed email of its invitation or account can be sent again.
-         */
-        post: operations["resendMailDelivery"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Read process liveness */
+    get: operations['getLiveness'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/health/ready': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    /** Read installation readiness */
+    get: operations['getReadiness'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/mail-deliveries/{mail_delivery_id}/resends': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Send a failed email again
+     * @description Issues anew what the email carried: a new invitation link, a new password reset link that replaces the unused one, or the same password-changed notice. Only the newest failed email of its invitation or account can be sent again.
+     */
+    post: operations['resendMailDelivery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        Problem: {
-            /** @constant */
-            type: "about:blank";
-            title: string;
-            status: number;
-            /** @enum {string} */
-            code: "VALIDATION_FAILED" | "INVALID_CURSOR" | "TOKEN_UNUSABLE" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "ACCESS_DENIED" | "CSRF_INVALID" | "ORIGIN_REJECTED" | "RESOURCE_NOT_FOUND" | "ACCOUNT_EXISTS" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "VERSION_CONFLICT" | "IDEMPOTENCY_CONFLICT" | "PROTECTED_ACCOUNT" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "MISDIRECTED_REQUEST" | "PASSWORD_POLICY_VIOLATION" | "PASSWORD_BLOCKED" | "PASSWORD_CURRENT_INVALID" | "PASSWORD_UNCHANGED" | "RATE_LIMITED" | "INTERNAL_ERROR" | "STORAGE_UNAVAILABLE" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "AUTH_CAPACITY_EXCEEDED" | "SERVICE_NOT_READY" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "LICENSE_CONFIGURATION_REQUIRED" | "MAIL_DELIVERY_NOT_RESENDABLE" | "MAIL_RESEND_UNSUPPORTED";
-            /** Format: uuid */
-            request_id: string;
-            detail?: string;
-            fields?: {
-                field: string;
-                code: string;
-            }[];
-        };
-        User: {
-            /** Format: uuid */
-            id: string;
-            email: string;
-            display_name: string;
-            locale: string;
-            /** @enum {string} */
-            status: "active" | "disabled";
-            is_platform_admin: boolean;
-            /** Format: date-time */
-            email_verified_at: string | null;
-            version: number;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        Workspace: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            tenant_id: string;
-            name: string;
-            /** @enum {string} */
-            role: "owner" | "member" | "viewer";
-        };
-        MeData: {
-            user: components["schemas"]["User"];
-            workspace: components["schemas"]["Workspace"] | null;
-            /** @enum {string} */
-            audience: "portal" | "admin";
-        };
-        CsrfResponse: {
-            data: {
-                token: string;
-                /** Format: date-time */
-                expires_at: string;
-            };
-        };
-        LoginRequest: {
-            /** @description Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes. */
-            email: string;
-            /** @description NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate. */
-            password: string;
-        };
-        LoginResponse: {
-            data: {
-                user: components["schemas"]["User"];
-                workspace: components["schemas"]["Workspace"] | null;
-                /** @enum {string} */
-                audience: "portal" | "admin";
-                session: {
-                    /** Format: date-time */
-                    absolute_expires_at: string;
-                    idle_timeout_seconds: number;
-                };
-            };
-        };
-        TokenRequest: {
-            token: string;
-        };
-        InvitationValidationResponse: {
-            data: {
-                email: string;
-                locale: string;
-                /** Format: date-time */
-                expires_at: string;
-            };
-        };
-        RegisterRequest: {
-            token: string;
-            /** @description Trim and NFC-normalize; final 1-100 code points, at most 400 UTF-8 bytes; reject control characters. */
-            display_name: string;
-            /** @description NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate. */
-            password: string;
-        };
-        RegisterResponse: {
-            data: {
-                /** @constant */
-                registered: true;
-            };
-        };
-        RecoveryRequest: {
-            /** @description Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes. */
-            email: string;
-        };
-        AcceptedResponse: {
-            data: {
-                /** @constant */
-                accepted: true;
-            };
-        };
-        ResetRequest: {
-            token: string;
-            /** @description NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate. */
-            password: string;
-        };
-        ResetResponse: {
-            data: {
-                /** @constant */
-                reset: true;
-            };
-        };
-        MeResponse: {
-            data: components["schemas"]["MeData"];
-        };
-        UpdateMeRequest: {
-            /** @description Trim and NFC-normalize; final 1-100 code points, at most 400 UTF-8 bytes; reject control characters. */
-            display_name: string;
-            locale: string;
-            version: number;
-        };
-        ChangePasswordRequest: {
-            /** @description The password the account signs in with now, as typed. Never trim or truncate. */
-            current_password: string;
-            /** @description NFC-normalize before semantic validation: 15-128 code points and <=512 UTF-8 bytes, local blocklist, different from the current password. Never trim or truncate. */
-            new_password: string;
-        };
-        UserResponse: {
-            data: components["schemas"]["User"];
-        };
-        SetUserStatusRequest: {
-            /** @enum {string} */
-            status: "active" | "disabled";
-            version: number;
-            reason: string;
-        };
-        DeliverySummary: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            state: "queued" | "sending" | "sent" | "failed" | "cancelled";
-            attempt_count: number;
-            error_category: string | null;
-        };
-        Invitation: {
-            /** Format: uuid */
-            id: string;
-            email: string;
-            locale: string;
-            /** @enum {string} */
-            status: "pending" | "accepted" | "revoked" | "expired";
-            version: number;
-            /** Format: date-time */
-            expires_at: string;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-            delivery: components["schemas"]["DeliverySummary"] | null;
-        };
-        InvitationResponse: {
-            data: components["schemas"]["Invitation"];
-        };
-        CreateInvitationRequest: {
-            /** @description Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes. */
-            email: string;
-            locale: string;
-        };
-        VersionRequest: {
-            version: number;
-        };
-        RevokeInvitationRequest: {
-            version: number;
-            reason: string;
-        };
-        AuditEvent: {
-            /** Format: uuid */
-            id: string;
-            /** Format: date-time */
-            occurred_at: string;
-            /** Format: uuid */
-            actor_user_id: string | null;
-            /** Format: uuid */
-            subject_user_id: string | null;
-            /** @enum {string} */
-            audience: "portal" | "admin" | "operator" | "system";
-            /** @description Versioned first-party audit action. Module events remain visible in unfiltered history;the query action enum lists currently supported exact selectors. */
-            action: string;
-            /** @enum {string} */
-            outcome: "success" | "failure" | "accepted";
-            target_type: string | null;
-            /** Format: uuid */
-            target_id: string | null;
-            reason: string | null;
-            /** Format: uuid */
-            request_id: string;
-        };
-        MailDelivery: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            purpose: "invitation" | "password_reset" | "password_changed";
-            recipient_email: string;
-            locale: string;
-            /** @enum {string} */
-            state: "queued" | "sending" | "sent" | "failed" | "cancelled";
-            attempt_count: number;
-            /** Format: date-time */
-            next_attempt_at: string | null;
-            error_category: string | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-            /** Format: date-time */
-            completed_at: string | null;
-        };
-        HealthResponse: {
-            data: {
-                /** @enum {string} */
-                status: "ok";
-            };
-        };
-        UserListResponse: {
-            data: {
-                items: components["schemas"]["User"][];
-                next_cursor: string | null;
-            };
-        };
-        InvitationListResponse: {
-            data: {
-                items: components["schemas"]["Invitation"][];
-                next_cursor: string | null;
-            };
-        };
-        AuditListResponse: {
-            data: {
-                items: components["schemas"]["AuditEvent"][];
-                next_cursor: string | null;
-            };
-        };
-        MailListResponse: {
-            data: {
-                items: components["schemas"]["MailDelivery"][];
-                next_cursor: string | null;
-            };
-        };
-        MailDeliveryResponse: {
-            data: components["schemas"]["MailDelivery"];
-        };
+  schemas: {
+    Problem: {
+      /** @constant */
+      type: 'about:blank';
+      title: string;
+      status: number;
+      /** @enum {string} */
+      code:
+        | 'VALIDATION_FAILED'
+        | 'INVALID_CURSOR'
+        | 'TOKEN_UNUSABLE'
+        | 'AUTH_INVALID_CREDENTIALS'
+        | 'AUTH_REQUIRED'
+        | 'AUTH_SESSION_EXPIRED'
+        | 'ACCESS_DENIED'
+        | 'CSRF_INVALID'
+        | 'ORIGIN_REJECTED'
+        | 'RESOURCE_NOT_FOUND'
+        | 'ACCOUNT_EXISTS'
+        | 'INVITATION_EXISTS'
+        | 'INVITATION_STATE_CONFLICT'
+        | 'VERSION_CONFLICT'
+        | 'IDEMPOTENCY_CONFLICT'
+        | 'PROTECTED_ACCOUNT'
+        | 'PAYLOAD_TOO_LARGE'
+        | 'UNSUPPORTED_MEDIA_TYPE'
+        | 'MISDIRECTED_REQUEST'
+        | 'PASSWORD_POLICY_VIOLATION'
+        | 'PASSWORD_BLOCKED'
+        | 'PASSWORD_CURRENT_INVALID'
+        | 'PASSWORD_UNCHANGED'
+        | 'RATE_LIMITED'
+        | 'INTERNAL_ERROR'
+        | 'STORAGE_UNAVAILABLE'
+        | 'STORAGE_COMMIT_OUTCOME_UNKNOWN'
+        | 'AUTH_CAPACITY_EXCEEDED'
+        | 'SERVICE_NOT_READY'
+        | 'LICENSE_NEW_BUSINESS_UNAVAILABLE'
+        | 'LICENSE_STORED_STATE_INVALID'
+        | 'LICENSE_CONFIGURATION_REQUIRED'
+        | 'MAIL_DELIVERY_NOT_RESENDABLE'
+        | 'MAIL_RESEND_UNSUPPORTED';
+      /** Format: uuid */
+      request_id: string;
+      detail?: string;
+      fields?: {
+        field: string;
+        code: string;
+      }[];
     };
-    responses: {
-        /** @description Problem Details; see error catalog. Retry-After is required for throttling and temporary unavailability. */
-        Problem: {
-            headers: {
-                /** @description Server-generated correlation UUID. */
-                "X-Request-ID"?: string;
-                /** @description Present for 429 and temporary 503. */
-                "Retry-After"?: number;
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
+    User: {
+      /** Format: uuid */
+      id: string;
+      email: string;
+      display_name: string;
+      locale: string;
+      /** @enum {string} */
+      status: 'active' | 'disabled';
+      is_platform_admin: boolean;
+      /** Format: date-time */
+      email_verified_at: string | null;
+      version: number;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+    };
+    Workspace: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      tenant_id: string;
+      name: string;
+      /** @enum {string} */
+      role: 'owner' | 'member' | 'viewer';
+    };
+    MeData: {
+      user: components['schemas']['User'];
+      workspace: components['schemas']['Workspace'] | null;
+      /** @enum {string} */
+      audience: 'portal' | 'admin';
+    };
+    CsrfResponse: {
+      data: {
+        token: string;
+        /** Format: date-time */
+        expires_at: string;
+      };
+    };
+    LoginRequest: {
+      /** @description Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes. */
+      email: string;
+      /** @description NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate. */
+      password: string;
+    };
+    LoginResponse: {
+      data: {
+        user: components['schemas']['User'];
+        workspace: components['schemas']['Workspace'] | null;
+        /** @enum {string} */
+        audience: 'portal' | 'admin';
+        session: {
+          /** Format: date-time */
+          absolute_expires_at: string;
+          idle_timeout_seconds: number;
         };
+      };
     };
-    parameters: {
-        /** @description Signed, audience/session/context-bound token from getCsrf. */
-        Csrf: string;
-        /** @description Required for invitation create/resend; retain for retries of this one action. */
-        Idempotency: string;
-        /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
-        Limit: number;
-        Cursor: string;
-        UserId: string;
-        InvitationId: string;
-        MailDeliveryId: string;
+    TokenRequest: {
+      token: string;
     };
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    InvitationValidationResponse: {
+      data: {
+        email: string;
+        locale: string;
+        /** Format: date-time */
+        expires_at: string;
+      };
+    };
+    RegisterRequest: {
+      token: string;
+      /** @description Trim and NFC-normalize; final 1-100 code points, at most 400 UTF-8 bytes; reject control characters. */
+      display_name: string;
+      /** @description NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate. */
+      password: string;
+    };
+    RegisterResponse: {
+      data: {
+        /** @constant */
+        registered: true;
+      };
+    };
+    RecoveryRequest: {
+      /** @description Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes. */
+      email: string;
+    };
+    AcceptedResponse: {
+      data: {
+        /** @constant */
+        accepted: true;
+      };
+    };
+    ResetRequest: {
+      token: string;
+      /** @description NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate. */
+      password: string;
+    };
+    ResetResponse: {
+      data: {
+        /** @constant */
+        reset: true;
+      };
+    };
+    MeResponse: {
+      data: components['schemas']['MeData'];
+    };
+    SessionStatus: {
+      /** @description How long the session survives without activity. */
+      idle_timeout_seconds: number;
+      /** @description How long until it ends if nothing else happens. */
+      idle_remaining_seconds: number;
+      /** @description How long until it ends regardless of activity. */
+      absolute_remaining_seconds: number;
+      /** @description How long before the end to warn the person: the configured time, shortened to fit a short idle timeout. */
+      warning_seconds: number;
+    };
+    SessionStatusResponse: {
+      data: components['schemas']['SessionStatus'];
+    };
+    UpdateMeRequest: {
+      /** @description Trim and NFC-normalize; final 1-100 code points, at most 400 UTF-8 bytes; reject control characters. */
+      display_name: string;
+      locale: string;
+      version: number;
+    };
+    ChangePasswordRequest: {
+      /** @description The password the account signs in with now, as typed. Never trim or truncate. */
+      current_password: string;
+      /** @description NFC-normalize before semantic validation: 15-128 code points and <=512 UTF-8 bytes, local blocklist, different from the current password. Never trim or truncate. */
+      new_password: string;
+    };
+    UserResponse: {
+      data: components['schemas']['User'];
+    };
+    SetUserStatusRequest: {
+      /** @enum {string} */
+      status: 'active' | 'disabled';
+      version: number;
+      reason: string;
+    };
+    DeliverySummary: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      state: 'queued' | 'sending' | 'sent' | 'failed' | 'cancelled';
+      attempt_count: number;
+      error_category: string | null;
+    };
+    Invitation: {
+      /** Format: uuid */
+      id: string;
+      email: string;
+      locale: string;
+      /** @enum {string} */
+      status: 'pending' | 'accepted' | 'revoked' | 'expired';
+      version: number;
+      /** Format: date-time */
+      expires_at: string;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+      delivery: components['schemas']['DeliverySummary'] | null;
+    };
+    InvitationResponse: {
+      data: components['schemas']['Invitation'];
+    };
+    CreateInvitationRequest: {
+      /** @description Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes. */
+      email: string;
+      locale: string;
+    };
+    VersionRequest: {
+      version: number;
+    };
+    RevokeInvitationRequest: {
+      version: number;
+      reason: string;
+    };
+    AuditEvent: {
+      /** Format: uuid */
+      id: string;
+      /** Format: date-time */
+      occurred_at: string;
+      /** Format: uuid */
+      actor_user_id: string | null;
+      /** Format: uuid */
+      subject_user_id: string | null;
+      /** @enum {string} */
+      audience: 'portal' | 'admin' | 'operator' | 'system';
+      /** @description Versioned first-party audit action. Module events remain visible in unfiltered history;the query action enum lists currently supported exact selectors. */
+      action: string;
+      /** @enum {string} */
+      outcome: 'success' | 'failure' | 'accepted';
+      target_type: string | null;
+      /** Format: uuid */
+      target_id: string | null;
+      reason: string | null;
+      /** Format: uuid */
+      request_id: string;
+    };
+    MailDelivery: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      purpose: 'invitation' | 'password_reset' | 'password_changed';
+      recipient_email: string;
+      locale: string;
+      /** @enum {string} */
+      state: 'queued' | 'sending' | 'sent' | 'failed' | 'cancelled';
+      attempt_count: number;
+      /** Format: date-time */
+      next_attempt_at: string | null;
+      error_category: string | null;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+      /** Format: date-time */
+      completed_at: string | null;
+    };
+    HealthResponse: {
+      data: {
+        /** @enum {string} */
+        status: 'ok';
+      };
+    };
+    UserListResponse: {
+      data: {
+        items: components['schemas']['User'][];
+        next_cursor: string | null;
+      };
+    };
+    InvitationListResponse: {
+      data: {
+        items: components['schemas']['Invitation'][];
+        next_cursor: string | null;
+      };
+    };
+    AuditListResponse: {
+      data: {
+        items: components['schemas']['AuditEvent'][];
+        next_cursor: string | null;
+      };
+    };
+    MailListResponse: {
+      data: {
+        items: components['schemas']['MailDelivery'][];
+        next_cursor: string | null;
+      };
+    };
+    MailDeliveryResponse: {
+      data: components['schemas']['MailDelivery'];
+    };
+  };
+  responses: {
+    /** @description Problem Details; see error catalog. Retry-After is required for throttling and temporary unavailability. */
+    Problem: {
+      headers: {
+        /** @description Server-generated correlation UUID. */
+        'X-Request-ID'?: string;
+        /** @description Present for 429 and temporary 503. */
+        'Retry-After'?: number;
+        [name: string]: unknown;
+      };
+      content: {
+        'application/problem+json': components['schemas']['Problem'];
+      };
+    };
+  };
+  parameters: {
+    /** @description Signed, audience/session/context-bound token from getCsrf. */
+    Csrf: string;
+    /** @description Required for invitation create/resend; retain for retries of this one action. */
+    Idempotency: string;
+    /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
+    Limit: number;
+    Cursor: string;
+    UserId: string;
+    InvitationId: string;
+    MailDeliveryId: string;
+  };
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getCsrf: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Get a CSRF context and token completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
-                    "Set-Cookie"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CsrfResponse"];
-                };
-            };
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+  getCsrf: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    login: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Get a CSRF context and token completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['CsrfResponse'];
         };
-        responses: {
-            /** @description Authenticate on the selected origin completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
-                    "Set-Cookie"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LoginResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+      };
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
     };
-    logout: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Revoke the current-origin session completed. */
-            204: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
-                    "Set-Cookie"?: string;
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+  };
+  login: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
     };
-    validateInvitation: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TokenRequest"];
-            };
-        };
-        responses: {
-            /** @description Inspect a usable invitation without consumption completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvitationValidationResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoginRequest'];
+      };
     };
-    register: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Authenticate on the selected origin completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RegisterRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['LoginResponse'];
         };
-        responses: {
-            /** @description Consume an invitation and create an account completed. */
-            201: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RegisterResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            422: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
     };
-    requestPasswordReset: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RecoveryRequest"];
-            };
-        };
-        responses: {
-            /** @description Accept a recovery request without account disclosure completed. */
-            202: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AcceptedResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+  };
+  logout: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
     };
-    resetPassword: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Revoke the current-origin session completed. */
+      204: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResetRequest"];
-            };
-        };
-        responses: {
-            /** @description Consume a reset token and revoke all sessions completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
-                    "Set-Cookie"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResetResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            422: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+        content?: never;
+      };
+      400: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
     };
-    getMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Read the current identity and default Workspace completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MeResponse"];
-                };
-            };
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+  };
+  validateInvitation: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
     };
-    updateMe: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateMeRequest"];
-            };
-        };
-        responses: {
-            /** @description Update the current profile completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MeResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            409: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TokenRequest'];
+      };
     };
-    changePassword: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Inspect a usable invitation without consumption completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangePasswordRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['InvitationValidationResponse'];
         };
-        responses: {
-            /** @description The password changed; this browser holds the account's only session. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
-                    "Set-Cookie"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MeResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            422: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+      };
+      400: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
     };
-    listUsers: {
-        parameters: {
-            query?: {
-                /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
-                limit?: components["parameters"]["Limit"];
-                cursor?: components["parameters"]["Cursor"];
-                email_prefix?: string;
-                status?: "active" | "disabled";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List accounts completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserListResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+  };
+  register: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
     };
-    getUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Read account detail completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            404: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegisterRequest'];
+      };
     };
-    setUserStatus: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description Consume an invitation and create an account completed. */
+      201: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetUserStatusRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['RegisterResponse'];
         };
-        responses: {
-            /** @description Disable or re-enable an ordinary account completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            404: components["responses"]["Problem"];
-            409: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+      };
+      400: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      422: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
     };
-    listInvitations: {
-        parameters: {
-            query?: {
-                /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
-                limit?: components["parameters"]["Limit"];
-                cursor?: components["parameters"]["Cursor"];
-                status?: "pending" | "accepted" | "revoked" | "expired";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List invitations and latest delivery state completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvitationListResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+  };
+  requestPasswordReset: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
     };
-    createInvitation: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-                /** @description Required for invitation create/resend; retain for retries of this one action. */
-                "Idempotency-Key": components["parameters"]["Idempotency"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateInvitationRequest"];
-            };
-        };
-        responses: {
-            /** @description Create and enqueue an invitation completed. */
-            201: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvitationResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            409: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RecoveryRequest'];
+      };
     };
-    resendInvitation: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-                /** @description Required for invitation create/resend; retain for retries of this one action. */
-                "Idempotency-Key": components["parameters"]["Idempotency"];
-            };
-            path: {
-                invitation_id: components["parameters"]["InvitationId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description Accept a recovery request without account disclosure completed. */
+      202: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VersionRequest"];
-            };
+        content: {
+          'application/json': components['schemas']['AcceptedResponse'];
         };
-        responses: {
-            /** @description Rotate invitation token and enqueue replacement mail completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvitationResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            404: components["responses"]["Problem"];
-            409: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+      };
+      400: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
     };
-    revokeInvitation: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                invitation_id: components["parameters"]["InvitationId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RevokeInvitationRequest"];
-            };
-        };
-        responses: {
-            /** @description Revoke an invitation completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvitationResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            404: components["responses"]["Problem"];
-            409: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+  };
+  resetPassword: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
     };
-    listAuditEvents: {
-        parameters: {
-            query?: {
-                /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
-                limit?: components["parameters"]["Limit"];
-                cursor?: components["parameters"]["Cursor"];
-                action?: "installation.bootstrapped" | "invitation.created" | "invitation.resent" | "invitation.revoked" | "invitation.accepted" | "invitation.expired" | "auth.login_succeeded" | "auth.login_failed" | "auth.logout" | "auth.recovery_requested" | "auth.password_reset" | "account.updated" | "account.disabled" | "account.enabled" | "mail.sent" | "mail.failed" | "mail.cancelled" | "system.retention" | "operator.admin_recovered" | "operator.auth_invalidated" | "workspace.created" | "workspace.updated" | "workspace.archived" | "workspace.restored" | "workspace.member_added" | "workspace.member_updated" | "workspace.member_removed" | "workspace.note_created" | "workspace.note_updated" | "workspace.note_deleted" | "node.join_token_created" | "node.join_token_revoked" | "node.enrolled" | "node.updated" | "node.task_requested" | "node.task_claimed" | "node.task_succeeded" | "node.task_failed" | "node.task_cancelled" | "node.task_released" | "node.resync_granted";
-                outcome?: "success" | "failure" | "accepted";
-                /** @description RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy. */
-                from?: string;
-                /** @description RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy. */
-                to?: string;
-                request_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List safe audit metadata completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuditListResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResetRequest'];
+      };
     };
-    listMailDeliveries: {
-        parameters: {
-            query?: {
-                /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
-                limit?: components["parameters"]["Limit"];
-                cursor?: components["parameters"]["Cursor"];
-                state?: "queued" | "sending" | "sent" | "failed" | "cancelled";
-                purpose?: "invitation" | "password_reset" | "password_changed";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Consume a reset token and revoke all sessions completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description List safe mail delivery metadata completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MailListResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
+        content: {
+          'application/json': components['schemas']['ResetResponse'];
         };
+      };
+      400: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      422: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
     };
-    getLiveness: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Read process liveness completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthResponse"];
-                };
-            };
-            default: components["responses"]["Problem"];
-        };
+  };
+  getMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    getReadiness: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Read the current identity and default Workspace completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Read installation readiness completed. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthResponse"];
-                };
-            };
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
+        content: {
+          'application/json': components['schemas']['MeResponse'];
         };
+      };
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
     };
-    resendMailDelivery: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-                /** @description Required for invitation create/resend; retain for retries of this one action. */
-                "Idempotency-Key": components["parameters"]["Idempotency"];
-            };
-            path: {
-                mail_delivery_id: components["parameters"]["MailDeliveryId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description The new email, queued. */
-            200: {
-                headers: {
-                    /** @description Server-generated correlation UUID. */
-                    "X-Request-ID"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MailDeliveryResponse"];
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-            404: components["responses"]["Problem"];
-            409: components["responses"]["Problem"];
-            429: components["responses"]["Problem"];
-            503: components["responses"]["Problem"];
-            default: components["responses"]["Problem"];
-        };
+  };
+  updateMe: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
     };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateMeRequest'];
+      };
+    };
+    responses: {
+      /** @description Update the current profile completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MeResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      409: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  getSessionStatus: {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description true when the person did not ask for this read, so it does not count as activity. */
+        'X-Ownsolid-Background'?: 'true';
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description How long the session has left. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SessionStatusResponse'];
+        };
+      };
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  changePassword: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangePasswordRequest'];
+      };
+    };
+    responses: {
+      /** @description The password changed; this browser holds the account's only session. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          /** @description May be repeated as separate Set-Cookie fields. Audience-specific secure host-only cookies are created/rotated/expired as specified in session-csrf.md; never combine into a comma-delimited value. */
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MeResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      422: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  listUsers: {
+    parameters: {
+      query?: {
+        /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
+        limit?: components['parameters']['Limit'];
+        cursor?: components['parameters']['Cursor'];
+        email_prefix?: string;
+        status?: 'active' | 'disabled';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List accounts completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserListResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  getUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Read account detail completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserResponse'];
+        };
+      };
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      404: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  setUserStatus: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetUserStatusRequest'];
+      };
+    };
+    responses: {
+      /** @description Disable or re-enable an ordinary account completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      404: components['responses']['Problem'];
+      409: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  listInvitations: {
+    parameters: {
+      query?: {
+        /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
+        limit?: components['parameters']['Limit'];
+        cursor?: components['parameters']['Cursor'];
+        status?: 'pending' | 'accepted' | 'revoked' | 'expired';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List invitations and latest delivery state completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InvitationListResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  createInvitation: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+        /** @description Required for invitation create/resend; retain for retries of this one action. */
+        'Idempotency-Key': components['parameters']['Idempotency'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateInvitationRequest'];
+      };
+    };
+    responses: {
+      /** @description Create and enqueue an invitation completed. */
+      201: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InvitationResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      409: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  resendInvitation: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+        /** @description Required for invitation create/resend; retain for retries of this one action. */
+        'Idempotency-Key': components['parameters']['Idempotency'];
+      };
+      path: {
+        invitation_id: components['parameters']['InvitationId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VersionRequest'];
+      };
+    };
+    responses: {
+      /** @description Rotate invitation token and enqueue replacement mail completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InvitationResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      404: components['responses']['Problem'];
+      409: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  revokeInvitation: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        invitation_id: components['parameters']['InvitationId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RevokeInvitationRequest'];
+      };
+    };
+    responses: {
+      /** @description Revoke an invitation completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InvitationResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      404: components['responses']['Problem'];
+      409: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  listAuditEvents: {
+    parameters: {
+      query?: {
+        /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
+        limit?: components['parameters']['Limit'];
+        cursor?: components['parameters']['Cursor'];
+        action?:
+          | 'installation.bootstrapped'
+          | 'invitation.created'
+          | 'invitation.resent'
+          | 'invitation.revoked'
+          | 'invitation.accepted'
+          | 'invitation.expired'
+          | 'auth.login_succeeded'
+          | 'auth.login_failed'
+          | 'auth.logout'
+          | 'auth.recovery_requested'
+          | 'auth.password_reset'
+          | 'account.updated'
+          | 'account.disabled'
+          | 'account.enabled'
+          | 'mail.sent'
+          | 'mail.failed'
+          | 'mail.cancelled'
+          | 'system.retention'
+          | 'operator.admin_recovered'
+          | 'operator.auth_invalidated'
+          | 'workspace.created'
+          | 'workspace.updated'
+          | 'workspace.archived'
+          | 'workspace.restored'
+          | 'workspace.member_added'
+          | 'workspace.member_updated'
+          | 'workspace.member_removed'
+          | 'workspace.note_created'
+          | 'workspace.note_updated'
+          | 'workspace.note_deleted'
+          | 'node.join_token_created'
+          | 'node.join_token_revoked'
+          | 'node.enrolled'
+          | 'node.updated'
+          | 'node.task_requested'
+          | 'node.task_claimed'
+          | 'node.task_succeeded'
+          | 'node.task_failed'
+          | 'node.task_cancelled'
+          | 'node.task_released'
+          | 'node.resync_granted';
+        outcome?: 'success' | 'failure' | 'accepted';
+        /** @description RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy. */
+        from?: string;
+        /** @description RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy. */
+        to?: string;
+        request_id?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List safe audit metadata completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuditListResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  listMailDeliveries: {
+    parameters: {
+      query?: {
+        /** @description Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends. */
+        limit?: components['parameters']['Limit'];
+        cursor?: components['parameters']['Cursor'];
+        state?: 'queued' | 'sending' | 'sent' | 'failed' | 'cancelled';
+        purpose?: 'invitation' | 'password_reset' | 'password_changed';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List safe mail delivery metadata completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MailListResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  getLiveness: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Read process liveness completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HealthResponse'];
+        };
+      };
+      default: components['responses']['Problem'];
+    };
+  };
+  getReadiness: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Read installation readiness completed. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HealthResponse'];
+        };
+      };
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
+  resendMailDelivery: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+        /** @description Required for invitation create/resend; retain for retries of this one action. */
+        'Idempotency-Key': components['parameters']['Idempotency'];
+      };
+      path: {
+        mail_delivery_id: components['parameters']['MailDeliveryId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': Record<string, never>;
+      };
+    };
+    responses: {
+      /** @description The new email, queued. */
+      200: {
+        headers: {
+          /** @description Server-generated correlation UUID. */
+          'X-Request-ID'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MailDeliveryResponse'];
+        };
+      };
+      400: components['responses']['Problem'];
+      401: components['responses']['Problem'];
+      403: components['responses']['Problem'];
+      404: components['responses']['Problem'];
+      409: components['responses']['Problem'];
+      429: components['responses']['Problem'];
+      503: components['responses']['Problem'];
+      default: components['responses']['Problem'];
+    };
+  };
 }

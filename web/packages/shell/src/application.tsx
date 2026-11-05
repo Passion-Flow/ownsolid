@@ -28,7 +28,11 @@ export function createApplication<TRouteTree extends AnyRoute>(
     onSignedOut: () => {
       const { pathname, href } = router.state.location;
       if (pathname === signInPath) return;
-      void router.navigate({ to: signInPath, search: { redirect: href }, replace: true });
+      void router.navigate({
+        to: signInPath,
+        search: { redirect: href, ended: true },
+        replace: true,
+      });
     },
   });
   const router = createRouter({

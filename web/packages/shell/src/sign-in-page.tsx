@@ -12,6 +12,8 @@ import { SsoButtons } from './sso.tsx';
 export interface SignInPageProps {
   /** The entrance being signed in to; it selects the page's wording. */
   audience: Audience;
+  /** The visitor was sent here because their session ended, so the page says so. */
+  sessionEnded?: boolean | undefined;
   /** Called after the session is established, to continue to the requested page. */
   onSignedIn: (me: Me) => void;
 }
@@ -22,7 +24,7 @@ interface FieldErrors {
 }
 
 /** Email and password sign-in for the console or the portal. */
-export function SignInPage({ audience, onSignedIn }: SignInPageProps) {
+export function SignInPage({ audience, sessionEnded = false, onSignedIn }: SignInPageProps) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState('');
@@ -59,6 +61,11 @@ export function SignInPage({ audience, onSignedIn }: SignInPageProps) {
   return (
     <AuthLayout title={t('signIn.title')} subtitle={t(`signIn.subtitle.${audience}`)}>
       <form noValidate onSubmit={submit} className="flex flex-col gap-4">
+        {sessionEnded && !error ? (
+          <Notice title={t('problem.AUTH_SESSION_EXPIRED.title')}>
+            {t('signIn.sessionEnded')}
+          </Notice>
+        ) : null}
         {error ? (
           isProblem(error, 'AUTH_INVALID_CREDENTIALS') ? (
             <Notice tone="critical" title={t('signIn.invalidCredentials.title')}>

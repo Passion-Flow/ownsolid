@@ -271,6 +271,32 @@ export const shellPages: readonly PageState[] = [
       await dialog.getByText('The password is not correct').waitFor();
     },
   },
+  {
+    name: 'sign-in after the session ended',
+    path: '/sign-in',
+    open: async (page) => {
+      await page.goto('/sign-in?redirect=%2F&ended=true');
+      await page.getByText('Your session has ended').waitFor();
+    },
+  },
+  {
+    name: 'warning before an idle session ends',
+    path: '/',
+    open: async (page, control) => {
+      control.session.idle_remaining_seconds = 110;
+      await signedIn(page, control);
+      await page.getByRole('dialog', { name: 'You are about to be signed out' }).waitFor();
+    },
+  },
+  {
+    name: 'warning before a session reaches its time limit',
+    path: '/',
+    open: async (page, control) => {
+      control.session.absolute_remaining_seconds = 110;
+      await signedIn(page, control);
+      await page.getByRole('dialog', { name: 'This session is reaching its time limit' }).waitFor();
+    },
+  },
   { name: 'start page', path: '/', open: signedIn },
   {
     name: 'command menu',
