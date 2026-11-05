@@ -29,7 +29,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [ ] UX-106 Global search across nodes, models, apps, users and tasks (P1)
 - [ ] UX-107 Empty states and errors that state the cause and the next action (P1) - Catalog: F022
 - [ ] UX-108 English and Simplified Chinese complete for every page, email and error (P1) - Catalog: F537, F552
-- [ ] UX-109 Language preference per user, tenant default and browser negotiation (P1) - Catalog: F553
+- [x] UX-109 Language preference per user, tenant default and browser negotiation (P1) - Catalog: F553 - Evidence: dfc68b2; real Chromium on both entrances of an offline install on `ownsolid-cpu` upgraded in place to schema 37, 2026-11-06
 - [x] UX-110 Locale formatting for dates, numbers and units (P1) - Catalog: F555 - Evidence: bee9124; real Chromium switched languages on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06
 - [ ] UX-111 In-product help and API documentation available offline (P1) - Catalog: F431
 - [x] UX-112 Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569 - Evidence: 27d03fc; keyboard walk and axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05
