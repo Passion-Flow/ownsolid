@@ -65,6 +65,47 @@ var callPriorities = map[Call]Priority{
 	CallUpload:      PriorityBulk,
 }
 
+// Growth names what the server cost of a call may grow with. The size of the fleet is
+// deliberately not a value: a call whose cost grows with it cannot be declared (ADR 0020).
+type Growth string
+
+const (
+	// GrowthFixed is a cost that depends on nothing the fleet or the request can change.
+	GrowthFixed Growth = "fixed"
+	// GrowthBatch is a cost that grows with the items of the request, which the protocol
+	// bounds. The declared statements are for CostBatchItems items.
+	GrowthBatch Growth = "batch"
+	// GrowthBytes is a cost that grows with the bytes of the request or response, which
+	// the protocol bounds per call, while its statements stay fixed.
+	GrowthBytes Growth = "bytes"
+)
+
+// CostBatchItems is the batch a GrowthBatch call declares its statements for.
+const CostBatchItems = 3
+
+// Cost is the server cost a call declares. Raising it is a reviewed change to this table;
+// the agent cost test measures every call on PostgreSQL and fails when a call exceeds its
+// declaration or costs more on a larger fleet.
+type Cost struct {
+	// Statements is the most SQL statements one call runs, counting those of triggers
+	// and foreign key checks, on its most expensive measured path.
+	Statements int
+	Growth     Growth
+}
+
+var callCosts = map[Call]Cost{
+	CallEnroll:      {Statements: 33, Growth: GrowthFixed},
+	CallHeartbeat:   {Statements: 10, Growth: GrowthFixed},
+	CallClaim:       {Statements: 51, Growth: GrowthFixed},
+	CallAcknowledge: {Statements: 8, Growth: GrowthFixed},
+	CallRenew:       {Statements: 21, Growth: GrowthFixed},
+	CallResult:      {Statements: 16, Growth: GrowthFixed},
+	CallStop:        {Statements: 28, Growth: GrowthFixed},
+	CallEvents:      {Statements: 75, Growth: GrowthBatch},
+	CallDownload:    {Statements: 38, Growth: GrowthBytes},
+	CallUpload:      {Statements: 76, Growth: GrowthBytes},
+}
+
 // Calls lists every call.
 func Calls() []Call {
 	return []Call{CallEnroll, CallHeartbeat, CallClaim, CallAcknowledge, CallRenew, CallResult, CallStop, CallEvents, CallDownload, CallUpload}
@@ -83,6 +124,9 @@ func (c Call) Priority() Priority {
 	}
 	return PriorityBulk
 }
+
+// Cost is the server cost c declares. An unknown call declares none.
+func (c Call) Cost() Cost { return callCosts[c] }
 
 // WaitsForWork reports whether control may hold c open until work arrives. Such a call
 // holds a serving seat only while control looks for work, not while it waits.

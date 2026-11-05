@@ -21,6 +21,26 @@ func TestEveryCallHasAPriority(t *testing.T) {
 	}
 }
 
+func TestEveryCallDeclaresItsCost(t *testing.T) {
+	if len(callCosts) != len(Calls()) {
+		t.Fatalf("%d costs for %d calls", len(callCosts), len(Calls()))
+	}
+	for _, c := range Calls() {
+		cost := c.Cost()
+		if cost.Statements < 1 {
+			t.Errorf("%s declares no statements", c)
+		}
+		switch cost.Growth {
+		case GrowthFixed, GrowthBatch, GrowthBytes:
+		default:
+			t.Errorf("%s declares growth %q", c, cost.Growth)
+		}
+	}
+	if (Call("telemetry").Cost() != Cost{}) {
+		t.Fatal("an unlisted call declares a cost")
+	}
+}
+
 func TestPriorityOrderShedsBulkFirst(t *testing.T) {
 	order := Priorities()
 	for i, p := range order {

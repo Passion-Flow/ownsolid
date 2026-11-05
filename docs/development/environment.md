@@ -58,6 +58,15 @@ Set `PROJECT_ONE_TEST_DSN`. Add `-tags repository_integration` with
 `PROJECT_ONE_REPOSITORY_ENGINE=postgresql`, `PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE`
 and `PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA` for the repository tests, and use `umask 077`.
 
+## Agent call cost test
+
+`make test-agent-cost` measures every agent call against its declared cost on a small and
+a large fleet ([ADR 0020](../decisions/0020-agent-call-cost-rule.md)) and takes about ten
+seconds. It needs a superuser in `PROJECT_ONE_TEST_DSN`, because it loads `auto_explain`,
+and `PROJECT_ONE_DATA_PYTHON` set to a Python 3.12 binary as a real path. Its log prints
+statements, blocks and rows of each exchange. When a change raises a cost on purpose, raise
+the declaration in `api/agent/v1/calls.go` in the same change and say why.
+
 ## Telemetry store integration tests
 
 The telemetry client has tests against the real stores, behind a build tag:

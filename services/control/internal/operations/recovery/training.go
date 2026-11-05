@@ -49,7 +49,7 @@ func PrepareTrainingRemoval(ctx context.Context, accounts *identity.Service, nod
 	}
 	e = trainingRemovalTransaction(ctx, accounts, func(ctx context.Context, tx transaction.Executor) error {
 		var lockedWorkspace string
-		if e = tx.QueryRow(ctx, trainingRemovalStatement(tx, "SELECT w.id::text FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w", "SELECT w.id FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND w.tenant_id=? AND w.id=? FOR UPDATE", []any{tenant, workspace}, []any{tenant, workspace})).Scan(&lockedWorkspace); e != nil {
+		if e = tx.QueryRow(ctx, trainingRemovalStatement(tx, "SELECT w.id::text FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR NO KEY UPDATE OF w", "SELECT w.id FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND w.tenant_id=? AND w.id=? FOR UPDATE", []any{tenant, workspace}, []any{tenant, workspace})).Scan(&lockedWorkspace); e != nil {
 			return e
 		}
 		var fenced *time.Time
@@ -101,7 +101,7 @@ func ReconcileTrainingRemoval(ctx context.Context, accounts *identity.Service, r
 	return trainingRemovalTransaction(ctx, accounts, func(ctx context.Context, tx transaction.Executor) error {
 		var e error
 		var lockedWorkspace string
-		if e = tx.QueryRow(ctx, trainingRemovalStatement(tx, "SELECT w.id::text FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w", "SELECT w.id FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND w.tenant_id=? AND w.id=? FOR UPDATE", []any{scope.TenantID, scope.WorkspaceID}, []any{scope.TenantID, scope.WorkspaceID})).Scan(&lockedWorkspace); e != nil {
+		if e = tx.QueryRow(ctx, trainingRemovalStatement(tx, "SELECT w.id::text FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR NO KEY UPDATE OF w", "SELECT w.id FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND w.tenant_id=? AND w.id=? FOR UPDATE", []any{scope.TenantID, scope.WorkspaceID}, []any{scope.TenantID, scope.WorkspaceID})).Scan(&lockedWorkspace); e != nil {
 			return e
 		}
 		var challengeRaw []byte

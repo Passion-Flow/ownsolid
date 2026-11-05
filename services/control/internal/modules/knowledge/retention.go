@@ -45,7 +45,7 @@ func (s *Service) Cleanup(ctx context.Context) (RetentionResult, error) {
 	s.maintenanceAfter = base
 	e = repo.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
 		var locked string
-		if e = tx.QueryRow(ctx, knowledgeSQL(tx, "SELECT id::text FROM workspaces WHERE tenant_id=$1 AND id=$2 FOR UPDATE", "SELECT id FROM workspaces WHERE tenant_id=? AND id=? FOR UPDATE", []any{tenant, workspace}, []any{tenant, workspace})).Scan(&locked); e != nil {
+		if e = tx.QueryRow(ctx, knowledgeSQL(tx, "SELECT id::text FROM workspaces WHERE tenant_id=$1 AND id=$2 FOR NO KEY UPDATE", "SELECT id FROM workspaces WHERE tenant_id=? AND id=? FOR UPDATE", []any{tenant, workspace}, []any{tenant, workspace})).Scan(&locked); e != nil {
 			return e
 		}
 		if e = tx.QueryRow(ctx, knowledgeSQL(tx, "SELECT id::text FROM knowledge_bases WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE", "SELECT id FROM knowledge_bases WHERE tenant_id=? AND workspace_id=? AND id=? AND initialization_state='ready' FOR UPDATE", []any{tenant, workspace, base}, []any{tenant, workspace, base})).Scan(&locked); e != nil {

@@ -33,39 +33,54 @@ func (s *Service) loadDelegatedWithin(ctx context.Context, q transaction.Executo
 	var epoch int64
 	var status string
 	var platformAdmin bool
-	if e = q.QueryRow(ctx, acceptedAdapterSQL(q, "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=$1 FOR UPDATE", "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=? FOR UPDATE", c.actor)).Scan(&epoch, &status, &platformAdmin); e != nil {
+	if e = q.QueryRow(ctx, acceptedAdapterSQL(q, "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=$1", "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=? FOR UPDATE", c.actor)).Scan(&epoch, &status, &platformAdmin); e != nil {
 		return zero(e)
 	}
 	a := identity.Auth{Me: identity.Me{User: identity.User{ID: c.actor, IsPlatformAdmin: platformAdmin}, Audience: c.audience}, Epoch: epoch}
 	w := workspaces.Workspace{ID: c.workspace, TenantID: c.tenant}
-	var tenantActive bool
-	if e = q.QueryRow(ctx, acceptedAdapterSQL(q,
-		`SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w`,
-		`SELECT w.status,EXISTS(SELECT 1 FROM tenants t WHERE t.id=w.tenant_id AND t.status='active') FROM workspaces w WHERE w.tenant_id=? AND w.id=? AND EXISTS(SELECT 1 FROM installation_state i WHERE i.id=1 AND i.bootstrap_complete AND i.tenant_id=w.tenant_id) FOR UPDATE`, c.tenant, c.workspace)).Scan(&w.Status, &tenantActive); e != nil {
-		return zero(e)
+	// ADR 0020: this runs on every training agent call, so on PostgreSQL it locks neither
+	// the actor, the membership nor the Workspace row, which all of a user's nodes share.
+	// The node lock fences the status read. A call in flight when a revocation commits
+	// ends as if it arrived just before it; the next call sees the new epoch. The other
+	// chains keep the Workspace lock before the node lock.
+	scope := func() (bool, error) {
+		var active bool
+		e := q.QueryRow(ctx, acceptedAdapterSQL(q,
+			`SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2`,
+			`SELECT w.status,EXISTS(SELECT 1 FROM tenants t WHERE t.id=w.tenant_id AND t.status='active') FROM workspaces w WHERE w.tenant_id=? AND w.id=? AND EXISTS(SELECT 1 FROM installation_state i WHERE i.id=1 AND i.bootstrap_complete AND i.tenant_id=w.tenant_id) FOR UPDATE`, c.tenant, c.workspace)).Scan(&w.Status, &active)
+		return active, e
 	}
-	valid := status == "active" && epoch == c.epoch && tenantActive && w.Status == "active"
+	var tenantActive bool
+	if q.Dialect() != transaction.PostgreSQL {
+		if tenantActive, e = scope(); e != nil {
+			return zero(e)
+		}
+	}
+	authorized := false
 	switch c.audience {
 	case "admin":
-		valid = valid && platformAdmin
+		authorized = platformAdmin
 	case "portal":
 		var role, authority string
-		e = q.QueryRow(ctx, acceptedAdapterSQL(q, "SELECT role,authority_id::text FROM workspace_memberships WHERE tenant_id=$1 AND workspace_id=$2 AND user_id=$3 FOR SHARE", "SELECT role,authority_id FROM workspace_memberships WHERE tenant_id=? AND workspace_id=? AND user_id=? FOR SHARE", c.tenant, c.workspace, c.actor)).Scan(&role, &authority)
-		if errors.Is(e, sql.ErrNoRows) {
-			valid = false
-		} else if e != nil {
+		e = q.QueryRow(ctx, acceptedAdapterSQL(q, "SELECT role,authority_id::text FROM workspace_memberships WHERE tenant_id=$1 AND workspace_id=$2 AND user_id=$3", "SELECT role,authority_id FROM workspace_memberships WHERE tenant_id=? AND workspace_id=? AND user_id=? FOR SHARE", c.tenant, c.workspace, c.actor)).Scan(&role, &authority)
+		if e != nil && !errors.Is(e, sql.ErrNoRows) {
 			return zero(e)
-		} else {
-			w.Role = &role
-			valid = valid && role == "owner" && c.membership != nil && *c.membership == authority
 		}
-	default:
-		valid = false
+		if e == nil {
+			w.Role = &role
+			authorized = role == "owner" && c.membership != nil && *c.membership == authority
+		}
 	}
 	n, nodeError := s.Nodes.TrainingTargetWithin(ctx, q, c.tenant, c.workspace, c.node)
 	if nodeError != nil && nodeError.Error() != "RESOURCE_NOT_FOUND" && nodeError.Error() != "NODE_UNAVAILABLE" && nodeError.Error() != "AGENT_PROFILE_REJECTED" {
 		return zero(nodeError)
 	}
+	if q.Dialect() == transaction.PostgreSQL {
+		if tenantActive, e = scope(); e != nil {
+			return zero(e)
+		}
+	}
+	valid := authorized && status == "active" && epoch == c.epoch && tenantActive && w.Status == "active"
 	j, e := lockedJobWithin(ctx, q, w, c.id)
 	if e != nil {
 		return zero(e)

@@ -6,7 +6,7 @@ CONTROL_IMAGE ?= ownsolid/control:dev
 E2E_BIN ?= bin/e2e
 IMAGE_PATHS := api pkg/license deploy/images/control tools/release/offline services/control runtimes/data-processing web
 
-.PHONY: help check check-layout check-roadmap check-web test-tools web-install generate build test test-web-browser image-control e2e-binaries test-offline
+.PHONY: help check check-layout check-roadmap check-web test-tools web-install generate build test test-web-browser test-agent-cost image-control e2e-binaries test-offline
 
 help: ## Show available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -46,6 +46,12 @@ test: web-install test-web-browser ## Run Go, gateway and web tests
 # Needs Chromium once per machine: cd web/apps/console && pnpm exec playwright install chromium
 test-web-browser: web-install ## Run the browser tests of the console and portal
 	@cd web && pnpm test:browser
+
+# The test skips without a database, so a missing setting must fail here instead of passing.
+test-agent-cost: ## Measure every agent call against its declared cost (PROJECT_ONE_TEST_DSN, PROJECT_ONE_DATA_PYTHON)
+	@test -n "$$PROJECT_ONE_TEST_DSN" && test -n "$$PROJECT_ONE_DATA_PYTHON" || { echo "PROJECT_ONE_TEST_DSN and PROJECT_ONE_DATA_PYTHON are required"; exit 1; }
+	@export TMPDIR="$$(cd "$${TMPDIR:-/tmp}" && pwd -P)/"; umask 077; \
+	cd services/control && go test ./internal/modules/training -run '^TestAgentCallCostDoesNotGrowWithTheFleet$$' -count=1 -v
 
 # The build context is a tar of tracked files, so local build output and secrets cannot
 # enter an image. DOCKER may be remote: make image-control DOCKER='ssh ownsolid-cpu docker'

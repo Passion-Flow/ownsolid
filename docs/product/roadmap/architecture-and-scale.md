@@ -46,6 +46,8 @@ agents is not.
 - [ ] ARC-105 Load tested with 1,000 simulated nodes per cell at twice the load, including a Kubernetes cell simulated with KWOK (P1)
 - [ ] ARC-106 Published fleet KPIs: dispatch p99, reconnect time, database writes per second at measured scale (P1)
 - [ ] ARC-107 Gateway connection lifecycle: maximum connection age with jitter, GOAWAY drain, and rebalancing after a gateway roll so long-lived streams do not pile onto old gateways (P1)
+- [ ] ARC-108 Measure the component, inference, model preparation and image registry operations in the agent cost test, so every operation of every call has an exchange (P1)
+- [ ] ARC-109 Cut the declared cost of claims, event batches and upload chunks, which repeat the same authority checks: one check per call, one per batch (P1)
 
 ## P2 Fleet operations
 

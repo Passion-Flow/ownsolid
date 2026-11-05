@@ -36,17 +36,23 @@ func (s *Service) machineWithin(ctx context.Context, id, credential string, fn f
 		return taskRuntimeError(e)
 	}
 	operation := func(ctx context.Context, q transaction.Executor, legacy pgx.Tx) error {
+		// ADR 0020: on PostgreSQL the node lock fences the status read, so no agent call
+		// waits for another on the Workspace row. The other chains lock it first.
 		var active bool
-		e := q.QueryRow(ctx, nodeSQL(q, `SELECT w.status='active' AND t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id WHERE w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w`, `SELECT w.status='active' AND t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id WHERE w.tenant_id=? AND w.id=? FOR UPDATE`, `SELECT CASE WHEN w.status='active' AND t.status='active' THEN 1 ELSE 0 END FROM workspaces w JOIN tenants t ON t.id=w.tenant_id WHERE w.tenant_id=? AND w.id=? FOR UPDATE`, tenant, workspace)).Scan(&active)
-		if errors.Is(e, sql.ErrNoRows) {
-			return fail("AGENT_UNAUTHORIZED")
-		}
-		if e != nil {
-			return e
+		var e error
+		if q.Dialect() != transaction.PostgreSQL {
+			if active, e = scopeActiveWithin(ctx, q, tenant, workspace); e != nil {
+				return e
+			}
 		}
 		n, e := s.CredentialWithin(ctx, q, tenant, workspace, id, credential)
 		if e != nil {
 			return e
+		}
+		if q.Dialect() == transaction.PostgreSQL {
+			if active, e = scopeActiveWithin(ctx, q, tenant, workspace); e != nil {
+				return e
+			}
 		}
 		return fn(ctx, q, n, active, legacy)
 	}
@@ -59,6 +65,19 @@ func (s *Service) machineWithin(ctx context.Context, id, credential string, fn f
 	}
 	return taskRuntimeError(store.Within(bounded, false, func(ctx context.Context, q transaction.Executor) error { return operation(ctx, q, nil) }))
 }
+
+// scopeActiveWithin reads whether a node's Workspace and tenant are active. On PostgreSQL
+// the caller holds the node lock and the read takes no lock: a status change locks the
+// Workspace's nodes, so it waits for this call or this call sees it (ADR 0020).
+func scopeActiveWithin(ctx context.Context, q transaction.Executor, tenant, workspace string) (bool, error) {
+	var active bool
+	e := q.QueryRow(ctx, nodeSQL(q, `SELECT w.status='active' AND t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id WHERE w.tenant_id=$1 AND w.id=$2`, `SELECT w.status='active' AND t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id WHERE w.tenant_id=? AND w.id=? FOR UPDATE`, `SELECT CASE WHEN w.status='active' AND t.status='active' THEN 1 ELSE 0 END FROM workspaces w JOIN tenants t ON t.id=w.tenant_id WHERE w.tenant_id=? AND w.id=? FOR UPDATE`, tenant, workspace)).Scan(&active)
+	if errors.Is(e, sql.ErrNoRows) {
+		return false, fail("AGENT_UNAUTHORIZED")
+	}
+	return active, e
+}
+
 func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, h wire.Handshake) (wire.Disposition, error) {
 	if e := h.Validate(); e != nil {
 		return wire.Disposition{}, e
@@ -186,16 +205,16 @@ func (s *Service) withPostgreSQLLease(ctx context.Context, id, credential, taskI
 		if e != nil {
 			return e
 		}
-		var active bool
-		if e = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT w.status='active' AND t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id WHERE w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w`, tenant, workspace)).Scan(&active); e != nil {
+		n, e := s.CredentialWithin(ctx, q, tenant, workspace, id, credential)
+		if e != nil {
+			return e
+		}
+		active, e := scopeActiveWithin(ctx, q, tenant, workspace)
+		if e != nil {
 			return e
 		}
 		if !active {
 			return fail("ACCESS_DENIED")
-		}
-		n, e := s.CredentialWithin(ctx, q, tenant, workspace, id, credential)
-		if e != nil {
-			return e
 		}
 		if n.Status != "active" {
 			return fail("ACCESS_DENIED")

@@ -95,6 +95,13 @@ func (s *Service) Update(ctx context.Context, a identity.Auth, id, name, status 
 		if e = incrementable(w.Version); e != nil {
 			return e
 		}
+		// Before the row changes: a rename conflicts with the foreign key checks of a call
+		// that holds its node, which this would then wait for in turn.
+		if w.Status != status {
+			if e = lockNodesWithin(ctx, q, w); e != nil {
+				return e
+			}
+		}
 		_, e = q.Exec(ctx, workspaceSQL(q, "UPDATE workspaces SET name=$1,status=$2,version=version+1,updated_at=clock_timestamp() WHERE tenant_id=$3 AND id=$4", "UPDATE workspaces SET name=?,status=?,version=version+1,updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND id=?", `UPDATE WORKSPACES SET NAME=?,STATUS=?,VERSION=VERSION+1,UPDATED_AT=CURRENT_TIMESTAMP(6) WHERE TENANT_ID=? AND ID=?`, name, status, w.TenantID, w.ID))
 		if e != nil {
 			return uniqueMutation(e, "WORKSPACE_EXISTS")
@@ -246,4 +253,16 @@ func (s *Service) ChangeMember(ctx context.Context, a identity.Auth, id, user, r
 		return Membership{}, e
 	}
 	return out, nil
+}
+
+// lockNodesWithin waits for agent calls in flight on the Workspace's nodes. Agent calls
+// read the status under their node lock, so after this no call acts on the old status
+// (ADR 0020). A status change is rare, which pays for visiting every node. The other
+// chains fence agent calls on the Workspace row instead.
+func lockNodesWithin(ctx context.Context, q transaction.Executor, w Workspace) error {
+	if q.Dialect() != transaction.PostgreSQL {
+		return nil
+	}
+	_, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT id FROM managed_nodes WHERE tenant_id=$1 AND workspace_id=$2 ORDER BY id FOR UPDATE", w.TenantID, w.ID))
+	return e
 }

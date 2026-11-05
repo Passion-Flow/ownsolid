@@ -4,6 +4,8 @@ This owner resolves the installed tenant's Workspaces, current memberships/roles
 
 [scope.go](scope.go) resolves Workspace through installation/tenant state, obtains the required Workspace lock and then reads current membership. [authority.go](authority.go) carries authority identity; [service.go](service.go), [mutations.go](mutations.go), [notes.go](notes.go) and [lists.go](lists.go) implement the public operations. [reconciliation.go](reconciliation.go) handles retained mutation outcomes.
 
+On PostgreSQL the exclusive Workspace fence is `FOR NO KEY UPDATE`, which foreign key checks pass; never use `FOR UPDATE` on that row. A status change also locks the Workspace's nodes, because agent calls read the status under their node lock instead of locking this row ([ADR 0020](../../../../../docs/decisions/0020-agent-call-cost-rule.md)).
+
 Never resolve authority from a client tenant ID or from a membership snapshot obtained before the lock wait. Platform-admin audience, active state, membership and owner-only operations remain distinct conditions. Business writers borrow the selected transaction and recheck identity; mutation/audit and revision changes share the outcome.
 
 Workspace/member state starts in migration 000001; notes and subsequent Workspace changes use their owning migrations and explicit PostgreSQL/MySQL queries. Preserve revision conflicts, membership-removal behavior, no cross-Workspace disclosure and commit-unknown readback.

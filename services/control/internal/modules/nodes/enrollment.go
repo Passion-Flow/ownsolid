@@ -54,7 +54,7 @@ func enrollmentScope(ctx context.Context, q transaction.Executor, hash []byte) (
 	var installed string
 	var complete bool
 	e = q.QueryRow(ctx, nodeSQL(q,
-		`SELECT COALESCE(tenant_id::text,''),bootstrap_complete FROM installation_state WHERE id=1 FOR UPDATE`,
+		`SELECT COALESCE(tenant_id::text,''),bootstrap_complete FROM installation_state WHERE id=1 FOR SHARE`,
 		`SELECT COALESCE(tenant_id,''),bootstrap_complete FROM installation_state WHERE id=1 FOR UPDATE`, `SELECT COALESCE(tenant_id,''),bootstrap_complete FROM installation_state WHERE id=1 FOR UPDATE`)).Scan(&installed, &complete)
 	if errors.Is(e, sql.ErrNoRows) || e == nil && (!complete || installed != tenant) {
 		return "", "", fail("TOKEN_UNUSABLE")
@@ -121,9 +121,8 @@ func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request str
 			(input.Facts.Architecture != "amd64" || input.Facts.OSID != "ubuntu" || input.Facts.OSVersion != "24.04") {
 			return fail("AGENT_PROFILE_REJECTED")
 		}
-		var count int
-		if e = q.QueryRow(ctx, nodeSQL(q, `SELECT count(*) FROM managed_nodes WHERE tenant_id=$1 AND status<>'removed'`,
-			`SELECT count(*) FROM managed_nodes WHERE tenant_id=? AND status<>'removed'`, `SELECT count(*) FROM managed_nodes WHERE tenant_id=? AND status<>'removed'`, tenant)).Scan(&count); e != nil {
+		count, e := liveNodesWithin(ctx, q, tenant)
+		if e != nil {
 			return e
 		}
 		if count >= s.Identity.Config.Policy().Nodes.MaximumLiveNodes {
@@ -170,4 +169,16 @@ func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request str
 		return wire.Enrolled{}, enrollmentError(e)
 	}
 	return out, nil
+}
+
+// liveNodesWithin reads how many live nodes a tenant has and serializes enrollment against
+// the limit. On PostgreSQL a trigger keeps the count, so the cost of enrolling does not
+// grow with the fleet (ADR 0020); the row is created by the first read. The other chains
+// lack the table until CMP-201 and CMP-202 and count the nodes.
+func liveNodesWithin(ctx context.Context, q transaction.Executor, tenant string) (int, error) {
+	var count int
+	e := q.QueryRow(ctx, nodeSQL(q,
+		`INSERT INTO tenant_node_counts(tenant_id,live_nodes) VALUES($1,0) ON CONFLICT(site_id,cell_id,tenant_id) DO UPDATE SET live_nodes=tenant_node_counts.live_nodes RETURNING live_nodes`,
+		`SELECT count(*) FROM managed_nodes WHERE tenant_id=? AND status<>'removed'`, `SELECT count(*) FROM managed_nodes WHERE tenant_id=? AND status<>'removed'`, tenant)).Scan(&count)
+	return count, e
 }

@@ -89,6 +89,18 @@ func newSchemaWithSetup(t *testing.T, options SetupOptions, version int, license
 
 func newSchemaWithCustody(t *testing.T, options SetupOptions, retainFailed bool, version int, licensed bool) *identity.Service {
 	t.Helper()
+	return newConfigured(t, options, retainFailed, version, licensed, nil)
+}
+
+// NewConfigured is New with configure applied to the returned business pool before its
+// first connection. Only that pool is affected, so a test can observe what its pool does.
+func NewConfigured(t *testing.T, configure func(*pgxpool.Config)) *identity.Service {
+	t.Helper()
+	return newConfigured(t, SetupOptions{}, false, 0, true, configure)
+}
+
+func newConfigured(t *testing.T, options SetupOptions, retainFailed bool, version int, licensed bool, configure func(*pgxpool.Config)) *identity.Service {
+	t.Helper()
 	setup, e := options.plan()
 	if e != nil {
 		t.Fatal(e)
@@ -143,6 +155,9 @@ func newSchemaWithCustody(t *testing.T, options SetupOptions, retainFailed bool,
 		t.Fatal(e)
 	}
 	pc.ConnConfig.RuntimeParams["search_path"] = schema
+	if configure != nil {
+		configure(pc)
+	}
 	db, e := pgxpool.NewWithConfig(context.Background(), pc)
 	if e != nil {
 		t.Fatal(e)

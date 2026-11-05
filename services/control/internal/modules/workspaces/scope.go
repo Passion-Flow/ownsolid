@@ -112,7 +112,7 @@ func (s *Service) resolveWithin(ctx context.Context, q transaction.Executor, a i
 		pg += " FOR SHARE OF w"
 		my += " FOR SHARE"
 	case scopeExclusive:
-		pg += " FOR UPDATE OF w"
+		pg += " FOR NO KEY UPDATE OF w"
 		my += " FOR UPDATE"
 	}
 	w, e := scanWorkspace(q.QueryRow(ctx, workspaceSQL(q, pg, my, dm, id)))
@@ -221,6 +221,30 @@ func (s *Service) RecheckScopeWithin(ctx context.Context, q transaction.Executor
 		return Workspace{}, e
 	}
 	w, e := s.resolveWithin(ctx, q, a, id, scopeExclusive)
+	if e != nil {
+		return Workspace{}, workspaceError(e)
+	}
+	return w, nil
+}
+
+// CurrentScopeWithin resolves a person's scope for an agent call acting on their grant. On
+// PostgreSQL the caller holds its node lock and this locks nothing, so the nodes of a
+// Workspace do not wait for each other (ADR 0020). The other chains lock the Workspace and
+// must call this before the node lock.
+func (s *Service) CurrentScopeWithin(ctx context.Context, q transaction.Executor, a identity.Auth, id string) (Workspace, error) {
+	if q == nil || q.Dialect() != transaction.PostgreSQL {
+		return s.RecheckScopeWithin(ctx, q, a, id)
+	}
+	if !workspaceID(id) {
+		return Workspace{}, fail("RESOURCE_NOT_FOUND")
+	}
+	if e := s.executor(q); e != nil {
+		return Workspace{}, e
+	}
+	if e := s.Identity.CurrentWithin(ctx, q, a); e != nil {
+		return Workspace{}, e
+	}
+	w, e := s.resolveWithin(ctx, q, a, id, scopeUnlocked)
 	if e != nil {
 		return Workspace{}, workspaceError(e)
 	}

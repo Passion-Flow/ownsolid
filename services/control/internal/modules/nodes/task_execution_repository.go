@@ -322,7 +322,7 @@ func (s *Service) sweepSelected(ctx context.Context) error {
 	for _, v := range scopes {
 		e = store.Within(bounded, false, func(ctx context.Context, q transaction.Executor) error {
 			var workspace string
-			if e := q.QueryRow(ctx, nodeSQL(q, "SELECT id::text FROM workspaces WHERE tenant_id=$1 AND id=$2 FOR UPDATE", "SELECT id FROM workspaces WHERE tenant_id=? AND id=? FOR UPDATE", `SELECT id FROM workspaces WHERE tenant_id=? AND id=? FOR UPDATE`, v.tenant, v.workspace)).Scan(&workspace); e != nil {
+			if e := q.QueryRow(ctx, nodeSQL(q, "SELECT id::text FROM workspaces WHERE tenant_id=$1 AND id=$2 FOR NO KEY UPDATE", "SELECT id FROM workspaces WHERE tenant_id=? AND id=? FOR UPDATE", `SELECT id FROM workspaces WHERE tenant_id=? AND id=? FOR UPDATE`, v.tenant, v.workspace)).Scan(&workspace); e != nil {
 				return e
 			}
 			n, e := s.lockedUpdateNode(ctx, q, v.tenant, v.workspace, v.node)

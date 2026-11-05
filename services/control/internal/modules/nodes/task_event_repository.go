@@ -41,15 +41,13 @@ func (s *Service) taskEventSourceWithin(ctx context.Context, q transaction.Execu
 	if err := s.taskExecutor(ctx, q); err != nil {
 		return Node{}, Task{}, err
 	}
-	// A shared Workspace fence matches existing component reads. Upgrading to
-	// exclusive here after an owning caller already locked its node can deadlock
-	// simultaneous same-Workspace tasks on different nodes. No Workspace mutation
-	// occurs in event correlation; membership/status writers still wait. Native
-	// DM uses the stronger FOR UPDATE fence: its caller must already acquire the
-	// Workspace fence before its node lock, including every publishing callback.
+	// The caller holds the node lock, which fences this read on PostgreSQL (ADR 0020); a
+	// Workspace row lock here would make every result wait on, or starve, the Workspace's
+	// writers. Native DM uses the stronger FOR UPDATE fence: its caller must already
+	// acquire the Workspace fence before its node lock, including every publishing callback.
 	var status string
 	err := q.QueryRow(ctx, nodeSQL(q,
-		"SELECT status FROM workspaces WHERE tenant_id=$1 AND id=$2 FOR SHARE",
+		"SELECT status FROM workspaces WHERE tenant_id=$1 AND id=$2",
 		"SELECT status FROM workspaces WHERE tenant_id=? AND id=? FOR SHARE", `SELECT status FROM workspaces WHERE tenant_id=? AND id=? FOR UPDATE`, tenant, workspace)).Scan(&status)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Node{}, Task{}, fail("RESOURCE_NOT_FOUND")

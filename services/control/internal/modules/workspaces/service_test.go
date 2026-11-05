@@ -50,7 +50,7 @@ func TestM02WaitingWritesRecheckMembership(t *testing.T) {
 			blocked := false
 			for time.Now().Before(deadline) {
 				var n int
-				if e = s.DB.QueryRow(ctx, "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%FOR UPDATE OF w%'").Scan(&n); e != nil {
+				if e = s.DB.QueryRow(ctx, "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%FOR NO KEY UPDATE OF w%'").Scan(&n); e != nil {
 					t.Fatal(e)
 				}
 				if n > 0 {

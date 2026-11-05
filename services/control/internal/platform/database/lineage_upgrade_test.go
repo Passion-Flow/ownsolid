@@ -82,6 +82,28 @@ func TestLineageUpgradeKeepsChosenThemesOnly(t *testing.T) {
 	}
 }
 
+
+// Migration 000035 counts the live nodes that already exist; removed nodes do not count.
+func TestLineageUpgradeCountsLiveNodes(t *testing.T) {
+	s := fixture.NewAtVersion(t, database.SchemaVersion-1)
+	fixture.Bootstrap(t, s)
+	ctx := t.Context()
+	seed := newTaskSeed(t, s)
+	seed.node("Live")
+	seed.node("Also live")
+	removed := seed.node("Removed")
+	if _, e := s.DB.Exec(ctx, "UPDATE managed_nodes SET status='removed',credential_hash=NULL WHERE id=$1", removed); e != nil {
+		t.Fatal(e)
+	}
+	if e := database.Migrate(ctx, s.DB); e != nil {
+		t.Fatal(e)
+	}
+	var live int
+	if e := s.DB.QueryRow(ctx, "SELECT live_nodes FROM tenant_node_counts").Scan(&live); e != nil || live != 2 {
+		t.Fatal(live, e)
+	}
+}
+
 // Migration 000031 numbers the tasks that already exist. They ran under the old rules, so
 // they count as delivered, and the first task of the new rules continues the sequence.
 func TestLineageUpgradeNumbersExistingTasks(t *testing.T) {

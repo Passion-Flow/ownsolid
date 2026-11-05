@@ -44,7 +44,7 @@ func (s *Service) lockDelegation(ctx context.Context, tx transaction.Executor, c
 	a := identity.Auth{Me: identity.Me{User: identity.User{ID: c.actor, IsPlatformAdmin: platformAdmin}, Audience: c.audience}, Epoch: epoch}
 	w := workspaces.Workspace{ID: c.workspace, TenantID: c.tenant}
 	var tenantActive bool
-	if e := tx.QueryRow(ctx, knowledgeSQL(tx, `SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w`, `SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=? AND w.id=? FOR UPDATE`, []any{c.tenant, c.workspace}, []any{c.tenant, c.workspace})).Scan(&w.Status, &tenantActive); e != nil {
+	if e := tx.QueryRow(ctx, knowledgeSQL(tx, `SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR NO KEY UPDATE OF w`, `SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=? AND w.id=? FOR UPDATE`, []any{c.tenant, c.workspace}, []any{c.tenant, c.workspace})).Scan(&w.Status, &tenantActive); e != nil {
 		return a, w, false, e
 	}
 	valid := status == "active" && epoch == c.epoch && tenantActive && w.Status == "active"

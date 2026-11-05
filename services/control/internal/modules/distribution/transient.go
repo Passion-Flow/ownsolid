@@ -49,7 +49,7 @@ func (s *Service) revokeTransient(ctx context.Context, a identity.Auth, key APIK
 			return e
 		}
 		w := workspaces.Workspace{ID: key.WorkspaceID}
-		if e := q.QueryRow(ctx, distributionNativeSQL(q, `SELECT TENANT_ID FROM WORKSPACES WHERE ID=? FOR UPDATE`, "SELECT tenant_id::text FROM workspaces WHERE id=$1 FOR UPDATE", "SELECT tenant_id FROM workspaces WHERE id=? FOR UPDATE", w.ID)).Scan(&w.TenantID); e != nil {
+		if e := q.QueryRow(ctx, distributionNativeSQL(q, `SELECT TENANT_ID FROM WORKSPACES WHERE ID=? FOR UPDATE`, "SELECT tenant_id::text FROM workspaces WHERE id=$1 FOR NO KEY UPDATE", "SELECT tenant_id FROM workspaces WHERE id=? FOR UPDATE", w.ID)).Scan(&w.TenantID); e != nil {
 			return e
 		}
 		var revoked bool
