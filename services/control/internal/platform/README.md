@@ -11,6 +11,7 @@ Platform packages provide bounded shared mechanisms. Domain owners still decide 
 | [database](database/README.md) | PostgreSQL installation/migration plus MySQL pool, migration journal and selected transaction adapters |
 | [httpserver](httpserver/README.md) | Bounded listener, request decoding, static/download responses and structured problems |
 | [health](health) | Health/readiness support |
+| liveness | In-memory table of when each node was last heard, its latest report and its recorded connectivity, so heartbeats cost no database write ([ADR 0022](../../../../docs/decisions/0022-liveness-outside-the-database.md)) |
 | [localization](localization/README.md) | Offline locale/resource/font inventory admission and serving metadata |
 | [mail](mail/README.md) | Encrypted durable outbox, rendered templates and SMTP transport |
 | [modelcache](modelcache/README.md) | Bounded single-instance Valkey RESP2 adapter for derived model-directory caching; never business model ownership |
