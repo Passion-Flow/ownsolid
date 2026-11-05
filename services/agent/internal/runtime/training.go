@@ -29,58 +29,17 @@ func executeTraining(ctx context.Context, connection *client.Client, base, node 
 	bounded, cancel := context.WithTimeout(ctx, time.Duration(lease.Training.Recipe.Resources.WallSeconds)*time.Second)
 	defer cancel()
 	taskBase := base + "/tasks/" + lease.TaskID
-	done := make(chan struct{})
 	finish := make(chan struct{})
-	renewed := make(chan error, 1)
-	renew := func(ctx context.Context) (time.Time, error) {
-		started := time.Now()
-		var out wire.RenewedLease
-		if e := connection.Post(ctx, taskBase+"/renewals", wire.LeaseRenewal{LeaseToken: lease.LeaseToken}, &out); e != nil {
-			return time.Time{}, e
-		}
-		return renewalDeadline(started, out)
-	}
+	renew := leaseRenewal(connection, taskBase, lease)
+	var done <-chan struct{}
+	var renewed <-chan error
 	expiry, e := renew(bounded)
 	if e != nil {
-		renewed <- e
+		// Execute still runs, cancelled, so the stop receipt proves nothing started.
 		cancel()
-		close(done)
+		done, renewed = lostBeforeStart(e)
 	} else {
-		go func() {
-			defer close(done)
-			ticker := time.NewTicker(time.Duration(wire.LeaseRenewalSeconds) * time.Second)
-			defer ticker.Stop()
-			watchdog := time.NewTimer(time.Until(expiry))
-			defer watchdog.Stop()
-			fail := func(e error) { renewed <- e; cancel() }
-			for {
-				select {
-				case <-bounded.Done():
-					return
-				case <-finish:
-					return
-				case <-watchdog.C:
-					fail(errors.New("AGENT_LEASE_STALE"))
-					return
-				case <-ticker.C:
-					renewal, stop := context.WithDeadline(bounded, expiry)
-					next, e := renew(renewal)
-					stop()
-					if e != nil {
-						fail(e)
-						return
-					}
-					expiry = next
-					if !watchdog.Stop() {
-						select {
-						case <-watchdog.C:
-						default:
-						}
-					}
-					watchdog.Reset(time.Until(expiry))
-				}
-			}
-		}()
+		done, renewed = renewWhileRunning(bounded, cancel, renew, lease.TaskID, expiry, finish)
 	}
 	receipt, outcome, executionError := manager.Execute(bounded, node, lease, connection)
 	close(finish)

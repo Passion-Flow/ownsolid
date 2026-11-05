@@ -5,46 +5,21 @@ import (
 	"errors"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentadmission"
 )
 
-// admitAddress applies the per-address request limit of the machine paths.
-func (h *Handler) admitAddress(ctx context.Context, host string, transfer bool) error {
-	policy := h.Service.Identity.Config.Policy().Rates
-	limit := identity.Limit{Purpose: "agent.request.ip", Identifier: host, Count: policy.AgentIPCount, Window: config.Seconds(policy.AgentIPWindowSeconds)}
-	if transfer {
-		limit = identity.Limit{Purpose: "agent.transfer.ip", Identifier: host, Count: policy.AgentTransferIPCount, Window: config.Seconds(policy.AgentTransferIPWindowSeconds)}
-	}
-	_, e := h.Service.Identity.Admit(ctx, limit)
-	return e
-}
-
-// admitNode validates the credential form and applies the per-node request limit.
-// Admit persists only an HMAC; an untrusted credential cannot fill the real node's bucket.
-func (h *Handler) admitNode(ctx context.Context, node, credential string, transfer bool) error {
-	if !security.ValidToken(credential) {
-		return errors.New("AGENT_UNAUTHORIZED")
-	}
-	policy := h.Service.Identity.Config.Policy().Rates
-	limit := identity.Limit{Purpose: "agent.node.requests", Identifier: node + ":" + credential, Count: policy.AgentNodeCount, Window: config.Seconds(policy.AgentNodeWindowSeconds)}
-	if transfer {
-		limit = identity.Limit{Purpose: "agent.node.model_files", Identifier: node + ":" + credential, Count: policy.AgentTransferNodeCount, Window: config.Seconds(policy.AgentTransferNodeWindowSeconds)}
-	}
-	_, e := h.Service.Identity.Admit(ctx, limit)
-	return e
-}
-
-// SessionBackend serves agent session exchanges with the same limits, authentication and
-// node service calls as the HTTPS heartbeat and claims paths.
+// SessionBackend serves agent session exchanges with the same admission, authentication
+// and node service calls as the HTTPS heartbeat, claims and acknowledgement paths.
 type SessionBackend struct{ Handler *Handler }
 
-func (b SessionBackend) Admit(ctx context.Context, address, node, credential string) error {
-	if e := b.Handler.admitAddress(ctx, address, false); e != nil {
-		return e
+// Admit applies the call's admission (ADR 0017). The caller runs release when the
+// exchange ends.
+func (b SessionBackend) Admit(ctx context.Context, address, node, credential string, call wire.Call) (func(), error) {
+	if !security.ValidToken(credential) {
+		return nil, errors.New("AGENT_UNAUTHORIZED")
 	}
-	return b.Handler.admitNode(ctx, node, credential, false)
+	return b.Handler.Admission.Admit(ctx, agentadmission.Request{Call: call, Address: address, Node: node, Credential: credential})
 }
 
 func (b SessionBackend) Heartbeat(ctx context.Context, node, credential string, h wire.Handshake) (wire.Disposition, error) {
@@ -52,9 +27,15 @@ func (b SessionBackend) Heartbeat(ctx context.Context, node, credential string, 
 }
 
 func (b SessionBackend) Claim(ctx context.Context, node, credential, request string, input wire.ClaimRequest) (wire.Claim, error) {
-	return b.Handler.Service.ClaimWaiting(ctx, node, credential, request, input)
+	return b.Handler.Service.ClaimWaiting(ctx, node, credential, request, input, b.Handler.claimSeat)
 }
 
 func (b SessionBackend) Acknowledge(ctx context.Context, node, credential, request string, ack wire.TaskAcknowledgement) (wire.RenewedLease, error) {
 	return b.Handler.Service.Acknowledge(ctx, node, credential, ack.TaskID, wire.TaskAcknowledgementRequest{Sequence: ack.Sequence, LeaseToken: ack.LeaseToken}, request)
+}
+
+// claimSeat takes a seat for one look for work of a held claim, which holds none while
+// it waits.
+func (h *Handler) claimSeat(ctx context.Context) (func(), error) {
+	return h.Admission.Enter(ctx, wire.CallClaim.Priority())
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores"
 	artifacthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores/http"
 	releasehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/releases/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentadmission"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentgateway"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
@@ -171,7 +172,11 @@ func New(s *identity.Service) *Handler {
 		}
 		return preparationService.Referenced(ctx, tx, tenant, workspace, model)
 	}
-	machine := &nodehttp.Handler{Service: n, OpenArtifact: c.OpenArtifact, Artifact: c.TaskArtifact, ComponentArtifact: c.DownloadArtifact}
+	admission, admissionError := agentadmission.New(s.Config.Policy().AgentAdmission, slog.Default())
+	if telemetryMetrics != nil && admission != nil {
+		telemetryMetrics.Add(admission.Samples)
+	}
+	machine := &nodehttp.Handler{Service: n, Admission: admission, OpenArtifact: c.OpenArtifact, Artifact: c.TaskArtifact, ComponentArtifact: c.DownloadArtifact}
 	sessions, sessionError := agentgateway.New(nodehttp.SessionBackend{Handler: machine}, agentgateway.Policy{MaxSessions: s.Config.Policy().Nodes.MaximumLiveNodes, ExchangeSeconds: s.Config.Policy().HTTP.RequestSeconds}, httpserver.PublicProblem)
 	if preparationService != nil {
 		machine.PreparationInputFile = preparationService.InputFile
@@ -217,7 +222,7 @@ func New(s *identity.Service) *Handler {
 	pluginService := &plugins.Service{DB: s.DB, Identity: s, Workspaces: w, Models: m}
 	workflowService := &workflows.Service{Plugins: pluginService, DB: s.DB, Identity: s, Workspaces: w, Knowledge: knowledgeService, Distribution: distributionService}
 	localeRegistry, localeError := s.LocaleRegistry()
-	return &Handler{TelemetryLogs: telemetryLogs, TelemetryMetrics: telemetryMetrics, AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, preparationError, localeError, sessionError, n.CheckRecoveryOwners()), AgentSessions: sessions, Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}}
+	return &Handler{TelemetryLogs: telemetryLogs, TelemetryMetrics: telemetryMetrics, AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, preparationError, localeError, admissionError, sessionError, n.CheckRecoveryOwners()), AgentSessions: sessions, Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}}
 }
 
 func Problem(w http.ResponseWriter, requestID string, e error) { httpserver.Problem(w, requestID, e) }
@@ -261,6 +266,25 @@ func success(w http.ResponseWriter, status int, data any) {
 	json.NewEncoder(w).Encode(map[string]any{"data": data})
 }
 func peer(r *http.Request) string { return httpserver.RequestClientIP(r) }
+
+// admitAgentCall admits an agent HTTPS call before any database work (ADR 0017). A path
+// that is no agent call is not found. A credential of the wrong form keys no node limit;
+// the path's handler refuses it.
+func (h *Handler) admitAgentCall(r *http.Request) (func(), error) {
+	call, node, ok := wire.PathCall(r.URL.Path)
+	if !ok {
+		return nil, errors.New("RESOURCE_NOT_FOUND")
+	}
+	if h.Nodes == nil || h.Nodes.Admission == nil {
+		return nil, errors.New("SERVICE_NOT_READY")
+	}
+	request := agentadmission.Request{Call: call, Address: httpserver.RequestClientIP(r)}
+	values := r.Header.Values("Authorization")
+	if credential, bearer := strings.CutPrefix(strings.Join(values, ""), "Bearer "); len(values) == 1 && bearer && node != "" && security.ValidToken(credential) {
+		request.Node, request.Credential = node, credential
+	}
+	return h.Nodes.Admission.Admit(r.Context(), request)
+}
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.serveHTTP(w, r, false)
 }
@@ -358,7 +382,9 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 			return
 		}
 		defer release()
-	} else {
+	} else if !strings.HasPrefix(r.URL.Path, "/agent/v1/") {
+		// Agent calls take agent seats instead of request slots (ADR 0017), so neither kind
+		// of traffic can starve the other.
 		select {
 		case h.active <- struct{}{}:
 			defer func() { <-h.active }()
@@ -478,6 +504,12 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 			h.problem(w, requestID, errors.New("RESOURCE_NOT_FOUND"))
 			return
 		}
+		release, e := h.admitAgentCall(r)
+		if e != nil {
+			h.problem(w, requestID, e)
+			return
+		}
+		defer release()
 		if registryhttp.MachineOwns(r.URL.Path) {
 			data, status, e := (&registryhttp.Handler{Service: h.ImageRegistry}).Machine(r)
 			if e != nil {

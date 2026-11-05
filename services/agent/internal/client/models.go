@@ -12,12 +12,14 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 )
 
-// modelRangeAttempts bounds how often one range is requested while control answers 503.
+// modelRangeAttempts bounds how often one range is requested while control answers 503
+// or refuses it with a retry hint.
 // The task is not retried on top of this, so these attempts are the only retry layer.
 const modelRangeAttempts = 3
 
@@ -65,20 +67,7 @@ func (c *Client) downloadModelFile(ctx context.Context, path, lease string, appr
 			return errors.New("INFERENCE_CANCELLED")
 		}
 		input := wire.ModelFileRequest{LeaseToken: lease, File: approved.Path, Offset: offset, Length: min(wire.ModelTransferChunkBytes, approved.SizeBytes-offset)}
-		var content []byte
-		for attempt := 0; attempt < modelRangeAttempts; attempt++ {
-			if attempt > 0 && !sleep(ctx, FullJitter(settings.Seconds(c.Policy().BackoffInitialSeconds), settings.Seconds(c.Policy().BackoffMaxSeconds), attempt-1)) {
-				break
-			}
-			content, e = c.modelRange(ctx, path, input)
-			if e == nil || ctx.Err() != nil {
-				break
-			}
-			var problem *Problem
-			if errors.As(e, &problem) && problem.Status != 503 {
-				break
-			}
-		}
+		content, e := c.modelRangeWithRetry(ctx, path, input)
 		if e != nil {
 			return errors.New("INFERENCE_MODEL_INVALID")
 		}
@@ -94,6 +83,33 @@ func (c *Client) downloadModelFile(ctx context.Context, path, lease string, appr
 		return errors.New("INFERENCE_IO_FAILED")
 	}
 	return nil
+}
+
+// modelRangeWithRetry requests one range up to modelRangeAttempts times while control
+// answers 503 or refuses it with a retry hint, waiting at least the hint between tries.
+func (c *Client) modelRangeWithRetry(ctx context.Context, path string, input wire.ModelFileRequest) ([]byte, error) {
+	var content []byte
+	var e error
+	var delay time.Duration
+	for attempt := 0; attempt < modelRangeAttempts; attempt++ {
+		if attempt > 0 && !sleep(ctx, delay) {
+			break
+		}
+		content, e = c.modelRange(ctx, path, input)
+		if e == nil || ctx.Err() != nil {
+			break
+		}
+		var problem *Problem
+		hint, hinted := RetryHint(e)
+		if errors.As(e, &problem) && problem.Status != 503 && !hinted {
+			break
+		}
+		delay = FullJitter(settings.Seconds(c.Policy().BackoffInitialSeconds), settings.Seconds(c.Policy().BackoffMaxSeconds), attempt)
+		if hinted {
+			delay = max(delay, AfterHint(hint))
+		}
+	}
+	return content, e
 }
 
 func (c *Client) modelRange(ctx context.Context, path string, input wire.ModelFileRequest) ([]byte, error) {
@@ -115,7 +131,7 @@ func (c *Client) modelRange(ctx context.Context, path string, input wire.ModelFi
 		if e != nil || len(b) > 65536 || json.Unmarshal(b, &p) != nil {
 			return nil, errors.New("CONTROL_RESPONSE_INVALID")
 		}
-		p.Status = response.StatusCode
+		p.Status, p.RetryAfter = response.StatusCode, retryAfter(response.Header)
 		return nil, &p
 	}
 	if response.ContentLength != input.Length || response.Header.Get("Content-Type") != "application/octet-stream" {

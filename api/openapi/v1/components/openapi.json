@@ -307,6 +307,11 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
@@ -329,7 +334,8 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-agent-call": "renew"
       },
       "parameters": [
         {
@@ -398,6 +404,11 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
@@ -420,7 +431,8 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-agent-call": "download"
       },
       "parameters": [
         {
@@ -1220,7 +1232,8 @@
               "MONGODB_SOURCE_EMPTY",
               "MONGODB_FIELD_INVALID",
               "MONGODB_TYPE_INVALID",
-              "MONGODB_RECORD_INVALID"
+              "MONGODB_RECORD_INVALID",
+              "AGENT_OVERLOADED"
             ]
           },
           "request_id": {
@@ -9315,6 +9328,16 @@
       "agentBearer": {
         "type": "http",
         "scheme": "bearer"
+      }
+    },
+    "headers": {
+      "AgentRetryAfter": {
+        "description": "Whole seconds the agent waits at least before it repeats a refused call (ADR 0017). Sent with 429 RATE_LIMITED, when the node or client address is over its limit for the call, and with 503 AGENT_OVERLOADED, when control sheds the call by priority.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 900
+        }
       }
     }
   }

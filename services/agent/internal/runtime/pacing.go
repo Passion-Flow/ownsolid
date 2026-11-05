@@ -17,10 +17,14 @@ type pacer struct {
 
 func newPacer() *pacer { return &pacer{} }
 
-// afterFailure returns the full-jitter delay for one more consecutive failure.
-func (p *pacer) afterFailure(pacing wire.Pacing) time.Duration {
+// afterFailure returns the full-jitter delay for one more consecutive failure, and at
+// least control's retry hint when the failure carries one (ADR 0017).
+func (p *pacer) afterFailure(pacing wire.Pacing, failure error) time.Duration {
 	delay := client.FullJitter(time.Duration(pacing.ReconnectBaseSeconds)*time.Second, time.Duration(pacing.ReconnectMaxSeconds)*time.Second, p.failures)
 	p.failures++
+	if hint, ok := client.RetryHint(failure); ok {
+		delay = max(delay, client.AfterHint(hint))
+	}
 	return delay
 }
 

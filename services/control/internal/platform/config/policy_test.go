@@ -44,6 +44,9 @@ func TestRuntimePolicyDefaultsOverridesAndInvalidConfiguration(t *testing.T) {
 		"distribution:\n    key_ttl_seconds: 7776001", "distribution:\n    key_max_ttl_seconds: 60",
 		"distribution:\n    max_concurrent_requests: 5", "distribution:\n    context_tokens: 2049",
 		"distribution:\n    output_tokens: 513", "distribution:\n    alias_max_active: 17",
+		"rates:\n    agent_node_count: 30", "agent_admission:\n    seats: 0",
+		"agent_admission:\n    bulk:\n      max_seats: 60", "agent_admission:\n    calls:\n      heartbeat:\n        per_minute: 0",
+		"agent_admission:\n    unknown: 1",
 	} {
 		t.Run(strings.ReplaceAll(value, "\n", " "), func(t *testing.T) {
 			_, err := Load(write(base + "\nruntime:\n  " + value + "\n"))

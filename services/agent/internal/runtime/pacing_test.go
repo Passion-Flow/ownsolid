@@ -5,6 +5,7 @@ import (
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/client"
 )
 
 func TestJitteredIntervalCoversTheWholeSpread(t *testing.T) {
@@ -35,7 +36,7 @@ func TestPacerBacksOffUntilACycleSucceeds(t *testing.T) {
 	pacing := wire.Pacing{HeartbeatSeconds: 10, ReconnectBaseSeconds: 1, ReconnectMaxSeconds: 4}
 	p := newPacer()
 	for i := range 6 {
-		if got := p.afterFailure(pacing); got < 0 || got > 4*time.Second {
+		if got := p.afterFailure(pacing, nil); got < 0 || got > 4*time.Second {
 			t.Fatalf("failure %d waits %s", i, got)
 		}
 	}
@@ -49,7 +50,7 @@ func TestPacerBacksOffUntilACycleSucceeds(t *testing.T) {
 	// The first delay after a success is back to the base.
 	for range 100 {
 		q := *p
-		if got := q.afterFailure(pacing); got > time.Second {
+		if got := q.afterFailure(pacing, nil); got > time.Second {
 			t.Fatalf("first failure waits %s", got)
 		}
 	}
@@ -67,9 +68,35 @@ func TestPacerUsesTheLatestPacing(t *testing.T) {
 	seen := false
 	for range 200 {
 		q := newPacer()
-		seen = seen || q.afterFailure(slow) > time.Second
+		seen = seen || q.afterFailure(slow, nil) > time.Second
 	}
 	if !seen {
 		t.Fatal("the reconnect base from control is ignored")
+	}
+}
+
+func TestPacerWaitsAtLeastTheRetryHint(t *testing.T) {
+	pacing := wire.Pacing{HeartbeatSeconds: 10, ReconnectBaseSeconds: 1, ReconnectMaxSeconds: 4}
+	refused := &client.Problem{Code: "AGENT_OVERLOADED", Status: 503, RetryAfter: 30 * time.Second}
+	for range 100 {
+		p := newPacer()
+		// The hint is longer than the reconnect maximum, and control's word wins.
+		if got := p.afterFailure(pacing, refused); got < 30*time.Second || got > 45*time.Second {
+			t.Fatalf("after a 30 s hint waits %s", got)
+		}
+		if p.failures != 1 {
+			t.Fatalf("failures %d", p.failures)
+		}
+	}
+	short := &client.Problem{Code: "RATE_LIMITED", Status: 429, RetryAfter: time.Millisecond}
+	p := newPacer()
+	p.failures = 10
+	seen := false
+	for range 100 {
+		q := *p
+		seen = seen || q.afterFailure(pacing, short) > time.Second
+	}
+	if !seen {
+		t.Fatal("a short hint cut the backoff")
 	}
 }

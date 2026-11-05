@@ -287,17 +287,60 @@ runtime:
     token_ip_window_seconds: 900
     admin_invite_count: 30
     admin_invite_window_seconds: 3600
-    agent_ip_count: 120
-    agent_ip_window_seconds: 60
-    agent_transfer_ip_count: 600
-    agent_transfer_ip_window_seconds: 60
+    # Enrollments per client address, shared by every control process; checked after
+    # agent_admission admits the call.
     agent_enroll_ip_count: 20
     agent_enroll_ip_window_seconds: 60
-    agent_node_count: 30
-    agent_node_window_seconds: 60
-    agent_transfer_node_count: 240
-    agent_transfer_node_window_seconds: 60
     reset_cooldown_seconds: 60
+  # Agent calls are admitted in memory before any database work (ADR 0017). Every value
+  # applies per control process. Under load control refuses bulk first, then telemetry,
+  # then heartbeats, and serves quarantine (task results, stop receipts) longest.
+  agent_admission:
+    # Agent calls served at once, HTTPS and session together; integer 1..4096. Agent calls
+    # do not use http.max_active_requests.
+    seats: 64
+    # Per priority: max_seats 1..seats; queue_length 0..65536 calls waiting for a seat;
+    # wait_milliseconds 0..10000, ended early by the request deadline; retry_seconds 1..900,
+    # the Retry-After hint of a call refused for lack of a seat. Telemetry and bulk
+    # max_seats together must stay below seats.
+    quarantine:
+      max_seats: 64
+      queue_length: 1024
+      wait_milliseconds: 2000
+      retry_seconds: 1
+    heartbeat:
+      max_seats: 64
+      queue_length: 4096
+      wait_milliseconds: 2000
+      retry_seconds: 2
+    telemetry:
+      max_seats: 16
+      queue_length: 1024
+      wait_milliseconds: 1000
+      retry_seconds: 5
+    bulk:
+      max_seats: 16
+      queue_length: 256
+      wait_milliseconds: 500
+      retry_seconds: 10
+    # Token buckets: per_minute 1..60000 on average, burst 1..10000 at once. address
+    # limits one client address before its credential is checked; calls limit each call
+    # of one node.
+    address:
+      per_minute: 1200
+      burst: 300
+    calls:
+      heartbeat: {per_minute: 30, burst: 10}
+      claim: {per_minute: 60, burst: 20}
+      acknowledge: {per_minute: 60, burst: 20}
+      renew: {per_minute: 120, burst: 30}
+      result: {per_minute: 60, burst: 20}
+      stop: {per_minute: 60, burst: 20}
+      events: {per_minute: 120, burst: 30}
+      download: {per_minute: 240, burst: 60}
+      upload: {per_minute: 240, burst: 60}
+    # Addresses and node calls held in memory for the limits; integer 1024..10000000.
+    tracked_keys: 100000
   ui:
     poll_milliseconds: 5000
     search_debounce_milliseconds: 150

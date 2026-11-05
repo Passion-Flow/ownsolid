@@ -121,7 +121,8 @@ func TestM03UntrustedCredentialCannotPoisonNodeRateBucket(t *testing.T) {
 	attacker := httpfixture.New(t, server, "admin", schemas)
 	attacker.Headers = map[string]string{"Authorization": "Bearer " + security.Token()}
 	path := "/agent/v1/sites/default/cells/default/nodes/" + node.NodeID + "/heartbeat"
-	for i := 0; i < 30; i++ {
+	// The attacker spends the allowance of its own credential, not the node's (ADR 0017).
+	for i := 0; i < s.Config.Policy().AgentAdmission.Calls.Heartbeat.Burst; i++ {
 		attacker.Call("POST", path, h, 401, "Problem")
 	}
 	attacker.Call("POST", path, h, 429, "Problem")

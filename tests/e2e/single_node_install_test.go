@@ -6,6 +6,7 @@ package e2e
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -69,6 +70,13 @@ func loadEnvironment(t *testing.T) environment {
 
 func (e environment) configuration(t *testing.T, directory, size, controlImage string) string {
 	t.Helper()
+	return e.configurationWith(t, directory, size, controlImage, "")
+}
+
+// configurationWith writes an install configuration with extra appended, for example
+// control_settings, under a name of its own.
+func (e environment) configurationWith(t *testing.T, directory, size, controlImage, extra string) string {
+	t.Helper()
 	raw, err := json.Marshal(e.trust)
 	if err != nil {
 		t.Fatal(err)
@@ -77,7 +85,11 @@ func (e environment) configuration(t *testing.T, directory, size, controlImage s
 	if err = os.WriteFile(trustFile, raw, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	path := filepath.Join(directory, "install-"+strings.NewReplacer(":", "-", "/", "-").Replace(size+controlImage)+".yaml")
+	name := size + controlImage
+	if extra != "" {
+		name += "-" + fmt.Sprintf("%x", sha256.Sum256([]byte(extra)))[:12]
+	}
+	path := filepath.Join(directory, "install-"+strings.NewReplacer(":", "-", "/", "-").Replace(name)+".yaml")
 	content := fmt.Sprintf(`format_version: 1
 topology: {size: %s}
 install_root: %s
@@ -96,7 +108,7 @@ administrator:
   display_name: Installation Administrator
   installation_name: End To End
   workspace_name: Default Workspace
-`, size, e.root, e.composeFile, e.archive, controlImage, e.postgresImage, e.metricsImage, e.logsImage, portalOrigin, adminOrigin, trustFile, adminEmail)
+`, size, e.root, e.composeFile, e.archive, controlImage, e.postgresImage, e.metricsImage, e.logsImage, portalOrigin, adminOrigin, trustFile, adminEmail) + extra
 	if err = os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -429,6 +441,44 @@ func TestSingleNodeInstall(t *testing.T) {
 		agent.stop(t)
 	})
 
+	t.Run("control sheds an agent over its call limit and the agent waits for the hint", func(t *testing.T) {
+		if agent == nil {
+			t.Skip("no agent is running")
+		}
+		// One heartbeat every 30 seconds for each node, against the 10 second interval, so
+		// every other heartbeat is refused with a retry hint of about 20 seconds (ADR 0017).
+		e.apply(t, e.configurationWith(t, directory, "single-node", e.controlImage, "control_settings:\n  runtime:\n    agent_admission:\n      calls:\n        heartbeat: {per_minute: 2, burst: 1}\n"))
+		mark := len(agent.output())
+		agent.start(t)
+		agent.waitForAfter(t, mark, "agent_session_transport transport=stream", 60*time.Second)
+		agent.runTask(t, 90*time.Second)
+		agent.waitForAfter(t, mark, "agent_cycle_failed code=RATE_LIMITED", 90*time.Second)
+		first := len(agent.output())
+		agent.waitForAfter(t, first, "agent_cycle_failed code=RATE_LIMITED", 120*time.Second)
+		refusals := refusalTimes(t, agent.output()[mark:])
+		// An agent that ignored the hint would retry within its one second base backoff.
+		for i := 1; i < len(refusals); i++ {
+			if gap := refusals[i].Sub(refusals[i-1]); gap < 19*time.Second {
+				t.Fatalf("refused heartbeats %s apart, under the hint:\n%s", gap, agent.output()[mark:])
+			}
+		}
+		// Shed heartbeats leave the node working: a task still runs to completion.
+		agent.runTask(t, 120*time.Second)
+		if output, err := e.compose(t, "logs", "control"); err != nil || !strings.Contains(output, "agent_call_refused priority=heartbeat reason=node_rate code=RATE_LIMITED") {
+			t.Fatalf("control logged no refusal: %v", err)
+		}
+		agent.stop(t)
+		e.apply(t, config)
+		mark = len(agent.output())
+		agent.start(t)
+		agent.waitForAfter(t, mark, "agent_session_transport transport=stream", 60*time.Second)
+		agent.runTask(t, 30*time.Second)
+		agent.stop(t)
+		if strings.Contains(agent.output()[mark:], "code=RATE_LIMITED") {
+			t.Fatalf("the default limits refused the agent:\n%s", agent.output()[mark:])
+		}
+	})
+
 	t.Run("stopped database is reported and repaired by apply", func(t *testing.T) {
 		if output, err := e.compose(t, "stop", "postgres"); err != nil {
 			t.Fatalf("%v %s", err, output)
@@ -462,10 +512,11 @@ sys.exit("the log store accepted the record but never returned it")`
 		// The fixed address of the default state subnet. A series is listed once indexed,
 		// and control pushes every 15 seconds.
 		script := `import json,sys,time,urllib.parse,urllib.request as u
-names=["ownsolid_go_goroutines","ownsolid_database_pool_total_connections","ownsolid_telemetry_log_queue_length"]
+names=["ownsolid_go_goroutines","ownsolid_database_pool_total_connections","ownsolid_telemetry_log_queue_length","ownsolid_agent_admission_seats_in_use","ownsolid_agent_admission_refused_total"]
 query=urllib.parse.urlencode([("match[]",n+'{service="control"}') for n in names])
 for _ in range(60):
-    if len(json.load(u.urlopen("http://172.31.254.3:8428/api/v1/series?"+query,timeout=5))["data"])==len(names):
+    found={s["__name__"] for s in json.load(u.urlopen("http://172.31.254.3:8428/api/v1/series?"+query,timeout=5))["data"]}
+    if found==set(names):
         sys.exit(0)
     time.sleep(1)
 sys.exit("control pushed no process metrics to the metrics store")`

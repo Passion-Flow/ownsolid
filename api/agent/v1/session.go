@@ -73,6 +73,17 @@ func (m AgentMessage) exchanges() int {
 	return set
 }
 
+// Call is the agent call the message makes. It is meaningful only for a valid message.
+func (m AgentMessage) Call() Call {
+	switch {
+	case m.Claim != nil:
+		return CallClaim
+	case m.Ack != nil:
+		return CallAcknowledge
+	}
+	return CallHeartbeat
+}
+
 func (m AgentMessage) Validate(previous uint64) error {
 	if m.ID != previous+1 || m.exchanges() != 1 {
 		return errors.New("AGENT_SESSION_MESSAGE_INVALID")
@@ -97,10 +108,12 @@ type ControlMessage struct {
 }
 
 // SessionProblem carries the code and HTTP-equivalent status the HTTPS path would return,
-// so both transports fail the same way.
+// so both transports fail the same way. RetryAfterSeconds is the Retry-After hint of a
+// refused call (ADR 0017); zero means control gave none.
 type SessionProblem struct {
-	Code   string `json:"code"`
-	Status int    `json:"status"`
+	Code              string `json:"code"`
+	Status            int    `json:"status"`
+	RetryAfterSeconds int    `json:"retry_after_seconds,omitempty"`
 }
 
 // Validate checks that the message answers request and holds the expected kind of reply.
@@ -116,7 +129,7 @@ func (m ControlMessage) Validate(request AgentMessage) error {
 		return bad
 	}
 	if m.Problem != nil {
-		if !text(m.Problem.Code, 128) || m.Problem.Status < 400 || m.Problem.Status > 599 {
+		if !text(m.Problem.Code, 128) || m.Problem.Status < 400 || m.Problem.Status > 599 || m.Problem.RetryAfterSeconds < 0 || m.Problem.RetryAfterSeconds > MaxRetryAfterSeconds {
 			return bad
 		}
 		return nil

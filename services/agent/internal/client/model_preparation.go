@@ -50,7 +50,7 @@ func preparationProblem(response *http.Response, b []byte) error {
 	if json.Unmarshal(b, &p) != nil || !safePreparationCode.MatchString(p.Code) {
 		return errors.New("CONTROL_RESPONSE_REJECTED")
 	}
-	p.Status = response.StatusCode
+	p.Status, p.RetryAfter = response.StatusCode, retryAfter(response.Header)
 	return &p
 }
 func (c *Client) preparationSend(ctx context.Context, path, media string, body []byte, headers map[string]string) (*http.Response, error) {

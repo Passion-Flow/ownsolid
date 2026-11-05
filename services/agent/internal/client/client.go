@@ -11,10 +11,13 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/components"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"io"
+	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -61,12 +64,48 @@ func (c *Client) ArtifactVersion(ctx context.Context, path, lease, destination, 
 	return components.DownloadToVersion(destination, response.Body, version)
 }
 
+// Problem is a failure control reported. RetryAfter is control's retry hint, from the
+// Retry-After header or the session problem, and zero when control gave none (ADR 0017).
 type Problem struct {
-	Code   string `json:"code"`
-	Status int    `json:"status"`
+	Code       string        `json:"code"`
+	Status     int           `json:"status"`
+	RetryAfter time.Duration `json:"-"`
 }
 
 func (p *Problem) Error() string { return p.Code }
+
+// RetryHint reports the retry hint control sent with the failure e.
+func RetryHint(e error) (time.Duration, bool) {
+	var p *Problem
+	if errors.As(e, &p) && p.RetryAfter > 0 {
+		return p.RetryAfter, true
+	}
+	return 0, false
+}
+
+// hintSpreadPercent spreads a wait after a hint above the hint itself, so agents refused
+// together with one hint do not return together.
+const hintSpreadPercent = 50
+
+// AfterHint is how long to wait after a failure with the retry hint: uniform between the
+// hint and the hint plus hintSpreadPercent, never less than the hint.
+func AfterHint(hint time.Duration) time.Duration {
+	return afterHint(rand.Int64N, hint)
+}
+
+func afterHint(random func(int64) int64, hint time.Duration) time.Duration {
+	return hint + time.Duration(random(int64(hint)*hintSpreadPercent/100+1))
+}
+
+// retryAfter reads a Retry-After header given in whole seconds, bounded by the protocol.
+// A date, a malformed value or none is no hint.
+func retryAfter(h http.Header) time.Duration {
+	seconds, e := strconv.Atoi(h.Get("Retry-After"))
+	if e != nil || seconds < 1 {
+		return 0
+	}
+	return time.Duration(min(seconds, wire.MaxRetryAfterSeconds)) * time.Second
+}
 func New(origin, caFile string, policies ...settings.Policy) (*Client, error) {
 	policy := settings.Default()
 	if len(policies) > 0 {
@@ -113,11 +152,15 @@ func (c *Client) Post(ctx context.Context, path string, value, out any) error {
 }
 
 // remoteProblem keeps a control failure only when its code is one the agent acts on.
-func remoteProblem(code string, status int) error {
+// Its retry hint survives either way, so a refusal still paces the agent.
+func remoteProblem(code string, status int, retry time.Duration) error {
 	if !strings.HasPrefix(code, "AGENT_") && code != "STORAGE_UNAVAILABLE" && code != "RATE_LIMITED" && code != "ACCESS_DENIED" && code != "VALIDATION_FAILED" && code != "TOKEN_UNUSABLE" {
-		return errors.New("CONTROL_RESPONSE_REJECTED")
+		code = "CONTROL_RESPONSE_REJECTED"
+		if retry == 0 {
+			return errors.New(code)
+		}
 	}
-	return &Problem{Code: code, Status: status}
+	return &Problem{Code: code, Status: status, RetryAfter: retry}
 }
 
 func (c *Client) post(ctx context.Context, client *http.Client, path string, value, out any) error {
@@ -153,7 +196,7 @@ func (c *Client) post(ctx context.Context, client *http.Client, path string, val
 		if json.Unmarshal(b, &p) != nil {
 			return errors.New("CONTROL_RESPONSE_REJECTED")
 		}
-		return remoteProblem(p.Code, response.StatusCode)
+		return remoteProblem(p.Code, response.StatusCode, retryAfter(response.Header))
 	}
 	var envelope struct {
 		Data json.RawMessage `json:"data"`

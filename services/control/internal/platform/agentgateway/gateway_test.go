@@ -24,6 +24,8 @@ const testNode = "6f1c1d0e-6b1a-4d55-9a3c-2f8b5d1e7a10"
 type fakeBackend struct {
 	mu        sync.Mutex
 	admitted  []string
+	held      int
+	refusal   error
 	heartbeat error
 	claim     error
 	pacing    *wire.Pacing
@@ -34,12 +36,29 @@ type fakeBackend struct {
 	lease     *wire.Lease
 }
 
-func (b *fakeBackend) Admit(_ context.Context, address, node, credential string) error {
+func (b *fakeBackend) Admit(_ context.Context, address, node, credential string, call wire.Call) (func(), error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.admitted = append(b.admitted, address+"|"+node+"|"+credential)
-	return nil
+	if b.refusal != nil {
+		return nil, b.refusal
+	}
+	b.admitted = append(b.admitted, address+"|"+node+"|"+credential+"|"+string(call))
+	b.held++
+	return func() {
+		b.mu.Lock()
+		defer b.mu.Unlock()
+		b.held--
+	}, nil
 }
+
+// hinted is a refusal that carries a retry hint, as admission refusals do.
+type hinted struct {
+	code  string
+	retry int
+}
+
+func (h hinted) Error() string     { return h.code }
+func (h hinted) RetrySeconds() int { return h.retry }
 
 func (b *fakeBackend) Heartbeat(context.Context, string, string, wire.Handshake) (wire.Disposition, error) {
 	if b.heartbeat != nil {
@@ -74,8 +93,13 @@ func (b *fakeBackend) Acknowledge(_ context.Context, _, _, request string, ack w
 }
 
 func problem(e error) (string, int) {
-	if e.Error() == "AGENT_UNAUTHORIZED" {
+	switch e.Error() {
+	case "AGENT_UNAUTHORIZED":
 		return e.Error(), 401
+	case "RATE_LIMITED":
+		return e.Error(), 429
+	case "AGENT_OVERLOADED":
+		return e.Error(), 503
 	}
 	return "STORAGE_UNAVAILABLE", 503
 }
@@ -155,8 +179,40 @@ func TestSessionCarriesHeartbeatsAndClaims(t *testing.T) {
 	if len(backend.waits) != 1 || backend.waits[0] != 3*time.Second {
 		t.Fatalf("claim wait %v", backend.waits)
 	}
-	if len(backend.admitted) != 2 || backend.admitted[0] != "192.0.2.10|"+testNode+"|credential" {
-		t.Fatalf("every exchange is admitted with the client address: %v", backend.admitted)
+	if len(backend.admitted) != 2 || backend.admitted[0] != "192.0.2.10|"+testNode+"|credential|heartbeat" || backend.admitted[1] != "192.0.2.10|"+testNode+"|credential|claim" {
+		t.Fatalf("every exchange is admitted as its call with the client address: %v", backend.admitted)
+	}
+	if backend.held != 0 {
+		t.Fatalf("%d admissions not released", backend.held)
+	}
+}
+
+func TestRefusedExchangeCarriesTheRetryHint(t *testing.T) {
+	backend := &fakeBackend{}
+	_, conn := start(t, backend, 4)
+	stream := open(t, conn)
+	if reply, e := exchange(t, stream, heartbeat(1)); e != nil || reply.Disposition == nil {
+		t.Fatalf("heartbeat reply %+v %v", reply, e)
+	}
+	for id, c := range []struct {
+		refusal error
+		code    string
+		status  int
+		retry   int
+	}{
+		{hinted{"AGENT_OVERLOADED", 7}, "AGENT_OVERLOADED", 503, 7},
+		{hinted{"RATE_LIMITED", 3}, "RATE_LIMITED", 429, 3},
+		{hinted{"RATE_LIMITED", 10 * wire.MaxRetryAfterSeconds}, "RATE_LIMITED", 429, wire.MaxRetryAfterSeconds},
+		{errors.New("AGENT_UNAUTHORIZED"), "AGENT_UNAUTHORIZED", 401, 0},
+	} {
+		backend.mu.Lock()
+		backend.refusal = c.refusal
+		backend.mu.Unlock()
+		m := heartbeat(uint64(id + 2))
+		reply, e := exchange(t, stream, m)
+		if e != nil || reply.Validate(m) != nil || reply.Problem == nil || reply.Problem.Code != c.code || reply.Problem.Status != c.status || reply.Problem.RetryAfterSeconds != c.retry {
+			t.Fatalf("%v: reply %+v %v", c.refusal, reply.Problem, e)
+		}
 	}
 }
 

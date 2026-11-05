@@ -29,6 +29,7 @@ type RuntimePolicy struct {
 	Models         ModelsPolicy         `yaml:"models"`
 	Distribution   DistributionPolicy   `yaml:"distribution"`
 	Rates          RatesPolicy          `yaml:"rates"`
+	AgentAdmission AgentAdmissionPolicy `yaml:"agent_admission"`
 }
 type HTTPPolicy struct {
 	InstallationLeaseIntervalSeconds int `yaml:"installation_lease_interval_seconds"`
@@ -118,31 +119,23 @@ type DistributionPolicy struct {
 	RateWindowSeconds     int `yaml:"rate_window_seconds"`
 }
 type RatesPolicy struct {
-	CSRFCount                      int `yaml:"csrf_count"`
-	CSRFWindowSeconds              int `yaml:"csrf_window_seconds"`
-	LoginEmailCount                int `yaml:"login_email_count"`
-	LoginEmailWindowSeconds        int `yaml:"login_email_window_seconds"`
-	LoginIPCount                   int `yaml:"login_ip_count"`
-	LoginIPWindowSeconds           int `yaml:"login_ip_window_seconds"`
-	ResetIPCount                   int `yaml:"reset_ip_count"`
-	ResetIPWindowSeconds           int `yaml:"reset_ip_window_seconds"`
-	ResetEmailCount                int `yaml:"reset_email_count"`
-	ResetEmailWindowSeconds        int `yaml:"reset_email_window_seconds"`
-	TokenIPCount                   int `yaml:"token_ip_count"`
-	TokenIPWindowSeconds           int `yaml:"token_ip_window_seconds"`
-	AdminInviteCount               int `yaml:"admin_invite_count"`
-	AdminInviteWindowSeconds       int `yaml:"admin_invite_window_seconds"`
-	AgentIPCount                   int `yaml:"agent_ip_count"`
-	AgentIPWindowSeconds           int `yaml:"agent_ip_window_seconds"`
-	AgentTransferIPCount           int `yaml:"agent_transfer_ip_count"`
-	AgentTransferIPWindowSeconds   int `yaml:"agent_transfer_ip_window_seconds"`
-	AgentEnrollIPCount             int `yaml:"agent_enroll_ip_count"`
-	AgentEnrollIPWindowSeconds     int `yaml:"agent_enroll_ip_window_seconds"`
-	AgentNodeCount                 int `yaml:"agent_node_count"`
-	AgentNodeWindowSeconds         int `yaml:"agent_node_window_seconds"`
-	AgentTransferNodeCount         int `yaml:"agent_transfer_node_count"`
-	AgentTransferNodeWindowSeconds int `yaml:"agent_transfer_node_window_seconds"`
-	ResetCooldownSeconds           int `yaml:"reset_cooldown_seconds"`
+	CSRFCount                  int `yaml:"csrf_count"`
+	CSRFWindowSeconds          int `yaml:"csrf_window_seconds"`
+	LoginEmailCount            int `yaml:"login_email_count"`
+	LoginEmailWindowSeconds    int `yaml:"login_email_window_seconds"`
+	LoginIPCount               int `yaml:"login_ip_count"`
+	LoginIPWindowSeconds       int `yaml:"login_ip_window_seconds"`
+	ResetIPCount               int `yaml:"reset_ip_count"`
+	ResetIPWindowSeconds       int `yaml:"reset_ip_window_seconds"`
+	ResetEmailCount            int `yaml:"reset_email_count"`
+	ResetEmailWindowSeconds    int `yaml:"reset_email_window_seconds"`
+	TokenIPCount               int `yaml:"token_ip_count"`
+	TokenIPWindowSeconds       int `yaml:"token_ip_window_seconds"`
+	AdminInviteCount           int `yaml:"admin_invite_count"`
+	AdminInviteWindowSeconds   int `yaml:"admin_invite_window_seconds"`
+	AgentEnrollIPCount         int `yaml:"agent_enroll_ip_count"`
+	AgentEnrollIPWindowSeconds int `yaml:"agent_enroll_ip_window_seconds"`
+	ResetCooldownSeconds       int `yaml:"reset_cooldown_seconds"`
 }
 
 func DefaultRuntimePolicy() RuntimePolicy {
@@ -165,7 +158,8 @@ func DefaultRuntimePolicy() RuntimePolicy {
 		Nodes:          NodesPolicy{MaximumLiveNodes: 100, MaximumLiveJoinTokens: 100, JoinTTLSeconds: 600, OnlineSeconds: 30, OfflineSeconds: 120, TaskSeconds: 300, InferenceDeploySeconds: 1800, TaskLeaseSeconds: 30, MaximumTaskAttempts: 3, TaskSweepBatch: 100, ReconcileSeconds: 10, ReconcileTimeoutSeconds: 5, MaximumTaskDeliveries: 10, ResyncIntervalSeconds: 300, ResyncPerSecond: 20},
 		Models:         DefaultModelsPolicy(),
 		Distribution:   DistributionPolicy{RecoverySeconds: 600, KeyTTLSeconds: 86400, KeyMaxTTLSeconds: 7776000, KeyMaxActive: 100, AliasMaxActive: 16, MaxConcurrentRequests: 4, RequestSeconds: 90, ContextTokens: 2048, OutputTokens: 512, RequestsPerWindow: 60, RateWindowSeconds: 60},
-		Rates:          RatesPolicy{CSRFCount: 60, CSRFWindowSeconds: 60, LoginEmailCount: 10, LoginEmailWindowSeconds: 900, LoginIPCount: 30, LoginIPWindowSeconds: 300, ResetIPCount: 20, ResetIPWindowSeconds: 900, ResetEmailCount: 3, ResetEmailWindowSeconds: 900, TokenIPCount: 30, TokenIPWindowSeconds: 900, AdminInviteCount: 30, AdminInviteWindowSeconds: 3600, AgentIPCount: 120, AgentIPWindowSeconds: 60, AgentTransferIPCount: 600, AgentTransferIPWindowSeconds: 60, AgentEnrollIPCount: 20, AgentEnrollIPWindowSeconds: 60, AgentNodeCount: 30, AgentNodeWindowSeconds: 60, AgentTransferNodeCount: 240, AgentTransferNodeWindowSeconds: 60, ResetCooldownSeconds: 60},
+		AgentAdmission: DefaultAgentAdmissionPolicy(),
+		Rates:          RatesPolicy{CSRFCount: 60, CSRFWindowSeconds: 60, LoginEmailCount: 10, LoginEmailWindowSeconds: 900, LoginIPCount: 30, LoginIPWindowSeconds: 300, ResetIPCount: 20, ResetIPWindowSeconds: 900, ResetEmailCount: 3, ResetEmailWindowSeconds: 900, TokenIPCount: 30, TokenIPWindowSeconds: 900, AdminInviteCount: 30, AdminInviteWindowSeconds: 3600, AgentEnrollIPCount: 20, AgentEnrollIPWindowSeconds: 60, ResetCooldownSeconds: 60},
 	}
 }
 
@@ -403,38 +397,17 @@ func (p RuntimePolicy) Validate() error {
 	if p.Rates.AdminInviteWindowSeconds < 1 || p.Rates.AdminInviteWindowSeconds > 86400 {
 		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
 	}
-	if p.Rates.AgentIPCount < 1 || p.Rates.AgentIPCount > 10000 {
-		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
-	}
-	if p.Rates.AgentIPWindowSeconds < 1 || p.Rates.AgentIPWindowSeconds > 86400 {
-		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
-	}
-	if p.Rates.AgentTransferIPCount < 1 || p.Rates.AgentTransferIPCount > 10000 {
-		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
-	}
-	if p.Rates.AgentTransferIPWindowSeconds < 1 || p.Rates.AgentTransferIPWindowSeconds > 86400 {
-		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
-	}
 	if p.Rates.AgentEnrollIPCount < 1 || p.Rates.AgentEnrollIPCount > 10000 {
 		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
 	}
 	if p.Rates.AgentEnrollIPWindowSeconds < 1 || p.Rates.AgentEnrollIPWindowSeconds > 86400 {
 		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
 	}
-	if p.Rates.AgentNodeCount < 1 || p.Rates.AgentNodeCount > 10000 {
-		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
-	}
-	if p.Rates.AgentNodeWindowSeconds < 1 || p.Rates.AgentNodeWindowSeconds > 86400 {
-		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
-	}
-	if p.Rates.AgentTransferNodeCount < 1 || p.Rates.AgentTransferNodeCount > 10000 {
-		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
-	}
-	if p.Rates.AgentTransferNodeWindowSeconds < 1 || p.Rates.AgentTransferNodeWindowSeconds > 86400 {
-		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
-	}
 	if p.Rates.ResetCooldownSeconds < 1 || p.Rates.ResetCooldownSeconds > 3600 {
 		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
+	}
+	if e := p.AgentAdmission.Validate(); e != nil {
+		return e
 	}
 	if p.HTTP.RequestSeconds*1000 <= p.Identity.ResetMinimumMilliseconds+p.Identity.ResetJitterMilliseconds {
 		return errors.New("CONFIG_REQUEST_DEADLINE_INVALID")

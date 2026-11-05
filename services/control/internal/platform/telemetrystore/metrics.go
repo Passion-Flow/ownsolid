@@ -19,10 +19,17 @@ const (
 	unknownInstance = "unknown"
 )
 
-// Sample is one current value of a process metric. Names come from code, never input.
+// Sample is one current value of a process metric. Names and labels come from code,
+// never input, so the number of series stays fixed.
 type Sample struct {
-	Name  string
-	Value float64
+	Name   string
+	Value  float64
+	Labels []Label
+}
+
+// Label is one label of a sample, added to the service and instance labels.
+type Label struct {
+	Name, Value string
 }
 
 // SampleSource returns current values. It runs on the pusher's goroutine at every push,
@@ -51,7 +58,7 @@ func NewMetricsPusher(client *Client, interval time.Duration, service, instance 
 	if interval <= 0 {
 		return nil, errors.New("metrics push interval must be positive")
 	}
-	labels := `{service="` + labelEscaper.Replace(service) + `",instance="` + labelEscaper.Replace(instance) + `"}`
+	labels := `service="` + labelEscaper.Replace(service) + `",instance="` + labelEscaper.Replace(instance) + `"`
 	p := &MetricsPusher{client: client, interval: interval, labels: labels, logger: logger, started: time.Now()}
 	p.sources = []SampleSource{p.processSamples}
 	return p, nil
@@ -124,8 +131,12 @@ func (p *MetricsPusher) render() []byte {
 	for _, source := range p.sources {
 		for _, s := range source() {
 			body.WriteString(s.Name)
+			body.WriteByte('{')
 			body.WriteString(p.labels)
-			body.WriteByte(' ')
+			for _, l := range s.Labels {
+				body.WriteString(`,` + l.Name + `="` + labelEscaper.Replace(l.Value) + `"`)
+			}
+			body.WriteString("} ")
 			body.WriteString(strconv.FormatFloat(s.Value, 'g', -1, 64))
 			body.WriteByte('\n')
 		}
@@ -135,7 +146,7 @@ func (p *MetricsPusher) render() []byte {
 
 func (p *MetricsPusher) processSamples() []Sample {
 	return []Sample{
-		{"ownsolid_process_uptime_seconds", time.Since(p.started).Seconds()},
-		{"ownsolid_telemetry_metric_pushes_failed_total", float64(p.failed.Load())},
+		{Name: "ownsolid_process_uptime_seconds", Value: time.Since(p.started).Seconds()},
+		{Name: "ownsolid_telemetry_metric_pushes_failed_total", Value: float64(p.failed.Load())},
 	}
 }

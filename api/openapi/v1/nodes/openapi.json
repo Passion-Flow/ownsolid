@@ -933,6 +933,11 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
@@ -952,7 +957,8 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-agent-call": "enroll"
       }
     },
     "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/heartbeat": {
@@ -991,6 +997,11 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
@@ -1014,7 +1025,8 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-agent-call": "heartbeat"
       },
       "parameters": [
         {
@@ -1073,6 +1085,11 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
@@ -1097,7 +1114,8 @@
           "maintenance",
           "platform"
         ],
-        "description": "Leases the next task. With wait_seconds, control holds the claim until work arrives or the wait ends; this long-poll is the fallback when the agent session stream cannot be opened (ADR 0007). An empty object claims at once."
+        "description": "Leases the next task. With wait_seconds, control holds the claim until work arrives or the wait ends; this long-poll is the fallback when the agent session stream cannot be opened (ADR 0007). An empty object claims at once.",
+        "x-agent-call": "claim"
       },
       "parameters": [
         {
@@ -1165,6 +1183,11 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
@@ -1188,7 +1211,8 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-agent-call": "result"
       },
       "parameters": [
         {
@@ -1256,6 +1280,11 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
@@ -1279,7 +1308,8 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-agent-call": "acknowledge"
       },
       "parameters": [
         {
@@ -1598,6 +1628,11 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
@@ -1620,7 +1655,8 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-agent-call": "renew"
       },
       "parameters": [
         {
@@ -1689,6 +1725,11 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
@@ -1711,7 +1752,8 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-agent-call": "download"
       },
       "parameters": [
         {
@@ -1866,12 +1908,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "download"
       },
       "parameters": [
         {
@@ -1975,12 +2023,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "download"
       },
       "parameters": [
         {
@@ -2066,12 +2120,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "download"
       },
       "parameters": [
         {
@@ -2156,12 +2216,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "events"
       },
       "parameters": [
         {
@@ -2246,12 +2312,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "upload"
       },
       "parameters": [
         {
@@ -2397,12 +2469,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "upload"
       },
       "parameters": [
         {
@@ -2497,12 +2575,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "upload"
       },
       "parameters": [
         {
@@ -2587,12 +2671,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "stop"
       },
       "parameters": [
         {
@@ -2678,12 +2768,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "download"
       },
       "parameters": [
         {
@@ -2768,12 +2864,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "events"
       },
       "parameters": [
         {
@@ -2858,12 +2960,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "upload"
       },
       "parameters": [
         {
@@ -3019,12 +3127,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "upload"
       },
       "parameters": [
         {
@@ -3119,12 +3233,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "upload"
       },
       "parameters": [
         {
@@ -3209,12 +3329,18 @@
                   "$ref": "#/components/schemas/Problem"
                 }
               }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
             }
           }
         },
         "x-application-profiles": [
           "platform"
-        ]
+        ],
+        "x-agent-call": "stop"
       },
       "parameters": [
         {
@@ -4068,7 +4194,8 @@
               "MONGODB_TYPE_INVALID",
               "MONGODB_RECORD_INVALID",
               "AGENT_PACING_EXCEEDS_ONLINE_WINDOW",
-              "AGENT_PACING_UNSUPPORTED"
+              "AGENT_PACING_UNSUPPORTED",
+              "AGENT_OVERLOADED"
             ]
           },
           "request_id": {
@@ -12329,6 +12456,16 @@
       "agentBearer": {
         "type": "http",
         "scheme": "bearer"
+      }
+    },
+    "headers": {
+      "AgentRetryAfter": {
+        "description": "Whole seconds the agent waits at least before it repeats a refused call (ADR 0017). Sent with 429 RATE_LIMITED, when the node or client address is over its limit for the call, and with 503 AGENT_OVERLOADED, when control sheds the call by priority.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 900
+        }
       }
     }
   }

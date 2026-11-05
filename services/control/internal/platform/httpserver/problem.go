@@ -464,7 +464,7 @@ var problemStatuses = map[string]int{
 	"MONGODB_BUSINESS_DATABASE_UNSUPPORTED": 503,
 	"MONGODB_SOURCE_CHANGED": 409,
 	"MONGODB_DISABLED":                      409, "MONGODB_BUSY": 409, "MONGODB_RETRY_LIMIT": 409, "MONGODB_MAPPING_INVALID": 400, "MONGODB_CONFIGURATION_INVALID": 503, "MONGODB_TIMEOUT": 504, "MONGODB_CANCELLED": 409, "MONGODB_CONNECT_FAILED": 503, "MONGODB_READ_FAILED": 503, "MONGODB_ACCESS_DENIED": 403, "MONGODB_SNAPSHOT_EXPIRED": 409, "MONGODB_SNAPSHOT_UNSUPPORTED": 422, "MONGODB_IDENTIFIER_INVALID": 422, "MONGODB_ORDER_INVALID": 422, "MONGODB_LIMIT_EXCEEDED": 413, "MONGODB_SOURCE_EMPTY": 422, "MONGODB_FIELD_INVALID": 422, "MONGODB_TYPE_INVALID": 422, "MONGODB_RECORD_INVALID": 422,
-	"AGENT_PACING_EXCEEDS_ONLINE_WINDOW": 409, "AGENT_PACING_UNSUPPORTED": 409,
+	"AGENT_PACING_EXCEEDS_ONLINE_WINDOW": 409, "AGENT_PACING_UNSUPPORTED": 409, "AGENT_OVERLOADED": 503,
 	"VALIDATION_FAILED": 400, "INVALID_CURSOR": 400, "TOKEN_UNUSABLE": 400, "AUTH_INVALID_CREDENTIALS": 401, "AUTH_REQUIRED": 401, "AUTH_SESSION_EXPIRED": 401, "ACCESS_DENIED": 403, "CSRF_INVALID": 403, "ORIGIN_REJECTED": 403, "RESOURCE_NOT_FOUND": 404, "ACCOUNT_EXISTS": 409, "INVITATION_EXISTS": 409, "INVITATION_STATE_CONFLICT": 409, "VERSION_CONFLICT": 409, "IDEMPOTENCY_CONFLICT": 409, "PROTECTED_ACCOUNT": 409, "PAYLOAD_TOO_LARGE": 413, "UNSUPPORTED_MEDIA_TYPE": 415, "MISDIRECTED_REQUEST": 421, "PASSWORD_POLICY_VIOLATION": 422, "PASSWORD_BLOCKED": 422, "RATE_LIMITED": 429, "INTERNAL_ERROR": 500, "STORAGE_UNAVAILABLE": 503, "AUTH_CAPACITY_EXCEEDED": 503, "SERVICE_NOT_READY": 503,
 }
 
@@ -498,6 +498,22 @@ func publicProblem(e error) (string, int) {
 	return "STORAGE_UNAVAILABLE", 503
 }
 
+// RetryAfter is the Retry-After hint of a failure with status: the error's own hint when
+// it carries one, else the policy's fallback for 429 and 503. Other statuses have none.
+func RetryAfter(e error, status int, policy config.HTTPPolicy) (int, bool) {
+	if status != http.StatusTooManyRequests && status != http.StatusServiceUnavailable {
+		return 0, false
+	}
+	var hint interface{ RetrySeconds() int }
+	if errors.As(e, &hint) && hint.RetrySeconds() > 0 {
+		return hint.RetrySeconds(), true
+	}
+	if status == http.StatusTooManyRequests {
+		return policy.RateLimitFallbackRetrySeconds, true
+	}
+	return policy.ServiceUnavailableRetrySeconds, true
+}
+
 // Problem retains the owned default policy for standalone consumers.
 func Problem(w http.ResponseWriter, requestID string, e error) {
 	ProblemWithPolicy(w, requestID, e, config.DefaultHTTPPolicy())
@@ -511,16 +527,8 @@ func ProblemWithPolicy(w http.ResponseWriter, requestID string, e error, policy 
 		code, status = "SERVICE_NOT_READY", http.StatusServiceUnavailable
 	}
 	w.Header().Del("Retry-After")
-	if status == http.StatusTooManyRequests {
-		retry := policy.RateLimitFallbackRetrySeconds
-		var rate interface{ RetrySeconds() int }
-		if errors.As(e, &rate) && rate.RetrySeconds() > 0 {
-			retry = rate.RetrySeconds()
-		}
+	if retry, ok := RetryAfter(e, status, policy); ok {
 		w.Header().Set("Retry-After", strconv.Itoa(retry))
-	}
-	if status == http.StatusServiceUnavailable {
-		w.Header().Set("Retry-After", strconv.Itoa(policy.ServiceUnavailableRetrySeconds))
 	}
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(status)

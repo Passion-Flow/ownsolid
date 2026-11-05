@@ -57,12 +57,24 @@ func (h *wakeHub) release(node string, ch <-chan struct{}) {
 // taskWritten announces a new task for node to claims waiting on this process.
 func (s *Service) taskWritten(node string) { s.wake.wake(node) }
 
+// Seat takes a serving seat for one step of an admitted call and returns its release
+// (ADR 0017).
+type Seat func(context.Context) (release func(), err error)
+
 // ClaimWaiting leases the next task like Claim. When there is none, it holds the claim
 // for up to wait and claims again as soon as a task for the node is written. A claim
-// that ends without work returns an empty lease.
-func (s *Service) ClaimWaiting(ctx context.Context, id, credential, request string, input wire.ClaimRequest) (wire.Claim, error) {
+// that ends without work returns an empty lease. Each look for work takes a seat, so a
+// held claim holds none while it waits.
+func (s *Service) ClaimWaiting(ctx context.Context, id, credential, request string, input wire.ClaimRequest, seat Seat) (wire.Claim, error) {
 	wait := time.Duration(input.WaitSeconds) * time.Second
-	return waitForClaim(ctx, &s.wake, id, wait, func() (wire.Claim, error) { return s.ClaimFrom(ctx, id, credential, request, input) })
+	return waitForClaim(ctx, &s.wake, id, wait, func() (wire.Claim, error) {
+		release, e := seat(ctx)
+		if e != nil {
+			return wire.Claim{}, e
+		}
+		defer release()
+		return s.ClaimFrom(ctx, id, credential, request, input)
+	})
 }
 
 func waitForClaim(ctx context.Context, hub *wakeHub, node string, wait time.Duration, claim func() (wire.Claim, error)) (wire.Claim, error) {
