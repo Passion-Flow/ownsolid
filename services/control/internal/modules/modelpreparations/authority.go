@@ -44,37 +44,50 @@ func (s *Service) delegatedTransaction(ctx context.Context, c candidate, fn func
 		var epoch int64
 		var status string
 		var platformAdmin bool
-		if e = preparationQueryRow(ctx, tx, preparationSelectedSQL(tx, preparationDM(`SELECT "AUTH_EPOCH","STATUS","IS_PLATFORM_ADMIN" FROM "USERS" WHERE "ID"=? FOR UPDATE`), "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=$1 FOR UPDATE", `SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=? FOR UPDATE`, c.actor)).Scan(&epoch, &status, &platformAdmin); e != nil {
+		if e = preparationQueryRow(ctx, tx, preparationSelectedSQL(tx, preparationDM(`SELECT "AUTH_EPOCH","STATUS","IS_PLATFORM_ADMIN" FROM "USERS" WHERE "ID"=? FOR UPDATE`), "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=$1", `SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=? FOR UPDATE`, c.actor)).Scan(&epoch, &status, &platformAdmin); e != nil {
 			return e
 		}
 		a := identity.Auth{Me: identity.Me{User: identity.User{ID: c.actor, IsPlatformAdmin: platformAdmin}, Audience: c.audience}, Epoch: epoch}
 		w := workspaces.Workspace{ID: c.workspace, TenantID: c.tenant}
-		var tenantActive bool
-		if e = preparationQueryRow(ctx, tx, preparationSelectedSQL(tx, preparationDM(`SELECT "W"."STATUS",CASE WHEN "T"."STATUS"='active' THEN 1 ELSE 0 END FROM "WORKSPACES" "W" JOIN "TENANTS" "T" ON "T"."ID"="W"."TENANT_ID" JOIN "INSTALLATION_STATE" "I" ON "I"."TENANT_ID"="W"."TENANT_ID" WHERE "I"."ID"=1 AND "I"."BOOTSTRAP_COMPLETE"=1 AND "W"."TENANT_ID"=? AND "W"."ID"=? FOR UPDATE OF "W"."ID"`), `SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w`, `SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=? AND w.id=? FOR UPDATE`, c.tenant, c.workspace)).Scan(&w.Status, &tenantActive); e != nil {
-			return e
+		// ADR 0020: this runs on every preparation agent call, so on PostgreSQL it locks
+		// neither the actor nor the Workspace row, which all of a user's nodes share. The
+		// node lock fences the status read; the other chains lock the Workspace first.
+		scope := func() (bool, error) {
+			var active bool
+			e := preparationQueryRow(ctx, tx, preparationSelectedSQL(tx, preparationDM(`SELECT "W"."STATUS",CASE WHEN "T"."STATUS"='active' THEN 1 ELSE 0 END FROM "WORKSPACES" "W" JOIN "TENANTS" "T" ON "T"."ID"="W"."TENANT_ID" JOIN "INSTALLATION_STATE" "I" ON "I"."TENANT_ID"="W"."TENANT_ID" WHERE "I"."ID"=1 AND "I"."BOOTSTRAP_COMPLETE"=1 AND "W"."TENANT_ID"=? AND "W"."ID"=? FOR UPDATE OF "W"."ID"`), `SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2`, `SELECT w.status,t.status='active' FROM workspaces w JOIN tenants t ON t.id=w.tenant_id JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=? AND w.id=? FOR UPDATE`, c.tenant, c.workspace)).Scan(&w.Status, &active)
+			return active, e
 		}
-		valid := status == "active" && epoch == c.epoch && tenantActive && w.Status == "active"
+		var tenantActive bool
+		if tx.Dialect() != transaction.PostgreSQL {
+			if tenantActive, e = scope(); e != nil {
+				return e
+			}
+		}
+		authorized := false
 		if c.audience == "admin" {
-			valid = valid && platformAdmin
+			authorized = platformAdmin
 		} else if c.audience == "portal" {
 			var role, authority string
 			e = preparationIDRow(preparationQueryRow(ctx, tx, preparationSelectedSQL(tx, preparationDM(`SELECT "ROLE","AUTHORITY_ID" FROM "WORKSPACE_MEMBERSHIPS" WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "USER_ID"=?`), "SELECT role,authority_id::text FROM workspace_memberships WHERE tenant_id=$1 AND workspace_id=$2 AND user_id=$3", `SELECT role,authority_id FROM workspace_memberships WHERE tenant_id=? AND workspace_id=? AND user_id=?`, c.tenant, c.workspace, c.actor)), 1).Scan(&role, &authority)
-			if errors.Is(e, sql.ErrNoRows) {
-				valid = false
-			} else if e != nil {
+			if e != nil && !errors.Is(e, sql.ErrNoRows) {
 				return e
-			} else {
-				w.Role = &role
-				valid = valid && role == "owner" && c.membership != nil && *c.membership == authority
 			}
-		} else {
-			valid = false
+			if e == nil {
+				w.Role = &role
+				authorized = role == "owner" && c.membership != nil && *c.membership == authority
+			}
 		}
 		n, nodeError := s.Nodes.ModelPreparationTargetWithin(ctx, tx, c.tenant, c.workspace, c.node)
 		// Expected node unavailability is recorded by the caller; actual database errors abort.
 		if nodeError != nil && nodeError.Error() != "RESOURCE_NOT_FOUND" && nodeError.Error() != "NODE_UNAVAILABLE" && nodeError.Error() != "AGENT_PROFILE_REJECTED" {
 			return nodeError
 		}
+		if tx.Dialect() == transaction.PostgreSQL {
+			if tenantActive, e = scope(); e != nil {
+				return e
+			}
+		}
+		valid := authorized && status == "active" && epoch == c.epoch && tenantActive && w.Status == "active"
 		j, e := lockedPreparationWithin(ctx, tx, w, c.id)
 		if e != nil {
 			return e

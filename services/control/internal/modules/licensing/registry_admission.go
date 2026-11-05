@@ -21,7 +21,9 @@ func (s *Service) CheckWithin(ctx context.Context, q transaction.Executor) error
 	if e != nil || owner == nil || owner.Dialect() != q.Dialect() {
 		return fail("LICENSE_CONFIGURATION_REQUIRED")
 	}
-	state, _, _, e := s.readLocked(ctx, q)
+	// This only reads, and image pulls of the whole fleet come through here: they must not
+	// wait for each other on the singleton row (ADR 0020).
+	state, _, _, e := s.read(ctx, q, "")
 	if e != nil {
 		return repositoryError(e)
 	}

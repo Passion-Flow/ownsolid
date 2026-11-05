@@ -39,9 +39,10 @@ func TestActualAdmissionAndKeyRevocationSerializeInBothOrders(t *testing.T) {
 			}
 			var workers sync.WaitGroup
 			defer func() { cancel(); _ = barrier.Rollback(context.WithoutCancel(ctx)); workers.Wait() }()
-			// KEY SHARE permits the current read-only scope preflight, but blocks the
-			// exclusive mutation fence after ordered user locks have been acquired.
-			if _, e = barrier.Exec(ctx, "SELECT id FROM workspaces WHERE id=$1 FOR KEY SHARE", access.alias.WorkspaceID); e != nil {
+			// SHARE permits the current read-only scope preflight, but blocks the exclusive
+			// mutation fence after ordered user locks have been acquired. KEY SHARE no longer
+			// blocks it: the fence passes foreign key checks (ADR 0020).
+			if _, e = barrier.Exec(ctx, "SELECT id FROM workspaces WHERE id=$1 FOR SHARE", access.alias.WorkspaceID); e != nil {
 				t.Fatal(e)
 			}
 			revokeDone := make(chan error, 1)
@@ -68,12 +69,12 @@ func TestActualAdmissionAndKeyRevocationSerializeInBothOrders(t *testing.T) {
 			}
 			if revokeFirst {
 				revoke()
-				c.waitForDatabaseLock(t, "%FOR UPDATE OF w%")
+				c.waitForDatabaseLock(t, "%FOR NO KEY UPDATE OF w%")
 				admit()
 				c.waitForDatabaseLock(t, "SELECT auth_epoch,status FROM users%FOR UPDATE%")
 			} else {
 				admit()
-				c.waitForDatabaseLock(t, "%FOR UPDATE OF w%")
+				c.waitForDatabaseLock(t, "%FOR NO KEY UPDATE OF w%")
 				revoke()
 				c.waitForDatabaseLock(t, "SELECT id::text FROM users WHERE id=%FOR UPDATE%")
 			}

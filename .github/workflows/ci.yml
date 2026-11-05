@@ -37,6 +37,39 @@ jobs:
       - name: Build Go modules, the gateway and the web applications
         run: make build
 
+  agent-cost:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.7-pg18-bookworm@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+        env:
+          POSTGRES_DB: ownsolid_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 127.0.0.1:5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ownsolid_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.3"
+          cache: false
+      - id: python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Prepare the test database
+        run: psql -h 127.0.0.1 -U postgres -d ownsolid_test -c 'CREATE EXTENSION vector'
+      - name: Measure every agent call against its declared cost
+        run: make test-agent-cost
+        env:
+          PROJECT_ONE_TEST_DSN: postgres://postgres@127.0.0.1:5432/ownsolid_test?sslmode=disable
+          PROJECT_ONE_DATA_PYTHON: ${{ steps.python.outputs.python-path }}
+
   web:
     runs-on: ubuntu-24.04
     steps:

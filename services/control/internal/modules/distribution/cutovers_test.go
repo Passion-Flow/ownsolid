@@ -252,7 +252,7 @@ func TestActualAliasPauseAndAdmissionSerializeInBothOrders(t *testing.T) {
 			} else {
 				admit()
 			}
-			c.waitForDatabaseLock(t, "%FOR UPDATE OF w%")
+			c.waitForDatabaseLock(t, "%FOR NO KEY UPDATE OF w%")
 			if pauseFirst {
 				admit()
 			} else {
@@ -262,7 +262,7 @@ func TestActualAliasPauseAndAdmissionSerializeInBothOrders(t *testing.T) {
 			queued := false
 			for time.Now().Before(deadline) {
 				var count int
-				if e = c.s.DB.QueryRow(ctx, "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%FOR UPDATE OF w%' AND pid<>pg_backend_pid()").Scan(&count); e != nil {
+				if e = c.s.DB.QueryRow(ctx, "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%FOR NO KEY UPDATE OF w%' AND pid<>pg_backend_pid()").Scan(&count); e != nil {
 					t.Fatal(e)
 				}
 				if count >= 2 {

@@ -10,6 +10,8 @@ Migration 000003 stores node/join-token/task state. Each operation retains insta
 
 [task_delivery.go](task_delivery.go) owns task delivery ([ADR 0011](../../../../../docs/decisions/0011-task-delivery-semantics.md)): leases carry the per-node sequence the insert trigger assigns, `Acknowledge` records that the agent took a lease, every claim first releases a lease that was never acknowledged without spending an attempt, and a claim whose cursor disagrees with the node's record is answered with a resync, bounded per node and across the fleet.
 
+Agent calls lock only what belongs to their node ([ADR 0020](../../../../../docs/decisions/0020-agent-call-cost-rule.md)): on PostgreSQL `machineWithin` takes the node row, then reads the Workspace status without a lock, and a status change locks the Workspace's nodes. Never lock a row the fleet shares on an agent path, and keep each call within its declared cost in `api/agent/v1/calls.go`; `make test-agent-cost` checks both. Enrollment reads `tenant_node_counts`, which a trigger keeps.
+
 [pacing.go](pacing.go) owns the pacing of this cell's agents ([ADR 0013](../../../../../docs/decisions/0013-agent-pacing.md)): the row, the administrator API, and the per-process copy heartbeat replies read.
 
 Task-event publication is recorded through the same-transaction hook; delivery of a broker message does not itself claim a task. Preserve ownership and lock ordering when extending cross-domain callbacks.

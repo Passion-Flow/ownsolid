@@ -36,23 +36,30 @@ func (s *Service) pull(ctx context.Context, node, credential, task, lease string
 	if e != nil {
 		return failure("AGENT_UNAUTHORIZED")
 	}
-	if e = s.license.Check(ctx); e != nil {
-		return e
-	}
 	return safeError(store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
 		// Rebuild only from immutable persisted server facts. The original exact
 		// session/source/epoch must still be live; no client can supply this Auth.
 		actor := identity.Auth{SessionID: g.session, TokenHash: g.tokenHash, Epoch: g.epoch,
 			Me: identity.Me{Audience: "admin", User: identity.User{ID: g.actor, IsPlatformAdmin: true}}}
-		if e := s.identity.RecheckOrderedWithin(ctx, q, actor); e != nil {
+		if e := s.identity.CurrentWithin(ctx, q, actor); e != nil {
 			return e
 		}
-		scope, e := s.workspaces.RecheckScopeWithin(ctx, q, actor, g.workspace)
-		if e != nil {
-			return e
+		// Every node pulling for one person shares these rows, so on PostgreSQL the node
+		// lock fences the read instead of a Workspace lock (ADR 0020).
+		checkScope := func() error {
+			scope, e := s.workspaces.CurrentScopeWithin(ctx, q, actor, g.workspace)
+			if e != nil {
+				return e
+			}
+			if scope.ID != g.workspace || scope.TenantID != g.tenant || scope.Status != "active" {
+				return failure("ACCESS_DENIED")
+			}
+			return nil
 		}
-		if scope.ID != g.workspace || scope.TenantID != g.tenant || scope.Status != "active" {
-			return failure("ACCESS_DENIED")
+		if q.Dialect() != transaction.PostgreSQL {
+			if e := checkScope(); e != nil {
+				return e
+			}
 		}
 		if e := s.license.CheckWithin(ctx, q); e != nil {
 			return e
@@ -60,6 +67,11 @@ func (s *Service) pull(ctx context.Context, node, credential, task, lease string
 		n, t, c, e := s.nodes.InferenceRegistryWithin(ctx, q, g.tenant, g.workspace, node, credential, task, lease)
 		if e != nil {
 			return e
+		}
+		if q.Dialect() == transaction.PostgreSQL {
+			if e := checkScope(); e != nil {
+				return e
+			}
 		}
 		var requester string
 		if e = q.QueryRow(ctx, statement(q, `SELECT requested_by::text FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4`, `SELECT requested_by FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, g.tenant, g.workspace, node, task)).Scan(&requester); e != nil {
@@ -92,7 +104,7 @@ func (s *Service) pull(ctx context.Context, node, credential, task, lease string
 			if _, _, _, e = s.nodes.InferenceRegistryWithin(ctx, q, g.tenant, g.workspace, node, credential, task, lease); e != nil {
 				return e
 			}
-			if e = s.identity.RecheckWithin(ctx, q, actor); e != nil {
+			if e = s.identity.CurrentWithin(ctx, q, actor); e != nil {
 				return e
 			}
 			if e = s.license.CheckWithin(ctx, q); e != nil {

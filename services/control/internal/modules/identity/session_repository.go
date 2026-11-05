@@ -199,6 +199,21 @@ func (s *Service) IssueSessionWithin(ctx context.Context, q transaction.Executor
 // writes. Callers with additional users/connectors must lock their complete sets
 // in canonical order first; repeat rechecks retain those same authority fences.
 func (s *Service) RecheckWithin(ctx context.Context, q transaction.Executor, a Auth) error {
+	return s.recheckWithin(ctx, q, a, true)
+}
+
+// CurrentWithin is RecheckWithin without the user and session locks on PostgreSQL, for an
+// agent call that acts on a person's grant: every node working for that person shares
+// those rows (ADR 0020). A call in flight when a revocation commits ends as if it arrived
+// just before it; the next call fails. The other chains keep the locks.
+func (s *Service) CurrentWithin(ctx context.Context, q transaction.Executor, a Auth) error {
+	if q == nil {
+		return failure("AUTH_SESSION_EXPIRED")
+	}
+	return s.recheckWithin(ctx, q, a, q.Dialect() != transaction.PostgreSQL)
+}
+
+func (s *Service) recheckWithin(ctx context.Context, q transaction.Executor, a Auth, lock bool) error {
 	if ctx == nil || !sessionActor(a) {
 		return failure("AUTH_SESSION_EXPIRED")
 	}
@@ -208,7 +223,11 @@ func (s *Service) RecheckWithin(ctx context.Context, q transaction.Executor, a A
 	var epoch int64
 	var status string
 	var admin bool
-	e := q.QueryRow(ctx, identitySQL(q, "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=$1 FOR NO KEY UPDATE", "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=? FOR UPDATE", `SELECT AUTH_EPOCH,STATUS,IS_PLATFORM_ADMIN FROM USERS WHERE ID=? FOR UPDATE`, a.Me.User.ID)).Scan(&epoch, &status, &admin)
+	userLock, sessionLock := "", ""
+	if lock {
+		userLock, sessionLock = " FOR NO KEY UPDATE", " FOR UPDATE"
+	}
+	e := q.QueryRow(ctx, identitySQL(q, "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=$1"+userLock, "SELECT auth_epoch,status,is_platform_admin FROM users WHERE id=? FOR UPDATE", `SELECT AUTH_EPOCH,STATUS,IS_PLATFORM_ADMIN FROM USERS WHERE ID=? FOR UPDATE`, a.Me.User.ID)).Scan(&epoch, &status, &admin)
 	if errors.Is(e, sql.ErrNoRows) {
 		return failure("AUTH_SESSION_EXPIRED")
 	}
@@ -227,7 +246,7 @@ func (s *Service) RecheckWithin(ctx context.Context, q transaction.Executor, a A
 	}
 	var locked string
 	e = q.QueryRow(ctx, identitySQL(q,
-		`SELECT id::text FROM sessions WHERE id=$1 AND user_id=$2 AND token_hash=$3 AND auth_epoch=$4 AND audience=$5 AND revoked_at IS NULL AND absolute_expires_at>clock_timestamp() AND last_seen_at>clock_timestamp()-$6::bigint*interval '1 microsecond' FOR UPDATE`,
+		`SELECT id::text FROM sessions WHERE id=$1 AND user_id=$2 AND token_hash=$3 AND auth_epoch=$4 AND audience=$5 AND revoked_at IS NULL AND absolute_expires_at>clock_timestamp() AND last_seen_at>clock_timestamp()-$6::bigint*interval '1 microsecond'`+sessionLock,
 		`SELECT id FROM sessions WHERE id=? AND user_id=? AND token_hash=? AND auth_epoch=? AND audience=? AND revoked_at IS NULL AND absolute_expires_at>UTC_TIMESTAMP(6) AND last_seen_at>TIMESTAMPADD(MICROSECOND,-?,UTC_TIMESTAMP(6)) FOR UPDATE`, `SELECT ID FROM SESSIONS WHERE ID=? AND USER_ID=? AND TOKEN_HASH=? AND AUTH_EPOCH=? AND AUDIENCE=? AND REVOKED_AT IS NULL AND ABSOLUTE_EXPIRES_AT>CURRENT_TIMESTAMP(6) AND LAST_SEEN_AT>CURRENT_TIMESTAMP(6)-NUMTODSINTERVAL(?/1000000.0,'SECOND') FOR UPDATE`, a.SessionID, a.Me.User.ID, a.TokenHash, a.Epoch, a.Me.Audience, s.Idle(a.Me.Audience).Microseconds())).Scan(&locked)
 	if errors.Is(e, sql.ErrNoRows) {
 		return failure("AUTH_SESSION_EXPIRED")

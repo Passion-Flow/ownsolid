@@ -34,7 +34,7 @@ func (s *Service) Report(ctx context.Context, gateway, credential string, outcom
 	}
 	e = s.storageTransaction(ctx, func(ctx context.Context, tx transaction.Executor) error {
 		var workspace string
-		e = tx.QueryRow(ctx, distributionNativeStatement(tx, `SELECT W.ID FROM WORKSPACES W JOIN INSTALLATION_STATE I ON I.TENANT_ID=W.TENANT_ID WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1 AND W.TENANT_ID=? AND W.ID=? FOR UPDATE`, []any{scope.tenant, scope.workspace}, "SELECT w.id::text FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR UPDATE OF w", `SELECT w.id FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=? AND w.id=? FOR UPDATE`, []any{scope.tenant, scope.workspace}, []any{scope.tenant, scope.workspace})).Scan(&workspace)
+		e = tx.QueryRow(ctx, distributionNativeStatement(tx, `SELECT W.ID FROM WORKSPACES W JOIN INSTALLATION_STATE I ON I.TENANT_ID=W.TENANT_ID WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1 AND W.TENANT_ID=? AND W.ID=? FOR UPDATE`, []any{scope.tenant, scope.workspace}, "SELECT w.id::text FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=$1 AND w.id=$2 FOR NO KEY UPDATE OF w", `SELECT w.id FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.tenant_id=? AND w.id=? FOR UPDATE`, []any{scope.tenant, scope.workspace}, []any{scope.tenant, scope.workspace})).Scan(&workspace)
 		if e != nil {
 			return e
 		}

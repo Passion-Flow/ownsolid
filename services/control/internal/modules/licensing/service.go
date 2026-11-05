@@ -116,9 +116,14 @@ func renewal(previous, next wire.Claims) bool {
 // Every read validates actual signed history, not cached booleans or a client
 // license/deployment override. The original singleton serializes all transitions.
 func (s *Service) readLocked(ctx context.Context, tx transaction.Executor) (State, []wire.Verified, time.Time, error) {
+	return s.read(ctx, tx, " FOR UPDATE")
+}
+
+// read is readLocked with the lock of the PostgreSQL statement chosen by the caller.
+func (s *Service) read(ctx context.Context, tx transaction.Executor, lock string) (State, []wire.Verified, time.Time, error) {
 	var out State
 	var observed time.Time
-	if e := tx.QueryRow(ctx, licenseSQL(tx, "SELECT deployment_id::text,observed_at FROM platform_license_state WHERE id=1 FOR UPDATE", "SELECT deployment_id,observed_at FROM platform_license_state WHERE id=1 FOR UPDATE", `SELECT "DEPLOYMENT_ID","OBSERVED_AT" FROM "PLATFORM_LICENSE_STATE" WHERE "ID"=1 FOR UPDATE`)).Scan(&out.DeploymentID, &observed); e != nil {
+	if e := tx.QueryRow(ctx, licenseSQL(tx, "SELECT deployment_id::text,observed_at FROM platform_license_state WHERE id=1"+lock, "SELECT deployment_id,observed_at FROM platform_license_state WHERE id=1 FOR UPDATE", `SELECT "DEPLOYMENT_ID","OBSERVED_AT" FROM "PLATFORM_LICENSE_STATE" WHERE "ID"=1 FOR UPDATE`)).Scan(&out.DeploymentID, &observed); e != nil {
 		if errors.Is(e, sql.ErrNoRows) {
 			return State{}, nil, time.Time{}, fail("LICENSE_STORED_STATE_INVALID")
 		}

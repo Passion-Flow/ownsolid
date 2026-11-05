@@ -3,9 +3,12 @@ package database_test
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +18,34 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 )
+
+// Foreign key checks take a key share on the Workspace row with every audit event, and FOR
+// UPDATE conflicts with key shares, so a PostgreSQL statement that locks the row FOR UPDATE
+// waits for agent traffic and can deadlock with it (ADR 0020).
+func TestPostgreSQLNeverLocksTheWorkspaceRowForUpdate(t *testing.T) {
+	literal := regexp.MustCompile("`[^`]*`|\"(?:[^\"\\\\\n]|\\\\.)*\"")
+	statement := regexp.MustCompile(`FROM workspaces\b.*\$1.*FOR UPDATE`)
+	seen := 0
+	e := filepath.WalkDir("../..", func(path string, entry fs.DirEntry, e error) error {
+		if e != nil || entry.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return e
+		}
+		raw, e := os.ReadFile(path)
+		if e != nil {
+			return e
+		}
+		seen++
+		for _, found := range literal.FindAllString(string(raw), -1) {
+			if statement.MatchString(found) {
+				t.Errorf("%s: %s", path, found)
+			}
+		}
+		return nil
+	})
+	if e != nil || seen == 0 {
+		t.Fatal(seen, e)
+	}
+}
 
 func TestDatabaseLockPolicyOpenRejectsBeforeSecrets(t *testing.T) {
 	var c config.Config

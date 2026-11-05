@@ -41,8 +41,13 @@ type scenario struct {
 
 func setup(t *testing.T) scenario {
 	t.Helper()
+	return setupOn(t, fixture.New(t))
+}
+
+// setupOn builds the scenario on an account fixture the caller configured.
+func setupOn(t *testing.T, account *identity.Service) scenario {
+	t.Helper()
 	ctx := context.Background()
-	account := fixture.New(t)
 	password := fixture.Bootstrap(t, account)
 	a := fixture.Login(t, account, "admin@example.invalid", password, "admin")
 	p := fixture.Login(t, account, "admin@example.invalid", password, "portal")

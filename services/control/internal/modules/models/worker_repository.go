@@ -75,7 +75,7 @@ func (s *Service) workerWithin(ctx context.Context, session transaction.Store, i
 		var workspaceStatus string
 		var tenantActive bool
 		e = q.QueryRow(ctx, modelNativeSQL(q, `SELECT W.STATUS,CASE WHEN T.STATUS='active' THEN 1 ELSE 0 END FROM WORKSPACES W JOIN INSTALLATION_STATE I ON I.TENANT_ID=W.TENANT_ID JOIN TENANTS T ON T.ID=W.TENANT_ID WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1 AND W.ID=? AND W.TENANT_ID=? FOR UPDATE`,
-			`SELECT w.status,t.status='active' FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id JOIN tenants t ON t.id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.id=$1 AND w.tenant_id=$2 FOR UPDATE OF w`,
+			`SELECT w.status,t.status='active' FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id JOIN tenants t ON t.id=w.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND w.id=$1 AND w.tenant_id=$2 FOR NO KEY UPDATE OF w`,
 			`SELECT w.status,(SELECT t.status='active' FROM tenants t WHERE t.id=w.tenant_id) FROM workspaces w WHERE w.id=? AND w.tenant_id=? AND EXISTS(SELECT 1 FROM installation_state i WHERE i.id=1 AND i.bootstrap_complete=1 AND i.tenant_id=w.tenant_id) FOR UPDATE`, preview.WorkspaceID, preview.TenantID)).Scan(&workspaceStatus, &tenantActive)
 		if errors.Is(e, sql.ErrNoRows) {
 			return fail("MODEL_ACTOR_UNAVAILABLE")
