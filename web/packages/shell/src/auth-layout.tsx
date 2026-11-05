@@ -3,16 +3,19 @@ import { isProblem } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
 import { Brand, LocaleSelect, Notice, ProblemNotice } from '@ownsolid/ui';
 import type { ReactNode } from 'react';
+import { useDocumentTitle } from './page-focus.ts';
 
 /** Props for {@link AuthLayout}. */
 export interface AuthLayoutProps {
-  title: ReactNode;
+  /** The page's heading and the browser tab's name. */
+  title: string;
   subtitle?: ReactNode | undefined;
   children: ReactNode;
 }
 
 /** The centered card of the sign-in, registration and password pages. */
 export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
+  useDocumentTitle(title);
   return (
     <main className="flex min-h-full flex-col items-center justify-center px-5 py-10">
       <div className="w-full max-w-[400px]">

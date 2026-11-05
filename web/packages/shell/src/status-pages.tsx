@@ -4,8 +4,10 @@ import { useI18n } from '@ownsolid/i18n';
 import { Brand, Button, Notice, ProblemNotice, Spinner } from '@ownsolid/ui';
 import { Link, useRouter, type ErrorComponentProps } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
+import { useDocumentTitle } from './page-focus.ts';
 
-function FullPage({ children }: { children: ReactNode }) {
+function FullPage({ title, children }: { title: string; children: ReactNode }) {
+  useDocumentTitle(title);
   return (
     <main className="flex min-h-full flex-col items-center justify-center gap-6 px-5 py-10">
       <Brand />
@@ -27,10 +29,12 @@ export function PendingPage() {
 /** Shown for a path no route matches. */
 export function NotFoundPage() {
   const { t } = useI18n();
+  const title = t('status.notFound.title');
   return (
-    <FullPage>
+    <FullPage title={title}>
       <Notice
-        title={t('status.notFound.title')}
+        title={title}
+        titleAs="h1"
         actions={
           <Button asChild size="sm">
             <Link to="/">{t('status.notFound.home')}</Link>
@@ -51,13 +55,14 @@ export function RouteErrorPage({ error }: ErrorComponentProps) {
     void router.invalidate();
   };
   return (
-    <FullPage>
+    <FullPage title={t('status.crashed.title')}>
       {isProblem(error) ? (
-        <ProblemNotice problem={error} onRetry={retry} />
+        <ProblemNotice problem={error} onRetry={retry} titleAs="h1" />
       ) : (
         <Notice
           tone="critical"
           title={t('status.crashed.title')}
+          titleAs="h1"
           actions={
             <Button size="sm" onClick={retry}>
               {t('action.retry')}

@@ -18,6 +18,7 @@ import { CommandMenu } from './command-menu.tsx';
 import { LicenseStatus } from './license-status.tsx';
 import { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
 import { NotificationBell } from './notifications.tsx';
+import { useDocumentTitle } from './page-focus.ts';
 import { signInPath } from './redirect.ts';
 import { useSignOut } from './sign-out.ts';
 import { UserMenu } from './user-menu.tsx';
@@ -124,9 +125,7 @@ export function AppFrame({ navigation, showLicense = false, children }: AppFrame
   const current = findNavItem(navigation, pathname);
   const pageTitle = current ? t(current.item.label) : undefined;
 
-  useEffect(() => {
-    document.title = pageTitle ? `${pageTitle} - ownsolid` : 'ownsolid';
-  }, [pageTitle]);
+  useDocumentTitle(pageTitle);
 
   useEffect(() => {
     const shortcut = (event: KeyboardEvent) => {

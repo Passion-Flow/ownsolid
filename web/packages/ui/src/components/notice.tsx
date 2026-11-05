@@ -8,6 +8,8 @@ export interface NoticeProps {
   tone?: 'info' | 'critical' | undefined;
   /** What happened. */
   title: ReactNode;
+  /** The title's element: a heading when the notice is all the page shows. */
+  titleAs?: 'p' | 'h1' | 'h2' | undefined;
   /** Likely cause and next step. */
   children?: ReactNode | undefined;
   /** Actions that fix the problem, such as a retry button. */
@@ -16,7 +18,14 @@ export interface NoticeProps {
 }
 
 /** An inline message. Every problem names its next step (design-system principle 2). */
-export function Notice({ tone = 'info', title, children, actions, className }: NoticeProps) {
+export function Notice({
+  tone = 'info',
+  title,
+  titleAs: Title = 'p',
+  children,
+  actions,
+  className,
+}: NoticeProps) {
   const Icon = tone === 'critical' ? CircleAlert : Info;
   return (
     <div
@@ -37,7 +46,7 @@ export function Notice({ tone = 'info', title, children, actions, className }: N
         )}
       />
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-text">{title}</p>
+        <Title className="m-0 text-[13px] font-semibold text-text">{title}</Title>
         {children ? <div className="mt-0.5">{children}</div> : null}
         {actions ? <div className="mt-2 flex flex-wrap gap-1.5">{actions}</div> : null}
       </div>

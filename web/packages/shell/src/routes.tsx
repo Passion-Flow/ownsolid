@@ -14,6 +14,7 @@ import {
 import type { ReactNode } from 'react';
 import type { AppFrameProps } from './app-frame.tsx';
 import { preloading } from './lazy-route.ts';
+import { usePageFocus } from './page-focus.ts';
 import { safeRedirect, signInPath } from './redirect.ts';
 import { sessionQuery } from './session.ts';
 import { parseSsoResult } from './sso-search.ts';
@@ -58,7 +59,10 @@ export const rootRoute = createRootRouteWithContext<AppContext>()({
   beforeLoad: async ({ context }) => ({
     config: await context.queryClient.query(runtimeConfigQuery()),
   }),
-  component: Outlet,
+  component: function Root() {
+    usePageFocus();
+    return <Outlet />;
+  },
   notFoundComponent: NotFoundPage,
   errorComponent: RouteErrorPage,
 });
