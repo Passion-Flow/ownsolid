@@ -32,7 +32,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [ ] UX-109 Language preference per user, tenant default and browser negotiation (P1) - Catalog: F553
 - [ ] UX-110 Locale formatting for dates, numbers and units (P1) - Catalog: F555
 - [ ] UX-111 In-product help and API documentation available offline (P1) - Catalog: F431
-- [ ] UX-112 Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569
+- [x] UX-112 Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569 - Evidence: 27d03fc; keyboard walk and axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05
 - [ ] UX-113 Warn before a session ends from inactivity, with one action to stay signed in (P1)
 - [ ] UX-114 Shareable links: filters, sort order and the open drawer live in the URL (P1)
 - [x] UX-115 Route-level code splitting and a bundle size budget enforced in CI (P1) - Evidence: 13b789e, 13034a0; real-browser run on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05
