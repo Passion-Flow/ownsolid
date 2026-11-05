@@ -905,7 +905,7 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 		cookies.ClearIdentity(w, audience)
 		return map[string]bool{"reset": true}, 200, nil
 	}
-	if path == "/api/v1/me" || strings.HasPrefix(path, "/api/v1/admin/") {
+	if path == "/api/v1/me" || path == passwordChangesPath || strings.HasPrefix(path, "/api/v1/admin/") {
 		a, e := s.Authenticate(ctx, session, audience)
 		if e != nil {
 			if e.Error() == "AUTH_SESSION_EXPIRED" {
@@ -930,6 +930,9 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 			}
 			data, e := s.UpdateMe(ctx, a, v.DisplayName, v.Locale, v.Version, requestID)
 			return data, 200, e
+		}
+		if route == "POST "+passwordChangesPath {
+			return h.changePassword(w, r, cookies, a, requestID)
 		}
 		if strings.HasPrefix(path, "/api/v1/admin/") {
 			if !a.Me.User.IsPlatformAdmin {

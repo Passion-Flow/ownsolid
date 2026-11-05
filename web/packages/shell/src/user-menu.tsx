@@ -1,6 +1,8 @@
 import { useI18n, supportedLocales } from '@ownsolid/i18n';
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '@ownsolid/ui';
-import { Check, LogOut } from 'lucide-react';
+import { useRouter } from '@tanstack/react-router';
+import { Check, LogOut, UserRound } from 'lucide-react';
+import { accountPath } from './redirect.ts';
 import { useSession } from './session.ts';
 
 /** Props for {@link UserMenu}. */
@@ -8,9 +10,10 @@ export interface UserMenuProps {
   onSignOut: () => void;
 }
 
-/** The avatar and its menu: who is signed in, language and sign-out. */
+/** The avatar and its menu: who is signed in, the account page, language and sign-out. */
 export function UserMenu({ onSignOut }: UserMenuProps) {
   const { t, locale, setLocale } = useI18n();
+  const router = useRouter();
   const me = useSession();
   if (!me) return null;
   const name = me.user.display_name || me.user.email;
@@ -32,6 +35,15 @@ export function UserMenu({ onSignOut }: UserMenuProps) {
         <p className="m-0 truncate font-semibold">{name}</p>
         <p className="m-0 truncate text-[12.5px] text-text-3">{me.user.email}</p>
       </div>
+      <MenuSeparator />
+      <MenuItem
+        onSelect={() => {
+          void router.navigate({ to: accountPath });
+        }}
+      >
+        <UserRound aria-hidden className="size-4" />
+        {t('user.account')}
+      </MenuItem>
       <MenuSeparator />
       <MenuLabel>{t('locale.label')}</MenuLabel>
       {supportedLocales.map((value) => (

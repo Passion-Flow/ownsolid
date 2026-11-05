@@ -84,10 +84,7 @@ func (s *Service) Login(ctx context.Context, email, password, audience, previous
 	}
 	ok, e := s.Passwords.Verify(ctx, phc, password)
 	if e != nil {
-		if code(e) == "AUTH_CAPACITY_EXCEEDED" {
-			return out, "", time.Time{}, e
-		}
-		return out, "", time.Time{}, failure("INTERNAL_ERROR")
+		return out, "", time.Time{}, verifyError(e)
 	}
 	if !eligible || !ok {
 		e = store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
