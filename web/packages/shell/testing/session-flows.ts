@@ -240,13 +240,13 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
   test('closes the command menu with Escape and says when nothing matches', async ({ page }) => {
     control.signedIn = true;
     await page.goto('/');
-    await page.getByRole('button', { name: 'Search and commands' }).click();
+    await page.getByRole('button', { name: 'Search, or type a command' }).click();
     const input = page.getByPlaceholder('Type a command or a page name');
     await input.fill('no such thing');
     await expect(page.getByText('No results')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(input).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Search and commands' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Search, or type a command' })).toBeFocused();
   });
 
   test('signs out from the command menu', async ({ page }) => {

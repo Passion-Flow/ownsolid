@@ -13,10 +13,10 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'border-accent bg-accent text-white hover:bg-accent-hover',
+        primary: 'border-accent-strong bg-accent-strong text-white hover:bg-accent-strong-hover',
         secondary: 'border-border-strong bg-surface text-text hover:bg-surface-2',
         ghost: 'border-transparent bg-transparent text-text-2 hover:bg-surface-2 hover:text-text',
-        danger: 'border-border-strong bg-surface text-critical hover:bg-surface-2',
+        danger: 'border-border-strong bg-surface text-critical-ink hover:bg-surface-2',
       },
       size: {
         md: 'h-9 px-3.5',

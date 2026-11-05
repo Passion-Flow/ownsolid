@@ -183,17 +183,18 @@ export function AppFrame({ navigation, showLicense = false, children }: AppFrame
           ) : null}
           <button
             type="button"
-            aria-label={t('command.label')}
+            aria-keyshortcuts={macLike ? 'Meta+K' : 'Control+K'}
             onClick={() => {
               setCommandOpen(true);
             }}
             className="ml-auto flex h-9 min-w-9 cursor-pointer items-center gap-2 rounded-field border border-border bg-surface px-2.5 text-text-3 xl:w-[320px] xl:pr-2.5 xl:pl-3"
           >
             <Search aria-hidden />
-            <span className="hidden flex-1 text-left text-[13px] xl:inline">
+            {/* The prompt names the button; narrow screens show only the icon. */}
+            <span className="sr-only flex-1 text-left text-[13px] xl:not-sr-only">
               {t('command.prompt')}
             </span>
-            <span className="hidden xl:inline">
+            <span aria-hidden className="hidden xl:inline">
               <Kbd>{macLike ? '⌘K' : 'Ctrl K'}</Kbd>
             </span>
           </button>
