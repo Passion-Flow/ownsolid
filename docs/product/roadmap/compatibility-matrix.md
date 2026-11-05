@@ -12,7 +12,8 @@ product". Each entry gets its own box for real-environment verification.
 - [ ] CMP-202 MySQL as the business database (P2) - Catalog: F238
   - CMP-201 and CMP-202 must add the `site_id` and `cell_id` columns their chains lack (ADR 0006).
   - They must also add the `density` column and the `system` theme to `user_preferences` (UX-118),
-    and the `resendMailDelivery` operation and resend of failed emails (UX-120).
+    the `resendMailDelivery` operation and resend of failed emails (UX-120), and the
+    `user_preferences.locale`, `tenants.default_locale` and `tenants.settings_revision` columns (UX-109).
 - [ ] CMP-203 Domestic CPUs and operating systems: Kunpeng, Hygon, Kylin, UOS, openEuler (P2) - Catalog: F512 to F517
 - [ ] CMP-204 Harbor registry (P2) - Catalog: F212
 - [ ] CMP-205 MinIO, Ceph RGW and SeaweedFS object storage (P2) - Catalog: F211, F320, F321

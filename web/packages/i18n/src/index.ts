@@ -24,4 +24,6 @@ export {
   useI18n,
   type I18n,
   type I18nProviderProps,
+  type LocaleChoice,
+  type LocaleSaver,
 } from './provider.tsx';

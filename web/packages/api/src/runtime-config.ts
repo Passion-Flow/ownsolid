@@ -23,6 +23,8 @@ export interface RuntimeConfig {
   plaintext: boolean;
   /** Per-request timeout. */
   requestTimeoutMilliseconds: number;
+  /** The language of people who have not chosen one; `auto` leaves it to the browser. */
+  defaultLocale: string;
   ui: UiPolicy;
 }
 
@@ -52,10 +54,12 @@ export function parseRuntimeConfig(document: unknown): RuntimeConfig {
   if (typeof topology.size !== 'string' || topology.size === '')
     throw new ApiProblem('RESPONSE_INVALID');
   if (typeof transport.plaintext !== 'boolean') throw new ApiProblem('RESPONSE_INVALID');
+  if (typeof data.default_locale !== 'string') throw new ApiProblem('RESPONSE_INVALID');
   return {
     topologySize: topology.size,
     plaintext: transport.plaintext,
     requestTimeoutMilliseconds: integer(data.request_timeout_milliseconds, 1_000, 300_000),
+    defaultLocale: data.default_locale,
     ui: {
       pollMilliseconds: integer(ui.poll_milliseconds, 1_000, 60_000),
       searchDebounceMilliseconds: integer(ui.search_debounce_milliseconds, 0, 2_000),

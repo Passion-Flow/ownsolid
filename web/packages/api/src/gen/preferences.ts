@@ -18,6 +18,24 @@ export interface paths {
         patch: operations["UpdatePreference"];
         trace?: never;
     };
+    "/api/v1/admin/tenant-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the tenant's settings */
+        get: operations["GetTenantSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change the tenant's settings on top of a revision */
+        patch: operations["UpdateTenantSettings"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -45,11 +63,16 @@ export interface components {
             theme: "system" | "light" | "dark";
             /** @enum {string} */
             density: "comfortable" | "compact";
+            /**
+             * @description `auto` means no choice: the tenant's default, then the browser's languages.
+             * @enum {string}
+             */
+            locale: "auto" | "en" | "zh-CN";
             revision: number;
             /** Format: date-time */
             updated_at: string;
         };
-        /** @description Changes the named fields and keeps the others. At least one of `theme` and `density` is required. */
+        /** @description Changes the named fields and keeps the others. At least one of `theme`, `density` and `locale` is required. A chosen locale also becomes the account's email language. */
         UpdatePreference: {
             /**
              * @description `system` leaves the choice to the operating system of each browser.
@@ -58,10 +81,34 @@ export interface components {
             theme?: "system" | "light" | "dark";
             /** @enum {string} */
             density?: "comfortable" | "compact";
+            /**
+             * @description `auto` means no choice: the tenant's default, then the browser's languages.
+             * @enum {string}
+             */
+            locale?: "auto" | "en" | "zh-CN";
             expected_revision: number;
         };
         PreferenceResponse: {
             data: components["schemas"]["Preference"];
+        };
+        TenantSettings: {
+            /**
+             * @description The language of people who have not chosen one. `auto` leaves it to each browser.
+             * @enum {string}
+             */
+            default_locale: "auto" | "en" | "zh-CN";
+            revision: number;
+        };
+        UpdateTenantSettings: {
+            /**
+             * @description The language of people who have not chosen one. `auto` leaves it to each browser.
+             * @enum {string}
+             */
+            default_locale: "auto" | "en" | "zh-CN";
+            expected_revision: number;
+        };
+        TenantSettingsResponse: {
+            data: components["schemas"]["TenantSettings"];
         };
     };
     responses: never;
@@ -127,6 +174,71 @@ export interface operations {
                 };
             };
             /** @description Safe scope, revision, availability or storage failure without another user data or private execution body. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    GetTenantSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The tenant's settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantSettingsResponse"];
+                };
+            };
+            /** @description Safe scope, revision, availability or storage failure. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    UpdateTenantSettings: {
+        parameters: {
+            query?: never;
+            header: {
+                Origin: string;
+                "X-CSRF-Token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTenantSettings"];
+            };
+        };
+        responses: {
+            /** @description The tenant's settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantSettingsResponse"];
+                };
+            };
+            /** @description Safe scope, revision, availability or storage failure. */
             default: {
                 headers: {
                     [name: string]: unknown;

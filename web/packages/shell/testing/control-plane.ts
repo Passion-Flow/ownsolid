@@ -195,8 +195,12 @@ export interface ControlPlane {
   nextAccountWrite: ScriptedProblem | null;
   /** The password the last reset or registration set. */
   lastPassword: string | null;
-  /** The theme and density saved on the account. */
-  preferences: { theme: string; density: string; revision: number };
+  /** The theme, density and language saved on the account. */
+  preferences: { theme: string; density: string; locale: string; revision: number };
+  /** The tenant's settings, which also set the public default language. */
+  tenantSettings: { default_locale: string; revision: number };
+  /** Fails reading the tenant's settings with this problem while set. */
+  tenantSettingsProblem: ScriptedProblem | null;
   /** Fails saving preferences with this problem while set. */
   preferencesProblem: ScriptedProblem | null;
   /** Bodies of the preference saves the server received, in order. */
@@ -262,7 +266,9 @@ export async function mockControlPlane(
     ssoAddress: '',
     nextAccountWrite: null,
     lastPassword: null,
-    preferences: { theme: 'system', density: 'comfortable', revision: 1 },
+    preferences: { theme: 'system', density: 'comfortable', locale: 'auto', revision: 1 },
+    tenantSettings: { default_locale: 'auto', revision: 1 },
+    tenantSettingsProblem: null,
     preferencesProblem: null,
     preferenceWrites: [],
     mail: [],
@@ -273,7 +279,9 @@ export async function mockControlPlane(
   const identity = () => ({ user: state.user, workspace, audience: state.audience });
 
   await page.route('**/runtime-config.json', (route) =>
-    state.unreachable ? route.abort('connectionrefused') : data(route, runtimeConfig),
+    state.unreachable
+      ? route.abort('connectionrefused')
+      : data(route, { ...runtimeConfig, default_locale: state.tenantSettings.default_locale }),
   );
   await page.route('**/api/v1/auth/csrf', (route) => {
     state.csrfFetches += 1;
@@ -494,6 +502,29 @@ export async function mockControlPlane(
       revision: state.preferences.revision + 1,
     };
     return data(route, { ...state.preferences, updated_at: '2026-11-04T00:00:00Z' });
+  });
+  await page.route('**/api/v1/admin/tenant-settings', (route) => {
+    if (state.audience !== 'admin') {
+      return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+    }
+    const request = route.request();
+    if (request.method() === 'GET') {
+      return state.tenantSettingsProblem
+        ? problem(route, state.tenantSettingsProblem)
+        : data(route, state.tenantSettings);
+    }
+    if (request.headers()['x-csrf-token'] !== 'csrf-token') {
+      return problem(route, { status: 403, code: 'CSRF_INVALID' });
+    }
+    const body = request.postDataJSON() as { default_locale: string; expected_revision: number };
+    if (body.expected_revision !== state.tenantSettings.revision) {
+      return problem(route, { status: 409, code: 'PREFERENCE_REVISION_CONFLICT' });
+    }
+    state.tenantSettings = {
+      default_locale: body.default_locale,
+      revision: state.tenantSettings.revision + 1,
+    };
+    return data(route, state.tenantSettings);
   });
   await page.route('**/api/v1/admin/mail-deliveries?*', (route) => {
     if (state.audience !== 'admin')

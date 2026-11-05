@@ -64,7 +64,7 @@ func upgradeDataFingerprint(t *testing.T, f actualFixture, tables []string) stri
 	h := sha256.New()
 	for _, table := range tables {
 		var raw string
-		if e := f.lease.QueryRow(t.Context(), "SELECT COALESCE(string_agg((to_jsonb(r)-'site_id'-'cell_id')::text,E'\\n' ORDER BY (to_jsonb(r)-'site_id'-'cell_id')::text),'') FROM "+pgx.Identifier{table}.Sanitize()+" r").Scan(&raw); e != nil {
+		if e := f.lease.QueryRow(t.Context(), "SELECT COALESCE(string_agg((to_jsonb(r)-'site_id'-'cell_id'-'default_locale'-'settings_revision')::text,E'\\n' ORDER BY (to_jsonb(r)-'site_id'-'cell_id'-'default_locale'-'settings_revision')::text),'') FROM "+pgx.Identifier{table}.Sanitize()+" r").Scan(&raw); e != nil {
 			t.Fatal(table, e)
 		}
 		h.Write([]byte(table + "\x00" + raw + "\x00"))

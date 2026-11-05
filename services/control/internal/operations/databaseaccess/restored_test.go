@@ -3,13 +3,14 @@ package databaseaccess
 import (
 	"context"
 	"encoding/json"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	release "github.com/Passion-Flow/ownsolid/api/release/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 )
 
 func restoredContextFixture() release.RestoredRuntimeContext {
@@ -56,7 +57,7 @@ func TestActualRestoredRuntimeRolePreservesFreshGuardAndRefusesWrongContext(t *t
 	ctx := context.Background()
 	r := restoredContextFixture()
 	pc := f.service.DB.Config().ConnConfig
-	r.TargetDatabase, r.TargetOperator = pc.Database, pc.User
+	r.TargetDatabase, r.TargetOperator, r.SchemaVersion = pc.Database, pc.User, database.SchemaVersion
 	if e := f.lease.QueryRow(ctx, "SELECT tenant_id::text FROM installation_state WHERE id=1").Scan(&r.TenantID); e != nil {
 		t.Fatal(e)
 	}

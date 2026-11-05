@@ -186,6 +186,16 @@ export const shellPages: readonly PageState[] = [
     },
   },
   {
+    name: 'account in a chosen language',
+    path: '/account',
+    open: async (page, control) => {
+      control.preferences.locale = 'zh-CN';
+      control.signedIn = true;
+      await page.goto('/account');
+      await page.getByRole('heading', { name: chinese['account.title'], level: 1 }).waitFor();
+    },
+  },
+  {
     name: 'account with no providers',
     path: '/account',
     open: async (page, control) => {

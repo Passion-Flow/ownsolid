@@ -46,7 +46,7 @@ func TestM15ActualPortalHumanTLSGeneratedContractsStrictCSRFAndPersistence(t *te
 		client.Write("POST", "/api/v1/auth/login", map[string]string{"email": "admin@example.invalid", "password": password}, 200, "")
 	}
 	p := portal.Call("GET", "/api/v1/preferences", nil, 200, "PreferenceResponse")
-	if p["theme"] != "system" || p["density"] != "comfortable" || p["revision"] != float64(1) {
+	if p["theme"] != "system" || p["density"] != "comfortable" || p["locale"] != "auto" || p["revision"] != float64(1) {
 		t.Fatal("initial persisted appearance")
 	}
 	body := map[string]any{"theme": "dark", "expected_revision": 1}

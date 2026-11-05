@@ -1,7 +1,16 @@
 // The signed-in person's own account: profile, password and sign-in providers.
 import { changePassword, isProblem, updateProfile, type User } from '@ownsolid/api';
-import { useI18n } from '@ownsolid/i18n';
-import { Button, Card, CardBody, CardHeader, Spinner, TextField, useToast } from '@ownsolid/ui';
+import { isLocale, supportedLocales, useI18n } from '@ownsolid/i18n';
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  SelectField,
+  Spinner,
+  TextField,
+  useToast,
+} from '@ownsolid/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState, type SubmitEvent } from 'react';
@@ -82,6 +91,32 @@ function ProfileCard({ user }: { user: User }) {
             </Button>
           </div>
         </form>
+      </CardBody>
+    </Card>
+  );
+}
+
+/** Chooses the language, which applies and saves at once, like the theme. */
+function LanguageCard() {
+  const { t, choice, setLocale } = useI18n();
+  return (
+    <Card>
+      <CardHeader title={t('account.language.title')} />
+      <CardBody>
+        <SelectField
+          label={t('account.language.label')}
+          name="language"
+          value={choice}
+          hint={t('account.language.hint')}
+          options={[
+            { value: 'auto', label: t('account.language.auto') },
+            ...supportedLocales.map((value) => ({ value, label: t(`locale.${value}`) })),
+          ]}
+          onChange={(event) => {
+            const next = event.target.value;
+            setLocale(isLocale(next) ? next : 'auto');
+          }}
+        />
       </CardBody>
     </Card>
   );
@@ -178,7 +213,10 @@ export function AccountPage() {
           <ProfileCard user={me.user} />
           <PasswordCard email={me.user.email} />
         </div>
-        <ProvidersCard />
+        <div className="flex min-w-0 flex-col gap-4">
+          <LanguageCard />
+          <ProvidersCard />
+        </div>
       </div>
     </>
   );

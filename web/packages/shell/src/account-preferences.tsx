@@ -1,11 +1,11 @@
-// Keeps this browser's theme and density in step with the signed-in account.
+// Keeps this browser's theme, density and language in step with the signed-in account.
 import { getPreferences, updatePreferences, type PreferenceChange } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
 import { usePreferences, useToast } from '@ownsolid/ui';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useEffectEvent, useMemo, useState } from 'react';
 import { createPreferenceSync } from './preference-sync.ts';
-import { useSession } from './session.ts';
+import { sessionKey, useSession } from './session.ts';
 
 /**
  * The account's preference. It is always stale, so returning to the window picks up what
@@ -23,6 +23,7 @@ function Sync({ userId }: { userId: string }) {
   const { t } = useI18n();
   const toast = useToast();
   const { adopt, connect } = usePreferences();
+  const { adoptLocale, connectLocale } = useI18n();
   const client = useQueryClient();
   const query = useMemo(() => preferencesQuery(userId), [userId]);
   const { data } = useQuery(query);
@@ -31,6 +32,7 @@ function Sync({ userId }: { userId: string }) {
     mutationFn: ({ change, revision }: { change: PreferenceChange; revision: number }) =>
       updatePreferences(change, revision),
   });
+  const [failedSave, setFailedSave] = useState<{ retry: () => void } | null>(null);
   const sync = useMemo(
     () =>
       createPreferenceSync({
@@ -38,19 +40,41 @@ function Sync({ userId }: { userId: string }) {
         load: () => client.query(query),
         save: (change, revision) => mutateAsync({ change, revision }),
         onSaved: (saved) => {
+          const previous = client.getQueryData(query.queryKey);
           client.setQueryData(query.queryKey, saved);
+          // A language is also the account's email language, which moves its version.
+          if (previous?.locale !== saved.locale) {
+            void client.invalidateQueries({ queryKey: sessionKey });
+          }
         },
         onFailed: (_, retry) => {
-          toast({ message: t('preferences.saveFailed'), retry });
+          setFailedSave({ retry });
         },
       }),
-    [client, query, mutateAsync, toast, t],
+    [client, query, mutateAsync],
   );
+  // The queue must outlive a change of language, which may be the change it holds, so it
+  // depends on neither the toast nor the translator.
+  const showFailure = useEffectEvent((retry: () => void) => {
+    toast({ message: t('preferences.saveFailed'), retry });
+  });
+  useEffect(() => {
+    if (failedSave) showFailure(failedSave.retry);
+  }, [failedSave]);
 
   useEffect(() => connect(sync.save), [connect, sync]);
+  useEffect(
+    () =>
+      connectLocale((locale) => {
+        sync.save({ locale });
+      }),
+    [connectLocale, sync],
+  );
   useEffect(() => {
-    if (data && !sync.busy()) adopt(data);
-  }, [data, adopt, sync]);
+    if (!data || sync.busy()) return;
+    adopt(data);
+    adoptLocale(data.locale);
+  }, [data, adopt, adoptLocale, sync]);
 
   return null;
 }

@@ -24,11 +24,19 @@ const mailRoute = createRoute({
   component: lazyRouteComponent(() => import('./mail-deliveries-page.tsx'), 'MailDeliveriesPage'),
 });
 
+const settingsRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/settings',
+  component: lazyRouteComponent(() => import('./settings-page.tsx'), 'SettingsPage'),
+});
+
 const accountRoute = createAccountRoute(frameRoute);
 
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
-  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute, accountRoute, mailRoute])]),
+  authenticatedRoute.addChildren([
+    frameRoute.addChildren([homeRoute, accountRoute, mailRoute, settingsRoute]),
+  ]),
 ]);
 
 /** The console application: its router and query client. */

@@ -2,7 +2,8 @@
 // authenticated layout. Applications add their pages under authenticatedRoute.
 import { loadRuntimeConfig, type Audience, type RuntimeConfig } from '@ownsolid/api';
 import type { QueryClient } from '@tanstack/react-query';
-import { queryOptions } from '@tanstack/react-query';
+import { isLocale, useI18n } from '@ownsolid/i18n';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import {
   type AnyRoute,
   Outlet,
@@ -12,7 +13,7 @@ import {
   redirect,
   useRouter,
 } from '@tanstack/react-router';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import type { AppFrameProps } from './app-frame.tsx';
 import { preloading } from './lazy-route.ts';
 import { usePageFocus } from './page-focus.ts';
@@ -58,6 +59,15 @@ export function runtimeConfigQuery() {
   });
 }
 
+/** Applies the installation's language for people who have not chosen one. */
+function useInstallationLocale(): void {
+  const { setInstallationLocale } = useI18n();
+  const configured = useQuery(runtimeConfigQuery()).data?.defaultLocale;
+  useEffect(() => {
+    if (configured) setInstallationLocale(isLocale(configured) ? configured : 'auto');
+  }, [configured, setInstallationLocale]);
+}
+
 /** The root route. It loads the runtime configuration before anything else. */
 export const rootRoute = createRootRouteWithContext<AppContext>()({
   beforeLoad: async ({ context }) => ({
@@ -65,6 +75,7 @@ export const rootRoute = createRootRouteWithContext<AppContext>()({
   }),
   component: function Root() {
     usePageFocus();
+    useInstallationLocale();
     return <Outlet />;
   },
   notFoundComponent: NotFoundPage,

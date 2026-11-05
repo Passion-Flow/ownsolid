@@ -40,7 +40,10 @@ export type SsoConnector = ssoContract.components['schemas']['PublicSSOConnector
 export type Preference = preferencesContract.components['schemas']['Preference'];
 
 /** The account fields to change; fields left out keep their saved value. */
-export type PreferenceChange = Partial<Pick<Preference, 'theme' | 'density'>>;
+export type PreferenceChange = Partial<Pick<Preference, 'theme' | 'density' | 'locale'>>;
+
+/** What an administrator chooses for everyone in the tenant. */
+export type TenantSettings = preferencesContract.components['schemas']['TenantSettings'];
 
 const sso = createClient<ssoContract.paths>();
 const workspaces = createClient<workspacesContract.paths>();
@@ -103,6 +106,24 @@ export function getPreferences(options?: RequestOptions): Promise<Preference> {
 export function updatePreferences(change: PreferenceChange, revision: number): Promise<Preference> {
   return preferences.patch('/api/v1/preferences', {
     body: { ...change, expected_revision: revision },
+  });
+}
+
+/** Reads the tenant's settings, for administrators. */
+export function getTenantSettings(options?: RequestOptions): Promise<TenantSettings> {
+  return preferences.get('/api/v1/admin/tenant-settings', options);
+}
+
+/**
+ * Saves the tenant's default language on top of `revision`. Fails with
+ * `PREFERENCE_REVISION_CONFLICT` when another administrator saved first.
+ */
+export function updateTenantSettings(
+  defaultLocale: TenantSettings['default_locale'],
+  revision: number,
+): Promise<TenantSettings> {
+  return preferences.patch('/api/v1/admin/tenant-settings', {
+    body: { default_locale: defaultLocale, expected_revision: revision },
   });
 }
 

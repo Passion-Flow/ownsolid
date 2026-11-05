@@ -6,6 +6,7 @@ const valid = {
     topology: { size: 'single-node' },
     transport: { mode: 'direct_https', plaintext: false },
     request_timeout_milliseconds: 30_000,
+    default_locale: 'auto',
     ui: {
       poll_milliseconds: 5_000,
       search_debounce_milliseconds: 150,
@@ -26,6 +27,7 @@ describe('parseRuntimeConfig', () => {
       topologySize: 'single-node',
       plaintext: false,
       requestTimeoutMilliseconds: 30_000,
+      defaultLocale: 'auto',
       ui: {
         pollMilliseconds: 5_000,
         searchDebounceMilliseconds: 150,

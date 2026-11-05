@@ -31,6 +31,7 @@ export {
   type ProblemLike,
   type ProblemNoticeProps,
 } from './components/problem-notice.tsx';
+export { SelectField, type SelectFieldProps } from './components/select-field.tsx';
 export { Spinner } from './components/spinner.tsx';
 export { Kbd, StatusPill, Tag, type StatusTone, type TagProps } from './components/status-pill.tsx';
 export { Table, Td, Th, Tr } from './components/table.tsx';

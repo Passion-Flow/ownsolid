@@ -8,12 +8,35 @@ async function openMail(page: Page, control: ControlPlane): Promise<void> {
   await page.getByRole('heading', { name: 'Email delivery', level: 1 }).waitFor();
 }
 
+async function openSettings(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/settings');
+  await page.getByRole('heading', { name: 'Settings', level: 1 }).waitFor();
+}
+
 /**
  * Every page state of the console, checked by accessibility.spec.ts. A page this
  * application adds gets its states here; src/router.test.ts fails until it does.
  */
 export const consolePages: readonly PageState[] = [
   ...shellPages,
+  {
+    name: 'settings',
+    path: '/settings',
+    open: async (page, control) => {
+      await openSettings(page, control);
+      await page.getByLabel('Default language').waitFor();
+    },
+  },
+  {
+    name: 'settings unavailable',
+    path: '/settings',
+    open: async (page, control) => {
+      control.tenantSettingsProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await openSettings(page, control);
+      await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
   {
     name: 'email delivery with a failed email',
     path: '/mail',

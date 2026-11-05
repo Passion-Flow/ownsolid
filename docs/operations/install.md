@@ -34,7 +34,8 @@ Compose. Other sizes are refused until their roadmap items land.
    and the path of the administrator credential.
 
 3. Read the generated password from `<install_root>/operator/admin-credential`, sign in at
-   the admin origin and change it on the Account page, under the account menu. The file holds a live credential until you do. If
+   the admin origin and change it on the Account page, under the account menu. To set the
+   language of people who have not chosen one, use **Settings** in the console. The file holds a live credential until you do. If
    `tls.source` is `generate`, clients must trust `<install_root>/config/ca.pem`.
 
 4. Check the installation at any time:

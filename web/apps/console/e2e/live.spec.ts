@@ -160,9 +160,34 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
   await page.getByRole('button', { name: 'Account menu' }).click();
   await page.getByRole('menuitem', { name: chinese['locale.zh-CN'] }).click();
   await expect(page.getByText(/\d{4}\u5e74\d{1,2}\u6708\d{1,2}\u65e5/).first()).toBeVisible();
-  await page.getByRole('button', { name: chinese['user.menu'] }).click();
-  await page.getByRole('menuitem', { name: 'English' }).click();
+  // The choice follows the account to the other browser, and automatic takes it back.
+  await second.reload();
+  await expect(second.locator('html')).toHaveAttribute('lang', 'zh-CN');
+  await page.getByLabel(chinese['account.language.label']).selectOption('auto');
   await expect(page.getByRole('heading', { name: 'Account', level: 1 })).toBeVisible();
+  await second.reload();
+  await expect(second.locator('html')).toHaveAttribute('lang', 'en');
+  if (!origin.includes('portal')) {
+    // The tenant's default reaches someone who has not signed in, then goes back.
+    const setDefault = async (value: string) => {
+      await page.goto('/settings');
+      await page.getByLabel('Default language').selectOption(value);
+      await page.getByRole('button', { name: 'Save' }).click();
+      await expect(page.locator('html')).toHaveAttribute('lang', value === 'auto' ? 'en' : value);
+    };
+    await setDefault('zh-CN');
+    const visitorContext = await browser.newContext({ baseURL: origin });
+    const visitor = await visitorContext.newPage();
+    await visitor.goto('/sign-in');
+    await expect(visitor.locator('html')).toHaveAttribute('lang', 'zh-CN');
+    await visitorContext.close();
+    await page.goto('/settings');
+    await page.getByLabel(chinese['settings.language.default']).selectOption('auto');
+    await page.getByRole('button', { name: chinese['settings.save'] }).click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await page.goto('/account');
+    await expect(page.getByRole('heading', { name: 'Account', level: 1 })).toBeVisible();
+  }
   const nameField = page.getByLabel('Display name');
   const originalName = await nameField.inputValue();
   const saveName = async (name: string) => {

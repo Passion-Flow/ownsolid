@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Project-one preferences",
-    "version": "0.15.0",
+    "version": "0.16.0",
     "description": "Current caller discovery, private internal metadata or fixed preferences. Contract presence alone is not implementation or qualification."
   },
   "servers": [
@@ -114,6 +114,109 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdatePreference"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tenant-settings": {
+      "get": {
+        "operationId": "GetTenantSettings",
+        "summary": "Read the tenant's settings",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The tenant's settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSettingsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe scope, revision, availability or storage failure.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "UpdateTenantSettings",
+        "summary": "Change the tenant's settings on top of a revision",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The tenant's settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSettingsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe scope, revision, availability or storage failure.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenantSettings"
               }
             }
           }
@@ -854,6 +957,7 @@
         "required": [
           "theme",
           "density",
+          "locale",
           "revision",
           "updated_at"
         ],
@@ -873,6 +977,15 @@
               "comfortable",
               "compact"
             ]
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "en",
+              "zh-CN"
+            ],
+            "description": "`auto` means no choice: the tenant's default, then the browser's languages."
           },
           "revision": {
             "type": "integer",
@@ -908,13 +1021,22 @@
               "compact"
             ]
           },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "en",
+              "zh-CN"
+            ],
+            "description": "`auto` means no choice: the tenant's default, then the browser's languages."
+          },
           "expected_revision": {
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740990
           }
         },
-        "description": "Changes the named fields and keeps the others. At least one of `theme` and `density` is required."
+        "description": "Changes the named fields and keeps the others. At least one of `theme`, `density` and `locale` is required. A chosen locale also becomes the account's email language."
       },
       "PreferenceResponse": {
         "type": "object",
@@ -925,6 +1047,66 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/Preference"
+          }
+        }
+      },
+      "TenantSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "default_locale",
+          "revision"
+        ],
+        "properties": {
+          "default_locale": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "en",
+              "zh-CN"
+            ],
+            "description": "The language of people who have not chosen one. `auto` leaves it to each browser."
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "UpdateTenantSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "default_locale",
+          "expected_revision"
+        ],
+        "properties": {
+          "default_locale": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "en",
+              "zh-CN"
+            ],
+            "description": "The language of people who have not chosen one. `auto` leaves it to each browser."
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740990
+          }
+        }
+      },
+      "TenantSettingsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TenantSettings"
           }
         }
       }

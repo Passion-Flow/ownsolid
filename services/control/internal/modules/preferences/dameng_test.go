@@ -60,8 +60,8 @@ func (q *nativePreferenceExecutor) Exec(_ context.Context, statement transaction
 
 func TestDamengPreferenceRevisionAuditAndFailureBoundary(t *testing.T) {
 	at := time.Date(2026, 10, 24, 7, 0, 0, 123456000, time.UTC)
-	old := Preference{Theme: LightTheme, Density: ComfortableDensity, Revision: 1, UpdatedAt: at}
-	updated := Preference{Theme: DarkTheme, Density: ComfortableDensity, Revision: 2, UpdatedAt: at.Add(time.Second)}
+	old := Preference{Theme: LightTheme, Density: ComfortableDensity, Locale: AutoLocale, Revision: 1, UpdatedAt: at}
+	updated := Preference{Theme: DarkTheme, Density: ComfortableDensity, Locale: AutoLocale, Revision: 2, UpdatedAt: at.Add(time.Second)}
 	unknown := errors.Join(context.Canceled, &transaction.Error{Kind: transaction.CommitUnknown})
 	for _, tc := range []struct {
 		name           string

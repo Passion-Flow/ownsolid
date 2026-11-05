@@ -57,7 +57,7 @@ func TestTransportDispatcherProjectionAndRefusalBeforeSQL(t *testing.T) {
 						Data map[string]json.RawMessage `json:"data"`
 					}
 					publicFields := []string{
-						"topology", "sso_callback_origins", "transport", "private_clusters", "monitoring",
+						"topology", "default_locale", "sso_callback_origins", "transport", "private_clusters", "monitoring",
 						"middleware", "task_events", "image_registry", "artifact_storage",
 						"workspaces", "ui", "request_timeout_milliseconds", "component_default_version",
 						"component_max_scrapes", "component_default_config",

@@ -267,6 +267,15 @@ func success(w http.ResponseWriter, status int, data any) {
 }
 func peer(r *http.Request) string { return httpserver.RequestClientIP(r) }
 
+// defaultLocale is the tenant's language for the public runtime configuration. A handler
+// composed without the preferences owner answers as a tenant with no default does.
+func (h *Handler) defaultLocale(r *http.Request) string {
+	if h.Preferences == nil {
+		return preferences.AutoLocale
+	}
+	return h.Preferences.Service.DefaultLocale(r.Context())
+}
+
 // admitAgentCall admits an agent HTTPS call before any database work (ADR 0018). A path
 // that is no agent call is not found. A credential of the wrong form keys no node limit;
 // the path's handler refuses it.
@@ -488,7 +497,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 			h.problem(w, requestID, errors.New("RESOURCE_NOT_FOUND"))
 			return
 		}
-		success(w, http.StatusOK, map[string]any{"topology": map[string]any{"size": c.Topology.EffectiveSize()}, "sso_callback_origins": ssoCallbackOrigins(c), "transport": map[string]any{"mode": c.Server.EffectiveTransportMode(), "plaintext": c.Server.EffectiveTransportMode() == config.TransportHTTP}, "private_clusters": h.privateClusterPublicPolicy(), "monitoring": h.monitoringPublicPolicy(audience), "middleware": h.middlewarePublicPolicy(), "task_events": taskDeliveryPublicPolicy(c), "image_registry": registryPublicPolicy(c), "artifact_storage": artifactPublicPolicy(c), "workspaces": c.Policy().Workspaces, "ui": c.Policy().UI, "request_timeout_milliseconds": c.Policy().HTTP.RequestSeconds * 1000, "component_default_version": wire.NodeExporterVersion, "component_max_scrapes": wire.MaxComponentScrapeRequests, "component_default_config": wire.DefaultComponentConfig()})
+		success(w, http.StatusOK, map[string]any{"topology": map[string]any{"size": c.Topology.EffectiveSize()}, "default_locale": h.defaultLocale(r), "sso_callback_origins": ssoCallbackOrigins(c), "transport": map[string]any{"mode": c.Server.EffectiveTransportMode(), "plaintext": c.Server.EffectiveTransportMode() == config.TransportHTTP}, "private_clusters": h.privateClusterPublicPolicy(), "monitoring": h.monitoringPublicPolicy(audience), "middleware": h.middlewarePublicPolicy(), "task_events": taskDeliveryPublicPolicy(c), "image_registry": registryPublicPolicy(c), "artifact_storage": artifactPublicPolicy(c), "workspaces": c.Policy().Workspaces, "ui": c.Policy().UI, "request_timeout_milliseconds": c.Policy().HTTP.RequestSeconds * 1000, "component_default_version": wire.NodeExporterVersion, "component_max_scrapes": wire.MaxComponentScrapeRequests, "component_default_config": wire.DefaultComponentConfig()})
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/v1/localization/") {

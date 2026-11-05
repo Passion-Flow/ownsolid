@@ -1,6 +1,6 @@
 # Authenticated user appearance preference
 
-This small owner persists the current user's theme (`system`, `light` or `dark`) and density (`comfortable` or `compact`), which follow the account across browsers. `system` leaves the choice to the operating system of each browser and is what a new account starts with. It is not the locale registry, an arbitrary preference JSON store or deployment configuration.
+This small owner persists the current user's theme (`system`, `light` or `dark`), density (`comfortable` or `compact`) and language, which follow the account across browsers. `system` leaves the choice to the operating system of each browser and is what a new account starts with. It is not the locale registry, an arbitrary preference JSON store or deployment configuration.
 
 [service.go](service.go) defines Get, Update and VerifyStored. An update names the fields it changes and keeps the others, so browsers changing different fields do not overwrite each other. Updates require valid values and an expected revision, lock/read the existing row, advance the revision and write audit in the selected transaction. [repository.go](repository.go) rechecks current identity; a request cannot select another user's preference. Revision conflict is an explicit outcome for the client to reconcile.
 
@@ -37,8 +37,11 @@ The MySQL and Dameng chains have no density column and accept only light and dar
 (CMP-201, CMP-202): they read as comfortable and refuse a value they cannot store with
 `PREFERENCE_UNAVAILABLE`, before any write.
 
-Language remains the identity owner's `users.locale`/`UpdateMe` contract and
-version, independent of the theme revision. The Dameng identity/account path,
+Language follows the account too (`auto`, `en` or `zh-CN`, ADR 0025). A choice also updates the
+identity owner's `users.locale`, which emails read, in the same transaction, and moves that
+account's version. [tenant_settings.go](tenant_settings.go) owns the tenant's default language,
+which the public runtime configuration serves so pages before sign-in can use it. MySQL and
+Dameng have no column for either: they read as `auto` and refuse a choice. The Dameng identity/account path,
 shared schema, serving admission and real-driver tests must be integrated before
 claiming native language/theme persistence. [dameng_test.go](dameng_test.go)
 provides focused statement/fault controls, not native database qualification.
