@@ -7,17 +7,35 @@ import {
   Outlet,
   createRootRouteWithContext,
   createRoute,
+  lazyRouteComponent,
   redirect,
   useRouter,
 } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { ForgotPasswordPage, ResetPasswordPage } from './password-pages.tsx';
+import type { AppFrameProps } from './app-frame.tsx';
+import { preloading } from './lazy-route.ts';
 import { safeRedirect, signInPath } from './redirect.ts';
-import { RegisterPage } from './register-page.tsx';
 import { sessionQuery } from './session.ts';
-import { SignInPage } from './sign-in-page.tsx';
-import { SsoResultPage, parseSsoResult } from './sso.tsx';
+import { parseSsoResult } from './sso-search.ts';
 import { NotFoundPage, RouteErrorPage } from './status-pages.tsx';
+
+// Each page's code loads with its route; only the root, its status pages and the
+// session check are part of the application's first download.
+const SignInPage = lazyRouteComponent(() => import('./sign-in-page.tsx'), 'SignInPage');
+const ForgotPasswordPage = lazyRouteComponent(
+  () => import('./password-pages.tsx'),
+  'ForgotPasswordPage',
+);
+const ResetPasswordPage = lazyRouteComponent(
+  () => import('./password-pages.tsx'),
+  'ResetPasswordPage',
+);
+const RegisterPage = lazyRouteComponent(() => import('./register-page.tsx'), 'RegisterPage');
+const SsoResultPage = lazyRouteComponent(() => import('./sso.tsx'), 'SsoResultPage');
+const AppFrame = lazyRouteComponent(() => import('./app-frame.tsx'), 'AppFrame');
+
+/** The signed-in start page. Its code loads with the route that shows it. */
+export const WelcomePage = lazyRouteComponent(() => import('./welcome-page.tsx'), 'WelcomePage');
 
 /** Router context every application provides. */
 export interface AppContext {
@@ -59,7 +77,7 @@ const signInRoute = createRoute({
     const me = await context.queryClient.query(sessionQuery());
     if (me) redirect({ href: safeRedirect(search.redirect), replace: true, throw: true });
   },
-  component: SignInRoute,
+  component: preloading(SignInRoute, SignInPage),
 });
 
 /**
@@ -103,9 +121,9 @@ const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
   // Invitations belong to the portal; the admin origin refuses them.
-  component: function RegisterRoute() {
+  component: preloading(function RegisterRoute() {
     return useAppContext().audience === 'portal' ? <RegisterPage /> : <NotFoundPage />;
-  },
+  }, RegisterPage),
 });
 
 const signInResultRoute = createRoute({
@@ -116,18 +134,18 @@ const signInResultRoute = createRoute({
     // The session cookie is set; the start page loads the identity.
     if (!search.error) redirect({ to: '/', replace: true, throw: true });
   },
-  component: function SignInResultRoute() {
+  component: preloading(function SignInResultRoute() {
     return <SsoResultPage search={signInResultRoute.useSearch()} />;
-  },
+  }, SsoResultPage),
 });
 
 const linkResultRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/account/sso-result',
   validateSearch: parseSsoResult,
-  component: function LinkResultRoute() {
+  component: preloading(function LinkResultRoute() {
     return <SsoResultPage search={linkResultRoute.useSearch()} />;
-  },
+  }, SsoResultPage),
 });
 
 /** Every page reachable before sign-in. */
@@ -152,3 +170,21 @@ export const authenticatedRoute = createRoute({
   },
   component: Outlet,
 });
+
+/**
+ * The signed-in frame as a layout route under {@link authenticatedRoute}; an
+ * application adds its pages under it. The frame's code loads after sign-in.
+ */
+export function createFrameRoute(frame: Omit<AppFrameProps, 'children'>) {
+  return createRoute({
+    getParentRoute: () => authenticatedRoute,
+    id: 'frame',
+    component: preloading(function FrameRoute() {
+      return (
+        <AppFrame {...frame}>
+          <Outlet />
+        </AppFrame>
+      );
+    }, AppFrame),
+  });
+}

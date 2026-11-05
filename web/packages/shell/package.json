@@ -6,6 +6,7 @@
     ".": "./src/index.ts",
     "./testing": "./testing/index.ts"
   },
+  "sideEffects": false,
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

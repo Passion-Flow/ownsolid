@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 import { defineConfig, type TestUserConfig, type ViteUserConfig } from 'vitest/config';
+import { bundleBudgetPlugin, type BundleBudget } from './bundle-budget.ts';
 
 const setupFile = fileURLToPath(new URL('./vitest-setup.ts', import.meta.url));
 
@@ -67,6 +68,14 @@ function noticesPlugin(): Plugin {
   };
 }
 
+/**
+ * The size budget of both applications, in gzip bytes. Set in November 2026, when the
+ * first download measured 138 kB and the largest later chunk, the signed-in frame,
+ * 39 kB; the headroom is for the shared code P1 pages add. A page that needs more
+ * loads it with its route; raising a limit is a reviewed change (ADR 0016).
+ */
+export const bundleBudget: BundleBudget = { initial: 160_000, chunk: 60_000 };
+
 // The control plane answers these paths; the development server forwards them.
 const controlPaths = ['/api', '/runtime-config.json', '/health'];
 
@@ -90,7 +99,7 @@ export function appConfig({ port }: AppOptions): ViteUserConfig {
       )
     : undefined;
   return defineConfig({
-    plugins: [react(), tailwindcss(), noticesPlugin()],
+    plugins: [react(), tailwindcss(), noticesPlugin(), bundleBudgetPlugin(bundleBudget)],
     build: {
       target: 'es2023',
       sourcemap: false,

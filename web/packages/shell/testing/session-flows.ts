@@ -181,6 +181,48 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await expect(page.locator('body')).toHaveCSS('font-family', /^"Figtree Variable"/);
   });
 
+  test('loads the signed-in frame only after sign-in', async ({ page }) => {
+    const scripts: string[] = [];
+    page.on('request', (request) => {
+      if (request.resourceType() === 'script') scripts.push(new URL(request.url()).pathname);
+    });
+    await page.goto('/sign-in');
+    await page.getByLabel('Email').waitFor();
+    expect(scripts.some((path) => path.includes('/sign-in-page-'))).toBe(true);
+    expect(scripts.filter((path) => path.includes('/app-frame-'))).toEqual([]);
+    await signIn(page);
+    await expect(page.getByRole('heading', { name: 'Welcome, Ada Lovelace' })).toBeVisible();
+    expect(scripts.some((path) => path.includes('/app-frame-'))).toBe(true);
+  });
+
+  test('reloads once when a newer deployment replaced the code of a page', async ({ page }) => {
+    control.signedIn = true;
+    let requests = 0;
+    // The first request finds the file gone, as after an upgrade; the reload gets it.
+    await page.route('**/assets/welcome-page-*.js', async (route) => {
+      requests += 1;
+      if (requests === 1) await route.fulfill({ status: 404, body: '' });
+      else await route.fallback();
+    });
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Welcome, Ada Lovelace' })).toBeVisible();
+    expect(requests).toBe(2);
+  });
+
+  test('offers a retry when the code of a page keeps failing to load', async ({ page }) => {
+    control.signedIn = true;
+    let available = false;
+    await page.route('**/assets/welcome-page-*.js', async (route) => {
+      if (available) await route.fallback();
+      else await route.fulfill({ status: 404, body: '' });
+    });
+    await page.goto('/');
+    await expect(page.getByText('Something went wrong')).toBeVisible();
+    available = true;
+    await page.getByRole('button', { name: 'Try again' }).click();
+    await expect(page.getByRole('heading', { name: 'Welcome, Ada Lovelace' })).toBeVisible();
+  });
+
   test('opens the command menu from the keyboard and runs an action', async ({ page }) => {
     control.signedIn = true;
     await page.emulateMedia({ colorScheme: 'light' });

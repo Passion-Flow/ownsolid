@@ -6,6 +6,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { AuthLayout, FailureNotice } from './auth-layout.tsx';
 import { signInPath } from './redirect.ts';
+import type { SsoResultSearch } from './sso-search.ts';
 
 const problemCode = /^[A-Z][A-Z0-9_]{0,99}$/;
 
@@ -48,20 +49,6 @@ export function SsoButtons() {
       ))}
     </div>
   );
-}
-
-/** Where a sign-in or an account link came back to. */
-export interface SsoResultSearch {
-  result?: string;
-  error?: string;
-}
-
-/** Keeps only what the result page reads; the values come from the address. */
-export function parseSsoResult(search: Record<string, unknown>): SsoResultSearch {
-  return {
-    ...(typeof search.result === 'string' ? { result: search.result } : {}),
-    ...(typeof search.error === 'string' ? { error: search.error } : {}),
-  };
 }
 
 /** `/login/sso-result` and `/account/sso-result`: the outcome of a provider round trip. */

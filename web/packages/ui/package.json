@@ -6,6 +6,9 @@
     ".": "./src/index.ts",
     "./styles.css": "./src/styles.css"
   },
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

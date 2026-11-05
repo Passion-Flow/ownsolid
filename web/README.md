@@ -67,6 +67,12 @@ and reuse it for retries.
   because the Content-Security-Policy allows fonts and scripts only from the origin.
 - **Inline styles:** the same policy blocks `<style>` elements and `style` attributes in
   HTML. React's `style` prop is allowed; a library that injects a `<style>` element is not.
+- **Pages load with their route:** a route's component comes from `lazyRouteComponent`, and
+  a large library is imported only by the page that needs it. Workspace packages declare
+  `sideEffects`, so an index import does not pull every module into the first download.
+  Each build checks the bundle budget in `packages/config/src/vite.ts`
+  ([ADR 0016](../docs/decisions/0016-route-level-code-splitting.md)) and fails when the
+  first download or a later chunk is over it.
 - **Errors:** show failures with `ProblemNotice`, which gives the cause, the next step and
   the request ID. New server error codes get `problem.<CODE>.title` and `.detail` keys.
 - **File names** are kebab-case, as for all TypeScript in this repository.

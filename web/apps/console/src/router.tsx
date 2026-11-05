@@ -1,23 +1,15 @@
 import {
-  AppFrame,
   WelcomePage,
   authenticatedRoute,
   createApplication,
+  createFrameRoute,
   publicRoutes,
   rootRoute,
 } from '@ownsolid/shell';
-import { Outlet, createRoute } from '@tanstack/react-router';
+import { createRoute } from '@tanstack/react-router';
 import { navigation } from './navigation.ts';
 
-const frameRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  id: 'frame',
-  component: () => (
-    <AppFrame navigation={navigation} showLicense>
-      <Outlet />
-    </AppFrame>
-  ),
-});
+const frameRoute = createFrameRoute({ navigation, showLicense: true });
 
 const homeRoute = createRoute({
   getParentRoute: () => frameRoute,
