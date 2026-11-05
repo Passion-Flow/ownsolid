@@ -6,7 +6,7 @@ import {
   publicRoutes,
   rootRoute,
 } from '@ownsolid/shell';
-import { createRoute } from '@tanstack/react-router';
+import { createRoute, lazyRouteComponent } from '@tanstack/react-router';
 import { navigation } from './navigation.ts';
 
 const frameRoute = createFrameRoute({ navigation, showLicense: true });
@@ -17,9 +17,15 @@ const homeRoute = createRoute({
   component: WelcomePage,
 });
 
+const mailRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/mail',
+  component: lazyRouteComponent(() => import('./mail-deliveries-page.tsx'), 'MailDeliveriesPage'),
+});
+
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
-  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute])]),
+  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute, mailRoute])]),
 ]);
 
 /** The console application: its router and query client. */

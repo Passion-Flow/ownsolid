@@ -10,6 +10,11 @@ Persistent identity state begins in PostgreSQL migration 000001, with selected M
 
 [http/handler.go](http/handler.go) currently also composes and dispatches most of the product. That is recorded architecture debt. A future extraction must preserve shared owner identity, route/audience checks, license policy and lifecycle joins; do not move live code during an unrelated feature change.
 
+Resending a failed email ([mail_resend.go](mail_resend.go), ADR 0021) issues anew what it
+carried: invitations go through `inviteWithin`, reset emails get a new token that replaces
+the unused one. Writes that take an `Idempotency-Key` use `idempotentWithin`; a new
+operation also needs its name in the `idempotency_records` check constraint.
+
 ## Related surfaces and checks
 
 Synchronize [account contract/runbooks](../../../../../docs/milestones/m01-account), [HTTP contracts](../../../../../contracts/http/v1), [identity frontend](../../../../../web/README.md), [typed config](../../platform/config), mail/localization and schema changes. SSO session-source changes also require the [sso owner](../sso/README.md).

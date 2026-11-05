@@ -6,10 +6,13 @@ export {
 } from './accessibility-flows.ts';
 export {
   account,
+  failedMail,
   failedRun,
   linkToken,
   mockControlPlane,
+  sentMail,
   type ControlPlane,
+  type ScriptedMail,
   type ScriptedProblem,
 } from './control-plane.ts';
 export { expectFocusVisible, keyboardFlows, type KeyboardFlowOptions } from './keyboard-flows.ts';

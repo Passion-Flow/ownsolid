@@ -1792,6 +1792,123 @@
           }
         }
       }
+    },
+    "/api/v1/admin/mail-deliveries/{mail_delivery_id}/resends": {
+      "post": {
+        "operationId": "resendMailDelivery",
+        "summary": "Send a failed email again",
+        "tags": [
+          "Administration"
+        ],
+        "x-audiences": [
+          "admin"
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "ACCOUNT_EXISTS",
+            "INVITATION_EXISTS",
+            "INVITATION_STATE_CONFLICT",
+            "IDEMPOTENCY_CONFLICT",
+            "MAIL_DELIVERY_NOT_RESENDABLE",
+            "MAIL_RESEND_UNSUPPORTED"
+          ]
+        },
+        "security": [
+          {
+            "AdminSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The new email, queued.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Server-generated correlation UUID.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailDeliveryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/Idempotency"
+          },
+          {
+            "$ref": "#/components/parameters/MailDeliveryId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "description": "Issues anew what the email carried: a new invitation link, a new password reset link that replaces the unused one, or the same password-changed notice. Only the newest failed email of its invitation or account can be sent again."
+      }
     }
   },
   "components": {
@@ -1845,7 +1962,9 @@
               "SERVICE_NOT_READY",
               "LICENSE_NEW_BUSINESS_UNAVAILABLE",
               "LICENSE_STORED_STATE_INVALID",
-              "LICENSE_CONFIGURATION_REQUIRED"
+              "LICENSE_CONFIGURATION_REQUIRED",
+              "MAIL_DELIVERY_NOT_RESENDABLE",
+              "MAIL_RESEND_UNSUPPORTED"
             ]
           },
           "request_id": {
@@ -2889,6 +3008,18 @@
         "required": [
           "data"
         ]
+      },
+      "MailDeliveryResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MailDelivery"
+          }
+        },
+        "required": [
+          "data"
+        ]
       }
     },
     "parameters": {
@@ -2942,6 +3073,15 @@
       },
       "InvitationId": {
         "name": "invitation_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "MailDeliveryId": {
+        "name": "mail_delivery_id",
         "in": "path",
         "required": true,
         "schema": {
