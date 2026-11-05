@@ -31,9 +31,11 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
   });
   // Pages load their code with their route; every file must come from this installation.
   const scripts = new Map<string, number>();
+  const encodings = new Set<string>();
   page.on('response', (response) => {
     if (response.request().resourceType() === 'script') {
       scripts.set(new URL(response.url()).pathname, response.status());
+      encodings.add(response.headers()['content-encoding'] ?? 'identity');
     }
   });
   const password = adminPassword();
@@ -302,6 +304,8 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
     await expect(page.getByText('Page not found')).toBeVisible();
   }
   expect([...scripts].filter(([, status]) => status >= 400)).toEqual([]);
+  // The browser accepts Brotli, so the build's precompressed copies are what it receives.
+  expect(encodings).toContain('br');
   for (const chunk of [
     '/sign-in-page-',
     '/app-frame-',
