@@ -6,13 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"regexp"
 	"strconv"
 	"strings"
@@ -28,6 +28,7 @@ type Docker struct {
 	runtime   *settings.Policy
 	client    *http.Client
 	transport *http.Transport
+	guard     egressGuard
 }
 
 func NewDocker(socket string, policies ...settings.Policy) (*Docker, error) {
@@ -48,7 +49,7 @@ func NewDocker(socket string, policies ...settings.Policy) (*Docker, error) {
 	transport := &http.Transport{Proxy: nil, MaxConnsPerHost: policy.DockerConnections, MaxIdleConns: policy.DockerConnections, MaxIdleConnsPerHost: policy.DockerConnections, IdleConnTimeout: settings.Seconds(policy.IdleConnectionSeconds), ResponseHeaderTimeout: settings.Seconds(policy.DockerHeaderSeconds), DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 		return (&net.Dialer{Timeout: settings.Seconds(policy.DockerDialSeconds)}).DialContext(ctx, "unix", socket)
 	}}
-	return &Docker{runtime: &policy, client: &http.Client{Transport: transport, Timeout: settings.Seconds(policy.DockerSeconds), CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, transport: transport}, nil
+	return &Docker{runtime: &policy, client: &http.Client{Transport: transport, Timeout: settings.Seconds(policy.DockerSeconds), CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, transport: transport, guard: newEgressGuard()}, nil
 }
 func (d *Docker) Close() { d.transport.CloseIdleConnections() }
 func (d *Docker) request(ctx context.Context, method, path string, input, output any, want int) error {
