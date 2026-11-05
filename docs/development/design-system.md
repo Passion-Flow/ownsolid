@@ -93,6 +93,9 @@ this browser. The server checks access to the workspace on every request.
 
 ## Offline rule
 
+The build writes a Brotli and a gzip copy of every text file over 1 kB, and the control plane
+sends one in place of the file when the browser accepts it; nothing is compressed on a request.
+
 Fonts, icons, help content and every other asset ship inside the product. Pages never
 load anything from the internet. The license texts of the fonts and icons ship in each
 build as `/assets/third-party-notices.txt`.

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 import { defineConfig, type TestUserConfig, type ViteUserConfig } from 'vitest/config';
 import { bundleBudgetPlugin, type BundleBudget } from './bundle-budget.ts';
+import { precompressPlugin } from './precompress.ts';
 
 const setupFile = fileURLToPath(new URL('./vitest-setup.ts', import.meta.url));
 
@@ -99,7 +100,13 @@ export function appConfig({ port }: AppOptions): ViteUserConfig {
       )
     : undefined;
   return defineConfig({
-    plugins: [react(), tailwindcss(), noticesPlugin(), bundleBudgetPlugin(bundleBudget)],
+    plugins: [
+      react(),
+      tailwindcss(),
+      noticesPlugin(),
+      bundleBudgetPlugin(bundleBudget),
+      precompressPlugin(),
+    ],
     build: {
       target: 'es2023',
       sourcemap: false,
