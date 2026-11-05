@@ -16,6 +16,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
 - [ ] MOD-107 Model retirement with dependency check across deployments, apps and keys (P1) - Catalog: F585
 - [ ] MOD-108 Model file and code review: scan for executable code and unsafe formats before import (P1) - Catalog: F583
 - [ ] MOD-109 Model distribution to nodes through the in-site registry with pre-warm (P1) - Catalog: F642
+- [ ] MOD-110 Model licence register: licence, commercial use, redistribution, attribution and use restrictions per model and version; deployments and task runs are refused with the reason when the installation's declared use is not permitted (P1)
 
 ## P2 Fleet operations
 

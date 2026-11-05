@@ -14,6 +14,19 @@ Read this file before changing anything. `CLAUDE.md` imports it.
      technical approach is still current, and add any missing capability as new items
      (with the next free IDs) before writing code. Commit the roadmap change on its own,
      and record the date of the review at the top of the module file.
+   - **Research every item before building it.** The owner wants each capability built
+     only on a proven technical approach, then made stable and high quality; no
+     guesswork. Before writing code, write or update the item's note in `docs/research/`
+     (one note per topic, kept current):
+     - how leading products and upstream projects solve it, from primary sources
+       (official documentation, specifications, source repositories), linked;
+     - the licence of every dependency, model and data set, including commercial use,
+       redistribution and offline use;
+     - the chosen approach, the alternatives rejected and why;
+     - known failure modes and how the tests will cover them;
+     - what the finished item must do, concretely enough to test.
+     If the research shows the approach is not yet proven, prototype it outside the
+     product code first and record the result; build the item only once it holds.
 3. Read [`docs/development/environment.md`](docs/development/environment.md) before
    using toolchains, servers or the tunnel.
 4. When an item meets the definition of done, tick it with its evidence link, run
@@ -168,6 +181,7 @@ ownsolid/
 │   ├── architecture/      Current architecture
 │   ├── operations/        Install, upgrade, backup, offline delivery
 │   ├── development/       Setup and conventions
+│   ├── research/          Research behind roadmap items, one note per topic
 │   └── decisions/         Architecture decision records: NNNN-title.md
 ├── pkg/<name>/            Go libraries shared by more than one service
 ├── runtimes/<runtime>/    src/, tests/, pyproject.toml, locks/
@@ -264,6 +278,8 @@ are in Chinese.
   verified in a customer environment, and known failures.
 - Record significant decisions as ADRs in `docs/decisions/`. Do not keep dated logs
   or progress diaries in the repository.
+- Research notes in `docs/research/` are kept current by topic and cite their sources;
+  they record findings and open questions, not progress.
 
 ## 13. Finishing a task
 

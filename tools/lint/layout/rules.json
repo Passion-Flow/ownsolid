@@ -8,7 +8,7 @@
     "api": null,
     "catalog": ["apps"],
     "deploy": ["components", "compose", "helm", "images", "offline", "systemd"],
-    "docs": ["product", "architecture", "operations", "development", "decisions"],
+    "docs": ["product", "architecture", "operations", "development", "research", "decisions"],
     "pkg": null,
     "runtimes": null,
     "services": ["control", "agent", "gateway"],

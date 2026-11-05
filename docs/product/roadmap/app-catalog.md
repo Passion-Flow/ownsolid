@@ -26,6 +26,7 @@ knowledge product.
 - [ ] CAT-204 Private catalogs and partner packaging kit (P2)
 - [ ] CAT-205 Fleet-wide app rollout across cells (P2)
 - [ ] CAT-206 App backups and restore hooks (P2)
+- [ ] CAT-207 Knowledge permissions follow ownsolid projects: DeepParser receives project and business-unit membership so search, citation, API and download access match ownsolid permissions, with cross-project negative tests (P2)
 
 Knowledge-base rows F009 to F033 and F576 to F579 are retired as native features and
 replaced by the DeepParser items above.

@@ -9,7 +9,8 @@ Read this page, then only the module file you work on.
    open items in that phase.
 2. Open that module file and pick the first unticked item of the current phase whose
    dependencies are ticked.
-3. Build it to the definition of done, then tick it and add the evidence link.
+3. Research it first (AGENTS.md section 0), then build it to the definition of done,
+   tick it and add the evidence link.
 4. Update the **Progress** table on this page and commit with the item ID in the message,
    for example `SCH-004: Add hierarchical quota tree`.
 
@@ -33,6 +34,7 @@ inside the runtime's network setup. Lanes for P1 are defined when P0 closes.
 
 Tick a box only when all of these hold. Never tick partly done work.
 
+- Its research note in `docs/research/` is current and the build follows it.
 - The implementation is merged on `main`, with no stubs, TODOs or fake success paths.
 - Automated tests cover it and pass; `make check`, `make build` and `make test` pass.
 - It works with the network disconnected.
@@ -66,6 +68,7 @@ keep them open, and tick them when the run happens.
 | Knowledge | DeepParser only, installed through the app catalog. ownsolid builds no knowledge base. |
 | Models | Every model type over time; embeddings and rerank count as model serving. |
 | Telemetry and logs | A dedicated time-series store and log store, never the control-plane database. Chosen by license, offline packaging and a load test at about 17 million series: VictoriaMetrics and VictoriaLogs, open-source editions (ADR 0009). |
+| Scientific computing | Models that run as jobs on files (structure prediction, design, sequence optimization) use one task-type contract on the job model; domain packs, life sciences first, build on it. Models with restrictive terms run only under the customer's licence ([research](../../research/scientific-computing.md)). |
 | Demo | Decided later. Build and polish first. |
 
 ## Phases
@@ -90,11 +93,11 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 2 | Delivery and upgrades | [delivery-and-upgrades.md](delivery-and-upgrades.md) | 3/3 | 0/13 | 0/4 | 0/1 | 0/1 |
 | 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 0/13 | 0/5 | 0/1 | 0/1 |
 | 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 9/21 | 0/3 | - | 0/2 |
-| 5 | Fleet and infrastructure | [fleet-and-infrastructure.md](fleet-and-infrastructure.md) | - | 0/13 | 0/10 | 0/2 | - |
+| 5 | Fleet and infrastructure | [fleet-and-infrastructure.md](fleet-and-infrastructure.md) | - | 0/13 | 0/11 | 0/2 | - |
 | 6 | GPU operations | [gpu-operations.md](gpu-operations.md) | - | 0/9 | 0/8 | - | 0/2 |
 | 7 | Scheduling and quota | [scheduling-and-quota.md](scheduling-and-quota.md) | - | 0/11 | 0/7 | 0/2 | 0/1 |
 | 8 | In-product operations | [in-product-operations.md](in-product-operations.md) | - | 0/14 | 0/6 | - | 0/2 |
-| 9 | Models and registry | [models-and-registry.md](models-and-registry.md) | - | 0/9 | 0/4 | - | 0/3 |
+| 9 | Models and registry | [models-and-registry.md](models-and-registry.md) | - | 0/10 | 0/4 | - | 0/3 |
 | 10 | Serving | [serving.md](serving.md) | - | 0/10 | 0/6 | 0/1 | 0/4 |
 | 11 | Gateway | [gateway.md](gateway.md) | - | 0/12 | 0/4 | 0/2 | 0/2 |
 | 12 | Training and fine-tuning | [training-and-finetuning.md](training-and-finetuning.md) | - | 0/10 | 0/5 | - | 0/4 |
@@ -102,14 +105,15 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 14 | Evaluation | [evaluation.md](evaluation.md) | - | 0/6 | 0/3 | - | 0/2 |
 | 15 | Applications and agents | [applications-and-agents.md](applications-and-agents.md) | - | 0/11 | 0/5 | - | 0/3 |
 | 16 | Product agent | [product-agent.md](product-agent.md) | - | 0/12 | 0/3 | - | 0/2 |
-| 17 | App catalog | [app-catalog.md](app-catalog.md) | - | 0/8 | 0/6 | - | - |
+| 17 | App catalog | [app-catalog.md](app-catalog.md) | - | 0/8 | 0/7 | - | - |
 | 18 | Tenancy, metering and commerce | [tenancy-metering-commerce.md](tenancy-metering-commerce.md) | - | 0/9 | 0/8 | 0/2 | - |
-| 19 | Audit and compliance | [audit-and-compliance.md](audit-and-compliance.md) | - | 0/8 | 0/4 | - | - |
+| 19 | Audit and compliance | [audit-and-compliance.md](audit-and-compliance.md) | - | 0/9 | 0/7 | - | - |
 | 20 | Observability and alerting | [observability-and-alerting.md](observability-and-alerting.md) | 2/2 | 0/13 | 0/5 | 0/1 | - |
 | 21 | Platform reliability | [platform-reliability.md](platform-reliability.md) | 1/2 | 0/11 | 0/4 | 0/2 | - |
 | 22 | Network and storage | [network-and-storage.md](network-and-storage.md) | - | 0/6 | 0/7 | - | 0/1 |
-| 23 | Developer experience | [developer-experience.md](developer-experience.md) | - | 0/7 | 0/4 | - | 0/1 |
+| 23 | Developer experience | [developer-experience.md](developer-experience.md) | - | 0/8 | 0/5 | - | 0/1 |
 | 24 | Compatibility matrix | [compatibility-matrix.md](compatibility-matrix.md) | - | - | 0/10 | - | 0/12 |
+| 25 | Scientific computing | [scientific-computing.md](scientific-computing.md) | - | 0/9 | 0/10 | - | - |
 
 ## Sources
 

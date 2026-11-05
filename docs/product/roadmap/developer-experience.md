@@ -14,6 +14,7 @@ How engineers and integrators use ownsolid programmatically.
 - [ ] DEV-105 Notebooks with GPU access inside workspaces (P1) - Catalog: F593
 - [ ] DEV-106 SSH and IDE access to development containers (P1)
 - [ ] DEV-107 Custom image building offline from approved bases (P1)
+- [ ] DEV-108 Compute layer for another AI platform: delegated identity, quota mapping, a job API with result callbacks and an integration guide, so an existing enterprise AI platform can run on ownsolid (P1)
 
 ## P2 Fleet operations
 
@@ -21,6 +22,7 @@ How engineers and integrators use ownsolid programmatically.
 - [ ] DEV-202 Adapter SDK and contract tests for new engines, storage and devices (P2) - Catalog: F237, F655
 - [ ] DEV-203 Pipelines: data, training, evaluation and deployment steps chained (P2)
 - [ ] DEV-204 API versioning and deprecation policy (P2) - Catalog: F653, F655
+- [ ] DEV-205 Laboratory system connectors: an ELN and LIMS adapter contract to import experiment records and export results with links back, first adapters chosen by research, laboratory data standards such as Allotrope and SiLA 2 evaluated (P2)
 
 ## P4 Breadth
 

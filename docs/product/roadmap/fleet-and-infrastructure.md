@@ -34,6 +34,7 @@ firmware, facility and spares.
 - [ ] FLT-208 Data-center asset management and work tickets for field engineers (P2)
 - [ ] FLT-209 Existing Slurm and Docker Swarm clusters registered and observed (P2) - Catalog: F626
 - [ ] FLT-210 Load tested with 10,000 simulated nodes enrolling, reporting and draining (P2)
+- [ ] FLT-211 Cloud GPU node pools for connected deployments: scale pools from queue demand through cloud APIs, use spot or preemptible capacity with checkpoint and requeue on interruption, record cost per job; the air-gapped default stays unchanged (P2)
 
 ## P3 Multi-site
 
