@@ -37,6 +37,13 @@ test('signs in and out of a real installation', async ({ page }) => {
   page.on('request', (request) => {
     if (!request.url().startsWith(origin)) problems.push(`outside request: ${request.url()}`);
   });
+  // Pages load their code with their route; every file must come from this installation.
+  const scripts = new Map<string, number>();
+  page.on('response', (response) => {
+    if (response.request().resourceType() === 'script') {
+      scripts.set(new URL(response.url()).pathname, response.status());
+    }
+  });
   const password = (JSON.parse(readFileSync(passwordFile, 'utf8')) as { password: string })
     .password;
 
@@ -83,6 +90,8 @@ test('signs in and out of a real installation', async ({ page }) => {
 
   // The account pages emails and sign-in providers link to, against the real API.
   await page.getByRole('link', { name: 'Forgot your password?' }).click();
+  // The sign-in page stays until the next page's code has loaded.
+  await expect(page.getByRole('heading', { name: 'Reset your password' })).toBeVisible();
   await page.getByLabel('Email').fill(email);
   await page.getByRole('button', { name: 'Send the reset link' }).click();
   await expect(page.getByText('If this address has an account')).toBeVisible();
@@ -102,6 +111,10 @@ test('signs in and out of a real installation', async ({ page }) => {
     await expect(page.getByRole('alert')).toContainText('This invitation cannot be used');
   } else {
     await expect(page.getByText('Page not found')).toBeVisible();
+  }
+  expect([...scripts].filter(([, status]) => status >= 400)).toEqual([]);
+  for (const chunk of ['/sign-in-page-', '/app-frame-', '/welcome-page-', '/password-pages-']) {
+    expect([...scripts.keys()].some((path) => path.includes(chunk))).toBe(true);
   }
   expect(problems).toEqual([]);
 });

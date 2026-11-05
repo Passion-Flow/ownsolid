@@ -117,6 +117,9 @@ OWNSOLID_LIVE_ORIGIN=https://<admin host>:<port> OWNSOLID_LIVE_EMAIL=<administra
 
 The certificate's public key is pinned, so the browser still refuses any other certificate.
 The spec ignores the Mac's system proxy, which cannot reach a forwarded port.
+The spec signs in once with a wrong password, so a few runs in a row against the same
+account trip the installation's sign-in rate limit; the failure then says how many
+seconds to wait.
 
 The tunnel can drop to about 20 KB/s, and pages then time out. Run the spec on
 `ownsolid-cpu` instead, with `--network host` in a `node` container that installs
