@@ -1,4 +1,10 @@
 export {
+  accessibilityFlows,
+  expectAccessible,
+  wcagTags,
+  type AccessibilityFlowOptions,
+} from './accessibility-flows.ts';
+export {
   account,
   failedRun,
   linkToken,

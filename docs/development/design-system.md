@@ -24,9 +24,11 @@ before writing new markup: `Button`, `TextField`, `Card`, `StatusPill`, `Tag`, `
 | Border | `#e5e0d5` | `#36332e` |
 | Text | `#1d1b18` | `#f3f0ea` |
 | Text, secondary | `#59544b` | `#bdb7ac` |
-| Text, tertiary | `#8c8679` | `#868074` |
+| Text, tertiary | `#706a60` | `#969084` |
 | Accent (teal) | `#0d9488` | `#14a394` |
+| Accent, strong | `#0b8378` | `#0b8378` |
 | Status: good, warning, critical | `#0ca30c`, `#fab219`, `#d03b3b` | same |
+| Critical text | `#c13737` | `#dd7070` |
 
 - Spacing follows a 4-pixel scale. Radii: 8 px for controls, 12 to 14 px for cards,
   18 px for dialogs.
@@ -79,10 +81,23 @@ Fonts, icons, help content and every other asset ship inside the product. Pages 
 load anything from the internet. The license texts of the fonts and icons ship in each
 build as `/assets/third-party-notices.txt`.
 
-## Known gaps
+## Accessibility
 
-White text on the accent color has a contrast of 3.7 to 1 in the light theme and 3.1 to 1
-in the dark theme, below the 4.5 to 1 that WCAG AA asks of 14-pixel text, and tertiary
-text is below it too. Both are the approved
-palette; UX-112 decides how to close the gap. A test holds primary and secondary text
-and `accent-ink` at AA on every surface in both themes.
+Every page meets WCAG 2.2 AA in both themes. The browser tests run axe-core on every
+page state in light and dark (`packages/shell/testing/accessibility-flows.ts`), and a unit
+test in each application fails when a route has no state in its `e2e/pages.ts`. A new page
+adds its states there: the empty, loading, error and filled views and each dialog or
+drawer it opens.
+
+Text needs 4.5 to 1 against what it sits on, so three tokens differ from the prototype:
+
+- **Tertiary text** is darker (`#706a60`, dark `#969084`); the prototype's reached only
+  3.1 to 3.6 to 1.
+- **Accent, strong** fills anything that carries white text, such as primary buttons. It is
+  the prototype's hover shade; white on the teal accent reaches only 3.7 to 1 (3.1 in
+  dark), so the accent itself stays for marks, switches, meters and focus rings.
+- **Critical text** is the status red adjusted for each theme; the status red stays for
+  icons and fills.
+
+A test holds every text token, critical text and white on the strong accent at AA on
+every surface in both themes.

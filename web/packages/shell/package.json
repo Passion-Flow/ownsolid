@@ -4,7 +4,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./testing": "./testing/index.ts"
+    "./testing": "./testing/index.ts",
+    "./testing/pages": "./testing/pages.ts"
   },
   "sideEffects": false,
   "scripts": {
@@ -23,6 +24,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@axe-core/playwright": "catalog:",
     "@ownsolid/config": "workspace:*",
     "@playwright/test": "catalog:",
     "@testing-library/jest-dom": "catalog:",

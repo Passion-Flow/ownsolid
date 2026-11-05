@@ -30,6 +30,8 @@ const guideRows: [string, string][] = [
   ['Text, secondary', 'text-2'],
   ['Text, tertiary', 'text-3'],
   ['Accent (teal)', 'accent'],
+  ['Accent, strong', 'accent-strong'],
+  ['Critical text', 'critical-ink'],
 ];
 
 function luminance(hex: string): number {
@@ -53,12 +55,31 @@ describe('tokens', () => {
   it.each([
     ['light', light],
     ['dark', dark],
-  ])('body text reaches WCAG AA on every surface in the %s theme', (_name, theme) => {
+  ])('text reaches WCAG AA on every surface in the %s theme', (_name, theme) => {
     for (const surface of ['bg', 'surface', 'surface-2']) {
-      for (const text of ['text', 'text-2', 'accent-ink']) {
+      for (const text of [
+        'text',
+        'text-2',
+        'text-3',
+        'accent-ink',
+        'critical-ink',
+        'warning-ink',
+      ]) {
         const ratio = contrast(theme[text] ?? '', theme[surface] ?? '');
         expect({ text, surface, passes: ratio >= 4.5 }).toEqual({ text, surface, passes: true });
       }
+    }
+  });
+
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ])('white text reaches WCAG AA on the strong accent in the %s theme', (_name, theme) => {
+    for (const fill of ['accent-strong', 'accent-strong-hover']) {
+      expect({ fill, ratio: contrast('#ffffff', theme[fill] ?? '') >= 4.5 }).toEqual({
+        fill,
+        ratio: true,
+      });
     }
   });
 });

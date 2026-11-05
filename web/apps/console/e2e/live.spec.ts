@@ -2,6 +2,7 @@
 // control plane's own TLS, cookies, CSRF checks and Content-Security-Policy. Skipped
 // unless the environment describes an installation; docs/development/environment.md
 // has the recipe.
+import { expectAccessible } from '@ownsolid/shell/testing';
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
@@ -49,6 +50,8 @@ test('signs in and out of a real installation', async ({ page }) => {
 
   await page.goto('/');
   await expect(page).toHaveURL(/\/sign-in/);
+  await page.getByLabel('Email').waitFor();
+  await expectAccessible(page);
 
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(`${password}-wrong`);
@@ -59,6 +62,7 @@ test('signs in and out of a real installation', async ({ page }) => {
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
   await expect(page.getByText(`Signed in as ${email}.`)).toBeVisible();
+  await expectAccessible(page);
 
   await page.reload();
   await expect(page.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
@@ -71,6 +75,7 @@ test('signs in and out of a real installation', async ({ page }) => {
   expect(fonts).toBeGreaterThan(0);
   await page.getByRole('button', { name: 'Use the dark theme' }).click();
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(22, 21, 19)');
+  await expectAccessible(page);
 
   await page.keyboard.press('ControlOrMeta+k');
   await page.getByPlaceholder('Type a command or a page name').fill('compact');

@@ -34,7 +34,7 @@ export function TextField({ label, hint, error, className, ...props }: TextField
         {...props}
       />
       {error ? (
-        <p id={errorId} className="text-[12.5px] text-critical">
+        <p id={errorId} className="text-[12.5px] text-critical-ink">
           {error}
         </p>
       ) : null}

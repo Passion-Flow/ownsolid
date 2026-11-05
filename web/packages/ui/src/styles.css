@@ -22,14 +22,17 @@
   --border-strong: #d3cdc0;
   --text: #1d1b18;
   --text-2: #59544b;
-  --text-3: #8c8679;
+  --text-3: #706a60;
   --deemph: #d8d2c5;
   --good: #0ca30c;
   --warning: #fab219;
   --warning-ink: #8a5a00;
   --critical: #d03b3b;
+  --critical-ink: #c13737;
   --accent: #0d9488;
-  --accent-hover: #0b8378;
+  /* Fills that carry white text; the accent itself is too light for 4.5 to 1. */
+  --accent-strong: #0b8378;
+  --accent-strong-hover: #0a6f65;
   --accent-soft: #e2f2ee;
   --accent-ink: #0a6f65;
   --shadow-1: 0 1px 2px rgb(40 32 20 / 5%);
@@ -51,11 +54,11 @@
   --border-strong: #46423b;
   --text: #f3f0ea;
   --text-2: #bdb7ac;
-  --text-3: #868074;
+  --text-3: #969084;
   --deemph: #46423b;
   --warning-ink: #fab219;
+  --critical-ink: #dd7070;
   --accent: #14a394;
-  --accent-hover: #1ab3a3;
   --accent-soft: #15302b;
   --accent-ink: #74d3c6;
   --shadow-1: 0 1px 2px rgb(0 0 0 / 35%);
@@ -96,8 +99,10 @@
   --color-warning: var(--warning);
   --color-warning-ink: var(--warning-ink);
   --color-critical: var(--critical);
+  --color-critical-ink: var(--critical-ink);
   --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-strong-hover: var(--accent-strong-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
   --color-log-bg: var(--log-bg);
