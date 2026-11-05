@@ -9,6 +9,7 @@ export {
   type TranslationKey,
   type Translator,
 } from './translate.ts';
+export { createFormatter, type Formatter } from './format.ts';
 export {
   defaultLocale,
   isLocale,

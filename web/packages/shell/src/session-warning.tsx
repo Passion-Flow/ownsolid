@@ -15,13 +15,9 @@ import {
 // nothing; capture sees scrolling inside panels, which does not bubble.
 const activityEvents = ['pointerdown', 'pointermove', 'keydown', 'wheel', 'scroll'] as const;
 
-function formatRemaining(seconds: number): string {
-  return `${String(Math.floor(seconds / 60))}:${String(seconds % 60).padStart(2, '0')}`;
-}
-
 /** Counts down to the end. It is a timer for screen readers: not read aloud every second. */
 function Countdown({ deadline }: { deadline: number }) {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const left = () => Math.max(0, Math.ceil((deadline - Date.now()) / 1_000));
   const [seconds, setSeconds] = useState(left);
   useEffect(() => {
@@ -38,7 +34,7 @@ function Countdown({ deadline }: { deadline: number }) {
     <p className="m-0 flex items-baseline gap-2 py-2">
       <span className="text-text-2">{t('session.remaining')}</span>
       <span role="timer" className="text-[22px] font-bold tabular-nums">
-        {formatRemaining(seconds)}
+        {format.countdown(seconds)}
       </span>
     </p>
   );

@@ -107,7 +107,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await signIn(page);
     const alert = page.getByRole('alert');
     await expect(alert).toContainText('Too many requests');
-    await expect(alert).toContainText('You can try again in 30 seconds.');
+    await expect(alert).toContainText('You can try again in 30s.');
     await expect(alert).toContainText('Request ID');
   });
 

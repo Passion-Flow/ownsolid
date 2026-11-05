@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { createFormatter, type Formatter } from './format.ts';
 import { defaultLocale, isLocale, loadCatalog, negotiateLocale, type Locale } from './locale.ts';
 import { createTranslator, englishCatalog, type Catalog, type Translator } from './translate.ts';
 
@@ -17,6 +18,8 @@ const storageKey = 'ownsolid.locale';
 export interface I18n {
   locale: Locale;
   t: Translator;
+  /** Dates, numbers and units for the active language. */
+  format: Formatter;
   /** Switches the interface language and remembers the choice in this browser. */
   setLocale: (locale: Locale) => void;
 }
@@ -85,6 +88,7 @@ export function I18nProvider({ children, locale: start }: I18nProviderProps) {
       active && {
         locale: active.locale,
         t: createTranslator(active.locale, active.catalog),
+        format: createFormatter(active.locale),
         setLocale,
       },
     [active, setLocale],
@@ -94,7 +98,7 @@ export function I18nProvider({ children, locale: start }: I18nProviderProps) {
   return <I18nContext value={value}>{children}</I18nContext>;
 }
 
-/** Returns the active locale and translator. Must be used inside {@link I18nProvider}. */
+/** Returns the active locale, translator and formatter. Must be used inside {@link I18nProvider}. */
 export function useI18n(): I18n {
   const value = use(I18nContext);
   if (!value) throw new Error('useI18n must be used inside I18nProvider');

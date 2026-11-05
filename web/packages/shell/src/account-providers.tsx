@@ -140,7 +140,7 @@ function ProviderRow({ name, meta, action }: { name: string; meta: ReactNode; ac
 
 /** The sign-in providers card of the account page. */
 export function ProvidersCard() {
-  const { t, locale } = useI18n();
+  const { t, format } = useI18n();
   const toast = useToast();
   const client = useQueryClient();
   const bindings = useQuery({
@@ -192,7 +192,6 @@ export function ProvidersCard() {
     const available = connectors.data.filter(
       (connector) => !linked.some((binding) => binding.connector_id === connector.id),
     );
-    const format = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
     body =
       linked.length === 0 && available.length === 0 ? (
         <EmptyState icon={KeyRound} title={t('account.providers.empty.title')}>
@@ -209,7 +208,7 @@ export function ProvidersCard() {
                   {t('account.providers.subject', { subject: binding.subject })}
                   {' · '}
                   {t('account.providers.linked', {
-                    date: format.format(new Date(binding.updated_at)),
+                    date: format.date(binding.updated_at),
                   })}
                 </>
               }

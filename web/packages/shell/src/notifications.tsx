@@ -34,16 +34,13 @@ const outcomes: Record<RunOutcome, { tone: StatusTone; label: TranslationKey }> 
 };
 
 function Row({ notification }: { notification: RunNotification }) {
-  const { t, locale } = useI18n();
+  const { t, format } = useI18n();
   const queryClient = useQueryClient();
   const read = useMutation({
     mutationFn: () => markNotificationRead(notification.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
   const outcome = outcomes[notification.outcome];
-  const time = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
-    new Date(notification.occurred_at),
-  );
   return (
     <li className="flex items-start gap-3 border-b border-border py-3 last:border-b-0">
       <div className="min-w-0 flex-1">
@@ -51,7 +48,9 @@ function Row({ notification }: { notification: RunNotification }) {
         {notification.error_code ? (
           <p className="m-0 mt-1 font-mono text-[12px] text-text-2">{notification.error_code}</p>
         ) : null}
-        <p className="m-0 mt-0.5 text-[12.5px] text-text-3">{time}</p>
+        <p className="m-0 mt-0.5 text-[12.5px] text-text-3">
+          {format.dateTime(notification.occurred_at)}
+        </p>
         {read.error && isProblem(read.error) ? (
           <ProblemNotice
             className="mt-2"

@@ -25,7 +25,7 @@ export interface ProblemNoticeProps {
  * the request ID for support. Unknown codes get a generic explanation.
  */
 export function ProblemNotice({ problem, onRetry, titleAs, className }: ProblemNoticeProps) {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const base = `problem.${problem.code}`;
   const title = `${base}.title`;
   const detail = `${base}.detail`;
@@ -46,7 +46,7 @@ export function ProblemNotice({ problem, onRetry, titleAs, className }: ProblemN
     >
       <p>{known ? t(detail) : t('problem.UNKNOWN.detail', { code: problem.code })}</p>
       {problem.retryAfterSeconds ? (
-        <p>{t('problem.retryAfter', { count: problem.retryAfterSeconds })}</p>
+        <p>{t('problem.retryAfter', { time: format.duration(problem.retryAfterSeconds) })}</p>
       ) : null}
       {problem.requestId ? (
         <p className="mt-1 font-mono text-[12px] text-text-3">

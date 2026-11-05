@@ -11,7 +11,7 @@ import { NewPasswordFields, useNewPassword } from './password-fields.tsx';
 import { sessionKey, useSession } from './session.ts';
 
 function ProfileCard({ user }: { user: User }) {
-  const { t, locale } = useI18n();
+  const { t, format } = useI18n();
   const toast = useToast();
   const client = useQueryClient();
   const saved = user.display_name;
@@ -42,9 +42,6 @@ function ProfileCard({ user }: { user: User }) {
     setMissing(trimmed === '');
     if (trimmed !== '') save.mutate();
   };
-  const created = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(
-    new Date(user.created_at),
-  );
   return (
     <Card>
       <CardHeader title={t('account.profile.title')} />
@@ -53,7 +50,7 @@ function ProfileCard({ user }: { user: User }) {
           <dt className="text-text-3">{t('account.email')}</dt>
           <dd className="m-0 min-w-0 break-words">{user.email}</dd>
           <dt className="text-text-3">{t('account.created')}</dt>
-          <dd className="m-0">{created}</dd>
+          <dd className="m-0">{format.date(user.created_at)}</dd>
         </dl>
         <form noValidate onSubmit={submit} className="flex flex-col gap-4">
           {save.error ? (

@@ -2,6 +2,7 @@
 // control plane's own TLS, cookies, CSRF checks and Content-Security-Policy. Skipped
 // unless the environment describes an installation; docs/development/environment.md
 // has the recipe.
+import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import { expectAccessible, expectFocusVisible } from '@ownsolid/shell/testing';
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -155,6 +156,13 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
   await expect(page.getByText(email)).toBeVisible();
   await expectAccessible(page);
   await expectFocusVisible(page);
+  // Dates follow the interface language.
+  await page.getByRole('button', { name: 'Account menu' }).click();
+  await page.getByRole('menuitem', { name: chinese['locale.zh-CN'] }).click();
+  await expect(page.getByText(/\d{4}\u5e74\d{1,2}\u6708\d{1,2}\u65e5/).first()).toBeVisible();
+  await page.getByRole('button', { name: chinese['user.menu'] }).click();
+  await page.getByRole('menuitem', { name: 'English' }).click();
+  await expect(page.getByRole('heading', { name: 'Account', level: 1 })).toBeVisible();
   const nameField = page.getByLabel('Display name');
   const originalName = await nameField.inputValue();
   const saveName = async (name: string) => {

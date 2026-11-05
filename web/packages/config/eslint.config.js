@@ -19,6 +19,20 @@ const visibleLiterals = [
   },
 ];
 
+// Dates, numbers and units go through the formatter in @ownsolid/i18n, so they follow the
+// interface language and stay consistent. Only that package may call Intl for them.
+const directFormatting = [
+  {
+    selector:
+      "NewExpression[callee.object.name='Intl'][callee.property.name=/^(DateTimeFormat|NumberFormat|RelativeTimeFormat|DurationFormat|ListFormat)$/]",
+    message: 'Use format from useI18n() instead of Intl.',
+  },
+  {
+    selector: 'CallExpression[callee.property.name=/^toLocale(Date|Time)?String$/]',
+    message: 'Use format from useI18n() instead of toLocaleString().',
+  },
+];
+
 export default tseslint.config(
   {
     ignores: [
@@ -40,15 +54,16 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+      'no-restricted-syntax': ['error', ...directFormatting],
     },
   },
   {
     files: ['**/*.tsx'],
     extends: [reactHooks.configs.flat['recommended-latest'], jsxA11y.configs.strict],
-    rules: { 'no-restricted-syntax': ['error', ...visibleLiterals] },
+    rules: { 'no-restricted-syntax': ['error', ...directFormatting, ...visibleLiterals] },
   },
   {
-    files: ['**/*.test.{ts,tsx}', '**/e2e/**'],
+    files: ['**/*.test.{ts,tsx}', '**/e2e/**', '**/packages/i18n/src/**'],
     rules: { 'no-restricted-syntax': 'off' },
   },
   {
