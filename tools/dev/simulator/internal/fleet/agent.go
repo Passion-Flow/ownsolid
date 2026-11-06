@@ -24,6 +24,7 @@ const sessionIdleMarginSeconds = 5
 type agent struct {
 	host     string
 	node     link.Node
+	longTask time.Duration
 	cursor   uint64
 	dialer   *link.Dialer
 	conn     *link.Connection
@@ -35,6 +36,7 @@ type agent struct {
 	lastExchange  time.Time
 	fallbackUntil time.Time
 	probeHTTPS    bool
+	probes        int
 
 	// wake ends the wait between cycles early, for a restart.
 	wake chan struct{}
@@ -44,6 +46,7 @@ type agent struct {
 	partitionUntil   time.Time
 	httpsOnlyUntil   time.Time
 	loseRepliesUntil time.Time
+	longTasksUntil   time.Time
 	restart          bool
 	loseCursor       bool
 	pending          []recovery
@@ -59,8 +62,8 @@ type recovery struct {
 	since time.Time
 }
 
-func newAgent(identity Identity, dialer *link.Dialer, conn *link.Connection, recorder *report.Recorder) *agent {
-	return &agent{host: identity.Hostname, node: identity.node(), cursor: identity.AcknowledgedSequence, dialer: dialer, conn: conn, recorder: recorder, pacing: wire.DefaultPacing(), wake: make(chan struct{}, 1)}
+func newAgent(identity Identity, dialer *link.Dialer, conn *link.Connection, recorder *report.Recorder, longTask time.Duration) *agent {
+	return &agent{host: identity.Hostname, node: identity.node(), longTask: longTask, cursor: identity.AcknowledgedSequence, dialer: dialer, conn: conn, recorder: recorder, pacing: wire.DefaultPacing(), wake: make(chan struct{}, 1)}
 }
 
 // run cycles until ctx ends or control revokes the credential, starting after delay.
@@ -152,7 +155,7 @@ func (a *agent) applyFaults() {
 		// A new process: no stream, no fallback, default pacing, no backoff. The cursor is
 		// on disk and survives.
 		a.dropStream()
-		a.fallbackUntil, a.probeHTTPS, a.failures, a.pacing = time.Time{}, false, 0, wire.DefaultPacing()
+		a.fallbackUntil, a.probeHTTPS, a.probes, a.failures, a.pacing = time.Time{}, false, 0, 0, wire.DefaultPacing()
 	}
 	if loseCursor {
 		a.cursor = 0
@@ -209,14 +212,19 @@ func (a *agent) heartbeat(ctx context.Context, h wire.Handshake) (wire.Dispositi
 			return a.heartbeatHTTPS(ctx, h)
 		}
 		if a.probeHTTPS {
-			// The stream failed last time. HTTPS working where the stream did not means
-			// the path lacks HTTP/2, so the agent stays on HTTPS for the fallback window.
+			// The stream failed last time. HTTPS working once may only mean control just came
+			// back; working every time the stream fails means the path lacks HTTP/2.
 			a.probeHTTPS = false
 			out, e := a.heartbeatHTTPS(ctx, h)
-			if e == nil {
+			if e != nil {
+				a.probes = 0
+				return out, e
+			}
+			if a.probes++; a.probes >= wire.SessionFallbackProbes {
+				a.probes = 0
 				a.fallbackUntil = time.Now().Add(time.Duration(wire.SessionFallbackRetrySeconds) * time.Second)
 			}
-			return out, e
+			return out, nil
 		}
 		return a.openWithHeartbeat(ctx, h)
 	}
@@ -247,6 +255,7 @@ func (a *agent) openWithHeartbeat(ctx context.Context, h wire.Handshake) (wire.D
 		return wire.Disposition{}, e
 	}
 	a.recorder.Succeeded(report.CallStreamOpen, time.Since(started))
+	a.probes = 0
 	if e != nil {
 		return wire.Disposition{}, e
 	}
@@ -307,6 +316,16 @@ func (a *agent) execute(ctx context.Context, lease wire.Lease) error {
 	var completed struct {
 		State string `json:"state"`
 	}
+	if a.active(&a.longTasksUntil) {
+		if e := a.work(ctx, task, lease.LeaseToken); e != nil {
+			return e
+		}
+		if e := a.deliver(ctx, task+"/results", result, &completed); e != nil {
+			return e
+		}
+		a.recorder.Task(func(t *report.Tasks) { t.Succeeded++ })
+		return nil
+	}
 	if e := a.post(ctx, report.CallResult, task+"/results", result, &completed); e != nil {
 		return e
 	}
@@ -319,6 +338,42 @@ func (a *agent) execute(ctx context.Context, lease wire.Lease) error {
 	}
 	a.recorder.Task(func(t *report.Tasks) { t.Succeeded++ })
 	return nil
+}
+
+// work stands for a long task: it renews the lease until the task is done, as the agent
+// does. Failing to reach control ends nothing; only a refusal control wrote does (ADR 0032).
+func (a *agent) work(ctx context.Context, task, token string) error {
+	finished := time.NewTimer(a.longTask)
+	defer finished.Stop()
+	ticker := time.NewTicker(time.Duration(wire.LeaseRenewalSeconds) * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-finished.C:
+			return nil
+		case <-ticker.C:
+			var renewed wire.RenewedLease
+			if e := a.post(ctx, report.CallRenew, task+"/renewals", wire.LeaseRenewal{LeaseToken: token}, &renewed); e != nil && !comeBack(e) {
+				return e
+			}
+		}
+	}
+}
+
+// deliver posts the result of finished work again whenever control cannot be reached,
+// until control answers or the run ends, as the agent's result delivery does.
+func (a *agent) deliver(ctx context.Context, path string, result wire.Result, out any) error {
+	for attempt := 0; ; attempt++ {
+		e := a.post(ctx, report.CallResult, path, result, out)
+		if e == nil || !comeBack(e) {
+			return e
+		}
+		if !sleep(ctx, wire.DefaultPacing().Backoff(rand.Int64N, attempt)) {
+			return ctx.Err()
+		}
+	}
 }
 
 // acknowledge confirms the lease on the stream and, when the stream fails or its reply is

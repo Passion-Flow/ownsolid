@@ -93,6 +93,8 @@ A JSON file; unknown fields are refused and paths are absolute.
 | `duration_seconds` | required by `run` | Length of the run |
 | `start_seconds` | 10 | First cycles are spread evenly over this window; 0 starts every agent at once |
 | `log_seconds` | 10 | Interval of the summary log line |
+| `window_seconds` | 60 | Length of the windows the report splits the run into |
+| `long_task_seconds` | 90 | How long a task runs under a `long_tasks` fault, at most 110 |
 | `report_file` | required by `run` | Where the report goes |
 | `faults` | none | Scripted faults, below |
 
@@ -109,6 +111,7 @@ faults take `duration_seconds` and must end before the run does.
 | `https_only` | yes | The stream cannot open, so they fall back to HTTPS long-polling |
 | `lose_replies` | yes | Control's reply to each acknowledgement on the stream and each result is lost; the agent sends it again as the real agent does |
 | `lose_cursor` | no | They forget their task cursor; control answers with a resync |
+| `long_tasks` | yes | Tasks they start in this time run for `long_task_seconds`. They renew their leases through an outage and deliver the result once control answers, and end only on a refusal control wrote, as the real agent does |
 
 With `agents_per_connection` above one, a connection fault reaches every agent on that
 connection.
@@ -128,8 +131,10 @@ The shape of the report, shortened, with example values:
 }
 ```
 
-- `calls` covers `enroll`, `heartbeat`, `claim`, `acknowledge`, `events` (progress), `result`
-  and `stream_open` (opening a stream with its first heartbeat). Latency covers successful calls;
+- `windows` repeats the counts for each `window_seconds` of the run, with the connected agents at
+  its end, so a steady stretch can be judged apart from the storms around it.
+- `calls` covers `enroll`, `heartbeat`, `claim`, `acknowledge`, `renew`, `events` (progress),
+  `result` and `stream_open` (opening a stream with its first heartbeat). Latency covers successful calls;
   a claim's includes the time control held it.
 - Recovery is measured for `disconnect`, `restart` and `partition`: from the fault (from the
   heal for a partition) to each hit agent's next good heartbeat. `full_recovery_seconds` is set

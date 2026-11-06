@@ -40,7 +40,7 @@ func Run(ctx context.Context, c config.Config) (report.Report, error) {
 	}
 	agents := make([]*agent, c.Agents)
 	for i := range agents {
-		agents[i] = newAgent(all[i], dialer, connections[i/c.AgentsPerConnection], recorder)
+		agents[i] = newAgent(all[i], dialer, connections[i/c.AgentsPerConnection], recorder, time.Duration(c.LongTaskSeconds)*time.Second)
 	}
 	running, stop := context.WithTimeout(ctx, time.Duration(c.DurationSeconds)*time.Second)
 	defer stop()
@@ -53,6 +53,7 @@ func Run(ctx context.Context, c config.Config) (report.Report, error) {
 	}
 	group.Go(func() { inject(running, started, c.Faults, agents, recorder) })
 	group.Go(func() { logEvery(running, time.Duration(c.LogSeconds)*time.Second, started, agents, recorder) })
+	group.Go(func() { closeWindows(running, time.Duration(c.WindowSeconds)*time.Second, started, agents, recorder) })
 	group.Wait()
 	for _, conn := range connections {
 		conn.Reset()
@@ -136,6 +137,8 @@ func (a *agent) suffer(kind string, index int, now, until time.Time) {
 		a.loseRepliesUntil = until
 	case config.FaultLoseCursor:
 		a.loseCursor = true
+	case config.FaultLongTasks:
+		a.longTasksUntil = until
 	}
 	a.mu.Unlock()
 	switch kind {
@@ -147,6 +150,21 @@ func (a *agent) suffer(kind string, index int, now, until time.Time) {
 		select {
 		case a.wake <- struct{}{}:
 		default:
+		}
+	}
+}
+
+// closeWindows ends a report window every interval.
+func closeWindows(ctx context.Context, interval time.Duration, started time.Time, agents []*agent, recorder *report.Recorder) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			connected, onStream, _ := counts(agents)
+			recorder.CloseWindow(int(time.Since(started).Round(time.Second).Seconds()), connected, onStream)
 		}
 	}
 }

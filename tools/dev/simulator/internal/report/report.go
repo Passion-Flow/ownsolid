@@ -18,6 +18,7 @@ const (
 	CallClaim       = "claim"
 	CallAcknowledge = "acknowledge"
 	CallEvents      = "events"
+	CallRenew       = "renew"
 	CallResult      = "result"
 	CallStreamOpen  = "stream_open"
 )
@@ -122,6 +123,24 @@ type Fault struct {
 	recovery        []time.Duration
 }
 
+// WindowCalls counts one call within a window.
+type WindowCalls struct {
+	Succeeded int64 `json:"succeeded"`
+	Failed    int64 `json:"failed"`
+	// P99Milliseconds covers the window's successful calls.
+	P99Milliseconds float64 `json:"p99_milliseconds"`
+	latency         Histogram
+}
+
+// Window is one stretch of a run, so a steady period can be read apart from the storms
+// around it. EndSeconds counts from the start of the run.
+type Window struct {
+	EndSeconds int                     `json:"end_seconds"`
+	Connected  int                     `json:"connected"`
+	OnStream   int                     `json:"on_stream"`
+	Calls      map[string]*WindowCalls `json:"calls"`
+}
+
 // Report is the result of a run.
 type Report struct {
 	StartedAt time.Time         `json:"started_at"`
@@ -133,17 +152,39 @@ type Report struct {
 	Calls     map[string]*Calls `json:"calls"`
 	Tasks     Tasks             `json:"tasks"`
 	Faults    []*Fault          `json:"faults"`
+	Windows   []Window          `json:"windows"`
 }
 
 // Recorder collects a run's counts from every agent goroutine.
 type Recorder struct {
 	mu     sync.Mutex
 	report Report
+	window map[string]*WindowCalls
 }
 
 // New starts a report for agents agents.
 func New(agents int, started time.Time) *Recorder {
-	return &Recorder{report: Report{StartedAt: started.UTC(), Agents: agents, Calls: map[string]*Calls{}, Faults: []*Fault{}}}
+	return &Recorder{report: Report{StartedAt: started.UTC(), Agents: agents, Calls: map[string]*Calls{}, Faults: []*Fault{}, Windows: []Window{}}, window: map[string]*WindowCalls{}}
+}
+
+func (r *Recorder) windowCalls(name string) *WindowCalls {
+	c := r.window[name]
+	if c == nil {
+		c = &WindowCalls{}
+		r.window[name] = c
+	}
+	return c
+}
+
+// CloseWindow ends the current window at end seconds into the run.
+func (r *Recorder) CloseWindow(end, connected, onStream int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, c := range r.window {
+		c.P99Milliseconds = c.latency.summary().P99
+	}
+	r.report.Windows = append(r.report.Windows, Window{EndSeconds: end, Connected: connected, OnStream: onStream, Calls: r.window})
+	r.window = map[string]*WindowCalls{}
 }
 
 func (r *Recorder) calls(name string) *Calls {
@@ -162,6 +203,9 @@ func (r *Recorder) Succeeded(call string, d time.Duration) {
 	c := r.calls(call)
 	c.Succeeded++
 	c.latency.Add(d)
+	w := r.windowCalls(call)
+	w.Succeeded++
+	w.latency.Add(d)
 }
 
 // Failed counts a failed call under code.
@@ -169,6 +213,7 @@ func (r *Recorder) Failed(call, code string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.calls(call).Failed[code]++
+	r.windowCalls(call).Failed++
 }
 
 // Task changes the task counts.
@@ -210,6 +255,7 @@ func (r *Recorder) Snapshot() Report {
 		copied.LatencyMilliseconds = c.latency.summary()
 		out.Calls[name] = &copied
 	}
+	out.Windows = append([]Window{}, r.report.Windows...)
 	out.Faults = make([]*Fault, len(r.report.Faults))
 	for i, f := range r.report.Faults {
 		copied := *f

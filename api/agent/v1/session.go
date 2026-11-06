@@ -37,6 +37,10 @@ const (
 	// SessionFallbackRetrySeconds is how long an agent stays on HTTPS long-polling after
 	// the stream could not be opened before it tries the stream again.
 	SessionFallbackRetrySeconds = 300
+	// SessionFallbackProbes is how many times in a row the stream must fail while HTTPS works
+	// before an agent stays on HTTPS. Once is what a control restart looks like; only a path
+	// without HTTP/2 does it every time.
+	SessionFallbackProbes = 2
 )
 
 // ClaimRequest asks for the next task lease. With WaitSeconds above zero, control holds

@@ -20,7 +20,10 @@ const (
 	MaximumEnrollConcurrency = 1024
 	MaximumRequestSeconds    = 120
 	MaximumDurationSeconds   = 7 * 24 * 3600
-	maximumConfigBytes       = 1 << 20
+	// MaximumLongTaskSeconds keeps a long task inside the shortest task deadline control
+	// can be configured with.
+	MaximumLongTaskSeconds = 110
+	maximumConfigBytes     = 1 << 20
 )
 
 // Defaults of the optional fields.
@@ -31,6 +34,8 @@ const (
 	DefaultRequestSeconds      = 10
 	DefaultStartSeconds        = 10
 	DefaultLogSeconds          = 10
+	DefaultWindowSeconds       = 60
+	DefaultLongTaskSeconds     = 90
 )
 
 // The kinds of Fault.
@@ -47,9 +52,12 @@ const (
 	FaultLoseReplies = "lose_replies"
 	// FaultLoseCursor makes them forget their task cursor.
 	FaultLoseCursor = "lose_cursor"
+	// FaultLongTasks makes the tasks they start for the duration run for LongTaskSeconds,
+	// renewing their leases, so that work is in flight when something else happens.
+	FaultLongTasks = "long_tasks"
 )
 
-var lasting = map[string]bool{FaultPartition: true, FaultHTTPSOnly: true, FaultLoseReplies: true}
+var lasting = map[string]bool{FaultPartition: true, FaultHTTPSOnly: true, FaultLoseReplies: true, FaultLongTasks: true}
 var instant = map[string]bool{FaultDisconnect: true, FaultRestart: true, FaultLoseCursor: true}
 
 // Fault is one scripted fault: at AtSeconds into the run, Percent of the agents, chosen
@@ -96,6 +104,11 @@ type Config struct {
 	StartSeconds *int `json:"start_seconds,omitempty"`
 	// LogSeconds is how often run logs a summary.
 	LogSeconds int `json:"log_seconds,omitempty"`
+	// WindowSeconds is the length of the windows the report splits a run into, so a steady
+	// stretch can be judged apart from the storms around it.
+	WindowSeconds int `json:"window_seconds,omitempty"`
+	// LongTaskSeconds is how long a task runs under a long_tasks fault.
+	LongTaskSeconds int `json:"long_task_seconds,omitempty"`
 	// ReportFile receives run's JSON report.
 	ReportFile string `json:"report_file,omitempty"`
 	// Faults are scripted for run.
@@ -143,6 +156,12 @@ func (c *Config) defaults() {
 	if c.LogSeconds == 0 {
 		c.LogSeconds = DefaultLogSeconds
 	}
+	if c.WindowSeconds == 0 {
+		c.WindowSeconds = DefaultWindowSeconds
+	}
+	if c.LongTaskSeconds == 0 {
+		c.LongTaskSeconds = DefaultLongTaskSeconds
+	}
 }
 
 // Validate checks every field that both commands use; ValidateEnroll and ValidateRun add
@@ -170,7 +189,8 @@ func (c Config) Validate() error {
 		c.RequestSeconds < 1 || c.RequestSeconds > MaximumRequestSeconds ||
 		c.DurationSeconds < 0 || c.DurationSeconds > MaximumDurationSeconds ||
 		c.StartSeconds == nil || *c.StartSeconds < 0 || *c.StartSeconds > MaximumDurationSeconds ||
-		c.LogSeconds < 1 || c.LogSeconds > 3600 {
+		c.LogSeconds < 1 || c.LogSeconds > 3600 || c.WindowSeconds < 1 || c.WindowSeconds > 3600 ||
+		c.LongTaskSeconds < 1 || c.LongTaskSeconds > MaximumLongTaskSeconds {
 		return invalid
 	}
 	for _, f := range c.Faults {

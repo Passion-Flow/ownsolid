@@ -145,6 +145,13 @@ minutes through a disconnect, a partition, lost replies, lost cursors and a rest
 tasks on every twentieth node, then restores the default limits. That adds about five minutes;
 a whole run took 13 minutes on `ownsolid-cpu`.
 
+The P0 load test (`TestFleetLoad`, [thresholds](../research/fleet-load-test.md)) runs alone on
+the same host and takes about half an hour. Add these to the run above:
+
+```sh
+OWNSOLID_E2E_LOAD=1 OWNSOLID_E2E_RUN=TestFleetLoad OWNSOLID_E2E_TIMEOUT=50m
+```
+
 When the host's disk is nearly full, keep the run in memory: `OWNSOLID_E2E_SCRATCH=/dev/shm`
 puts the image archive there and `OWNSOLID_E2E_DOCKER_TMPFS=12g` gives the isolated Docker
 daemon a tmpfs for its storage. `ownsolid-cpu` has the memory for both. If the control image

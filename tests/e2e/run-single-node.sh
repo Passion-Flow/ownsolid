@@ -13,6 +13,7 @@
 # OWNSOLID_E2E_DOCKER_TMPFS, for example 12g, keeps the isolated Docker daemon's storage in
 # memory. Together they keep a run off a full disk: /dev/shm and 12g need no disk at all.
 # OWNSOLID_E2E_SIMULATED_AGENTS sizes the simulated fleet (default 2000).
+# The fleet load test runs alone, with OWNSOLID_E2E_LOAD=1 and OWNSOLID_E2E_RUN=TestFleetLoad.
 set -euo pipefail
 
 binaries=${1:?binaries directory}
@@ -87,4 +88,5 @@ docker exec \
 	--env OWNSOLID_E2E_ROOT=/srv/ownsolid \
 	--env OWNSOLID_E2E_EGRESS_LOG="$egress_log" \
 	--env OWNSOLID_E2E_EGRESS_INTERFACE="$egress_interface" \
-	"$name" /bundle/e2e.test -test.v -test.timeout=30m
+	--env OWNSOLID_E2E_LOAD="${OWNSOLID_E2E_LOAD:-}" \
+	"$name" /bundle/e2e.test -test.v -test.timeout="${OWNSOLID_E2E_TIMEOUT:-30m}" -test.run="${OWNSOLID_E2E_RUN:-.}"

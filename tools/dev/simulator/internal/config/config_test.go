@@ -50,6 +50,7 @@ func TestLoadRefusesUnknownAndMalformedInput(t *testing.T) {
 		"no percent":     `{"control_origin":"https://a.example","identities_file":"/i","agents":1,"faults":[{"kind":"disconnect","at_seconds":1}]}`,
 		"lasting":        `{"control_origin":"https://a.example","identities_file":"/i","agents":1,"faults":[{"kind":"partition","at_seconds":1,"percent":5}]}`,
 		"instant lasts":  `{"control_origin":"https://a.example","identities_file":"/i","agents":1,"faults":[{"kind":"restart","at_seconds":1,"percent":5,"duration_seconds":3}]}`,
+		"long task":      `{"control_origin":"https://a.example","identities_file":"/i","agents":1,"long_task_seconds":111}`,
 		"negative start": `{"control_origin":"https://a.example","identities_file":"/i","agents":1,"start_seconds":-1}`,
 	} {
 		if _, e := Load(write(t, content)); e == nil {

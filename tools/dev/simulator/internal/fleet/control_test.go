@@ -47,6 +47,10 @@ type fakeControl struct {
 	// revoked answers every call of these nodes as an unknown credential.
 	revoked map[string]bool
 	streams int
+	// down answers every task call with 503, as control does while it restarts.
+	down bool
+	// renewal, when set, refuses lease renewals.
+	renewal *wire.SessionProblem
 }
 
 type fakeNode struct {
@@ -99,6 +103,16 @@ func newFakeControl(t *testing.T) *fakeControl {
 		n.progress[r.PathValue("task")]++
 		f.mu.Unlock()
 		return wire.TaskProgressAccepted{Accepted: len(report.Entries)}, nil
+	}))
+	mux.HandleFunc("POST "+base+"/tasks/{task}/renewals", f.node(func(n *fakeNode, r *http.Request) (any, *wire.SessionProblem) {
+		var renewal wire.LeaseRenewal
+		decodeBody(f.t, r, &renewal)
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		if f.renewal != nil {
+			return nil, f.renewal
+		}
+		return wire.RenewedLease{LeaseExpiresAt: time.Now().Add(30 * time.Second).UTC(), ValidForMilliseconds: 30000}, nil
 	}))
 	mux.HandleFunc("POST "+base+"/tasks/{task}/results", f.node(func(n *fakeNode, r *http.Request) (any, *wire.SessionProblem) {
 		var result wire.Result
@@ -157,7 +171,7 @@ func (f *fakeControl) files(agents int) config.Config {
 	return config.Config{ControlOrigin: f.origin, CAFile: f.caFile, DialAddress: f.server.Listener.Addr().String(),
 		IdentitiesFile: filepath.Join(directory, "identities.json"), JoinTokensFile: tokensFile, Agents: agents,
 		AgentsPerConnection: 1, HTTPSConnections: 8, EnrollConcurrency: 4, RequestSeconds: 5, StartSeconds: &start,
-		LogSeconds: 1, ReportFile: filepath.Join(directory, "report.json")}
+		LogSeconds: 1, WindowSeconds: 60, LongTaskSeconds: 5, ReportFile: filepath.Join(directory, "report.json")}
 }
 
 func randomToken() string {
@@ -227,6 +241,13 @@ func (f *fakeControl) node(handle func(*fakeNode, *http.Request) (any, *wire.Ses
 		n := f.authorized(r.PathValue("node"), r.Header.Get("Authorization"))
 		if n == nil || r.PathValue("site") != "default" || r.PathValue("cell") != "default" {
 			answer(w, 0, nil, &wire.SessionProblem{Code: "AGENT_UNAUTHORIZED", Status: 401})
+			return
+		}
+		f.mu.Lock()
+		down := f.down
+		f.mu.Unlock()
+		if down {
+			answer(w, 0, nil, &wire.SessionProblem{Code: "SERVICE_UNAVAILABLE", Status: 503})
 			return
 		}
 		value, problem := handle(n, r)

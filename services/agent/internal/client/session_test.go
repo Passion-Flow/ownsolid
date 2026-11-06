@@ -241,29 +241,76 @@ func TestSessionFallsBackToLongPolling(t *testing.T) {
 	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
 		t.Fatal(e)
 	}
+	if !s.fallbackUntil.IsZero() {
+		t.Fatal("one stream failure left the stream: that is also what a control restart looks like")
+	}
 	if _, e := s.Claim(ctx, wire.MaxClaimWaitSeconds, 0); e != nil {
 		t.Fatal(e)
+	}
+	// It fails again while HTTPS works, so the path lacks HTTP/2 and the agent stays on HTTPS.
+	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e == nil {
+		t.Fatal("the second attempt on the stream succeeded")
 	}
 	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
 		t.Fatal(e)
 	}
-	if got := c.log(); !equal(got, []string{"https heartbeat", "https claim", "https heartbeat"}) {
+	if s.fallbackUntil.IsZero() {
+		t.Fatal("the stream failed twice while HTTPS worked, and the agent stayed on it")
+	}
+	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
+		t.Fatal(e)
+	}
+	if got := c.log(); !equal(got, []string{"https heartbeat", "https claim", "https heartbeat", "https heartbeat"}) {
 		t.Fatalf("exchanges %v", got)
 	}
 	if s.Transport() != TransportHTTPS || c.waits[0] != wire.MaxClaimWaitSeconds {
 		t.Fatalf("transport %q waits %v", s.Transport(), c.waits)
 	}
-	// After the retry window the stream is tried again; it still fails, so HTTPS continues
-	// on the next attempt.
+	// After the retry window the stream is tried again, and the same two failures start a
+	// new window.
 	current = current.Add(time.Duration(wire.SessionFallbackRetrySeconds) * time.Second)
+	for range wire.SessionFallbackProbes {
+		if _, e := s.Heartbeat(ctx, wire.Handshake{}); e == nil {
+			t.Fatal("the stream worked after the window")
+		}
+		if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
+			t.Fatal(e)
+		}
+	}
+	if !s.fallbackUntil.After(current) {
+		t.Fatal("a failed retry starts a new fallback window")
+	}
+}
+
+func TestSessionReturnsToTheStreamAfterAControlRestart(t *testing.T) {
+	c := &control{refuse: codes.Unavailable}
+	s := serve(t, c, true)
+	ctx := t.Context()
 	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e == nil {
-		t.Fatal("the stream worked after the window")
+		t.Fatal("the stream worked during the restart")
+	}
+	// Control is back: HTTPS answers the probe, and the next attempt is on the stream.
+	c.refuse = codes.OK
+	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil || s.Transport() != TransportHTTPS {
+		t.Fatalf("probe: %v %q", e, s.Transport())
+	}
+	if !s.fallbackUntil.IsZero() {
+		t.Fatal("one restart put the agent on HTTPS for the whole fallback window")
+	}
+	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil || s.Transport() != TransportStream {
+		t.Fatalf("after the probe the stream is used: %v %q", e, s.Transport())
+	}
+	// A later restart counts from the start: the good stream cleared the first probe.
+	c.refuse = codes.Unavailable
+	s.dropStream()
+	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e == nil {
+		t.Fatal("the stream worked during the second restart")
 	}
 	if _, e := s.Heartbeat(ctx, wire.Handshake{}); e != nil {
 		t.Fatal(e)
 	}
-	if !s.fallbackUntil.After(current) {
-		t.Fatal("a failed retry starts a new fallback window")
+	if !s.fallbackUntil.IsZero() {
+		t.Fatal("two restarts apart were read as a path without HTTP/2")
 	}
 }
 
