@@ -45,7 +45,7 @@ func (d *fakeDatabase) Stream(_ context.Context, stdin io.Reader, stdout io.Writ
 			return "", e
 		}
 		d.loaded = string(raw)
-	case strings.Contains(line, "SELECT tablename"):
+	case strings.Contains(line, "SELECT c.relname"):
 		io.WriteString(stdout, "tenants\nusers\n")
 	case strings.Contains(line, "UNION ALL"):
 		io.WriteString(stdout, "tenants|1|5\nusers|2|9\n")
@@ -510,7 +510,7 @@ func TestSwapRetriesWhileASessionHoldsTheDatabase(t *testing.T) {
 
 func TestFingerprintRefusesAnUnexpectedTableName(t *testing.T) {
 	d := &fakeDatabase{override: func(line string) (string, error, bool) {
-		return `users"; DROP TABLE x; --` + "\n", nil, strings.Contains(line, "SELECT tablename")
+		return `users"; DROP TABLE x; --` + "\n", nil, strings.Contains(line, "SELECT c.relname")
 	}}
 	_, e := testOperation(t, validConfig(t), d, &bytes.Buffer{}).fingerprint(context.Background(), "ownsolid")
 	if e == nil || d.ran("UNION ALL") {
