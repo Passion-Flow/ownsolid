@@ -6,25 +6,26 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"io"
 	"log/slog"
 	"net/url"
 	"os"
 	"path/filepath"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"regexp"
 	"strings"
 	"time"
 
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/client"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/components"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/discovery"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/imageregistry"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/inference"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/modelpreparations"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/progress"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/state"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/training"
-	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 )
 
 type Config struct {
@@ -244,6 +245,7 @@ func Enroll(ctx context.Context, c Config) error {
 	}
 	return nil
 }
+
 // cycle runs one cycle on a session of its own, for callers outside the run loop.
 func cycle(ctx context.Context, c Config, connection *client.Client, identity state.Identity, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
 	var session *client.Session
@@ -389,18 +391,24 @@ func claimAndRun(ctx context.Context, c Config, connection *client.Client, sessi
 	if lease.Component != nil {
 		return errors.New("AGENT_TASK_UNSUPPORTED")
 	}
+	taskBase := base + "/tasks/" + lease.TaskID
+	reporter := taskReporter(connection, taskBase, *lease)
+	reporting := progress.With(ctx, reporter)
+	reporter.Start(reporting)
 	result := wire.Result{LeaseToken: lease.LeaseToken, Outcome: "success"}
-	refreshed, e := discovery.Collect(c.DiskPath)
+	refreshed, e := discovery.CollectReporting(reporting, c.DiskPath)
 	if e != nil {
+		progress.Error(reporting, "Reading this node's facts failed: %s", e.Error())
 		result.Outcome = "failure"
 		result.ErrorCode = "DISCOVERY_FAILED"
 	} else {
 		result.Facts = &refreshed
 	}
+	reporter.Finish(ctx, e != nil)
 	var completed struct {
 		State string `json:"state"`
 	}
-	return connection.Post(ctx, base+"/tasks/"+lease.TaskID+"/results", result, &completed)
+	return connection.Post(ctx, taskBase+"/results", result, &completed)
 }
 func Run(ctx context.Context, c Config) error {
 	if _, e := discovery.Collect(c.DiskPath); e != nil {
@@ -577,7 +585,12 @@ func fencedExecution(ctx context.Context, connection *client.Client, base string
 	}
 	stopRenewal := make(chan struct{})
 	done, renewed := renewWhileRunning(bounded, cancel, renew, lease.TaskID, expiry, stopRenewal)
-	result, executionError := execute(bounded, taskBase)
+	reporter := taskReporter(connection, taskBase, lease)
+	reporting := progress.With(bounded, reporter)
+	reporter.Start(reporting)
+	result, executionError := execute(reporting, taskBase)
+	// The lease proves the last report, so it goes before renewal stops.
+	reporter.Finish(ctx, executionError != nil || result.Outcome != "success")
 	if executionError != nil {
 		close(stopRenewal)
 		<-done
