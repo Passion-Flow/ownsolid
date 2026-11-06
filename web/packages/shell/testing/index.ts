@@ -34,3 +34,4 @@ export {
   type TaskScript,
 } from './tasks.ts';
 export { disabledNode, joinToken, node, offlineNode, type NodeScript } from './nodes.ts';
+export { adminUser, memberUser, pendingInvitation, type UserScript } from './users.ts';

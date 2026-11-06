@@ -35,6 +35,12 @@ const pacingRoute = createRoute({
   component: lazyRouteComponent(() => import('./agent-pacing-page.tsx'), 'AgentPacingPage'),
 });
 
+const usersRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/users',
+  component: lazyRouteComponent(() => import('./users-page.tsx'), 'UsersPage'),
+});
+
 const mailRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/mail',
@@ -69,6 +75,7 @@ const routeTree = rootRoute.addChildren([
       accountRoute,
       nodesRoute,
       pacingRoute,
+      usersRoute,
       mailRoute,
       tasksRoute,
       taskRoute,

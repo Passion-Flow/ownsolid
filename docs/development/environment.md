@@ -187,6 +187,21 @@ OWNSOLID_LIVE_NODE_SHELL='ssh ownsolid-cpu docker exec -i <host> sh -s' \
   <the variables above> pnpm exec playwright test live-nodes
 ```
 
+`live-users.spec.ts` invites someone, reads the invitation from a mail server, accepts it in a second
+browser, and disables and enables the new account. It needs an SMTP server with TLS whose messages it
+can read. `tools/dev/smtp_sink.py`, a test sink that stores each message as a file, runs on the installation's state network
+under the SMTP host name; point the install configuration at it (`port: 465`, `tls_mode:
+implicit_tls`, `ca_file` for its own test CA, made with RSA keys and SHA-256, since TLS clients refuse
+EC keys with explicit parameters), apply, and name a command that prints every stored message:
+
+```sh
+ssh ownsolid-cpu docker run -d --name <sink> --network <project>_state --ip <free address> \
+  --network-alias <smtp host> -v <sink directory>:/sink python:3.12.15-slim-bookworm \
+  python3 /sink/smtp_sink.py /sink/out /sink/sink.pem /sink/sink.key
+OWNSOLID_LIVE_MAIL_COMMAND='ssh ownsolid-cpu "cat <sink directory>/out/*.eml 2>/dev/null || true"' \
+  <the variables above, with the portal host in the host rules> pnpm exec playwright test live-users
+```
+
 The certificate's public key is pinned, so the browser still refuses any other certificate.
 The spec ignores the Mac's system proxy, which cannot reach a forwarded port.
 The spec signs in once with a wrong password, so a few runs in a row against the same

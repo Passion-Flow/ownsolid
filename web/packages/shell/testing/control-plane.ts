@@ -3,6 +3,7 @@
 import type { Page, Route } from '@playwright/test';
 import { emptyNodeScript, routeNodes, type NodeScript } from './nodes.ts';
 import { emptyTaskScript, routeTasks, type TaskScript } from './tasks.ts';
+import { emptyUserScript, routeUsers, type UserScript } from './users.ts';
 
 /** The account the mock accepts. */
 export const account = { email: 'ada@example.test', password: 'correct horse battery staple' };
@@ -169,7 +170,7 @@ export interface ScriptedProblem {
 }
 
 /** Mutable state of the mock, so a spec can change it between steps. */
-export interface ControlPlane extends TaskScript, NodeScript {
+export interface ControlPlane extends TaskScript, NodeScript, UserScript {
   audience: 'admin' | 'portal';
   /** How often pages poll, as the runtime configuration says. */
   pollMilliseconds: number;
@@ -282,6 +283,7 @@ export async function mockControlPlane(
   const state: ControlPlane = {
     ...emptyTaskScript(),
     ...emptyNodeScript(),
+    ...emptyUserScript(),
     audience,
     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
     signedIn: false,
@@ -629,6 +631,7 @@ export async function mockControlPlane(
     return data(route, state.tenantSettings);
   });
   await routeNodes(page, state, data, problem);
+  await routeUsers(page, state, data, problem);
   await routeTasks(page, state, data, problem);
   await page.route('**/api/v1/admin/mail-deliveries?*', (route) => {
     if (state.audience !== 'admin')
@@ -664,6 +667,9 @@ export async function mockControlPlane(
       if (item.invitation === null || item.invitation.id !== id) return item;
       return { ...item, invitation: { ...item.invitation, status: 'revoked' } };
     });
+    state.invitations = state.invitations.map((item) =>
+      item.id === id ? { ...item, status: 'revoked' } : item,
+    );
     return data(route, { id, status: 'revoked', version: 3 });
   });
   await page.route('**/api/v1/admin/mail-deliveries/*/resends', (route) => {

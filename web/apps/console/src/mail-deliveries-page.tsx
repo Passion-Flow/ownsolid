@@ -4,7 +4,6 @@ import {
   isProblem,
   listMailDeliveries,
   resendMailDelivery,
-  revokeInvitation,
   type MailDelivery,
   type MailPurpose,
   type MailState,
@@ -42,15 +41,14 @@ import {
   Table,
   Td,
   Th,
-  TextField,
   Tr,
-  TypedConfirmation,
   useToast,
   type StatusTone,
 } from '@ownsolid/ui';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Mail, RotateCw } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
+import { RevokeInvitation } from './revoke-invitation.tsx';
 
 type Filter = 'all' | 'failed' | 'queued' | 'sent';
 
@@ -180,65 +178,6 @@ function ResendAll({ selection }: { selection: RowSelection }) {
   );
 }
 
-type PendingInvitation = NonNullable<MailDelivery['invitation']>;
-
-/** Revokes an invitation. Its link cannot be brought back, so the address must be typed. */
-function RevokeInvitation({
-  invitation,
-  email,
-  onClose,
-  onDone,
-}: {
-  invitation: PendingInvitation;
-  email: string;
-  onClose: () => void;
-  onDone: () => void;
-}) {
-  const { t } = useI18n();
-  const toast = useToast();
-  const queryClient = useQueryClient();
-  const [reason, setReason] = useState(t('mail.revoke.reason.default'));
-  const revoke = useMutation({
-    mutationFn: () => revokeInvitation(invitation.id, invitation.version, reason.trim()),
-    // The dialog closes at once; the list catches up behind it.
-    onSuccess: () => {
-      onDone();
-      toast({ message: t('mail.revoke.done', { email }) });
-      void queryClient.invalidateQueries({ queryKey: listKey });
-    },
-    // Someone acted on it first: the list shows what is true now.
-    onError: () => queryClient.invalidateQueries({ queryKey: listKey }),
-  });
-  return (
-    <TypedConfirmation
-      title={t('mail.revoke.title')}
-      consequence={t('mail.revoke.consequence', { email })}
-      expected={email}
-      confirmLabel={t('mail.revoke.submit')}
-      pending={revoke.isPending}
-      onClose={onClose}
-      onConfirm={() => {
-        if (reason.trim() !== '') revoke.mutate();
-      }}
-    >
-      <TextField
-        label={t('mail.revoke.reason')}
-        name="reason"
-        autoComplete="off"
-        maxLength={500}
-        required
-        hint={t('mail.revoke.reason.hint')}
-        value={reason}
-        error={reason.trim() === '' ? t('mail.revoke.reason.required') : undefined}
-        onChange={(event) => {
-          setReason(event.target.value);
-        }}
-      />
-      {revoke.error && isProblem(revoke.error) ? <ProblemNotice problem={revoke.error} /> : null}
-    </TypedConfirmation>
-  );
-}
-
 function DeliveryDrawer({
   delivery,
   onClose,
@@ -345,6 +284,7 @@ function DeliveryDrawer({
         <RevokeInvitation
           invitation={pendingInvitation}
           email={delivery.recipient_email}
+          defaultReason={t('mail.revoke.reason.default')}
           onClose={() => {
             setRevoking(false);
           }}

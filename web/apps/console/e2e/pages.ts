@@ -1,11 +1,14 @@
 import {
+  adminUser,
   failedMail,
   disabledNode,
   failedTask,
   finishedTask,
   joinToken,
+  memberUser,
   node,
   offlineNode,
+  pendingInvitation,
   runningTask,
   secondFailedMail,
   sentMail,
@@ -108,6 +111,66 @@ export const consolePages: readonly PageState[] = [
       await openNodes(page, control);
       await page.getByRole('button', { name: 'Open details of gpu-a03' }).click();
       await page.getByRole('dialog').getByText('Last heard from').waitFor();
+    },
+  },
+  {
+    name: 'users with an invitation waiting',
+    path: '/users',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.users = [memberUser, adminUser];
+      control.invitations = [
+        pendingInvitation,
+        {
+          ...pendingInvitation,
+          id: '6f1c7a1e-0000-4000-8000-000000000082',
+          email: 'kay@example.test',
+          status: 'expired',
+        },
+      ];
+      await page.goto('/users');
+      await page.getByRole('region', { name: 'Invitations' }).waitFor();
+    },
+  },
+  {
+    name: 'users matching nothing',
+    path: '/users',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/users?status=disabled');
+      await page.getByText('No accounts match').waitFor();
+    },
+  },
+  {
+    name: 'users that could not load',
+    path: '/users',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.usersProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await page.goto('/users');
+      await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
+    name: 'an account and disabling it',
+    path: '/users',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.users = [memberUser, adminUser];
+      await page.goto('/users');
+      await page.getByRole('button', { name: 'Open details of Grace Hopper' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Disable' }).click();
+      await page.getByRole('dialog', { name: 'Disable grace@example.test' }).waitFor();
+    },
+  },
+  {
+    name: 'inviting someone',
+    path: '/users',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/users');
+      await page.getByRole('button', { name: 'Invite' }).click();
+      await page.getByRole('dialog', { name: 'Invite someone' }).waitFor();
     },
   },
   {
