@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "M01 Account Lifecycle API",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Canonical implemented account HTTP contract. Relative paths resolve on the configured portal/admin HTTPS origin; x-audiences is normative. Runtime behavior, local evidence and independent target qualification are recorded in the English milestone and execution documentation."
   },
   "servers": [
@@ -1896,6 +1896,17 @@
                 "password_reset",
                 "password_changed"
               ]
+            }
+          },
+          {
+            "name": "recipient_prefix",
+            "in": "query",
+            "required": false,
+            "description": "Only emails whose recipient address starts with this text, ignoring case.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
             }
           }
         ]

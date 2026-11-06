@@ -157,6 +157,27 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 		}
 		return nil
 	}
+	// emailPrefix filters on the start of an address in a lowercase column expression:
+	// printable ASCII only, with LIKE's wildcards escaped.
+	emailPrefix := func(key, column string) error {
+		allowed[key] = true
+		values, ok := q[key]
+		if !ok {
+			return nil
+		}
+		prefix := values[0]
+		if len(prefix) < 1 || len(prefix) > 254 {
+			return failure("VALIDATION_FAILED")
+		}
+		for _, r := range prefix {
+			if r >= 127 || r < 32 {
+				return failure("VALIDATION_FAILED")
+			}
+		}
+		prefix = strings.NewReplacer("!", "!!", "%", "!%", "_", "!_").Replace(strings.ToLower(prefix))
+		p.compare(column, " LIKE ", prefix+"%", " ESCAPE '!'")
+		return nil
+	}
 	switch kind {
 	case "users":
 		p.dmFrom = "USERS u"
@@ -167,19 +188,8 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 		if e := enum("status", "active|disabled"); e != nil {
 			return listPlan{}, e
 		}
-		allowed["email_prefix"] = true
-		if values, ok := q["email_prefix"]; ok {
-			prefix := values[0]
-			if len(prefix) < 1 || len(prefix) > 254 {
-				return fail("VALIDATION_FAILED")
-			}
-			for _, r := range prefix {
-				if r >= 127 || r < 32 {
-					return fail("VALIDATION_FAILED")
-				}
-			}
-			prefix = strings.NewReplacer("!", "!!", "%", "!%", "_", "!_").Replace(strings.ToLower(prefix))
-			p.compare("u.email_canonical", " LIKE ", prefix+"%", " ESCAPE '!'")
+		if e := emailPrefix("email_prefix", "u.email_canonical"); e != nil {
+			return listPlan{}, e
 		}
 	case "invitations":
 		p.dmFrom = "INVITATIONS i LEFT JOIN MAIL_DELIVERIES d ON d.ID=(SELECT L.ID FROM MAIL_DELIVERIES L WHERE L.INVITATION_ID=i.ID ORDER BY L.CREATED_AT DESC,L.ID DESC LIMIT 1)"
@@ -216,6 +226,9 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 			return listPlan{}, e
 		}
 		if e := enum("purpose", "invitation|password_reset|password_changed"); e != nil {
+			return listPlan{}, e
+		}
+		if e := emailPrefix("recipient_prefix", "lower(d.recipient_email)"); e != nil {
 			return listPlan{}, e
 		}
 	case "audit-events":
