@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
 )
 
 func TestM03HTTPContractAndHumanMachineSeparation(t *testing.T) {
@@ -67,8 +67,38 @@ func TestM03HTTPContractAndHumanMachineSeparation(t *testing.T) {
 	admin.Headers = map[string]string{"Idempotency-Key": uuid.NewString()}
 	failedTask := admin.Write("POST", "/api/v1/admin/nodes/"+id+"/tasks", map[string]any{"operation": wire.CollectFacts}, 202, "TaskResponse")
 	failedLease := machine.Call("POST", base+"/tasks/claims", map[string]any{}, 200, "ClaimResponse")["lease"].(map[string]any)
+	// A task's progress reaches an administrator through the public paths, as it does on a real install.
+	progressPath := base + "/tasks/" + failedTask["id"].(string) + "/" + wire.TaskProgressPath
+	at := time.Now().UTC()
+	entries := []wire.ProgressEntry{
+		{Sequence: 1, Kind: wire.ProgressKindStep, At: at, Step: wire.ProgressStepReadSystem, State: wire.ProgressStepRunning},
+		{Sequence: 2, Kind: wire.ProgressKindLog, At: at, Level: wire.ProgressLevelError, Message: "Reading failed"},
+	}
+	machine.Call("POST", progressPath, wire.TaskProgress{LeaseToken: failedLease["lease_token"].(string), Entries: entries}, 200, "TaskProgressAcceptedResponse")
+	machine.Call("POST", progressPath, wire.TaskProgress{LeaseToken: failedLease["lease_token"].(string), Entries: []wire.ProgressEntry{{Sequence: 3, Kind: "metric", At: at}}}, 400, "Problem")
+	admin.Call("POST", progressPath, wire.TaskProgress{LeaseToken: failedLease["lease_token"].(string), Entries: entries}, 401, "Problem")
 	machine.Call("POST", base+"/tasks/"+failedTask["id"].(string)+"/results", wire.Result{LeaseToken: failedLease["lease_token"].(string), Outcome: "failure", ErrorCode: "DISCOVERY_FAILED"}, 200, "CompletedResponse")
 	admin.Call("GET", "/api/v1/admin/nodes/"+id+"/tasks", nil, 200, "TaskListResponse")
+	tasksPath := "/api/v1/sites/default/cells/default/admin/tasks"
+	listed := admin.Call("GET", tasksPath, nil, 200, "TaskSummaryListResponse")
+	if items := listed["items"].([]any); len(items) != 2 || items[0].(map[string]any)["id"] != failedTask["id"] {
+		t.Fatal("the list holds both tasks, newest first", listed)
+	}
+	admin.Call("GET", tasksPath+"?state=failed", nil, 200, "TaskSummaryListResponse")
+	admin.Call("GET", tasksPath+"?state=paused", nil, 400, "Problem")
+	detail := admin.Call("GET", tasksPath+"/"+failedTask["id"].(string), nil, 200, "TaskDetailResponse")
+	if steps := detail["steps"].([]any); len(steps) != 1 || steps[0].(map[string]any)["state"] != wire.ProgressStepFailed {
+		t.Fatal("a step left open takes the task's outcome", detail)
+	}
+	log := admin.Call("GET", tasksPath+"/"+failedTask["id"].(string)+"/log", nil, 200, "TaskLogResponse")
+	if items := log["items"].([]any); len(items) != 1 || log["cursor"] != "1.2" {
+		t.Fatal(log)
+	}
+	admin.Call("GET", tasksPath+"/"+failedTask["id"].(string)+"/log?after=nonsense", nil, 400, "Problem")
+	admin.Call("GET", tasksPath+"/"+uuid.NewString(), nil, 404, "Problem")
+	admin.Call("GET", tasksPath+"/not-an-id", nil, 404, "Problem")
+	portal.Call("GET", tasksPath, nil, 404, "Problem")
+	machine.Call("GET", tasksPath, nil, 401, "Problem")
 	admin.Write("PATCH", "/api/v1/admin/nodes/"+id, map[string]any{"name": "HTTP renamed", "status": "disabled", "version": node["version"], "reason": "Synthetic disable"}, 200, "NodeResponse")
 	machine.Call("POST", base+"/heartbeat", h, 200, "DispositionResponse")
 	machine.Call("POST", base+"/tasks/claims", map[string]any{}, 403, "Problem")

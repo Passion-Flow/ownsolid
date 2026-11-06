@@ -20,7 +20,7 @@ const (
 // aggregation, licensing and release state.
 var cellAdmin = families("agent-pacing", "artifact-objects", "datasets", "deployments", "distribution", "image-registry",
 	"knowledge-bases", "model-holdouts", "model-imports", "model-preparations", "models", "monitoring",
-	"node-join-tokens", "nodes", "plugins", "private-clusters", "task-delivery-quarantine", "training", "workflows")
+	"node-join-tokens", "nodes", "plugins", "private-clusters", "task-delivery-quarantine", "tasks", "training", "workflows")
 var cellWorkspace = families("artifact-objects", "aws", "datasets", "deployments", "distribution", "image-registry",
 	"knowledge-bases", "middleware", "model-holdouts", "model-preparations", "models", "nodes", "plugins",
 	"private-clusters", "training", "workflows")
