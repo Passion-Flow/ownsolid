@@ -11,6 +11,7 @@ import {
 } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
 import {
+  AdvancedFold,
   Button,
   Card,
   CardBody,
@@ -62,6 +63,13 @@ function parse(field: Field, text: string): number | null {
   const { minimum, maximum } = bounds[field];
   return value >= minimum && value <= maximum ? value : null;
 }
+
+// These work at their defaults; the heartbeat is what a person comes here to change.
+const advanced: readonly Field[] = [
+  'jitter_percent',
+  'reconnect_base_seconds',
+  'reconnect_max_seconds',
+];
 
 function PacingForm({ pacing }: { pacing: AgentPacing }) {
   const { t } = useI18n();
@@ -136,6 +144,23 @@ function PacingForm({ pacing }: { pacing: AgentPacing }) {
     if (values && changed && reason.trim() !== '' && !save.isPending) save.mutate(values);
   };
 
+  const field = (name: Field) => (
+    <TextField
+      key={name}
+      label={t(`pacing.field.${name}`)}
+      name={name}
+      inputMode="numeric"
+      autoComplete="off"
+      required
+      hint={t(`pacing.field.${name}.hint`)}
+      error={errors[name]}
+      value={texts[name]}
+      onChange={(event) => {
+        setTexts({ ...texts, [name]: event.target.value });
+      }}
+    />
+  );
+
   return (
     <form noValidate onSubmit={submit} className="flex flex-col gap-4">
       {save.error && isProblem(save.error) ? (
@@ -146,24 +171,13 @@ function PacingForm({ pacing }: { pacing: AgentPacing }) {
           }}
         />
       ) : null}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {fields.map((field) => (
-          <TextField
-            key={field}
-            label={t(`pacing.field.${field}`)}
-            name={field}
-            inputMode="numeric"
-            autoComplete="off"
-            required
-            hint={t(`pacing.field.${field}.hint`)}
-            error={errors[field]}
-            value={texts[field]}
-            onChange={(event) => {
-              setTexts({ ...texts, [field]: event.target.value });
-            }}
-          />
-        ))}
-      </div>
+      {field('heartbeat_seconds')}
+      <AdvancedFold
+        label={t('form.advanced', { count: advanced.length })}
+        invalid={advanced.some((name) => errors[name] !== undefined)}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">{advanced.map(field)}</div>
+      </AdvancedFold>
       {tooSlow ? (
         <Notice tone="critical" title={t('pacing.window.exceeded', { seconds: slowest })}>
           {t('pacing.window.next', { window: pacing.online_window_seconds })}

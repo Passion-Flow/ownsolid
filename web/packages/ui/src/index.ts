@@ -1,4 +1,5 @@
 export { cn } from './cn.ts';
+export { AdvancedFold, type AdvancedFoldProps } from './components/advanced-fold.tsx';
 export { FilterTiles, type FilterTile, type FilterTilesProps } from './components/filter-tiles.tsx';
 export { saveFile } from './save-file.ts';
 export { applyTheme, resolveTheme, type ThemePreference } from './theme.ts';

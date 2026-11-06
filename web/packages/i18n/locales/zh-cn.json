@@ -142,6 +142,8 @@
   "command.switchWorkspace": "切换到 {name}",
   "confirm.irreversible": "此操作无法撤销",
   "confirm.type": "输入 {text} 以确认",
+  "form.advanced_one": "高级设置（{count}）",
+  "form.advanced_other": "高级设置（{count}）",
   "license.active": "有效",
   "license.check.capacity": "历史记录还有空间",
   "license.check.deployment": "为本安装签发",
