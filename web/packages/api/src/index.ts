@@ -49,6 +49,7 @@ export {
   type User,
   type Workspace,
 } from './identity.ts';
+export { listAuditEvents, type AuditEvent, type AuditOutcome, type AuditPage } from './audit.ts';
 export {
   downloadLicenseDiagnostics,
   getLicense,

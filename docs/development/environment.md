@@ -242,6 +242,9 @@ object with `renewal`, `otherDeployment`, `otherIssuer`, `changed` and `addsNoTi
 command out of the repository, which holds no signing code: write it against `license.Issue` in a
 scratch module and run it where the test key lives.
 
+`live-audit.spec.ts` needs only the variables above: signing in writes the event it then reads, finds
+by family and by request, and opens from its own link.
+
 `live-overview.spec.ts` checks the overview's figures against the API and follows a real offline node
 to its drawer. Stop a joined node's agent so that it goes offline, leave the node active, and run it
 with `OWNSOLID_LIVE_OFFLINE_NODE=true` and the variables above.

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -44,6 +45,33 @@ func TestListInputsAreBoundedBeforeStorage(t *testing.T) {
 	}
 }
 
+func TestListAuditFiltersByFamilyAndPerson(t *testing.T) {
+	policy := config.DefaultRuntimePolicy()
+	now := time.Now().UTC()
+	person := uuid.NewString()
+	p, e := makeListPlan("audit-events", url.Values{"category": {"license"}, "actor_user_id": {person}}, policy, now)
+	if e != nil {
+		t.Fatal(e)
+	}
+	joined := strings.Join(p.pgWhere, " AND ")
+	if !strings.Contains(joined, "a.action LIKE $") || !strings.Contains(joined, "a.actor_user_id=$") {
+		t.Fatal(joined)
+	}
+	if !slices.Contains(p.pgArgs, any("license.%")) || !slices.Contains(p.pgArgs, any(person)) {
+		t.Fatal(p.pgArgs)
+	}
+	for name, values := range map[string][]string{
+		"category":      {"License", "license.imported", "%", "a_b", strings.Repeat("a", 33)},
+		"actor_user_id": {"someone", "1"},
+	} {
+		for _, value := range values {
+			if _, e := makeListPlan("audit-events", url.Values{name: {value}}, policy, now); code(e) != "VALIDATION_FAILED" {
+				t.Fatal(name, value, e)
+			}
+		}
+	}
+}
+
 func TestListAuditCursorPinsWindowAndRejectsFilterDrift(t *testing.T) {
 	policy := config.DefaultRuntimePolicy()
 	now := time.Now().UTC()
@@ -67,6 +95,16 @@ func TestListAuditCursorPinsWindowAndRejectsFilterDrift(t *testing.T) {
 	q.Set("action", "auth.logout")
 	if _, e := makeListPlan("audit-events", q, policy, now); code(e) != "INVALID_CURSOR" {
 		t.Fatal(e)
+	}
+	q.Del("action")
+	q.Set("category", "license")
+	if _, e := makeListPlan("audit-events", q, policy, now); code(e) != "INVALID_CURSOR" {
+		t.Fatal("a new family kept the old cursor", e)
+	}
+	q.Del("category")
+	q.Set("actor_user_id", uuid.NewString())
+	if _, e := makeListPlan("audit-events", q, policy, now); code(e) != "INVALID_CURSOR" {
+		t.Fatal("a new person kept the old cursor", e)
 	}
 	c.WindowTo = nil
 	if _, e := makeListPlan("audit-events", url.Values{"cursor": {encode(c)}}, policy, now); code(e) != "INVALID_CURSOR" {

@@ -575,8 +575,11 @@ export interface components {
             occurred_at: string;
             /** Format: uuid */
             actor_user_id: string | null;
+            /** @description The email of the actor, null for the system. */
+            actor_email: string | null;
             /** Format: uuid */
             subject_user_id: string | null;
+            subject_email: string | null;
             /** @enum {string} */
             audience: "portal" | "admin" | "operator" | "system";
             /** @description Versioned first-party audit action. Module events remain visible in unfiltered history;the query action enum lists currently supported exact selectors. */
@@ -1306,6 +1309,9 @@ export interface operations {
                 limit?: components["parameters"]["Limit"];
                 cursor?: components["parameters"]["Cursor"];
                 action?: "installation.bootstrapped" | "invitation.created" | "invitation.resent" | "invitation.revoked" | "invitation.accepted" | "invitation.expired" | "auth.login_succeeded" | "auth.login_failed" | "auth.logout" | "auth.recovery_requested" | "auth.password_reset" | "account.updated" | "account.disabled" | "account.enabled" | "mail.sent" | "mail.failed" | "mail.cancelled" | "system.retention" | "operator.admin_recovered" | "operator.auth_invalidated" | "workspace.created" | "workspace.updated" | "workspace.archived" | "workspace.restored" | "workspace.member_added" | "workspace.member_updated" | "workspace.member_removed" | "workspace.note_created" | "workspace.note_updated" | "workspace.note_deleted" | "node.join_token_created" | "node.join_token_revoked" | "node.enrolled" | "node.updated" | "node.task_requested" | "node.task_claimed" | "node.task_succeeded" | "node.task_failed" | "node.task_cancelled" | "node.task_released" | "node.resync_granted";
+                /** @description An action family, the part of the action before its first dot. */
+                category?: string;
+                actor_user_id?: string;
                 outcome?: "success" | "failure" | "accepted";
                 /** @description RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy. */
                 from?: string;

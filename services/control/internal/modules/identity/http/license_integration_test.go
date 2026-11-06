@@ -206,6 +206,43 @@ func TestM19ActualHTTPImportAuthorityDiagnosticsAndWallClock(t *testing.T) {
 	}
 }
 
+func TestAuditListNamesPeopleAndFiltersByFamily(t *testing.T) {
+	s, _, admin, _ := licenseClients(t, nil)
+	claims := licenseClaims(t, s, time.Now())
+	admin.mutate("POST", "/api/v1/admin/license", licenseInput(t, s, claims, ""), 200, "")
+	list := func(query string) []any {
+		t.Helper()
+		return admin.request("GET", "/api/v1/admin/audit-events?limit=100&"+query, nil, 200, "AuditListResponse", nil)["items"].([]any)
+	}
+	licensed := list("category=license")
+	if len(licensed) != 1 {
+		t.Fatal("the license family", licensed)
+	}
+	event := licensed[0].(map[string]any)
+	if event["action"] != "license.imported" || event["actor_email"] != "admin@example.invalid" || event["subject_email"] != nil || event["target_id"] != claims.LicenseID {
+		t.Fatal("the event should name its actor", event)
+	}
+	if none := list("category=licens"); len(none) != 0 {
+		t.Fatal("a family matched by its prefix", none)
+	}
+	actor := event["actor_user_id"].(string)
+	mine := list("actor_user_id=" + actor)
+	if len(mine) == 0 {
+		t.Fatal("the actor's events")
+	}
+	for _, item := range mine {
+		if item.(map[string]any)["actor_user_id"] != actor {
+			t.Fatal("another actor's event", item)
+		}
+	}
+	if none := list("actor_user_id=" + uuid.NewString()); len(none) != 0 {
+		t.Fatal("an unknown actor's events", none)
+	}
+	for _, bad := range []string{"category=%25", "category=license.imported", "actor_user_id=someone"} {
+		admin.request("GET", "/api/v1/admin/audit-events?"+bad, nil, 400, "", nil)
+	}
+}
+
 func TestM19ActualHTTPFutureGraceExpiryRecoveryAndRenewal(t *testing.T) {
 	base := time.Now().UTC().Truncate(time.Second).Add(2 * time.Second)
 	clock := &licenseClock{value: base}

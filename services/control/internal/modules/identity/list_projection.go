@@ -68,12 +68,12 @@ func scanListRow(kind string, row transaction.Row) (map[string]any, time.Time, s
 	case "audit-events":
 		var id, audience, action, outcome, request string
 		var occurred time.Time
-		var actor, subject, targetType, target, reason *string
-		e := row.Scan(&id, &occurred, &actor, &subject, &audience, &action, &outcome, &targetType, &target, &reason, &request)
+		var actor, actorEmail, subject, subjectEmail, targetType, target, reason *string
+		e := row.Scan(&id, &occurred, &actor, &actorEmail, &subject, &subjectEmail, &audience, &action, &outcome, &targetType, &target, &reason, &request)
 		if e != nil {
 			return nil, time.Time{}, "", e
 		}
-		return map[string]any{"id": id, "occurred_at": listStamp(occurred), "actor_user_id": optionalListString(actor), "subject_user_id": optionalListString(subject), "audience": audience, "action": action, "outcome": outcome, "target_type": optionalListString(targetType), "target_id": optionalListString(target), "reason": optionalListString(reason), "request_id": request}, occurred, id, nil
+		return map[string]any{"id": id, "occurred_at": listStamp(occurred), "actor_user_id": optionalListString(actor), "actor_email": optionalListString(actorEmail), "subject_user_id": optionalListString(subject), "subject_email": optionalListString(subjectEmail), "audience": audience, "action": action, "outcome": outcome, "target_type": optionalListString(targetType), "target_id": optionalListString(target), "reason": optionalListString(reason), "request_id": request}, occurred, id, nil
 	}
 	return nil, time.Time{}, "", failure("RESOURCE_NOT_FOUND")
 }

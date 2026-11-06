@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -36,6 +37,10 @@ type List struct {
 }
 
 var auditActions = map[string]bool{}
+
+// auditCategory is an action's family, the part before its first dot. Its letters hold no LIKE
+// wildcard, so the filter matches exactly that family.
+var auditCategory = regexp.MustCompile(`^[a-z]{1,32}$`)
 
 func init() {
 	for _, a := range strings.Fields("installation.bootstrapped invitation.created invitation.resent invitation.revoked invitation.accepted invitation.expired auth.login_succeeded auth.login_failed auth.logout auth.recovery_requested auth.password_reset account.updated account.disabled account.enabled mail.sent mail.failed mail.cancelled system.retention operator.admin_recovered operator.auth_invalidated workspace.created workspace.updated workspace.archived workspace.restored workspace.member_added workspace.member_updated workspace.member_removed workspace.note_created workspace.note_updated workspace.note_deleted node.join_token_created node.join_token_revoked node.enrolled node.updated node.task_requested node.task_claimed node.task_succeeded node.task_failed node.task_cancelled node.task_released node.resync_granted node.pacing_updated mail.resent") {
@@ -242,11 +247,12 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 			return fail("VALIDATION_FAILED")
 		}
 	case "audit-events":
-		p.dmFrom = "AUDIT_EVENTS a"
-		p.dmProjection = "a.ID,a.OCCURRED_AT,a.ACTOR_USER_ID,a.SUBJECT_USER_ID,a.AUDIENCE,a.ACTION,a.OUTCOME,a.TARGET_TYPE,a.TARGET_ID,a.REASON,a.REQUEST_ID"
-		p.alias, p.order, p.pgFrom, p.myFrom = "a", "occurred_at", "audit_events a", "audit_events a"
-		p.pgProjection = "a.id::text,a.occurred_at,a.actor_user_id::text,a.subject_user_id::text,a.audience,a.action,a.outcome,a.target_type,a.target_id::text,a.reason,a.request_id::text"
-		p.myProjection = "a.id,a.occurred_at,a.actor_user_id,a.subject_user_id,a.audience,a.action,a.outcome,a.target_type,a.target_id,a.reason,a.request_id"
+		p.dmFrom = "AUDIT_EVENTS a LEFT JOIN USERS actor_user ON actor_user.ID=a.ACTOR_USER_ID LEFT JOIN USERS subject_user ON subject_user.ID=a.SUBJECT_USER_ID"
+		p.dmProjection = "a.ID,a.OCCURRED_AT,a.ACTOR_USER_ID,actor_user.EMAIL_DISPLAY,a.SUBJECT_USER_ID,subject_user.EMAIL_DISPLAY,a.AUDIENCE,a.ACTION,a.OUTCOME,a.TARGET_TYPE,a.TARGET_ID,a.REASON,a.REQUEST_ID"
+		const auditJoins = " LEFT JOIN users actor_user ON actor_user.id=a.actor_user_id LEFT JOIN users subject_user ON subject_user.id=a.subject_user_id"
+		p.alias, p.order, p.pgFrom, p.myFrom = "a", "occurred_at", "audit_events a"+auditJoins, "audit_events a"+auditJoins
+		p.pgProjection = "a.id::text,a.occurred_at,a.actor_user_id::text,actor_user.email_display,a.subject_user_id::text,subject_user.email_display,a.audience,a.action,a.outcome,a.target_type,a.target_id::text,a.reason,a.request_id::text"
+		p.myProjection = "a.id,a.occurred_at,a.actor_user_id,actor_user.email_display,a.subject_user_id,subject_user.email_display,a.audience,a.action,a.outcome,a.target_type,a.target_id,a.reason,a.request_id"
 		if e := enum("outcome", "success|failure|accepted"); e != nil {
 			return listPlan{}, e
 		}
@@ -256,6 +262,19 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 				return fail("VALIDATION_FAILED")
 			}
 			p.compare("a.action", "=", v, "")
+		}
+		allowed["category"], allowed["actor_user_id"] = true, true
+		if v := q.Get("category"); v != "" {
+			if !auditCategory.MatchString(v) {
+				return fail("VALIDATION_FAILED")
+			}
+			p.compare("a.action", " LIKE ", v+".%", "")
+		}
+		if v := q.Get("actor_user_id"); v != "" {
+			if !sessionID(v) {
+				return fail("VALIDATION_FAILED")
+			}
+			p.compare("a.actor_user_id", "=", v, "")
 		}
 		allowed["from"], allowed["to"], allowed["request_id"] = true, true, true
 		from, to := now.UTC().Add(-time.Duration(policy.Identity.AuditDefaultDays)*24*time.Hour), now.UTC()

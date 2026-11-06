@@ -5,10 +5,12 @@ import {
   checksStoppingAt,
   failedMail,
   disabledNode,
+  failedSignIn,
   failedTask,
   finishedTask,
   importableInspection,
   joinToken,
+  licenseEvent,
   memberUser,
   missingLicense,
   node,
@@ -17,6 +19,7 @@ import {
   runningTask,
   secondFailedMail,
   sentMail,
+  systemEvent,
   type ControlPlane,
   type ScriptedView,
 } from '@ownsolid/shell/testing';
@@ -62,6 +65,12 @@ async function openOverview(page: Page, control: ControlPlane): Promise<void> {
   control.signedIn = true;
   await page.goto('/');
   await page.getByRole('heading', { name: 'Welcome, Ada Lovelace', level: 1 }).waitFor();
+}
+
+async function openAudit(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/audit');
+  await page.getByRole('heading', { name: 'Audit trail', level: 1 }).waitFor();
 }
 
 async function openLicense(page: Page, control: ControlPlane): Promise<void> {
@@ -492,6 +501,42 @@ export const consolePages: readonly PageState[] = [
     open: async (page, control) => {
       control.mailProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
       await openMail(page, control);
+      await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
+    name: 'audit trail with events',
+    path: '/audit',
+    open: async (page, control) => {
+      control.auditEvents = [licenseEvent, failedSignIn, systemEvent];
+      await openAudit(page, control);
+      await page.getByText('license.imported').waitFor();
+    },
+  },
+  {
+    name: 'audit event details',
+    path: '/audit',
+    open: async (page, control) => {
+      control.auditEvents = [licenseEvent];
+      await openAudit(page, control);
+      await page.getByRole('button', { name: /^Show details of license.imported/ }).click();
+      await page.getByRole('dialog', { name: 'license.imported' }).waitFor();
+    },
+  },
+  {
+    name: 'audit trail with nothing recorded',
+    path: '/audit',
+    open: async (page, control) => {
+      await openAudit(page, control);
+      await page.getByText('Nothing recorded in the last 7 days').waitFor();
+    },
+  },
+  {
+    name: 'audit trail that could not load',
+    path: '/audit',
+    open: async (page, control) => {
+      control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await openAudit(page, control);
       await page.getByRole('button', { name: 'Try again' }).waitFor();
     },
   },

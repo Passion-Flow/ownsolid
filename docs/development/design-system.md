@@ -127,6 +127,9 @@ this browser. The server checks access to the workspace on every request.
   kind of failure; a page that could not check never says all is clear. The checklist follows real
   state and goes when it is done. `useHashAction` opens a page's dialog from a link such as
   `/nodes#add`, once. Show only figures that exist; a tile joins with its module.
+- **A list read over a time window:** let the first page set the window and its cursor carry it, so
+  later pages cannot shift. A link to one row names a narrow window of its own, so it keeps working
+  ([research](../research/audit-trail-page.md)).
 - **Importing a file that cannot be taken back:** check it on the server first and show what it would
   do, or each check and why one refused it, with the values involved and a report to download. The
   preview is the confirmation: a button that names the action, the permanence stated beside it, and
