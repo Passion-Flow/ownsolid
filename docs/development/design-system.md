@@ -117,7 +117,16 @@ this browser. The server checks access to the workspace on every request.
     (UX-114); `CopyLinkButton` copies it. Columns are not part of a link. Sort on the server,
     with `aria-sort` on the sorted column and its header as a button.
 - **Long-running tasks:** step timeline with durations plus a live log; the task keeps
-  running when the user leaves the page.
+  running when the user leaves the page ([research](../research/long-task-pattern.md)).
+  - `StepTimeline` lists steps in order. The running step carries `aria-current="step"`, and a state
+    is never told by colour alone.
+  - `LiveLog` is a named `role="log"` that a keyboard can reach. It follows its end only while
+    scrolled to the end, offers pause, copy and download, and marks where a new attempt begins.
+  - Pages poll with a cursor on the installation's interval, as background reads, and stop when the
+    task has finished. A failed read keeps what is on screen and offers a retry.
+  - The top bar's `TaskTray` lists the person's unfinished tasks from any page, and a toast says once
+    when one ends, with a way back to it. Give an application's frame `tasks` to turn it on.
+  - Never block a page on a long task, and never make someone stay to see it finish.
 - **Charts:** a single series needs no legend; every chart offers a table view and a
   hover readout.
 
