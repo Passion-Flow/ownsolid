@@ -42,7 +42,7 @@ func nodeRepositoryError(e error) error {
 		return fail(string(kind))
 	}
 	switch e.Error() {
-	case "ACCESS_DENIED", "AUTH_SESSION_EXPIRED", "RESOURCE_NOT_FOUND", "VALIDATION_FAILED", "INVALID_CURSOR",
+	case "ACCESS_DENIED", "TASK_HISTORY_UNAVAILABLE", "AUTH_SESSION_EXPIRED", "RESOURCE_NOT_FOUND", "VALIDATION_FAILED", "INVALID_CURSOR",
 		"STORAGE_UNAVAILABLE", string(transaction.Deadlock), string(transaction.LockTimeout),
 		string(transaction.Cancelled), string(transaction.Timeout), string(transaction.CommitUnknown), string(transaction.CommitRolledBack):
 		return fail(e.Error())

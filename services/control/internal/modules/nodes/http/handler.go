@@ -74,8 +74,31 @@ func (h *Handler) agentPacing(r *http.Request, a identity.Auth, request string) 
 	return nil, 0, errors.New("RESOURCE_NOT_FOUND")
 }
 
+// tasksPath is where an administrator reads tasks across every node.
+const tasksPath = "/api/v1/admin/tasks"
+
+// adminTasks serves the task reads. Starting a task stays under its node.
+func (h *Handler) adminTasks(r *http.Request, a identity.Auth) (any, int, error) {
+	if r.Method != "GET" {
+		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
+	}
+	parts := strings.Split(strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, tasksPath), "/"), "/")
+	switch {
+	case len(parts) == 1 && parts[0] == "":
+		out, e := h.Service.AdminTasks(r.Context(), a, r.URL.Query())
+		return out, 200, e
+	case len(parts) == 1 && id(parts[0]):
+		out, e := h.Service.AdminTask(r.Context(), a, parts[0])
+		return out, 200, e
+	case len(parts) == 2 && id(parts[0]) && parts[1] == "log":
+		out, e := h.Service.AdminTaskLog(r.Context(), a, parts[0], r.URL.Query())
+		return out, 200, e
+	}
+	return nil, 0, errors.New("RESOURCE_NOT_FOUND")
+}
+
 func Owns(path string) bool {
-	for _, prefix := range []string{"/api/v1/admin/nodes", "/api/v1/admin/node-join-tokens", pacingPath} {
+	for _, prefix := range []string{"/api/v1/admin/nodes", "/api/v1/admin/node-join-tokens", pacingPath, tasksPath} {
 		if path == prefix || strings.HasPrefix(path, prefix+"/") {
 			return true
 		}
@@ -342,6 +365,14 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 		}
 		return httpserver.Download{File: file, Size: wire.NodeExporterArchiveBytes, SHA256: wire.NodeExporterSHA256}, 200, nil
 	}
+	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && parts[4] == wire.TaskProgressPath {
+		var input wire.TaskProgress
+		if e := httpserver.DecodeJSON(r, &input); e != nil {
+			return nil, 0, e
+		}
+		out, e := h.Service.RecordTaskProgress(r.Context(), parts[1], credential, parts[3], input)
+		return out, 200, e
+	}
 	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && parts[4] == "results" {
 		var input wire.Result
 		if e := httpserver.DecodeJSON(r, &input); e != nil {
@@ -364,6 +395,9 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 	}
 	if path == pacingPath {
 		return h.agentPacing(r, a, request)
+	}
+	if path == tasksPath || strings.HasPrefix(path, tasksPath+"/") {
+		return h.adminTasks(r, a)
 	}
 	tokens := "/api/v1/admin/node-join-tokens"
 	if path == tokens {
