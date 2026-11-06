@@ -112,6 +112,21 @@ export async function get<T>(path: string, options: RequestOptions = {}): Promis
   return read<T>(await send(path, init, options.signal));
 }
 
+/** A file the server sent, and the name it gave it. */
+export interface DownloadedFile {
+  content: Blob;
+  name: string;
+}
+
+/** Reads a download. A failure is the same `ApiProblem` any other read raises. */
+export async function getFile(path: string, options: RequestOptions = {}): Promise<DownloadedFile> {
+  const response = await send(path, { method: 'GET' }, options.signal);
+  if (!response.ok) return read<never>(response);
+  const disposition = response.headers.get('Content-Disposition') ?? '';
+  const name = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? 'download';
+  return { content: await response.blob(), name };
+}
+
 function csrfToken(signal?: AbortSignal): Promise<CsrfToken> {
   if (csrf) {
     const cached = csrf;

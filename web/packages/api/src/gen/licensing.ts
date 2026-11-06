@@ -18,6 +18,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/license/inspections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Runs every check an import runs and reports each one. Nothing changes but the audit trail, so a refused file is an ordinary 200 answer. */
+        post: operations["InspectLicenseFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/license/diagnostics": {
         parameters: {
             query?: never;
@@ -98,6 +115,7 @@ export interface components {
             pending: components["schemas"]["LicenseSummary"] | null;
             accepted_licenses: number;
             history_head_license_id: string | "";
+            maximum_imports: number;
             /** Format: date-time */
             observed_at: string;
             public_key_fingerprint: string;
@@ -107,11 +125,52 @@ export interface components {
             reason: string;
             expected_current_license_id: string | "";
         };
+        InspectLicense: {
+            artifact: string;
+        };
         LicenseImportResult: {
             state: components["schemas"]["LicenseState"];
             /** Format: uuid */
             imported_license_id: string;
             repeated: boolean;
+        };
+        LicenseFileTerms: {
+            /** Format: uuid */
+            license_id: string;
+            artifact_sha256: string;
+            customer_reference: string;
+            /** Format: date-time */
+            not_before: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            grace_until: string;
+            /** Format: uuid */
+            deployment_id: string;
+            /** Format: date-time */
+            issued_at: string;
+            replaces_license_id: string | "";
+        };
+        LicenseCheck: {
+            /** @enum {string} */
+            name: "format" | "key" | "signature" | "terms" | "deployment" | "identity" | "capacity" | "renewal";
+            /** @enum {string} */
+            result: "passed" | "failed" | "not_checked";
+        };
+        LicenseInspection: {
+            /** @enum {string} */
+            outcome: "importable" | "installed" | "refused";
+            /** @enum {string} */
+            code: "" | "LICENSE_ARTIFACT_INVALID" | "LICENSE_DEPLOYMENT_MISMATCH" | "LICENSE_ID_CONFLICT" | "LICENSE_IMPORT_CAPACITY_REQUIRED" | "LICENSE_PREDECESSOR_REQUIRED" | "LICENSE_PENDING_SUCCESSOR_EXISTS" | "LICENSE_RENEWAL_WINDOW_INVALID";
+            /** @enum {string} */
+            detail: "" | "wrong_predecessor" | "wrong_deployment" | "issued_before_current" | "starts_before_current" | "starts_after_grace" | "expires_no_later";
+            checks: components["schemas"]["LicenseCheck"][];
+            /** @description The key the file names. Unproven unless the signature check passed; empty when the file is unreadable. */
+            key_id: string;
+            trusted_key_id: string;
+            /** @description Present only once the signature is proven. */
+            file: components["schemas"]["LicenseFileTerms"] | null;
+            state: components["schemas"]["LicenseState"];
         };
         LicenseDiagnostics: {
             /** @constant */
@@ -126,6 +185,9 @@ export interface components {
         };
         LicenseImportResultResponse: {
             data: components["schemas"]["LicenseImportResult"];
+        };
+        LicenseInspectionResponse: {
+            data: components["schemas"]["LicenseInspection"];
         };
     };
     responses: never;
@@ -188,6 +250,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LicenseImportResultResponse"];
+                };
+            };
+            /** @description Fixed redacted authentication, authorization, validation, license conflict or storage error. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    InspectLicenseFile: {
+        parameters: {
+            query?: never;
+            header: {
+                Origin: string;
+                "X-CSRF-Token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InspectLicense"];
+            };
+        };
+        responses: {
+            /** @description What importing the file would do, and why it would be refused. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LicenseInspectionResponse"];
                 };
             };
             /** @description Fixed redacted authentication, authorization, validation, license conflict or storage error. */

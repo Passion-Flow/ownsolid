@@ -76,6 +76,28 @@ type Verified struct {
 	Artifact    []byte
 }
 
+// Refusal names the first check a license file failed.
+type Refusal string
+
+const (
+	// RefusalUnreadable is a file that is not a license in this format.
+	RefusalUnreadable Refusal = "unreadable"
+	// RefusalKey is a file signed with a key this installation does not trust.
+	RefusalKey Refusal = "key"
+	// RefusalSignature is a file that was changed after it was signed, or forged.
+	RefusalSignature Refusal = "signature"
+	// RefusalTerms is a correctly signed file whose terms break the format.
+	RefusalTerms Refusal = "terms"
+)
+
+// Inspection is what Inspect learned. Verified is set only when Refusal is empty. KeyID is what
+// the file claims, unproven unless the file verified, and is empty when the file is unreadable.
+type Inspection struct {
+	Refusal  Refusal
+	KeyID    string
+	Verified Verified
+}
+
 func invalid() error { return errors.New("LICENSE_ARTIFACT_INVALID") }
 func ValidID(value string) bool {
 	return uuidPattern.MatchString(value) && value != "00000000-0000-0000-0000-000000000000"
@@ -253,24 +275,44 @@ func Issue(c Claims, p PrivateKey) ([]byte, error) {
 	return canonical(Artifact{FormatVersion, Algorithm, p.KeyID, encoded(payload), encoded(signature)}), nil
 }
 
-func Verify(raw []byte, trust Trust) (Verified, error) {
+// Inspect reads raw and reports the first check it fails, so a person can be told why a file was
+// refused. The returned error is only for unusable trust; a bad file is a Refusal.
+func Inspect(raw []byte, trust Trust) (Inspection, error) {
 	public, e := trust.key()
 	if e != nil {
-		return Verified{}, e
+		return Inspection{}, e
 	}
 	var a Artifact
-	if closedJSON(raw, &a, MaximumArtifactBytes) != nil || a.FormatVersion != FormatVersion || a.Algorithm != Algorithm || a.KeyID != trust.KeyID {
-		return Verified{}, invalid()
+	if closedJSON(raw, &a, MaximumArtifactBytes) != nil || a.FormatVersion != FormatVersion || a.Algorithm != Algorithm || !ValidKeyID(a.KeyID) {
+		return Inspection{Refusal: RefusalUnreadable}, nil
+	}
+	if a.KeyID != trust.KeyID {
+		return Inspection{Refusal: RefusalKey, KeyID: a.KeyID}, nil
 	}
 	payload, pe := decoded(a.Payload, MaximumClaimsBytes)
 	signature, se := decoded(a.Signature, ed25519.SignatureSize)
-	if pe != nil || se != nil || len(signature) != ed25519.SignatureSize || ed25519.VerifyWithOptions(public, payload, signature, &ed25519.Options{Hash: crypto.Hash(0), Context: SignatureContext}) != nil {
-		return Verified{}, invalid()
+	if pe != nil || se != nil || len(signature) != ed25519.SignatureSize {
+		return Inspection{Refusal: RefusalUnreadable, KeyID: a.KeyID}, nil
+	}
+	if ed25519.VerifyWithOptions(public, payload, signature, &ed25519.Options{Hash: crypto.Hash(0), Context: SignatureContext}) != nil {
+		return Inspection{Refusal: RefusalSignature, KeyID: a.KeyID}, nil
 	}
 	claims, e := ParseClaims(payload)
 	if e != nil || !bytes.Equal(payload, canonical(claims)) {
-		return Verified{}, invalid()
+		return Inspection{Refusal: RefusalTerms, KeyID: a.KeyID}, nil
 	}
 	artifact := canonical(a)
-	return Verified{Claims: claims, KeyID: a.KeyID, SHA256: Digest(artifact), Fingerprint: Digest(public), Artifact: artifact}, nil
+	return Inspection{KeyID: a.KeyID, Verified: Verified{Claims: claims, KeyID: a.KeyID, SHA256: Digest(artifact), Fingerprint: Digest(public), Artifact: artifact}}, nil
+}
+
+// Verify returns the proven contents of raw, or LICENSE_ARTIFACT_INVALID.
+func Verify(raw []byte, trust Trust) (Verified, error) {
+	inspection, e := Inspect(raw, trust)
+	if e != nil {
+		return Verified{}, e
+	}
+	if inspection.Refusal != "" {
+		return Verified{}, invalid()
+	}
+	return inspection.Verified, nil
 }

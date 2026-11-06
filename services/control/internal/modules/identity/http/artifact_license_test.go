@@ -22,6 +22,10 @@ func TestArtifactRecoveryLicenseExceptionsAreExactAndRetainOwnerChecks(t *testin
 		{"POST", "/api/v1/admin/artifact-objects/not-an-id/abort", false},
 		{"POST", "/api/v1/admin/artifact-objects/" + id + "/abort/", false},
 		{"PUT", "/api/v1/admin/artifact-objects/" + id + "/abort", false},
+		{"POST", "/api/v1/admin/license", true},
+		{"POST", "/api/v1/admin/license/inspections", true},
+		{"POST", "/api/v1/admin/license/inspections/", false},
+		{"PUT", "/api/v1/admin/license/inspections", false},
 	} {
 		allowed, e := recoveryMutation(httptest.NewRequest(item.method, item.path, nil))
 		if e != nil || allowed != item.safe {

@@ -3,6 +3,7 @@
 import type { Page, Route } from '@playwright/test';
 import { emptyNodeScript, routeNodes, type NodeScript } from './nodes.ts';
 import { emptyTaskScript, routeTasks, type TaskScript } from './tasks.ts';
+import { emptyLicenseScript, routeLicense, type LicenseScript } from './license.ts';
 import { emptyUserScript, routeUsers, type UserScript } from './users.ts';
 
 /** The account the mock accepts. */
@@ -170,7 +171,7 @@ export interface ScriptedProblem {
 }
 
 /** Mutable state of the mock, so a spec can change it between steps. */
-export interface ControlPlane extends TaskScript, NodeScript, UserScript {
+export interface ControlPlane extends TaskScript, NodeScript, UserScript, LicenseScript {
   audience: 'admin' | 'portal';
   /** How often pages poll, as the runtime configuration says. */
   pollMilliseconds: number;
@@ -284,6 +285,7 @@ export async function mockControlPlane(
     ...emptyTaskScript(),
     ...emptyNodeScript(),
     ...emptyUserScript(),
+    ...emptyLicenseScript(),
     audience,
     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
     signedIn: false,
@@ -532,9 +534,6 @@ export async function mockControlPlane(
     item.read_at = '2026-11-04T09:00:00Z';
     return data(route, item);
   });
-  await page.route('**/api/v1/license/status', (route) =>
-    data(route, { state: 'active', new_business_allowed: true, warning: false }),
-  );
   await page.route('**/api/v1/preferences', (route) => {
     const request = route.request();
     if (request.method() === 'GET') {
@@ -632,6 +631,7 @@ export async function mockControlPlane(
   });
   await routeNodes(page, state, data, problem);
   await routeUsers(page, state, data, problem);
+  await routeLicense(page, state, data, problem);
   await routeTasks(page, state, data, problem);
   await page.route('**/api/v1/admin/mail-deliveries?*', (route) => {
     if (state.audience !== 'admin')

@@ -4,6 +4,7 @@ import { useI18n } from '@ownsolid/i18n';
 import { Check, Copy, Download, Pause, Play } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { cn } from '../cn.ts';
+import { saveFile } from '../save-file.ts';
 import { Button } from './button.tsx';
 
 const confirmationMilliseconds = 1_500;
@@ -77,12 +78,7 @@ export function LiveLog({ label, lines, live, fileName, empty, className }: Live
   }, [copied]);
 
   const download = () => {
-    const url = URL.createObjectURL(new Blob([asText(lines)], { type: 'text/plain' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    URL.revokeObjectURL(url);
+    saveFile(new Blob([asText(lines)], { type: 'text/plain' }), fileName);
   };
 
   return (

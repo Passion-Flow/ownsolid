@@ -31,8 +31,15 @@ export function CopyText({ text, proportional = false, className }: CopyTextProp
 
   const label = copied ? t('action.copied') : t('action.copy');
   return (
-    <span className={cn('inline-flex items-center gap-2', className)}>
-      <span className={proportional ? undefined : 'font-mono text-[12.5px]'}>{text}</span>
+    <span className={cn('inline-flex max-w-full items-center gap-2', className)}>
+      <span
+        className={cn(
+          'min-w-0 [overflow-wrap:anywhere]',
+          !proportional && 'font-mono text-[12.5px]',
+        )}
+      >
+        {text}
+      </span>
       <button
         type="button"
         aria-label={label}
@@ -46,7 +53,7 @@ export function CopyText({ text, proportional = false, className }: CopyTextProp
             () => undefined,
           );
         }}
-        className="grid cursor-pointer rounded-[6px] border-0 bg-transparent p-1 text-text-3 hover:bg-surface-2 hover:text-text"
+        className="grid flex-none cursor-pointer rounded-[6px] border-0 bg-transparent p-1 text-text-3 hover:bg-surface-2 hover:text-text"
       >
         {copied ? <Check className="size-[15px] text-good" /> : <Copy className="size-[15px]" />}
       </button>

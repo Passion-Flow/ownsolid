@@ -4,6 +4,8 @@ This module owns durable signed platform-license history and current admission. 
 
 [service.go](service.go) verifies history, deployment identity, renewal linkage and import expectations before updating state. [configuration.go](configuration.go) owns construction from protected configuration; [diagnostics.go](diagnostics.go), [registry_admission.go](registry_admission.go) and [monitoring.go](monitoring.go) expose bounded owner-specific surfaces.
 
+[inspection.go](inspection.go) runs the checks an import runs and reports each one, without changing history, so the console can show what a file would do and why one is refused. Inspect and Import share `judge`, so they cannot disagree.
+
 Migration 000017 stores license state/artifacts. Import binds expected current license and writes its audit in the same selected transaction. Expiry, grace, missing/invalid history and commit-unknown must preserve existing admission/reconciliation behavior. Diagnostic or recovery exceptions remain explicit; adding a new feature must not introduce a blanket bypass.
 
 Synchronize [contracts/licensing](../../../../../contracts/licensing), [M19](../../../../../docs/milestones/m19-license), protected config/schema and deployment inputs, [licensing frontend](../../../../../web/README.md), offline release trust and dependent owner admission tests.

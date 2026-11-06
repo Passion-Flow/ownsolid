@@ -34,4 +34,13 @@ export {
   type TaskScript,
 } from './tasks.ts';
 export { disabledNode, joinToken, node, offlineNode, type NodeScript } from './nodes.ts';
+export {
+  activeLicense,
+  activeSummary,
+  checksStoppingAt,
+  importableInspection,
+  missingLicense,
+  renewalTerms,
+  type LicenseScript,
+} from './license.ts';
 export { adminUser, memberUser, pendingInvitation, type UserScript } from './users.ts';

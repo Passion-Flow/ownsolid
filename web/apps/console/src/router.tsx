@@ -13,7 +13,7 @@ import { operations, taskPath } from './task-names.ts';
 
 const frameRoute = createFrameRoute({
   navigation,
-  showLicense: true,
+  licensePath: '/license',
   tasks: { taskPath, taskName: (task) => operations[task.operation] },
 });
 
@@ -39,6 +39,12 @@ const usersRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/users',
   component: lazyRouteComponent(() => import('./users-page.tsx'), 'UsersPage'),
+});
+
+const licenseRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/license',
+  component: lazyRouteComponent(() => import('./license-page.tsx'), 'LicensePage'),
 });
 
 const mailRoute = createRoute({
@@ -76,6 +82,7 @@ const routeTree = rootRoute.addChildren([
       nodesRoute,
       pacingRoute,
       usersRoute,
+      licenseRoute,
       mailRoute,
       tasksRoute,
       taskRoute,
