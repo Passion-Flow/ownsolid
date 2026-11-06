@@ -23,7 +23,7 @@ Reviewed 2026-11-06 against Kubernetes, Nomad and GitHub runner documentation ([
 - [ ] FLT-111 Kubernetes cell lifecycle: create, add nodes, upgrade, certificate rotation (P1) - Catalog: F400, F624
 - [ ] FLT-112 Fleet batch actions with staged rollout and stop on failure (P1)
 - [ ] FLT-113 Console page for agent pacing: current values, change with a reason, the online-window refusal explained (P1)
-- [ ] FLT-114 Nodes page: list with server-side filters and counts, details drawer, rename, disable and remove, add a node with a one-time join token and see it join (P1)
+- [x] FLT-114 Nodes page: list with server-side filters and counts, details drawer, rename, disable and remove, add a node with a one-time join token and see it join (P1) - Evidence: 602acdf, b66dfce; real Chromium on an offline install on `ownsolid-cpu` added a node by running the page's commands on a disposable host, saw the real agent join and ran a task on it, four runs in a row, 2026-11-06
 - [ ] FLT-115 Node events: joined, connectivity changes, status changes and who made them, per node in the details drawer (P1)
 
 ## P2 Fleet operations
