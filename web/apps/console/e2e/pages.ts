@@ -132,6 +132,17 @@ export const consolePages: readonly PageState[] = [
     },
   },
   {
+    name: 'email delivery revoking an invitation',
+    path: '/mail',
+    open: async (page, control) => {
+      control.mail = [failedMail];
+      await openMail(page, control);
+      await page.getByRole('button', { name: /^Show details of the email to / }).click();
+      await page.getByRole('button', { name: 'Revoke the invitation' }).click();
+      await page.getByRole('dialog', { name: 'Revoke this invitation' }).waitFor();
+    },
+  },
+  {
     name: 'email delivery with no matches',
     path: '/mail',
     open: async (page, control) => {

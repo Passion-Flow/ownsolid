@@ -60,6 +60,8 @@ export interface ListView {
   /** Saves the screen over the open view. */
   saveChanges: () => Promise<SavedView | null>;
   rename: (view: SavedView, name: string) => Promise<SavedView>;
+  /** Puts a view back as it was, on top of the revision that replaced it. */
+  restore: (current: SavedView, previous: SavedView) => Promise<SavedView>;
   /** Deletes a view and returns a function that restores it. */
   remove: (view: SavedView) => Promise<() => Promise<void>>;
 }
@@ -206,6 +208,8 @@ export function useListView(definition: ListDefinition): ListView {
     saveChanges: async () =>
       activeView ? put(activeView.id, activeView.name, state, activeView.revision) : null,
     rename: (view, name) => put(view.id, name, view.state, view.revision),
+    restore: (current, previous) =>
+      put(current.id, previous.name, previous.state, current.revision),
     remove: async (view) => {
       try {
         await deleteSavedView(view.id, view.revision);

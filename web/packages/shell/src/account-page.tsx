@@ -38,7 +38,19 @@ function ProfileCard({ user }: { user: User }) {
       updateProfile({ display_name: trimmed, locale: user.locale, version: user.version }),
     onSuccess: (me) => {
       client.setQueryData(sessionKey, me);
-      toast({ message: t('account.profile.saved') });
+      toast({
+        message: t('account.profile.saved'),
+        undo: async () => {
+          client.setQueryData(
+            sessionKey,
+            await updateProfile({
+              display_name: saved,
+              locale: me.user.locale,
+              version: me.user.version,
+            }),
+          );
+        },
+      });
     },
     // The next save needs the account's current version.
     onError: (error) =>

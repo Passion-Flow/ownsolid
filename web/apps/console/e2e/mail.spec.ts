@@ -6,7 +6,7 @@ import {
   sentMail,
   type ControlPlane,
 } from '@ownsolid/shell/testing';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { failedView } from './pages.ts';
 
 let control: ControlPlane;
@@ -449,5 +449,127 @@ test.describe('shareable links', () => {
     await page.getByRole('button', { name: 'Copy a link to this list' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Link copied' })).toBeVisible();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(page.url());
+  });
+});
+
+test.describe('revoking an invitation', () => {
+  const open = async (page: Page) => {
+    await page.goto('/mail');
+    await page
+      .getByRole('button', { name: 'Show details of the email to grace@example.test' })
+      .click();
+    await page.getByRole('button', { name: 'Revoke the invitation' }).click();
+    return page.getByRole('dialog', { name: 'Revoke this invitation' });
+  };
+
+  test('needs the address typed, then revokes and says so', async ({ page }) => {
+    const dialog = await open(page);
+    const field = dialog.getByLabel('Type grace@example.test to confirm');
+    await expect(field).toBeFocused();
+    const submit = dialog.getByRole('button', { name: 'Revoke the invitation' });
+    await expect(submit).toBeDisabled();
+    await field.fill('grace@example.tes');
+    await page.keyboard.press('Enter');
+    await expect(submit).toBeDisabled();
+    expect(control.revocations).toEqual([]);
+
+    await field.fill('  GRACE@example.test ');
+    await expect(submit).toBeEnabled();
+    await submit.click();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Invitation to grace@example.test revoked' }),
+    ).toBeVisible();
+    expect(control.revocations).toEqual([
+      { version: 2, reason: 'Revoked from the email delivery page' },
+    ]);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
+  test('offers nothing further once it is revoked', async ({ page }) => {
+    control.mail = [{ ...failedMail, invitation: { id: 'x', version: 3, status: 'revoked' } }];
+    await page.goto('/mail');
+    await page
+      .getByRole('button', { name: 'Show details of the email to grace@example.test' })
+      .click();
+    const drawer = page.getByRole('dialog', { name: 'grace@example.test' });
+    await expect(drawer).toContainText('Revoked');
+    await expect(drawer.getByRole('button', { name: 'Revoke the invitation' })).toHaveCount(0);
+  });
+
+  test('is not offered for an email without an invitation', async ({ page }) => {
+    await page.goto('/mail');
+    await page
+      .getByRole('button', { name: 'Show details of the email to ada@example.test' })
+      .click();
+    await expect(
+      page.getByRole('dialog').getByRole('button', { name: 'Revoke the invitation' }),
+    ).toHaveCount(0);
+  });
+
+  test('explains an invitation accepted meanwhile', async ({ page }) => {
+    control.nextRevocation = { status: 409, code: 'INVITATION_STATE_CONFLICT' };
+    const dialog = await open(page);
+    await dialog.getByLabel('Type grace@example.test to confirm').fill('grace@example.test');
+    await page.keyboard.press('Enter');
+    await expect(dialog.getByRole('alert').last()).toContainText('The invitation changed');
+  });
+
+  test('closes without revoking, and Escape leaves only the dialog', async ({ page }) => {
+    const dialog = await open(page);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByRole('dialog', { name: 'grace@example.test' })).toBeVisible();
+    expect(control.revocations).toEqual([]);
+  });
+});
+
+test.describe('undo', () => {
+  test('puts a saved view back, on screen too', async ({ page }) => {
+    control.savedViews = [failedView];
+    await page.goto('/mail');
+    await page.getByRole('button', { name: /^Views: / }).click();
+    await page.getByRole('menuitem', { name: 'Failures' }).click();
+    await page
+      .getByRole('group', { name: 'Show emails' })
+      .getByRole('button', { name: 'Sent' })
+      .click();
+    await page.getByRole('button', { name: /Unsaved changes/ }).click();
+    await page.getByRole('menuitem', { name: 'Save the changes' }).click();
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Change undone' })).toBeVisible();
+    expect(control.savedViews[0]?.state).toEqual(failedView.state);
+    await expect(page).toHaveURL(/state=failed/);
+  });
+
+  test('puts a view name back', async ({ page }) => {
+    control.savedViews = [failedView];
+    await page.goto('/mail');
+    await page.getByRole('button', { name: /^Views: / }).click();
+    await page.getByRole('menuitem', { name: 'Failures' }).click();
+    await page.getByRole('button', { name: /^Views: / }).click();
+    await page.getByRole('menuitem', { name: 'Rename this view' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Rename the view' });
+    await dialog.getByLabel('View name').fill('Broken');
+    await dialog.getByRole('button', { name: 'Save' }).click();
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect(page.getByRole('button', { name: 'Views: Failures' })).toBeVisible();
+  });
+
+  test('says so when someone else changed it first, and retries', async ({ page }) => {
+    control.savedViews = [failedView];
+    await page.goto('/mail');
+    await page.getByRole('button', { name: /^Views: / }).click();
+    await page.getByRole('menuitem', { name: 'Failures' }).click();
+    await page.getByRole('button', { name: /^Views: / }).click();
+    await page.getByRole('menuitem', { name: 'Rename this view' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Rename the view' });
+    await dialog.getByLabel('View name').fill('Broken');
+    await dialog.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
+    control.nextViewSave = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect(page.getByRole('status')).toContainText('The change could not be undone');
+    await page.getByRole('button', { name: 'Try again' }).click();
+    await expect.poll(() => control.savedViews[0]?.name).toBe('Failures');
   });
 });

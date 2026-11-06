@@ -30,6 +30,17 @@ test.describe('settings page', () => {
     expect(control.tenantSettings).toEqual({ default_locale: 'zh-CN', revision: 2 });
   });
 
+  test('undoes the change', async ({ page }) => {
+    await page.goto('/settings');
+    await page.getByLabel('Default language').selectOption('en');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect
+      .poll(() => control.tenantSettings)
+      .toEqual({ default_locale: 'auto', revision: 3 });
+    await expect(page.getByLabel('Default language')).toHaveValue('auto');
+  });
+
   test('recovers from a save that lost to another administrator', async ({ page }) => {
     await page.goto('/settings');
     await expect(page.getByLabel('Default language')).toBeVisible();

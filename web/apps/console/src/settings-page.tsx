@@ -36,9 +36,17 @@ function LanguageForm({ settings }: { settings: TenantSettings }) {
   const save = useMutation({
     mutationFn: () => updateTenantSettings(value, settings.revision),
     onSuccess: (saved) => {
-      client.setQueryData(settingsKey, saved);
-      setInstallationLocale(saved.default_locale);
-      toast({ message: t('settings.saved') });
+      const apply = (next: TenantSettings) => {
+        client.setQueryData(settingsKey, next);
+        setInstallationLocale(next.default_locale);
+      };
+      apply(saved);
+      toast({
+        message: t('settings.saved'),
+        undo: async () => {
+          apply(await updateTenantSettings(settings.default_locale, saved.revision));
+        },
+      });
     },
     // The next save needs the current revision.
     onError: (error) =>

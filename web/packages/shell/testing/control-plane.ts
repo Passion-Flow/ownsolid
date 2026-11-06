@@ -109,6 +109,7 @@ export interface ScriptedMail {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+  invitation: { id: string; version: number; status: string } | null;
 }
 
 /** A failed invitation email, which the console offers to send again. */
@@ -124,6 +125,7 @@ export const failedMail: ScriptedMail = {
   created_at: '2026-11-04T08:00:00Z',
   updated_at: '2026-11-04T09:00:00Z',
   completed_at: '2026-11-04T09:00:00Z',
+  invitation: { id: '6f1c7a1e-0000-4000-8000-000000000030', version: 2, status: 'pending' },
 };
 
 /** Another failed email, for bulk actions. */
@@ -131,6 +133,7 @@ export const secondFailedMail: ScriptedMail = {
   ...failedMail,
   id: '6f1c7a1e-0000-4000-8000-000000000012',
   recipient_email: 'hedy@example.test',
+  invitation: { id: '6f1c7a1e-0000-4000-8000-000000000031', version: 2, status: 'pending' },
 };
 
 /** A delivered password reset email. */
@@ -142,6 +145,7 @@ export const sentMail: ScriptedMail = {
   state: 'sent',
   attempt_count: 1,
   error_category: null,
+  invitation: null,
 };
 
 /** A saved view of a list. */
@@ -233,6 +237,10 @@ export interface ControlPlane {
   nextViewSave: ScriptedProblem | null;
   /** Fails the delivery list with this problem while set. */
   mailProblem: ScriptedProblem | null;
+  /** Fails the next revocation with this problem, instead of revoking. */
+  nextRevocation: ScriptedProblem | null;
+  /** Bodies of the revocations the server received, in order. */
+  revocations: Record<string, unknown>[];
   /** Fails the next resend with this problem, instead of queuing a new email. */
   nextResend: ScriptedProblem | null;
   /** Idempotency-Key of each resend request, in order. */
@@ -300,6 +308,8 @@ export async function mockControlPlane(
     savedViewsProblem: null,
     nextViewSave: null,
     mailProblem: null,
+    nextRevocation: null,
+    revocations: [],
     nextResend: null,
     resendKeys: [],
   };
@@ -620,6 +630,24 @@ export async function mockControlPlane(
     // The scripted list is newest first, as the server sends it by default.
     const items = query.get('order') === 'oldest' ? [...matching].reverse() : matching;
     return data(route, { items, next_cursor: null });
+  });
+  await page.route('**/api/v1/admin/invitations/*/revocations', (route) => {
+    const request = route.request();
+    if (request.headers()['x-csrf-token'] !== 'csrf-token') {
+      return problem(route, { status: 403, code: 'CSRF_INVALID' });
+    }
+    if (state.nextRevocation) {
+      const scripted = state.nextRevocation;
+      state.nextRevocation = null;
+      return problem(route, scripted);
+    }
+    const id = new URL(request.url()).pathname.split('/').at(-2);
+    state.revocations.push(request.postDataJSON() as Record<string, unknown>);
+    state.mail = state.mail.map((item) => {
+      if (item.invitation === null || item.invitation.id !== id) return item;
+      return { ...item, invitation: { ...item.invitation, status: 'revoked' } };
+    });
+    return data(route, { id, status: 'revoked', version: 3 });
   });
   await page.route('**/api/v1/admin/mail-deliveries/*/resends', (route) => {
     const request = route.request();

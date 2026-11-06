@@ -70,7 +70,12 @@ comes back empty offers to clear the filters.
 3. **Common tasks are one step away.** Quick actions on the overview, single-key
    shortcuts and a command menu (`Cmd+K`) that can run actions, not only navigate.
 4. **Prefer undo to confirmation.** Reversible actions complete immediately and offer
-   undo; only irreversible actions ask for confirmation.
+   undo; only irreversible actions ask for confirmation
+   ([research](../research/undo-and-confirmation.md)). Pass `undo` to the toast; when it
+   returns a promise, a refusal is reported with a retry. An action that cannot be recalled
+   but harms nothing, like sending an email again, just happens. One that cannot be undone
+   and matters if wrong uses `TypedConfirmation`: the person types the target's own name, and
+   the title, button and consequence all name the action.
 5. **Bulk work and copying are always at hand.** Multi-select with a bulk action bar,
    copy buttons next to identifiers, commands and URLs, row actions on hover.
 6. **Guide newcomers without slowing experts.** A setup checklist and empty states that

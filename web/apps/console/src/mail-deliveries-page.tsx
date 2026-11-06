@@ -4,6 +4,7 @@ import {
   isProblem,
   listMailDeliveries,
   resendMailDelivery,
+  revokeInvitation,
   type MailDelivery,
   type MailPurpose,
   type MailState,
@@ -37,7 +38,9 @@ import {
   Table,
   Td,
   Th,
+  TextField,
   Tr,
+  TypedConfirmation,
   useToast,
   type StatusTone,
 } from '@ownsolid/ui';
@@ -64,6 +67,14 @@ const purposes: Record<MailPurpose, TranslationKey> = {
 };
 
 const purposeNames = Object.keys(purposes) as MailPurpose[];
+
+const invitationStates: Record<NonNullable<MailDelivery['invitation']>['status'], TranslationKey> =
+  {
+    pending: 'mail.invitation.pending',
+    accepted: 'mail.invitation.accepted',
+    revoked: 'mail.invitation.revoked',
+    expired: 'mail.invitation.expired',
+  };
 
 // The outbox's error categories. An unknown category shows as a generic reason.
 const reasons: Record<string, TranslationKey> = {
@@ -177,6 +188,64 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+type PendingInvitation = NonNullable<MailDelivery['invitation']>;
+
+/** Revokes an invitation. Its link cannot be brought back, so the address must be typed. */
+function RevokeInvitation({
+  invitation,
+  email,
+  onClose,
+  onDone,
+}: {
+  invitation: PendingInvitation;
+  email: string;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const { t } = useI18n();
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const [reason, setReason] = useState(t('mail.revoke.reason.default'));
+  const revoke = useMutation({
+    mutationFn: () => revokeInvitation(invitation.id, invitation.version, reason.trim()),
+    onSuccess: async () => {
+      toast({ message: t('mail.revoke.done', { email }) });
+      await queryClient.invalidateQueries({ queryKey: listKey });
+      onDone();
+    },
+    // Someone acted on it first: the list shows what is true now.
+    onError: () => queryClient.invalidateQueries({ queryKey: listKey }),
+  });
+  return (
+    <TypedConfirmation
+      title={t('mail.revoke.title')}
+      consequence={t('mail.revoke.consequence', { email })}
+      expected={email}
+      confirmLabel={t('mail.revoke.submit')}
+      pending={revoke.isPending}
+      onClose={onClose}
+      onConfirm={() => {
+        if (reason.trim() !== '') revoke.mutate();
+      }}
+    >
+      <TextField
+        label={t('mail.revoke.reason')}
+        name="reason"
+        autoComplete="off"
+        maxLength={500}
+        required
+        hint={t('mail.revoke.reason.hint')}
+        value={reason}
+        error={reason.trim() === '' ? t('mail.revoke.reason.required') : undefined}
+        onChange={(event) => {
+          setReason(event.target.value);
+        }}
+      />
+      {revoke.error && isProblem(revoke.error) ? <ProblemNotice problem={revoke.error} /> : null}
+    </TypedConfirmation>
+  );
+}
+
 function DeliveryDrawer({
   delivery,
   onClose,
@@ -196,26 +265,56 @@ function DeliveryDrawer({
     },
   });
   const state = delivery ? states[delivery.state] : null;
+  const [revoking, setRevoking] = useState(false);
+  const pendingInvitation = delivery?.invitation?.status === 'pending' ? delivery.invitation : null;
+  const canSend = delivery?.state === 'failed';
   return (
     <Drawer
       open={delivery !== null}
       onClose={onClose}
       title={delivery?.recipient_email}
       footer={
-        delivery?.state === 'failed' ? (
-          <Button
-            variant="primary"
-            disabled={send.isPending}
-            onClick={() => {
-              send.mutate(delivery.id);
-            }}
-          >
-            <RotateCw aria-hidden />
-            {t('mail.resend')}
-          </Button>
+        pendingInvitation || canSend ? (
+          <>
+            {pendingInvitation ? (
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setRevoking(true);
+                }}
+              >
+                {t('mail.revoke.open')}
+              </Button>
+            ) : null}
+            {canSend ? (
+              <Button
+                variant="primary"
+                disabled={send.isPending}
+                onClick={() => {
+                  send.mutate(delivery.id);
+                }}
+              >
+                <RotateCw aria-hidden />
+                {t('mail.resend')}
+              </Button>
+            ) : null}
+          </>
         ) : undefined
       }
     >
+      {revoking && pendingInvitation && delivery ? (
+        <RevokeInvitation
+          invitation={pendingInvitation}
+          email={delivery.recipient_email}
+          onClose={() => {
+            setRevoking(false);
+          }}
+          onDone={() => {
+            setRevoking(false);
+            onClose();
+          }}
+        />
+      ) : null}
       {send.error && isProblem(send.error) ? (
         <ProblemNotice
           className="mb-4"
@@ -231,6 +330,11 @@ function DeliveryDrawer({
             <StatusPill tone={state.tone}>{t(state.label)}</StatusPill>
           </Detail>
           <Detail label={t('mail.column.purpose')}>{t(purposes[delivery.purpose])}</Detail>
+          {delivery.invitation ? (
+            <Detail label={t('mail.detail.invitation')}>
+              {t(invitationStates[delivery.invitation.status])}
+            </Detail>
+          ) : null}
           <Detail label={t('mail.column.reason')}>
             <Reason delivery={delivery} />
           </Detail>
