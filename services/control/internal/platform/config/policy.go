@@ -105,7 +105,17 @@ type NodesPolicy struct {
 	// ResyncPerSecond is the fleet-wide rate at which control grants them (ADR 0011).
 	ResyncIntervalSeconds int `yaml:"resync_interval_seconds"`
 	ResyncPerSecond       int `yaml:"resync_per_second"`
+	// LivenessFlushSeconds is how often control writes last-seen times and the latest
+	// reports to the database; StateRefreshSeconds is the longest a node's state goes
+	// without a synchronous write and its checks (ADR 0022).
+	LivenessFlushSeconds int `yaml:"liveness_flush_seconds"`
+	StateRefreshSeconds  int `yaml:"state_refresh_seconds"`
 }
+
+// PacingWindowSeconds is the part of the online window a heartbeat interval may use: a
+// last-seen time reaches the database up to one flush after the heartbeat.
+func (p NodesPolicy) PacingWindowSeconds() int { return p.OnlineSeconds - p.LivenessFlushSeconds }
+
 type DistributionPolicy struct {
 	RecoverySeconds       int `yaml:"recovery_seconds"`
 	KeyTTLSeconds         int `yaml:"key_ttl_seconds"`
@@ -156,7 +166,7 @@ func DefaultRuntimePolicy() RuntimePolicy {
 		Identity:       IdentityPolicy{InvitationTTLSeconds: 86400, ResetTTLSeconds: 900, PortalIdleSeconds: 1800, PortalAbsoluteSeconds: 43200, AdminIdleSeconds: 900, AdminAbsoluteSeconds: 14400, CSRFSeconds: 900, SessionTouchSeconds: 60, SessionWarningSeconds: 120, IdempotencySeconds: 86400, HashWorkers: 2, HashQueueCapacity: 16, HashAdmissionMilliseconds: 2000, MaxLiveResetTokens: 3, ResetMinimumMilliseconds: 300, ResetJitterMilliseconds: 50, AuditDefaultDays: 7, AuditMaxDays: 31},
 		Mail:           MailPolicy{PollMilliseconds: 1000, AttemptSeconds: 25, LeaseSeconds: 60, MaxAttempts: 5, Retry1Seconds: 15, Retry2Seconds: 60, Retry3Seconds: 180, Retry4Seconds: 300, JitterPercent: 10},
 		Retention:      RetentionPolicy{IntervalSeconds: 60, TimeoutSeconds: 5, BatchSize: 100, MailDays: 30, ResetDays: 30, InvitationDays: 90, SessionDays: 7, RateGraceSeconds: 3600, AuditDays: 180},
-		Nodes:          NodesPolicy{MaximumLiveNodes: 100, MaximumLiveJoinTokens: 100, JoinTTLSeconds: 600, OnlineSeconds: 30, OfflineSeconds: 120, TaskSeconds: 300, InferenceDeploySeconds: 1800, TaskLeaseSeconds: 30, MaximumTaskAttempts: 3, TaskSweepBatch: 100, ReconcileSeconds: 10, ReconcileTimeoutSeconds: 5, MaximumTaskDeliveries: 10, ResyncIntervalSeconds: 300, ResyncPerSecond: 20},
+		Nodes:          NodesPolicy{MaximumLiveNodes: 100, MaximumLiveJoinTokens: 100, JoinTTLSeconds: 600, OnlineSeconds: 30, OfflineSeconds: 120, TaskSeconds: 300, InferenceDeploySeconds: 1800, TaskLeaseSeconds: 30, MaximumTaskAttempts: 3, TaskSweepBatch: 100, ReconcileSeconds: 10, ReconcileTimeoutSeconds: 5, MaximumTaskDeliveries: 10, ResyncIntervalSeconds: 300, ResyncPerSecond: 20, LivenessFlushSeconds: 3, StateRefreshSeconds: 300},
 		Models:         DefaultModelsPolicy(),
 		Distribution:   DistributionPolicy{RecoverySeconds: 600, KeyTTLSeconds: 86400, KeyMaxTTLSeconds: 7776000, KeyMaxActive: 100, AliasMaxActive: 16, MaxConcurrentRequests: 4, RequestSeconds: 90, ContextTokens: 2048, OutputTokens: 512, RequestsPerWindow: 60, RateWindowSeconds: 60},
 		AgentAdmission: DefaultAgentAdmissionPolicy(),
@@ -345,6 +355,9 @@ func (p RuntimePolicy) Validate() error {
 	if p.Nodes.InferenceDeploySeconds < 120 || p.Nodes.InferenceDeploySeconds > 1800 || p.Nodes.InferenceDeploySeconds < p.Nodes.TaskSeconds ||
 		p.Nodes.TaskLeaseSeconds < 10 || p.Nodes.TaskLeaseSeconds > agentwire.TaskLeaseSeconds ||
 		p.Nodes.MaximumTaskAttempts < 1 || p.Nodes.MaximumTaskAttempts > 3 || p.Nodes.TaskSweepBatch < 1 || p.Nodes.TaskSweepBatch > 1000 {
+		return errors.New("CONFIG_NODES_BOUNDS_INVALID")
+	}
+	if p.Nodes.LivenessFlushSeconds < 1 || p.Nodes.LivenessFlushSeconds > 10 || p.Nodes.StateRefreshSeconds < 30 || p.Nodes.StateRefreshSeconds > 3600 || p.Nodes.PacingWindowSeconds() < 1 || !agentwire.DefaultPacing().FitsOnlineWindow(p.Nodes.PacingWindowSeconds()) {
 		return errors.New("CONFIG_NODES_BOUNDS_INVALID")
 	}
 	if p.Nodes.ReconcileSeconds < 1 || p.Nodes.ReconcileSeconds > 60 {

@@ -3,12 +3,12 @@ package deployments_test
 import (
 	"context"
 	"encoding/json"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
@@ -17,6 +17,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/operations/recovery"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
 )
 
 // All machine observations/results here are synthetic protocol fixtures, never GPU evidence.
@@ -430,5 +431,76 @@ func TestReenrollmentCannotBypassUnknownGPUUUIDReservation(t *testing.T) {
 	}
 	if e = c.s.Nodes.DB.QueryRow(ctx, "SELECT count(*) FROM gpu_leases WHERE gpu_uuid=$1 AND state IN ('held','recovery_required')", gpuID).Scan(&count); e != nil || count != 1 {
 		t.Fatal("UUID reservation is not globally exclusive", e, count)
+	}
+}
+
+// Heartbeats that repeat a deployment's state reach its rows in batches, a report of an old
+// revision reaches nothing, and hardware keeps its freshness (ADR 0022).
+func TestUnchangedInferenceObservationsReachTheRowsInBatches(t *testing.T) {
+	c := setup(t)
+	ctx := context.Background()
+	n := c.s.Nodes
+	if e := n.EnableLiveness(ctx); e != nil {
+		t.Fatal(e)
+	}
+	created, e := c.s.Create(ctx, c.a, c.input(), uuid.NewString(), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	lease := c.claim(t)
+	c.complete(t, lease, "running")
+	// The agent repeats the result of its last generation check, with that check's time.
+	verified := time.Now().UTC()
+	beat := func(free int64) {
+		t.Helper()
+		h := c.h
+		o := *result(lease, "running").Inference
+		o.GPUs = slices.Clone(c.h.Inference.GPUs)
+		o.GPUs[0].MemoryFreeMiB, o.GPUs[0].ObservedAt = free, time.Now().UTC()
+		o.Deployment.Verification.ObservedAt = verified
+		h.Inference = &o
+		if _, e := n.Heartbeat(ctx, c.node.NodeID, c.node.Credential, h); e != nil {
+			t.Fatal(e)
+		}
+	}
+	type row struct {
+		hardware, deployment string
+		free                 int64
+		received, observed   time.Time
+	}
+	read := func() row {
+		t.Helper()
+		var r row
+		if e := n.DB.QueryRow(ctx, `SELECT i.xmin::text,d.xmin::text,(i.observation->'gpus'->0->>'memory_free_mib')::bigint,i.received_at,d.observed_at FROM inference_nodes i JOIN deployments d ON d.node_id=i.node_id WHERE d.id=$1`, created.ID).Scan(&r.hardware, &r.deployment, &r.free, &r.received, &r.observed); e != nil {
+			t.Fatal(e)
+		}
+		return r
+	}
+	beat(1000)
+	first := read()
+	beat(900)
+	if again := read(); again != first {
+		t.Fatalf("an unchanged observation wrote: %+v then %+v", first, again)
+	}
+	if e = n.FlushLiveness(ctx); e != nil {
+		t.Fatal(e)
+	}
+	flushed := read()
+	if flushed.free != 900 || !flushed.received.After(first.received) || !flushed.observed.After(first.observed) {
+		t.Fatalf("%+v then %+v", first, flushed)
+	}
+
+	// The deployment moved to a new revision while this report waited: it reaches the
+	// hardware row, which is current, and not the deployment.
+	beat(800)
+	if _, e = n.DB.Exec(ctx, `UPDATE deployments SET revision=revision+1 WHERE id=$1`, created.ID); e != nil {
+		t.Fatal(e)
+	}
+	if e = n.FlushLiveness(ctx); e != nil {
+		t.Fatal(e)
+	}
+	moved := read()
+	if moved.free != 800 || !moved.observed.Equal(flushed.observed) {
+		t.Fatalf("%+v then %+v", flushed, moved)
 	}
 }

@@ -1,6 +1,7 @@
 package training_test
 
 import (
+	"strings"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -41,6 +42,8 @@ type costRun struct {
 	client   *httpfixture.Client
 	post     func(path string, headers map[string]string, body []byte, status int) []byte
 	measured map[string]exchangeCost
+	// flush writes what the heartbeats of this run left in memory (ADR 0022).
+	flush func() error
 }
 
 // measure records one exchange while another transaction holds a shared lock on every row
@@ -74,6 +77,21 @@ func (r *costRun) measure(name string, call agentwire.Call, exchange func()) {
 		r.t.Fatal(e)
 	}
 	r.measured[name] = exchangeCost{call, cost}
+}
+
+// expectNoWrites fails unless an exchange only read, in at most one statement for itself and
+// one for the pacing it may refresh.
+func (r *costRun) expectNoWrites(name string) {
+	r.t.Helper()
+	statements := r.measured[name].cost.Statements
+	if len(statements) > 2 {
+		r.t.Errorf("%s ran %d statements", name, len(statements))
+	}
+	for _, statement := range statements {
+		if !strings.HasPrefix(strings.ToUpper(strings.TrimSpace(statement.Query)), "SELECT") {
+			r.t.Errorf("%s wrote: %s", name, statement.Query)
+		}
+	}
 }
 
 // seedFleet adds nodes with finished tasks and audit history beside the node under test,
@@ -119,12 +137,15 @@ func measureFleet(t *testing.T, nodes int) map[string]exchangeCost {
 	handler.Training.Store = f.s.Store
 	handler.Datasets.Service.Store = f.s.Datasets.Store
 	handler.Datasets.Service.Processor = f.s.Datasets.Processor
+	if e := handler.Nodes.Service.EnableLiveness(context.Background()); e != nil {
+		t.Fatal(e)
+	}
 	server := httpfixture.NewTLSServer(t, handler)
 	t.Cleanup(server.Close)
 	client := httpfixture.New(t, server, "admin", httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json"))
 	client.Headers = map[string]string{"Authorization": "Bearer " + f.credential}
 	base := "/agent/v1/sites/default/cells/default/nodes/" + f.input.NodeID
-	r := &costRun{t: t, f: f, recorder: &recorder, client: client, measured: map[string]exchangeCost{}}
+	r := &costRun{t: t, f: f, recorder: &recorder, client: client, measured: map[string]exchangeCost{}, flush: func() error { return handler.Nodes.Service.FlushLiveness(context.Background()) }}
 	r.post = func(path string, headers map[string]string, body []byte, status int) []byte {
 		t.Helper()
 		request, e := http.NewRequest("POST", httpfixture.AdminOrigin+base+path, bytes.NewReader(body))
@@ -189,6 +210,13 @@ func (r *costRun) exchanges(base string) {
 		r.client.Call("POST", "/agent/v1/enroll", agentwire.Enrollment{JoinToken: join.Token, Handshake: handshake}, 201, "")
 	})
 	r.measure("heartbeat", agentwire.CallHeartbeat, func() { r.client.Call("POST", base+"/heartbeat", handshake, 200, "") })
+	r.measure("heartbeat unchanged", agentwire.CallHeartbeat, func() { r.client.Call("POST", base+"/heartbeat", handshake, 200, "") })
+	r.expectNoWrites("heartbeat unchanged")
+	r.measure("liveness flush", agentwire.CallHeartbeat, func() {
+		if e := r.flush(); e != nil {
+			t.Fatal(e)
+		}
+	})
 	var sequence uint64
 	if e = f.s.DB.QueryRow(ctx, "SELECT task_sequence FROM managed_nodes WHERE id=$1", f.input.NodeID).Scan(&sequence); e != nil {
 		t.Fatal(e)

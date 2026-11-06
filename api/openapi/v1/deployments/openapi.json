@@ -2953,10 +2953,22 @@
           "facts": {
             "$ref": "#/components/schemas/Facts"
           },
+          "connectivity_changed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When control last recorded a change of connectivity. History only: connectivity is derived from last_heartbeat_at and may be ahead of it. Null on MySQL and Dameng."
+          },
           "last_heartbeat_at": {
             "type": "string",
             "format": "date-time",
-            "description": "Last authenticated heartbeat or current task lease renewal; metric/fact observation timestamps remain independent."
+            "description": "Last authenticated heartbeat or current task lease renewal, written in batches and so up to the configured flush interval behind them; metric/fact observation timestamps remain independent."
           },
           "created_at": {
             "type": "string",
@@ -3032,6 +3044,7 @@
           "version",
           "protocol_version",
           "facts",
+          "connectivity_changed_at",
           "last_heartbeat_at",
           "created_at",
           "updated_at",

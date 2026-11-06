@@ -22,6 +22,7 @@ const MaximumDatabaseConnections int32 = 32
 
 type Config struct {
 	Telemetry                 *TelemetryConfiguration       `yaml:"telemetry,omitempty"`
+	LivenessReplica           *LivenessReplicaConfiguration `yaml:"liveness_replica,omitempty"`
 	Topology                  TopologyConfiguration         `yaml:"topology,omitempty" json:"topology"`
 	ReleaseViewConfigFile     string                        `yaml:"release_view_config_file,omitempty" json:"-"`
 	MachineServer             *MachineServerConfiguration   `yaml:"machine_server,omitempty" json:"machine_server,omitempty"`
@@ -235,6 +236,9 @@ func decodeWithEnvironment(b []byte, environmentFile string) (Config, error) {
 }
 func (c Config) Validate() error {
 	if e := c.Telemetry.Validate(); e != nil {
+		return e
+	}
+	if e := c.LivenessReplica.Validate(); e != nil {
 		return e
 	}
 	if e := c.ValidateReleaseViewReference(); e != nil {

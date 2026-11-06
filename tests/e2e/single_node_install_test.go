@@ -365,6 +365,23 @@ func TestSingleNodeInstall(t *testing.T) {
 		}
 	})
 
+	t.Run("repeated heartbeats wait for the batch and write no state", func(t *testing.T) {
+		if agent == nil {
+			t.Skip("no agent")
+		}
+		// The first repeat can take the synchronous path once, as the table learns the state.
+		time.Sleep(12 * time.Second)
+		query := "SELECT updated_at,last_heartbeat_at,connectivity FROM managed_nodes WHERE id='" + agent.nodeID + "'"
+		before := strings.Split(e.sql(t, query), "|")
+		time.Sleep(25 * time.Second)
+		after := strings.Split(e.sql(t, query), "|")
+		if len(before) != 3 || len(after) != 3 || after[0] != before[0] {
+			t.Fatalf("a repeated heartbeat changed the node: %q then %q", before, after)
+		}
+		if after[1] == before[1] || after[2] != "online" {
+			t.Fatalf("last seen did not reach the database: %q then %q", before, after)
+		}
+	})
 	t.Run("serving holds no privileged database identity", func(t *testing.T) {
 		output, err := e.compose(t, "exec", "--no-TTY", "control", "python3", "-c", "import os,sys;sys.exit(os.path.exists('/run/projectone-operator'))")
 		if err != nil {
@@ -450,6 +467,34 @@ func TestSingleNodeInstall(t *testing.T) {
 		agent.stop(t)
 	})
 
+	t.Run("a silent agent is recorded offline and online again", func(t *testing.T) {
+		if agent == nil {
+			t.Skip("no agent")
+		}
+		state := "SELECT connectivity,connectivity_changed_at FROM managed_nodes WHERE id='" + agent.nodeID + "'"
+		waitFor := func(want string, within time.Duration) string {
+			t.Helper()
+			var got string
+			for started := time.Now(); time.Since(started) < within; time.Sleep(2 * time.Second) {
+				got = e.sql(t, state)
+				if strings.HasPrefix(got, want+"|") {
+					return got
+				}
+			}
+			t.Fatalf("connectivity %q after %v, want %s", got, within, want)
+			return ""
+		}
+		agent.start(t)
+		online := waitFor("online", 40*time.Second)
+		agent.stop(t)
+		offline := waitFor("offline", 170*time.Second)
+		agent.start(t)
+		back := waitFor("online", 60*time.Second)
+		agent.stop(t)
+		if online == offline || offline == back {
+			t.Fatalf("change times did not move: %q, %q, %q", online, offline, back)
+		}
+	})
 	t.Run("control sheds an agent over its call limit and the agent waits for the hint", func(t *testing.T) {
 		if agent == nil {
 			t.Skip("no agent is running")

@@ -34,8 +34,7 @@ func (s *Service) ObserveWithin(ctx context.Context, q transaction.Executor, n n
 	if e := o.ValidateForProfile(n.ExecutionProfile); e != nil {
 		return e
 	}
-	verifiedManaged := o.Managed && o.ErrorCode == "" && (o.State == "stopped" || o.State == "running" && o.Metrics != nil)
-	verifiedAbsent := !o.Managed && o.State == "not_installed" && o.ErrorCode == ""
+	verifiedManaged, verifiedAbsent := verifiedObservation(o)
 	var applied *wire.ComponentConfig
 	previous := ""
 	desired := "not_installed"
@@ -61,6 +60,35 @@ func (s *Service) ObserveWithin(ctx context.Context, q transaction.Executor, n n
  ON CONFLICT(node_id,component) DO UPDATE SET version=CASE WHEN $15 THEN EXCLUDED.version ELSE managed_components.version END,observed_state=EXCLUDED.observed_state,managed=EXCLUDED.managed,observation=EXCLUDED.observation,observed_at=clock_timestamp(),updated_at=clock_timestamp(),last_task_id=COALESCE(EXCLUDED.last_task_id,managed_components.last_task_id),applied_config=CASE WHEN $14 THEN EXCLUDED.applied_config ELSE managed_components.applied_config END,previous_version=CASE WHEN $14 THEN EXCLUDED.previous_version ELSE managed_components.previous_version END,last_verified_at=CASE WHEN $14 THEN clock_timestamp() ELSE managed_components.last_verified_at END`, `INSERT INTO managed_components(tenant_id,workspace_id,node_id,component,version,desired_state,observed_state,managed,observation,observed_at,last_task_id,desired_version,desired_config,applied_config,previous_version,last_verified_at)
  VALUES(?,?,?,?,?,?,?,?,CAST(? AS JSON),UTC_TIMESTAMP(6),NULLIF(?,''),?,CAST(? AS JSON),CAST(? AS JSON),NULLIF(?,''),CASE WHEN ? THEN UTC_TIMESTAMP(6) ELSE NULL END) AS incoming
  ON DUPLICATE KEY UPDATE version=CASE WHEN ? THEN incoming.version ELSE managed_components.version END,observed_state=incoming.observed_state,managed=incoming.managed,observation=incoming.observation,observed_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6),last_task_id=COALESCE(incoming.last_task_id,managed_components.last_task_id),applied_config=CASE WHEN ? THEN incoming.applied_config ELSE managed_components.applied_config END,previous_version=CASE WHEN ? THEN incoming.previous_version ELSE managed_components.previous_version END,last_verified_at=CASE WHEN ? THEN UTC_TIMESTAMP(6) ELSE managed_components.last_verified_at END`, "", observationArgs(q, n, o, desired, body, taskID, desiredConfig, applied, previous, verifiedManaged, verifiedAbsent)...))
+	return e
+}
+
+// verifiedObservation says whether an observation proves a managed component or its absence.
+func verifiedObservation(o wire.ComponentObservation) (managed, absent bool) {
+	managed = o.Managed && o.ErrorCode == "" && (o.State == "stopped" || o.State == "running" && o.Metrics != nil)
+	absent = !o.Managed && o.State == "not_installed" && o.ErrorCode == ""
+	return managed, absent
+}
+
+// RecordComponentSightingsWithin writes the latest reports of heartbeats whose state did not
+// change (ADR 0022). The observed time guards a newer synchronous write.
+func (s *Service) RecordComponentSightingsWithin(ctx context.Context, q transaction.Executor, batch []nodes.ComponentSighting) error {
+	if e := s.borrowed(ctx, q); e != nil {
+		return e
+	}
+	if q.Dialect() != transaction.PostgreSQL {
+		return errors.New("STORAGE_UNAVAILABLE")
+	}
+	ids, times, bodies, verified := make([]string, len(batch)), make([]time.Time, len(batch)), make([]string, len(batch)), make([]bool, len(batch))
+	for i, v := range batch {
+		body, e := json.Marshal(v.Observation)
+		if e != nil {
+			return errors.New("VALIDATION_FAILED")
+		}
+		managed, absent := verifiedObservation(v.Observation)
+		ids[i], times[i], bodies[i], verified[i] = v.NodeID, v.At, string(body), managed || absent
+	}
+	_, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `WITH t AS (SELECT c.node_id,c.component,v.at,v.body,v.verified FROM managed_components c JOIN unnest($1::text[],$2::timestamptz[],$3::text[],$4::boolean[]) AS v(node,at,body,verified) ON c.node_id=v.node::uuid WHERE c.component='node_exporter' AND c.observed_at<v.at ORDER BY c.node_id FOR NO KEY UPDATE OF c SKIP LOCKED) UPDATE managed_components c SET observation=t.body::jsonb,observed_at=t.at,updated_at=t.at,last_verified_at=CASE WHEN t.verified THEN t.at ELSE c.last_verified_at END FROM t WHERE c.node_id=t.node_id AND c.component=t.component`, ids, times, bodies, verified))
 	return e
 }
 

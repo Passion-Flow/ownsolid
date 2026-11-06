@@ -143,8 +143,7 @@ func (s *Service) RenewPreparationWithin(ctx context.Context, q transaction.Exec
 		return wire.RenewedLease{}, command, e
 	}
 	out.LeaseExpiresAt = out.LeaseExpiresAt.UTC()
-	_, e = q.Exec(ctx, nodeSQL(q, `UPDATE managed_nodes SET last_heartbeat_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1`, `UPDATE managed_nodes SET last_heartbeat_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE id=?`, `UPDATE managed_nodes SET last_heartbeat_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, n.ID))
-	return out, command, e
+	return out, command, s.noteContactWithin(ctx, q, n.ID)
 }
 
 func preparationClaimAudit(ctx context.Context, q transaction.Executor, n Node, id, request string) error {

@@ -263,3 +263,59 @@ func TestM04MinimalLifecycleCurrentObservationsAndResultAuditRollback(t *testing
 		t.Fatal("later schema activated", e)
 	}
 }
+
+// Heartbeats that repeat a state reach the row in batches, with their latest metrics, and an
+// older report never overwrites a newer synchronous write (ADR 0022).
+func TestUnchangedObservationsReachTheRowInBatches(t *testing.T) {
+	f := setupComposed(t)
+	ctx := context.Background()
+	n := f.service.Nodes
+	if e := n.EnableLiveness(ctx); e != nil {
+		t.Fatal(e)
+	}
+	id := f.enrolled.NodeID
+	beat := func(state string, cpu float64) wire.Handshake {
+		h := f.handshake
+		o := wire.ComponentObservation{Component: wire.NodeExporter, Version: wire.NodeExporterVersion, State: state, Managed: true, ObservedAt: time.Now().UTC()}
+		if state == "running" {
+			o.Metrics = &wire.ComponentMetrics{CPUSecondsTotal: cpu, CPUIdleSecondsTotal: 1, MemoryTotalBytes: 1, MemoryAvailableBytes: 1, FilesystemTotalBytes: 1, FilesystemAvailableBytes: 1}
+		}
+		h.Component = &o
+		if _, e := n.Heartbeat(ctx, id, f.enrolled.Credential, h); e != nil {
+			t.Fatal(e)
+		}
+		return h
+	}
+	read := func() (xmin, state string, cpu float64, observed, verified time.Time) {
+		t.Helper()
+		if e := n.DB.QueryRow(ctx, `SELECT xmin::text,observed_state,COALESCE((observation->'metrics'->>'cpu_seconds_total')::float8,0),observed_at,last_verified_at FROM managed_components WHERE node_id=$1`, id).Scan(&xmin, &state, &cpu, &observed, &verified); e != nil {
+			t.Fatal(e)
+		}
+		return
+	}
+	beat("running", 1)
+	xmin, _, cpu, observed, verified := read()
+	if cpu != 1 {
+		t.Fatal(cpu)
+	}
+	beat("running", 2)
+	if again, _, _, _, _ := read(); again != xmin {
+		t.Fatal("an unchanged observation wrote the row")
+	}
+	if e := n.FlushLiveness(ctx); e != nil {
+		t.Fatal(e)
+	}
+	_, state, cpu, flushedAt, flushedVerified := read()
+	if state != "running" || cpu != 2 || !flushedAt.After(observed) || !flushedVerified.After(verified) {
+		t.Fatal(state, cpu, flushedAt, flushedVerified)
+	}
+
+	beat("running", 3)
+	beat("stopped", 0)
+	if e := n.FlushLiveness(ctx); e != nil {
+		t.Fatal(e)
+	}
+	if _, state, cpu, _, _ = read(); state != "stopped" || cpu != 0 {
+		t.Fatalf("an older report overwrote a newer write: %s %v", state, cpu)
+	}
+}
