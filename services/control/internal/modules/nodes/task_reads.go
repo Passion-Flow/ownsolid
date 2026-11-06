@@ -108,8 +108,10 @@ func foldSteps(reports []stepReport, task TaskSummary) []TaskStep {
 	if task.State == "succeeded" {
 		outcome = wire.ProgressStepSucceeded
 	}
-	for _, index := range open {
-		out[index].State, out[index].FinishedAt = outcome, task.CompletedAt
+	for index := range out {
+		if out[index].State == wire.ProgressStepRunning {
+			out[index].State, out[index].FinishedAt = outcome, task.CompletedAt
+		}
 	}
 	return out
 }

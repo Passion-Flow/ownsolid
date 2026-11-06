@@ -254,13 +254,6 @@ func Info(ctx context.Context, format string, values ...any) {
 	}
 }
 
-// Warning adds a log line about something that did not stop the task.
-func Warning(ctx context.Context, format string, values ...any) {
-	if r := from(ctx); r != nil {
-		r.line(wire.ProgressLevelWarning, fmt.Sprintf(format, values...))
-	}
-}
-
 // Error adds a log line about what stopped the task.
 func Error(ctx context.Context, format string, values ...any) {
 	if r := from(ctx); r != nil {
