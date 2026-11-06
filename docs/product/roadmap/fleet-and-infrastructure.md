@@ -6,6 +6,8 @@ firmware, facility and spares.
 - Owns: `services/control/internal/modules/nodes`, `components`, `services/agent`.
 - Depends on: architecture-and-scale (agent protocol, cells).
 
+Reviewed 2026-11-06 against Kubernetes, Nomad and GitHub runner documentation ([research](../../research/nodes-page.md)). The review added FLT-114 and FLT-115.
+
 ## P1 Enterprise release
 
 - [ ] FLT-101 Inventory model: site, cell, room, row, rack, node, GPU, NIC, disk, with serials and positions (P1) - Catalog: F183
@@ -21,6 +23,8 @@ firmware, facility and spares.
 - [ ] FLT-111 Kubernetes cell lifecycle: create, add nodes, upgrade, certificate rotation (P1) - Catalog: F400, F624
 - [ ] FLT-112 Fleet batch actions with staged rollout and stop on failure (P1)
 - [ ] FLT-113 Console page for agent pacing: current values, change with a reason, the online-window refusal explained (P1)
+- [ ] FLT-114 Nodes page: list with server-side filters and counts, details drawer, rename, disable and remove, add a node with a one-time join token and see it join (P1)
+- [ ] FLT-115 Node events: joined, connectivity changes, status changes and who made them, per node in the details drawer (P1)
 
 ## P2 Fleet operations
 
