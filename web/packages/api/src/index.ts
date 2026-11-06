@@ -114,13 +114,17 @@ export {
 } from './tasks.ts';
 export {
   createJoinToken,
+  getAgentPacing,
   getNode,
   getNodeCounts,
   listJoinTokens,
   listNodeTasks,
   listNodes,
   revokeJoinToken,
+  slowestHeartbeat,
+  updateAgentPacing,
   updateNode,
+  type AgentPacing,
   type JoinToken,
   type MintedJoinToken,
   type Node,
@@ -129,4 +133,5 @@ export {
   type NodePage,
   type NodeStatus,
   type NodeTask,
+  type PacingValues,
 } from './nodes.ts';

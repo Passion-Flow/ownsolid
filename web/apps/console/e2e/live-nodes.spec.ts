@@ -127,6 +127,29 @@ test('adds a node with the commands on the page and works with it', async ({ pag
   const renamedRow = page.getByRole('row', { name: new RegExp(renamed) });
   await expect(renamedRow).toContainText('Online');
 
+  // A pacing change reaches the real agent with its next report, and so does its undo.
+  const pacingLog = () => onHost('grep agent_pacing_changed /var/log/agent.log || true\n');
+  await page.getByRole('link', { name: 'Agent pacing' }).click();
+  await expect(page.getByRole('heading', { name: 'Agent pacing', level: 1 })).toBeVisible();
+  const interval = page.getByLabel('Heartbeat interval (seconds)');
+  const before = await interval.inputValue();
+  await expectAccessible(page);
+  await interval.fill('6');
+  await page.getByLabel('Reason').fill('Live check of agent pacing');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Pacing saved' })).toBeVisible();
+  await expect.poll(pacingLog, { timeout: 60_000 }).toContain('heartbeat_seconds=6 ');
+  // Put back what was there; the undo itself is a mocked flow, since its toast is short-lived.
+  await interval.fill(before);
+  await page.getByLabel('Reason').fill('Live check done');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Pacing saved' })).toBeVisible();
+  await expect
+    .poll(() => pacingLog().trim().split('\n').at(-1) ?? '', { timeout: 60_000 })
+    .toContain(`heartbeat_seconds=${before} `);
+  await page.getByRole('link', { name: 'Nodes', exact: true }).last().click();
+  await page.getByLabel('Filter by name').fill(renamed);
+
   // A token nobody used is listed and revoked.
   const spare = `${name}-spare`;
   await page.getByRole('main').getByRole('button', { name: 'Add node' }).first().click();

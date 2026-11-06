@@ -47,7 +47,8 @@ import {
   useToast,
 } from '@ownsolid/ui';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ban, Plus, RefreshCw, Server } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { Ban, Gauge, Plus, RefreshCw, Server } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { AddNodeDialog } from './add-node-dialog.tsx';
 import { NodeDrawer } from './node-drawer.tsx';
@@ -489,15 +490,24 @@ export function NodesPage() {
           </h1>
           <p className="m-0 text-text-2">{t('nodes.subtitle')}</p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => {
-            setAdding(true);
-          }}
-        >
-          <Plus aria-hidden />
-          {t('nodes.add.open')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/nodes/pacing"
+            className="inline-flex h-9 items-center gap-[7px] rounded-field border border-border-strong bg-surface px-3.5 font-[550] text-text hover:bg-surface-2"
+          >
+            <Gauge aria-hidden className="size-4" />
+            {t('nodes.pacing.open')}
+          </Link>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setAdding(true);
+            }}
+          >
+            <Plus aria-hidden />
+            {t('nodes.add.open')}
+          </Button>
+        </div>
       </div>
       <PendingJoins />
       <div className="mb-3.5 flex flex-wrap items-center gap-2.5">

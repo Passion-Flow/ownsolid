@@ -3682,7 +3682,19 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       },
       "put": {
         "operationId": "updateAgentPacing",
@@ -3743,7 +3755,33 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "409": [
+            "VERSION_CONFLICT",
+            "AGENT_PACING_EXCEEDS_ONLINE_WINDOW",
+            "AGENT_PACING_UNSUPPORTED",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       }
     },
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks": {
@@ -13157,6 +13195,11 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "online_window_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "What one and a half of the longest interval, heartbeat_seconds plus its jitter, must fit in. Set by nodes.online_seconds less the liveness flush interval."
           }
         },
         "required": [
@@ -13165,7 +13208,8 @@
           "reconnect_base_seconds",
           "reconnect_max_seconds",
           "version",
-          "updated_at"
+          "updated_at",
+          "online_window_seconds"
         ]
       },
       "AgentPacingResponse": {

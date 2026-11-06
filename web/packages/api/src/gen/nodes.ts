@@ -2538,6 +2538,8 @@ export interface components {
             version: number;
             /** Format: date-time */
             updated_at: string;
+            /** @description What one and a half of the longest interval, heartbeat_seconds plus its jitter, must fit in. Set by nodes.online_seconds less the liveness flush interval. */
+            online_window_seconds: number;
         };
         AgentPacingResponse: {
             data: components["schemas"]["AgentPacing"];

@@ -72,6 +72,10 @@ func recoveryMutation(r *http.Request) (bool, error) {
 	if (r.Method == http.MethodPut || r.Method == http.MethodDelete) && licensePath(path, "/api/v1/saved-views/:id") {
 		return true, nil
 	}
+	// Pacing protects control from its own fleet, so an operator can slow agents at any time.
+	if r.Method == http.MethodPut && path == "/api/v1/admin/agent-pacing" {
+		return true, nil
+	}
 	if r.Method == http.MethodPatch {
 		if path == "/api/v1/me" || path == "/api/v1/preferences" {
 			return true, nil

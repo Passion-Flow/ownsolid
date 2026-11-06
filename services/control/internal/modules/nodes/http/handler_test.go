@@ -106,13 +106,16 @@ func TestM03HTTPContractAndHumanMachineSeparation(t *testing.T) {
 	// and a reason, and may not mark healthy nodes offline.
 	pacingPath := "/api/v1/admin/agent-pacing"
 	pacing := admin.Call("GET", pacingPath, nil, 200, "AgentPacingResponse")
+	if window, ok := pacing["online_window_seconds"].(float64); !ok || window < 1 {
+		t.Fatal("pacing read has no online window", pacing)
+	}
 	machine.Call("GET", pacingPath, nil, 401, "Problem")
 	portal.Call("GET", pacingPath, nil, 404, "Problem")
 	portal.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 15, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Portal attempt"}, 404, "Problem")
 	admin.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 120, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Too slow"}, 409, "Problem")
 	admin.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 1, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Too fast"}, 400, "Problem")
 	changed := admin.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 15, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Reducing heartbeat load"}, 200, "AgentPacingResponse")
-	if changed["heartbeat_seconds"].(float64) != 15 || changed["version"].(float64) != pacing["version"].(float64)+1 {
+	if changed["heartbeat_seconds"].(float64) != 15 || changed["version"].(float64) != pacing["version"].(float64)+1 || changed["online_window_seconds"] != pacing["online_window_seconds"] {
 		t.Fatal("pacing update", changed)
 	}
 	admin.Write("PUT", pacingPath, map[string]any{"heartbeat_seconds": 16, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120, "version": pacing["version"], "reason": "Stale version"}, 409, "Problem")

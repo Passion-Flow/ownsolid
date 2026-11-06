@@ -26,6 +26,15 @@ export type JoinToken = Schemas['JoinToken'];
 /** A new token, with the secret that is shown this once. */
 export type MintedJoinToken = Schemas['MintedToken'];
 
+/** How the cell's agents report and back off, and the window it must fit. */
+export type AgentPacing = Schemas['AgentPacing'];
+
+/** The values an administrator sets in {@link AgentPacing}. */
+export type PacingValues = Pick<
+  AgentPacing,
+  'heartbeat_seconds' | 'jitter_percent' | 'reconnect_base_seconds' | 'reconnect_max_seconds'
+>;
+
 /** One task of one node. */
 export type NodeTask = Schemas['Task'];
 
@@ -135,4 +144,34 @@ export function revokeJoinToken(
     '/api/v1/sites/{site_id}/cells/{cell_id}/admin/node-join-tokens/{token_id}/revocations',
     { ...options, path: { ...localCell, token_id: id }, body: { reason } },
   );
+}
+
+/** Reads how this cell's agents are paced. */
+export function getAgentPacing(options?: RequestOptions): Promise<AgentPacing> {
+  return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-pacing', {
+    ...options,
+    path: localCell,
+  });
+}
+
+/** Changes the pacing. `version` refuses a change made on stale values. */
+export function updateAgentPacing(
+  values: PacingValues,
+  version: number,
+  reason: string,
+  options?: RequestOptions,
+): Promise<AgentPacing> {
+  return client.put('/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-pacing', {
+    ...options,
+    path: localCell,
+    body: { ...values, version, reason },
+  });
+}
+
+/**
+ * The slowest heartbeat that keeps a healthy node online with `jitterPercent`: one and a half of
+ * the longest interval must fit in the window, as control checks it.
+ */
+export function slowestHeartbeat(windowSeconds: number, jitterPercent: number): number {
+  return Math.floor((200 * windowSeconds) / (3 * (100 + jitterPercent)));
 }
