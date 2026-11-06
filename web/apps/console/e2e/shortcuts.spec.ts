@@ -1,7 +1,13 @@
 // One-character shortcuts: they act at once, never while typing or behind a layer, say so when
 // their page does not exist yet, and a person can turn them off, which follows the account.
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
-import { adminUser, mockControlPlane, type ControlPlane } from '@ownsolid/shell/testing';
+import {
+  adminUser,
+  expectAccessible,
+  memberUser,
+  mockControlPlane,
+  type ControlPlane,
+} from '@ownsolid/shell/testing';
 import { expect, test, type Page } from '@playwright/test';
 
 let control: ControlPlane;
@@ -95,6 +101,83 @@ test('turning them off stops every one-character key and keeps the command menu'
   await page.keyboard.press('Escape');
   await page.keyboard.press('n');
   await expect(addNode(page)).toBeVisible();
+});
+
+test.describe('moving through a list', () => {
+  const others = Array.from({ length: 3 }, (_, index) => ({
+    ...memberUser,
+    id: `6f1c7a1e-0000-4000-8000-3${String(index).padStart(11, '0')}`,
+    email: `person${String(index)}@example.test`,
+    display_name: `Person ${String(index)}`,
+  }));
+  const row = (page: Page, name: string) => page.getByRole('row').filter({ hasText: name });
+
+  test.beforeEach(async ({ page }) => {
+    control.users = others;
+    await page.goto('/users');
+    await expect(row(page, 'Person 0')).toBeVisible();
+  });
+
+  test('J and K move one row, stop at the ends, and Enter opens', async ({ page }) => {
+    const opener = (name: string) =>
+      row(page, name).getByRole('link').or(row(page, name).getByRole('button')).first();
+    await page.keyboard.press('j');
+    await expect(opener('Person 0')).toBeFocused();
+    await page.keyboard.press('k');
+    await expect(opener('Person 0')).toBeFocused();
+    await page.keyboard.press('j');
+    await page.keyboard.press('j');
+    await expect(opener('Person 2')).toBeFocused();
+    await page.keyboard.press('j');
+    await expect(opener('Person 2')).toBeFocused();
+    await page.keyboard.press('k');
+    await expect(opener('Person 1')).toBeFocused();
+    await expectAccessible(page);
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('dialog', { name: 'Person 1' })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`open=${others[1]?.id ?? ''}`));
+  });
+
+  test('K from outside the list starts at its end', async ({ page }) => {
+    await page.keyboard.press('k');
+    await expect(row(page, 'Person 2').getByRole('button').first()).toBeFocused();
+  });
+
+  test('a key does nothing while typing, behind a layer, or with the switch off', async ({
+    page,
+  }) => {
+    const search = page.getByRole('main').getByRole('searchbox');
+    await search.click();
+    await page.keyboard.press('j');
+    await expect(search).toHaveValue('j');
+    await search.fill('');
+    await search.blur();
+    await page.getByRole('button', { name: 'Invite', exact: true }).click();
+    await page.getByRole('dialog').first().waitFor();
+    await page.keyboard.press('Escape');
+    control.preferences.single_key_shortcuts = false;
+    await page.reload();
+    await expect(row(page, 'Person 0')).toBeVisible();
+    await page.keyboard.press('j');
+    await expect(page.locator('main table :focus')).toHaveCount(0);
+  });
+
+  test('Shift+K keeps the action named K in reach', async ({ page }) => {
+    await page.keyboard.press('Shift+K');
+    await expect(page.getByRole('status').filter({ hasText: 'not available yet' })).toBeVisible();
+    await expect(page.locator('main table :focus')).toHaveCount(0);
+  });
+
+  test('the list of shortcuts names them', async ({ page }) => {
+    await page.keyboard.press('?');
+    await expect(list(page).getByText('Move through a list')).toBeVisible();
+  });
+});
+
+test('on a page with no list, K is still the action named K', async ({ page }) => {
+  await overview(page);
+  await page.keyboard.press('k');
+  await expect(page.getByRole('status').filter({ hasText: 'not available yet' })).toBeVisible();
 });
 
 test('the choice follows the account into another browser', async ({ page }) => {

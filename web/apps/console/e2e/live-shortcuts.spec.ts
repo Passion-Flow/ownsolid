@@ -31,6 +31,15 @@ test('shortcuts work, and turning them off follows the account', async ({ page, 
   await expect(page.getByRole('dialog', { name: 'Add a node' })).toBeVisible();
   await page.keyboard.press('Escape');
 
+  // J moves to the first row of a real list, and Enter opens it.
+  await page.goto('/users');
+  await expect(page.getByRole('row').nth(1)).toBeVisible();
+  await page.keyboard.press('j');
+  await expect(page.locator('main table tbody tr').first().locator(':focus')).toHaveCount(1);
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/open=/);
+  await page.keyboard.press('Escape');
+
   await page.goto('/account');
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-checked', 'false');
