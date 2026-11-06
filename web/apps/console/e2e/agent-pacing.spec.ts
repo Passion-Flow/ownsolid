@@ -1,6 +1,6 @@
 // Agent pacing: an administrator slows the fleet's reports with a reason, and is told what the
 // online window allows before control refuses it.
-import { mockControlPlane, type ControlPlane } from '@ownsolid/shell/testing';
+import { expectAccessible, mockControlPlane, type ControlPlane } from '@ownsolid/shell/testing';
 import { expect, test, type Page } from '@playwright/test';
 
 let control: ControlPlane;
@@ -12,6 +12,7 @@ test.beforeEach(async ({ page }) => {
 
 const heartbeat = (page: Page) => page.getByLabel('Heartbeat interval (seconds)');
 const save = (page: Page) => page.getByRole('button', { name: 'Save' });
+const fold = (page: Page) => page.getByText('Advanced settings (3)');
 
 test('is reached from the Nodes page and shows the current pacing', async ({ page }) => {
   await page.goto('/nodes');
@@ -51,6 +52,7 @@ test('explains the online window before control refuses', async ({ page }) => {
   await expect(page.getByText('raise nodes.online_seconds')).toBeVisible();
   await expect(save(page)).toBeDisabled();
   // Less jitter leaves room for a slower interval.
+  await fold(page).click();
   await page.getByLabel('Jitter (percent)').fill('0');
   await heartbeat(page).fill('16');
   await expect(page.getByText('the interval can be up to 16 seconds')).toBeVisible();
@@ -64,6 +66,7 @@ test('checks each value against its bounds', async ({ page }) => {
   await heartbeat(page).fill('ten');
   await expect(page.getByText('Enter a whole number from 5 to 120.')).toBeVisible();
   await heartbeat(page).fill('12');
+  await fold(page).click();
   await page.getByLabel('First retry within (seconds)').fill('30');
   await page.getByLabel('Longest retry wait (seconds)').fill('20');
   await expect(page.getByText('This must be at least the first retry wait.')).toBeVisible();
@@ -110,4 +113,34 @@ test('is not part of the portal', async ({ page }) => {
   control.audience = 'portal';
   await page.goto('/nodes/pacing');
   await expect(heartbeat(page)).toHaveCount(0);
+});
+
+test('keeps what works at its default behind one fold that says how much', async ({ page }) => {
+  await page.goto('/nodes/pacing');
+  await expect(heartbeat(page)).toBeVisible();
+  await expect(page.getByLabel('Jitter (percent)')).toBeHidden();
+  await expect(page.getByLabel('Reason')).toBeVisible();
+  await expectAccessible(page);
+
+  // From the keyboard, and its values still save when it is closed again.
+  await fold(page).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Jitter (percent)')).toBeVisible();
+  await expectAccessible(page);
+  await page.getByLabel('Jitter (percent)').fill('20');
+  await fold(page).click();
+  await expect(page.getByLabel('Jitter (percent)')).toBeHidden();
+  await page.getByLabel('Reason').fill('Spreading the reports');
+  await save(page).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Pacing saved' })).toBeVisible();
+  expect(control.pacing.jitter_percent).toBe(20);
+});
+
+test('a problem behind the fold opens it and keeps it open', async ({ page }) => {
+  await page.goto('/nodes/pacing');
+  await fold(page).click();
+  await page.getByLabel('Jitter (percent)').fill('999');
+  await fold(page).click();
+  await expect(page.getByLabel('Jitter (percent)')).toBeVisible();
+  await expect(save(page)).toBeDisabled();
 });

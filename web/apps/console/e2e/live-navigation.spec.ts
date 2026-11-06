@@ -81,5 +81,13 @@ test('groups, the filter and the rail work, and the rail follows the account', a
   await expect(nav(page).getByText('Pinned', { exact: true })).toHaveCount(0);
   await page.reload();
   await expect(nav(page).getByRole('searchbox', { name: 'Filter pages' })).toBeVisible();
+
+  // A form keeps what works at its default behind one fold.
+  await page.goto('/nodes/pacing');
+  await expect(page.getByLabel('Heartbeat interval (seconds)')).toBeVisible();
+  await expect(page.getByLabel('Jitter (percent)')).toBeHidden();
+  await page.getByText('Advanced settings (3)').click();
+  await expect(page.getByLabel('Jitter (percent)')).toBeVisible();
+  await expectAccessible(page);
   expect(problems).toEqual([]);
 });

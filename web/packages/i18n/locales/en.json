@@ -142,6 +142,8 @@
   "command.switchWorkspace": "Switch to {name}",
   "confirm.irreversible": "This cannot be undone",
   "confirm.type": "Type {text} to confirm",
+  "form.advanced_one": "Advanced settings ({count})",
+  "form.advanced_other": "Advanced settings ({count})",
   "license.active": "Valid",
   "license.check.capacity": "There is room in the history",
   "license.check.deployment": "Made for this installation",

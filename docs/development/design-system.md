@@ -85,6 +85,14 @@ comes back empty offers to clear the filters.
 7. **When something breaks, show the answer.** Diagnostics, exact commands and a
    downloadable diagnostic bundle sit next to the failure.
 
+## Forms
+
+A form shows the common path first. A field with a default that works goes behind `AdvancedFold`, which says how
+many fields it holds. A form has one fold at most, and a problem inside opens it. Anything without a safe default,
+that costs money or capacity, or that cannot be undone stays outside
+([ADR 0037](../decisions/0037-simple-on-the-surface-deep-underneath.md),
+[research](../research/form-disclosure.md)). A form too short to fold simply shows its fields.
+
 ## Application frame
 
 `AppFrame` in `web/packages/shell` is the same on every signed-in page. Add a page by
