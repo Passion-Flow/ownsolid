@@ -97,6 +97,9 @@ this browser. The server checks access to the workspace on every request.
     with the count, the actions and Clear (or Escape). A bulk action reports how many rows
     succeeded and keeps the failed ones selected for a retry.
   - An empty result says whether filters caused it and offers to clear them.
+  - Filters, sort and the open drawer live in the address, so a link shows the same list
+    (UX-114); `CopyLinkButton` copies it. Columns are not part of a link. Sort on the server,
+    with `aria-sort` on the sorted column and its header as a button.
 - **Long-running tasks:** step timeline with durations plus a live log; the task keeps
   running when the user leaves the page.
 - **Charts:** a single series needs no legend; every chart offers a table view and a

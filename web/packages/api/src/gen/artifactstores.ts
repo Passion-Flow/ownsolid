@@ -2,2649 +2,2657 @@
 // Change the contract, then run `make generate`.
 
 export interface paths {
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget_objects"];
-        put?: never;
-        post: operations["adminpost_objects"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/configuration": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget_configuration"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget_objects'];
+    put?: never;
+    post: operations['adminpost_objects'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/configuration': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/expire": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminpost_expire"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget_configuration'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/expire': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget__object_id_"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminpost_expire'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/parts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget__object_id__parts"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget__object_id_'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/parts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/parts/{part_number}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["adminput__object_id__parts__part_number_"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget__object_id__parts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/parts/{part_number}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminpost__object_id__complete"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put: operations['adminput__object_id__parts__part_number_'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/abort": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminpost__object_id__abort"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminpost__object_id__complete'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/abort': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminpost__object_id__delete"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminpost__object_id__abort'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/reconcile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminpost__object_id__reconcile"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminpost__object_id__delete'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/reconcile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/grants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget__object_id__grants"];
-        put?: never;
-        post: operations["adminpost__object_id__grants"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminpost__object_id__reconcile'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/grants': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/grants/{grant_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["admindelete__object_id__grants__grant_id_"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget__object_id__grants'];
+    put?: never;
+    post: operations['adminpost__object_id__grants'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/grants/{grant_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/content": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget__object_id__content"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['admindelete__object_id__grants__grant_id_'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/content': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/model-import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminpost__object_id__model_import"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget__object_id__content'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/model-import': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/dataset-import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminpost__object_id__dataset_import"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminpost__object_id__model_import'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/dataset-import': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget__object_id__ingestions__ingestion_id_"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminpost__object_id__dataset_import'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminpost__object_id__ingestions__ingestion_id__reconcile"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget__object_id__ingestions__ingestion_id_'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/staging": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget_staging"];
-        put?: never;
-        post?: never;
-        delete: operations["admindelete_staging"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminpost__object_id__ingestions__ingestion_id__reconcile'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/staging': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/snapshot": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget__object_id__snapshot"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget_staging'];
+    put?: never;
+    post?: never;
+    delete: operations['admindelete_staging'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/snapshot': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalget_objects"];
-        put?: never;
-        post: operations["portalpost_objects"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget__object_id__snapshot'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/configuration": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalget_configuration"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalget_objects'];
+    put?: never;
+    post: operations['portalpost_objects'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/configuration': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/expire": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalpost_expire"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalget_configuration'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/expire': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalget__object_id_"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalpost_expire'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalget__object_id__parts"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalget__object_id_'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts/{part_number}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["portalput__object_id__parts__part_number_"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalget__object_id__parts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts/{part_number}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalpost__object_id__complete"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put: operations['portalput__object_id__parts__part_number_'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/abort": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalpost__object_id__abort"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalpost__object_id__complete'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/abort': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalpost__object_id__delete"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalpost__object_id__abort'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/reconcile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalpost__object_id__reconcile"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalpost__object_id__delete'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/reconcile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalget__object_id__grants"];
-        put?: never;
-        post: operations["portalpost__object_id__grants"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalpost__object_id__reconcile'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants/{grant_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["portaldelete__object_id__grants__grant_id_"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalget__object_id__grants'];
+    put?: never;
+    post: operations['portalpost__object_id__grants'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants/{grant_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/content": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalget__object_id__content"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['portaldelete__object_id__grants__grant_id_'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/content': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/model-import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalpost__object_id__model_import"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalget__object_id__content'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/model-import': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/dataset-import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalpost__object_id__dataset_import"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalpost__object_id__model_import'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/dataset-import': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalget__object_id__ingestions__ingestion_id_"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalpost__object_id__dataset_import'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalpost__object_id__ingestions__ingestion_id__reconcile"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalget__object_id__ingestions__ingestion_id_'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminget__object_id__ingestions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalpost__object_id__ingestions__ingestion_id__reconcile'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalget__object_id__ingestions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminget__object_id__ingestions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancel only an unclaimed ingestion intent */
-        post: operations["adminpost__object_id__ingestions__ingestion_id__cancel"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalget__object_id__ingestions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancel only an unclaimed ingestion intent */
-        post: operations["portalpost__object_id__ingestions__ingestion_id__cancel"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Cancel only an unclaimed ingestion intent */
+    post: operations['adminpost__object_id__ingestions__ingestion_id__cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
+    get?: never;
+    put?: never;
+    /** Cancel only an unclaimed ingestion intent */
+    post: operations['portalpost__object_id__ingestions__ingestion_id__cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        CreateObject: {
-            name: string;
-            /** @enum {unknown} */
-            purpose: "model_bundle" | "dataset_source";
-            /** Format: int64 */
-            expected_bytes: number;
-            sha256: string;
-            reason: string;
-        };
-        Reason: {
-            reason: string;
-        };
-        GrantRequest: {
-            /** Format: uuid */
-            recipient_user_id: string;
-            /** @enum {unknown} */
-            action: "read" | "ingest_model" | "ingest_dataset";
-            seconds: number;
-            reason: string;
-        };
-        Object: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            name: string;
-            /** @enum {unknown} */
-            purpose: "model_bundle" | "dataset_source";
-            /** Format: int64 */
-            expected_bytes: number;
-            sha256: string;
-            /** Format: int64 */
-            part_bytes: number;
-            /** @enum {unknown} */
-            state: "creating" | "uploading" | "completing" | "ready" | "deleting" | "deleted" | "aborting" | "aborted";
-            revision: number;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-            /** Format: date-time */
-            upload_expires_at: string;
-            /** Format: date-time */
-            expires_at: string;
-            error_code: string | null;
-        };
-        Part: {
-            part_number: number;
-            /** Format: int64 */
-            size_bytes: number;
-            sha256: string;
-            etag: string;
-        };
-        Grant: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            object_id: string;
-            /** Format: uuid */
-            recipient_user_id: string;
-            /** @enum {unknown} */
-            action: "read" | "ingest_model" | "ingest_dataset";
-            /** Format: date-time */
-            not_before: string;
-            /** Format: date-time */
-            expires_at: string;
-            /** Format: date-time */
-            revoked_at: string | null;
-        };
-        Ingestion: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            object_id: string;
-            /** @enum {unknown} */
-            kind: "model" | "dataset";
-            /** Format: uuid */
-            target_id: string | null;
-            /** @enum {unknown} */
-            state: "intent" | "running" | "submitted" | "failed";
-            error_code: string | null;
-        };
-        ModelImport: {
-            name: string;
-            catalog_digest: string;
-            /** @constant */
-            license_acknowledged: true;
-            reason: string;
-        };
-        DatasetImport: {
-            /** Format: uuid */
-            dataset_id: string;
-            source_name: string;
-            reason: string;
-        };
-        Expiry: {
-            limit: number;
-            reason: string;
-        };
-        Capabilities: {
-            /** Format: int64 */
-            maximum_object_bytes: number;
-            /** Format: int64 */
-            part_bytes: number;
-            maximum_grant_seconds: number;
-            can_create: boolean;
-            can_import_model: boolean;
-            can_ingest_dataset: boolean;
-        };
-        StageRecord: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            namespace_id: string;
-            /** Format: int64 */
-            expected_bytes: number;
-            sha256: string;
-            /** @description Exact unsigned 64-bit identity, encoded as a decimal string to avoid browser integer rounding. */
-            device: string;
-            /** @description Exact unsigned 64-bit identity, encoded as a decimal string to avoid browser integer rounding. */
-            inode: string;
-        };
-        CleanupStaging: {
-            record: components["schemas"]["StageRecord"];
-            reason: string;
-        };
-        ExpiryResult: {
-            queued_object_ids: string[];
-            referenced_object_ids: string[];
-        };
+  schemas: {
+    CreateObject: {
+      name: string;
+      /** @enum {unknown} */
+      purpose: 'model_bundle' | 'dataset_source';
+      /** Format: int64 */
+      expected_bytes: number;
+      sha256: string;
+      reason: string;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    Reason: {
+      reason: string;
+    };
+    GrantRequest: {
+      /** Format: uuid */
+      recipient_user_id: string;
+      /** @enum {unknown} */
+      action: 'read' | 'ingest_model' | 'ingest_dataset';
+      seconds: number;
+      reason: string;
+    };
+    Object: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      name: string;
+      /** @enum {unknown} */
+      purpose: 'model_bundle' | 'dataset_source';
+      /** Format: int64 */
+      expected_bytes: number;
+      sha256: string;
+      /** Format: int64 */
+      part_bytes: number;
+      /** @enum {unknown} */
+      state:
+        | 'creating'
+        | 'uploading'
+        | 'completing'
+        | 'ready'
+        | 'deleting'
+        | 'deleted'
+        | 'aborting'
+        | 'aborted';
+      revision: number;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+      /** Format: date-time */
+      upload_expires_at: string;
+      /** Format: date-time */
+      expires_at: string;
+      error_code: string | null;
+    };
+    Part: {
+      part_number: number;
+      /** Format: int64 */
+      size_bytes: number;
+      sha256: string;
+      etag: string;
+    };
+    Grant: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      object_id: string;
+      /** Format: uuid */
+      recipient_user_id: string;
+      /** @enum {unknown} */
+      action: 'read' | 'ingest_model' | 'ingest_dataset';
+      /** Format: date-time */
+      not_before: string;
+      /** Format: date-time */
+      expires_at: string;
+      /** Format: date-time */
+      revoked_at: string | null;
+    };
+    Ingestion: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      object_id: string;
+      /** @enum {unknown} */
+      kind: 'model' | 'dataset';
+      /** Format: uuid */
+      target_id: string | null;
+      /** @enum {unknown} */
+      state: 'intent' | 'running' | 'submitted' | 'failed';
+      error_code: string | null;
+    };
+    ModelImport: {
+      name: string;
+      catalog_digest: string;
+      /** @constant */
+      license_acknowledged: true;
+      reason: string;
+    };
+    DatasetImport: {
+      /** Format: uuid */
+      dataset_id: string;
+      source_name: string;
+      reason: string;
+    };
+    Expiry: {
+      limit: number;
+      reason: string;
+    };
+    Capabilities: {
+      /** Format: int64 */
+      maximum_object_bytes: number;
+      /** Format: int64 */
+      part_bytes: number;
+      maximum_grant_seconds: number;
+      can_create: boolean;
+      can_import_model: boolean;
+      can_ingest_dataset: boolean;
+    };
+    StageRecord: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      namespace_id: string;
+      /** Format: int64 */
+      expected_bytes: number;
+      sha256: string;
+      /** @description Exact unsigned 64-bit identity, encoded as a decimal string to avoid browser integer rounding. */
+      device: string;
+      /** @description Exact unsigned 64-bit identity, encoded as a decimal string to avoid browser integer rounding. */
+      inode: string;
+    };
+    CleanupStaging: {
+      record: components['schemas']['StageRecord'];
+      reason: string;
+    };
+    ExpiryResult: {
+      queued_object_ids: string[];
+      referenced_object_ids: string[];
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    adminget_objects: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                limit: number;
-                after?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"][];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  adminget_objects: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        limit: number;
+        after?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    adminpost_objects: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "Idempotency-Key": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateObject"];
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'][];
+          };
         };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    adminget_configuration: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Capabilities"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminpost_objects: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    adminpost_expire: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Expiry"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["ExpiryResult"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateObject'];
+      };
     };
-    adminget__object_id_: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                grant_id?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
         };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    adminget__object_id__parts: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Part"][];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminget_configuration: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    adminput__object_id__parts__part_number_: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "X-Object-Part-SHA256": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-                part_number: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/octet-stream": string;
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Capabilities'];
+          };
         };
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    adminpost__object_id__complete: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminpost_expire: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    adminpost__object_id__abort: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Expiry'];
+      };
     };
-    adminpost__object_id__delete: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['ExpiryResult'];
+          };
         };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    adminpost__object_id__reconcile: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminget__object_id_: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        grant_id?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    adminget__object_id__grants: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                limit: number;
-                after?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Grant"][];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
         };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    adminpost__object_id__grants: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "Idempotency-Key": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GrantRequest"];
-            };
-        };
-        responses: {
-            /** @description Current scoped result. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Grant"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminget__object_id__parts: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    admindelete__object_id__grants__grant_id_: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-                grant_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Part'][];
+          };
         };
-        responses: {
-            /** @description Current scoped result. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    adminget__object_id__content: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                grant_id?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminput__object_id__parts__part_number_: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'X-Object-Part-SHA256': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+        part_number: number;
+      };
+      cookie?: never;
     };
-    adminpost__object_id__model_import: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                grant_id?: string;
-            };
-            header: {
-                "Idempotency-Key": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModelImport"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/octet-stream': string;
+      };
     };
-    adminpost__object_id__dataset_import: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                grant_id?: string;
-            };
-            header: {
-                "Idempotency-Key": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DatasetImport"];
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
         };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    adminget__object_id__ingestions__ingestion_id_: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-                ingestion_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminpost__object_id__complete: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    adminpost__object_id__ingestions__ingestion_id__reconcile: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                grant_id?: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-                ingestion_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
     };
-    adminget_staging: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                limit: number;
-                after?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["StageRecord"][];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
         };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    admindelete_staging: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CleanupStaging"];
-            };
-        };
-        responses: {
-            /** @description Current scoped result. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminpost__object_id__abort: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    adminget__object_id__snapshot: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
     };
-    portalget_objects: {
-        parameters: {
-            query: {
-                limit: number;
-                after?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"][];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
         };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    portalpost_objects: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateObject"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminpost__object_id__delete: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    portalget_configuration: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Capabilities"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
     };
-    portalpost_expire: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Expiry"];
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
         };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["ExpiryResult"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    portalget__object_id_: {
-        parameters: {
-            query?: {
-                grant_id?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminpost__object_id__reconcile: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    portalget__object_id__parts: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Part"][];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
     };
-    portalput__object_id__parts__part_number_: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-Object-Part-SHA256": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-                part_number: number;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/octet-stream": string;
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
         };
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    portalpost__object_id__complete: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminget__object_id__grants: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        limit: number;
+        after?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    portalpost__object_id__abort: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Grant'][];
+          };
         };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    portalpost__object_id__delete: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminpost__object_id__grants: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    portalpost__object_id__reconcile: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Object"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GrantRequest'];
+      };
     };
-    portalget__object_id__grants: {
-        parameters: {
-            query: {
-                limit: number;
-                after?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Current scoped result. */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Grant"][];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Grant'];
+          };
         };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    portalpost__object_id__grants: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GrantRequest"];
-            };
-        };
-        responses: {
-            /** @description Current scoped result. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Grant"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  admindelete__object_id__grants__grant_id_: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+        grant_id: string;
+      };
+      cookie?: never;
     };
-    portaldelete__object_id__grants__grant_id_: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-                grant_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Current scoped result. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
     };
-    portalget__object_id__content: {
-        parameters: {
-            query?: {
-                grant_id?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Current scoped result. */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content?: never;
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    portalpost__object_id__model_import: {
-        parameters: {
-            query?: {
-                grant_id?: string;
-            };
-            header: {
-                "Idempotency-Key": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModelImport"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminget__object_id__content: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        grant_id?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    portalpost__object_id__dataset_import: {
-        parameters: {
-            query?: {
-                grant_id?: string;
-            };
-            header: {
-                "Idempotency-Key": string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DatasetImport"];
-            };
+        content: {
+          'application/octet-stream': string;
         };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
-    portalget__object_id__ingestions__ingestion_id_: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-                ingestion_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminpost__object_id__model_import: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        grant_id?: string;
+      };
+      header: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    portalpost__object_id__ingestions__ingestion_id__reconcile: {
-        parameters: {
-            query?: {
-                grant_id?: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-                ingestion_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Accepted durable intent; remote completion is observed separately. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModelImport'];
+      };
     };
-    adminget__object_id__ingestions: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                limit: number;
-                after?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"][];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
         };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    portalget__object_id__ingestions: {
-        parameters: {
-            query: {
-                limit: number;
-                after?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"][];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  adminpost__object_id__dataset_import: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        grant_id?: string;
+      };
+      header: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
     };
-    adminpost__object_id__ingestions__ingestion_id__cancel: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                object_id: string;
-                ingestion_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Confirmed cancellation or immutable cancellation replay */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DatasetImport'];
+      };
     };
-    portalpost__object_id__ingestions__ingestion_id__cancel: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                object_id: string;
-                ingestion_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
         };
-        responses: {
-            /** @description Confirmed cancellation or immutable cancellation replay */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["Ingestion"];
-                    };
-                };
-            };
-            /** @description Canonical problem response; no result projection on error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content?: never;
+      };
     };
+  };
+  adminget__object_id__ingestions__ingestion_id_: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+        ingestion_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  adminpost__object_id__ingestions__ingestion_id__reconcile: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        grant_id?: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+        ingestion_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  adminget_staging: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        limit: number;
+        after?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['StageRecord'][];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  admindelete_staging: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CleanupStaging'];
+      };
+    };
+    responses: {
+      /** @description Current scoped result. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  adminget__object_id__snapshot: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/octet-stream': string;
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalget_objects: {
+    parameters: {
+      query: {
+        limit: number;
+        after?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'][];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost_objects: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateObject'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalget_configuration: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Capabilities'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost_expire: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Expiry'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['ExpiryResult'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalget__object_id_: {
+    parameters: {
+      query?: {
+        grant_id?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalget__object_id__parts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Part'][];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalput__object_id__parts__part_number_: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-Object-Part-SHA256': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+        part_number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/octet-stream': string;
+      };
+    };
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost__object_id__complete: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost__object_id__abort: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost__object_id__delete: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost__object_id__reconcile: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Object'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalget__object_id__grants: {
+    parameters: {
+      query: {
+        limit: number;
+        after?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Grant'][];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost__object_id__grants: {
+    parameters: {
+      query?: never;
+      header: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GrantRequest'];
+      };
+    };
+    responses: {
+      /** @description Current scoped result. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Grant'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portaldelete__object_id__grants__grant_id_: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+        grant_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Current scoped result. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalget__object_id__content: {
+    parameters: {
+      query?: {
+        grant_id?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/octet-stream': string;
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost__object_id__model_import: {
+    parameters: {
+      query?: {
+        grant_id?: string;
+      };
+      header: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModelImport'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost__object_id__dataset_import: {
+    parameters: {
+      query?: {
+        grant_id?: string;
+      };
+      header: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DatasetImport'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalget__object_id__ingestions__ingestion_id_: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+        ingestion_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost__object_id__ingestions__ingestion_id__reconcile: {
+    parameters: {
+      query?: {
+        grant_id?: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+        ingestion_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Accepted durable intent; remote completion is observed separately. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  adminget__object_id__ingestions: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        limit: number;
+        after?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'][];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalget__object_id__ingestions: {
+    parameters: {
+      query: {
+        limit: number;
+        after?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'][];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  adminpost__object_id__ingestions__ingestion_id__cancel: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        object_id: string;
+        ingestion_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Confirmed cancellation or immutable cancellation replay */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  portalpost__object_id__ingestions__ingestion_id__cancel: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        object_id: string;
+        ingestion_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Confirmed cancellation or immutable cancellation replay */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: components['schemas']['Ingestion'];
+          };
+        };
+      };
+      /** @description Canonical problem response; no result projection on error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
 }

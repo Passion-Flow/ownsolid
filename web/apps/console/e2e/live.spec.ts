@@ -130,6 +130,10 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
     // The list pattern against the real API: a saved view, a recipient filter and the drawer.
     await page.getByLabel('Filter by recipient').fill(email.slice(0, 4));
     await expect(page.getByRole('row').nth(1)).toContainText(email);
+    // The filter is in the address, so reloading or sharing it shows the same list.
+    await expect(page).toHaveURL(new RegExp(`recipient=${email.slice(0, 4)}`));
+    await page.reload();
+    await expect(page.getByLabel('Filter by recipient')).toHaveValue(email.slice(0, 4));
     await page.getByLabel('Filter by recipient').fill('');
     await page.getByRole('button', { name: /^Views: / }).click();
     await page.getByRole('menuitem', { name: 'Save as a new view' }).click();

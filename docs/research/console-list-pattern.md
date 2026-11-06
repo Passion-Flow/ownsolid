@@ -55,6 +55,24 @@ and portal builds on it, so it is settled once here.
   lists are server-paged and need only these few states; its code would weigh on every page's
   budget for logic of a few dozen lines.
 
+## Shareable links (UX-114)
+
+- **The address holds what someone would share: filters, sort and the open row.** The visible
+  columns are the reader's own preference, so a link does not impose them. Saved views stay
+  personal; a link is how one person shows a list to another.
+- **A link wins over this browser's memory.** Without one, the remembered screen comes back
+  and is written into the address, so the address always shows what is on screen.
+- **Changes replace the history entry.** Back leaves the page instead of stepping through
+  every filter, which is what people expect from a filter bar.
+- **The query string is read as text.** The router's default parser reads JSON values, which
+  would turn a recipient filter of `123` into a number; the list reads and writes its own
+  parameters with `URLSearchParams` and leaves others alone.
+- **Links are untrusted input.** Unknown parameters and values, and malformed row IDs, are
+  ignored the same way an old saved view's are.
+- **Sorting is server-side,** like filtering, so paging stays correct: the mail list takes
+  `order=oldest`, and a cursor made in one order is refused in the other. The sorted column
+  carries `aria-sort`, and its header is a button.
+
 ## Licences
 
 No new dependency. The server change uses PostgreSQL only.

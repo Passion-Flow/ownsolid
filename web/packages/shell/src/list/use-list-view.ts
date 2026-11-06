@@ -1,5 +1,7 @@
-// A list's filters, columns and saved views. What is on screen is remembered per person in
-// this browser; a saved view keeps it on the server, so it follows the account.
+// A list's filters, columns and saved views. The filters, sort and open row live in the
+// address, so a link shows the same list to whoever opens it (UX-114); the visible columns are
+// the person's own. What is on screen is also remembered in this browser, and a saved view
+// keeps it on the server, so it follows the account.
 import {
   deleteSavedView,
   isProblem,
@@ -8,16 +10,20 @@ import {
   type SavedView,
 } from '@ownsolid/api';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter, useRouterState } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSession } from '../session.ts';
 import {
   emptyListState,
+  linksList,
+  readListLink,
   readListState,
   sameListState,
   withColumn,
   withFilter,
   type ListDefinition,
   type ListState,
+  writeListLink,
 } from './list-state.ts';
 
 function readStored(key: string): { state?: unknown; view?: unknown } {
@@ -37,6 +43,9 @@ export interface ListView {
   setFilter: (name: string, value: string) => void;
   setColumnVisible: (id: string, visible: boolean) => void;
   isColumnVisible: (id: string) => boolean;
+  /** The row whose drawer is open, from the address. */
+  openRow: string | null;
+  setOpenRow: (id: string | null) => void;
   clearFilters: () => void;
   views: readonly SavedView[];
   /** False when this installation cannot store views, or they could not load. */
@@ -61,8 +70,43 @@ export function useListView(definition: ListDefinition): ListView {
   const client = useQueryClient();
   const storageKey = `ownsolid.list.${definition.key}.${me?.user.id ?? 'visitor'}`;
   const [stored] = useState(() => readStored(storageKey));
-  const [state, setState] = useState(() => readListState(stored.state, definition));
+  const router = useRouter();
+  const location = useRouterState({ select: (current) => current.location });
+  const link = useMemo(
+    () => readListLink(location.searchStr, definition),
+    [location.searchStr, definition],
+  );
+  const [hiddenColumns, setHiddenColumns] = useState(
+    () => readListState(stored.state, definition).hiddenColumns,
+  );
+  const state: ListState = useMemo(
+    () => ({ filters: link.filters, hiddenColumns }),
+    [link.filters, hiddenColumns],
+  );
   const [activeId, setActiveId] = useState(typeof stored.view === 'string' ? stored.view : null);
+  // Every change replaces the entry: Back leaves the page rather than stepping through filters.
+  const show = useCallback(
+    (filters: ListState['filters'], open: string | null) => {
+      const current = router.state.location;
+      const search = writeListLink(current.searchStr, definition, filters, open);
+      if (search === current.searchStr || (search === '' && current.searchStr === '?')) return;
+      void router.navigate({
+        href: `${current.pathname}${search}${current.hash ? `#${current.hash}` : ''}`,
+        replace: true,
+      });
+    },
+    [router, definition],
+  );
+  // A link decides what the list shows. Without one, this browser's last screen comes back,
+  // and the address shows it, so copying the address shares what is on screen.
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    if (restored) return;
+    setRestored(true);
+    if (!linksList(location.searchStr, definition)) {
+      show(readListState(stored.state, definition).filters, null);
+    }
+  }, [restored, location.searchStr, definition, show, stored.state]);
   const queryKey = useMemo(() => ['saved-views', definition.key] as const, [definition.key]);
   const query = useQuery({
     queryKey,
@@ -123,14 +167,18 @@ export function useListView(definition: ListDefinition): ListView {
     definition,
     state,
     setFilter: (name, value) => {
-      setState((current) => withFilter(current, name, value));
+      show(withFilter(state, name, value).filters, link.open);
     },
     setColumnVisible: (id, visible) => {
-      setState((current) => withColumn(current, id, visible));
+      setHiddenColumns(withColumn(state, id, visible).hiddenColumns);
     },
     isColumnVisible: (id) => !state.hiddenColumns.includes(id),
+    openRow: link.open,
+    setOpenRow: (id) => {
+      show(state.filters, id);
+    },
     clearFilters: () => {
-      setState((current) => ({ ...current, filters: {} }));
+      show({}, link.open);
     },
     views,
     viewsAvailable: query.isSuccess,
@@ -139,11 +187,16 @@ export function useListView(definition: ListDefinition): ListView {
       ? !sameListState(readListState(activeView.state, definition), state)
       : false,
     openView: (view) => {
+      const next = view ? readListState(view.state, definition) : emptyListState;
       setActiveId(view?.id ?? null);
-      setState(view ? readListState(view.state, definition) : emptyListState);
+      setHiddenColumns(next.hiddenColumns);
+      show(next.filters, null);
     },
     revert: () => {
-      if (activeView) setState(readListState(activeView.state, definition));
+      if (!activeView) return;
+      const saved = readListState(activeView.state, definition);
+      setHiddenColumns(saved.hiddenColumns);
+      show(saved.filters, link.open);
     },
     saveAs: async (id, name) => {
       const saved = await put(id, name, state, 0);

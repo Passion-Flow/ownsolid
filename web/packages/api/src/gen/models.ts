@@ -2,976 +2,1040 @@
 // Change the contract, then run `make generate`.
 
 export interface paths {
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/catalog": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["getApprovedModelCatalog"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/catalog': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["listAdminModels"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['getApprovedModelCatalog'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/models': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["getAdminModel"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['listAdminModels'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}/retire": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["retireModelVersion"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['getAdminModel'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}/retire': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["listModelImports"];
-        put?: never;
-        post: operations["startModelImport"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['retireModelVersion'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["resolveModelImportIntent"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['listModelImports'];
+    put?: never;
+    post: operations['startModelImport'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["getModelImport"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['resolveModelImportIntent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/chunks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Upload one exact next offset or replay identical bytes. Reuse a current CSRF token across sequential chunks; uncertain results reconcile through import status and the same offset/digest. */
-        post: operations["uploadModelImportChunk"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['getModelImport'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/chunks': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["queueModelImport"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description Upload one exact next offset or replay identical bytes. Reuse a current CSRF token across sequential chunks; uncertain results reconcile through import status and the same offset/digest. */
+    post: operations['uploadModelImportChunk'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["cancelModelImport"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['queueModelImport'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["listPortalModels"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['cancelModelImport'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models/{model_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["getPortalModel"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['listPortalModels'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models/{model_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
+    get: operations['getPortalModel'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        ModelFile: {
-            /** @enum {string} */
-            path: "LICENSE" | "README.md" | "config.json" | "generation_config.json" | "merges.txt" | "model.safetensors" | "tokenizer.json" | "tokenizer_config.json" | "vocab.json";
-            size_bytes: number;
-            sha256: string;
-        };
-        ModelCatalog: {
-            /** @constant */
-            repository: "Qwen/Qwen3-0.6B";
-            /** @constant */
-            revision: "c1899de289a04d12100db370d81485cdf75e47ca";
-            /** @constant */
-            license: "Apache-2.0";
-            /** @constant */
-            schema_version: 1;
-            /** @constant */
-            model_key: "qwen3-0.6b";
-            /** @constant */
-            format: "safetensors";
-            /** @constant */
-            architecture: "Qwen3ForCausalLM";
-            /** @constant */
-            model_type: "qwen3";
-            /** @constant */
-            max_context: 2048;
-            files: components["schemas"]["ModelFile"][];
-        };
-        DerivedModelCatalog: {
-            /** @constant */
-            schema_version: 1;
-            /** @constant */
-            kind: "merged_lora";
-            scope: {
-                /** Format: uuid */
-                tenant_id: string;
-                /** Format: uuid */
-                workspace_id: string;
-                /** Format: uuid */
-                preparation_id: string;
-            };
-            /** Format: uuid */
-            model_id: string;
-            /** Format: uuid */
-            base_model_id: string;
-            /** Format: uuid */
-            attempt_id: string;
-            /** Format: uuid */
-            artifact_id: string;
-            /** @constant */
-            base_catalog_sha256: "4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc";
-            report_sha256: string;
-            /** @constant */
-            recipe_sha256: "758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496";
-            /** @constant */
-            base_repository: "Qwen/Qwen3-0.6B";
-            /** @constant */
-            base_revision: "c1899de289a04d12100db370d81485cdf75e47ca";
-            /** @constant */
-            license: "Apache-2.0";
-            /** @constant */
-            format: "safetensors";
-            /** @constant */
-            architecture: "Qwen3ForCausalLM";
-            /** @constant */
-            model_type: "qwen3";
-            /** @constant */
-            precision: "BF16";
-            /** @constant */
-            maximum_context_tokens: 2048;
-            files: [
-                {
-                    /** @constant */
-                    path: "LICENSE";
-                    /** @constant */
-                    size_bytes: 11343;
-                    /** @constant */
-                    sha256: "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e";
-                },
-                {
-                    /** @constant */
-                    path: "README.md";
-                    /** @constant */
-                    size_bytes: 13965;
-                    /** @constant */
-                    sha256: "1ab64a26fcb3b461423b89a433a8c858f1bf8d4086f979cbb3ff878d47cf20e9";
-                },
-                {
-                    /** @constant */
-                    path: "config.json";
-                    /** @constant */
-                    size_bytes: 726;
-                    /** @constant */
-                    sha256: "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd";
-                },
-                {
-                    /** @constant */
-                    path: "generation_config.json";
-                    /** @constant */
-                    size_bytes: 239;
-                    /** @constant */
-                    sha256: "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2";
-                },
-                {
-                    /** @constant */
-                    path: "merges.txt";
-                    /** @constant */
-                    size_bytes: 1671853;
-                    /** @constant */
-                    sha256: "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5";
-                },
-                {
-                    /** @constant */
-                    path: "model.safetensors";
-                    size_bytes: number;
-                    sha256: string;
-                },
-                {
-                    /** @constant */
-                    path: "tokenizer.json";
-                    /** @constant */
-                    size_bytes: 11422654;
-                    /** @constant */
-                    sha256: "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4";
-                },
-                {
-                    /** @constant */
-                    path: "tokenizer_config.json";
-                    /** @constant */
-                    size_bytes: 9732;
-                    /** @constant */
-                    sha256: "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101";
-                },
-                {
-                    /** @constant */
-                    path: "vocab.json";
-                    /** @constant */
-                    size_bytes: 2776833;
-                    /** @constant */
-                    sha256: "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910";
-                }
-            ];
-        };
-        ModelVersion: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            name: string;
-            /** @constant */
-            model_key: "qwen3-0.6b";
-            catalog_digest: string;
-            /** @enum {string} */
-            kind: "approved_base" | "merged_lora";
-            manifest: components["schemas"]["ModelCatalog"] | components["schemas"]["DerivedModelCatalog"];
-            /** @constant */
-            state: "ready";
-            /** Format: date-time */
-            created_at: string;
-        } & (unknown & unknown);
-        ModelImport: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            name: string;
-            catalog_digest: string;
-            expected_bytes: number;
-            uploaded_bytes: number;
-            /** @enum {string} */
-            state: "uploading" | "queued" | "verifying" | "ready" | "failed" | "cancelled";
-            error_code: string | null;
-            model_id: string | null;
-            attempts: number;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        StartModelImport: {
-            /** Format: uuid */
-            workspace_id: string;
-            name: string;
-            catalog_digest: string;
-            expected_bytes: number;
-            /** @constant */
-            license_acknowledged: true;
-            reason: string;
-        };
-        ModelImportResolution: {
-            /** @enum {string} */
-            status: "found" | "absent";
-            import: components["schemas"]["ModelImport"] | null;
-        } & (unknown & unknown);
-        ModelRetirement: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** @constant */
-            state: "deleted";
-            /** @constant */
-            artifact_retention: "immutable_files_retained";
-        };
-        Reason: {
-            reason: string;
-        };
-        ModelCatalogAvailability: {
-            catalog: components["schemas"]["ModelCatalog"];
-            catalog_digest: string;
-            /** @constant */
-            chunk_bytes: 8388608;
-            /** @constant */
-            minimum_bundle_bytes: 1519216128;
-            maximum_bundle_bytes: number;
-            maximum_attempts: number;
-            storage_available: boolean;
-        };
-        ModelList: {
-            items: components["schemas"]["ModelVersion"][];
-        };
-        ModelImportList: {
-            items: components["schemas"]["ModelImport"][];
-        };
-        Problem: {
-            /** @constant */
-            type: "about:blank";
-            title: string;
-            status: number;
-            /** @enum {string} */
-            code: "VALIDATION_FAILED" | "INVALID_CURSOR" | "TOKEN_UNUSABLE" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "ACCESS_DENIED" | "CSRF_INVALID" | "ORIGIN_REJECTED" | "RESOURCE_NOT_FOUND" | "ACCOUNT_EXISTS" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "VERSION_CONFLICT" | "IDEMPOTENCY_CONFLICT" | "PROTECTED_ACCOUNT" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "MISDIRECTED_REQUEST" | "PASSWORD_POLICY_VIOLATION" | "PASSWORD_BLOCKED" | "RATE_LIMITED" | "INTERNAL_ERROR" | "STORAGE_UNAVAILABLE" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "AUTH_CAPACITY_EXCEEDED" | "SERVICE_NOT_READY" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "LICENSE_CONFIGURATION_REQUIRED" | "MODEL_VERSION_REFERENCED" | "MODEL_REFERENCE_CHECK_UNAVAILABLE" | "MODEL_STORAGE_UNAVAILABLE" | "MODEL_IMPORT_BUSY" | "MODEL_ALREADY_EXISTS" | "MODEL_IMPORT_STATE_CONFLICT" | "MODEL_IMPORT_INCOMPLETE" | "MODEL_CHUNK_INVALID" | "MODEL_CHUNK_CONFLICT" | "MODEL_CHUNK_OFFSET_MISMATCH" | "MODEL_CLEANUP_CONFLICT" | "MODEL_IO_FAILED" | "MODEL_PATH_INVALID" | "MODEL_DERIVED_CATALOG_INVALID" | "MODEL_DERIVED_STORAGE_INVALID" | "MODEL_DERIVED_COPY_BUSY" | "MODEL_DERIVED_PARTIAL_COPY_RETAINED" | "MODEL_DERIVED_COPY_POLICY_INVALID" | "MODEL_DERIVED_COPY_ATTEMPT_LIMIT" | "MODEL_DERIVED_DISK_SPACE_LOW" | "MODEL_DERIVED_REGISTRATION_UNAVAILABLE" | "MODEL_DERIVED_REVIEW_REQUIRED" | "MODEL_DERIVED_IDENTITY_CONFLICT" | "MODEL_DERIVED_ALREADY_RETIRED";
-            /** Format: uuid */
-            request_id: string;
-            detail?: string;
-            fields?: {
-                field: string;
-                code: string;
-            }[];
-        };
-        ModelCatalogAvailabilityResponse: {
-            data: components["schemas"]["ModelCatalogAvailability"];
-        };
-        ModelListResponse: {
-            data: components["schemas"]["ModelList"];
-        };
-        ModelVersionResponse: {
-            data: components["schemas"]["ModelVersion"];
-        };
-        ModelRetirementResponse: {
-            data: components["schemas"]["ModelRetirement"];
-        };
-        ModelImportListResponse: {
-            data: components["schemas"]["ModelImportList"];
-        };
-        ModelImportResponse: {
-            data: components["schemas"]["ModelImport"];
-        };
-        ModelImportResolutionResponse: {
-            data: components["schemas"]["ModelImportResolution"];
-        };
+  schemas: {
+    ModelFile: {
+      /** @enum {string} */
+      path:
+        | 'LICENSE'
+        | 'README.md'
+        | 'config.json'
+        | 'generation_config.json'
+        | 'merges.txt'
+        | 'model.safetensors'
+        | 'tokenizer.json'
+        | 'tokenizer_config.json'
+        | 'vocab.json';
+      size_bytes: number;
+      sha256: string;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    ModelCatalog: {
+      /** @constant */
+      repository: 'Qwen/Qwen3-0.6B';
+      /** @constant */
+      revision: 'c1899de289a04d12100db370d81485cdf75e47ca';
+      /** @constant */
+      license: 'Apache-2.0';
+      /** @constant */
+      schema_version: 1;
+      /** @constant */
+      model_key: 'qwen3-0.6b';
+      /** @constant */
+      format: 'safetensors';
+      /** @constant */
+      architecture: 'Qwen3ForCausalLM';
+      /** @constant */
+      model_type: 'qwen3';
+      /** @constant */
+      max_context: 2048;
+      files: components['schemas']['ModelFile'][];
+    };
+    DerivedModelCatalog: {
+      /** @constant */
+      schema_version: 1;
+      /** @constant */
+      kind: 'merged_lora';
+      scope: {
+        /** Format: uuid */
+        tenant_id: string;
+        /** Format: uuid */
+        workspace_id: string;
+        /** Format: uuid */
+        preparation_id: string;
+      };
+      /** Format: uuid */
+      model_id: string;
+      /** Format: uuid */
+      base_model_id: string;
+      /** Format: uuid */
+      attempt_id: string;
+      /** Format: uuid */
+      artifact_id: string;
+      /** @constant */
+      base_catalog_sha256: '4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc';
+      report_sha256: string;
+      /** @constant */
+      recipe_sha256: '758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496';
+      /** @constant */
+      base_repository: 'Qwen/Qwen3-0.6B';
+      /** @constant */
+      base_revision: 'c1899de289a04d12100db370d81485cdf75e47ca';
+      /** @constant */
+      license: 'Apache-2.0';
+      /** @constant */
+      format: 'safetensors';
+      /** @constant */
+      architecture: 'Qwen3ForCausalLM';
+      /** @constant */
+      model_type: 'qwen3';
+      /** @constant */
+      precision: 'BF16';
+      /** @constant */
+      maximum_context_tokens: 2048;
+      files: [
+        {
+          /** @constant */
+          path: 'LICENSE';
+          /** @constant */
+          size_bytes: 11343;
+          /** @constant */
+          sha256: '832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e';
+        },
+        {
+          /** @constant */
+          path: 'README.md';
+          /** @constant */
+          size_bytes: 13965;
+          /** @constant */
+          sha256: '1ab64a26fcb3b461423b89a433a8c858f1bf8d4086f979cbb3ff878d47cf20e9';
+        },
+        {
+          /** @constant */
+          path: 'config.json';
+          /** @constant */
+          size_bytes: 726;
+          /** @constant */
+          sha256: '660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd';
+        },
+        {
+          /** @constant */
+          path: 'generation_config.json';
+          /** @constant */
+          size_bytes: 239;
+          /** @constant */
+          sha256: '2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2';
+        },
+        {
+          /** @constant */
+          path: 'merges.txt';
+          /** @constant */
+          size_bytes: 1671853;
+          /** @constant */
+          sha256: '8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5';
+        },
+        {
+          /** @constant */
+          path: 'model.safetensors';
+          size_bytes: number;
+          sha256: string;
+        },
+        {
+          /** @constant */
+          path: 'tokenizer.json';
+          /** @constant */
+          size_bytes: 11422654;
+          /** @constant */
+          sha256: 'aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4';
+        },
+        {
+          /** @constant */
+          path: 'tokenizer_config.json';
+          /** @constant */
+          size_bytes: 9732;
+          /** @constant */
+          sha256: 'd5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101';
+        },
+        {
+          /** @constant */
+          path: 'vocab.json';
+          /** @constant */
+          size_bytes: 2776833;
+          /** @constant */
+          sha256: 'ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910';
+        },
+      ];
+    };
+    ModelVersion: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      name: string;
+      /** @constant */
+      model_key: 'qwen3-0.6b';
+      catalog_digest: string;
+      /** @enum {string} */
+      kind: 'approved_base' | 'merged_lora';
+      manifest:
+        components['schemas']['ModelCatalog'] | components['schemas']['DerivedModelCatalog'];
+      /** @constant */
+      state: 'ready';
+      /** Format: date-time */
+      created_at: string;
+    } & (unknown & unknown);
+    ModelImport: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      name: string;
+      catalog_digest: string;
+      expected_bytes: number;
+      uploaded_bytes: number;
+      /** @enum {string} */
+      state: 'uploading' | 'queued' | 'verifying' | 'ready' | 'failed' | 'cancelled';
+      error_code: string | null;
+      model_id: string | null;
+      attempts: number;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+    };
+    StartModelImport: {
+      /** Format: uuid */
+      workspace_id: string;
+      name: string;
+      catalog_digest: string;
+      expected_bytes: number;
+      /** @constant */
+      license_acknowledged: true;
+      reason: string;
+    };
+    ModelImportResolution: {
+      /** @enum {string} */
+      status: 'found' | 'absent';
+      import: components['schemas']['ModelImport'] | null;
+    } & (unknown & unknown);
+    ModelRetirement: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** @constant */
+      state: 'deleted';
+      /** @constant */
+      artifact_retention: 'immutable_files_retained';
+    };
+    Reason: {
+      reason: string;
+    };
+    ModelCatalogAvailability: {
+      catalog: components['schemas']['ModelCatalog'];
+      catalog_digest: string;
+      /** @constant */
+      chunk_bytes: 8388608;
+      /** @constant */
+      minimum_bundle_bytes: 1519216128;
+      maximum_bundle_bytes: number;
+      maximum_attempts: number;
+      storage_available: boolean;
+    };
+    ModelList: {
+      items: components['schemas']['ModelVersion'][];
+    };
+    ModelImportList: {
+      items: components['schemas']['ModelImport'][];
+    };
+    Problem: {
+      /** @constant */
+      type: 'about:blank';
+      title: string;
+      status: number;
+      /** @enum {string} */
+      code:
+        | 'VALIDATION_FAILED'
+        | 'INVALID_CURSOR'
+        | 'TOKEN_UNUSABLE'
+        | 'AUTH_INVALID_CREDENTIALS'
+        | 'AUTH_REQUIRED'
+        | 'AUTH_SESSION_EXPIRED'
+        | 'ACCESS_DENIED'
+        | 'CSRF_INVALID'
+        | 'ORIGIN_REJECTED'
+        | 'RESOURCE_NOT_FOUND'
+        | 'ACCOUNT_EXISTS'
+        | 'INVITATION_EXISTS'
+        | 'INVITATION_STATE_CONFLICT'
+        | 'VERSION_CONFLICT'
+        | 'IDEMPOTENCY_CONFLICT'
+        | 'PROTECTED_ACCOUNT'
+        | 'PAYLOAD_TOO_LARGE'
+        | 'UNSUPPORTED_MEDIA_TYPE'
+        | 'MISDIRECTED_REQUEST'
+        | 'PASSWORD_POLICY_VIOLATION'
+        | 'PASSWORD_BLOCKED'
+        | 'RATE_LIMITED'
+        | 'INTERNAL_ERROR'
+        | 'STORAGE_UNAVAILABLE'
+        | 'STORAGE_COMMIT_OUTCOME_UNKNOWN'
+        | 'AUTH_CAPACITY_EXCEEDED'
+        | 'SERVICE_NOT_READY'
+        | 'LICENSE_NEW_BUSINESS_UNAVAILABLE'
+        | 'LICENSE_STORED_STATE_INVALID'
+        | 'LICENSE_CONFIGURATION_REQUIRED'
+        | 'MODEL_VERSION_REFERENCED'
+        | 'MODEL_REFERENCE_CHECK_UNAVAILABLE'
+        | 'MODEL_STORAGE_UNAVAILABLE'
+        | 'MODEL_IMPORT_BUSY'
+        | 'MODEL_ALREADY_EXISTS'
+        | 'MODEL_IMPORT_STATE_CONFLICT'
+        | 'MODEL_IMPORT_INCOMPLETE'
+        | 'MODEL_CHUNK_INVALID'
+        | 'MODEL_CHUNK_CONFLICT'
+        | 'MODEL_CHUNK_OFFSET_MISMATCH'
+        | 'MODEL_CLEANUP_CONFLICT'
+        | 'MODEL_IO_FAILED'
+        | 'MODEL_PATH_INVALID'
+        | 'MODEL_DERIVED_CATALOG_INVALID'
+        | 'MODEL_DERIVED_STORAGE_INVALID'
+        | 'MODEL_DERIVED_COPY_BUSY'
+        | 'MODEL_DERIVED_PARTIAL_COPY_RETAINED'
+        | 'MODEL_DERIVED_COPY_POLICY_INVALID'
+        | 'MODEL_DERIVED_COPY_ATTEMPT_LIMIT'
+        | 'MODEL_DERIVED_DISK_SPACE_LOW'
+        | 'MODEL_DERIVED_REGISTRATION_UNAVAILABLE'
+        | 'MODEL_DERIVED_REVIEW_REQUIRED'
+        | 'MODEL_DERIVED_IDENTITY_CONFLICT'
+        | 'MODEL_DERIVED_ALREADY_RETIRED';
+      /** Format: uuid */
+      request_id: string;
+      detail?: string;
+      fields?: {
+        field: string;
+        code: string;
+      }[];
+    };
+    ModelCatalogAvailabilityResponse: {
+      data: components['schemas']['ModelCatalogAvailability'];
+    };
+    ModelListResponse: {
+      data: components['schemas']['ModelList'];
+    };
+    ModelVersionResponse: {
+      data: components['schemas']['ModelVersion'];
+    };
+    ModelRetirementResponse: {
+      data: components['schemas']['ModelRetirement'];
+    };
+    ModelImportListResponse: {
+      data: components['schemas']['ModelImportList'];
+    };
+    ModelImportResponse: {
+      data: components['schemas']['ModelImport'];
+    };
+    ModelImportResolutionResponse: {
+      data: components['schemas']['ModelImportResolution'];
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getApprovedModelCatalog: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelCatalogAvailabilityResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  getApprovedModelCatalog: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    listAdminModels: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelListResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelCatalogAvailabilityResponse'];
         };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    getAdminModel: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                model_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelVersionResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  listAdminModels: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    retireModelVersion: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                model_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
+        content: {
+          'application/json': components['schemas']['ModelListResponse'];
         };
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelRetirementResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    listModelImports: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelImportListResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  getAdminModel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        model_id: string;
+      };
+      cookie?: never;
     };
-    startModelImport: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StartModelImport"];
-            };
+        content: {
+          'application/json': components['schemas']['ModelVersionResponse'];
         };
-        responses: {
-            /** @description Scoped result */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelImportResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    resolveModelImportIntent: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                idempotency_key: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelImportResolutionResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  retireModelVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        model_id: string;
+      };
+      cookie?: never;
     };
-    getModelImport: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                import_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelImportResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
     };
-    uploadModelImportChunk: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "X-Chunk-Offset": string;
-                "X-Chunk-SHA256": string;
-                "Content-Length": number;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                import_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/octet-stream": string;
-            };
+        content: {
+          'application/json': components['schemas']['ModelRetirementResponse'];
         };
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelImportResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    queueModelImport: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                import_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Scoped result */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelImportResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  listModelImports: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    cancelModelImport: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                import_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
+        content: {
+          'application/json': components['schemas']['ModelImportListResponse'];
         };
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelImportResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    listPortalModels: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelListResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  startModelImport: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    getPortalModel: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                model_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelVersionResponse"];
-                };
-            };
-            /** @description Stable error; no host paths, raw diagnostics or credentials */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StartModelImport'];
+      };
     };
+    responses: {
+      /** @description Scoped result */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelImportResponse'];
+        };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  resolveModelImportIntent: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        idempotency_key: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelImportResolutionResponse'];
+        };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  getModelImport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        import_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelImportResponse'];
+        };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  uploadModelImportChunk: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'X-Chunk-Offset': string;
+        'X-Chunk-SHA256': string;
+        'Content-Length': number;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        import_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/octet-stream': string;
+      };
+    };
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelImportResponse'];
+        };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  queueModelImport: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        import_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Scoped result */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelImportResponse'];
+        };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  cancelModelImport: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        import_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelImportResponse'];
+        };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  listPortalModels: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelListResponse'];
+        };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  getPortalModel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        model_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelVersionResponse'];
+        };
+      };
+      /** @description Stable error; no host paths, raw diagnostics or credentials */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
 }

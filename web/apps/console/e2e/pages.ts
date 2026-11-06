@@ -122,6 +122,16 @@ export const consolePages: readonly PageState[] = [
     },
   },
   {
+    name: 'email delivery from a link, oldest first, with a drawer',
+    path: '/mail',
+    open: async (page, control) => {
+      control.mail = [failedMail, secondFailedMail, sentMail];
+      control.signedIn = true;
+      await page.goto(`/mail?order=oldest&open=${failedMail.id}`);
+      await page.getByRole('dialog', { name: failedMail.recipient_email }).waitFor();
+    },
+  },
+  {
     name: 'email delivery with no matches',
     path: '/mail',
     open: async (page, control) => {

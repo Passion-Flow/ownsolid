@@ -363,3 +363,91 @@ test.describe('detail drawer', () => {
     await expect(drawer.getByRole('button', { name: 'Send again' })).toHaveCount(0);
   });
 });
+
+test.describe('shareable links', () => {
+  test.beforeEach(() => {
+    control.mail = [failedMail, secondFailedMail, sentMail];
+  });
+
+  test('puts the filters, the sort and the open drawer in the address', async ({ page }) => {
+    await page.goto('/mail');
+    await page
+      .getByRole('group', { name: 'Show emails' })
+      .getByRole('button', { name: 'Failed' })
+      .click();
+    await page.getByLabel('Filter by recipient').fill('he');
+    await expect(page).toHaveURL(/[?&]recipient=he(&|$)/);
+    await page.getByRole('button', { name: /^Created/ }).click();
+    await page
+      .getByRole('button', { name: 'Show details of the email to hedy@example.test' })
+      .click();
+    const url = new URL(page.url());
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      order: 'oldest',
+      recipient: 'he',
+      state: 'failed',
+      open: secondFailedMail.id,
+    });
+  });
+
+  test('shows what a link names to someone who has never been here', async ({ page }) => {
+    await page.goto(`/mail?state=failed&order=oldest&open=${failedMail.id}`);
+    await expect(page.getByRole('dialog', { name: 'grace@example.test' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page).not.toHaveURL(/open=/);
+    const rows = page.getByRole('row');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.nth(1)).toContainText('hedy@example.test');
+    await expect(page.getByRole('row', { name: /ada@example\.test/ })).toHaveCount(0);
+    await expect(page.getByRole('columnheader', { name: /^Created/ })).toHaveAttribute(
+      'aria-sort',
+      'ascending',
+    );
+  });
+
+  test('lets a link win over what this browser remembers', async ({ page }) => {
+    await page.goto('/mail');
+    await page
+      .getByRole('group', { name: 'Show emails' })
+      .getByRole('button', { name: 'Sent' })
+      .click();
+    await expect(page.getByRole('row', { name: /grace@example\.test/ })).toHaveCount(0);
+    await page.goto('/mail?state=failed');
+    await expect(page.getByRole('row', { name: /grace@example\.test/ })).toBeVisible();
+    await expect(page.getByRole('row', { name: /ada@example\.test/ })).toHaveCount(0);
+  });
+
+  test('shows the remembered screen in the address when there is no link', async ({ page }) => {
+    await page.goto('/mail');
+    await page
+      .getByRole('group', { name: 'Show emails' })
+      .getByRole('button', { name: 'Failed' })
+      .click();
+    await page.goto('/mail');
+    await expect(page).toHaveURL(/\?state=failed$/);
+  });
+
+  test('ignores what a link names that the page does not have', async ({ page }) => {
+    await page.goto('/mail?state=gone&purpose=spam&open=..%2F..&utm=x');
+    await expect(page.getByRole('row', { name: /ada@example\.test/ })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
+  test('keeps the address to a single history entry', async ({ page }) => {
+    await page.goto('/');
+    await page.goto('/mail');
+    const filter = page.getByRole('group', { name: 'Show emails' });
+    await filter.getByRole('button', { name: 'Failed' }).click();
+    await filter.getByRole('button', { name: 'Sent' }).click();
+    await page.goBack();
+    await expect(page.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
+  });
+
+  test('copies the link', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto('/mail?state=failed');
+    await page.getByRole('button', { name: 'Copy a link to this list' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Link copied' })).toBeVisible();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(page.url());
+  });
+});

@@ -27,10 +27,12 @@ export function listMailDeliveries(
     state?: MailState | undefined;
     purpose?: MailPurpose | undefined;
     recipientPrefix?: string | undefined;
+    /** Newest first unless `oldest`. */
+    order?: 'oldest' | undefined;
   },
   options?: RequestOptions,
 ): Promise<MailDeliveryPage> {
-  const { limit, cursor, state, purpose, recipientPrefix } = query;
+  const { limit, cursor, state, purpose, recipientPrefix, order } = query;
   return client.get('/api/v1/admin/mail-deliveries', {
     ...options,
     query: {
@@ -39,6 +41,7 @@ export function listMailDeliveries(
       ...(state ? { state } : {}),
       ...(purpose ? { purpose } : {}),
       ...(recipientPrefix ? { recipient_prefix: recipientPrefix } : {}),
+      ...(order ? { order } : {}),
     },
   });
 }

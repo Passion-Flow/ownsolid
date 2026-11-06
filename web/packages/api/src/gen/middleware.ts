@@ -2,1248 +2,1347 @@
 // Change the contract, then run `make generate`.
 
 export interface paths {
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalListMiddleware"];
-        put?: never;
-        post: operations["portalRegisterMiddleware"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/profiles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalMiddlewareProfiles"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalListMiddleware'];
+    put?: never;
+    post: operations['portalRegisterMiddleware'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/profiles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalReadMiddleware"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["portalChangeMiddleware"];
-        trace?: never;
+    get: operations['portalMiddlewareProfiles'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}/operations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalMiddlewareHistory"];
-        put?: never;
-        post: operations["portalEnqueueMiddleware"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalReadMiddleware'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['portalChangeMiddleware'];
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}/operations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalMiddlewareRegistrationIntent"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalMiddlewareHistory'];
+    put?: never;
+    post: operations['portalEnqueueMiddleware'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalMiddlewareOperationIntent"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalMiddlewareRegistrationIntent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operations/{operation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalMiddlewareOperation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalMiddlewareOperationIntent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operations/{operation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminListMiddleware"];
-        put?: never;
-        post: operations["adminRegisterMiddleware"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalMiddlewareOperation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/profiles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminMiddlewareProfiles"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminListMiddleware'];
+    put?: never;
+    post: operations['adminRegisterMiddleware'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/profiles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminReadMiddleware"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["adminChangeMiddleware"];
-        trace?: never;
+    get: operations['adminMiddlewareProfiles'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}/operations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminMiddlewareHistory"];
-        put?: never;
-        post: operations["adminEnqueueMiddleware"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminReadMiddleware'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['adminChangeMiddleware'];
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}/operations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminMiddlewareRegistrationIntent"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminMiddlewareHistory'];
+    put?: never;
+    post: operations['adminEnqueueMiddleware'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminMiddlewareOperationIntent"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminMiddlewareRegistrationIntent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operations/{operation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminMiddlewareOperation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminMiddlewareOperationIntent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operations/{operation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
+    get: operations['adminMiddlewareOperation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        Problem: {
-            /** @constant */
-            type: "about:blank";
-            title: string;
-            status: number;
-            /** @enum {string} */
-            code: "ACCESS_DENIED" | "ACCOUNT_EXISTS" | "AUTH_CAPACITY_EXCEEDED" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "CSRF_INVALID" | "IDEMPOTENCY_CONFLICT" | "INTERNAL_ERROR" | "INVALID_CURSOR" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "LICENSE_CONFIGURATION_REQUIRED" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "MIDDLEWARE_AMBIENT_DRIVER_INPUT_REFUSED" | "MIDDLEWARE_ARTIFACT_ROOT_MISMATCH" | "MIDDLEWARE_ATTEMPT_STALE" | "MIDDLEWARE_BACKUP_EVIDENCE_INVALID" | "MIDDLEWARE_CA_INPUT_INVALID" | "MIDDLEWARE_COMPLETED_BACKUP_REQUIRED" | "MIDDLEWARE_CONFIGURATION_INVALID" | "MIDDLEWARE_CONNECTION_CONFIGURATION_INVALID" | "MIDDLEWARE_CONNECTION_FAILED" | "MIDDLEWARE_ENDPOINT_IDENTITY_MISMATCH" | "MIDDLEWARE_ENVIRONMENT_INVALID" | "MIDDLEWARE_EXECUTION_UNCERTAIN" | "MIDDLEWARE_EXTERNAL_MUTATION_REFUSED" | "MIDDLEWARE_FRESH_TARGET_REQUIRED" | "MIDDLEWARE_IDENTITY_REPOSITORY_REQUIRED" | "MIDDLEWARE_INPUT_CHANGED" | "MIDDLEWARE_INSTALLED_PLATFORM_REQUIRED" | "MIDDLEWARE_INSTANCE_LIMIT" | "MIDDLEWARE_ISOLATED_CONFIRMATION_REQUIRED" | "MIDDLEWARE_ISOLATED_TARGET_INVALID" | "MIDDLEWARE_OPERATION_DEADLINE_REQUIRED" | "MIDDLEWARE_OPERATOR_RECONCILIATION_REQUIRED" | "MIDDLEWARE_ORIGINAL_OPERATOR_INTENT_REQUIRED" | "MIDDLEWARE_ORIGINAL_UNCERTAIN_OPERATION_REQUIRED" | "MIDDLEWARE_PASSWORD_INPUT_INVALID" | "MIDDLEWARE_PLATFORM_SCOPE_DUPLICATE" | "MIDDLEWARE_PLATFORM_SCOPE_MISMATCH" | "MIDDLEWARE_PLATFORM_SCOPE_REQUIRED" | "MIDDLEWARE_PRIVATE_INPUT_CHANGED" | "MIDDLEWARE_PRIVATE_INPUT_INVALID" | "MIDDLEWARE_PRIVILEGE_OBSERVATION_FAILED" | "MIDDLEWARE_PROBE_FAILED" | "MIDDLEWARE_PROFILE_ALREADY_REGISTERED" | "MIDDLEWARE_PROFILE_DUPLICATE" | "MIDDLEWARE_PROFILE_INVALID" | "MIDDLEWARE_PROFILE_UNAVAILABLE" | "MIDDLEWARE_REASON_TOO_LONG" | "MIDDLEWARE_RESTORE_FENCE_CHANGED" | "MIDDLEWARE_RESTORE_TRANSACTION_REQUIRED" | "MIDDLEWARE_RESULT_INVALID" | "MIDDLEWARE_SCHEMA_REJECTED" | "MIDDLEWARE_SCOPE_CHANGED" | "MIDDLEWARE_STORAGE_MISMATCH" | "MIDDLEWARE_STORAGE_UNAVAILABLE" | "MIDDLEWARE_STORED_EVIDENCE_INVALID" | "MIDDLEWARE_STORED_INSTANCE_INVALID" | "MIDDLEWARE_STORED_INTENT_INVALID" | "MIDDLEWARE_VERIFIED_TLS_REQUIRED" | "MIDDLEWARE_VERSION_LIMIT" | "MIDDLEWARE_WORKER_ALREADY_RUNNING" | "MISDIRECTED_REQUEST" | "ORIGIN_REJECTED" | "PASSWORD_BLOCKED" | "PASSWORD_POLICY_VIOLATION" | "PAYLOAD_TOO_LARGE" | "PROTECTED_ACCOUNT" | "RATE_LIMITED" | "RESOURCE_NOT_FOUND" | "SERVICE_NOT_READY" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "STORAGE_UNAVAILABLE" | "TOKEN_UNUSABLE" | "UNSUPPORTED_MEDIA_TYPE" | "VALIDATION_FAILED" | "VERSION_CONFLICT";
-            /** Format: uuid */
-            request_id: string;
-            detail?: string;
-            fields?: {
-                field: string;
-                code: string;
-            }[];
-        };
-        Profile: {
-            key: string;
-            /** @enum {string} */
-            kind: "platform_owned" | "customer_external";
-            health: boolean;
-            backup: boolean;
-            restore_targets: string[];
-        };
-        Profiles: components["schemas"]["Profile"][];
-        Instance: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            profile_key: string;
-            /** @enum {string} */
-            kind: "platform_owned" | "customer_external";
-            name: string;
-            version: number;
-            /** @enum {string} */
-            state: "active" | "archived";
-            /** Format: date-time */
-            created_at: string;
-        };
-        Register: {
-            profile_key: string;
-            name: string;
-            /** Format: uuid */
-            idempotency_key: string;
-        };
-        Change: {
-            name: string;
-            /** @enum {string} */
-            state: "active" | "archived";
-            version: number;
-            refresh_inputs: boolean;
-            reason: string;
-        };
-        Enqueue: {
-            /** @enum {string} */
-            kind: "health" | "backup" | "isolated_restore" | "reconcile";
-            reason: string;
-            /** Format: uuid */
-            idempotency_key: string;
-            version: number;
-            /** Format: uuid */
-            backup_id?: string;
-            target_key?: string;
-            confirm_isolated: boolean;
-            /** Format: uuid */
-            original_operation_id?: string;
-        };
-        Observation: {
-            /** Format: date-time */
-            observed_at: string;
-            database: string;
-            user: string;
-            server_address: string;
-            server_port: number;
-            version_number: number;
-            in_recovery: boolean;
-            tls_version: string;
-            tls_cipher: string;
-            superuser: boolean;
-            create_role: boolean;
-            create_database: boolean;
-            create_schema: boolean;
-            create_any_schema_objects: boolean;
-            read_all_tables: boolean;
-            write_any_table: boolean;
-            table_count: number;
-            /** Format: uuid */
-            platform_tenant_id?: string;
-        };
-        DatabaseSource: {
-            database: string;
-            operator: string;
-            server_version_number: number;
-            /** Format: uuid */
-            tenant_id: string;
-            schema_version: number;
-            vector_version: string;
-        };
-        NativePostgreSQLRegistryReference: {
-            receipt_sha256: string;
-            manifest_sha256: string;
-            payload_tree_sha256: string;
-            pins: number;
-            files: number;
-            bytes: number;
-        };
-        NativePostgreSQLBackupReference: {
-            /** @constant */
-            format_version: 1;
-            /** @constant */
-            application_profile: "mvp-postgresql-cpu-v1";
-            source_manifest_sha256: string;
-            /** @constant */
-            schema_version: 29;
-            /** @constant */
-            table_count: 108;
-            request_sha256: string;
-            candidate_sha256: string;
-            completion_sha256: string;
-            readback_sha256: string;
-            mvp_source_sha256: string;
-            registry_configured: boolean;
-            registry?: components["schemas"]["NativePostgreSQLRegistryReference"];
-        } & unknown;
-        NativePostgreSQLRegistryImportReference: {
-            snapshot_receipt_sha256: string;
-            import_receipt_sha256: string;
-            readback_sha256: string;
-        };
-        NativePostgreSQLRestoreReference: {
-            /** @constant */
-            format_version: 1;
-            /** @constant */
-            application_profile: "mvp-postgresql-cpu-v1";
-            backup: components["schemas"]["NativePostgreSQLBackupReference"];
-            request_sha256: string;
-            manifest_sha256: string;
-            intent_sha256: string;
-            files_sha256: string;
-            completion_sha256: string;
-            files_readback_sha256: string;
-            observation_sha256: string;
-            target_binding_sha256: string;
-            post_data_sha256: string;
-            registry?: components["schemas"]["NativePostgreSQLRegistryImportReference"];
-        } & unknown;
-        Stage: {
-            /** @enum {string} */
-            command: "backup" | "inspect-backup" | "reconcile-backup" | "inspect-restore-source" | "inspect-restore-target" | "prepare-restore" | "reconcile-restore-reservation" | "restore-sql" | "reconcile-restore-sql" | "qualify-restored-database" | "reconcile-restored-database" | "restore-stores" | "reconcile-restored-stores";
-            status: string;
-            scope_id?: string;
-            attempt_id?: string;
-            pending: boolean;
-            completed_steps?: number;
-            total_steps?: number;
-            manifest_sha256?: string;
-            proof_sha256?: string;
-            qualification: string;
-            evidence_sha256: string;
-            source_scope_id?: string;
-            source?: components["schemas"]["DatabaseSource"];
-            plan_sha256?: string;
-            stores?: ("datasets" | "models" | "preparations" | "training")[];
-            profile?: string;
-            release_manifest_sha256?: string;
-            native_postgresql?: components["schemas"]["NativePostgreSQLBackupReference"] | components["schemas"]["NativePostgreSQLRestoreReference"];
-        };
-        MySQLObservation: {
-            /** Format: date-time */
-            observed_at: string;
-            database: string;
-            user: string;
-            /** Format: uuid */
-            server_uuid: string;
-            version: string;
-            /** @enum {string} */
-            tls_version: "TLSv1.2" | "TLSv1.3";
-            tls_cipher: string;
-            read_only: boolean;
-            super_read_only: boolean;
-            visible_table_count: number;
-        };
-        Evidence: {
-            /** @constant */
-            format_version: 1;
-            /** @enum {string} */
-            kind: "health" | "backup" | "isolated_restore";
-            observation?: components["schemas"]["Observation"];
-            mysql_observation?: components["schemas"]["MySQLObservation"];
-            stages?: components["schemas"]["Stage"][];
-            /** Format: uuid */
-            original_operation_id?: string;
-        } & ({
-            /** @constant */
-            kind?: "health";
-        } | {
-            /** @constant */
-            kind?: "health";
-        } | {
-            /** @enum {string} */
-            kind?: "backup" | "isolated_restore";
-        });
-        Operation: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            instance_id: string;
-            /** @enum {string} */
-            kind: "health" | "backup" | "isolated_restore" | "reconcile";
-            /** @enum {string} */
-            state: "queued" | "running" | "succeeded" | "failed" | "unknown";
-            error_code?: string;
-            result?: components["schemas"]["Evidence"];
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        InstancePage: {
-            items: components["schemas"]["Instance"][];
-            next_cursor: string | null;
-        };
-        OperationPage: {
-            items: components["schemas"]["Operation"][];
-            next_cursor: string | null;
-        };
-        InstancePageResponse: {
-            data: components["schemas"]["InstancePage"];
-        };
-        InstanceResponse: {
-            data: components["schemas"]["Instance"];
-        };
-        ProfilesResponse: {
-            data: components["schemas"]["Profiles"];
-        };
-        OperationPageResponse: {
-            data: components["schemas"]["OperationPage"];
-        };
-        OperationResponse: {
-            data: components["schemas"]["Operation"];
-        };
+  schemas: {
+    Problem: {
+      /** @constant */
+      type: 'about:blank';
+      title: string;
+      status: number;
+      /** @enum {string} */
+      code:
+        | 'ACCESS_DENIED'
+        | 'ACCOUNT_EXISTS'
+        | 'AUTH_CAPACITY_EXCEEDED'
+        | 'AUTH_INVALID_CREDENTIALS'
+        | 'AUTH_REQUIRED'
+        | 'AUTH_SESSION_EXPIRED'
+        | 'CSRF_INVALID'
+        | 'IDEMPOTENCY_CONFLICT'
+        | 'INTERNAL_ERROR'
+        | 'INVALID_CURSOR'
+        | 'INVITATION_EXISTS'
+        | 'INVITATION_STATE_CONFLICT'
+        | 'LICENSE_CONFIGURATION_REQUIRED'
+        | 'LICENSE_NEW_BUSINESS_UNAVAILABLE'
+        | 'LICENSE_STORED_STATE_INVALID'
+        | 'MIDDLEWARE_AMBIENT_DRIVER_INPUT_REFUSED'
+        | 'MIDDLEWARE_ARTIFACT_ROOT_MISMATCH'
+        | 'MIDDLEWARE_ATTEMPT_STALE'
+        | 'MIDDLEWARE_BACKUP_EVIDENCE_INVALID'
+        | 'MIDDLEWARE_CA_INPUT_INVALID'
+        | 'MIDDLEWARE_COMPLETED_BACKUP_REQUIRED'
+        | 'MIDDLEWARE_CONFIGURATION_INVALID'
+        | 'MIDDLEWARE_CONNECTION_CONFIGURATION_INVALID'
+        | 'MIDDLEWARE_CONNECTION_FAILED'
+        | 'MIDDLEWARE_ENDPOINT_IDENTITY_MISMATCH'
+        | 'MIDDLEWARE_ENVIRONMENT_INVALID'
+        | 'MIDDLEWARE_EXECUTION_UNCERTAIN'
+        | 'MIDDLEWARE_EXTERNAL_MUTATION_REFUSED'
+        | 'MIDDLEWARE_FRESH_TARGET_REQUIRED'
+        | 'MIDDLEWARE_IDENTITY_REPOSITORY_REQUIRED'
+        | 'MIDDLEWARE_INPUT_CHANGED'
+        | 'MIDDLEWARE_INSTALLED_PLATFORM_REQUIRED'
+        | 'MIDDLEWARE_INSTANCE_LIMIT'
+        | 'MIDDLEWARE_ISOLATED_CONFIRMATION_REQUIRED'
+        | 'MIDDLEWARE_ISOLATED_TARGET_INVALID'
+        | 'MIDDLEWARE_OPERATION_DEADLINE_REQUIRED'
+        | 'MIDDLEWARE_OPERATOR_RECONCILIATION_REQUIRED'
+        | 'MIDDLEWARE_ORIGINAL_OPERATOR_INTENT_REQUIRED'
+        | 'MIDDLEWARE_ORIGINAL_UNCERTAIN_OPERATION_REQUIRED'
+        | 'MIDDLEWARE_PASSWORD_INPUT_INVALID'
+        | 'MIDDLEWARE_PLATFORM_SCOPE_DUPLICATE'
+        | 'MIDDLEWARE_PLATFORM_SCOPE_MISMATCH'
+        | 'MIDDLEWARE_PLATFORM_SCOPE_REQUIRED'
+        | 'MIDDLEWARE_PRIVATE_INPUT_CHANGED'
+        | 'MIDDLEWARE_PRIVATE_INPUT_INVALID'
+        | 'MIDDLEWARE_PRIVILEGE_OBSERVATION_FAILED'
+        | 'MIDDLEWARE_PROBE_FAILED'
+        | 'MIDDLEWARE_PROFILE_ALREADY_REGISTERED'
+        | 'MIDDLEWARE_PROFILE_DUPLICATE'
+        | 'MIDDLEWARE_PROFILE_INVALID'
+        | 'MIDDLEWARE_PROFILE_UNAVAILABLE'
+        | 'MIDDLEWARE_REASON_TOO_LONG'
+        | 'MIDDLEWARE_RESTORE_FENCE_CHANGED'
+        | 'MIDDLEWARE_RESTORE_TRANSACTION_REQUIRED'
+        | 'MIDDLEWARE_RESULT_INVALID'
+        | 'MIDDLEWARE_SCHEMA_REJECTED'
+        | 'MIDDLEWARE_SCOPE_CHANGED'
+        | 'MIDDLEWARE_STORAGE_MISMATCH'
+        | 'MIDDLEWARE_STORAGE_UNAVAILABLE'
+        | 'MIDDLEWARE_STORED_EVIDENCE_INVALID'
+        | 'MIDDLEWARE_STORED_INSTANCE_INVALID'
+        | 'MIDDLEWARE_STORED_INTENT_INVALID'
+        | 'MIDDLEWARE_VERIFIED_TLS_REQUIRED'
+        | 'MIDDLEWARE_VERSION_LIMIT'
+        | 'MIDDLEWARE_WORKER_ALREADY_RUNNING'
+        | 'MISDIRECTED_REQUEST'
+        | 'ORIGIN_REJECTED'
+        | 'PASSWORD_BLOCKED'
+        | 'PASSWORD_POLICY_VIOLATION'
+        | 'PAYLOAD_TOO_LARGE'
+        | 'PROTECTED_ACCOUNT'
+        | 'RATE_LIMITED'
+        | 'RESOURCE_NOT_FOUND'
+        | 'SERVICE_NOT_READY'
+        | 'STORAGE_COMMIT_OUTCOME_UNKNOWN'
+        | 'STORAGE_UNAVAILABLE'
+        | 'TOKEN_UNUSABLE'
+        | 'UNSUPPORTED_MEDIA_TYPE'
+        | 'VALIDATION_FAILED'
+        | 'VERSION_CONFLICT';
+      /** Format: uuid */
+      request_id: string;
+      detail?: string;
+      fields?: {
+        field: string;
+        code: string;
+      }[];
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    Profile: {
+      key: string;
+      /** @enum {string} */
+      kind: 'platform_owned' | 'customer_external';
+      health: boolean;
+      backup: boolean;
+      restore_targets: string[];
+    };
+    Profiles: components['schemas']['Profile'][];
+    Instance: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      profile_key: string;
+      /** @enum {string} */
+      kind: 'platform_owned' | 'customer_external';
+      name: string;
+      version: number;
+      /** @enum {string} */
+      state: 'active' | 'archived';
+      /** Format: date-time */
+      created_at: string;
+    };
+    Register: {
+      profile_key: string;
+      name: string;
+      /** Format: uuid */
+      idempotency_key: string;
+    };
+    Change: {
+      name: string;
+      /** @enum {string} */
+      state: 'active' | 'archived';
+      version: number;
+      refresh_inputs: boolean;
+      reason: string;
+    };
+    Enqueue: {
+      /** @enum {string} */
+      kind: 'health' | 'backup' | 'isolated_restore' | 'reconcile';
+      reason: string;
+      /** Format: uuid */
+      idempotency_key: string;
+      version: number;
+      /** Format: uuid */
+      backup_id?: string;
+      target_key?: string;
+      confirm_isolated: boolean;
+      /** Format: uuid */
+      original_operation_id?: string;
+    };
+    Observation: {
+      /** Format: date-time */
+      observed_at: string;
+      database: string;
+      user: string;
+      server_address: string;
+      server_port: number;
+      version_number: number;
+      in_recovery: boolean;
+      tls_version: string;
+      tls_cipher: string;
+      superuser: boolean;
+      create_role: boolean;
+      create_database: boolean;
+      create_schema: boolean;
+      create_any_schema_objects: boolean;
+      read_all_tables: boolean;
+      write_any_table: boolean;
+      table_count: number;
+      /** Format: uuid */
+      platform_tenant_id?: string;
+    };
+    DatabaseSource: {
+      database: string;
+      operator: string;
+      server_version_number: number;
+      /** Format: uuid */
+      tenant_id: string;
+      schema_version: number;
+      vector_version: string;
+    };
+    NativePostgreSQLRegistryReference: {
+      receipt_sha256: string;
+      manifest_sha256: string;
+      payload_tree_sha256: string;
+      pins: number;
+      files: number;
+      bytes: number;
+    };
+    NativePostgreSQLBackupReference: {
+      /** @constant */
+      format_version: 1;
+      /** @constant */
+      application_profile: 'mvp-postgresql-cpu-v1';
+      source_manifest_sha256: string;
+      /** @constant */
+      schema_version: 29;
+      /** @constant */
+      table_count: 108;
+      request_sha256: string;
+      candidate_sha256: string;
+      completion_sha256: string;
+      readback_sha256: string;
+      mvp_source_sha256: string;
+      registry_configured: boolean;
+      registry?: components['schemas']['NativePostgreSQLRegistryReference'];
+    } & unknown;
+    NativePostgreSQLRegistryImportReference: {
+      snapshot_receipt_sha256: string;
+      import_receipt_sha256: string;
+      readback_sha256: string;
+    };
+    NativePostgreSQLRestoreReference: {
+      /** @constant */
+      format_version: 1;
+      /** @constant */
+      application_profile: 'mvp-postgresql-cpu-v1';
+      backup: components['schemas']['NativePostgreSQLBackupReference'];
+      request_sha256: string;
+      manifest_sha256: string;
+      intent_sha256: string;
+      files_sha256: string;
+      completion_sha256: string;
+      files_readback_sha256: string;
+      observation_sha256: string;
+      target_binding_sha256: string;
+      post_data_sha256: string;
+      registry?: components['schemas']['NativePostgreSQLRegistryImportReference'];
+    } & unknown;
+    Stage: {
+      /** @enum {string} */
+      command:
+        | 'backup'
+        | 'inspect-backup'
+        | 'reconcile-backup'
+        | 'inspect-restore-source'
+        | 'inspect-restore-target'
+        | 'prepare-restore'
+        | 'reconcile-restore-reservation'
+        | 'restore-sql'
+        | 'reconcile-restore-sql'
+        | 'qualify-restored-database'
+        | 'reconcile-restored-database'
+        | 'restore-stores'
+        | 'reconcile-restored-stores';
+      status: string;
+      scope_id?: string;
+      attempt_id?: string;
+      pending: boolean;
+      completed_steps?: number;
+      total_steps?: number;
+      manifest_sha256?: string;
+      proof_sha256?: string;
+      qualification: string;
+      evidence_sha256: string;
+      source_scope_id?: string;
+      source?: components['schemas']['DatabaseSource'];
+      plan_sha256?: string;
+      stores?: ('datasets' | 'models' | 'preparations' | 'training')[];
+      profile?: string;
+      release_manifest_sha256?: string;
+      native_postgresql?:
+        | components['schemas']['NativePostgreSQLBackupReference']
+        | components['schemas']['NativePostgreSQLRestoreReference'];
+    };
+    MySQLObservation: {
+      /** Format: date-time */
+      observed_at: string;
+      database: string;
+      user: string;
+      /** Format: uuid */
+      server_uuid: string;
+      version: string;
+      /** @enum {string} */
+      tls_version: 'TLSv1.2' | 'TLSv1.3';
+      tls_cipher: string;
+      read_only: boolean;
+      super_read_only: boolean;
+      visible_table_count: number;
+    };
+    Evidence: {
+      /** @constant */
+      format_version: 1;
+      /** @enum {string} */
+      kind: 'health' | 'backup' | 'isolated_restore';
+      observation?: components['schemas']['Observation'];
+      mysql_observation?: components['schemas']['MySQLObservation'];
+      stages?: components['schemas']['Stage'][];
+      /** Format: uuid */
+      original_operation_id?: string;
+    } & (
+      | {
+          /** @constant */
+          kind?: 'health';
+        }
+      | {
+          /** @constant */
+          kind?: 'health';
+        }
+      | {
+          /** @enum {string} */
+          kind?: 'backup' | 'isolated_restore';
+        }
+    );
+    Operation: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      instance_id: string;
+      /** @enum {string} */
+      kind: 'health' | 'backup' | 'isolated_restore' | 'reconcile';
+      /** @enum {string} */
+      state: 'queued' | 'running' | 'succeeded' | 'failed' | 'unknown';
+      error_code?: string;
+      result?: components['schemas']['Evidence'];
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+    };
+    InstancePage: {
+      items: components['schemas']['Instance'][];
+      next_cursor: string | null;
+    };
+    OperationPage: {
+      items: components['schemas']['Operation'][];
+      next_cursor: string | null;
+    };
+    InstancePageResponse: {
+      data: components['schemas']['InstancePage'];
+    };
+    InstanceResponse: {
+      data: components['schemas']['Instance'];
+    };
+    ProfilesResponse: {
+      data: components['schemas']['Profiles'];
+    };
+    OperationPageResponse: {
+      data: components['schemas']['OperationPage'];
+    };
+    OperationResponse: {
+      data: components['schemas']['Operation'];
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    portalListMiddleware: {
-        parameters: {
-            query?: {
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstancePageResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  portalListMiddleware: {
+    parameters: {
+      query?: {
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    portalRegisterMiddleware: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Register"];
-            };
+        content: {
+          'application/json': components['schemas']['InstancePageResponse'];
         };
-        responses: {
-            /** @description Actual authorized persisted result. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstanceResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalMiddlewareProfiles: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProfilesResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalRegisterMiddleware: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    portalReadMiddleware: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                instance_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstanceResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Register'];
+      };
     };
-    portalChangeMiddleware: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                instance_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Change"];
-            };
+        content: {
+          'application/json': components['schemas']['InstanceResponse'];
         };
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstanceResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalMiddlewareHistory: {
-        parameters: {
-            query?: {
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                instance_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationPageResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalMiddlewareProfiles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    portalEnqueueMiddleware: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                instance_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Enqueue"];
-            };
+        content: {
+          'application/json': components['schemas']['ProfilesResponse'];
         };
-        responses: {
-            /** @description Actual authorized persisted result. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalMiddlewareRegistrationIntent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                intent_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstanceResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalReadMiddleware: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        instance_id: string;
+      };
+      cookie?: never;
     };
-    portalMiddlewareOperationIntent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                intent_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['InstanceResponse'];
         };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalMiddlewareOperation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                operation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalChangeMiddleware: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        instance_id: string;
+      };
+      cookie?: never;
     };
-    adminListMiddleware: {
-        parameters: {
-            query?: {
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstancePageResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Change'];
+      };
     };
-    adminRegisterMiddleware: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Register"];
-            };
+        content: {
+          'application/json': components['schemas']['InstanceResponse'];
         };
-        responses: {
-            /** @description Actual authorized persisted result. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstanceResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminMiddlewareProfiles: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProfilesResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalMiddlewareHistory: {
+    parameters: {
+      query?: {
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        instance_id: string;
+      };
+      cookie?: never;
     };
-    adminReadMiddleware: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                instance_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstanceResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['OperationPageResponse'];
         };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminChangeMiddleware: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                instance_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Change"];
-            };
-        };
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstanceResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalEnqueueMiddleware: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        instance_id: string;
+      };
+      cookie?: never;
     };
-    adminMiddlewareHistory: {
-        parameters: {
-            query?: {
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                instance_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationPageResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Enqueue'];
+      };
     };
-    adminEnqueueMiddleware: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                instance_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      202: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Enqueue"];
-            };
+        content: {
+          'application/json': components['schemas']['OperationResponse'];
         };
-        responses: {
-            /** @description Actual authorized persisted result. */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminMiddlewareRegistrationIntent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                intent_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InstanceResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalMiddlewareRegistrationIntent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        intent_id: string;
+      };
+      cookie?: never;
     };
-    adminMiddlewareOperationIntent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                intent_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['InstanceResponse'];
         };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminMiddlewareOperation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                operation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Actual authorized persisted result. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationResponse"];
-                };
-            };
-            /** @description Safe refusal with zero successful projection. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalMiddlewareOperationIntent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        intent_id: string;
+      };
+      cookie?: never;
     };
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OperationResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalMiddlewareOperation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        operation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OperationResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminListMiddleware: {
+    parameters: {
+      query?: {
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InstancePageResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminRegisterMiddleware: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Register'];
+      };
+    };
+    responses: {
+      /** @description Actual authorized persisted result. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InstanceResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminMiddlewareProfiles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ProfilesResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminReadMiddleware: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        instance_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InstanceResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminChangeMiddleware: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        instance_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Change'];
+      };
+    };
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InstanceResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminMiddlewareHistory: {
+    parameters: {
+      query?: {
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        instance_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OperationPageResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminEnqueueMiddleware: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        instance_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Enqueue'];
+      };
+    };
+    responses: {
+      /** @description Actual authorized persisted result. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OperationResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminMiddlewareRegistrationIntent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        intent_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InstanceResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminMiddlewareOperationIntent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        intent_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OperationResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminMiddlewareOperation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        operation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Actual authorized persisted result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OperationResponse'];
+        };
+      };
+      /** @description Safe refusal with zero successful projection. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
 }

@@ -2,2121 +2,2868 @@
 // Change the contract, then run `make generate`.
 
 export interface paths {
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts/capabilities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminGetHoldoutCapabilities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts/capabilities': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminListHoldouts"];
-        put?: never;
-        post: operations["adminReserveHoldout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminGetHoldoutCapabilities'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts/{holdout_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminGetHoldout"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminListHoldouts'];
+    put?: never;
+    post: operations['adminReserveHoldout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts/{holdout_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts/capabilities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalGetHoldoutCapabilities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminGetHoldout'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts/capabilities': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalListHoldouts"];
-        put?: never;
-        post: operations["portalReserveHoldout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalGetHoldoutCapabilities'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts/{holdout_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalGetHoldout"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalListHoldouts'];
+    put?: never;
+    post: operations['portalReserveHoldout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts/{holdout_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/nodes/{node_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminPreparationTarget"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalGetHoldout'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/nodes/{node_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/capabilities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminPreparationCapabilities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminPreparationTarget'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/capabilities': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminListPreparations"];
-        put?: never;
-        post: operations["adminCreatePreparation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminPreparationCapabilities'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminGetPreparation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminListPreparations'];
+    put?: never;
+    post: operations['adminCreatePreparation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminPreparationReport"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminGetPreparation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/report': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/attempts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminPreparationAttempts"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminPreparationReport'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/attempts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/attempts/{attempt_id}/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminPreparationEvents"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminPreparationAttempts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/attempts/{attempt_id}/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/cancellations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminCancelPreparation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminPreparationEvents'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/cancellations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/recoveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminRecoverPreparation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminCancelPreparation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/recoveries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminReviewPreparation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminRecoverPreparation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/reviews': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/nodes/{node_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalPreparationTarget"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminReviewPreparation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/nodes/{node_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/capabilities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalPreparationCapabilities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalPreparationTarget'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/capabilities': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalListPreparations"];
-        put?: never;
-        post: operations["portalCreatePreparation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalPreparationCapabilities'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalGetPreparation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalListPreparations'];
+    put?: never;
+    post: operations['portalCreatePreparation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalPreparationReport"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalGetPreparation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/report': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/attempts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalPreparationAttempts"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalPreparationReport'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/attempts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/attempts/{attempt_id}/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalPreparationEvents"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalPreparationAttempts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/attempts/{attempt_id}/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/cancellations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalCancelPreparation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalPreparationEvents'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/cancellations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/recoveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalRecoverPreparation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalCancelPreparation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/recoveries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
+    get?: never;
+    put?: never;
+    post: operations['portalRecoverPreparation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        Problem: {
-            /** @constant */
-            type: "about:blank";
-            title: string;
-            status: number;
-            /** @enum {string} */
-            code: "VALIDATION_FAILED" | "INVALID_CURSOR" | "TOKEN_UNUSABLE" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "ACCESS_DENIED" | "CSRF_INVALID" | "ORIGIN_REJECTED" | "RESOURCE_NOT_FOUND" | "ACCOUNT_EXISTS" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "VERSION_CONFLICT" | "IDEMPOTENCY_CONFLICT" | "PROTECTED_ACCOUNT" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "MISDIRECTED_REQUEST" | "PASSWORD_POLICY_VIOLATION" | "PASSWORD_BLOCKED" | "RATE_LIMITED" | "INTERNAL_ERROR" | "STORAGE_UNAVAILABLE" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "AUTH_CAPACITY_EXCEEDED" | "SERVICE_NOT_READY" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "LICENSE_CONFIGURATION_REQUIRED" | "DATASET_NOT_FOUND" | "DATASET_EXISTS" | "DATASET_RETIRED" | "DATASET_VERSION_RETIRED" | "DATASET_DRAFT_BUSY" | "DATASET_REVISION_CONFLICT" | "DATASET_UPLOAD_BUSY" | "DATASET_SOURCE_CHANGED" | "DATASET_UPLOAD_INCOMPLETE" | "DATASET_CORRECTED_UPLOAD_REQUIRED" | "DATASET_VALIDATION_FAILED" | "DATASET_SPLIT_CONFIGURATION_INVALID" | "DATASET_SPLIT_INSUFFICIENT_GROUPS" | "DATASET_LIMIT_REACHED" | "DATASET_RETRY_NOT_ALLOWED" | "DATASET_PROCESSOR_TIMEOUT" | "DATASET_PROCESSOR_MEMORY_EXCEEDED" | "DATASET_PROCESSOR_RESULT_TOO_LARGE" | "DATASET_ATTEMPT_STALE" | "DATASET_FILE_INVALID" | "DATASET_STORAGE_UNAVAILABLE" | "DATASET_STORAGE_FULL" | "DATASET_DATA_INVALID" | "DATASET_SOURCE_INVALID" | "DATASET_TEXT_INVALID" | "DATASET_LINE_TOO_LARGE" | "DATASET_ROW_LIMIT" | "DATASET_FILE_TOO_LARGE" | "DATASET_EMPTY_SOURCE" | "RELEASE_VIEW_UNAVAILABLE" | "RELEASE_VIEW_CONFIGURATION_INVALID" | "CONFIG_RELEASE_VIEW_INVALID" | "RELEASE_VIEW_CHANGED" | "CONFIG_MACHINE_TRANSPORT_REQUIRED" | "CONFIG_MONITORING_INVALID" | "MONITORING_CONFIGURATION_INVALID" | "MONITORING_CONFIGURATION_REQUIRED" | "MONITORING_OWNER_REQUIRED" | "MONITORING_BUSY" | "MIDDLEWARE_PROFILE_ALREADY_REGISTERED" | "MIDDLEWARE_SCHEMA_REJECTED" | "MIDDLEWARE_AMBIENT_DRIVER_INPUT_REFUSED" | "MIDDLEWARE_ARTIFACT_ROOT_MISMATCH" | "MIDDLEWARE_ATTEMPT_STALE" | "MIDDLEWARE_BACKUP_EVIDENCE_INVALID" | "MIDDLEWARE_CA_INPUT_INVALID" | "MIDDLEWARE_COMPLETED_BACKUP_REQUIRED" | "MIDDLEWARE_CONFIGURATION_INVALID" | "MIDDLEWARE_CONNECTION_CONFIGURATION_INVALID" | "MIDDLEWARE_CONNECTION_FAILED" | "MIDDLEWARE_ENDPOINT_IDENTITY_MISMATCH" | "MIDDLEWARE_ENVIRONMENT_INVALID" | "MIDDLEWARE_EXECUTION_UNCERTAIN" | "MIDDLEWARE_EXTERNAL_MUTATION_REFUSED" | "MIDDLEWARE_FRESH_TARGET_REQUIRED" | "MIDDLEWARE_IDENTITY_REPOSITORY_REQUIRED" | "MIDDLEWARE_INPUT_CHANGED" | "MIDDLEWARE_INSTALLED_PLATFORM_REQUIRED" | "MIDDLEWARE_INSTANCE_LIMIT" | "MIDDLEWARE_ISOLATED_CONFIRMATION_REQUIRED" | "MIDDLEWARE_ISOLATED_TARGET_INVALID" | "MIDDLEWARE_OPERATION_DEADLINE_REQUIRED" | "MIDDLEWARE_OPERATOR_RECONCILIATION_REQUIRED" | "MIDDLEWARE_ORIGINAL_OPERATOR_INTENT_REQUIRED" | "MIDDLEWARE_ORIGINAL_UNCERTAIN_OPERATION_REQUIRED" | "MIDDLEWARE_PASSWORD_INPUT_INVALID" | "MIDDLEWARE_PLATFORM_SCOPE_DUPLICATE" | "MIDDLEWARE_PLATFORM_SCOPE_MISMATCH" | "MIDDLEWARE_PLATFORM_SCOPE_REQUIRED" | "MIDDLEWARE_PRIVATE_INPUT_CHANGED" | "MIDDLEWARE_PRIVATE_INPUT_INVALID" | "MIDDLEWARE_PRIVILEGE_OBSERVATION_FAILED" | "MIDDLEWARE_PROBE_FAILED" | "MIDDLEWARE_PROFILE_DUPLICATE" | "MIDDLEWARE_PROFILE_INVALID" | "MIDDLEWARE_PROFILE_UNAVAILABLE" | "MIDDLEWARE_REASON_TOO_LONG" | "MIDDLEWARE_RESTORE_FENCE_CHANGED" | "MIDDLEWARE_RESTORE_TRANSACTION_REQUIRED" | "MIDDLEWARE_RESULT_INVALID" | "MIDDLEWARE_SCOPE_CHANGED" | "MIDDLEWARE_STORAGE_MISMATCH" | "MIDDLEWARE_STORAGE_UNAVAILABLE" | "MIDDLEWARE_STORED_EVIDENCE_INVALID" | "MIDDLEWARE_STORED_INSTANCE_INVALID" | "MIDDLEWARE_STORED_INTENT_INVALID" | "MIDDLEWARE_VERIFIED_TLS_REQUIRED" | "MIDDLEWARE_VERSION_LIMIT" | "MIDDLEWARE_WORKER_ALREADY_RUNNING" | "STORAGE_DEADLOCK" | "STORAGE_LOCK_TIMEOUT" | "STORAGE_CANCELLED" | "STORAGE_TIMEOUT" | "STORAGE_COMMIT_ROLLED_BACK" | "NODE_STORAGE_MISMATCH" | "OBJECT_UPLOAD_NOT_FOUND" | "OBJECT_UPLOAD_INVALID" | "OBJECT_TIMEOUT" | "OBJECT_TARGET_SOURCE_UNPROVEN" | "OBJECT_TARGET_NOT_ACCEPTED" | "OBJECT_TARGET_CHANGED" | "OBJECT_STORE_CHANGED" | "OBJECT_STORED_PROVENANCE_INVALID" | "OBJECT_STORAGE_UNAVAILABLE" | "OBJECT_STORAGE_MISMATCH" | "OBJECT_STORAGE_FULL" | "OBJECT_STORAGE_CLOSED" | "OBJECT_STATE_INVALID" | "OBJECT_STAGING_REFERENCED" | "OBJECT_STAGING_RECORD_MISSING" | "OBJECT_STAGING_NOT_EMPTY" | "OBJECT_STAGING_NAMESPACE_MISMATCH" | "OBJECT_STAGING_INVALID" | "OBJECT_STAGING_FAILED" | "OBJECT_STAGING_CONFLICT" | "OBJECT_STAGING_CHANGED" | "OBJECT_STAGING_BUSY" | "OBJECT_SNAPSHOT_INVALID" | "OBJECT_SCOPE_INVALID" | "OBJECT_RESPONSE_INVALID" | "OBJECT_REQUEST_INVALID" | "OBJECT_REMOTE_OUTCOME_UNKNOWN" | "OBJECT_REFERENCED" | "OBJECT_RECONCILE_REQUIRED" | "OBJECT_RECEIPT_INVALID" | "OBJECT_PURPOSE_INVALID" | "OBJECT_PROFILE_UNVERIFIED" | "OBJECT_PART_INVALID" | "OBJECT_OPERATION_STALE" | "OBJECT_NOT_READY" | "OBJECT_NOT_FOUND" | "OBJECT_NOT_ADMITTED" | "OBJECT_MANAGEMENT_PROTOCOL_UNVERIFIED" | "OBJECT_MANAGEMENT_PROFILE_UNVERIFIED" | "OBJECT_MANAGEMENT_PROFILE_INVALID" | "OBJECT_MANAGEMENT_MTLS_UNENFORCED" | "OBJECT_MANAGEMENT_CERTIFICATE_INVALID" | "OBJECT_MANAGEMENT_CA_INVALID" | "OBJECT_LIST_INCOMPLETE" | "OBJECT_INGESTION_UNAVAILABLE" | "OBJECT_INGESTION_STOP_UNCONFIRMED" | "OBJECT_INGESTION_INVALID" | "OBJECT_INGESTION_CANCELLED" | "OBJECT_INCOMPLETE" | "OBJECT_IDENTITY_REQUIRED" | "OBJECT_EXPIRED" | "OBJECT_ENDPOINT_CHANGED" | "OBJECT_DIGEST_MISMATCH" | "OBJECT_CONFLICT" | "OBJECT_CONFIGURATION_INVALID" | "OBJECT_COMPOSITION_INVALID" | "OBJECT_CHANGED" | "OBJECT_CA_INVALID" | "OBJECT_CAPABILITY_UNSUPPORTED" | "OBJECT_CANCELLED" | "OBJECT_BUSY" | "OBJECT_BUCKET_AUTHORITY_UNVERIFIED" | "OBJECT_BUCKET_AUTHORITY_INVALID" | "OBJECT_BACKEND_AUTH_UNENFORCED" | "OBJECT_AUTHORITY_INVALID" | "OBJECT_AMBIGUOUS_REMOTE_UPLOAD" | "OBJECT_ACTOR_CHANGED" | "OBJECT_ACCESS_DENIED" | "OBJECT_SCHEMA_NOT_ACTIVE" | "AWS_BUSINESS_DATABASE_UNSUPPORTED" | "AWS_BUSY" | "AWS_DISABLED" | "AWS_SCOPE_REJECTED" | "AWS_ACCOUNT_MISMATCH" | "AWS_CREDENTIALS_INVALID" | "AWS_CREDENTIALS_EXPIRED" | "AWS_ACCESS_DENIED" | "AWS_UNAVAILABLE" | "AWS_THROTTLED" | "AWS_CANCELLED" | "AWS_RESPONSE_INVALID" | "AWS_PROVIDER_REJECTED" | "AWS_PAGINATION_INVALID" | "AWS_LIMIT_REACHED" | "AWS_SYNC_SUPERSEDED" | "AWS_CONFIGURATION_INVALID" | "LICENSE_ARTIFACT_INVALID" | "LICENSE_DEPLOYMENT_MISMATCH" | "LICENSE_ID_CONFLICT" | "LICENSE_CURRENT_CHANGED" | "LICENSE_IMPORT_CAPACITY_REQUIRED" | "LICENSE_PREDECESSOR_REQUIRED" | "LICENSE_PENDING_SUCCESSOR_EXISTS" | "LICENSE_RENEWAL_WINDOW_INVALID" | "LOCALIZATION_UNAVAILABLE" | "LOCALIZATION_PACKAGE_INVALID" | "LOCALIZATION_LOCALE_UNAVAILABLE" | "LOCALIZATION_REQUIRED_LOCALE_UNAVAILABLE" | "PREFERENCE_UNAVAILABLE" | "PREFERENCE_REVISION_CONFLICT" | "NOTIFICATION_UNAVAILABLE" | "NOTIFICATION_NOT_FOUND" | "NOTIFICATION_ALREADY_STARTED" | "NOTIFICATION_SHUTDOWN_TIMEOUT" | "NOTIFICATION_PROVENANCE_INVALID" | "PLUGIN_ALREADY_STARTED" | "PLUGIN_AUTHORITY_CHANGED" | "PLUGIN_AUTHORITY_INVALID" | "PLUGIN_CAPABILITY_UNSUPPORTED" | "PLUGIN_GRANT_EXISTS" | "PLUGIN_GRANT_NOT_FOUND" | "PLUGIN_GRANT_REVOKED" | "PLUGIN_LIMIT_EXCEEDED" | "PLUGIN_MODEL_LIMIT_EXCEEDED" | "PLUGIN_MODEL_REFERENCE_CHANGED" | "PLUGIN_NOT_INSTALLED" | "PLUGIN_PACKAGE_DIGEST_MISMATCH" | "PLUGIN_PACKAGE_INVALID" | "PLUGIN_PACKAGE_LIMIT_INVALID" | "PLUGIN_REFERENCED" | "PLUGIN_REFERENCES_CHANGED" | "PLUGIN_REFERENCE_LIMIT_EXCEEDED" | "PLUGIN_RESULT_INVALID" | "PLUGIN_RESULT_LIMIT_EXCEEDED" | "PLUGIN_REVISION_CONFLICT" | "PLUGIN_SHUTDOWN_TIMEOUT" | "PLUGIN_SIGNATURE_INVALID" | "PLUGIN_TRUST_KEY_INVALID" | "PLUGIN_UNAVAILABLE" | "PLUGIN_VERSION_CONFLICT" | "PLUGIN_VERSION_INVALID" | "PLUGIN_VERSION_NOT_FOUND" | "PLUGIN_VERSION_UNSUPPORTED" | "WORKFLOW_CAPACITY_EXCEEDED" | "WORKFLOW_CONVERSATION_BUSY" | "WORKFLOW_ALREADY_STARTED" | "WORKFLOW_AUTHORITY_CHANGED" | "WORKFLOW_CONNECTIONS_REQUIRED" | "WORKFLOW_CONNECTION_ORDER_INVALID" | "WORKFLOW_CONVERSATION_NOT_FOUND" | "WORKFLOW_CYCLE" | "WORKFLOW_DISABLED" | "WORKFLOW_DRAFT_CHANGED" | "WORKFLOW_END_HAS_OUTPUT" | "WORKFLOW_GRAPH_CORRUPT" | "WORKFLOW_GRAPH_INVALID" | "WORKFLOW_INPUT_REQUIRED" | "WORKFLOW_LIMIT_EXCEEDED" | "WORKFLOW_MAINTENANCE_FAILED" | "WORKFLOW_NAME_EXISTS" | "WORKFLOW_NOT_FOUND" | "WORKFLOW_RESULT_INVALID" | "WORKFLOW_RESULT_LIMIT_EXCEEDED" | "WORKFLOW_RUN_CANCELLED" | "WORKFLOW_RUN_INTERRUPTED" | "WORKFLOW_RUN_NOT_FOUND" | "WORKFLOW_RUN_STALE" | "WORKFLOW_RUN_TIMEOUT" | "WORKFLOW_SHUTDOWN_TIMEOUT" | "WORKFLOW_UNAVAILABLE" | "WORKFLOW_VERSION_UNAVAILABLE" | "KNOWLEDGE_UNAVAILABLE" | "KNOWLEDGE_CONFIGURATION_INVALID" | "KNOWLEDGE_INSTALLED_ASSET_INVALID" | "KNOWLEDGE_COMPILED_CONTRACT_INVALID" | "KNOWLEDGE_ENCODER_ASSET_INVALID" | "KNOWLEDGE_ENCODER_LOAD_FAILED" | "KNOWLEDGE_SCRATCH_ROOT_INVALID" | "KNOWLEDGE_SCRATCH_UNAVAILABLE" | "KNOWLEDGE_BASE_NOT_FOUND" | "KNOWLEDGE_BASE_EXISTS" | "KNOWLEDGE_BASE_DISABLED" | "KNOWLEDGE_BUSY" | "KNOWLEDGE_LIMIT_REACHED" | "KNOWLEDGE_REVISION_CONFLICT" | "KNOWLEDGE_DOCUMENT_EXISTS" | "KNOWLEDGE_DOCUMENT_NOT_FOUND" | "KNOWLEDGE_SOURCE_NOT_FOUND" | "KNOWLEDGE_SOURCE_CHANGED" | "KNOWLEDGE_INDEX_INCOMPATIBLE" | "KNOWLEDGE_INVALID_SOURCE" | "KNOWLEDGE_EMPTY_SOURCE" | "KNOWLEDGE_SOURCE_LIMIT_EXCEEDED" | "KNOWLEDGE_QUERY_TOO_LONG" | "KNOWLEDGE_WORKER_REQUEST_INVALID" | "KNOWLEDGE_WORKER_START_FAILED" | "KNOWLEDGE_WORKER_TIMEOUT" | "KNOWLEDGE_WORKER_MEMORY_MONITOR_FAILED" | "KNOWLEDGE_WORKER_MEMORY_EXCEEDED" | "KNOWLEDGE_WORKER_OUTPUT_LIMIT" | "KNOWLEDGE_WORKER_RESULT_INVALID" | "KNOWLEDGE_WORKER_FAILED" | "KNOWLEDGE_REQUEST_CANCELLED" | "KNOWLEDGE_ATTEMPT_STALE" | "KNOWLEDGE_RETRY_NOT_ALLOWED" | "KNOWLEDGE_GENERATION_NOT_FOUND" | "KNOWLEDGE_NO_CONTEXT" | "KNOWLEDGE_INVALID_CITATIONS" | "KNOWLEDGE_GATEWAY_UNAVAILABLE" | "KNOWLEDGE_GATEWAY_RESPONSE_INVALID" | "KNOWLEDGE_ANSWER_SOURCE_CHANGED" | "KNOWLEDGE_ANSWER_KEY_CLEANUP_FAILED" | "KNOWLEDGE_REBUILD_FAILED" | "KNOWLEDGE_AUTHORITY_INVALID" | "KNOWLEDGE_WORKER_INTERRUPTED" | "KNOWLEDGE_CANCELLED" | "SSO_CONNECTOR_ID_CONFLICT" | "SSO_BINDING_LIMIT" | "SSO_DISABLED" | "SSO_CONNECTOR_NOT_FOUND" | "SSO_CONNECTOR_DISABLED" | "SSO_CONNECTOR_LIMIT" | "SSO_REVISION_CONFLICT" | "SSO_BINDING_NOT_FOUND" | "SSO_BINDING_CONFLICT" | "SSO_BINDING_REQUIRED" | "SSO_FLOW_INVALID" | "SSO_FLOW_EXPIRED" | "SSO_FLOW_UNUSABLE" | "SSO_BROWSER_CHANGED" | "SSO_PASSWORD_REQUIRED" | "SSO_PASSWORD_CHANGED" | "SSO_PROVIDER_DENIED" | "SSO_AUTHORIZATION_INPUT_INVALID" | "SSO_CAPACITY_EXCEEDED" | "SSO_IDENTITY_REJECTED" | "SSO_SCOPE_REJECTED" | "SSO_PROVIDER_REJECTED" | "SSO_PROVIDER_RESPONSE_INVALID" | "SSO_PROVIDER_UNAVAILABLE" | "SSO_PROVIDER_CONFIGURATION_INVALID" | "SSO_PROVIDER_DESTINATION_REJECTED" | "SSO_KEYRING_INVALID" | "SSO_PRIVATE_FILE_INVALID" | "SSO_ENCRYPTED_STATE_INVALID" | "SSO_ENTROPY_UNAVAILABLE" | "SSO_SECRET_SCOPE_INVALID" | "SSO_JSON_INVALID" | "MODEL_DERIVED_CATALOG_INVALID" | "MODEL_DERIVED_STORAGE_INVALID" | "MODEL_DERIVED_COPY_BUSY" | "MODEL_DERIVED_PARTIAL_COPY_RETAINED" | "MODEL_DERIVED_COPY_POLICY_INVALID" | "MODEL_DERIVED_COPY_ATTEMPT_LIMIT" | "MODEL_DERIVED_DISK_SPACE_LOW" | "MODEL_DERIVED_REGISTRATION_UNAVAILABLE" | "MODEL_DERIVED_REVIEW_REQUIRED" | "MODEL_DERIVED_IDENTITY_CONFLICT" | "MODEL_DERIVED_ALREADY_RETIRED" | "MODEL_PREPARATION_REVIEW_NOT_ALLOWED" | "MODEL_PREPARATION_REVIEW_BINDING_INVALID" | "MODEL_PREPARATION_QUALITY_FAILED" | "MODEL_PREPARATION_ACTOR_UNAVAILABLE" | "MODEL_PREPARATION_ADAPTER_INVALID" | "MODEL_PREPARATION_AGENT_EXECUTION_FAILED" | "MODEL_PREPARATION_AGENT_INTERRUPTED" | "MODEL_PREPARATION_ARTIFACT_INVALID" | "MODEL_PREPARATION_ATTEMPT_IN_USE" | "MODEL_PREPARATION_CANCELLED" | "MODEL_PREPARATION_CANCEL_PENDING_STOP" | "MODEL_PREPARATION_COMMAND_INVALID" | "MODEL_PREPARATION_CONFIGURATION_INVALID" | "MODEL_PREPARATION_DEVICE_UNAVAILABLE" | "MODEL_PREPARATION_DISK_SPACE_LOW" | "MODEL_PREPARATION_DOCKER_REJECTED" | "MODEL_PREPARATION_DOCKER_UNAVAILABLE" | "MODEL_PREPARATION_DRIVER_UNSUPPORTED" | "MODEL_PREPARATION_EVENT_TRANSFER_FAILED" | "MODEL_PREPARATION_EXECUTION_IDENTITY_REQUIRED" | "MODEL_PREPARATION_EXECUTION_PROFILE_INVALID" | "MODEL_PREPARATION_GPU_BUSY" | "MODEL_PREPARATION_GPU_MEMORY_LOW" | "MODEL_PREPARATION_GPU_UNAVAILABLE" | "MODEL_PREPARATION_GPU_UNSUPPORTED" | "MODEL_PREPARATION_HELDOUT_INVALID" | "MODEL_PREPARATION_HOST_CPU_UNAVAILABLE" | "MODEL_PREPARATION_HOST_MEMORY_LOW" | "MODEL_PREPARATION_INPUT_INVALID" | "MODEL_PREPARATION_LEASE_EXPIRED" | "MODEL_PREPARATION_MEMORY_BOUNDARY_REQUIRED" | "MODEL_PREPARATION_MERGE_INVALID" | "MODEL_PREPARATION_MIG_UNSUPPORTED" | "MODEL_PREPARATION_MODEL_INVALID" | "MODEL_PREPARATION_NODE_UNAVAILABLE" | "MODEL_PREPARATION_NONFINITE_TENSOR" | "MODEL_PREPARATION_NON_TARGET_CHANGED" | "MODEL_PREPARATION_OUTPUT_CHANGED" | "MODEL_PREPARATION_OUTPUT_CONFLICT" | "MODEL_PREPARATION_OUTPUT_INVALID" | "MODEL_PREPARATION_OUTPUT_LIMIT" | "MODEL_PREPARATION_OUTPUT_TRANSFER_FAILED" | "MODEL_PREPARATION_PATH_INVALID" | "MODEL_PREPARATION_PLATFORM_UNSUPPORTED" | "MODEL_PREPARATION_PREFLIGHT_REQUIRED" | "MODEL_PREPARATION_PROCESSOR_FAILED" | "MODEL_PREPARATION_PROCESSOR_MEMORY_EXCEEDED" | "MODEL_PREPARATION_PROCESSOR_TIMEOUT" | "MODEL_PREPARATION_REPORT_CONFLICT" | "MODEL_PREPARATION_REPORT_INVALID" | "MODEL_PREPARATION_REQUEST_INVALID" | "MODEL_PREPARATION_RESERVED_TOKEN" | "MODEL_PREPARATION_RESOURCES_INVALID" | "MODEL_PREPARATION_RESOURCE_BUSY" | "MODEL_PREPARATION_RESULT_INVALID" | "MODEL_PREPARATION_RESULT_LIMIT" | "MODEL_PREPARATION_RESULT_UNAVAILABLE" | "MODEL_PREPARATION_RUNTIME_MISMATCH" | "MODEL_PREPARATION_SCOPE_INVALID" | "MODEL_PREPARATION_SEQUENCE_TOO_LONG" | "MODEL_PREPARATION_STOP_CONFLICT" | "MODEL_PREPARATION_STOP_INVALID" | "MODEL_PREPARATION_STORAGE_CONFLICT" | "MODEL_PREPARATION_STORAGE_DATA_INVALID" | "MODEL_PREPARATION_STORAGE_FULL" | "MODEL_PREPARATION_STORAGE_PATH_INVALID" | "MODEL_PREPARATION_STORAGE_UNAVAILABLE" | "MODEL_PREPARATION_STORE_IN_USE" | "MODEL_PREPARATION_STORE_NAMESPACE_INVALID" | "MODEL_PREPARATION_STORE_NOT_EMPTY" | "MODEL_PREPARATION_TENSOR_INVALID" | "MODEL_PREPARATION_TOKENIZER_INVALID" | "MODEL_PREPARATION_UNCHANGED_MODEL" | "MODEL_PREPARATION_UPLOAD_BUSY" | "MODEL_PREPARATION_UPLOAD_CHECKSUM_MISMATCH" | "MODEL_PREPARATION_UPLOAD_CONFLICT" | "MODEL_PREPARATION_UPLOAD_INCOMPLETE" | "MODEL_PREPARATION_UPLOAD_INVALID" | "MODEL_PREPARATION_UPLOAD_NOT_FOUND" | "MODEL_PREPARATION_UPLOAD_RECOVERY_REQUIRED" | "MODEL_PREPARATION_UPLOAD_STATE_CONFLICT" | "MODEL_PREPARATION_UPLOAD_TICKET_STALE" | "MODEL_PREPARATION_UPLOAD_TIMEOUT" | "MODEL_PREPARATION_WIRE_INVALID" | "MODEL_PREPARATION_RECOVERY_NOT_ALLOWED" | "MODEL_PREPARATION_ATTEMPTS_EXHAUSTED" | "MODEL_PREPARATION_UNAVAILABLE" | "MODEL_PREPARATION_DATA_INVALID" | "MODEL_PREPARATION_NOT_FOUND" | "MODEL_PREPARATION_ATTEMPT_STALE" | "MODEL_PREPARATION_INPUT_CHANGED" | "MODEL_PREPARATION_INPUT_LIMIT_REACHED" | "MODEL_PREPARATION_RECIPE_INVALID" | "MODEL_PREPARATION_RECIPE_UNAVAILABLE" | "MODEL_PREPARATION_LIMIT_REACHED" | "MODEL_PREPARATION_REVISION_CONFLICT" | "MODEL_PREPARATION_PHYSICAL_STOP_REQUIRED" | "MODEL_PREPARATION_EVENT_INVALID" | "MODEL_PREPARATION_EVENT_CONFLICT" | "MODEL_PREPARATION_EVENT_ORDER_CONFLICT" | "MODEL_PREPARATION_EVENT_LIMIT" | "MODEL_PREPARATION_TRANSFER_INVALID" | "MODEL_PREPARATION_TRANSFER_FAILED" | "MODEL_PREPARATION_AUTHORITY_REQUIRED" | "MODEL_HOLDOUT_UNAVAILABLE" | "MODEL_HOLDOUT_DATA_INVALID" | "MODEL_HOLDOUT_NOT_FOUND" | "MODEL_HOLDOUT_EXISTS" | "MODEL_HOLDOUT_OVERLAP" | "MODEL_HOLDOUT_SOURCE_CHANGED" | "MODEL_HOLDOUT_SOURCE_INVALID" | "MODEL_HOLDOUT_LABELS_INVALID" | "MODEL_HOLDOUT_ANALYSIS_LIMIT" | "MODEL_HOLDOUT_ANALYSIS_TIMEOUT" | "MODEL_HOLDOUT_SCAN_BUSY" | "MODEL_HOLDOUT_LIMIT_REACHED" | "MODEL_HOLDOUT_CONCURRENT_TRAINING_RETRY" | "MODEL_HOLDOUT_GUARD_REQUIRED" | "TRAINING_RECOVERY_NOT_ALLOWED" | "TRAINING_ATTEMPTS_EXHAUSTED" | "TRAINING_RECIPE_UNAVAILABLE" | "TRAINING_GPU_UNAVAILABLE" | "TRAINING_GPU_MEMORY_LOW" | "TRAINING_HOST_MEMORY_LOW" | "TRAINING_PREFLIGHT_REQUIRED" | "TRAINING_PLATFORM_UNSUPPORTED" | "TRAINING_DRIVER_UNSUPPORTED" | "TRAINING_GPU_UNSUPPORTED" | "TRAINING_MIG_UNSUPPORTED" | "TRAINING_INSTALLATION_REQUIRED" | "TRAINING_STORE_IN_USE" | "TRAINING_STORE_NAMESPACE_INVALID" | "TRAINING_STORAGE_REQUIRED" | "TRAINING_INPUT_STORES_REQUIRED" | "TRAINING_STORAGE_PATH_INVALID" | "TRAINING_STORE_BUSY" | "TRAINING_STORE_NOT_EMPTY" | "TRAINING_STOP_INVALID" | "TRAINING_STOP_CONFLICT" | "TRAINING_RESULT_UNAVAILABLE" | "TRAINING_UPLOAD_TIMEOUT" | "TRAINING_UPLOAD_INVALID" | "TRAINING_UPLOAD_NOT_FOUND" | "TRAINING_CHECKPOINT_NOT_ANNOUNCED" | "TRAINING_CHECKPOINT_CONFLICT" | "TRAINING_UPLOAD_CONFLICT" | "TRAINING_UPLOAD_STATE_CONFLICT" | "TRAINING_UPLOAD_BUSY" | "TRAINING_UPLOAD_TICKET_STALE" | "TRAINING_UPLOAD_INCOMPLETE" | "TRAINING_UPLOAD_RECOVERY_REQUIRED" | "TRAINING_UPLOAD_CHECKSUM_MISMATCH" | "TRAINING_STORAGE_CONFLICT" | "TRAINING_STORAGE_DATA_INVALID" | "TRAINING_CHECKPOINT_INVALID" | "TRAINING_RESULT_INVALID" | "TRAINING_RESULT_CONFLICT" | "TRAINING_ADAPTER_INVALID" | "TRAINING_BASE_SHAPE_INVALID" | "TRAINING_STORAGE_UNAVAILABLE" | "TRAINING_STORAGE_FULL" | "TRAINING_EVENT_INVALID" | "TRAINING_EVENT_CONFLICT" | "TRAINING_EVENT_ORDER_CONFLICT" | "TRAINING_INPUT_LIMIT_REACHED" | "TRAINING_NOT_FOUND" | "TRAINING_TRANSFER_INVALID" | "TRAINING_COMMAND_INVALID" | "TRAINING_RECIPE_INVALID" | "TRAINING_AUTHORITY_REQUIRED" | "TRAINING_UNAVAILABLE" | "TRAINING_DATA_INVALID" | "TRAINING_TRANSFER_FAILED" | "TRAINING_CHECKPOINT_UNAVAILABLE" | "TRAINING_INPUT_UNAVAILABLE" | "TRAINING_JOB_LIMIT_REACHED" | "TRAINING_REVISION_CONFLICT" | "TRAINING_PHYSICAL_STOP_REQUIRED" | "TRAINING_ATTEMPT_STALE" | "TRAINING_DATASET_EMPTY_PARTITION" | "GATEWAY_RECOVERY_NOT_REQUIRED" | "GATEWAY_RECOVERY_REQUIRES_REVOCATION" | "GATEWAY_RECOVERY_STATE_CONFLICT" | "GATEWAY_FENCE_RECEIPT_CONFLICT" | "GATEWAY_FENCE_SCOPE_CONFLICT" | "GATEWAY_BACKEND_STOP_UNCONFIRMED" | "API_KEY_INVALID" | "API_KEY_EXPIRED" | "GATEWAY_UNAUTHORIZED" | "FORBIDDEN" | "ALIAS_PAUSE_REQUIRED" | "ALIAS_ALREADY_PAUSED" | "ALIAS_NOT_PAUSED" | "ALIAS_REQUESTS_UNDRAINED" | "ALIAS_ROLLBACK_TARGET_INVALID" | "MODEL_ALIAS_NOT_FOUND" | "MODEL_ALIAS_UNAVAILABLE" | "MODEL_ALIAS_EXISTS" | "GATEWAY_INSTANCE_EXISTS" | "GATEWAY_INSTANCE_REVOKED" | "GATEWAY_NODE_UNAVAILABLE" | "GATEWAY_REQUEST_EXISTS" | "GATEWAY_REQUEST_NOT_FOUND" | "GATEWAY_OUTCOME_CONFLICT" | "GATEWAY_USAGE_INVALID" | "MODEL_VERSION_REFERENCED" | "MODEL_REFERENCE_CHECK_UNAVAILABLE" | "INFERENCE_RESOURCE_BUSY" | "INFERENCE_PREFLIGHT_REQUIRED" | "NODE_UNAVAILABLE" | "INFERENCE_CONFIGURATION_INVALID" | "INFERENCE_RECOVERY_REQUIRED" | "INFERENCE_OWNERSHIP_CONFLICT" | "INFERENCE_REVISION_CONFLICT" | "MODEL_FILE_INVALID" | "MODEL_FILE_CHANGED" | "MODEL_STORAGE_UNAVAILABLE" | "MODEL_IMPORT_BUSY" | "MODEL_ALREADY_EXISTS" | "MODEL_IMPORT_STATE_CONFLICT" | "MODEL_IMPORT_INCOMPLETE" | "MODEL_CHUNK_INVALID" | "MODEL_CHUNK_CONFLICT" | "MODEL_CHUNK_OFFSET_MISMATCH" | "MODEL_CLEANUP_CONFLICT" | "MODEL_IO_FAILED" | "MODEL_PATH_INVALID" | "COMPONENT_CONFIG_INVALID" | "COMPONENT_VERSION_UNSUPPORTED" | "COMPONENT_VERSION_CONFLICT" | "COMPONENT_UPGRADE_NOT_FORWARD" | "COMPONENT_ROLLBACK_UNAVAILABLE" | "COMPONENT_ROLLBACK_FAILED" | "COMPONENT_UPDATE_ROLLED_BACK" | "COMPONENT_LOGS_UNAVAILABLE" | "COMPONENT_LOGS_TOO_LARGE" | "COMPONENT_LOGS_INVALID" | "COMPONENT_MAINTENANCE_REQUIRED" | "COMPONENT_STATE_INVALID" | "COMPONENT_INTERRUPTED" | "COMPONENT_ASSET_UNAVAILABLE" | "COMPONENT_ASSET_INVALID" | "AGENT_PROFILE_REJECTED" | "COMPONENT_PROFILE_UNAVAILABLE" | "NODE_NAME_EXISTS" | "NODE_REMOVED" | "NODE_JOIN_STATE_CONFLICT" | "NODE_BUSY" | "AGENT_UNAUTHORIZED" | "AGENT_PROTOCOL_UNSUPPORTED" | "AGENT_OPERATION_UNSUPPORTED" | "AGENT_LEASE_STALE" | "WORKSPACE_EXISTS" | "MEMBERSHIP_EXISTS" | "LAST_WORKSPACE_OWNER" | "DEFAULT_WORKSPACE_PROTECTED" | "RESOURCE_LIMIT_REACHED" | "MONGODB_BUSINESS_DATABASE_UNSUPPORTED" | "MONGODB_SOURCE_CHANGED" | "MONGODB_DISABLED" | "MONGODB_BUSY" | "MONGODB_RETRY_LIMIT" | "MONGODB_MAPPING_INVALID" | "MONGODB_CONFIGURATION_INVALID" | "MONGODB_TIMEOUT" | "MONGODB_CANCELLED" | "MONGODB_CONNECT_FAILED" | "MONGODB_READ_FAILED" | "MONGODB_ACCESS_DENIED" | "MONGODB_SNAPSHOT_EXPIRED" | "MONGODB_SNAPSHOT_UNSUPPORTED" | "MONGODB_IDENTIFIER_INVALID" | "MONGODB_ORDER_INVALID" | "MONGODB_LIMIT_EXCEEDED" | "MONGODB_SOURCE_EMPTY" | "MONGODB_FIELD_INVALID" | "MONGODB_TYPE_INVALID" | "MONGODB_RECORD_INVALID";
-            /** Format: uuid */
-            request_id: string;
-            detail?: string;
-            fields?: {
-                field: string;
-                code: string;
-            }[];
-        };
-        ModelHoldoutLabels: {
-            account: number;
-            billing: number;
-            technical: number;
-        };
-        ModelHoldout: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            dataset_id: string;
-            /** Format: uuid */
-            dataset_version_id: string;
-            /** Format: uuid */
-            created_by: string;
-            name: string;
-            manifest_sha256: string;
-            effective_source_sha256: string;
-            row_mapping_sha256: string;
-            recipe_sha256: string;
-            instruction_sha256: string;
-            source_bytes: number;
-            row_count: number;
-            label_counts: components["schemas"]["ModelHoldoutLabels"];
-            /** @enum {string} */
-            recipe_id: "support_routing_v1";
-            /** @enum {string} */
-            fingerprint_algorithm: "sha256_utf8_crlf_cr_to_lf_trim_ascii_space_tab_lf_v1";
-            /** @enum {string} */
-            audience: "admin" | "portal";
-            reason: string;
-            /** Format: date-time */
-            created_at: string;
-        };
-        ReserveModelHoldout: {
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            dataset_id: string;
-            /** Format: uuid */
-            dataset_version_id: string;
-            expected_manifest_sha256: string;
-            name: string;
-            reason: string;
-        };
-        ModelHoldoutCapabilities: {
-            enabled: boolean;
-            can_reserve: boolean;
-            maximum_holdouts: number;
-            /** @constant */
-            maximum_rows: 256;
-            /** @constant */
-            minimum_rows: 3;
-        };
-        ModelHoldoutPage: {
-            items: components["schemas"]["ModelHoldout"][];
-            next_cursor: null | string;
-        };
-        ModelHoldoutResponse: {
-            data: components["schemas"]["ModelHoldout"];
-        };
-        ModelHoldoutPageResponse: {
-            data: components["schemas"]["ModelHoldoutPage"];
-        };
-        ModelHoldoutCapabilitiesResponse: {
-            data: components["schemas"]["ModelHoldoutCapabilities"];
-        };
-        NVIDIAGPU: {
-            uuid: string;
-            name: string;
-            driver_version: string;
-            memory_total_mib: number;
-            memory_free_mib: number;
-            compute_capability: number;
-            /** @enum {string} */
-            mig_mode: "Disabled" | "Enabled" | "[N/A]" | "N/A";
-            /** Format: date-time */
-            observed_at: string;
-        };
-        ModelPreparationConfiguration: {
-            /** @constant */
-            device: "nvidia_bfloat16";
-            /** @default 512 */
-            maximum_input_tokens: number;
-            /** @default 8 */
-            maximum_new_tokens: number;
-            /** @default 42 */
-            seed: number;
-            /** @default 2 */
-            threads: number;
-            /** @default 8000 */
-            minimum_accuracy_basis_points: number;
-            /** @default 0 */
-            maximum_regression_basis_points: number;
-        };
-        ModelPreparationRecipe: {
-            /** @constant */
-            schema_version: 1;
-            /** @constant */
-            worker_version: "0.1.0";
-            image_reference: string;
-            execution_identity: components["schemas"]["TrainingExecutionIdentity"];
-            resources: components["schemas"]["ModelPreparationResources"];
-            data_limits: components["schemas"]["ModelPreparationDataLimits"];
-            /** @constant */
-            recipe_sha256: "758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496";
-            /** @constant */
-            processor_sha256: "b80b0b0bb0c1defe663015e88eff028f5c2888bef9a2a14a2db0cac4510cc689";
-        };
-        TrainingExecutionIdentity: {
-            /** @constant */
-            profile: "nvidia_bfloat16";
-            /** @constant */
-            python: "3.12.15";
-            worker_source_sha256: string;
-            image_id: string;
-        };
-        ModelPreparationResources: {
-            wall_seconds: number;
-            cpu_seconds: number;
-            memory_bytes: number;
-            maximum_output_bytes: number;
-            maximum_output_files: number;
-            maximum_result_bytes: number;
-            maximum_event_bytes: number;
-            open_files: number;
-        };
-        ModelPreparationDataLimits: {
-            maximum_bytes: number;
-            maximum_rows: number;
-            maximum_line_bytes: number;
-            maximum_text_bytes: number;
-            maximum_source_bytes: number;
-            maximum_errors: number;
-        };
-        ModelPreparationPreparedResult: {
-            /** @constant */
-            schema_version: 1;
-            /** @constant */
-            worker_version: "0.1.0";
-            /** @constant */
-            status: "prepared";
-            /** @constant */
-            recipe_id: "support_routing_v1";
-            /** @constant */
-            recipe_sha256: "758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496";
-            configuration: components["schemas"]["ModelPreparationConfiguration"];
-            configuration_sha256: string;
-            /** @constant */
-            model_catalog_sha256: "4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc";
-            adapter_files: components["schemas"]["ModelPreparationAdapterAsset"][] & (unknown & unknown & unknown);
-            heldout_sha256: string;
-            training_configuration_sha256: string;
-            chat_template_sha256: string;
-            /** @constant */
-            instruction_sha256: "814baef5d99fdbee68a4add364327ebd1e8a509880bbdd01414b011aff025932";
-            packages: components["schemas"]["TrainingPackages"];
-            /** @constant */
-            device_profile: "nvidia_bfloat16";
-            /** @constant */
-            computation_dtype: "bfloat16";
-            /** @constant */
-            storage_dtype: "BF16";
-            row_count: number;
-            base: components["schemas"]["ModelPreparationScore"];
-            candidate: components["schemas"]["ModelPreparationScore"];
-            cases: components["schemas"]["ModelPreparationCase"][];
-            model_files: components["schemas"]["ModelPreparationModelAsset"][] & (unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown);
-            changed_target_tensors: string[];
-            tied_weight_aliases: {
-                /** @constant */
-                "lm_head.weight": "model.embed_tokens.weight";
-            };
-            gate_passed: boolean;
-            /** Format: uuid */
-            tenant_id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            preparation_id: string;
-            /** Format: uuid */
-            attempt_id: string;
-            /** Format: uuid */
-            training_job_id: string;
-            /** Format: uuid */
-            training_attempt_id: string;
-            /** Format: uuid */
-            heldout_id: string;
-            execution_identity: components["schemas"]["TrainingExecutionIdentity"];
-            resources: components["schemas"]["ModelPreparationResources"];
-            /** @constant */
-            memory_enforcement: "linux_cgroup_memory_cpu_fsize_wall";
-            event_count: number;
-            request_sha256: string;
-        };
-        ModelPreparationAdapterAsset: {
-            /** @enum {string} */
-            path: "adapter_config.json" | "adapter_model.safetensors" | "README.md";
-            size_bytes: number;
-            sha256: string;
-        };
-        TrainingPackages: {
-            /** @constant */
-            torch: "2.14.1";
-            /** @constant */
-            transformers: "5.19.0";
-            /** @constant */
-            peft: "0.21.2";
-            /** @constant */
-            accelerate: "1.15.0";
-        };
-        ModelPreparationScore: {
-            correct: number;
-            row_count: number;
-            confusion: number[][];
-        };
-        ModelPreparationCase: {
-            source_id: string;
-            prompt_sha256: string;
-            /** @enum {string} */
-            expected_label: "account" | "billing" | "technical";
-            base: components["schemas"]["ModelPreparationPrediction"];
-            candidate: components["schemas"]["ModelPreparationPrediction"];
-        };
-        ModelPreparationPrediction: {
-            predicted_label: ("account" | "billing" | "technical") | null;
-            output_sha256: string;
-            generated_tokens: number;
-            duration_milliseconds: number;
-        };
-        ModelPreparationModelAsset: {
-            /** @constant */
-            path: "LICENSE";
-            /** @constant */
-            size_bytes: 11343;
-            /** @constant */
-            sha256: "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e";
-        } | {
-            /** @constant */
-            path: "README.md";
-            /** @constant */
-            size_bytes: 13965;
-            /** @constant */
-            sha256: "1ab64a26fcb3b461423b89a433a8c858f1bf8d4086f979cbb3ff878d47cf20e9";
-        } | {
-            /** @constant */
-            path: "config.json";
-            /** @constant */
-            size_bytes: 726;
-            /** @constant */
-            sha256: "660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd";
-        } | {
-            /** @constant */
-            path: "generation_config.json";
-            /** @constant */
-            size_bytes: 239;
-            /** @constant */
-            sha256: "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2";
-        } | {
-            /** @constant */
-            path: "merges.txt";
-            /** @constant */
-            size_bytes: 1671853;
-            /** @constant */
-            sha256: "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5";
-        } | {
-            /** @constant */
-            path: "model.safetensors";
-            size_bytes: number;
-            sha256: string;
-        } | {
-            /** @constant */
-            path: "tokenizer.json";
-            /** @constant */
-            size_bytes: 11422654;
-            /** @constant */
-            sha256: "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4";
-        } | {
-            /** @constant */
-            path: "tokenizer_config.json";
-            /** @constant */
-            size_bytes: 9732;
-            /** @constant */
-            sha256: "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101";
-        } | {
-            /** @constant */
-            path: "vocab.json";
-            /** @constant */
-            size_bytes: 2776833;
-            /** @constant */
-            sha256: "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910";
-        };
-        ModelPreparationFailedResult: {
-            /** @constant */
-            schema_version: 1;
-            /** @constant */
-            worker_version: "0.1.0";
-            /** @constant */
-            status: "failed";
-            /** Format: uuid */
-            preparation_id: string;
-            /** Format: uuid */
-            attempt_id: string;
-            /** @enum {string} */
-            error_code: "MODEL_PREPARATION_ADAPTER_INVALID" | "MODEL_PREPARATION_ATTEMPT_IN_USE" | "MODEL_PREPARATION_CONFIGURATION_INVALID" | "MODEL_PREPARATION_DEVICE_UNAVAILABLE" | "MODEL_PREPARATION_EVENT_LIMIT" | "MODEL_PREPARATION_EXECUTION_IDENTITY_REQUIRED" | "MODEL_PREPARATION_EXECUTION_PROFILE_INVALID" | "MODEL_PREPARATION_HELDOUT_INVALID" | "MODEL_PREPARATION_INPUT_CHANGED" | "MODEL_PREPARATION_INPUT_INVALID" | "MODEL_PREPARATION_MEMORY_BOUNDARY_REQUIRED" | "MODEL_PREPARATION_MERGE_INVALID" | "MODEL_PREPARATION_MODEL_INVALID" | "MODEL_PREPARATION_NONFINITE_TENSOR" | "MODEL_PREPARATION_NON_TARGET_CHANGED" | "MODEL_PREPARATION_OUTPUT_CONFLICT" | "MODEL_PREPARATION_OUTPUT_INVALID" | "MODEL_PREPARATION_OUTPUT_LIMIT" | "MODEL_PREPARATION_PATH_INVALID" | "MODEL_PREPARATION_PLATFORM_UNSUPPORTED" | "MODEL_PREPARATION_PROCESSOR_FAILED" | "MODEL_PREPARATION_PROCESSOR_MEMORY_EXCEEDED" | "MODEL_PREPARATION_PROCESSOR_TIMEOUT" | "MODEL_PREPARATION_REPORT_INVALID" | "MODEL_PREPARATION_REQUEST_INVALID" | "MODEL_PREPARATION_RESERVED_TOKEN" | "MODEL_PREPARATION_RESOURCES_INVALID" | "MODEL_PREPARATION_RESULT_LIMIT" | "MODEL_PREPARATION_RUNTIME_MISMATCH" | "MODEL_PREPARATION_SCOPE_INVALID" | "MODEL_PREPARATION_SEQUENCE_TOO_LONG" | "MODEL_PREPARATION_STORAGE_FULL" | "MODEL_PREPARATION_TENSOR_INVALID" | "MODEL_PREPARATION_TOKENIZER_INVALID" | "MODEL_PREPARATION_UNCHANGED_MODEL";
-        } | {
-            /** @constant */
-            schema_version: 1;
-            /** @constant */
-            worker_version: "0.1.0";
-            /** @constant */
-            status: "cancelled";
-            /** Format: uuid */
-            preparation_id: string;
-            /** Format: uuid */
-            attempt_id: string;
-            /** @enum {string} */
-            error_code: "MODEL_PREPARATION_CANCELLED";
-        };
-        ModelPreparationEvent: {
-            sequence: number;
-            /** Format: uuid */
-            preparation_id: string;
-            /** Format: uuid */
-            attempt_id: string;
-            /** @constant */
-            kind: "phase";
-            /** @enum {string} */
-            phase: "evaluating_base" | "merging" | "evaluating_candidate";
-        } | {
-            sequence: number;
-            /** Format: uuid */
-            preparation_id: string;
-            /** Format: uuid */
-            attempt_id: string;
-            /** @constant */
-            kind: "evaluation_progress";
-            /** @enum {string} */
-            phase: "base" | "candidate";
-            completed_rows: number;
-            total_rows: number;
-        };
-        ModelPreparation: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            node_id: string;
-            /** Format: uuid */
-            current_node_id: string;
-            /** Format: uuid */
-            model_id: string;
-            /** Format: uuid */
-            training_job_id: string;
-            /** Format: uuid */
-            training_attempt_id: string;
-            /** Format: uuid */
-            training_artifact_id: string;
-            /** Format: uuid */
-            heldout_id: string;
-            /** Format: uuid */
-            created_by: string;
-            gpu_uuid: string;
-            input_sha256: string;
-            training_result_sha256: string;
-            heldout_manifest_sha256: string;
-            configuration_sha256: string;
-            configuration: components["schemas"]["ModelPreparationConfiguration"];
-            recipe: components["schemas"]["ModelPreparationRecipe"];
-            reason: string;
-            /** @enum {string} */
-            state: "queued" | "preparing" | "running" | "cancelling" | "recovery_required" | "quality_failed" | "awaiting_review" | "approved" | "rejected" | "cancelled" | "failed";
-            revision: number;
-            attempt_number: number;
-            current_attempt_id: string | null;
-            pending_recovery_id: string | null;
-            review_id: string | null;
-            derived_model_id: string | null;
-            wait_code: string | null;
-            error_code: string | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-            finished_at: string | null;
-            cancel_requested_at: string | null;
-        };
-        CreateModelPreparation: {
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            training_job_id: string;
-            /** Format: uuid */
-            heldout_id: string;
-            /** Format: uuid */
-            node_id: string;
-            gpu_uuid: string;
-            configuration: components["schemas"]["ModelPreparationConfiguration"];
-            reason: string;
-        };
-        ModelPreparationAction: {
-            expected_revision: number;
-            reason: string;
-        };
-        ModelPreparationRecovery: {
-            expected_revision: number;
-            reason: string;
-            /** Format: uuid */
-            node_id: string;
-        };
-        ModelPreparationReviewRequest: {
-            expected_revision: number;
-            reason: string;
-            /** Format: uuid */
-            artifact_id: string;
-            report_sha256: string;
-            /** @enum {string} */
-            decision: "approve" | "reject";
-            name: string;
-        };
-        ModelPreparationReview: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            preparation_id: string;
-            /** Format: uuid */
-            attempt_id: string;
-            /** Format: uuid */
-            artifact_id: string;
-            /** Format: uuid */
-            reviewed_by: string;
-            report_sha256: string;
-            expected_revision: number;
-            /** @enum {string} */
-            decision: "approve" | "reject";
-            model_id: string | null;
-            name: string;
-            reason: string;
-            /** Format: date-time */
-            created_at: string;
-        };
-        ModelPreparationCapabilities: {
-            execution_configured: boolean;
-            can_create: boolean;
-            can_manage: boolean;
-            can_cancel_own: boolean;
-            can_review: boolean;
-            /** @constant */
-            node_profile: "docker_model_lifecycle";
-            /** @constant */
-            protocol_version: "1.5";
-            configuration_defaults: components["schemas"]["ModelPreparationConfiguration"];
-            maximum_preparations: number;
-            maximum_active: number;
-            maximum_attempts: number;
-        };
-        ModelPreparationTarget: {
-            /** Format: uuid */
-            node_id: string;
-            gpus: components["schemas"]["NVIDIAGPU"][];
-            /** Format: date-time */
-            observed_at: string;
-            probe_error_code: string | null;
-        };
-        ModelPreparationAttempt: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            preparation_id: string;
-            /** Format: uuid */
-            node_id: string;
-            /** Format: uuid */
-            task_id: string;
-            attempt_number: number;
-            command_sha256: string;
-            /** @enum {string} */
-            state: "pending" | "preparing" | "running" | "stopping" | "recovery_required" | "stopped" | "prepared" | "cancelled" | "failed";
-            last_event_sequence: number;
-            outcome_sha256: string | null;
-            physical_stop_sha256: string | null;
-            error_code: string | null;
-            /** Format: date-time */
-            created_at: string;
-            started_at: string | null;
-            finished_at: string | null;
-            physical_stopped_at: string | null;
-        };
-        ModelPreparationPage: {
-            items: components["schemas"]["ModelPreparation"][];
-            next_cursor: string | null;
-        };
-        ModelPreparationAttemptPage: {
-            items: components["schemas"]["ModelPreparationAttempt"][];
-            next_cursor: string | null;
-        };
-        ModelPreparationEventPage: {
-            items: components["schemas"]["ModelPreparationEvent"][];
-            next_after: number | null;
-        };
-        ModelPreparationReport: {
-            /** Format: uuid */
-            preparation_id: string;
-            attempt_id: string | null;
-            artifact_id: string | null;
-            report_sha256: string | null;
-            physical_stopped_at: string | null;
-            result: components["schemas"]["ModelPreparationPreparedResult"] | components["schemas"]["ModelPreparationFailedResult"] | null;
-            review: components["schemas"]["ModelPreparationReview"] | null;
-        };
-        ModelPreparationResponse: {
-            data: components["schemas"]["ModelPreparation"];
-        };
-        ModelPreparationPageResponse: {
-            data: components["schemas"]["ModelPreparationPage"];
-        };
-        ModelPreparationCapabilitiesResponse: {
-            data: components["schemas"]["ModelPreparationCapabilities"];
-        };
-        ModelPreparationTargetResponse: {
-            data: components["schemas"]["ModelPreparationTarget"];
-        };
-        ModelPreparationAttemptPageResponse: {
-            data: components["schemas"]["ModelPreparationAttemptPage"];
-        };
-        ModelPreparationEventPageResponse: {
-            data: components["schemas"]["ModelPreparationEventPage"];
-        };
-        ModelPreparationReportResponse: {
-            data: components["schemas"]["ModelPreparationReport"];
-        };
-        ModelPreparationReviewResponse: {
-            data: components["schemas"]["ModelPreparationReview"];
-        };
+  schemas: {
+    Problem: {
+      /** @constant */
+      type: 'about:blank';
+      title: string;
+      status: number;
+      /** @enum {string} */
+      code:
+        | 'VALIDATION_FAILED'
+        | 'INVALID_CURSOR'
+        | 'TOKEN_UNUSABLE'
+        | 'AUTH_INVALID_CREDENTIALS'
+        | 'AUTH_REQUIRED'
+        | 'AUTH_SESSION_EXPIRED'
+        | 'ACCESS_DENIED'
+        | 'CSRF_INVALID'
+        | 'ORIGIN_REJECTED'
+        | 'RESOURCE_NOT_FOUND'
+        | 'ACCOUNT_EXISTS'
+        | 'INVITATION_EXISTS'
+        | 'INVITATION_STATE_CONFLICT'
+        | 'VERSION_CONFLICT'
+        | 'IDEMPOTENCY_CONFLICT'
+        | 'PROTECTED_ACCOUNT'
+        | 'PAYLOAD_TOO_LARGE'
+        | 'UNSUPPORTED_MEDIA_TYPE'
+        | 'MISDIRECTED_REQUEST'
+        | 'PASSWORD_POLICY_VIOLATION'
+        | 'PASSWORD_BLOCKED'
+        | 'RATE_LIMITED'
+        | 'INTERNAL_ERROR'
+        | 'STORAGE_UNAVAILABLE'
+        | 'STORAGE_COMMIT_OUTCOME_UNKNOWN'
+        | 'AUTH_CAPACITY_EXCEEDED'
+        | 'SERVICE_NOT_READY'
+        | 'LICENSE_NEW_BUSINESS_UNAVAILABLE'
+        | 'LICENSE_STORED_STATE_INVALID'
+        | 'LICENSE_CONFIGURATION_REQUIRED'
+        | 'DATASET_NOT_FOUND'
+        | 'DATASET_EXISTS'
+        | 'DATASET_RETIRED'
+        | 'DATASET_VERSION_RETIRED'
+        | 'DATASET_DRAFT_BUSY'
+        | 'DATASET_REVISION_CONFLICT'
+        | 'DATASET_UPLOAD_BUSY'
+        | 'DATASET_SOURCE_CHANGED'
+        | 'DATASET_UPLOAD_INCOMPLETE'
+        | 'DATASET_CORRECTED_UPLOAD_REQUIRED'
+        | 'DATASET_VALIDATION_FAILED'
+        | 'DATASET_SPLIT_CONFIGURATION_INVALID'
+        | 'DATASET_SPLIT_INSUFFICIENT_GROUPS'
+        | 'DATASET_LIMIT_REACHED'
+        | 'DATASET_RETRY_NOT_ALLOWED'
+        | 'DATASET_PROCESSOR_TIMEOUT'
+        | 'DATASET_PROCESSOR_MEMORY_EXCEEDED'
+        | 'DATASET_PROCESSOR_RESULT_TOO_LARGE'
+        | 'DATASET_ATTEMPT_STALE'
+        | 'DATASET_FILE_INVALID'
+        | 'DATASET_STORAGE_UNAVAILABLE'
+        | 'DATASET_STORAGE_FULL'
+        | 'DATASET_DATA_INVALID'
+        | 'DATASET_SOURCE_INVALID'
+        | 'DATASET_TEXT_INVALID'
+        | 'DATASET_LINE_TOO_LARGE'
+        | 'DATASET_ROW_LIMIT'
+        | 'DATASET_FILE_TOO_LARGE'
+        | 'DATASET_EMPTY_SOURCE'
+        | 'RELEASE_VIEW_UNAVAILABLE'
+        | 'RELEASE_VIEW_CONFIGURATION_INVALID'
+        | 'CONFIG_RELEASE_VIEW_INVALID'
+        | 'RELEASE_VIEW_CHANGED'
+        | 'CONFIG_MACHINE_TRANSPORT_REQUIRED'
+        | 'CONFIG_MONITORING_INVALID'
+        | 'MONITORING_CONFIGURATION_INVALID'
+        | 'MONITORING_CONFIGURATION_REQUIRED'
+        | 'MONITORING_OWNER_REQUIRED'
+        | 'MONITORING_BUSY'
+        | 'MIDDLEWARE_PROFILE_ALREADY_REGISTERED'
+        | 'MIDDLEWARE_SCHEMA_REJECTED'
+        | 'MIDDLEWARE_AMBIENT_DRIVER_INPUT_REFUSED'
+        | 'MIDDLEWARE_ARTIFACT_ROOT_MISMATCH'
+        | 'MIDDLEWARE_ATTEMPT_STALE'
+        | 'MIDDLEWARE_BACKUP_EVIDENCE_INVALID'
+        | 'MIDDLEWARE_CA_INPUT_INVALID'
+        | 'MIDDLEWARE_COMPLETED_BACKUP_REQUIRED'
+        | 'MIDDLEWARE_CONFIGURATION_INVALID'
+        | 'MIDDLEWARE_CONNECTION_CONFIGURATION_INVALID'
+        | 'MIDDLEWARE_CONNECTION_FAILED'
+        | 'MIDDLEWARE_ENDPOINT_IDENTITY_MISMATCH'
+        | 'MIDDLEWARE_ENVIRONMENT_INVALID'
+        | 'MIDDLEWARE_EXECUTION_UNCERTAIN'
+        | 'MIDDLEWARE_EXTERNAL_MUTATION_REFUSED'
+        | 'MIDDLEWARE_FRESH_TARGET_REQUIRED'
+        | 'MIDDLEWARE_IDENTITY_REPOSITORY_REQUIRED'
+        | 'MIDDLEWARE_INPUT_CHANGED'
+        | 'MIDDLEWARE_INSTALLED_PLATFORM_REQUIRED'
+        | 'MIDDLEWARE_INSTANCE_LIMIT'
+        | 'MIDDLEWARE_ISOLATED_CONFIRMATION_REQUIRED'
+        | 'MIDDLEWARE_ISOLATED_TARGET_INVALID'
+        | 'MIDDLEWARE_OPERATION_DEADLINE_REQUIRED'
+        | 'MIDDLEWARE_OPERATOR_RECONCILIATION_REQUIRED'
+        | 'MIDDLEWARE_ORIGINAL_OPERATOR_INTENT_REQUIRED'
+        | 'MIDDLEWARE_ORIGINAL_UNCERTAIN_OPERATION_REQUIRED'
+        | 'MIDDLEWARE_PASSWORD_INPUT_INVALID'
+        | 'MIDDLEWARE_PLATFORM_SCOPE_DUPLICATE'
+        | 'MIDDLEWARE_PLATFORM_SCOPE_MISMATCH'
+        | 'MIDDLEWARE_PLATFORM_SCOPE_REQUIRED'
+        | 'MIDDLEWARE_PRIVATE_INPUT_CHANGED'
+        | 'MIDDLEWARE_PRIVATE_INPUT_INVALID'
+        | 'MIDDLEWARE_PRIVILEGE_OBSERVATION_FAILED'
+        | 'MIDDLEWARE_PROBE_FAILED'
+        | 'MIDDLEWARE_PROFILE_DUPLICATE'
+        | 'MIDDLEWARE_PROFILE_INVALID'
+        | 'MIDDLEWARE_PROFILE_UNAVAILABLE'
+        | 'MIDDLEWARE_REASON_TOO_LONG'
+        | 'MIDDLEWARE_RESTORE_FENCE_CHANGED'
+        | 'MIDDLEWARE_RESTORE_TRANSACTION_REQUIRED'
+        | 'MIDDLEWARE_RESULT_INVALID'
+        | 'MIDDLEWARE_SCOPE_CHANGED'
+        | 'MIDDLEWARE_STORAGE_MISMATCH'
+        | 'MIDDLEWARE_STORAGE_UNAVAILABLE'
+        | 'MIDDLEWARE_STORED_EVIDENCE_INVALID'
+        | 'MIDDLEWARE_STORED_INSTANCE_INVALID'
+        | 'MIDDLEWARE_STORED_INTENT_INVALID'
+        | 'MIDDLEWARE_VERIFIED_TLS_REQUIRED'
+        | 'MIDDLEWARE_VERSION_LIMIT'
+        | 'MIDDLEWARE_WORKER_ALREADY_RUNNING'
+        | 'STORAGE_DEADLOCK'
+        | 'STORAGE_LOCK_TIMEOUT'
+        | 'STORAGE_CANCELLED'
+        | 'STORAGE_TIMEOUT'
+        | 'STORAGE_COMMIT_ROLLED_BACK'
+        | 'NODE_STORAGE_MISMATCH'
+        | 'OBJECT_UPLOAD_NOT_FOUND'
+        | 'OBJECT_UPLOAD_INVALID'
+        | 'OBJECT_TIMEOUT'
+        | 'OBJECT_TARGET_SOURCE_UNPROVEN'
+        | 'OBJECT_TARGET_NOT_ACCEPTED'
+        | 'OBJECT_TARGET_CHANGED'
+        | 'OBJECT_STORE_CHANGED'
+        | 'OBJECT_STORED_PROVENANCE_INVALID'
+        | 'OBJECT_STORAGE_UNAVAILABLE'
+        | 'OBJECT_STORAGE_MISMATCH'
+        | 'OBJECT_STORAGE_FULL'
+        | 'OBJECT_STORAGE_CLOSED'
+        | 'OBJECT_STATE_INVALID'
+        | 'OBJECT_STAGING_REFERENCED'
+        | 'OBJECT_STAGING_RECORD_MISSING'
+        | 'OBJECT_STAGING_NOT_EMPTY'
+        | 'OBJECT_STAGING_NAMESPACE_MISMATCH'
+        | 'OBJECT_STAGING_INVALID'
+        | 'OBJECT_STAGING_FAILED'
+        | 'OBJECT_STAGING_CONFLICT'
+        | 'OBJECT_STAGING_CHANGED'
+        | 'OBJECT_STAGING_BUSY'
+        | 'OBJECT_SNAPSHOT_INVALID'
+        | 'OBJECT_SCOPE_INVALID'
+        | 'OBJECT_RESPONSE_INVALID'
+        | 'OBJECT_REQUEST_INVALID'
+        | 'OBJECT_REMOTE_OUTCOME_UNKNOWN'
+        | 'OBJECT_REFERENCED'
+        | 'OBJECT_RECONCILE_REQUIRED'
+        | 'OBJECT_RECEIPT_INVALID'
+        | 'OBJECT_PURPOSE_INVALID'
+        | 'OBJECT_PROFILE_UNVERIFIED'
+        | 'OBJECT_PART_INVALID'
+        | 'OBJECT_OPERATION_STALE'
+        | 'OBJECT_NOT_READY'
+        | 'OBJECT_NOT_FOUND'
+        | 'OBJECT_NOT_ADMITTED'
+        | 'OBJECT_MANAGEMENT_PROTOCOL_UNVERIFIED'
+        | 'OBJECT_MANAGEMENT_PROFILE_UNVERIFIED'
+        | 'OBJECT_MANAGEMENT_PROFILE_INVALID'
+        | 'OBJECT_MANAGEMENT_MTLS_UNENFORCED'
+        | 'OBJECT_MANAGEMENT_CERTIFICATE_INVALID'
+        | 'OBJECT_MANAGEMENT_CA_INVALID'
+        | 'OBJECT_LIST_INCOMPLETE'
+        | 'OBJECT_INGESTION_UNAVAILABLE'
+        | 'OBJECT_INGESTION_STOP_UNCONFIRMED'
+        | 'OBJECT_INGESTION_INVALID'
+        | 'OBJECT_INGESTION_CANCELLED'
+        | 'OBJECT_INCOMPLETE'
+        | 'OBJECT_IDENTITY_REQUIRED'
+        | 'OBJECT_EXPIRED'
+        | 'OBJECT_ENDPOINT_CHANGED'
+        | 'OBJECT_DIGEST_MISMATCH'
+        | 'OBJECT_CONFLICT'
+        | 'OBJECT_CONFIGURATION_INVALID'
+        | 'OBJECT_COMPOSITION_INVALID'
+        | 'OBJECT_CHANGED'
+        | 'OBJECT_CA_INVALID'
+        | 'OBJECT_CAPABILITY_UNSUPPORTED'
+        | 'OBJECT_CANCELLED'
+        | 'OBJECT_BUSY'
+        | 'OBJECT_BUCKET_AUTHORITY_UNVERIFIED'
+        | 'OBJECT_BUCKET_AUTHORITY_INVALID'
+        | 'OBJECT_BACKEND_AUTH_UNENFORCED'
+        | 'OBJECT_AUTHORITY_INVALID'
+        | 'OBJECT_AMBIGUOUS_REMOTE_UPLOAD'
+        | 'OBJECT_ACTOR_CHANGED'
+        | 'OBJECT_ACCESS_DENIED'
+        | 'OBJECT_SCHEMA_NOT_ACTIVE'
+        | 'AWS_BUSINESS_DATABASE_UNSUPPORTED'
+        | 'AWS_BUSY'
+        | 'AWS_DISABLED'
+        | 'AWS_SCOPE_REJECTED'
+        | 'AWS_ACCOUNT_MISMATCH'
+        | 'AWS_CREDENTIALS_INVALID'
+        | 'AWS_CREDENTIALS_EXPIRED'
+        | 'AWS_ACCESS_DENIED'
+        | 'AWS_UNAVAILABLE'
+        | 'AWS_THROTTLED'
+        | 'AWS_CANCELLED'
+        | 'AWS_RESPONSE_INVALID'
+        | 'AWS_PROVIDER_REJECTED'
+        | 'AWS_PAGINATION_INVALID'
+        | 'AWS_LIMIT_REACHED'
+        | 'AWS_SYNC_SUPERSEDED'
+        | 'AWS_CONFIGURATION_INVALID'
+        | 'LICENSE_ARTIFACT_INVALID'
+        | 'LICENSE_DEPLOYMENT_MISMATCH'
+        | 'LICENSE_ID_CONFLICT'
+        | 'LICENSE_CURRENT_CHANGED'
+        | 'LICENSE_IMPORT_CAPACITY_REQUIRED'
+        | 'LICENSE_PREDECESSOR_REQUIRED'
+        | 'LICENSE_PENDING_SUCCESSOR_EXISTS'
+        | 'LICENSE_RENEWAL_WINDOW_INVALID'
+        | 'LOCALIZATION_UNAVAILABLE'
+        | 'LOCALIZATION_PACKAGE_INVALID'
+        | 'LOCALIZATION_LOCALE_UNAVAILABLE'
+        | 'LOCALIZATION_REQUIRED_LOCALE_UNAVAILABLE'
+        | 'PREFERENCE_UNAVAILABLE'
+        | 'PREFERENCE_REVISION_CONFLICT'
+        | 'NOTIFICATION_UNAVAILABLE'
+        | 'NOTIFICATION_NOT_FOUND'
+        | 'NOTIFICATION_ALREADY_STARTED'
+        | 'NOTIFICATION_SHUTDOWN_TIMEOUT'
+        | 'NOTIFICATION_PROVENANCE_INVALID'
+        | 'PLUGIN_ALREADY_STARTED'
+        | 'PLUGIN_AUTHORITY_CHANGED'
+        | 'PLUGIN_AUTHORITY_INVALID'
+        | 'PLUGIN_CAPABILITY_UNSUPPORTED'
+        | 'PLUGIN_GRANT_EXISTS'
+        | 'PLUGIN_GRANT_NOT_FOUND'
+        | 'PLUGIN_GRANT_REVOKED'
+        | 'PLUGIN_LIMIT_EXCEEDED'
+        | 'PLUGIN_MODEL_LIMIT_EXCEEDED'
+        | 'PLUGIN_MODEL_REFERENCE_CHANGED'
+        | 'PLUGIN_NOT_INSTALLED'
+        | 'PLUGIN_PACKAGE_DIGEST_MISMATCH'
+        | 'PLUGIN_PACKAGE_INVALID'
+        | 'PLUGIN_PACKAGE_LIMIT_INVALID'
+        | 'PLUGIN_REFERENCED'
+        | 'PLUGIN_REFERENCES_CHANGED'
+        | 'PLUGIN_REFERENCE_LIMIT_EXCEEDED'
+        | 'PLUGIN_RESULT_INVALID'
+        | 'PLUGIN_RESULT_LIMIT_EXCEEDED'
+        | 'PLUGIN_REVISION_CONFLICT'
+        | 'PLUGIN_SHUTDOWN_TIMEOUT'
+        | 'PLUGIN_SIGNATURE_INVALID'
+        | 'PLUGIN_TRUST_KEY_INVALID'
+        | 'PLUGIN_UNAVAILABLE'
+        | 'PLUGIN_VERSION_CONFLICT'
+        | 'PLUGIN_VERSION_INVALID'
+        | 'PLUGIN_VERSION_NOT_FOUND'
+        | 'PLUGIN_VERSION_UNSUPPORTED'
+        | 'WORKFLOW_CAPACITY_EXCEEDED'
+        | 'WORKFLOW_CONVERSATION_BUSY'
+        | 'WORKFLOW_ALREADY_STARTED'
+        | 'WORKFLOW_AUTHORITY_CHANGED'
+        | 'WORKFLOW_CONNECTIONS_REQUIRED'
+        | 'WORKFLOW_CONNECTION_ORDER_INVALID'
+        | 'WORKFLOW_CONVERSATION_NOT_FOUND'
+        | 'WORKFLOW_CYCLE'
+        | 'WORKFLOW_DISABLED'
+        | 'WORKFLOW_DRAFT_CHANGED'
+        | 'WORKFLOW_END_HAS_OUTPUT'
+        | 'WORKFLOW_GRAPH_CORRUPT'
+        | 'WORKFLOW_GRAPH_INVALID'
+        | 'WORKFLOW_INPUT_REQUIRED'
+        | 'WORKFLOW_LIMIT_EXCEEDED'
+        | 'WORKFLOW_MAINTENANCE_FAILED'
+        | 'WORKFLOW_NAME_EXISTS'
+        | 'WORKFLOW_NOT_FOUND'
+        | 'WORKFLOW_RESULT_INVALID'
+        | 'WORKFLOW_RESULT_LIMIT_EXCEEDED'
+        | 'WORKFLOW_RUN_CANCELLED'
+        | 'WORKFLOW_RUN_INTERRUPTED'
+        | 'WORKFLOW_RUN_NOT_FOUND'
+        | 'WORKFLOW_RUN_STALE'
+        | 'WORKFLOW_RUN_TIMEOUT'
+        | 'WORKFLOW_SHUTDOWN_TIMEOUT'
+        | 'WORKFLOW_UNAVAILABLE'
+        | 'WORKFLOW_VERSION_UNAVAILABLE'
+        | 'KNOWLEDGE_UNAVAILABLE'
+        | 'KNOWLEDGE_CONFIGURATION_INVALID'
+        | 'KNOWLEDGE_INSTALLED_ASSET_INVALID'
+        | 'KNOWLEDGE_COMPILED_CONTRACT_INVALID'
+        | 'KNOWLEDGE_ENCODER_ASSET_INVALID'
+        | 'KNOWLEDGE_ENCODER_LOAD_FAILED'
+        | 'KNOWLEDGE_SCRATCH_ROOT_INVALID'
+        | 'KNOWLEDGE_SCRATCH_UNAVAILABLE'
+        | 'KNOWLEDGE_BASE_NOT_FOUND'
+        | 'KNOWLEDGE_BASE_EXISTS'
+        | 'KNOWLEDGE_BASE_DISABLED'
+        | 'KNOWLEDGE_BUSY'
+        | 'KNOWLEDGE_LIMIT_REACHED'
+        | 'KNOWLEDGE_REVISION_CONFLICT'
+        | 'KNOWLEDGE_DOCUMENT_EXISTS'
+        | 'KNOWLEDGE_DOCUMENT_NOT_FOUND'
+        | 'KNOWLEDGE_SOURCE_NOT_FOUND'
+        | 'KNOWLEDGE_SOURCE_CHANGED'
+        | 'KNOWLEDGE_INDEX_INCOMPATIBLE'
+        | 'KNOWLEDGE_INVALID_SOURCE'
+        | 'KNOWLEDGE_EMPTY_SOURCE'
+        | 'KNOWLEDGE_SOURCE_LIMIT_EXCEEDED'
+        | 'KNOWLEDGE_QUERY_TOO_LONG'
+        | 'KNOWLEDGE_WORKER_REQUEST_INVALID'
+        | 'KNOWLEDGE_WORKER_START_FAILED'
+        | 'KNOWLEDGE_WORKER_TIMEOUT'
+        | 'KNOWLEDGE_WORKER_MEMORY_MONITOR_FAILED'
+        | 'KNOWLEDGE_WORKER_MEMORY_EXCEEDED'
+        | 'KNOWLEDGE_WORKER_OUTPUT_LIMIT'
+        | 'KNOWLEDGE_WORKER_RESULT_INVALID'
+        | 'KNOWLEDGE_WORKER_FAILED'
+        | 'KNOWLEDGE_REQUEST_CANCELLED'
+        | 'KNOWLEDGE_ATTEMPT_STALE'
+        | 'KNOWLEDGE_RETRY_NOT_ALLOWED'
+        | 'KNOWLEDGE_GENERATION_NOT_FOUND'
+        | 'KNOWLEDGE_NO_CONTEXT'
+        | 'KNOWLEDGE_INVALID_CITATIONS'
+        | 'KNOWLEDGE_GATEWAY_UNAVAILABLE'
+        | 'KNOWLEDGE_GATEWAY_RESPONSE_INVALID'
+        | 'KNOWLEDGE_ANSWER_SOURCE_CHANGED'
+        | 'KNOWLEDGE_ANSWER_KEY_CLEANUP_FAILED'
+        | 'KNOWLEDGE_REBUILD_FAILED'
+        | 'KNOWLEDGE_AUTHORITY_INVALID'
+        | 'KNOWLEDGE_WORKER_INTERRUPTED'
+        | 'KNOWLEDGE_CANCELLED'
+        | 'SSO_CONNECTOR_ID_CONFLICT'
+        | 'SSO_BINDING_LIMIT'
+        | 'SSO_DISABLED'
+        | 'SSO_CONNECTOR_NOT_FOUND'
+        | 'SSO_CONNECTOR_DISABLED'
+        | 'SSO_CONNECTOR_LIMIT'
+        | 'SSO_REVISION_CONFLICT'
+        | 'SSO_BINDING_NOT_FOUND'
+        | 'SSO_BINDING_CONFLICT'
+        | 'SSO_BINDING_REQUIRED'
+        | 'SSO_FLOW_INVALID'
+        | 'SSO_FLOW_EXPIRED'
+        | 'SSO_FLOW_UNUSABLE'
+        | 'SSO_BROWSER_CHANGED'
+        | 'SSO_PASSWORD_REQUIRED'
+        | 'SSO_PASSWORD_CHANGED'
+        | 'SSO_PROVIDER_DENIED'
+        | 'SSO_AUTHORIZATION_INPUT_INVALID'
+        | 'SSO_CAPACITY_EXCEEDED'
+        | 'SSO_IDENTITY_REJECTED'
+        | 'SSO_SCOPE_REJECTED'
+        | 'SSO_PROVIDER_REJECTED'
+        | 'SSO_PROVIDER_RESPONSE_INVALID'
+        | 'SSO_PROVIDER_UNAVAILABLE'
+        | 'SSO_PROVIDER_CONFIGURATION_INVALID'
+        | 'SSO_PROVIDER_DESTINATION_REJECTED'
+        | 'SSO_KEYRING_INVALID'
+        | 'SSO_PRIVATE_FILE_INVALID'
+        | 'SSO_ENCRYPTED_STATE_INVALID'
+        | 'SSO_ENTROPY_UNAVAILABLE'
+        | 'SSO_SECRET_SCOPE_INVALID'
+        | 'SSO_JSON_INVALID'
+        | 'MODEL_DERIVED_CATALOG_INVALID'
+        | 'MODEL_DERIVED_STORAGE_INVALID'
+        | 'MODEL_DERIVED_COPY_BUSY'
+        | 'MODEL_DERIVED_PARTIAL_COPY_RETAINED'
+        | 'MODEL_DERIVED_COPY_POLICY_INVALID'
+        | 'MODEL_DERIVED_COPY_ATTEMPT_LIMIT'
+        | 'MODEL_DERIVED_DISK_SPACE_LOW'
+        | 'MODEL_DERIVED_REGISTRATION_UNAVAILABLE'
+        | 'MODEL_DERIVED_REVIEW_REQUIRED'
+        | 'MODEL_DERIVED_IDENTITY_CONFLICT'
+        | 'MODEL_DERIVED_ALREADY_RETIRED'
+        | 'MODEL_PREPARATION_REVIEW_NOT_ALLOWED'
+        | 'MODEL_PREPARATION_REVIEW_BINDING_INVALID'
+        | 'MODEL_PREPARATION_QUALITY_FAILED'
+        | 'MODEL_PREPARATION_ACTOR_UNAVAILABLE'
+        | 'MODEL_PREPARATION_ADAPTER_INVALID'
+        | 'MODEL_PREPARATION_AGENT_EXECUTION_FAILED'
+        | 'MODEL_PREPARATION_AGENT_INTERRUPTED'
+        | 'MODEL_PREPARATION_ARTIFACT_INVALID'
+        | 'MODEL_PREPARATION_ATTEMPT_IN_USE'
+        | 'MODEL_PREPARATION_CANCELLED'
+        | 'MODEL_PREPARATION_CANCEL_PENDING_STOP'
+        | 'MODEL_PREPARATION_COMMAND_INVALID'
+        | 'MODEL_PREPARATION_CONFIGURATION_INVALID'
+        | 'MODEL_PREPARATION_DEVICE_UNAVAILABLE'
+        | 'MODEL_PREPARATION_DISK_SPACE_LOW'
+        | 'MODEL_PREPARATION_DOCKER_REJECTED'
+        | 'MODEL_PREPARATION_DOCKER_UNAVAILABLE'
+        | 'MODEL_PREPARATION_DRIVER_UNSUPPORTED'
+        | 'MODEL_PREPARATION_EVENT_TRANSFER_FAILED'
+        | 'MODEL_PREPARATION_EXECUTION_IDENTITY_REQUIRED'
+        | 'MODEL_PREPARATION_EXECUTION_PROFILE_INVALID'
+        | 'MODEL_PREPARATION_GPU_BUSY'
+        | 'MODEL_PREPARATION_GPU_MEMORY_LOW'
+        | 'MODEL_PREPARATION_GPU_UNAVAILABLE'
+        | 'MODEL_PREPARATION_GPU_UNSUPPORTED'
+        | 'MODEL_PREPARATION_HELDOUT_INVALID'
+        | 'MODEL_PREPARATION_HOST_CPU_UNAVAILABLE'
+        | 'MODEL_PREPARATION_HOST_MEMORY_LOW'
+        | 'MODEL_PREPARATION_INPUT_INVALID'
+        | 'MODEL_PREPARATION_LEASE_EXPIRED'
+        | 'MODEL_PREPARATION_MEMORY_BOUNDARY_REQUIRED'
+        | 'MODEL_PREPARATION_MERGE_INVALID'
+        | 'MODEL_PREPARATION_MIG_UNSUPPORTED'
+        | 'MODEL_PREPARATION_MODEL_INVALID'
+        | 'MODEL_PREPARATION_NODE_UNAVAILABLE'
+        | 'MODEL_PREPARATION_NONFINITE_TENSOR'
+        | 'MODEL_PREPARATION_NON_TARGET_CHANGED'
+        | 'MODEL_PREPARATION_OUTPUT_CHANGED'
+        | 'MODEL_PREPARATION_OUTPUT_CONFLICT'
+        | 'MODEL_PREPARATION_OUTPUT_INVALID'
+        | 'MODEL_PREPARATION_OUTPUT_LIMIT'
+        | 'MODEL_PREPARATION_OUTPUT_TRANSFER_FAILED'
+        | 'MODEL_PREPARATION_PATH_INVALID'
+        | 'MODEL_PREPARATION_PLATFORM_UNSUPPORTED'
+        | 'MODEL_PREPARATION_PREFLIGHT_REQUIRED'
+        | 'MODEL_PREPARATION_PROCESSOR_FAILED'
+        | 'MODEL_PREPARATION_PROCESSOR_MEMORY_EXCEEDED'
+        | 'MODEL_PREPARATION_PROCESSOR_TIMEOUT'
+        | 'MODEL_PREPARATION_REPORT_CONFLICT'
+        | 'MODEL_PREPARATION_REPORT_INVALID'
+        | 'MODEL_PREPARATION_REQUEST_INVALID'
+        | 'MODEL_PREPARATION_RESERVED_TOKEN'
+        | 'MODEL_PREPARATION_RESOURCES_INVALID'
+        | 'MODEL_PREPARATION_RESOURCE_BUSY'
+        | 'MODEL_PREPARATION_RESULT_INVALID'
+        | 'MODEL_PREPARATION_RESULT_LIMIT'
+        | 'MODEL_PREPARATION_RESULT_UNAVAILABLE'
+        | 'MODEL_PREPARATION_RUNTIME_MISMATCH'
+        | 'MODEL_PREPARATION_SCOPE_INVALID'
+        | 'MODEL_PREPARATION_SEQUENCE_TOO_LONG'
+        | 'MODEL_PREPARATION_STOP_CONFLICT'
+        | 'MODEL_PREPARATION_STOP_INVALID'
+        | 'MODEL_PREPARATION_STORAGE_CONFLICT'
+        | 'MODEL_PREPARATION_STORAGE_DATA_INVALID'
+        | 'MODEL_PREPARATION_STORAGE_FULL'
+        | 'MODEL_PREPARATION_STORAGE_PATH_INVALID'
+        | 'MODEL_PREPARATION_STORAGE_UNAVAILABLE'
+        | 'MODEL_PREPARATION_STORE_IN_USE'
+        | 'MODEL_PREPARATION_STORE_NAMESPACE_INVALID'
+        | 'MODEL_PREPARATION_STORE_NOT_EMPTY'
+        | 'MODEL_PREPARATION_TENSOR_INVALID'
+        | 'MODEL_PREPARATION_TOKENIZER_INVALID'
+        | 'MODEL_PREPARATION_UNCHANGED_MODEL'
+        | 'MODEL_PREPARATION_UPLOAD_BUSY'
+        | 'MODEL_PREPARATION_UPLOAD_CHECKSUM_MISMATCH'
+        | 'MODEL_PREPARATION_UPLOAD_CONFLICT'
+        | 'MODEL_PREPARATION_UPLOAD_INCOMPLETE'
+        | 'MODEL_PREPARATION_UPLOAD_INVALID'
+        | 'MODEL_PREPARATION_UPLOAD_NOT_FOUND'
+        | 'MODEL_PREPARATION_UPLOAD_RECOVERY_REQUIRED'
+        | 'MODEL_PREPARATION_UPLOAD_STATE_CONFLICT'
+        | 'MODEL_PREPARATION_UPLOAD_TICKET_STALE'
+        | 'MODEL_PREPARATION_UPLOAD_TIMEOUT'
+        | 'MODEL_PREPARATION_WIRE_INVALID'
+        | 'MODEL_PREPARATION_RECOVERY_NOT_ALLOWED'
+        | 'MODEL_PREPARATION_ATTEMPTS_EXHAUSTED'
+        | 'MODEL_PREPARATION_UNAVAILABLE'
+        | 'MODEL_PREPARATION_DATA_INVALID'
+        | 'MODEL_PREPARATION_NOT_FOUND'
+        | 'MODEL_PREPARATION_ATTEMPT_STALE'
+        | 'MODEL_PREPARATION_INPUT_CHANGED'
+        | 'MODEL_PREPARATION_INPUT_LIMIT_REACHED'
+        | 'MODEL_PREPARATION_RECIPE_INVALID'
+        | 'MODEL_PREPARATION_RECIPE_UNAVAILABLE'
+        | 'MODEL_PREPARATION_LIMIT_REACHED'
+        | 'MODEL_PREPARATION_REVISION_CONFLICT'
+        | 'MODEL_PREPARATION_PHYSICAL_STOP_REQUIRED'
+        | 'MODEL_PREPARATION_EVENT_INVALID'
+        | 'MODEL_PREPARATION_EVENT_CONFLICT'
+        | 'MODEL_PREPARATION_EVENT_ORDER_CONFLICT'
+        | 'MODEL_PREPARATION_EVENT_LIMIT'
+        | 'MODEL_PREPARATION_TRANSFER_INVALID'
+        | 'MODEL_PREPARATION_TRANSFER_FAILED'
+        | 'MODEL_PREPARATION_AUTHORITY_REQUIRED'
+        | 'MODEL_HOLDOUT_UNAVAILABLE'
+        | 'MODEL_HOLDOUT_DATA_INVALID'
+        | 'MODEL_HOLDOUT_NOT_FOUND'
+        | 'MODEL_HOLDOUT_EXISTS'
+        | 'MODEL_HOLDOUT_OVERLAP'
+        | 'MODEL_HOLDOUT_SOURCE_CHANGED'
+        | 'MODEL_HOLDOUT_SOURCE_INVALID'
+        | 'MODEL_HOLDOUT_LABELS_INVALID'
+        | 'MODEL_HOLDOUT_ANALYSIS_LIMIT'
+        | 'MODEL_HOLDOUT_ANALYSIS_TIMEOUT'
+        | 'MODEL_HOLDOUT_SCAN_BUSY'
+        | 'MODEL_HOLDOUT_LIMIT_REACHED'
+        | 'MODEL_HOLDOUT_CONCURRENT_TRAINING_RETRY'
+        | 'MODEL_HOLDOUT_GUARD_REQUIRED'
+        | 'TRAINING_RECOVERY_NOT_ALLOWED'
+        | 'TRAINING_ATTEMPTS_EXHAUSTED'
+        | 'TRAINING_RECIPE_UNAVAILABLE'
+        | 'TRAINING_GPU_UNAVAILABLE'
+        | 'TRAINING_GPU_MEMORY_LOW'
+        | 'TRAINING_HOST_MEMORY_LOW'
+        | 'TRAINING_PREFLIGHT_REQUIRED'
+        | 'TRAINING_PLATFORM_UNSUPPORTED'
+        | 'TRAINING_DRIVER_UNSUPPORTED'
+        | 'TRAINING_GPU_UNSUPPORTED'
+        | 'TRAINING_MIG_UNSUPPORTED'
+        | 'TRAINING_INSTALLATION_REQUIRED'
+        | 'TRAINING_STORE_IN_USE'
+        | 'TRAINING_STORE_NAMESPACE_INVALID'
+        | 'TRAINING_STORAGE_REQUIRED'
+        | 'TRAINING_INPUT_STORES_REQUIRED'
+        | 'TRAINING_STORAGE_PATH_INVALID'
+        | 'TRAINING_STORE_BUSY'
+        | 'TRAINING_STORE_NOT_EMPTY'
+        | 'TRAINING_STOP_INVALID'
+        | 'TRAINING_STOP_CONFLICT'
+        | 'TRAINING_RESULT_UNAVAILABLE'
+        | 'TRAINING_UPLOAD_TIMEOUT'
+        | 'TRAINING_UPLOAD_INVALID'
+        | 'TRAINING_UPLOAD_NOT_FOUND'
+        | 'TRAINING_CHECKPOINT_NOT_ANNOUNCED'
+        | 'TRAINING_CHECKPOINT_CONFLICT'
+        | 'TRAINING_UPLOAD_CONFLICT'
+        | 'TRAINING_UPLOAD_STATE_CONFLICT'
+        | 'TRAINING_UPLOAD_BUSY'
+        | 'TRAINING_UPLOAD_TICKET_STALE'
+        | 'TRAINING_UPLOAD_INCOMPLETE'
+        | 'TRAINING_UPLOAD_RECOVERY_REQUIRED'
+        | 'TRAINING_UPLOAD_CHECKSUM_MISMATCH'
+        | 'TRAINING_STORAGE_CONFLICT'
+        | 'TRAINING_STORAGE_DATA_INVALID'
+        | 'TRAINING_CHECKPOINT_INVALID'
+        | 'TRAINING_RESULT_INVALID'
+        | 'TRAINING_RESULT_CONFLICT'
+        | 'TRAINING_ADAPTER_INVALID'
+        | 'TRAINING_BASE_SHAPE_INVALID'
+        | 'TRAINING_STORAGE_UNAVAILABLE'
+        | 'TRAINING_STORAGE_FULL'
+        | 'TRAINING_EVENT_INVALID'
+        | 'TRAINING_EVENT_CONFLICT'
+        | 'TRAINING_EVENT_ORDER_CONFLICT'
+        | 'TRAINING_INPUT_LIMIT_REACHED'
+        | 'TRAINING_NOT_FOUND'
+        | 'TRAINING_TRANSFER_INVALID'
+        | 'TRAINING_COMMAND_INVALID'
+        | 'TRAINING_RECIPE_INVALID'
+        | 'TRAINING_AUTHORITY_REQUIRED'
+        | 'TRAINING_UNAVAILABLE'
+        | 'TRAINING_DATA_INVALID'
+        | 'TRAINING_TRANSFER_FAILED'
+        | 'TRAINING_CHECKPOINT_UNAVAILABLE'
+        | 'TRAINING_INPUT_UNAVAILABLE'
+        | 'TRAINING_JOB_LIMIT_REACHED'
+        | 'TRAINING_REVISION_CONFLICT'
+        | 'TRAINING_PHYSICAL_STOP_REQUIRED'
+        | 'TRAINING_ATTEMPT_STALE'
+        | 'TRAINING_DATASET_EMPTY_PARTITION'
+        | 'GATEWAY_RECOVERY_NOT_REQUIRED'
+        | 'GATEWAY_RECOVERY_REQUIRES_REVOCATION'
+        | 'GATEWAY_RECOVERY_STATE_CONFLICT'
+        | 'GATEWAY_FENCE_RECEIPT_CONFLICT'
+        | 'GATEWAY_FENCE_SCOPE_CONFLICT'
+        | 'GATEWAY_BACKEND_STOP_UNCONFIRMED'
+        | 'API_KEY_INVALID'
+        | 'API_KEY_EXPIRED'
+        | 'GATEWAY_UNAUTHORIZED'
+        | 'FORBIDDEN'
+        | 'ALIAS_PAUSE_REQUIRED'
+        | 'ALIAS_ALREADY_PAUSED'
+        | 'ALIAS_NOT_PAUSED'
+        | 'ALIAS_REQUESTS_UNDRAINED'
+        | 'ALIAS_ROLLBACK_TARGET_INVALID'
+        | 'MODEL_ALIAS_NOT_FOUND'
+        | 'MODEL_ALIAS_UNAVAILABLE'
+        | 'MODEL_ALIAS_EXISTS'
+        | 'GATEWAY_INSTANCE_EXISTS'
+        | 'GATEWAY_INSTANCE_REVOKED'
+        | 'GATEWAY_NODE_UNAVAILABLE'
+        | 'GATEWAY_REQUEST_EXISTS'
+        | 'GATEWAY_REQUEST_NOT_FOUND'
+        | 'GATEWAY_OUTCOME_CONFLICT'
+        | 'GATEWAY_USAGE_INVALID'
+        | 'MODEL_VERSION_REFERENCED'
+        | 'MODEL_REFERENCE_CHECK_UNAVAILABLE'
+        | 'INFERENCE_RESOURCE_BUSY'
+        | 'INFERENCE_PREFLIGHT_REQUIRED'
+        | 'NODE_UNAVAILABLE'
+        | 'INFERENCE_CONFIGURATION_INVALID'
+        | 'INFERENCE_RECOVERY_REQUIRED'
+        | 'INFERENCE_OWNERSHIP_CONFLICT'
+        | 'INFERENCE_REVISION_CONFLICT'
+        | 'MODEL_FILE_INVALID'
+        | 'MODEL_FILE_CHANGED'
+        | 'MODEL_STORAGE_UNAVAILABLE'
+        | 'MODEL_IMPORT_BUSY'
+        | 'MODEL_ALREADY_EXISTS'
+        | 'MODEL_IMPORT_STATE_CONFLICT'
+        | 'MODEL_IMPORT_INCOMPLETE'
+        | 'MODEL_CHUNK_INVALID'
+        | 'MODEL_CHUNK_CONFLICT'
+        | 'MODEL_CHUNK_OFFSET_MISMATCH'
+        | 'MODEL_CLEANUP_CONFLICT'
+        | 'MODEL_IO_FAILED'
+        | 'MODEL_PATH_INVALID'
+        | 'COMPONENT_CONFIG_INVALID'
+        | 'COMPONENT_VERSION_UNSUPPORTED'
+        | 'COMPONENT_VERSION_CONFLICT'
+        | 'COMPONENT_UPGRADE_NOT_FORWARD'
+        | 'COMPONENT_ROLLBACK_UNAVAILABLE'
+        | 'COMPONENT_ROLLBACK_FAILED'
+        | 'COMPONENT_UPDATE_ROLLED_BACK'
+        | 'COMPONENT_LOGS_UNAVAILABLE'
+        | 'COMPONENT_LOGS_TOO_LARGE'
+        | 'COMPONENT_LOGS_INVALID'
+        | 'COMPONENT_MAINTENANCE_REQUIRED'
+        | 'COMPONENT_STATE_INVALID'
+        | 'COMPONENT_INTERRUPTED'
+        | 'COMPONENT_ASSET_UNAVAILABLE'
+        | 'COMPONENT_ASSET_INVALID'
+        | 'AGENT_PROFILE_REJECTED'
+        | 'COMPONENT_PROFILE_UNAVAILABLE'
+        | 'NODE_NAME_EXISTS'
+        | 'NODE_REMOVED'
+        | 'NODE_JOIN_STATE_CONFLICT'
+        | 'NODE_BUSY'
+        | 'AGENT_UNAUTHORIZED'
+        | 'AGENT_PROTOCOL_UNSUPPORTED'
+        | 'AGENT_OPERATION_UNSUPPORTED'
+        | 'AGENT_LEASE_STALE'
+        | 'WORKSPACE_EXISTS'
+        | 'MEMBERSHIP_EXISTS'
+        | 'LAST_WORKSPACE_OWNER'
+        | 'DEFAULT_WORKSPACE_PROTECTED'
+        | 'RESOURCE_LIMIT_REACHED'
+        | 'MONGODB_BUSINESS_DATABASE_UNSUPPORTED'
+        | 'MONGODB_SOURCE_CHANGED'
+        | 'MONGODB_DISABLED'
+        | 'MONGODB_BUSY'
+        | 'MONGODB_RETRY_LIMIT'
+        | 'MONGODB_MAPPING_INVALID'
+        | 'MONGODB_CONFIGURATION_INVALID'
+        | 'MONGODB_TIMEOUT'
+        | 'MONGODB_CANCELLED'
+        | 'MONGODB_CONNECT_FAILED'
+        | 'MONGODB_READ_FAILED'
+        | 'MONGODB_ACCESS_DENIED'
+        | 'MONGODB_SNAPSHOT_EXPIRED'
+        | 'MONGODB_SNAPSHOT_UNSUPPORTED'
+        | 'MONGODB_IDENTIFIER_INVALID'
+        | 'MONGODB_ORDER_INVALID'
+        | 'MONGODB_LIMIT_EXCEEDED'
+        | 'MONGODB_SOURCE_EMPTY'
+        | 'MONGODB_FIELD_INVALID'
+        | 'MONGODB_TYPE_INVALID'
+        | 'MONGODB_RECORD_INVALID';
+      /** Format: uuid */
+      request_id: string;
+      detail?: string;
+      fields?: {
+        field: string;
+        code: string;
+      }[];
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    ModelHoldoutLabels: {
+      account: number;
+      billing: number;
+      technical: number;
+    };
+    ModelHoldout: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      dataset_id: string;
+      /** Format: uuid */
+      dataset_version_id: string;
+      /** Format: uuid */
+      created_by: string;
+      name: string;
+      manifest_sha256: string;
+      effective_source_sha256: string;
+      row_mapping_sha256: string;
+      recipe_sha256: string;
+      instruction_sha256: string;
+      source_bytes: number;
+      row_count: number;
+      label_counts: components['schemas']['ModelHoldoutLabels'];
+      /** @enum {string} */
+      recipe_id: 'support_routing_v1';
+      /** @enum {string} */
+      fingerprint_algorithm: 'sha256_utf8_crlf_cr_to_lf_trim_ascii_space_tab_lf_v1';
+      /** @enum {string} */
+      audience: 'admin' | 'portal';
+      reason: string;
+      /** Format: date-time */
+      created_at: string;
+    };
+    ReserveModelHoldout: {
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      dataset_id: string;
+      /** Format: uuid */
+      dataset_version_id: string;
+      expected_manifest_sha256: string;
+      name: string;
+      reason: string;
+    };
+    ModelHoldoutCapabilities: {
+      enabled: boolean;
+      can_reserve: boolean;
+      maximum_holdouts: number;
+      /** @constant */
+      maximum_rows: 256;
+      /** @constant */
+      minimum_rows: 3;
+    };
+    ModelHoldoutPage: {
+      items: components['schemas']['ModelHoldout'][];
+      next_cursor: null | string;
+    };
+    ModelHoldoutResponse: {
+      data: components['schemas']['ModelHoldout'];
+    };
+    ModelHoldoutPageResponse: {
+      data: components['schemas']['ModelHoldoutPage'];
+    };
+    ModelHoldoutCapabilitiesResponse: {
+      data: components['schemas']['ModelHoldoutCapabilities'];
+    };
+    NVIDIAGPU: {
+      uuid: string;
+      name: string;
+      driver_version: string;
+      memory_total_mib: number;
+      memory_free_mib: number;
+      compute_capability: number;
+      /** @enum {string} */
+      mig_mode: 'Disabled' | 'Enabled' | '[N/A]' | 'N/A';
+      /** Format: date-time */
+      observed_at: string;
+    };
+    ModelPreparationConfiguration: {
+      /** @constant */
+      device: 'nvidia_bfloat16';
+      /** @default 512 */
+      maximum_input_tokens: number;
+      /** @default 8 */
+      maximum_new_tokens: number;
+      /** @default 42 */
+      seed: number;
+      /** @default 2 */
+      threads: number;
+      /** @default 8000 */
+      minimum_accuracy_basis_points: number;
+      /** @default 0 */
+      maximum_regression_basis_points: number;
+    };
+    ModelPreparationRecipe: {
+      /** @constant */
+      schema_version: 1;
+      /** @constant */
+      worker_version: '0.1.0';
+      image_reference: string;
+      execution_identity: components['schemas']['TrainingExecutionIdentity'];
+      resources: components['schemas']['ModelPreparationResources'];
+      data_limits: components['schemas']['ModelPreparationDataLimits'];
+      /** @constant */
+      recipe_sha256: '758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496';
+      /** @constant */
+      processor_sha256: 'b80b0b0bb0c1defe663015e88eff028f5c2888bef9a2a14a2db0cac4510cc689';
+    };
+    TrainingExecutionIdentity: {
+      /** @constant */
+      profile: 'nvidia_bfloat16';
+      /** @constant */
+      python: '3.12.15';
+      worker_source_sha256: string;
+      image_id: string;
+    };
+    ModelPreparationResources: {
+      wall_seconds: number;
+      cpu_seconds: number;
+      memory_bytes: number;
+      maximum_output_bytes: number;
+      maximum_output_files: number;
+      maximum_result_bytes: number;
+      maximum_event_bytes: number;
+      open_files: number;
+    };
+    ModelPreparationDataLimits: {
+      maximum_bytes: number;
+      maximum_rows: number;
+      maximum_line_bytes: number;
+      maximum_text_bytes: number;
+      maximum_source_bytes: number;
+      maximum_errors: number;
+    };
+    ModelPreparationPreparedResult: {
+      /** @constant */
+      schema_version: 1;
+      /** @constant */
+      worker_version: '0.1.0';
+      /** @constant */
+      status: 'prepared';
+      /** @constant */
+      recipe_id: 'support_routing_v1';
+      /** @constant */
+      recipe_sha256: '758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496';
+      configuration: components['schemas']['ModelPreparationConfiguration'];
+      configuration_sha256: string;
+      /** @constant */
+      model_catalog_sha256: '4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc';
+      adapter_files: components['schemas']['ModelPreparationAdapterAsset'][] &
+        (unknown & unknown & unknown);
+      heldout_sha256: string;
+      training_configuration_sha256: string;
+      chat_template_sha256: string;
+      /** @constant */
+      instruction_sha256: '814baef5d99fdbee68a4add364327ebd1e8a509880bbdd01414b011aff025932';
+      packages: components['schemas']['TrainingPackages'];
+      /** @constant */
+      device_profile: 'nvidia_bfloat16';
+      /** @constant */
+      computation_dtype: 'bfloat16';
+      /** @constant */
+      storage_dtype: 'BF16';
+      row_count: number;
+      base: components['schemas']['ModelPreparationScore'];
+      candidate: components['schemas']['ModelPreparationScore'];
+      cases: components['schemas']['ModelPreparationCase'][];
+      model_files: components['schemas']['ModelPreparationModelAsset'][] &
+        (unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown & unknown);
+      changed_target_tensors: string[];
+      tied_weight_aliases: {
+        /** @constant */
+        'lm_head.weight': 'model.embed_tokens.weight';
+      };
+      gate_passed: boolean;
+      /** Format: uuid */
+      tenant_id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      preparation_id: string;
+      /** Format: uuid */
+      attempt_id: string;
+      /** Format: uuid */
+      training_job_id: string;
+      /** Format: uuid */
+      training_attempt_id: string;
+      /** Format: uuid */
+      heldout_id: string;
+      execution_identity: components['schemas']['TrainingExecutionIdentity'];
+      resources: components['schemas']['ModelPreparationResources'];
+      /** @constant */
+      memory_enforcement: 'linux_cgroup_memory_cpu_fsize_wall';
+      event_count: number;
+      request_sha256: string;
+    };
+    ModelPreparationAdapterAsset: {
+      /** @enum {string} */
+      path: 'adapter_config.json' | 'adapter_model.safetensors' | 'README.md';
+      size_bytes: number;
+      sha256: string;
+    };
+    TrainingPackages: {
+      /** @constant */
+      torch: '2.14.1';
+      /** @constant */
+      transformers: '5.19.0';
+      /** @constant */
+      peft: '0.21.2';
+      /** @constant */
+      accelerate: '1.15.0';
+    };
+    ModelPreparationScore: {
+      correct: number;
+      row_count: number;
+      confusion: number[][];
+    };
+    ModelPreparationCase: {
+      source_id: string;
+      prompt_sha256: string;
+      /** @enum {string} */
+      expected_label: 'account' | 'billing' | 'technical';
+      base: components['schemas']['ModelPreparationPrediction'];
+      candidate: components['schemas']['ModelPreparationPrediction'];
+    };
+    ModelPreparationPrediction: {
+      predicted_label: ('account' | 'billing' | 'technical') | null;
+      output_sha256: string;
+      generated_tokens: number;
+      duration_milliseconds: number;
+    };
+    ModelPreparationModelAsset:
+      | {
+          /** @constant */
+          path: 'LICENSE';
+          /** @constant */
+          size_bytes: 11343;
+          /** @constant */
+          sha256: '832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e';
+        }
+      | {
+          /** @constant */
+          path: 'README.md';
+          /** @constant */
+          size_bytes: 13965;
+          /** @constant */
+          sha256: '1ab64a26fcb3b461423b89a433a8c858f1bf8d4086f979cbb3ff878d47cf20e9';
+        }
+      | {
+          /** @constant */
+          path: 'config.json';
+          /** @constant */
+          size_bytes: 726;
+          /** @constant */
+          sha256: '660db3b73d788119c04535e48cf9be5f55bc3100841a718637ae695b442f27dd';
+        }
+      | {
+          /** @constant */
+          path: 'generation_config.json';
+          /** @constant */
+          size_bytes: 239;
+          /** @constant */
+          sha256: '2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2';
+        }
+      | {
+          /** @constant */
+          path: 'merges.txt';
+          /** @constant */
+          size_bytes: 1671853;
+          /** @constant */
+          sha256: '8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5';
+        }
+      | {
+          /** @constant */
+          path: 'model.safetensors';
+          size_bytes: number;
+          sha256: string;
+        }
+      | {
+          /** @constant */
+          path: 'tokenizer.json';
+          /** @constant */
+          size_bytes: 11422654;
+          /** @constant */
+          sha256: 'aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4';
+        }
+      | {
+          /** @constant */
+          path: 'tokenizer_config.json';
+          /** @constant */
+          size_bytes: 9732;
+          /** @constant */
+          sha256: 'd5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101';
+        }
+      | {
+          /** @constant */
+          path: 'vocab.json';
+          /** @constant */
+          size_bytes: 2776833;
+          /** @constant */
+          sha256: 'ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910';
+        };
+    ModelPreparationFailedResult:
+      | {
+          /** @constant */
+          schema_version: 1;
+          /** @constant */
+          worker_version: '0.1.0';
+          /** @constant */
+          status: 'failed';
+          /** Format: uuid */
+          preparation_id: string;
+          /** Format: uuid */
+          attempt_id: string;
+          /** @enum {string} */
+          error_code:
+            | 'MODEL_PREPARATION_ADAPTER_INVALID'
+            | 'MODEL_PREPARATION_ATTEMPT_IN_USE'
+            | 'MODEL_PREPARATION_CONFIGURATION_INVALID'
+            | 'MODEL_PREPARATION_DEVICE_UNAVAILABLE'
+            | 'MODEL_PREPARATION_EVENT_LIMIT'
+            | 'MODEL_PREPARATION_EXECUTION_IDENTITY_REQUIRED'
+            | 'MODEL_PREPARATION_EXECUTION_PROFILE_INVALID'
+            | 'MODEL_PREPARATION_HELDOUT_INVALID'
+            | 'MODEL_PREPARATION_INPUT_CHANGED'
+            | 'MODEL_PREPARATION_INPUT_INVALID'
+            | 'MODEL_PREPARATION_MEMORY_BOUNDARY_REQUIRED'
+            | 'MODEL_PREPARATION_MERGE_INVALID'
+            | 'MODEL_PREPARATION_MODEL_INVALID'
+            | 'MODEL_PREPARATION_NONFINITE_TENSOR'
+            | 'MODEL_PREPARATION_NON_TARGET_CHANGED'
+            | 'MODEL_PREPARATION_OUTPUT_CONFLICT'
+            | 'MODEL_PREPARATION_OUTPUT_INVALID'
+            | 'MODEL_PREPARATION_OUTPUT_LIMIT'
+            | 'MODEL_PREPARATION_PATH_INVALID'
+            | 'MODEL_PREPARATION_PLATFORM_UNSUPPORTED'
+            | 'MODEL_PREPARATION_PROCESSOR_FAILED'
+            | 'MODEL_PREPARATION_PROCESSOR_MEMORY_EXCEEDED'
+            | 'MODEL_PREPARATION_PROCESSOR_TIMEOUT'
+            | 'MODEL_PREPARATION_REPORT_INVALID'
+            | 'MODEL_PREPARATION_REQUEST_INVALID'
+            | 'MODEL_PREPARATION_RESERVED_TOKEN'
+            | 'MODEL_PREPARATION_RESOURCES_INVALID'
+            | 'MODEL_PREPARATION_RESULT_LIMIT'
+            | 'MODEL_PREPARATION_RUNTIME_MISMATCH'
+            | 'MODEL_PREPARATION_SCOPE_INVALID'
+            | 'MODEL_PREPARATION_SEQUENCE_TOO_LONG'
+            | 'MODEL_PREPARATION_STORAGE_FULL'
+            | 'MODEL_PREPARATION_TENSOR_INVALID'
+            | 'MODEL_PREPARATION_TOKENIZER_INVALID'
+            | 'MODEL_PREPARATION_UNCHANGED_MODEL';
+        }
+      | {
+          /** @constant */
+          schema_version: 1;
+          /** @constant */
+          worker_version: '0.1.0';
+          /** @constant */
+          status: 'cancelled';
+          /** Format: uuid */
+          preparation_id: string;
+          /** Format: uuid */
+          attempt_id: string;
+          /** @enum {string} */
+          error_code: 'MODEL_PREPARATION_CANCELLED';
+        };
+    ModelPreparationEvent:
+      | {
+          sequence: number;
+          /** Format: uuid */
+          preparation_id: string;
+          /** Format: uuid */
+          attempt_id: string;
+          /** @constant */
+          kind: 'phase';
+          /** @enum {string} */
+          phase: 'evaluating_base' | 'merging' | 'evaluating_candidate';
+        }
+      | {
+          sequence: number;
+          /** Format: uuid */
+          preparation_id: string;
+          /** Format: uuid */
+          attempt_id: string;
+          /** @constant */
+          kind: 'evaluation_progress';
+          /** @enum {string} */
+          phase: 'base' | 'candidate';
+          completed_rows: number;
+          total_rows: number;
+        };
+    ModelPreparation: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      node_id: string;
+      /** Format: uuid */
+      current_node_id: string;
+      /** Format: uuid */
+      model_id: string;
+      /** Format: uuid */
+      training_job_id: string;
+      /** Format: uuid */
+      training_attempt_id: string;
+      /** Format: uuid */
+      training_artifact_id: string;
+      /** Format: uuid */
+      heldout_id: string;
+      /** Format: uuid */
+      created_by: string;
+      gpu_uuid: string;
+      input_sha256: string;
+      training_result_sha256: string;
+      heldout_manifest_sha256: string;
+      configuration_sha256: string;
+      configuration: components['schemas']['ModelPreparationConfiguration'];
+      recipe: components['schemas']['ModelPreparationRecipe'];
+      reason: string;
+      /** @enum {string} */
+      state:
+        | 'queued'
+        | 'preparing'
+        | 'running'
+        | 'cancelling'
+        | 'recovery_required'
+        | 'quality_failed'
+        | 'awaiting_review'
+        | 'approved'
+        | 'rejected'
+        | 'cancelled'
+        | 'failed';
+      revision: number;
+      attempt_number: number;
+      current_attempt_id: string | null;
+      pending_recovery_id: string | null;
+      review_id: string | null;
+      derived_model_id: string | null;
+      wait_code: string | null;
+      error_code: string | null;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+      finished_at: string | null;
+      cancel_requested_at: string | null;
+    };
+    CreateModelPreparation: {
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      training_job_id: string;
+      /** Format: uuid */
+      heldout_id: string;
+      /** Format: uuid */
+      node_id: string;
+      gpu_uuid: string;
+      configuration: components['schemas']['ModelPreparationConfiguration'];
+      reason: string;
+    };
+    ModelPreparationAction: {
+      expected_revision: number;
+      reason: string;
+    };
+    ModelPreparationRecovery: {
+      expected_revision: number;
+      reason: string;
+      /** Format: uuid */
+      node_id: string;
+    };
+    ModelPreparationReviewRequest: {
+      expected_revision: number;
+      reason: string;
+      /** Format: uuid */
+      artifact_id: string;
+      report_sha256: string;
+      /** @enum {string} */
+      decision: 'approve' | 'reject';
+      name: string;
+    };
+    ModelPreparationReview: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      preparation_id: string;
+      /** Format: uuid */
+      attempt_id: string;
+      /** Format: uuid */
+      artifact_id: string;
+      /** Format: uuid */
+      reviewed_by: string;
+      report_sha256: string;
+      expected_revision: number;
+      /** @enum {string} */
+      decision: 'approve' | 'reject';
+      model_id: string | null;
+      name: string;
+      reason: string;
+      /** Format: date-time */
+      created_at: string;
+    };
+    ModelPreparationCapabilities: {
+      execution_configured: boolean;
+      can_create: boolean;
+      can_manage: boolean;
+      can_cancel_own: boolean;
+      can_review: boolean;
+      /** @constant */
+      node_profile: 'docker_model_lifecycle';
+      /** @constant */
+      protocol_version: '1.5';
+      configuration_defaults: components['schemas']['ModelPreparationConfiguration'];
+      maximum_preparations: number;
+      maximum_active: number;
+      maximum_attempts: number;
+    };
+    ModelPreparationTarget: {
+      /** Format: uuid */
+      node_id: string;
+      gpus: components['schemas']['NVIDIAGPU'][];
+      /** Format: date-time */
+      observed_at: string;
+      probe_error_code: string | null;
+    };
+    ModelPreparationAttempt: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      preparation_id: string;
+      /** Format: uuid */
+      node_id: string;
+      /** Format: uuid */
+      task_id: string;
+      attempt_number: number;
+      command_sha256: string;
+      /** @enum {string} */
+      state:
+        | 'pending'
+        | 'preparing'
+        | 'running'
+        | 'stopping'
+        | 'recovery_required'
+        | 'stopped'
+        | 'prepared'
+        | 'cancelled'
+        | 'failed';
+      last_event_sequence: number;
+      outcome_sha256: string | null;
+      physical_stop_sha256: string | null;
+      error_code: string | null;
+      /** Format: date-time */
+      created_at: string;
+      started_at: string | null;
+      finished_at: string | null;
+      physical_stopped_at: string | null;
+    };
+    ModelPreparationPage: {
+      items: components['schemas']['ModelPreparation'][];
+      next_cursor: string | null;
+    };
+    ModelPreparationAttemptPage: {
+      items: components['schemas']['ModelPreparationAttempt'][];
+      next_cursor: string | null;
+    };
+    ModelPreparationEventPage: {
+      items: components['schemas']['ModelPreparationEvent'][];
+      next_after: number | null;
+    };
+    ModelPreparationReport: {
+      /** Format: uuid */
+      preparation_id: string;
+      attempt_id: string | null;
+      artifact_id: string | null;
+      report_sha256: string | null;
+      physical_stopped_at: string | null;
+      result:
+        | components['schemas']['ModelPreparationPreparedResult']
+        | components['schemas']['ModelPreparationFailedResult']
+        | null;
+      review: components['schemas']['ModelPreparationReview'] | null;
+    };
+    ModelPreparationResponse: {
+      data: components['schemas']['ModelPreparation'];
+    };
+    ModelPreparationPageResponse: {
+      data: components['schemas']['ModelPreparationPage'];
+    };
+    ModelPreparationCapabilitiesResponse: {
+      data: components['schemas']['ModelPreparationCapabilities'];
+    };
+    ModelPreparationTargetResponse: {
+      data: components['schemas']['ModelPreparationTarget'];
+    };
+    ModelPreparationAttemptPageResponse: {
+      data: components['schemas']['ModelPreparationAttemptPage'];
+    };
+    ModelPreparationEventPageResponse: {
+      data: components['schemas']['ModelPreparationEventPage'];
+    };
+    ModelPreparationReportResponse: {
+      data: components['schemas']['ModelPreparationReport'];
+    };
+    ModelPreparationReviewResponse: {
+      data: components['schemas']['ModelPreparationReview'];
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    adminGetHoldoutCapabilities: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current authorized immutable heldout registry result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelHoldoutCapabilitiesResponse"];
-                };
-            };
-            /** @description Stable scoped refusal without source text or private paths */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  adminGetHoldoutCapabilities: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    adminListHoldouts: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current authorized immutable heldout registry result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current authorized immutable heldout registry result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelHoldoutPageResponse"];
-                };
-            };
-            /** @description Stable scoped refusal without source text or private paths */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelHoldoutCapabilitiesResponse'];
         };
+      };
+      /** @description Stable scoped refusal without source text or private paths */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminReserveHoldout: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReserveModelHoldout"];
-            };
-        };
-        responses: {
-            /** @description Current authorized immutable heldout registry result */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelHoldoutResponse"];
-                };
-            };
-            /** @description Stable scoped refusal without source text or private paths */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminListHoldouts: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    adminGetHoldout: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                holdout_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current authorized immutable heldout registry result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current authorized immutable heldout registry result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelHoldoutResponse"];
-                };
-            };
-            /** @description Stable scoped refusal without source text or private paths */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelHoldoutPageResponse'];
         };
+      };
+      /** @description Stable scoped refusal without source text or private paths */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalGetHoldoutCapabilities: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current authorized immutable heldout registry result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelHoldoutCapabilitiesResponse"];
-                };
-            };
-            /** @description Stable scoped refusal without source text or private paths */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminReserveHoldout: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    portalListHoldouts: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current authorized immutable heldout registry result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelHoldoutPageResponse"];
-                };
-            };
-            /** @description Stable scoped refusal without source text or private paths */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReserveModelHoldout'];
+      };
     };
-    portalReserveHoldout: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Current authorized immutable heldout registry result */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReserveModelHoldout"];
-            };
+        content: {
+          'application/json': components['schemas']['ModelHoldoutResponse'];
         };
-        responses: {
-            /** @description Current authorized immutable heldout registry result */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelHoldoutResponse"];
-                };
-            };
-            /** @description Stable scoped refusal without source text or private paths */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable scoped refusal without source text or private paths */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalGetHoldout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                holdout_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current authorized immutable heldout registry result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelHoldoutResponse"];
-                };
-            };
-            /** @description Stable scoped refusal without source text or private paths */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminGetHoldout: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        holdout_id: string;
+      };
+      cookie?: never;
     };
-    adminPreparationTarget: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                node_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current authorized immutable heldout registry result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationTargetResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelHoldoutResponse'];
         };
+      };
+      /** @description Stable scoped refusal without source text or private paths */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminPreparationCapabilities: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationCapabilitiesResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalGetHoldoutCapabilities: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    adminListPreparations: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                limit?: number;
-                cursor?: string;
-                state?: "queued" | "preparing" | "running" | "cancelling" | "recovery_required" | "quality_failed" | "awaiting_review" | "approved" | "rejected" | "cancelled" | "failed";
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current authorized immutable heldout registry result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationPageResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelHoldoutCapabilitiesResponse'];
         };
+      };
+      /** @description Stable scoped refusal without source text or private paths */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminCreatePreparation: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateModelPreparation"];
-            };
-        };
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalListHoldouts: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    adminGetPreparation: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current authorized immutable heldout registry result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelHoldoutPageResponse'];
         };
+      };
+      /** @description Stable scoped refusal without source text or private paths */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminPreparationReport: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationReportResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalReserveHoldout: {
+    parameters: {
+      query?: never;
+      header: {
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    adminPreparationAttempts: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationAttemptPageResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReserveModelHoldout'];
+      };
     };
-    adminPreparationEvents: {
-        parameters: {
-            query: {
-                workspace_id: string;
-                limit?: number;
-                after?: number;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                preparation_id: string;
-                attempt_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Current authorized immutable heldout registry result */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationEventPageResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelHoldoutResponse'];
         };
+      };
+      /** @description Stable scoped refusal without source text or private paths */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminCancelPreparation: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModelPreparationAction"];
-            };
-        };
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  portalGetHoldout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        holdout_id: string;
+      };
+      cookie?: never;
     };
-    adminRecoverPreparation: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current authorized immutable heldout registry result */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModelPreparationRecovery"];
-            };
+        content: {
+          'application/json': components['schemas']['ModelHoldoutResponse'];
         };
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable scoped refusal without source text or private paths */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminReviewPreparation: {
-        parameters: {
-            query: {
-                workspace_id: string;
-            };
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModelPreparationReviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationReviewResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminPreparationTarget: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        node_id: string;
+      };
+      cookie?: never;
     };
-    portalPreparationTarget: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                node_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationTargetResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelPreparationTargetResponse'];
         };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalPreparationCapabilities: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationCapabilitiesResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminPreparationCapabilities: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    portalListPreparations: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-                state?: "queued" | "preparing" | "running" | "cancelling" | "recovery_required" | "quality_failed" | "awaiting_review" | "approved" | "rejected" | "cancelled" | "failed";
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationPageResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelPreparationCapabilitiesResponse'];
         };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalCreatePreparation: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateModelPreparation"];
-            };
-        };
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminListPreparations: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        limit?: number;
+        cursor?: string;
+        state?:
+          | 'queued'
+          | 'preparing'
+          | 'running'
+          | 'cancelling'
+          | 'recovery_required'
+          | 'quality_failed'
+          | 'awaiting_review'
+          | 'approved'
+          | 'rejected'
+          | 'cancelled'
+          | 'failed';
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    portalGetPreparation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelPreparationPageResponse'];
         };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalPreparationReport: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationReportResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminCreatePreparation: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    portalPreparationAttempts: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationAttemptPageResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateModelPreparation'];
+      };
     };
-    portalPreparationEvents: {
-        parameters: {
-            query?: {
-                limit?: number;
-                after?: number;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                preparation_id: string;
-                attempt_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationEventPageResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelPreparationResponse'];
         };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalCancelPreparation: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModelPreparationAction"];
-            };
-        };
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminGetPreparation: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
     };
-    portalRecoverPreparation: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                preparation_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ModelPreparationRecovery"];
-            };
+        content: {
+          'application/json': components['schemas']['ModelPreparationResponse'];
         };
-        responses: {
-            /** @description Current scoped persisted preparation result; serving/target qualification is separate */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelPreparationResponse"];
-                };
-            };
-            /** @description Stable current-authority scoped refusal */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
+  };
+  adminPreparationReport: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationReportResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminPreparationAttempts: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationAttemptPageResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminPreparationEvents: {
+    parameters: {
+      query: {
+        workspace_id: string;
+        limit?: number;
+        after?: number;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        preparation_id: string;
+        attempt_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationEventPageResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminCancelPreparation: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModelPreparationAction'];
+      };
+    };
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminRecoverPreparation: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModelPreparationRecovery'];
+      };
+    };
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminReviewPreparation: {
+    parameters: {
+      query: {
+        workspace_id: string;
+      };
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModelPreparationReviewRequest'];
+      };
+    };
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationReviewResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalPreparationTarget: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        node_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationTargetResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalPreparationCapabilities: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationCapabilitiesResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalListPreparations: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+        state?:
+          | 'queued'
+          | 'preparing'
+          | 'running'
+          | 'cancelling'
+          | 'recovery_required'
+          | 'quality_failed'
+          | 'awaiting_review'
+          | 'approved'
+          | 'rejected'
+          | 'cancelled'
+          | 'failed';
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationPageResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalCreatePreparation: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateModelPreparation'];
+      };
+    };
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalGetPreparation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalPreparationReport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationReportResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalPreparationAttempts: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationAttemptPageResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalPreparationEvents: {
+    parameters: {
+      query?: {
+        limit?: number;
+        after?: number;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        preparation_id: string;
+        attempt_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationEventPageResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalCancelPreparation: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModelPreparationAction'];
+      };
+    };
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalRecoverPreparation: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        preparation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModelPreparationRecovery'];
+      };
+    };
+    responses: {
+      /** @description Current scoped persisted preparation result; serving/target qualification is separate */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelPreparationResponse'];
+        };
+      };
+      /** @description Stable current-authority scoped refusal */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
 }

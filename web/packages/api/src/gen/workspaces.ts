@@ -2,2596 +2,2641 @@
 // Change the contract, then run `make generate`.
 
 export interface paths {
-    "/api/v1/admin/workspaces": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** listAdminWorkspaces */
-        get: operations["listAdminWorkspaces"];
-        put?: never;
-        /** createWorkspace */
-        post: operations["createWorkspace"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/v1/admin/workspaces': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/workspaces/{workspace_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** getAdminWorkspace */
-        get: operations["getAdminWorkspace"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** updateAdminWorkspace */
-        patch: operations["updateAdminWorkspace"];
-        trace?: never;
+    /** listAdminWorkspaces */
+    get: operations['listAdminWorkspaces'];
+    put?: never;
+    /** createWorkspace */
+    post: operations['createWorkspace'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/workspaces/{workspace_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/workspaces/{workspace_id}/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** listAdminMembers */
-        get: operations["listAdminMembers"];
-        put?: never;
-        /** addAdminMember */
-        post: operations["addAdminMember"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** getAdminWorkspace */
+    get: operations['getAdminWorkspace'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** updateAdminWorkspace */
+    patch: operations['updateAdminWorkspace'];
+    trace?: never;
+  };
+  '/api/v1/admin/workspaces/{workspace_id}/members': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/workspaces/{workspace_id}/members/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** removeAdminMember */
-        delete: operations["removeAdminMember"];
-        options?: never;
-        head?: never;
-        /** updateAdminMember */
-        patch: operations["updateAdminMember"];
-        trace?: never;
+    /** listAdminMembers */
+    get: operations['listAdminMembers'];
+    put?: never;
+    /** addAdminMember */
+    post: operations['addAdminMember'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/workspaces/{workspace_id}/members/{user_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/workspaces": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** listPortalWorkspaces */
-        get: operations["listPortalWorkspaces"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** removeAdminMember */
+    delete: operations['removeAdminMember'];
+    options?: never;
+    head?: never;
+    /** updateAdminMember */
+    patch: operations['updateAdminMember'];
+    trace?: never;
+  };
+  '/api/v1/workspaces': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/workspaces/{workspace_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** getPortalWorkspace */
-        get: operations["getPortalWorkspace"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** updatePortalWorkspace */
-        patch: operations["updatePortalWorkspace"];
-        trace?: never;
+    /** listPortalWorkspaces */
+    get: operations['listPortalWorkspaces'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/workspaces/{workspace_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/workspaces/{workspace_id}/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** listPortalMembers */
-        get: operations["listPortalMembers"];
-        put?: never;
-        /** addPortalMember */
-        post: operations["addPortalMember"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** getPortalWorkspace */
+    get: operations['getPortalWorkspace'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** updatePortalWorkspace */
+    patch: operations['updatePortalWorkspace'];
+    trace?: never;
+  };
+  '/api/v1/workspaces/{workspace_id}/members': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/workspaces/{workspace_id}/members/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** removePortalMember */
-        delete: operations["removePortalMember"];
-        options?: never;
-        head?: never;
-        /** updatePortalMember */
-        patch: operations["updatePortalMember"];
-        trace?: never;
+    /** listPortalMembers */
+    get: operations['listPortalMembers'];
+    put?: never;
+    /** addPortalMember */
+    post: operations['addPortalMember'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/workspaces/{workspace_id}/members/{user_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/workspaces/{workspace_id}/notes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** listNotes */
-        get: operations["listNotes"];
-        put?: never;
-        /** createNote */
-        post: operations["createNote"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /** removePortalMember */
+    delete: operations['removePortalMember'];
+    options?: never;
+    head?: never;
+    /** updatePortalMember */
+    patch: operations['updatePortalMember'];
+    trace?: never;
+  };
+  '/api/v1/workspaces/{workspace_id}/notes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/workspaces/{workspace_id}/notes/{note_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** getNote */
-        get: operations["getNote"];
-        put?: never;
-        post?: never;
-        /** deleteNote */
-        delete: operations["deleteNote"];
-        options?: never;
-        head?: never;
-        /** updateNote */
-        patch: operations["updateNote"];
-        trace?: never;
+    /** listNotes */
+    get: operations['listNotes'];
+    put?: never;
+    /** createNote */
+    post: operations['createNote'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/workspaces/{workspace_id}/notes/{note_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/workspaces/{workspace_id}/notes/{note_id}/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** exportNote */
-        get: operations["exportNote"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** getNote */
+    get: operations['getNote'];
+    put?: never;
+    post?: never;
+    /** deleteNote */
+    delete: operations['deleteNote'];
+    options?: never;
+    head?: never;
+    /** updateNote */
+    patch: operations['updateNote'];
+    trace?: never;
+  };
+  '/api/v1/workspaces/{workspace_id}/notes/{note_id}/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/workspaces/operations/{request_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Confirm the current actor own atomic write; absence remains unconfirmed. Never resubmit automatically. */
-        get: operations["getPortalWorkspaceOperation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** exportNote */
+    get: operations['exportNote'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/workspaces/operations/{request_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/workspaces/operations/{request_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Confirm the current actor own atomic write; absence remains unconfirmed. Never resubmit automatically. */
-        get: operations["getAdminWorkspaceOperation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Confirm the current actor own atomic write; absence remains unconfirmed. Never resubmit automatically. */
+    get: operations['getPortalWorkspaceOperation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/workspaces/operations/{request_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    /** Confirm the current actor own atomic write; absence remains unconfirmed. Never resubmit automatically. */
+    get: operations['getAdminWorkspaceOperation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        Problem: {
-            /** @constant */
-            type: "about:blank";
-            title: string;
-            status: number;
-            /** @enum {string} */
-            code: "VALIDATION_FAILED" | "INVALID_CURSOR" | "TOKEN_UNUSABLE" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "ACCESS_DENIED" | "CSRF_INVALID" | "ORIGIN_REJECTED" | "RESOURCE_NOT_FOUND" | "ACCOUNT_EXISTS" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "VERSION_CONFLICT" | "IDEMPOTENCY_CONFLICT" | "PROTECTED_ACCOUNT" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "MISDIRECTED_REQUEST" | "PASSWORD_POLICY_VIOLATION" | "PASSWORD_BLOCKED" | "RATE_LIMITED" | "INTERNAL_ERROR" | "STORAGE_UNAVAILABLE" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "AUTH_CAPACITY_EXCEEDED" | "SERVICE_NOT_READY" | "WORKSPACE_EXISTS" | "MEMBERSHIP_EXISTS" | "LAST_WORKSPACE_OWNER" | "DEFAULT_WORKSPACE_PROTECTED" | "RESOURCE_LIMIT_REACHED" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "LICENSE_CONFIGURATION_REQUIRED";
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            request_id: string;
-            detail?: string;
-            fields?: {
-                field: string;
-                code: string;
-            }[];
-        };
-        Workspace: {
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            id: string;
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            tenant_id: string;
-            name: string;
-            /** @enum {string} */
-            status: "active" | "disabled";
-            version: number;
-            is_default: boolean;
-            /** @enum {string|null} */
-            role: "owner" | "member" | "viewer" | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        Membership: {
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            user_id: string;
-            email: string;
-            display_name: string;
-            /** @enum {string} */
-            user_status: "active" | "disabled";
-            /** @enum {string} */
-            role: "owner" | "member" | "viewer";
-            version: number;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        Note: {
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            id: string;
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            tenant_id: string;
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            workspace_id: string;
-            title: string;
-            /** @description Valid UTF-8 without NUL; at most 8192 bytes. */
-            text: string;
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            author_user_id: string;
-            version: number;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        CreateWorkspace: {
-            name: string;
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            owner_user_id: string;
-        };
-        UpdateWorkspace: {
-            name: string;
-            /** @enum {string} */
-            status: "active" | "disabled";
-            version: number;
-            /** @description Nonblank UTF-8 without NUL; at most 500 code points. */
-            reason: string;
-        };
-        AddMember: {
-            email: string;
-            /** @enum {string} */
-            role: "owner" | "member" | "viewer";
-        };
-        UpdateMember: {
-            /** @enum {string} */
-            role: "owner" | "member" | "viewer";
-            version: number;
-            /** @description Nonblank UTF-8 without NUL; at most 500 code points. */
-            reason: string;
-        };
-        RemoveMember: {
-            version: number;
-            /** @description Nonblank UTF-8 without NUL; at most 500 code points. */
-            reason: string;
-        };
-        CreateNote: {
-            title: string;
-            /** @description Valid UTF-8 without NUL; at most 8192 bytes. */
-            text: string;
-        };
-        UpdateNote: {
-            title: string;
-            /** @description Valid UTF-8 without NUL; at most 8192 bytes. */
-            text: string;
-            version: number;
-        };
-        DeleteNote: {
-            version: number;
-        };
-        WorkspaceResponse: {
-            data: components["schemas"]["Workspace"];
-        };
-        WorkspaceListResponse: {
-            data: {
-                items: components["schemas"]["Workspace"][];
-                next_cursor: string | null;
-            };
-        };
-        MembershipResponse: {
-            data: components["schemas"]["Membership"];
-        };
-        MembershipListResponse: {
-            data: {
-                items: components["schemas"]["Membership"][];
-                next_cursor: string | null;
-            };
-        };
-        NoteResponse: {
-            data: components["schemas"]["Note"];
-        };
-        NoteListResponse: {
-            data: {
-                items: components["schemas"]["Note"][];
-                next_cursor: string | null;
-            };
-        };
-        OperationEvent: {
-            /** @enum {string} */
-            action: "workspace.created" | "workspace.updated" | "workspace.archived" | "workspace.restored" | "workspace.member_added" | "workspace.member_updated" | "workspace.member_removed" | "workspace.note_created" | "workspace.note_updated" | "workspace.note_deleted";
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            workspace_id: string;
-            /** @enum {string} */
-            target_type: "workspace" | "workspace_membership" | "workspace_note";
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            target_id: string;
-        };
-        OperationReceipt: {
-            /**
-             * Format: uuid
-             * @description Canonical lowercase nonzero UUID.
-             */
-            request_id: string;
-            /** @enum {string} */
-            state: "committed" | "unconfirmed";
-            event: components["schemas"]["OperationEvent"] | null;
-        } & (unknown & unknown);
-        OperationReceiptResponse: {
-            data: components["schemas"]["OperationReceipt"];
-        };
+  schemas: {
+    Problem: {
+      /** @constant */
+      type: 'about:blank';
+      title: string;
+      status: number;
+      /** @enum {string} */
+      code:
+        | 'VALIDATION_FAILED'
+        | 'INVALID_CURSOR'
+        | 'TOKEN_UNUSABLE'
+        | 'AUTH_INVALID_CREDENTIALS'
+        | 'AUTH_REQUIRED'
+        | 'AUTH_SESSION_EXPIRED'
+        | 'ACCESS_DENIED'
+        | 'CSRF_INVALID'
+        | 'ORIGIN_REJECTED'
+        | 'RESOURCE_NOT_FOUND'
+        | 'ACCOUNT_EXISTS'
+        | 'INVITATION_EXISTS'
+        | 'INVITATION_STATE_CONFLICT'
+        | 'VERSION_CONFLICT'
+        | 'IDEMPOTENCY_CONFLICT'
+        | 'PROTECTED_ACCOUNT'
+        | 'PAYLOAD_TOO_LARGE'
+        | 'UNSUPPORTED_MEDIA_TYPE'
+        | 'MISDIRECTED_REQUEST'
+        | 'PASSWORD_POLICY_VIOLATION'
+        | 'PASSWORD_BLOCKED'
+        | 'RATE_LIMITED'
+        | 'INTERNAL_ERROR'
+        | 'STORAGE_UNAVAILABLE'
+        | 'STORAGE_COMMIT_OUTCOME_UNKNOWN'
+        | 'AUTH_CAPACITY_EXCEEDED'
+        | 'SERVICE_NOT_READY'
+        | 'WORKSPACE_EXISTS'
+        | 'MEMBERSHIP_EXISTS'
+        | 'LAST_WORKSPACE_OWNER'
+        | 'DEFAULT_WORKSPACE_PROTECTED'
+        | 'RESOURCE_LIMIT_REACHED'
+        | 'LICENSE_NEW_BUSINESS_UNAVAILABLE'
+        | 'LICENSE_STORED_STATE_INVALID'
+        | 'LICENSE_CONFIGURATION_REQUIRED';
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      request_id: string;
+      detail?: string;
+      fields?: {
+        field: string;
+        code: string;
+      }[];
     };
-    responses: never;
-    parameters: {
-        /** @description Signed, audience/session/context-bound token from getCsrf. */
-        Csrf: string;
-        /** @description Required for invitation create/resend; retain for retries of this one action. */
-        Idempotency: string;
-        /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
-        Limit: number;
-        /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
-        Cursor: string;
-        UserId: string;
-        InvitationId: string;
-        WorkspaceId: string;
-        NoteId: string;
+    Workspace: {
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      id: string;
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      tenant_id: string;
+      name: string;
+      /** @enum {string} */
+      status: 'active' | 'disabled';
+      version: number;
+      is_default: boolean;
+      /** @enum {string|null} */
+      role: 'owner' | 'member' | 'viewer' | null;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
     };
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    Membership: {
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      user_id: string;
+      email: string;
+      display_name: string;
+      /** @enum {string} */
+      user_status: 'active' | 'disabled';
+      /** @enum {string} */
+      role: 'owner' | 'member' | 'viewer';
+      version: number;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+    };
+    Note: {
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      id: string;
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      tenant_id: string;
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      workspace_id: string;
+      title: string;
+      /** @description Valid UTF-8 without NUL; at most 8192 bytes. */
+      text: string;
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      author_user_id: string;
+      version: number;
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      updated_at: string;
+    };
+    CreateWorkspace: {
+      name: string;
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      owner_user_id: string;
+    };
+    UpdateWorkspace: {
+      name: string;
+      /** @enum {string} */
+      status: 'active' | 'disabled';
+      version: number;
+      /** @description Nonblank UTF-8 without NUL; at most 500 code points. */
+      reason: string;
+    };
+    AddMember: {
+      email: string;
+      /** @enum {string} */
+      role: 'owner' | 'member' | 'viewer';
+    };
+    UpdateMember: {
+      /** @enum {string} */
+      role: 'owner' | 'member' | 'viewer';
+      version: number;
+      /** @description Nonblank UTF-8 without NUL; at most 500 code points. */
+      reason: string;
+    };
+    RemoveMember: {
+      version: number;
+      /** @description Nonblank UTF-8 without NUL; at most 500 code points. */
+      reason: string;
+    };
+    CreateNote: {
+      title: string;
+      /** @description Valid UTF-8 without NUL; at most 8192 bytes. */
+      text: string;
+    };
+    UpdateNote: {
+      title: string;
+      /** @description Valid UTF-8 without NUL; at most 8192 bytes. */
+      text: string;
+      version: number;
+    };
+    DeleteNote: {
+      version: number;
+    };
+    WorkspaceResponse: {
+      data: components['schemas']['Workspace'];
+    };
+    WorkspaceListResponse: {
+      data: {
+        items: components['schemas']['Workspace'][];
+        next_cursor: string | null;
+      };
+    };
+    MembershipResponse: {
+      data: components['schemas']['Membership'];
+    };
+    MembershipListResponse: {
+      data: {
+        items: components['schemas']['Membership'][];
+        next_cursor: string | null;
+      };
+    };
+    NoteResponse: {
+      data: components['schemas']['Note'];
+    };
+    NoteListResponse: {
+      data: {
+        items: components['schemas']['Note'][];
+        next_cursor: string | null;
+      };
+    };
+    OperationEvent: {
+      /** @enum {string} */
+      action:
+        | 'workspace.created'
+        | 'workspace.updated'
+        | 'workspace.archived'
+        | 'workspace.restored'
+        | 'workspace.member_added'
+        | 'workspace.member_updated'
+        | 'workspace.member_removed'
+        | 'workspace.note_created'
+        | 'workspace.note_updated'
+        | 'workspace.note_deleted';
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      workspace_id: string;
+      /** @enum {string} */
+      target_type: 'workspace' | 'workspace_membership' | 'workspace_note';
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      target_id: string;
+    };
+    OperationReceipt: {
+      /**
+       * Format: uuid
+       * @description Canonical lowercase nonzero UUID.
+       */
+      request_id: string;
+      /** @enum {string} */
+      state: 'committed' | 'unconfirmed';
+      event: components['schemas']['OperationEvent'] | null;
+    } & (unknown & unknown);
+    OperationReceiptResponse: {
+      data: components['schemas']['OperationReceipt'];
+    };
+  };
+  responses: never;
+  parameters: {
+    /** @description Signed, audience/session/context-bound token from getCsrf. */
+    Csrf: string;
+    /** @description Required for invitation create/resend; retain for retries of this one action. */
+    Idempotency: string;
+    /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
+    Limit: number;
+    /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
+    Cursor: string;
+    UserId: string;
+    InvitationId: string;
+    WorkspaceId: string;
+    NoteId: string;
+  };
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    listAdminWorkspaces: {
-        parameters: {
-            query?: {
-                /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
-                limit?: components["parameters"]["Limit"];
-                /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
-                cursor?: components["parameters"]["Cursor"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceListResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  listAdminWorkspaces: {
+    parameters: {
+      query?: {
+        /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
+        limit?: components['parameters']['Limit'];
+        /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
+        cursor?: components['parameters']['Cursor'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    createWorkspace: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateWorkspace"];
-            };
+        content: {
+          'application/json': components['schemas']['WorkspaceListResponse'];
         };
-        responses: {
-            /** @description Success */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    getAdminWorkspace: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  createWorkspace: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
     };
-    updateAdminWorkspace: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateWorkspace"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateWorkspace'];
+      };
     };
-    listAdminMembers: {
-        parameters: {
-            query?: {
-                /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
-                limit?: components["parameters"]["Limit"];
-                /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
-                cursor?: components["parameters"]["Cursor"];
-            };
-            header?: never;
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description Success */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipListResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['WorkspaceResponse'];
         };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    addAdminMember: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddMember"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  getAdminWorkspace: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
     };
-    removeAdminMember: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RemoveMember"];
-            };
+        content: {
+          'application/json': components['schemas']['WorkspaceResponse'];
         };
-        responses: {
-            /** @description Success */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    updateAdminMember: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateMember"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  updateAdminWorkspace: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
     };
-    listPortalWorkspaces: {
-        parameters: {
-            query?: {
-                /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
-                limit?: components["parameters"]["Limit"];
-                /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
-                cursor?: components["parameters"]["Cursor"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceListResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateWorkspace'];
+      };
     };
-    getPortalWorkspace: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['WorkspaceResponse'];
         };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    updatePortalWorkspace: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateWorkspace"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkspaceResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  listAdminMembers: {
+    parameters: {
+      query?: {
+        /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
+        limit?: components['parameters']['Limit'];
+        /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
+        cursor?: components['parameters']['Cursor'];
+      };
+      header?: never;
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
     };
-    listPortalMembers: {
-        parameters: {
-            query?: {
-                /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
-                limit?: components["parameters"]["Limit"];
-                /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
-                cursor?: components["parameters"]["Cursor"];
-            };
-            header?: never;
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipListResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['MembershipListResponse'];
         };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    addPortalMember: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddMember"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  addAdminMember: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
     };
-    removePortalMember: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RemoveMember"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AddMember'];
+      };
     };
-    updatePortalMember: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-                user_id: components["parameters"]["UserId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description Success */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateMember"];
-            };
+        content: {
+          'application/json': components['schemas']['MembershipResponse'];
         };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MembershipResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    listNotes: {
-        parameters: {
-            query?: {
-                /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
-                limit?: components["parameters"]["Limit"];
-                /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
-                cursor?: components["parameters"]["Cursor"];
-            };
-            header?: never;
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NoteListResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  removeAdminMember: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
     };
-    createNote: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateNote"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NoteResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RemoveMember'];
+      };
     };
-    getNote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-                note_id: components["parameters"]["NoteId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description Success */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NoteResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content?: never;
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    deleteNote: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-                note_id: components["parameters"]["NoteId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DeleteNote"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  updateAdminMember: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
     };
-    updateNote: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Signed, audience/session/context-bound token from getCsrf. */
-                "X-CSRF-Token": components["parameters"]["Csrf"];
-            };
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-                note_id: components["parameters"]["NoteId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateNote"];
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NoteResponse"];
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateMember'];
+      };
     };
-    exportNote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                workspace_id: components["parameters"]["WorkspaceId"];
-                note_id: components["parameters"]["NoteId"];
-            };
-            cookie?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
-            /** @description Stable scoped failure */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Stable scoped failure */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['MembershipResponse'];
         };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    getPortalWorkspaceOperation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Uncached scoped receipt; current resource state requires a fresh authorized read. */
-            200: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationReceiptResponse"];
-                };
-            };
-            /** @description Current authority, input or storage failure. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  listPortalWorkspaces: {
+    parameters: {
+      query?: {
+        /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
+        limit?: components['parameters']['Limit'];
+        /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
+        cursor?: components['parameters']['Cursor'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    getAdminWorkspaceOperation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                request_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Uncached scoped receipt; current resource state requires a fresh authorized read. */
-            200: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationReceiptResponse"];
-                };
-            };
-            /** @description Current authority, input or storage failure. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['WorkspaceListResponse'];
         };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
+  };
+  getPortalWorkspace: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WorkspaceResponse'];
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  updatePortalWorkspace: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateWorkspace'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WorkspaceResponse'];
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  listPortalMembers: {
+    parameters: {
+      query?: {
+        /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
+        limit?: components['parameters']['Limit'];
+        /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
+        cursor?: components['parameters']['Cursor'];
+      };
+      header?: never;
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MembershipListResponse'];
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  addPortalMember: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AddMember'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MembershipResponse'];
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  removePortalMember: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RemoveMember'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  updatePortalMember: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateMember'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MembershipResponse'];
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  listNotes: {
+    parameters: {
+      query?: {
+        /** @description Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100. */
+        limit?: components['parameters']['Limit'];
+        /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
+        cursor?: components['parameters']['Cursor'];
+      };
+      header?: never;
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NoteListResponse'];
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  createNote: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateNote'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NoteResponse'];
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  getNote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+        note_id: components['parameters']['NoteId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NoteResponse'];
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  deleteNote: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+        note_id: components['parameters']['NoteId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeleteNote'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  updateNote: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Signed, audience/session/context-bound token from getCsrf. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+        note_id: components['parameters']['NoteId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateNote'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NoteResponse'];
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  exportNote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        workspace_id: components['parameters']['WorkspaceId'];
+        note_id: components['parameters']['NoteId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': string;
+        };
+      };
+      /** @description Stable scoped failure */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description Stable scoped failure */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  getPortalWorkspaceOperation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Uncached scoped receipt; current resource state requires a fresh authorized read. */
+      200: {
+        headers: {
+          'Cache-Control'?: 'no-store';
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OperationReceiptResponse'];
+        };
+      };
+      /** @description Current authority, input or storage failure. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  getAdminWorkspaceOperation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Uncached scoped receipt; current resource state requires a fresh authorized read. */
+      200: {
+        headers: {
+          'Cache-Control'?: 'no-store';
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OperationReceiptResponse'];
+        };
+      };
+      /** @description Current authority, input or storage failure. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
 }

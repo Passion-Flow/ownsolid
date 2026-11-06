@@ -2,2096 +2,2775 @@
 // Change the contract, then run `make generate`.
 
 export interface paths {
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminListGatewayInstance"];
-        put?: never;
-        post: operations["adminProvisionGateway"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminGetGatewayInstance"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminListGatewayInstance'];
+    put?: never;
+    post: operations['adminProvisionGateway'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminListModelAlias"];
-        put?: never;
-        post: operations["adminPublishAlias"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminGetGatewayInstance'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminGetModelAlias"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminListModelAlias'];
+    put?: never;
+    post: operations['adminPublishAlias'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminListDistributionKey"];
-        put?: never;
-        post: operations["adminMintDistributionKey"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminGetModelAlias'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminGetDistributionKey"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminListDistributionKey'];
+    put?: never;
+    post: operations['adminMintDistributionKey'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminListGatewayRequest"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminGetDistributionKey'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{resource_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminGetGatewayRequest"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminListGatewayRequest'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{resource_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminrevokeDistributionKey"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminGetGatewayRequest'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}/revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminrevokeGatewayInstance"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminrevokeDistributionKey'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}/revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/disable": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["admindisableModelAlias"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminrevokeGatewayInstance'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/disable': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/cutovers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminCutoverAlias"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['admindisableModelAlias'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/cutovers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/targets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminAliasTargets"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminCutoverAlias'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/targets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminCreateGatewayRecovery"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminAliasTargets'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["adminGetGatewayRecovery"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminCreateGatewayRecovery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/fence": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminAcceptGatewayFence"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['adminGetGatewayRecovery'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/fence': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["adminConfirmGatewayRecovery"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminAcceptGatewayFence'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalListModelAlias"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['adminConfirmGatewayRecovery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalGetModelAlias"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalListModelAlias'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalListDistributionKey"];
-        put?: never;
-        post: operations["portalMintDistributionKey"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalGetModelAlias'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalGetDistributionKey"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalListDistributionKey'];
+    put?: never;
+    post: operations['portalMintDistributionKey'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalListGatewayRequest"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalGetDistributionKey'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests/{resource_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get: operations["portalGetGatewayRequest"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalListGatewayRequest'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests/{resource_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["portalrevokeDistributionKey"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['portalGetGatewayRequest'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}/revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/gateway/v1/sites/{site_id}/cells/{cell_id}/instances/{gateway_id}/models": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["gatewayModels"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['portalrevokeDistributionKey'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/gateway/v1/sites/{site_id}/cells/{cell_id}/instances/{gateway_id}/models': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/gateway/v1/sites/{site_id}/cells/{cell_id}/instances/{gateway_id}/admissions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["gatewayAdmissions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['gatewayModels'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/gateway/v1/sites/{site_id}/cells/{cell_id}/instances/{gateway_id}/admissions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
-    "/gateway/v1/sites/{site_id}/cells/{cell_id}/instances/{gateway_id}/outcomes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["gatewayOutcomes"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['gatewayAdmissions'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/gateway/v1/sites/{site_id}/cells/{cell_id}/instances/{gateway_id}/outcomes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+      };
+      cookie?: never;
     };
+    get?: never;
+    put?: never;
+    post: operations['gatewayOutcomes'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        GatewayInstance: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            node_id: string;
-            name: string;
-            /**
-             * Format: uri
-             * @description Canonical HTTPS origin only; advertised metadata, never an outbound control destination.
-             */
-            client_origin: string;
-            /** Format: uuid */
-            created_by: string;
-            /** @enum {string} */
-            state: "active" | "revoked" | "invalidated";
-            /** Format: date-time */
-            created_at: string;
-            revoked_at: string | null;
-        };
-        ProvisionGateway: {
-            /** Format: uuid */
-            node_id: string;
-            name: string;
-            /**
-             * Format: uri
-             * @description Canonical HTTPS origin only; advertised metadata, never an outbound control destination.
-             */
-            client_origin: string;
-            reason: string;
-        };
-        ProvisionedGateway: {
-            gateway: components["schemas"]["GatewayInstance"];
-            secret: string | null;
-            secret_available: boolean;
-        };
-        ModelAlias: {
-            held_requests: number;
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            gateway_id: string;
-            /** Format: uuid */
-            node_id: string;
-            name: string;
-            /**
-             * Format: uri
-             * @description Canonical HTTPS origin only; advertised metadata, never an outbound control destination.
-             */
-            client_origin: string;
-            /** Format: uuid */
-            deployment_id: string;
-            deployment_revision: number;
-            revision: number;
-            disabled_at: string | null;
-            /** Format: date-time */
-            created_at: string;
-            available: boolean;
-            unavailable_code: "MODEL_ALIAS_UNAVAILABLE" | null;
-        };
-        AliasCutover: {
-            /** @enum {string} */
-            action: "pause" | "resume" | "retarget" | "rollback";
-            expected_revision: number;
-            deployment_id: string | null;
-            deployment_revision: number | null;
-            source_revision: number | null;
-            reason: string;
-        };
-        AliasCutoverResult: {
-            alias: components["schemas"]["ModelAlias"];
-            applied_revision: number;
-            replayed: boolean;
-        };
-        AliasTarget: {
-            source_revision: number | null;
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            alias_id: string;
-            revision: number;
-            /** @enum {string} */
-            action: "migration_current" | "published" | "disabled" | "paused" | "resumed" | "retargeted" | "rolled_back";
-            /** Format: uuid */
-            deployment_id: string;
-            deployment_revision: number;
-            /** Format: uuid */
-            model_id: string;
-            /** @enum {string} */
-            model_kind: "approved_base" | "merged_lora";
-            catalog_digest: string;
-            serving_recipe_sha256: string | null;
-            /** Format: date-time */
-            created_at: string;
-        };
-        AliasTargetPage: {
-            items: components["schemas"]["AliasTarget"][];
-            next_cursor: string | null;
-        };
-        PublishAlias: {
-            /** Format: uuid */
-            gateway_id: string;
-            name: string;
-            /** Format: uuid */
-            deployment_id: string;
-            deployment_revision: number;
-            reason: string;
-        };
-        DistributionKey: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            alias_id: string;
-            alias_name: string;
-            label: string;
-            prefix: string;
-            /** Format: uuid */
-            created_by: string;
-            /** @enum {string} */
-            state: "active" | "expired" | "revoked" | "invalidated" | "unavailable";
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            expires_at: string;
-            last_used_at: string | null;
-            revoked_at: string | null;
-        };
-        MintDistributionKey: {
-            /** Format: uuid */
-            alias_id: string;
-            label: string;
-            ttl_seconds: 0 | number;
-            reason: string;
-        };
-        MintedDistributionKey: {
-            key: components["schemas"]["DistributionKey"];
-            secret: string | null;
-            secret_available: boolean;
-        };
-        Reason: {
-            reason: string;
-        };
-        DisableAlias: {
-            expected_revision: number;
-            reason: string;
-        };
-        ConfirmRecovery: {
-            deployment_revision: number;
-            reason: string;
-        };
-        ActualUsage: {
-            prompt_tokens: number;
-            completion_tokens: number;
-            total_tokens: number;
-        };
-        GatewayOutcome: {
-            /** Format: uuid */
-            request_id: string;
-            /** @enum {string} */
-            status: "succeeded" | "client_cancelled" | "upstream_timeout" | "upstream_error" | "invalid_response" | "gateway_shutdown" | "usage_storage_failed" | "incomplete";
-            error_code: ("client_cancelled" | "context_length_exceeded" | "upstream_unavailable" | "upstream_timeout" | "upstream_response_invalid" | "gateway_unavailable" | "gateway_shutdown" | "usage_storage_unavailable" | "gateway_interrupted") | null;
-            usage: components["schemas"]["ActualUsage"] | null;
-            elapsed_milliseconds: number;
-            output_started: boolean;
-        };
-        GatewayFenceReceipt: {
-            /** @constant */
-            schema_version: 1;
-            /** Format: uuid */
-            gateway_id: string;
-            /** Format: uuid */
-            node_id: string;
-            control_origin_sha256: string;
-            /** Format: uuid */
-            challenge_id: string;
-            state_fence_sha256: string;
-            fenced_at_unix_milliseconds: number;
-            checked_at_unix_milliseconds: number;
-            /** @constant */
-            exclusive_state_lock_confirmed: true;
-            /** @constant */
-            persistent_fence_confirmed: true;
-            pending_outcomes: number;
-            gateway_version: string;
-        };
-        AcceptRecoveryFence: {
-            receipt: components["schemas"]["GatewayFenceReceipt"];
-            reason: string;
-        };
-        GatewayRecovery: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            request_id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** @enum {string} */
-            state: "pending_fence" | "fenced" | "completed" | "expired" | "invalidated" | "superseded";
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            expires_at: string;
-            fence_accepted_at: string | null;
-            confirmed_at: string | null;
-            fence_receipt: components["schemas"]["GatewayFenceReceipt"] | null;
-        };
-        GatewayRequest: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            /** Format: uuid */
-            gateway_id: string;
-            /** Format: uuid */
-            node_id: string;
-            /** Format: uuid */
-            api_key_id: string;
-            /** Format: uuid */
-            actor_id: string;
-            /** Format: uuid */
-            alias_id: string;
-            alias_name: string;
-            /** Format: uuid */
-            deployment_id: string;
-            deployment_revision: number;
-            /** @enum {string} */
-            state: "admitted" | "reported" | "reconciled";
-            capacity_held: boolean;
-            stream: boolean;
-            /** Format: date-time */
-            admitted_at: string;
-            /** Format: date-time */
-            deadline_at: string;
-            reported_at: string | null;
-            reconciled_at: string | null;
-            active_recovery_id: string | null;
-            outcome: components["schemas"]["GatewayOutcome"] | null;
-        };
-        GatewayInstancePage: {
-            items: components["schemas"]["GatewayInstance"][];
-            next_cursor: string | null;
-        };
-        ModelAliasPage: {
-            items: components["schemas"]["ModelAlias"][];
-            next_cursor: string | null;
-        };
-        DistributionKeyPage: {
-            items: components["schemas"]["DistributionKey"][];
-            next_cursor: string | null;
-        };
-        GatewayRequestPage: {
-            items: components["schemas"]["GatewayRequest"][];
-            next_cursor: string | null;
-        };
-        GatewayModelsRequest: {
-            api_key: string;
-        };
-        GatewayAdmissionRequest: {
-            /** Format: uuid */
-            request_id: string;
-            api_key: string;
-            model: string;
-            maximum_output_tokens: number;
-            stream: boolean;
-        };
-        GatewayAliasBinding: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            created: number;
-            /** Format: uuid */
-            deployment_id: string;
-            deployment_revision: number;
-            backend_model: string;
-        };
-        GatewayModelsAuthorization: {
-            /** Format: uuid */
-            gateway_id: string;
-            /** Format: uuid */
-            node_id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            models: components["schemas"]["GatewayAliasBinding"][];
-        };
-        GatewayAdmission: {
-            /** Format: uuid */
-            request_id: string;
-            /** Format: uuid */
-            gateway_id: string;
-            /** Format: uuid */
-            node_id: string;
-            /** Format: uuid */
-            workspace_id: string;
-            binding: components["schemas"]["GatewayAliasBinding"];
-            maximum_context_tokens: number;
-            maximum_request_seconds: number;
-        };
-        GatewayOutcomeAcknowledgment: {
-            /** Format: uuid */
-            request_id: string;
-            canonical_sha256: string;
-        };
-        Problem: {
-            /** @constant */
-            type: "about:blank";
-            title: string;
-            status: number;
-            /** @enum {string} */
-            code: "ACCESS_DENIED" | "ACCOUNT_EXISTS" | "AGENT_LEASE_STALE" | "AGENT_OPERATION_UNSUPPORTED" | "AGENT_PROFILE_REJECTED" | "AGENT_PROTOCOL_UNSUPPORTED" | "AGENT_UNAUTHORIZED" | "ALIAS_ALREADY_PAUSED" | "ALIAS_NOT_PAUSED" | "ALIAS_PAUSE_REQUIRED" | "ALIAS_REQUESTS_UNDRAINED" | "ALIAS_ROLLBACK_TARGET_INVALID" | "API_KEY_EXPIRED" | "API_KEY_INVALID" | "AUTH_CAPACITY_EXCEEDED" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "AWS_ACCESS_DENIED" | "AWS_ACCOUNT_MISMATCH" | "AWS_BUSINESS_DATABASE_UNSUPPORTED" | "AWS_BUSY" | "AWS_CANCELLED" | "AWS_CONFIGURATION_INVALID" | "AWS_CREDENTIALS_EXPIRED" | "AWS_CREDENTIALS_INVALID" | "AWS_DISABLED" | "AWS_LIMIT_REACHED" | "AWS_PAGINATION_INVALID" | "AWS_PROVIDER_REJECTED" | "AWS_RESPONSE_INVALID" | "AWS_SCOPE_REJECTED" | "AWS_SYNC_SUPERSEDED" | "AWS_THROTTLED" | "AWS_UNAVAILABLE" | "COMPONENT_ASSET_INVALID" | "COMPONENT_ASSET_UNAVAILABLE" | "COMPONENT_CONFIG_INVALID" | "COMPONENT_INTERRUPTED" | "COMPONENT_LOGS_INVALID" | "COMPONENT_LOGS_TOO_LARGE" | "COMPONENT_LOGS_UNAVAILABLE" | "COMPONENT_MAINTENANCE_REQUIRED" | "COMPONENT_PROFILE_UNAVAILABLE" | "COMPONENT_ROLLBACK_FAILED" | "COMPONENT_ROLLBACK_UNAVAILABLE" | "COMPONENT_STATE_INVALID" | "COMPONENT_UPDATE_ROLLED_BACK" | "COMPONENT_UPGRADE_NOT_FORWARD" | "COMPONENT_VERSION_CONFLICT" | "COMPONENT_VERSION_UNSUPPORTED" | "CONFIG_MACHINE_TRANSPORT_REQUIRED" | "CONFIG_MONITORING_INVALID" | "CONFIG_RELEASE_VIEW_INVALID" | "CSRF_INVALID" | "DATASET_ATTEMPT_STALE" | "DATASET_CORRECTED_UPLOAD_REQUIRED" | "DATASET_DATA_INVALID" | "DATASET_DRAFT_BUSY" | "DATASET_EMPTY_SOURCE" | "DATASET_EXISTS" | "DATASET_FILE_INVALID" | "DATASET_FILE_TOO_LARGE" | "DATASET_LIMIT_REACHED" | "DATASET_LINE_TOO_LARGE" | "DATASET_NOT_FOUND" | "DATASET_PROCESSOR_MEMORY_EXCEEDED" | "DATASET_PROCESSOR_RESULT_TOO_LARGE" | "DATASET_PROCESSOR_TIMEOUT" | "DATASET_RETIRED" | "DATASET_RETRY_NOT_ALLOWED" | "DATASET_REVISION_CONFLICT" | "DATASET_ROW_LIMIT" | "DATASET_SOURCE_CHANGED" | "DATASET_SOURCE_INVALID" | "DATASET_SPLIT_CONFIGURATION_INVALID" | "DATASET_SPLIT_INSUFFICIENT_GROUPS" | "DATASET_STORAGE_FULL" | "DATASET_STORAGE_UNAVAILABLE" | "DATASET_TEXT_INVALID" | "DATASET_UPLOAD_BUSY" | "DATASET_UPLOAD_INCOMPLETE" | "DATASET_VALIDATION_FAILED" | "DATASET_VERSION_RETIRED" | "DEFAULT_WORKSPACE_PROTECTED" | "FORBIDDEN" | "GATEWAY_BACKEND_STOP_UNCONFIRMED" | "GATEWAY_FENCE_RECEIPT_CONFLICT" | "GATEWAY_FENCE_SCOPE_CONFLICT" | "GATEWAY_INSTANCE_EXISTS" | "GATEWAY_INSTANCE_REVOKED" | "GATEWAY_NODE_UNAVAILABLE" | "GATEWAY_OUTCOME_CONFLICT" | "GATEWAY_RECOVERY_NOT_REQUIRED" | "GATEWAY_RECOVERY_REQUIRES_REVOCATION" | "GATEWAY_RECOVERY_STATE_CONFLICT" | "GATEWAY_REQUEST_EXISTS" | "GATEWAY_REQUEST_NOT_FOUND" | "GATEWAY_UNAUTHORIZED" | "GATEWAY_USAGE_INVALID" | "IDEMPOTENCY_CONFLICT" | "INFERENCE_CONFIGURATION_INVALID" | "INFERENCE_OWNERSHIP_CONFLICT" | "INFERENCE_PREFLIGHT_REQUIRED" | "INFERENCE_RECOVERY_REQUIRED" | "INFERENCE_RESOURCE_BUSY" | "INFERENCE_REVISION_CONFLICT" | "INTERNAL_ERROR" | "INVALID_CURSOR" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "KNOWLEDGE_ANSWER_KEY_CLEANUP_FAILED" | "KNOWLEDGE_ANSWER_SOURCE_CHANGED" | "KNOWLEDGE_ATTEMPT_STALE" | "KNOWLEDGE_AUTHORITY_INVALID" | "KNOWLEDGE_BASE_DISABLED" | "KNOWLEDGE_BASE_EXISTS" | "KNOWLEDGE_BASE_NOT_FOUND" | "KNOWLEDGE_BUSY" | "KNOWLEDGE_CANCELLED" | "KNOWLEDGE_COMPILED_CONTRACT_INVALID" | "KNOWLEDGE_CONFIGURATION_INVALID" | "KNOWLEDGE_DOCUMENT_EXISTS" | "KNOWLEDGE_DOCUMENT_NOT_FOUND" | "KNOWLEDGE_EMPTY_SOURCE" | "KNOWLEDGE_ENCODER_ASSET_INVALID" | "KNOWLEDGE_ENCODER_LOAD_FAILED" | "KNOWLEDGE_GATEWAY_RESPONSE_INVALID" | "KNOWLEDGE_GATEWAY_UNAVAILABLE" | "KNOWLEDGE_GENERATION_NOT_FOUND" | "KNOWLEDGE_INDEX_INCOMPATIBLE" | "KNOWLEDGE_INSTALLED_ASSET_INVALID" | "KNOWLEDGE_INVALID_CITATIONS" | "KNOWLEDGE_INVALID_SOURCE" | "KNOWLEDGE_LIMIT_REACHED" | "KNOWLEDGE_NO_CONTEXT" | "KNOWLEDGE_QUERY_TOO_LONG" | "KNOWLEDGE_REBUILD_FAILED" | "KNOWLEDGE_REQUEST_CANCELLED" | "KNOWLEDGE_RETRY_NOT_ALLOWED" | "KNOWLEDGE_REVISION_CONFLICT" | "KNOWLEDGE_SCRATCH_ROOT_INVALID" | "KNOWLEDGE_SCRATCH_UNAVAILABLE" | "KNOWLEDGE_SOURCE_CHANGED" | "KNOWLEDGE_SOURCE_LIMIT_EXCEEDED" | "KNOWLEDGE_SOURCE_NOT_FOUND" | "KNOWLEDGE_UNAVAILABLE" | "KNOWLEDGE_WORKER_FAILED" | "KNOWLEDGE_WORKER_INTERRUPTED" | "KNOWLEDGE_WORKER_MEMORY_EXCEEDED" | "KNOWLEDGE_WORKER_MEMORY_MONITOR_FAILED" | "KNOWLEDGE_WORKER_OUTPUT_LIMIT" | "KNOWLEDGE_WORKER_REQUEST_INVALID" | "KNOWLEDGE_WORKER_RESULT_INVALID" | "KNOWLEDGE_WORKER_START_FAILED" | "KNOWLEDGE_WORKER_TIMEOUT" | "LAST_WORKSPACE_OWNER" | "LICENSE_ARTIFACT_INVALID" | "LICENSE_CONFIGURATION_REQUIRED" | "LICENSE_CURRENT_CHANGED" | "LICENSE_DEPLOYMENT_MISMATCH" | "LICENSE_ID_CONFLICT" | "LICENSE_IMPORT_CAPACITY_REQUIRED" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_PENDING_SUCCESSOR_EXISTS" | "LICENSE_PREDECESSOR_REQUIRED" | "LICENSE_RENEWAL_WINDOW_INVALID" | "LICENSE_STORED_STATE_INVALID" | "LOCALIZATION_LOCALE_UNAVAILABLE" | "LOCALIZATION_PACKAGE_INVALID" | "LOCALIZATION_REQUIRED_LOCALE_UNAVAILABLE" | "LOCALIZATION_UNAVAILABLE" | "MEMBERSHIP_EXISTS" | "MIDDLEWARE_AMBIENT_DRIVER_INPUT_REFUSED" | "MIDDLEWARE_ARTIFACT_ROOT_MISMATCH" | "MIDDLEWARE_ATTEMPT_STALE" | "MIDDLEWARE_BACKUP_EVIDENCE_INVALID" | "MIDDLEWARE_CA_INPUT_INVALID" | "MIDDLEWARE_COMPLETED_BACKUP_REQUIRED" | "MIDDLEWARE_CONFIGURATION_INVALID" | "MIDDLEWARE_CONNECTION_CONFIGURATION_INVALID" | "MIDDLEWARE_CONNECTION_FAILED" | "MIDDLEWARE_ENDPOINT_IDENTITY_MISMATCH" | "MIDDLEWARE_ENVIRONMENT_INVALID" | "MIDDLEWARE_EXECUTION_UNCERTAIN" | "MIDDLEWARE_EXTERNAL_MUTATION_REFUSED" | "MIDDLEWARE_FRESH_TARGET_REQUIRED" | "MIDDLEWARE_IDENTITY_REPOSITORY_REQUIRED" | "MIDDLEWARE_INPUT_CHANGED" | "MIDDLEWARE_INSTALLED_PLATFORM_REQUIRED" | "MIDDLEWARE_INSTANCE_LIMIT" | "MIDDLEWARE_ISOLATED_CONFIRMATION_REQUIRED" | "MIDDLEWARE_ISOLATED_TARGET_INVALID" | "MIDDLEWARE_OPERATION_DEADLINE_REQUIRED" | "MIDDLEWARE_OPERATOR_RECONCILIATION_REQUIRED" | "MIDDLEWARE_ORIGINAL_OPERATOR_INTENT_REQUIRED" | "MIDDLEWARE_ORIGINAL_UNCERTAIN_OPERATION_REQUIRED" | "MIDDLEWARE_PASSWORD_INPUT_INVALID" | "MIDDLEWARE_PLATFORM_SCOPE_DUPLICATE" | "MIDDLEWARE_PLATFORM_SCOPE_MISMATCH" | "MIDDLEWARE_PLATFORM_SCOPE_REQUIRED" | "MIDDLEWARE_PRIVATE_INPUT_CHANGED" | "MIDDLEWARE_PRIVATE_INPUT_INVALID" | "MIDDLEWARE_PRIVILEGE_OBSERVATION_FAILED" | "MIDDLEWARE_PROBE_FAILED" | "MIDDLEWARE_PROFILE_ALREADY_REGISTERED" | "MIDDLEWARE_PROFILE_DUPLICATE" | "MIDDLEWARE_PROFILE_INVALID" | "MIDDLEWARE_PROFILE_UNAVAILABLE" | "MIDDLEWARE_REASON_TOO_LONG" | "MIDDLEWARE_RESTORE_FENCE_CHANGED" | "MIDDLEWARE_RESTORE_TRANSACTION_REQUIRED" | "MIDDLEWARE_RESULT_INVALID" | "MIDDLEWARE_SCHEMA_REJECTED" | "MIDDLEWARE_SCOPE_CHANGED" | "MIDDLEWARE_STORAGE_MISMATCH" | "MIDDLEWARE_STORAGE_UNAVAILABLE" | "MIDDLEWARE_STORED_EVIDENCE_INVALID" | "MIDDLEWARE_STORED_INSTANCE_INVALID" | "MIDDLEWARE_STORED_INTENT_INVALID" | "MIDDLEWARE_VERIFIED_TLS_REQUIRED" | "MIDDLEWARE_VERSION_LIMIT" | "MIDDLEWARE_WORKER_ALREADY_RUNNING" | "MISDIRECTED_REQUEST" | "MODEL_ALIAS_EXISTS" | "MODEL_ALIAS_NOT_FOUND" | "MODEL_ALIAS_UNAVAILABLE" | "MODEL_ALREADY_EXISTS" | "MODEL_CHUNK_CONFLICT" | "MODEL_CHUNK_INVALID" | "MODEL_CHUNK_OFFSET_MISMATCH" | "MODEL_CLEANUP_CONFLICT" | "MODEL_DERIVED_ALREADY_RETIRED" | "MODEL_DERIVED_CATALOG_INVALID" | "MODEL_DERIVED_COPY_ATTEMPT_LIMIT" | "MODEL_DERIVED_COPY_BUSY" | "MODEL_DERIVED_COPY_POLICY_INVALID" | "MODEL_DERIVED_DISK_SPACE_LOW" | "MODEL_DERIVED_IDENTITY_CONFLICT" | "MODEL_DERIVED_PARTIAL_COPY_RETAINED" | "MODEL_DERIVED_REGISTRATION_UNAVAILABLE" | "MODEL_DERIVED_REVIEW_REQUIRED" | "MODEL_DERIVED_STORAGE_INVALID" | "MODEL_FILE_CHANGED" | "MODEL_FILE_INVALID" | "MODEL_HOLDOUT_ANALYSIS_LIMIT" | "MODEL_HOLDOUT_ANALYSIS_TIMEOUT" | "MODEL_HOLDOUT_CONCURRENT_TRAINING_RETRY" | "MODEL_HOLDOUT_DATA_INVALID" | "MODEL_HOLDOUT_EXISTS" | "MODEL_HOLDOUT_GUARD_REQUIRED" | "MODEL_HOLDOUT_LABELS_INVALID" | "MODEL_HOLDOUT_LIMIT_REACHED" | "MODEL_HOLDOUT_NOT_FOUND" | "MODEL_HOLDOUT_OVERLAP" | "MODEL_HOLDOUT_SCAN_BUSY" | "MODEL_HOLDOUT_SOURCE_CHANGED" | "MODEL_HOLDOUT_SOURCE_INVALID" | "MODEL_HOLDOUT_UNAVAILABLE" | "MODEL_IMPORT_BUSY" | "MODEL_IMPORT_INCOMPLETE" | "MODEL_IMPORT_STATE_CONFLICT" | "MODEL_IO_FAILED" | "MODEL_PATH_INVALID" | "MODEL_PREPARATION_ACTOR_UNAVAILABLE" | "MODEL_PREPARATION_ADAPTER_INVALID" | "MODEL_PREPARATION_AGENT_EXECUTION_FAILED" | "MODEL_PREPARATION_AGENT_INTERRUPTED" | "MODEL_PREPARATION_ARTIFACT_INVALID" | "MODEL_PREPARATION_ATTEMPTS_EXHAUSTED" | "MODEL_PREPARATION_ATTEMPT_IN_USE" | "MODEL_PREPARATION_ATTEMPT_STALE" | "MODEL_PREPARATION_AUTHORITY_REQUIRED" | "MODEL_PREPARATION_CANCELLED" | "MODEL_PREPARATION_CANCEL_PENDING_STOP" | "MODEL_PREPARATION_COMMAND_INVALID" | "MODEL_PREPARATION_CONFIGURATION_INVALID" | "MODEL_PREPARATION_DATA_INVALID" | "MODEL_PREPARATION_DEVICE_UNAVAILABLE" | "MODEL_PREPARATION_DISK_SPACE_LOW" | "MODEL_PREPARATION_DOCKER_REJECTED" | "MODEL_PREPARATION_DOCKER_UNAVAILABLE" | "MODEL_PREPARATION_DRIVER_UNSUPPORTED" | "MODEL_PREPARATION_EVENT_CONFLICT" | "MODEL_PREPARATION_EVENT_INVALID" | "MODEL_PREPARATION_EVENT_LIMIT" | "MODEL_PREPARATION_EVENT_ORDER_CONFLICT" | "MODEL_PREPARATION_EVENT_TRANSFER_FAILED" | "MODEL_PREPARATION_EXECUTION_IDENTITY_REQUIRED" | "MODEL_PREPARATION_EXECUTION_PROFILE_INVALID" | "MODEL_PREPARATION_GPU_BUSY" | "MODEL_PREPARATION_GPU_MEMORY_LOW" | "MODEL_PREPARATION_GPU_UNAVAILABLE" | "MODEL_PREPARATION_GPU_UNSUPPORTED" | "MODEL_PREPARATION_HELDOUT_INVALID" | "MODEL_PREPARATION_HOST_CPU_UNAVAILABLE" | "MODEL_PREPARATION_HOST_MEMORY_LOW" | "MODEL_PREPARATION_INPUT_CHANGED" | "MODEL_PREPARATION_INPUT_INVALID" | "MODEL_PREPARATION_INPUT_LIMIT_REACHED" | "MODEL_PREPARATION_LEASE_EXPIRED" | "MODEL_PREPARATION_LIMIT_REACHED" | "MODEL_PREPARATION_MEMORY_BOUNDARY_REQUIRED" | "MODEL_PREPARATION_MERGE_INVALID" | "MODEL_PREPARATION_MIG_UNSUPPORTED" | "MODEL_PREPARATION_MODEL_INVALID" | "MODEL_PREPARATION_NODE_UNAVAILABLE" | "MODEL_PREPARATION_NONFINITE_TENSOR" | "MODEL_PREPARATION_NON_TARGET_CHANGED" | "MODEL_PREPARATION_NOT_FOUND" | "MODEL_PREPARATION_OUTPUT_CHANGED" | "MODEL_PREPARATION_OUTPUT_CONFLICT" | "MODEL_PREPARATION_OUTPUT_INVALID" | "MODEL_PREPARATION_OUTPUT_LIMIT" | "MODEL_PREPARATION_OUTPUT_TRANSFER_FAILED" | "MODEL_PREPARATION_PATH_INVALID" | "MODEL_PREPARATION_PHYSICAL_STOP_REQUIRED" | "MODEL_PREPARATION_PLATFORM_UNSUPPORTED" | "MODEL_PREPARATION_PREFLIGHT_REQUIRED" | "MODEL_PREPARATION_PROCESSOR_FAILED" | "MODEL_PREPARATION_PROCESSOR_MEMORY_EXCEEDED" | "MODEL_PREPARATION_PROCESSOR_TIMEOUT" | "MODEL_PREPARATION_QUALITY_FAILED" | "MODEL_PREPARATION_RECIPE_INVALID" | "MODEL_PREPARATION_RECIPE_UNAVAILABLE" | "MODEL_PREPARATION_RECOVERY_NOT_ALLOWED" | "MODEL_PREPARATION_REPORT_CONFLICT" | "MODEL_PREPARATION_REPORT_INVALID" | "MODEL_PREPARATION_REQUEST_INVALID" | "MODEL_PREPARATION_RESERVED_TOKEN" | "MODEL_PREPARATION_RESOURCES_INVALID" | "MODEL_PREPARATION_RESOURCE_BUSY" | "MODEL_PREPARATION_RESULT_INVALID" | "MODEL_PREPARATION_RESULT_LIMIT" | "MODEL_PREPARATION_RESULT_UNAVAILABLE" | "MODEL_PREPARATION_REVIEW_BINDING_INVALID" | "MODEL_PREPARATION_REVIEW_NOT_ALLOWED" | "MODEL_PREPARATION_REVISION_CONFLICT" | "MODEL_PREPARATION_RUNTIME_MISMATCH" | "MODEL_PREPARATION_SCOPE_INVALID" | "MODEL_PREPARATION_SEQUENCE_TOO_LONG" | "MODEL_PREPARATION_STOP_CONFLICT" | "MODEL_PREPARATION_STOP_INVALID" | "MODEL_PREPARATION_STORAGE_CONFLICT" | "MODEL_PREPARATION_STORAGE_DATA_INVALID" | "MODEL_PREPARATION_STORAGE_FULL" | "MODEL_PREPARATION_STORAGE_PATH_INVALID" | "MODEL_PREPARATION_STORAGE_UNAVAILABLE" | "MODEL_PREPARATION_STORE_IN_USE" | "MODEL_PREPARATION_STORE_NAMESPACE_INVALID" | "MODEL_PREPARATION_STORE_NOT_EMPTY" | "MODEL_PREPARATION_TENSOR_INVALID" | "MODEL_PREPARATION_TOKENIZER_INVALID" | "MODEL_PREPARATION_TRANSFER_FAILED" | "MODEL_PREPARATION_TRANSFER_INVALID" | "MODEL_PREPARATION_UNAVAILABLE" | "MODEL_PREPARATION_UNCHANGED_MODEL" | "MODEL_PREPARATION_UPLOAD_BUSY" | "MODEL_PREPARATION_UPLOAD_CHECKSUM_MISMATCH" | "MODEL_PREPARATION_UPLOAD_CONFLICT" | "MODEL_PREPARATION_UPLOAD_INCOMPLETE" | "MODEL_PREPARATION_UPLOAD_INVALID" | "MODEL_PREPARATION_UPLOAD_NOT_FOUND" | "MODEL_PREPARATION_UPLOAD_RECOVERY_REQUIRED" | "MODEL_PREPARATION_UPLOAD_STATE_CONFLICT" | "MODEL_PREPARATION_UPLOAD_TICKET_STALE" | "MODEL_PREPARATION_UPLOAD_TIMEOUT" | "MODEL_PREPARATION_WIRE_INVALID" | "MODEL_REFERENCE_CHECK_UNAVAILABLE" | "MODEL_STORAGE_UNAVAILABLE" | "MODEL_VERSION_REFERENCED" | "MONGODB_ACCESS_DENIED" | "MONGODB_BUSINESS_DATABASE_UNSUPPORTED" | "MONGODB_BUSY" | "MONGODB_CANCELLED" | "MONGODB_CONFIGURATION_INVALID" | "MONGODB_CONNECT_FAILED" | "MONGODB_DISABLED" | "MONGODB_FIELD_INVALID" | "MONGODB_IDENTIFIER_INVALID" | "MONGODB_LIMIT_EXCEEDED" | "MONGODB_MAPPING_INVALID" | "MONGODB_ORDER_INVALID" | "MONGODB_READ_FAILED" | "MONGODB_RECORD_INVALID" | "MONGODB_RETRY_LIMIT" | "MONGODB_SNAPSHOT_EXPIRED" | "MONGODB_SNAPSHOT_UNSUPPORTED" | "MONGODB_SOURCE_CHANGED" | "MONGODB_SOURCE_EMPTY" | "MONGODB_TIMEOUT" | "MONGODB_TYPE_INVALID" | "MONITORING_BUSY" | "MONITORING_CONFIGURATION_INVALID" | "MONITORING_CONFIGURATION_REQUIRED" | "MONITORING_OWNER_REQUIRED" | "NODE_BUSY" | "NODE_JOIN_STATE_CONFLICT" | "NODE_NAME_EXISTS" | "NODE_REMOVED" | "NODE_STORAGE_MISMATCH" | "NODE_UNAVAILABLE" | "NOTIFICATION_ALREADY_STARTED" | "NOTIFICATION_NOT_FOUND" | "NOTIFICATION_PROVENANCE_INVALID" | "NOTIFICATION_SHUTDOWN_TIMEOUT" | "NOTIFICATION_UNAVAILABLE" | "OBJECT_ACCESS_DENIED" | "OBJECT_ACTOR_CHANGED" | "OBJECT_AMBIGUOUS_REMOTE_UPLOAD" | "OBJECT_AUTHORITY_INVALID" | "OBJECT_BACKEND_AUTH_UNENFORCED" | "OBJECT_BUCKET_AUTHORITY_INVALID" | "OBJECT_BUCKET_AUTHORITY_UNVERIFIED" | "OBJECT_BUSY" | "OBJECT_CANCELLED" | "OBJECT_CAPABILITY_UNSUPPORTED" | "OBJECT_CA_INVALID" | "OBJECT_CHANGED" | "OBJECT_COMPOSITION_INVALID" | "OBJECT_CONFIGURATION_INVALID" | "OBJECT_CONFLICT" | "OBJECT_DIGEST_MISMATCH" | "OBJECT_ENDPOINT_CHANGED" | "OBJECT_EXPIRED" | "OBJECT_IDENTITY_REQUIRED" | "OBJECT_INCOMPLETE" | "OBJECT_INGESTION_CANCELLED" | "OBJECT_INGESTION_INVALID" | "OBJECT_INGESTION_STOP_UNCONFIRMED" | "OBJECT_INGESTION_UNAVAILABLE" | "OBJECT_LIST_INCOMPLETE" | "OBJECT_MANAGEMENT_CA_INVALID" | "OBJECT_MANAGEMENT_CERTIFICATE_INVALID" | "OBJECT_MANAGEMENT_MTLS_UNENFORCED" | "OBJECT_MANAGEMENT_PROFILE_INVALID" | "OBJECT_MANAGEMENT_PROFILE_UNVERIFIED" | "OBJECT_MANAGEMENT_PROTOCOL_UNVERIFIED" | "OBJECT_NOT_ADMITTED" | "OBJECT_NOT_FOUND" | "OBJECT_NOT_READY" | "OBJECT_OPERATION_STALE" | "OBJECT_PART_INVALID" | "OBJECT_PROFILE_UNVERIFIED" | "OBJECT_PURPOSE_INVALID" | "OBJECT_RECEIPT_INVALID" | "OBJECT_RECONCILE_REQUIRED" | "OBJECT_REFERENCED" | "OBJECT_REMOTE_OUTCOME_UNKNOWN" | "OBJECT_REQUEST_INVALID" | "OBJECT_RESPONSE_INVALID" | "OBJECT_SCHEMA_NOT_ACTIVE" | "OBJECT_SCOPE_INVALID" | "OBJECT_SNAPSHOT_INVALID" | "OBJECT_STAGING_BUSY" | "OBJECT_STAGING_CHANGED" | "OBJECT_STAGING_CONFLICT" | "OBJECT_STAGING_FAILED" | "OBJECT_STAGING_INVALID" | "OBJECT_STAGING_NAMESPACE_MISMATCH" | "OBJECT_STAGING_NOT_EMPTY" | "OBJECT_STAGING_RECORD_MISSING" | "OBJECT_STAGING_REFERENCED" | "OBJECT_STATE_INVALID" | "OBJECT_STORAGE_CLOSED" | "OBJECT_STORAGE_FULL" | "OBJECT_STORAGE_MISMATCH" | "OBJECT_STORAGE_UNAVAILABLE" | "OBJECT_STORED_PROVENANCE_INVALID" | "OBJECT_STORE_CHANGED" | "OBJECT_TARGET_CHANGED" | "OBJECT_TARGET_NOT_ACCEPTED" | "OBJECT_TARGET_SOURCE_UNPROVEN" | "OBJECT_TIMEOUT" | "OBJECT_UPLOAD_INVALID" | "OBJECT_UPLOAD_NOT_FOUND" | "ORIGIN_REJECTED" | "PASSWORD_BLOCKED" | "PASSWORD_POLICY_VIOLATION" | "PAYLOAD_TOO_LARGE" | "PLUGIN_ALREADY_STARTED" | "PLUGIN_AUTHORITY_CHANGED" | "PLUGIN_AUTHORITY_INVALID" | "PLUGIN_CAPABILITY_UNSUPPORTED" | "PLUGIN_GRANT_EXISTS" | "PLUGIN_GRANT_NOT_FOUND" | "PLUGIN_GRANT_REVOKED" | "PLUGIN_LIMIT_EXCEEDED" | "PLUGIN_MODEL_LIMIT_EXCEEDED" | "PLUGIN_MODEL_REFERENCE_CHANGED" | "PLUGIN_NOT_INSTALLED" | "PLUGIN_PACKAGE_DIGEST_MISMATCH" | "PLUGIN_PACKAGE_INVALID" | "PLUGIN_PACKAGE_LIMIT_INVALID" | "PLUGIN_REFERENCED" | "PLUGIN_REFERENCES_CHANGED" | "PLUGIN_REFERENCE_LIMIT_EXCEEDED" | "PLUGIN_RESULT_INVALID" | "PLUGIN_RESULT_LIMIT_EXCEEDED" | "PLUGIN_REVISION_CONFLICT" | "PLUGIN_SHUTDOWN_TIMEOUT" | "PLUGIN_SIGNATURE_INVALID" | "PLUGIN_TRUST_KEY_INVALID" | "PLUGIN_UNAVAILABLE" | "PLUGIN_VERSION_CONFLICT" | "PLUGIN_VERSION_INVALID" | "PLUGIN_VERSION_NOT_FOUND" | "PLUGIN_VERSION_UNSUPPORTED" | "PREFERENCE_REVISION_CONFLICT" | "PREFERENCE_UNAVAILABLE" | "PROTECTED_ACCOUNT" | "RATE_LIMITED" | "RELEASE_VIEW_CHANGED" | "RELEASE_VIEW_CONFIGURATION_INVALID" | "RELEASE_VIEW_UNAVAILABLE" | "RESOURCE_LIMIT_REACHED" | "RESOURCE_NOT_FOUND" | "SERVICE_NOT_READY" | "SSO_AUTHORIZATION_INPUT_INVALID" | "SSO_BINDING_CONFLICT" | "SSO_BINDING_LIMIT" | "SSO_BINDING_NOT_FOUND" | "SSO_BINDING_REQUIRED" | "SSO_BROWSER_CHANGED" | "SSO_CAPACITY_EXCEEDED" | "SSO_CONNECTOR_DISABLED" | "SSO_CONNECTOR_ID_CONFLICT" | "SSO_CONNECTOR_LIMIT" | "SSO_CONNECTOR_NOT_FOUND" | "SSO_DISABLED" | "SSO_ENCRYPTED_STATE_INVALID" | "SSO_ENTROPY_UNAVAILABLE" | "SSO_FLOW_EXPIRED" | "SSO_FLOW_INVALID" | "SSO_FLOW_UNUSABLE" | "SSO_IDENTITY_REJECTED" | "SSO_JSON_INVALID" | "SSO_KEYRING_INVALID" | "SSO_PASSWORD_CHANGED" | "SSO_PASSWORD_REQUIRED" | "SSO_PRIVATE_FILE_INVALID" | "SSO_PROVIDER_CONFIGURATION_INVALID" | "SSO_PROVIDER_DENIED" | "SSO_PROVIDER_DESTINATION_REJECTED" | "SSO_PROVIDER_REJECTED" | "SSO_PROVIDER_RESPONSE_INVALID" | "SSO_PROVIDER_UNAVAILABLE" | "SSO_REVISION_CONFLICT" | "SSO_SCOPE_REJECTED" | "SSO_SECRET_SCOPE_INVALID" | "STORAGE_CANCELLED" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "STORAGE_COMMIT_ROLLED_BACK" | "STORAGE_DEADLOCK" | "STORAGE_LOCK_TIMEOUT" | "STORAGE_TIMEOUT" | "STORAGE_UNAVAILABLE" | "TOKEN_UNUSABLE" | "TRAINING_ADAPTER_INVALID" | "TRAINING_ATTEMPTS_EXHAUSTED" | "TRAINING_ATTEMPT_STALE" | "TRAINING_AUTHORITY_REQUIRED" | "TRAINING_BASE_SHAPE_INVALID" | "TRAINING_CHECKPOINT_CONFLICT" | "TRAINING_CHECKPOINT_INVALID" | "TRAINING_CHECKPOINT_NOT_ANNOUNCED" | "TRAINING_CHECKPOINT_UNAVAILABLE" | "TRAINING_COMMAND_INVALID" | "TRAINING_DATASET_EMPTY_PARTITION" | "TRAINING_DATA_INVALID" | "TRAINING_DRIVER_UNSUPPORTED" | "TRAINING_EVENT_CONFLICT" | "TRAINING_EVENT_INVALID" | "TRAINING_EVENT_ORDER_CONFLICT" | "TRAINING_GPU_MEMORY_LOW" | "TRAINING_GPU_UNAVAILABLE" | "TRAINING_GPU_UNSUPPORTED" | "TRAINING_HOST_MEMORY_LOW" | "TRAINING_INPUT_LIMIT_REACHED" | "TRAINING_INPUT_STORES_REQUIRED" | "TRAINING_INPUT_UNAVAILABLE" | "TRAINING_INSTALLATION_REQUIRED" | "TRAINING_JOB_LIMIT_REACHED" | "TRAINING_MIG_UNSUPPORTED" | "TRAINING_NOT_FOUND" | "TRAINING_PHYSICAL_STOP_REQUIRED" | "TRAINING_PLATFORM_UNSUPPORTED" | "TRAINING_PREFLIGHT_REQUIRED" | "TRAINING_RECIPE_INVALID" | "TRAINING_RECIPE_UNAVAILABLE" | "TRAINING_RECOVERY_NOT_ALLOWED" | "TRAINING_RESULT_CONFLICT" | "TRAINING_RESULT_INVALID" | "TRAINING_RESULT_UNAVAILABLE" | "TRAINING_REVISION_CONFLICT" | "TRAINING_STOP_CONFLICT" | "TRAINING_STOP_INVALID" | "TRAINING_STORAGE_CONFLICT" | "TRAINING_STORAGE_DATA_INVALID" | "TRAINING_STORAGE_FULL" | "TRAINING_STORAGE_PATH_INVALID" | "TRAINING_STORAGE_REQUIRED" | "TRAINING_STORAGE_UNAVAILABLE" | "TRAINING_STORE_BUSY" | "TRAINING_STORE_IN_USE" | "TRAINING_STORE_NAMESPACE_INVALID" | "TRAINING_STORE_NOT_EMPTY" | "TRAINING_TRANSFER_FAILED" | "TRAINING_TRANSFER_INVALID" | "TRAINING_UNAVAILABLE" | "TRAINING_UPLOAD_BUSY" | "TRAINING_UPLOAD_CHECKSUM_MISMATCH" | "TRAINING_UPLOAD_CONFLICT" | "TRAINING_UPLOAD_INCOMPLETE" | "TRAINING_UPLOAD_INVALID" | "TRAINING_UPLOAD_NOT_FOUND" | "TRAINING_UPLOAD_RECOVERY_REQUIRED" | "TRAINING_UPLOAD_STATE_CONFLICT" | "TRAINING_UPLOAD_TICKET_STALE" | "TRAINING_UPLOAD_TIMEOUT" | "UNSUPPORTED_MEDIA_TYPE" | "VALIDATION_FAILED" | "VERSION_CONFLICT" | "WORKFLOW_ALREADY_STARTED" | "WORKFLOW_AUTHORITY_CHANGED" | "WORKFLOW_CAPACITY_EXCEEDED" | "WORKFLOW_CONNECTIONS_REQUIRED" | "WORKFLOW_CONNECTION_ORDER_INVALID" | "WORKFLOW_CONVERSATION_BUSY" | "WORKFLOW_CONVERSATION_NOT_FOUND" | "WORKFLOW_CYCLE" | "WORKFLOW_DISABLED" | "WORKFLOW_DRAFT_CHANGED" | "WORKFLOW_END_HAS_OUTPUT" | "WORKFLOW_GRAPH_CORRUPT" | "WORKFLOW_GRAPH_INVALID" | "WORKFLOW_INPUT_REQUIRED" | "WORKFLOW_LIMIT_EXCEEDED" | "WORKFLOW_MAINTENANCE_FAILED" | "WORKFLOW_NAME_EXISTS" | "WORKFLOW_NOT_FOUND" | "WORKFLOW_RESULT_INVALID" | "WORKFLOW_RESULT_LIMIT_EXCEEDED" | "WORKFLOW_RUN_CANCELLED" | "WORKFLOW_RUN_INTERRUPTED" | "WORKFLOW_RUN_NOT_FOUND" | "WORKFLOW_RUN_STALE" | "WORKFLOW_RUN_TIMEOUT" | "WORKFLOW_SHUTDOWN_TIMEOUT" | "WORKFLOW_UNAVAILABLE" | "WORKFLOW_VERSION_UNAVAILABLE" | "WORKSPACE_EXISTS";
-            /** Format: uuid */
-            request_id: string;
-            detail?: string;
-            fields?: {
-                field: string;
-                code: string;
-            }[];
-        };
-        GatewayInstancePageResponse: {
-            data: components["schemas"]["GatewayInstancePage"];
-        };
-        GatewayInstanceResponse: {
-            data: components["schemas"]["GatewayInstance"];
-        };
-        ModelAliasPageResponse: {
-            data: components["schemas"]["ModelAliasPage"];
-        };
-        ModelAliasResponse: {
-            data: components["schemas"]["ModelAlias"];
-        };
-        DistributionKeyPageResponse: {
-            data: components["schemas"]["DistributionKeyPage"];
-        };
-        DistributionKeyResponse: {
-            data: components["schemas"]["DistributionKey"];
-        };
-        GatewayRequestPageResponse: {
-            data: components["schemas"]["GatewayRequestPage"];
-        };
-        GatewayRequestResponse: {
-            data: components["schemas"]["GatewayRequest"];
-        };
-        MintedDistributionKeyResponse: {
-            data: components["schemas"]["MintedDistributionKey"];
-        };
-        ProvisionedGatewayResponse: {
-            data: components["schemas"]["ProvisionedGateway"];
-        };
-        AliasCutoverResultResponse: {
-            data: components["schemas"]["AliasCutoverResult"];
-        };
-        AliasTargetPageResponse: {
-            data: components["schemas"]["AliasTargetPage"];
-        };
-        GatewayRecoveryResponse: {
-            data: components["schemas"]["GatewayRecovery"];
-        };
-        GatewayModelsAuthorizationResponse: {
-            data: components["schemas"]["GatewayModelsAuthorization"];
-        };
-        GatewayAdmissionResponse: {
-            data: components["schemas"]["GatewayAdmission"];
-        };
-        GatewayOutcomeAcknowledgmentResponse: {
-            data: components["schemas"]["GatewayOutcomeAcknowledgment"];
-        };
+  schemas: {
+    GatewayInstance: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      node_id: string;
+      name: string;
+      /**
+       * Format: uri
+       * @description Canonical HTTPS origin only; advertised metadata, never an outbound control destination.
+       */
+      client_origin: string;
+      /** Format: uuid */
+      created_by: string;
+      /** @enum {string} */
+      state: 'active' | 'revoked' | 'invalidated';
+      /** Format: date-time */
+      created_at: string;
+      revoked_at: string | null;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    ProvisionGateway: {
+      /** Format: uuid */
+      node_id: string;
+      name: string;
+      /**
+       * Format: uri
+       * @description Canonical HTTPS origin only; advertised metadata, never an outbound control destination.
+       */
+      client_origin: string;
+      reason: string;
+    };
+    ProvisionedGateway: {
+      gateway: components['schemas']['GatewayInstance'];
+      secret: string | null;
+      secret_available: boolean;
+    };
+    ModelAlias: {
+      held_requests: number;
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      gateway_id: string;
+      /** Format: uuid */
+      node_id: string;
+      name: string;
+      /**
+       * Format: uri
+       * @description Canonical HTTPS origin only; advertised metadata, never an outbound control destination.
+       */
+      client_origin: string;
+      /** Format: uuid */
+      deployment_id: string;
+      deployment_revision: number;
+      revision: number;
+      disabled_at: string | null;
+      /** Format: date-time */
+      created_at: string;
+      available: boolean;
+      unavailable_code: 'MODEL_ALIAS_UNAVAILABLE' | null;
+    };
+    AliasCutover: {
+      /** @enum {string} */
+      action: 'pause' | 'resume' | 'retarget' | 'rollback';
+      expected_revision: number;
+      deployment_id: string | null;
+      deployment_revision: number | null;
+      source_revision: number | null;
+      reason: string;
+    };
+    AliasCutoverResult: {
+      alias: components['schemas']['ModelAlias'];
+      applied_revision: number;
+      replayed: boolean;
+    };
+    AliasTarget: {
+      source_revision: number | null;
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      alias_id: string;
+      revision: number;
+      /** @enum {string} */
+      action:
+        | 'migration_current'
+        | 'published'
+        | 'disabled'
+        | 'paused'
+        | 'resumed'
+        | 'retargeted'
+        | 'rolled_back';
+      /** Format: uuid */
+      deployment_id: string;
+      deployment_revision: number;
+      /** Format: uuid */
+      model_id: string;
+      /** @enum {string} */
+      model_kind: 'approved_base' | 'merged_lora';
+      catalog_digest: string;
+      serving_recipe_sha256: string | null;
+      /** Format: date-time */
+      created_at: string;
+    };
+    AliasTargetPage: {
+      items: components['schemas']['AliasTarget'][];
+      next_cursor: string | null;
+    };
+    PublishAlias: {
+      /** Format: uuid */
+      gateway_id: string;
+      name: string;
+      /** Format: uuid */
+      deployment_id: string;
+      deployment_revision: number;
+      reason: string;
+    };
+    DistributionKey: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      alias_id: string;
+      alias_name: string;
+      label: string;
+      prefix: string;
+      /** Format: uuid */
+      created_by: string;
+      /** @enum {string} */
+      state: 'active' | 'expired' | 'revoked' | 'invalidated' | 'unavailable';
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      expires_at: string;
+      last_used_at: string | null;
+      revoked_at: string | null;
+    };
+    MintDistributionKey: {
+      /** Format: uuid */
+      alias_id: string;
+      label: string;
+      ttl_seconds: 0 | number;
+      reason: string;
+    };
+    MintedDistributionKey: {
+      key: components['schemas']['DistributionKey'];
+      secret: string | null;
+      secret_available: boolean;
+    };
+    Reason: {
+      reason: string;
+    };
+    DisableAlias: {
+      expected_revision: number;
+      reason: string;
+    };
+    ConfirmRecovery: {
+      deployment_revision: number;
+      reason: string;
+    };
+    ActualUsage: {
+      prompt_tokens: number;
+      completion_tokens: number;
+      total_tokens: number;
+    };
+    GatewayOutcome: {
+      /** Format: uuid */
+      request_id: string;
+      /** @enum {string} */
+      status:
+        | 'succeeded'
+        | 'client_cancelled'
+        | 'upstream_timeout'
+        | 'upstream_error'
+        | 'invalid_response'
+        | 'gateway_shutdown'
+        | 'usage_storage_failed'
+        | 'incomplete';
+      error_code:
+        | (
+            | 'client_cancelled'
+            | 'context_length_exceeded'
+            | 'upstream_unavailable'
+            | 'upstream_timeout'
+            | 'upstream_response_invalid'
+            | 'gateway_unavailable'
+            | 'gateway_shutdown'
+            | 'usage_storage_unavailable'
+            | 'gateway_interrupted'
+          )
+        | null;
+      usage: components['schemas']['ActualUsage'] | null;
+      elapsed_milliseconds: number;
+      output_started: boolean;
+    };
+    GatewayFenceReceipt: {
+      /** @constant */
+      schema_version: 1;
+      /** Format: uuid */
+      gateway_id: string;
+      /** Format: uuid */
+      node_id: string;
+      control_origin_sha256: string;
+      /** Format: uuid */
+      challenge_id: string;
+      state_fence_sha256: string;
+      fenced_at_unix_milliseconds: number;
+      checked_at_unix_milliseconds: number;
+      /** @constant */
+      exclusive_state_lock_confirmed: true;
+      /** @constant */
+      persistent_fence_confirmed: true;
+      pending_outcomes: number;
+      gateway_version: string;
+    };
+    AcceptRecoveryFence: {
+      receipt: components['schemas']['GatewayFenceReceipt'];
+      reason: string;
+    };
+    GatewayRecovery: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      request_id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** @enum {string} */
+      state: 'pending_fence' | 'fenced' | 'completed' | 'expired' | 'invalidated' | 'superseded';
+      /** Format: date-time */
+      created_at: string;
+      /** Format: date-time */
+      expires_at: string;
+      fence_accepted_at: string | null;
+      confirmed_at: string | null;
+      fence_receipt: components['schemas']['GatewayFenceReceipt'] | null;
+    };
+    GatewayRequest: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      /** Format: uuid */
+      gateway_id: string;
+      /** Format: uuid */
+      node_id: string;
+      /** Format: uuid */
+      api_key_id: string;
+      /** Format: uuid */
+      actor_id: string;
+      /** Format: uuid */
+      alias_id: string;
+      alias_name: string;
+      /** Format: uuid */
+      deployment_id: string;
+      deployment_revision: number;
+      /** @enum {string} */
+      state: 'admitted' | 'reported' | 'reconciled';
+      capacity_held: boolean;
+      stream: boolean;
+      /** Format: date-time */
+      admitted_at: string;
+      /** Format: date-time */
+      deadline_at: string;
+      reported_at: string | null;
+      reconciled_at: string | null;
+      active_recovery_id: string | null;
+      outcome: components['schemas']['GatewayOutcome'] | null;
+    };
+    GatewayInstancePage: {
+      items: components['schemas']['GatewayInstance'][];
+      next_cursor: string | null;
+    };
+    ModelAliasPage: {
+      items: components['schemas']['ModelAlias'][];
+      next_cursor: string | null;
+    };
+    DistributionKeyPage: {
+      items: components['schemas']['DistributionKey'][];
+      next_cursor: string | null;
+    };
+    GatewayRequestPage: {
+      items: components['schemas']['GatewayRequest'][];
+      next_cursor: string | null;
+    };
+    GatewayModelsRequest: {
+      api_key: string;
+    };
+    GatewayAdmissionRequest: {
+      /** Format: uuid */
+      request_id: string;
+      api_key: string;
+      model: string;
+      maximum_output_tokens: number;
+      stream: boolean;
+    };
+    GatewayAliasBinding: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      created: number;
+      /** Format: uuid */
+      deployment_id: string;
+      deployment_revision: number;
+      backend_model: string;
+    };
+    GatewayModelsAuthorization: {
+      /** Format: uuid */
+      gateway_id: string;
+      /** Format: uuid */
+      node_id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      models: components['schemas']['GatewayAliasBinding'][];
+    };
+    GatewayAdmission: {
+      /** Format: uuid */
+      request_id: string;
+      /** Format: uuid */
+      gateway_id: string;
+      /** Format: uuid */
+      node_id: string;
+      /** Format: uuid */
+      workspace_id: string;
+      binding: components['schemas']['GatewayAliasBinding'];
+      maximum_context_tokens: number;
+      maximum_request_seconds: number;
+    };
+    GatewayOutcomeAcknowledgment: {
+      /** Format: uuid */
+      request_id: string;
+      canonical_sha256: string;
+    };
+    Problem: {
+      /** @constant */
+      type: 'about:blank';
+      title: string;
+      status: number;
+      /** @enum {string} */
+      code:
+        | 'ACCESS_DENIED'
+        | 'ACCOUNT_EXISTS'
+        | 'AGENT_LEASE_STALE'
+        | 'AGENT_OPERATION_UNSUPPORTED'
+        | 'AGENT_PROFILE_REJECTED'
+        | 'AGENT_PROTOCOL_UNSUPPORTED'
+        | 'AGENT_UNAUTHORIZED'
+        | 'ALIAS_ALREADY_PAUSED'
+        | 'ALIAS_NOT_PAUSED'
+        | 'ALIAS_PAUSE_REQUIRED'
+        | 'ALIAS_REQUESTS_UNDRAINED'
+        | 'ALIAS_ROLLBACK_TARGET_INVALID'
+        | 'API_KEY_EXPIRED'
+        | 'API_KEY_INVALID'
+        | 'AUTH_CAPACITY_EXCEEDED'
+        | 'AUTH_INVALID_CREDENTIALS'
+        | 'AUTH_REQUIRED'
+        | 'AUTH_SESSION_EXPIRED'
+        | 'AWS_ACCESS_DENIED'
+        | 'AWS_ACCOUNT_MISMATCH'
+        | 'AWS_BUSINESS_DATABASE_UNSUPPORTED'
+        | 'AWS_BUSY'
+        | 'AWS_CANCELLED'
+        | 'AWS_CONFIGURATION_INVALID'
+        | 'AWS_CREDENTIALS_EXPIRED'
+        | 'AWS_CREDENTIALS_INVALID'
+        | 'AWS_DISABLED'
+        | 'AWS_LIMIT_REACHED'
+        | 'AWS_PAGINATION_INVALID'
+        | 'AWS_PROVIDER_REJECTED'
+        | 'AWS_RESPONSE_INVALID'
+        | 'AWS_SCOPE_REJECTED'
+        | 'AWS_SYNC_SUPERSEDED'
+        | 'AWS_THROTTLED'
+        | 'AWS_UNAVAILABLE'
+        | 'COMPONENT_ASSET_INVALID'
+        | 'COMPONENT_ASSET_UNAVAILABLE'
+        | 'COMPONENT_CONFIG_INVALID'
+        | 'COMPONENT_INTERRUPTED'
+        | 'COMPONENT_LOGS_INVALID'
+        | 'COMPONENT_LOGS_TOO_LARGE'
+        | 'COMPONENT_LOGS_UNAVAILABLE'
+        | 'COMPONENT_MAINTENANCE_REQUIRED'
+        | 'COMPONENT_PROFILE_UNAVAILABLE'
+        | 'COMPONENT_ROLLBACK_FAILED'
+        | 'COMPONENT_ROLLBACK_UNAVAILABLE'
+        | 'COMPONENT_STATE_INVALID'
+        | 'COMPONENT_UPDATE_ROLLED_BACK'
+        | 'COMPONENT_UPGRADE_NOT_FORWARD'
+        | 'COMPONENT_VERSION_CONFLICT'
+        | 'COMPONENT_VERSION_UNSUPPORTED'
+        | 'CONFIG_MACHINE_TRANSPORT_REQUIRED'
+        | 'CONFIG_MONITORING_INVALID'
+        | 'CONFIG_RELEASE_VIEW_INVALID'
+        | 'CSRF_INVALID'
+        | 'DATASET_ATTEMPT_STALE'
+        | 'DATASET_CORRECTED_UPLOAD_REQUIRED'
+        | 'DATASET_DATA_INVALID'
+        | 'DATASET_DRAFT_BUSY'
+        | 'DATASET_EMPTY_SOURCE'
+        | 'DATASET_EXISTS'
+        | 'DATASET_FILE_INVALID'
+        | 'DATASET_FILE_TOO_LARGE'
+        | 'DATASET_LIMIT_REACHED'
+        | 'DATASET_LINE_TOO_LARGE'
+        | 'DATASET_NOT_FOUND'
+        | 'DATASET_PROCESSOR_MEMORY_EXCEEDED'
+        | 'DATASET_PROCESSOR_RESULT_TOO_LARGE'
+        | 'DATASET_PROCESSOR_TIMEOUT'
+        | 'DATASET_RETIRED'
+        | 'DATASET_RETRY_NOT_ALLOWED'
+        | 'DATASET_REVISION_CONFLICT'
+        | 'DATASET_ROW_LIMIT'
+        | 'DATASET_SOURCE_CHANGED'
+        | 'DATASET_SOURCE_INVALID'
+        | 'DATASET_SPLIT_CONFIGURATION_INVALID'
+        | 'DATASET_SPLIT_INSUFFICIENT_GROUPS'
+        | 'DATASET_STORAGE_FULL'
+        | 'DATASET_STORAGE_UNAVAILABLE'
+        | 'DATASET_TEXT_INVALID'
+        | 'DATASET_UPLOAD_BUSY'
+        | 'DATASET_UPLOAD_INCOMPLETE'
+        | 'DATASET_VALIDATION_FAILED'
+        | 'DATASET_VERSION_RETIRED'
+        | 'DEFAULT_WORKSPACE_PROTECTED'
+        | 'FORBIDDEN'
+        | 'GATEWAY_BACKEND_STOP_UNCONFIRMED'
+        | 'GATEWAY_FENCE_RECEIPT_CONFLICT'
+        | 'GATEWAY_FENCE_SCOPE_CONFLICT'
+        | 'GATEWAY_INSTANCE_EXISTS'
+        | 'GATEWAY_INSTANCE_REVOKED'
+        | 'GATEWAY_NODE_UNAVAILABLE'
+        | 'GATEWAY_OUTCOME_CONFLICT'
+        | 'GATEWAY_RECOVERY_NOT_REQUIRED'
+        | 'GATEWAY_RECOVERY_REQUIRES_REVOCATION'
+        | 'GATEWAY_RECOVERY_STATE_CONFLICT'
+        | 'GATEWAY_REQUEST_EXISTS'
+        | 'GATEWAY_REQUEST_NOT_FOUND'
+        | 'GATEWAY_UNAUTHORIZED'
+        | 'GATEWAY_USAGE_INVALID'
+        | 'IDEMPOTENCY_CONFLICT'
+        | 'INFERENCE_CONFIGURATION_INVALID'
+        | 'INFERENCE_OWNERSHIP_CONFLICT'
+        | 'INFERENCE_PREFLIGHT_REQUIRED'
+        | 'INFERENCE_RECOVERY_REQUIRED'
+        | 'INFERENCE_RESOURCE_BUSY'
+        | 'INFERENCE_REVISION_CONFLICT'
+        | 'INTERNAL_ERROR'
+        | 'INVALID_CURSOR'
+        | 'INVITATION_EXISTS'
+        | 'INVITATION_STATE_CONFLICT'
+        | 'KNOWLEDGE_ANSWER_KEY_CLEANUP_FAILED'
+        | 'KNOWLEDGE_ANSWER_SOURCE_CHANGED'
+        | 'KNOWLEDGE_ATTEMPT_STALE'
+        | 'KNOWLEDGE_AUTHORITY_INVALID'
+        | 'KNOWLEDGE_BASE_DISABLED'
+        | 'KNOWLEDGE_BASE_EXISTS'
+        | 'KNOWLEDGE_BASE_NOT_FOUND'
+        | 'KNOWLEDGE_BUSY'
+        | 'KNOWLEDGE_CANCELLED'
+        | 'KNOWLEDGE_COMPILED_CONTRACT_INVALID'
+        | 'KNOWLEDGE_CONFIGURATION_INVALID'
+        | 'KNOWLEDGE_DOCUMENT_EXISTS'
+        | 'KNOWLEDGE_DOCUMENT_NOT_FOUND'
+        | 'KNOWLEDGE_EMPTY_SOURCE'
+        | 'KNOWLEDGE_ENCODER_ASSET_INVALID'
+        | 'KNOWLEDGE_ENCODER_LOAD_FAILED'
+        | 'KNOWLEDGE_GATEWAY_RESPONSE_INVALID'
+        | 'KNOWLEDGE_GATEWAY_UNAVAILABLE'
+        | 'KNOWLEDGE_GENERATION_NOT_FOUND'
+        | 'KNOWLEDGE_INDEX_INCOMPATIBLE'
+        | 'KNOWLEDGE_INSTALLED_ASSET_INVALID'
+        | 'KNOWLEDGE_INVALID_CITATIONS'
+        | 'KNOWLEDGE_INVALID_SOURCE'
+        | 'KNOWLEDGE_LIMIT_REACHED'
+        | 'KNOWLEDGE_NO_CONTEXT'
+        | 'KNOWLEDGE_QUERY_TOO_LONG'
+        | 'KNOWLEDGE_REBUILD_FAILED'
+        | 'KNOWLEDGE_REQUEST_CANCELLED'
+        | 'KNOWLEDGE_RETRY_NOT_ALLOWED'
+        | 'KNOWLEDGE_REVISION_CONFLICT'
+        | 'KNOWLEDGE_SCRATCH_ROOT_INVALID'
+        | 'KNOWLEDGE_SCRATCH_UNAVAILABLE'
+        | 'KNOWLEDGE_SOURCE_CHANGED'
+        | 'KNOWLEDGE_SOURCE_LIMIT_EXCEEDED'
+        | 'KNOWLEDGE_SOURCE_NOT_FOUND'
+        | 'KNOWLEDGE_UNAVAILABLE'
+        | 'KNOWLEDGE_WORKER_FAILED'
+        | 'KNOWLEDGE_WORKER_INTERRUPTED'
+        | 'KNOWLEDGE_WORKER_MEMORY_EXCEEDED'
+        | 'KNOWLEDGE_WORKER_MEMORY_MONITOR_FAILED'
+        | 'KNOWLEDGE_WORKER_OUTPUT_LIMIT'
+        | 'KNOWLEDGE_WORKER_REQUEST_INVALID'
+        | 'KNOWLEDGE_WORKER_RESULT_INVALID'
+        | 'KNOWLEDGE_WORKER_START_FAILED'
+        | 'KNOWLEDGE_WORKER_TIMEOUT'
+        | 'LAST_WORKSPACE_OWNER'
+        | 'LICENSE_ARTIFACT_INVALID'
+        | 'LICENSE_CONFIGURATION_REQUIRED'
+        | 'LICENSE_CURRENT_CHANGED'
+        | 'LICENSE_DEPLOYMENT_MISMATCH'
+        | 'LICENSE_ID_CONFLICT'
+        | 'LICENSE_IMPORT_CAPACITY_REQUIRED'
+        | 'LICENSE_NEW_BUSINESS_UNAVAILABLE'
+        | 'LICENSE_PENDING_SUCCESSOR_EXISTS'
+        | 'LICENSE_PREDECESSOR_REQUIRED'
+        | 'LICENSE_RENEWAL_WINDOW_INVALID'
+        | 'LICENSE_STORED_STATE_INVALID'
+        | 'LOCALIZATION_LOCALE_UNAVAILABLE'
+        | 'LOCALIZATION_PACKAGE_INVALID'
+        | 'LOCALIZATION_REQUIRED_LOCALE_UNAVAILABLE'
+        | 'LOCALIZATION_UNAVAILABLE'
+        | 'MEMBERSHIP_EXISTS'
+        | 'MIDDLEWARE_AMBIENT_DRIVER_INPUT_REFUSED'
+        | 'MIDDLEWARE_ARTIFACT_ROOT_MISMATCH'
+        | 'MIDDLEWARE_ATTEMPT_STALE'
+        | 'MIDDLEWARE_BACKUP_EVIDENCE_INVALID'
+        | 'MIDDLEWARE_CA_INPUT_INVALID'
+        | 'MIDDLEWARE_COMPLETED_BACKUP_REQUIRED'
+        | 'MIDDLEWARE_CONFIGURATION_INVALID'
+        | 'MIDDLEWARE_CONNECTION_CONFIGURATION_INVALID'
+        | 'MIDDLEWARE_CONNECTION_FAILED'
+        | 'MIDDLEWARE_ENDPOINT_IDENTITY_MISMATCH'
+        | 'MIDDLEWARE_ENVIRONMENT_INVALID'
+        | 'MIDDLEWARE_EXECUTION_UNCERTAIN'
+        | 'MIDDLEWARE_EXTERNAL_MUTATION_REFUSED'
+        | 'MIDDLEWARE_FRESH_TARGET_REQUIRED'
+        | 'MIDDLEWARE_IDENTITY_REPOSITORY_REQUIRED'
+        | 'MIDDLEWARE_INPUT_CHANGED'
+        | 'MIDDLEWARE_INSTALLED_PLATFORM_REQUIRED'
+        | 'MIDDLEWARE_INSTANCE_LIMIT'
+        | 'MIDDLEWARE_ISOLATED_CONFIRMATION_REQUIRED'
+        | 'MIDDLEWARE_ISOLATED_TARGET_INVALID'
+        | 'MIDDLEWARE_OPERATION_DEADLINE_REQUIRED'
+        | 'MIDDLEWARE_OPERATOR_RECONCILIATION_REQUIRED'
+        | 'MIDDLEWARE_ORIGINAL_OPERATOR_INTENT_REQUIRED'
+        | 'MIDDLEWARE_ORIGINAL_UNCERTAIN_OPERATION_REQUIRED'
+        | 'MIDDLEWARE_PASSWORD_INPUT_INVALID'
+        | 'MIDDLEWARE_PLATFORM_SCOPE_DUPLICATE'
+        | 'MIDDLEWARE_PLATFORM_SCOPE_MISMATCH'
+        | 'MIDDLEWARE_PLATFORM_SCOPE_REQUIRED'
+        | 'MIDDLEWARE_PRIVATE_INPUT_CHANGED'
+        | 'MIDDLEWARE_PRIVATE_INPUT_INVALID'
+        | 'MIDDLEWARE_PRIVILEGE_OBSERVATION_FAILED'
+        | 'MIDDLEWARE_PROBE_FAILED'
+        | 'MIDDLEWARE_PROFILE_ALREADY_REGISTERED'
+        | 'MIDDLEWARE_PROFILE_DUPLICATE'
+        | 'MIDDLEWARE_PROFILE_INVALID'
+        | 'MIDDLEWARE_PROFILE_UNAVAILABLE'
+        | 'MIDDLEWARE_REASON_TOO_LONG'
+        | 'MIDDLEWARE_RESTORE_FENCE_CHANGED'
+        | 'MIDDLEWARE_RESTORE_TRANSACTION_REQUIRED'
+        | 'MIDDLEWARE_RESULT_INVALID'
+        | 'MIDDLEWARE_SCHEMA_REJECTED'
+        | 'MIDDLEWARE_SCOPE_CHANGED'
+        | 'MIDDLEWARE_STORAGE_MISMATCH'
+        | 'MIDDLEWARE_STORAGE_UNAVAILABLE'
+        | 'MIDDLEWARE_STORED_EVIDENCE_INVALID'
+        | 'MIDDLEWARE_STORED_INSTANCE_INVALID'
+        | 'MIDDLEWARE_STORED_INTENT_INVALID'
+        | 'MIDDLEWARE_VERIFIED_TLS_REQUIRED'
+        | 'MIDDLEWARE_VERSION_LIMIT'
+        | 'MIDDLEWARE_WORKER_ALREADY_RUNNING'
+        | 'MISDIRECTED_REQUEST'
+        | 'MODEL_ALIAS_EXISTS'
+        | 'MODEL_ALIAS_NOT_FOUND'
+        | 'MODEL_ALIAS_UNAVAILABLE'
+        | 'MODEL_ALREADY_EXISTS'
+        | 'MODEL_CHUNK_CONFLICT'
+        | 'MODEL_CHUNK_INVALID'
+        | 'MODEL_CHUNK_OFFSET_MISMATCH'
+        | 'MODEL_CLEANUP_CONFLICT'
+        | 'MODEL_DERIVED_ALREADY_RETIRED'
+        | 'MODEL_DERIVED_CATALOG_INVALID'
+        | 'MODEL_DERIVED_COPY_ATTEMPT_LIMIT'
+        | 'MODEL_DERIVED_COPY_BUSY'
+        | 'MODEL_DERIVED_COPY_POLICY_INVALID'
+        | 'MODEL_DERIVED_DISK_SPACE_LOW'
+        | 'MODEL_DERIVED_IDENTITY_CONFLICT'
+        | 'MODEL_DERIVED_PARTIAL_COPY_RETAINED'
+        | 'MODEL_DERIVED_REGISTRATION_UNAVAILABLE'
+        | 'MODEL_DERIVED_REVIEW_REQUIRED'
+        | 'MODEL_DERIVED_STORAGE_INVALID'
+        | 'MODEL_FILE_CHANGED'
+        | 'MODEL_FILE_INVALID'
+        | 'MODEL_HOLDOUT_ANALYSIS_LIMIT'
+        | 'MODEL_HOLDOUT_ANALYSIS_TIMEOUT'
+        | 'MODEL_HOLDOUT_CONCURRENT_TRAINING_RETRY'
+        | 'MODEL_HOLDOUT_DATA_INVALID'
+        | 'MODEL_HOLDOUT_EXISTS'
+        | 'MODEL_HOLDOUT_GUARD_REQUIRED'
+        | 'MODEL_HOLDOUT_LABELS_INVALID'
+        | 'MODEL_HOLDOUT_LIMIT_REACHED'
+        | 'MODEL_HOLDOUT_NOT_FOUND'
+        | 'MODEL_HOLDOUT_OVERLAP'
+        | 'MODEL_HOLDOUT_SCAN_BUSY'
+        | 'MODEL_HOLDOUT_SOURCE_CHANGED'
+        | 'MODEL_HOLDOUT_SOURCE_INVALID'
+        | 'MODEL_HOLDOUT_UNAVAILABLE'
+        | 'MODEL_IMPORT_BUSY'
+        | 'MODEL_IMPORT_INCOMPLETE'
+        | 'MODEL_IMPORT_STATE_CONFLICT'
+        | 'MODEL_IO_FAILED'
+        | 'MODEL_PATH_INVALID'
+        | 'MODEL_PREPARATION_ACTOR_UNAVAILABLE'
+        | 'MODEL_PREPARATION_ADAPTER_INVALID'
+        | 'MODEL_PREPARATION_AGENT_EXECUTION_FAILED'
+        | 'MODEL_PREPARATION_AGENT_INTERRUPTED'
+        | 'MODEL_PREPARATION_ARTIFACT_INVALID'
+        | 'MODEL_PREPARATION_ATTEMPTS_EXHAUSTED'
+        | 'MODEL_PREPARATION_ATTEMPT_IN_USE'
+        | 'MODEL_PREPARATION_ATTEMPT_STALE'
+        | 'MODEL_PREPARATION_AUTHORITY_REQUIRED'
+        | 'MODEL_PREPARATION_CANCELLED'
+        | 'MODEL_PREPARATION_CANCEL_PENDING_STOP'
+        | 'MODEL_PREPARATION_COMMAND_INVALID'
+        | 'MODEL_PREPARATION_CONFIGURATION_INVALID'
+        | 'MODEL_PREPARATION_DATA_INVALID'
+        | 'MODEL_PREPARATION_DEVICE_UNAVAILABLE'
+        | 'MODEL_PREPARATION_DISK_SPACE_LOW'
+        | 'MODEL_PREPARATION_DOCKER_REJECTED'
+        | 'MODEL_PREPARATION_DOCKER_UNAVAILABLE'
+        | 'MODEL_PREPARATION_DRIVER_UNSUPPORTED'
+        | 'MODEL_PREPARATION_EVENT_CONFLICT'
+        | 'MODEL_PREPARATION_EVENT_INVALID'
+        | 'MODEL_PREPARATION_EVENT_LIMIT'
+        | 'MODEL_PREPARATION_EVENT_ORDER_CONFLICT'
+        | 'MODEL_PREPARATION_EVENT_TRANSFER_FAILED'
+        | 'MODEL_PREPARATION_EXECUTION_IDENTITY_REQUIRED'
+        | 'MODEL_PREPARATION_EXECUTION_PROFILE_INVALID'
+        | 'MODEL_PREPARATION_GPU_BUSY'
+        | 'MODEL_PREPARATION_GPU_MEMORY_LOW'
+        | 'MODEL_PREPARATION_GPU_UNAVAILABLE'
+        | 'MODEL_PREPARATION_GPU_UNSUPPORTED'
+        | 'MODEL_PREPARATION_HELDOUT_INVALID'
+        | 'MODEL_PREPARATION_HOST_CPU_UNAVAILABLE'
+        | 'MODEL_PREPARATION_HOST_MEMORY_LOW'
+        | 'MODEL_PREPARATION_INPUT_CHANGED'
+        | 'MODEL_PREPARATION_INPUT_INVALID'
+        | 'MODEL_PREPARATION_INPUT_LIMIT_REACHED'
+        | 'MODEL_PREPARATION_LEASE_EXPIRED'
+        | 'MODEL_PREPARATION_LIMIT_REACHED'
+        | 'MODEL_PREPARATION_MEMORY_BOUNDARY_REQUIRED'
+        | 'MODEL_PREPARATION_MERGE_INVALID'
+        | 'MODEL_PREPARATION_MIG_UNSUPPORTED'
+        | 'MODEL_PREPARATION_MODEL_INVALID'
+        | 'MODEL_PREPARATION_NODE_UNAVAILABLE'
+        | 'MODEL_PREPARATION_NONFINITE_TENSOR'
+        | 'MODEL_PREPARATION_NON_TARGET_CHANGED'
+        | 'MODEL_PREPARATION_NOT_FOUND'
+        | 'MODEL_PREPARATION_OUTPUT_CHANGED'
+        | 'MODEL_PREPARATION_OUTPUT_CONFLICT'
+        | 'MODEL_PREPARATION_OUTPUT_INVALID'
+        | 'MODEL_PREPARATION_OUTPUT_LIMIT'
+        | 'MODEL_PREPARATION_OUTPUT_TRANSFER_FAILED'
+        | 'MODEL_PREPARATION_PATH_INVALID'
+        | 'MODEL_PREPARATION_PHYSICAL_STOP_REQUIRED'
+        | 'MODEL_PREPARATION_PLATFORM_UNSUPPORTED'
+        | 'MODEL_PREPARATION_PREFLIGHT_REQUIRED'
+        | 'MODEL_PREPARATION_PROCESSOR_FAILED'
+        | 'MODEL_PREPARATION_PROCESSOR_MEMORY_EXCEEDED'
+        | 'MODEL_PREPARATION_PROCESSOR_TIMEOUT'
+        | 'MODEL_PREPARATION_QUALITY_FAILED'
+        | 'MODEL_PREPARATION_RECIPE_INVALID'
+        | 'MODEL_PREPARATION_RECIPE_UNAVAILABLE'
+        | 'MODEL_PREPARATION_RECOVERY_NOT_ALLOWED'
+        | 'MODEL_PREPARATION_REPORT_CONFLICT'
+        | 'MODEL_PREPARATION_REPORT_INVALID'
+        | 'MODEL_PREPARATION_REQUEST_INVALID'
+        | 'MODEL_PREPARATION_RESERVED_TOKEN'
+        | 'MODEL_PREPARATION_RESOURCES_INVALID'
+        | 'MODEL_PREPARATION_RESOURCE_BUSY'
+        | 'MODEL_PREPARATION_RESULT_INVALID'
+        | 'MODEL_PREPARATION_RESULT_LIMIT'
+        | 'MODEL_PREPARATION_RESULT_UNAVAILABLE'
+        | 'MODEL_PREPARATION_REVIEW_BINDING_INVALID'
+        | 'MODEL_PREPARATION_REVIEW_NOT_ALLOWED'
+        | 'MODEL_PREPARATION_REVISION_CONFLICT'
+        | 'MODEL_PREPARATION_RUNTIME_MISMATCH'
+        | 'MODEL_PREPARATION_SCOPE_INVALID'
+        | 'MODEL_PREPARATION_SEQUENCE_TOO_LONG'
+        | 'MODEL_PREPARATION_STOP_CONFLICT'
+        | 'MODEL_PREPARATION_STOP_INVALID'
+        | 'MODEL_PREPARATION_STORAGE_CONFLICT'
+        | 'MODEL_PREPARATION_STORAGE_DATA_INVALID'
+        | 'MODEL_PREPARATION_STORAGE_FULL'
+        | 'MODEL_PREPARATION_STORAGE_PATH_INVALID'
+        | 'MODEL_PREPARATION_STORAGE_UNAVAILABLE'
+        | 'MODEL_PREPARATION_STORE_IN_USE'
+        | 'MODEL_PREPARATION_STORE_NAMESPACE_INVALID'
+        | 'MODEL_PREPARATION_STORE_NOT_EMPTY'
+        | 'MODEL_PREPARATION_TENSOR_INVALID'
+        | 'MODEL_PREPARATION_TOKENIZER_INVALID'
+        | 'MODEL_PREPARATION_TRANSFER_FAILED'
+        | 'MODEL_PREPARATION_TRANSFER_INVALID'
+        | 'MODEL_PREPARATION_UNAVAILABLE'
+        | 'MODEL_PREPARATION_UNCHANGED_MODEL'
+        | 'MODEL_PREPARATION_UPLOAD_BUSY'
+        | 'MODEL_PREPARATION_UPLOAD_CHECKSUM_MISMATCH'
+        | 'MODEL_PREPARATION_UPLOAD_CONFLICT'
+        | 'MODEL_PREPARATION_UPLOAD_INCOMPLETE'
+        | 'MODEL_PREPARATION_UPLOAD_INVALID'
+        | 'MODEL_PREPARATION_UPLOAD_NOT_FOUND'
+        | 'MODEL_PREPARATION_UPLOAD_RECOVERY_REQUIRED'
+        | 'MODEL_PREPARATION_UPLOAD_STATE_CONFLICT'
+        | 'MODEL_PREPARATION_UPLOAD_TICKET_STALE'
+        | 'MODEL_PREPARATION_UPLOAD_TIMEOUT'
+        | 'MODEL_PREPARATION_WIRE_INVALID'
+        | 'MODEL_REFERENCE_CHECK_UNAVAILABLE'
+        | 'MODEL_STORAGE_UNAVAILABLE'
+        | 'MODEL_VERSION_REFERENCED'
+        | 'MONGODB_ACCESS_DENIED'
+        | 'MONGODB_BUSINESS_DATABASE_UNSUPPORTED'
+        | 'MONGODB_BUSY'
+        | 'MONGODB_CANCELLED'
+        | 'MONGODB_CONFIGURATION_INVALID'
+        | 'MONGODB_CONNECT_FAILED'
+        | 'MONGODB_DISABLED'
+        | 'MONGODB_FIELD_INVALID'
+        | 'MONGODB_IDENTIFIER_INVALID'
+        | 'MONGODB_LIMIT_EXCEEDED'
+        | 'MONGODB_MAPPING_INVALID'
+        | 'MONGODB_ORDER_INVALID'
+        | 'MONGODB_READ_FAILED'
+        | 'MONGODB_RECORD_INVALID'
+        | 'MONGODB_RETRY_LIMIT'
+        | 'MONGODB_SNAPSHOT_EXPIRED'
+        | 'MONGODB_SNAPSHOT_UNSUPPORTED'
+        | 'MONGODB_SOURCE_CHANGED'
+        | 'MONGODB_SOURCE_EMPTY'
+        | 'MONGODB_TIMEOUT'
+        | 'MONGODB_TYPE_INVALID'
+        | 'MONITORING_BUSY'
+        | 'MONITORING_CONFIGURATION_INVALID'
+        | 'MONITORING_CONFIGURATION_REQUIRED'
+        | 'MONITORING_OWNER_REQUIRED'
+        | 'NODE_BUSY'
+        | 'NODE_JOIN_STATE_CONFLICT'
+        | 'NODE_NAME_EXISTS'
+        | 'NODE_REMOVED'
+        | 'NODE_STORAGE_MISMATCH'
+        | 'NODE_UNAVAILABLE'
+        | 'NOTIFICATION_ALREADY_STARTED'
+        | 'NOTIFICATION_NOT_FOUND'
+        | 'NOTIFICATION_PROVENANCE_INVALID'
+        | 'NOTIFICATION_SHUTDOWN_TIMEOUT'
+        | 'NOTIFICATION_UNAVAILABLE'
+        | 'OBJECT_ACCESS_DENIED'
+        | 'OBJECT_ACTOR_CHANGED'
+        | 'OBJECT_AMBIGUOUS_REMOTE_UPLOAD'
+        | 'OBJECT_AUTHORITY_INVALID'
+        | 'OBJECT_BACKEND_AUTH_UNENFORCED'
+        | 'OBJECT_BUCKET_AUTHORITY_INVALID'
+        | 'OBJECT_BUCKET_AUTHORITY_UNVERIFIED'
+        | 'OBJECT_BUSY'
+        | 'OBJECT_CANCELLED'
+        | 'OBJECT_CAPABILITY_UNSUPPORTED'
+        | 'OBJECT_CA_INVALID'
+        | 'OBJECT_CHANGED'
+        | 'OBJECT_COMPOSITION_INVALID'
+        | 'OBJECT_CONFIGURATION_INVALID'
+        | 'OBJECT_CONFLICT'
+        | 'OBJECT_DIGEST_MISMATCH'
+        | 'OBJECT_ENDPOINT_CHANGED'
+        | 'OBJECT_EXPIRED'
+        | 'OBJECT_IDENTITY_REQUIRED'
+        | 'OBJECT_INCOMPLETE'
+        | 'OBJECT_INGESTION_CANCELLED'
+        | 'OBJECT_INGESTION_INVALID'
+        | 'OBJECT_INGESTION_STOP_UNCONFIRMED'
+        | 'OBJECT_INGESTION_UNAVAILABLE'
+        | 'OBJECT_LIST_INCOMPLETE'
+        | 'OBJECT_MANAGEMENT_CA_INVALID'
+        | 'OBJECT_MANAGEMENT_CERTIFICATE_INVALID'
+        | 'OBJECT_MANAGEMENT_MTLS_UNENFORCED'
+        | 'OBJECT_MANAGEMENT_PROFILE_INVALID'
+        | 'OBJECT_MANAGEMENT_PROFILE_UNVERIFIED'
+        | 'OBJECT_MANAGEMENT_PROTOCOL_UNVERIFIED'
+        | 'OBJECT_NOT_ADMITTED'
+        | 'OBJECT_NOT_FOUND'
+        | 'OBJECT_NOT_READY'
+        | 'OBJECT_OPERATION_STALE'
+        | 'OBJECT_PART_INVALID'
+        | 'OBJECT_PROFILE_UNVERIFIED'
+        | 'OBJECT_PURPOSE_INVALID'
+        | 'OBJECT_RECEIPT_INVALID'
+        | 'OBJECT_RECONCILE_REQUIRED'
+        | 'OBJECT_REFERENCED'
+        | 'OBJECT_REMOTE_OUTCOME_UNKNOWN'
+        | 'OBJECT_REQUEST_INVALID'
+        | 'OBJECT_RESPONSE_INVALID'
+        | 'OBJECT_SCHEMA_NOT_ACTIVE'
+        | 'OBJECT_SCOPE_INVALID'
+        | 'OBJECT_SNAPSHOT_INVALID'
+        | 'OBJECT_STAGING_BUSY'
+        | 'OBJECT_STAGING_CHANGED'
+        | 'OBJECT_STAGING_CONFLICT'
+        | 'OBJECT_STAGING_FAILED'
+        | 'OBJECT_STAGING_INVALID'
+        | 'OBJECT_STAGING_NAMESPACE_MISMATCH'
+        | 'OBJECT_STAGING_NOT_EMPTY'
+        | 'OBJECT_STAGING_RECORD_MISSING'
+        | 'OBJECT_STAGING_REFERENCED'
+        | 'OBJECT_STATE_INVALID'
+        | 'OBJECT_STORAGE_CLOSED'
+        | 'OBJECT_STORAGE_FULL'
+        | 'OBJECT_STORAGE_MISMATCH'
+        | 'OBJECT_STORAGE_UNAVAILABLE'
+        | 'OBJECT_STORED_PROVENANCE_INVALID'
+        | 'OBJECT_STORE_CHANGED'
+        | 'OBJECT_TARGET_CHANGED'
+        | 'OBJECT_TARGET_NOT_ACCEPTED'
+        | 'OBJECT_TARGET_SOURCE_UNPROVEN'
+        | 'OBJECT_TIMEOUT'
+        | 'OBJECT_UPLOAD_INVALID'
+        | 'OBJECT_UPLOAD_NOT_FOUND'
+        | 'ORIGIN_REJECTED'
+        | 'PASSWORD_BLOCKED'
+        | 'PASSWORD_POLICY_VIOLATION'
+        | 'PAYLOAD_TOO_LARGE'
+        | 'PLUGIN_ALREADY_STARTED'
+        | 'PLUGIN_AUTHORITY_CHANGED'
+        | 'PLUGIN_AUTHORITY_INVALID'
+        | 'PLUGIN_CAPABILITY_UNSUPPORTED'
+        | 'PLUGIN_GRANT_EXISTS'
+        | 'PLUGIN_GRANT_NOT_FOUND'
+        | 'PLUGIN_GRANT_REVOKED'
+        | 'PLUGIN_LIMIT_EXCEEDED'
+        | 'PLUGIN_MODEL_LIMIT_EXCEEDED'
+        | 'PLUGIN_MODEL_REFERENCE_CHANGED'
+        | 'PLUGIN_NOT_INSTALLED'
+        | 'PLUGIN_PACKAGE_DIGEST_MISMATCH'
+        | 'PLUGIN_PACKAGE_INVALID'
+        | 'PLUGIN_PACKAGE_LIMIT_INVALID'
+        | 'PLUGIN_REFERENCED'
+        | 'PLUGIN_REFERENCES_CHANGED'
+        | 'PLUGIN_REFERENCE_LIMIT_EXCEEDED'
+        | 'PLUGIN_RESULT_INVALID'
+        | 'PLUGIN_RESULT_LIMIT_EXCEEDED'
+        | 'PLUGIN_REVISION_CONFLICT'
+        | 'PLUGIN_SHUTDOWN_TIMEOUT'
+        | 'PLUGIN_SIGNATURE_INVALID'
+        | 'PLUGIN_TRUST_KEY_INVALID'
+        | 'PLUGIN_UNAVAILABLE'
+        | 'PLUGIN_VERSION_CONFLICT'
+        | 'PLUGIN_VERSION_INVALID'
+        | 'PLUGIN_VERSION_NOT_FOUND'
+        | 'PLUGIN_VERSION_UNSUPPORTED'
+        | 'PREFERENCE_REVISION_CONFLICT'
+        | 'PREFERENCE_UNAVAILABLE'
+        | 'PROTECTED_ACCOUNT'
+        | 'RATE_LIMITED'
+        | 'RELEASE_VIEW_CHANGED'
+        | 'RELEASE_VIEW_CONFIGURATION_INVALID'
+        | 'RELEASE_VIEW_UNAVAILABLE'
+        | 'RESOURCE_LIMIT_REACHED'
+        | 'RESOURCE_NOT_FOUND'
+        | 'SERVICE_NOT_READY'
+        | 'SSO_AUTHORIZATION_INPUT_INVALID'
+        | 'SSO_BINDING_CONFLICT'
+        | 'SSO_BINDING_LIMIT'
+        | 'SSO_BINDING_NOT_FOUND'
+        | 'SSO_BINDING_REQUIRED'
+        | 'SSO_BROWSER_CHANGED'
+        | 'SSO_CAPACITY_EXCEEDED'
+        | 'SSO_CONNECTOR_DISABLED'
+        | 'SSO_CONNECTOR_ID_CONFLICT'
+        | 'SSO_CONNECTOR_LIMIT'
+        | 'SSO_CONNECTOR_NOT_FOUND'
+        | 'SSO_DISABLED'
+        | 'SSO_ENCRYPTED_STATE_INVALID'
+        | 'SSO_ENTROPY_UNAVAILABLE'
+        | 'SSO_FLOW_EXPIRED'
+        | 'SSO_FLOW_INVALID'
+        | 'SSO_FLOW_UNUSABLE'
+        | 'SSO_IDENTITY_REJECTED'
+        | 'SSO_JSON_INVALID'
+        | 'SSO_KEYRING_INVALID'
+        | 'SSO_PASSWORD_CHANGED'
+        | 'SSO_PASSWORD_REQUIRED'
+        | 'SSO_PRIVATE_FILE_INVALID'
+        | 'SSO_PROVIDER_CONFIGURATION_INVALID'
+        | 'SSO_PROVIDER_DENIED'
+        | 'SSO_PROVIDER_DESTINATION_REJECTED'
+        | 'SSO_PROVIDER_REJECTED'
+        | 'SSO_PROVIDER_RESPONSE_INVALID'
+        | 'SSO_PROVIDER_UNAVAILABLE'
+        | 'SSO_REVISION_CONFLICT'
+        | 'SSO_SCOPE_REJECTED'
+        | 'SSO_SECRET_SCOPE_INVALID'
+        | 'STORAGE_CANCELLED'
+        | 'STORAGE_COMMIT_OUTCOME_UNKNOWN'
+        | 'STORAGE_COMMIT_ROLLED_BACK'
+        | 'STORAGE_DEADLOCK'
+        | 'STORAGE_LOCK_TIMEOUT'
+        | 'STORAGE_TIMEOUT'
+        | 'STORAGE_UNAVAILABLE'
+        | 'TOKEN_UNUSABLE'
+        | 'TRAINING_ADAPTER_INVALID'
+        | 'TRAINING_ATTEMPTS_EXHAUSTED'
+        | 'TRAINING_ATTEMPT_STALE'
+        | 'TRAINING_AUTHORITY_REQUIRED'
+        | 'TRAINING_BASE_SHAPE_INVALID'
+        | 'TRAINING_CHECKPOINT_CONFLICT'
+        | 'TRAINING_CHECKPOINT_INVALID'
+        | 'TRAINING_CHECKPOINT_NOT_ANNOUNCED'
+        | 'TRAINING_CHECKPOINT_UNAVAILABLE'
+        | 'TRAINING_COMMAND_INVALID'
+        | 'TRAINING_DATASET_EMPTY_PARTITION'
+        | 'TRAINING_DATA_INVALID'
+        | 'TRAINING_DRIVER_UNSUPPORTED'
+        | 'TRAINING_EVENT_CONFLICT'
+        | 'TRAINING_EVENT_INVALID'
+        | 'TRAINING_EVENT_ORDER_CONFLICT'
+        | 'TRAINING_GPU_MEMORY_LOW'
+        | 'TRAINING_GPU_UNAVAILABLE'
+        | 'TRAINING_GPU_UNSUPPORTED'
+        | 'TRAINING_HOST_MEMORY_LOW'
+        | 'TRAINING_INPUT_LIMIT_REACHED'
+        | 'TRAINING_INPUT_STORES_REQUIRED'
+        | 'TRAINING_INPUT_UNAVAILABLE'
+        | 'TRAINING_INSTALLATION_REQUIRED'
+        | 'TRAINING_JOB_LIMIT_REACHED'
+        | 'TRAINING_MIG_UNSUPPORTED'
+        | 'TRAINING_NOT_FOUND'
+        | 'TRAINING_PHYSICAL_STOP_REQUIRED'
+        | 'TRAINING_PLATFORM_UNSUPPORTED'
+        | 'TRAINING_PREFLIGHT_REQUIRED'
+        | 'TRAINING_RECIPE_INVALID'
+        | 'TRAINING_RECIPE_UNAVAILABLE'
+        | 'TRAINING_RECOVERY_NOT_ALLOWED'
+        | 'TRAINING_RESULT_CONFLICT'
+        | 'TRAINING_RESULT_INVALID'
+        | 'TRAINING_RESULT_UNAVAILABLE'
+        | 'TRAINING_REVISION_CONFLICT'
+        | 'TRAINING_STOP_CONFLICT'
+        | 'TRAINING_STOP_INVALID'
+        | 'TRAINING_STORAGE_CONFLICT'
+        | 'TRAINING_STORAGE_DATA_INVALID'
+        | 'TRAINING_STORAGE_FULL'
+        | 'TRAINING_STORAGE_PATH_INVALID'
+        | 'TRAINING_STORAGE_REQUIRED'
+        | 'TRAINING_STORAGE_UNAVAILABLE'
+        | 'TRAINING_STORE_BUSY'
+        | 'TRAINING_STORE_IN_USE'
+        | 'TRAINING_STORE_NAMESPACE_INVALID'
+        | 'TRAINING_STORE_NOT_EMPTY'
+        | 'TRAINING_TRANSFER_FAILED'
+        | 'TRAINING_TRANSFER_INVALID'
+        | 'TRAINING_UNAVAILABLE'
+        | 'TRAINING_UPLOAD_BUSY'
+        | 'TRAINING_UPLOAD_CHECKSUM_MISMATCH'
+        | 'TRAINING_UPLOAD_CONFLICT'
+        | 'TRAINING_UPLOAD_INCOMPLETE'
+        | 'TRAINING_UPLOAD_INVALID'
+        | 'TRAINING_UPLOAD_NOT_FOUND'
+        | 'TRAINING_UPLOAD_RECOVERY_REQUIRED'
+        | 'TRAINING_UPLOAD_STATE_CONFLICT'
+        | 'TRAINING_UPLOAD_TICKET_STALE'
+        | 'TRAINING_UPLOAD_TIMEOUT'
+        | 'UNSUPPORTED_MEDIA_TYPE'
+        | 'VALIDATION_FAILED'
+        | 'VERSION_CONFLICT'
+        | 'WORKFLOW_ALREADY_STARTED'
+        | 'WORKFLOW_AUTHORITY_CHANGED'
+        | 'WORKFLOW_CAPACITY_EXCEEDED'
+        | 'WORKFLOW_CONNECTIONS_REQUIRED'
+        | 'WORKFLOW_CONNECTION_ORDER_INVALID'
+        | 'WORKFLOW_CONVERSATION_BUSY'
+        | 'WORKFLOW_CONVERSATION_NOT_FOUND'
+        | 'WORKFLOW_CYCLE'
+        | 'WORKFLOW_DISABLED'
+        | 'WORKFLOW_DRAFT_CHANGED'
+        | 'WORKFLOW_END_HAS_OUTPUT'
+        | 'WORKFLOW_GRAPH_CORRUPT'
+        | 'WORKFLOW_GRAPH_INVALID'
+        | 'WORKFLOW_INPUT_REQUIRED'
+        | 'WORKFLOW_LIMIT_EXCEEDED'
+        | 'WORKFLOW_MAINTENANCE_FAILED'
+        | 'WORKFLOW_NAME_EXISTS'
+        | 'WORKFLOW_NOT_FOUND'
+        | 'WORKFLOW_RESULT_INVALID'
+        | 'WORKFLOW_RESULT_LIMIT_EXCEEDED'
+        | 'WORKFLOW_RUN_CANCELLED'
+        | 'WORKFLOW_RUN_INTERRUPTED'
+        | 'WORKFLOW_RUN_NOT_FOUND'
+        | 'WORKFLOW_RUN_STALE'
+        | 'WORKFLOW_RUN_TIMEOUT'
+        | 'WORKFLOW_SHUTDOWN_TIMEOUT'
+        | 'WORKFLOW_UNAVAILABLE'
+        | 'WORKFLOW_VERSION_UNAVAILABLE'
+        | 'WORKSPACE_EXISTS';
+      /** Format: uuid */
+      request_id: string;
+      detail?: string;
+      fields?: {
+        field: string;
+        code: string;
+      }[];
+    };
+    GatewayInstancePageResponse: {
+      data: components['schemas']['GatewayInstancePage'];
+    };
+    GatewayInstanceResponse: {
+      data: components['schemas']['GatewayInstance'];
+    };
+    ModelAliasPageResponse: {
+      data: components['schemas']['ModelAliasPage'];
+    };
+    ModelAliasResponse: {
+      data: components['schemas']['ModelAlias'];
+    };
+    DistributionKeyPageResponse: {
+      data: components['schemas']['DistributionKeyPage'];
+    };
+    DistributionKeyResponse: {
+      data: components['schemas']['DistributionKey'];
+    };
+    GatewayRequestPageResponse: {
+      data: components['schemas']['GatewayRequestPage'];
+    };
+    GatewayRequestResponse: {
+      data: components['schemas']['GatewayRequest'];
+    };
+    MintedDistributionKeyResponse: {
+      data: components['schemas']['MintedDistributionKey'];
+    };
+    ProvisionedGatewayResponse: {
+      data: components['schemas']['ProvisionedGateway'];
+    };
+    AliasCutoverResultResponse: {
+      data: components['schemas']['AliasCutoverResult'];
+    };
+    AliasTargetPageResponse: {
+      data: components['schemas']['AliasTargetPage'];
+    };
+    GatewayRecoveryResponse: {
+      data: components['schemas']['GatewayRecovery'];
+    };
+    GatewayModelsAuthorizationResponse: {
+      data: components['schemas']['GatewayModelsAuthorization'];
+    };
+    GatewayAdmissionResponse: {
+      data: components['schemas']['GatewayAdmission'];
+    };
+    GatewayOutcomeAcknowledgmentResponse: {
+      data: components['schemas']['GatewayOutcomeAcknowledgment'];
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    adminListGatewayInstance: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayInstancePageResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  adminListGatewayInstance: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    adminProvisionGateway: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProvisionGateway"];
-            };
+        content: {
+          'application/json': components['schemas']['GatewayInstancePageResponse'];
         };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProvisionedGatewayResponse"];
-                };
-            };
-            /** @description Scoped result; creation replay never repeats a secret. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProvisionedGatewayResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminGetGatewayInstance: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayInstanceResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminProvisionGateway: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    adminListModelAlias: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelAliasPageResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProvisionGateway'];
+      };
     };
-    adminPublishAlias: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PublishAlias"];
-            };
+        content: {
+          'application/json': components['schemas']['ProvisionedGatewayResponse'];
         };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelAliasResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Scoped result; creation replay never repeats a secret. */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/json': components['schemas']['ProvisionedGatewayResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminGetModelAlias: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelAliasResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminGetGatewayInstance: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
     };
-    adminListDistributionKey: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DistributionKeyPageResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['GatewayInstanceResponse'];
         };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminMintDistributionKey: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MintDistributionKey"];
-            };
-        };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MintedDistributionKeyResponse"];
-                };
-            };
-            /** @description Scoped result; creation replay never repeats a secret. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MintedDistributionKeyResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminListModelAlias: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    adminGetDistributionKey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DistributionKeyResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['ModelAliasPageResponse'];
         };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminListGatewayRequest: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayRequestPageResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminPublishAlias: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    adminGetGatewayRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayRequestResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PublishAlias'];
+      };
     };
-    adminrevokeDistributionKey: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
+        content: {
+          'application/json': components['schemas']['ModelAliasResponse'];
         };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DistributionKeyResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminrevokeGatewayInstance: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayInstanceResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminGetModelAlias: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
     };
-    admindisableModelAlias: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DisableAlias"];
-            };
+        content: {
+          'application/json': components['schemas']['ModelAliasResponse'];
         };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelAliasResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminCutoverAlias: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AliasCutover"];
-            };
-        };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AliasCutoverResultResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminListDistributionKey: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    adminAliasTargets: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AliasTargetPageResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['DistributionKeyPageResponse'];
         };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminCreateGatewayRecovery: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                request_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
-        };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayRecoveryResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminMintDistributionKey: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    adminGetGatewayRecovery: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                request_id: string;
-                recovery_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayRecoveryResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MintDistributionKey'];
+      };
     };
-    adminAcceptGatewayFence: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                request_id: string;
-                recovery_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AcceptRecoveryFence"];
-            };
+        content: {
+          'application/json': components['schemas']['MintedDistributionKeyResponse'];
         };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayRecoveryResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Scoped result; creation replay never repeats a secret. */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/json': components['schemas']['MintedDistributionKeyResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    adminConfirmGatewayRecovery: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                request_id: string;
-                recovery_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConfirmRecovery"];
-            };
-        };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayRecoveryResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminGetDistributionKey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
     };
-    portalListModelAlias: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelAliasPageResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['DistributionKeyResponse'];
         };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalGetModelAlias: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ModelAliasResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminListGatewayRequest: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
     };
-    portalListDistributionKey: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DistributionKeyPageResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['GatewayRequestPageResponse'];
         };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalMintDistributionKey: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-                "Idempotency-Key": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MintDistributionKey"];
-            };
-        };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MintedDistributionKeyResponse"];
-                };
-            };
-            /** @description Scoped result; creation replay never repeats a secret. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MintedDistributionKeyResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminGetGatewayRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
     };
-    portalGetDistributionKey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DistributionKeyResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['GatewayRequestResponse'];
         };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    portalListGatewayRequest: {
-        parameters: {
-            query?: {
-                limit?: number;
-                cursor?: string;
-            };
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayRequestPageResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminrevokeDistributionKey: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
     };
-    portalGetGatewayRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayRequestResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
     };
-    portalrevokeDistributionKey: {
-        parameters: {
-            query?: never;
-            header: {
-                Origin: string;
-                "X-CSRF-Token": string;
-            };
-            path: {
-                site_id: string;
-                cell_id: string;
-                workspace_id: string;
-                resource_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Reason"];
-            };
+        content: {
+          'application/json': components['schemas']['DistributionKeyResponse'];
         };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DistributionKeyResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
-    gatewayModels: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                gateway_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GatewayModelsRequest"];
-            };
-        };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayModelsAuthorizationResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+  };
+  adminrevokeGatewayInstance: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
     };
-    gatewayAdmissions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                gateway_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GatewayAdmissionRequest"];
-            };
-        };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayAdmissionResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
     };
-    gatewayOutcomes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: string;
-                cell_id: string;
-                gateway_id: string;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GatewayOutcome"];
-            };
+        content: {
+          'application/json': components['schemas']['GatewayInstanceResponse'];
         };
-        responses: {
-            /** @description Scoped result; creation replay never repeats a secret. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GatewayOutcomeAcknowledgmentResponse"];
-                };
-            };
-            /** @description Stable safe error. */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
+  };
+  admindisableModelAlias: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DisableAlias'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelAliasResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminCutoverAlias: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AliasCutover'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AliasCutoverResultResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminAliasTargets: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AliasTargetPageResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminCreateGatewayRecovery: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GatewayRecoveryResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminGetGatewayRecovery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        request_id: string;
+        recovery_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GatewayRecoveryResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminAcceptGatewayFence: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        request_id: string;
+        recovery_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AcceptRecoveryFence'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GatewayRecoveryResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  adminConfirmGatewayRecovery: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        request_id: string;
+        recovery_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConfirmRecovery'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GatewayRecoveryResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalListModelAlias: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelAliasPageResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalGetModelAlias: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ModelAliasResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalListDistributionKey: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DistributionKeyPageResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalMintDistributionKey: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+        'Idempotency-Key': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MintDistributionKey'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MintedDistributionKeyResponse'];
+        };
+      };
+      /** @description Scoped result; creation replay never repeats a secret. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MintedDistributionKeyResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalGetDistributionKey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DistributionKeyResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalListGatewayRequest: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GatewayRequestPageResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalGetGatewayRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GatewayRequestResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  portalrevokeDistributionKey: {
+    parameters: {
+      query?: never;
+      header: {
+        Origin: string;
+        'X-CSRF-Token': string;
+      };
+      path: {
+        site_id: string;
+        cell_id: string;
+        workspace_id: string;
+        resource_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reason'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DistributionKeyResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  gatewayModels: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        gateway_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GatewayModelsRequest'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GatewayModelsAuthorizationResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  gatewayAdmissions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        gateway_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GatewayAdmissionRequest'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GatewayAdmissionResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
+  gatewayOutcomes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        site_id: string;
+        cell_id: string;
+        gateway_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GatewayOutcome'];
+      };
+    };
+    responses: {
+      /** @description Scoped result; creation replay never repeats a secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GatewayOutcomeAcknowledgmentResponse'];
+        };
+      };
+      /** @description Stable safe error. */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+    };
+  };
 }
