@@ -113,18 +113,10 @@ func Interrupted(e error) bool {
 	return false
 }
 
-// hintSpreadPercent spreads a wait after a hint above the hint itself, so agents refused
-// together with one hint do not return together.
-const hintSpreadPercent = 50
-
-// AfterHint is how long to wait after a failure with the retry hint: uniform between the
-// hint and the hint plus hintSpreadPercent, never less than the hint.
+// AfterHint is how long to wait after a failure with the retry hint, never less than the
+// hint (wire.AfterHint).
 func AfterHint(hint time.Duration) time.Duration {
-	return afterHint(rand.Int64N, hint)
-}
-
-func afterHint(random func(int64) int64, hint time.Duration) time.Duration {
-	return hint + time.Duration(random(int64(hint)*hintSpreadPercent/100+1))
+	return wire.AfterHint(rand.Int64N, hint)
 }
 
 // retryAfter reads a Retry-After header given in whole seconds, bounded by the protocol.

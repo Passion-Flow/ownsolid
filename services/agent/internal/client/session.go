@@ -148,7 +148,8 @@ func (s *Session) heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 		return s.fallBack(ctx, h)
 	}
 	if e != nil {
-		s.probeHTTPS = !errors.Is(e, errStreamRefused) && ctx.Err() == nil
+		var refused *Problem
+		s.probeHTTPS = !errors.Is(e, errStreamRefused) && !errors.As(e, &refused) && ctx.Err() == nil
 		return wire.Disposition{}, e
 	}
 	s.transport = TransportStream
@@ -389,10 +390,14 @@ func (s *Session) exchange(ctx context.Context, m wire.AgentMessage) (wire.Contr
 	return reply, nil
 }
 
-// streamError separates a stream control refused from one that never worked.
+// streamError separates a stream control refused from one that never worked. Control
+// answers a credential it does not accept with Unauthenticated, the stream's 401, which
+// ends the agent as the same answer over HTTPS does.
 func streamError(e error) error {
 	switch status.Code(e) {
-	case codes.ResourceExhausted, codes.NotFound, codes.InvalidArgument, codes.Unauthenticated:
+	case codes.Unauthenticated:
+		return &Problem{Code: "AGENT_UNAUTHORIZED", Status: http.StatusUnauthorized}
+	case codes.ResourceExhausted, codes.NotFound, codes.InvalidArgument:
 		return errStreamRefused
 	}
 	return errors.New("CONTROL_CONNECTION_FAILED")
