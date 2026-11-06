@@ -70,6 +70,14 @@ func deliveryServer(t *testing.T, d *deliveryControl, identity state.Identity) *
 				return
 			}
 			json.NewEncoder(w).Encode(map[string]any{"data": wire.RenewedLease{LeaseExpiresAt: time.Now().UTC().Add(30 * time.Second), ValidForMilliseconds: 30000}})
+		case strings.HasSuffix(r.URL.Path, "/"+wire.TaskProgressPath):
+			var report wire.TaskProgress
+			json.NewDecoder(r.Body).Decode(&report)
+			if e := report.Validate(); e != nil || report.LeaseToken == "" {
+				t.Error("report", e)
+			}
+			d.record("progress")
+			json.NewEncoder(w).Encode(map[string]any{"data": wire.TaskProgressAccepted{Accepted: len(report.Entries)}})
 		case strings.HasSuffix(r.URL.Path, "/results"):
 			d.record("result")
 			json.NewEncoder(w).Encode(map[string]any{"data": map[string]string{"state": "succeeded"}})
@@ -109,7 +117,7 @@ func TestAgentAcknowledgesBeforeExecutingAndKeepsItsCursor(t *testing.T) {
 	if e := run(); e != nil {
 		t.Fatal(e)
 	}
-	if got := d.log(); !reflect.DeepEqual(got, []string{"heartbeat", "claim", "ack", "result"}) {
+	if got := d.log(); !reflect.DeepEqual(got, []string{"heartbeat", "claim", "ack", "progress", "result"}) {
 		t.Fatal("order", got)
 	}
 	if cursor, e := state.LoadCursor(dir); e != nil || cursor != 5 {
