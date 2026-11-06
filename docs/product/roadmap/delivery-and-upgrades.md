@@ -39,6 +39,7 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 - [ ] DEL-113 Upgrade bundle upload through the console as well as the command line, both ending at the same preflight screen (P1)
 - [ ] DEL-114 Install configuration covers the whole address and transport matrix: a hostname per entrance, published ports, deployments reached by IP address with the address as a certificate name, plain HTTP for an isolated laboratory, and TLS terminated by a trusted proxy with explicit proxy ranges (P1)
 - [ ] DEL-115 Change an entrance address after install: reissue the certificate, reconcile single sign-on callbacks, invalidate affected sessions and roll back, without editing files by hand (P1)
+- [ ] DEL-116 License page: status, limits and expiry, import of a license file, diagnostics that say why a file was refused (P1)
 
 ## P2 Fleet operations
 
