@@ -1,6 +1,6 @@
 # Console navigation
 
-Research behind UX-123: the sidebar that [ADR 0037](../decisions/0037-simple-on-the-surface-deep-underneath.md)
+Research behind UX-123 and UX-124: the sidebar that [ADR 0037](../decisions/0037-simple-on-the-surface-deep-underneath.md)
 asks for. The ADR decides the shape; this note records how it is built and tested.
 
 ## How others solve it
@@ -55,7 +55,26 @@ Rejected: an accordion that closes the last group when another opens, which figh
 groups and which the ADR does not ask for; storing open groups on the account, which would rebuild the wall;
 a separate flyout per group in the rail, which adds a hover menu to reach what the command menu reaches faster.
 
-ADR 0037 calls for pinned destinations at the top. They are UX-124 and go above this filter.
+## Pinned pages (UX-124)
+
+ADR 0037 puts pinned destinations at the top, as "the customization that matters most and costs least".
+
+- **One list per entrance.** The console and the portal have different pages under similar paths, so
+  `pinned_console` and `pinned_portal` are separate, and the server answers with this entrance's only. The
+  portal shows no pin buttons while it has nothing to pin; the same rule as its filter.
+- **Stored as paths**, in the order pinned, at most 12. The server checks the shape and leaves whether a page
+  exists to the sidebar, which skips a pin whose page has gone. So a release can rename a page without touching
+  accounts, and the path is never used as a link: the sidebar links to its own item.
+- **A pin sits at the top and stays in its group**, so the group still reads complete, and the filter searches
+  the groups only, so a page never appears twice in its results.
+- **The button shows on hover and focus, and always on a pinned page or a touch screen.** Taking the last pin off
+  removes the section with its button, so focus moves to the filter rather than being lost.
+- **The command menu pins the current page**, which is how the rail, with no room for a button, reaches it.
+  It pins the destination, so on `/users/workspaces` it pins Users and workspaces.
+- **Pins change at once, with no toast.** Pressing the button again undoes it.
+
+Rejected: a pin menu per row, which adds a layer to a one-press action; dragging to reorder, which is a
+separate gesture to make accessible and can wait until a person has enough pins to want it.
 
 ## Licences
 
@@ -70,9 +89,12 @@ and the shared stylesheet. The limit rises to 170 kB, and UX-129 moves the catal
 
 - Nothing about the current page is stored, so a stale choice cannot hide it; browser flow.
 - A group opened by hand goes on the next page, and stays through a list filter; browser flow.
-- Upgrading leaves everyone's sidebar open without a new revision; Go test on PostgreSQL.
+- Upgrading leaves everyone's sidebar open and without pins, with no new revision; Go test on PostgreSQL.
+- A pin in the other entrance, a malformed path, a duplicate, or more than the limit; Go test on PostgreSQL.
+- A pin whose page has gone, and pinning at the limit; browser flow.
+- Unpinning the last page keeps focus in the sidebar; browser flow.
 - Two browsers changing different fields: an update names only its field; Go test and browser flow.
-- MySQL and Dameng chains lack the column: they read as open and refuse collapsing; Go test.
+- MySQL and Dameng chains lack the columns: they read as open with no pins and refuse both; Go test.
 - A name in Chinese is matched as shown; browser flow.
 - Keyboard: every control reachable with visible focus, in both modes; browser flow and axe in both themes.
 - The tip under the installation's Content-Security-Policy; live run.
@@ -81,4 +103,4 @@ and the shared stylesheet. The limit rises to 170 kB, and UX-129 moves the catal
 
 Sign in and see only the group in use open; open another with a heading; move on and see it close; find any
 page by typing part of its name; collapse to icons, have every name still announced and shown on focus or
-hover, and find the choice in another browser.
+hover, and find the choice in another browser. Pin a page and find it at the top there too.

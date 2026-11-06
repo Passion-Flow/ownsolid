@@ -21,6 +21,7 @@ const themeKey = 'ownsolid.theme';
 const densityKey = 'ownsolid.density';
 const shortcutsKey = 'ownsolid.shortcuts';
 const navigationKey = 'ownsolid.navigation';
+const pinnedKey = 'ownsolid.pinned';
 
 function read(key: string): string | null {
   try {
@@ -56,6 +57,15 @@ function storedNavigationCollapsed(): boolean {
   return read(navigationKey) === 'collapsed';
 }
 
+function storedPinned(): readonly string[] {
+  try {
+    const value: unknown = JSON.parse(read(pinnedKey) ?? '[]');
+    return Array.isArray(value) ? value.filter((item) => typeof item === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
 /** The choices a user can save. */
 export interface Appearance {
   theme: ThemePreference;
@@ -64,6 +74,8 @@ export interface Appearance {
   singleKeyShortcuts: boolean;
   /** Whether the sidebar shows only its icons. */
   navigationCollapsed: boolean;
+  /** The pages kept at the top of the sidebar, in order. */
+  pinnedDestinations: readonly string[];
 }
 
 /** Receives what the user changes, to save it beyond this browser. */
@@ -75,6 +87,7 @@ export interface Preferences extends Appearance {
   setDensity: (density: Density) => void;
   setSingleKeyShortcuts: (on: boolean) => void;
   setNavigationCollapsed: (collapsed: boolean) => void;
+  setPinnedDestinations: (paths: readonly string[]) => void;
   /** Applies values saved elsewhere. Unlike the setters, this saves nothing. */
   adopt: (saved: Partial<Appearance>) => void;
   /** Sends later changes to `saver` and returns a function that stops. */
@@ -89,6 +102,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [density, setDensityState] = useState(storedDensity);
   const [singleKeyShortcuts, setShortcutsState] = useState(storedShortcuts);
   const [navigationCollapsed, setNavigationState] = useState(storedNavigationCollapsed);
+  const [pinnedDestinations, setPinnedState] = useState(storedPinned);
   const saver = useRef<AppearanceSaver | null>(null);
 
   useLayoutEffect(() => applyTheme(theme), [theme]);
@@ -97,7 +111,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   }, [density]);
 
   const applyChoice = useCallback(
-    ({ theme, density, singleKeyShortcuts, navigationCollapsed }: Partial<Appearance>) => {
+    ({
+      theme,
+      density,
+      singleKeyShortcuts,
+      navigationCollapsed,
+      pinnedDestinations,
+    }: Partial<Appearance>) => {
       if (theme) {
         write(themeKey, theme);
         setThemeState(theme);
@@ -114,6 +134,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         write(navigationKey, navigationCollapsed ? 'collapsed' : 'open');
         setNavigationState(navigationCollapsed);
       }
+      if (pinnedDestinations !== undefined) {
+        write(pinnedKey, JSON.stringify(pinnedDestinations));
+        setPinnedState(pinnedDestinations);
+      }
     },
     [],
   );
@@ -128,6 +152,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     (value: Density) => {
       applyChoice({ density: value });
       saver.current?.({ density: value });
+    },
+    [applyChoice],
+  );
+  const setPinnedDestinations = useCallback(
+    (value: readonly string[]) => {
+      applyChoice({ pinnedDestinations: value });
+      saver.current?.({ pinnedDestinations: value });
     },
     [applyChoice],
   );
@@ -162,6 +193,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setSingleKeyShortcuts,
       navigationCollapsed,
       setNavigationCollapsed,
+      pinnedDestinations,
+      setPinnedDestinations,
       adopt: applyChoice,
       connect,
     }),
@@ -174,6 +207,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setSingleKeyShortcuts,
       navigationCollapsed,
       setNavigationCollapsed,
+      pinnedDestinations,
+      setPinnedDestinations,
       applyChoice,
       connect,
     ],

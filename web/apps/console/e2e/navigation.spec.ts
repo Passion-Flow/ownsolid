@@ -100,7 +100,7 @@ test.describe('the filter', () => {
     await expect(link(page, 'Audit trail')).toBeVisible();
     await expect(link(page, 'Overview')).toHaveCount(0);
     await expect(nav(page).getByRole('status')).toHaveText('1 page');
-    await expect(nav(page).getByRole('button')).toHaveCount(0);
+    await expect(heading(page, 'Governance')).toHaveCount(0);
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/audit/);
     await expect(filter(page)).toHaveValue('');
@@ -211,6 +211,103 @@ test.describe('the icon-only rail', () => {
     await drawer.getByRole('link', { name: 'Audit trail', exact: true }).click();
     await expect(page).toHaveURL(/\/audit/);
     await expect(drawer).toBeHidden();
+  });
+});
+
+test.describe('pinned pages', () => {
+  const pinnedList = (page: Page) => nav(page).getByRole('list').first();
+
+  test('a pin sits at the top, stays in its group, and comes off', async ({ page }) => {
+    await page.goto('/tasks');
+    await expect(nav(page).getByText('Pinned', { exact: true })).toHaveCount(0);
+    await nav(page).getByRole('button', { name: 'Pin Tasks' }).focus();
+    await expect(nav(page).getByRole('button', { name: 'Pin Tasks' })).toHaveCSS('opacity', '1');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => control.preferences.pinned_destinations).toEqual(['/tasks']);
+    expect(control.preferenceWrites.at(-1)).toEqual(
+      expect.objectContaining({ pinned_destinations: ['/tasks'] }),
+    );
+    await expect(nav(page).getByText('Pinned', { exact: true })).toBeVisible();
+    await expect(nav(page).getByRole('link', { name: 'Tasks', exact: true })).toHaveCount(2);
+    await expectAccessible(page);
+
+    // From a closed group, in the order chosen.
+    await heading(page, 'Governance').click();
+    await nav(page).getByRole('button', { name: 'Pin Audit trail' }).click();
+    await expect.poll(() => control.preferences.pinned_destinations).toEqual(['/tasks', '/audit']);
+    await expect(pinnedList(page).getByRole('link')).toHaveText(['Tasks', 'Audit trail']);
+    await pinnedList(page).getByRole('link', { name: 'Audit trail' }).click();
+    await expect(page).toHaveURL(/\/audit/);
+    await expect(pinnedList(page).getByRole('link', { name: 'Audit trail' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+
+    // Taking the last one off keeps focus in the sidebar.
+    await pinnedList(page).getByRole('button', { name: 'Unpin Tasks' }).click();
+    await pinnedList(page).getByRole('button', { name: 'Unpin Audit trail' }).click();
+    await expect.poll(() => control.preferences.pinned_destinations).toEqual([]);
+    await expect(nav(page).getByText('Pinned', { exact: true })).toHaveCount(0);
+    await expect(nav(page).getByRole('searchbox')).toBeFocused();
+  });
+
+  test('a page that has not shipped cannot be pinned', async ({ page }) => {
+    await page.goto('/tasks');
+    await expect(nav(page).getByRole('button', { name: 'Pin Monitoring' })).toHaveCount(0);
+  });
+
+  test('pins arrive with the account, and a pin whose page has gone is left out', async ({
+    page,
+  }) => {
+    control.preferences.pinned_destinations = ['/gone', '/license'];
+    await page.goto('/tasks');
+    await expect(pinnedList(page).getByRole('link')).toHaveText(['License']);
+    await page.reload();
+    await expect(pinnedList(page).getByRole('link')).toHaveText(['License']);
+  });
+
+  test('the rail shows pins first, with their names', async ({ page }) => {
+    control.preferences.pinned_destinations = ['/license'];
+    control.preferences.navigation_collapsed = true;
+    await page.goto('/tasks');
+    await expect(sidebar(page).getByRole('list', { name: 'Pinned' })).toContainText('License');
+    await expectAccessible(page);
+  });
+
+  test('a filter looks through the groups, not the pins', async ({ page }) => {
+    control.preferences.pinned_destinations = ['/license'];
+    await page.goto('/tasks');
+    await nav(page).getByRole('searchbox').fill('license');
+    await expect(nav(page).getByRole('link', { name: 'License', exact: true })).toHaveCount(1);
+    await expect(nav(page).getByText('Pinned', { exact: true })).toHaveCount(0);
+  });
+
+  test('the limit says what to do', async ({ page }) => {
+    control.preferences.pinned_destinations = Array.from(
+      { length: 12 },
+      (_, index) => `/p${String(index)}`,
+    );
+    await page.goto('/tasks');
+    await nav(page).getByRole('button', { name: 'Pin Tasks' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Unpin one' })).toBeVisible();
+    expect(control.preferences.pinned_destinations).toHaveLength(12);
+  });
+
+  test('the command menu pins the current page', async ({ page }) => {
+    await page.goto('/users/workspaces');
+    await expect(link(page, 'Users and workspaces')).toBeVisible();
+    await page.keyboard.press('Control+k');
+    await page.getByRole('option', { name: 'Pin Users and workspaces' }).click();
+    await expect.poll(() => control.preferences.pinned_destinations).toEqual(['/users']);
+    await page.keyboard.press('Control+k');
+    await expect(page.getByRole('option', { name: 'Unpin Users and workspaces' })).toBeVisible();
+  });
+
+  test('the account page has no pin', async ({ page }) => {
+    await page.goto('/account');
+    await page.getByRole('heading', { name: 'Account', level: 1 }).waitFor();
+    await page.keyboard.press('Control+k');
+    await expect(page.getByRole('option', { name: /^Pin / })).toHaveCount(0);
   });
 });
 

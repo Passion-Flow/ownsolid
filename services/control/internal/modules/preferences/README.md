@@ -40,7 +40,9 @@ to the session's user; another person's view answers not found. They are persona
 state, so they are not audited and work without a license. Names are unique per person and
 list, at most 50 views per list, and a view's state at most 4096 bytes.
 
-The sidebar's icon-only mode (UX-123) is one more choice stored the same way.
+The sidebar's icon-only mode (UX-123) is one more choice stored the same way. Pinned pages (UX-124) are
+kept per entrance, because the console and the portal have different pages, as a JSON list of paths of at
+most 12; the server checks their shape and the sidebar leaves out any whose page has gone.
 
 The MySQL and Dameng chains have no density column and accept only light and dark
 (CMP-201, CMP-202): they read as comfortable and refuse a value they cannot store with

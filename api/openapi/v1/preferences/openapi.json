@@ -1366,6 +1366,7 @@
           "locale",
           "single_key_shortcuts",
           "navigation_collapsed",
+          "pinned_destinations",
           "revision",
           "updated_at"
         ],
@@ -1394,6 +1395,16 @@
               "zh-CN"
             ],
             "description": "`auto` means no choice: the tenant's default, then the browser's languages."
+          },
+          "pinned_destinations": {
+            "type": "array",
+            "maxItems": 12,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^/[a-z0-9/-]{0,99}$"
+            },
+            "description": "Pages kept at the top of the sidebar of this entrance, in order. The console and the portal each keep their own."
           },
           "navigation_collapsed": {
             "type": "boolean",
@@ -1446,6 +1457,16 @@
             ],
             "description": "`auto` means no choice: the tenant's default, then the browser's languages."
           },
+          "pinned_destinations": {
+            "type": "array",
+            "maxItems": 12,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^/[a-z0-9/-]{0,99}$"
+            },
+            "description": "Pages kept at the top of the sidebar of this entrance, in order. The console and the portal each keep their own."
+          },
           "navigation_collapsed": {
             "type": "boolean",
             "description": "Whether the sidebar shows only its icons."
@@ -1460,7 +1481,7 @@
             "maximum": 9007199254740990
           }
         },
-        "description": "Changes the named fields and keeps the others. At least one of `theme`, `density`, `locale`, `single_key_shortcuts` and `navigation_collapsed` is required. A chosen locale also becomes the account's email language."
+        "description": "Changes the named fields and keeps the others. At least one of `theme`, `density`, `locale`, `single_key_shortcuts`, `navigation_collapsed` and `pinned_destinations` is required. A chosen locale also becomes the account's email language."
       },
       "PreferenceResponse": {
         "type": "object",

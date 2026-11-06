@@ -7,6 +7,7 @@ const saved = (revision: number, change: PreferenceChange = {}): Preference => (
   density: 'comfortable',
   single_key_shortcuts: true,
   navigation_collapsed: false,
+  pinned_destinations: [],
   locale: 'auto',
   revision,
   updated_at: '2026-11-05T00:00:00Z',

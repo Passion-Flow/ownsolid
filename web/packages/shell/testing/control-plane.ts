@@ -225,6 +225,7 @@ export interface ControlPlane
     locale: string;
     single_key_shortcuts: boolean;
     navigation_collapsed: boolean;
+    pinned_destinations: string[];
     revision: number;
   };
   /** The tenant's settings, which also set the public default language. */
@@ -324,6 +325,7 @@ export async function mockControlPlane(
       locale: 'auto',
       single_key_shortcuts: true,
       navigation_collapsed: false,
+      pinned_destinations: [],
       revision: 1,
     },
     tenantSettings: { default_locale: 'auto', revision: 1 },

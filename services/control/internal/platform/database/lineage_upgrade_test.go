@@ -84,6 +84,29 @@ func TestLineageUpgradeKeepsChosenThemesOnly(t *testing.T) {
 }
 
 
+// Migration 000047 starts everyone with no pins and changes no one's revision.
+func TestLineageUpgradeStartsWithoutPinsOrARevision(t *testing.T) {
+	s := fixture.NewAtVersion(t, 46) // before 000047
+	fixture.Bootstrap(t, s)
+	ctx := t.Context()
+	var user string
+	var before int64
+	if e := s.DB.QueryRow(ctx, "SELECT user_id::text,revision FROM user_preferences LIMIT 1").Scan(&user, &before); e != nil {
+		t.Fatal(e)
+	}
+	if e := database.Migrate(ctx, s.DB); e != nil {
+		t.Fatal(e)
+	}
+	var console, portal string
+	var after int64
+	if e := s.DB.QueryRow(ctx, "SELECT pinned_console::text,pinned_portal::text,revision FROM user_preferences WHERE user_id=$1", user).Scan(&console, &portal, &after); e != nil {
+		t.Fatal(e)
+	}
+	if console != "[]" || portal != "[]" || after != before {
+		t.Fatal(console, portal, before, after)
+	}
+}
+
 // Migration 000046 leaves the sidebar open for everyone and changes no one's revision.
 func TestLineageUpgradeLeavesNavigationOpenWithoutARevision(t *testing.T) {
 	s := fixture.NewAtVersion(t, 45) // before 000046
