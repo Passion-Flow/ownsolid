@@ -878,6 +878,7 @@
   "shortcuts.install": "安装应用",
   "shortcuts.notReady": "{name}暂不可用。",
   "shortcuts.notYet": "暂不可用",
+  "shortcuts.rows": "在列表中上下移动，按 Enter 打开所在行",
   "shortcuts.search": "搜索当前页面",
   "shortcuts.switch": "单键快捷键",
   "shortcuts.switch.detail": "N、/ 等按键会立即生效，正在输入时除外。如果你使用语音输入或容易误触按键，可以关闭它们。Ctrl 或 ⌘ K 不受影响。",

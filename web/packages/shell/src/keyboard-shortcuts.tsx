@@ -5,6 +5,7 @@ import { useI18n, type TranslationKey } from '@ownsolid/i18n';
 import { Button, Dialog, Kbd, Switch, usePreferences, useToast } from '@ownsolid/ui';
 import { useRouter } from '@tanstack/react-router';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
+import { moveThroughRows } from './row-keys.ts';
 
 /** A letter that runs an action. One without `to` has no page yet and says so. */
 export interface SingleKeyShortcut {
@@ -56,6 +57,11 @@ export function useSingleKeyShortcuts(
       if (!search) return;
       event.preventDefault();
       search.focus();
+      return;
+    }
+    // Lower-case `k` moves on a page with a list; Shift+K keeps the action named `K` in reach there.
+    if ((event.key === 'j' || event.key === 'k') && moveThroughRows(event.key === 'j' ? 1 : -1)) {
+      event.preventDefault();
       return;
     }
     const shortcut = shortcuts.find((item) => item.key === event.key.toLowerCase());
@@ -118,6 +124,18 @@ export function ShortcutsDialog({ shortcuts, onClose }: ShortcutsDialogProps) {
             {item.to ? null : ` (${t('shortcuts.notYet')})`}
           </Row>
         ))}
+        {shortcuts.length > 0 ? (
+          <Row
+            keys={
+              <span className="flex gap-1">
+                <Kbd>{'J'}</Kbd>
+                <Kbd>{'K'}</Kbd>
+              </span>
+            }
+          >
+            {t('shortcuts.rows')}
+          </Row>
+        ) : null}
       </dl>
       <div className="mt-4 flex items-start justify-between gap-4 border-t border-border pt-4">
         <div>

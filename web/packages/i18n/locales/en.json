@@ -878,6 +878,7 @@
   "shortcuts.install": "Install an application",
   "shortcuts.notReady": "{name} is not available yet.",
   "shortcuts.notYet": "not available yet",
+  "shortcuts.rows": "Move through a list, then Enter to open the row",
   "shortcuts.search": "Search this page",
   "shortcuts.switch": "Single-key shortcuts",
   "shortcuts.switch.detail": "Keys such as N and / act at once, unless you are typing. Turn them off if you use speech input or press keys by accident. Ctrl or ⌘ K keeps working.",
