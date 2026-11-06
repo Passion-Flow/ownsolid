@@ -214,7 +214,7 @@ func TestLongLinesFillABatchWithoutPassingTheBodyLimit(t *testing.T) {
 	c := &control{}
 	r, ctx := started(t, c)
 	for range 200 {
-		Info(ctx, "%s", strings.Repeat("中", 400))
+		Info(ctx, "%s", strings.Repeat("\u4e2d", 400))
 	}
 	r.Finish(ctx, false)
 	if entries := c.entries(); len(entries) != 200 {
