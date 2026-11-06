@@ -21,7 +21,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 
 ## P1 Enterprise release
 
-- [ ] UX-101 Console overview: quick actions, needs-attention list with next steps, setup checklist, fleet health (P1) - Catalog: F435
+- [x] UX-101 Console overview: quick actions, needs-attention list with next steps, setup checklist, fleet health (P1) - Catalog: F435 - Evidence: b8891d5; real Chromium on an offline install on `ownsolid-cpu` matched the tiles to the API, followed a real offline node to its drawer and opened the add-node and invite dialogs, three runs in a row, 2026-11-07
 - [ ] UX-102 Portal home: apps and assistants, conversations, my resources and usage (P1) - Catalog: F425, F426, F429
 - [x] UX-103 Shared list pattern: filter bar, saved views, column chooser, bulk selection with action bar, detail drawer (P1) - Evidence: 5c630cf; real Chromium saved, opened and deleted a view and read an email's details on an offline install on `ownsolid-cpu` upgraded in place to schema 39, 2026-11-06
 - [x] UX-104 Long-task pattern: step timeline, live log, tasks continue when the page is left (P1) - Evidence: 6d314d8, 853daf0; a real agent on an offline install on `ownsolid-cpu` ran fact collection from the console in real Chromium while the page was left; the console told how it ended and showed its steps and log after a reload, six runs in a row
