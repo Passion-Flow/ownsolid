@@ -23,6 +23,15 @@ type transferFixture struct {
 	failStop bool
 	chunks   int
 	upload   wire.Upload
+	// interrupt, when set, can fail a call by name, as a broken connection or control would.
+	interrupt func(string) error
+}
+
+func (d *transferFixture) interrupted(call string) error {
+	if d.interrupt == nil {
+		return nil
+	}
+	return d.interrupt(call)
 }
 
 func (d *transferFixture) TrainingFile(_ context.Context, _, _, kind string, asset datawire.Asset, destination string) error {
@@ -33,6 +42,9 @@ func (d *transferFixture) TrainingFile(_ context.Context, _, _, kind string, ass
 	return os.WriteFile(destination, body, 0600)
 }
 func (d *transferFixture) TrainingEvents(_ context.Context, _, _ string, _ wire.Command, events [][]byte) ([]wire.EventAcceptance, error) {
+	if e := d.interrupted("events"); e != nil {
+		return nil, e
+	}
 	for _, raw := range events {
 		var e wire.Event
 		json.Unmarshal(raw, &e)
@@ -41,13 +53,22 @@ func (d *transferFixture) TrainingEvents(_ context.Context, _, _ string, _ wire.
 	return nil, nil
 }
 func (d *transferFixture) BeginTrainingUpload(context.Context, string, string, string, []byte) (wire.Upload, error) {
+	if e := d.interrupted("begin"); e != nil {
+		return wire.Upload{}, e
+	}
 	return d.upload, nil
 }
 func (d *transferFixture) TrainingChunk(context.Context, string, string, string, wire.ChunkRequest, []byte) (wire.ChunkAcceptance, error) {
+	if e := d.interrupted("chunk"); e != nil {
+		return wire.ChunkAcceptance{}, e
+	}
 	d.chunks++
 	return wire.ChunkAcceptance{}, nil
 }
 func (d *transferFixture) FinishTrainingUpload(context.Context, string, string, wire.Upload) (wire.OutputAcceptance, error) {
+	if e := d.interrupted("finish"); e != nil {
+		return wire.OutputAcceptance{}, e
+	}
 	return wire.OutputAcceptance{}, nil
 }
 func (d *transferFixture) TrainingStop(_ context.Context, _, _ string, _ wire.Command, r wire.StopReceipt, _ []byte) (wire.StopAcceptance, error) {

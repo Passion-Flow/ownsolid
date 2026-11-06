@@ -26,13 +26,13 @@ func invalidateNodeWithin(ctx context.Context, q transaction.Executor, tenant, w
 		return fail("STORAGE_UNAVAILABLE")
 	}
 	statements := []string{
-		`UPDATE training_jobs SET state='recovery_required',error_code='TRAINING_NODE_UNAVAILABLE',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND current_node_id=$3 AND state IN ('preparing','running','cancelling')`,
+		`UPDATE training_jobs SET state='recovery_required',error_code='TRAINING_NODE_UNAVAILABLE',wait_code=NULL,revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND current_node_id=$3 AND state IN ('preparing','running','cancelling')`,
 		`UPDATE training_attempts SET state='recovery_required',error_code='TRAINING_NODE_UNAVAILABLE',updated_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND physical_stopped_at IS NULL AND state IN ('pending','preparing','running','stopping')`,
 		`UPDATE gpu_leases SET state='recovery_required',updated_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND training_job_id IS NOT NULL AND state='held'`,
 	}
 	if q.Dialect() == transaction.MySQL {
 		statements = []string{
-			`UPDATE training_jobs SET state='recovery_required',error_code='TRAINING_NODE_UNAVAILABLE',revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND current_node_id=? AND state IN ('preparing','running','cancelling')`,
+			`UPDATE training_jobs SET state='recovery_required',error_code='TRAINING_NODE_UNAVAILABLE',wait_code=NULL,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND current_node_id=? AND state IN ('preparing','running','cancelling')`,
 			`UPDATE training_attempts SET state='recovery_required',error_code='TRAINING_NODE_UNAVAILABLE',updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND physical_stopped_at IS NULL AND state IN ('pending','preparing','running','stopping')`,
 			`UPDATE gpu_leases SET state='recovery_required',updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND training_job_id IS NOT NULL AND state='held'`,
 		}

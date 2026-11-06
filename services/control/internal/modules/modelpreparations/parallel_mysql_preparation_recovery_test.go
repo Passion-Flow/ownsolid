@@ -129,9 +129,22 @@ func TestParallelMySQLPreparationRecovery(t *testing.T) {
 		}
 		parallelPreparationState(t, g, "failed", "released", true, 1)
 	})
-	t.Run("expired_acknowledged_lease_keeps_the_physical_owner", func(t *testing.T) {
+	t.Run("expired_acknowledged_lease_is_lost_contact_not_a_verdict", func(t *testing.T) {
 		g := deliveryCase(t)
 		g.exec(t, `UPDATE node_tasks SET acknowledged_attempt=1 WHERE id=$1`, ``, g.task)
+		worked, e := g.s.ReconcileNext(g.ctx)
+		if e != nil || worked {
+			t.Fatal(worked, e)
+		}
+		parallelPreparationState(t, g, "preparing", "held", false, 0)
+		var wait string
+		if e = g.f.Store.QueryRow(g.ctx, g.f.Statement(`SELECT wait_code FROM model_preparations WHERE id=$1`, ``, g.id)).Scan(&wait); e != nil || wait != "MODEL_PREPARATION_NODE_UNREACHABLE" {
+			t.Fatal("lost contact not shown", wait, e)
+		}
+	})
+	t.Run("acknowledged_lease_past_its_deadline_keeps_the_physical_owner", func(t *testing.T) {
+		g := deliveryCase(t)
+		g.exec(t, `UPDATE node_tasks SET acknowledged_attempt=1,deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1`, ``, g.task)
 		worked, e := g.s.ReconcileNext(g.ctx)
 		if e != nil || !worked {
 			t.Fatal(worked, e)

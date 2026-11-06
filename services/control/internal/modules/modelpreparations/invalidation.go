@@ -20,20 +20,20 @@ func invalidateNodeWithin(ctx context.Context, q transaction.Executor, tenant, w
 		return fail("STORAGE_UNAVAILABLE")
 	}
 	statements := []string{
-		`UPDATE model_preparations SET state='recovery_required',error_code='MODEL_PREPARATION_NODE_UNAVAILABLE',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND current_node_id=$3 AND state IN ('preparing','running','cancelling')`,
+		`UPDATE model_preparations SET state='recovery_required',error_code='MODEL_PREPARATION_NODE_UNAVAILABLE',wait_code=NULL,revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND current_node_id=$3 AND state IN ('preparing','running','cancelling')`,
 		`UPDATE model_preparation_attempts SET state='recovery_required',error_code='MODEL_PREPARATION_NODE_UNAVAILABLE',updated_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND physical_stopped_at IS NULL AND state IN ('pending','preparing','running','stopping')`,
 		`UPDATE gpu_leases SET state='recovery_required',updated_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND model_preparation_id IS NOT NULL AND state='held'`,
 	}
 	if q.Dialect() == transaction.MySQL {
 		statements = []string{
-			`UPDATE model_preparations SET state='recovery_required',error_code='MODEL_PREPARATION_NODE_UNAVAILABLE',revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND current_node_id=? AND state IN ('preparing','running','cancelling')`,
+			`UPDATE model_preparations SET state='recovery_required',error_code='MODEL_PREPARATION_NODE_UNAVAILABLE',wait_code=NULL,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND current_node_id=? AND state IN ('preparing','running','cancelling')`,
 			`UPDATE model_preparation_attempts SET state='recovery_required',error_code='MODEL_PREPARATION_NODE_UNAVAILABLE',updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND physical_stopped_at IS NULL AND state IN ('pending','preparing','running','stopping')`,
 			`UPDATE gpu_leases SET state='recovery_required',updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND model_preparation_id IS NOT NULL AND state='held'`,
 		}
 	}
 	if q.Dialect() == transaction.Dameng {
 		statements = []string{
-			`UPDATE "MODEL_PREPARATIONS" SET "STATE"='recovery_required',"ERROR_CODE"='MODEL_PREPARATION_NODE_UNAVAILABLE',"REVISION"="REVISION"+1,"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "CURRENT_NODE_ID"=? AND "STATE" IN ('preparing','running','cancelling')`,
+			`UPDATE "MODEL_PREPARATIONS" SET "STATE"='recovery_required',"ERROR_CODE"='MODEL_PREPARATION_NODE_UNAVAILABLE',"WAIT_CODE"=NULL,"REVISION"="REVISION"+1,"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "CURRENT_NODE_ID"=? AND "STATE" IN ('preparing','running','cancelling')`,
 			`UPDATE "MODEL_PREPARATION_ATTEMPTS" SET "STATE"='recovery_required',"ERROR_CODE"='MODEL_PREPARATION_NODE_UNAVAILABLE',"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "NODE_ID"=? AND "PHYSICAL_STOPPED_AT" IS NULL AND "STATE" IN ('pending','preparing','running','stopping')`,
 			`UPDATE "GPU_LEASES" SET "STATE"='recovery_required',"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "NODE_ID"=? AND "MODEL_PREPARATION_ID" IS NOT NULL AND "STATE"='held'`,
 		}

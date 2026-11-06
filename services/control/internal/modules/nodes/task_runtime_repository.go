@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"math"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -161,14 +162,23 @@ func (s *Service) taskIdleWithin(ctx context.Context, q transaction.Executor, n 
 	return nil
 }
 
-// Select and mutate under the already locked node; this also works without UPDATE RETURNING.
+// expireTasksWithin ends what a claim proves over: the agent claims only when it holds no
+// task, so a claim also fails a task whose lease expired on its last attempt.
 func (s *Service) expireTasksWithin(ctx context.Context, q transaction.Executor, n Node, request string) error {
+	return s.expireTasksBeyondWithin(ctx, q, n, request, s.Identity.Config.Policy().Nodes.MaximumTaskAttempts)
+}
+
+// noAttemptLimit keeps the sweep to task deadlines. Without a claim, an expired lease says
+// nothing: its agent may be running the task through an outage (ADR 0032).
+const noAttemptLimit = math.MaxInt32
+
+// Select and mutate under the already locked node; this also works without UPDATE RETURNING.
+func (s *Service) expireTasksBeyondWithin(ctx context.Context, q transaction.Executor, n Node, request string, max int) error {
 	// An expired lease that was never acknowledged was never delivered: release it
 	// without spending an attempt before failing tasks that ran out of attempts.
 	if e := s.releaseUnacknowledgedWithin(ctx, q, n, request, true); e != nil {
 		return e
 	}
-	max := s.Identity.Config.Policy().Nodes.MaximumTaskAttempts
 	rows, e := q.Query(ctx, nodeSQL(q, `SELECT id::text,deadline_at<=clock_timestamp() FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND ((state IN ('pending','running') AND deadline_at<=clock_timestamp()) OR (state='running' AND lease_expires_at<=clock_timestamp() AND attempt>=$4)) ORDER BY id FOR UPDATE`, `SELECT id,deadline_at<=UTC_TIMESTAMP(6) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND ((state IN ('pending','running') AND deadline_at<=UTC_TIMESTAMP(6)) OR (state='running' AND lease_expires_at<=UTC_TIMESTAMP(6) AND attempt>=?)) ORDER BY id FOR UPDATE`, `SELECT id,CASE WHEN deadline_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) THEN 1 ELSE 0 END FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND ((state IN ('pending','running') AND deadline_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))) OR (state='running' AND lease_expires_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND attempt>=?)) ORDER BY id FOR UPDATE`, n.TenantID, n.WorkspaceID, n.ID, max))
 	if e != nil {
 		return e

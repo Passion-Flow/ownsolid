@@ -28,6 +28,24 @@ type undeliveredReceipt struct {
 	ClaimAttempt  int        `json:"claim_attempt"`
 }
 
+// nodeUnreachableCode is the wait code of a running preparation whose agent control has not
+// heard from within the lease.
+const nodeUnreachableCode = "MODEL_PREPARATION_NODE_UNREACHABLE"
+
+// markUnreachable records a change in whether control can hear the preparation's agent.
+func markUnreachable(ctx context.Context, tx transaction.Executor, j Preparation, unreachable bool) error {
+	marked := j.WaitCode != nil && *j.WaitCode == nodeUnreachableCode
+	if unreachable == marked || j.State != "preparing" && j.State != "running" {
+		return nil
+	}
+	var code any
+	if unreachable {
+		code = nodeUnreachableCode
+	}
+	_, e := tx.Exec(ctx, preparationSelectedRuntimeSQL(tx, preparationDM(`UPDATE "MODEL_PREPARATIONS" SET "WAIT_CODE"=?,"REVISION"="REVISION"+1,"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "ID"=?`), "UPDATE model_preparations SET wait_code=$2,revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", `UPDATE model_preparations SET wait_code=?,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?`, []any{j.ID, code}, []any{code, j.ID}))
+	return e
+}
+
 // ReconcileNext can release only a transactionally proven never-delivered command. Delivered uncertainty always retains hardware ownership.
 func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 	store, repositoryError := s.runtimeRepository()
@@ -77,7 +95,8 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 			return e
 		}
 		if valid && n.Status == "active" && j.CancelRequestedAt == nil && !t.expired && (t.state == "pending" || t.state == "running") {
-			return nil
+			// Lost contact is shown, not judged: the attempt keeps its GPU and may return (ADR 0032).
+			return markUnreachable(ctx, tx, j, t.unreachable)
 		}
 		var gpuNode, gpuUUID, gpuState string
 		var revision int
@@ -124,7 +143,7 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 		if j.State == "recovery_required" && gpuState == "recovery_required" {
 			return nil
 		}
-		if _, e = tx.Exec(ctx, preparationSelectedRuntimeSQL(tx, preparationDM(`UPDATE "MODEL_PREPARATIONS" SET "STATE"='recovery_required',"ERROR_CODE"=?,"REVISION"="REVISION"+1,"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "ID"=?`), "UPDATE model_preparations SET state='recovery_required',error_code=$2,revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", `UPDATE model_preparations SET state='recovery_required',error_code=?,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?`, []any{j.ID, code}, []any{code, j.ID})); e != nil {
+		if _, e = tx.Exec(ctx, preparationSelectedRuntimeSQL(tx, preparationDM(`UPDATE "MODEL_PREPARATIONS" SET "STATE"='recovery_required',"ERROR_CODE"=?,"WAIT_CODE"=NULL,"REVISION"="REVISION"+1,"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "ID"=?`), "UPDATE model_preparations SET state='recovery_required',error_code=$2,wait_code=NULL,revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", `UPDATE model_preparations SET state='recovery_required',error_code=?,wait_code=NULL,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?`, []any{j.ID, code}, []any{code, j.ID})); e != nil {
 			return e
 		}
 		if _, e = tx.Exec(ctx, preparationSelectedRuntimeSQL(tx, preparationDM(`UPDATE "MODEL_PREPARATION_ATTEMPTS" SET "STATE"='recovery_required',"ERROR_CODE"=?,"UPDATED_AT"=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE "ID"=?`), "UPDATE model_preparation_attempts SET state='recovery_required',error_code=$2,updated_at=clock_timestamp() WHERE id=$1", `UPDATE model_preparation_attempts SET state='recovery_required',error_code=?,updated_at=UTC_TIMESTAMP(6) WHERE id=?`, []any{command.AttemptID, code}, []any{code, command.AttemptID})); e != nil {

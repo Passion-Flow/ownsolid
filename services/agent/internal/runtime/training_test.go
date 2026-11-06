@@ -63,10 +63,12 @@ func (m *guardTrainingFixture) AcceptStop(wire.StopReceipt) error {
 	return nil
 }
 
-func TestTrainingRenewalGuardPreservesCleanupAfterDeniedExpiredAndBlockedTransfers(t *testing.T) {
-	for _, mode := range []string{"denied", "expires", "blocked", "stop_unavailable"} {
+func TestTrainingRenewalGuardPreservesCleanupAfterRefusalsAndBlockedTransfers(t *testing.T) {
+	for _, mode := range []string{"denied", "refused_while_running", "blocked", "stop_unavailable"} {
 		t.Run(mode, func(t *testing.T) {
+			fastRenewal(t)
 			manager := &guardTrainingFixture{}
+			var renewals atomic.Int64
 			lease := runtimeTrainingLease()
 			node := lease.Training.Scope.TenantID
 			var stops atomic.Int64
@@ -79,7 +81,7 @@ func TestTrainingRenewalGuardPreservesCleanupAfterDeniedExpiredAndBlockedTransfe
 				w.Header().Set("Content-Type", "application/json")
 				switch {
 				case strings.HasSuffix(r.URL.Path, "/renewals"):
-					if mode == "denied" {
+					if mode == "denied" || renewals.Add(1) > 3 {
 						w.WriteHeader(409)
 						json.NewEncoder(w).Encode(map[string]any{"code": "AGENT_LEASE_STALE"})
 						return

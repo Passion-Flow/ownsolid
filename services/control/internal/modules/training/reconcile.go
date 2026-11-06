@@ -27,6 +27,24 @@ type undeliveredReceipt struct {
 	ClaimAttempt  int        `json:"claim_attempt"`
 }
 
+// nodeUnreachableCode is the wait code of a running job whose agent control has not heard
+// from within the lease.
+const nodeUnreachableCode = "TRAINING_NODE_UNREACHABLE"
+
+// markUnreachable records a change in whether control can hear the job's agent.
+func markUnreachable(ctx context.Context, tx transaction.Executor, j Job, unreachable bool) error {
+	marked := j.WaitCode != nil && *j.WaitCode == nodeUnreachableCode
+	if unreachable == marked || j.State != "preparing" && j.State != "running" {
+		return nil
+	}
+	var code any
+	if unreachable {
+		code = nodeUnreachableCode
+	}
+	_, e := tx.Exec(ctx, transferStatement(tx, "UPDATE training_jobs SET wait_code=$2,revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_jobs SET wait_code=?,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{j.ID, code}, []any{code, j.ID}))
+	return e
+}
+
 // ReconcileNext can release only a transactionally proven never-delivered command. Delivered uncertainty always retains hardware ownership.
 func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 	var c candidate
@@ -78,15 +96,16 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 		if e = bindFrozenCommand(j, command); e != nil {
 			return e
 		}
-		var expired bool
-		if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT deadline_at<=clock_timestamp() OR state='running' AND COALESCE(lease_expires_at<=clock_timestamp(),true) FROM node_tasks WHERE id=$1", "SELECT deadline_at<=UTC_TIMESTAMP(6) OR state='running' AND COALESCE(lease_expires_at<=UTC_TIMESTAMP(6),true) FROM node_tasks WHERE id=?", []any{task}, []any{task})).Scan(&expired); e != nil {
+		// Lost contact is shown, not judged: the attempt keeps its GPU and may return (ADR 0032).
+		var expired, unreachable bool
+		if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT deadline_at<=clock_timestamp() OR state='running' AND lease_expires_at IS NULL,state='running' AND COALESCE(lease_expires_at<=clock_timestamp(),false) FROM node_tasks WHERE id=$1", "SELECT deadline_at<=UTC_TIMESTAMP(6) OR state='running' AND lease_expires_at IS NULL,state='running' AND COALESCE(lease_expires_at<=UTC_TIMESTAMP(6),false) FROM node_tasks WHERE id=?", []any{task}, []any{task})).Scan(&expired, &unreachable); e != nil {
 			return e
 		}
 		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_jobs SET next_dispatch_at=clock_timestamp()+make_interval(secs=>$2::double precision/1000) WHERE id=$1", "UPDATE training_jobs SET next_dispatch_at=TIMESTAMPADD(MICROSECOND,?*1000,UTC_TIMESTAMP(6)) WHERE id=?", []any{j.ID, s.policy().PollMilliseconds}, []any{s.policy().PollMilliseconds, j.ID})); e != nil {
 			return e
 		}
 		if valid && n.Status == "active" && j.CancelRequestedAt == nil && !expired && (t.State == "pending" || t.State == "running") {
-			return nil
+			return markUnreachable(ctx, tx, j, unreachable)
 		}
 		var gpuNode, gpuUUID, gpuState string
 		var revision int
@@ -133,7 +152,7 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 		if j.State == "recovery_required" && gpuState == "recovery_required" {
 			return nil
 		}
-		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_jobs SET state='recovery_required',error_code=$2,revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_jobs SET state='recovery_required',error_code=?,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{j.ID, code}, []any{code, j.ID})); e != nil {
+		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_jobs SET state='recovery_required',error_code=$2,wait_code=NULL,revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_jobs SET state='recovery_required',error_code=?,wait_code=NULL,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{j.ID, code}, []any{code, j.ID})); e != nil {
 			return e
 		}
 		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_attempts SET state='recovery_required',error_code=$2,updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_attempts SET state='recovery_required',error_code=?,updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{command.AttemptID, code}, []any{code, command.AttemptID})); e != nil {

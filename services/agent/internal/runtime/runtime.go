@@ -270,8 +270,10 @@ func sessionCycle(ctx context.Context, c Config, connection *client.Client, sess
 	return claimAndRun(ctx, c, connection, session, identity, f, m, im, tm, pm, rm)
 }
 
-// recoverLocalWork reconciles interrupted work from the local journals. It runs at the
-// start of every cycle and for a full resync.
+// recoverLocalWork reconciles interrupted work from the local journals: an attempt an
+// earlier process left running is adopted and followed to its end, and anything else is
+// closed. It runs at the start of every cycle and for a full resync, and is the first thing
+// a new process does, so startup itself never needs control.
 func recoverLocalWork(ctx context.Context, c Config, connection *client.Client, identity state.Identity, m componentLifecycle, tm *training.Manager, pm *modelpreparations.Manager) error {
 	// An expired lease or cancelled maintenance can leave a durable transition
 	// in this process. Reconcile it before publishing state or claiming more work.
@@ -279,6 +281,9 @@ func recoverLocalWork(ctx context.Context, c Config, connection *client.Client, 
 		return e
 	}
 	if pm != nil {
+		if e := resumePreparation(ctx, connection, identity.NodeID, pm, c.Preparation.OutputTimeoutSeconds()); e != nil {
+			return e
+		}
 		bounded, stop := context.WithTimeout(ctx, settings.Seconds(c.Policy().RemoveSeconds))
 		e := pm.Recover(bounded, identity.NodeID, connection)
 		stop()
@@ -287,6 +292,9 @@ func recoverLocalWork(ctx context.Context, c Config, connection *client.Client, 
 		}
 	}
 	if tm != nil {
+		if e := resumeTraining(ctx, connection, identity.NodeID, tm); e != nil {
+			return e
+		}
 		bounded, stop := context.WithTimeout(ctx, settings.Seconds(c.Policy().RemoveSeconds))
 		e := tm.Recover(bounded, identity.NodeID, connection)
 		stop()
@@ -461,10 +469,7 @@ func Run(ctx context.Context, c Config) error {
 		}
 		defer tm.Close()
 		bounded, stop := context.WithTimeout(ctx, settings.Seconds(c.Policy().RemoveSeconds))
-		e = tm.Recover(bounded, identity.NodeID, connection)
-		if e == nil {
-			e = tm.CheckInstallation(bounded)
-		}
+		e = tm.CheckInstallation(bounded)
 		stop()
 		if e != nil {
 			return e
@@ -478,10 +483,7 @@ func Run(ctx context.Context, c Config) error {
 		}
 		defer pm.Close()
 		bounded, stop := context.WithTimeout(ctx, settings.Seconds(c.Policy().RemoveSeconds))
-		e = pm.Recover(bounded, identity.NodeID, connection)
-		if e == nil {
-			e = pm.CheckInstallation(bounded)
-		}
+		e = pm.CheckInstallation(bounded)
 		stop()
 		if e != nil {
 			return e
@@ -575,31 +577,29 @@ func executeInference(ctx context.Context, connection *client.Client, base, node
 }
 
 func fencedExecution(ctx context.Context, connection *client.Client, base string, lease wire.Lease, timeout time.Duration, execute func(context.Context, string) (wire.Result, error)) error {
-	bounded, cancel := context.WithTimeout(ctx, timeout)
+	limited, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+	bounded, revoke := context.WithCancelCause(limited)
+	defer revoke(nil)
 	taskBase := base + "/tasks/" + lease.TaskID
 	renew := leaseRenewal(connection, taskBase, lease)
-	expiry, e := renew(bounded)
-	if e != nil {
+	if e := renew(bounded); e != nil {
 		return e
 	}
 	stopRenewal := make(chan struct{})
-	done, renewed := renewWhileRunning(bounded, cancel, renew, lease.TaskID, expiry, stopRenewal)
+	done, renewed := renewWhileRunning(bounded, revoke, renew, lease.TaskID, stopRenewal)
 	reporter := taskReporter(connection, taskBase, lease)
 	reporting := progress.With(bounded, reporter)
 	reporter.Start(reporting)
 	result, executionError := execute(reporting, taskBase)
 	// The lease proves the last report, so it goes before renewal stops.
 	reporter.Finish(ctx, executionError != nil || result.Outcome != "success")
-	if executionError != nil {
-		close(stopRenewal)
-		<-done
-		return executionError
-	}
 	// Keep renewal active until effects finish, then join it before submitting the fenced result.
 	close(stopRenewal)
 	<-done
-	cancel()
+	if executionError != nil {
+		return executionError
+	}
 	select {
 	case renewalError := <-renewed:
 		return renewalError
@@ -608,22 +608,21 @@ func fencedExecution(ctx context.Context, connection *client.Client, base string
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-	var completed struct {
-		State string `json:"state"`
-	}
-	return connection.Post(ctx, taskBase+"/results", result, &completed)
+	return deliverResult(ctx, timeout, func(attempt context.Context) error {
+		var completed struct {
+			State string `json:"state"`
+		}
+		return connection.Post(attempt, taskBase+"/results", result, &completed)
+	})
 }
 
-// Use a monotonic request-start duration, never the agent's wall clock, to bound effects.
-func renewalDeadline(started time.Time, lease wire.RenewedLease) (time.Time, error) {
+// validRenewal checks control's answer to a renewal. A lease with no time left has reached
+// its task deadline, and the next renewal would be refused.
+func validRenewal(lease wire.RenewedLease) error {
 	if lease.LeaseExpiresAt.IsZero() || lease.ValidForMilliseconds < 1 || lease.ValidForMilliseconds > 30000 {
-		return time.Time{}, errors.New("AGENT_LEASE_STALE")
+		return errors.New("AGENT_LEASE_STALE")
 	}
-	deadline := started.Add(time.Duration(lease.ValidForMilliseconds) * time.Millisecond)
-	if !deadline.After(time.Now()) {
-		return time.Time{}, errors.New("AGENT_LEASE_STALE")
-	}
-	return deadline, nil
+	return nil
 }
 
 func (c Config) Policy() settings.Policy { return settings.Resolve(c.Runtime) }

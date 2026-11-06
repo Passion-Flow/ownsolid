@@ -30,7 +30,7 @@ func TestExplicitLifecycleProfileRetainsActualTrainingAdmissionClaimRenewAndRest
 	if _, e = f.s.Nodes.Renew(ctx, enrolled.NodeID, enrolled.Credential, lease.TaskID, lease.LeaseToken); e != nil {
 		t.Fatal("actual delegated training renewal", e)
 	}
-	if _, e = f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", lease.TaskID); e != nil {
+	if _, e = f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second',deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1", lease.TaskID); e != nil {
 		t.Fatal(e)
 	}
 	receipt := stopFixture(t, f, lease)

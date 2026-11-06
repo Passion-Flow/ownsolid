@@ -60,7 +60,7 @@ func TestActualTrainingDeliveredExpiryRequiresStopAndUndeliveredAuditFailureRoll
 				if e != nil || worked {
 					t.Fatal("healthy attempt changed", e)
 				}
-				if _, e = f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID); e != nil {
+				if _, e = f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second',deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID); e != nil {
 					t.Fatal(e)
 				}
 				if _, e = f.s.DB.Exec(ctx, "UPDATE training_jobs SET next_dispatch_at=clock_timestamp() WHERE id=$1", j.ID); e != nil {
