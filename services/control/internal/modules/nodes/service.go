@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"sync/atomic"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -15,6 +15,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/liveness"
 )
 
 type Service struct {
@@ -32,6 +33,13 @@ type Service struct {
 	resync resyncBucket
 	// pacing caches what heartbeat replies tell agents (ADR 0013).
 	pacing pacingCache
+	// sightings holds liveness in memory once the worker runs (ADR 0022). Until then every
+	// heartbeat writes synchronously, because nothing would persist what the table holds.
+	sightings atomic.Pointer[liveness.Table[heartbeatReport]]
+	// livenessCounters counts what the liveness path did, for the metrics store.
+	livenessCounters livenessCounters
+	// LivenessReplica shares sightings with other gateways; nil with a single gateway.
+	LivenessReplica liveness.Replica
 }
 
 // TaskEventRecorder borrows the actual node-task transaction. It must not commit
@@ -65,12 +73,10 @@ func mapped(e error) error {
 	return e
 }
 
-const nodeFieldsTemplate = `n.id::text,n.tenant_id::text,n.workspace_id::text,n.name,n.status,n.version,n.protocol_version,n.facts,n.last_heartbeat_at,n.created_at,n.updated_at,CASE WHEN n.last_heartbeat_at>=clock_timestamp()-make_interval(secs=>%d) THEN 'online' WHEN n.last_heartbeat_at>=clock_timestamp()-make_interval(secs=>%d) THEN 'unknown' ELSE 'offline' END,n.execution_profile,n.capabilities`
-
 func scanNode(row pgx.Row) (Node, error) {
 	var n Node
 	var facts, capabilities []byte
-	e := row.Scan(&n.ID, &n.TenantID, &n.WorkspaceID, &n.Name, &n.Status, &n.Version, &n.ProtocolVersion, &facts, &n.LastHeartbeatAt, &n.CreatedAt, &n.UpdatedAt, &n.Connectivity, &n.ExecutionProfile, &capabilities, &n.SiteID, &n.CellID)
+	e := row.Scan(&n.ID, &n.TenantID, &n.WorkspaceID, &n.Name, &n.Status, &n.Version, &n.ProtocolVersion, &facts, &n.LastHeartbeatAt, &n.CreatedAt, &n.UpdatedAt, &n.Connectivity, &n.ExecutionProfile, &capabilities, &n.SiteID, &n.CellID, &n.ConnectivityChangedAt)
 	if errors.Is(e, pgx.ErrNoRows) {
 		return n, fail("RESOURCE_NOT_FOUND")
 	}
@@ -79,17 +85,12 @@ func scanNode(row pgx.Row) (Node, error) {
 	}
 	if e == nil {
 		n.LastHeartbeatAt, n.CreatedAt, n.UpdatedAt = n.LastHeartbeatAt.UTC(), n.CreatedAt.UTC(), n.UpdatedAt.UTC()
+		if n.ConnectivityChangedAt != nil {
+			changed := n.ConnectivityChangedAt.UTC()
+			n.ConnectivityChangedAt = &changed
+		}
 	}
 	return n, e
-}
-func (s *Service) lookup(ctx context.Context, q interface {
-	QueryRow(context.Context, string, ...any) pgx.Row
-}, id string, lock bool) (Node, error) {
-	sql := "SELECT " + s.nodeFields() + " FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id JOIN tenants t ON t.id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND t.status='active' AND n.id=$1"
-	if lock {
-		sql += " FOR UPDATE OF n"
-	}
-	return scanNode(q.QueryRow(ctx, sql, id))
 }
 func (s *Service) audit(ctx context.Context, tx pgx.Tx, actor, audience, tenant, workspace, action, target, id, reason, request string) error {
 	_, e := tx.Exec(ctx, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES($1,clock_timestamp(),NULLIF($2,'')::uuid,$3,$4,$5,$6,'success',$7,$8,NULLIF($9,''),$10)`, uuid.NewString(), actor, tenant, workspace, audience, action, target, id, reason, request)
@@ -132,8 +133,4 @@ func scanJoin(row pgx.Row) (JoinToken, error) {
 		v.CreatedAt, v.ExpiresAt = v.CreatedAt.UTC(), v.ExpiresAt.UTC()
 	}
 	return v, e
-}
-func (s *Service) nodeFields() string {
-	p := s.Identity.Config.Policy().Nodes
-	return fmt.Sprintf(nodeFieldsTemplate, p.OnlineSeconds, p.OfflineSeconds)
 }

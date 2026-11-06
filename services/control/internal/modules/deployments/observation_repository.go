@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
@@ -65,6 +66,46 @@ func (s *Service) ObserveInferenceWithin(ctx context.Context, q transaction.Exec
 	_, e = q.Exec(ctx, statement)
 	return e
 }
+
+// RecordInferenceSightingsWithin writes the latest reports of heartbeats whose state did not
+// change (ADR 0022). The received and observed times guard a newer synchronous write, and the
+// revision guard keeps a report from reaching a deployment that moved on.
+func (s *Service) RecordInferenceSightingsWithin(ctx context.Context, q transaction.Executor, batch []nodes.InferenceSighting) error {
+	if e := s.runtimeExecutor(ctx, q); e != nil {
+		return e
+	}
+	if q.Dialect() != transaction.PostgreSQL {
+		return fail("STORAGE_UNAVAILABLE")
+	}
+	ids, times, bodies := make([]string, len(batch)), make([]time.Time, len(batch)), make([]string, len(batch))
+	var deployments, deploymentNodes, states, deploymentBodies []string
+	var revisions []int64
+	var deploymentTimes []time.Time
+	for i, v := range batch {
+		body, e := json.Marshal(v.Observation)
+		if e != nil {
+			return fail("VALIDATION_FAILED")
+		}
+		ids[i], times[i], bodies[i] = v.NodeID, v.At, string(body)
+		if d := v.Observation.Deployment; d != nil {
+			raw, e := json.Marshal(d)
+			if e != nil {
+				return fail("VALIDATION_FAILED")
+			}
+			deployments, deploymentNodes, states, deploymentBodies = append(deployments, d.DeploymentID), append(deploymentNodes, v.NodeID), append(states, d.State), append(deploymentBodies, string(raw))
+			revisions, deploymentTimes = append(revisions, d.Revision), append(deploymentTimes, v.At)
+		}
+	}
+	if _, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `WITH t AS (SELECT i.node_id,v.at,v.body FROM inference_nodes i JOIN unnest($1::text[],$2::timestamptz[],$3::text[]) AS v(node,at,body) ON i.node_id=v.node::uuid WHERE i.received_at<v.at ORDER BY i.node_id FOR NO KEY UPDATE OF i SKIP LOCKED) UPDATE inference_nodes i SET observation=t.body::jsonb,received_at=t.at FROM t WHERE i.node_id=t.node_id`, ids, times, bodies)); e != nil {
+		return e
+	}
+	if len(deployments) == 0 {
+		return nil
+	}
+	_, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `WITH t AS (SELECT d.id,v.state,v.body,v.at FROM deployments d JOIN unnest($1::text[],$2::text[],$3::bigint[],$4::text[],$5::text[],$6::timestamptz[]) AS v(id,node,revision,state,body,at) ON d.id=v.id::uuid AND d.node_id=v.node::uuid AND d.revision=v.revision WHERE d.removed_at IS NULL AND (d.observed_at IS NULL OR d.observed_at<v.at) ORDER BY d.id FOR NO KEY UPDATE OF d SKIP LOCKED) UPDATE deployments d SET observed_state=t.state,observation=t.body::jsonb,observed_at=t.at,updated_at=t.at FROM t WHERE d.id=t.id`, deployments, deploymentNodes, revisions, states, deploymentBodies, deploymentTimes))
+	return e
+}
+
 func (s *Service) RecordInferenceResultWithin(ctx context.Context, q transaction.Executor, n nodes.Node, t nodes.Task, result wire.Result) error {
 	if e := s.runtimeExecutor(ctx, q); e != nil {
 		return e

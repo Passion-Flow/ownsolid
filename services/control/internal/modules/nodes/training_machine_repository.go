@@ -156,7 +156,7 @@ func (s *Service) RenewTrainingWithin(ctx context.Context, q transaction.Executo
 	if e = q.QueryRow(ctx, nodeSQL(q, "SELECT lease_expires_at,GREATEST(0,floor(extract(epoch FROM (lease_expires_at-clock_timestamp()))*1000))::integer FROM node_tasks WHERE id=$1", "SELECT lease_expires_at,GREATEST(0,TIMESTAMPDIFF(MICROSECOND,UTC_TIMESTAMP(6),lease_expires_at) DIV 1000) FROM node_tasks WHERE id=?", `SELECT lease_expires_at,CAST(GREATEST(0,FLOOR(BIGDATEDIFF(MICROSECOND,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),lease_expires_at) / 1000)) AS BIGINT) FROM node_tasks WHERE id=?`, id)).Scan(&out.LeaseExpiresAt, &out.ValidForMilliseconds); e != nil {
 		return wire.RenewedLease{}, zero, e
 	}
-	if _, e = q.Exec(ctx, nodeSQL(q, "UPDATE managed_nodes SET last_heartbeat_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1", "UPDATE managed_nodes SET last_heartbeat_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE id=?", `UPDATE managed_nodes SET last_heartbeat_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE id=?`, n.ID)); e != nil {
+	if e = s.noteContactWithin(ctx, q, n.ID); e != nil {
 		return wire.RenewedLease{}, zero, e
 	}
 	out.LeaseExpiresAt = out.LeaseExpiresAt.UTC()

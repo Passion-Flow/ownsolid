@@ -11,6 +11,8 @@ const (
 	nodeMaximumTaskAttemptsEnvironment = "PROJECT_ONE_NODE_MAXIMUM_TASK_ATTEMPTS"
 	nodeTaskSweepBatchEnvironment      = "PROJECT_ONE_NODE_TASK_SWEEP_BATCH"
 	nodeTaskEnvironment                = "PROJECT_ONE_NODE_TASK_SECONDS"
+	nodeLivenessFlushEnvironment       = "PROJECT_ONE_NODE_LIVENESS_FLUSH_SECONDS"
+	nodeStateRefreshEnvironment        = "PROJECT_ONE_NODE_STATE_REFRESH_SECONDS"
 	nodeReconcileEnvironment           = "PROJECT_ONE_NODE_RECONCILE_SECONDS"
 	nodeReconcileTimeoutEnvironment    = "PROJECT_ONE_NODE_RECONCILE_TIMEOUT_SECONDS"
 	uiPageEnvironment                  = "PROJECT_ONE_UI_PAGE_SIZE"
@@ -42,6 +44,10 @@ func (p *RuntimePolicy) nodeEnvironmentField(key string) *int {
 		return &p.Nodes.TaskSweepBatch
 	case nodeTaskEnvironment:
 		return &p.Nodes.TaskSeconds
+	case nodeLivenessFlushEnvironment:
+		return &p.Nodes.LivenessFlushSeconds
+	case nodeStateRefreshEnvironment:
+		return &p.Nodes.StateRefreshSeconds
 	case nodeReconcileEnvironment:
 		return &p.Nodes.ReconcileSeconds
 	case nodeReconcileTimeoutEnvironment:

@@ -991,9 +991,11 @@ export interface components {
             version: number;
             protocol_version: string;
             facts: components["schemas"]["Facts"];
+            /** @description When control last recorded a change of connectivity. History only: connectivity is derived from last_heartbeat_at and may be ahead of it. Null on MySQL and Dameng. */
+            connectivity_changed_at: string | null;
             /**
              * Format: date-time
-             * @description Last authenticated heartbeat or current task lease renewal; metric/fact observation timestamps remain independent.
+             * @description Last authenticated heartbeat or current task lease renewal, written in batches and so up to the configured flush interval behind them; metric/fact observation timestamps remain independent.
              */
             last_heartbeat_at: string;
             /** Format: date-time */

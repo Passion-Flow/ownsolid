@@ -77,8 +77,8 @@ func (s *Service) currentPacing(ctx context.Context) wire.Pacing {
 // effectivePacing guards against an online window lowered after the row was written: such
 // a row would mark healthy nodes offline and fence their inference.
 func (s *Service) effectivePacing(p wire.Pacing) wire.Pacing {
-	if p.Validate() != nil || !p.FitsOnlineWindow(s.Identity.Config.Policy().Nodes.OnlineSeconds) {
-		slog.Error("agent_pacing_outside_online_window", "heartbeat_seconds", p.HeartbeatSeconds, "jitter_percent", p.JitterPercent, "online_seconds", s.Identity.Config.Policy().Nodes.OnlineSeconds)
+	if p.Validate() != nil || !p.FitsOnlineWindow(s.Identity.Config.Policy().Nodes.PacingWindowSeconds()) {
+		slog.Error("agent_pacing_outside_online_window", "heartbeat_seconds", p.HeartbeatSeconds, "jitter_percent", p.JitterPercent, "window_seconds", s.Identity.Config.Policy().Nodes.PacingWindowSeconds())
 		return wire.DefaultPacing()
 	}
 	return p
@@ -141,7 +141,7 @@ func (s *Service) UpdateAgentPacing(ctx context.Context, a identity.Auth, next w
 	if ctx == nil || !nodeID(request) || !workspaces.ValidVersion(version) || !workspaces.ValidReason(reason) || next.Validate() != nil {
 		return AgentPacing{}, fail("VALIDATION_FAILED")
 	}
-	if !next.FitsOnlineWindow(s.Identity.Config.Policy().Nodes.OnlineSeconds) {
+	if !next.FitsOnlineWindow(s.Identity.Config.Policy().Nodes.PacingWindowSeconds()) {
 		return AgentPacing{}, fail("AGENT_PACING_EXCEEDS_ONLINE_WINDOW")
 	}
 	var out AgentPacing

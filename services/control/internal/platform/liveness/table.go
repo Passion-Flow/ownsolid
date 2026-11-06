@@ -51,12 +51,15 @@ func (t Thresholds) at(seen, now time.Time) Connectivity {
 	}
 }
 
-// Sighting says a node was heard at a time, with the latest report it sent since the last
-// drain. Report is the zero value when the node sent none.
+// Sighting says a node was heard at a time. HasReport says Report is the latest report it
+// sent since the last drain, received at ReportAt; a later contact that carried no report
+// can move At past ReportAt, and a report is only ever as fresh as ReportAt.
 type Sighting[R any] struct {
-	Node   string
-	At     time.Time
-	Report R
+	Node      string
+	At        time.Time
+	HasReport bool
+	Report    R
+	ReportAt  time.Time
 }
 
 // Transition says a node's connectivity differs from the one last recorded.
@@ -69,12 +72,29 @@ type Transition struct {
 const shardCount = 64
 
 type entry[R any] struct {
-	seen     time.Time
-	report   R
-	dirty    bool
-	recorded Connectivity
-	digest   [32]byte
-	written  time.Time
+	seen      time.Time
+	dirty     bool
+	hasReport bool
+	report    R
+	reportAt  time.Time
+	recorded  Connectivity
+	digest    [32]byte
+	written   time.Time
+}
+
+// takeReport holds report as the latest received at at.
+func (e *entry[R]) takeReport(report R, at time.Time) {
+	e.hasReport, e.report, e.reportAt = true, report, at
+}
+
+// dropReport forgets the pending report, because a state at least as recent as at was
+// written durably and an older report must not overwrite it.
+func (e *entry[R]) dropReport(at time.Time) {
+	var none R
+	e.hasReport, e.report = false, none
+	if at.After(e.reportAt) {
+		e.reportAt = at
+	}
 }
 
 type shard[R any] struct {
@@ -133,7 +153,17 @@ func (t *Table[R]) Observe(node string, at time.Time, report R) {
 		if at.Before(e.seen) {
 			return
 		}
-		e.seen, e.report, e.dirty = at, report, true
+		e.seen, e.dirty = at, true
+		e.takeReport(report, at)
+	})
+}
+
+// Touch records a contact that carried no report, keeping any report still pending.
+func (t *Table[R]) Touch(node string, at time.Time) {
+	t.locked(node, true, func(e *entry[R]) {
+		if !at.Before(e.seen) {
+			e.seen, e.dirty = at, true
+		}
 	})
 }
 
@@ -185,11 +215,19 @@ func (t *Table[R]) Size() int {
 	return total
 }
 
-// Accept records that the state with this digest was written durably at at. Until
-// Unchanged stops holding, later heartbeats with the same digest need no synchronous write.
-// The caller observes the node first: a node never heard has no last-seen time to judge.
-func (t *Table[R]) Accept(node string, digest [32]byte, at time.Time) {
-	t.locked(node, false, func(e *entry[R]) { e.digest, e.written = digest, at })
+// Accept records a synchronous write: the node was heard at at, its state with this digest
+// is durable, and written is the time Unchanged measures its age from. A pending older
+// report is dropped so that it cannot overwrite that state.
+func (t *Table[R]) Accept(node string, digest [32]byte, at, written time.Time) {
+	t.locked(node, true, func(e *entry[R]) {
+		e.digest, e.written = digest, written
+		if at.After(e.seen) {
+			e.seen = at
+		}
+		if !at.Before(e.reportAt) {
+			e.dropReport(at)
+		}
+	})
 }
 
 // Unchanged reports whether digest is the state last written for node, no longer ago than
@@ -215,8 +253,8 @@ func (t *Table[R]) Drain(limit int) []Sighting[R] {
 				break
 			}
 			if e.dirty {
-				out = append(out, Sighting[R]{Node: node, At: e.seen, Report: e.report})
-				e.dirty, e.report = false, none
+				out = append(out, Sighting[R]{Node: node, At: e.seen, HasReport: e.hasReport, Report: e.report, ReportAt: e.reportAt})
+				e.dirty, e.hasReport, e.report = false, false, none
 			}
 		}
 		s.mu.Unlock()
@@ -227,15 +265,16 @@ func (t *Table[R]) Drain(limit int) []Sighting[R] {
 	return out
 }
 
-// Restore marks sightings for draining again after a failed write. A newer sighting of the
-// same node wins, and a node forgotten meanwhile stays forgotten.
+// Restore marks sightings for draining again after a failed write. A newer report of the
+// same node wins, a report older than a durable write stays dropped, and a node forgotten
+// meanwhile stays forgotten.
 func (t *Table[R]) Restore(sightings []Sighting[R]) {
 	for _, v := range sightings {
 		t.locked(v.Node, false, func(e *entry[R]) {
-			if !e.dirty {
-				e.report = v.Report
-			}
 			e.dirty = true
+			if v.HasReport && !e.hasReport && !v.ReportAt.Before(e.reportAt) {
+				e.takeReport(v.Report, v.ReportAt)
+			}
 		})
 	}
 }

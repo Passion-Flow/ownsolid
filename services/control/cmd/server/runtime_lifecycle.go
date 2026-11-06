@@ -16,6 +16,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/liveness"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/mail"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/retention"
 )
@@ -356,6 +357,9 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 		if selected.postgres != nil {
 			h.TelemetryMetrics.Add(databasePoolSamples(selected.postgres))
 		}
+		if bootstrapped {
+			h.TelemetryMetrics.Add(h.Nodes.Service.LivenessSamples)
+		}
 		g.Go("TELEMETRY_METRICS", h.TelemetryMetrics.Run)
 	}
 	g.Go("RETENTION_WORKER", func(ctx context.Context) error {
@@ -379,6 +383,20 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 	}
 	if bootstrapped {
 		g.Loop("NODE_RECONCILIATION", h.Nodes.Service.Run)
+		if selected.postgres != nil {
+			if c.LivenessReplica != nil {
+				replica, e := openLivenessReplica(*c.LivenessReplica, c.Policy().Nodes)
+				if e != nil {
+					return e
+				}
+				h.Nodes.Service.LivenessReplica = replica
+				g.Loop("NODE_LIVENESS_REPLICA", func(ctx context.Context) {
+					defer replica.Close()
+					h.Nodes.Service.RunLivenessReplica(ctx)
+				})
+			}
+			g.Loop("NODE_LIVENESS", h.Nodes.Service.RunLiveness)
+		}
 		if c.Models.ArtifactRoot != "" {
 			g.Loop("MODEL_IMPORT", h.Models.Service.Run)
 		}
@@ -407,4 +425,13 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 		result = errors.New("SERVER_FAILED")
 	}
 	return errors.Join(result, g.Failure())
+}
+
+// openLivenessReplica connects to the store gateways share sightings through (ADR 0022).
+func openLivenessReplica(c config.LivenessReplicaConfiguration, policy config.NodesPolicy) (*liveness.JetStreamReplica, error) {
+	settings, e := c.Settings(config.Seconds(policy.OfflineSeconds))
+	if e != nil {
+		return nil, e
+	}
+	return liveness.NewJetStream(settings)
 }

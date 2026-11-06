@@ -124,11 +124,13 @@ type nodeReadTimeRow struct{ stamp time.Time }
 
 func (r nodeReadTimeRow) Scan(dest ...any) error {
 	switch len(dest) {
-	case 16:
+	case 17:
 		*dest[7].(*[]byte), *dest[13].(*[]byte) = []byte(`{}`), []byte(`["collect_facts.v1"]`)
 		for _, i := range []int{8, 9, 10} {
 			*dest[i].(*time.Time) = r.stamp
 		}
+		changed := r.stamp
+		*dest[16].(**time.Time) = &changed
 	case 10:
 		for _, i := range []int{6, 7} {
 			*dest[i].(*time.Time) = r.stamp
@@ -159,7 +161,7 @@ func TestNodeReadUTCProjection(t *testing.T) {
 		if e != nil {
 			t.Fatal(e)
 		}
-		assert(t, v.LastHeartbeatAt, v.CreatedAt, v.UpdatedAt)
+		assert(t, v.LastHeartbeatAt, v.CreatedAt, v.UpdatedAt, *v.ConnectivityChangedAt)
 	})
 	t.Run("join", func(t *testing.T) {
 		v, e := scanJoin(nodeReadTimeRow{stamp})

@@ -86,6 +86,18 @@ Component tests against PostgreSQL also need the pinned `node_exporter` archives
 and 1.12.0, under `$PROJECT_ONE_STATE_ROOT/dependencies/components/node-exporter/<version>/linux-amd64/`.
 Without them the tests stop at `COMPONENT_ASSET_UNAVAILABLE` before reaching their subject.
 
+## Liveness replica integration tests
+
+The store gateways share sightings through has tests against three real NATS servers with TLS
+and an NKey, started with Docker by the test itself, which also removes them:
+
+```sh
+go -C services/control test -tags liveness_integration ./internal/platform/liveness/
+```
+
+It takes about 40 seconds, needs `nats:2.12.1-alpine` loaded, and stops one server to show that
+the bucket and the service survive it. Docker must be able to mount `TMPDIR`.
+
 ## End-to-end install
 
 `tests/e2e/run-single-node.sh` runs the real installer in a Docker-in-Docker container
