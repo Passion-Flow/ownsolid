@@ -56,9 +56,10 @@ the transactional outbox (ARC-011) delivers it to other gateways. A missed wake 
 most one wait, because the agent claims again after its next heartbeat. An idle agent
 still reports once per interval, because the wait is part of the interval.
 
-**HTTPS long-poll fallback.** When the stream cannot be opened but the HTTPS heartbeat
-works, the path to control lacks HTTP/2, for example a proxy that speaks only HTTP/1.1.
-The agent then sends heartbeats over HTTPS and long-polls
+**HTTPS long-poll fallback.** When the stream fails twice in a row while the HTTPS heartbeat
+works, the path to control lacks HTTP/2, for example a proxy that speaks only HTTP/1.1. Once
+is not enough: a control restart looks the same, and the load test (ARC-015) saw it move two
+thirds of a fleet off the stream for five minutes. The agent then sends heartbeats over HTTPS and long-polls
 `POST .../tasks/claims` with `{"wait_seconds": 10}`, and tries the stream again after five
 minutes. A long-polled claim is bounded by the gateway's session slots, not the shared
 request slots. When control refuses the stream (capacity, scope, credential form) or is

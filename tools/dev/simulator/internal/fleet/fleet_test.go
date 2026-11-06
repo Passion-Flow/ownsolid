@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/tools/dev/simulator/internal/config"
 	"github.com/Passion-Flow/ownsolid/tools/dev/simulator/internal/link"
 	"github.com/Passion-Flow/ownsolid/tools/dev/simulator/internal/report"
@@ -168,7 +169,7 @@ func TestAgentFallsBackToHTTPSWhenTheStreamCannotOpen(t *testing.T) {
 	if out.Tasks.Succeeded != 1 || out.Connected != 1 || out.OnStream != 0 {
 		t.Fatalf("report %+v", out)
 	}
-	if opens := out.Calls[report.CallStreamOpen]; opens == nil || opens.Failed["CONTROL_CONNECTION_FAILED"] != 1 || opens.Succeeded != 0 {
+	if opens := out.Calls[report.CallStreamOpen]; opens == nil || opens.Failed["CONTROL_CONNECTION_FAILED"] != wire.SessionFallbackProbes || opens.Succeeded != 0 {
 		t.Fatalf("stream opens %+v: the fallback window should stop further attempts", opens)
 	}
 }
@@ -322,7 +323,7 @@ func TestAHeartbeatCutShortByTheEndOfTheRunKeepsTheAgentConnected(t *testing.T) 
 		t.Fatal(e)
 	}
 	defer dialer.Close()
-	a := newAgent(all[0], dialer, dialer.Connection(), report.New(1, time.Now()))
+	a := newAgent(all[0], dialer, dialer.Connection(), report.New(1, time.Now()), time.Second)
 	a.connected.Store(true)
 	ended, cancel := context.WithCancel(t.Context())
 	cancel()
@@ -353,7 +354,8 @@ func TestManyAgentsLongPollAtOnceOverASmallHTTPSPool(t *testing.T) {
 func TestHTTPSOnlyFaultMovesAgentsToLongPolling(t *testing.T) {
 	t.Parallel()
 	f := newFakeControl(t)
-	c := enrolled(t, f, 2, 9, config.Fault{Kind: config.FaultHTTPSOnly, AtSeconds: 1, Percent: 100, DurationSeconds: 7})
+	// Long enough for both failures of the stream, a heartbeat cycle apart.
+	c := enrolled(t, f, 2, 18, config.Fault{Kind: config.FaultHTTPSOnly, AtSeconds: 1, Percent: 100, DurationSeconds: 15})
 	done := runAsync(t, c)
 	waitUntil(t, f, 6*time.Second, "heartbeats over HTTPS", everyNode(func(n *fakeNode) bool {
 		return len(n.heartbeats) > 0 && n.heartbeats[len(n.heartbeats)-1].transport == "https"
@@ -365,5 +367,93 @@ func TestHTTPSOnlyFaultMovesAgentsToLongPolling(t *testing.T) {
 	}
 	if opens := out.Calls[report.CallStreamOpen]; opens.Succeeded != 2 || opens.Failed["CONTROL_CONNECTION_FAILED"] == 0 {
 		t.Fatalf("stream opens %+v", opens)
+	}
+}
+
+func TestLongTaskRenewsThroughAnOutageAndDeliversItsResult(t *testing.T) {
+	t.Parallel()
+	f := newFakeControl(t)
+	c := enrolled(t, f, 1, 24, config.Fault{Kind: config.FaultLongTasks, AtSeconds: 0, Percent: 100, DurationSeconds: 5})
+	c.LongTaskSeconds = 12
+	done := runAsync(t, c)
+	waitUntil(t, f, 3*time.Second, "a heartbeat", everyNode(func(n *fakeNode) bool { return len(n.heartbeats) > 0 }))
+	f.enqueue()
+	waitUntil(t, f, 3*time.Second, "the task to start", everyNode(func(n *fakeNode) bool { return n.acknowledged == 1 }))
+	// Control answers nothing but 503s from before the first renewal until after the task
+	// ends, so the work finishes while control is away and its result must wait.
+	f.set(func(f *fakeControl) { f.down = true })
+	time.Sleep(13 * time.Second)
+	f.each(func(n *fakeNode) {
+		if len(n.results) != 0 {
+			t.Errorf("a result reached control during the outage: %v", n.results)
+		}
+	})
+	f.set(func(f *fakeControl) { f.down = false })
+	out := <-done
+	if out.Tasks.Succeeded != 1 {
+		t.Fatalf("tasks %+v", out.Tasks)
+	}
+	f.each(func(n *fakeNode) {
+		for task, results := range n.results {
+			if results != 1 || n.acks[task] != 1 {
+				t.Errorf("task %s: %d results, %d acknowledgements", task, results, n.acks[task])
+			}
+		}
+	})
+	if renew := out.Calls[report.CallRenew]; renew == nil || renew.Failed["SERVICE_UNAVAILABLE"] == 0 {
+		t.Fatalf("renewals %+v", renew)
+	}
+}
+
+func TestARefusedRenewalEndsALongTask(t *testing.T) {
+	t.Parallel()
+	f := newFakeControl(t)
+	c := enrolled(t, f, 1, 16, config.Fault{Kind: config.FaultLongTasks, AtSeconds: 0, Percent: 100, DurationSeconds: 5})
+	c.LongTaskSeconds = 12
+	f.renewal = &wire.SessionProblem{Code: "AGENT_LEASE_STALE", Status: 409}
+	done := runAsync(t, c)
+	waitUntil(t, f, 3*time.Second, "a heartbeat", everyNode(func(n *fakeNode) bool { return len(n.heartbeats) > 0 }))
+	f.enqueue()
+	out := <-done
+	if out.Tasks.Succeeded != 0 || out.Tasks.Acknowledged != 1 {
+		t.Fatalf("tasks %+v", out.Tasks)
+	}
+	f.each(func(n *fakeNode) {
+		if len(n.results) != 0 {
+			t.Errorf("a refused task still delivered a result: %v", n.results)
+		}
+	})
+}
+
+func TestReportSplitsTheRunIntoWindows(t *testing.T) {
+	t.Parallel()
+	f := newFakeControl(t)
+	c := enrolled(t, f, 2, 7)
+	c.WindowSeconds = 2
+	out := <-runAsync(t, c)
+	if len(out.Windows) != 3 {
+		t.Fatalf("windows %+v", out.Windows)
+	}
+	var heartbeats int64
+	for i, w := range out.Windows {
+		if w.EndSeconds != 2*(i+1) || w.Connected != 2 || w.OnStream != 2 {
+			t.Fatalf("window %d: %+v", i, w)
+		}
+		if calls := w.Calls[report.CallHeartbeat]; calls != nil {
+			heartbeats += calls.Succeeded
+		}
+	}
+	if heartbeats < 2 || out.Windows[0].Calls[report.CallHeartbeat].P99Milliseconds <= 0 {
+		t.Fatalf("heartbeats in the windows: %d, first %+v", heartbeats, out.Windows[0].Calls[report.CallHeartbeat])
+	}
+}
+
+func TestAPartitionLeavesAgentsOnTheStream(t *testing.T) {
+	t.Parallel()
+	f := newFakeControl(t)
+	c := enrolled(t, f, 4, 16, config.Fault{Kind: config.FaultPartition, AtSeconds: 1, Percent: 100, DurationSeconds: 3})
+	out := <-runAsync(t, c)
+	if out.OnStream != 4 || out.Connected != 4 {
+		t.Fatalf("after a partition %d of %d connected agents are on the stream", out.OnStream, out.Connected)
 	}
 }

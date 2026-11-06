@@ -46,7 +46,9 @@ type Session struct {
 	stream        *sessionStream
 	fallbackUntil time.Time
 	// probeHTTPS makes the next heartbeat try HTTPS because the stream could not be opened.
-	probeHTTPS   bool
+	probeHTTPS bool
+	// probes counts the HTTPS heartbeats that worked since the stream last did.
+	probes       int
 	transport    string
 	pollHTTP     *http.Client
 	pacing       wire.Pacing
@@ -136,11 +138,20 @@ func (s *Session) heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 		return s.heartbeatHTTPS(ctx, h)
 	}
 	if s.probeHTTPS {
-		// The stream failed on the last attempt. HTTPS working where the stream did not
-		// means the path to control lacks HTTP/2; if it fails too, control is unreachable
-		// and the next attempt starts with the stream again.
+		// The stream failed on the last attempt. The next attempt starts with the stream
+		// again whatever this one finds: HTTPS working once may only mean control just came
+		// back. HTTPS working every time the stream fails means the path lacks HTTP/2.
 		s.probeHTTPS = false
-		return s.fallBack(ctx, h)
+		out, e := s.heartbeatHTTPS(ctx, h)
+		if e != nil {
+			s.probes = 0
+			return out, e
+		}
+		if s.probes++; s.probes >= wire.SessionFallbackProbes {
+			s.probes = 0
+			s.stayOnHTTPS()
+		}
+		return out, nil
 	}
 	reply, e := s.openWithHeartbeat(ctx, h)
 	if errors.Is(e, errStreamUnavailable) {
@@ -153,6 +164,7 @@ func (s *Session) heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 		return wire.Disposition{}, e
 	}
 	s.transport = TransportStream
+	s.probes = 0
 	return s.disposition(reply)
 }
 
@@ -162,9 +174,13 @@ func (s *Session) fallBack(ctx context.Context, h wire.Handshake) (wire.Disposit
 	if e != nil {
 		return out, e
 	}
+	s.stayOnHTTPS()
+	return out, nil
+}
+
+func (s *Session) stayOnHTTPS() {
 	slog.Warn("agent_session_fallback", "retry_seconds", wire.SessionFallbackRetrySeconds)
 	s.fallbackUntil = s.now().Add(time.Duration(wire.SessionFallbackRetrySeconds) * time.Second)
-	return out, nil
 }
 
 func (s *Session) heartbeatHTTPS(ctx context.Context, h wire.Handshake) (wire.Disposition, error) {
