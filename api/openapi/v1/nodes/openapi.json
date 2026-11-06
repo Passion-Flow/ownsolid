@@ -35,6 +35,17 @@
               "type": "string",
               "maxLength": 512
             }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Only tokens that can still be used.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending"
+              ]
+            }
           }
         ],
         "responses": {
@@ -69,7 +80,23 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       },
       "post": {
         "operationId": "createNodeJoinToken",
@@ -130,7 +157,34 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       },
       "parameters": [
         {
@@ -222,7 +276,33 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "NODE_JOIN_STATE_CONFLICT"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       },
       "parameters": [
         {
@@ -268,6 +348,42 @@
             "schema": {
               "type": "string",
               "maxLength": 512
+            }
+          },
+          {
+            "name": "connectivity",
+            "in": "query",
+            "description": "Only nodes in this state.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "online",
+                "unknown",
+                "offline"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Only nodes with this status. Without it, every node that has not been removed.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "disabled",
+                "removed"
+              ]
+            }
+          },
+          {
+            "name": "name_prefix",
+            "in": "query",
+            "description": "Only nodes whose name starts with this, ignoring case.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
             }
           }
         ],
@@ -391,7 +507,22 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       },
       "patch": {
         "operationId": "updateNode",
@@ -461,7 +592,37 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "VERSION_CONFLICT",
+            "NODE_NAME_EXISTS",
+            "NODE_REMOVED",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       },
       "parameters": [
         {
@@ -551,7 +712,26 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       },
       "post": {
         "operationId": "createNodeTask",
@@ -643,7 +823,8 @@
             "ACCESS_DENIED",
             "AGENT_PROFILE_REJECTED",
             "CSRF_INVALID",
-            "ORIGIN_REJECTED"
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
           ],
           "404": [
             "RESOURCE_NOT_FOUND"
@@ -713,6 +894,42 @@
             "schema": {
               "type": "string",
               "maxLength": 512
+            }
+          },
+          {
+            "name": "connectivity",
+            "in": "query",
+            "description": "Only nodes in this state.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "online",
+                "unknown",
+                "offline"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Only nodes with this status. Without it, every node that has not been removed.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "disabled",
+                "removed"
+              ]
+            }
+          },
+          {
+            "name": "name_prefix",
+            "in": "query",
+            "description": "Only nodes whose name starts with this, ignoring case.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
             }
           }
         ],
@@ -3958,6 +4175,80 @@
           }
         }
       ]
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/summary": {
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "readAdminNodeCounts",
+        "x-audiences": [
+          "admin"
+        ],
+        "description": "How many nodes the fleet has in each state.",
+        "responses": {
+          "200": {
+            "description": "Committed response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeCountsResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ],
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
+      }
     }
   },
   "components": {
@@ -13389,6 +13680,57 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/TaskLog"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "NodeCounts": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "How many nodes are in each state. Removed nodes do not count; a disabled node counts under its connectivity as well.",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "online": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "unknown": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "offline": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "disabled": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "total",
+          "online",
+          "unknown",
+          "offline",
+          "disabled"
+        ]
+      },
+      "NodeCountsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/NodeCounts"
           }
         },
         "required": [

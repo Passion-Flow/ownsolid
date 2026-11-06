@@ -85,6 +85,18 @@ func recoveryMutation(r *http.Request) (bool, error) {
 			e := inspectAction(r, &input)
 			return input.Status == "disabled", e
 		}
+		// Taking a node out of service is how an operator contains a problem, so an expired
+		// license must not stop it. Bringing one back, or renaming it, is ordinary work.
+		if licensePath(path, "/api/v1/admin/nodes/:id") {
+			var input struct {
+				Name    string `json:"name"`
+				Status  string `json:"status"`
+				Version int64  `json:"version"`
+				Reason  string `json:"reason"`
+			}
+			e := inspectAction(r, &input)
+			return input.Status == "disabled" || input.Status == "removed", e
+		}
 	}
 	for _, scope := range []string{"/api/v1/admin/artifact-objects", "/api/v1/workspaces/:id/artifact-objects"} {
 		if r.Method == http.MethodPost {

@@ -8,7 +8,9 @@ import (
 
 // DM uses native UTC timestamps, positional parameters and the schema owner's
 // uppercase unquoted identifiers. SQL is explicit at each call, never rewritten.
-const damengNodeFields = `n.id,n.tenant_id,n.workspace_id,n.name,n.status,n.version,n.protocol_version,n.facts,n.last_heartbeat_at,n.created_at,n.updated_at,CASE WHEN n.last_heartbeat_at>=DATEADD(SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))) THEN 'online' WHEN n.last_heartbeat_at>=DATEADD(SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))) THEN 'unknown' ELSE 'offline' END,n.execution_profile,n.capabilities,'default','default',NULL`
+const damengConnectivity = `CASE WHEN n.last_heartbeat_at>=DATEADD(SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))) THEN 'online' WHEN n.last_heartbeat_at>=DATEADD(SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))) THEN 'unknown' ELSE 'offline' END`
+
+const damengNodeFields = `n.id,n.tenant_id,n.workspace_id,n.name,n.status,n.version,n.protocol_version,n.facts,n.last_heartbeat_at,n.created_at,n.updated_at,` + damengConnectivity + `,n.execution_profile,n.capabilities,'default','default',NULL`
 const damengJoinFields = `j.id,j.tenant_id,j.workspace_id,j.node_name,j.created_by,j.node_id,j.created_at,j.expires_at,CASE WHEN j.revoked_at IS NOT NULL THEN 'revoked' WHEN j.consumed_at IS NOT NULL THEN 'consumed' WHEN j.expires_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) THEN 'expired' ELSE 'pending' END,j.execution_profile`
 const damengTaskFields = `id,tenant_id,workspace_id,node_id,operation,state,attempt,error_code,created_at,updated_at,deadline_at,completed_at`
 

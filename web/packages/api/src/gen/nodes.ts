@@ -722,6 +722,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        /** @description How many nodes the fleet has in each state. */
+        get: operations["readAdminNodeCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2624,6 +2644,17 @@ export interface components {
         TaskLogResponse: {
             data: components["schemas"]["TaskLog"];
         };
+        /** @description How many nodes are in each state. Removed nodes do not count; a disabled node counts under its connectivity as well. */
+        NodeCounts: {
+            total: number;
+            online: number;
+            unknown: number;
+            offline: number;
+            disabled: number;
+        };
+        NodeCountsResponse: {
+            data: components["schemas"]["NodeCounts"];
+        };
     };
     responses: never;
     parameters: never;
@@ -2641,6 +2672,8 @@ export interface operations {
             query?: {
                 limit?: number;
                 cursor?: string;
+                /** @description Only tokens that can still be used. */
+                status?: "pending";
             };
             header?: never;
             path: {
@@ -2753,6 +2786,12 @@ export interface operations {
             query?: {
                 limit?: number;
                 cursor?: string;
+                /** @description Only nodes in this state. */
+                connectivity?: "online" | "unknown" | "offline";
+                /** @description Only nodes with this status. Without it, every node that has not been removed. */
+                status?: "active" | "disabled" | "removed";
+                /** @description Only nodes whose name starts with this, ignoring case. */
+                name_prefix?: string;
             };
             header?: never;
             path: {
@@ -2936,6 +2975,12 @@ export interface operations {
             query?: {
                 limit?: number;
                 cursor?: string;
+                /** @description Only nodes in this state. */
+                connectivity?: "online" | "unknown" | "offline";
+                /** @description Only nodes with this status. Without it, every node that has not been removed. */
+                status?: "active" | "disabled" | "removed";
+                /** @description Only nodes whose name starts with this, ignoring case. */
+                name_prefix?: string;
             };
             header?: never;
             path: {
@@ -4218,6 +4263,38 @@ export interface operations {
             default: {
                 headers: {
                     "Retry-After": components["headers"]["AgentRetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    readAdminNodeCounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Committed response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeCountsResponse"];
+                };
+            };
+            /** @description Structured failure; no fake success */
+            default: {
+                headers: {
                     [name: string]: unknown;
                 };
                 content: {

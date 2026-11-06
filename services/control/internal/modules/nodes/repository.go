@@ -13,8 +13,15 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
-const mysqlNodeFields = `n.id,n.tenant_id,n.workspace_id,n.name,n.status,n.version,n.protocol_version,n.facts,n.last_heartbeat_at,n.created_at,n.updated_at,CASE WHEN n.last_heartbeat_at>=TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)) THEN 'online' WHEN n.last_heartbeat_at>=TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)) THEN 'unknown' ELSE 'offline' END,n.execution_profile,n.capabilities,'default','default',NULL`
-const pairedNodeFields = `n.id::text,n.tenant_id::text,n.workspace_id::text,n.name,n.status,n.version,n.protocol_version,n.facts,n.last_heartbeat_at,n.created_at,n.updated_at,CASE WHEN n.last_heartbeat_at>=clock_timestamp()-make_interval(secs=>$1) THEN 'online' WHEN n.last_heartbeat_at>=clock_timestamp()-make_interval(secs=>$2) THEN 'unknown' ELSE 'offline' END,n.execution_profile,n.capabilities,n.site_id,n.cell_id,n.connectivity_changed_at`
+// Connectivity is derived from the last heartbeat, in one place for each dialect, so a list, its
+// filters and its counts cannot disagree. Each takes the online and offline windows, in that order.
+const (
+	pgConnectivity    = `CASE WHEN n.last_heartbeat_at>=clock_timestamp()-make_interval(secs=>$1) THEN 'online' WHEN n.last_heartbeat_at>=clock_timestamp()-make_interval(secs=>$2) THEN 'unknown' ELSE 'offline' END`
+	mysqlConnectivity = `CASE WHEN n.last_heartbeat_at>=TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)) THEN 'online' WHEN n.last_heartbeat_at>=TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)) THEN 'unknown' ELSE 'offline' END`
+)
+
+const mysqlNodeFields = `n.id,n.tenant_id,n.workspace_id,n.name,n.status,n.version,n.protocol_version,n.facts,n.last_heartbeat_at,n.created_at,n.updated_at,` + mysqlConnectivity + `,n.execution_profile,n.capabilities,'default','default',NULL`
+const pairedNodeFields = `n.id::text,n.tenant_id::text,n.workspace_id::text,n.name,n.status,n.version,n.protocol_version,n.facts,n.last_heartbeat_at,n.created_at,n.updated_at,` + pgConnectivity + `,n.execution_profile,n.capabilities,n.site_id,n.cell_id,n.connectivity_changed_at`
 const mysqlJoinFields = `j.id,j.tenant_id,j.workspace_id,j.node_name,j.created_by,j.node_id,j.created_at,j.expires_at,CASE WHEN j.revoked_at IS NOT NULL THEN 'revoked' WHEN j.consumed_at IS NOT NULL THEN 'consumed' WHEN j.expires_at<=UTC_TIMESTAMP(6) THEN 'expired' ELSE 'pending' END,j.execution_profile`
 const mysqlTaskFields = `id,tenant_id,workspace_id,node_id,operation,state,attempt,error_code,created_at,updated_at,deadline_at,completed_at`
 

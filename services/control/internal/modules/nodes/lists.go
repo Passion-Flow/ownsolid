@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
@@ -63,6 +65,82 @@ func nodeListRows[T any](ctx context.Context, q transaction.Executor, statement 
 	}
 	return out, nil
 }
+
+// nodeFilter narrows the node list. Removed nodes stay out unless asked for: their names can be
+// used again, so they are history rather than part of the fleet.
+type nodeFilter struct {
+	connectivity, status, namePrefix string
+}
+
+// maximumNodeName is the longest name a node can have, so no longer prefix can match.
+const maximumNodeName = 100
+
+// splitNodeFilter takes the filter out of a query and returns the rest for paging.
+func splitNodeFilter(values url.Values) (nodeFilter, url.Values, error) {
+	var f nodeFilter
+	rest := url.Values{}
+	for key, value := range values {
+		if key != "connectivity" && key != "status" && key != "name_prefix" {
+			rest[key] = value
+			continue
+		}
+		if len(value) != 1 {
+			return f, nil, fail("VALIDATION_FAILED")
+		}
+		switch key {
+		case "connectivity":
+			f.connectivity = value[0]
+			if f.connectivity != "online" && f.connectivity != "unknown" && f.connectivity != "offline" {
+				return f, nil, fail("VALIDATION_FAILED")
+			}
+		case "status":
+			f.status = value[0]
+			if f.status != "active" && f.status != "disabled" && f.status != "removed" {
+				return f, nil, fail("VALIDATION_FAILED")
+			}
+		case "name_prefix":
+			f.namePrefix = value[0]
+			if f.namePrefix == "" || !utf8.ValidString(f.namePrefix) || utf8.RuneCountInString(f.namePrefix) > maximumNodeName {
+				return f, nil, fail("VALIDATION_FAILED")
+			}
+		}
+	}
+	return f, rest, nil
+}
+
+// scope binds a cursor to the filter it was issued under.
+func (f nodeFilter) scope() string {
+	return ":" + f.connectivity + ":" + f.status + ":" + strconv.Quote(f.namePrefix)
+}
+
+// apply adds the filter to the three dialects' statements. PostgreSQL reads the windows
+// from the projection's numbered arguments; the others repeat them, since theirs are positional.
+func (f nodeFilter) apply(pg, my, dm string, pgArgs, myArgs []any, online, offline int) (string, string, string, []any, []any) {
+	if f.connectivity != "" {
+		pgArgs = append(pgArgs, f.connectivity)
+		pg += " AND " + pgConnectivity + "=$" + strconv.Itoa(len(pgArgs))
+		my += " AND " + mysqlConnectivity + "=?"
+		dm += " AND " + damengConnectivity + "=?"
+		myArgs = append(myArgs, -online, -offline, f.connectivity)
+	}
+	if f.status == "" {
+		pg, my, dm = pg+" AND n.status<>'removed'", my+" AND n.status<>'removed'", dm+" AND n.status<>'removed'"
+	} else {
+		pgArgs = append(pgArgs, f.status)
+		pg += " AND n.status=$" + strconv.Itoa(len(pgArgs))
+		my, dm = my+" AND n.status=?", dm+" AND n.status=?"
+		myArgs = append(myArgs, f.status)
+	}
+	if f.namePrefix != "" {
+		pattern := strings.NewReplacer("!", "!!", "%", "!%", "_", "!_").Replace(strings.ToLower(f.namePrefix)) + "%"
+		pgArgs = append(pgArgs, pattern)
+		pg += " AND lower(n.name) LIKE $" + strconv.Itoa(len(pgArgs)) + " ESCAPE '!'"
+		my, dm = my+" AND lower(n.name) LIKE ? ESCAPE '!'", dm+" AND lower(n.name) LIKE ? ESCAPE '!'"
+		myArgs = append(myArgs, pattern)
+	}
+	return pg, my, dm, pgArgs, myArgs
+}
+
 func (s *Service) List(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[Node], error) {
 	var out Page[Node]
 	e := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
@@ -78,7 +156,11 @@ func (s *Service) List(ctx context.Context, a identity.Auth, workspace string, v
 		if e != nil {
 			return e
 		}
-		limit, cursor, fingerprint, e := pagination.ParseWithDefault(values, nodeListScope("nodes", tenant, workspace, "", a), s.Identity.Config.Policy().UI.PageSize)
+		filter, paging, e := splitNodeFilter(values)
+		if e != nil {
+			return e
+		}
+		limit, cursor, fingerprint, e := pagination.ParseWithDefault(paging, nodeListScope("nodes", tenant, workspace, "", a)+filter.scope(), s.Identity.Config.Policy().UI.PageSize)
 		if e == nil && q.Dialect() == transaction.Dameng && cursor.ID != "" && !nodeNativeTime(cursor.Time) {
 			return fail("INVALID_CURSOR")
 		}
@@ -95,6 +177,7 @@ func (s *Service) List(ctx context.Context, a identity.Auth, workspace string, v
 			dm += " AND n.workspace_id=?"
 			pgArgs, myArgs = append(pgArgs, workspace), append(myArgs, workspace)
 		}
+		pg, my, dm, pgArgs, myArgs = filter.apply(pg, my, dm, pgArgs, myArgs, p.OnlineSeconds, p.OfflineSeconds)
 		out, e = nodeListRows(ctx, q, nodeSeek(q, pg, my, dm, pgArgs, myArgs, "n.created_at", "n.id", cursor, limit), limit, fingerprint, func(row transaction.Row) (Node, error) { return scanNode(row) }, func(n Node) (time.Time, string) { return n.CreatedAt, n.ID })
 		return e
 	})
@@ -103,6 +186,51 @@ func (s *Service) List(ctx context.Context, a identity.Auth, workspace string, v
 	}
 	return out, nil
 }
+
+// NodeCounts is how many nodes of the fleet are in each state. Removed nodes do not count; a
+// disabled node counts under its connectivity as well as under Disabled.
+type NodeCounts struct {
+	Total    int64 `json:"total"`
+	Online   int64 `json:"online"`
+	Unknown  int64 `json:"unknown"`
+	Offline  int64 `json:"offline"`
+	Disabled int64 `json:"disabled"`
+}
+
+// Counts reads the fleet's totals with one query, for labels and the overview.
+func (s *Service) Counts(ctx context.Context, a identity.Auth) (NodeCounts, error) {
+	var out NodeCounts
+	e := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
+		if !isAdmin(a) {
+			return fail("ACCESS_DENIED")
+		}
+		tenant, e := nodeTenant(ctx, q)
+		if e != nil {
+			return e
+		}
+		p := s.Identity.Config.Policy().Nodes
+		const totals = "SELECT count(*),COALESCE(SUM(CASE WHEN c='online' THEN 1 ELSE 0 END),0),COALESCE(SUM(CASE WHEN c='unknown' THEN 1 ELSE 0 END),0),COALESCE(SUM(CASE WHEN c='offline' THEN 1 ELSE 0 END),0),COALESCE(SUM(CASE WHEN s='disabled' THEN 1 ELSE 0 END),0) FROM (SELECT "
+		const from = " AS c,n.status AS s FROM managed_nodes n WHERE n.tenant_id="
+		const live = " AND n.status<>'removed') f"
+		var statement transaction.Statement
+		switch q.Dialect() {
+		case transaction.PostgreSQL:
+			statement = transaction.SQL(transaction.PostgreSQL, totals+pgConnectivity+from+"$3"+live, p.OnlineSeconds, p.OfflineSeconds, tenant)
+		case transaction.MySQL:
+			statement = transaction.SQL(transaction.MySQL, totals+mysqlConnectivity+from+"?"+live, -p.OnlineSeconds, -p.OfflineSeconds, tenant)
+		case transaction.Dameng:
+			statement = transaction.SQL(transaction.Dameng, totals+damengConnectivity+from+"?"+live, -p.OnlineSeconds, -p.OfflineSeconds, tenant)
+		default:
+			statement = transaction.SQL(q.Dialect(), "")
+		}
+		return q.QueryRow(ctx, statement).Scan(&out.Total, &out.Online, &out.Unknown, &out.Offline, &out.Disabled)
+	})
+	if e != nil {
+		return NodeCounts{}, e
+	}
+	return out, nil
+}
+
 func (s *Service) Tokens(ctx context.Context, a identity.Auth, values url.Values) (Page[JoinToken], error) {
 	var out Page[JoinToken]
 	e := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
@@ -113,7 +241,19 @@ func (s *Service) Tokens(ctx context.Context, a identity.Auth, values url.Values
 		if e != nil {
 			return e
 		}
-		limit, cursor, fingerprint, e := pagination.ParseWithDefault(values, nodeListScope("node-tokens", tenant, "", "", a), s.Identity.Config.Policy().UI.PageSize)
+		// Only tokens that can still be used are worth filtering for: the rest are history.
+		paging, pendingOnly := url.Values{}, false
+		for key, value := range values {
+			if key != "status" {
+				paging[key] = value
+				continue
+			}
+			if len(value) != 1 || value[0] != "pending" {
+				return fail("VALIDATION_FAILED")
+			}
+			pendingOnly = true
+		}
+		limit, cursor, fingerprint, e := pagination.ParseWithDefault(paging, nodeListScope("node-tokens", tenant, "", "", a)+":"+strconv.FormatBool(pendingOnly), s.Identity.Config.Policy().UI.PageSize)
 		if e == nil && q.Dialect() == transaction.Dameng && cursor.ID != "" && !nodeNativeTime(cursor.Time) {
 			return fail("INVALID_CURSOR")
 		}
@@ -122,6 +262,10 @@ func (s *Service) Tokens(ctx context.Context, a identity.Auth, values url.Values
 		}
 		pg, my := "SELECT "+joinFields+" FROM node_join_tokens j WHERE j.tenant_id=$1", "SELECT "+mysqlJoinFields+" FROM node_join_tokens j WHERE j.tenant_id=?"
 		dm := "SELECT " + damengJoinFields + " FROM node_join_tokens j WHERE j.tenant_id=?"
+		if pendingOnly {
+			const unused = " AND j.consumed_at IS NULL AND j.revoked_at IS NULL AND j.expires_at>"
+			pg, my, dm = pg+unused+"clock_timestamp()", my+unused+"UTC_TIMESTAMP(6)", dm+unused+"SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))"
+		}
 		out, e = nodeListRows(ctx, q, nodeSeek(q, pg, my, dm, []any{tenant}, []any{tenant}, "j.created_at", "j.id", cursor, limit), limit, fingerprint, func(row transaction.Row) (JoinToken, error) { return scanJoin(row) }, func(v JoinToken) (time.Time, string) { return v.CreatedAt, v.ID })
 		return e
 	})

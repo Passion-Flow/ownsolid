@@ -457,6 +457,10 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 		out, e := h.Service.List(r.Context(), a, workspace, r.URL.Query())
 		return out, 200, e
 	}
+	if admin && len(parts) == 1 && parts[0] == "summary" && r.Method == "GET" {
+		out, e := h.Service.Counts(r.Context(), a)
+		return out, 200, e
+	}
 	if len(parts) < 1 || !id(parts[0]) {
 		return nil, 0, bad
 	}
