@@ -101,3 +101,20 @@ columns, saves the result as a named view, opens it in another browser, renames 
 it, selects several failed emails and sends them again in one action, and opens an email's
 details in a drawer. Every state passes the accessibility and keyboard flows in both themes
 and both languages, and the pieces are documented in the design system for the next pages.
+
+## Summary tiles (UX-126)
+
+The interaction system's list anatomy puts "summary tiles that filter the list below them" above the filter bar:
+"Tiles are filters, not decoration." [ADR 0037](../decisions/0037-simple-on-the-surface-deep-underneath.md) names
+this as open.
+
+- **`FilterTiles` replaces the segmented control where a list has figures**, so the figure and the filter are one
+  control. Nodes is the only list with a server count today. A list without one keeps `Segmented`: a tile with no
+  figure would be decoration, and counting by reading every page is not a number anyone should trust.
+- **Each tile is a toggle button**, `aria-pressed` as `Segmented` is, with its state in the address like every
+  filter, so a filtered view can be sent. A second press goes back to everything.
+- **The chosen tile is marked by a thicker border and heavier text as well as colour** (WCAG 1.4.1).
+- **Figures that cannot be read leave the tile working.** It shows no number rather than a zero that would claim
+  something, and it still filters, since the list has its own request and failure message.
+- **The figures describe the whole fleet, not the search above them.** The summary has no name filter, and a tile
+  that changed as a person typed would stop being a summary.

@@ -1,6 +1,7 @@
 // The Nodes page: an administrator sees the fleet, finds a node, changes it and adds another.
 import {
   disabledNode,
+  expectAccessible,
   joinToken,
   mockControlPlane,
   node,
@@ -61,6 +62,51 @@ test.describe('the list', () => {
     await expect(page.getByText('No nodes match')).toBeVisible();
     await page.getByRole('button', { name: 'Clear the filters' }).click();
     await expect(row(page, 'gpu-a02')).toBeVisible();
+  });
+
+  test('a tile is a figure and the filter that shows those rows', async ({ page }) => {
+    await page.goto('/nodes');
+    const group = page.getByRole('group', { name: 'Show nodes' });
+    const offline = group.getByRole('button', { name: 'Offline' });
+    await expect(offline).toHaveText(/1$/);
+    await expect(group.getByRole('button', { name: 'All' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await offline.click();
+    await expect(page).toHaveURL(/connectivity=offline/);
+    await expect(offline).toHaveAttribute('aria-pressed', 'true');
+    await expect(row(page, 'gpu-a02')).toHaveCount(0);
+    await expectAccessible(page);
+
+    // The address opens the same view, and a second press goes back to everything.
+    await page.reload();
+    await expect(offline).toHaveAttribute('aria-pressed', 'true');
+    await offline.click();
+    await expect(page).not.toHaveURL(/connectivity=/);
+    await expect(row(page, 'gpu-a02')).toBeVisible();
+    await expect(group.getByRole('button', { name: 'All' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  test('tiles still filter when the figures cannot be read', async ({ page }) => {
+    await page.route('**/admin/nodes/summary', (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/problem+json',
+        body: JSON.stringify({ code: 'INTERNAL_ERROR', title: 'x', status: 500 }),
+      }),
+    );
+    await page.goto('/nodes');
+    const offline = page.getByRole('group', { name: 'Show nodes' }).getByRole('button', {
+      name: 'Offline',
+    });
+    await expect(offline).toHaveText('Offline');
+    await offline.click();
+    await expect(page).toHaveURL(/connectivity=offline/);
+    await expect(row(page, 'gpu-a02')).toHaveCount(0);
   });
 
   test('filters by name and by status', async ({ page }) => {
