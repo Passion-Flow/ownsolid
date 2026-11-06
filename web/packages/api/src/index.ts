@@ -96,3 +96,22 @@ export {
   type MailPurpose,
   type MailState,
 } from './mail.ts';
+export {
+  collectNodeFacts,
+  getTask,
+  getTaskLog,
+  listNodes,
+  listTasks,
+  taskFinished,
+  type Node,
+  type NodePage,
+  type TaskDetail,
+  type TaskLogLine,
+  type TaskLogPage,
+  type TaskOperation,
+  type TaskPage,
+  type TaskState,
+  type TaskStep,
+  type TaskStepName,
+  type TaskSummary,
+} from './tasks.ts';

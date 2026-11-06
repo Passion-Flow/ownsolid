@@ -36,4 +36,5 @@ export { SavedViewsMenu } from './list/saved-views-menu.tsx';
 export { useListView, type ListView } from './list/use-list-view.ts';
 export { useRowSelection, type RowSelection } from './list/use-row-selection.ts';
 export { useSignOut } from './sign-out.ts';
+export type { TaskTrayProps } from './task-tray.tsx';
 export { NotFoundPage, PendingPage, RouteErrorPage } from './status-pages.tsx';

@@ -40,6 +40,9 @@
   --shadow-3: 0 24px 64px rgb(40 32 20 / 18%), 0 2px 8px rgb(40 32 20 / 8%);
   --log-bg: #1b1916;
   --log-text: #ebe7df;
+  --log-muted: #8f9099;
+  --log-warning: #e8b765;
+  --log-error: #f29384;
   --row: 52px;
   --gap: 20px;
 }
@@ -107,6 +110,9 @@
   --color-accent-ink: var(--accent-ink);
   --color-log-bg: var(--log-bg);
   --color-log-text: var(--log-text);
+  --color-log-muted: var(--log-muted);
+  --color-log-warning: var(--log-warning);
+  --color-log-error: var(--log-error);
 
   --radius-control: 8px;
   --radius-field: 10px;

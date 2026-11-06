@@ -1,5 +1,8 @@
 import {
   failedMail,
+  failedTask,
+  finishedTask,
+  runningTask,
   secondFailedMail,
   sentMail,
   type ControlPlane,
@@ -25,6 +28,18 @@ async function openMail(page: Page, control: ControlPlane): Promise<void> {
   await page.getByRole('heading', { name: 'Email delivery', level: 1 }).waitFor();
 }
 
+async function openTasks(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/tasks');
+  await page.getByRole('heading', { name: 'Tasks', level: 1 }).waitFor();
+}
+
+async function openTask(page: Page, control: ControlPlane, id: string): Promise<void> {
+  control.signedIn = true;
+  await page.goto(`/tasks/${id}`);
+  await page.getByRole('log').waitFor();
+}
+
 async function openSettings(page: Page, control: ControlPlane): Promise<void> {
   control.signedIn = true;
   await page.goto('/settings');
@@ -37,6 +52,77 @@ async function openSettings(page: Page, control: ControlPlane): Promise<void> {
  */
 export const consolePages: readonly PageState[] = [
   ...shellPages,
+  {
+    name: 'tasks with none yet',
+    path: '/tasks',
+    open: async (page, control) => {
+      await openTasks(page, control);
+      await page.getByText('No tasks yet').waitFor();
+    },
+  },
+  {
+    name: 'tasks with rows',
+    path: '/tasks',
+    open: async (page, control) => {
+      control.tasks = [failedTask, finishedTask, runningTask];
+      await openTasks(page, control);
+      await page.getByRole('link', { name: 'Collect node facts' }).first().waitFor();
+    },
+  },
+  {
+    name: 'tasks unavailable',
+    path: '/tasks',
+    open: async (page, control) => {
+      control.tasksProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await openTasks(page, control);
+      await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
+    name: 'starting a task',
+    path: '/tasks',
+    open: async (page, control) => {
+      await openTasks(page, control);
+      await page.getByRole('button', { name: 'Collect node facts' }).click();
+      await page.getByRole('combobox', { name: 'Node' }).waitFor();
+    },
+  },
+  {
+    name: 'a running task',
+    path: '/tasks/$taskId',
+    open: async (page, control) => {
+      control.tasks = [runningTask];
+      await openTask(page, control, runningTask.task.id);
+      await page.getByRole('button', { name: 'Pause' }).waitFor();
+    },
+  },
+  {
+    name: 'a finished task',
+    path: '/tasks/$taskId',
+    open: async (page, control) => {
+      control.tasks = [finishedTask];
+      await openTask(page, control, finishedTask.task.id);
+      await page.getByText('Memory: 33554432000 bytes').waitFor();
+    },
+  },
+  {
+    name: 'a failed task',
+    path: '/tasks/$taskId',
+    open: async (page, control) => {
+      control.tasks = [failedTask];
+      await openTask(page, control, failedTask.task.id);
+      await page.getByRole('button', { name: 'Run again' }).waitFor();
+    },
+  },
+  {
+    name: 'a task that cannot be found',
+    path: '/tasks/$taskId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto(`/tasks/${runningTask.task.id}`);
+      await page.getByRole('link', { name: 'All tasks' }).waitFor();
+    },
+  },
   {
     name: 'settings',
     path: '/settings',
