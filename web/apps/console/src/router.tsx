@@ -9,8 +9,13 @@ import {
 } from '@ownsolid/shell';
 import { createRoute, lazyRouteComponent } from '@tanstack/react-router';
 import { navigation } from './navigation.ts';
+import { operations, taskPath } from './task-names.ts';
 
-const frameRoute = createFrameRoute({ navigation, showLicense: true });
+const frameRoute = createFrameRoute({
+  navigation,
+  showLicense: true,
+  tasks: { taskPath, taskName: (task) => operations[task.operation] },
+});
 
 const homeRoute = createRoute({
   getParentRoute: () => frameRoute,
@@ -24,6 +29,18 @@ const mailRoute = createRoute({
   component: lazyRouteComponent(() => import('./mail-deliveries-page.tsx'), 'MailDeliveriesPage'),
 });
 
+const tasksRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/tasks',
+  component: lazyRouteComponent(() => import('./tasks-page.tsx'), 'TasksPage'),
+});
+
+const taskRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/tasks/$taskId',
+  component: lazyRouteComponent(() => import('./task-page.tsx'), 'TaskPage'),
+});
+
 const settingsRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/settings',
@@ -35,7 +52,14 @@ const accountRoute = createAccountRoute(frameRoute);
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
   authenticatedRoute.addChildren([
-    frameRoute.addChildren([homeRoute, accountRoute, mailRoute, settingsRoute]),
+    frameRoute.addChildren([
+      homeRoute,
+      accountRoute,
+      mailRoute,
+      tasksRoute,
+      taskRoute,
+      settingsRoute,
+    ]),
   ]),
 ]);
 

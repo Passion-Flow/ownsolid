@@ -646,6 +646,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["listAdminTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getAdminTask"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks/{task_id}/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getAdminTaskLog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/tasks/{task_id}/task-progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submitTaskProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2459,6 +2535,95 @@ export interface components {
             version: number;
             reason: string;
         };
+        TaskProgressEntry: {
+            sequence: number;
+            /** @constant */
+            kind: "step";
+            /** Format: date-time */
+            at: string;
+            /** @enum {string} */
+            step: "read_system" | "read_memory" | "read_disk" | "preflight" | "download" | "install" | "start" | "stop" | "remove" | "verify";
+            /** @enum {string} */
+            state: "running" | "succeeded" | "failed";
+        } | {
+            sequence: number;
+            /** @constant */
+            kind: "log";
+            /** Format: date-time */
+            at: string;
+            /** @enum {string} */
+            level: "info" | "warning" | "error";
+            message: string;
+        };
+        TaskProgress: {
+            lease_token: string;
+            entries: components["schemas"]["TaskProgressEntry"][];
+        };
+        TaskProgressAccepted: {
+            accepted: number;
+        };
+        TaskProgressAcceptedResponse: {
+            data: components["schemas"]["TaskProgressAccepted"];
+        };
+        TaskSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspace_id: string;
+            /** Format: uuid */
+            node_id: string;
+            node_name: string;
+            /** @enum {string} */
+            operation: "collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1";
+            /** @enum {string} */
+            state: "pending" | "running" | "succeeded" | "failed" | "cancelled";
+            attempt: number;
+            error_code: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            completed_at: string | null;
+        };
+        TaskSummaryList: {
+            items: components["schemas"]["TaskSummary"][];
+            next_cursor: string | null;
+        };
+        TaskSummaryListResponse: {
+            data: components["schemas"]["TaskSummaryList"];
+        };
+        TaskStep: {
+            /** @enum {string} */
+            step: "read_system" | "read_memory" | "read_disk" | "preflight" | "download" | "install" | "start" | "stop" | "remove" | "verify";
+            /** @enum {string} */
+            state: "running" | "succeeded" | "failed";
+            /** Format: date-time */
+            started_at: string;
+            finished_at: string | null;
+        };
+        TaskDetail: {
+            task: components["schemas"]["TaskSummary"];
+            steps: components["schemas"]["TaskStep"][];
+        };
+        TaskDetailResponse: {
+            data: components["schemas"]["TaskDetail"];
+        };
+        TaskLogLine: {
+            attempt: number;
+            sequence: number;
+            /** Format: date-time */
+            at: string;
+            /** @enum {string} */
+            level: "info" | "warning" | "error";
+            message: string;
+        };
+        TaskLog: {
+            items: components["schemas"]["TaskLogLine"][];
+            cursor: string;
+        };
+        TaskLogResponse: {
+            data: components["schemas"]["TaskLog"];
+        };
     };
     responses: never;
     parameters: never;
@@ -3905,6 +4070,154 @@ export interface operations {
             /** @description Structured failure; no fake success */
             default: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listAdminTasks: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+                state?: "pending" | "running" | "succeeded" | "failed" | "cancelled";
+                node_id?: string;
+                /** @description Only unfinished tasks the signed-in person started. */
+                mine?: boolean;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Committed response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSummaryListResponse"];
+                };
+            };
+            /** @description Structured failure; no fake success */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getAdminTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Committed response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDetailResponse"];
+                };
+            };
+            /** @description Structured failure; no fake success */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getAdminTaskLog: {
+        parameters: {
+            query?: {
+                /** @description The cursor of the previous page. */
+                after?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Committed response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskLogResponse"];
+                };
+            };
+            /** @description Structured failure; no fake success */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    submitTaskProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                node_id: string;
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskProgress"];
+            };
+        };
+        responses: {
+            /** @description How many entries of this report were new; a repeated report accepts none and changes nothing */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskProgressAcceptedResponse"];
+                };
+            };
+            /** @description Stable scoped rejection; a refused report records nothing */
+            default: {
+                headers: {
+                    "Retry-After": components["headers"]["AgentRetryAfter"];
                     [name: string]: unknown;
                 };
                 content: {

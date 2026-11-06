@@ -1,6 +1,7 @@
 // A scripted control plane for browser tests. It speaks the real wire format of the
 // paths the shell uses, so specs exercise the production transport end to end.
 import type { Page, Route } from '@playwright/test';
+import { emptyTaskScript, routeTasks, type TaskScript } from './tasks.ts';
 
 /** The account the mock accepts. */
 export const account = { email: 'ada@example.test', password: 'correct horse battery staple' };
@@ -167,8 +168,10 @@ export interface ScriptedProblem {
 }
 
 /** Mutable state of the mock, so a spec can change it between steps. */
-export interface ControlPlane {
+export interface ControlPlane extends TaskScript {
   audience: 'admin' | 'portal';
+  /** How often pages poll, as the runtime configuration says. */
+  pollMilliseconds: number;
   signedIn: boolean;
   /** The signed-in account, which profile saves and password changes update. */
   user: typeof user;
@@ -262,8 +265,12 @@ function problem(route: Route, { status, code, headers }: ScriptedProblem): Prom
   });
 }
 
-function data(route: Route, value: unknown): Promise<void> {
-  return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: value }) });
+function data(route: Route, value: unknown, status = 200): Promise<void> {
+  return route.fulfill({
+    status,
+    contentType: 'application/json',
+    body: JSON.stringify({ data: value }),
+  });
 }
 
 /** Installs the mock on a page and returns its state. */
@@ -272,7 +279,9 @@ export async function mockControlPlane(
   audience: ControlPlane['audience'],
 ): Promise<ControlPlane> {
   const state: ControlPlane = {
+    ...emptyTaskScript(),
     audience,
+    pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
     signedIn: false,
     user: { ...user },
     password: account.password,
@@ -318,7 +327,11 @@ export async function mockControlPlane(
   await page.route('**/runtime-config.json', (route) =>
     state.unreachable
       ? route.abort('connectionrefused')
-      : data(route, { ...runtimeConfig, default_locale: state.tenantSettings.default_locale }),
+      : data(route, {
+          ...runtimeConfig,
+          default_locale: state.tenantSettings.default_locale,
+          ui: { ...runtimeConfig.ui, poll_milliseconds: state.pollMilliseconds },
+        }),
   );
   await page.route('**/api/v1/auth/csrf', (route) => {
     state.csrfFetches += 1;
@@ -613,6 +626,7 @@ export async function mockControlPlane(
     };
     return data(route, state.tenantSettings);
   });
+  await routeTasks(page, state, data, problem);
   await page.route('**/api/v1/admin/mail-deliveries?*', (route) => {
     if (state.audience !== 'admin')
       return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });

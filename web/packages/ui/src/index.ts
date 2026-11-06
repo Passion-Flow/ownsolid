@@ -23,6 +23,7 @@ export {
 export { CopyText, type CopyTextProps } from './components/copy-text.tsx';
 export { Dialog, Drawer, ModalSurface, type DialogProps } from './components/dialog.tsx';
 export { EmptyState, Skeleton, type EmptyStateProps } from './components/empty-state.tsx';
+export { LiveLog, type LiveLogLine, type LiveLogProps } from './components/live-log.tsx';
 export { LocaleSelect } from './components/locale-select.tsx';
 export {
   Menu,
@@ -44,6 +45,12 @@ export {
 } from './components/problem-notice.tsx';
 export { SelectField, type SelectFieldProps } from './components/select-field.tsx';
 export { Spinner } from './components/spinner.tsx';
+export {
+  StepTimeline,
+  type StepState,
+  type StepTimelineProps,
+  type TimelineStep,
+} from './components/step-timeline.tsx';
 export { Kbd, StatusPill, Tag, type StatusTone, type TagProps } from './components/status-pill.tsx';
 export { Table, Td, Th, Tr } from './components/table.tsx';
 export { TextField, type TextFieldProps } from './components/text-field.tsx';
