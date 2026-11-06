@@ -548,9 +548,7 @@ export function MailDeliveriesPage() {
     return () => {
       clearTimeout(timer);
     };
-    // setFilter changes with the state it writes; the pause depends only on the text.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typed, recipient, debounce]);
+  }, [typed, recipient, debounce, setFilter]);
 
   const deliveries = useInfiniteQuery({
     queryKey: [...listKey, state, purpose, recipient, order],

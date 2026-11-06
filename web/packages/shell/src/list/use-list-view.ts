@@ -10,7 +10,7 @@ import {
   type SavedView,
 } from '@ownsolid/api';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter, useRouterState } from '@tanstack/react-router';
+import { useRouter, useRouterState, type RouterHistory } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSession } from '../session.ts';
 import {
@@ -87,17 +87,28 @@ export function useListView(definition: ListDefinition): ListView {
   );
   const [activeId, setActiveId] = useState(typeof stored.view === 'string' ? stored.view : null);
   // Every change replaces the entry: Back leaves the page rather than stepping through filters.
+  // The history is read at the moment of the change, never from a render, so a change that
+  // lands late, such as a debounced search, keeps whatever was chosen in the meantime.
+  const history = router.history as RouterHistory;
+  const current = useCallback(
+    () => readListLink(history.location.search, definition),
+    [history, definition],
+  );
   const show = useCallback(
     (filters: ListState['filters'], open: string | null) => {
-      const current = router.state.location;
-      const search = writeListLink(current.searchStr, definition, filters, open);
-      if (search === current.searchStr || (search === '' && current.searchStr === '?')) return;
-      void router.navigate({
-        href: `${current.pathname}${search}${current.hash ? `#${current.hash}` : ''}`,
-        replace: true,
-      });
+      const { pathname, search, hash } = history.location;
+      const next = writeListLink(search, definition, filters, open);
+      if (next === search || (next === '' && search === '?')) return;
+      void router.navigate({ href: `${pathname}${next}${hash}`, replace: true });
     },
-    [router, definition],
+    [router, history, definition],
+  );
+  const setFilter = useCallback(
+    (name: string, value: string) => {
+      const { filters, open } = current();
+      show(withFilter({ filters, hiddenColumns: [] }, name, value).filters, open);
+    },
+    [current, show],
   );
   // A link decides what the list shows. Without one, this browser's last screen comes back,
   // and the address shows it, so copying the address shares what is on screen.
@@ -168,19 +179,17 @@ export function useListView(definition: ListDefinition): ListView {
   return {
     definition,
     state,
-    setFilter: (name, value) => {
-      show(withFilter(state, name, value).filters, link.open);
-    },
+    setFilter,
     setColumnVisible: (id, visible) => {
       setHiddenColumns(withColumn(state, id, visible).hiddenColumns);
     },
     isColumnVisible: (id) => !state.hiddenColumns.includes(id),
     openRow: link.open,
     setOpenRow: (id) => {
-      show(state.filters, id);
+      show(current().filters, id);
     },
     clearFilters: () => {
-      show({}, link.open);
+      show({}, current().open);
     },
     views,
     viewsAvailable: query.isSuccess,
@@ -198,7 +207,7 @@ export function useListView(definition: ListDefinition): ListView {
       if (!activeView) return;
       const saved = readListState(activeView.state, definition);
       setHiddenColumns(saved.hiddenColumns);
-      show(saved.filters, link.open);
+      show(saved.filters, current().open);
     },
     saveAs: async (id, name) => {
       const saved = await put(id, name, state, 0);
