@@ -87,3 +87,54 @@ export function selectedOnScreen(
   const kept = rows.filter((id) => selected.has(id));
   return kept.length === selected.size ? selected : new Set(kept);
 }
+
+/** The query parameter that names the row whose drawer is open. */
+export const openRowParam = 'open';
+
+/**
+ * Reads a list's filters and open row from a query string. A link may be old or edited by
+ * hand, so values are checked like a saved view's.
+ */
+export function readListLink(
+  query: string,
+  definition: ListDefinition,
+): { filters: ListState['filters']; open: string | null } {
+  const params = new URLSearchParams(query);
+  const raw: Record<string, string> = {};
+  for (const name of Object.keys(definition.filters)) {
+    const value = params.get(name);
+    if (value !== null) raw[name] = value;
+  }
+  const open = params.get(openRowParam);
+  return {
+    filters: readListState({ filters: raw }, definition).filters,
+    open: open !== null && /^[A-Za-z0-9_-]{1,64}$/.test(open) ? open : null,
+  };
+}
+
+/** True when a query string names any of a list's filters or an open row. */
+export function linksList(query: string, definition: ListDefinition): boolean {
+  const params = new URLSearchParams(query);
+  return [...Object.keys(definition.filters), openRowParam].some((name) => params.has(name));
+}
+
+/**
+ * Writes a list's filters and open row into a query string, keeping parameters that belong to
+ * others, in a stable order so equal states give equal links.
+ */
+export function writeListLink(
+  query: string,
+  definition: ListDefinition,
+  filters: ListState['filters'],
+  open: string | null,
+): string {
+  const params = new URLSearchParams(query);
+  for (const name of [...Object.keys(definition.filters), openRowParam]) params.delete(name);
+  for (const name of Object.keys(definition.filters).sort()) {
+    const value = filters[name];
+    if (value) params.set(name, value);
+  }
+  if (open) params.set(openRowParam, open);
+  const text = params.toString();
+  return text === '' ? '' : `?${text}`;
+}

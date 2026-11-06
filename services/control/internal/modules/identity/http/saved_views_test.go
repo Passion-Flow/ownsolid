@@ -196,3 +196,44 @@ func TestMailDeliveriesFilterByRecipient(t *testing.T) {
 	admin.request("GET", "/api/v1/admin/mail-deliveries?recipient_prefix=", nil, 400, "", nil)
 	admin.request("GET", "/api/v1/admin/mail-deliveries?recipient_prefix=%01", nil, 400, "", nil)
 }
+
+func TestMailDeliveriesSortOldestFirstAndPageInThatOrder(t *testing.T) {
+	_, _, _, admin, password := setup(t)
+	admin.mutate("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": password}, 200, "LoginResponse")
+	for i := range 3 {
+		admin.mutate("POST", "/api/v1/admin/invitations", map[string]any{"email": fmt.Sprintf("order%d@example.invalid", i), "locale": "en"}, 201, "")
+	}
+	recipients := func(order string) []string {
+		t.Helper()
+		var out []string
+		cursor := ""
+		for range 5 {
+			path := "/api/v1/admin/mail-deliveries?limit=2&recipient_prefix=order&order=" + order
+			if cursor != "" {
+				path += "&cursor=" + cursor
+			}
+			page := admin.request("GET", path, nil, 200, "MailListResponse", nil)
+			for _, item := range page["items"].([]any) {
+				out = append(out, item.(map[string]any)["recipient_email"].(string))
+			}
+			next, _ := page["next_cursor"].(string)
+			if next == "" {
+				return out
+			}
+			cursor = next
+		}
+		t.Fatal("pages never ended")
+		return nil
+	}
+	oldest, newest := recipients("oldest"), recipients("newest")
+	if strings.Join(oldest, ",") != "order0@example.invalid,order1@example.invalid,order2@example.invalid" {
+		t.Fatal("oldest first across pages", oldest)
+	}
+	if strings.Join(newest, ",") != "order2@example.invalid,order1@example.invalid,order0@example.invalid" {
+		t.Fatal("newest first across pages", newest)
+	}
+	first := admin.request("GET", "/api/v1/admin/mail-deliveries?limit=1&order=oldest", nil, 200, "MailListResponse", nil)
+	cursor := first["next_cursor"].(string)
+	problemCode(t, admin.request("GET", "/api/v1/admin/mail-deliveries?limit=1&order=newest&cursor="+cursor, nil, 400, "", nil), "INVALID_CURSOR")
+	admin.request("GET", "/api/v1/admin/mail-deliveries?order=sideways", nil, 400, "", nil)
+}

@@ -611,12 +611,14 @@ export async function mockControlPlane(
     const wanted = query.get('state');
     const purpose = query.get('purpose');
     const recipient = query.get('recipient_prefix')?.toLowerCase();
-    const items = state.mail.filter(
+    const matching = state.mail.filter(
       (item) =>
         (!wanted || item.state === wanted) &&
         (!purpose || item.purpose === purpose) &&
         (!recipient || item.recipient_email.startsWith(recipient)),
     );
+    // The scripted list is newest first, as the server sends it by default.
+    const items = query.get('order') === 'oldest' ? [...matching].reverse() : matching;
     return data(route, { items, next_cursor: null });
   });
   await page.route('**/api/v1/admin/mail-deliveries/*/resends', (route) => {

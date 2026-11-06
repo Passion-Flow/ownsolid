@@ -23,6 +23,7 @@ export {
   type QueryClientOptions,
 } from './session.ts';
 export { ColumnChooser } from './list/column-chooser.tsx';
+export { CopyLinkButton } from './list/copy-link-button.tsx';
 export {
   emptyListState,
   readListState,

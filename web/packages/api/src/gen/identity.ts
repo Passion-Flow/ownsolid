@@ -1339,6 +1339,8 @@ export interface operations {
                 purpose?: "invitation" | "password_reset" | "password_changed";
                 /** @description Only emails whose recipient address starts with this text, ignoring case. */
                 recipient_prefix?: string;
+                /** @description `newest` (the default) or `oldest` first, by creation time. A cursor belongs to the order it was made with. */
+                order?: "newest" | "oldest";
             };
             header?: never;
             path?: never;

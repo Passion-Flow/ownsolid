@@ -51,8 +51,10 @@ type listPlan struct {
 	pgArgs, myArgs                                                         []any
 	dmArgs                                                                 []any
 	hasCursor                                                              bool
-	limit                                                                  int
-	windowFrom, windowTo                                                   *time.Time
+	// ascending lists oldest first; every list defaults to newest first.
+	ascending            bool
+	limit                int
+	windowFrom, windowTo *time.Time
 }
 
 func listTime(value time.Time) bool {
@@ -231,6 +233,14 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 		if e := emailPrefix("recipient_prefix", "lower(d.recipient_email)"); e != nil {
 			return listPlan{}, e
 		}
+		allowed["order"] = true
+		switch q.Get("order") {
+		case "", "newest":
+		case "oldest":
+			p.ascending = true
+		default:
+			return fail("VALIDATION_FAILED")
+		}
 	case "audit-events":
 		p.dmFrom = "AUDIT_EVENTS a"
 		p.dmProjection = "a.ID,a.OCCURRED_AT,a.ACTOR_USER_ID,a.SUBJECT_USER_ID,a.AUDIENCE,a.ACTION,a.OUTCOME,a.TARGET_TYPE,a.TARGET_ID,a.REASON,a.REQUEST_ID"
@@ -299,19 +309,26 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 	}
 	if c.ID != "" {
 		p.hasCursor = true
-		column := p.alias + "." + p.order
+		column, after := p.alias+"."+p.order, "<"
+		if p.ascending {
+			after = ">"
+		}
 		p.pgArgs = append(p.pgArgs, c.Time, c.ID)
 		n := len(p.pgArgs)
-		p.pgWhere = append(p.pgWhere, "("+column+","+p.alias+".id)<($"+strconv.Itoa(n-1)+",$"+strconv.Itoa(n)+"::uuid)")
+		p.pgWhere = append(p.pgWhere, "("+column+","+p.alias+".id)"+after+"($"+strconv.Itoa(n-1)+",$"+strconv.Itoa(n)+"::uuid)")
 		p.myArgs = append(p.myArgs, c.Time, c.Time, c.ID)
-		p.myWhere = append(p.myWhere, "("+column+"<? OR("+column+"=? AND "+p.alias+".id<?))")
+		p.myWhere = append(p.myWhere, "("+column+after+"? OR("+column+"=? AND "+p.alias+".id"+after+"?))")
 		p.dmArgs = append(p.dmArgs, c.Time.UTC(), c.Time.UTC(), c.ID)
-		p.dmWhere = append(p.dmWhere, "("+column+"<? OR("+column+"=? AND "+p.alias+".id<?))")
+		p.dmWhere = append(p.dmWhere, "("+column+after+"? OR("+column+"=? AND "+p.alias+".id"+after+"?))")
 	}
 	return p, nil
 }
 func (p listPlan) statement(dialect transaction.Dialect) transaction.Statement {
-	order := " ORDER BY " + p.alias + "." + p.order + " DESC," + p.alias + ".id DESC LIMIT "
+	direction := " DESC"
+	if p.ascending {
+		direction = " ASC"
+	}
+	order := " ORDER BY " + p.alias + "." + p.order + direction + "," + p.alias + ".id" + direction + " LIMIT "
 	if dialect == transaction.Dameng {
 		if p.limit < 1 || p.limit > maximumListLimit || p.dmFrom == "" {
 			return transaction.SQL(transaction.Dameng, "")

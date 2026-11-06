@@ -1908,6 +1908,19 @@
               "minLength": 1,
               "maxLength": 254
             }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "description": "`newest` (the default) or `oldest` first, by creation time. A cursor belongs to the order it was made with.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "newest",
+                "oldest"
+              ]
+            }
           }
         ]
       }

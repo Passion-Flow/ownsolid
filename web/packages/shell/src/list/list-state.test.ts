@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   emptyListState,
+  linksList,
+  readListLink,
+  writeListLink,
   readListState,
   sameListState,
   selectedOnScreen,
@@ -93,5 +96,48 @@ describe('selectedOnScreen', () => {
   it('keeps the same set when nothing changed, so nothing renders again', () => {
     const selected = new Set(['a']);
     expect(selectedOnScreen(selected, ['a', 'b'])).toBe(selected);
+  });
+});
+
+describe('list links', () => {
+  it('reads filters and the open row, checking them like a saved view', () => {
+    expect(readListLink('?state=failed&name=ada&open=abc-1&other=x', definition)).toEqual({
+      filters: { state: 'failed', name: 'ada' },
+      open: 'abc-1',
+    });
+    expect(readListLink('?state=gone&name=far+too+long&open=a%20b', definition)).toEqual({
+      filters: {},
+      open: null,
+    });
+  });
+
+  it('keeps text that looks like a number as text', () => {
+    expect(readListLink('?name=123', definition).filters).toEqual({ name: '123' });
+  });
+
+  it('writes a stable link and keeps parameters it does not own', () => {
+    const link = writeListLink(
+      '?other=x&state=sent',
+      definition,
+      { state: 'failed', name: 'a b' },
+      'r1',
+    );
+    expect(link).toBe('?other=x&name=a+b&state=failed&open=r1');
+    expect(writeListLink(link, definition, {}, null)).toBe('?other=x');
+    expect(writeListLink('', definition, {}, null)).toBe('');
+  });
+
+  it('round-trips', () => {
+    const filters = { state: 'sent', name: 'gr' };
+    expect(readListLink(writeListLink('', definition, filters, 'x'), definition)).toEqual({
+      filters,
+      open: 'x',
+    });
+  });
+
+  it('knows whether a link names the list', () => {
+    expect(linksList('?other=x', definition)).toBe(false);
+    expect(linksList('?state=failed', definition)).toBe(true);
+    expect(linksList('?open=x', definition)).toBe(true);
   });
 });

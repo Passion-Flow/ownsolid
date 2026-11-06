@@ -11,6 +11,7 @@ import {
 import { useI18n, type TranslationKey } from '@ownsolid/i18n';
 import {
   ColumnChooser,
+  CopyLinkButton,
   SavedViewsMenu,
   runtimeConfigQuery,
   useListView,
@@ -41,7 +42,7 @@ import {
   type StatusTone,
 } from '@ownsolid/ui';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Mail, RotateCw } from 'lucide-react';
+import { ArrowDown, ArrowUp, Mail, RotateCw } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 type Filter = 'all' | 'failed' | 'queued' | 'sent';
@@ -83,6 +84,8 @@ const definition: ListDefinition = {
     state: { kind: 'choice', values: filters.filter((value) => value !== 'all') },
     purpose: { kind: 'choice', values: purposeNames },
     recipient: { kind: 'text', maximum: 254 },
+    // Newest first unless the link says otherwise.
+    order: { kind: 'choice', values: ['oldest'] },
   },
   columns: [
     { id: 'recipient', label: 'mail.column.recipient', locked: true },
@@ -306,7 +309,32 @@ function Rows({ items, list, selection, selectable, onOpen }: RowsProps) {
               {shows('attempts') ? (
                 <Th className="text-right">{t('mail.column.attempts')}</Th>
               ) : null}
-              {shows('created') ? <Th>{t('mail.column.created')}</Th> : null}
+              {shows('created') ? (
+                <Th aria-sort={list.state.filters.order === 'oldest' ? 'ascending' : 'descending'}>
+                  <button
+                    type="button"
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-control border-0 bg-transparent p-0 font-semibold text-text-3 hover:text-text"
+                    onClick={() => {
+                      list.setFilter(
+                        'order',
+                        list.state.filters.order === 'oldest' ? '' : 'oldest',
+                      );
+                    }}
+                  >
+                    {t('mail.column.created')}
+                    {list.state.filters.order === 'oldest' ? (
+                      <ArrowUp aria-hidden className="size-3.5" />
+                    ) : (
+                      <ArrowDown aria-hidden className="size-3.5" />
+                    )}
+                    <span className="sr-only">
+                      {list.state.filters.order === 'oldest'
+                        ? t('list.sort.toNewest')
+                        : t('list.sort.toOldest')}
+                    </span>
+                  </button>
+                </Th>
+              ) : null}
               <Th>
                 <span className="sr-only">{t('mail.column.actions')}</span>
               </Th>
@@ -398,6 +426,7 @@ export function MailDeliveriesPage() {
   const state = applied.state as MailState | undefined;
   const purpose = applied.purpose as MailPurpose | undefined;
   const recipient = applied.recipient;
+  const order = applied.order as 'oldest' | undefined;
 
   // The field follows typing; the list follows the field after a pause.
   const [typed, setTyped] = useState(recipient ?? '');
@@ -420,10 +449,17 @@ export function MailDeliveriesPage() {
   }, [typed, recipient, debounce]);
 
   const deliveries = useInfiniteQuery({
-    queryKey: [...listKey, state, purpose, recipient],
+    queryKey: [...listKey, state, purpose, recipient, order],
     queryFn: ({ pageParam, signal }) =>
       listMailDeliveries(
-        { limit, cursor: pageParam ?? undefined, state, purpose, recipientPrefix: recipient },
+        {
+          limit,
+          cursor: pageParam ?? undefined,
+          state,
+          purpose,
+          recipientPrefix: recipient,
+          order,
+        },
         { signal },
       ),
     initialPageParam: null as string | null,
@@ -438,9 +474,8 @@ export function MailDeliveriesPage() {
     [items],
   );
   const selection = useRowSelection(selectable);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const open = items.find((item) => item.id === openId) ?? null;
-  const filtered = Object.keys(applied).length > 0;
+  const open = items.find((item) => item.id === list.openRow) ?? null;
+  const filtered = Object.keys(applied).some((name) => name !== 'order');
 
   let body;
   if (deliveries.isPending) {
@@ -483,7 +518,7 @@ export function MailDeliveriesPage() {
             list={list}
             selection={selection}
             selectable={selectable}
-            onOpen={setOpenId}
+            onOpen={list.setOpenRow}
           />
           {deliveries.hasNextPage ? (
             <Button
@@ -541,13 +576,14 @@ export function MailDeliveriesPage() {
         <div className="ml-auto flex items-center gap-2">
           <SavedViewsMenu list={list} />
           <ColumnChooser list={list} />
+          <CopyLinkButton />
         </div>
       </div>
       {body}
       <DeliveryDrawer
         delivery={open}
         onClose={() => {
-          setOpenId(null);
+          list.setOpenRow(null);
         }}
       />
     </>
