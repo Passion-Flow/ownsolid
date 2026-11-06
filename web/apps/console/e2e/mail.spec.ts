@@ -500,6 +500,27 @@ test.describe('revoking an invitation', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
+  test('gives the page back before the list has finished reloading', async ({ page }) => {
+    await page.goto('/mail?recipient=grace%40example.test');
+    await page
+      .getByRole('button', { name: 'Show details of the email to grace@example.test' })
+      .click();
+    await page.getByRole('button', { name: 'Revoke the invitation' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Revoke this invitation' });
+    await dialog.getByLabel('Type grace@example.test to confirm').fill('grace@example.test');
+    await page.route('**/api/v1/admin/mail-deliveries?*', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1_500));
+      await route.fallback();
+    });
+    await dialog.getByRole('button', { name: 'Revoke the invitation' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'revoked' })).toBeVisible();
+
+    const search = page.getByLabel('Filter by recipient');
+    await search.fill('');
+    await expect(search).toHaveValue('');
+    await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 500 });
+  });
+
   test('offers nothing further once it is revoked', async ({ page }) => {
     control.mail = [{ ...failedMail, invitation: { id: 'x', version: 3, status: 'revoked' } }];
     await page.goto('/mail');

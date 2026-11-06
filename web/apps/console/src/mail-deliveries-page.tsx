@@ -208,10 +208,11 @@ function RevokeInvitation({
   const [reason, setReason] = useState(t('mail.revoke.reason.default'));
   const revoke = useMutation({
     mutationFn: () => revokeInvitation(invitation.id, invitation.version, reason.trim()),
-    onSuccess: async () => {
-      toast({ message: t('mail.revoke.done', { email }) });
-      await queryClient.invalidateQueries({ queryKey: listKey });
+    // The dialog closes at once; the list catches up behind it.
+    onSuccess: () => {
       onDone();
+      toast({ message: t('mail.revoke.done', { email }) });
+      void queryClient.invalidateQueries({ queryKey: listKey });
     },
     // Someone acted on it first: the list shows what is true now.
     onError: () => queryClient.invalidateQueries({ queryKey: listKey }),
@@ -258,10 +259,10 @@ function DeliveryDrawer({
   const resend = useResend();
   const send = useMutation({
     mutationFn: (id: string) => resend.send(id),
-    onSuccess: async () => {
-      toast({ message: t('mail.resent') });
-      await resend.refresh();
+    onSuccess: () => {
       onClose();
+      toast({ message: t('mail.resent') });
+      void resend.refresh();
     },
   });
   const state = delivery ? states[delivery.state] : null;
