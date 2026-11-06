@@ -194,6 +194,7 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
     await expect(
       page.getByRole('status').filter({ hasText: `Invitation to ${invitee} revoked` }),
     ).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByLabel('Filter by recipient').fill('');
     await showEmails.getByRole('button', { name: 'Failed' }).click();
     const failed = page
