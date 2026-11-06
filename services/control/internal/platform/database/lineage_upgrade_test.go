@@ -84,6 +84,29 @@ func TestLineageUpgradeKeepsChosenThemesOnly(t *testing.T) {
 }
 
 
+// Migration 000045 leaves shortcuts on for everyone and changes no one's revision: nobody chose it.
+func TestLineageUpgradeLeavesShortcutsOnWithoutARevision(t *testing.T) {
+	s := fixture.NewAtVersion(t, 44) // before 000045
+	fixture.Bootstrap(t, s)
+	ctx := t.Context()
+	var user string
+	var before int64
+	if e := s.DB.QueryRow(ctx, "SELECT user_id::text,revision FROM user_preferences LIMIT 1").Scan(&user, &before); e != nil {
+		t.Fatal(e)
+	}
+	if e := database.Migrate(ctx, s.DB); e != nil {
+		t.Fatal(e)
+	}
+	var on bool
+	var after int64
+	if e := s.DB.QueryRow(ctx, "SELECT single_key_shortcuts,revision FROM user_preferences WHERE user_id=$1", user).Scan(&on, &after); e != nil {
+		t.Fatal(e)
+	}
+	if !on || after != before {
+		t.Fatal(on, before, after)
+	}
+}
+
 // Migration 000035 counts the live nodes that already exist; removed nodes do not count.
 func TestLineageUpgradeCountsLiveNodes(t *testing.T) {
 	s := fixture.NewAtVersion(t, 34) // before 000035

@@ -1,4 +1,4 @@
-import type { NavGroup } from '@ownsolid/shell';
+import type { NavGroup, SingleKeyShortcut } from '@ownsolid/shell';
 import {
   Activity,
   BadgeCheck,
@@ -25,6 +25,14 @@ import {
   Users,
   Workflow,
 } from 'lucide-react';
+
+/** The console's one-character shortcuts. One gets a `to` when its page ships. */
+export const shortcuts: readonly SingleKeyShortcut[] = [
+  { key: 'd', label: 'shortcuts.deploy' },
+  { key: 'i', label: 'shortcuts.install' },
+  { key: 'n', label: 'shortcuts.addNode', to: '/nodes', hash: 'add' },
+  { key: 'k', label: 'shortcuts.apiKey' },
+];
 
 /** The console's navigation. An item gets a `to` when its page ships. */
 export const navigation: readonly NavGroup[] = [

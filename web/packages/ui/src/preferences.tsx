@@ -19,6 +19,7 @@ export type Density = 'comfortable' | 'compact';
 
 const themeKey = 'ownsolid.theme';
 const densityKey = 'ownsolid.density';
+const shortcutsKey = 'ownsolid.shortcuts';
 
 function read(key: string): string | null {
   try {
@@ -46,10 +47,16 @@ function storedDensity(): Density {
   return read(densityKey) === 'compact' ? 'compact' : 'comfortable';
 }
 
+function storedShortcuts(): boolean {
+  return read(shortcutsKey) !== 'off';
+}
+
 /** The choices a user can save. */
 export interface Appearance {
   theme: ThemePreference;
   density: Density;
+  /** Whether one-character keyboard shortcuts work. */
+  singleKeyShortcuts: boolean;
 }
 
 /** Receives what the user changes, to save it beyond this browser. */
@@ -59,8 +66,9 @@ export type AppearanceSaver = (change: Partial<Appearance>) => void;
 export interface Preferences extends Appearance {
   setTheme: (theme: ThemePreference) => void;
   setDensity: (density: Density) => void;
+  setSingleKeyShortcuts: (on: boolean) => void;
   /** Applies values saved elsewhere. Unlike the setters, this saves nothing. */
-  adopt: (saved: Appearance) => void;
+  adopt: (saved: Partial<Appearance>) => void;
   /** Sends later changes to `saver` and returns a function that stops. */
   connect: (saver: AppearanceSaver) => () => void;
 }
@@ -71,6 +79,7 @@ const PreferencesContext = createContext<Preferences | null>(null);
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState(storedTheme);
   const [density, setDensityState] = useState(storedDensity);
+  const [singleKeyShortcuts, setShortcutsState] = useState(storedShortcuts);
   const saver = useRef<AppearanceSaver | null>(null);
 
   useLayoutEffect(() => applyTheme(theme), [theme]);
@@ -78,7 +87,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.density = density;
   }, [density]);
 
-  const applyChoice = useCallback(({ theme, density }: Partial<Appearance>) => {
+  const applyChoice = useCallback(({ theme, density, singleKeyShortcuts }: Partial<Appearance>) => {
     if (theme) {
       write(themeKey, theme);
       setThemeState(theme);
@@ -86,6 +95,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     if (density) {
       write(densityKey, density);
       setDensityState(density);
+    }
+    if (singleKeyShortcuts !== undefined) {
+      write(shortcutsKey, singleKeyShortcuts ? 'on' : 'off');
+      setShortcutsState(singleKeyShortcuts);
     }
   }, []);
   const setTheme = useCallback(
@@ -102,6 +115,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     },
     [applyChoice],
   );
+  const setSingleKeyShortcuts = useCallback(
+    (value: boolean) => {
+      applyChoice({ singleKeyShortcuts: value });
+      saver.current?.({ singleKeyShortcuts: value });
+    },
+    [applyChoice],
+  );
   const connect = useCallback((next: AppearanceSaver) => {
     saver.current = next;
     return () => {
@@ -110,8 +130,26 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ theme, setTheme, density, setDensity, adopt: applyChoice, connect }),
-    [theme, setTheme, density, setDensity, applyChoice, connect],
+    () => ({
+      theme,
+      setTheme,
+      density,
+      setDensity,
+      singleKeyShortcuts,
+      setSingleKeyShortcuts,
+      adopt: applyChoice,
+      connect,
+    }),
+    [
+      theme,
+      setTheme,
+      density,
+      setDensity,
+      singleKeyShortcuts,
+      setSingleKeyShortcuts,
+      applyChoice,
+      connect,
+    ],
   );
   return <PreferencesContext value={value}>{children}</PreferencesContext>;
 }

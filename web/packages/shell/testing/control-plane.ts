@@ -219,7 +219,13 @@ export interface ControlPlane
   /** The password the last reset or registration set. */
   lastPassword: string | null;
   /** The theme, density and language saved on the account. */
-  preferences: { theme: string; density: string; locale: string; revision: number };
+  preferences: {
+    theme: string;
+    density: string;
+    locale: string;
+    single_key_shortcuts: boolean;
+    revision: number;
+  };
   /** The tenant's settings, which also set the public default language. */
   tenantSettings: { default_locale: string; revision: number };
   /** Fails reading the tenant's settings with this problem while set. */
@@ -311,7 +317,13 @@ export async function mockControlPlane(
     ssoAddress: '',
     nextAccountWrite: null,
     lastPassword: null,
-    preferences: { theme: 'system', density: 'comfortable', locale: 'auto', revision: 1 },
+    preferences: {
+      theme: 'system',
+      density: 'comfortable',
+      locale: 'auto',
+      single_key_shortcuts: true,
+      revision: 1,
+    },
     tenantSettings: { default_locale: 'auto', revision: 1 },
     tenantSettingsProblem: null,
     preferencesProblem: null,

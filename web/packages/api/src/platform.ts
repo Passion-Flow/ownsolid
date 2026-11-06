@@ -40,7 +40,9 @@ export type SsoConnector = ssoContract.components['schemas']['PublicSSOConnector
 export type Preference = preferencesContract.components['schemas']['Preference'];
 
 /** The account fields to change; fields left out keep their saved value. */
-export type PreferenceChange = Partial<Pick<Preference, 'theme' | 'density' | 'locale'>>;
+export type PreferenceChange = Partial<
+  Pick<Preference, 'theme' | 'density' | 'locale' | 'single_key_shortcuts'>
+>;
 
 /** A named state of one list: its filters and columns. */
 export type SavedView = preferencesContract.components['schemas']['SavedView'];

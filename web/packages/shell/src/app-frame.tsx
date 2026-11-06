@@ -16,6 +16,11 @@ import { ChevronRight, Menu as MenuIcon, Search, UserRound } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AccountPreferences } from './account-preferences.tsx';
 import { CommandMenu } from './command-menu.tsx';
+import {
+  ShortcutsDialog,
+  useSingleKeyShortcuts,
+  type SingleKeyShortcut,
+} from './keyboard-shortcuts.tsx';
 import { LicenseStatus } from './license-status.tsx';
 import { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
 import { NotificationBell } from './notifications.tsx';
@@ -123,16 +128,30 @@ export interface AppFrameProps {
   licensePath?: string | undefined;
   /** Shows the tasks the person started; the portal has none. */
   tasks?: TaskTrayProps | undefined;
+  /** One-character actions; the portal has none. */
+  shortcuts?: readonly SingleKeyShortcut[] | undefined;
   children: ReactNode;
 }
 
+const noShortcuts: readonly SingleKeyShortcut[] = [];
+
 /** The signed-in layout of the console and the portal. */
-export function AppFrame({ navigation, licensePath, tasks, children }: AppFrameProps) {
+export function AppFrame({
+  navigation,
+  licensePath,
+  tasks,
+  shortcuts = noShortcuts,
+  children,
+}: AppFrameProps) {
   const { t } = useI18n();
   const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [commandOpen, setCommandOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  useSingleKeyShortcuts(shortcuts, () => {
+    setShortcutsOpen(true);
+  });
   const signOut = useSignOut(() => {
     void router.navigate({ to: signInPath, replace: true });
   });
@@ -254,7 +273,18 @@ export function AppFrame({ navigation, licensePath, tasks, children }: AppFrameP
         }}
         navigation={pages}
         onSignOut={startSignOut}
+        onShortcuts={() => {
+          setShortcutsOpen(true);
+        }}
       />
+      {shortcutsOpen ? (
+        <ShortcutsDialog
+          shortcuts={shortcuts}
+          onClose={() => {
+            setShortcutsOpen(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

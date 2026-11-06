@@ -22,7 +22,7 @@ import {
   runtimeConfigQuery,
   useListView,
   useRowSelection,
-  useHashAction,
+  useHashDialog,
   useTypedFilter,
   type ListDefinition,
   type ListView,
@@ -50,7 +50,7 @@ import {
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { Ban, Gauge, Plus, RefreshCw, Server } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import { AddNodeDialog } from './add-node-dialog.tsx';
 import { NodeDrawer } from './node-drawer.tsx';
 import { nodeState } from './node-state.ts';
@@ -365,7 +365,7 @@ export function NodesPage() {
   const status = applied.status as NodeStatus | undefined;
   const name = applied.name;
   const [typed, setTyped] = useTypedFilter(list, 'name', config?.searchDebounceMilliseconds ?? 0);
-  const [adding, setAdding] = useState(useHashAction('add'));
+  const [adding, setAdding] = useHashDialog('add');
 
   const nodes = useInfiniteQuery({
     queryKey: ['nodes', 'list', connectivity, status, name],

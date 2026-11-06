@@ -5,6 +5,7 @@ import { createPreferenceSync, type PreferenceSyncOptions } from './preference-s
 const saved = (revision: number, change: PreferenceChange = {}): Preference => ({
   theme: 'system',
   density: 'comfortable',
+  single_key_shortcuts: true,
   locale: 'auto',
   revision,
   updated_at: '2026-11-05T00:00:00Z',

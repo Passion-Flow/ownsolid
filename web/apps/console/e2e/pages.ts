@@ -556,6 +556,17 @@ export const consolePages: readonly PageState[] = [
     },
   },
   {
+    name: 'keyboard shortcuts listed',
+    path: '/',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/');
+      await page.getByRole('heading', { name: /^Welcome/, level: 1 }).waitFor();
+      await page.keyboard.press('?');
+      await page.getByRole('dialog', { name: 'Keyboard shortcuts' }).waitFor();
+    },
+  },
+  {
     name: 'single sign-on listed',
     path: '/sso',
     open: async (page, control) => {

@@ -258,6 +258,9 @@ state network with a fixed address.
 A database that holds connectors needs the keyring that sealed them: control will not start without
 it, and the schema refuses to delete connectors. Keep the keyring with the install root.
 
+`live-shortcuts.spec.ts` needs only the variables above. It uses two browsers and two sign-ins per run, and
+leaves the shortcuts on.
+
 `live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
 to the license history. It needs test files signed with the key the installation trusts.
 `OWNSOLID_LIVE_LICENSE_COMMAND` reads the license state as JSON on standard input and prints a JSON

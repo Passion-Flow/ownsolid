@@ -8,7 +8,9 @@ import {
   CardHeader,
   SelectField,
   Spinner,
+  Switch,
   TextField,
+  usePreferences,
   useToast,
 } from '@ownsolid/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -134,6 +136,27 @@ function LanguageCard() {
   );
 }
 
+/** Turns the one-character shortcuts on or off, which applies and saves at once. */
+function KeyboardCard() {
+  const { t } = useI18n();
+  const { singleKeyShortcuts, setSingleKeyShortcuts } = usePreferences();
+  return (
+    <Card>
+      <CardHeader title={t('shortcuts.switch')} subtitle={t('shortcuts.switch.detail')} />
+      <CardBody>
+        <div className="flex items-center justify-between gap-4">
+          <p className="m-0 text-text-2">{t('shortcuts.switch.list')}</p>
+          <Switch
+            label={t('shortcuts.switch')}
+            checked={singleKeyShortcuts}
+            onChange={setSingleKeyShortcuts}
+          />
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
 function PasswordCard({ email }: { email: string }) {
   const { t } = useI18n();
   const toast = useToast();
@@ -227,6 +250,7 @@ export function AccountPage() {
         </div>
         <div className="flex min-w-0 flex-col gap-4">
           <LanguageCard />
+          <KeyboardCard />
           <ProvidersCard />
         </div>
       </div>

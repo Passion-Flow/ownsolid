@@ -1364,6 +1364,7 @@
           "theme",
           "density",
           "locale",
+          "single_key_shortcuts",
           "revision",
           "updated_at"
         ],
@@ -1392,6 +1393,10 @@
               "zh-CN"
             ],
             "description": "`auto` means no choice: the tenant's default, then the browser's languages."
+          },
+          "single_key_shortcuts": {
+            "type": "boolean",
+            "description": "Whether one-character keyboard shortcuts work. A person can turn them off, as WCAG 2.2 criterion 2.1.4 requires."
           },
           "revision": {
             "type": "integer",
@@ -1436,13 +1441,17 @@
             ],
             "description": "`auto` means no choice: the tenant's default, then the browser's languages."
           },
+          "single_key_shortcuts": {
+            "type": "boolean",
+            "description": "Whether one-character keyboard shortcuts work. A person can turn them off, as WCAG 2.2 criterion 2.1.4 requires."
+          },
           "expected_revision": {
             "type": "integer",
             "minimum": 1,
             "maximum": 9007199254740990
           }
         },
-        "description": "Changes the named fields and keeps the others. At least one of `theme`, `density` and `locale` is required. A chosen locale also becomes the account's email language."
+        "description": "Changes the named fields and keeps the others. At least one of `theme`, `density`, `locale` and `single_key_shortcuts` is required. A chosen locale also becomes the account's email language."
       },
       "PreferenceResponse": {
         "type": "object",

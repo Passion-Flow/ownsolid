@@ -2,7 +2,16 @@ import { useI18n, supportedLocales } from '@ownsolid/i18n';
 import { ModalSurface, usePreferences, resolveTheme, useToast } from '@ownsolid/ui';
 import { useRouter } from '@tanstack/react-router';
 import { Command } from 'cmdk';
-import { Building2, Languages, LogOut, Moon, Rows3, Sun, type LucideIcon } from 'lucide-react';
+import {
+  Building2,
+  Keyboard,
+  Languages,
+  LogOut,
+  Moon,
+  Rows3,
+  Sun,
+  type LucideIcon,
+} from 'lucide-react';
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { NavGroup } from './navigation.ts';
 import { useWorkspaces } from './workspace.ts';
@@ -36,10 +45,17 @@ export interface CommandMenuProps {
   onClose: () => void;
   navigation: readonly NavGroup[];
   onSignOut: () => void;
+  onShortcuts: () => void;
 }
 
 /** Search and run: actions first, then every page that has shipped. */
-export function CommandMenu({ open, onClose, navigation, onSignOut }: CommandMenuProps) {
+export function CommandMenu({
+  open,
+  onClose,
+  navigation,
+  onSignOut,
+  onShortcuts,
+}: CommandMenuProps) {
   const { t, locale, setLocale } = useI18n();
   const router = useRouter();
   const toast = useToast();
@@ -120,6 +136,9 @@ export function CommandMenu({ open, onClose, navigation, onSignOut }: CommandMen
                 {t('command.switchWorkspace', { name: item.name })}
               </Item>
             ))}
+            <Item icon={Keyboard} onSelect={run(onShortcuts)}>
+              {t('shortcuts.title')}
+            </Item>
             <Item icon={LogOut} onSelect={run(onSignOut)}>
               {t('signOut.action')}
             </Item>

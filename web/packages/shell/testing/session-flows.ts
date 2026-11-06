@@ -167,7 +167,13 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
 
   test('applies what the account saved, over what this browser remembers', async ({ page }) => {
     control.signedIn = true;
-    control.preferences = { theme: 'dark', density: 'compact', locale: 'auto', revision: 4 };
+    control.preferences = {
+      theme: 'dark',
+      density: 'compact',
+      locale: 'auto',
+      single_key_shortcuts: true,
+      revision: 4,
+    };
     await page.emulateMedia({ colorScheme: 'light' });
     await page.addInitScript(() => {
       localStorage.setItem('ownsolid.theme', 'light');
@@ -188,7 +194,13 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await expect.poll(() => control.preferences.theme).toBe('dark');
     expect(control.preferenceWrites).toEqual([{ theme: 'dark', expected_revision: 1 }]);
 
-    control.preferences = { theme: 'light', density: 'compact', locale: 'auto', revision: 9 };
+    control.preferences = {
+      theme: 'light',
+      density: 'compact',
+      locale: 'auto',
+      single_key_shortcuts: true,
+      revision: 9,
+    };
     await page.evaluate(() => {
       window.dispatchEvent(new Event('visibilitychange'));
     });
@@ -201,7 +213,13 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto('/');
     await expect(page.getByRole('button', { name: 'Use compact spacing' })).toBeVisible();
-    control.preferences = { theme: 'system', density: 'comfortable', locale: 'auto', revision: 7 };
+    control.preferences = {
+      theme: 'system',
+      density: 'comfortable',
+      locale: 'auto',
+      single_key_shortcuts: true,
+      revision: 7,
+    };
     await page.getByRole('button', { name: 'Use the dark theme' }).click();
     await expect.poll(() => control.preferences.theme).toBe('dark');
     expect(control.preferences.revision).toBe(8);

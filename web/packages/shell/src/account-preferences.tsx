@@ -62,7 +62,17 @@ function Sync({ userId }: { userId: string }) {
     if (failedSave) showFailure(failedSave.retry);
   }, [failedSave]);
 
-  useEffect(() => connect(sync.save), [connect, sync]);
+  useEffect(
+    () =>
+      connect(({ singleKeyShortcuts, ...appearance }) => {
+        sync.save(
+          singleKeyShortcuts === undefined
+            ? appearance
+            : { ...appearance, single_key_shortcuts: singleKeyShortcuts },
+        );
+      }),
+    [connect, sync],
+  );
   useEffect(
     () =>
       connectLocale((locale) => {
@@ -72,7 +82,11 @@ function Sync({ userId }: { userId: string }) {
   );
   useEffect(() => {
     if (!data || sync.busy()) return;
-    adopt(data);
+    adopt({
+      theme: data.theme,
+      density: data.density,
+      singleKeyShortcuts: data.single_key_shortcuts,
+    });
     adoptLocale(data.locale);
   }, [data, adopt, adoptLocale, sync]);
 

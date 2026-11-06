@@ -7,11 +7,12 @@ import {
   rootRoute,
 } from '@ownsolid/shell';
 import { createRoute, lazyRouteComponent } from '@tanstack/react-router';
-import { navigation } from './navigation.ts';
+import { navigation, shortcuts } from './navigation.ts';
 import { operations, taskPath } from './task-names.ts';
 
 const frameRoute = createFrameRoute({
   navigation,
+  shortcuts,
   licensePath: '/license',
   tasks: { taskPath, taskName: (task) => operations[task.operation] },
 });

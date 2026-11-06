@@ -69,7 +69,8 @@ comes back empty offers to clear the filters.
 2. **Every problem carries its next step.** Alerts and errors state the likely cause
    and offer the fixing action directly.
 3. **Common tasks are one step away.** Quick actions on the overview, single-key
-   shortcuts and a command menu (`Cmd+K`) that can run actions, not only navigate.
+   shortcuts and a command menu (`Cmd+K`) that can run actions, not only navigate. Every
+   one-character shortcut sits under the account's switch (WCAG 2.2, 2.1.4).
 4. **Prefer undo to confirmation.** Reversible actions complete immediately and offer
    undo; only irreversible actions ask for confirmation
    ([research](../research/undo-and-confirmation.md)). Pass `undo` to the toast; when it

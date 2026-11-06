@@ -60,8 +60,8 @@ func (q *nativePreferenceExecutor) Exec(_ context.Context, statement transaction
 
 func TestDamengPreferenceRevisionAuditAndFailureBoundary(t *testing.T) {
 	at := time.Date(2026, 10, 24, 7, 0, 0, 123456000, time.UTC)
-	old := Preference{Theme: LightTheme, Density: ComfortableDensity, Locale: AutoLocale, Revision: 1, UpdatedAt: at}
-	updated := Preference{Theme: DarkTheme, Density: ComfortableDensity, Locale: AutoLocale, Revision: 2, UpdatedAt: at.Add(time.Second)}
+	old := Preference{Theme: LightTheme, Density: ComfortableDensity, Locale: AutoLocale, SingleKeyShortcuts: true, Revision: 1, UpdatedAt: at}
+	updated := Preference{Theme: DarkTheme, Density: ComfortableDensity, Locale: AutoLocale, SingleKeyShortcuts: true, Revision: 2, UpdatedAt: at.Add(time.Second)}
 	unknown := errors.Join(context.Canceled, &transaction.Error{Kind: transaction.CommitUnknown})
 	for _, tc := range []struct {
 		name           string
@@ -108,10 +108,11 @@ func TestDamengPreferenceRevisionAuditAndFailureBoundary(t *testing.T) {
 // Chains without the density column refuse what they cannot store, before any write.
 func TestDamengPreferenceRefusesWhatItsChainCannotStore(t *testing.T) {
 	at := time.Date(2026, 10, 24, 7, 0, 0, 0, time.UTC)
-	old := Preference{Theme: LightTheme, Density: ComfortableDensity, Revision: 1, UpdatedAt: at}
+	old := Preference{Theme: LightTheme, Density: ComfortableDensity, SingleKeyShortcuts: true, Revision: 1, UpdatedAt: at}
 	for name, input := range map[string]UpdateRequest{
 		"system_theme":    {Theme: new(SystemTheme), ExpectedRevision: 1},
 		"compact_density": {Density: new(CompactDensity), ExpectedRevision: 1},
+		"shortcuts_off":   {SingleKeyShortcuts: new(false), ExpectedRevision: 1},
 	} {
 		t.Run(name, func(t *testing.T) {
 			q := &nativePreferenceExecutor{t: t, rows: []nativePreferenceRow{{old, nil}}}

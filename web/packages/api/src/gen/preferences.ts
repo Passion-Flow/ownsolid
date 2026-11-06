@@ -106,11 +106,13 @@ export interface components {
              * @enum {string}
              */
             locale: "auto" | "en" | "zh-CN";
+            /** @description Whether one-character keyboard shortcuts work. A person can turn them off, as WCAG 2.2 criterion 2.1.4 requires. */
+            single_key_shortcuts: boolean;
             revision: number;
             /** Format: date-time */
             updated_at: string;
         };
-        /** @description Changes the named fields and keeps the others. At least one of `theme`, `density` and `locale` is required. A chosen locale also becomes the account's email language. */
+        /** @description Changes the named fields and keeps the others. At least one of `theme`, `density`, `locale` and `single_key_shortcuts` is required. A chosen locale also becomes the account's email language. */
         UpdatePreference: {
             /**
              * @description `system` leaves the choice to the operating system of each browser.
@@ -124,6 +126,8 @@ export interface components {
              * @enum {string}
              */
             locale?: "auto" | "en" | "zh-CN";
+            /** @description Whether one-character keyboard shortcuts work. A person can turn them off, as WCAG 2.2 criterion 2.1.4 requires. */
+            single_key_shortcuts?: boolean;
             expected_revision: number;
         };
         PreferenceResponse: {
