@@ -8,21 +8,22 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"io"
 	"net"
 	"os"
 	"os/user"
 	"path/filepath"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/discovery"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/state"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/discovery"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/progress"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/state"
 )
 
 type Config struct {
@@ -471,22 +472,26 @@ func (m *Manager) Execute(ctx context.Context, command wire.ComponentCommand, do
 		if !exists {
 			e = m.install(ctx, download)
 		} else {
+			progress.Step(ctx, wire.ProgressStepStart)
 			e = m.service.Start(ctx)
 		}
 	case "start":
 		if !exists {
 			e = code("COMPONENT_STATE_INVALID")
 		} else {
+			progress.Step(ctx, wire.ProgressStepStart)
 			e = m.service.Start(ctx)
 		}
 	case "stop":
 		if !exists {
 			e = code("COMPONENT_STATE_INVALID")
 		} else {
+			progress.Step(ctx, wire.ProgressStepStop)
 			e = m.service.Stop(ctx)
 		}
 	case "remove":
 		if exists {
+			progress.Step(ctx, wire.ProgressStepRemove)
 			var j journal
 			j, e = m.readJournal()
 			if e == nil {
@@ -500,9 +505,12 @@ func (m *Manager) Execute(ctx context.Context, command wire.ComponentCommand, do
 	case "observe":
 	}
 	if e != nil {
+		progress.Error(ctx, "Node exporter %s failed: %s", command.Action, safeComponentError(e).Error())
 		return m.failed(e), safeComponentError(e)
 	}
+	progress.Step(ctx, wire.ProgressStepVerify)
 	o := m.Observe(ctx)
+	progress.Info(ctx, "Node exporter is %s", o.State)
 	if command.Action == "install" || command.Action == "start" {
 		if o.State != "running" || o.Metrics == nil {
 			e = code("COMPONENT_SERVICE_FAILED")
@@ -600,6 +608,7 @@ func (m *Manager) installVersion(ctx context.Context, version string, configurat
 	if e := ctx.Err(); e != nil {
 		return code("COMPONENT_CANCELLED")
 	}
+	progress.Step(ctx, wire.ProgressStepPreflight)
 	// Keep stop/recovery available under space pressure; staging headroom gates only new installs.
 	available, e := diskAvailable(m.config.RootDirectory)
 	if e != nil || available < 256*1024*1024 {
@@ -628,13 +637,17 @@ func (m *Manager) installVersion(ctx context.Context, version string, configurat
 		return e
 	}
 	defer os.Remove(archive)
+	progress.Step(ctx, wire.ProgressStepDownload)
+	progress.Info(ctx, "Fetching node exporter %s from control", version)
 	if e = download(ctx, archive); e != nil {
 		return safeComponentError(e)
 	}
+	progress.Step(ctx, wire.ProgressStepInstall)
 	files, e := extractArchiveVersion(archive, stage, version)
 	if e != nil {
 		return e
 	}
+	progress.Info(ctx, "Unpacked %d files", len(files))
 	j.Ownership.Files = files
 	j.Ownership.ManifestSHA256 = bytesHash(manifestBytes(j.Ownership))
 	if e = m.save(j); e != nil {
@@ -695,6 +708,7 @@ func (m *Manager) installVersion(ctx context.Context, version string, configurat
 	if ctx.Err() != nil {
 		return code("COMPONENT_CANCELLED")
 	}
+	progress.Step(ctx, wire.ProgressStepStart)
 	if e = m.service.Start(ctx); e != nil {
 		return e
 	}
