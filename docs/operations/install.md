@@ -56,7 +56,7 @@ Compose. Other sizes are refused until their roadmap items land.
 | `telemetry` | Starts the metrics and logs stores and waits until both answer |
 | `vector-extension` | Installs pgvector 0.8.7 |
 | `schema` | Applies migrations |
-| `runtime-access` | Creates the restricted role that serving uses |
+| `runtime-access` | Creates the restricted role that serving uses. On an existing installation it grants that role the tables a newer release added, and nothing else |
 | `check-schema` | Verifies the ledger, catalog and grants |
 | `administrator` | Creates the first administrator once |
 | `control` | Starts serving and waits until it is healthy |

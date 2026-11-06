@@ -244,10 +244,27 @@ func (i *installer) schema(ctx context.Context) error {
 	return e
 }
 
+// runtimeAccess grants the runtime role what the schema needs and verifies it. A new
+// installation gets its role from prepare-runtime-access. On an existing one, a migration
+// that added a table leaves the role without access to it, which prepare-runtime-access
+// refuses to repair; upgrade-schema grants exactly the application tables to the role that
+// is already there, and only when inspection says grants are pending.
 func (i *installer) runtimeAccess(ctx context.Context) error {
-	_, e := i.operator(ctx, "RUNTIME_ACCESS_VERIFIED", "prepare-runtime-access", "--config", i.operatorConfig(), "--runtime-config", i.runtimeConfig())
+	args := []string{"--config", i.operatorConfig(), "--runtime-config", i.runtimeConfig()}
+	// A new installation has no accepted role yet, so inspection fails there by design.
+	inspection, _ := i.operator(ctx, grantsPending, append([]string{"inspect-schema-upgrade"}, args...)...)
+	if containsLine(inspection, grantsPending) {
+		if _, e := i.operator(ctx, "SCHEMA_UPGRADE_COMPLETE", append([]string{"upgrade-schema"}, args...)...); e != nil {
+			return e
+		}
+	}
+	_, e := i.operator(ctx, "RUNTIME_ACCESS_VERIFIED", append([]string{"prepare-runtime-access"}, args...)...)
 	return e
 }
+
+// grantsPending is what inspect-schema-upgrade prints when the schema is current and the
+// runtime role lacks access to some of its tables.
+const grantsPending = "SCHEMA_COMMITTED_GRANTS_PENDING"
 
 func (i *installer) checkSchema(ctx context.Context) error {
 	_, e := i.operator(ctx, "SCHEMA_CURRENT", "check-schema", "--config", i.operatorConfig())

@@ -680,3 +680,70 @@ func TestFailedServiceStartIncludesItsLog(t *testing.T) {
 		t.Fatalf("got %v", e)
 	}
 }
+
+func TestApplyGrantsTheExistingRoleTheTablesAnUpgradeAdded(t *testing.T) {
+	for _, c := range []struct {
+		name       string
+		inspection string
+		fails      bool
+		upgrade    bool
+	}{
+		{"new installation", "UPGRADE_ACCEPTED_INSTALLATION_REQUIRED", true, false},
+		{"nothing pending", "SCHEMA_UPGRADE_COMPLETE", false, false},
+		{"a table without grants", grantsPending, false, true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			runner := &fakeRunner{answer: func(line string) (string, error) {
+				switch {
+				case strings.Contains(line, "inspect-schema-upgrade"):
+					if c.fails {
+						return c.inspection + "\n", errors.New("exit status 1")
+					}
+					return "Container started\n" + c.inspection + "\n", nil
+				case strings.Contains(line, "upgrade-schema"):
+					return "Container started\nSCHEMA_UPGRADE_COMPLETE\n", nil
+				}
+				return successOutput(line), nil
+			}}
+			var out bytes.Buffer
+			if e := testInstaller(validConfig(t), runner, &out).apply(context.Background()); e != nil {
+				t.Fatal(e)
+			}
+			upgraded, prepared := -1, -1
+			for index, command := range runner.commands {
+				if strings.Contains(command, " upgrade-schema ") {
+					upgraded = index
+				}
+				if strings.Contains(command, "prepare-runtime-access") {
+					prepared = index
+				}
+			}
+			if (upgraded >= 0) != c.upgrade || prepared < 0 || c.upgrade && upgraded > prepared {
+				t.Fatalf("upgrade at %d, prepare at %d:\n%s", upgraded, prepared, strings.Join(runner.commands, "\n"))
+			}
+		})
+	}
+}
+
+func TestApplyStopsWhenGrantingFails(t *testing.T) {
+	runner := &fakeRunner{answer: func(line string) (string, error) {
+		switch {
+		case strings.Contains(line, "inspect-schema-upgrade"):
+			return grantsPending + "\n", nil
+		case strings.Contains(line, "upgrade-schema"):
+			return "UPGRADE_GRANT_CONFLICT\n", errors.New("exit status 1")
+		}
+		return successOutput(line), nil
+	}}
+	var out bytes.Buffer
+	e := testInstaller(validConfig(t), runner, &out).apply(context.Background())
+	var step *StepError
+	if !errors.As(e, &step) || step.Step != "runtime-access" || !strings.Contains(step.Detail, "UPGRADE_GRANT_CONFLICT") {
+		t.Fatalf("got %v", e)
+	}
+	for _, command := range runner.commands {
+		if strings.Contains(command, "prepare-runtime-access") {
+			t.Fatal("went on to verify after granting failed")
+		}
+	}
+}
