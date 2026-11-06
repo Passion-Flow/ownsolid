@@ -34,6 +34,13 @@ export {
   type TaskScript,
 } from './tasks.ts';
 export { disabledNode, joinToken, node, offlineNode, type NodeScript } from './nodes.ts';
+export {
+  defaultWorkspace,
+  ownerMember,
+  plainMember,
+  teamWorkspace,
+  type WorkspaceScript,
+} from './workspaces.ts';
 export { failedSignIn, licenseEvent, systemEvent, type AuditScript } from './audit.ts';
 export {
   activeLicense,

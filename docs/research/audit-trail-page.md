@@ -10,9 +10,9 @@ ended.
   author, entity, target, action and IP address. "Export as CSV" exports the current view, up to
   100,000 events.
 - **GitHub** ([reviewing the audit log](https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization)):
-  shows actor, affected user, action and time; filters by `actor:`, `action:` (a family such as
-  `action:team` as well as an exact name), `operation:` and `created:` with a date range; action
-  names are shown as codes; text search is not offered; JSON and CSV export.
+  shows actor, affected user, action and time; filters by `actor:`, `action:` (`action:team.create`,
+  and `-action:hook` to leave out a family), `operation:` and `created:` with a date range; text search
+  is not offered; JSON and CSV export.
 - **Kubernetes** ([auditing](https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/)): records
   go to a file with `maxage`, `maxbackup` and `maxsize` limits or to a webhook with a bounded buffer
   that drops on overflow, and counters report events and errors.
@@ -25,10 +25,10 @@ be read for this note. None of the sources read describes tamper evidence, which
 - **Who, not only an ID.** The API returned user IDs, which a person cannot read. The list joins the
   users table for the email of the actor and the subject; a null actor is the system.
 - **Filter by family, person, outcome, time and request.** A new `category` selects an action family
-  (`license` is `license.*`), as GitHub's `action:` does, because the existing exact-action filter
+  (`license` is `license.*`), the reverse of GitHub's `-action:hook`, because the existing exact-action filter
   lists only some actions. A new `actor_user_id` shows one person's actions. `request_id` connects to
   the request ID that every error notice lets people copy.
-- **Action codes stay codes,** as on GitHub: they are the stable names an auditor quotes and searches
+- **Action codes stay codes,** the names GitHub's filters use too: they are the stable names an auditor quotes and searches
   for. Categories, outcomes and entrances are translated. A new action needs no translation to appear.
 - **Time is a window the server pins.** Presets of 24 hours, 7 days and 31 days (the default
   `audit_max_days`) anchor when the list loads; the cursor carries the window, so later pages omit it

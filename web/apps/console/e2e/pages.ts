@@ -20,6 +20,7 @@ import {
   secondFailedMail,
   sentMail,
   systemEvent,
+  teamWorkspace,
   type ControlPlane,
   type ScriptedView,
 } from '@ownsolid/shell/testing';
@@ -502,6 +503,53 @@ export const consolePages: readonly PageState[] = [
       control.mailProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
       await openMail(page, control);
       await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
+    name: 'workspaces listed',
+    path: '/users/workspaces',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/users/workspaces');
+      await page.getByRole('heading', { name: 'Workspaces', level: 1 }).waitFor();
+      await page.getByRole('link', { name: teamWorkspace.name }).waitFor();
+    },
+  },
+  {
+    name: 'workspaces creating one',
+    path: '/users/workspaces',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/users/workspaces#create');
+      await page.getByRole('dialog', { name: 'Create a workspace' }).waitFor();
+    },
+  },
+  {
+    name: 'workspace with members',
+    path: '/users/workspaces/$workspaceId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto(`/users/workspaces/${teamWorkspace.id}`);
+      await page.getByText('grace@example.test').first().waitFor();
+    },
+  },
+  {
+    name: 'workspace removing a member',
+    path: '/users/workspaces/$workspaceId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto(`/users/workspaces/${teamWorkspace.id}`);
+      await page.getByRole('button', { name: 'Remove grace@example.test' }).click();
+      await page.getByRole('dialog', { name: 'Remove grace@example.test' }).waitFor();
+    },
+  },
+  {
+    name: 'workspace that does not exist',
+    path: '/users/workspaces/$workspaceId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/users/workspaces/6f1c7a1e-0000-4000-8000-0000000000ee');
+      await page.getByRole('heading', { name: 'Not found' }).waitFor();
     },
   },
   {

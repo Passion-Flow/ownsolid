@@ -27,6 +27,7 @@ import {
 } from '@ownsolid/shell';
 import {
   Button,
+  buttonVariants,
   Card,
   CopyText,
   Detail,
@@ -50,7 +51,8 @@ import {
   type StatusTone,
 } from '@ownsolid/ui';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ban, Check, RotateCw, UserPlus, Users } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { Ban, Building2, Check, RotateCw, UserPlus, Users } from 'lucide-react';
 import { useRef, useState, type SubmitEvent } from 'react';
 import { RevokeInvitation } from './revoke-invitation.tsx';
 
@@ -657,15 +659,21 @@ export function UsersPage() {
           </h1>
           <p className="m-0 text-text-2">{t('users.subtitle')}</p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => {
-            setInviting(true);
-          }}
-        >
-          <UserPlus aria-hidden />
-          {t('users.invite.open')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to="/users/workspaces" className={buttonVariants()}>
+            <Building2 aria-hidden />
+            {t('users.workspaces')}
+          </Link>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setInviting(true);
+            }}
+          >
+            <UserPlus aria-hidden />
+            {t('users.invite.open')}
+          </Button>
+        </div>
       </div>
       <Invitations />
       <div className="mb-3.5 flex flex-wrap items-center gap-2.5">

@@ -40,6 +40,18 @@ const usersRoute = createRoute({
   component: lazyRouteComponent(() => import('./users-page.tsx'), 'UsersPage'),
 });
 
+const workspacesRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/users/workspaces',
+  component: lazyRouteComponent(() => import('./workspaces-page.tsx'), 'WorkspacesPage'),
+});
+
+const workspaceRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/users/workspaces/$workspaceId',
+  component: lazyRouteComponent(() => import('./workspace-page.tsx'), 'WorkspacePage'),
+});
+
 const auditRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/audit',
@@ -87,6 +99,8 @@ const routeTree = rootRoute.addChildren([
       nodesRoute,
       pacingRoute,
       usersRoute,
+      workspacesRoute,
+      workspaceRoute,
       auditRoute,
       licenseRoute,
       mailRoute,

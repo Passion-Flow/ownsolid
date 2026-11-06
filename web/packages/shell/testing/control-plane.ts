@@ -5,6 +5,12 @@ import { emptyNodeScript, routeNodes, type NodeScript } from './nodes.ts';
 import { emptyTaskScript, routeTasks, type TaskScript } from './tasks.ts';
 import { emptyAuditScript, routeAudit, type AuditScript } from './audit.ts';
 import { emptyLicenseScript, routeLicense, type LicenseScript } from './license.ts';
+import {
+  defaultWorkspace as managedWorkspace,
+  emptyWorkspaceScript,
+  routeWorkspaces,
+  type WorkspaceScript,
+} from './workspaces.ts';
 import { emptyUserScript, routeUsers, type UserScript } from './users.ts';
 
 /** The account the mock accepts. */
@@ -23,12 +29,7 @@ const user = {
   updated_at: '2026-11-04T00:00:00Z',
 };
 
-const workspace = {
-  id: '6f1c7a1e-0000-4000-8000-000000000002',
-  tenant_id: '6f1c7a1e-0000-4000-8000-000000000003',
-  name: 'Research Lab',
-  role: 'owner',
-};
+const workspace = managedWorkspace;
 
 const runtimeConfig = {
   topology: { size: 'single-node' },
@@ -40,22 +41,6 @@ const runtimeConfig = {
     page_size: 20,
     lookup_page_size: 100,
   },
-};
-
-const defaultWorkspace = {
-  ...workspace,
-  status: 'active',
-  version: 1,
-  is_default: true,
-  created_at: '2026-11-04T00:00:00Z',
-  updated_at: '2026-11-04T00:00:00Z',
-};
-
-const secondWorkspace = {
-  ...defaultWorkspace,
-  id: '6f1c7a1e-0000-4000-8000-000000000004',
-  name: 'Platform Team',
-  is_default: false,
 };
 
 /** A provider connector the account page offers to link. */
@@ -173,7 +158,7 @@ export interface ScriptedProblem {
 
 /** Mutable state of the mock, so a spec can change it between steps. */
 export interface ControlPlane
-  extends TaskScript, NodeScript, UserScript, LicenseScript, AuditScript {
+  extends TaskScript, NodeScript, UserScript, LicenseScript, AuditScript, WorkspaceScript {
   audience: 'admin' | 'portal';
   /** How often pages poll, as the runtime configuration says. */
   pollMilliseconds: number;
@@ -289,6 +274,7 @@ export async function mockControlPlane(
     ...emptyUserScript(),
     ...emptyLicenseScript(),
     ...emptyAuditScript(),
+    ...emptyWorkspaceScript(),
     audience,
     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
     signedIn: false,
@@ -514,7 +500,7 @@ export async function mockControlPlane(
     if (state.audience !== owner)
       return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
     if (state.workspacesProblem) return problem(route, state.workspacesProblem);
-    return data(route, { items: [defaultWorkspace, secondWorkspace], next_cursor: null });
+    return data(route, { items: state.workspaceList, next_cursor: null });
   };
   await page.route('**/api/v1/admin/workspaces?*', workspaces('admin'));
   await page.route('**/api/v1/workspaces?*', workspaces('portal'));
@@ -636,6 +622,7 @@ export async function mockControlPlane(
   await routeUsers(page, state, data, problem);
   await routeLicense(page, state, data, problem);
   await routeAudit(page, state, data, problem);
+  await routeWorkspaces(page, state, data, problem);
   await routeTasks(page, state, data, problem);
   await page.route('**/api/v1/admin/mail-deliveries?*', (route) => {
     if (state.audience !== 'admin')

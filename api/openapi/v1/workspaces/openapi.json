@@ -113,6 +113,26 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "post": {
@@ -229,6 +249,35 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "WORKSPACE_EXISTS",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ]
         }
       }
     },
@@ -337,6 +386,26 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "patch": {
@@ -456,6 +525,37 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "WORKSPACE_EXISTS",
+            "VERSION_CONFLICT",
+            "DEFAULT_WORKSPACE_PROTECTED",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ]
         }
       }
     },
@@ -570,6 +670,26 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "post": {
@@ -689,6 +809,36 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "MEMBERSHIP_EXISTS",
+            "VERSION_CONFLICT",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ]
         }
       }
     },
@@ -813,6 +963,36 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "VERSION_CONFLICT",
+            "LAST_WORKSPACE_OWNER",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ]
         }
       },
       "delete": {
@@ -928,6 +1108,36 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "VERSION_CONFLICT",
+            "LAST_WORKSPACE_OWNER",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ]
         }
       }
     },
