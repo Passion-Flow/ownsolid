@@ -124,7 +124,7 @@ func readProfileDatabaseContents(ctx context.Context, tx pgx.Tx, p release.Postg
 	if e := database.CheckWithin(ctx, transaction.PostgreSQLTransaction(tx)); e != nil {
 		return out, errors.New("POSTGRES_RESTORE_CONTENT_SCHEMA_INVALID")
 	}
-	tables, e := tx.Query(ctx, `SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public' ORDER BY tablename COLLATE "C"`)
+	tables, e := tx.Query(ctx, `SELECT c.relname FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p') AND NOT c.relispartition ORDER BY c.relname COLLATE "C"`)
 	if e != nil {
 		return out, errors.New("POSTGRES_BACKUP_DATABASE_READ_FAILED")
 	}

@@ -30,6 +30,9 @@ func PassSelected(ctx context.Context, store transaction.Store, policy config.Re
 	}
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(policy.TimeoutSeconds))
 	defer cancel()
+	if e := maintainPartitions(ctx, store, policy); e != nil {
+		return e
+	}
 	return store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
 		var bootstrapped bool
 		var tenant, workspace string
@@ -57,6 +60,9 @@ func PassSelected(ctx context.Context, store transaction.Store, policy config.Re
 		}
 		var changed int64
 		for _, op := range operations(policy, tenant, now) {
+			if tx.Dialect() == transaction.PostgreSQL && op.selectPG == "" {
+				continue
+			}
 			selectArgs := op.selectArgs
 			if tx.Dialect() == transaction.MySQL && op.selectMyArgs != nil {
 				selectArgs = op.selectMyArgs
@@ -241,9 +247,7 @@ func operations(p config.RetentionPolicy, tenant string, now time.Time) []retent
 			selectArgs: []any{now, p.BatchSize}, mutationArgs: []any{now}, key: compositeKey,
 		},
 		{
-			selectPG:   `SELECT id::text FROM audit_events WHERE (tenant_id=$1 OR tenant_id IS NULL) AND occurred_at<$2 ORDER BY occurred_at,id LIMIT $3 FOR UPDATE SKIP LOCKED`,
 			selectMy:   `SELECT id FROM audit_events WHERE (tenant_id=? OR tenant_id IS NULL) AND occurred_at<? ORDER BY occurred_at,id LIMIT ? FOR UPDATE SKIP LOCKED`,
-			mutatePG:   `DELETE FROM audit_events WHERE id=$1 AND (tenant_id=$2 OR tenant_id IS NULL) AND occurred_at<$3`,
 			mutateMy:   `DELETE FROM audit_events WHERE id=? AND (tenant_id=? OR tenant_id IS NULL) AND occurred_at<?`,
 			selectArgs: []any{tenant, auditCutoff, p.BatchSize}, mutationArgs: []any{tenant, auditCutoff},
 		},
