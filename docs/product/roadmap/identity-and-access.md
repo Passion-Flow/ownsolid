@@ -22,7 +22,7 @@ agents. Every check happens on the server.
 - [ ] IAM-112 Separate Admin and Portal entrances with audience-bound sessions (P1) - Catalog: F424, F432, F545
 - [ ] IAM-113 Enable single sign-on from the typed install configuration: `ownsolid-install` has no input for providers, their CA or the keyring, so an installed product cannot turn it on (P1)
 - [ ] IAM-114 Refuse two browser entrances on one hostname unless the deployment opts in, because browsers do not isolate cookies by port; the opt-in, the sign-in page and the operator documentation state that the audience check is then the only separation ([ADR 0027](../../decisions/0027-entrance-addresses.md)) (P1)
-- [ ] IAM-115 Users page: accounts with status and filters, invite and resend, disable and enable an account with a reason (P1)
+- [x] IAM-115 Users page: accounts with status and filters, invite and resend, disable and enable an account with a reason (P1) - Evidence: 24d6b00; real Chromium on an offline install on `ownsolid-cpu` with a TLS mail server accepted a real invitation, disabled the new account, which ended its session, and enabled it, three runs in a row, 2026-11-07
 
 ## P2 Fleet operations
 
