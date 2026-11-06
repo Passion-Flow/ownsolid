@@ -430,6 +430,19 @@ func TestRefusedSessionDoesNotFallBack(t *testing.T) {
 	}
 }
 
+func TestRevokedCredentialOnTheStreamEndsTheAgent(t *testing.T) {
+	c := &control{refuse: codes.Unauthenticated}
+	s := serve(t, c, true)
+	_, e := s.Heartbeat(t.Context(), wire.Handshake{})
+	var p *Problem
+	if !errors.As(e, &p) || p.Status != http.StatusUnauthorized || p.Code != "AGENT_UNAUTHORIZED" {
+		t.Fatalf("revoked session %v", e)
+	}
+	if _, e = s.Heartbeat(t.Context(), wire.Handshake{}); !errors.As(e, &p) || len(c.log()) != 0 {
+		t.Fatalf("a revoked stream moved to HTTPS: %v", e)
+	}
+}
+
 func TestClaimWaitIsBounded(t *testing.T) {
 	s := serve(t, &control{}, true)
 	if _, e := s.Claim(t.Context(), wire.MaxClaimWaitSeconds+1, 0); e == nil {

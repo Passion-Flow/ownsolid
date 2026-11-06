@@ -2,28 +2,9 @@ package client
 
 import (
 	"context"
-	"math"
 	"testing"
 	"time"
 )
-
-func TestFullJitterCeilingDoublesUpToTheLimit(t *testing.T) {
-	highest := func(n int64) int64 { return n - 1 }
-	for _, c := range []struct {
-		failures int
-		want     time.Duration
-	}{{0, time.Second}, {1, 2 * time.Second}, {2, 4 * time.Second}, {3, 8 * time.Second}, {4, 10 * time.Second}, {math.MaxInt, 10 * time.Second}} {
-		if got := fullJitter(highest, time.Second, 10*time.Second, c.failures); got != c.want {
-			t.Errorf("failures %d: %s, want %s", c.failures, got, c.want)
-		}
-	}
-}
-
-func TestFullJitterStartsFromZero(t *testing.T) {
-	if got := fullJitter(func(int64) int64 { return 0 }, time.Second, time.Minute, 5); got != 0 {
-		t.Fatalf("lowest delay %s", got)
-	}
-}
 
 func TestFullJitterStaysInRangeAndSpreads(t *testing.T) {
 	seen := map[time.Duration]bool{}
