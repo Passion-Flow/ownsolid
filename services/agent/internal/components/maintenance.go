@@ -5,9 +5,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/progress"
 	"os"
 	"path/filepath"
-	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"regexp"
 	"time"
 )
@@ -108,22 +109,26 @@ func (m *Manager) ExecuteMaintenance(ctx context.Context, taskID string, command
 		} else if command.Config != nil && *command.Config != appliedConfig(j.Ownership) {
 			e = code("COMPONENT_CONFIG_INVALID")
 		} else {
+			progress.Step(ctx, wire.ProgressStepStart)
 			e = m.service.Start(ctx)
 		}
 	case "start":
 		if !exists {
 			e = code("COMPONENT_STATE_INVALID")
 		} else {
+			progress.Step(ctx, wire.ProgressStepStart)
 			e = m.service.Start(ctx)
 		}
 	case "stop":
 		if !exists {
 			e = code("COMPONENT_STATE_INVALID")
 		} else {
+			progress.Step(ctx, wire.ProgressStepStop)
 			e = m.service.Stop(ctx)
 		}
 	case "remove":
 		if exists {
+			progress.Step(ctx, wire.ProgressStepRemove)
 			j.Phase = "removing"
 			e = m.save(j)
 			if e == nil {
@@ -135,6 +140,7 @@ func (m *Manager) ExecuteMaintenance(ctx context.Context, taskID string, command
 		if !exists {
 			e = code("COMPONENT_STATE_INVALID")
 		} else {
+			progress.Step(ctx, wire.ProgressStepStart)
 			var adapter maintenanceService
 			adapter, e = m.adapter()
 			if e == nil {
@@ -170,8 +176,10 @@ func (m *Manager) ExecuteMaintenance(ctx context.Context, taskID string, command
 		e = code("AGENT_OPERATION_UNSUPPORTED")
 	}
 	if e != nil {
+		progress.Error(ctx, "Node exporter %s failed: %s", command.Action, safeComponentError(e).Error())
 		return failure(e)
 	}
+	progress.Step(ctx, wire.ProgressStepVerify)
 	if ctx.Err() != nil {
 		return failure(code("COMPONENT_CANCELLED"))
 	}

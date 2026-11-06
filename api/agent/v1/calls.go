@@ -147,6 +147,7 @@ var taskCalls = map[string]Call{
 	"model-preparation-stops":       CallStop,
 	"training-events":               CallEvents,
 	"model-preparation-events":      CallEvents,
+	TaskProgressPath:                CallEvents,
 	"artifact":                      CallDownload,
 	"model-manifest":                CallDownload,
 	"model-files":                   CallDownload,
