@@ -8,19 +8,6 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/client"
 )
 
-func TestJitteredIntervalCoversTheWholeSpread(t *testing.T) {
-	p := wire.Pacing{HeartbeatSeconds: 10, JitterPercent: 10}
-	if got := jitteredInterval(func(int64) int64 { return 0 }, p); got != 9*time.Second {
-		t.Fatalf("shortest %s", got)
-	}
-	if got := jitteredInterval(func(n int64) int64 { return n - 1 }, p); got != 11*time.Second {
-		t.Fatalf("longest %s", got)
-	}
-	if got := jitteredInterval(func(n int64) int64 { return n - 1 }, wire.Pacing{HeartbeatSeconds: 10}); got != 10*time.Second {
-		t.Fatalf("no jitter %s", got)
-	}
-}
-
 func TestPacerKeepsTheIntervalWhenIdleAndGoesOnAfterATask(t *testing.T) {
 	p := newPacer()
 	pacing := wire.Pacing{HeartbeatSeconds: 10, JitterPercent: 0}

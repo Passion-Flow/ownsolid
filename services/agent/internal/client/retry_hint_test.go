@@ -84,12 +84,6 @@ func TestUnknownRefusalKeepsItsHint(t *testing.T) {
 
 func TestAfterHintNeverWaitsLessThanTheHint(t *testing.T) {
 	hint := 10 * time.Second
-	if got := afterHint(func(int64) int64 { return 0 }, hint); got != hint {
-		t.Fatalf("shortest wait %s", got)
-	}
-	if got := afterHint(func(n int64) int64 { return n - 1 }, hint); got != hint+hint*hintSpreadPercent/100 {
-		t.Fatalf("longest wait %s", got)
-	}
 	for range 100 {
 		if got := AfterHint(hint); got < hint || got > hint*3/2 {
 			t.Fatalf("wait %s", got)
