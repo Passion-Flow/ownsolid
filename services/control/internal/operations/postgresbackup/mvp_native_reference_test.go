@@ -99,7 +99,7 @@ func TestMVPReferenceMetadataNeverSubstitutesForOriginalVerification(t *testing.
 	m.Request.BackupRoot = root
 	m.RequestSHA256 = requestDigest(m.Request)
 	m.Database.SchemaVersion = 39
-	m.Database.Tables = 111
+	m.Database.Tables = 112
 	m.Archive.SHA256 = strings.Repeat("d", 64)
 	m.Sources = []TreeReadback{}
 	m.Stores = []StoreReadback{}
