@@ -395,11 +395,37 @@ func TestActualPairedPreparationRuntime(t *testing.T) {
 		}
 		g.released(t, true)
 	})
+	t.Run("lost_contact_keeps_running_and_the_token_returns", func(t *testing.T) {
+		g := runtimeSetup(t)
+		g.dispatch(t)
+		g.claim(t)
+		g.g.exec(t, `UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '6 hours' WHERE id=$1`, `UPDATE node_tasks SET lease_expires_at=TIMESTAMPADD(HOUR,-6,UTC_TIMESTAMP(6)) WHERE id=?`, g.lease.TaskID)
+		g.due(t)
+		worked, e := g.g.s.ReconcileNext(g.g.ctx)
+		if e != nil || worked {
+			t.Fatal("the outage changed the preparation", worked, e)
+		}
+		if n := g.count(t, `SELECT count(*) FROM model_preparations WHERE id=$1 AND state IN ('preparing','running') AND wait_code='MODEL_PREPARATION_NODE_UNREACHABLE'`, `SELECT count(*) FROM model_preparations WHERE id=? AND state IN ('preparing','running') AND wait_code='MODEL_PREPARATION_NODE_UNREACHABLE'`, g.preparation.ID); n != 1 {
+			t.Fatal("lost contact is not shown, or the preparation moved")
+		}
+		g.released(t, false)
+		renewed, handled, e := g.g.s.RenewPreparation(g.g.ctx, g.input.NodeID, g.credential, g.lease.TaskID, g.lease.LeaseToken)
+		if e != nil || !handled || renewed.ValidForMilliseconds < 1 {
+			t.Fatal("renewal after the outage", handled, e)
+		}
+		g.due(t)
+		if _, e = g.g.s.ReconcileNext(g.g.ctx); e != nil {
+			t.Fatal(e)
+		}
+		if n := g.count(t, `SELECT count(*) FROM model_preparations WHERE id=$1 AND wait_code IS NULL`, `SELECT count(*) FROM model_preparations WHERE id=? AND wait_code IS NULL`, g.preparation.ID); n != 1 {
+			t.Fatal("lost contact is still shown after the agent returned")
+		}
+	})
 	t.Run("expired_delivered_retains_gpu_until_positive_stop", func(t *testing.T) {
 		g := runtimeSetup(t)
 		g.dispatch(t)
 		g.claim(t)
-		g.g.exec(t, `UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1`, `UPDATE node_tasks SET lease_expires_at=TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6)) WHERE id=?`, g.lease.TaskID)
+		g.g.exec(t, `UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second',deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1`, `UPDATE node_tasks SET lease_expires_at=TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6)),deadline_at=TIMESTAMPADD(SECOND,-1,UTC_TIMESTAMP(6)) WHERE id=?`, g.lease.TaskID)
 		g.due(t)
 		worked, e := g.g.s.ReconcileNext(g.g.ctx)
 		if e != nil || !worked {

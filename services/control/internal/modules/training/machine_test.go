@@ -109,7 +109,7 @@ func TestActualTrainingNodeClaimRenewExpiryAndGenericLeaseBypassRefusal(t *testi
 	}
 	e = f.s.Nodes.WithLease(ctx, f.input.NodeID, f.credential, l.TaskID, l.LeaseToken, func(pgx.Tx, nodes.Node, nodes.Task) error { t.Fatal("unguarded training lease effect"); return nil })
 	expected(t, e, "TRAINING_AUTHORITY_REQUIRED")
-	if _, e = f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID); e != nil {
+	if _, e = f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second',deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID); e != nil {
 		t.Fatal(e)
 	}
 	_, e = f.s.Nodes.Renew(ctx, f.input.NodeID, f.credential, l.TaskID, l.LeaseToken)

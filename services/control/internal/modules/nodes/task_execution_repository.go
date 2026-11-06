@@ -212,7 +212,7 @@ func (s *Service) completeSelected(ctx context.Context, id, credential, taskID s
 		}
 		var hash, completed, previous []byte
 		var valid bool
-		e = q.QueryRow(ctx, nodeSQL(q, `SELECT lease_token_hash,completed_lease_hash,result_hash,COALESCE(lease_expires_at>clock_timestamp() AND deadline_at>clock_timestamp(),false) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4`, `SELECT lease_token_hash,completed_lease_hash,result_hash,COALESCE(lease_expires_at>UTC_TIMESTAMP(6) AND deadline_at>UTC_TIMESTAMP(6),false) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, `SELECT lease_token_hash,completed_lease_hash,result_hash,CASE WHEN lease_expires_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND deadline_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) THEN 1 ELSE 0 END FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, n.TenantID, n.WorkspaceID, n.ID, task.ID)).Scan(&hash, &completed, &previous, &valid)
+		e = q.QueryRow(ctx, nodeSQL(q, `SELECT lease_token_hash,completed_lease_hash,result_hash,COALESCE(deadline_at>clock_timestamp(),false) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4`, `SELECT lease_token_hash,completed_lease_hash,result_hash,COALESCE(deadline_at>UTC_TIMESTAMP(6),false) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, `SELECT lease_token_hash,completed_lease_hash,result_hash,CASE WHEN deadline_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) THEN 1 ELSE 0 END FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, n.TenantID, n.WorkspaceID, n.ID, task.ID)).Scan(&hash, &completed, &previous, &valid)
 		if e != nil {
 			return e
 		}
@@ -300,7 +300,7 @@ func (s *Service) sweepSelected(ctx context.Context) error {
 	policy := s.Identity.Config.Policy().Nodes
 	bounded, cancel := context.WithTimeout(ctx, config.Seconds(policy.ReconcileTimeoutSeconds))
 	defer cancel()
-	rows, e := store.Query(bounded, nodeSQL(store, `SELECT DISTINCT tenant_id::text,workspace_id::text,node_id::text FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete) AND state IN ('pending','running') AND (deadline_at<=clock_timestamp() OR (state='running' AND lease_expires_at<=clock_timestamp() AND (attempt>=$1 OR acknowledged_attempt<attempt))) ORDER BY node_id::text LIMIT $2`, `SELECT DISTINCT tenant_id,workspace_id,node_id FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete=1) AND state IN ('pending','running') AND (deadline_at<=UTC_TIMESTAMP(6) OR (state='running' AND lease_expires_at<=UTC_TIMESTAMP(6) AND attempt>=?)) ORDER BY node_id LIMIT ?`, `SELECT DISTINCT tenant_id,workspace_id,node_id FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete=1) AND state IN ('pending','running') AND (deadline_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR (state='running' AND lease_expires_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND attempt>=?)) ORDER BY node_id LIMIT ?`, policy.MaximumTaskAttempts, policy.TaskSweepBatch))
+	rows, e := store.Query(bounded, nodeSQL(store, `SELECT DISTINCT tenant_id::text,workspace_id::text,node_id::text FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete) AND state IN ('pending','running') AND (deadline_at<=clock_timestamp() OR (state='running' AND lease_expires_at<=clock_timestamp() AND acknowledged_attempt<attempt)) ORDER BY node_id::text LIMIT $1`, `SELECT DISTINCT tenant_id,workspace_id,node_id FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete=1) AND state IN ('pending','running') AND deadline_at<=UTC_TIMESTAMP(6) ORDER BY node_id LIMIT ?`, `SELECT DISTINCT tenant_id,workspace_id,node_id FROM node_tasks WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1 AND bootstrap_complete=1) AND state IN ('pending','running') AND deadline_at<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) ORDER BY node_id LIMIT ?`, policy.TaskSweepBatch))
 	if e != nil {
 		return taskRuntimeError(e)
 	}
@@ -329,7 +329,7 @@ func (s *Service) sweepSelected(ctx context.Context) error {
 			if e != nil {
 				return e
 			}
-			return s.expireTasksWithin(ctx, q, n, uuid.NewString())
+			return s.expireTasksBeyondWithin(ctx, q, n, uuid.NewString(), noAttemptLimit)
 		})
 		if e != nil {
 			return taskRuntimeError(e)

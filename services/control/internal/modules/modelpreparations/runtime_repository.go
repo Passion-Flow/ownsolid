@@ -28,6 +28,8 @@ type preparationReconciliationTask struct {
 	errorCode *string
 	attempt   int
 	expired   bool
+	// unreachable is a running task whose agent control has not heard from within the lease.
+	unreachable bool
 	command   wire.Command
 }
 
@@ -38,10 +40,10 @@ func retainedPreparationTask(ctx context.Context, q transaction.Executor, n node
 	var out preparationReconciliationTask
 	var raw []byte
 	e := q.QueryRow(ctx, preparationSelectedRuntimeSQL(q,
-		preparationDM(`SELECT "STATE","ERROR_CODE","ATTEMPT","PAYLOAD",CASE WHEN "DEADLINE_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR ("STATE"='running' AND ("LEASE_EXPIRES_AT" IS NULL OR "LEASE_EXPIRES_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)))) THEN 1 ELSE 0 END FROM "NODE_TASKS" WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "NODE_ID"=? AND "ID"=? AND "OPERATION"=? FOR UPDATE`),
-		`SELECT state,error_code,attempt,payload,deadline_at<=clock_timestamp() OR state='running' AND COALESCE(lease_expires_at<=clock_timestamp(),true) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4 AND operation=$5 FOR UPDATE`,
-		`SELECT state,error_code,attempt,payload,deadline_at<=UTC_TIMESTAMP(6) OR state='running' AND COALESCE(lease_expires_at<=UTC_TIMESTAMP(6),true) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND operation=? FOR UPDATE`,
-		[]any{n.TenantID, n.WorkspaceID, n.ID, id, wire.RunOperation}, []any{n.TenantID, n.WorkspaceID, n.ID, id, wire.RunOperation})).Scan(&out.state, &out.errorCode, &out.attempt, &raw, &out.expired)
+		preparationDM(`SELECT "STATE","ERROR_CODE","ATTEMPT","PAYLOAD",CASE WHEN "DEADLINE_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) OR ("STATE"='running' AND "LEASE_EXPIRES_AT" IS NULL) THEN 1 ELSE 0 END,CASE WHEN "STATE"='running' AND "LEASE_EXPIRES_AT"<=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) THEN 1 ELSE 0 END FROM "NODE_TASKS" WHERE "TENANT_ID"=? AND "WORKSPACE_ID"=? AND "NODE_ID"=? AND "ID"=? AND "OPERATION"=? FOR UPDATE`),
+		`SELECT state,error_code,attempt,payload,deadline_at<=clock_timestamp() OR state='running' AND lease_expires_at IS NULL,state='running' AND COALESCE(lease_expires_at<=clock_timestamp(),false) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4 AND operation=$5 FOR UPDATE`,
+		`SELECT state,error_code,attempt,payload,deadline_at<=UTC_TIMESTAMP(6) OR state='running' AND lease_expires_at IS NULL,state='running' AND COALESCE(lease_expires_at<=UTC_TIMESTAMP(6),false) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND operation=? FOR UPDATE`,
+		[]any{n.TenantID, n.WorkspaceID, n.ID, id, wire.RunOperation}, []any{n.TenantID, n.WorkspaceID, n.ID, id, wire.RunOperation})).Scan(&out.state, &out.errorCode, &out.attempt, &raw, &out.expired, &out.unreachable)
 	if e != nil {
 		return preparationReconciliationTask{}, e
 	}

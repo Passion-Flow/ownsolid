@@ -115,7 +115,7 @@ func (s *Service) LeasedPreparationWithin(ctx context.Context, q transaction.Exe
 	}
 	var hash []byte
 	var timely bool
-	if e = q.QueryRow(ctx, nodeSQL(q, `SELECT lease_token_hash,COALESCE(lease_expires_at>clock_timestamp() AND deadline_at>clock_timestamp(),false) FROM node_tasks WHERE id=$1`, `SELECT lease_token_hash,COALESCE(lease_expires_at>UTC_TIMESTAMP(6) AND deadline_at>UTC_TIMESTAMP(6),false) FROM node_tasks WHERE id=?`, `SELECT lease_token_hash,CASE WHEN lease_expires_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND deadline_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) THEN 1 ELSE 0 END FROM node_tasks WHERE id=?`, id)).Scan(&hash, &timely); e != nil {
+	if e = q.QueryRow(ctx, nodeSQL(q, `SELECT lease_token_hash,COALESCE(deadline_at>clock_timestamp(),false) FROM node_tasks WHERE id=$1`, `SELECT lease_token_hash,COALESCE(deadline_at>UTC_TIMESTAMP(6),false) FROM node_tasks WHERE id=?`, `SELECT lease_token_hash,CASE WHEN deadline_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) THEN 1 ELSE 0 END FROM node_tasks WHERE id=?`, id)).Scan(&hash, &timely); e != nil {
 		return t, command, e
 	}
 	if t.State != "running" || t.Attempt != 1 || !timely || subtle.ConstantTimeCompare(hash, digest("node-lease", token)) != 1 {

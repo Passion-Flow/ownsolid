@@ -2,90 +2,125 @@ package runtime
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/client"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 )
 
 // renewalInterval is how often a running task renews its lease; tests shorten it.
 var renewalInterval = time.Duration(wire.LeaseRenewalSeconds) * time.Second
 
-// renewal renews one task lease and returns when the renewed lease expires.
-type renewal func(context.Context) (time.Time, error)
+// renewal renews one task lease.
+type renewal func(context.Context) error
 
 // leaseRenewal is the renewal of lease through the task path taskBase.
 func leaseRenewal(connection *client.Client, taskBase string, lease wire.Lease) renewal {
-	return func(ctx context.Context) (time.Time, error) {
-		started := time.Now()
+	return func(ctx context.Context) error {
+		bounded, cancel := context.WithTimeout(ctx, settings.Seconds(connection.Policy().ControlRequestSeconds))
+		defer cancel()
 		var out wire.RenewedLease
-		if e := connection.Post(ctx, taskBase+"/renewals", wire.LeaseRenewal{LeaseToken: lease.LeaseToken}, &out); e != nil {
-			return time.Time{}, e
+		if e := connection.Post(bounded, taskBase+"/renewals", wire.LeaseRenewal{LeaseToken: lease.LeaseToken}, &out); e != nil {
+			return e
 		}
-		return renewalDeadline(started, out)
+		return validRenewal(out)
 	}
 }
 
-// renewWhileRunning keeps a lease that holds until expiry renewed until stop closes or
-// bounded ends. When the lease is lost it cancels the task and sends the reason on
-// failed. done closes once renewal has stopped.
-//
-// A renewal control refuses with a retry hint was shed under load (ADR 0018). The lease
-// still holds, so the next tick tries again, and the task ends only when the lease
-// expires without a renewal getting through.
-func renewWhileRunning(bounded context.Context, cancel context.CancelFunc, renew renewal, task string, expiry time.Time, stop <-chan struct{}) (done <-chan struct{}, failed <-chan error) {
+// renewWhileRunning keeps renewing a lease until stop closes or bounded ends. Failing to
+// reach control ends nothing: the work goes on and the next tick tries again, for as long
+// as it takes (ADR 0032). When control itself refuses the lease, renewWhileRunning revokes
+// the task with that refusal as the cause and sends it on failed. done closes once renewal
+// has stopped.
+func renewWhileRunning(bounded context.Context, revoke context.CancelCauseFunc, renew renewal, task string, stop <-chan struct{}) (done <-chan struct{}, failed <-chan error) {
 	finished := make(chan struct{})
 	reasons := make(chan error, 1)
 	go func() {
 		defer close(finished)
 		ticker := time.NewTicker(renewalInterval)
 		defer ticker.Stop()
-		watchdog := time.NewTimer(time.Until(expiry))
-		defer watchdog.Stop()
-		fail := func(e error) { reasons <- e; cancel() }
+		out := false
 		for {
 			select {
 			case <-bounded.Done():
 				return
 			case <-stop:
 				return
-			case <-watchdog.C:
-				fail(errors.New("AGENT_LEASE_STALE"))
-				return
 			case <-ticker.C:
-				attempt, release := context.WithDeadline(bounded, expiry)
-				next, e := renew(attempt)
-				release()
-				if _, shed := client.RetryHint(e); shed {
-					slog.Warn("agent_lease_renewal_deferred", "task_id", task, "code", e.Error())
+				e := renew(bounded)
+				if client.Interrupted(e) {
+					if !out && bounded.Err() == nil {
+						slog.Warn("agent_lease_renewal_interrupted", "task_id", task, "code", e.Error())
+						out = true
+					}
 					continue
 				}
 				if e != nil {
-					fail(e)
+					reasons <- e
+					revoke(e)
 					return
 				}
-				expiry = next
-				if !watchdog.Stop() {
-					select {
-					case <-watchdog.C:
-					default:
-					}
+				if out {
+					slog.Info("agent_lease_renewal_resumed", "task_id", task)
+					out = false
 				}
-				watchdog.Reset(time.Until(expiry))
 			}
 		}
 	}()
 	return finished, reasons
 }
 
-// lostBeforeStart reports a lease whose first renewal failed, in the shape of
-// renewWhileRunning: renewal is already over and failed holds the reason.
-func lostBeforeStart(reason error) (done <-chan struct{}, failed <-chan error) {
+// renewedAttempt runs one training or preparation attempt with its lease renewed, within
+// the wall limit. A refusal of the first renewal still runs it, cancelled, so its stop
+// receipt proves it never started. refused is the refusal that ended the attempt, if any.
+func renewedAttempt[R any](ctx context.Context, wall time.Duration, renew renewal, task string, run func(context.Context) (R, []byte, error)) (receipt R, outcome []byte, executionError, refused error) {
+	limited, cancel := context.WithTimeout(ctx, wall)
+	defer cancel()
+	bounded, revoke := context.WithCancelCause(limited)
+	defer revoke(nil)
+	stop := make(chan struct{})
 	finished := make(chan struct{})
 	close(finished)
+	var done <-chan struct{} = finished
 	reasons := make(chan error, 1)
-	reasons <- reason
-	return finished, reasons
+	var failed <-chan error = reasons
+	if e := renew(bounded); e != nil && !client.Interrupted(e) {
+		reasons <- e
+		revoke(e)
+	} else {
+		done, failed = renewWhileRunning(bounded, revoke, renew, task, stop)
+	}
+	receipt, outcome, executionError = run(bounded)
+	close(stop)
+	<-done
+	select {
+	case refused = <-failed:
+	default:
+	}
+	return receipt, outcome, executionError, refused
+}
+
+// deliverResult sends the result of finished work, again whenever control cannot be
+// reached, until control answers or limit passes. Without it the work would run a second
+// time for the sake of one lost request.
+func deliverResult(ctx context.Context, limit time.Duration, post func(context.Context) error) error {
+	bounded, cancel := context.WithTimeout(ctx, limit)
+	defer cancel()
+	var retry client.Retry
+	for {
+		e := post(bounded)
+		if !client.Interrupted(e) {
+			return e
+		}
+		delay, _ := retry.Failed(time.Now())
+		timer := time.NewTimer(delay)
+		select {
+		case <-bounded.Done():
+			timer.Stop()
+			return e
+		case <-timer.C:
+		}
+	}
 }

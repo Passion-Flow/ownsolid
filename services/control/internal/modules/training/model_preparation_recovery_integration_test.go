@@ -87,7 +87,7 @@ func TestActualCpuModelPreparationRecoveryCannotReplaceDeliveredUnstoppedOwner(t
 	p := preparationDispatched(t, g)
 	l := preparationClaimed(t, g)
 	ctx := context.Background()
-	if _, e := g.f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID); e != nil {
+	if _, e := g.f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second',deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID); e != nil {
 		t.Fatal(e)
 	}
 	preparationDue(t, g, p.ID)

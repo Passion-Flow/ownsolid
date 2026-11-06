@@ -83,6 +83,36 @@ func RetryHint(e error) (time.Duration, bool) {
 	return 0, false
 }
 
+// retriableCodes are refusals that say a request should come again, not that the work is
+// over: an upload a dropped connection left busy, or one that ran out of time.
+var retriableCodes = map[string]bool{
+	"TRAINING_UPLOAD_BUSY":             true,
+	"TRAINING_UPLOAD_TIMEOUT":          true,
+	"MODEL_PREPARATION_UPLOAD_BUSY":    true,
+	"MODEL_PREPARATION_UPLOAD_TIMEOUT": true,
+}
+
+// Interrupted reports whether the failure e says nothing about the work: control was not
+// reached, did not answer as itself, or asked the agent to come back. Running work outlives
+// such a failure; only a refusal control wrote ends it (ADR 0032).
+func Interrupted(e error) bool {
+	if e == nil {
+		return false
+	}
+	if errors.Is(e, context.Canceled) || errors.Is(e, context.DeadlineExceeded) {
+		return true
+	}
+	var p *Problem
+	if errors.As(e, &p) {
+		return p.RetryAfter > 0 || p.Status >= 500 || p.Status == http.StatusRequestTimeout || p.Status == http.StatusTooManyRequests || retriableCodes[p.Code]
+	}
+	switch e.Error() {
+	case "CONTROL_CONNECTION_FAILED", "CONTROL_RESPONSE_INVALID", "CONTROL_RESPONSE_REJECTED":
+		return true
+	}
+	return false
+}
+
 // hintSpreadPercent spreads a wait after a hint above the hint itself, so agents refused
 // together with one hint do not return together.
 const hintSpreadPercent = 50
@@ -152,11 +182,15 @@ func (c *Client) Post(ctx context.Context, path string, value, out any) error {
 }
 
 // remoteProblem keeps a control failure only when its code is one the agent acts on.
-// Its retry hint survives either way, so a refusal still paces the agent.
+// Its retry hint survives either way, so a refusal still paces the agent, and so does a
+// refusal control wrote with a code the agent does not know: that still ends running work
+// (Interrupted). A body with no valid code is not control speaking, and 401 stays reserved
+// for the codes that revoke the credential.
 func remoteProblem(code string, status int, retry time.Duration) error {
 	if !strings.HasPrefix(code, "AGENT_") && code != "STORAGE_UNAVAILABLE" && code != "RATE_LIMITED" && code != "ACCESS_DENIED" && code != "VALIDATION_FAILED" && code != "TOKEN_UNUSABLE" {
+		written := safeTrainingCode.MatchString(code) && status != http.StatusUnauthorized
 		code = "CONTROL_RESPONSE_REJECTED"
-		if retry == 0 {
+		if retry == 0 && !written {
 			return errors.New(code)
 		}
 	}

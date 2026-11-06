@@ -204,7 +204,7 @@ func TestActualCpuModelPreparationConcurrentClaimRenewAndGenericBypassRefusal(t 
 	if count(t, g.f, "SELECT count(*) FROM model_preparation_attempts WHERE id=$1 AND octet_length(stop_token_hash)=32", *p.CurrentAttemptID) != 1 {
 		t.Fatal("missing durable independent stop authority")
 	}
-	if _, e = g.f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", lease.TaskID); e != nil {
+	if _, e = g.f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second',deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1", lease.TaskID); e != nil {
 		t.Fatal(e)
 	}
 	_, e = g.f.s.Nodes.Renew(ctx, g.node.NodeID, g.node.Credential, lease.TaskID, lease.LeaseToken)

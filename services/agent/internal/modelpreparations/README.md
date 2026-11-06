@@ -8,4 +8,6 @@ The Transport interface carries preparation-specific file/event/upload/stop cont
 
 Synchronize [model-lifecycle contracts](../../../../contracts/model-lifecycle), [Python preparation](../../../../runtimes/model-lifecycle/README.md), control/modelpreparations and agent runtime/client dispatch, image recipes and recovery tests. The Docker envelope implementation parallels training; mechanical fixes may need both owners, but workload policies and result semantics must stay distinct.
 
+An attempt does not depend on control being reachable ([ADR 0032](../../../../docs/decisions/0032-static-stability.md)). Events, checkpoints and output wait for control with backoff, and only a refusal control wrote ends the attempt. A shutdown leaves a started container running and its journal in place, and `Resumable` and `Resume` let the next agent process adopt it within what remains of its wall limit. A checkpoint event counts as sent only after its upload finished.
+
 Focused check: `go -C services/agent test ./internal/modelpreparations`. Actual container/image, cancellation, upload/readback and target merge/evaluation profiles need their declared resources and original failure receipts.

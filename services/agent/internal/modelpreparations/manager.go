@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -15,12 +16,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/inference"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/state"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/client"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/inference"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/state"
 )
 
 const MinimumPreparationDriverMajor = 580
@@ -194,17 +196,68 @@ func (m *Manager) prepare(ctx context.Context, j Journal, transport Transport) e
 	return prepareAttempt(ctx, m.Config, j, download)
 }
 
-// Execute always reconciles the exact owned container with an independent bounded cleanup context.
-// A nonzero receipt can be submitted through the restricted stop endpoint even after execution authority expires.
-func (m *Manager) Execute(ctx context.Context, node string, lease agentwire.Lease, transport Transport) (receipt wire.StopReceipt, outcome []byte, executionError error) {
+// Execute runs a newly delivered attempt. See supervise for how it ends.
+func (m *Manager) Execute(ctx context.Context, node string, lease agentwire.Lease, transport Transport) (wire.StopReceipt, []byte, error) {
 	j, e := m.Begin(node, lease)
 	if e != nil {
-		return receipt, nil, e
+		return wire.StopReceipt{}, nil, e
 	}
 	if j.Phase != "preparing" {
-		return receipt, nil, fail("MODEL_PREPARATION_AGENT_PREVIOUS_ATTEMPT_REQUIRES_RECONCILIATION")
+		return wire.StopReceipt{}, nil, fail("MODEL_PREPARATION_AGENT_PREVIOUS_ATTEMPT_REQUIRES_RECONCILIATION")
 	}
+	return m.supervise(ctx, j, transport, true)
+}
+
+// Resumable returns the lease of an attempt an earlier agent process left running, with
+// what remains of its wall limit. Its container belongs to Docker, so a restart does not
+// end it (ADR 0032). Any attempt already ending or not yet started goes to Recover.
+func (m *Manager) Resumable(node string) (lease agentwire.Lease, wall time.Duration, ok bool, e error) {
+	j, e := m.Lifecycle.Store.Read()
+	if os.IsNotExist(e) {
+		return lease, 0, false, nil
+	}
+	if e != nil {
+		return lease, 0, false, e
+	}
+	if j.NodeID != node {
+		return lease, 0, false, fail("MODEL_PREPARATION_AGENT_JOURNAL_INVALID")
+	}
+	if j.Phase != "running" || j.ContainerID == "" || j.StopReceipt != nil || j.AgentErrorCode != "" {
+		return lease, 0, false, nil
+	}
+	command := j.Command
+	lease = agentwire.Lease{TaskID: j.TaskID, Operation: wire.RunOperation, LeaseToken: j.LeaseToken, Attempt: 1, Preparation: &command}
+	wall = time.Until(j.CreatedAt.Add(time.Duration(j.Command.Recipe.Resources.WallSeconds) * time.Second))
+	return lease, wall, true, nil
+}
+
+// Resume adopts the attempt Resumable found. See supervise for how it ends.
+func (m *Manager) Resume(ctx context.Context, transport Transport) (wire.StopReceipt, []byte, error) {
+	j, e := m.Lifecycle.Store.Read()
+	if e != nil {
+		return wire.StopReceipt{}, nil, e
+	}
+	return m.supervise(ctx, j, transport, false)
+}
+
+// shuttingDown reports that the agent itself is stopping: the context ended without the
+// wall limit passing and without a refusal from control naming a cause.
+func shuttingDown(ctx context.Context) bool {
+	return ctx.Err() != nil && context.Cause(ctx) == context.Canceled
+}
+
+// supervise follows one attempt to its end, starting it first when start is set. Local work
+// goes on while control cannot be reached; transfers wait for it to return. An attempt that
+// ends is always reconciled with the exact owned container in an independent bounded cleanup
+// context, and a nonzero receipt can be submitted through the restricted stop endpoint even
+// after execution authority is gone. Only the shutdown of the agent itself leaves a started
+// container running, for the next process to adopt.
+func (m *Manager) supervise(ctx context.Context, j Journal, transport Transport, start bool) (receipt wire.StopReceipt, outcome []byte, executionError error) {
 	defer func() {
+		if executionError != nil && shuttingDown(ctx) && j.Phase == "running" {
+			receipt = wire.StopReceipt{}
+			return
+		}
 		if executionError != nil {
 			code := executionError.Error()
 			if errors.Is(executionError, context.DeadlineExceeded) {
@@ -228,8 +281,10 @@ func (m *Manager) Execute(ctx context.Context, node string, lease agentwire.Leas
 		}
 		receipt = proof
 	}()
-	if e = m.prepare(ctx, j, transport); e != nil {
-		return receipt, nil, e
+	if start {
+		if e := m.prepare(ctx, j, transport); e != nil {
+			return receipt, nil, e
+		}
 	}
 	if m.expectedResult == nil {
 		return receipt, nil, fail("MODEL_PREPARATION_AGENT_CONFIGURATION_INVALID")
@@ -238,9 +293,12 @@ func (m *Manager) Execute(ctx context.Context, node string, lease agentwire.Leas
 	if e != nil {
 		return receipt, nil, e
 	}
-	if e = m.Lifecycle.Start(ctx, &j); e != nil {
-		return receipt, nil, e
+	if start {
+		if e = m.Lifecycle.Start(ctx, &j); e != nil {
+			return receipt, nil, e
+		}
 	}
+	var retry client.Retry
 	for {
 		if e = ctx.Err(); e != nil {
 			return receipt, nil, e
@@ -255,47 +313,23 @@ func (m *Manager) Execute(ctx context.Context, node string, lease agentwire.Leas
 		if e = outputBudget(ctx, filepath.Join(attemptPath(m.Config, j), "output"), j.Command.Recipe.Resources, m.Config.Policy().UserID); e != nil {
 			return receipt, nil, e
 		}
-		if e = m.relayEvents(ctx, &j, transport, int64(len(expected.Cases)), !container.State.Running); e != nil {
-			return receipt, nil, e
-		}
-		if !container.State.Running {
-			if container.State.OOMKilled {
-				return receipt, nil, fail("MODEL_PREPARATION_PROCESSOR_MEMORY_EXCEEDED")
-			}
-			request, e := j.Command.ContainerRequest()
-			if e != nil {
+		if retry.Due(time.Now()) {
+			raw, e := m.transfer(ctx, &j, transport, container, expected)
+			if e != nil && !client.Interrupted(e) {
 				return receipt, nil, e
 			}
-			raw, e := workerBytes(filepath.Join(attemptPath(m.Config, j), "output/result.json"), min(j.Command.Recipe.Resources.MaximumResultBytes, int64(wire.MaximumResultBytes)), m.Config.Policy().UserID)
 			if e != nil {
-				return receipt, nil, fail("MODEL_PREPARATION_RESULT_INVALID")
-			}
-			var status struct {
-				Status string `json:"status"`
-			}
-			if json.Unmarshal(raw, &status) != nil {
-				return receipt, nil, fail("MODEL_PREPARATION_RESULT_INVALID")
-			}
-			if status.Status == "prepared" {
-				result, e := wire.DecodePreparedResult(raw, expected)
-				if e != nil || container.State.ExitCode != 0 || result.EventCount != j.LastEventSequence {
-					return receipt, nil, fail("MODEL_PREPARATION_RESULT_INVALID")
-				}
-				if e = m.saveOutcome(&j, raw); e != nil {
-					return receipt, nil, e
-				}
-				if e = m.upload(ctx, j, transport, raw, filepath.Join(attemptPath(m.Config, j), "output/model"), result.ModelFiles); e != nil {
-					return receipt, nil, fail("MODEL_PREPARATION_OUTPUT_TRANSFER_FAILED")
+				if _, first := retry.Failed(time.Now()); first {
+					slog.Warn("model_preparation_transfer_interrupted", "task_id", j.TaskID, "code", e.Error())
 				}
 			} else {
-				if _, e = wire.DecodeFailedResult(raw, request); e != nil {
-					return receipt, nil, e
+				if retry.Succeeded() {
+					slog.Info("model_preparation_transfer_resumed", "task_id", j.TaskID)
 				}
-				if e = m.saveOutcome(&j, raw); e != nil {
-					return receipt, nil, e
+				if !container.State.Running {
+					return receipt, raw, nil
 				}
 			}
-			return receipt, raw, nil
 		}
 		select {
 		case <-ctx.Done():
@@ -303,6 +337,59 @@ func (m *Manager) Execute(ctx context.Context, node string, lease agentwire.Leas
 		case <-time.After(time.Duration(m.Config.Policy().PollMilliseconds) * time.Millisecond):
 		}
 	}
+}
+
+// transfer relays what the attempt has written so far and, once its container has exited,
+// its outcome and output. Every step repeats safely: control accepts a resent event, a
+// resent upload and a finished upload again, so an interrupted transfer simply runs again.
+func (m *Manager) transfer(ctx context.Context, j *Journal, transport Transport, container Container, expected wire.ResultExpectation) ([]byte, error) {
+	finished := !container.State.Running
+	if e := m.relayEvents(ctx, j, transport, int64(len(expected.Cases)), finished); e != nil {
+		return nil, e
+	}
+	if !finished {
+		return nil, nil
+	}
+	request, e := j.Command.ContainerRequest()
+	if e != nil {
+		return nil, e
+	}
+	raw, e := workerBytes(filepath.Join(attemptPath(m.Config, *j), "output/result.json"), min(j.Command.Recipe.Resources.MaximumResultBytes, int64(wire.MaximumResultBytes)), m.Config.Policy().UserID)
+	if e != nil {
+		return nil, fail("MODEL_PREPARATION_RESULT_INVALID")
+	}
+	var status struct {
+		Status string `json:"status"`
+	}
+	if json.Unmarshal(raw, &status) != nil {
+		return nil, fail("MODEL_PREPARATION_RESULT_INVALID")
+	}
+	if status.Status != "prepared" {
+		if _, e = wire.DecodeFailedResult(raw, request); e != nil {
+			return nil, e
+		}
+		return raw, m.saveOutcome(j, raw)
+	}
+	result, e := wire.DecodePreparedResult(raw, expected)
+	if e != nil || container.State.ExitCode != 0 || result.EventCount != j.LastEventSequence {
+		return nil, fail("MODEL_PREPARATION_RESULT_INVALID")
+	}
+	if e = m.saveOutcome(j, raw); e != nil {
+		return nil, e
+	}
+	if e = m.upload(ctx, *j, transport, raw, filepath.Join(attemptPath(m.Config, *j), "output/model"), result.ModelFiles); e != nil {
+		return nil, transferFailure(e, "MODEL_PREPARATION_OUTPUT_TRANSFER_FAILED")
+	}
+	return raw, nil
+}
+
+// transferFailure keeps an interrupted transfer recognizable, so it is tried again, and
+// names any other failure with code.
+func transferFailure(e error, code string) error {
+	if client.Interrupted(e) {
+		return e
+	}
+	return fail(code)
 }
 func digest(b []byte) string { sum := sha256.Sum256(b); return hex.EncodeToString(sum[:]) }
 func (m *Manager) relayEvents(ctx context.Context, j *Journal, transport Transport, rows int64, finished bool) error {
@@ -331,7 +418,7 @@ func (m *Manager) relayEvents(ctx context.Context, j *Journal, transport Transpo
 		}
 		base := "/agent/v1/nodes/" + j.NodeID + "/tasks/" + j.TaskID
 		if _, e = transport.PreparationEvents(ctx, base, j.LeaseToken, j.Command, rows, [][]byte{line}); e != nil {
-			return fail("MODEL_PREPARATION_EVENT_TRANSFER_FAILED")
+			return transferFailure(e, "MODEL_PREPARATION_EVENT_TRANSFER_FAILED")
 		}
 		j.LastEventSequence = event.Sequence
 		if e = m.Lifecycle.Store.Save(*j); e != nil {
@@ -370,6 +457,10 @@ func (m *Manager) upload(ctx context.Context, j Journal, transport Transport, me
 	if upload.PreparationID != j.Command.Scope.PreparationID || upload.AttemptID != j.Command.AttemptID || !sameAssets(assets, upload.Files) {
 		return fail("MODEL_PREPARATION_UPLOAD_INVALID")
 	}
+	if upload.State == "accepted" {
+		// The reply to an earlier finish was lost. Finishing again returns the same answer.
+		assets = nil
+	}
 	for _, asset := range assets {
 		if !wire.ModelAssetAllowed(asset.Path) {
 			return fail("MODEL_PREPARATION_UPLOAD_INVALID")
@@ -401,6 +492,9 @@ func (m *Manager) outcomePath(task string) string {
 	return filepath.Join(m.Lifecycle.Store.Directory, "model-preparation-outcomes", task+".json")
 }
 func (m *Manager) saveOutcome(j *Journal, raw []byte) error {
+	if j.OutcomeSHA256 != nil && *j.OutcomeSHA256 == digest(raw) {
+		return nil
+	}
 	parent := filepath.Dir(m.outcomePath(j.TaskID))
 	if e := rootDirectory(parent); e != nil {
 		return e

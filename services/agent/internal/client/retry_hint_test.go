@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -146,4 +147,76 @@ func writeRange(w http.ResponseWriter, content []byte) {
 	w.Header().Set("Content-Length", strconv.Itoa(len(content)))
 	w.Header().Set("X-Artifact-SHA256", hex.EncodeToString(sum[:]))
 	w.Write(content)
+}
+
+func TestInterruptedSeparatesSilenceFromARefusal(t *testing.T) {
+	for _, tc := range []struct {
+		failure error
+		want    bool
+	}{
+		{nil, false},
+		{errors.New("CONTROL_CONNECTION_FAILED"), true},
+		{errors.New("CONTROL_RESPONSE_INVALID"), true},
+		{errors.New("CONTROL_RESPONSE_REJECTED"), true},
+		{context.Canceled, true},
+		{context.DeadlineExceeded, true},
+		{&Problem{Code: "STORAGE_UNAVAILABLE", Status: 503}, true},
+		{&Problem{Code: "AGENT_OVERLOADED", Status: 503, RetryAfter: time.Second}, true},
+		{&Problem{Code: "RATE_LIMITED", Status: 429}, true},
+		{&Problem{Code: "AGENT_THROTTLED", Status: 409, RetryAfter: time.Second}, true},
+		{&Problem{Code: "TRAINING_UPLOAD_BUSY", Status: 409}, true},
+		{&Problem{Code: "MODEL_PREPARATION_UPLOAD_TIMEOUT", Status: 409}, true},
+		{&Problem{Code: "AGENT_LEASE_STALE", Status: 409}, false},
+		{&Problem{Code: "ACCESS_DENIED", Status: 403}, false},
+		{&Problem{Code: "AGENT_UNAUTHORIZED", Status: 401}, false},
+		{&Problem{Code: "CONTROL_RESPONSE_REJECTED", Status: 409}, false},
+		{errors.New("AGENT_LEASE_STALE"), false},
+		{errors.New("TRAINING_OUTPUT_CHANGED"), false},
+	} {
+		if got := Interrupted(tc.failure); got != tc.want {
+			t.Errorf("Interrupted(%v) = %v", tc.failure, got)
+		}
+	}
+}
+
+func TestOnlyAnAnswerControlWroteCountsAsARefusal(t *testing.T) {
+	for _, tc := range []struct {
+		code    string
+		status  int
+		refused bool
+	}{
+		{"TRAINING_ATTEMPT_STALE", 409, true},
+		{"AGENT_LEASE_STALE", 409, true},
+		{"", 404, false},
+		{"not a code", 403, false},
+		{"SOME_PROXY_CODE", 401, false},
+		{"", 502, false},
+	} {
+		e := remoteProblem(tc.code, tc.status, 0)
+		if Interrupted(e) == tc.refused {
+			t.Errorf("code %q status %d: %v", tc.code, tc.status, e)
+		}
+	}
+}
+
+func TestRetryBacksOffAndResets(t *testing.T) {
+	var retry Retry
+	now := time.Now()
+	if !retry.Due(now) || retry.Succeeded() {
+		t.Fatal("a fresh retry is due and has nothing to recover from")
+	}
+	delay, first := retry.Failed(now)
+	if !first || delay > time.Second {
+		t.Fatalf("first failure: %v, %v", delay, first)
+	}
+	if _, first = retry.Failed(now); first {
+		t.Fatal("second failure reported as first")
+	}
+	retry.due = now.Add(time.Hour)
+	if retry.Due(now) {
+		t.Fatal("due before its time")
+	}
+	if !retry.Succeeded() || !retry.Due(now) {
+		t.Fatal("success did not reset the backoff")
+	}
 }

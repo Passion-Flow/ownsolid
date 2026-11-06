@@ -56,7 +56,7 @@ func TestActualTrainingRestrictedStopAfterExpiryRevocationCancellationAndNodeDis
 			var e error
 			switch mode {
 			case "expired":
-				_, e = f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID)
+				_, e = f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second',deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID)
 			case "epoch":
 				_, e = f.s.DB.Exec(ctx, "UPDATE users SET auth_epoch=auth_epoch+1 WHERE id=$1", f.portal.Me.User.ID)
 			case "membership":

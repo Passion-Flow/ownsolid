@@ -8,7 +8,9 @@ The run loop sends heartbeats and claims through one [client session](../client/
 
 [pacing.go](pacing.go) decides the wait between cycles from the pacing control last sent: what is left of a jittered interval after a success, a full-jitter backoff after a failure ([ADR 0013](../../../../docs/decisions/0013-agent-pacing.md)), and at least control's retry hint after a refusal ([ADR 0018](../../../../docs/decisions/0018-agent-call-admission.md)).
 
-[lease_renewal.go](lease_renewal.go) keeps the lease of every running task renewed, for components, inference, training and model preparation alike. A renewal control sheds with a retry hint is tried again at the next tick while the lease holds; any other failure, or a lease that expires unrenewed, cancels the task.
+[lease_renewal.go](lease_renewal.go) keeps the lease of every running task renewed, for components, inference, training and model preparation alike. Failing to reach control ends nothing: renewal tries again at the next tick for as long as control is away, and only a refusal control wrote cancels the task, with that refusal as the cause ([ADR 0032](../../../../docs/decisions/0032-static-stability.md)). A finished task's result is sent again until control answers or the task's limit passes.
+
+Training and model preparation attempts outlive the agent process. Each cycle first adopts an attempt an earlier process left running and follows it to its end, so startup never needs control; a shutdown leaves the container running for the next process.
 
 Runtime borrows [state](../state/README.md) for identity and process locking, [settings](../settings/README.md) for bounded policy, and [client](../client/README.md) for control transport. Managers own their local journals and resource checks. A failed enrollment acknowledgement or lost lease must not erase identity/workload evidence or silently create a replacement attempt.
 

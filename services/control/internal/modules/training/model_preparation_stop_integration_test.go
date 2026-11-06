@@ -91,7 +91,7 @@ func TestActualCpuModelPreparationRestrictedCleanupSurvivesRevocationCancellatio
 				}
 				_, e = g.f.s.Nodes.Update(ctx, g.f.admin, n.ID, n.Name, "disabled", n.Version, "Disable execution but retain restricted stop authority", uuid.NewString())
 			case "expired":
-				_, e = g.f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID)
+				_, e = g.f.s.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second',deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1", l.TaskID)
 				if e == nil {
 					preparationDue(t, g, p.ID)
 					_, e = g.service.ReconcileNext(ctx)
