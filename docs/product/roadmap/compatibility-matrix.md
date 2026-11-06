@@ -38,3 +38,6 @@ product". Each entry gets its own box for real-environment verification.
 - [ ] CMP-410 Training frameworks and gateways (P4) - Catalog: F088, F089, F126 to F139
 - [ ] CMP-411 Agent frameworks (P4) - Catalog: F046 to F050
 - [ ] CMP-412 Other hardware: Apple silicon, TPU, AWS Neuron (P4) - Catalog: F189, F195, F196
+
+- [ ] CMP-215 Capability registry: every option the product offers, each declared ready, planned, licensed or unsupported, with a reason and the roadmap item behind it; the installer, the API and both entrances read the same declaration ([ADR 0029](../../decisions/0029-show-every-option-and-fetch-models-offline.md)) (P1)
+- [ ] CMP-216 Unavailable options stay visible and announced: `aria-disabled` rather than removal, a readable reason beside each, and a test that no option is disabled without one (P1)
