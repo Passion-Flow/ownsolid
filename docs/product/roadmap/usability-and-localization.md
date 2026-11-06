@@ -43,6 +43,12 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [x] UX-120 Mail delivery status for administrators, so a failed invitation or reset email can be seen and resent (P1) - Evidence: ec65295; a real failed reset email resent from the console in Chromium on a licensed offline install on `ownsolid-cpu`, 2026-11-05
 - [x] UX-121 Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1) - Evidence: 82b0830; real Chromium received Brotli copies on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06
 
+- [ ] UX-122 Navigation to [ADR 0030](../../decisions/0030-simple-on-the-surface-deep-underneath.md): collapsing groups with only the current one open, self-cleaning open state, a heading that only opens and closes, a filter box, and a collapsed icon-only mode that keeps every accessible name (P1)
+- [ ] UX-123 Pinned destinations, chosen by the person and kept per person (P1)
+- [ ] UX-124 One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1)
+- [ ] UX-125 Summary tiles above a list filter the list instead of decorating it (P1)
+- [ ] UX-126 Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1)
+
 ## P2 Fleet operations
 
 - [ ] UX-201 Wall display and NOC dashboards for operations centers (P2)
