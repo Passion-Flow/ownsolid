@@ -8,6 +8,11 @@
 # through a read-only bind mount.
 #
 # Usage: run-single-node.sh <binaries-directory> <control-image> <postgres-image> <metrics-image> <logs-image> <dind-image>
+#
+# OWNSOLID_E2E_SCRATCH names the directory for the image archive (default /var/tmp), and
+# OWNSOLID_E2E_DOCKER_TMPFS, for example 12g, keeps the isolated Docker daemon's storage in
+# memory. Together they keep a run off a full disk: /dev/shm and 12g need no disk at all.
+# OWNSOLID_E2E_SIMULATED_AGENTS sizes the simulated fleet (default 2000).
 set -euo pipefail
 
 binaries=${1:?binaries directory}
@@ -17,7 +22,7 @@ metrics_image=${4:?metrics store image}
 logs_image=${5:?logs store image}
 dind_image=${6:?docker-in-docker image}
 
-work=$(mktemp -d /var/tmp/ownsolid-e2e.XXXXXX)
+work=$(mktemp -d "${OWNSOLID_E2E_SCRATCH:-/var/tmp}/ownsolid-e2e.XXXXXX")
 name=$(basename "$work" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-\n' '-')
 
 cleanup() {
@@ -29,12 +34,16 @@ trap cleanup EXIT
 egress_interface=egress0
 egress_log=/var/log/ownsolid-egress.jsonl
 
-cp "$binaries/ownsolid-install" "$binaries/e2e.test" "$binaries/agent" "$binaries/inference-egress.test" "$binaries/egress-recorder" "$binaries/compose.yaml" "$work/"
-chmod 755 "$work" "$work/ownsolid-install" "$work/e2e.test" "$work/agent" "$work/inference-egress.test" "$work/egress-recorder"
+cp "$binaries/ownsolid-install" "$binaries/e2e.test" "$binaries/agent" "$binaries/inference-egress.test" "$binaries/egress-recorder" "$binaries/simulator" "$binaries/compose.yaml" "$work/"
+chmod 755 "$work" "$work/ownsolid-install" "$work/e2e.test" "$work/agent" "$work/inference-egress.test" "$work/egress-recorder" "$work/simulator"
 echo "saving images"
 docker save --output "$work/images.tar" "$control_image" "$postgres_image" "$metrics_image" "$logs_image"
 
-docker run --detach --name "$name" --privileged --network none \
+storage=()
+if [ -n "${OWNSOLID_E2E_DOCKER_TMPFS:-}" ]; then
+	storage=(--tmpfs "/var/lib/docker:size=$OWNSOLID_E2E_DOCKER_TMPFS")
+fi
+docker run --detach --name "$name" --privileged --network none "${storage[@]}" \
 	--env DOCKER_TLS_CERTDIR= --volume "$work:/bundle:ro" "$dind_image" >/dev/null
 
 echo "waiting for the isolated Docker daemon"
@@ -66,6 +75,8 @@ docker exec "$name" sh -euc "
 docker exec \
 	--env OWNSOLID_E2E_INSTALLER=/bundle/ownsolid-install \
 	--env OWNSOLID_E2E_AGENT=/bundle/agent \
+	--env OWNSOLID_E2E_SIMULATOR=/bundle/simulator \
+	--env OWNSOLID_E2E_SIMULATED_AGENTS="${OWNSOLID_E2E_SIMULATED_AGENTS:-}" \
 	--env OWNSOLID_E2E_INFERENCE_EGRESS_TEST=/bundle/inference-egress.test \
 	--env OWNSOLID_E2E_COMPOSE_FILE=/bundle/compose.yaml \
 	--env OWNSOLID_E2E_IMAGE_ARCHIVE=/bundle/images.tar \
