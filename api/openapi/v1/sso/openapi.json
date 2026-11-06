@@ -235,6 +235,15 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       }
     },
@@ -298,6 +307,48 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE",
+            "SSO_PASSWORD_REQUIRED"
+          ],
+          "404": [
+            "SSO_CONNECTOR_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "SSO_CONNECTOR_DISABLED",
+            "SSO_BINDING_LIMIT"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "429": [
+            "RATE_LIMITED",
+            "SSO_CAPACITY_EXCEEDED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "SSO_DISABLED",
+            "SSO_PROVIDER_CONFIGURATION_INVALID"
+          ]
         }
       }
     },
@@ -338,6 +389,22 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       }
     },
@@ -418,6 +485,46 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "SSO_PASSWORD_REQUIRED"
+          ],
+          "404": [
+            "SSO_BINDING_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "IDEMPOTENCY_CONFLICT",
+            "SSO_REVISION_CONFLICT",
+            "SSO_PASSWORD_CHANGED"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       }
     },

@@ -48,6 +48,23 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "NOTIFICATION_UNAVAILABLE"
+          ]
         }
       }
     },
@@ -107,6 +124,27 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "NOTIFICATION_UNAVAILABLE"
+          ]
         }
       }
     },
@@ -188,6 +226,40 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "NOTIFICATION_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "NOTIFICATION_UNAVAILABLE"
+          ]
         }
       }
     }

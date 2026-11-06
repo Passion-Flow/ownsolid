@@ -70,7 +70,9 @@ describe('ProblemNotice', () => {
     inEnglish(<ProblemNotice problem={{ ...base, code: 'SERVICE_NOT_READY' }} onRetry={onRetry} />);
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('The control plane is not ready');
-    expect(alert).toHaveTextContent('Request ID req-1');
+    expect(alert).toHaveTextContent('Request ID');
+    expect(alert).toHaveTextContent('req-1');
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(onRetry).toHaveBeenCalledOnce();
   });
@@ -87,7 +89,7 @@ describe('ProblemNotice', () => {
         onRetry={() => undefined}
       />,
     );
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
   });
 
   it('shows how long to wait when the server said so', () => {
@@ -95,6 +97,41 @@ describe('ProblemNotice', () => {
       <ProblemNotice problem={{ ...base, code: 'RATE_LIMITED', retryAfterSeconds: 526 }} />,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('You can try again in 8m 46s.');
+  });
+
+  it('holds the retry until the wait the server asked for is over', () => {
+    vi.useFakeTimers();
+    try {
+      const onRetry = vi.fn();
+      inEnglish(
+        <ProblemNotice
+          problem={{ ...base, code: 'RATE_LIMITED', retryAfterSeconds: 2 }}
+          onRetry={onRetry}
+        />,
+      );
+      const retry = screen.getByRole('button', { name: 'Try again' });
+      expect(retry).toBeDisabled();
+      expect(screen.getByRole('timer')).toHaveTextContent('2s');
+      act(() => {
+        vi.advanceTimersByTime(2_100);
+      });
+      expect(retry).toBeEnabled();
+      expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('offers a reload for a page that is out of date, instead of repeating the request', () => {
+    const onRetry = vi.fn();
+    inEnglish(
+      <ProblemNotice
+        problem={{ ...base, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN', retryable: true }}
+        onRetry={onRetry}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Reload the page' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
   });
 });
 

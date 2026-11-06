@@ -48,6 +48,24 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "PREFERENCE_UNAVAILABLE",
+            "STORAGE_TIMEOUT"
+          ]
         }
       },
       "patch": {
@@ -117,6 +135,39 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "PREFERENCE_REVISION_CONFLICT"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "PREFERENCE_UNAVAILABLE",
+            "STORAGE_TIMEOUT"
+          ]
         }
       }
     },
@@ -154,6 +205,24 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "PREFERENCE_UNAVAILABLE",
+            "STORAGE_TIMEOUT"
+          ]
         }
       },
       "patch": {
@@ -220,6 +289,39 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "PREFERENCE_REVISION_CONFLICT"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "PREFERENCE_UNAVAILABLE",
+            "STORAGE_TIMEOUT"
+          ]
         }
       }
     },
@@ -272,6 +374,27 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "PREFERENCE_UNAVAILABLE",
+            "STORAGE_TIMEOUT"
+          ]
         }
       }
     },
@@ -355,6 +478,44 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "PREFERENCE_REVISION_CONFLICT",
+            "RESOURCE_LIMIT_REACHED",
+            "SAVED_VIEW_NAME_EXISTS"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "PREFERENCE_UNAVAILABLE",
+            "STORAGE_TIMEOUT"
+          ]
         }
       },
       "delete": {
@@ -428,6 +589,42 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "PREFERENCE_REVISION_CONFLICT"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "PREFERENCE_UNAVAILABLE",
+            "STORAGE_TIMEOUT"
+          ]
         }
       }
     }

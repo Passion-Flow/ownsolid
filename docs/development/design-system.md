@@ -50,6 +50,17 @@ before writing new markup: `Button`, `TextField`, `Card`, `StatusPill`, `Tag`, `
   shows a toast with a retry; the next change sends it too.
 - Chart colors pass the dataviz palette validator in both themes before use.
 
+## Errors and empty states
+
+Every failure says what happened and what to do next ([research](../research/errors-and-empty-states.md)).
+Show API failures with `ProblemNotice`: it offers Try again only for failures that may pass,
+waits as long as the server asked, offers Reload the page when the page is out of date, and
+lets the request ID be copied. A new API call must declare its codes in `x-error-codes`, and
+each code needs `problem.<CODE>.title` and `.detail` in every catalog; tests enforce both.
+Write the title as what happened and the detail as the next step, without apologies, blame
+or jargon. An empty state names what will appear and the first action; a filtered list that
+comes back empty offers to clear the filters.
+
 ## Interaction principles
 
 1. **Decide for the user, allow overrides.** Offer a recommended choice, such as

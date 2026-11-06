@@ -196,6 +196,24 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ]
         }
       }
     }
