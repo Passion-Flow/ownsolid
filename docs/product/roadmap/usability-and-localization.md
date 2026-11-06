@@ -34,7 +34,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [ ] UX-111 In-product help and API documentation available offline (P1) - Catalog: F431
 - [x] UX-112 Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569 - Evidence: 27d03fc; keyboard walk and axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05
 - [x] UX-113 Warn before a session ends from inactivity, with one action to stay signed in (P1) - Evidence: 62b3448; a real 60-second idle timeout with the page's poll running in Chromium on the admin entrance of an offline install on `ownsolid-cpu`, 2026-11-06
-- [ ] UX-114 Shareable links: filters, sort order and the open drawer live in the URL (P1)
+- [x] UX-114 Shareable links: filters, sort order and the open drawer live in the URL (P1) - Evidence: fb4eac6; real Chromium reloaded a filtered email list from its address on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06
 - [x] UX-115 Route-level code splitting and a bundle size budget enforced in CI (P1) - Evidence: 13b789e, 13034a0; real-browser run on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05
 - [x] UX-116 Automated accessibility checks in the browser tests of every page (P1) - Evidence: 31e5343; axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05
 - [ ] UX-117 Replace the inherited browser suite in `services/control/internal/testing/browser` with Playwright flows as pages land; its `tests/acceptance` scripts did not move here, so it cannot run (P1)
