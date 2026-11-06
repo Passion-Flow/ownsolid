@@ -70,16 +70,16 @@ through the outage ([static stability](static-stability.md)).
 
 ## What the runs showed
 
-Two runs on `ownsolid-cpu` on 2026-11-07, with the configuration above.
+Three runs on `ownsolid-cpu` on 2026-11-07, with the configuration above.
 
-| Threshold | Run 1 | Run 2 |
-| --- | --- | --- |
-| 1, 2: steady windows | Met: no failure, worst window p99 212 ms | **Missed**: windows ending at 240, 300 and 360 s shed 3,246, 591 and 431 heartbeats with `AGENT_OVERLOADED`, p99 up to 3.1 s |
-| 3: dispatch p99 | 1.24 s | 1.34 s |
-| 4: full reconnect | disconnect 3.4 s, partition 59.5 s after the heal, control restart 17.7 s | 3.7 s, 58.9 s, 29.4 s |
-| 5: tasks through the restart | 100 of 100 on the first attempt | 100 of 100 on the first attempt |
-| 6: control | No restart, no logged failure | No restart, no logged failure |
-| 7: back on the stream | **Missed**, which added this threshold: 1,324 agents stayed on HTTPS for five minutes after the restart | Met after the fix below |
+| Threshold | Run 1 | Run 2 | Run 3 |
+| --- | --- | --- | --- |
+| 1, 2: steady windows | Met: no failure, worst window p99 212 ms | **Missed**: windows ending at 240, 300 and 360 s shed 3,246, 591 and 431 heartbeats with `AGENT_OVERLOADED`, p99 up to 3.1 s | Met |
+| 3: dispatch p99 | 1.24 s | 1.34 s | 1.23 s |
+| 4: full reconnect | disconnect 3.4 s, partition 59.5 s after the heal, control restart 17.7 s | 3.7 s, 58.9 s, 29.4 s | Met; control restart 11.2 s |
+| 5: tasks through the restart | 100 of 100 on the first attempt | 100 of 100 | 100 of 100 |
+| 6: control | No restart, no logged failure | No restart, no logged failure | Met |
+| 7: back on the stream | **Missed**, which added this threshold: 1,324 agents stayed on HTTPS for five minutes after the restart | Met after the fix below | Met |
 
 Steady stretch, per second: about 2,800 commits, 410 row updates (the batched last-seen writes
 of ADR 0022) and 310 KB of WAL. Control used about one CPU of its two, PostgreSQL one of its two.
@@ -92,10 +92,22 @@ agent now leaves the stream only after `SessionFallbackProbes` (two) such failur
 (ADR 0007), and the simulator does the same.
 
 **Open: shedding in a steady stretch.** Run 2 shed heartbeats for three minutes with nothing
-injected, while run 1 did not. The liveness state refresh is not the cause: its synchronous
-writes are already spread over half the refresh, about 13 a second. What stalls control for more
-than the two-second seat wait is not yet known. The next run samples PostgreSQL's waits and
-checkpoints and control's refusals over time. Until it passes twice in a row, ARC-015 stays open.
+injected; runs 1 and 3 did not. The liveness state refresh is not the cause: its synchronous
+writes are already spread over half the refresh, about 13 a second.
+
+Run 3 sampled every five seconds and points at **CPU quota throttling of PostgreSQL**. The
+installer limits the database container with `cpus: "2"`, a CFS quota. In the steady stretch
+PostgreSQL averaged 0.92 CPU yet spent up to 2.0 s of a 5 s sample throttled (p90 0.8 s), and
+6.2 s around the disconnect storm. Up to ten pooled backends run at once on the host's 16 cores,
+so they spend the period's 200 ms of quota in about 20 ms of wall time and every query then
+waits out the rest of the 100 ms period. Control, whose Go runtime sizes itself to its quota,
+was throttled for at most 42 ms. A worse stretch of the same stalls would hold control's seats
+past their two-second wait, which is what run 2 shed with. This is a hypothesis with
+supporting evidence, not yet a proven cause.
+
+Next step: prototype a database limit that does not stall (CPU shares or a cpuset instead of a
+quota, or a pool sized to the quota), rerun, and keep ARC-015 open until two runs in a row pass
+with the cause fixed. The installer's resource settings are `deploy/` code (lane C).
 
 ## Failure modes
 
