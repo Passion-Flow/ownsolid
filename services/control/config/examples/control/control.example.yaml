@@ -234,6 +234,12 @@ runtime:
     rate_grace_seconds: 3600
     # A minimum on PostgreSQL: rows leave with their whole month (ADR 0029).
     audit_days: 180
+    # Training and model preparation events: 0 keeps them, otherwise 30 to 3650, a minimum as above.
+    event_days: 0
+    # A finished task leaves node_tasks after task_days, once nothing refers to it, and its history
+    # record after task_history_days, which must not be shorter.
+    task_days: 30
+    task_history_days: 365
   nodes:
     maximum_live_nodes: 100
     maximum_live_join_tokens: 100

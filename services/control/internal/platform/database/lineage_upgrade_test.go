@@ -3,6 +3,7 @@ package database_test
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -101,6 +102,67 @@ func TestLineageUpgradeCountsLiveNodes(t *testing.T) {
 	var live int
 	if e := s.DB.QueryRow(ctx, "SELECT live_nodes FROM tenant_node_counts").Scan(&live); e != nil || live != 2 {
 		t.Fatal(live, e)
+	}
+}
+
+// Migrations 000041 to 000043 keep rows in place: the old tables become first partitions, events take
+// the creation time of their attempt, and finished tasks reach the history.
+func TestLineageUpgradeKeepsAppendRows(t *testing.T) {
+	s := fixture.NewAtVersion(t, 40)
+	fixture.Bootstrap(t, s)
+	ctx := t.Context()
+	seed := newTaskSeed(t, s)
+	node := seed.node("Node with history")
+	finished := seed.task(node, "succeeded", 1, 0)
+	live := seed.task(node, "pending", 0, 0)
+	attempt, preparationAttempt := uuid.NewString(), uuid.NewString()
+	started := time.Date(2026, 3, 4, 5, 6, 7, 0, time.UTC)
+	connection, e := s.DB.Acquire(ctx)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer connection.Release()
+	digest := strings.Repeat("a", 64)
+	// The rows above these belong to other features, so their foreign keys are set aside.
+	for _, statement := range []struct {
+		sql  string
+		args []any
+	}{
+		{sql: `SET session_replication_role=replica`},
+		{`INSERT INTO training_attempts(id,tenant_id,workspace_id,job_id,node_id,attempt_number,state,requested_by,requested_audience,requested_epoch,input_inventory,created_at) VALUES($1,$2,$3,$4,$5,1,'running',$6,'admin',0,'{}',$7)`, []any{attempt, seed.tenant, seed.workspace, uuid.NewString(), node, seed.user, started}},
+		{`INSERT INTO training_events(tenant_id,workspace_id,job_id,attempt_id,sequence,kind,global_step,payload,canonical_sha256) SELECT tenant_id,workspace_id,job_id,id,1,'phase',0,'{}',$2 FROM training_attempts WHERE id=$1`, []any{attempt, digest}},
+		{`INSERT INTO model_preparation_attempts(id,tenant_id,workspace_id,preparation_id,node_id,task_id,attempt_number,state,requested_by,requested_audience,requested_epoch,command_sha256,created_at) VALUES($1,$2,$3,$4,$5,$6,1,'running',$7,'admin',0,$8,$9)`, []any{preparationAttempt, seed.tenant, seed.workspace, uuid.NewString(), node, live, seed.user, digest, started}},
+		{`INSERT INTO model_preparation_events(tenant_id,workspace_id,preparation_id,attempt_id,sequence,kind,payload,canonical_sha256) SELECT tenant_id,workspace_id,preparation_id,id,1,'phase','{}',$2 FROM model_preparation_attempts WHERE id=$1`, []any{preparationAttempt, digest}},
+		{sql: `RESET session_replication_role`},
+	} {
+		if _, e = connection.Exec(ctx, statement.sql, statement.args...); e != nil {
+			t.Fatal(statement.sql, e)
+		}
+	}
+	var audits int
+	if e = s.DB.QueryRow(ctx, `SELECT count(*) FROM audit_events`).Scan(&audits); e != nil || audits == 0 {
+		t.Fatal(audits, e)
+	}
+	if e = database.Migrate(ctx, s.DB); e != nil {
+		t.Fatal(e)
+	}
+	var kept int
+	var home string
+	if e = s.DB.QueryRow(ctx, `SELECT count(*),min(tableoid::regclass::text) FROM audit_events`).Scan(&kept, &home); e != nil || kept != audits || !strings.HasSuffix(home, "audit_events_p000000") {
+		t.Fatal(kept, audits, home, e)
+	}
+	for _, table := range []string{"training_events", "model_preparation_events"} {
+		var at time.Time
+		if e = s.DB.QueryRow(ctx, `SELECT attempt_created_at FROM `+table).Scan(&at); e != nil || !at.Equal(started) {
+			t.Fatal(table, at, e)
+		}
+	}
+	var history int
+	if e = s.DB.QueryRow(ctx, `SELECT count(*) FILTER(WHERE id=$1),count(*) FILTER(WHERE id=$2) FROM node_task_history`, finished, live).Scan(&history, new(int)); e != nil || history != 1 {
+		t.Fatal(history, e)
+	}
+	if _, e = s.DB.Exec(ctx, `INSERT INTO audit_events(id,occurred_at,audience,action,outcome,request_id) VALUES($1,clock_timestamp(),'system','test.event','success',$1)`, uuid.NewString()); e != nil {
+		t.Fatal(e)
 	}
 }
 

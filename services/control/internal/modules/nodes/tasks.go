@@ -15,6 +15,9 @@ import (
 
 const taskFields = `id::text,tenant_id::text,workspace_id::text,node_id::text,operation,state,attempt,error_code,created_at,updated_at,deadline_at,completed_at`
 
+// taskHistoryColumns are the columns node_tasks and node_task_history share.
+const taskHistoryColumns = `id,tenant_id,workspace_id,node_id,operation,state,attempt,error_code,created_at,updated_at,deadline_at,completed_at`
+
 func scanTask(row pgx.Row) (Task, error) {
 	var v Task
 	e := row.Scan(&v.ID, &v.TenantID, &v.WorkspaceID, &v.NodeID, &v.Operation, &v.State, &v.Attempt, &v.ErrorCode, &v.CreatedAt, &v.UpdatedAt, &v.DeadlineAt, &v.CompletedAt)
@@ -68,6 +71,9 @@ func (s *Service) Run(ctx context.Context) {
 			}
 			if s.trimWakes(bounded) != nil {
 				slog.Warn("node_task_wake_trim_failed", "code", "STORAGE_UNAVAILABLE")
+			}
+			if s.pruneTasks(bounded) != nil {
+				slog.Warn("node_task_prune_failed", "code", "STORAGE_UNAVAILABLE")
 			}
 			cancel()
 		}

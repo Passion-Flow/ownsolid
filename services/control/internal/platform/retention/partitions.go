@@ -24,6 +24,9 @@ type partitionedTable struct {
 
 var partitionedTables = []partitionedTable{
 	{"audit_events", func(p config.RetentionPolicy) int { return p.AuditDays }},
+	{"training_events", func(p config.RetentionPolicy) int { return p.EventDays }},
+	{"model_preparation_events", func(p config.RetentionPolicy) int { return p.EventDays }},
+	{"node_task_history", func(p config.RetentionPolicy) int { return p.TaskHistoryDays }},
 }
 
 // partitionReach is the last result of each table, for the metrics store.

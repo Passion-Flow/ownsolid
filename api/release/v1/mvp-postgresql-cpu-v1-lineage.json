@@ -2,8 +2,8 @@
   "format_version": 1,
   "kind": "projectone-postgresql-lineage-v1",
   "application_profile": "mvp-postgresql-cpu-v1",
-  "schema_version": 41,
-  "table_count_including_ledger": 113,
+  "schema_version": 43,
+  "table_count_including_ledger": 114,
   "prefix_lineage": "account22",
   "prefix_schema_version": 22,
   "entries": [
@@ -211,6 +211,16 @@
       "version": 41,
       "source_path": "services/control/migrations/postgresql/000041_partitioned_audit.up.sql",
       "sha256": "c66a1ab88297dfa55f37263717b0b719e79ef558596c91e1b2793711335e6eb8"
+    },
+    {
+      "version": 42,
+      "source_path": "services/control/migrations/postgresql/000042_partitioned_events.up.sql",
+      "sha256": "9828587b06630df4c6cd1d48305d89b588fb393b7a8a9579151ee5192fee0ffe"
+    },
+    {
+      "version": 43,
+      "source_path": "services/control/migrations/postgresql/000043_node_task_history.up.sql",
+      "sha256": "a03214b3a1839f71ba1928b5cde88b42d0ee91ea3b3ddce550a7ea2defb77909"
     }
   ]
 }
