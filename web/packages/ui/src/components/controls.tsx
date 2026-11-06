@@ -1,5 +1,5 @@
 // Small form controls: segmented choice, switch and checkbox.
-import type { ComponentProps, ReactNode } from 'react';
+import { useEffect, useRef, type ComponentProps, type ReactNode } from 'react';
 import { cn } from '../cn.ts';
 
 /** One choice in a {@link Segmented} control. */
@@ -92,10 +92,21 @@ export function Switch({ label, checked, onChange, disabled }: SwitchProps) {
   );
 }
 
+/** Props for {@link Checkbox}. */
+export interface CheckboxProps extends Omit<ComponentProps<'input'>, 'type'> {
+  /** Shows the third state of a checkbox that speaks for several rows. */
+  indeterminate?: boolean | undefined;
+}
+
 /** A checkbox in the accent color. Give it an accessible name. */
-export function Checkbox({ className, ...props }: Omit<ComponentProps<'input'>, 'type'>) {
+export function Checkbox({ className, indeterminate = false, ...props }: CheckboxProps) {
+  const element = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (element.current) element.current.indeterminate = indeterminate;
+  }, [indeterminate]);
   return (
     <input
+      ref={element}
       type="checkbox"
       className={cn('m-0 size-4 cursor-pointer accent-accent', className)}
       {...props}

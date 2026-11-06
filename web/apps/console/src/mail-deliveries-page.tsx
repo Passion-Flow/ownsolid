@@ -1,4 +1,5 @@
-// Email delivery: what the platform sent, what failed and why, and a resend for failures.
+// Email delivery: what the platform sent, what failed and why, and a resend for failures. It is
+// the first page built on the shared list pattern (docs/research/console-list-pattern.md).
 import {
   isProblem,
   listMailDeliveries,
@@ -8,12 +9,27 @@ import {
   type MailState,
 } from '@ownsolid/api';
 import { useI18n, type TranslationKey } from '@ownsolid/i18n';
-import { runtimeConfigQuery } from '@ownsolid/shell';
 import {
+  ColumnChooser,
+  SavedViewsMenu,
+  runtimeConfigQuery,
+  useListView,
+  useRowSelection,
+  type ListDefinition,
+  type ListView,
+  type RowSelection,
+} from '@ownsolid/shell';
+import {
+  BulkBar,
   Button,
   Card,
+  Checkbox,
+  CopyText,
+  Drawer,
   EmptyState,
+  FilterSelect,
   ProblemNotice,
+  SearchField,
   Segmented,
   Skeleton,
   StatusPill,
@@ -26,7 +42,7 @@ import {
 } from '@ownsolid/ui';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Mail, RotateCw } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 type Filter = 'all' | 'failed' | 'queued' | 'sent';
 
@@ -46,6 +62,8 @@ const purposes: Record<MailPurpose, TranslationKey> = {
   password_changed: 'mail.purpose.password_changed',
 };
 
+const purposeNames = Object.keys(purposes) as MailPurpose[];
+
 // The outbox's error categories. An unknown category shows as a generic reason.
 const reasons: Record<string, TranslationKey> = {
   smtp_unavailable: 'mail.reason.smtp_unavailable',
@@ -59,6 +77,23 @@ const reasons: Record<string, TranslationKey> = {
 
 const listKey = ['mail-deliveries'] as const;
 
+const definition: ListDefinition = {
+  key: 'mail-deliveries',
+  filters: {
+    state: { kind: 'choice', values: filters.filter((value) => value !== 'all') },
+    purpose: { kind: 'choice', values: purposeNames },
+    recipient: { kind: 'text', maximum: 254 },
+  },
+  columns: [
+    { id: 'recipient', label: 'mail.column.recipient', locked: true },
+    { id: 'purpose', label: 'mail.column.purpose' },
+    { id: 'state', label: 'mail.column.state' },
+    { id: 'reason', label: 'mail.column.reason' },
+    { id: 'attempts', label: 'mail.column.attempts' },
+    { id: 'created', label: 'mail.column.created' },
+  ],
+};
+
 function Reason({ delivery }: { delivery: MailDelivery }) {
   const { t, format } = useI18n();
   if (delivery.state === 'queued' && delivery.next_attempt_at && delivery.attempt_count > 0) {
@@ -68,33 +103,184 @@ function Reason({ delivery }: { delivery: MailDelivery }) {
   return <>{t(reasons[delivery.error_category] ?? 'mail.reason.other')}</>;
 }
 
-function Rows({ items }: { items: readonly MailDelivery[] }) {
-  const { t, format } = useI18n();
-  const toast = useToast();
+/** Resends, with one key per email until it succeeds, so a retry cannot send it twice. */
+function useResend() {
   const queryClient = useQueryClient();
-  // One key per email until its resend succeeds, so retrying a failed request cannot
-  // send the email twice.
   const keys = useRef(new Map<string, string>());
-  const resend = useMutation({
-    mutationFn: (id: string) => {
-      const key = keys.current.get(id) ?? crypto.randomUUID();
-      keys.current.set(id, key);
-      return resendMailDelivery(id, key);
+  return useMemo(
+    () => ({
+      send: async (id: string) => {
+        const key = keys.current.get(id) ?? crypto.randomUUID();
+        keys.current.set(id, key);
+        const sent = await resendMailDelivery(id, key);
+        keys.current.delete(id);
+        return sent;
+      },
+      refresh: () => queryClient.invalidateQueries({ queryKey: listKey }),
+    }),
+    [queryClient],
+  );
+}
+
+function ResendAll({ selection }: { selection: RowSelection }) {
+  const { t } = useI18n();
+  const toast = useToast();
+  const resend = useResend();
+  const run = useMutation({
+    mutationFn: async (ids: readonly string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => resend.send(id)));
+      return ids.filter((_, index) => results[index]?.status === 'rejected');
     },
-    onSuccess: (_, id) => {
-      keys.current.delete(id);
-      toast({ message: t('mail.resent') });
-      return queryClient.invalidateQueries({ queryKey: listKey });
+    onSuccess: async (failed, ids) => {
+      selection.select(failed);
+      await resend.refresh();
+      if (failed.length === 0) {
+        toast({ message: t('mail.bulk.resent', { count: ids.length }) });
+        return;
+      }
+      toast({
+        message: t('mail.bulk.partial', {
+          sent: ids.length - failed.length,
+          failed: failed.length,
+        }),
+        retry: () => {
+          run.mutate(failed);
+        },
+      });
     },
   });
   return (
+    <Button
+      size="sm"
+      variant="ghost"
+      disabled={run.isPending}
+      className="border-[color-mix(in_srgb,var(--bg)_30%,transparent)] text-bg hover:bg-[color-mix(in_srgb,var(--bg)_14%,transparent)] hover:text-bg"
+      onClick={() => {
+        run.mutate([...selection.selected]);
+      }}
+    >
+      <RotateCw aria-hidden />
+      {t('mail.bulk.resend')}
+    </Button>
+  );
+}
+
+function Detail({ label, children }: { label: string; children: ReactNode }) {
+  return (
     <>
-      {resend.error && isProblem(resend.error) ? (
+      <dt className="text-text-3">{label}</dt>
+      <dd className="m-0 min-w-0 break-words">{children}</dd>
+    </>
+  );
+}
+
+function DeliveryDrawer({
+  delivery,
+  onClose,
+}: {
+  delivery: MailDelivery | null;
+  onClose: () => void;
+}) {
+  const { t, format } = useI18n();
+  const toast = useToast();
+  const resend = useResend();
+  const send = useMutation({
+    mutationFn: (id: string) => resend.send(id),
+    onSuccess: async () => {
+      toast({ message: t('mail.resent') });
+      await resend.refresh();
+      onClose();
+    },
+  });
+  const state = delivery ? states[delivery.state] : null;
+  return (
+    <Drawer
+      open={delivery !== null}
+      onClose={onClose}
+      title={delivery?.recipient_email}
+      footer={
+        delivery?.state === 'failed' ? (
+          <Button
+            variant="primary"
+            disabled={send.isPending}
+            onClick={() => {
+              send.mutate(delivery.id);
+            }}
+          >
+            <RotateCw aria-hidden />
+            {t('mail.resend')}
+          </Button>
+        ) : undefined
+      }
+    >
+      {send.error && isProblem(send.error) ? (
         <ProblemNotice
           className="mb-4"
-          problem={resend.error}
+          problem={send.error}
           onRetry={() => {
-            resend.mutate(resend.variables);
+            if (delivery) send.mutate(delivery.id);
+          }}
+        />
+      ) : null}
+      {delivery && state ? (
+        <dl className="m-0 grid grid-cols-[130px_1fr] gap-y-2.5 text-[13.5px]">
+          <Detail label={t('mail.column.state')}>
+            <StatusPill tone={state.tone}>{t(state.label)}</StatusPill>
+          </Detail>
+          <Detail label={t('mail.column.purpose')}>{t(purposes[delivery.purpose])}</Detail>
+          <Detail label={t('mail.column.reason')}>
+            <Reason delivery={delivery} />
+          </Detail>
+          <Detail label={t('mail.column.attempts')}>{format.number(delivery.attempt_count)}</Detail>
+          <Detail label={t('mail.detail.language')}>{delivery.locale}</Detail>
+          <Detail label={t('mail.detail.created')}>{format.dateTime(delivery.created_at)}</Detail>
+          {delivery.next_attempt_at ? (
+            <Detail label={t('mail.detail.nextAttempt')}>
+              {format.dateTime(delivery.next_attempt_at)}
+            </Detail>
+          ) : null}
+          {delivery.completed_at ? (
+            <Detail label={t('mail.detail.completed')}>
+              {format.dateTime(delivery.completed_at)}
+            </Detail>
+          ) : null}
+          <Detail label={t('mail.detail.id')}>
+            <CopyText text={delivery.id} />
+          </Detail>
+        </dl>
+      ) : null}
+    </Drawer>
+  );
+}
+
+interface RowsProps {
+  items: readonly MailDelivery[];
+  list: ListView;
+  selection: RowSelection;
+  selectable: readonly string[];
+  onOpen: (id: string) => void;
+}
+
+function Rows({ items, list, selection, selectable, onOpen }: RowsProps) {
+  const { t, format } = useI18n();
+  const toast = useToast();
+  const resend = useResend();
+  const send = useMutation({
+    mutationFn: (id: string) => resend.send(id),
+    onSuccess: () => {
+      toast({ message: t('mail.resent') });
+      return resend.refresh();
+    },
+  });
+  const shows = list.isColumnVisible;
+  return (
+    <>
+      {send.error && isProblem(send.error) ? (
+        <ProblemNotice
+          className="mb-4"
+          problem={send.error}
+          onRetry={() => {
+            send.mutate(send.variables);
           }}
         />
       ) : null}
@@ -103,12 +289,24 @@ function Rows({ items }: { items: readonly MailDelivery[] }) {
           <caption className="sr-only">{t('mail.title')}</caption>
           <thead>
             <tr>
+              <Th className="w-11 pr-0">
+                {selectable.length > 0 ? (
+                  <Checkbox
+                    aria-label={t('list.selectAll')}
+                    checked={selection.allSelected}
+                    indeterminate={selection.someSelected}
+                    onChange={selection.toggleAll}
+                  />
+                ) : null}
+              </Th>
               <Th>{t('mail.column.recipient')}</Th>
-              <Th>{t('mail.column.purpose')}</Th>
-              <Th>{t('mail.column.state')}</Th>
-              <Th>{t('mail.column.reason')}</Th>
-              <Th className="text-right">{t('mail.column.attempts')}</Th>
-              <Th>{t('mail.column.created')}</Th>
+              {shows('purpose') ? <Th>{t('mail.column.purpose')}</Th> : null}
+              {shows('state') ? <Th>{t('mail.column.state')}</Th> : null}
+              {shows('reason') ? <Th>{t('mail.column.reason')}</Th> : null}
+              {shows('attempts') ? (
+                <Th className="text-right">{t('mail.column.attempts')}</Th>
+              ) : null}
+              {shows('created') ? <Th>{t('mail.column.created')}</Th> : null}
               <Th>
                 <span className="sr-only">{t('mail.column.actions')}</span>
               </Th>
@@ -117,26 +315,58 @@ function Rows({ items }: { items: readonly MailDelivery[] }) {
           <tbody>
             {items.map((delivery) => {
               const state = states[delivery.state];
-              const pending = resend.isPending && resend.variables === delivery.id;
+              const pending = send.isPending && send.variables === delivery.id;
+              const canSend = delivery.state === 'failed';
+              const selected = selection.isSelected(delivery.id);
               return (
-                <Tr key={delivery.id}>
-                  <Td className="font-medium">{delivery.recipient_email}</Td>
-                  <Td>{t(purposes[delivery.purpose])}</Td>
-                  <Td>
-                    <StatusPill tone={state.tone}>{t(state.label)}</StatusPill>
+                <Tr key={delivery.id} data-selected={selected ? '' : undefined}>
+                  <Td className="w-11 pr-0">
+                    {canSend ? (
+                      <Checkbox
+                        aria-label={t('list.selectRow', { name: delivery.recipient_email })}
+                        checked={selected}
+                        onChange={(event) => {
+                          selection.toggle(delivery.id, event.target.checked);
+                        }}
+                      />
+                    ) : null}
                   </Td>
-                  <Td className="whitespace-normal text-text-2">
-                    <Reason delivery={delivery} />
+                  <Td className="font-medium">
+                    <button
+                      type="button"
+                      aria-label={t('mail.detail.open', { email: delivery.recipient_email })}
+                      className="cursor-pointer rounded-control border-0 bg-transparent p-0 font-medium text-text hover:underline"
+                      onClick={() => {
+                        onOpen(delivery.id);
+                      }}
+                    >
+                      {delivery.recipient_email}
+                    </button>
                   </Td>
-                  <Td className="text-right">{format.number(delivery.attempt_count)}</Td>
-                  <Td className="text-text-2">{format.dateTime(delivery.created_at)}</Td>
+                  {shows('purpose') ? <Td>{t(purposes[delivery.purpose])}</Td> : null}
+                  {shows('state') ? (
+                    <Td>
+                      <StatusPill tone={state.tone}>{t(state.label)}</StatusPill>
+                    </Td>
+                  ) : null}
+                  {shows('reason') ? (
+                    <Td className="min-w-[260px] whitespace-normal text-text-2">
+                      <Reason delivery={delivery} />
+                    </Td>
+                  ) : null}
+                  {shows('attempts') ? (
+                    <Td className="text-right">{format.number(delivery.attempt_count)}</Td>
+                  ) : null}
+                  {shows('created') ? (
+                    <Td className="text-text-2">{format.dateTime(delivery.created_at)}</Td>
+                  ) : null}
                   <Td className="text-right">
-                    {delivery.state === 'failed' ? (
+                    {canSend ? (
                       <Button
                         size="sm"
                         disabled={pending}
                         onClick={() => {
-                          resend.mutate(delivery.id);
+                          send.mutate(delivery.id);
                         }}
                       >
                         <RotateCw aria-hidden />
@@ -160,19 +390,60 @@ function Rows({ items }: { items: readonly MailDelivery[] }) {
 /** Lists the platform's emails, newest first, with a resend for each one that failed. */
 export function MailDeliveriesPage() {
   const { t } = useI18n();
-  const [filter, setFilter] = useState<Filter>('all');
-  const limit = useQuery(runtimeConfigQuery()).data?.ui.pageSize ?? 20;
-  const state = filter === 'all' ? undefined : filter;
-  const list = useInfiniteQuery({
-    queryKey: [...listKey, state],
+  const config = useQuery(runtimeConfigQuery()).data?.ui;
+  const limit = config?.pageSize ?? 20;
+  const debounce = config?.searchDebounceMilliseconds ?? 0;
+  const list = useListView(definition);
+  const applied = list.state.filters;
+  const state = applied.state as MailState | undefined;
+  const purpose = applied.purpose as MailPurpose | undefined;
+  const recipient = applied.recipient;
+
+  // The field follows typing; the list follows the field after a pause.
+  const [typed, setTyped] = useState(recipient ?? '');
+  const [appliedRecipient, setAppliedRecipient] = useState(recipient);
+  if (recipient !== appliedRecipient) {
+    setAppliedRecipient(recipient);
+    setTyped(recipient ?? '');
+  }
+  const { setFilter } = list;
+  useEffect(() => {
+    if (typed.trim() === (recipient ?? '')) return undefined;
+    const timer = setTimeout(() => {
+      setFilter('recipient', typed.trim());
+    }, debounce);
+    return () => {
+      clearTimeout(timer);
+    };
+    // setFilter changes with the state it writes; the pause depends only on the text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typed, recipient, debounce]);
+
+  const deliveries = useInfiniteQuery({
+    queryKey: [...listKey, state, purpose, recipient],
     queryFn: ({ pageParam, signal }) =>
-      listMailDeliveries({ limit, cursor: pageParam ?? undefined, state }, { signal }),
+      listMailDeliveries(
+        { limit, cursor: pageParam ?? undefined, state, purpose, recipientPrefix: recipient },
+        { signal },
+      ),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.next_cursor,
   });
+  const items = useMemo(
+    () => deliveries.data?.pages.flatMap((page) => page.items) ?? [],
+    [deliveries.data],
+  );
+  const selectable = useMemo(
+    () => items.filter((item) => item.state === 'failed').map((item) => item.id),
+    [items],
+  );
+  const selection = useRowSelection(selectable);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open = items.find((item) => item.id === openId) ?? null;
+  const filtered = Object.keys(applied).length > 0;
 
   let body;
-  if (list.isPending) {
+  if (deliveries.isPending) {
     body = (
       <div className="flex flex-col gap-3" aria-busy>
         <Skeleton className="h-11 w-full" />
@@ -180,41 +451,54 @@ export function MailDeliveriesPage() {
         <Skeleton className="h-11 w-full" />
       </div>
     );
-  } else if (list.error) {
-    body = isProblem(list.error) ? (
+  } else if (deliveries.error) {
+    body = isProblem(deliveries.error) ? (
       <ProblemNotice
-        problem={list.error}
+        problem={deliveries.error}
         onRetry={() => {
-          void list.refetch();
+          void deliveries.refetch();
         }}
       />
     ) : null;
   } else {
-    const items = list.data.pages.flatMap((page) => page.items);
     body =
       items.length === 0 ? (
         <Card>
           <EmptyState
             icon={Mail}
-            title={filter === 'all' ? t('mail.empty.title') : t('mail.emptyFilter.title')}
+            title={filtered ? t('mail.emptyFilter.title') : t('mail.empty.title')}
+            action={
+              filtered ? (
+                <Button onClick={list.clearFilters}>{t('mail.emptyFilter.clear')}</Button>
+              ) : undefined
+            }
           >
-            {filter === 'all' ? t('mail.empty.detail') : t('mail.emptyFilter.detail')}
+            {filtered ? t('mail.emptyFilter.detail') : t('mail.empty.detail')}
           </EmptyState>
         </Card>
       ) : (
         <>
-          <Rows items={items} />
-          {list.hasNextPage ? (
+          <Rows
+            items={items}
+            list={list}
+            selection={selection}
+            selectable={selectable}
+            onOpen={setOpenId}
+          />
+          {deliveries.hasNextPage ? (
             <Button
               className="mt-4"
-              disabled={list.isFetchingNextPage}
+              disabled={deliveries.isFetchingNextPage}
               onClick={() => {
-                void list.fetchNextPage();
+                void deliveries.fetchNextPage();
               }}
             >
               {t('mail.loadMore')}
             </Button>
           ) : null}
+          <BulkBar count={selection.selected.size} onClear={selection.clear}>
+            <ResendAll selection={selection} />
+          </BulkBar>
         </>
       );
   }
@@ -225,14 +509,47 @@ export function MailDeliveriesPage() {
         {t('mail.title')}
       </h1>
       <p className="m-0 mb-6 text-text-2">{t('mail.subtitle')}</p>
-      <Segmented
-        className="mb-4"
-        label={t('mail.filter')}
-        value={filter}
-        options={filters.map((value) => ({ value, label: t(`mail.filter.${value}`) }))}
-        onChange={setFilter}
-      />
+      <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
+        <SearchField
+          label={t('mail.search')}
+          placeholder={t('mail.search.placeholder')}
+          className="w-full max-w-[320px] flex-1 basis-[220px]"
+          value={typed}
+          onChange={(event) => {
+            setTyped(event.target.value);
+          }}
+        />
+        <Segmented
+          label={t('mail.filter')}
+          value={(state as Filter | undefined) ?? 'all'}
+          options={filters.map((value) => ({ value, label: t(`mail.filter.${value}`) }))}
+          onChange={(value) => {
+            list.setFilter('state', value === 'all' ? '' : value);
+          }}
+        />
+        <FilterSelect
+          label={t('mail.filter.purpose')}
+          value={purpose ?? ''}
+          options={[
+            { value: '', label: t('mail.filter.purpose.all') },
+            ...purposeNames.map((value) => ({ value, label: t(purposes[value]) })),
+          ]}
+          onChange={(event) => {
+            list.setFilter('purpose', event.target.value);
+          }}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          <SavedViewsMenu list={list} />
+          <ColumnChooser list={list} />
+        </div>
+      </div>
       {body}
+      <DeliveryDrawer
+        delivery={open}
+        onClose={() => {
+          setOpenId(null);
+        }}
+      />
     </>
   );
 }

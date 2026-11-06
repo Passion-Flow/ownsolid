@@ -126,6 +126,13 @@ export const failedMail: ScriptedMail = {
   completed_at: '2026-11-04T09:00:00Z',
 };
 
+/** Another failed email, for bulk actions. */
+export const secondFailedMail: ScriptedMail = {
+  ...failedMail,
+  id: '6f1c7a1e-0000-4000-8000-000000000012',
+  recipient_email: 'hedy@example.test',
+};
+
 /** A delivered password reset email. */
 export const sentMail: ScriptedMail = {
   ...failedMail,
@@ -136,6 +143,17 @@ export const sentMail: ScriptedMail = {
   attempt_count: 1,
   error_category: null,
 };
+
+/** A saved view of a list. */
+export interface ScriptedView {
+  id: string;
+  list: string;
+  name: string;
+  state: Record<string, unknown>;
+  revision: number;
+  created_at: string;
+  updated_at: string;
+}
 
 /** A scripted failure for one path. */
 export interface ScriptedProblem {
@@ -207,6 +225,12 @@ export interface ControlPlane {
   preferenceWrites: Record<string, unknown>[];
   /** Emails in the delivery list, newest first. */
   mail: ScriptedMail[];
+  /** The caller's saved views. */
+  savedViews: ScriptedView[];
+  /** Fails listing saved views with this problem while set. */
+  savedViewsProblem: ScriptedProblem | null;
+  /** Fails the next save of a view with this problem. */
+  nextViewSave: ScriptedProblem | null;
   /** Fails the delivery list with this problem while set. */
   mailProblem: ScriptedProblem | null;
   /** Fails the next resend with this problem, instead of queuing a new email. */
@@ -272,6 +296,9 @@ export async function mockControlPlane(
     preferencesProblem: null,
     preferenceWrites: [],
     mail: [],
+    savedViews: [],
+    savedViewsProblem: null,
+    nextViewSave: null,
     mailProblem: null,
     nextResend: null,
     resendKeys: [],
@@ -503,6 +530,56 @@ export async function mockControlPlane(
     };
     return data(route, { ...state.preferences, updated_at: '2026-11-04T00:00:00Z' });
   });
+  await page.route('**/api/v1/saved-views?*', (route) => {
+    if (state.savedViewsProblem) return problem(route, state.savedViewsProblem);
+    const list = new URL(route.request().url()).searchParams.get('list');
+    return data(route, { items: state.savedViews.filter((view) => view.list === list) });
+  });
+  await page.route(/\/api\/v1\/saved-views\/[^/?]+(\?.*)?$/, (route) => {
+    const request = route.request();
+    if (request.headers()['x-csrf-token'] !== 'csrf-token') {
+      return problem(route, { status: 403, code: 'CSRF_INVALID' });
+    }
+    const url = new URL(request.url());
+    const id = url.pathname.split('/').at(-1) ?? '';
+    const current = state.savedViews.find((view) => view.id === id);
+    if (request.method() === 'DELETE') {
+      if (!current) return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+      if (url.searchParams.get('revision') !== String(current.revision)) {
+        return problem(route, { status: 409, code: 'PREFERENCE_REVISION_CONFLICT' });
+      }
+      state.savedViews = state.savedViews.filter((view) => view.id !== id);
+      return route.fulfill({ status: 204 });
+    }
+    if (state.nextViewSave) {
+      const scripted = state.nextViewSave;
+      state.nextViewSave = null;
+      return problem(route, scripted);
+    }
+    const body = request.postDataJSON() as {
+      list: string;
+      name: string;
+      state: Record<string, unknown>;
+      expected_revision: number;
+    };
+    if (body.expected_revision !== (current?.revision ?? 0)) {
+      return problem(route, { status: 409, code: 'PREFERENCE_REVISION_CONFLICT' });
+    }
+    if (state.savedViews.some((view) => view.id !== id && view.name === body.name)) {
+      return problem(route, { status: 409, code: 'SAVED_VIEW_NAME_EXISTS' });
+    }
+    const saved: ScriptedView = {
+      id,
+      list: body.list,
+      name: body.name,
+      state: body.state,
+      revision: body.expected_revision + 1,
+      created_at: current?.created_at ?? '2026-11-04T00:00:00Z',
+      updated_at: '2026-11-04T00:00:00Z',
+    };
+    state.savedViews = [...state.savedViews.filter((view) => view.id !== id), saved];
+    return data(route, saved);
+  });
   await page.route('**/api/v1/admin/tenant-settings', (route) => {
     if (state.audience !== 'admin') {
       return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
@@ -530,8 +607,16 @@ export async function mockControlPlane(
     if (state.audience !== 'admin')
       return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
     if (state.mailProblem) return problem(route, state.mailProblem);
-    const wanted = new URL(route.request().url()).searchParams.get('state');
-    const items = state.mail.filter((item) => !wanted || item.state === wanted);
+    const query = new URL(route.request().url()).searchParams;
+    const wanted = query.get('state');
+    const purpose = query.get('purpose');
+    const recipient = query.get('recipient_prefix')?.toLowerCase();
+    const items = state.mail.filter(
+      (item) =>
+        (!wanted || item.state === wanted) &&
+        (!purpose || item.purpose === purpose) &&
+        (!recipient || item.recipient_email.startsWith(recipient)),
+    );
     return data(route, { items, next_cursor: null });
   });
   await page.route('**/api/v1/admin/mail-deliveries/*/resends', (route) => {

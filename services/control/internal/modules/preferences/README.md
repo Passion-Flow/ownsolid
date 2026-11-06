@@ -33,6 +33,13 @@ fall back to PostgreSQL. The native schema must seed one preference per existing
 user, initialize future users atomically, and preserve owner/revision constraints.
 Missing seed state remains an error, never a lazy default insert.
 
+Saved views ([saved_views.go](saved_views.go)) keep a list's filters and columns under a name
+for one person (UX-103). The client chooses each view's ID, so a create is safe to retry; a
+retry of a create that already landed returns the view it made. Every read and write is scoped
+to the session's user; another person's view answers not found. They are personal interface
+state, so they are not audited and work without a license. Names are unique per person and
+list, at most 50 views per list, and a view's state at most 4096 bytes.
+
 The MySQL and Dameng chains have no density column and accept only light and dark
 (CMP-201, CMP-202): they read as comfortable and refuse a value they cannot store with
 `PREFERENCE_UNAVAILABLE`, before any write.

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Project-one preferences",
-    "version": "0.16.0",
+    "version": "0.17.0",
     "description": "Current caller discovery, private internal metadata or fixed preferences. Contract presence alone is not implementation or qualification."
   },
   "servers": [
@@ -217,6 +217,214 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateTenantSettings"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/saved-views": {
+      "get": {
+        "operationId": "ListSavedViews",
+        "summary": "List the caller's views of one list",
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
+        "security": [
+          {
+            "portalCookie": []
+          },
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "list",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,63}$",
+              "description": "The list the view belongs to, such as `mail-deliveries`."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The caller's views, by name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedViewListResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Validation, scope, revision, name, limit, availability or storage failure.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/saved-views/{view_id}": {
+      "put": {
+        "operationId": "PutSavedView",
+        "summary": "Create or replace one of the caller's views",
+        "description": "The client chooses the ID, so a create is safe to retry. At most 50 views per list (`RESOURCE_LIMIT_REACHED`); names are unique per list (`SAVED_VIEW_NAME_EXISTS`). Another person's view answers `RESOURCE_NOT_FOUND`.",
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
+        "security": [
+          {
+            "portalCookie": []
+          },
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutSavedView"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The view as saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedViewResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Validation, scope, revision, name, limit, availability or storage failure.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteSavedView",
+        "summary": "Delete one of the caller's views at a revision",
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
+        "security": [
+          {
+            "portalCookie": []
+          },
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "view_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740990
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "default": {
+            "description": "Validation, scope, revision, name, limit, availability or storage failure.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
               }
             }
           }
@@ -909,7 +1117,8 @@
               "MONGODB_SOURCE_EMPTY",
               "MONGODB_FIELD_INVALID",
               "MONGODB_TYPE_INVALID",
-              "MONGODB_RECORD_INVALID"
+              "MONGODB_RECORD_INVALID",
+              "SAVED_VIEW_NAME_EXISTS"
             ]
           },
           "request_id": {
@@ -1107,6 +1316,126 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/TenantSettings"
+          }
+        }
+      },
+      "SavedView": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "list",
+          "name",
+          "state",
+          "revision",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "list": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,63}$",
+            "description": "The list the view belongs to, such as `mail-deliveries`."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Unique among the person's views of the list; no leading or trailing spaces."
+          },
+          "state": {
+            "type": "object",
+            "description": "Filters, sort and columns as the page defines them; at most 4096 bytes. The page ignores what it does not know.",
+            "additionalProperties": true
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PutSavedView": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "list",
+          "name",
+          "state",
+          "expected_revision"
+        ],
+        "properties": {
+          "list": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,63}$",
+            "description": "The list the view belongs to, such as `mail-deliveries`."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Unique among the person's views of the list; no leading or trailing spaces."
+          },
+          "state": {
+            "type": "object",
+            "description": "Filters, sort and columns as the page defines them; at most 4096 bytes. The page ignores what it does not know.",
+            "additionalProperties": true
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740990,
+            "description": "0 creates the view; a retried create returns the view it made. Otherwise the revision being replaced."
+          }
+        }
+      },
+      "SavedViewResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SavedView"
+          }
+        }
+      },
+      "SavedViewListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "maxItems": 51,
+                "items": {
+                  "$ref": "#/components/schemas/SavedView"
+                }
+              }
+            }
           }
         }
       }

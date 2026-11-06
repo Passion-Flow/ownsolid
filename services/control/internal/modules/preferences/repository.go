@@ -32,6 +32,8 @@ func preferenceSQL(q transaction.Executor, pg, my, dm string, args ...any) trans
 		return transaction.SQL(q.Dialect(), "")
 	}
 }
+func noRows(e error) bool { return errors.Is(e, sql.ErrNoRows) }
+
 func preferenceError(e error) error {
 	if e == nil {
 		return nil
@@ -69,7 +71,7 @@ func preferenceError(e error) error {
 		}
 	}
 	switch code {
-	case "ACCESS_DENIED", "AUTHENTICATION_REQUIRED", "VALIDATION_FAILED", "RESOURCE_NOT_FOUND":
+	case "ACCESS_DENIED", "AUTHENTICATION_REQUIRED", "VALIDATION_FAILED", "RESOURCE_NOT_FOUND", "RESOURCE_LIMIT_REACHED", "SAVED_VIEW_NAME_EXISTS":
 		return failure(code)
 	}
 	return failure("STORAGE_UNAVAILABLE")

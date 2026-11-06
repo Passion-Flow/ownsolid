@@ -127,6 +127,32 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
       .getByRole('group', { name: 'Show emails' })
       .getByRole('button', { name: 'Failed' })
       .click();
+    // The list pattern against the real API: a saved view, a recipient filter and the drawer.
+    await page.getByLabel('Filter by recipient').fill(email.slice(0, 4));
+    await expect(page.getByRole('row').nth(1)).toContainText(email);
+    await page.getByLabel('Filter by recipient').fill('');
+    await page.getByRole('button', { name: /^Views: / }).click();
+    await page.getByRole('menuitem', { name: 'Save as a new view' }).click();
+    const viewName = `Live ${String(Date.now())}`;
+    await page
+      .getByRole('dialog', { name: 'Save this view' })
+      .getByLabel('View name')
+      .fill(viewName);
+    await page
+      .getByRole('dialog', { name: 'Save this view' })
+      .getByRole('button', { name: 'Save' })
+      .click();
+    await expect(page.getByRole('button', { name: `Views: ${viewName}` })).toBeVisible();
+    await page
+      .getByRole('button', { name: /^Show details of the email to / })
+      .first()
+      .click();
+    await expect(page.getByRole('dialog').getByText('Email ID')).toBeVisible();
+    await expectAccessible(page);
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: /^Views: / }).click();
+    await page.getByRole('menuitem', { name: 'Delete this view' }).click();
+    await expect(page.getByRole('button', { name: 'Views: Default view' })).toBeVisible();
     const failed = page
       .getByRole('row')
       .filter({ hasText: 'The mail server could not be reached' });

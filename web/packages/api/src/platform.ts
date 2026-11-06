@@ -42,6 +42,12 @@ export type Preference = preferencesContract.components['schemas']['Preference']
 /** The account fields to change; fields left out keep their saved value. */
 export type PreferenceChange = Partial<Pick<Preference, 'theme' | 'density' | 'locale'>>;
 
+/** A named state of one list: its filters and columns. */
+export type SavedView = preferencesContract.components['schemas']['SavedView'];
+
+/** What {@link putSavedView} sends. */
+export type SavedViewInput = preferencesContract.components['schemas']['PutSavedView'];
+
 /** What an administrator chooses for everyone in the tenant. */
 export type TenantSettings = preferencesContract.components['schemas']['TenantSettings'];
 
@@ -106,6 +112,27 @@ export function getPreferences(options?: RequestOptions): Promise<Preference> {
 export function updatePreferences(change: PreferenceChange, revision: number): Promise<Preference> {
   return preferences.patch('/api/v1/preferences', {
     body: { ...change, expected_revision: revision },
+  });
+}
+
+/** Lists the caller's saved views of one list. */
+export async function listSavedViews(list: string, options?: RequestOptions): Promise<SavedView[]> {
+  return (await preferences.get('/api/v1/saved-views', { ...options, query: { list } })).items;
+}
+
+/** Creates a view at revision 0, or replaces one. Choosing the ID makes a retry safe. */
+export function putSavedView(id: string, input: SavedViewInput): Promise<SavedView> {
+  return preferences.put('/api/v1/saved-views/{view_id}', {
+    path: { view_id: id },
+    body: input,
+  });
+}
+
+/** Deletes a view at the revision it was read at. */
+export async function deleteSavedView(id: string, revision: number): Promise<void> {
+  await preferences.delete('/api/v1/saved-views/{view_id}', {
+    path: { view_id: id },
+    query: { revision },
   });
 }
 

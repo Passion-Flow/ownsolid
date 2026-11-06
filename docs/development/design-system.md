@@ -85,7 +85,18 @@ this browser. The server checks access to the workspace on every request.
 
 ## Page patterns
 
-- **List pages:** filter bar, table and detail drawer.
+- **List pages:** filter bar, table and detail drawer, built from the shell's list pieces
+  ([research](../research/console-list-pattern.md)). Declare the list's filters and columns
+  as a `ListDefinition` and keep its state with `useListView`; the toolbar holds a
+  `SearchField`, `Segmented` or `FilterSelect` choices, then `SavedViewsMenu` and
+  `ColumnChooser` at the right. Saved views follow the account; the screen is remembered in
+  this browser. Filter on the server, so paging stays correct.
+  - The column that names a row is `locked` and opens the row's `Drawer`.
+  - Rows an action applies to get a checkbox, and the header checkbox has three states.
+    `useRowSelection` keeps only rows on screen; `BulkBar` appears at the foot of the page
+    with the count, the actions and Clear (or Escape). A bulk action reports how many rows
+    succeeded and keeps the failed ones selected for a retry.
+  - An empty result says whether filters caused it and offers to clear them.
 - **Long-running tasks:** step timeline with durations plus a live log; the task keeps
   running when the user leaves the page.
 - **Charts:** a single series needs no legend; every chart offers a table view and a

@@ -1337,6 +1337,8 @@ export interface operations {
                 cursor?: components["parameters"]["Cursor"];
                 state?: "queued" | "sending" | "sent" | "failed" | "cancelled";
                 purpose?: "invitation" | "password_reset" | "password_changed";
+                /** @description Only emails whose recipient address starts with this text, ignoring case. */
+                recipient_prefix?: string;
             };
             header?: never;
             path?: never;

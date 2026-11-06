@@ -21,13 +21,25 @@ const client = createClient<identityContract.paths>();
 
 /** Lists emails, newest first, optionally only those in one state. */
 export function listMailDeliveries(
-  query: { limit: number; cursor?: string | undefined; state?: MailState | undefined },
+  query: {
+    limit: number;
+    cursor?: string | undefined;
+    state?: MailState | undefined;
+    purpose?: MailPurpose | undefined;
+    recipientPrefix?: string | undefined;
+  },
   options?: RequestOptions,
 ): Promise<MailDeliveryPage> {
-  const { limit, cursor, state } = query;
+  const { limit, cursor, state, purpose, recipientPrefix } = query;
   return client.get('/api/v1/admin/mail-deliveries', {
     ...options,
-    query: { limit, ...(cursor ? { cursor } : {}), ...(state ? { state } : {}) },
+    query: {
+      limit,
+      ...(cursor ? { cursor } : {}),
+      ...(state ? { state } : {}),
+      ...(purpose ? { purpose } : {}),
+      ...(recipientPrefix ? { recipient_prefix: recipientPrefix } : {}),
+    },
   });
 }
 

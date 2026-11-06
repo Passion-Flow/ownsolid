@@ -14,10 +14,12 @@ export {
   giteaConnector,
   linkToken,
   mockControlPlane,
+  secondFailedMail,
   sentMail,
   type ControlPlane,
   type ScriptedMail,
   type ScriptedProblem,
+  type ScriptedView,
 } from './control-plane.ts';
 export { expectFocusVisible, keyboardFlows, type KeyboardFlowOptions } from './keyboard-flows.ts';
 export { languageFlows } from './language-flows.ts';
