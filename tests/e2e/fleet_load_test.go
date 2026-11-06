@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"syscall"
@@ -75,6 +76,63 @@ func logResources(t *testing.T, when string) {
 	t.Logf("%s:\n%s", when, output)
 }
 
+// loadSampleEvery is how often the run samples what control and PostgreSQL wait on.
+const loadSampleEvery = 5 * time.Second
+
+// sampleLoad records, every loadSampleEvery until stop closes, what PostgreSQL's active
+// sessions wait on, its checkpoints, and the CPU use and CFS throttling of the control and
+// PostgreSQL containers, so a missed threshold can be tied to its cause. Lines are relative
+// to started. It runs off the test goroutine and so never fails the test.
+func (e environment) sampleLoad(started time.Time, stop <-chan struct{}) <-chan []string {
+	out := make(chan []string, 1)
+	go func() {
+		var lines []string
+		previous := map[string][2]int64{}
+		ticker := time.NewTicker(loadSampleEvery)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-stop:
+				out <- lines
+				return
+			case <-ticker.C:
+			}
+			line := fmt.Sprintf("t=%d", int(time.Since(started).Seconds()))
+			query := "SELECT coalesce(string_agg(w||'='||n, ' '),'none') FROM (SELECT coalesce(wait_event_type||':'||wait_event,'cpu') w, count(*) n FROM pg_stat_activity WHERE state='active' AND pid<>pg_backend_pid() GROUP BY 1) a"
+			query += " UNION ALL SELECT 'checkpoints='||num_timed||'+'||num_requested||' write_ms='||round(write_time) FROM pg_stat_checkpointer"
+			query += " UNION ALL SELECT 'autovacuum='||count(*) FROM pg_stat_activity WHERE backend_type='autovacuum worker'"
+			if output, err := exec.Command("docker", "compose", "--env-file", e.root+"/compose.env", "-f", e.root+"/compose.yaml", "exec", "--no-TTY", "postgres", "psql", "-X", "-tA", "-U", "ownsolid_migrator", "-d", "ownsolid", "-c", query).Output(); err == nil {
+				line += " pg[" + strings.Join(strings.Fields(string(output)), " ") + "]"
+			}
+			for _, container := range []string{"ownsolid-control-1", "ownsolid-postgres-1"} {
+				raw, err := exec.Command("docker", "exec", container, "cat", "/sys/fs/cgroup/cpu.stat").Output()
+				if err != nil {
+					continue
+				}
+				var usage, throttled int64
+				for _, field := range strings.Split(string(raw), "\n") {
+					name, value, _ := strings.Cut(field, " ")
+					n, _ := strconv.ParseInt(value, 10, 64)
+					switch name {
+					case "usage_usec":
+						usage = n
+					case "throttled_usec":
+						throttled = n
+					}
+				}
+				last, seen := previous[container]
+				previous[container] = [2]int64{usage, throttled}
+				if seen {
+					line += fmt.Sprintf(" %s cpu=%.2f throttled_ms=%d", strings.TrimSuffix(strings.TrimPrefix(container, "ownsolid-"), "-1"),
+						float64(usage-last[0])/float64(loadSampleEvery.Microseconds()), (throttled-last[1])/1000)
+				}
+			}
+			lines = append(lines, line)
+		}
+	}()
+	return out
+}
+
 // TestFleetLoad is the P0 load test: 2,000 simulated nodes at twice the planned load, a
 // reconnect of the whole fleet, and a control restart while work runs. It judges the
 // thresholds of docs/research/fleet-load-test.md and takes about half an hour.
@@ -96,6 +154,8 @@ func TestFleetLoad(t *testing.T) {
 	})
 	targets := fleet.targets()
 	fleet.start(t, time.Duration(loadSteadyFrom)*time.Second)
+	stopSampling := make(chan struct{})
+	samples := e.sampleLoad(fleet.started, stopSampling)
 
 	fleet.at(loadSteadyFrom)
 	before := e.sampleDatabase(t)
@@ -154,6 +214,17 @@ func TestFleetLoad(t *testing.T) {
 	t.Logf("long tasks: %s on their first attempt, %s s from the first created to the last result", firstAttempt, finishedAt)
 
 	fleet.wait(t, loadSeconds, time.Minute)
+	close(stopSampling)
+	t.Logf("samples every %s:\n%s", loadSampleEvery, strings.Join(<-samples, "\n"))
+	if output, err := e.compose(t, "logs", "--no-color", "postgres"); err == nil {
+		var checkpoints []string
+		for _, line := range strings.Split(output, "\n") {
+			if strings.Contains(line, "checkpoint") || strings.Contains(line, "automatic vacuum") {
+				checkpoints = append(checkpoints, line)
+			}
+		}
+		t.Logf("PostgreSQL checkpoints and vacuums:\n%s", strings.Join(checkpoints, "\n"))
+	}
 	final := e.sampleDatabase(t)
 	logRates(t, "whole run", before, final)
 	logResources(t, "at the end of the run")
@@ -201,6 +272,13 @@ func TestFleetLoad(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	var refusals []string
+	for _, line := range strings.Split(output, "\n") {
+		if strings.Contains(line, "agent_call_refused") {
+			refusals = append(refusals, line)
+		}
+	}
+	t.Logf("control's refusals, at most one line every ten seconds:\n%s", strings.Join(refusals, "\n"))
 	for _, failure := range []string{"node_task_wakes_read_failed", "node_task_wake_trim_failed", "node_liveness_flush_failed", "node_task_sweep_failed"} {
 		if n := strings.Count(output, failure); n > 0 {
 			t.Errorf("threshold 6: control logged %s %d times", failure, n)
