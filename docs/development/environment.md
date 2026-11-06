@@ -249,6 +249,10 @@ object with `renewal`, `otherDeployment`, `otherIssuer`, `changed` and `addsNoTi
 command out of the repository, which holds no signing code: write it against `license.Issue` in a
 scratch module and run it where the test key lives.
 
+`live-workspaces.spec.ts` creates a workspace, adds a real account and changes its role. Name an account
+other than the administrator in `OWNSOLID_LIVE_OTHER_ACCOUNT`. The API has no deletion, so each run
+leaves one disabled workspace behind.
+
 `live-audit.spec.ts` needs only the variables above: signing in writes the event it then reads, finds
 by family and by request, and opens from its own link.
 

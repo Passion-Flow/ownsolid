@@ -208,7 +208,7 @@ instead of issuing a second one.
   example an unreachable SMTP host or a refused sign-in), and sends a failed one again
   once the mail server works. A failed email is retried four times over about ten minutes
   before it shows as failed. The **License** page imports the license and explains a refused
-  file; the **Users** page invites people; **Nodes** adds them. The **Overview** shows what needs
+  file; the **Users** page invites people and leads to **Workspaces**; **Nodes** adds them. The **Overview** shows what needs
   attention and what is left to set up, and the **Audit trail** records every privileged action.
   Other capabilities are reached
   through the API until their pages land.

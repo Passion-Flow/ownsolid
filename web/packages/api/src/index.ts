@@ -49,6 +49,21 @@ export {
   type User,
   type Workspace,
 } from './identity.ts';
+export {
+  addMember,
+  changeMember,
+  createWorkspace,
+  getWorkspace,
+  listAllWorkspaces,
+  listMembers,
+  removeMember,
+  updateWorkspace,
+  type MemberRole,
+  type Membership,
+  type MembershipPage,
+  type Workspace as ManagedWorkspace,
+  type WorkspaceListPage,
+} from './workspaces.ts';
 export { listAuditEvents, type AuditEvent, type AuditOutcome, type AuditPage } from './audit.ts';
 export {
   downloadLicenseDiagnostics,
