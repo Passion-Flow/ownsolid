@@ -242,6 +242,10 @@ object with `renewal`, `otherDeployment`, `otherIssuer`, `changed` and `addsNoTi
 command out of the repository, which holds no signing code: write it against `license.Issue` in a
 scratch module and run it where the test key lives.
 
+`live-overview.spec.ts` checks the overview's figures against the API and follows a real offline node
+to its drawer. Stop a joined node's agent so that it goes offline, leave the node active, and run it
+with `OWNSOLID_LIVE_OFFLINE_NODE=true` and the variables above.
+
 `live-idle.spec.ts` waits out a real idle timeout with the page's poll running, so it needs a
 short one. Add this to the installation's `control.yaml`, restart control, and run it with
 `OWNSOLID_LIVE_IDLE_SECONDS=60 OWNSOLID_LIVE_WARNING_SECONDS=30`. It takes about three minutes,

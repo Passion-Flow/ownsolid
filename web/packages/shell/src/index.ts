@@ -36,6 +36,7 @@ export {
 export { SavedViewsMenu } from './list/saved-views-menu.tsx';
 export { useListView, type ListView } from './list/use-list-view.ts';
 export { useTypedFilter } from './list/use-typed-filter.ts';
+export { useHashAction } from './use-hash-action.ts';
 export { useWorkspaces, type Workspaces } from './workspace.ts';
 export { useRowSelection, type RowSelection } from './list/use-row-selection.ts';
 export { useSignOut } from './sign-out.ts';

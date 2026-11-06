@@ -22,6 +22,7 @@ import {
   runtimeConfigQuery,
   useListView,
   useRowSelection,
+  useHashAction,
   useTypedFilter,
   type ListDefinition,
   type ListView,
@@ -364,7 +365,7 @@ export function NodesPage() {
   const status = applied.status as NodeStatus | undefined;
   const name = applied.name;
   const [typed, setTyped] = useTypedFilter(list, 'name', config?.searchDebounceMilliseconds ?? 0);
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState(useHashAction('add'));
 
   const nodes = useInfiniteQuery({
     queryKey: ['nodes', 'list', connectivity, status, name],

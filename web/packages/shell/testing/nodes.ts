@@ -152,14 +152,16 @@ export async function routeNodes(
     const connectivity = query.get('connectivity');
     const status = query.get('status');
     const prefix = query.get('name_prefix')?.toLowerCase();
+    const limit = Number(query.get('limit') ?? state.nodes.length);
+    const matching = state.nodes.filter(
+      (item) =>
+        (status ? item.status === status : item.status !== 'removed') &&
+        (!connectivity || item.connectivity === connectivity) &&
+        (!prefix || item.name.toLowerCase().startsWith(prefix)),
+    );
     return data(route, {
-      items: state.nodes.filter(
-        (item) =>
-          (status ? item.status === status : item.status !== 'removed') &&
-          (!connectivity || item.connectivity === connectivity) &&
-          (!prefix || item.name.toLowerCase().startsWith(prefix)),
-      ),
-      next_cursor: null,
+      items: matching.slice(0, limit),
+      next_cursor: matching.length > limit ? 'next' : null,
     });
   });
   await page.route(`${base}/nodes/summary`, (route) => data(route, counts(state.nodes)));

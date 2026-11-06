@@ -28,6 +28,9 @@ async function signIn(page: Page, password = account.password): Promise<void> {
 }
 
 /** Registers the shared flows in the current spec file. */
+// The start page's code: the portal's welcome page or the console's overview.
+const startPageCode = '**/assets/{welcome,overview}-page-*.js';
+
 export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
   let control: ControlPlane;
   const failures: string[] = [];
@@ -70,7 +73,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Welcome, Ada Lovelace' })).toBeVisible();
     await page.reload();
-    await expect(page.getByRole('main').getByText('Research Lab')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Workspace: Research Lab/ })).toBeVisible();
     await signOut(page);
     await expect(page).toHaveURL(/\/sign-in$/);
     await page.goto('/');
@@ -255,7 +258,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     control.signedIn = true;
     let requests = 0;
     // The first request finds the file gone, as after an upgrade; the reload gets it.
-    await page.route('**/assets/welcome-page-*.js', async (route) => {
+    await page.route(startPageCode, async (route) => {
       requests += 1;
       if (requests === 1) await route.fulfill({ status: 404, body: '' });
       else await route.fallback();
@@ -268,7 +271,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
   test('offers a retry when the code of a page keeps failing to load', async ({ page }) => {
     control.signedIn = true;
     let available = false;
-    await page.route('**/assets/welcome-page-*.js', async (route) => {
+    await page.route(startPageCode, async (route) => {
       if (available) await route.fallback();
       else await route.fulfill({ status: 404, body: '' });
     });

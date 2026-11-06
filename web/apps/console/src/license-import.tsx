@@ -29,9 +29,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, Circle, Download, Upload, X } from 'lucide-react';
 import { useRef, useState, type DragEvent, type SubmitEvent } from 'react';
-
-/** The query that holds the installation's license. */
-export const licenseKey = ['license', 'admin'] as const;
+import { licenseKey } from './license-standing.ts';
 
 interface Inspected {
   fileName: string;

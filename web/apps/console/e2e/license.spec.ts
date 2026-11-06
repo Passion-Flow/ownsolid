@@ -31,7 +31,10 @@ const importButton = (page: Page) => page.getByRole('button', { name: 'Import th
 
 test('is reached from the navigation and the sidebar, and shows the license', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: /^License\s*Valid/ }).click();
+  await page
+    .getByRole('complementary')
+    .getByRole('link', { name: /^License\s*Valid/ })
+    .click();
   await expect(page.getByRole('heading', { name: 'License', level: 1 })).toBeFocused();
   await expect(page.getByText('Northwind Compute')).toBeVisible();
   await expect(page.getByText(activeSummary.license_id)).toBeVisible();
@@ -83,7 +86,9 @@ test('imports a first license after showing what it will do', async ({ page }) =
     { artifact: fileContent, reason: 'First license', expected_current_license_id: '' },
   ]);
   await expect(page.getByText('No license is installed')).toBeHidden();
-  await expect(page.getByRole('link', { name: /^License\s*Valid/ })).toBeVisible();
+  await expect(
+    page.getByRole('complementary').getByRole('link', { name: /^License\s*Valid/ }),
+  ).toBeVisible();
   // Back to the start, ready for the next file.
   await expect(page.getByRole('button', { name: 'Choose a file' })).toBeVisible();
 });

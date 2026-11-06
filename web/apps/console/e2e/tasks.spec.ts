@@ -26,7 +26,7 @@ const copy = (task: ScriptedTask): ScriptedTask => ({ ...task, log: [...task.log
 test.describe('the task list', () => {
   test('is reached from the navigation and says when there are none', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('link', { name: 'Tasks' }).click();
+    await page.getByRole('navigation').getByRole('link', { name: 'Tasks' }).click();
     await expect(page.getByRole('heading', { name: 'Tasks', level: 1 })).toBeFocused();
     await expect(page.getByText('No tasks yet')).toBeVisible();
   });

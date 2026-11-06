@@ -1,5 +1,4 @@
 import {
-  WelcomePage,
   authenticatedRoute,
   createAccountRoute,
   createApplication,
@@ -20,7 +19,7 @@ const frameRoute = createFrameRoute({
 const homeRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/',
-  component: WelcomePage,
+  component: lazyRouteComponent(() => import('./overview-page.tsx'), 'OverviewPage'),
 });
 
 const nodesRoute = createRoute({

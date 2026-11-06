@@ -5,7 +5,6 @@ import {
   getLicense,
   isProblem,
   licenseDaysUntil,
-  renewalNoticeDays,
   type License,
   type LicenseSummary,
 } from '@ownsolid/api';
@@ -30,7 +29,8 @@ import {
 } from '@ownsolid/ui';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Download } from 'lucide-react';
-import { LicenseImport, licenseKey } from './license-import.tsx';
+import { LicenseImport } from './license-import.tsx';
+import { licenseKey, licenseStanding } from './license-standing.ts';
 
 const tones: Record<License['state'], StatusTone> = {
   active: 'good',
@@ -43,58 +43,14 @@ const tones: Record<License['state'], StatusTone> = {
 
 /** What the state means now and what to do next. A healthy license says nothing. */
 function Standing({ license }: { license: License }) {
-  const { t, format } = useI18n();
-  const { current, pending } = license;
-  switch (license.state) {
-    case 'missing':
-      return (
-        <Notice tone="critical" title={t('license.standing.missing')}>
-          {t('license.standing.missing.next')}
-        </Notice>
-      );
-    case 'not_yet_valid':
-      return (
-        <Notice
-          title={t('license.standing.notYetValid', {
-            date: format.date(pending?.not_before ?? ''),
-          })}
-        >
-          {t('license.standing.notYetValid.next')}
-        </Notice>
-      );
-    case 'grace':
-      return (
-        <Notice
-          title={t('license.standing.grace', { date: format.date(current?.expires_at ?? '') })}
-        >
-          {t('license.standing.grace.next', { date: format.dateTime(current?.grace_until ?? '') })}
-        </Notice>
-      );
-    case 'expired':
-      return (
-        <Notice tone="critical" title={t('license.standing.expired')}>
-          {t('license.standing.expired.next', {
-            date: format.dateTime(current?.grace_until ?? ''),
-          })}
-        </Notice>
-      );
-    case 'clock_suspect':
-      return (
-        <Notice tone="critical" title={t('license.standing.clock')}>
-          {t('license.standing.clock.next', { date: format.dateTime(license.observed_at) })}
-        </Notice>
-      );
-    case 'active': {
-      if (!current || pending) return null;
-      const days = licenseDaysUntil(current.expires_at, license);
-      if (days > renewalNoticeDays) return null;
-      return (
-        <Notice title={t('license.standing.renewal', { count: days })}>
-          {t('license.standing.renewal.next', { date: format.date(current.expires_at) })}
-        </Notice>
-      );
-    }
-  }
+  const i18n = useI18n();
+  const standing = licenseStanding(license, i18n);
+  if (!standing) return null;
+  return (
+    <Notice tone={standing.tone} title={standing.title}>
+      {standing.next}
+    </Notice>
+  );
 }
 
 function Terms({ summary, license }: { summary: LicenseSummary; license: License }) {

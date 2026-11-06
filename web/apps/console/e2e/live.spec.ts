@@ -63,7 +63,7 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
-  await expect(page.getByText(`Signed in as ${email}.`)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
   // Signing in is a navigation: focus moves to the start page's heading.
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   await expectAccessible(page);
@@ -379,7 +379,7 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
   for (const chunk of [
     '/sign-in-page-',
     '/app-frame-',
-    '/welcome-page-',
+    '/overview-page-',
     '/password-pages-',
     '/account-page-',
   ]) {

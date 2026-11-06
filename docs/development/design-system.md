@@ -122,6 +122,11 @@ this browser. The server checks access to the workspace on every request.
     on the `BulkBar`. A poll reads with `background: true` and a failed one keeps the rows on screen.
   - A secret shown once stays out of any command on the page: it reaches its file by paste, so it
     never lands in shell history or a process list.
+- **Overview:** quick actions, tiles, Needs attention beside Finish setup ([research](../research/console-overview.md)).
+  Attention items carry a link that opens the fix; each source fails on its own, with one notice per
+  kind of failure; a page that could not check never says all is clear. The checklist follows real
+  state and goes when it is done. `useHashAction` opens a page's dialog from a link such as
+  `/nodes#add`, once. Show only figures that exist; a tile joins with its module.
 - **Importing a file that cannot be taken back:** check it on the server first and show what it would
   do, or each check and why one refused it, with the values involved and a report to download. The
   preview is the confirmation: a button that names the action, the permanence stated beside it, and

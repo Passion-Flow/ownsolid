@@ -58,6 +58,12 @@ async function openNodes(page: Page, control: ControlPlane): Promise<void> {
   await page.getByRole('heading', { name: 'Nodes', level: 1 }).waitFor();
 }
 
+async function openOverview(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/');
+  await page.getByRole('heading', { name: 'Welcome, Ada Lovelace', level: 1 }).waitFor();
+}
+
 async function openLicense(page: Page, control: ControlPlane): Promise<void> {
   control.signedIn = true;
   await page.goto('/license');
@@ -84,6 +90,50 @@ async function openSettings(page: Page, control: ControlPlane): Promise<void> {
  */
 export const consolePages: readonly PageState[] = [
   ...shellPages,
+  {
+    name: 'overview of a new installation',
+    path: '/',
+    open: async (page, control) => {
+      control.license = missingLicense;
+      control.nodes = [];
+      await openOverview(page, control);
+      await page.getByRole('heading', { name: 'Finish setup' }).waitFor();
+    },
+  },
+  {
+    name: 'overview with items that need attention',
+    path: '/',
+    open: async (page, control) => {
+      control.nodes = [node, offlineNode, disabledNode];
+      control.tasks = [
+        { ...failedTask, task: { ...failedTask.task, completed_at: new Date().toISOString() } },
+      ];
+      control.mail = [{ ...failedMail, completed_at: new Date().toISOString() }];
+      await openOverview(page, control);
+      await page.getByText('gpu-a03 last reported').waitFor();
+      await page.getByText('1 email failed').waitFor();
+    },
+  },
+  {
+    name: 'overview with nothing to do',
+    path: '/',
+    open: async (page, control) => {
+      control.nodes = [node];
+      control.users = [adminUser, memberUser];
+      await openOverview(page, control);
+      await page.getByRole('heading', { name: 'Nothing needs you' }).waitFor();
+    },
+  },
+  {
+    name: 'overview that could not load',
+    path: '/',
+    open: async (page, control) => {
+      control.tasksProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      control.mailProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await openOverview(page, control);
+      await page.getByRole('button', { name: 'Try again' }).first().waitFor();
+    },
+  },
   {
     name: 'nodes with none yet',
     path: '/nodes',

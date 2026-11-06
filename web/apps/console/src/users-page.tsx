@@ -20,6 +20,7 @@ import {
   runtimeConfigQuery,
   useListView,
   useSession,
+  useHashAction,
   useTypedFilter,
   type ListDefinition,
   type ListView,
@@ -572,7 +573,7 @@ export function UsersPage() {
   const status = list.state.filters.status as UserStatus | undefined;
   const email = list.state.filters.email;
   const [typed, setTyped] = useTypedFilter(list, 'email', config?.searchDebounceMilliseconds ?? 0);
-  const [inviting, setInviting] = useState(false);
+  const [inviting, setInviting] = useState(useHashAction('invite'));
   const users = useInfiniteQuery({
     queryKey: [...usersKey, status, email],
     queryFn: ({ pageParam, signal }) =>
