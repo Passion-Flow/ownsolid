@@ -93,7 +93,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 1 | Architecture and scale | [architecture-and-scale.md](architecture-and-scale.md) | 10/16 | 0/10 | 0/7 | 0/4 | - |
 | 2 | Delivery and upgrades | [delivery-and-upgrades.md](delivery-and-upgrades.md) | 3/3 | 0/15 | 0/4 | 0/1 | 0/1 |
 | 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 0/14 | 0/5 | 0/1 | 0/1 |
-| 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 12/21 | 0/3 | - | 0/2 |
+| 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 13/21 | 0/3 | - | 0/2 |
 | 5 | Fleet and infrastructure | [fleet-and-infrastructure.md](fleet-and-infrastructure.md) | - | 0/13 | 0/11 | 0/2 | - |
 | 6 | GPU operations | [gpu-operations.md](gpu-operations.md) | - | 0/9 | 0/8 | - | 0/2 |
 | 7 | Scheduling and quota | [scheduling-and-quota.md](scheduling-and-quota.md) | - | 0/11 | 0/7 | 0/2 | 0/1 |
