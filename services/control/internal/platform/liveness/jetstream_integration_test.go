@@ -115,7 +115,7 @@ accounts {
 				logs, _ := exec.Command("docker", "logs", "--tail", "12", container).CombinedOutput()
 				t.Logf("%s:\n%s", container, logs)
 			}
-			exec.Command("docker", "rm", "-f", container).Run()
+			exec.Command("docker", "rm", "-f", "-v", container).Run()
 		})
 		cluster.servers = append(cluster.servers, fmt.Sprintf("tls://127.0.0.1:%d", port))
 	}

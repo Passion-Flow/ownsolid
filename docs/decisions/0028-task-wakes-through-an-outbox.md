@@ -45,8 +45,9 @@ is not running the reader also wakes locally, as a test or a command may be.
   outbox. The reads and the sweep are measured in the agent cost test.
 - A wake adds up to one poll interval to dispatch, about the settle delay it removes.
 - A long write transaction holds the watermark, which delays every wake until it ends, and claims
-  fall back to their wait meanwhile. `ownsolid_node_task_wake_lag_seconds` shows it. Transactions
-  with no transaction ID, such as `pg_dump`, do not hold it.
+  fall back to their wait meanwhile. `ownsolid_node_task_wake_lag_seconds` shows it. The watermark
+  spans the whole server, so autovacuum's `ANALYZE` and writers of other databases can hold it for a
+  moment. Transactions with no transaction ID, such as `pg_dump`, do not.
 - A logical restore can bring rows whose transaction IDs the new server has not reached. They sit
   above the watermark, are never read and age out.
 - Reading by every gateway does not scale with the number of gateways as well as a broker would,

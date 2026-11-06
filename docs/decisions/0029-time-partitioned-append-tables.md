@@ -22,7 +22,7 @@ are partitioned, so that is the list it serves. Dropping a month grants nothing 
 role can already delete those rows.
 
 **Partitions are created ahead, and attached.** The retention worker calls the function each pass,
-before it checks for bootstrap, and partitions reach three months ahead. Attaching does not block
+in transactions of its own, and partitions reach three months ahead. Attaching does not block
 writers. Dropping takes `ACCESS EXCLUSIVE` on the parent under a two second `lock_timeout`; a blocked
 drop is reported and retried at the next pass.
 

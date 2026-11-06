@@ -271,13 +271,29 @@ func TestActualSSOMaintenanceExactCapturedClockRetentionBoundary(t *testing.T) {
 
 func maintenanceHold(t *testing.T, f sourceRepositoryFixture, statement transaction.Statement) func() {
 	t.Helper()
+	return maintenanceHolding(t, f, func(ctx context.Context, q transaction.Executor) error {
+		var id string
+		return q.QueryRow(ctx, statement).Scan(&id)
+	})
+}
+
+// maintenanceTableHold holds a lock that a statement returning no row takes.
+func maintenanceTableHold(t *testing.T, f sourceRepositoryFixture, statement transaction.Statement) func() {
+	t.Helper()
+	return maintenanceHolding(t, f, func(ctx context.Context, q transaction.Executor) error {
+		_, e := q.Exec(ctx, statement)
+		return e
+	})
+}
+
+func maintenanceHolding(t *testing.T, f sourceRepositoryFixture, take func(context.Context, transaction.Executor) error) func() {
+	t.Helper()
 	ctx, cancel := context.WithTimeout(f.ctx, 6*time.Second)
 	t.Cleanup(cancel)
 	ready, release, done := make(chan struct{}), make(chan struct{}), make(chan error, 1)
 	go func() {
 		done <- f.f.Store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
-			var id string
-			if e := q.QueryRow(ctx, statement).Scan(&id); e != nil {
+			if e := take(ctx, q); e != nil {
 				return e
 			}
 			close(ready)
@@ -514,7 +530,13 @@ func TestActualSSOMaintenanceCancellationRollsBackAndRecovers(t *testing.T) {
 	now := maintenanceNow(t, f)
 	expired := maintenanceFlow(t, f, flowPending, now.Add(-2*time.Hour), now.Add(-time.Hour), time.Time{})
 	terminal := maintenanceFlow(t, f, "failed", now.Add(-12*maintenanceRetentionDay), now.Add(-11*maintenanceRetentionDay), now.Add(-10*maintenanceRetentionDay))
-	unlock := maintenanceHold(t, f, f.f.Statement(`SELECT id::text FROM tenants WHERE id=$1 FOR UPDATE`, `SELECT id FROM tenants WHERE id=? FOR UPDATE`, f.f.Tenant))
+	// PostgreSQL audit rows hold no foreign keys (ADR 0029), so there the table itself is held.
+	hold := maintenanceHold
+	statement := f.f.Statement(`SELECT id::text FROM tenants WHERE id=$1 FOR UPDATE`, `SELECT id FROM tenants WHERE id=? FOR UPDATE`, f.f.Tenant)
+	if f.f.Store.Dialect() == transaction.PostgreSQL {
+		hold, statement = maintenanceTableHold, transaction.SQL(transaction.PostgreSQL, `LOCK TABLE audit_events IN SHARE ROW EXCLUSIVE MODE`)
+	}
+	unlock := hold(t, f, statement)
 	originalStore, originalDB := f.accounts.Storage, f.accounts.DB
 	ready := make(chan struct{}, 1)
 	f.accounts.Storage, f.accounts.DB = maintenanceAuditObserveStore{Store: f.f.Store, ready: ready}, nil

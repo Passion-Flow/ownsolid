@@ -107,7 +107,7 @@ func TestM03ActualAgentUbuntuAMD64Emulation(t *testing.T) {
 		t.Fatal(e)
 	}
 	container := "projectone-m03-agent-" + uuid.NewString()[:8]
-	defer exec.Command("docker", "rm", "--force", container).Run()
+	defer exec.Command("docker", "rm", "--force", "--volumes", container).Run()
 	retained := []string{}
 	for _, argument := range common {
 		if argument != "--rm" {

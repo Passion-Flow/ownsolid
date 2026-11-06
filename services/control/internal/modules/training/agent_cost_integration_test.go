@@ -116,6 +116,15 @@ func (r *costRun) expectNoWrites(name string) {
 func seedFleet(t *testing.T, f scenario, nodes int) {
 	t.Helper()
 	ctx := context.Background()
+	// Seeding a large fleet is not what this test measures, so it is not held to the fixture's limit.
+	tx, e := f.s.DB.Begin(ctx)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer tx.Rollback(ctx)
+	if _, e = tx.Exec(ctx, `SET LOCAL statement_timeout=0`); e != nil {
+		t.Fatal(e)
+	}
 	for _, seed := range []struct {
 		sql  string
 		args []any
@@ -134,9 +143,12 @@ func seedFleet(t *testing.T, f scenario, nodes int) {
 			FROM managed_nodes n,generate_series(1,$1::integer) WHERE n.name LIKE 'cost-fleet-%'`, []any{costAuditsEach}},
 		{`ANALYZE`, nil},
 	} {
-		if _, e := f.s.DB.Exec(ctx, seed.sql, seed.args...); e != nil {
+		if _, e := tx.Exec(ctx, seed.sql, seed.args...); e != nil {
 			t.Fatal(e)
 		}
+	}
+	if e = tx.Commit(ctx); e != nil {
+		t.Fatal(e)
 	}
 }
 

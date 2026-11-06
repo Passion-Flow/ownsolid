@@ -20,7 +20,7 @@ An uncertain commit is retained as uncertainty. Do not automatically replay that
 
 ## Partitions
 
-[partitions.go](partitions.go) keeps the monthly partitions of append tables on PostgreSQL ([ADR 0029](../../../../../docs/decisions/0029-time-partitioned-append-tables.md)). Each pass, before the bootstrap check, it calls `manage_time_partitions` for each table in its own transaction: partitions reach three months ahead and a month past its retention is dropped whole. A lock it could not take is retried at the next pass. The tables are `audit_events`, `training_events`, `model_preparation_events` and `node_task_history`. MySQL keeps row deletion.
+[partitions.go](partitions.go) keeps the monthly partitions of append tables on PostgreSQL ([ADR 0029](../../../../../docs/decisions/0029-time-partitioned-append-tables.md)). Each worker pass, whether or not the installation is bootstrapped, it calls `manage_time_partitions` for each table in its own transaction: partitions reach three months ahead and a month past its retention is dropped whole. A lock it could not take is retried at the next pass. The tables are `audit_events`, `training_events`, `model_preparation_events` and `node_task_history`. MySQL keeps row deletion.
 
 ## Policy and maintenance
 

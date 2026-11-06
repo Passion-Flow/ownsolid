@@ -338,9 +338,26 @@ func (g *retentionFixture) progress(r retentionRows) []int {
 		len(r.terminal) - g.remaining("mail_deliveries", r.terminal, ""), len(r.oldReset) - g.remaining("password_reset_tokens", r.oldReset, ""), len(r.oldInvite) - g.remaining("invitations", r.oldInvite, ""),
 		len(r.session) - g.remaining("sessions", r.session, ""), len(r.rate) - rates, len(r.idem) - g.remaining("idempotency_records", r.idem, ""), len(r.audit) - g.remaining("audit_events", r.audit, "")}
 }
+// partitionTransactions is how many transactions partition maintenance adds to a worker's pass.
+func (g *retentionFixture) partitionTransactions() int64 {
+	if g.f.Store.Dialect() == transaction.PostgreSQL {
+		return int64(len(partitionedTables))
+	}
+	return 0
+}
+
+// expectedAuditRemoved is how many old audit rows a pass removes. PostgreSQL removes none: they
+// leave with their whole partition (ADR 0029).
+func (g *retentionFixture) expectedAuditRemoved(r retentionRows) int {
+	if g.f.Store.Dialect() == transaction.PostgreSQL {
+		return 0
+	}
+	return len(r.audit)
+}
+
 func retentionComplete(g *retentionFixture, r retentionRows) {
 	g.t.Helper()
-	want := []int{len(r.expire), len(r.reset), len(r.cancel), len(r.terminal), len(r.oldReset), len(r.oldInvite), len(r.session), len(r.rate), len(r.idem), len(r.audit)}
+	want := []int{len(r.expire), len(r.reset), len(r.cancel), len(r.terminal), len(r.oldReset), len(r.oldInvite), len(r.session), len(r.rate), len(r.idem), g.expectedAuditRemoved(r)}
 	if got := g.progress(r); fmt.Sprint(got) != fmt.Sprint(want) {
 		g.t.Fatal("ten actual owner results incomplete", got, want)
 	}
@@ -358,6 +375,8 @@ type retentionFaultStore struct {
 	unknown, auditFailure    bool
 	dialect                  transaction.Dialect
 	calls, commits, rejected atomic.Int64
+	// skipCalls is how many transactions run before the one a read attempt watches.
+	skipCalls int64
 	readAttempt              chan struct{}
 	readOnce                 sync.Once
 }
@@ -396,7 +415,7 @@ type retentionFaultExecutor struct {
 }
 
 func (q *retentionFaultExecutor) QueryRow(ctx context.Context, s transaction.Statement) transaction.Row {
-	if q.owner.readAttempt != nil {
+	if q.owner.readAttempt != nil && q.owner.calls.Load() > q.owner.skipCalls {
 		q.owner.readOnce.Do(func() { close(q.owner.readAttempt) })
 	}
 	return q.Executor.QueryRow(ctx, s)
@@ -591,7 +610,7 @@ func TestActualPairedRetentionRuntime(t *testing.T) {
 		protected := g.digest(g.protected)
 		g.pass()
 		retentionComplete(g, r)
-		if g.digest(g.protected) != protected || g.remaining("audit_events", []string{installedAudit}, "") != 0 {
+		if g.digest(g.protected) != protected || g.remaining("audit_events", []string{installedAudit}, "") != 1-min(g.expectedAuditRemoved(r), 1) {
 			t.Fatal("foreign facts changed or installed audit retained")
 		}
 		for _, binding := range []struct{ action, target, workspace string }{{"invitation.expired", r.expire[0], g.workspace}, {"mail.cancelled", r.cancel[0], g.workspace}, {"mail.cancelled", r.cancel[1], g.f.Workspace}} {
@@ -745,7 +764,7 @@ func TestActualPairedRetentionRuntime(t *testing.T) {
 		g.exec(`UPDATE tenants SET status='active' WHERE id=$1`, `UPDATE tenants SET status='active' WHERE id=?`, g.f.Tenant)
 		unlock := retentionHeldLock(g, `SELECT id::text FROM installation_state WHERE id=1 FOR UPDATE`, `SELECT CAST(id AS CHAR) FROM installation_state WHERE id=1 FOR UPDATE`)
 		ctx, cancelRun := context.WithCancel(g.ctx)
-		instrument := &retentionFaultStore{Store: g.f.Store, g: g, readAttempt: make(chan struct{})}
+		instrument := &retentionFaultStore{Store: g.f.Store, g: g, readAttempt: make(chan struct{}), skipCalls: g.partitionTransactions()}
 		done := make(chan struct{})
 		var runError error
 		go func() { defer close(done); runError = RunSelected(ctx, instrument, policy) }()
@@ -773,7 +792,7 @@ func TestActualPairedRetentionRuntime(t *testing.T) {
 			t.Fatal("active retention cancellation never joined")
 		}
 		unlock()
-		if runError != nil || instrument.calls.Load() != 1 || instrument.commits.Load() != 0 || before != g.snapshot() {
+		if runError != nil || instrument.calls.Load() != g.partitionTransactions()+1 || instrument.commits.Load() != g.partitionTransactions() || before != g.snapshot() {
 			t.Fatal("active cancellation committed, escaped join or returned wrong error", runError)
 		}
 	})

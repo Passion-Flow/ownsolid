@@ -475,7 +475,7 @@ func testProductionBrowser(t *testing.T, script, evidence string, workspace bool
 		defer func() {
 			label, _ := exec.Command("docker", "inspect", "--format", `{{index .Config.Labels "projectone.owner"}}`, container).Output()
 			if strings.TrimSpace(string(label)) == "mvp-development" {
-				exec.Command("docker", "rm", "--force", container).Run()
+				exec.Command("docker", "rm", "--force", "--volumes", container).Run()
 			}
 			label, _ = exec.Command("docker", "volume", "inspect", "--format", `{{index .Labels "projectone.owner"}}`, volume).Output()
 			if strings.TrimSpace(string(label)) == "mvp-development" {

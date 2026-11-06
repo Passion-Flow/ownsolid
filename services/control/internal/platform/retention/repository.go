@@ -30,9 +30,6 @@ func PassSelected(ctx context.Context, store transaction.Store, policy config.Re
 	}
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(policy.TimeoutSeconds))
 	defer cancel()
-	if e := maintainPartitions(ctx, store, policy); e != nil {
-		return e
-	}
 	return store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
 		var bootstrapped bool
 		var tenant, workspace string

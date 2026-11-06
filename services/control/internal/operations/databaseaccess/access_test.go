@@ -25,6 +25,7 @@ func TestCatalogMatchesImmutableMigrations(t *testing.T) {
 		t.Fatal(e)
 	}
 	pattern := regexp.MustCompile(`(?m)^CREATE TABLE(?: IF NOT EXISTS)? ([a-z][a-z0-9_]*)`)
+	partition := regexp.MustCompile(`_p[0-9]{6}$`)
 	dropped := regexp.MustCompile(`(?m)^DROP TABLE(?: IF EXISTS)? ([a-z][a-z0-9_]*)`)
 	tables := map[string]bool{}
 	for _, entry := range entries {
@@ -36,7 +37,10 @@ func TestCatalogMatchesImmutableMigrations(t *testing.T) {
 			t.Fatal(e)
 		}
 		for _, m := range pattern.FindAllStringSubmatch(string(b), -1) {
-			tables[m[1]] = true
+			// A partition takes its access through its parent (ADR 0029).
+			if !partition.MatchString(m[1]) {
+				tables[m[1]] = true
+			}
 		}
 		for _, m := range dropped.FindAllStringSubmatch(string(b), -1) {
 			delete(tables, m[1])

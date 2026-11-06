@@ -78,7 +78,11 @@ func (g trainingOperatorStory) histories(t *testing.T) []string {
 }
 func (g trainingOperatorStory) metric(t *testing.T, attempt string, sequence int, raw string) {
 	t.Helper()
-	g.seed(t, "training_events", map[string]any{"job_id": g.job.ID, "attempt_id": attempt, "sequence": sequence, "kind": "metric", "global_step": sequence, "payload": acceptedAdapterJSON(raw), "canonical_sha256": acceptedAdapterDigest([]byte(raw))})
+	values := map[string]any{"job_id": g.job.ID, "attempt_id": attempt, "sequence": sequence, "kind": "metric", "global_step": sequence, "payload": acceptedAdapterJSON(raw), "canonical_sha256": acceptedAdapterDigest([]byte(raw))}
+	if g.f.Store.Dialect() == transaction.PostgreSQL {
+		values["attempt_created_at"] = time.Now().UTC()
+	}
+	g.seed(t, "training_events", values)
 }
 func (g trainingOperatorStory) portal(t *testing.T, role string) identity.Auth {
 	t.Helper()

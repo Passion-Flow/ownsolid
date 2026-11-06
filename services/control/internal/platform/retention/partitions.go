@@ -40,6 +40,8 @@ func maintainPartitions(ctx context.Context, store transaction.Store, policy con
 	if store.Dialect() != transaction.PostgreSQL {
 		return nil
 	}
+	ctx, cancel := context.WithTimeout(ctx, config.Seconds(policy.TimeoutSeconds))
+	defer cancel()
 	for _, table := range partitionedTables {
 		var created, dropped, blocked int
 		var reaches time.Time

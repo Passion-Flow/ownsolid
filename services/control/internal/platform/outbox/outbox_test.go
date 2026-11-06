@@ -87,6 +87,17 @@ func keys(t *testing.T, r *outbox.Reader) []string {
 	return out
 }
 
+// collect reads until want events arrived. Any write transaction in the cluster, such as autovacuum's
+// ANALYZE, holds the watermark for a moment, so a committed event is not always readable at once.
+func collect(t *testing.T, r *outbox.Reader, want int) []string {
+	t.Helper()
+	out := []string{}
+	for deadline := time.Now().Add(20 * time.Second); len(out) < want && time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		out = append(out, keys(t, r)...)
+	}
+	return out
+}
+
 func equal(a []string, b ...string) bool {
 	if len(a) != len(b) {
 		return false
@@ -104,14 +115,14 @@ func TestReaderSeesCommittedEventsOnceInCommitOrder(t *testing.T) {
 	r := h.reader(10)
 	h.append("a")
 	h.append("b")
-	if got := keys(t, r); !equal(got, "a", "b") {
+	if got := collect(t, r, 2); !equal(got, "a", "b") {
 		t.Fatal(got)
 	}
 	if got := keys(t, r); len(got) != 0 {
 		t.Fatalf("read twice: %v", got)
 	}
 	h.append("c")
-	if got := keys(t, r); !equal(got, "c") {
+	if got := collect(t, r, 1); !equal(got, "c") {
 		t.Fatal(got)
 	}
 }
@@ -120,10 +131,10 @@ func TestEveryReaderSeesEveryEvent(t *testing.T) {
 	h := setup(t)
 	first, second := h.reader(10), h.reader(10)
 	h.append("a")
-	if got := keys(t, first); !equal(got, "a") {
+	if got := collect(t, first, 1); !equal(got, "a") {
 		t.Fatal(got)
 	}
-	if got := keys(t, second); !equal(got, "a") {
+	if got := collect(t, second, 1); !equal(got, "a") {
 		t.Fatal(got)
 	}
 }
@@ -136,7 +147,7 @@ func TestRollbackLeavesNoEvent(t *testing.T) {
 		t.Fatal(e)
 	}
 	h.append("kept")
-	if got := keys(t, r); !equal(got, "kept") {
+	if got := collect(t, r, 1); !equal(got, "kept") {
 		t.Fatal(got)
 	}
 }
@@ -155,7 +166,7 @@ func TestATransactionThatCommitsLateIsNotSkipped(t *testing.T) {
 	if e := early.Commit(ctx); e != nil {
 		t.Fatal(e)
 	}
-	if got := keys(t, r); !equal(got, "early", "late") {
+	if got := collect(t, r, 2); !equal(got, "early", "late") {
 		t.Fatal(got)
 	}
 }
@@ -170,14 +181,19 @@ func TestAReaderStartedDuringATransactionStillSeesIt(t *testing.T) {
 	if e := running.Commit(context.Background()); e != nil {
 		t.Fatal(e)
 	}
-	if got := keys(t, r); !equal(got, "running") {
+	if got := collect(t, r, 1); !equal(got, "running") {
 		t.Fatal(got)
 	}
 }
 
 func TestAStartedReaderDoesNotReplay(t *testing.T) {
 	h := setup(t)
+	earlier := h.reader(10)
 	h.append("before")
+	// Once a reader has seen it, the watermark has passed it for good.
+	if got := collect(t, earlier, 1); !equal(got, "before") {
+		t.Fatal(got)
+	}
 	r := h.reader(10)
 	if got := keys(t, r); len(got) != 0 {
 		t.Fatalf("replayed: %v", got)
@@ -186,7 +202,7 @@ func TestAStartedReaderDoesNotReplay(t *testing.T) {
 		t.Fatal(e)
 	}
 	h.append("after")
-	if got := keys(t, r); !equal(got, "after") {
+	if got := collect(t, r, 1); !equal(got, "after") {
 		t.Fatal(got)
 	}
 }
@@ -207,10 +223,7 @@ func TestEventsOfOneTransactionAreReadAcrossTheLimit(t *testing.T) {
 	}); e != nil {
 		t.Fatal(e)
 	}
-	got := []string{}
-	for range 3 {
-		got = append(got, keys(t, r)...)
-	}
+	got := collect(t, r, 5)
 	sort.Strings(got)
 	if !equal(got, "a", "b", "c", "d", "e") {
 		t.Fatal(got)
@@ -226,7 +239,7 @@ func TestAFailedReadKeepsThePosition(t *testing.T) {
 	if _, e := r.Next(cancelled); e == nil {
 		t.Fatal("a read with no database reported success")
 	}
-	if got := keys(t, r); !equal(got, "a") {
+	if got := collect(t, r, 1); !equal(got, "a") {
 		t.Fatalf("lost across a failed read: %v", got)
 	}
 }
@@ -240,7 +253,7 @@ func TestRestoredRowsAboveTheWatermarkDoNotCarryTheReaderAway(t *testing.T) {
 		t.Fatal(e)
 	}
 	h.append("real")
-	if got := keys(t, r); !equal(got, "real") {
+	if got := collect(t, r, 1); !equal(got, "real") {
 		t.Fatal(got)
 	}
 }
@@ -264,7 +277,7 @@ func TestTrimDeletesOnlyWhatAged(t *testing.T) {
 	}); e != nil {
 		t.Fatal(e)
 	}
-	if got := keys(t, r); !equal(got, "new") {
+	if got := collect(t, r, 1); !equal(got, "new") {
 		t.Fatal(got)
 	}
 }
@@ -276,8 +289,8 @@ func TestLagReportsTheAgeOfTheNewestEventRead(t *testing.T) {
 	if _, e := h.pool.Exec(context.Background(), `UPDATE control_outbox SET created_at=clock_timestamp()-interval '1 minute'`); e != nil {
 		t.Fatal(e)
 	}
-	keys(t, r)
-	if lag := r.Lag(); lag < 59*time.Second || lag > 70*time.Second {
+	collect(t, r, 1)
+	if lag := r.Lag(); lag < 59*time.Second || lag > 90*time.Second {
 		t.Fatalf("lag %v", lag)
 	}
 }

@@ -72,10 +72,11 @@ func TestATaskWrittenOnOneGatewayWakesAClaimHeldOnAnother(t *testing.T) {
 		if claim.Lease == nil {
 			t.Fatalf("claim ended without the task: %+v", claim)
 		}
-		if took := time.Since(started); took > 3*time.Second {
+		// Under the 30 second wait, with room for a moment's hold on the watermark.
+		if took := time.Since(started); took > 15*time.Second {
 			t.Fatalf("woken after %v", took)
 		}
-	case <-time.After(10 * time.Second):
+	case <-time.After(20 * time.Second):
 		t.Fatal("a claim on the other gateway was not woken")
 	}
 }
@@ -189,7 +190,11 @@ func TestAHeldClaimEndsAtItsWaitWhenDeliveryIsHeldUp(t *testing.T) {
 	if e = holder.Rollback(ctx); e != nil {
 		t.Fatal(e)
 	}
-	waitUntil(t, "delivery to resume", func() bool { return wakeEvents(other) > before })
+	for deadline := time.Now().Add(20 * time.Second); wakeEvents(other) <= before; time.Sleep(10 * time.Millisecond) {
+		if time.Now().After(deadline) {
+			t.Fatal("delivery did not resume")
+		}
+	}
 }
 
 func TestSweepSettlesAnExpiredTaskOfASilentNodeAndTrimsTheOutbox(t *testing.T) {

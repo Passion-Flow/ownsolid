@@ -21,6 +21,9 @@ func Pass(ctx context.Context, db *pgxpool.Pool, policies ...config.RetentionPol
 	if e != nil {
 		return e
 	}
+	if e = maintainPartitions(ctx, store, policy); e != nil {
+		return e
+	}
 	return PassSelected(ctx, store, policy)
 }
 
@@ -68,7 +71,11 @@ func RunSelected(ctx context.Context, store transaction.Store, policy config.Ret
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			if e := PassSelected(ctx, store, policy); e != nil {
+			e := maintainPartitions(ctx, store, policy)
+			if e == nil {
+				e = PassSelected(ctx, store, policy)
+			}
+			if e != nil {
 				if ctx.Err() != nil && (transaction.IsCancellationOnly(e)) {
 					return nil
 				}
