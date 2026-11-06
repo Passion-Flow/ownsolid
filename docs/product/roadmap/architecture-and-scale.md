@@ -30,7 +30,8 @@ agents is not.
   - Scope of the evidence: limits and seats apply per control process until separate gateway replicas (ARC-102). Settings go through `control_settings`; the console page is FLT-113. Shedding ran with one agent; fleet-scale load is ARC-015.
 - [x] ARC-009 Cost rule: every agent call declares its server cost; calls whose cost grows with fleet size fail review (P0) - Evidence: commit 9d25841 (ADR 0020)
   - Scope of the evidence: PostgreSQL only; MySQL and Dameng keep their locks and `count(*)` until CMP-201 and CMP-202. Measured on 50 and 3,000 nodes through the node and training paths, which cover all ten calls; component, inference, preparation and registry operations are ARC-108. Load at fleet scale is ARC-015.
-- [ ] ARC-010 Liveness kept in gateway memory plus a small replicated store; PostgreSQL stores only state transitions and batched last-seen (P0)
+- [x] ARC-010 Liveness kept in gateway memory plus a small replicated store; PostgreSQL stores only state transitions and batched last-seen (P0) - Evidence: commit 2ee0fe1 (ADR 0022)
+  - Scope of the evidence: PostgreSQL only; MySQL and Dameng keep the synchronous heartbeat until CMP-201 and CMP-202. The replicated store (NATS JetStream KV) ran on three real servers with one stopped; the installer deploys it with REL-101, and with one gateway none is needed. Ran with one real agent on a real install; fleet load is ARC-015.
 - [ ] ARC-011 Transactional outbox with batched delivery replaces LISTEN/NOTIFY; low-frequency reconciliation (P0)
 - [ ] ARC-012 Time-partitioned append tables for events, task history and audit, with partition drop; pooled connections; agents never hold database connections (P0)
 - [ ] ARC-013 Static stability: agents keep running work when disconnected and never kill on disconnect (P0)
