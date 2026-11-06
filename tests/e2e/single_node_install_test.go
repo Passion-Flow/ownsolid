@@ -365,6 +365,15 @@ func TestSingleNodeInstall(t *testing.T) {
 		}
 	})
 
+	t.Run("task wakes go through the outbox", func(t *testing.T) {
+		if agent == nil {
+			t.Skip("no agent")
+		}
+		// The first task ran within a claim wait, which only a delivered wake allows.
+		if got := e.sql(t, "SELECT count(*)>0 FROM control_outbox WHERE topic='node.task_written' AND key='"+agent.nodeID+"'"); got != "t" {
+			t.Fatalf("no outbox event for the task: %q", got)
+		}
+	})
 	t.Run("repeated heartbeats wait for the batch and write no state", func(t *testing.T) {
 		if agent == nil {
 			t.Skip("no agent")
@@ -530,6 +539,18 @@ func TestSingleNodeInstall(t *testing.T) {
 		agent.stop(t)
 		if strings.Contains(agent.output()[mark:], "code=RATE_LIMITED") {
 			t.Fatalf("the default limits refused the agent:\n%s", agent.output()[mark:])
+		}
+	})
+
+	t.Run("the serving role reads and trims the outbox", func(t *testing.T) {
+		output, err := e.compose(t, "logs", "control")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, failure := range []string{"node_task_wakes_read_failed", "node_task_wake_trim_failed", "node_liveness_flush_failed"} {
+			if strings.Contains(output, failure) {
+				t.Fatalf("control logged %s:\n%s", failure, output)
+			}
 		}
 	})
 

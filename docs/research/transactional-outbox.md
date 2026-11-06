@@ -1,6 +1,6 @@
 # Transactional outbox for control-plane events
 
-Research behind ARC-011.
+Research behind ARC-011 and [ADR 0028](../decisions/0028-task-wakes-through-an-outbox.md).
 
 ## The problem in this code base
 
@@ -48,11 +48,12 @@ when it wrote.
 
 ## Chosen approach
 
-- One table, `control_outbox`, with `seq`, `xid8`, topic and key. It is append only and trimmed by
+- One table, `control_outbox`, with the transaction ID as `xid8`, a random UUID, topic and key. No
+  sequence: the serving role is granted none, and the transaction ID already orders what matters. It is append only and trimmed by
   age; ARC-012 decides whether to partition it.
 - A writer appends in its own transaction. PostgreSQL only; MySQL and Dameng keep the process-local
   wake until CMP-201 and CMP-202.
-- Every gateway reads on its own with an in-memory cursor `(xid, seq)`, up to 1,000 rows at a time,
+- Every gateway reads on its own with an in-memory cursor `(xid, id)`, up to 1,000 rows at a time,
   and starts from the current watermark. Nothing is replayed after a restart, because wakes are
   hints: a claim always looks at the task table first.
 - Delivery is at least once and consumers are idempotent. A wake with nothing to claim costs one
@@ -67,7 +68,7 @@ when it wrote.
 | Alternative | Why not |
 | --- | --- |
 | LISTEN/NOTIFY | See above |
-| Remembering the highest `seq` | Skips a row that commits late, which is the bug the watermark prevents |
+| Remembering the highest sequence value | Skips a row that commits late, which is the bug the watermark prevents; the repository also grants the serving role no sequences |
 | Holding a cursor at a gap until a timeout | More code for the same guarantee, and it needs a timeout that can still lose a row |
 | One dispatcher deleting rows with `SKIP LOCKED` | Suits one consumer per message. Every gateway must see every wake, because only the holder of the claim can act |
 | Publishing through NATS | The single-node install runs no broker, and the wake must work there |

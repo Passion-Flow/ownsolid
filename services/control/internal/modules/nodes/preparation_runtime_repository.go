@@ -46,7 +46,9 @@ func (s *Service) QueuePreparationWithin(ctx context.Context, q transaction.Exec
 	if affected != 1 {
 		return Task{}, fail("STORAGE_UNAVAILABLE")
 	}
-	s.taskWritten(current.ID)
+	if e = s.taskWrittenWithin(ctx, q, current.ID); e != nil {
+		return Task{}, e
+	}
 	t, _, e := s.PreparationStopTaskWithin(ctx, q, current, id)
 	return t, e
 }

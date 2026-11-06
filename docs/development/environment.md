@@ -80,6 +80,12 @@ and `PROJECT_ONE_DATA_PYTHON` set to a Python 3.12 binary as a real path. Its lo
 statements, blocks and rows of each exchange. When a change raises a cost on purpose, raise
 the declaration in `api/agent/v1/calls.go` in the same change and say why.
 
+## Free disk space
+
+`internal/platform/objectstore` refuses to stage below 30% free on the filesystem of `TMPDIR`, so
+its tests fail with `OBJECT_STORAGE_FULL` on a fuller disk and `make test` stops there. Free space,
+or run that package with `TMPDIR` on a RAM disk and the rest of `make test` as usual.
+
 ## Telemetry store integration tests
 
 The telemetry client has tests against the real stores, behind a build tag:

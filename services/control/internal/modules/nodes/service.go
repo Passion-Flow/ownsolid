@@ -29,6 +29,10 @@ type Service struct {
 	Training     TrainingAuthority
 	// wake lets claims held open for new work (ClaimWaiting) see tasks as they are written.
 	wake wakeHub
+	// delivering says the outbox reader runs, so wakes arrive after commit (ADR 0028).
+	delivering atomic.Bool
+	// wakeCounters report that reader to the metrics store.
+	wakeCounters wakeCounters
 	// resync bounds full resyncs granted by this process (ADR 0011).
 	resync resyncBucket
 	// pacing caches what heartbeat replies tell agents (ADR 0013).

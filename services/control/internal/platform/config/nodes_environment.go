@@ -13,6 +13,8 @@ const (
 	nodeTaskEnvironment                = "PROJECT_ONE_NODE_TASK_SECONDS"
 	nodeLivenessFlushEnvironment       = "PROJECT_ONE_NODE_LIVENESS_FLUSH_SECONDS"
 	nodeStateRefreshEnvironment        = "PROJECT_ONE_NODE_STATE_REFRESH_SECONDS"
+	nodeOutboxPollEnvironment          = "PROJECT_ONE_NODE_OUTBOX_POLL_MILLISECONDS"
+	nodeOutboxRetentionEnvironment     = "PROJECT_ONE_NODE_OUTBOX_RETENTION_SECONDS"
 	nodeReconcileEnvironment           = "PROJECT_ONE_NODE_RECONCILE_SECONDS"
 	nodeReconcileTimeoutEnvironment    = "PROJECT_ONE_NODE_RECONCILE_TIMEOUT_SECONDS"
 	uiPageEnvironment                  = "PROJECT_ONE_UI_PAGE_SIZE"
@@ -48,6 +50,10 @@ func (p *RuntimePolicy) nodeEnvironmentField(key string) *int {
 		return &p.Nodes.LivenessFlushSeconds
 	case nodeStateRefreshEnvironment:
 		return &p.Nodes.StateRefreshSeconds
+	case nodeOutboxPollEnvironment:
+		return &p.Nodes.OutboxPollMilliseconds
+	case nodeOutboxRetentionEnvironment:
+		return &p.Nodes.OutboxRetentionSeconds
 	case nodeReconcileEnvironment:
 		return &p.Nodes.ReconcileSeconds
 	case nodeReconcileTimeoutEnvironment:

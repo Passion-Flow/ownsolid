@@ -13,3 +13,6 @@ func (s *Service) EnableLivenessStartedAt(ctx context.Context, started time.Time
 
 // HeartbeatDigest exposes the digest for tests.
 var HeartbeatDigest = heartbeatDigest
+
+// WakesDelivering says the outbox reader of s has started.
+func (s *Service) WakesDelivering() bool { return s.delivering.Load() }

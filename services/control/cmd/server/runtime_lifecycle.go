@@ -359,6 +359,7 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 		}
 		if bootstrapped {
 			h.TelemetryMetrics.Add(h.Nodes.Service.LivenessSamples)
+			h.TelemetryMetrics.Add(h.Nodes.Service.WakeSamples)
 		}
 		g.Go("TELEMETRY_METRICS", h.TelemetryMetrics.Run)
 	}
@@ -396,6 +397,7 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 				})
 			}
 			g.Loop("NODE_LIVENESS", h.Nodes.Service.RunLiveness)
+			g.Loop("NODE_TASK_WAKES", h.Nodes.Service.RunWakes)
 		}
 		if c.Models.ArtifactRoot != "" {
 			g.Loop("MODEL_IMPORT", h.Models.Service.Run)

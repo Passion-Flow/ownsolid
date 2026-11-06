@@ -51,7 +51,9 @@ func (s *Service) QueueTrainingWithin(ctx context.Context, q transaction.Executo
 	if count != 1 {
 		return Task{}, fail("STORAGE_UNAVAILABLE")
 	}
-	s.taskWritten(current.ID)
+	if e = s.taskWrittenWithin(ctx, q, current.ID); e != nil {
+		return Task{}, e
+	}
 	out, e := scanTask(q.QueryRow(ctx, nodeSQL(q, "SELECT "+taskFields+" FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4", "SELECT "+mysqlTaskFields+" FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?", `SELECT `+damengTaskFields+` FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, current.TenantID, current.WorkspaceID, current.ID, id)))
 	if e != nil {
 		return Task{}, e

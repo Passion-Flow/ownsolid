@@ -8,10 +8,13 @@ import (
 	"net/http"
 	"sort"
 	"testing"
+	"time"
 
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/outbox"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/agentcost"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
@@ -44,6 +47,10 @@ type costRun struct {
 	measured map[string]exchangeCost
 	// flush writes what the heartbeats of this run left in memory (ADR 0022).
 	flush func() error
+	// sweep looks for expired tasks across the fleet, and read is one read of the outbox by a
+	// gateway. Neither is an agent call, but both run constantly whatever the fleet does.
+	sweep func() error
+	read  func() error
 }
 
 // measure records one exchange while another transaction holds a shared lock on every row
@@ -77,6 +84,16 @@ func (r *costRun) measure(name string, call agentwire.Call, exchange func()) {
 		r.t.Fatal(e)
 	}
 	r.measured[name] = exchangeCost{call, cost}
+}
+
+// store is the repository of the fleet under test.
+func store(t *testing.T, f scenario) transaction.Store {
+	t.Helper()
+	out, e := f.s.Identity.Repository()
+	if e != nil {
+		t.Fatal(e)
+	}
+	return out
 }
 
 // expectNoWrites fails unless an exchange only read, in at most one statement for itself and
@@ -146,6 +163,20 @@ func measureFleet(t *testing.T, nodes int) map[string]exchangeCost {
 	client.Headers = map[string]string{"Authorization": "Bearer " + f.credential}
 	base := "/agent/v1/sites/default/cells/default/nodes/" + f.input.NodeID
 	r := &costRun{t: t, f: f, recorder: &recorder, client: client, measured: map[string]exchangeCost{}, flush: func() error { return handler.Nodes.Service.FlushLiveness(context.Background()) }}
+	r.sweep = func() error { return handler.Nodes.Service.Sweep(context.Background()) }
+	reader, e := outbox.NewReader(store(t, f), 1000)
+	if e != nil {
+		t.Fatal(e)
+	}
+	r.read = func() error {
+		bounded, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if e := reader.Start(bounded); e != nil {
+			return e
+		}
+		_, e := reader.Next(bounded)
+		return e
+	}
 	r.post = func(path string, headers map[string]string, body []byte, status int) []byte {
 		t.Helper()
 		request, e := http.NewRequest("POST", httpfixture.AdminOrigin+base+path, bytes.NewReader(body))
@@ -212,6 +243,13 @@ func (r *costRun) exchanges(base string) {
 	r.measure("heartbeat", agentwire.CallHeartbeat, func() { r.client.Call("POST", base+"/heartbeat", handshake, 200, "") })
 	r.measure("heartbeat unchanged", agentwire.CallHeartbeat, func() { r.client.Call("POST", base+"/heartbeat", handshake, 200, "") })
 	r.expectNoWrites("heartbeat unchanged")
+	for name, background := range map[string]func() error{"task sweep": r.sweep, "outbox read": r.read} {
+		r.measure(name, agentwire.CallHeartbeat, func() {
+			if e := background(); e != nil {
+				t.Fatal(e)
+			}
+		})
+	}
 	r.measure("liveness flush", agentwire.CallHeartbeat, func() {
 		if e := r.flush(); e != nil {
 			t.Fatal(e)

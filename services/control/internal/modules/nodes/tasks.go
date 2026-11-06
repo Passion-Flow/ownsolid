@@ -66,6 +66,9 @@ func (s *Service) Run(ctx context.Context) {
 			if s.Sweep(bounded) != nil {
 				slog.Warn("node_task_sweep_failed", "code", "STORAGE_UNAVAILABLE")
 			}
+			if s.trimWakes(bounded) != nil {
+				slog.Warn("node_task_wake_trim_failed", "code", "STORAGE_UNAVAILABLE")
+			}
 			cancel()
 		}
 	}
