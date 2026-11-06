@@ -18,6 +18,10 @@ Each operation selects bounded ordered keys with `FOR UPDATE SKIP LOCKED`, then 
 
 An uncertain commit is retained as uncertainty. Do not automatically replay that transaction or fabricate rollback. A later independently admitted pass evaluates current eligible state. Recovery must also respect foreign-key order and preserve live reset/session/outbox evidence.
 
+## Partitions
+
+[partitions.go](partitions.go) keeps the monthly partitions of append tables on PostgreSQL ([ADR 0029](../../../../../docs/decisions/0029-time-partitioned-append-tables.md)). Each pass, before the bootstrap check, it calls `manage_time_partitions` for each table in its own transaction: partitions reach three months ahead and a month past its retention is dropped whole. A lock it could not take is retried at the next pass. MySQL keeps row deletion.
+
 ## Policy and maintenance
 
 [RetentionPolicy](../config/policy.go) supplies interval/timeout in seconds, batch size, mail/reset/invitation/session/audit ages in days and rate grace in seconds under `runtime.retention`. The [control YAML example](../../../../../config/examples/control/control.example.yaml) is the deployment input; the configuration owner validates ranges. The package does not independently read environment or spawn a daemon.

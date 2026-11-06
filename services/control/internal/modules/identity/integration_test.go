@@ -817,8 +817,9 @@ func TestM01RetentionIsBoundedAndForeignKeySafe(t *testing.T) {
 	if e = retention.Pass(ctx, s.DB); e != nil {
 		t.Fatal(e)
 	}
-	if count(t, s, "SELECT count(*) FROM audit_events WHERE occurred_at<clock_timestamp()-interval '180 days'") != 1 {
-		t.Fatal("audit cleanup exceeded or missed the 100-row bound")
+	// Audit rows leave with their whole partition, never one at a time (ADR 0029).
+	if count(t, s, "SELECT count(*) FROM audit_events WHERE occurred_at<clock_timestamp()-interval '180 days'") != 101 {
+		t.Fatal("audit rows were deleted before their partition expired")
 	}
 	if count(t, s, "SELECT count(*) FROM invitations WHERE status='accepted'") != 1 || count(t, s, "SELECT count(*) FROM invitations WHERE status='expired'") != 0 || count(t, s, "SELECT count(*) FROM password_reset_tokens") != 0 || count(t, s, "SELECT count(*) FROM idempotency_records") != 0 {
 		t.Fatal("retention violated provenance or FK-safe removal")

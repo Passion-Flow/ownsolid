@@ -11,13 +11,14 @@ import (
 
 // CatalogSQL binds every schema-local table/column/default,
 // constraint/index/trigger and function (including enabled/validity/security
-// attributes). OIDs, data and installation schema names are not fingerprints.
+// attributes). OIDs, data and installation schema names are not fingerprints, and neither are
+// partitions: they come and go at run time (ADR 0029), and a partition has its parent's shape.
 const CatalogSQL = `WITH owned AS (
  SELECT c.oid,c.relname,c.relkind,c.relrowsecurity,c.relforcerowsecurity,c.relpersistence,c.relreplident
  FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
- WHERE n.nspname=current_schema() AND c.relkind IN ('r','p','v','m','f','S')
+ WHERE n.nspname=current_schema() AND c.relkind IN ('r','p','v','m','f','S') AND NOT c.relispartition
 )
-SELECT jsonb_build_object('table_count',(SELECT count(*) FROM pg_tables WHERE schemaname=current_schema()),
+SELECT jsonb_build_object('table_count',(SELECT count(*) FROM owned WHERE relkind IN ('r','p')),
  'functions',(SELECT jsonb_agg(jsonb_build_array(p.proname,pg_get_function_identity_arguments(p.oid),p.prosrc,p.provolatile,p.proisstrict,p.prosecdef,p.proparallel,p.proconfig,p.prokind,pg_get_function_result(p.oid),(SELECT lanname FROM pg_language l WHERE l.oid=p.prolang),p.proleakproof,p.proargnames,p.proargmodes) ORDER BY p.proname,pg_get_function_identity_arguments(p.oid)) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname=current_schema() AND NOT EXISTS(SELECT 1 FROM pg_depend dep WHERE dep.classid='pg_proc'::regclass AND dep.objid=p.oid AND dep.deptype='e')),
  'tables',(SELECT jsonb_agg(jsonb_build_array(o.relname,o.relkind,o.relrowsecurity,o.relforcerowsecurity,o.relpersistence,o.relreplident,
   (SELECT jsonb_agg(jsonb_build_array(a.attname,replace(format_type(a.atttypid,a.atttypmod),'public.vector','vector'),a.attnotnull,a.attidentity,a.attgenerated,(SELECT co.collname FROM pg_collation co WHERE co.oid=a.attcollation),a.attstorage,a.attcompression,pg_get_expr(d.adbin,d.adrelid)) ORDER BY a.attnum)
@@ -33,8 +34,8 @@ SELECT jsonb_build_object('table_count',(SELECT count(*) FROM pg_tables WHERE sc
    FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid WHERE t.tgrelid=o.oid AND NOT t.tgisinternal)) ORDER BY o.relname) FROM owned o))::text`
 
 // Exact native fresh and logical dump/reparse forms from pinned PostgreSQL18.6.
-const catalogFreshSHA256 = "054078cd554dd2c59995441d28116dbf39baeaacd76d48c3235b32b3d4f6145c"
-const catalogRestoredSHA256 = "f2c0ccc89acecc614f7b84d52b3d2e491804e09a54d182a783ff0331d4c32183"
+const catalogFreshSHA256 = "909280cdc89d9954e17a71658cf668d7d337f804b08b0752f05f7628b16bdd7b"
+const catalogRestoredSHA256 = "f1c45e5ecae5f410cf79d06757a41d41f6513ae86ca07ca7e3fd28eb837b2d91"
 
 func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
 	var raw string
