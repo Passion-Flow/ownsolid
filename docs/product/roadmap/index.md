@@ -1,7 +1,20 @@
 # ownsolid roadmap
 
-This is the single plan for building ownsolid. Every chat or contributor starts here.
-Read this page, then only the module file you work on.
+The engineering ledger: every item, its phase, and the evidence that it is done.
+
+## Before you start
+
+This page is the engineering ledger: what is done, with evidence. It is no longer
+enough on its own to start work on anything with a screen.
+
+- [The interaction system](../design/README.md) — how a screen behaves: surfaces,
+  the five page archetypes, the seven states, tokens and motion. Read it first.
+- [The build plan](../plan/README.md) — what gets built in what order, with each
+  screen's purpose, dialogs and click paths specified before it is written.
+
+An item here that touches a screen waits for that screen's entry in the plan. The
+two meet at the end: the item ticks when the code is merged and tested, and the
+screen is done when it also behaves the way the design says.
 
 ## How to work
 
