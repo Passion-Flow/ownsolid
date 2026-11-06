@@ -20,7 +20,7 @@ var globalTables = map[string]bool{
 
 func TestEveryCellOwnedTableCarriesScope(t *testing.T) {
 	s := fixture.New(t)
-	rows, e := s.DB.Query(t.Context(), `SELECT t.tablename,count(*) FILTER (WHERE c.column_name IN ('site_id','cell_id') AND c.is_nullable='NO' AND c.column_default IS NOT NULL) FROM pg_tables t JOIN information_schema.columns c ON c.table_schema=t.schemaname AND c.table_name=t.tablename WHERE t.schemaname=current_schema() GROUP BY 1 ORDER BY 1`)
+	rows, e := s.DB.Query(t.Context(), `SELECT t.tablename,count(*) FILTER (WHERE c.column_name IN ('site_id','cell_id') AND c.is_nullable='NO' AND c.column_default IS NOT NULL) FROM pg_tables t JOIN pg_class k ON k.oid=format('%I.%I',t.schemaname,t.tablename)::regclass AND NOT k.relispartition JOIN information_schema.columns c ON c.table_schema=t.schemaname AND c.table_name=t.tablename WHERE t.schemaname=current_schema() GROUP BY 1 ORDER BY 1`)
 	if e != nil {
 		t.Fatal(e)
 	}

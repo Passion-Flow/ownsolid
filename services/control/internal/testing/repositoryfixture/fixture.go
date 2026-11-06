@@ -190,7 +190,7 @@ func disposeOwnedRepositoryTables(ctx context.Context, pool *pgxpool.Pool, schem
 	if c.Host != "127.0.0.1" || c.Port < 1024 || !strings.HasSuffix(c.Database, "_test") || !repositoryOwnedTable.MatchString(c.User) || c.RuntimeParams["search_path"] != schema {
 		return errors.New("OWNED_REPOSITORY_SCHEMA_CLEANUP_CONTEXT_INVALID")
 	}
-	rows, e := pool.Query(ctx, "SELECT tablename FROM pg_tables WHERE schemaname=$1 ORDER BY tablename", schema)
+	rows, e := pool.Query(ctx, "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=$1 AND c.relkind IN ('r','p') AND NOT c.relispartition ORDER BY c.relname", schema)
 	if e != nil {
 		return errors.New("OWNED_REPOSITORY_TABLE_INVENTORY_FAILED")
 	}

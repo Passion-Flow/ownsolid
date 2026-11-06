@@ -177,10 +177,11 @@ func (o *operation) loadDump(ctx context.Context, database, path string) error {
 	return nil
 }
 
-// fingerprint reads every table of database. hashtextextended and a numeric sum need no
+// fingerprint reads every table of database, each partitioned table through its parent, because
+// partitions come and go while control runs. hashtextextended and a numeric sum need no
 // sort, so this stays cheap on a large table and does not depend on row order.
 func (o *operation) fingerprint(ctx context.Context, database string) ([]tableFingerprint, error) {
-	raw, e := o.query(ctx, database, "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY 1")
+	raw, e := o.query(ctx, database, "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p') AND NOT c.relispartition ORDER BY 1")
 	if e != nil {
 		return nil, e
 	}
