@@ -41,7 +41,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [x] UX-118 Theme and density follow the user across browsers through `/api/v1/preferences` (P1) - Evidence: aa68ace; two browser contexts on both entrances of an offline install on `ownsolid-cpu`, and migration 000034 on an installed database, 2026-11-05
 - [x] UX-119 Account page: profile, password change and linked sign-in providers (P1) - Evidence: 46d2fbb, 9267698; real browser on both entrances of an offline install on `ownsolid-cpu`, and link and unlink against Gitea 28.1.0 on the admin entrance, 2026-11-05
 - [x] UX-120 Mail delivery status for administrators, so a failed invitation or reset email can be seen and resent (P1) - Evidence: ec65295; a real failed reset email resent from the console in Chromium on a licensed offline install on `ownsolid-cpu`, 2026-11-05
-- [ ] UX-121 Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1)
+- [x] UX-121 Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1) - Evidence: 82b0830; real Chromium received Brotli copies on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06
 
 ## P2 Fleet operations
 

@@ -24,6 +24,19 @@ macOS links `/var` to `/private/var`, and some tests reject symlinked temporary 
 `make test` exports a resolved `TMPDIR`. Docker Desktop is available for local
 containers.
 
+Object staging refuses writes that would leave less than 30% of its volume free, and its
+tests stage in `TMPDIR`. When the workstation's disk is fuller than that (it was at 80% on
+2026-11-06), `make test` fails in `internal/platform/objectstore` with `OBJECT_STORAGE_FULL`
+and stops before the later modules. Free space, or run that package on a scratch volume and
+the remaining modules, gateway and web tests by hand:
+
+```sh
+dev=$(hdiutil attach -nomount ram://1048576 | awk '{print $1}')
+diskutil erasevolume HFS+ ownsolid-tmp "$dev"
+(cd services/control && TMPDIR=/Volumes/ownsolid-tmp/ go test -count=1 ./internal/platform/objectstore/)
+hdiutil detach "$dev"
+```
+
 ## Test servers
 
 | Server | Purpose | Access |
