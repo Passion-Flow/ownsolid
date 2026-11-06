@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"net/mail"
 	"net/netip"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -161,6 +163,27 @@ type TelemetryConfig struct {
 	LogsRetention    string `yaml:"logs_retention"`
 }
 
+// Docker's CPU weight: 1024 is one default container, and the daemon refuses more than the
+// maximum.
+const (
+	cpuSharesPerCPU = 1024
+	maxCPUShares    = 262144
+)
+
+// cpuShares turns a CPU count into a Docker CPU weight. PostgreSQL gets a weight, not a quota:
+// a quota stalls every backend for the rest of its period once a burst has spent it (ADR 0038).
+func cpuShares(cpus string) (int, error) {
+	count, err := strconv.ParseFloat(cpus, 64)
+	if err != nil {
+		return 0, errors.New("must be a number of CPUs like 2 or 1.5")
+	}
+	shares := int(math.Round(count * cpuSharesPerCPU))
+	if shares > maxCPUShares {
+		return 0, fmt.Errorf("must be at most %d CPUs", maxCPUShares/cpuSharesPerCPU)
+	}
+	return shares, nil
+}
+
 func defaults() Config {
 	var c Config
 	c.Topology.Size = SingleNode
@@ -274,8 +297,11 @@ func (c Config) Validate() error {
 	}
 	for _, cpus := range []string{r.ControlCPUs, r.PostgresCPUs, r.MetricsCPUs, r.LogsCPUs} {
 		if !cpusPattern.MatchString(cpus) {
-			return invalid("resources", "cpus must look like 2 or 0.5")
+			return invalid("resources", "cpus must look like 2 or 1.5")
 		}
+	}
+	if _, err := cpuShares(r.PostgresCPUs); err != nil {
+		return invalid("resources.postgres_cpus", err.Error())
 	}
 	if !retentionPattern.MatchString(c.Telemetry.MetricsRetention) || !retentionPattern.MatchString(c.Telemetry.LogsRetention) {
 		return invalid("telemetry", "metrics_retention and logs_retention must be whole days like 30d")

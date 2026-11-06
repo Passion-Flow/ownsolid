@@ -94,6 +94,8 @@ resources:
   control_memory: 1g
   control_cpus: "2"
   postgres_memory: 2g
+  # The database's share of the host when CPUs are contended, not a ceiling: it may use idle
+  # CPUs, because a hard limit stalls every query once a burst has spent it (ADR 0038).
   postgres_cpus: "2"
   postgres_max_connections: 50
   metrics_memory: 2g

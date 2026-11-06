@@ -96,6 +96,20 @@ func TestStateSubnetFixesTheDatabaseAddressOutsideTheDynamicRange(t *testing.T) 
 	}
 }
 
+func TestPostgresGetsACPUWeightNotAQuota(t *testing.T) {
+	config := validConfig(t)
+	for cpus, want := range map[string]string{"2": "2048", "1.5": "1536", "256": "262144"} {
+		config.Resources.PostgresCPUs = cpus
+		rendered := config.ComposeVariables()
+		if rendered["OWNSOLID_POSTGRES_CPU_SHARES"] != want {
+			t.Errorf("%s CPUs rendered weight %q, want %s", cpus, rendered["OWNSOLID_POSTGRES_CPU_SHARES"], want)
+		}
+		if _, quota := rendered["OWNSOLID_POSTGRES_CPUS"]; quota {
+			t.Errorf("%s CPUs still render a quota", cpus)
+		}
+	}
+}
+
 func TestDecodeRefusals(t *testing.T) {
 	base := validYAML(t, "/srv/ownsolid")
 	for name, test := range map[string]struct{ old, new, want string }{
@@ -126,6 +140,7 @@ func TestDecodeRefusals(t *testing.T) {
 		"retention":          {"format_version: 1\n", "format_version: 1\ntelemetry: {logs_retention: 1y}\n", "telemetry"},
 		"store memory":       {"format_version: 1\n", "format_version: 1\nresources: {metrics_memory: lots}\n", "resources"},
 		"store cpus":         {"format_version: 1\n", "format_version: 1\nresources: {logs_cpus: many}\n", "resources"},
+		"database cpus":      {"format_version: 1\n", "format_version: 1\nresources: {postgres_cpus: \"257\"}\n", "resources.postgres_cpus"},
 		"subnet not cidr":    {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 172.31.254.0}\n", "network.state_subnet"},
 		"subnet host bits":   {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 172.31.254.1/26}\n", "network.state_subnet"},
 		"subnet public":      {"format_version: 1\n", "format_version: 1\nnetwork: {state_subnet: 8.8.8.0/24}\n", "network.state_subnet"},

@@ -74,6 +74,9 @@ func (h *Histogram) Quantile(q float64) time.Duration {
 	return h.max
 }
 
+// ms is d in milliseconds, to a tenth.
+func ms(d time.Duration) float64 { return math.Round(float64(d)/float64(time.Millisecond)*10) / 10 }
+
 // Latency is a summary of a histogram in milliseconds.
 type Latency struct {
 	P50 float64 `json:"p50"`
@@ -83,7 +86,6 @@ type Latency struct {
 }
 
 func (h *Histogram) summary() Latency {
-	ms := func(d time.Duration) float64 { return math.Round(float64(d)/float64(time.Millisecond)*10) / 10 }
 	return Latency{P50: ms(h.Quantile(0.5)), P90: ms(h.Quantile(0.9)), P99: ms(h.Quantile(0.99)), Max: ms(h.max)}
 }
 
@@ -139,6 +141,9 @@ type Window struct {
 	Connected  int                     `json:"connected"`
 	OnStream   int                     `json:"on_stream"`
 	Calls      map[string]*WindowCalls `json:"calls"`
+	// GeneratorLagMilliseconds is the longest the simulator's own scheduling ran late in the
+	// window. A long lag beside a slow call means the delay may not be control's.
+	GeneratorLagMilliseconds float64 `json:"generator_lag_max_milliseconds"`
 }
 
 // Report is the result of a run.
@@ -160,6 +165,7 @@ type Recorder struct {
 	mu     sync.Mutex
 	report Report
 	window map[string]*WindowCalls
+	lag    time.Duration
 }
 
 // New starts a report for agents agents.
@@ -183,8 +189,17 @@ func (r *Recorder) CloseWindow(end, connected, onStream int) {
 	for _, c := range r.window {
 		c.P99Milliseconds = c.latency.summary().P99
 	}
-	r.report.Windows = append(r.report.Windows, Window{EndSeconds: end, Connected: connected, OnStream: onStream, Calls: r.window})
+	r.report.Windows = append(r.report.Windows, Window{EndSeconds: end, Connected: connected, OnStream: onStream, Calls: r.window, GeneratorLagMilliseconds: ms(r.lag)})
 	r.window = map[string]*WindowCalls{}
+	r.lag = 0
+}
+
+// ObserveLag records how late the simulator's scheduling ran, keeping the current window's
+// longest.
+func (r *Recorder) ObserveLag(d time.Duration) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.lag = max(r.lag, d)
 }
 
 func (r *Recorder) calls(name string) *Calls {
