@@ -254,6 +254,11 @@ runtime:
     resync_interval_seconds: 300
     # Full resyncs granted per second across the fleet; integer 1..10000.
     resync_per_second: 20
+    # How often last-seen times and the latest reports reach the database. A node's
+    # heartbeat interval must fit the online window less this (ADR 0022).
+    liveness_flush_seconds: 3
+    # The longest a node's unchanged state goes without a synchronous write and its checks.
+    state_refresh_seconds: 300
   models:
     maximum_attempts: 3
     maximum_bundle_bytes: 2147483648
@@ -392,6 +397,16 @@ task_events:
 #   request_timeout_seconds: 5
 #   queue_capacity: 4096
 #   metrics_push_interval_seconds: 15
+
+# Optional. NATS JetStream that gateways share node sightings through (ADR 0022). One gateway
+# needs none. servers are tls:// URLs; replicas is 1, 3 or 5; the seed file must be private.
+# liveness_replica:
+#   servers: [tls://10.0.0.11:4222, tls://10.0.0.12:4222, tls://10.0.0.13:4222]
+#   server_name: liveness.internal
+#   ca_file: /run/projectone/liveness-ca.pem
+#   nkey_seed_file: /run/projectone/liveness-nkey.seed
+#   bucket: ownsolid-liveness
+#   replicas: 3
 
 # M30 owner: optional canonical absolute protected JSON file, no default.
 # Omit to disable diagnostics; present empty/null/false/relative values fail.

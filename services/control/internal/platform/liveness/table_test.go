@@ -89,6 +89,47 @@ func TestRestoreKeepsTheNewerReportAndTheForgotten(t *testing.T) {
 	}
 }
 
+func TestAcceptDropsAnOlderPendingReport(t *testing.T) {
+	l := table(t, base)
+	l.Observe("n", base, "old")
+	l.Accept("n", [32]byte{1}, base.Add(time.Second), base.Add(time.Second))
+	if got := l.Drain(10); len(got) != 1 || got[0].HasReport || !got[0].At.Equal(base.Add(time.Second)) {
+		t.Fatalf("the older report survived a durable write: %+v", got)
+	}
+
+	// A batch that failed before the durable write must not bring its report back.
+	l.Observe("n", base.Add(2*time.Second), "pending")
+	failed := l.Drain(10)
+	l.Accept("n", [32]byte{2}, base.Add(3*time.Second), base.Add(3*time.Second))
+	l.Restore(failed)
+	got := l.Drain(10)
+	if len(got) != 1 || got[0].HasReport {
+		t.Fatalf("report older than the durable write came back: %+v", got)
+	}
+
+	// A durable write older than the pending report leaves that report in place.
+	l.Observe("n", base.Add(5*time.Second), "newer")
+	l.Accept("n", [32]byte{3}, base.Add(4*time.Second), base.Add(4*time.Second))
+	if got = l.Drain(10); len(got) != 1 || !got[0].HasReport || got[0].Report != "newer" {
+		t.Fatalf("newer report lost: %+v", got)
+	}
+}
+
+func TestTouchKeepsThePendingReportAndItsTime(t *testing.T) {
+	l := table(t, base)
+	l.Observe("n", base, "report")
+	l.Touch("n", base.Add(time.Second))
+	l.Touch("n", base)
+	got := l.Drain(10)
+	if len(got) != 1 || !got[0].HasReport || got[0].Report != "report" || !got[0].At.Equal(base.Add(time.Second)) || !got[0].ReportAt.Equal(base) {
+		t.Fatalf("drained %+v", got)
+	}
+	l.Touch("n", base.Add(2*time.Second))
+	if got = l.Drain(10); len(got) != 1 || got[0].HasReport {
+		t.Fatalf("drained a report twice: %+v", got)
+	}
+}
+
 func TestMergeIsNotDrained(t *testing.T) {
 	l := table(t, base)
 	l.Merge("n", base.Add(time.Minute))
@@ -116,15 +157,11 @@ func TestUnchangedRequiresTheSameRecentState(t *testing.T) {
 	if l.Unchanged("n", a, base, time.Minute) {
 		t.Fatal("unknown node reported unchanged")
 	}
-	l.Accept("n", a, base)
-	if l.Size() != 0 {
-		t.Fatal("accept created a node that was never heard")
-	}
 	l.Observe("n", base, "")
 	if l.Unchanged("n", [32]byte{}, base, time.Minute) {
 		t.Fatal("node with no written state reported unchanged")
 	}
-	l.Accept("n", a, base)
+	l.Accept("n", a, base, base)
 	if !l.Unchanged("n", a, base.Add(time.Minute), time.Minute) {
 		t.Fatal("same digest within the age refused")
 	}
@@ -228,7 +265,8 @@ func TestConcurrentUse(t *testing.T) {
 				at := base.Add(time.Duration(w*i) * time.Millisecond)
 				l.Observe(node, at, "r")
 				l.Merge(node, at)
-				l.Accept(node, [32]byte{byte(w)}, at)
+				l.Accept(node, [32]byte{byte(w)}, at, at)
+				l.Touch(node, at)
 				l.Unchanged(node, [32]byte{byte(w)}, at, time.Minute)
 				if i%100 == 0 {
 					l.Restore(l.Drain(10))

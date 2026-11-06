@@ -82,6 +82,9 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 	if e := h.Validate(); e != nil {
 		return wire.Disposition{}, e
 	}
+	if out, ok := s.heartbeatUnchanged(ctx, id, credential, h); ok {
+		return out, nil
+	}
 	var out wire.Disposition
 	e := s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
 		if h.ProtocolVersion != n.ProtocolVersion || h.Profile() != n.ExecutionProfile || !slices.Equal(h.Capabilities, n.Capabilities) {
@@ -133,6 +136,7 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 		return wire.Disposition{}, e
 	}
 	out.ServerTime = out.ServerTime.UTC()
+	s.acceptHeartbeat(id, h, out.ServerTime)
 	pacing := s.currentPacing(ctx)
 	out.Pacing = &pacing
 	return out, nil
@@ -259,8 +263,7 @@ func (s *Service) renewSelected(ctx context.Context, id, credential, taskID, lea
 		if e = q.QueryRow(ctx, nodeSQL(q, `SELECT lease_expires_at,GREATEST(0,floor(extract(epoch FROM (lease_expires_at-clock_timestamp()))*1000))::integer FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4`, `SELECT lease_expires_at,GREATEST(0,TIMESTAMPDIFF(MICROSECOND,UTC_TIMESTAMP(6),lease_expires_at) DIV 1000) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, `SELECT lease_expires_at,CAST(GREATEST(0,FLOOR(BIGDATEDIFF(MICROSECOND,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),lease_expires_at) / 1000)) AS BIGINT) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, n.TenantID, n.WorkspaceID, n.ID, t.ID)).Scan(&out.LeaseExpiresAt, &out.ValidForMilliseconds); e != nil {
 			return e
 		}
-		_, e = q.Exec(ctx, nodeSQL(q, `UPDATE managed_nodes SET last_heartbeat_at=clock_timestamp(),updated_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3`, `UPDATE managed_nodes SET last_heartbeat_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND id=?`, `UPDATE managed_nodes SET last_heartbeat_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND id=?`, n.TenantID, n.WorkspaceID, n.ID))
-		return e
+		return s.noteContactWithin(ctx, q, n.ID)
 	})
 	if e != nil {
 		return wire.RenewedLease{}, e

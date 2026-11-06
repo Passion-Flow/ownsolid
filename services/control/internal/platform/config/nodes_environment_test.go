@@ -18,6 +18,7 @@ var nodeEnvironmentBounds = []struct {
 	{nodeJoinTTLEnvironment, 60, 3600, 900}, {nodeOnlineEnvironment, 20, 300, 45},
 	{nodeOfflineEnvironment, 30, 3600, 180}, {nodeTaskEnvironment, 120, 1800, 400},
 	{nodeReconcileEnvironment, 1, 60, 11}, {nodeReconcileTimeoutEnvironment, 1, 30, 6},
+	{nodeStateRefreshEnvironment, 30, 3600, 301},
 	{uiPageEnvironment, 1, 100, 7}, {uiPollEnvironment, 1000, 60000, 2700},
 }
 
@@ -116,5 +117,26 @@ func TestNodeEnvironmentDoesNotMaskInvalidBaseYAML(t *testing.T) {
 		if _, e = decodeWithEnvironment(raw, workspaceEnvironmentFixture(t, field+"=30\n")); e == nil || !strings.HasPrefix(e.Error(), "CONFIG_") || e.Error() == "CONFIG_POLICY_ENVIRONMENT_INVALID" {
 			t.Fatal("override masked invalid base YAML", e)
 		}
+	}
+}
+
+func TestLivenessFlushMustFitTheOnlineWindow(t *testing.T) {
+	raw := workspaceConfigInput(t)
+	for _, c := range []struct {
+		online, flush int
+		valid         bool
+	}{{20, 3, true}, {20, 4, false}, {60, 10, true}, {60, 11, false}, {60, 0, false}} {
+		body := nodeEnvironmentBody(map[string]int{nodeOnlineEnvironment: c.online, nodeLivenessFlushEnvironment: c.flush})
+		decoded, e := decodeWithEnvironment(raw, workspaceEnvironmentFixture(t, body))
+		if c.valid != (e == nil) {
+			t.Errorf("online %d flush %d: %v", c.online, c.flush, e)
+		}
+		if e == nil && decoded.Policy().Nodes.PacingWindowSeconds() != c.online-c.flush {
+			t.Errorf("online %d flush %d: window %d", c.online, c.flush, decoded.Policy().Nodes.PacingWindowSeconds())
+		}
+	}
+	values := map[string]int{nodeStateRefreshEnvironment: 29}
+	if _, e := decodeWithEnvironment(raw, workspaceEnvironmentFixture(t, nodeEnvironmentBody(values))); e == nil {
+		t.Error("a state refresh under its bound was accepted")
 	}
 }

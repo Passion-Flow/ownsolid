@@ -85,7 +85,7 @@ func TestLineageUpgradeKeepsChosenThemesOnly(t *testing.T) {
 
 // Migration 000035 counts the live nodes that already exist; removed nodes do not count.
 func TestLineageUpgradeCountsLiveNodes(t *testing.T) {
-	s := fixture.NewAtVersion(t, database.SchemaVersion-1)
+	s := fixture.NewAtVersion(t, 34) // before 000035
 	fixture.Bootstrap(t, s)
 	ctx := t.Context()
 	seed := newTaskSeed(t, s)

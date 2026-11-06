@@ -168,6 +168,7 @@ func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request str
 	if e != nil {
 		return wire.Enrolled{}, enrollmentError(e)
 	}
+	s.noteEnrolled(out.NodeID)
 	return out, nil
 }
 

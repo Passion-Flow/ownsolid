@@ -6,22 +6,25 @@ import (
 )
 
 type Node struct {
-	ID               string     `json:"id"`
-	SiteID           string     `json:"site_id"`
-	CellID           string     `json:"cell_id"`
-	TenantID         string     `json:"tenant_id"`
-	WorkspaceID      string     `json:"workspace_id"`
-	Name             string     `json:"name"`
-	Status           string     `json:"status"`
-	Connectivity     string     `json:"connectivity"`
-	Version          int64      `json:"version"`
-	ProtocolVersion  string     `json:"protocol_version"`
-	ExecutionProfile string     `json:"execution_profile"`
-	Capabilities     []string   `json:"capabilities"`
-	Facts            wire.Facts `json:"facts"`
-	LastHeartbeatAt  time.Time  `json:"last_heartbeat_at"`
-	CreatedAt        time.Time  `json:"created_at"`
-	UpdatedAt        time.Time  `json:"updated_at"`
+	ID           string `json:"id"`
+	SiteID       string `json:"site_id"`
+	CellID       string `json:"cell_id"`
+	TenantID     string `json:"tenant_id"`
+	WorkspaceID  string `json:"workspace_id"`
+	Name         string `json:"name"`
+	Status       string `json:"status"`
+	Connectivity string `json:"connectivity"`
+	// ConnectivityChangedAt is when control last recorded a change of connectivity. It is
+	// history: Connectivity is derived from LastHeartbeatAt and may be ahead of it.
+	ConnectivityChangedAt *time.Time `json:"connectivity_changed_at"`
+	Version               int64      `json:"version"`
+	ProtocolVersion       string     `json:"protocol_version"`
+	ExecutionProfile      string     `json:"execution_profile"`
+	Capabilities          []string   `json:"capabilities"`
+	Facts                 wire.Facts `json:"facts"`
+	LastHeartbeatAt       time.Time  `json:"last_heartbeat_at"`
+	CreatedAt             time.Time  `json:"created_at"`
+	UpdatedAt             time.Time  `json:"updated_at"`
 }
 type JoinToken struct {
 	ID               string    `json:"id"`
