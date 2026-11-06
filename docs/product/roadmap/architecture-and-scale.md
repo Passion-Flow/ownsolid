@@ -50,6 +50,7 @@ agents is not.
 - [ ] ARC-107 Gateway connection lifecycle: maximum connection age with jitter, GOAWAY drain, and rebalancing after a gateway roll so long-lived streams do not pile onto old gateways (P1)
 - [ ] ARC-108 Measure the component, inference, model preparation and image registry operations in the agent cost test, so every operation of every call has an exchange (P1)
 - [ ] ARC-109 Cut the declared cost of claims, event batches and upload chunks, which repeat the same authority checks: one check per call, one per batch (P1)
+- [ ] ARC-110 A listener per entrance: the admin console, the portal, the model gateway and the agent endpoint can each bind their own address and port, so a site can firewall and scale them apart; four hostnames on one TLS port stays the default ([ADR 0027](../../decisions/0027-entrance-addresses.md)) (P1)
 
 ## P2 Fleet operations
 

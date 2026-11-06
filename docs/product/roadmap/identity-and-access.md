@@ -21,6 +21,7 @@ agents. Every check happens on the server.
 - [ ] IAM-111 Session management: idle and absolute timeout, device list, forced sign-out, revocation propagation (P1) - Catalog: F454, F571
 - [ ] IAM-112 Separate Admin and Portal entrances with audience-bound sessions (P1) - Catalog: F424, F432, F545
 - [ ] IAM-113 Enable single sign-on from the typed install configuration: `ownsolid-install` has no input for providers, their CA or the keyring, so an installed product cannot turn it on (P1)
+- [ ] IAM-114 Refuse two browser entrances on one hostname unless the deployment opts in, because browsers do not isolate cookies by port; the opt-in, the sign-in page and the operator documentation state that the audience check is then the only separation ([ADR 0027](../../decisions/0027-entrance-addresses.md)) (P1)
 
 ## P2 Fleet operations
 

@@ -37,6 +37,8 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 - [ ] DEL-111 Diagnostic support bundle command that collects host, cluster and application state with secrets redacted and works while the console is down (P1)
 - [ ] DEL-112 Bundle signature verification against a pinned offline trust root, with signed root rotation and a clear refusal for expired or unknown roots (P1)
 - [ ] DEL-113 Upgrade bundle upload through the console as well as the command line, both ending at the same preflight screen (P1)
+- [ ] DEL-114 Install configuration covers the whole address and transport matrix: a hostname per entrance, published ports, deployments reached by IP address with the address as a certificate name, plain HTTP for an isolated laboratory, and TLS terminated by a trusted proxy with explicit proxy ranges (P1)
+- [ ] DEL-115 Change an entrance address after install: reissue the certificate, reconcile single sign-on callbacks, invalidate affected sessions and roll back, without editing files by hand (P1)
 
 ## P2 Fleet operations
 
