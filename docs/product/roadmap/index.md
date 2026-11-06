@@ -24,7 +24,7 @@ works in its own worktree (AGENTS.md section 10).
 | Lane | Items, in order | Code it owns |
 | --- | --- | --- |
 | A. Fleet core | ARC-006 to ARC-016, then REL-001 | `api/agent`, agent client and runtime, control platform and node modules, `tools/dev/simulator` |
-| B. Web console | UX-001 to UX-005, then tick DEL-001; then the P1 console foundations UX-115, UX-116, UX-112, UX-118, UX-120, UX-119, UX-113, UX-110, UX-109 ([ADR 0015](../../decisions/0015-web-lane-after-p0.md)); then UX-121, UX-103, UX-114, UX-107, UX-105, UX-104 ([ADR 0026](../../decisions/0026-web-lane-second-foundations.md)); then FLT-114, FLT-113, IAM-115, DEL-116, UX-101 ([ADR 0031](../../decisions/0031-web-lane-first-module-pages.md)) | `web/`, `deploy/images/control` web build, `docs/development/design-system.md` |
+| B. Web console | UX-001 to UX-005, then tick DEL-001; then the P1 console foundations UX-115, UX-116, UX-112, UX-118, UX-120, UX-119, UX-113, UX-110, UX-109 ([ADR 0015](../../decisions/0015-web-lane-after-p0.md)); then UX-121, UX-103, UX-114, UX-107, UX-105, UX-104 ([ADR 0026](../../decisions/0026-web-lane-second-foundations.md)); then FLT-114, FLT-113, IAM-115, DEL-116, UX-101 ([ADR 0031](../../decisions/0031-web-lane-first-module-pages.md)); then AUD-110, IAM-116, IAM-117, UX-122, UX-106 ([ADR 0034](../../decisions/0034-web-lane-governance-pages.md)) | `web/`, `deploy/images/control` web build, `docs/development/design-system.md` |
 | C. Delivery and telemetry | DEL-002, OBS-001, OBS-002, REL-002, DEL-003 | `tests/e2e` egress harness, `deploy/`, monitoring modules, `services/control/internal/operations` |
 
 DEL-003 changes agent container networking: coordinate with lane A by keeping the change
