@@ -86,6 +86,21 @@ test.describe('filter bar', () => {
     await expect(page.getByRole('row', { name: /ada@example\.test/ })).toBeVisible();
   });
 
+  test('keeps a filter chosen while the search is still waiting to apply', async ({ page }) => {
+    control.mail = [failedMail, secondFailedMail, sentMail];
+    await page.goto('/mail?recipient=gr');
+    await expect(page.getByRole('row', { name: /hedy@example\.test/ })).toHaveCount(0);
+    await page.getByLabel('Filter by recipient').fill('');
+    await page
+      .getByRole('group', { name: 'Show emails' })
+      .getByRole('button', { name: 'Failed' })
+      .click();
+    await expect(page.getByRole('row', { name: /hedy@example\.test/ })).toBeVisible();
+    await page.waitForTimeout(400);
+    await expect(page).toHaveURL(/\?state=failed$/);
+    await expect(page.getByRole('row', { name: /ada@example\.test/ })).toHaveCount(0);
+  });
+
   test('remembers the screen in this browser', async ({ page }) => {
     await page.goto('/mail');
     await page

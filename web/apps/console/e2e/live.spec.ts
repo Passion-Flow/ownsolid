@@ -182,6 +182,8 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
       return response.status;
     }, invitee);
     expect(invited).toBe(201);
+    const showEmails = page.getByRole('group', { name: 'Show emails' });
+    await showEmails.getByRole('button', { name: 'All' }).click();
     await page.getByLabel('Filter by recipient').fill(invitee);
     await page.getByRole('button', { name: `Show details of the email to ${invitee}` }).click();
     await page.getByRole('button', { name: 'Revoke the invitation' }).click();
@@ -193,6 +195,7 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
       page.getByRole('status').filter({ hasText: `Invitation to ${invitee} revoked` }),
     ).toBeVisible();
     await page.getByLabel('Filter by recipient').fill('');
+    await showEmails.getByRole('button', { name: 'Failed' }).click();
     const failed = page
       .getByRole('row')
       .filter({ hasText: 'The mail server could not be reached' });
