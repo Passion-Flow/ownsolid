@@ -14,6 +14,7 @@ Platform packages provide bounded shared mechanisms. Domain owners still decide 
 | liveness | In-memory table of when each node was last heard, its latest report and its recorded connectivity, so heartbeats cost no database write ([ADR 0022](../../../../docs/decisions/0022-liveness-outside-the-database.md)) |
 | [localization](localization/README.md) | Offline locale/resource/font inventory admission and serving metadata |
 | [mail](mail/README.md) | Encrypted durable outbox, rendered templates and SMTP transport |
+| outbox | Transactional outbox: append in the caller's transaction, read below the oldest running transaction, trim by age ([ADR 0028](../../../../docs/decisions/0028-task-wakes-through-an-outbox.md)) |
 | [modelcache](modelcache/README.md) | Bounded single-instance Valkey RESP2 adapter for derived model-directory caching; never business model ownership |
 | [monitoringmetrics](monitoringmetrics/README.md) | Bounded HTTP measurement/recorder used by the monitoring domain |
 | [objectstore](objectstore/README.md) | Private configured S3 transport and staging for server-resolved object identities |

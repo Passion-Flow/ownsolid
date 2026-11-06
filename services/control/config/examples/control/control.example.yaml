@@ -248,7 +248,7 @@ runtime:
     maximum_task_attempts: 3
     # Maximum node IDs examined in one expiry sweep; integer 1..1000.
     task_sweep_batch: 100
-    reconcile_seconds: 10
+    reconcile_seconds: 30
     reconcile_timeout_seconds: 5
     # Deliveries of a lease the agent never acknowledged before the task fails; integer 1..100.
     maximum_task_deliveries: 10
@@ -261,6 +261,10 @@ runtime:
     liveness_flush_seconds: 3
     # The longest a node's unchanged state goes without a synchronous write and its checks.
     state_refresh_seconds: 300
+    # How often each gateway reads the outbox of task wakes, and how long an event stays for a
+    # late reader (ADR 0028).
+    outbox_poll_milliseconds: 200
+    outbox_retention_seconds: 300
   models:
     maximum_attempts: 3
     maximum_bundle_bytes: 2147483648

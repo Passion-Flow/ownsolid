@@ -14,7 +14,7 @@ const waitNode = "0d6f2c52-7f43-4b5e-9a7d-5e9c1f3b2a11"
 
 func TestClaimWithoutWaitClaimsOnce(t *testing.T) {
 	var calls atomic.Int32
-	out, e := waitForClaim(context.Background(), &wakeHub{}, waitNode, 0, func() (wire.Claim, error) { calls.Add(1); return wire.Claim{}, nil })
+	out, e := waitForClaim(context.Background(), &wakeHub{}, waitNode, 0, claimSettle, func() (wire.Claim, error) { calls.Add(1); return wire.Claim{}, nil })
 	if e != nil || out.Lease != nil || calls.Load() != 1 {
 		t.Fatalf("claim %+v %v calls %d", out, e, calls.Load())
 	}
@@ -37,7 +37,7 @@ func TestWaitingClaimReturnsWorkWhenATaskIsWritten(t *testing.T) {
 		hub.wake(waitNode)
 	}()
 	started := time.Now()
-	out, e := waitForClaim(context.Background(), hub, waitNode, 5*time.Second, claim)
+	out, e := waitForClaim(context.Background(), hub, waitNode, 5*time.Second, claimSettle, claim)
 	if e != nil || out.Lease == nil || out.Lease.TaskID != "task" {
 		t.Fatalf("claim %+v %v", out, e)
 	}
@@ -57,7 +57,7 @@ func TestWaitingClaimReturnsWorkWhenATaskIsWritten(t *testing.T) {
 func TestWaitingClaimEndsEmptyAtItsWait(t *testing.T) {
 	hub := &wakeHub{}
 	started := time.Now()
-	out, e := waitForClaim(context.Background(), hub, waitNode, 150*time.Millisecond, func() (wire.Claim, error) { return wire.Claim{}, nil })
+	out, e := waitForClaim(context.Background(), hub, waitNode, 150*time.Millisecond, claimSettle, func() (wire.Claim, error) { return wire.Claim{}, nil })
 	if e != nil || out.Lease != nil {
 		t.Fatalf("claim %+v %v", out, e)
 	}
@@ -72,14 +72,14 @@ func TestWaitingClaimEndsEmptyAtItsWait(t *testing.T) {
 func TestWaitingClaimStopsWithItsRequest(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
-	out, e := waitForClaim(ctx, &wakeHub{}, waitNode, 10*time.Second, func() (wire.Claim, error) { return wire.Claim{}, nil })
+	out, e := waitForClaim(ctx, &wakeHub{}, waitNode, 10*time.Second, claimSettle, func() (wire.Claim, error) { return wire.Claim{}, nil })
 	if e != nil || out.Lease != nil {
 		t.Fatalf("claim %+v %v", out, e)
 	}
 }
 
 func TestWaitingClaimReturnsClaimErrors(t *testing.T) {
-	_, e := waitForClaim(context.Background(), &wakeHub{}, waitNode, time.Second, func() (wire.Claim, error) { return wire.Claim{}, errors.New("AGENT_UNAUTHORIZED") })
+	_, e := waitForClaim(context.Background(), &wakeHub{}, waitNode, time.Second, claimSettle, func() (wire.Claim, error) { return wire.Claim{}, errors.New("AGENT_UNAUTHORIZED") })
 	if e == nil || e.Error() != "AGENT_UNAUTHORIZED" {
 		t.Fatalf("error %v", e)
 	}

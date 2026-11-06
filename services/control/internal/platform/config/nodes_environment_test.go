@@ -17,8 +17,9 @@ var nodeEnvironmentBounds = []struct {
 	{nodeMaximumLiveJoinEnvironment, 1, 10000, 3},
 	{nodeJoinTTLEnvironment, 60, 3600, 900}, {nodeOnlineEnvironment, 20, 300, 45},
 	{nodeOfflineEnvironment, 30, 3600, 180}, {nodeTaskEnvironment, 120, 1800, 400},
-	{nodeReconcileEnvironment, 1, 60, 11}, {nodeReconcileTimeoutEnvironment, 1, 30, 6},
+	{nodeReconcileEnvironment, 1, 300, 11}, {nodeReconcileTimeoutEnvironment, 1, 30, 6},
 	{nodeStateRefreshEnvironment, 30, 3600, 301},
+	{nodeOutboxPollEnvironment, 50, 5000, 300}, {nodeOutboxRetentionEnvironment, 60, 86400, 600},
 	{uiPageEnvironment, 1, 100, 7}, {uiPollEnvironment, 1000, 60000, 2700},
 }
 
