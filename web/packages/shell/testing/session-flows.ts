@@ -172,6 +172,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
       density: 'compact',
       locale: 'auto',
       single_key_shortcuts: true,
+      navigation_collapsed: false,
       revision: 4,
     };
     await page.emulateMedia({ colorScheme: 'light' });
@@ -199,6 +200,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
       density: 'compact',
       locale: 'auto',
       single_key_shortcuts: true,
+      navigation_collapsed: false,
       revision: 9,
     };
     await page.evaluate(() => {
@@ -218,6 +220,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
       density: 'comfortable',
       locale: 'auto',
       single_key_shortcuts: true,
+      navigation_collapsed: false,
       revision: 7,
     };
     await page.getByRole('button', { name: 'Use the dark theme' }).click();

@@ -283,6 +283,9 @@ with `OWNSOLID_LIVE_OFFLINE_NODE=true` and the variables above.
 It starts one task, so it needs a joined node with a running agent: name it in
 `OWNSOLID_LIVE_SEARCH_NODE`, with the variables above.
 
+`live-navigation.spec.ts` needs only the variables above: it opens and filters the sidebar, collapses it, and
+finds the choice in a second browser. It leaves the sidebar open.
+
 `live-idle.spec.ts` waits out a real idle timeout with the page's poll running, so it needs a
 short one. Add this to the installation's `control.yaml`, restart control, and run it with
 `OWNSOLID_LIVE_IDLE_SECONDS=60 OWNSOLID_LIVE_WARNING_SECONDS=30`. It takes about three minutes,

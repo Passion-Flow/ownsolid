@@ -41,7 +41,7 @@ export type Preference = preferencesContract.components['schemas']['Preference']
 
 /** The account fields to change; fields left out keep their saved value. */
 export type PreferenceChange = Partial<
-  Pick<Preference, 'theme' | 'density' | 'locale' | 'single_key_shortcuts'>
+  Pick<Preference, 'theme' | 'density' | 'locale' | 'single_key_shortcuts' | 'navigation_collapsed'>
 >;
 
 /** A named state of one list: its filters and columns. */

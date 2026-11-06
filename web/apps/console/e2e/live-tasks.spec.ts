@@ -34,7 +34,8 @@ test('watches a task on a real agent, leaves it and is told how it ended', async
 
   execSync(stopAgent, { stdio: 'ignore' });
   try {
-    await page.getByRole('link', { name: 'Tasks' }).click();
+    await page.getByRole('button', { name: 'Operations', exact: true }).click();
+    await page.getByRole('navigation').getByRole('link', { name: 'Tasks' }).click();
     await expect(page.getByRole('heading', { name: 'Tasks', level: 1 })).toBeVisible();
     await page.getByRole('button', { name: 'Collect node facts' }).click();
     const dialog = page.getByRole('dialog', { name: 'Collect node facts' });
@@ -45,7 +46,8 @@ test('watches a task on a real agent, leaves it and is told how it ended', async
     await expectAccessible(page);
 
     // The page is left while the task waits, and the top bar keeps track of it.
-    await page.getByRole('link', { name: 'Settings' }).click();
+    await page.getByRole('button', { name: 'System', exact: true }).click();
+    await page.getByRole('navigation').getByRole('link', { name: 'Settings' }).click();
     await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
     await expect(page.getByRole('button', { name: /of your tasks running/ })).toBeVisible();
   } finally {

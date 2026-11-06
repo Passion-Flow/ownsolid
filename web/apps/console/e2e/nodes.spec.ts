@@ -25,6 +25,7 @@ const open = (page: Page, name: string) =>
 test.describe('the list', () => {
   test('is reached from the navigation and shows each node as it stands', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Infrastructure', exact: true }).click();
     await page.getByRole('link', { name: 'Nodes', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Nodes', level: 1 })).toBeFocused();
     await expect(row(page, 'gpu-a02')).toContainText('Online');

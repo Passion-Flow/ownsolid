@@ -24,6 +24,7 @@ const openEvent = (page: Page, action: string) =>
 
 test('is reached from the navigation and names people, not IDs', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Governance', exact: true }).click();
   await page.getByRole('navigation').getByRole('link', { name: 'Audit trail' }).click();
   await expect(page.getByRole('heading', { name: 'Audit trail', level: 1 })).toBeFocused();
   const row = rows(page).filter({ hasText: 'license.imported' });

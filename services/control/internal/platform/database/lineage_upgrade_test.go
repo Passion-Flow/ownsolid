@@ -84,6 +84,29 @@ func TestLineageUpgradeKeepsChosenThemesOnly(t *testing.T) {
 }
 
 
+// Migration 000046 leaves the sidebar open for everyone and changes no one's revision.
+func TestLineageUpgradeLeavesNavigationOpenWithoutARevision(t *testing.T) {
+	s := fixture.NewAtVersion(t, 45) // before 000046
+	fixture.Bootstrap(t, s)
+	ctx := t.Context()
+	var user string
+	var before int64
+	if e := s.DB.QueryRow(ctx, "SELECT user_id::text,revision FROM user_preferences LIMIT 1").Scan(&user, &before); e != nil {
+		t.Fatal(e)
+	}
+	if e := database.Migrate(ctx, s.DB); e != nil {
+		t.Fatal(e)
+	}
+	var collapsed bool
+	var after int64
+	if e := s.DB.QueryRow(ctx, "SELECT navigation_collapsed,revision FROM user_preferences WHERE user_id=$1", user).Scan(&collapsed, &after); e != nil {
+		t.Fatal(e)
+	}
+	if collapsed || after != before {
+		t.Fatal(collapsed, before, after)
+	}
+}
+
 // Migration 000045 leaves shortcuts on for everyone and changes no one's revision: nobody chose it.
 func TestLineageUpgradeLeavesShortcutsOnWithoutARevision(t *testing.T) {
 	s := fixture.NewAtVersion(t, 44) // before 000045

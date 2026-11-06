@@ -64,12 +64,14 @@ function Sync({ userId }: { userId: string }) {
 
   useEffect(
     () =>
-      connect(({ singleKeyShortcuts, ...appearance }) => {
-        sync.save(
-          singleKeyShortcuts === undefined
-            ? appearance
-            : { ...appearance, single_key_shortcuts: singleKeyShortcuts },
-        );
+      connect(({ singleKeyShortcuts, navigationCollapsed, ...appearance }) => {
+        sync.save({
+          ...appearance,
+          ...(singleKeyShortcuts === undefined ? {} : { single_key_shortcuts: singleKeyShortcuts }),
+          ...(navigationCollapsed === undefined
+            ? {}
+            : { navigation_collapsed: navigationCollapsed }),
+        });
       }),
     [connect, sync],
   );
@@ -86,6 +88,7 @@ function Sync({ userId }: { userId: string }) {
       theme: data.theme,
       density: data.density,
       singleKeyShortcuts: data.single_key_shortcuts,
+      navigationCollapsed: data.navigation_collapsed,
     });
     adoptLocale(data.locale);
   }, [data, adopt, adoptLocale, sync]);

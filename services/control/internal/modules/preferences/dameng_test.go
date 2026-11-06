@@ -110,9 +110,10 @@ func TestDamengPreferenceRefusesWhatItsChainCannotStore(t *testing.T) {
 	at := time.Date(2026, 10, 24, 7, 0, 0, 0, time.UTC)
 	old := Preference{Theme: LightTheme, Density: ComfortableDensity, SingleKeyShortcuts: true, Revision: 1, UpdatedAt: at}
 	for name, input := range map[string]UpdateRequest{
-		"system_theme":    {Theme: new(SystemTheme), ExpectedRevision: 1},
-		"compact_density": {Density: new(CompactDensity), ExpectedRevision: 1},
-		"shortcuts_off":   {SingleKeyShortcuts: new(false), ExpectedRevision: 1},
+		"system_theme":     {Theme: new(SystemTheme), ExpectedRevision: 1},
+		"compact_density":  {Density: new(CompactDensity), ExpectedRevision: 1},
+		"shortcuts_off":    {SingleKeyShortcuts: new(false), ExpectedRevision: 1},
+		"navigation_icons": {NavigationCollapsed: new(true), ExpectedRevision: 1},
 	} {
 		t.Run(name, func(t *testing.T) {
 			q := &nativePreferenceExecutor{t: t, rows: []nativePreferenceRow{{old, nil}}}

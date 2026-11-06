@@ -147,7 +147,7 @@ test('adds a node with the commands on the page and works with it', async ({ pag
   await expect
     .poll(() => pacingLog().trim().split('\n').at(-1) ?? '', { timeout: 60_000 })
     .toContain(`heartbeat_seconds=${before} `);
-  await page.getByRole('link', { name: 'Nodes', exact: true }).last().click();
+  await page.getByRole('navigation').getByRole('link', { name: 'Nodes', exact: true }).click();
   await page.getByLabel('Filter by name').fill(renamed);
 
   // A token nobody used is listed and revoked.

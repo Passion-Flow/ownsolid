@@ -43,19 +43,22 @@ type Preference struct {
 	Locale  string `json:"locale"`
 	// SingleKeyShortcuts turns the console's one-character shortcuts on, as WCAG 2.2
 	// criterion 2.1.4 requires a person to be able to turn them off.
-	SingleKeyShortcuts bool      `json:"single_key_shortcuts"`
-	Revision           int64     `json:"revision"`
-	UpdatedAt          time.Time `json:"updated_at"`
+	SingleKeyShortcuts bool `json:"single_key_shortcuts"`
+	// NavigationCollapsed keeps the sidebar to its icons.
+	NavigationCollapsed bool      `json:"navigation_collapsed"`
+	Revision            int64     `json:"revision"`
+	UpdatedAt           time.Time `json:"updated_at"`
 }
 
 // UpdateRequest changes the fields it names and keeps the others, so two browsers that
 // change different fields do not overwrite each other.
 type UpdateRequest struct {
-	Theme              *string `json:"theme,omitempty"`
-	Density            *string `json:"density,omitempty"`
-	Locale             *string `json:"locale,omitempty"`
-	SingleKeyShortcuts *bool   `json:"single_key_shortcuts,omitempty"`
-	ExpectedRevision   int64   `json:"expected_revision"`
+	Theme               *string `json:"theme,omitempty"`
+	Density             *string `json:"density,omitempty"`
+	Locale              *string `json:"locale,omitempty"`
+	SingleKeyShortcuts  *bool   `json:"single_key_shortcuts,omitempty"`
+	NavigationCollapsed *bool   `json:"navigation_collapsed,omitempty"`
+	ExpectedRevision    int64   `json:"expected_revision"`
 }
 
 func validTheme(theme string) bool {
@@ -68,7 +71,7 @@ func validLocale(locale string) bool {
 	return locale == AutoLocale || locale == "en" || locale == "zh-CN"
 }
 func (r UpdateRequest) valid() bool {
-	return (r.Theme != nil || r.Density != nil || r.Locale != nil || r.SingleKeyShortcuts != nil) &&
+	return (r.Theme != nil || r.Density != nil || r.Locale != nil || r.SingleKeyShortcuts != nil || r.NavigationCollapsed != nil) &&
 		(r.Theme == nil || validTheme(*r.Theme)) &&
 		(r.Density == nil || validDensity(*r.Density)) &&
 		(r.Locale == nil || validLocale(*r.Locale)) &&
@@ -87,6 +90,9 @@ func (r UpdateRequest) applyTo(p Preference) Preference {
 	if r.SingleKeyShortcuts != nil {
 		p.SingleKeyShortcuts = *r.SingleKeyShortcuts
 	}
+	if r.NavigationCollapsed != nil {
+		p.NavigationCollapsed = *r.NavigationCollapsed
+	}
 	return p
 }
 
@@ -99,7 +105,7 @@ func current(ctx context.Context, tx transaction.Executor, user string) (Prefere
 	p := Preference{Density: ComfortableDensity, Locale: AutoLocale, SingleKeyShortcuts: true}
 	var e error
 	if tx.Dialect() == transaction.PostgreSQL {
-		e = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT theme,density,locale,single_key_shortcuts,revision,updated_at FROM user_preferences WHERE user_id=$1 FOR UPDATE", user)).Scan(&p.Theme, &p.Density, &p.Locale, &p.SingleKeyShortcuts, &p.Revision, &p.UpdatedAt)
+		e = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT theme,density,locale,single_key_shortcuts,navigation_collapsed,revision,updated_at FROM user_preferences WHERE user_id=$1 FOR UPDATE", user)).Scan(&p.Theme, &p.Density, &p.Locale, &p.SingleKeyShortcuts, &p.NavigationCollapsed, &p.Revision, &p.UpdatedAt)
 	} else {
 		e = tx.QueryRow(ctx, preferenceSQL(tx, "", "SELECT theme,revision,updated_at FROM user_preferences WHERE user_id=? FOR UPDATE", "SELECT theme,revision,updated_at FROM user_preferences WHERE user_id=? FOR UPDATE", user)).Scan(&p.Theme, &p.Revision, &p.UpdatedAt)
 	}
@@ -159,7 +165,7 @@ func updateWithin(ctx context.Context, tx transaction.Executor, a identity.Auth,
 		next := input.applyTo(old)
 		switch tx.Dialect() {
 		case transaction.MySQL, transaction.Dameng:
-			if next.Theme == SystemTheme || next.Density != ComfortableDensity || next.Locale != AutoLocale || !next.SingleKeyShortcuts {
+			if next.Theme == SystemTheme || next.Density != ComfortableDensity || next.Locale != AutoLocale || !next.SingleKeyShortcuts || next.NavigationCollapsed {
 				return failure("PREFERENCE_UNAVAILABLE")
 			}
 			changed, e := tx.Exec(ctx, preferenceSQL(tx, "", "UPDATE user_preferences SET theme=?,revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE user_id=? AND revision=?", "UPDATE user_preferences SET theme=?,revision=revision+1,updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE user_id=? AND revision=?", next.Theme, a.Me.User.ID, old.Revision))
@@ -174,7 +180,7 @@ func updateWithin(ctx context.Context, tx transaction.Executor, a identity.Auth,
 				return e
 			}
 		case transaction.PostgreSQL:
-			if e = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "UPDATE user_preferences SET theme=$1,density=$2,locale=$3,single_key_shortcuts=$4,revision=revision+1,updated_at=clock_timestamp() WHERE user_id=$5 AND revision=$6 RETURNING theme,density,locale,single_key_shortcuts,revision,updated_at", next.Theme, next.Density, next.Locale, next.SingleKeyShortcuts, a.Me.User.ID, old.Revision)).Scan(&p.Theme, &p.Density, &p.Locale, &p.SingleKeyShortcuts, &p.Revision, &p.UpdatedAt); e != nil {
+			if e = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "UPDATE user_preferences SET theme=$1,density=$2,locale=$3,single_key_shortcuts=$4,navigation_collapsed=$5,revision=revision+1,updated_at=clock_timestamp() WHERE user_id=$6 AND revision=$7 RETURNING theme,density,locale,single_key_shortcuts,navigation_collapsed,revision,updated_at", next.Theme, next.Density, next.Locale, next.SingleKeyShortcuts, next.NavigationCollapsed, a.Me.User.ID, old.Revision)).Scan(&p.Theme, &p.Density, &p.Locale, &p.SingleKeyShortcuts, &p.NavigationCollapsed, &p.Revision, &p.UpdatedAt); e != nil {
 				return e
 			}
 			p.UpdatedAt = p.UpdatedAt.UTC()
@@ -186,7 +192,7 @@ func updateWithin(ctx context.Context, tx transaction.Executor, a identity.Auth,
 		default:
 			return failure("STORAGE_UNAVAILABLE")
 		}
-		if p.Theme != next.Theme || p.Density != next.Density || p.Locale != next.Locale || p.SingleKeyShortcuts != next.SingleKeyShortcuts || p.Revision != old.Revision+1 {
+		if p.Theme != next.Theme || p.Density != next.Density || p.Locale != next.Locale || p.SingleKeyShortcuts != next.SingleKeyShortcuts || p.NavigationCollapsed != next.NavigationCollapsed || p.Revision != old.Revision+1 {
 			return failure("PREFERENCE_UNAVAILABLE")
 		}
 		changed, e := tx.Exec(ctx, preferenceSQL(tx, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES($1,clock_timestamp(),$2,$3,$4,'preference.updated','success','user_preference',$2,'User appearance preference',$5)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,UTC_TIMESTAMP(6),?,?,?,'preference.updated','success','user_preference',?,'User appearance preference',?)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),?,?,?,'preference.updated','success','user_preference',?,'User appearance preference',?)`, preferenceAuditArgs(tx, uuid.NewString(), a.Me.User.ID, tenant, a.Me.Audience, request)...))

@@ -6,6 +6,7 @@ const saved = (revision: number, change: PreferenceChange = {}): Preference => (
   theme: 'system',
   density: 'comfortable',
   single_key_shortcuts: true,
+  navigation_collapsed: false,
   locale: 'auto',
   revision,
   updated_at: '2026-11-05T00:00:00Z',

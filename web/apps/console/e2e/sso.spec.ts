@@ -32,6 +32,7 @@ async function openConnector(page: Page, name = activeConnector.name) {
 
 test('is reached from the navigation and starts empty with a way to add one', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Governance', exact: true }).click();
   await page.getByRole('navigation').getByRole('link', { name: 'Single sign-on' }).click();
   await expect(page.getByRole('heading', { name: 'Single sign-on', level: 1 })).toBeFocused();
   await expect(page.getByText('No connectors yet')).toBeVisible();

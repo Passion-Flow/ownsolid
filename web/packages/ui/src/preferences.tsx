@@ -20,6 +20,7 @@ export type Density = 'comfortable' | 'compact';
 const themeKey = 'ownsolid.theme';
 const densityKey = 'ownsolid.density';
 const shortcutsKey = 'ownsolid.shortcuts';
+const navigationKey = 'ownsolid.navigation';
 
 function read(key: string): string | null {
   try {
@@ -51,12 +52,18 @@ function storedShortcuts(): boolean {
   return read(shortcutsKey) !== 'off';
 }
 
+function storedNavigationCollapsed(): boolean {
+  return read(navigationKey) === 'collapsed';
+}
+
 /** The choices a user can save. */
 export interface Appearance {
   theme: ThemePreference;
   density: Density;
   /** Whether one-character keyboard shortcuts work. */
   singleKeyShortcuts: boolean;
+  /** Whether the sidebar shows only its icons. */
+  navigationCollapsed: boolean;
 }
 
 /** Receives what the user changes, to save it beyond this browser. */
@@ -67,6 +74,7 @@ export interface Preferences extends Appearance {
   setTheme: (theme: ThemePreference) => void;
   setDensity: (density: Density) => void;
   setSingleKeyShortcuts: (on: boolean) => void;
+  setNavigationCollapsed: (collapsed: boolean) => void;
   /** Applies values saved elsewhere. Unlike the setters, this saves nothing. */
   adopt: (saved: Partial<Appearance>) => void;
   /** Sends later changes to `saver` and returns a function that stops. */
@@ -80,6 +88,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState(storedTheme);
   const [density, setDensityState] = useState(storedDensity);
   const [singleKeyShortcuts, setShortcutsState] = useState(storedShortcuts);
+  const [navigationCollapsed, setNavigationState] = useState(storedNavigationCollapsed);
   const saver = useRef<AppearanceSaver | null>(null);
 
   useLayoutEffect(() => applyTheme(theme), [theme]);
@@ -87,20 +96,27 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.density = density;
   }, [density]);
 
-  const applyChoice = useCallback(({ theme, density, singleKeyShortcuts }: Partial<Appearance>) => {
-    if (theme) {
-      write(themeKey, theme);
-      setThemeState(theme);
-    }
-    if (density) {
-      write(densityKey, density);
-      setDensityState(density);
-    }
-    if (singleKeyShortcuts !== undefined) {
-      write(shortcutsKey, singleKeyShortcuts ? 'on' : 'off');
-      setShortcutsState(singleKeyShortcuts);
-    }
-  }, []);
+  const applyChoice = useCallback(
+    ({ theme, density, singleKeyShortcuts, navigationCollapsed }: Partial<Appearance>) => {
+      if (theme) {
+        write(themeKey, theme);
+        setThemeState(theme);
+      }
+      if (density) {
+        write(densityKey, density);
+        setDensityState(density);
+      }
+      if (singleKeyShortcuts !== undefined) {
+        write(shortcutsKey, singleKeyShortcuts ? 'on' : 'off');
+        setShortcutsState(singleKeyShortcuts);
+      }
+      if (navigationCollapsed !== undefined) {
+        write(navigationKey, navigationCollapsed ? 'collapsed' : 'open');
+        setNavigationState(navigationCollapsed);
+      }
+    },
+    [],
+  );
   const setTheme = useCallback(
     (value: ThemePreference) => {
       applyChoice({ theme: value });
@@ -112,6 +128,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     (value: Density) => {
       applyChoice({ density: value });
       saver.current?.({ density: value });
+    },
+    [applyChoice],
+  );
+  const setNavigationCollapsed = useCallback(
+    (value: boolean) => {
+      applyChoice({ navigationCollapsed: value });
+      saver.current?.({ navigationCollapsed: value });
     },
     [applyChoice],
   );
@@ -137,6 +160,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setDensity,
       singleKeyShortcuts,
       setSingleKeyShortcuts,
+      navigationCollapsed,
+      setNavigationCollapsed,
       adopt: applyChoice,
       connect,
     }),
@@ -147,6 +172,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setDensity,
       singleKeyShortcuts,
       setSingleKeyShortcuts,
+      navigationCollapsed,
+      setNavigationCollapsed,
       applyChoice,
       connect,
     ],

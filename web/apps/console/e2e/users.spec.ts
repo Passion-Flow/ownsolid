@@ -22,6 +22,7 @@ const open = (page: Page, name: string) =>
 
 test('is reached from the navigation and lists every account', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Governance', exact: true }).click();
   await page.getByRole('link', { name: 'Users and workspaces' }).click();
   await expect(page.getByRole('heading', { name: 'Users', level: 1 })).toBeFocused();
   await expect(row(page, 'grace@example.test')).toContainText('Member');

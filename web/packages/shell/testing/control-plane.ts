@@ -224,6 +224,7 @@ export interface ControlPlane
     density: string;
     locale: string;
     single_key_shortcuts: boolean;
+    navigation_collapsed: boolean;
     revision: number;
   };
   /** The tenant's settings, which also set the public default language. */
@@ -322,6 +323,7 @@ export async function mockControlPlane(
       density: 'comfortable',
       locale: 'auto',
       single_key_shortcuts: true,
+      navigation_collapsed: false,
       revision: 1,
     },
     tenantSettings: { default_locale: 'auto', revision: 1 },

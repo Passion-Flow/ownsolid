@@ -33,7 +33,7 @@ test('N adds a node from anywhere, and on the Nodes page itself', async ({ page 
 
 test('a key does nothing while typing, with a modifier, or behind a layer', async ({ page }) => {
   await page.goto('/users');
-  const search = page.getByRole('searchbox');
+  const search = page.getByRole('main').getByRole('searchbox');
   await search.click();
   await page.keyboard.press('n');
   await expect(search).toHaveValue('n');
@@ -53,8 +53,9 @@ test('/ goes to the search on the page, and only when it has one', async ({ page
   await page.goto('/users');
   await expect(page.getByRole('heading', { name: 'Users', level: 1 })).toBeVisible();
   await page.keyboard.press('/');
-  await expect(page.getByRole('searchbox')).toBeFocused();
-  await expect(page.getByRole('searchbox')).toHaveValue('');
+  const search = page.getByRole('main').getByRole('searchbox');
+  await expect(search).toBeFocused();
+  await expect(search).toHaveValue('');
   await overview(page);
   await page.keyboard.press('/');
   await expect(page.getByRole('heading', { name: /^Welcome/, level: 1 })).toBeVisible();

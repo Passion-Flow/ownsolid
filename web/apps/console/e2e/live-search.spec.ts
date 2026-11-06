@@ -39,9 +39,10 @@ test('finds real nodes, people, tasks and workspaces, and opens each', async ({ 
   // Text from the middle of the name, in the other case.
   const part = nodeName.slice(2, -1).toUpperCase();
   await menu(page, part);
-  await expect(row(page, new RegExp(`^${nodeName}.*Node$`))).toBeVisible();
+  const nodeRow = row(page, new RegExp(`^${nodeName}.*Node$`));
+  await expect(nodeRow).toBeVisible();
   await expectAccessible(page);
-  await page.getByRole('combobox').press('Enter');
+  await nodeRow.click();
   await expect(page).toHaveURL(/\/nodes\?open=/);
   await expect(page.getByRole('dialog', { name: nodeName })).toBeVisible();
   await page.keyboard.press('Escape');

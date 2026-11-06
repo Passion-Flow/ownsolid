@@ -8,6 +8,7 @@ import {
   Languages,
   LogOut,
   Moon,
+  PanelLeft,
   RotateCw,
   Rows3,
   Sun,
@@ -102,7 +103,8 @@ export function CommandMenu({
   const { t, locale, setLocale } = useI18n();
   const router = useRouter();
   const toast = useToast();
-  const { theme, setTheme, density, setDensity } = usePreferences();
+  const { theme, setTheme, density, setDensity, navigationCollapsed, setNavigationCollapsed } =
+    usePreferences();
   const workspaces = useWorkspaces();
   const input = useRef<HTMLInputElement>(null);
   const [typed, setTyped] = useState('');
@@ -168,6 +170,14 @@ export function CommandMenu({
               })}
             >
               {compact ? t('preferences.useComfortable') : t('preferences.useCompact')}
+            </Item>
+            <Item
+              icon={PanelLeft}
+              onSelect={run(() => {
+                setNavigationCollapsed(!navigationCollapsed);
+              })}
+            >
+              {navigationCollapsed ? t('nav.expand') : t('nav.collapse')}
             </Item>
             {supportedLocales
               .filter((value) => value !== locale)

@@ -121,7 +121,8 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
   // Email delivery is a console page. A failed email from an earlier run, the installation
   // having no reachable mail server, is sent again and shows as waiting.
   if (!origin.includes('portal')) {
-    await page.getByRole('link', { name: 'Email delivery' }).click();
+    await page.getByRole('button', { name: 'System', exact: true }).click();
+    await page.getByRole('navigation').getByRole('link', { name: 'Email delivery' }).click();
     await expect(page.getByRole('heading', { name: 'Email delivery', level: 1 })).toBeFocused();
     await page
       .getByRole('group', { name: 'Show emails' })

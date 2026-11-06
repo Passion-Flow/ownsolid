@@ -14,6 +14,7 @@ test.describe('settings page', () => {
 
   test('reaches the page from the navigation', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'System', exact: true }).click();
     await page.getByRole('link', { name: 'Settings' }).click();
     await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeFocused();
   });

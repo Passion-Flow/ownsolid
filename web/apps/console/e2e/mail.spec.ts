@@ -19,6 +19,7 @@ test.beforeEach(async ({ page }) => {
 
 test('reaches the page from the navigation', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'System', exact: true }).click();
   await page.getByRole('link', { name: 'Email delivery' }).click();
   await expect(page.getByRole('heading', { name: 'Email delivery', level: 1 })).toBeFocused();
 });

@@ -92,6 +92,12 @@ giving its navigation item a `to` in the application's `navigation.ts`; until th
 item shows disabled, as in the prototype. Page navigation and new actions appear in the
 command menu from the same list. Below 1024 pixels the sidebar moves into a drawer.
 
+Groups collapse: only the group of the current page is open, and what a person opens by hand goes when they
+move to another page. A heading only opens and closes. A filter above the groups finds any page, and a person
+can keep the sidebar to its icons, which follows the account
+([research](../research/console-navigation.md)). The current page is marked by a bar and by weight, never by
+colour alone. Reach a page in a test through its group's heading, or through the address.
+
 The command menu also finds things on the server ([research](../research/global-search.md)). A module
 adds a `SearchSource` to the application's `search-sources.ts`, which asks the list its page shows with
 `q`, so the menu shows what the page would and "See all" opens the same rows. Each list page searches

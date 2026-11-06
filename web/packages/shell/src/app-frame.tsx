@@ -2,7 +2,6 @@
 import { isProblem } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
 import {
-  Brand,
   Button,
   DensityToggle,
   Kbd,
@@ -10,8 +9,9 @@ import {
   ProblemNotice,
   ThemeToggle,
   cn,
+  usePreferences,
 } from '@ownsolid/ui';
-import { Link, useRouter, useRouterState } from '@tanstack/react-router';
+import { useRouter, useRouterState } from '@tanstack/react-router';
 import { ChevronRight, Menu as MenuIcon, Search, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AccountPreferences } from './account-preferences.tsx';
@@ -22,98 +22,16 @@ import {
   useSingleKeyShortcuts,
   type SingleKeyShortcut,
 } from './keyboard-shortcuts.tsx';
-import { LicenseStatus } from './license-status.tsx';
-import { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
+import { findNavItem, type NavGroup } from './navigation.ts';
 import { NotificationBell } from './notifications.tsx';
 import { useDocumentTitle } from './page-focus.ts';
 import { accountPath, signInPath } from './redirect.ts';
 import { SessionWarningDialog } from './session-warning.tsx';
+import { Sidebar } from './sidebar.tsx';
 import { useSignOut } from './sign-out.ts';
 import { TaskTray, type TaskTrayProps } from './task-tray.tsx';
 import { UserMenu } from './user-menu.tsx';
 import { WorkspaceSwitcher } from './workspace-switcher.tsx';
-
-const itemClasses =
-  'flex h-[34px] items-center gap-2.5 rounded-control px-2.5 font-medium text-text-2 no-underline';
-
-function Item({ item, onNavigate }: { item: NavItem; onNavigate?: (() => void) | undefined }) {
-  const { t } = useI18n();
-  if (!item.to) {
-    return (
-      <span
-        aria-disabled
-        title={t('nav.notAvailable')}
-        className={cn(itemClasses, 'cursor-default opacity-50')}
-      >
-        <item.icon aria-hidden />
-        <span className="truncate">{t(item.label)}</span>
-      </span>
-    );
-  }
-  return (
-    <Link
-      to={item.to}
-      onClick={onNavigate}
-      activeOptions={{ exact: item.to === '/' }}
-      className={cn(
-        itemClasses,
-        'transition-colors duration-150 hover:bg-surface-2 hover:text-text',
-        'data-[status=active]:bg-accent-soft data-[status=active]:font-semibold data-[status=active]:text-accent-ink',
-      )}
-    >
-      <item.icon aria-hidden />
-      <span className="truncate">{t(item.label)}</span>
-    </Link>
-  );
-}
-
-function Navigation({
-  groups,
-  onNavigate,
-}: {
-  groups: readonly NavGroup[];
-  onNavigate?: (() => void) | undefined;
-}) {
-  const { t } = useI18n();
-  return (
-    <nav aria-label={t('nav.label')} className="px-2.5 pt-1 pb-5">
-      {groups.map((group) => (
-        <div key={group.heading ?? 'start'} className="mt-3.5">
-          {group.heading ? (
-            <div className="px-2.5 pb-1 text-[11.5px] font-semibold text-text-3">
-              {t(group.heading)}
-            </div>
-          ) : null}
-          {group.items.map((item) => (
-            <Item key={item.label} item={item} onNavigate={onNavigate} />
-          ))}
-        </div>
-      ))}
-    </nav>
-  );
-}
-
-function SidebarContent({
-  groups,
-  licensePath,
-  onNavigate,
-}: {
-  groups: readonly NavGroup[];
-  licensePath: string | undefined;
-  onNavigate?: (() => void) | undefined;
-}) {
-  return (
-    <>
-      <Brand className="px-[18px] pt-[18px] pb-2.5" />
-      <Navigation groups={groups} onNavigate={onNavigate} />
-      {licensePath ? (
-        <div className="mt-auto border-t border-border p-3.5">
-          <LicenseStatus to={licensePath} onNavigate={onNavigate} />
-        </div>
-      ) : null}
-    </>
-  );
-}
 
 const macLike = /Mac|iPhone|iPad/.test(navigator.userAgent);
 
@@ -149,6 +67,7 @@ export function AppFrame({
 }: AppFrameProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const { navigationCollapsed } = usePreferences();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [commandOpen, setCommandOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -183,7 +102,12 @@ export function AppFrame({
   };
 
   return (
-    <div className="grid h-dvh grid-cols-1 lg:grid-cols-[248px_1fr]">
+    <div
+      className={cn(
+        'grid h-dvh grid-cols-1',
+        navigationCollapsed ? 'lg:grid-cols-[56px_1fr]' : 'lg:grid-cols-[248px_1fr]',
+      )}
+    >
       <AccountPreferences />
       <SessionWarningDialog onSignOut={startSignOut} />
       <a
@@ -193,7 +117,7 @@ export function AppFrame({
         {t('nav.skip')}
       </a>
       <aside className="hidden flex-col overflow-y-auto border-r border-border bg-surface lg:flex">
-        <SidebarContent groups={navigation} licensePath={licensePath} />
+        <Sidebar groups={navigation} licensePath={licensePath} />
       </aside>
       <div className="flex h-dvh min-w-0 flex-col">
         <header className="sticky top-0 z-[5] flex h-[58px] flex-none items-center gap-2.5 border-b border-border px-4 lg:px-6">
@@ -262,7 +186,7 @@ export function AppFrame({
         label={t('nav.label')}
         className="my-0 mr-auto ml-0 h-dvh max-h-none w-[280px] max-w-[85vw] flex-col overflow-y-auto border-y-0 border-l-0 open:flex"
       >
-        <SidebarContent
+        <Sidebar
           groups={navigation}
           licensePath={licensePath}
           onNavigate={() => {
