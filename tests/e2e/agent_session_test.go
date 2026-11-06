@@ -71,6 +71,12 @@ func (e environment) adminSession(t *testing.T, password string) (*browser, stri
 	if status := b.login(t, password); status != http.StatusOK {
 		t.Fatalf("administrator login: status %d", status)
 	}
+	return b, b.csrfToken(t)
+}
+
+// csrfToken asks for a CSRF token for this browser's session.
+func (b *browser) csrfToken(t *testing.T) string {
+	t.Helper()
 	status, raw := b.request(t, http.MethodGet, "/api/v1/auth/csrf", nil, "")
 	var csrf struct {
 		Data struct {
@@ -78,9 +84,9 @@ func (e environment) adminSession(t *testing.T, password string) (*browser, stri
 		} `json:"data"`
 	}
 	if status != http.StatusOK || json.Unmarshal(raw, &csrf) != nil || csrf.Data.Token == "" {
-		t.Fatalf("csrf after login: %d %s", status, raw)
+		t.Fatalf("csrf for the session: %d %s", status, raw)
 	}
-	return b, csrf.Data.Token
+	return csrf.Data.Token
 }
 
 func decode(t *testing.T, status, want int, raw []byte, out any) {

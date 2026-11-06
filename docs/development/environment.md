@@ -127,8 +127,7 @@ including DNS queries, is logged and refused, and the run fails listing each att
 The same run starts the agent's egress guard test on that isolated Docker host
 ([ADR 0017](../decisions/0017-workload-egress-guard.md)): a probe container on a plain
 bridge must reach the recorder, and the same probe on the agent's guarded inference
-network must leave no trace. It needs a Linux amd64 host with Docker and takes about two
-minutes.
+network must leave no trace. It needs a Linux amd64 host with Docker.
 
 ```sh
 make image-control DOCKER='ssh ownsolid-cpu docker' CONTROL_IMAGE=ownsolid/control:e2e
@@ -137,6 +136,23 @@ scp bin/e2e/* tests/e2e/run-single-node.sh ownsolid-cpu:/root/e2e/
 ssh ownsolid-cpu 'cd /root/e2e && bash run-single-node.sh /root/e2e ownsolid/control:e2e \
   pgvector/pgvector:0.8.7-pg18-bookworm victoriametrics/victoria-metrics:v1.155.0 \
   victoriametrics/victoria-logs:v1.53.0 docker:29.1.3-dind'
+```
+
+The run includes a simulated fleet ([agent simulator](../../tools/dev/simulator/README.md)):
+the test raises the fleet limits with `apply`, mints join tokens, enrolls
+`OWNSOLID_E2E_SIMULATED_AGENTS` agents (default 2,000) from one process and runs them for four
+minutes through a disconnect, a partition, lost replies, lost cursors and a restart while it runs
+tasks on every twentieth node, then restores the default limits. That adds about five minutes;
+a whole run took 13 minutes on `ownsolid-cpu`.
+
+When the host's disk is nearly full, keep the run in memory: `OWNSOLID_E2E_SCRATCH=/dev/shm`
+puts the image archive there and `OWNSOLID_E2E_DOCKER_TMPFS=12g` gives the isolated Docker
+daemon a tmpfs for its storage. `ownsolid-cpu` has the memory for both. If the control image
+cannot be built there for lack of space, build it on the workstation and load it over SSH:
+
+```sh
+make image-control DOCKER='env DOCKER_DEFAULT_PLATFORM=linux/amd64 docker' CONTROL_IMAGE=ownsolid/control:e2e
+docker save ownsolid/control:e2e | ssh ownsolid-cpu docker load
 ```
 
 `make test` skips this test without those inputs.
