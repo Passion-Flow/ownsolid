@@ -1,5 +1,7 @@
 # Audit and compliance
 
+Module reviewed: 2026-11-07, against GitLab, GitHub and Kubernetes audit documentation ([research](../../research/audit-trail-page.md)). The review added AUD-111.
+
 One audit trail from user to GPU, tamper evident, retained as regulations require, and
 evidence packs for security assessments.
 
@@ -18,6 +20,7 @@ evidence packs for security assessments.
 - [ ] AUD-108 Diagnostic read access audited and redacted (P1)
 - [ ] AUD-109 Encryption at rest for the platform database, object storage and backups with keys from an external KMS (KMIP, Vault-compatible transit, cloud KMS), envelope encryption, key rotation, and a TLS 1.3-only policy option (P1)
 - [ ] AUD-110 Audit trail page: events with filters by action, outcome, time and request, event details, shareable links (P1)
+- [ ] AUD-111 Stream audit events to an external SIEM over syslog or a webhook, with counters for events sent and dropped (P1)
 
 ## P2 Fleet operations
 
