@@ -38,7 +38,7 @@ var webAsset = regexp.MustCompile(`(?:src|href)="(/assets/[^"]+)"`)
 
 type environment struct {
 	installer, composeFile, controlImage, postgresImage, archive, root, agent string
-	metricsImage, logsImage                                                   string
+	metricsImage, logsImage, simulator                                        string
 	egress                                                                    egressWatch
 	// licenseKey signs the test's license; its trust file is in every configuration.
 	licenseKey license.PrivateKey
@@ -51,7 +51,7 @@ func loadEnvironment(t *testing.T) environment {
 		installer: os.Getenv("OWNSOLID_E2E_INSTALLER"), composeFile: os.Getenv("OWNSOLID_E2E_COMPOSE_FILE"),
 		controlImage: os.Getenv("OWNSOLID_E2E_CONTROL_IMAGE"), postgresImage: os.Getenv("OWNSOLID_E2E_POSTGRES_IMAGE"),
 		archive: os.Getenv("OWNSOLID_E2E_IMAGE_ARCHIVE"), root: os.Getenv("OWNSOLID_E2E_ROOT"),
-		agent:        os.Getenv("OWNSOLID_E2E_AGENT"),
+		agent: os.Getenv("OWNSOLID_E2E_AGENT"), simulator: os.Getenv("OWNSOLID_E2E_SIMULATOR"),
 		metricsImage: os.Getenv("OWNSOLID_E2E_METRICS_IMAGE"), logsImage: os.Getenv("OWNSOLID_E2E_LOGS_IMAGE"),
 		egress: egressWatch{log: os.Getenv("OWNSOLID_E2E_EGRESS_LOG"), iface: os.Getenv("OWNSOLID_E2E_EGRESS_INTERFACE")},
 	}
@@ -540,6 +540,15 @@ func TestSingleNodeInstall(t *testing.T) {
 		if strings.Contains(agent.output()[mark:], "code=RATE_LIMITED") {
 			t.Fatalf("the default limits refused the agent:\n%s", agent.output()[mark:])
 		}
+	})
+
+	t.Run("a simulated fleet runs tasks through faults and reconnects", func(t *testing.T) {
+		if e.simulator == "" {
+			t.Skip("OWNSOLID_E2E_SIMULATOR names no simulator binary")
+		}
+		e.apply(t, e.configurationWith(t, directory, "single-node", e.controlImage, fleetLimits))
+		defer e.apply(t, config)
+		e.simulatedFleet(t, password)
 	})
 
 	t.Run("the serving role reads and trims the outbox", func(t *testing.T) {
