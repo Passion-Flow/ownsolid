@@ -64,6 +64,19 @@ export {
   type Workspace as ManagedWorkspace,
   type WorkspaceListPage,
 } from './workspaces.ts';
+export {
+  connectorCallbackUrl,
+  createConnector,
+  getSsoConfiguration,
+  listManagedConnectors,
+  testConnector,
+  updateConnector,
+  type ConnectorCheck,
+  type ConnectorCheckOutcome,
+  type ManagedConnector,
+  type ManagedConnectorPage,
+  type SsoConfiguration,
+} from './sso.ts';
 export { listAuditEvents, type AuditEvent, type AuditOutcome, type AuditPage } from './audit.ts';
 export {
   downloadLicenseDiagnostics,

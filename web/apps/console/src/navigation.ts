@@ -66,7 +66,7 @@ export const navigation: readonly NavGroup[] = [
     items: [
       { label: 'nav.users', icon: Users, to: '/users' },
       { label: 'nav.roles', icon: ShieldCheck },
-      { label: 'nav.sso', icon: KeyRound },
+      { label: 'nav.sso', icon: KeyRound, to: '/sso' },
       { label: 'nav.audit', icon: ScrollText, to: '/audit' },
     ],
   },

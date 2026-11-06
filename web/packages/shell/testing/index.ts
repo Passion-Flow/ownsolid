@@ -51,4 +51,5 @@ export {
   renewalTerms,
   type LicenseScript,
 } from './license.ts';
+export { activeConnector, giteaOrigin, retiredConnector, ssoOn, type SsoScript } from './sso.ts';
 export { adminUser, memberUser, pendingInvitation, type UserScript } from './users.ts';

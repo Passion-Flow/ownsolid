@@ -62,6 +62,22 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "post": {
@@ -126,6 +142,40 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "SSO_CONNECTOR_ID_CONFLICT",
+            "SSO_CONNECTOR_LIMIT",
+            "IDEMPOTENCY_CONFLICT",
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "SSO_DISABLED",
+            "SSO_PROVIDER_DESTINATION_REJECTED",
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       }
     },
@@ -202,6 +252,174 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND",
+            "SSO_CONNECTOR_NOT_FOUND"
+          ],
+          "409": [
+            "SSO_REVISION_CONFLICT",
+            "IDEMPOTENCY_CONFLICT",
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "SSO_DISABLED",
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
+        }
+      }
+    },
+    "/api/v1/admin/sso/connectors/{connector_id}/tests": {
+      "post": {
+        "operationId": "testSSOConnector",
+        "description": "Checks a stored connector the way a sign-in would use it: its origin is still approved, the provider answers over the configured transport, and it accepts the client credentials and every callback URL. Sends the provider's token endpoint an authorization code that cannot exist, so nothing is created there. Changes no connector, flow or session, so it takes no body and no idempotency key; the check and its outcome are audited as sso.connector_tested. Works on a disabled connector.",
+        "x-audiences": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "connector_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The outcome of the check. A failed check is a result, not an error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SSOConnectorCheckResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable rejection without provider descriptions, credentials, code, state or private paths.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND",
+            "SSO_CONNECTOR_NOT_FOUND"
+          ],
+          "429": [
+            "SSO_CAPACITY_EXCEEDED"
+          ],
+          "503": [
+            "SSO_DISABLED",
+            "SSO_ENCRYPTED_STATE_INVALID",
+            "SSO_PROVIDER_CONFIGURATION_INVALID",
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
+        }
+      }
+    },
+    "/api/v1/admin/sso/configuration": {
+      "get": {
+        "operationId": "getSSOConfiguration",
+        "description": "What the installation's configuration lets single sign-on use: whether it is on, the provider origins a connector may name, and the origins whose callback URLs a provider must accept. Reads no stored state and opens no provider connection.",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The installation's single sign-on configuration, without files, addresses or keys.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SSOConfigurationResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable rejection without provider descriptions, credentials, code, state or private paths.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "SERVICE_NOT_READY"
+          ]
         }
       }
     },
@@ -1876,6 +2094,140 @@
                 }
               }
             }
+          }
+        }
+      },
+      "SSOConfiguration": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "enabled",
+          "providers",
+          "callback_origins"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether single sign-on is on. When off, connectors still list, and creating or enabling one is refused with SSO_DISABLED."
+          },
+          "providers": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "provider",
+                "origin"
+              ],
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "enum": [
+                    "gitea"
+                  ]
+                },
+                "origin": {
+                  "type": "string",
+                  "format": "uri",
+                  "maxLength": 2048
+                }
+              }
+            }
+          },
+          "callback_origins": {
+            "type": "array",
+            "maxItems": 2,
+            "description": "Entrance origins, portal first; a provider must accept {origin}/api/v1/auth/sso/{connector_id}/callback for each. Empty when an entrance is not HTTPS.",
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "maxLength": 2048
+            }
+          }
+        }
+      },
+      "SSOConnectorCheck": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "connector_id",
+          "outcome",
+          "callback_url",
+          "provider_error",
+          "checked_at"
+        ],
+        "properties": {
+          "connector_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "not_configured",
+              "unreachable",
+              "certificate_untrusted",
+              "credentials_rejected",
+              "callback_not_registered",
+              "unexpected_answer"
+            ],
+            "description": "passed: credentials and every callback were accepted. not_configured: the origin is no longer approved, and nothing was sent. unreachable: no answer over the configured addresses. certificate_untrusted: the provider's certificate is not trusted by the configured CA. credentials_rejected: the client ID or secret was refused. callback_not_registered: the provider refused callback_url. unexpected_answer: an answer the check does not know."
+          },
+          "callback_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The callback the provider refused, for callback_not_registered."
+          },
+          "provider_error": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z_]{1,64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The provider's OAuth error code, for unexpected_answer, when it is one."
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SSOConfigurationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SSOConfiguration"
+          }
+        }
+      },
+      "SSOConnectorCheckResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SSOConnectorCheck"
           }
         }
       }

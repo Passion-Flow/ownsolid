@@ -181,6 +181,59 @@ nf_tables (every supported distribution). It needs no `nft` or `iptables` binary
 cannot install the rules, the deployment fails with `INFERENCE_EGRESS_GUARD_UNAVAILABLE`
 and the model does not start: fix the agent's privileges and retry the deployment.
 
+## Single sign-on
+
+People can sign in with a Gitea server instead of a password once the installation approves
+that server. Administrators then add connectors on the console's **Single sign-on** page, which
+shows the callback URLs to register in Gitea and tests each connector against it. Until the
+installation turns single sign-on on, that page says so and adds nothing.
+
+`install.yaml` has no typed fields for this yet, so it is set under `control_settings` and the
+two files it names are placed in `<install_root>/config/` by hand:
+
+1. Create the keyring that encrypts connector secrets, with the control image itself, into a
+   new directory owned by `runtime.uid` (10001 unless changed), then move it into place:
+
+   ```sh
+   install -d -o 10001 -g 10001 -m 0700 /root/sso-keyring
+   docker run --rm --network none --user 10001:10001 -v /root/sso-keyring:/out \
+     <images.control> initialize-sso-keyring --sso-keyring-output /out/sso-keyring.json
+   install -o 10001 -g 10001 -m 0600 /root/sso-keyring/sso-keyring.json <install_root>/config/
+   ```
+
+   Keep a copy of this file somewhere safe. Control opens every stored client secret when it
+   starts: with a keyring that cannot open them it stops with `SSO_ENCRYPTED_STATE_INVALID`, for
+   password sign-in too, even after single sign-on is turned off in `control_settings`.
+   Connectors cannot be deleted, so the only recovery today is restoring this file.
+2. Copy the CA certificate that signed Gitea's TLS certificate to
+   `<install_root>/config/gitea-ca.pem`, owned by `runtime.uid` and mode 0600. Leave
+   `ca_file` out when Gitea's certificate chains to the image's system roots.
+3. Add the section and run `apply`:
+
+   ```yaml
+   control_settings:
+     sso:
+       enabled: true
+       keyring_file: /run/projectone/sso-keyring.json
+       providers:
+         - origin: https://git.example.com        # Gitea's ROOT_URL, without the path
+           issuer: https://git.example.com        # the same, with no trailing slash
+           dial_addresses: [10.0.0.5]            # where control reaches it; no DNS is used
+           ca_file: /run/projectone/gitea-ca.pem
+   ```
+
+Both entrances must be HTTPS, since Gitea calls them back. Control connects only to the listed
+addresses, without a proxy, and refuses any other origin. Removing a provider from the list makes
+its connectors unusable at once and ends the sessions that started through them; the page marks
+them. Setting `enabled: false` keeps connectors and links, signs no one in with them, and leaves
+password sign-in working.
+
+The page's **Test connection** asks Gitea's token endpoint to exchange an authorization code
+that cannot exist, with the connector's client ID, secret and each callback URL. Gitea checks
+those before the code, so the answer says which of them it refused, or that it accepted them all.
+Nothing is created in Gitea and nobody is signed in; each test is in the audit trail as
+`sso.connector_tested`.
+
 ## When a step fails
 
 The message names the step and the cause, followed by the end of the service log when one
@@ -210,6 +263,8 @@ instead of issuing a second one.
   before it shows as failed. The **License** page imports the license and explains a refused
   file; the **Users** page invites people and leads to **Workspaces**; **Nodes** adds them. The **Overview** shows what needs
   attention and what is left to set up, and the **Audit trail** records every privileged action.
+  **Single sign-on** adds and tests Gitea connectors once the installation approves a Gitea
+  server (above).
   Other capabilities are reached
   through the API until their pages land.
 - Upgrades, rollback and signed bundles are separate roadmap items (DEL-101, DEL-104,

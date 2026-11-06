@@ -20,6 +20,8 @@ type Service struct {
 	policy   config.SSOPolicy
 	enabled  bool
 	approved map[string]config.SSOProvider
+	// origins lists the approved provider origins in configuration order.
+	origins []string
 	slots    chan struct{}
 	mu       sync.Mutex
 	clients  map[string]*giteaProvider
@@ -62,6 +64,7 @@ func New(accounts *identity.Service) (*Service, error) {
 		}
 		client.transport.CloseIdleConnections()
 		s.approved[provider.Origin] = provider
+		s.origins = append(s.origins, provider.Origin)
 	}
 	startup, cancel := context.WithTimeout(context.Background(), config.Seconds(policy.OperationSeconds))
 	defer cancel()

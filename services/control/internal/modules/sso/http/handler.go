@@ -302,6 +302,21 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request, audience, sessi
 		out, e := h.Service.UpdateConnector(ctx, a, parts[5], input, key, requestID)
 		return out, 200, e
 	}
+	if r.URL.Path == "/api/v1/admin/sso/configuration" && r.Method == http.MethodGet {
+		if len(query) != 0 {
+			return nil, 0, bad
+		}
+		out, e := h.Service.Configuration(a)
+		return out, 200, e
+	}
+	// A check changes nothing and may be repeated, so it takes neither a body nor a key.
+	if len(parts) == 7 && parts[2] == "admin" && parts[3] == "sso" && parts[4] == "connectors" && parts[6] == "tests" && r.Method == http.MethodPost {
+		if len(query) != 0 || !validID(parts[5]) || r.ContentLength != 0 || len(r.TransferEncoding) != 0 {
+			return nil, 0, bad
+		}
+		out, e := h.Service.TestConnector(ctx, a, parts[5], requestID)
+		return out, 200, e
+	}
 	if r.URL.Path == "/api/v1/account/sso/bindings" && r.Method == http.MethodGet {
 		if len(query) != 0 {
 			return nil, 0, bad

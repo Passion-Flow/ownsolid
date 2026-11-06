@@ -1,11 +1,11 @@
 package http_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
@@ -13,10 +13,11 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
 )
 
 func TestM11ActualTLSHumanRoutesStrictContractsCSRFAndLocalRecovery(t *testing.T) {
-	admin, portal, password, _ := configuredHTTP(t, nil)
+	admin, portal, password, accounts := configuredHTTP(t, nil)
 	admin.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": password}, 200, "")
 	portal.Call("GET", "/api/v1/auth/sso/connectors", nil, 200, "PublicSSOConnectorListResponse")
 	portal.Write("POST", "/api/v1/admin/sso/connectors", map[string]any{}, 404, "Problem")
@@ -28,6 +29,24 @@ func TestM11ActualTLSHumanRoutesStrictContractsCSRFAndLocalRecovery(t *testing.T
 	admin.Call("GET", "/api/v1/admin/sso/connectors?limit=1", nil, 200, "SSOConnectorPageResponse")
 	admin.Call("GET", "/api/v1/admin/sso/connectors?limit=01", nil, 400, "Problem")
 	admin.Call("GET", "/api/v1/admin/sso/connectors?cursor=%zz", nil, 400, "Problem")
+	configuration := admin.Call("GET", "/api/v1/admin/sso/configuration", nil, 200, "SSOConfigurationResponse")
+	if configuration["enabled"] != true || len(configuration["providers"].([]any)) != 1 {
+		t.Fatalf("configuration %v", configuration)
+	}
+	admin.Call("GET", "/api/v1/admin/sso/configuration?x=1", nil, 400, "Problem")
+	portal.Call("GET", "/api/v1/admin/sso/configuration", nil, 404, "Problem")
+	// Nothing listens on the provider's dial address, so the check reports it, and is audited.
+	check := admin.Write("POST", "/api/v1/admin/sso/connectors/"+id+"/tests", nil, 200, "SSOConnectorCheckResponse")
+	if check["outcome"] != "unreachable" || check["connector_id"] != id {
+		t.Fatalf("check %v", check)
+	}
+	admin.Write("POST", "/api/v1/admin/sso/connectors/"+id+"/tests", map[string]any{}, 400, "Problem")
+	admin.Write("POST", "/api/v1/admin/sso/connectors/"+uuid.NewString()+"/tests", nil, 404, "Problem")
+	portal.Write("POST", "/api/v1/admin/sso/connectors/"+id+"/tests", nil, 404, "Problem")
+	var tested int
+	if e := accounts.DB.QueryRow(context.Background(), `SELECT COUNT(*) FROM audit_events WHERE action='sso.connector_tested' AND outcome='failure' AND target_id=$1 AND reason='unreachable'`, id).Scan(&tested); e != nil || tested != 1 {
+		t.Fatalf("audited checks %d %v", tested, e)
+	}
 	for _, raw := range []string{
 		`{"mode":"login","password":null}`,
 		`{"mode":"login","password":null,"reason":null,"return_url":"https://outside.example.invalid"}`,

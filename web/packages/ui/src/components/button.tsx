@@ -8,7 +8,7 @@ export const buttonVariants = cva(
   [
     'inline-flex shrink-0 cursor-pointer items-center justify-center gap-[7px] rounded-field border font-[550] whitespace-nowrap',
     'transition-[background-color,border-color,transform] duration-150 active:scale-[0.98]',
-    'disabled:pointer-events-none disabled:opacity-55 [&_svg]:size-4 [&_svg]:shrink-0',
+    'disabled:pointer-events-none disabled:opacity-55 aria-disabled:cursor-not-allowed aria-disabled:opacity-55 aria-disabled:active:scale-100 [&_svg]:size-4 [&_svg]:shrink-0',
   ],
   {
     variants: {

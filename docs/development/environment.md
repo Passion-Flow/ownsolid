@@ -242,6 +242,22 @@ one `GiteaTestedRelease` names, and a live run spends about four of the ten sign
 in 15 minutes. Add the provider's public key to `OWNSOLID_LIVE_SPKI` (comma-separated) and
 its host to `OWNSOLID_LIVE_HOST_RULES`.
 
+`live-sso.spec.ts` adds a connector on a real installation and a real Gitea: it finds a wrong secret and
+an unregistered callback, passes the check, turns the connector on, links the account, signs in through
+Gitea, and turns the connector off from a second browser, which ends that session. Each run leaves one
+connector turned off, and the default limit is 16. Turn single sign-on on as
+[the install guide](../operations/install.md#single-sign-on) says, with Gitea's address on the state
+network as `dial_addresses`. Besides `OWNSOLID_LIVE_PROVIDER_ORIGIN`, `_USER` and `_PASSWORD_FILE` it
+needs `OWNSOLID_LIVE_GITEA_APP_COMMAND`, a command that takes `create <redirect URI>...` or
+`update <id> <redirect URI>...` and prints Gitea's JSON for the application; the API's
+`/api/v1/user/applications/oauth2` does both. An update issues a new client secret. Gitea's port must be
+the same inside its container and through the tunnel, because control and the browser use one origin;
+a state network is internal, so start Gitea on a network that publishes the port and connect it to the
+state network with a fixed address.
+
+A database that holds connectors needs the keyring that sealed them: control will not start without
+it, and the schema refuses to delete connectors. Keep the keyring with the install root.
+
 `live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
 to the license history. It needs test files signed with the key the installation trusts.
 `OWNSOLID_LIVE_LICENSE_COMMAND` reads the license state as JSON on standard input and prints a JSON

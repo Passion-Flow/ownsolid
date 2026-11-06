@@ -12,6 +12,7 @@ import {
   type WorkspaceScript,
 } from './workspaces.ts';
 import { emptyUserScript, routeUsers, type UserScript } from './users.ts';
+import { emptySsoScript, routeSso, type SsoScript } from './sso.ts';
 
 /** The account the mock accepts. */
 export const account = { email: 'ada@example.test', password: 'correct horse battery staple' };
@@ -158,7 +159,14 @@ export interface ScriptedProblem {
 
 /** Mutable state of the mock, so a spec can change it between steps. */
 export interface ControlPlane
-  extends TaskScript, NodeScript, UserScript, LicenseScript, AuditScript, WorkspaceScript {
+  extends
+    TaskScript,
+    NodeScript,
+    UserScript,
+    LicenseScript,
+    AuditScript,
+    WorkspaceScript,
+    SsoScript {
   audience: 'admin' | 'portal';
   /** How often pages poll, as the runtime configuration says. */
   pollMilliseconds: number;
@@ -275,6 +283,7 @@ export async function mockControlPlane(
     ...emptyLicenseScript(),
     ...emptyAuditScript(),
     ...emptyWorkspaceScript(),
+    ...emptySsoScript(),
     audience,
     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
     signedIn: false,
@@ -623,6 +632,7 @@ export async function mockControlPlane(
   await routeLicense(page, state, data, problem);
   await routeAudit(page, state, data, problem);
   await routeWorkspaces(page, state, data, problem);
+  await routeSso(page, state, data, problem);
   await routeTasks(page, state, data, problem);
   await page.route('**/api/v1/admin/mail-deliveries?*', (route) => {
     if (state.audience !== 'admin')

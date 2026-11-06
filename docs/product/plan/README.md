@@ -250,6 +250,27 @@ here manages the platform.
 | S-406 | People and roles `#/iam` | list | invite |
 | S-407 | Audit log `#/audit` | list | export a range |
 | S-408 | Sessions and devices `#/iam/sessions` | list | end a session |
+| S-409 | Single sign-on `/sso` | list | add a connector |
+
+### S-409  Single sign-on                              `/sso`
+**For** platform administrators · **Archetype** list · **Primary** add a connector.
+
+**Does** lets people sign in with the company's Gitea, and says which part of a connector is wrong.
+**Content** a notice when the installation has single sign-on off or approves no provider →
+columns: connector, status (on, off, provider not approved), provider address, client ID, updated.
+**Click** row name → drawer: the connection check, details, callback URLs to copy. The detail page
+comes with UX-127.
+**Dialogs**
+- *Add a connector* → dialog, five fields and the callback URLs to register first. It starts off.
+- *Test connection* → in the drawer, no dialog; the result names what was refused and the next step.
+- *Edit* → dialog: rename, or replace the client ID and secret, which warns of the sign-out.
+- *Turn on* → dialog with a reason. *Turn off* → typed confirmation: the sessions it ends do not come
+  back, so it does not offer undo.
+
+**Empty** "No connectors yet" with *Add connector*. There are no filters, as an installation has a
+handful of connectors.
+**Done when** a connector added here passes its test against a real Gitea, someone signs in with it,
+and turning it off ends that session.
 
 # Stage 5 — Run it
 

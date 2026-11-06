@@ -106,7 +106,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Architecture and scale | [architecture-and-scale.md](architecture-and-scale.md) | 14/16 | 0/10 | 0/7 | 0/4 | - |
 | 2 | Delivery and upgrades | [delivery-and-upgrades.md](delivery-and-upgrades.md) | 3/3 | 1/16 | 0/4 | 0/1 | 0/1 |
-| 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 2/17 | 0/5 | 0/1 | 0/1 |
+| 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 2/19 | 0/5 | 0/1 | 0/1 |
 | 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 16/27 | 0/3 | - | 0/2 |
 | 5 | Fleet and infrastructure | [fleet-and-infrastructure.md](fleet-and-infrastructure.md) | - | 2/15 | 0/11 | 0/2 | - |
 | 6 | GPU operations | [gpu-operations.md](gpu-operations.md) | - | 0/9 | 0/8 | - | 0/2 |

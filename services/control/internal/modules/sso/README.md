@@ -20,6 +20,18 @@ proxy does not bypass state, PKCE, Origin/CSRF or durable flow/session-source ch
 Existing historical IP-URL/DNS-Host fixtures need proper DNS/SNI/SAN/CA migration
 before new current-source SQL qualification; see the [transport increment](../../../../../docs/execution/mvp/deployment-transport-boundaries.md).
 
+## Administration surface
+
+The console's Single sign-on page uses the connector routes plus two more.
+`GET /api/v1/admin/sso/configuration` reports what the installation allows and opens no connection.
+`POST /api/v1/admin/sso/connectors/{id}/tests` ([connector_check.go](connector_check.go),
+[provider_check.go](provider_check.go)) sends Gitea's token endpoint an authorization code that cannot
+exist, over the sign-in transport and its exchange slots, and reads which of client ID, secret or
+callback it refused. Only Gitea's exact refusal of the code passes, so a changed wording reads as
+`unexpected_answer`, never as a pass. It changes no connector, flow or session and is audited as
+`sso.connector_tested`. The reasoning, and why introspection cannot do this, is in
+[the research note](../../../../../docs/research/sso-page.md).
+
 ## Native Dameng repository boundary
 
 The repository files now select explicit PostgreSQL, MySQL or native Dameng SQL;

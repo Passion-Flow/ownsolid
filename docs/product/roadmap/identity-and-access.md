@@ -25,6 +25,8 @@ agents. Every check happens on the server.
 - [x] IAM-115 Users page: accounts with status and filters, invite and resend, disable and enable an account with a reason (P1) - Evidence: 24d6b00; real Chromium on an offline install on `ownsolid-cpu` with a TLS mail server accepted a real invitation, disabled the new account, which ended its session, and enabled it, three runs in a row, 2026-11-07
 - [x] IAM-116 Workspaces page: list, create and rename workspaces and manage who belongs to each (P1) - Evidence: 3a406f9; real Chromium on an offline install on `ownsolid-cpu` created a workspace, added a real account, changed its role, removed it, was refused for the last owner and disabled the workspace with its reason in the audit trail, three runs in a row, 2026-11-07
 - [ ] IAM-117 Single sign-on page: list, add, test and disable connectors, on the existing connector API (P1)
+- [ ] IAM-118 Test a connector with a real sign-in that shows the identity returned and signs nobody in, as Auth0 and Cloudflare One do; the connection check of IAM-117 stops short of the provider's login (P1)
+- [ ] IAM-119 Survive a lost single sign-on keyring: control starts, password sign-in works, unreadable connectors are marked and their credentials can be replaced; today a keyring that cannot open a stored secret stops control at startup and connectors cannot be deleted (P1)
 
 ## P2 Fleet operations
 
