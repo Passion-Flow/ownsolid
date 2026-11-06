@@ -17,6 +17,7 @@ evidence packs for security assessments.
 - [ ] AUD-107 Controlled data export with approval and record (P1) - Catalog: F488
 - [ ] AUD-108 Diagnostic read access audited and redacted (P1)
 - [ ] AUD-109 Encryption at rest for the platform database, object storage and backups with keys from an external KMS (KMIP, Vault-compatible transit, cloud KMS), envelope encryption, key rotation, and a TLS 1.3-only policy option (P1)
+- [ ] AUD-110 Audit trail page: events with filters by action, outcome, time and request, event details, shareable links (P1)
 
 ## P2 Fleet operations
 

@@ -24,7 +24,7 @@ works in its own worktree (AGENTS.md section 10).
 | Lane | Items, in order | Code it owns |
 | --- | --- | --- |
 | A. Fleet core | ARC-006 to ARC-016, then REL-001 | `api/agent`, agent client and runtime, control platform and node modules, `tools/dev/simulator` |
-| B. Web console | UX-001 to UX-005, then tick DEL-001; then the P1 console foundations UX-115, UX-116, UX-112, UX-118, UX-120, UX-119, UX-113, UX-110, UX-109 ([ADR 0015](../../decisions/0015-web-lane-after-p0.md)); then UX-121, UX-103, UX-114, UX-107, UX-105, UX-104 ([ADR 0026](../../decisions/0026-web-lane-second-foundations.md)); then FLT-114, FLT-113, IAM-115, DEL-116, UX-101 ([ADR 0031](../../decisions/0031-web-lane-first-module-pages.md)) | `web/`, `deploy/images/control` web build, `docs/development/design-system.md` |
+| B. Web console | UX-001 to UX-005, then tick DEL-001; then the P1 console foundations UX-115, UX-116, UX-112, UX-118, UX-120, UX-119, UX-113, UX-110, UX-109 ([ADR 0015](../../decisions/0015-web-lane-after-p0.md)); then UX-121, UX-103, UX-114, UX-107, UX-105, UX-104 ([ADR 0026](../../decisions/0026-web-lane-second-foundations.md)); then FLT-114, FLT-113, IAM-115, DEL-116, UX-101 ([ADR 0031](../../decisions/0031-web-lane-first-module-pages.md)); then AUD-110, IAM-116, IAM-117, UX-122, UX-106 ([ADR 0034](../../decisions/0034-web-lane-governance-pages.md)) | `web/`, `deploy/images/control` web build, `docs/development/design-system.md` |
 | C. Delivery and telemetry | DEL-002, OBS-001, OBS-002, REL-002, DEL-003 | `tests/e2e` egress harness, `deploy/`, monitoring modules, `services/control/internal/operations` |
 
 DEL-003 changes agent container networking: coordinate with lane A by keeping the change
@@ -92,8 +92,8 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Architecture and scale | [architecture-and-scale.md](architecture-and-scale.md) | 14/16 | 0/10 | 0/7 | 0/4 | - |
 | 2 | Delivery and upgrades | [delivery-and-upgrades.md](delivery-and-upgrades.md) | 3/3 | 1/16 | 0/4 | 0/1 | 0/1 |
-| 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 1/15 | 0/5 | 0/1 | 0/1 |
-| 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 15/21 | 0/3 | - | 0/2 |
+| 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 1/17 | 0/5 | 0/1 | 0/1 |
+| 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 15/22 | 0/3 | - | 0/2 |
 | 5 | Fleet and infrastructure | [fleet-and-infrastructure.md](fleet-and-infrastructure.md) | - | 2/15 | 0/11 | 0/2 | - |
 | 6 | GPU operations | [gpu-operations.md](gpu-operations.md) | - | 0/9 | 0/8 | - | 0/2 |
 | 7 | Scheduling and quota | [scheduling-and-quota.md](scheduling-and-quota.md) | - | 0/11 | 0/7 | 0/2 | 0/1 |
@@ -108,7 +108,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 16 | Product agent | [product-agent.md](product-agent.md) | - | 0/12 | 0/3 | - | 0/2 |
 | 17 | App catalog | [app-catalog.md](app-catalog.md) | - | 0/8 | 0/7 | - | - |
 | 18 | Tenancy, metering and commerce | [tenancy-metering-commerce.md](tenancy-metering-commerce.md) | - | 0/9 | 0/8 | 0/2 | - |
-| 19 | Audit and compliance | [audit-and-compliance.md](audit-and-compliance.md) | - | 0/9 | 0/7 | - | - |
+| 19 | Audit and compliance | [audit-and-compliance.md](audit-and-compliance.md) | - | 0/10 | 0/7 | - | - |
 | 20 | Observability and alerting | [observability-and-alerting.md](observability-and-alerting.md) | 2/2 | 0/13 | 0/5 | 0/1 | - |
 | 21 | Platform reliability | [platform-reliability.md](platform-reliability.md) | 1/2 | 0/11 | 0/4 | 0/2 | - |
 | 22 | Network and storage | [network-and-storage.md](network-and-storage.md) | - | 0/6 | 0/7 | - | 0/1 |
