@@ -220,6 +220,8 @@ func (c Config) renderControl(dsnFile string) ([]byte, error) {
 func (c Config) ComposeVariables() map[string]string {
 	l := c.Layout()
 	addresses := c.Network.stateAddresses()
+	// Validate has already refused a count that has no weight.
+	postgresShares, _ := cpuShares(c.Resources.PostgresCPUs)
 	return map[string]string{
 		"OWNSOLID_STATE_SUBNET": c.Network.StateSubnet, "OWNSOLID_STATE_DYNAMIC_RANGE": addresses.Dynamic.String(),
 		"OWNSOLID_POSTGRES_ADDRESS": addresses.Postgres.String(), "OWNSOLID_METRICS_ADDRESS": addresses.Metrics.String(),
@@ -234,7 +236,7 @@ func (c Config) ComposeVariables() map[string]string {
 		"OWNSOLID_CONFIG_DIR": l.Config, "OWNSOLID_OPERATOR_DIR": l.Operator, "OWNSOLID_POSTGRES_DATA": l.Postgres,
 		"OWNSOLID_POSTGRES_PASSWORD_FILE": filepath.Join(l.Secrets, "postgres-password"),
 		"OWNSOLID_CONTROL_MEMORY":         c.Resources.ControlMemory, "OWNSOLID_CONTROL_CPUS": c.Resources.ControlCPUs,
-		"OWNSOLID_POSTGRES_MEMORY": c.Resources.PostgresMemory, "OWNSOLID_POSTGRES_CPUS": c.Resources.PostgresCPUs,
+		"OWNSOLID_POSTGRES_MEMORY": c.Resources.PostgresMemory, "OWNSOLID_POSTGRES_CPU_SHARES": strconv.Itoa(postgresShares),
 		"OWNSOLID_POSTGRES_MAX_CONNECTIONS": strconv.Itoa(c.Resources.PostgresMaxConnections),
 	}
 }

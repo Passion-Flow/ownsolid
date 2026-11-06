@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
@@ -79,15 +80,72 @@ func logResources(t *testing.T, when string) {
 // loadSampleEvery is how often the run samples what control and PostgreSQL wait on.
 const loadSampleEvery = 5 * time.Second
 
+// pressureStalled reads the cumulative microseconds in the "some" line of a /proc/pressure
+// file: time in which at least one task on the host waited for that resource.
+func pressureStalled(text string) int64 {
+	for _, line := range strings.Split(text, "\n") {
+		if !strings.HasPrefix(line, "some ") {
+			continue
+		}
+		_, total, found := strings.Cut(line, "total=")
+		if !found {
+			return 0
+		}
+		n, _ := strconv.ParseInt(strings.TrimSpace(total), 10, 64)
+		return n
+	}
+	return 0
+}
+
+// sampleHostPressure formats how long the host waited for each resource since previous, and
+// updates previous. A kernel without pressure information leaves the line empty.
+func sampleHostPressure(previous map[string]int64) string {
+	line := ""
+	for _, resource := range []string{"cpu", "memory", "io"} {
+		raw, err := os.ReadFile("/proc/pressure/" + resource)
+		if err != nil {
+			continue
+		}
+		total := pressureStalled(string(raw))
+		if last, seen := previous[resource]; seen {
+			line += fmt.Sprintf(" host_%s_wait_ms=%d", resource, (total-last)/1000)
+		}
+		previous[resource] = total
+	}
+	return line
+}
+
+// watchTestLag keeps in longest how late a timer in this process fired, in milliseconds. It
+// shares the host and not the simulator's process, so the two together place a stall.
+func watchTestLag(longest *atomic.Int64, stop <-chan struct{}) {
+	const every = 10 * time.Millisecond
+	for {
+		asleep := time.Now()
+		select {
+		case <-stop:
+			return
+		case <-time.After(every):
+			late := (time.Since(asleep) - every).Milliseconds()
+			if late > longest.Load() {
+				longest.Store(late)
+			}
+		}
+	}
+}
+
 // sampleLoad records, every loadSampleEvery until stop closes, what PostgreSQL's active
-// sessions wait on, its checkpoints, and the CPU use and CFS throttling of the control and
-// PostgreSQL containers, so a missed threshold can be tied to its cause. Lines are relative
-// to started. It runs off the test goroutine and so never fails the test.
+// sessions wait on, its checkpoints, the CPU use and CFS throttling of the control and
+// PostgreSQL containers, the host's pressure and how late this process ran, so a missed
+// threshold can be tied to its cause. Lines are relative to started. It runs off the test
+// goroutine and so never fails the test.
 func (e environment) sampleLoad(started time.Time, stop <-chan struct{}) <-chan []string {
 	out := make(chan []string, 1)
 	go func() {
 		var lines []string
 		previous := map[string][2]int64{}
+		pressure := map[string]int64{}
+		var testLag atomic.Int64
+		go watchTestLag(&testLag, stop)
 		ticker := time.NewTicker(loadSampleEvery)
 		defer ticker.Stop()
 		for {
@@ -127,10 +185,24 @@ func (e environment) sampleLoad(started time.Time, stop <-chan struct{}) <-chan 
 						float64(usage-last[0])/float64(loadSampleEvery.Microseconds()), (throttled-last[1])/1000)
 				}
 			}
+			line += sampleHostPressure(pressure)
+			line += fmt.Sprintf(" test_lag_ms=%d", testLag.Swap(0))
 			lines = append(lines, line)
 		}
 	}()
 	return out
+}
+
+func TestPressureStalledReadsTheSomeLine(t *testing.T) {
+	text := "some avg10=0.00 avg60=0.02 avg300=1.06 total=1658207115\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=7\n"
+	if got := pressureStalled(text); got != 1658207115 {
+		t.Fatalf("read %d", got)
+	}
+	for _, malformed := range []string{"", "full avg10=0.00 total=7\n", "some avg10=0.00\n"} {
+		if got := pressureStalled(malformed); got != 0 {
+			t.Errorf("%q read %d", malformed, got)
+		}
+	}
 }
 
 // TestFleetLoad is the P0 load test: 2,000 simulated nodes at twice the planned load, a

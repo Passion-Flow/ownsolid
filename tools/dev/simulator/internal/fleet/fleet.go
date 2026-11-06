@@ -54,6 +54,7 @@ func Run(ctx context.Context, c config.Config) (report.Report, error) {
 	group.Go(func() { inject(running, started, c.Faults, agents, recorder) })
 	group.Go(func() { logEvery(running, time.Duration(c.LogSeconds)*time.Second, started, agents, recorder) })
 	group.Go(func() { closeWindows(running, time.Duration(c.WindowSeconds)*time.Second, started, agents, recorder) })
+	group.Go(func() { watchLag(running, recorder) })
 	group.Wait()
 	for _, conn := range connections {
 		conn.Reset()
@@ -165,6 +166,27 @@ func closeWindows(ctx context.Context, interval time.Duration, started time.Time
 		case <-ticker.C:
 			connected, onStream, _ := counts(agents)
 			recorder.CloseWindow(int(time.Since(started).Round(time.Second).Seconds()), connected, onStream)
+		}
+	}
+}
+
+// lagProbeEvery is short enough to catch a stall that would show in a heartbeat's p99, and
+// long enough to cost nothing beside thousands of agents.
+const lagProbeEvery = 10 * time.Millisecond
+
+// watchLag measures how late a timer fires, which tells a stall of this process or its host
+// apart from a slow reply.
+func watchLag(ctx context.Context, recorder *report.Recorder) {
+	timer := time.NewTimer(lagProbeEvery)
+	defer timer.Stop()
+	for {
+		asleep := time.Now()
+		select {
+		case <-ctx.Done():
+			return
+		case <-timer.C:
+			recorder.ObserveLag(time.Since(asleep) - lagProbeEvery)
+			timer.Reset(lagProbeEvery)
 		}
 	}
 }

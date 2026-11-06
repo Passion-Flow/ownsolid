@@ -33,8 +33,8 @@ a good hour cannot hide a bad minute, and the result is stated with its configur
 The planning load is one liveness update per node every 10 seconds. Twice that for 2,000 nodes is
 a 5 second interval, the shortest the protocol allows, set through the pacing API: 400 heartbeats
 and 400 claims a second, against an installation with default resources (control on 2 CPUs and
-1 GB, PostgreSQL on 2 CPUs and 2 GB). A run from one host raises the same limits as the simulator's
-own test; each is named in the [simulator research](agent-simulator.md).
+1 GB, PostgreSQL with a weight of 2 CPUs and 2 GB; the first three runs below had a quota of
+2 CPUs). A run from one host raises the same limits as the simulator's own test; each is named in the [simulator research](agent-simulator.md).
 
 ## Thresholds
 
@@ -95,24 +95,83 @@ agent now leaves the stream only after `SessionFallbackProbes` (two) such failur
 injected; runs 1 and 3 did not. The liveness state refresh is not the cause: its synchronous
 writes are already spread over half the refresh, about 13 a second.
 
-Run 3 sampled every five seconds and points at **CPU quota throttling of PostgreSQL**. The
-installer limits the database container with `cpus: "2"`, a CFS quota. In the steady stretch
-PostgreSQL averaged 0.92 CPU yet spent up to 2.0 s of a 5 s sample throttled (p90 0.8 s), and
-6.2 s around the disconnect storm. Up to ten pooled backends run at once on the host's 16 cores,
-so they spend the period's 200 ms of quota in about 20 ms of wall time and every query then
-waits out the rest of the 100 ms period. Control, whose Go runtime sizes itself to its quota,
-was throttled for at most 42 ms. A worse stretch of the same stalls would hold control's seats
-past their two-second wait, which is what run 2 shed with. This is a hypothesis with
-supporting evidence, not yet a proven cause.
+Run 3 sampled every five seconds and pointed at **CPU quota throttling of PostgreSQL**. The
+installer limited the database container with `cpus: "2"`, a CFS quota. In the steady stretch
+PostgreSQL averaged 0.92 CPU yet reported up to 2.0 s of throttling in a 5 s sample (p90 0.8 s),
+and 6.2 s around the disconnect storm. `throttled_usec` adds up across CPUs, so these are not
+wall-clock seconds: the prototype below read more than 1,000 ms of it per second. Control, whose
+Go runtime sizes itself to its quota, reported at most 42 ms.
 
-Next step: prototype a database limit that does not stall (CPU shares or a cpuset instead of a
-quota, or a pool sized to the quota), rerun, and keep ARC-015 open until two runs in a row pass
-with the cause fixed. The installer's resource settings are `deploy/` code (lane C).
+A prototype on `ownsolid-cpu` isolated the limit from the product: the product's PostgreSQL image
+with 10 clients at 2,000 steady writes a second, plus heavy scans that stand in for the bursts.
+The scans are an assumption about the burst's shape; which real query bursts is not known.
+
+| Limit | At 1.2 CPU: p99, max | At 1.7 CPU: p99, max |
+| --- | --- | --- |
+| Quota, 100 ms period | 264 ms, 990 ms | 1,623 ms, 2,011 ms |
+| Quota, 10 ms period | 165 ms, 376 ms | 2,341 ms, 2,711 ms |
+| Quota, pool of 2 | 596 ms, 903 ms | 3,090 ms, 3,491 ms |
+| Two pinned cores | 39 ms, 114 ms | 117 ms, 220 ms |
+| No limit | 1.5 ms, 17 ms | 1.8 ms, 17 ms |
+
+With a CPU-bound neighbour on the same four cores, a weight of 2,048 held p99 at 9 ms, the
+default weight at 40 ms and the old quota at 33 ms; with no neighbour on those cores, 4.1 ms
+against 110 ms. A stall of two seconds is what control's seats wait before shedding, so the old
+quota can produce run 2's symptom. [ADR 0038](../decisions/0038-database-cpu-weight.md) replaces
+the quota with a weight.
+
+Two runs on 2026-11-07 with the weight confirmed the first part and found a second problem.
+
+| Measure | Weight, run 1 | Weight, run 2 |
+| --- | --- | --- |
+| PostgreSQL throttled in the steady stretch | 0 | 0 |
+| Failed heartbeats and claims in the steady stretch | 0 | 0 |
+| Worst steady heartbeat p99 | 414 ms | **1,010 ms, a miss of threshold 2** |
+| Dispatch p99 | not kept | 1.38 s |
+
+**Open: a stall of about a second.** Run 2's window ending at 660 s holds it. Every other steady
+window of that run was at most 6 ms. The sample ending at 606 s shows control down from 0.87 CPU
+to 0.64 and PostgreSQL from 0.93 to 0.78, so work stopped for about 1.3 s across both, with no
+throttling, checkpoint start, autovacuum or task batch at that moment. Run 1's windows reached
+414 ms without a visible dip. The reported p99 is a bucket's upper bound, within a quarter of the
+true value, so the true figure may be just under 1 s; it still counts as a miss.
+
+Those samples could not place the stall, so the runs now record the simulator's own timer lag per
+window (`generator_lag_max_milliseconds`), and per sample the host's pressure stall times and the
+test process's timer lag. Three more runs with those probes:
+
+| Measure | Probe run 1 | Probe run 2 | Probe run 3 |
+| --- | --- | --- | --- |
+| Result | Pass | **Fail: thresholds 1 and 2** | Pass |
+| Worst steady heartbeat p99 | 517 ms | 2,465 ms | 517 ms |
+| Failed steady heartbeats, claims | 0, 0 | 2,176, 1,717 | 0, 0 |
+| Dispatch p99 | 1.34 s | 3.65 s | 1.33 s |
+| Longest steady generator lag, test process lag | 3 ms, 4 ms | 9 ms, 10 ms | 4 ms, 5 ms |
+| Host IO wait, worst 5 s sample | 666 ms | 2,531 ms | 357 ms |
+| PostgreSQL throttled | 0 | 0 | 0 |
+| Full reconnect after a control restart | 16 s | 18.5 s | 14.6 s |
+
+**Probe run 2 had disk load beside it, some of it ours.** Its refusals ran from second 480 to 660,
+22:51:45 to 22:54:45 UTC. Host IO wait rose at 22:51:36 and peaked at 22:53:11, with control and
+PostgreSQL down to 0.3 CPU, while a `du` over a large tree, run by hand during the test from about
+22:51:07, lasted until about 22:53. Memory pressure followed from 22:54:36 during another session's
+image build, and another project's test suite ran on the host throughout. The generator and the
+test process stayed on time, so the delay was in control or below it. The IO wait points at the
+database's disk; no sample proves that, and the timing is the only link to the `du`.
+
+The run still counts as a failure. The install's data lives under `/srv/ownsolid`, in the isolated
+container's own filesystem on the host's disk, so PostgreSQL's WAL syncs compete with whatever else
+uses that disk; only `/var/lib/docker` inside it is in memory. Shedding is the designed response to
+a slow database, and every agent came back by the end of the run.
+
+ARC-015 stays open until three runs in a row pass on a host with nothing else running. That is one
+more than this note first asked, because the old quota also passed two runs of three.
 
 ## Failure modes
 
 | Failure | Coverage |
 | --- | --- |
+| A stall of the load generator or host reads as control's | Generator lag per window, host pressure and test process lag per sample place it; a threshold is not relaxed by them |
 | A storm's latency hides or fails the steady verdict | Windows split the run; only steady windows are judged |
 | A task restarted by the outage still "succeeds" | Threshold 5 reads `attempt` and `acknowledged_attempt` in PostgreSQL |
 | Simulated work ends at the outage for a simulator reason | Unit tests: a long task renews through 503s and delivers once, and a written refusal ends it |
@@ -124,4 +183,6 @@ with the cause fixed. The installer's resource settings are `deploy/` code (lane
 - All agents come from one host, through one Docker proxy, so per-address behaviour and real
   network latency are not exercised.
 - One control process and one PostgreSQL. High availability is REL-101.
+- The database shares its disk only with the host's other work. The disk synced 8 KB in about
+  0.34 ms on `ownsolid-cpu`; a slower one is not measured here.
 - A run is 25 minutes, not a day. Slow leaks and monthly partition rollover are not covered.

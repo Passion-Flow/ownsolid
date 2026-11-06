@@ -132,7 +132,9 @@ The shape of the report, shortened, with example values:
 ```
 
 - `windows` repeats the counts for each `window_seconds` of the run, with the connected agents at
-  its end, so a steady stretch can be judged apart from the storms around it.
+  its end, so a steady stretch can be judged apart from the storms around it. Each also carries
+  `generator_lag_max_milliseconds`, the longest the simulator's own timers ran late, which tells a
+  stall of the simulator or its host apart from a slow reply.
 - `calls` covers `enroll`, `heartbeat`, `claim`, `acknowledge`, `renew`, `events` (progress),
   `result` and `stream_open` (opening a stream with its first heartbeat). Latency covers successful calls;
   a claim's includes the time control held it.

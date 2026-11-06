@@ -52,6 +52,18 @@ func TestRecoveryIsFullOnlyWhenEveryHitAgentCameBack(t *testing.T) {
 	}
 }
 
+func TestWindowKeepsTheLongestGeneratorLagAndStartsAgain(t *testing.T) {
+	r := New(1, time.Now())
+	r.ObserveLag(20 * time.Millisecond)
+	r.ObserveLag(5 * time.Millisecond)
+	r.CloseWindow(60, 1, 1)
+	r.CloseWindow(120, 1, 1)
+	windows := r.Snapshot().Windows
+	if len(windows) != 2 || windows[0].GeneratorLagMilliseconds != 20 || windows[1].GeneratorLagMilliseconds != 0 {
+		t.Fatalf("windows %+v", windows)
+	}
+}
+
 func TestRecorderCountsFromManyGoroutines(t *testing.T) {
 	r := New(100, time.Now())
 	var group sync.WaitGroup
