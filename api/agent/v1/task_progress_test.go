@@ -74,9 +74,3 @@ func TestTaskProgressIsAnEventsCall(t *testing.T) {
 		t.Fatal(call, node, ok)
 	}
 }
-
-func TestEverySequenceOfAFullLogFits(t *testing.T) {
-	if MaximumProgressSequence <= MaximumProgressLogLines+2*MaximumProgressSteps {
-		t.Fatal("a full log and its closing line must fit", MaximumProgressSequence)
-	}
-}

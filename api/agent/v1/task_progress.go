@@ -78,15 +78,6 @@ var progressSteps = map[string]bool{
 	ProgressStepVerify:     true,
 }
 
-// ProgressSteps lists every step key.
-func ProgressSteps() []string {
-	out := make([]string, 0, len(progressSteps))
-	for step := range progressSteps {
-		out = append(out, step)
-	}
-	return out
-}
-
 // ProgressEntry is one thing a running task reports: a step changing state, or a log line.
 // The time is the agent's, and is compared only with other times of the same attempt.
 type ProgressEntry struct {
@@ -139,8 +130,8 @@ func (e ProgressEntry) Validate() error {
 	}
 	switch e.Kind {
 	case ProgressKindStep:
-		running := e.State == ProgressStepRunning || e.State == ProgressStepSucceeded || e.State == ProgressStepFailed
-		if !progressSteps[e.Step] || !running || e.Level != "" || e.Message != "" {
+		state := e.State == ProgressStepRunning || e.State == ProgressStepSucceeded || e.State == ProgressStepFailed
+		if !progressSteps[e.Step] || !state || e.Level != "" || e.Message != "" {
 			return errProgressInvalid
 		}
 	case ProgressKindLog:

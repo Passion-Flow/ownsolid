@@ -261,8 +261,7 @@ test.describe('watching a task', () => {
 });
 
 test.describe('leaving a running task', () => {
-  const tray = (page: Page) =>
-    page.getByRole('button', { name: /of your tasks running/ });
+  const tray = (page: Page) => page.getByRole('button', { name: /of your tasks running/ });
 
   test('shows it from any page and leads back to it', async ({ page }) => {
     control.tasks = [copy(runningTask)];

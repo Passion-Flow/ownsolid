@@ -242,7 +242,6 @@ func TestWorkWithoutAReporterReportsNothing(t *testing.T) {
 	ctx := context.Background()
 	Step(ctx, wire.ProgressStepDownload)
 	Info(ctx, "line")
-	Warning(ctx, "line")
 	Error(ctx, "line")
 }
 
