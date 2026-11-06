@@ -3128,6 +3128,43 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "invitation": {
+            "description": "The invitation this email carries, in lists only; null for other emails.",
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "version",
+                  "status"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "accepted",
+                      "revoked",
+                      "expired"
+                    ]
+                  }
+                }
+              }
+            ]
           }
         },
         "required": [

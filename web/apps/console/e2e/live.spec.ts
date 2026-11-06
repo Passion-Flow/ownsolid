@@ -157,6 +157,42 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
     await page.getByRole('button', { name: /^Views: / }).click();
     await page.getByRole('menuitem', { name: 'Delete this view' }).click();
     await expect(page.getByRole('button', { name: 'Views: Default view' })).toBeVisible();
+    // Undo brings the view back through the real API, and it can then be deleted for good.
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Change undone' })).toBeVisible();
+    await page.getByRole('button', { name: /^Views: / }).click();
+    await page.getByRole('menuitem', { name: viewName }).click();
+    await page.getByRole('button', { name: /^Views: / }).click();
+    await page.getByRole('menuitem', { name: 'Delete this view' }).click();
+    await expect(page.getByRole('button', { name: 'Views: Default view' })).toBeVisible();
+
+    // An invitation can only be revoked by typing its address, and that cannot be undone.
+    const invitee = `revoke-${String(Date.now())}@example.invalid`;
+    const invited = await page.evaluate(async (address) => {
+      const csrf = (await (await fetch('/api/v1/auth/csrf')).json()) as { data: { token: string } };
+      const response = await fetch('/api/v1/admin/invitations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf.data.token,
+          'Idempotency-Key': crypto.randomUUID(),
+        },
+        body: JSON.stringify({ email: address, locale: 'en' }),
+      });
+      return response.status;
+    }, invitee);
+    expect(invited).toBe(201);
+    await page.getByLabel('Filter by recipient').fill(invitee);
+    await page.getByRole('button', { name: `Show details of the email to ${invitee}` }).click();
+    await page.getByRole('button', { name: 'Revoke the invitation' }).click();
+    const revoke = page.getByRole('dialog', { name: 'Revoke this invitation' });
+    await expectAccessible(page);
+    await revoke.getByLabel(`Type ${invitee} to confirm`).fill(invitee);
+    await revoke.getByRole('button', { name: 'Revoke the invitation' }).click();
+    await expect(
+      page.getByRole('status').filter({ hasText: `Invitation to ${invitee} revoked` }),
+    ).toBeVisible();
+    await page.getByLabel('Filter by recipient').fill('');
     const failed = page
       .getByRole('row')
       .filter({ hasText: 'The mail server could not be reached' });

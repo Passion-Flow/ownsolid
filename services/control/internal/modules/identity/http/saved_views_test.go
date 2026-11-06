@@ -237,3 +237,29 @@ func TestMailDeliveriesSortOldestFirstAndPageInThatOrder(t *testing.T) {
 	problemCode(t, admin.request("GET", "/api/v1/admin/mail-deliveries?limit=1&order=newest&cursor="+cursor, nil, 400, "", nil), "INVALID_CURSOR")
 	admin.request("GET", "/api/v1/admin/mail-deliveries?order=sideways", nil, 400, "", nil)
 }
+
+func TestMailDeliveriesNameTheInvitationTheyCarry(t *testing.T) {
+	_, _, _, admin, password := setup(t)
+	admin.mutate("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": password}, 200, "LoginResponse")
+	invited := admin.mutate("POST", "/api/v1/admin/invitations", map[string]any{"email": "carried@example.invalid", "locale": "en"}, 201, "")
+	admin.mutate("POST", "/api/v1/auth/password-reset-requests", map[string]any{"email": "admin@example.invalid"}, 202, "AcceptedResponse")
+	row := func(prefix string) map[string]any {
+		t.Helper()
+		items := admin.request("GET", "/api/v1/admin/mail-deliveries?recipient_prefix="+prefix, nil, 200, "MailListResponse", nil)["items"].([]any)
+		if len(items) != 1 {
+			t.Fatal("one email for", prefix, len(items))
+		}
+		return items[0].(map[string]any)
+	}
+	carried := row("carried")["invitation"].(map[string]any)
+	if carried["id"] != invited["id"] || carried["status"] != "pending" || carried["version"] != invited["version"] {
+		t.Fatal("the email names its invitation", carried)
+	}
+	if other := row("admin"); other["invitation"] != nil {
+		t.Fatal("a reset email carries no invitation", other)
+	}
+	admin.mutate("POST", "/api/v1/admin/invitations/"+invited["id"].(string)+"/revocations", map[string]any{"version": carried["version"], "reason": "Sent to the wrong address"}, 200, "InvitationResponse")
+	if after := row("carried")["invitation"].(map[string]any); after["status"] != "revoked" {
+		t.Fatal("the list follows the invitation", after)
+	}
+}

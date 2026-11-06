@@ -90,6 +90,7 @@ export {
 export {
   listMailDeliveries,
   resendMailDelivery,
+  revokeInvitation,
   type MailDelivery,
   type MailDeliveryPage,
   type MailPurpose,

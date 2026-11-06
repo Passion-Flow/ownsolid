@@ -219,11 +219,11 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 			}
 		}
 	case "mail-deliveries":
-		p.dmFrom = "MAIL_DELIVERIES d"
-		p.dmProjection = "d.ID,d.PURPOSE,d.RECIPIENT_EMAIL,d.LOCALE,d.STATE,d.ATTEMPT_COUNT,CASE WHEN d.STATE='queued' THEN d.NEXT_ATTEMPT_AT ELSE NULL END,d.ERROR_CATEGORY,d.CREATED_AT,d.UPDATED_AT,d.COMPLETED_AT"
-		p.alias, p.pgFrom, p.myFrom = "d", "mail_deliveries d", "mail_deliveries d"
-		p.pgProjection = "d.id::text,d.purpose,d.recipient_email,d.locale,d.state,d.attempt_count,CASE WHEN d.state='queued' THEN d.next_attempt_at ELSE NULL END,d.error_category,d.created_at,d.updated_at,d.completed_at"
-		p.myProjection = "d.id,d.purpose,d.recipient_email,d.locale,d.state,d.attempt_count,CASE WHEN d.state='queued' THEN d.next_attempt_at ELSE NULL END,d.error_category,d.created_at,d.updated_at,d.completed_at"
+		p.dmFrom = "MAIL_DELIVERIES d LEFT JOIN INVITATIONS v ON v.ID=d.INVITATION_ID"
+		p.dmProjection = "d.ID,d.PURPOSE,d.RECIPIENT_EMAIL,d.LOCALE,d.STATE,d.ATTEMPT_COUNT,CASE WHEN d.STATE='queued' THEN d.NEXT_ATTEMPT_AT ELSE NULL END,d.ERROR_CATEGORY,d.CREATED_AT,d.UPDATED_AT,d.COMPLETED_AT,v.ID,v.VERSION,CASE WHEN v.STATUS='pending' AND v.EXPIRES_AT<=CURRENT_TIMESTAMP(6) THEN 'expired' ELSE v.STATUS END"
+		p.alias, p.pgFrom, p.myFrom = "d", "mail_deliveries d LEFT JOIN invitations v ON v.id=d.invitation_id", "mail_deliveries d LEFT JOIN invitations v ON v.id=d.invitation_id"
+		p.pgProjection = "d.id::text,d.purpose,d.recipient_email,d.locale,d.state,d.attempt_count,CASE WHEN d.state='queued' THEN d.next_attempt_at ELSE NULL END,d.error_category,d.created_at,d.updated_at,d.completed_at,v.id::text,v.version,CASE WHEN v.status='pending' AND v.expires_at<=clock_timestamp() THEN 'expired' ELSE v.status END"
+		p.myProjection = "d.id,d.purpose,d.recipient_email,d.locale,d.state,d.attempt_count,CASE WHEN d.state='queued' THEN d.next_attempt_at ELSE NULL END,d.error_category,d.created_at,d.updated_at,d.completed_at,v.id,v.version,CASE WHEN v.status='pending' AND v.expires_at<=UTC_TIMESTAMP(6) THEN 'expired' ELSE v.status END"
 		if e := enum("state", "queued|sending|sent|failed|cancelled"); e != nil {
 			return listPlan{}, e
 		}

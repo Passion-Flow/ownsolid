@@ -12,9 +12,22 @@ import { EmptyState } from './empty-state.tsx';
 import { Meter } from './meter.tsx';
 import { Notice } from './notice.tsx';
 import { ProblemNotice } from './problem-notice.tsx';
+import { TypedConfirmation } from './typed-confirmation.tsx';
 import { StatusPill } from './status-pill.tsx';
 import { TextField } from './text-field.tsx';
 import { ToastProvider, useToast } from './toast.tsx';
+
+beforeAll(() => {
+  // jsdom has no top layer; these stand in for the browser's behavior.
+  Object.assign(HTMLDialogElement.prototype, {
+    showModal(this: HTMLDialogElement) {
+      this.open = true;
+    },
+    close(this: HTMLDialogElement) {
+      this.open = false;
+    },
+  });
+});
 
 const inEnglish = (node: ReactNode) => render(<I18nProvider locale="en">{node}</I18nProvider>);
 
@@ -59,6 +72,45 @@ describe('Notice', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Failed');
     rerender(<Notice title="Saved" />);
     expect(screen.getByRole('status')).toHaveTextContent('Saved');
+  });
+});
+
+describe('TypedConfirmation', () => {
+  const props = {
+    title: 'Remove this',
+    consequence: 'It is gone for good.',
+    expected: 'Node-1',
+    confirmLabel: 'Remove',
+    pending: false,
+    onClose: () => undefined,
+  };
+
+  it('stays closed to the action until the target is typed', async () => {
+    const onConfirm = vi.fn();
+    inEnglish(<TypedConfirmation {...props} onConfirm={onConfirm} />);
+    const field = screen.getByLabelText('Type Node-1 to confirm', {});
+    const remove = screen.getByRole('button', { name: 'Remove', hidden: true });
+    expect(remove).toBeDisabled();
+    await userEvent.type(field, 'node');
+    expect(remove).toBeDisabled();
+    await userEvent.type(field, '-1 {Enter}');
+    expect(onConfirm).toHaveBeenCalledOnce();
+  });
+
+  it('does not act on Enter before the target is typed, or while it is working', async () => {
+    const onConfirm = vi.fn();
+    const { rerender } = inEnglish(<TypedConfirmation {...props} onConfirm={onConfirm} />);
+    const field = screen.getByLabelText('Type Node-1 to confirm', {});
+    await userEvent.type(field, 'wrong{Enter}');
+    expect(onConfirm).not.toHaveBeenCalled();
+    rerender(
+      <I18nProvider locale="en">
+        <TypedConfirmation {...props} pending onConfirm={onConfirm} />
+      </I18nProvider>,
+    );
+    await userEvent.clear(field);
+    await userEvent.type(field, 'Node-1{Enter}');
+    expect(onConfirm).not.toHaveBeenCalled();
   });
 });
 
@@ -136,18 +188,6 @@ describe('ProblemNotice', () => {
 });
 
 describe('Dialog', () => {
-  beforeAll(() => {
-    // jsdom has no top layer; these stand in for the browser's behavior.
-    Object.assign(HTMLDialogElement.prototype, {
-      showModal(this: HTMLDialogElement) {
-        this.open = true;
-      },
-      close(this: HTMLDialogElement) {
-        this.open = false;
-      },
-    });
-  });
-
   it('opens with its title as the accessible name and closes from the button', async () => {
     const onClose = vi.fn();
     inEnglish(

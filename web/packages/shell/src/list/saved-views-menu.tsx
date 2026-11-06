@@ -96,36 +96,33 @@ export function SavedViewsMenu({ list }: { list: ListView }) {
     setDialog(null);
   };
   const { activeView, changed } = list;
-  const failed = (error: unknown, retry: () => void) => {
-    const title = isProblem(error) ? `problem.${error.code}.title` : '';
-    toast({ message: title ? t('list.views.failed') : t('problem.UNKNOWN.title'), retry });
+  const failed = (retry: () => void) => {
+    toast({ message: t('list.views.failed'), retry });
   };
   const saveChanges = () => {
+    const previous = activeView;
     list.saveChanges().then(
       (saved) => {
-        if (saved) toast({ message: t('list.views.saved', { name: saved.name }) });
+        if (!saved || !previous) return;
+        toast({
+          message: t('list.views.saved', { name: saved.name }),
+          undo: async () => {
+            list.openView(await list.restore(saved, previous));
+          },
+        });
       },
-      (error: unknown) => {
-        failed(error, saveChanges);
+      () => {
+        failed(saveChanges);
       },
     );
   };
   const remove = (view: SavedView) => {
     list.remove(view).then(
       (restore) => {
-        toast({
-          message: t('list.views.deleted', { name: view.name }),
-          undo: () => {
-            restore().catch((error: unknown) => {
-              failed(error, () => {
-                void restore();
-              });
-            });
-          },
-        });
+        toast({ message: t('list.views.deleted', { name: view.name }), undo: restore });
       },
-      (error: unknown) => {
-        failed(error, () => {
+      () => {
+        failed(() => {
           remove(view);
         });
       },
@@ -239,7 +236,13 @@ export function SavedViewsMenu({ list }: { list: ListView }) {
           title={t('list.views.rename.title')}
           initial={dialog.view.name}
           onClose={close}
-          onSave={(name) => list.rename(dialog.view, name)}
+          onSave={async (name) => {
+            const renamed = await list.rename(dialog.view, name);
+            toast({
+              message: t('list.views.saved', { name }),
+              undo: () => list.restore(renamed, dialog.view),
+            });
+          }}
         />
       ) : null}
     </>

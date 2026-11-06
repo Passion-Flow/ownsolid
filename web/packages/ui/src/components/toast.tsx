@@ -19,8 +19,11 @@ const actionClasses =
 /** Options for a toast. */
 export interface ToastOptions {
   message: string;
-  /** Reverses the action; the toast stays longer and offers an undo button. */
-  undo?: (() => void) | undefined;
+  /**
+   * Reverses the action; the toast stays longer and offers an undo button. An undo that
+   * reaches the server returns its promise, so a refusal is reported and can be retried.
+   */
+  undo?: (() => unknown) | undefined;
   /** Repeats what failed; the toast stays longer and offers a retry button. */
   retry?: (() => void) | undefined;
 }
@@ -46,6 +49,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const undo = (action: ToastOptions['undo']) => {
+    Promise.resolve(action?.()).then(
+      () => {
+        show({ message: t('action.undone') });
+      },
+      () => {
+        show({
+          message: t('action.undoFailed'),
+          retry: () => {
+            undo(action);
+          },
+        });
+      },
+    );
+  };
+
   useEffect(
     () => () => {
       clearTimeout(timer.current);
@@ -68,8 +87,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 type="button"
                 className={actionClasses}
                 onClick={() => {
-                  current.undo?.();
-                  show({ message: t('action.undone') });
+                  undo(current.undo);
                 }}
               >
                 {t('action.undo')}

@@ -47,6 +47,17 @@ export function listMailDeliveries(
 }
 
 /**
+ * Revokes an invitation at the version it was read at. Its link stops working for good; a new
+ * invitation can be sent. Fails with `INVITATION_STATE_CONFLICT` when it was accepted meanwhile.
+ */
+export async function revokeInvitation(id: string, version: number, reason: string): Promise<void> {
+  await client.post('/api/v1/admin/invitations/{invitation_id}/revocations', {
+    path: { invitation_id: id },
+    body: { version, reason },
+  });
+}
+
+/**
  * Sends a failed email again and returns the new email. Reuse `idempotencyKey` when
  * retrying the same request, so it cannot send twice.
  */

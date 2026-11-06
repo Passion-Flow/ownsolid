@@ -54,11 +54,17 @@ func scanListRow(kind string, row transaction.Row) (map[string]any, time.Time, s
 		var next, completed *time.Time
 		var category *string
 		var created, updated time.Time
-		e := row.Scan(&id, &purpose, &recipient, &locale, &state, &attempts, &next, &category, &created, &updated, &completed)
+		var invitationID, invitationStatus *string
+		var invitationVersion *int64
+		e := row.Scan(&id, &purpose, &recipient, &locale, &state, &attempts, &next, &category, &created, &updated, &completed, &invitationID, &invitationVersion, &invitationStatus)
 		if e != nil {
 			return nil, time.Time{}, "", e
 		}
-		return map[string]any{"id": id, "purpose": purpose, "recipient_email": recipient, "locale": locale, "state": state, "attempt_count": attempts, "next_attempt_at": optionalListStamp(next), "error_category": optionalListString(category), "created_at": listStamp(created), "updated_at": listStamp(updated), "completed_at": optionalListStamp(completed)}, created, id, nil
+		var invitation any
+		if invitationID != nil && invitationVersion != nil && invitationStatus != nil {
+			invitation = map[string]any{"id": *invitationID, "version": *invitationVersion, "status": *invitationStatus}
+		}
+		return map[string]any{"invitation": invitation, "id": id, "purpose": purpose, "recipient_email": recipient, "locale": locale, "state": state, "attempt_count": attempts, "next_attempt_at": optionalListStamp(next), "error_category": optionalListString(category), "created_at": listStamp(created), "updated_at": listStamp(updated), "completed_at": optionalListStamp(completed)}, created, id, nil
 	case "audit-events":
 		var id, audience, action, outcome, request string
 		var occurred time.Time

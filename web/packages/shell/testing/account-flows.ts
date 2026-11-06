@@ -64,6 +64,15 @@ export function accountFlows(audience: ControlPlane['audience']): void {
     await expect(page.getByLabel('Display name')).toHaveValue('Ada King');
   });
 
+  test('undoes a new name', async ({ page }) => {
+    await page.goto('/account');
+    await page.getByLabel('Display name').fill('Ada King');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await page.getByRole('button', { name: 'Undo' }).click();
+    await expect(page.getByLabel('Display name')).toHaveValue('Ada Lovelace');
+    expect(control.user.display_name).toBe('Ada Lovelace');
+  });
+
   test('refuses an empty name', async ({ page }) => {
     await page.goto('/account');
     await page.getByLabel('Display name').fill('   ');

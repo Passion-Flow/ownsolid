@@ -609,6 +609,14 @@ export interface components {
             updated_at: string;
             /** Format: date-time */
             completed_at: string | null;
+            /** @description The invitation this email carries, in lists only; null for other emails. */
+            invitation?: null | {
+                /** Format: uuid */
+                id: string;
+                version: number;
+                /** @enum {string} */
+                status: "pending" | "accepted" | "revoked" | "expired";
+            };
         };
         HealthResponse: {
             data: {

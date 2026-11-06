@@ -47,5 +47,9 @@ export { Spinner } from './components/spinner.tsx';
 export { Kbd, StatusPill, Tag, type StatusTone, type TagProps } from './components/status-pill.tsx';
 export { Table, Td, Th, Tr } from './components/table.tsx';
 export { TextField, type TextFieldProps } from './components/text-field.tsx';
+export {
+  TypedConfirmation,
+  type TypedConfirmationProps,
+} from './components/typed-confirmation.tsx';
 export { ToastProvider, useToast, type ToastOptions } from './components/toast.tsx';
 export { DensityToggle, ThemeToggle } from './components/preference-toggles.tsx';
