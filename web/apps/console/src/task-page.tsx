@@ -97,8 +97,9 @@ function useTaskLog(id: string, live: boolean, poll: number | false) {
 function Timeline({ detail }: { detail: TaskDetail }) {
   const { t, format } = useI18n();
   const { task } = detail;
-  const steps: TimelineStep[] = detail.steps.map((step) => ({
-    id: step.step,
+  const steps: TimelineStep[] = detail.steps.map((step, index) => ({
+    // A step can run twice, so its name alone does not identify it.
+    id: `${step.step}-${String(index)}`,
     title: t(stepNames[step.step]),
     state: stepStates[step.state],
     duration: step.finished_at

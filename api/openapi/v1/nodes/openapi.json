@@ -303,7 +303,23 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       },
       "parameters": [
         {
@@ -614,7 +630,35 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "AGENT_PROFILE_REJECTED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "IDEMPOTENCY_CONFLICT",
+            "NODE_BUSY"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
       },
       "parameters": [
         {
@@ -3573,7 +3617,24 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "TASK_HISTORY_UNAVAILABLE"
+          ]
+        }
       },
       "parameters": [
         {
@@ -3645,7 +3706,27 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "TASK_HISTORY_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ]
+        }
       },
       "parameters": [
         {
@@ -3736,7 +3817,27 @@
           "components",
           "maintenance",
           "platform"
-        ]
+        ],
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "TASK_HISTORY_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ]
+        }
       },
       "parameters": [
         {
