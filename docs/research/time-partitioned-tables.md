@@ -77,7 +77,8 @@ check, table counts and backup manifests must ignore them, and test fixtures mus
 about eight tables, and its partial unique index for one running task per node has no partition key.
 It is not an append table. Finished tasks instead get an append table, `node_task_history`, written by
 a trigger on the transition to a final state so every path is covered, and rows nothing references
-leave `node_tasks` after a retention period.
+leave `node_tasks` after a retention period. A multi-relation `WHEN` clause on that trigger cannot be
+used: `pg_get_expr`, which the schema catalog calls, refuses an expression over `OLD` and `NEW`.
 
 ## Tables left out
 
@@ -110,7 +111,9 @@ REL-101 and ARC-102 decide it with real replica counts.
 | Backup and restore | Partitions and rows survive, catalog passes | Real backup and restore |
 | Serving role calls the function with another table | Refused | Permission test |
 | Caller changes `search_path` | Objects stay qualified | Hostile `search_path` test |
-| Held claim or stream | No pooled connection held | Pool statistics during a held claim |
+| Held claim | No pooled connection held | More held claims than connections, with pool statistics |
+| Finished task nothing records | Stays in `node_tasks` | Prune keeps a task with no history |
+| Tasks that must stay | Each pass moves on | Prune walks past them in batches of one |
 
 ## What the finished item must do
 

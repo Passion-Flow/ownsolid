@@ -144,7 +144,11 @@ func (s *Service) Tasks(ctx context.Context, a identity.Auth, workspace, id stri
 		if e != nil {
 			return e
 		}
-		pg, my := "SELECT "+taskFields+" FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3", "SELECT "+mysqlTaskFields+" FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=?"
+		// Finished tasks are all in the history, which outlives their rows in node_tasks (ADR 0029).
+		pg, my := "SELECT "+taskFields+" FROM ("+
+			"SELECT "+taskHistoryColumns+" FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND completed_at IS NULL"+
+			" UNION ALL SELECT "+taskHistoryColumns+" FROM node_task_history WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3"+
+			") tasks WHERE true", "SELECT "+mysqlTaskFields+" FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=?"
 		dm := "SELECT " + damengTaskFields + " FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=?"
 		args := []any{n.TenantID, n.WorkspaceID, id}
 		out, e = nodeListRows(ctx, q, nodeSeek(q, pg, my, dm, args, args, "created_at", "id", cursor, limit), limit, fingerprint, func(row transaction.Row) (Task, error) { return scanTask(row) }, func(v Task) (time.Time, string) { return v.CreatedAt, v.ID })

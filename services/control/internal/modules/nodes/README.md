@@ -16,6 +16,8 @@ Agent calls lock only what belongs to their node ([ADR 0020](../../../../../docs
 
 [liveness.go](liveness.go) keeps liveness out of the database ([ADR 0022](../../../../../docs/decisions/0022-liveness-outside-the-database.md)): a heartbeat that repeats the state last written runs one read and goes to [the table](../../platform/liveness/table.go), and `RunLiveness` writes last-seen times and the latest reports in batches and stores connectivity changes. Component and deployment modules write their own rows through `ComponentSightingRecorder` and `InferenceSightingRecorder`. `Node.Connectivity` stays derived from `last_heartbeat_at`, which now lags a heartbeat by up to `liveness_flush_seconds`; `updated_at` no longer moves with it. MySQL and Dameng keep the synchronous heartbeat.
 
+[task_prune.go](task_prune.go) removes finished tasks from `node_tasks` after `retention.task_days`, in batches, once they have a history record and nothing refers to them ([ADR 0029](../../../../../docs/decisions/0029-time-partitioned-append-tables.md)). A trigger writes that record to `node_task_history`, and `Tasks` lists live tasks and the history.
+
 [pacing.go](pacing.go) owns the pacing of this cell's agents ([ADR 0013](../../../../../docs/decisions/0013-agent-pacing.md)): the row, the administrator API, and the per-process copy heartbeat replies read.
 
 Task-event publication is recorded through the same-transaction hook; delivery of a broker message does not itself claim a task. Preserve ownership and lock ordering when extending cross-domain callbacks.

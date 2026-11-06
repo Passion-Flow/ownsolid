@@ -33,6 +33,8 @@ type Service struct {
 	delivering atomic.Bool
 	// wakeCounters report that reader to the metrics store.
 	wakeCounters wakeCounters
+	// prune remembers where the walk of finished tasks stands (ADR 0029).
+	prune taskPruneCursor
 	// resync bounds full resyncs granted by this process (ADR 0011).
 	resync resyncBucket
 	// pacing caches what heartbeat replies tell agents (ADR 0013).

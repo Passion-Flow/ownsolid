@@ -240,3 +240,17 @@ func TestPartitionsDoNotDisturbTheSchemaCheck(t *testing.T) {
 		t.Fatal(e)
 	}
 }
+
+func TestEventTablesKeepTheirMonthsUnlessARetentionIsSet(t *testing.T) {
+	s := fixture.New(t)
+	ctx := context.Background()
+	if e := retention.Pass(ctx, s.DB); e != nil {
+		t.Fatal(e)
+	}
+	for _, table := range []string{"training_events", "model_preparation_events"} {
+		var count int
+		if e := s.DB.QueryRow(ctx, `SELECT count(*) FROM pg_inherits WHERE inhparent=$1::regclass`, table).Scan(&count); e != nil || count != 4 {
+			t.Fatal(table, count, e)
+		}
+	}
+}

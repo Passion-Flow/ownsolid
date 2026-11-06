@@ -103,6 +103,37 @@ func TestARolledBackTaskWakesNobody(t *testing.T) {
 	}
 }
 
+// Agents reach the database only through control, and a held claim costs it nothing: more claims than
+// the pool has connections wait at once, holding none of them (ARC-012).
+func TestHeldClaimsHoldNoDatabaseConnection(t *testing.T) {
+	s, a := setup(t)
+	node := enroll(t, s, a, "Patient node")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	held := int(s.DB.Config().MaxConns) + 5
+	finished := make(chan error, held)
+	for range held {
+		go func() {
+			_, e := s.ClaimWaiting(ctx, node.NodeID, node.Credential, uuid.NewString(), wire.ClaimRequest{WaitSeconds: 30}, openSeat)
+			finished <- e
+		}()
+	}
+	waitUntil(t, "every claim to find no work", func() bool { return s.DB.Stat().AcquiredConns() == 0 && s.WatchedNodes() == 1 })
+	time.Sleep(waitForHeldClaim)
+	if acquired := s.DB.Stat().AcquiredConns(); acquired != 0 {
+		t.Fatalf("%d held claims hold %d connections", held, acquired)
+	}
+	if _, e := s.CreateTask(context.Background(), a, node.NodeID, wire.CollectFacts, uuid.NewString(), uuid.NewString()); e != nil {
+		t.Fatal("the pool was not free for other work:", e)
+	}
+	cancel()
+	for range held {
+		if e := <-finished; e != nil && e.Error() != "NODE_BUSY" {
+			t.Log(e)
+		}
+	}
+}
+
 func TestAClaimStillFindsItsTaskWithoutAWake(t *testing.T) {
 	s, a := setup(t)
 	ctx := context.Background()

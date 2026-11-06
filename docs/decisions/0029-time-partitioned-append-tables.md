@@ -40,9 +40,30 @@ key cost a statement per write, and the Workspace key made renames wait for agen
 come from the server. `PRIMARY KEY (id, occurred_at)` replaces `PRIMARY KEY (id)`; nothing refers to
 the table and IDs are random UUIDs.
 
-**An upgrade copies nothing.** The old table becomes the first partition, from `MINVALUE` to the end
-of the month of the upgrade, and leaves when that month expires. An upgrade adds a key and scans the
-table once, under an exclusive lock, so its duration grows with the audit history.
+**An upgrade copies no audit or event rows.** The old table becomes the first partition, from `MINVALUE` to the end
+of the month of the upgrade, and leaves when that month expires. An upgrade adds a key and scans each
+table once, under an exclusive lock, and rewrites the event tables to add their column, so its
+duration grows with that history.
+
+**Events partition by the creation time of their attempt.** `training_events` and
+`model_preparation_events` must keep `(attempt_id, sequence)` unique, and a partitioned key must hold
+the partition key. A value fixed per attempt adds nothing to the key's meaning, so `attempt_created_at`
+keeps uniqueness exact, and an attempt's events stay in one partition. Writers copy it from the
+attempt. `event_days` defaults to keeping them: dropping training records is the operator's choice.
+
+**Finished tasks get an append table.** `node_tasks` is updated in place, referred to by six tables
+and held to one running task per node, so it cannot be partitioned. A trigger writes
+`node_task_history` when a task finishes, so no path can miss it. A finished task leaves `node_tasks`
+after `task_days` only if it has a history record and nothing refers to it, and the task list reads
+live tasks and the history. Each pass reads one batch and remembers where it stopped, so tasks that
+must stay are not read over and over. Their upgrade copies finished tasks into the history once.
+
+**Connections.** Agents have no database driver. A held claim holds no pooled connection, and more
+claims than the pool has connections wait at once; a test keeps it that way. `pgxpool` is the pool.
+PgBouncer is left to REL-101 and ARC-102, which will know the replica count.
+
+**Left out.** `task_event_outbox`, `task_event_receipts` and `task_event_dead_letters` are updated in
+place, and `control_outbox` holds minutes of small rows.
 
 ## Consequences
 
@@ -50,3 +71,7 @@ table once, under an exclusive lock, so its duration grows with the audit histor
 - The first partition keeps rows older than the retention until its last month expires, so storage
   falls only then.
 - A drop can make writers of the parent wait up to two seconds, once a month.
+- Attaching or dropping a partition with a foreign key also locks the referenced table briefly, so
+  event tables wait for writers of attempts. A timeout is retried.
+- Idempotency keys of tasks pruned from `node_tasks` stop matching after `task_days`.
+- A task finished before an upgrade that nothing refers to leaves `node_tasks` like any other.

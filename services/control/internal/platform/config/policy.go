@@ -84,6 +84,13 @@ type RetentionPolicy struct {
 	SessionDays      int `yaml:"session_days"`
 	RateGraceSeconds int `yaml:"rate_grace_seconds"`
 	AuditDays        int `yaml:"audit_days"`
+	// EventDays keeps training and model preparation events this long, as a minimum, because
+	// they leave with their whole month (ADR 0029). Zero keeps them.
+	EventDays int `yaml:"event_days"`
+	// TaskDays is how long a finished task stays in node_tasks, and TaskHistoryDays how long it
+	// stays in the history, as a minimum. The history must outlive the row.
+	TaskDays        int `yaml:"task_days"`
+	TaskHistoryDays int `yaml:"task_history_days"`
 }
 type NodesPolicy struct {
 	MaximumLiveNodes        int `yaml:"maximum_live_nodes"`
@@ -170,7 +177,7 @@ func DefaultRuntimePolicy() RuntimePolicy {
 		HTTP:           DefaultHTTPPolicy(),
 		Identity:       IdentityPolicy{InvitationTTLSeconds: 86400, ResetTTLSeconds: 900, PortalIdleSeconds: 1800, PortalAbsoluteSeconds: 43200, AdminIdleSeconds: 900, AdminAbsoluteSeconds: 14400, CSRFSeconds: 900, SessionTouchSeconds: 60, SessionWarningSeconds: 120, IdempotencySeconds: 86400, HashWorkers: 2, HashQueueCapacity: 16, HashAdmissionMilliseconds: 2000, MaxLiveResetTokens: 3, ResetMinimumMilliseconds: 300, ResetJitterMilliseconds: 50, AuditDefaultDays: 7, AuditMaxDays: 31},
 		Mail:           MailPolicy{PollMilliseconds: 1000, AttemptSeconds: 25, LeaseSeconds: 60, MaxAttempts: 5, Retry1Seconds: 15, Retry2Seconds: 60, Retry3Seconds: 180, Retry4Seconds: 300, JitterPercent: 10},
-		Retention:      RetentionPolicy{IntervalSeconds: 60, TimeoutSeconds: 5, BatchSize: 100, MailDays: 30, ResetDays: 30, InvitationDays: 90, SessionDays: 7, RateGraceSeconds: 3600, AuditDays: 180},
+		Retention:      RetentionPolicy{TaskDays: 30, TaskHistoryDays: 365, IntervalSeconds: 60, TimeoutSeconds: 5, BatchSize: 100, MailDays: 30, ResetDays: 30, InvitationDays: 90, SessionDays: 7, RateGraceSeconds: 3600, AuditDays: 180},
 		Nodes:          NodesPolicy{MaximumLiveNodes: 100, MaximumLiveJoinTokens: 100, JoinTTLSeconds: 600, OnlineSeconds: 30, OfflineSeconds: 120, TaskSeconds: 300, InferenceDeploySeconds: 1800, TaskLeaseSeconds: 30, MaximumTaskAttempts: 3, TaskSweepBatch: 100, ReconcileSeconds: 30, ReconcileTimeoutSeconds: 5, MaximumTaskDeliveries: 10, ResyncIntervalSeconds: 300, ResyncPerSecond: 20, LivenessFlushSeconds: 3, StateRefreshSeconds: 300, OutboxPollMilliseconds: 200, OutboxRetentionSeconds: 300},
 		Models:         DefaultModelsPolicy(),
 		Distribution:   DistributionPolicy{RecoverySeconds: 600, KeyTTLSeconds: 86400, KeyMaxTTLSeconds: 7776000, KeyMaxActive: 100, AliasMaxActive: 16, MaxConcurrentRequests: 4, RequestSeconds: 90, ContextTokens: 2048, OutputTokens: 512, RequestsPerWindow: 60, RateWindowSeconds: 60},
@@ -334,6 +341,12 @@ func (p RuntimePolicy) Validate() error {
 		return errors.New("CONFIG_RETENTION_BOUNDS_INVALID")
 	}
 	if p.Retention.RateGraceSeconds < 1 || p.Retention.RateGraceSeconds > 86400 {
+		return errors.New("CONFIG_RETENTION_BOUNDS_INVALID")
+	}
+	if p.Retention.TaskDays < 1 || p.Retention.TaskDays > 3650 || p.Retention.TaskHistoryDays < p.Retention.TaskDays || p.Retention.TaskHistoryDays > 3650 {
+		return errors.New("CONFIG_RETENTION_BOUNDS_INVALID")
+	}
+	if p.Retention.EventDays != 0 && (p.Retention.EventDays < 30 || p.Retention.EventDays > 3650) {
 		return errors.New("CONFIG_RETENTION_BOUNDS_INVALID")
 	}
 	if p.Retention.AuditDays < 1 || p.Retention.AuditDays > 3650 {
