@@ -12,7 +12,7 @@ import (
 var globalTables = map[string]bool{
 	"cells": true, "installation_state": true, "invitations": true, "mail_deliveries": true,
 	"password_credentials": true, "password_reset_tokens": true, "platform_license_artifacts": true,
-	"platform_license_state": true, "schema_migrations": true, "sessions": true, "sites": true,
+	"platform_license_state": true, "saved_views": true, "schema_migrations": true, "sessions": true, "sites": true,
 	"sso_bindings": true, "sso_connectors": true, "sso_flows": true, "sso_mutation_intents": true,
 	"tenants": true, "terminal_notifications": true, "user_preferences": true, "users": true,
 	"workspace_memberships": true, "workspace_notes": true, "workspaces": true,

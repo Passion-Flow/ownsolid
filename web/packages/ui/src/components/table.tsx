@@ -25,7 +25,7 @@ export function Tr({ className, ...props }: ComponentProps<'tr'>) {
   return (
     <tr
       className={cn(
-        'transition-colors duration-100 hover:[&>td]:bg-surface-2 aria-selected:[&>td]:bg-accent-soft [&:last-child>td]:border-b-0',
+        'transition-colors duration-100 hover:[&>td]:bg-surface-2 data-[selected]:[&>td]:bg-accent-soft [&:last-child>td]:border-b-0',
         className,
       )}
       {...props}

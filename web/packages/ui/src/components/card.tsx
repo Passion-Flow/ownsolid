@@ -1,11 +1,14 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { cn } from '../cn.ts';
 
-/** A surface that groups related content. */
+/**
+ * A surface that groups related content. It contains what is positioned inside it, so the
+ * visually hidden text of a table that scrolls in a card cannot widen the page.
+ */
 export function Card({ className, ...props }: ComponentProps<'section'>) {
   return (
     <section
-      className={cn('rounded-card border border-border bg-surface shadow-1', className)}
+      className={cn('relative rounded-card border border-border bg-surface shadow-1', className)}
       {...props}
     />
   );

@@ -13,6 +13,7 @@ export { Button, buttonVariants, type ButtonProps } from './components/button.ts
 export { Card, CardBody, CardHeader, type CardHeaderProps } from './components/card.tsx';
 export {
   Checkbox,
+  type CheckboxProps,
   Segmented,
   Switch,
   type SegmentedOption,
@@ -23,9 +24,19 @@ export { CopyText, type CopyTextProps } from './components/copy-text.tsx';
 export { Dialog, Drawer, ModalSurface, type DialogProps } from './components/dialog.tsx';
 export { EmptyState, Skeleton, type EmptyStateProps } from './components/empty-state.tsx';
 export { LocaleSelect } from './components/locale-select.tsx';
-export { Menu, MenuItem, MenuLabel, MenuSeparator, type MenuProps } from './components/menu.tsx';
+export {
+  Menu,
+  MenuCheckboxItem,
+  MenuItem,
+  MenuLabel,
+  MenuSeparator,
+  type MenuProps,
+} from './components/menu.tsx';
 export { Meter, type MeterProps } from './components/meter.tsx';
 export { Notice, type NoticeProps } from './components/notice.tsx';
+export { BulkBar, type BulkBarProps } from './components/bulk-bar.tsx';
+export { SearchField, type SearchFieldProps } from './components/search-field.tsx';
+export { FilterSelect, type FilterSelectProps } from './components/filter-select.tsx';
 export {
   ProblemNotice,
   type ProblemLike,

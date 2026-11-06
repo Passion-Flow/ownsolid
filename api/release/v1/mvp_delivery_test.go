@@ -78,7 +78,7 @@ func TestMVPSelectionRequiresEveryCapabilityAssetAndExactIndependentLineage(t *t
 		"old-platform-schema":       func(m *Manifest) { m.SchemaVersion, m.MaximumPredecessor = 27, 27 },
 		"old-runtime":               func(m *Manifest) { m.Cumulative.ApplicationProfile = "releases" },
 		"old-predecessor":           func(m *Manifest) { m.MinimumPredecessor = 21 },
-		"future-predecessor":        func(m *Manifest) { m.MaximumPredecessor = 39 },
+		"future-predecessor":        func(m *Manifest) { m.MaximumPredecessor = 40 },
 		"partial-capabilities":      func(m *Manifest) { m.Capabilities = m.Capabilities[:29] },
 		"missing-middle-capability": func(m *Manifest) { m.Capabilities[22] = "M22" },
 		"wrong-native-client":       func(m *Manifest) { m.Cumulative.ComponentVersions["native-postgres"] = "18.5" },
@@ -118,7 +118,7 @@ func TestMVPLineageDescriptorIsCompletePrivateCopy(t *testing.T) {
 	if err := json.Unmarshal(raw, &descriptor); err != nil {
 		t.Fatal(err)
 	}
-	if descriptor.Application != MVPPostgreSQLCPUApplicationProfile || descriptor.Schema != 38 || descriptor.Tables != 111 || descriptor.Prefix != "account22" || descriptor.PrefixVersion != 22 || len(descriptor.Entries) != 38 {
+	if descriptor.Application != MVPPostgreSQLCPUApplicationProfile || descriptor.Schema != 39 || descriptor.Tables != 112 || descriptor.Prefix != "account22" || descriptor.PrefixVersion != 22 || len(descriptor.Entries) != 39 {
 		t.Fatal("lineage identity or count differs")
 	}
 	for i, entry := range descriptor.Entries {
