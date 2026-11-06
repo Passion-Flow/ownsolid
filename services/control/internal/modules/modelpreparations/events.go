@@ -47,7 +47,7 @@ func (s *Service) RecordEvents(ctx context.Context, node, credential, task, toke
 			if bytes+int64(len(canonical))+1 > command.Recipe.Resources.MaximumEventBytes {
 				return fail("MODEL_PREPARATION_EVENT_LIMIT")
 			}
-			if _, e = tx.Exec(ctx, preparationSelectedSQL(tx, preparationDM(`INSERT INTO "MODEL_PREPARATION_EVENTS"("TENANT_ID","WORKSPACE_ID","PREPARATION_ID","ATTEMPT_ID","SEQUENCE","KIND","PAYLOAD","CANONICAL_SHA256") VALUES(?,?,?,?,?,?,CAST(? AS CLOB),?)`, 6), `INSERT INTO model_preparation_events(tenant_id,workspace_id,preparation_id,attempt_id,sequence,kind,payload,canonical_sha256) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, `INSERT INTO model_preparation_events(tenant_id,workspace_id,preparation_id,attempt_id,sequence,kind,payload,canonical_sha256) VALUES(?,?,?,?,?,?,CAST(? AS JSON),?)`, w.TenantID, w.ID, p.ID, command.AttemptID, event.Sequence, event.Kind, canonical, sha)); e != nil {
+			if _, e = tx.Exec(ctx, preparationSelectedSQL(tx, preparationDM(`INSERT INTO "MODEL_PREPARATION_EVENTS"("TENANT_ID","WORKSPACE_ID","PREPARATION_ID","ATTEMPT_ID","SEQUENCE","KIND","PAYLOAD","CANONICAL_SHA256") VALUES(?,?,?,?,?,?,CAST(? AS CLOB),?)`, 6), `INSERT INTO model_preparation_events(tenant_id,workspace_id,preparation_id,attempt_id,sequence,kind,payload,canonical_sha256,attempt_created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,(SELECT created_at FROM model_preparation_attempts WHERE id=$4))`, `INSERT INTO model_preparation_events(tenant_id,workspace_id,preparation_id,attempt_id,sequence,kind,payload,canonical_sha256) VALUES(?,?,?,?,?,?,CAST(? AS JSON),?)`, w.TenantID, w.ID, p.ID, command.AttemptID, event.Sequence, event.Kind, canonical, sha)); e != nil {
 				return e
 			}
 			sequence = event.Sequence
