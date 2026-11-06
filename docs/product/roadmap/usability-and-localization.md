@@ -23,7 +23,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 
 - [ ] UX-101 Console overview: quick actions, needs-attention list with next steps, setup checklist, fleet health (P1) - Catalog: F435
 - [ ] UX-102 Portal home: apps and assistants, conversations, my resources and usage (P1) - Catalog: F425, F426, F429
-- [ ] UX-103 Shared list pattern: filter bar, saved views, column chooser, bulk selection with action bar, detail drawer (P1)
+- [x] UX-103 Shared list pattern: filter bar, saved views, column chooser, bulk selection with action bar, detail drawer (P1) - Evidence: 5c630cf; real Chromium saved, opened and deleted a view and read an email's details on an offline install on `ownsolid-cpu` upgraded in place to schema 39, 2026-11-06
 - [ ] UX-104 Long-task pattern: step timeline, live log, tasks continue when the page is left (P1)
 - [ ] UX-105 Undo for reversible actions; typed confirmation only for irreversible ones (P1)
 - [ ] UX-106 Global search across nodes, models, apps, users and tasks (P1)
