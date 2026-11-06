@@ -69,6 +69,7 @@ keep them open, and tick them when the run happens.
 | Models | Every model type over time; embeddings and rerank count as model serving. |
 | Telemetry and logs | A dedicated time-series store and log store, never the control-plane database. Chosen by license, offline packaging and a load test at about 17 million series: VictoriaMetrics and VictoriaLogs, open-source editions (ADR 0009). |
 | Scientific computing | Models that run as jobs on files (structure prediction, design, sequence optimization) use one task-type contract on the job model; domain packs, life sciences first, build on it. Models with restrictive terms run only under the customer's licence ([research](../../research/scientific-computing.md)). |
+| What is in each entrance | Who the person is decides the entrance, not which subsystem a feature belongs to. A capability usually appears in both, with different scope and verbs: the console allocates and limits across every tenant, the portal submits and calls within one workspace ([ADR 0035](../../decisions/0035-what-belongs-in-each-entrance.md)). |
 | Entrances | Four: admin console, portal, model gateway and agent endpoint. Each has its own hostname; four hostnames on one TLS port is the default, a listener per entrance is configurable, and two browser entrances never share an origin ([ADR 0027](../../decisions/0027-entrance-addresses.md)). |
 | Demo | Decided later. Build and polish first. |
 
@@ -115,6 +116,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 23 | Developer experience | [developer-experience.md](developer-experience.md) | - | 0/8 | 0/5 | - | 0/1 |
 | 24 | Compatibility matrix | [compatibility-matrix.md](compatibility-matrix.md) | - | - | 0/10 | - | 0/12 |
 | 25 | Scientific computing | [scientific-computing.md](scientific-computing.md) | - | 0/9 | 0/10 | - | - |
+| 26 | Portal | [portal.md](portal.md) | - | 0/14 | 0/3 | - | - |
 
 ## Sources
 
