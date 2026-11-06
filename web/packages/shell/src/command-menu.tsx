@@ -1,6 +1,6 @@
 import { useI18n, supportedLocales } from '@ownsolid/i18n';
 import { ModalSurface, usePreferences, resolveTheme, useToast } from '@ownsolid/ui';
-import { useRouter } from '@tanstack/react-router';
+import { useRouter, useRouterState } from '@tanstack/react-router';
 import { Command, defaultFilter, useCommandState } from 'cmdk';
 import {
   Building2,
@@ -9,6 +9,7 @@ import {
   LogOut,
   Moon,
   PanelLeft,
+  Pin,
   RotateCw,
   Rows3,
   Sun,
@@ -16,7 +17,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useCommandSearch, type SearchSource } from './command-search.ts';
-import type { NavGroup } from './navigation.ts';
+import { findNavItem, type NavGroup } from './navigation.ts';
+import { accountPath } from './redirect.ts';
+import { usePins } from './use-pins.ts';
 import { useWorkspaces } from './workspace.ts';
 
 const groupClasses =
@@ -106,6 +109,8 @@ export function CommandMenu({
   const { theme, setTheme, density, setDensity, navigationCollapsed, setNavigationCollapsed } =
     usePreferences();
   const workspaces = useWorkspaces();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { pinned, toggle: togglePin } = usePins();
   const input = useRef<HTMLInputElement>(null);
   const [typed, setTyped] = useState('');
   // Each opening starts a new search.
@@ -130,6 +135,9 @@ export function CommandMenu({
   const pages = navigation
     .flatMap((group) => group.items)
     .flatMap((item) => (item.to ? [{ ...item, to: item.to }] : []));
+  // The account page is reached from the user menu, so it has no place in the sidebar to pin.
+  const currentPage = findNavItem(navigation, pathname)?.item;
+  const pinnable = currentPage?.to !== accountPath ? currentPage : undefined;
   const otherWorkspaces = workspaces.items.filter((item) => item.id !== workspaces.active?.id);
 
   return (
@@ -179,6 +187,18 @@ export function CommandMenu({
             >
               {navigationCollapsed ? t('nav.expand') : t('nav.collapse')}
             </Item>
+            {pinnable?.to && navigation.some((group) => group.heading) ? (
+              <Item
+                icon={Pin}
+                onSelect={run(() => {
+                  if (pinnable.to) togglePin(pinnable.to);
+                })}
+              >
+                {t(pinned.includes(pinnable.to) ? 'nav.unpin' : 'nav.pin', {
+                  name: t(pinnable.label),
+                })}
+              </Item>
+            ) : null}
             {supportedLocales
               .filter((value) => value !== locale)
               .map((value) => (

@@ -3,11 +3,12 @@
 import { useI18n } from '@ownsolid/i18n';
 import { Brand, Button, SearchField, cn, usePreferences } from '@ownsolid/ui';
 import { Link, useRouter, useRouterState } from '@tanstack/react-router';
-import { ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { useId, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { ChevronRight, PanelLeftClose, PanelLeftOpen, Pin, PinOff } from 'lucide-react';
+import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { LicenseStatus } from './license-status.tsx';
 import { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
 import { RailTip } from './rail-tip.tsx';
+import { usePins } from './use-pins.ts';
 
 const itemClasses =
   'relative flex h-[34px] items-center gap-2.5 rounded-control px-2.5 font-medium text-text-2 no-underline';
@@ -19,14 +20,45 @@ const linkClasses = cn(
   'data-[status=active]:before:absolute data-[status=active]:before:inset-y-1.5 data-[status=active]:before:left-0 data-[status=active]:before:w-[3px] data-[status=active]:before:rounded-full data-[status=active]:before:bg-accent',
 );
 
+/** Pins a page or takes it off. It shows on hover and focus, and always where it is pinned. */
+function PinButton({
+  label,
+  pinned,
+  onToggle,
+}: {
+  label: string;
+  pinned: boolean;
+  onToggle: () => void;
+}) {
+  const { t } = useI18n();
+  const Icon = pinned ? PinOff : Pin;
+  return (
+    <button
+      type="button"
+      aria-label={t(pinned ? 'nav.unpin' : 'nav.pin', { name: label })}
+      onClick={onToggle}
+      className={cn(
+        'absolute top-[5px] right-1 grid size-6 cursor-pointer place-items-center rounded-control border-0 bg-transparent text-text-3 hover:bg-surface-3 hover:text-text',
+        'group-hover/item:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100',
+        pinned ? 'opacity-100' : 'opacity-0',
+      )}
+    >
+      <Icon aria-hidden className="size-3.5" />
+    </button>
+  );
+}
+
 function Item({
   item,
   rail,
   onNavigate,
+  pin,
 }: {
   item: NavItem;
   rail: boolean;
   onNavigate: (() => void) | undefined;
+  /** Offers to pin the page; absent where a navigation has nothing to pin. */
+  pin?: { pinned: boolean; onToggle: () => void } | undefined;
 }) {
   const { t } = useI18n();
   const label = t(item.label);
@@ -41,7 +73,7 @@ function Item({
       to={item.to}
       onClick={onNavigate}
       activeOptions={{ exact: item.to === '/' }}
-      className={cn(itemClasses, linkClasses, rail && 'justify-center px-0')}
+      className={cn(itemClasses, linkClasses, rail && 'justify-center px-0', pin && 'pr-8')}
     >
       {content}
     </Link>
@@ -54,7 +86,12 @@ function Item({
       {content}
     </span>
   );
-  return <li>{rail ? <RailTip label={label}>{row}</RailTip> : row}</li>;
+  return (
+    <li className="group/item relative">
+      {rail ? <RailTip label={label}>{row}</RailTip> : row}
+      {pin && item.to ? <PinButton label={label} {...pin} /> : null}
+    </li>
+  );
 }
 
 function Group({
@@ -111,6 +148,15 @@ function Group({
   );
 }
 
+/** The items a person pinned, leaving out any whose page has gone. */
+function usePinnedGroup(groups: readonly NavGroup[], pinned: readonly string[]): NavGroup | null {
+  return useMemo(() => {
+    const destinations = groups.flatMap((group) => group.items);
+    const items = pinned.flatMap((path) => destinations.filter((item) => item.to === path));
+    return items.length > 0 ? { heading: 'nav.pinned', items } : null;
+  }, [groups, pinned]);
+}
+
 /** Which groups the person opened or closed by hand. Moving to another page forgets it. */
 function useToggledGroups() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -133,6 +179,9 @@ function Navigation({
   const { t } = useI18n();
   const router = useRouter();
   const { pathname, toggled, setToggled } = useToggledGroups();
+  const { pinned, toggle } = usePins();
+  const pinnedGroup = usePinnedGroup(groups, pinned);
+  const filterBox = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState('');
   const [filteredAt, setFilteredAt] = useState(pathname);
   if (pathname !== filteredAt) {
@@ -159,10 +208,47 @@ function Navigation({
   };
   // A small navigation has nothing to open, close or filter.
   const collapsible = groups.some((group) => group.heading);
+  const pinOf = (item: NavItem) =>
+    collapsible && item.to
+      ? {
+          pinned: pinned.includes(item.to),
+          onToggle: () => {
+            if (item.to) toggle(item.to);
+          },
+        }
+      : undefined;
   return (
     <nav aria-label={t('nav.label')} className="px-2.5 pt-1 pb-5">
+      {pinnedGroup && term === '' ? (
+        <div className="mb-3.5">
+          <Group group={pinnedGroup} open current={false} onToggle={undefined}>
+            {pinnedGroup.items.map((item) => {
+              const pin = pinOf(item);
+              return (
+                <Item
+                  key={item.label}
+                  item={item}
+                  rail={false}
+                  onNavigate={onNavigate}
+                  pin={
+                    pin && {
+                      ...pin,
+                      // The button goes with its row, and focus must not go with it.
+                      onToggle: () => {
+                        pin.onToggle();
+                        filterBox.current?.focus();
+                      },
+                    }
+                  }
+                />
+              );
+            })}
+          </Group>
+        </div>
+      ) : null}
       {collapsible ? (
         <SearchField
+          ref={filterBox}
           label={t('nav.filter')}
           placeholder={t('nav.filter')}
           className="mb-1 h-8 text-[13px]"
@@ -199,7 +285,13 @@ function Navigation({
             }
           >
             {shown.map((item) => (
-              <Item key={item.label} item={item} rail={false} onNavigate={onNavigate} />
+              <Item
+                key={item.label}
+                item={item}
+                rail={false}
+                onNavigate={onNavigate}
+                pin={pinOf(item)}
+              />
             ))}
           </Group>
         );
@@ -210,9 +302,11 @@ function Navigation({
 
 function Rail({ groups }: { groups: readonly NavGroup[] }) {
   const { t } = useI18n();
+  const { pinned } = usePins();
+  const pinnedGroup = usePinnedGroup(groups, pinned);
   return (
     <nav aria-label={t('nav.label')} className="px-2 pt-1 pb-5">
-      {groups.map((group, index) => (
+      {(pinnedGroup ? [pinnedGroup, ...groups] : groups).map((group, index) => (
         <ul
           key={group.heading ?? 'start'}
           aria-label={group.heading ? t(group.heading) : undefined}

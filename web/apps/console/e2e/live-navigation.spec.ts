@@ -53,6 +53,10 @@ test('groups, the filter and the rail work, and the rail follows the account', a
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/license/);
 
+  // A pin reaches the second browser too, and comes off at the end.
+  await nav(page).getByRole('button', { name: 'Pin License' }).click();
+  await expect(nav(page).getByText('Pinned', { exact: true })).toBeVisible();
+
   await sidebar(page).getByRole('button', { name: 'Collapse navigation' }).click();
   await link(page, 'Nodes').hover();
   await expect(sidebar(page).locator('.fixed')).toHaveText('Nodes');
@@ -67,11 +71,14 @@ test('groups, the filter and the rail work, and the rail follows the account', a
   try {
     await signIn(second, '/tasks');
     await expect(sidebar(second).getByRole('button', { name: 'Expand navigation' })).toBeVisible();
+    await expect(sidebar(second).getByRole('list', { name: 'Pinned' })).toContainText('License');
   } finally {
     await other.close();
   }
   await sidebar(page).getByRole('button', { name: 'Expand navigation' }).click();
   await expect(sidebar(page).getByRole('button', { name: 'Collapse navigation' })).toBeVisible();
+  await nav(page).getByRole('button', { name: 'Unpin License' }).first().click();
+  await expect(nav(page).getByText('Pinned', { exact: true })).toHaveCount(0);
   await page.reload();
   await expect(nav(page).getByRole('searchbox', { name: 'Filter pages' })).toBeVisible();
   expect(problems).toEqual([]);

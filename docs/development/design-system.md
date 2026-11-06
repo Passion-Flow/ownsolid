@@ -96,7 +96,7 @@ Groups collapse: only the group of the current page is open, and what a person o
 move to another page. A heading only opens and closes. A filter above the groups finds any page, and a person
 can keep the sidebar to its icons, which follows the account
 ([research](../research/console-navigation.md)). The current page is marked by a bar and by weight, never by
-colour alone. Reach a page in a test through its group's heading, or through the address.
+colour alone. A person can pin pages to the top of the sidebar, also on the account. Reach a page in a test through its group's heading, or through the address.
 
 The command menu also finds things on the server ([research](../research/global-search.md)). A module
 adds a `SearchSource` to the application's `search-sources.ts`, which asks the list its page shows with
