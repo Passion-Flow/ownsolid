@@ -50,6 +50,16 @@ test('finds real nodes, people, tasks and workspaces, and opens each', async ({ 
   await page.goto(`/nodes?name=${encodeURIComponent(part)}`);
   await expect(page.getByRole('row').filter({ hasText: nodeName })).toBeVisible();
 
+  // The summary filters the list, and the address carries it.
+  const online = page.getByRole('group', { name: 'Show nodes' }).getByRole('button', {
+    name: 'Online',
+  });
+  await online.click();
+  await expect(page).toHaveURL(/connectivity=online/);
+  await expect(page.getByRole('row').filter({ hasText: nodeName })).toBeVisible();
+  await online.click();
+  await expect(page).not.toHaveURL(/connectivity=/);
+
   // A task to find, from the same node.
   await page.goto('/tasks');
   await page.getByRole('button', { name: 'Collect node facts' }).click();

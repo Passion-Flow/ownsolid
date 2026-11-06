@@ -118,7 +118,8 @@ this browser. The server checks access to the workspace on every request.
   ([research](../research/console-list-pattern.md)). Declare the list's filters and columns
   as a `ListDefinition` and keep its state with `useListView`; the toolbar holds a
   `SearchField`, `Segmented` or `FilterSelect` choices, then `SavedViewsMenu` and
-  `ColumnChooser` at the right. Saved views follow the account; the screen is remembered in
+  `ColumnChooser` at the right. A list with figures from the server puts them in `FilterTiles` above the
+  toolbar, where each figure is also its filter. Saved views follow the account; the screen is remembered in
   this browser. Filter on the server, so paging stays correct.
   - The column that names a row is `locked` and opens the row's `Drawer`.
   - Rows an action applies to get a checkbox, and the header checkbox has three states.

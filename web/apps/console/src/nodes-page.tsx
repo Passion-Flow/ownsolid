@@ -35,10 +35,10 @@ import {
   Card,
   Checkbox,
   EmptyState,
+  FilterTiles,
   FilterSelect,
   ProblemNotice,
   SearchField,
-  Segmented,
   Skeleton,
   StatusPill,
   Table,
@@ -511,6 +511,20 @@ export function NodesPage() {
         </div>
       </div>
       <PendingJoins />
+      <FilterTiles
+        label={t('nodes.filter')}
+        value={connectivity ?? 'all'}
+        tiles={filters.map((value) => ({
+          value,
+          label: t(`nodes.filter.${value}`),
+          count: count(value),
+          attention: value === 'offline',
+        }))}
+        onChange={(value) => {
+          // A second press on the chosen tile goes back to everything.
+          list.setFilter('connectivity', value === 'all' || value === connectivity ? '' : value);
+        }}
+      />
       <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
         <SearchField
           label={t('nodes.search')}
@@ -519,23 +533,6 @@ export function NodesPage() {
           value={typed}
           onChange={(event) => {
             setTyped(event.target.value);
-          }}
-        />
-        <Segmented
-          label={t('nodes.filter')}
-          value={connectivity ?? 'all'}
-          options={filters.map((value) => {
-            const number = count(value);
-            return {
-              value,
-              label:
-                number === undefined
-                  ? t(`nodes.filter.${value}`)
-                  : t(`nodes.filter.${value}.count`, { count: number }),
-            };
-          })}
-          onChange={(value) => {
-            list.setFilter('connectivity', value === 'all' ? '' : value);
           }}
         />
         <FilterSelect
