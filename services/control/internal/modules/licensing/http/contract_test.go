@@ -51,6 +51,44 @@ func TestLicenseHTTPFormAndDiagnosticLimitsMatchActualProtocol(t *testing.T) {
 	}
 }
 
+func TestLicenseInspectionContractMatchesActualFields(t *testing.T) {
+	raw, e := os.ReadFile("../../../../../../api/openapi/v1/licensing/openapi.json")
+	if e != nil {
+		t.Fatal(e)
+	}
+	var contract struct {
+		Components struct {
+			Schemas map[string]struct {
+				Required   []string                   `json:"required"`
+				Properties map[string]json.RawMessage `json:"properties"`
+			} `json:"schemas"`
+		} `json:"components"`
+	}
+	if e = json.Unmarshal(raw, &contract); e != nil {
+		t.Fatal(e)
+	}
+	terms := licensing.FileTerms{Summary: licensing.Summary{}}
+	for schema, value := range map[string]any{"LicenseInspection": licensing.Inspection{}, "LicenseFileTerms": terms, "LicenseCheck": licensing.Check{}, "InspectLicense": licensing.InspectInput{}, "LicenseState": licensing.State{}} {
+		encoded, e := json.Marshal(value)
+		if e != nil {
+			t.Fatal(e)
+		}
+		var fields map[string]json.RawMessage
+		if e = json.Unmarshal(encoded, &fields); e != nil {
+			t.Fatal(e)
+		}
+		declared := contract.Components.Schemas[schema]
+		if len(fields) != len(declared.Properties) || len(fields) != len(declared.Required) {
+			t.Fatal("field count drift", schema, len(fields), len(declared.Properties), len(declared.Required))
+		}
+		for name := range fields {
+			if _, ok := declared.Properties[name]; !ok {
+				t.Fatal("actual field missing from contract", schema, name)
+			}
+		}
+	}
+}
+
 // Central License admission runs before every owning human mutation handler;
 // therefore every Go Problem schema must describe those exact public failures.
 func TestAllHumanHTTPProblemsIncludeCentralLicenseErrors(t *testing.T) {

@@ -1,11 +1,16 @@
 import {
+  activeLicense,
+  activeSummary,
   adminUser,
+  checksStoppingAt,
   failedMail,
   disabledNode,
   failedTask,
   finishedTask,
+  importableInspection,
   joinToken,
   memberUser,
+  missingLicense,
   node,
   offlineNode,
   pendingInvitation,
@@ -51,6 +56,20 @@ async function openNodes(page: Page, control: ControlPlane): Promise<void> {
   control.signedIn = true;
   await page.goto('/nodes');
   await page.getByRole('heading', { name: 'Nodes', level: 1 }).waitFor();
+}
+
+async function openLicense(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/license');
+  await page.getByRole('heading', { name: 'License', level: 1 }).waitFor();
+}
+
+async function chooseLicenseFile(page: Page): Promise<void> {
+  await page.getByTestId('license-file').setInputFiles({
+    name: 'license.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"payload":"..."}'),
+  });
 }
 
 async function openSettings(page: Page, control: ControlPlane): Promise<void> {
@@ -424,6 +443,71 @@ export const consolePages: readonly PageState[] = [
       control.mailProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
       await openMail(page, control);
       await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
+    name: 'license in force',
+    path: '/license',
+    open: async (page, control) => {
+      await openLicense(page, control);
+      await page.getByText('Northwind Compute').waitFor();
+    },
+  },
+  {
+    name: 'license missing',
+    path: '/license',
+    open: async (page, control) => {
+      control.license = missingLicense;
+      await openLicense(page, control);
+      await page.getByText('No license is installed').waitFor();
+    },
+  },
+  {
+    name: 'license expired with a renewal waiting',
+    path: '/license',
+    open: async (page, control) => {
+      control.license = {
+        ...activeLicense,
+        state: 'expired',
+        new_business_allowed: false,
+        warning: true,
+        pending: { ...activeSummary, license_id: importableInspection.file?.license_id ?? '' },
+      };
+      await openLicense(page, control);
+      await page.getByText('The license has expired').waitFor();
+    },
+  },
+  {
+    name: 'license that could not load',
+    path: '/license',
+    open: async (page, control) => {
+      control.licenseProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await openLicense(page, control);
+      await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
+    name: 'license file ready to import',
+    path: '/license',
+    open: async (page, control) => {
+      await openLicense(page, control);
+      await chooseLicenseFile(page);
+      await page.getByRole('button', { name: 'Import this license' }).waitFor();
+    },
+  },
+  {
+    name: 'license file refused',
+    path: '/license',
+    open: async (page, control) => {
+      control.inspection = {
+        ...importableInspection,
+        outcome: 'refused',
+        code: 'LICENSE_DEPLOYMENT_MISMATCH',
+        checks: checksStoppingAt('deployment'),
+      };
+      await openLicense(page, control);
+      await chooseLicenseFile(page);
+      await page.getByText('This file is for another installation').waitFor();
     },
   },
   {

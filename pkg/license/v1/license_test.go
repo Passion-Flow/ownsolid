@@ -238,3 +238,66 @@ func TestLicenseClaimsUnicodeEscapesRefuseSubstitutionAndPreserveValidContent(t 
 		}
 	}
 }
+
+func TestInspectNamesTheFirstCheckAFileFails(t *testing.T) {
+	private, trust := keys(t)
+	other, _, e := GenerateKey("another-issuer")
+	if e != nil {
+		t.Fatal(e)
+	}
+	raw, e := Issue(claimFixture(), private)
+	if e != nil {
+		t.Fatal(e)
+	}
+	foreign, e := Issue(claimFixture(), other)
+	if e != nil {
+		t.Fatal(e)
+	}
+	var tampered Artifact
+	if e := json.Unmarshal(raw, &tampered); e != nil {
+		t.Fatal(e)
+	}
+	bad := []byte(tampered.Signature)
+	bad[0] = map[bool]byte{true: 'B', false: 'A'}[bad[0] == 'A']
+	tampered.Signature = string(bad)
+	// Terms that break the format, correctly signed: Issue refuses them, so sign by hand.
+	seed, e := private.key()
+	if e != nil {
+		t.Fatal(e)
+	}
+	broken := claimFixture()
+	broken.Scope = "per_feature"
+	payload := canonical(broken)
+	signature, e := seed.Sign(nil, payload, &ed25519.Options{Hash: 0, Context: SignatureContext})
+	if e != nil {
+		t.Fatal(e)
+	}
+	wrongTerms := canonical(Artifact{FormatVersion, Algorithm, private.KeyID, encoded(payload), encoded(signature)})
+
+	for _, item := range []struct {
+		name    string
+		raw     []byte
+		refusal Refusal
+		keyID   string
+	}{
+		{"not JSON", []byte("not a license"), RefusalUnreadable, ""},
+		{"another format", []byte(`{"format_version":2}`), RefusalUnreadable, ""},
+		{"another issuer", foreign, RefusalKey, "another-issuer"},
+		{"changed after signing", canonical(tampered), RefusalSignature, trust.KeyID},
+		{"signed but malformed terms", wrongTerms, RefusalTerms, trust.KeyID},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			found, e := Inspect(item.raw, trust)
+			if e != nil || found.Refusal != item.refusal || found.KeyID != item.keyID || found.Verified.SHA256 != "" {
+				t.Fatal(found, e)
+			}
+			if _, e := Verify(item.raw, trust); e == nil || e.Error() != "LICENSE_ARTIFACT_INVALID" {
+				t.Fatal("verify must keep its one public refusal", e)
+			}
+		})
+	}
+	found, e := Inspect(raw, trust)
+	if e != nil || found.Refusal != "" || found.KeyID != trust.KeyID || found.Verified.Claims != claimFixture() {
+		t.Fatal(found, e)
+	}
+}

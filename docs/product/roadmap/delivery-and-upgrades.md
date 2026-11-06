@@ -28,6 +28,7 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 - [ ] DEL-107 Helm chart with values schema, image-address rewrite, secret references, ingress and TLS (P1) - Catalog: F216, F228, F492
 - [ ] DEL-108 In-site OCI registry bootstrapped from the bundle; images pinned by digest (P1) - Catalog: F494
 - [ ] DEL-109 Offline license activation, renewal and migration with the ownsolid-entitlement file format (P1) - Catalog: F443, F501, F646
+  - Includes an installer setting for `runtime.licensing.maximum_imports`: today raising it means editing `control.yaml`, which `apply` rewrites.
   - Before starting this item: freeze the license format in `pkg/license`, then tell the
     owner it is time to start `ownsolid-entitlement` in a separate chat. That repository
     first gets its own roadmap (customers, issue, renew, revoke, export, audit, console),

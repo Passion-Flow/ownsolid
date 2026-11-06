@@ -1,4 +1,5 @@
 export { cn } from './cn.ts';
+export { saveFile } from './save-file.ts';
 export { applyTheme, resolveTheme, type ThemePreference } from './theme.ts';
 export {
   PreferencesProvider,

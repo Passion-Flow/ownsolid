@@ -235,6 +235,13 @@ one `GiteaTestedRelease` names, and a live run spends about four of the ten sign
 in 15 minutes. Add the provider's public key to `OWNSOLID_LIVE_SPKI` (comma-separated) and
 its host to `OWNSOLID_LIVE_HOST_RULES`.
 
+`live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
+to the license history. It needs test files signed with the key the installation trusts.
+`OWNSOLID_LIVE_LICENSE_COMMAND` reads the license state as JSON on standard input and prints a JSON
+object with `renewal`, `otherDeployment`, `otherIssuer`, `changed` and `addsNoTime`. Keep that
+command out of the repository, which holds no signing code: write it against `license.Issue` in a
+scratch module and run it where the test key lives.
+
 `live-idle.spec.ts` waits out a real idle timeout with the page's poll running, so it needs a
 short one. Add this to the installation's `control.yaml`, restart control, and run it with
 `OWNSOLID_LIVE_IDLE_SECONDS=60 OWNSOLID_LIVE_WARNING_SECONDS=30`. It takes about three minutes,

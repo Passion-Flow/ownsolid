@@ -207,9 +207,9 @@ instead of issuing a second one.
   **Email delivery** page shows every invitation and password email, why one failed (for
   example an unreachable SMTP host or a refused sign-in), and sends a failed one again
   once the mail server works. A failed email is retried four times over about ten minutes
-  before it shows as failed. Other capabilities,
-  including installing a license and inviting users, are reached through the API until
-  their pages land.
+  before it shows as failed. The **License** page imports the license and explains a refused
+  file; the **Users** page invites people; **Nodes** adds them. Other capabilities are reached
+  through the API until their pages land.
 - Upgrades, rollback and signed bundles are separate roadmap items (DEL-101, DEL-104,
   DEL-105). Do not reuse an install root across versions.
 - Model, dataset and training stores are not set up by the installer.

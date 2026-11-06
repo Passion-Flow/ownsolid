@@ -117,7 +117,8 @@ func recoveryMutation(r *http.Request) (bool, error) {
 	if r.Method != http.MethodPost {
 		return false, nil
 	}
-	if path == "/api/v1/admin/license" {
+	// Inspecting a file changes nothing and is how a refused import is explained.
+	if path == "/api/v1/admin/license" || path == "/api/v1/admin/license/inspections" {
 		return true, nil
 	}
 	for _, action := range []string{"remove", "reconcile-removal", "revoke", "release-offline", "release-deployment", "abandon", "discard"} {

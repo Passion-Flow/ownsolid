@@ -50,6 +50,20 @@ export {
   type Workspace,
 } from './identity.ts';
 export {
+  downloadLicenseDiagnostics,
+  getLicense,
+  importLicense,
+  inspectLicense,
+  licenseDaysUntil,
+  maximumLicenseFileBytes,
+  renewalNoticeDays,
+  type License,
+  type LicenseCheck,
+  type LicenseFileTerms,
+  type LicenseInspection,
+  type LicenseSummary,
+} from './license.ts';
+export {
   getLicenseStatus,
   getNotificationSummary,
   getPreferences,

@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one whole-platform License",
-    "version": "0.19.0"
+    "title": "ownsolid whole-platform License",
+    "version": "0.20.0"
   },
   "servers": [
     {
@@ -46,6 +46,27 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ]
         }
       },
       "post": {
@@ -107,6 +128,147 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ],
+          "409": [
+            "LICENSE_DEPLOYMENT_MISMATCH",
+            "LICENSE_ID_CONFLICT",
+            "LICENSE_CURRENT_CHANGED",
+            "LICENSE_IMPORT_CAPACITY_REQUIRED",
+            "LICENSE_PREDECESSOR_REQUIRED",
+            "LICENSE_PENDING_SUCCESSOR_EXISTS",
+            "LICENSE_RENEWAL_WINDOW_INVALID",
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "422": [
+            "LICENSE_ARTIFACT_INVALID"
+          ]
+        }
+      }
+    },
+    "/api/v1/admin/license/inspections": {
+      "post": {
+        "operationId": "InspectLicenseFile",
+        "description": "Runs every check an import runs and reports each one. Nothing changes but the audit trail, so a refused file is an ordinary 200 answer.",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "AdminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What importing the file would do, and why it would be refused.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LicenseInspectionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Fixed redacted authentication, authorization, validation, license conflict or storage error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectLicense"
+              }
+            }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ]
         }
       }
     },
@@ -156,6 +318,27 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "LICENSE_STORED_STATE_INVALID"
+          ]
         }
       }
     },
@@ -411,6 +594,7 @@
           "pending",
           "accepted_licenses",
           "history_head_license_id",
+          "maximum_imports",
           "observed_at",
           "public_key_fingerprint"
         ],
@@ -474,6 +658,11 @@
               }
             ]
           },
+          "maximum_imports": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1024
+          },
           "observed_at": {
             "type": "string",
             "format": "date-time"
@@ -517,6 +706,20 @@
           }
         }
       },
+      "InspectLicense": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact"
+        ],
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 65536
+          }
+        }
+      },
       "LicenseImportResult": {
         "type": "object",
         "additionalProperties": false,
@@ -536,6 +739,182 @@
           },
           "repeated": {
             "type": "boolean"
+          }
+        }
+      },
+      "LicenseFileTerms": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "license_id",
+          "artifact_sha256",
+          "customer_reference",
+          "not_before",
+          "expires_at",
+          "grace_until",
+          "deployment_id",
+          "issued_at",
+          "replaces_license_id"
+        ],
+        "properties": {
+          "license_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "artifact_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "customer_reference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "not_before": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "grace_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deployment_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "replaces_license_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+              },
+              {
+                "const": ""
+              }
+            ]
+          }
+        }
+      },
+      "LicenseCheck": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "result"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "format",
+              "key",
+              "signature",
+              "terms",
+              "deployment",
+              "identity",
+              "capacity",
+              "renewal"
+            ]
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "not_checked"
+            ]
+          }
+        }
+      },
+      "LicenseInspection": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "code",
+          "detail",
+          "checks",
+          "key_id",
+          "trusted_key_id",
+          "file",
+          "state"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "importable",
+              "installed",
+              "refused"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "",
+              "LICENSE_ARTIFACT_INVALID",
+              "LICENSE_DEPLOYMENT_MISMATCH",
+              "LICENSE_ID_CONFLICT",
+              "LICENSE_IMPORT_CAPACITY_REQUIRED",
+              "LICENSE_PREDECESSOR_REQUIRED",
+              "LICENSE_PENDING_SUCCESSOR_EXISTS",
+              "LICENSE_RENEWAL_WINDOW_INVALID"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "",
+              "wrong_predecessor",
+              "wrong_deployment",
+              "issued_before_current",
+              "starts_before_current",
+              "starts_after_grace",
+              "expires_no_later"
+            ]
+          },
+          "checks": {
+            "type": "array",
+            "minItems": 8,
+            "maxItems": 8,
+            "items": {
+              "$ref": "#/components/schemas/LicenseCheck"
+            }
+          },
+          "key_id": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "The key the file names. Unproven unless the signature check passed; empty when the file is unreadable."
+          },
+          "trusted_key_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "file": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LicenseFileTerms"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only once the signature is proven."
+          },
+          "state": {
+            "$ref": "#/components/schemas/LicenseState"
           }
         }
       },
@@ -589,6 +968,18 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/LicenseImportResult"
+          }
+        }
+      },
+      "LicenseInspectionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/LicenseInspection"
           }
         }
       }
