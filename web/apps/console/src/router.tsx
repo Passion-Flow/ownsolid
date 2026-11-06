@@ -52,6 +52,12 @@ const workspaceRoute = createRoute({
   component: lazyRouteComponent(() => import('./workspace-page.tsx'), 'WorkspacePage'),
 });
 
+const ssoRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/sso',
+  component: lazyRouteComponent(() => import('./sso-page.tsx'), 'SsoPage'),
+});
+
 const auditRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/audit',
@@ -101,6 +107,7 @@ const routeTree = rootRoute.addChildren([
       usersRoute,
       workspacesRoute,
       workspaceRoute,
+      ssoRoute,
       auditRoute,
       licenseRoute,
       mailRoute,

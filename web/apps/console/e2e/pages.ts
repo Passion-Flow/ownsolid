@@ -1,4 +1,5 @@
 import {
+  activeConnector,
   activeLicense,
   activeSummary,
   adminUser,
@@ -16,9 +17,11 @@ import {
   node,
   offlineNode,
   pendingInvitation,
+  retiredConnector,
   runningTask,
   secondFailedMail,
   sentMail,
+  ssoOn,
   systemEvent,
   teamWorkspace,
   type ControlPlane,
@@ -550,6 +553,48 @@ export const consolePages: readonly PageState[] = [
       control.signedIn = true;
       await page.goto('/users/workspaces/6f1c7a1e-0000-4000-8000-0000000000ee');
       await page.getByRole('heading', { name: 'Not found' }).waitFor();
+    },
+  },
+  {
+    name: 'single sign-on listed',
+    path: '/sso',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.ssoConnectorList = [{ ...retiredConnector }, { ...activeConnector }];
+      await page.goto('/sso');
+      await page.getByRole('row', { name: /Company Gitea/ }).waitFor();
+    },
+  },
+  {
+    name: 'single sign-on adding a connector',
+    path: '/sso',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/sso#add');
+      await page.getByRole('dialog', { name: 'Add a connector' }).waitFor();
+    },
+  },
+  {
+    name: 'single sign-on connector with a failed check',
+    path: '/sso',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.ssoConnectorList = [{ ...activeConnector }];
+      control.ssoChecks[activeConnector.id] = 'callback_not_registered';
+      await page.goto('/sso');
+      await page.getByRole('button', { name: 'Open Company Gitea' }).click();
+      await page.getByRole('button', { name: 'Test connection' }).click();
+      await page.getByText('Gitea does not accept a callback URL').waitFor();
+    },
+  },
+  {
+    name: 'single sign-on off for the installation',
+    path: '/sso',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.ssoConfiguration = { ...ssoOn, enabled: false };
+      await page.goto('/sso');
+      await page.getByText('Single sign-on is off for this installation').waitFor();
     },
   },
   {

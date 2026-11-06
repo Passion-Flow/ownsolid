@@ -34,6 +34,40 @@ export interface paths {
         patch: operations["updateSSOConnector"];
         trace?: never;
     };
+    "/api/v1/admin/sso/connectors/{connector_id}/tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Checks a stored connector the way a sign-in would use it: its origin is still approved, the provider answers over the configured transport, and it accepts the client credentials and every callback URL. Sends the provider's token endpoint an authorization code that cannot exist, so nothing is created there. Changes no connector, flow or session, so it takes no body and no idempotency key; the check and its outcome are audited as sso.connector_tested. Works on a disabled connector. */
+        post: operations["testSSOConnector"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/sso/configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What the installation's configuration lets single sign-on use: whether it is on, the provider origins a connector may name, and the origins whose callback URLs a provider must accept. Reads no stored state and opens no provider connection. */
+        get: operations["getSSOConfiguration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/sso/connectors": {
         parameters: {
             query?: never;
@@ -240,6 +274,39 @@ export interface components {
                 items: components["schemas"]["SSOBinding"][];
             };
         };
+        SSOConfiguration: {
+            /** @description Whether single sign-on is on. When off, connectors still list, and creating or enabling one is refused with SSO_DISABLED. */
+            enabled: boolean;
+            providers: {
+                /** @enum {string} */
+                provider: "gitea";
+                /** Format: uri */
+                origin: string;
+            }[];
+            /** @description Entrance origins, portal first; a provider must accept {origin}/api/v1/auth/sso/{connector_id}/callback for each. Empty when an entrance is not HTTPS. */
+            callback_origins: string[];
+        };
+        SSOConnectorCheck: {
+            /** Format: uuid */
+            connector_id: string;
+            /**
+             * @description passed: credentials and every callback were accepted. not_configured: the origin is no longer approved, and nothing was sent. unreachable: no answer over the configured addresses. certificate_untrusted: the provider's certificate is not trusted by the configured CA. credentials_rejected: the client ID or secret was refused. callback_not_registered: the provider refused callback_url. unexpected_answer: an answer the check does not know.
+             * @enum {string}
+             */
+            outcome: "passed" | "not_configured" | "unreachable" | "certificate_untrusted" | "credentials_rejected" | "callback_not_registered" | "unexpected_answer";
+            /** @description The callback the provider refused, for callback_not_registered. */
+            callback_url: string | null;
+            /** @description The provider's OAuth error code, for unexpected_answer, when it is one. */
+            provider_error: string | null;
+            /** Format: date-time */
+            checked_at: string;
+        };
+        SSOConfigurationResponse: {
+            data: components["schemas"]["SSOConfiguration"];
+        };
+        SSOConnectorCheckResponse: {
+            data: components["schemas"]["SSOConnectorCheck"];
+        };
     };
     responses: never;
     parameters: never;
@@ -342,6 +409,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SSOConnectorResponse"];
+                };
+            };
+            /** @description Stable rejection without provider descriptions, credentials, code, state or private paths. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    testSSOConnector: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": string;
+            };
+            path: {
+                connector_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The outcome of the check. A failed check is a result, not an error. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SSOConnectorCheckResponse"];
+                };
+            };
+            /** @description Stable rejection without provider descriptions, credentials, code, state or private paths. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getSSOConfiguration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The installation's single sign-on configuration, without files, addresses or keys. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SSOConfigurationResponse"];
                 };
             };
             /** @description Stable rejection without provider descriptions, credentials, code, state or private paths. */
