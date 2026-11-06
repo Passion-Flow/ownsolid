@@ -23,7 +23,7 @@ agents. Every check happens on the server.
 - [ ] IAM-113 Enable single sign-on from the typed install configuration: `ownsolid-install` has no input for providers, their CA or the keyring, so an installed product cannot turn it on (P1)
 - [ ] IAM-114 Refuse two browser entrances on one hostname unless the deployment opts in, because browsers do not isolate cookies by port; the opt-in, the sign-in page and the operator documentation state that the audience check is then the only separation ([ADR 0027](../../decisions/0027-entrance-addresses.md)) (P1)
 - [x] IAM-115 Users page: accounts with status and filters, invite and resend, disable and enable an account with a reason (P1) - Evidence: 24d6b00; real Chromium on an offline install on `ownsolid-cpu` with a TLS mail server accepted a real invitation, disabled the new account, which ended its session, and enabled it, three runs in a row, 2026-11-07
-- [ ] IAM-116 Workspaces page: list, create and rename workspaces and manage who belongs to each (P1)
+- [x] IAM-116 Workspaces page: list, create and rename workspaces and manage who belongs to each (P1) - Evidence: 3a406f9; real Chromium on an offline install on `ownsolid-cpu` created a workspace, added a real account, changed its role, removed it, was refused for the last owner and disabled the workspace with its reason in the audit trail, three runs in a row, 2026-11-07
 - [ ] IAM-117 Single sign-on page: list, add, test and disable connectors, on the existing connector API (P1)
 
 ## P2 Fleet operations
