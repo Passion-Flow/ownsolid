@@ -173,6 +173,20 @@ OWNSOLID_LIVE_AGENT_STOP='ssh ownsolid-cpu docker stop -t 5 <agent>' \
   <the variables above> pnpm exec playwright test live-tasks
 ```
 
+`live-nodes.spec.ts` adds a node from the console and runs the commands the page shows, as written, on a
+disposable host: a container on the host network with `sudo` as a pass-through, the agent binary at
+`/opt/agent` and the installation's CA at `/opt/ca.pem`. Name a shell on it, which reads its script from
+standard input. A license must be imported, or the agent's enrollment is refused:
+
+```sh
+ssh ownsolid-cpu docker run -d --name <host> --network host --add-host <admin host>:127.0.0.1 \
+  -v <agent binary>:/opt/agent:ro -v <install root>/config/ca.pem:/opt/ca.pem:ro \
+  debian:bookworm-slim sleep infinity
+ssh ownsolid-cpu docker exec <host> sh -c 'printf "#!/bin/sh\nexec \"\$@\"\n" > /usr/local/bin/sudo; chmod 755 /usr/local/bin/sudo'
+OWNSOLID_LIVE_NODE_SHELL='ssh ownsolid-cpu docker exec -i <host> sh -s' \
+  <the variables above> pnpm exec playwright test live-nodes
+```
+
 The certificate's public key is pinned, so the browser still refuses any other certificate.
 The spec ignores the Mac's system proxy, which cannot reach a forwarded port.
 The spec signs in once with a wrong password, so a few runs in a row against the same

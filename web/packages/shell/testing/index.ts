@@ -29,8 +29,8 @@ export {
   failedTask,
   finishedTask,
   logLine,
-  node,
   runningTask,
   type ScriptedTask,
   type TaskScript,
 } from './tasks.ts';
+export { disabledNode, joinToken, node, offlineNode, type NodeScript } from './nodes.ts';

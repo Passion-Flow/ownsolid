@@ -17,16 +17,20 @@ import {
   runtimeConfigQuery,
   useListView,
   useRowSelection,
+  useTypedFilter,
   type ListDefinition,
   type ListView,
   type RowSelection,
 } from '@ownsolid/shell';
 import {
+  BulkAction,
   BulkBar,
   Button,
   Card,
   Checkbox,
   CopyText,
+  Detail,
+  DetailList,
   Drawer,
   EmptyState,
   FilterSelect,
@@ -46,7 +50,7 @@ import {
 } from '@ownsolid/ui';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Mail, RotateCw } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 type Filter = 'all' | 'failed' | 'queued' | 'sent';
 
@@ -164,27 +168,15 @@ function ResendAll({ selection }: { selection: RowSelection }) {
     },
   });
   return (
-    <Button
-      size="sm"
-      variant="ghost"
+    <BulkAction
       disabled={run.isPending}
-      className="border-[color-mix(in_srgb,var(--bg)_30%,transparent)] text-bg hover:bg-[color-mix(in_srgb,var(--bg)_14%,transparent)] hover:text-bg"
       onClick={() => {
         run.mutate([...selection.selected]);
       }}
     >
       <RotateCw aria-hidden />
       {t('mail.bulk.resend')}
-    </Button>
-  );
-}
-
-function Detail({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <>
-      <dt className="text-text-3">{label}</dt>
-      <dd className="m-0 min-w-0 break-words">{children}</dd>
-    </>
+    </BulkAction>
   );
 }
 
@@ -314,7 +306,7 @@ function DeliveryDrawer({
           />
         ) : null}
         {delivery && state ? (
-          <dl className="m-0 grid grid-cols-[130px_1fr] gap-y-2.5 text-[13.5px]">
+          <DetailList>
             <Detail label={t('mail.column.state')}>
               <StatusPill tone={state.tone}>{t(state.label)}</StatusPill>
             </Detail>
@@ -345,7 +337,7 @@ function DeliveryDrawer({
             <Detail label={t('mail.detail.id')}>
               <CopyText text={delivery.id} />
             </Detail>
-          </dl>
+          </DetailList>
         ) : null}
       </Drawer>
       {/* Beside the drawer, not in it: a modal inside a modal can lose clicks to its parent. */}
@@ -538,23 +530,7 @@ export function MailDeliveriesPage() {
   const recipient = applied.recipient;
   const order = applied.order as 'oldest' | undefined;
 
-  // The field follows typing; the list follows the field after a pause.
-  const [typed, setTyped] = useState(recipient ?? '');
-  const [appliedRecipient, setAppliedRecipient] = useState(recipient);
-  if (recipient !== appliedRecipient) {
-    setAppliedRecipient(recipient);
-    setTyped(recipient ?? '');
-  }
-  const { setFilter } = list;
-  useEffect(() => {
-    if (typed.trim() === (recipient ?? '')) return undefined;
-    const timer = setTimeout(() => {
-      setFilter('recipient', typed.trim());
-    }, debounce);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [typed, recipient, debounce, setFilter]);
+  const [typed, setTyped] = useTypedFilter(list, 'recipient', debounce);
 
   const deliveries = useInfiniteQuery({
     queryKey: [...listKey, state, purpose, recipient, order],

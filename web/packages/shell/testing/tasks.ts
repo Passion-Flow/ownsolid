@@ -1,14 +1,7 @@
-// Scripted tasks and nodes for browser flows.
-import type { Node, TaskLogLine, TaskStep, TaskSummary } from '@ownsolid/api';
+// Scripted tasks for browser flows.
+import type { TaskLogLine, TaskStep, TaskSummary } from '@ownsolid/api';
+import { node } from './nodes.ts';
 import type { Page, Route } from '@playwright/test';
-
-/** One joined node a flow can start a task on. */
-export const node = {
-  id: '6f1c7a1e-0000-4000-8000-000000000031',
-  workspace_id: '6f1c7a1e-0000-4000-8000-000000000002',
-  name: 'gpu-a02',
-  status: 'active',
-} as unknown as Node;
 
 const stamp = '2026-11-06T08:00:00Z';
 
@@ -112,8 +105,6 @@ export const failedTask: ScriptedTask = {
 export interface TaskScript {
   /** Tasks, newest first. */
   tasks: ScriptedTask[];
-  /** Nodes a task can start on. */
-  nodes: Node[];
   /** Fails task reads with this while set. */
   tasksProblem: { status: number; code: string } | null;
   /** Answers the next start with this failure instead of starting a task. */
@@ -128,7 +119,6 @@ export interface TaskScript {
 export function emptyTaskScript(): TaskScript {
   return {
     tasks: [],
-    nodes: [node],
     tasksProblem: null,
     nextTaskStart: null,
     taskStartKeys: [],
@@ -147,7 +137,7 @@ function position(line: TaskLogLine): number {
   return line.attempt * 100_000 + line.sequence;
 }
 
-/** Serves the task and node routes of the admin entrance from `state`. */
+/** Serves the task routes of the admin entrance from `state`. */
 export async function routeTasks(
   page: Page,
   state: TaskScript,
@@ -197,9 +187,13 @@ export async function routeTasks(
       cursor: last ? `${String(last.attempt)}.${String(last.sequence)}` : after,
     });
   });
-  await page.route(`${base}/nodes?*`, (route) =>
-    data(route, { items: state.nodes, next_cursor: null }),
-  );
+  await page.route(`${base}/nodes/*/tasks?*`, (route) => {
+    const id = new URL(route.request().url()).pathname.split('/').at(-2);
+    return data(route, {
+      items: state.tasks.filter((item) => item.task.node_id === id).map((item) => item.task),
+      next_cursor: null,
+    });
+  });
   await page.route(`${base}/nodes/*/tasks`, (route) => {
     const request = route.request();
     if (request.headers()['x-csrf-token'] !== 'csrf-token') {
@@ -213,7 +207,13 @@ export async function routeTasks(
     }
     const id = `6f1c7a1e-0000-4000-8000-${String(state.taskStartKeys.length).padStart(12, '0')}`;
     const started: ScriptedTask = {
-      task: { ...runningTask.task, id, state: 'pending', attempt: 0 },
+      task: {
+        ...runningTask.task,
+        id,
+        state: 'pending',
+        attempt: 0,
+        node_id: new URL(request.url()).pathname.split('/').at(-2) ?? '',
+      },
       steps: [],
       log: [],
     };

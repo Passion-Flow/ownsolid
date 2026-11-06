@@ -32,7 +32,7 @@ export const navigation: readonly NavGroup[] = [
   {
     heading: 'nav.group.infrastructure',
     items: [
-      { label: 'nav.nodes', icon: Server },
+      { label: 'nav.nodes', icon: Server, to: '/nodes' },
       { label: 'nav.accelerators', icon: Cpu },
       { label: 'nav.clusters', icon: Network },
     ],

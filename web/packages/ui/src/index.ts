@@ -35,7 +35,9 @@ export {
 } from './components/menu.tsx';
 export { Meter, type MeterProps } from './components/meter.tsx';
 export { Notice, type NoticeProps } from './components/notice.tsx';
-export { BulkBar, type BulkBarProps } from './components/bulk-bar.tsx';
+export { BulkAction, BulkBar, type BulkBarProps } from './components/bulk-bar.tsx';
+export { CodeBlock, type CodeBlockProps } from './components/code-block.tsx';
+export { Detail, DetailList } from './components/detail-list.tsx';
 export { SearchField, type SearchFieldProps } from './components/search-field.tsx';
 export { FilterSelect, type FilterSelectProps } from './components/filter-select.tsx';
 export {

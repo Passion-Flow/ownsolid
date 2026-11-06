@@ -1,7 +1,11 @@
 import {
   failedMail,
+  disabledNode,
   failedTask,
   finishedTask,
+  joinToken,
+  node,
+  offlineNode,
   runningTask,
   secondFailedMail,
   sentMail,
@@ -40,6 +44,12 @@ async function openTask(page: Page, control: ControlPlane, id: string): Promise<
   await page.getByRole('log').waitFor();
 }
 
+async function openNodes(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/nodes');
+  await page.getByRole('heading', { name: 'Nodes', level: 1 }).waitFor();
+}
+
 async function openSettings(page: Page, control: ControlPlane): Promise<void> {
   control.signedIn = true;
   await page.goto('/settings');
@@ -52,6 +62,74 @@ async function openSettings(page: Page, control: ControlPlane): Promise<void> {
  */
 export const consolePages: readonly PageState[] = [
   ...shellPages,
+  {
+    name: 'nodes with none yet',
+    path: '/nodes',
+    open: async (page, control) => {
+      control.nodes = [];
+      await openNodes(page, control);
+      await page.getByText('No nodes yet').waitFor();
+    },
+  },
+  {
+    name: 'nodes with rows and a token waiting',
+    path: '/nodes',
+    open: async (page, control) => {
+      control.nodes = [node, offlineNode, disabledNode];
+      control.joinTokens = [joinToken];
+      await openNodes(page, control);
+      await page.getByRole('row', { name: /gpu-a03/ }).waitFor();
+    },
+  },
+  {
+    name: 'nodes with several selected',
+    path: '/nodes',
+    open: async (page, control) => {
+      control.nodes = [node, offlineNode];
+      await openNodes(page, control);
+      await page.getByRole('checkbox', { name: 'Select all' }).check();
+      await page.getByRole('toolbar').waitFor();
+    },
+  },
+  {
+    name: 'nodes that could not load',
+    path: '/nodes',
+    open: async (page, control) => {
+      control.nodesProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await openNodes(page, control);
+      await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
+    name: 'a node that went quiet',
+    path: '/nodes',
+    open: async (page, control) => {
+      control.nodes = [offlineNode];
+      await openNodes(page, control);
+      await page.getByRole('button', { name: 'Open details of gpu-a03' }).click();
+      await page.getByRole('dialog').getByText('Last heard from').waitFor();
+    },
+  },
+  {
+    name: 'adding a node',
+    path: '/nodes',
+    open: async (page, control) => {
+      await openNodes(page, control);
+      await page.getByRole('button', { name: 'Add node' }).click();
+      await page.getByRole('dialog', { name: 'Add a node' }).waitFor();
+    },
+  },
+  {
+    name: 'the steps that join a node',
+    path: '/nodes',
+    open: async (page, control) => {
+      await openNodes(page, control);
+      await page.getByRole('button', { name: 'Add node' }).click();
+      await page.getByLabel('Node name').fill('edge-e02');
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await page.getByRole('dialog', { name: 'Join edge-e02' }).waitFor();
+    },
+  },
   {
     name: 'tasks with none yet',
     path: '/tasks',

@@ -1,6 +1,6 @@
 import { useI18n } from '@ownsolid/i18n';
 import { X } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, type ComponentProps, type ReactNode } from 'react';
 import { Button } from './button.tsx';
 
 /** Props for {@link BulkBar}. */
@@ -50,5 +50,17 @@ export function BulkBar({ count, onClear, children }: BulkBarProps) {
         <X aria-hidden />
       </Button>
     </div>
+  );
+}
+
+/** An action in the {@link BulkBar}, drawn for its dark background. */
+export function BulkAction(props: Omit<ComponentProps<typeof Button>, 'size' | 'variant'>) {
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="border-[color-mix(in_srgb,var(--bg)_30%,transparent)] text-bg hover:bg-[color-mix(in_srgb,var(--bg)_14%,transparent)] hover:text-bg"
+      {...props}
+    />
   );
 }

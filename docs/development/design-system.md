@@ -12,7 +12,7 @@ cartoon icons; keep the warm neutral, teal and Figtree direction below.
 The tokens, fonts and components live in `web/packages/ui`. Reach for its components
 before writing new markup: `Button`, `TextField`, `Card`, `StatusPill`, `Tag`, `Kbd`,
 `Meter`, `Segmented`, `Switch`, `Checkbox`, `CopyText`, `EmptyState`, `Skeleton`, `Table`,
-`Menu`, `Dialog`, `Drawer`, `Notice`, `ProblemNotice` and `useToast`.
+`Menu`, `Dialog`, `Drawer`, `DetailList`, `CodeBlock`, `Notice`, `ProblemNotice` and `useToast`.
 
 ## Tokens
 
@@ -116,6 +116,11 @@ this browser. The server checks access to the workspace on every request.
   - Filters, sort and the open drawer live in the address, so a link shows the same list
     (UX-114); `CopyLinkButton` copies it. Columns are not part of a link. Sort on the server,
     with `aria-sort` on the sorted column and its header as a button.
+  - A toast sits behind a modal, so an action in a drawer that offers undo closes the drawer first.
+    `useTypedFilter` keeps a search field in step with its filter, and `BulkAction` draws an action
+    on the `BulkBar`. A poll reads with `background: true` and a failed one keeps the rows on screen.
+  - A secret shown once stays out of any command on the page: it reaches its file by paste, so it
+    never lands in shell history or a process list.
 - **Long-running tasks:** step timeline with durations plus a live log; the task keeps
   running when the user leaves the page ([research](../research/long-task-pattern.md)).
   - `StepTimeline` lists steps in order. The running step carries `aria-current="step"`, and a state

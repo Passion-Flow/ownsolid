@@ -32,12 +32,6 @@ export type TaskLogLine = Schemas['TaskLogLine'];
 /** Lines of a task's log, and the cursor to read on from. */
 export type TaskLogPage = Schemas['TaskLog'];
 
-/** One joined node. */
-export type Node = Schemas['Node'];
-
-/** One page of joined nodes. */
-export type NodePage = Schemas['NodeList'];
-
 // Tasks live in a cell. Every installation has the one local cell until ARC-202.
 const localCell = { site_id: 'default', cell_id: 'default' };
 
@@ -91,15 +85,6 @@ export function getTaskLog(
     ...options,
     path: { ...localCell, task_id: id },
     query: { limit, ...(after ? { after } : {}) },
-  });
-}
-
-/** Lists joined nodes. */
-export function listNodes(query: { limit: number }, options?: RequestOptions): Promise<NodePage> {
-  return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes', {
-    ...options,
-    path: localCell,
-    query,
   });
 }
 

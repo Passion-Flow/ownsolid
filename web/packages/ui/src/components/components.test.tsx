@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Button } from './button.tsx';
 import { Segmented, Switch } from './controls.tsx';
+import { CodeBlock } from './code-block.tsx';
 import { CopyText } from './copy-text.tsx';
 import { Dialog, Drawer } from './dialog.tsx';
 import { EmptyState } from './empty-state.tsx';
@@ -329,6 +330,16 @@ describe('small components', () => {
     render(<Switch label="Offline mode" checked={false} onChange={onChange} />);
     await userEvent.click(screen.getByRole('switch', { name: 'Offline mode' }));
     expect(onChange).toHaveBeenCalledWith(true);
+  });
+
+  it('CodeBlock copies every line as written and confirms', async () => {
+    const user = userEvent.setup();
+    inEnglish(<CodeBlock code={'first line\nsecond line'} label="Join commands" />);
+    await user.click(screen.getByRole('button', { name: 'Copy: Join commands' }));
+    expect(await navigator.clipboard.readText()).toBe('first line\nsecond line');
+    expect(
+      await screen.findByRole('button', { name: 'Copied: Join commands' }),
+    ).toBeInTheDocument();
   });
 
   it('CopyText copies and confirms', async () => {

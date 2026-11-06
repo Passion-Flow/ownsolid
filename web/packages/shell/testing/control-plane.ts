@@ -1,6 +1,7 @@
 // A scripted control plane for browser tests. It speaks the real wire format of the
 // paths the shell uses, so specs exercise the production transport end to end.
 import type { Page, Route } from '@playwright/test';
+import { emptyNodeScript, routeNodes, type NodeScript } from './nodes.ts';
 import { emptyTaskScript, routeTasks, type TaskScript } from './tasks.ts';
 
 /** The account the mock accepts. */
@@ -168,7 +169,7 @@ export interface ScriptedProblem {
 }
 
 /** Mutable state of the mock, so a spec can change it between steps. */
-export interface ControlPlane extends TaskScript {
+export interface ControlPlane extends TaskScript, NodeScript {
   audience: 'admin' | 'portal';
   /** How often pages poll, as the runtime configuration says. */
   pollMilliseconds: number;
@@ -280,6 +281,7 @@ export async function mockControlPlane(
 ): Promise<ControlPlane> {
   const state: ControlPlane = {
     ...emptyTaskScript(),
+    ...emptyNodeScript(),
     audience,
     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
     signedIn: false,
@@ -626,6 +628,7 @@ export async function mockControlPlane(
     };
     return data(route, state.tenantSettings);
   });
+  await routeNodes(page, state, data, problem);
   await routeTasks(page, state, data, problem);
   await page.route('**/api/v1/admin/mail-deliveries?*', (route) => {
     if (state.audience !== 'admin')

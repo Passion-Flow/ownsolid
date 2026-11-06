@@ -23,6 +23,12 @@ const homeRoute = createRoute({
   component: WelcomePage,
 });
 
+const nodesRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/nodes',
+  component: lazyRouteComponent(() => import('./nodes-page.tsx'), 'NodesPage'),
+});
+
 const mailRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/mail',
@@ -55,6 +61,7 @@ const routeTree = rootRoute.addChildren([
     frameRoute.addChildren([
       homeRoute,
       accountRoute,
+      nodesRoute,
       mailRoute,
       tasksRoute,
       taskRoute,

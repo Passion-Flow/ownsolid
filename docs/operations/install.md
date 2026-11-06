@@ -95,6 +95,12 @@ back. Telemetry is not backed up yet (OBS-113).
 
 ## Node agents
 
+Add a node from the console's Nodes page: name it, and the page shows a token that works once and
+the commands to run on the host, then says when the node has joined. A token not used can be revoked
+from the same page. The agent program is not in the install bundle yet (FLT-102): copy it to the host
+from the release. A node joins read-only, and the page shows the steps for that. Other execution
+profiles need more sections in the agent's configuration, which FLT-102 adds to these steps.
+
 Agents connect to the admin origin over HTTPS. They keep one long-lived HTTP/2 stream for
 heartbeats and task claims ([ADR 0007](../decisions/0007-agent-session-protocol.md)).
 Anything between agents and control must pass HTTP/2 to keep that stream; through a proxy
