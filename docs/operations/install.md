@@ -111,9 +111,11 @@ transport changes, and `agent_session_fallback` when it falls back.
 ### Pacing the agents
 
 Control tells every agent how often to report and how to back off, in each heartbeat
-reply. To take load off control, a platform administrator changes the pacing with
+reply. To take load off control, a platform administrator changes the pacing on the
+console's Nodes page under Agent pacing, or with
 `PUT /api/v1/sites/default/cells/default/admin/agent-pacing`. Agents follow within one
-interval, with no restart.
+interval, with no restart. The page shows the slowest interval the online window allows
+before it is saved, and the change works while the license refuses new work.
 
 | Field | Range | Default | Meaning |
 | --- | --- | --- | --- |

@@ -111,6 +111,36 @@ export const consolePages: readonly PageState[] = [
     },
   },
   {
+    name: 'agent pacing',
+    path: '/nodes/pacing',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/nodes/pacing');
+      await page.getByRole('heading', { name: 'Agent pacing', level: 1 }).waitFor();
+      await page.getByLabel('Heartbeat interval (seconds)').waitFor();
+    },
+  },
+  {
+    name: 'agent pacing too slow for the window',
+    path: '/nodes/pacing',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/nodes/pacing');
+      await page.getByLabel('Heartbeat interval (seconds)').fill('60');
+      await page.getByText('the interval can be at most').waitFor();
+    },
+  },
+  {
+    name: 'agent pacing that could not load',
+    path: '/nodes/pacing',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.pacingProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await page.goto('/nodes/pacing');
+      await page.getByRole('button', { name: 'Try again' }).first().waitFor();
+    },
+  },
+  {
     name: 'adding a node',
     path: '/nodes',
     open: async (page, control) => {

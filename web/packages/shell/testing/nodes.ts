@@ -1,5 +1,5 @@
 // Scripted nodes and join tokens for browser flows.
-import type { JoinToken, Node, NodeCounts } from '@ownsolid/api';
+import type { AgentPacing, JoinToken, Node, NodeCounts } from '@ownsolid/api';
 import type { Page, Route } from '@playwright/test';
 
 const stamp = '2026-11-06T08:00:00Z';
@@ -69,6 +69,17 @@ export const joinToken: JoinToken = {
   execution_profile: 'read_only',
 };
 
+/** The default pacing in the default 30-second window, less a 5-second liveness flush. */
+export const pacing: AgentPacing = {
+  heartbeat_seconds: 10,
+  jitter_percent: 10,
+  reconnect_base_seconds: 1,
+  reconnect_max_seconds: 60,
+  version: 1,
+  updated_at: stamp,
+  online_window_seconds: 25,
+};
+
 /** What a flow changes to script nodes and join tokens. */
 export interface NodeScript {
   /** Joined nodes, newest first. */
@@ -86,6 +97,10 @@ export interface NodeScript {
   nodeReasons: string[];
   /** Whether each list read was marked as background, in order. */
   nodePolls: boolean[];
+  pacing: AgentPacing;
+  pacingProblem: { status: number; code: string } | null;
+  /** The next pacing change fails like this. */
+  nextPacingChange: { status: number; code: string } | null;
 }
 
 /** The state of a mock with nothing scripted. */
@@ -99,6 +114,9 @@ export function emptyNodeScript(): NodeScript {
     nextRevoke: null,
     nodeReasons: [],
     nodePolls: [],
+    pacing: { ...pacing },
+    pacingProblem: null,
+    nextPacingChange: null,
   };
 }
 
@@ -215,5 +233,41 @@ export async function routeNodes(
     state.nodeReasons.push((request.postDataJSON() as { reason: string }).reason);
     state.joinTokens = state.joinTokens.filter((item) => item !== found);
     return data(route, { ...found, status: 'revoked' });
+  });
+  await page.route(`${base}/agent-pacing`, (route) => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      if (state.pacingProblem) return problem(route, state.pacingProblem);
+      return data(route, state.pacing);
+    }
+    if (request.headers()['x-csrf-token'] !== 'csrf-token') {
+      return problem(route, { status: 403, code: 'CSRF_INVALID' });
+    }
+    if (state.nextPacingChange) {
+      const scripted = state.nextPacingChange;
+      state.nextPacingChange = null;
+      return problem(route, scripted);
+    }
+    const change = request.postDataJSON() as AgentPacing & { reason: string };
+    if (change.version !== state.pacing.version) {
+      return problem(route, { status: 409, code: 'VERSION_CONFLICT' });
+    }
+    if (
+      3 * change.heartbeat_seconds * (100 + change.jitter_percent) >
+      200 * state.pacing.online_window_seconds
+    ) {
+      return problem(route, { status: 409, code: 'AGENT_PACING_EXCEEDS_ONLINE_WINDOW' });
+    }
+    state.nodeReasons.push(change.reason);
+    state.pacing = {
+      heartbeat_seconds: change.heartbeat_seconds,
+      jitter_percent: change.jitter_percent,
+      reconnect_base_seconds: change.reconnect_base_seconds,
+      reconnect_max_seconds: change.reconnect_max_seconds,
+      version: state.pacing.version + 1,
+      updated_at: '2026-11-06T09:00:00Z',
+      online_window_seconds: state.pacing.online_window_seconds,
+    };
+    return data(route, state.pacing);
   });
 }

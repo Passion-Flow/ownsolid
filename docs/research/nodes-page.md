@@ -1,6 +1,7 @@
 # Nodes page
 
-Research behind FLT-114 (list, filters, details and adding a node) and FLT-115 (node events).
+Research behind FLT-114 (list, filters, details and adding a node), FLT-113 (agent pacing) and
+FLT-115 (node events).
 
 ## How others solve it
 
@@ -43,6 +44,25 @@ Research behind FLT-114 (list, filters, details and adding a node) and FLT-115 (
 Rejected: a separate page for each node, because the list pattern's drawer shows everything the API has
 today and keeps a person in the list; counting by paging through the list, which does not scale to a
 fleet.
+
+## Agent pacing (FLT-113)
+
+The protocol and its bounds were settled in ARC-007 ([ADR 0013](../decisions/0013-agent-pacing.md)).
+Kubernetes sets the kubelet's lease renewal and the controller's grace period as separate flags and
+documents that the grace period must exceed the update interval; Nomad likewise derives a node's
+heartbeat deadline from a server-side grace. Neither lets an operator pick an interval the grace
+cannot hold.
+
+- **Say the limit before control refuses it.** The read returns `online_window_seconds`, and the page
+  shows the slowest interval the chosen jitter allows, computed with control's own inequality
+  (`FitsOnlineWindow`), and a unit test holds the two equal at every edge. An interval past it is
+  explained with the next step, raising `nodes.online_seconds`, and cannot be saved.
+- **A change takes a reason and offers undo,** like every reversible setting; a conflicting save
+  reloads what the other administrator saved.
+- **The license never blocks it.** Pacing protects control from its own fleet, so it is a recovery
+  action, like disabling a node.
+- **It lives under Nodes,** at `/nodes/pacing`, linked from the Nodes page: it is about the fleet, and
+  the navigation stays as the prototype has it.
 
 ## Licences
 

@@ -30,6 +30,7 @@ func TestArtifactRecoveryLicenseExceptionsAreExactAndRetainOwnerChecks(t *testin
 	}
 }
 
+// Pacing is in the same list: it protects control, so the license never blocks it.
 func TestNodeLicenseExceptionCoversOnlyTakingANodeOutOfService(t *testing.T) {
 	id := "11111111-1111-4111-8111-111111111111"
 	for _, item := range []struct {
@@ -42,6 +43,8 @@ func TestNodeLicenseExceptionCoversOnlyTakingANodeOutOfService(t *testing.T) {
 		{"PATCH", "/api/v1/admin/nodes/not-an-id", `{"name":"a","status":"disabled","version":1,"reason":"r"}`, false},
 		{"PATCH", "/api/v1/admin/nodes/" + id + "/tasks", `{"name":"a","status":"disabled","version":1,"reason":"r"}`, false},
 		{"POST", "/api/v1/admin/nodes/" + id, `{"name":"a","status":"disabled","version":1,"reason":"r"}`, false},
+		{"PUT", "/api/v1/admin/agent-pacing", `{}`, true},
+		{"PATCH", "/api/v1/admin/agent-pacing", `{}`, false},
 	} {
 		request := httptest.NewRequest(item.method, item.path, strings.NewReader(item.body))
 		request.Header.Set("Content-Type", "application/json")

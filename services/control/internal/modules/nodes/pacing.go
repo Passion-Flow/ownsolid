@@ -27,6 +27,9 @@ type AgentPacing struct {
 	wire.Pacing
 	Version   int64     `json:"version"`
 	UpdatedAt time.Time `json:"updated_at"`
+	// OnlineWindowSeconds is what one and a half of the longest interval must fit in, so a
+	// client can say what is allowed before it asks.
+	OnlineWindowSeconds int `json:"online_window_seconds"`
 }
 
 type pacingCache struct {
@@ -129,6 +132,7 @@ func (s *Service) AgentPacing(ctx context.Context, a identity.Auth) (AgentPacing
 	if e != nil {
 		return AgentPacing{}, e
 	}
+	out.OnlineWindowSeconds = s.Identity.Config.Policy().Nodes.PacingWindowSeconds()
 	return out, nil
 }
 
@@ -171,5 +175,6 @@ func (s *Service) UpdateAgentPacing(ctx context.Context, a identity.Auth, next w
 		return AgentPacing{}, e
 	}
 	s.pacing.put(next, time.Now())
+	out.OnlineWindowSeconds = s.Identity.Config.Policy().Nodes.PacingWindowSeconds()
 	return out, nil
 }
