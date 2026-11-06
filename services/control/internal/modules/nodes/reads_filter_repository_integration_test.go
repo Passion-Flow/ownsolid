@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"net/url"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -88,6 +89,30 @@ func TestNodeListFiltersAndCountsAgree(t *testing.T) {
 	same("a wildcard in a prefix is plain text", names(url.Values{"name_prefix": {"100%_"}}), percentNode)
 	same("a wildcard does not match anything else", names(url.Values{"name_prefix": {"filter%"}}))
 
+	same("a search finds text anywhere, in any case", names(url.Values{"q": {"LTER-ONL"}}), onlineNode)
+	same("a search hides removed nodes", names(url.Values{"q": {"filter-"}}), onlineNode, unknownNode, offlineNode, disabledNode)
+	same("a search combines with filters", names(url.Values{"q": {"filter-"}, "connectivity": {"offline"}}), offlineNode)
+	same("a wildcard in a search is plain text", names(url.Values{"q": {"0%_n"}}), percentNode)
+	same("a wildcard does not widen a search", names(url.Values{"q": {"filter%"}}))
+	chineseNode := x.nodeRow(t, "\u8ba1\u7b97\u8282\u70b9-01", "active", online)
+	same("a search finds Chinese names", names(url.Values{"q": {"\u7b97\u8282"}}), chineseNode)
+
+	t.Run("a cursor belongs to its search", func(t *testing.T) {
+		values := url.Values{"q": {"filter-"}, "limit": {"1"}}
+		page, e := x.s.List(x.ctx, x.admin, "", values)
+		if e != nil || page.NextCursor == nil {
+			t.Fatal(page, e)
+		}
+		values["cursor"] = []string{*page.NextCursor}
+		if _, e = x.s.List(x.ctx, x.admin, "", values); e != nil {
+			t.Fatal(e)
+		}
+		values["q"] = []string{"filter-o"}
+		if _, e = x.s.List(x.ctx, x.admin, "", values); e == nil || e.Error() != "INVALID_CURSOR" {
+			t.Fatal(e)
+		}
+	})
+
 	t.Run("a cursor belongs to its filter", func(t *testing.T) {
 		values := url.Values{"name_prefix": {"filter-"}, "limit": {"1"}}
 		page, e := x.s.List(x.ctx, x.admin, "", values)
@@ -107,6 +132,7 @@ func TestNodeListFiltersAndCountsAgree(t *testing.T) {
 	t.Run("bad filters are refused", func(t *testing.T) {
 		for _, values := range []url.Values{
 			{"connectivity": {"up"}}, {"status": {"gone"}}, {"name_prefix": {""}}, {"connectivity": {"online", "offline"}}, {"other": {"x"}},
+			{"q": {""}}, {"q": {"a", "b"}}, {"q": {"a\x00b"}}, {"q": {strings.Repeat("a", 101)}},
 		} {
 			if _, e := x.s.List(x.ctx, x.admin, "", values); e == nil || e.Error() != "VALIDATION_FAILED" {
 				t.Fatal(values, e)

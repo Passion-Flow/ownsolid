@@ -91,6 +91,39 @@ func TestActualWorkspaceListRepository(t *testing.T) {
 		}
 		return n
 	}
+	t.Run("a_search_finds_text_anywhere_in_a_name", func(t *testing.T) {
+		count := func(t *testing.T, a identity.Auth, values url.Values) int {
+			t.Helper()
+			page, e := s.List(ctx, a, values)
+			if e != nil {
+				t.Fatal(e)
+			}
+			return len(page.Items)
+		}
+		if got := count(t, admin, url.Values{"q": {"SCOPE \u4e16\u754c 42"}}); got != 1 {
+			t.Fatal(got)
+		}
+		if got := count(t, admin, url.Values{"q": {"%"}}); got != 0 {
+			t.Fatal("a wildcard is plain text", got)
+		}
+		if got := count(t, owner, url.Values{"q": {"scope \u4e16\u754c 42"}}); got != 0 {
+			t.Fatal("a member finds only their own workspaces", got)
+		}
+		page, e := s.List(ctx, admin, url.Values{"q": {"synthetic scope"}, "limit": {"1"}})
+		if e != nil || page.NextCursor == nil {
+			t.Fatal(page, e)
+		}
+		rest, e := s.List(ctx, admin, url.Values{"q": {"synthetic scope"}, "limit": {"1"}, "cursor": {*page.NextCursor}})
+		if e != nil || len(rest.Items) != 1 || rest.Items[0].ID == page.Items[0].ID {
+			t.Fatal("the next page of a search", rest, e)
+		}
+		_, e = s.List(ctx, admin, url.Values{"q": {"synthetic"}, "cursor": {*page.NextCursor}})
+		want(t, e, "INVALID_CURSOR")
+		for _, bad := range []url.Values{{"q": {""}}, {"q": {"a", "b"}}, {"q": {"a\x00"}}, {"q": {strings.Repeat("a", 101)}}} {
+			_, e = s.List(ctx, admin, bad)
+			want(t, e, "VALIDATION_FAILED")
+		}
+	})
 	t.Run("three_tied_lists_have_bounded_stable_seeks", func(t *testing.T) {
 		before := events(t)
 		for _, kind := range []string{"workspaces", "members", "notes"} {

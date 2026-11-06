@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -152,8 +153,13 @@ func scanTaskSummary(row transaction.Row) (TaskSummary, error) {
 
 // taskListFilter is what a task list asks for beyond its page.
 type taskListFilter struct {
-	state string
-	mine  bool
+	state, node, search string
+	mine                bool
+}
+
+// scope binds a cursor to the filter it was issued under.
+func (f taskListFilter) scope() string {
+	return f.state + ":" + strconv.FormatBool(f.mine) + ":" + f.node + ":" + strconv.Quote(f.search)
 }
 
 // taskListQuery splits the filters from the paging values and checks them.
@@ -175,9 +181,23 @@ func taskListQuery(values url.Values) (taskListFilter, url.Values, error) {
 				return filter, nil, fail("VALIDATION_FAILED")
 			}
 			filter.mine = true
+		case "node_id":
+			filter.node = value[0]
+			if !nodeID(filter.node) {
+				return filter, nil, fail("VALIDATION_FAILED")
+			}
+		case pagination.ListSearchParameter:
+			filter.search = value[0]
+			if !pagination.SearchTerm(filter.search, maximumNodeName) {
+				return filter, nil, fail("VALIDATION_FAILED")
+			}
 		default:
 			page[key] = value
 		}
+	}
+	// Mine reads unfinished tasks only, so a finished state could never match.
+	if filter.mine && finishedTaskState(filter.state) {
+		return filter, nil, fail("VALIDATION_FAILED")
 	}
 	return filter, page, nil
 }
@@ -185,6 +205,10 @@ func taskListQuery(values url.Values) (taskListFilter, url.Values, error) {
 // taskListStatement reads one page. Unfinished tasks are in node_tasks and finished ones in the
 // history, so a filter reads one side, and each side keeps its own index order. The page is cut
 // before node names are joined.
+//
+// A search finds its nodes first and reads each one's newest tasks through the per-node index. Left
+// to itself the planner walks the whole history in date order looking for a match, which takes
+// seconds exactly when nothing matches (docs/research/global-search.md).
 func taskListStatement(tenant, user string, filter taskListFilter, cursor pagination.Cursor, limit int) transaction.Statement {
 	args := []any{tenant}
 	seek := ""
@@ -196,21 +220,33 @@ func taskListStatement(tenant, user string, filter taskListFilter, cursor pagina
 		args = append(args, value)
 		return "$" + strconv.Itoa(len(args))
 	}
+	page := next(limit + 1)
+	if filter.node != "" {
+		seek += " AND node_id=" + next(filter.node) + "::uuid"
+	}
 	live := "SELECT " + taskSummaryColumns + " FROM node_tasks WHERE tenant_id=$1 AND completed_at IS NULL" + seek
 	history := "SELECT " + taskSummaryColumns + " FROM node_task_history WHERE tenant_id=$1" + seek
 	if filter.mine {
 		live += " AND requested_by=" + next(user) + "::uuid"
 	}
-	source := live + " UNION ALL " + history
+	var reads []string
 	switch {
 	case filter.state != "" && finishedTaskState(filter.state):
-		source = history + " AND state=" + next(filter.state)
+		reads = []string{history + " AND state=" + next(filter.state)}
 	case filter.state != "":
-		source = live + " AND state=" + next(filter.state)
+		reads = []string{live + " AND state=" + next(filter.state)}
 	case filter.mine:
-		source = live
+		reads = []string{live}
+	default:
+		reads = []string{live, history}
 	}
-	return transaction.SQL(transaction.PostgreSQL, "SELECT "+taskSummaryFields+" FROM ("+source+" ORDER BY created_at DESC,id DESC LIMIT "+next(limit+1)+") t LEFT JOIN managed_nodes n ON n.id=t.node_id ORDER BY t.created_at DESC,t.id DESC", args...)
+	if filter.search != "" {
+		matching := "SELECT id,workspace_id FROM managed_nodes WHERE tenant_id=$1 AND lower(name) LIKE lower(" + next(pagination.ContainsPattern(filter.search)) + ") ESCAPE '!'"
+		for index, read := range reads {
+			reads[index] = "SELECT s.* FROM (" + matching + ") m CROSS JOIN LATERAL (" + read + " AND workspace_id=m.workspace_id AND node_id=m.id ORDER BY created_at DESC,id DESC LIMIT " + page + ") s"
+		}
+	}
+	return transaction.SQL(transaction.PostgreSQL, "SELECT "+taskSummaryFields+" FROM ("+strings.Join(reads, " UNION ALL ")+" ORDER BY created_at DESC,id DESC LIMIT "+page+") t LEFT JOIN managed_nodes n ON n.id=t.node_id ORDER BY t.created_at DESC,t.id DESC", args...)
 }
 
 // AdminTasks lists tasks across every node of the tenant, newest first.
@@ -221,7 +257,7 @@ func (s *Service) AdminTasks(ctx context.Context, a identity.Auth, values url.Va
 		return out, e
 	}
 	e = s.taskReader(ctx, a, func(ctx context.Context, q transaction.Executor, tenant string) error {
-		scope := nodeListScope("admin-tasks:"+filter.state+":"+strconv.FormatBool(filter.mine), tenant, "", "", a)
+		scope := nodeListScope("admin-tasks:"+filter.scope(), tenant, "", "", a)
 		limit, cursor, fingerprint, e := pagination.ParseWithDefault(page, scope, s.Identity.Config.Policy().UI.PageSize)
 		if e != nil {
 			return e

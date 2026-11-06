@@ -2,6 +2,7 @@ package nodes
 
 import (
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -60,11 +61,16 @@ func TestFoldStepsIgnoresAnEndWithoutAStart(t *testing.T) {
 }
 
 func TestTaskListQuerySeparatesFiltersFromPaging(t *testing.T) {
-	filter, page, e := taskListQuery(url.Values{"state": {"failed"}, "mine": {"true"}, "limit": {"5"}})
-	if e != nil || filter.state != "failed" || !filter.mine || page.Get("limit") != "5" || page.Has("state") {
+	filter, page, e := taskListQuery(url.Values{"state": {"running"}, "mine": {"true"}, "limit": {"5"}})
+	if e != nil || filter.state != "running" || !filter.mine || page.Get("limit") != "5" || page.Has("state") {
 		t.Fatal(filter, page, e)
 	}
-	for _, bad := range []url.Values{{"state": {"paused"}}, {"mine": {"false"}}, {"state": {"failed", "running"}}} {
+	node := "6f1f4c8e-7b1a-4f7c-9d2e-3a5b6c7d8e9f"
+	filter, page, e = taskListQuery(url.Values{"node_id": {node}, "q": {"gpu"}})
+	if e != nil || filter.node != node || filter.search != "gpu" || page.Has("q") || page.Has("node_id") {
+		t.Fatal(filter, page, e)
+	}
+	for _, bad := range []url.Values{{"state": {"paused"}}, {"mine": {"false"}}, {"state": {"failed", "running"}}, {"mine": {"true"}, "state": {"succeeded"}}, {"node_id": {"x"}}, {"q": {""}}, {"q": {"a\x00"}}, {"q": {strings.Repeat("a", maximumNodeName+1)}}} {
 		if _, _, e := taskListQuery(bad); e == nil || e.Error() != "VALIDATION_FAILED" {
 			t.Fatal(bad, e)
 		}

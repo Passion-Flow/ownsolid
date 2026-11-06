@@ -16,6 +16,7 @@ import (
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/pagination"
 )
 
 // These bounds are existing wire/schema invariants,not adjustable deployment policy.
@@ -23,6 +24,9 @@ const maximumListLimit = 100
 const maximumListCursorBytes = 512
 const minimumListTimestampYear = 1000
 const maximumListTimestampYear = 9999
+
+// maximumUserSearch is the longest address, so no longer text can match.
+const maximumUserSearch = 254
 
 type cursor struct {
 	Time       time.Time  `json:"time"`
@@ -72,6 +76,18 @@ func (p *listPlan) compare(column, operator string, value any, suffix string) {
 	p.pgWhere = append(p.pgWhere, column+operator+"$"+strconv.Itoa(len(p.pgArgs))+suffix)
 	p.myWhere = append(p.myWhere, column+operator+"?"+suffix)
 	p.dmWhere = append(p.dmWhere, column+operator+"?"+suffix)
+}
+
+// matchEither keeps rows where either column holds a LIKE pattern, whatever its case.
+func (p *listPlan) matchEither(first, second, pattern string) {
+	p.pgArgs = append(p.pgArgs, pattern)
+	p.myArgs = append(p.myArgs, pattern, pattern)
+	p.dmArgs = append(p.dmArgs, pattern, pattern)
+	number := "$" + strconv.Itoa(len(p.pgArgs))
+	p.pgWhere = append(p.pgWhere, "(lower("+first+") LIKE lower("+number+") ESCAPE '!' OR lower("+second+") LIKE lower("+number+") ESCAPE '!')")
+	either := "(lower(" + first + ") LIKE lower(?) ESCAPE '!' OR lower(" + second + ") LIKE lower(?) ESCAPE '!')"
+	p.myWhere = append(p.myWhere, either)
+	p.dmWhere = append(p.dmWhere, either)
 }
 
 // decodeListCursor accepts only the bounded flat cursor contract;unknown or
@@ -181,8 +197,7 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 				return failure("VALIDATION_FAILED")
 			}
 		}
-		prefix = strings.NewReplacer("!", "!!", "%", "!%", "_", "!_").Replace(strings.ToLower(prefix))
-		p.compare(column, " LIKE ", prefix+"%", " ESCAPE '!'")
+		p.compare(column, " LIKE ", pagination.EscapeLike(strings.ToLower(prefix))+"%", " ESCAPE '!'")
 		return nil
 	}
 	switch kind {
@@ -197,6 +212,13 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 		}
 		if e := emailPrefix("email_prefix", "u.email_canonical"); e != nil {
 			return listPlan{}, e
+		}
+		allowed[pagination.ListSearchParameter] = true
+		if values, ok := q[pagination.ListSearchParameter]; ok {
+			if !pagination.SearchTerm(values[0], maximumUserSearch) {
+				return listPlan{}, failure("VALIDATION_FAILED")
+			}
+			p.matchEither("u.email_canonical", "u.display_name", pagination.ContainsPattern(values[0]))
 		}
 	case "invitations":
 		p.dmFrom = "INVITATIONS i LEFT JOIN MAIL_DELIVERIES d ON d.ID=(SELECT L.ID FROM MAIL_DELIVERIES L WHERE L.INVITATION_ID=i.ID ORDER BY L.CREATED_AT DESC,L.ID DESC LIMIT 1)"

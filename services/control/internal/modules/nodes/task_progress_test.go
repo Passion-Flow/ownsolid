@@ -351,6 +351,88 @@ func TestAnotherTenantsTaskIsNotThere(t *testing.T) {
 	}
 }
 
+func TestAdminTasksNarrowToANodeOrASearch(t *testing.T) {
+	s, a := setup(t)
+	ctx := context.Background()
+	first := enroll(t, s, a, "Rack-7 gpu-a01")
+	second := enroll(t, s, a, "storage-100%")
+	finished := finishedTask(t, s, a, first)
+	waiting, e := s.CreateTask(ctx, a, first.NodeID, wire.CollectFacts, uuid.NewString(), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	other, e := s.CreateTask(ctx, a, second.NodeID, wire.CollectFacts, uuid.NewString(), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	ids := func(values url.Values) []string {
+		t.Helper()
+		page, e := s.AdminTasks(ctx, a, values)
+		if e != nil {
+			t.Fatal(values, e)
+		}
+		out := []string{}
+		for _, item := range page.Items {
+			out = append(out, item.ID)
+		}
+		return out
+	}
+	if got := ids(url.Values{"node_id": {first.NodeID}}); len(got) != 2 || got[0] != waiting.ID || got[1] != finished {
+		t.Fatal("a node reads both tables", got)
+	}
+	if got := ids(url.Values{"q": {"GPU-A"}}); len(got) != 2 || got[0] != waiting.ID || got[1] != finished {
+		t.Fatal("a search reads both tables in any case", got)
+	}
+	if got := ids(url.Values{"q": {"gpu-a"}, "state": {"succeeded"}}); len(got) != 1 || got[0] != finished {
+		t.Fatal("a search combines with a finished state", got)
+	}
+	if got := ids(url.Values{"q": {"gpu-a"}, "state": {"pending"}}); len(got) != 1 || got[0] != waiting.ID {
+		t.Fatal("a search combines with an unfinished state", got)
+	}
+	if got := ids(url.Values{"q": {"100%"}}); len(got) != 1 || got[0] != other.ID {
+		t.Fatal("a wildcard is plain text", got)
+	}
+	if got := ids(url.Values{"q": {"%"}}); len(got) != 1 || got[0] != other.ID {
+		t.Fatal("a wildcard does not match every node", got)
+	}
+	if got := ids(url.Values{"q": {"absent"}}); len(got) != 0 {
+		t.Fatal(got)
+	}
+	if got := ids(url.Values{"q": {"gpu-a"}, "mine": {"true"}}); len(got) != 1 || got[0] != waiting.ID {
+		t.Fatal("a search combines with mine", got)
+	}
+	if got := ids(url.Values{"q": {"gpu-a"}, "node_id": {second.NodeID}}); len(got) != 0 {
+		t.Fatal("a search combines with a node", got)
+	}
+	page, e := s.AdminTasks(ctx, a, url.Values{"q": {"gpu-a"}, "limit": {"1"}})
+	if e != nil || page.NextCursor == nil {
+		t.Fatal(page, e)
+	}
+	if got := ids(url.Values{"q": {"gpu-a"}, "limit": {"1"}, "cursor": {*page.NextCursor}}); len(got) != 1 || got[0] != finished {
+		t.Fatal("the next page of a search", got)
+	}
+	if _, e = s.AdminTasks(ctx, a, url.Values{"q": {"gpu"}, "cursor": {*page.NextCursor}}); e == nil || e.Error() != "INVALID_CURSOR" {
+		t.Fatal("a cursor belongs to its search", e)
+	}
+}
+
+func TestATaskSearchStaysInItsTenant(t *testing.T) {
+	s, a := setup(t)
+	ctx := context.Background()
+	node := enroll(t, s, a, "Tenant-bound node")
+	foreign, foreignTenant := uuid.NewString(), uuid.NewString()
+	if _, e := s.DB.Exec(ctx, `INSERT INTO node_task_history(id,tenant_id,workspace_id,node_id,operation,state,attempt,created_at,updated_at,deadline_at,completed_at)
+ VALUES($1,$2,$2,$3,'collect_facts.v1','succeeded',1,clock_timestamp(),clock_timestamp(),clock_timestamp(),clock_timestamp())`, foreign, foreignTenant, node.NodeID); e != nil {
+		t.Fatal(e)
+	}
+	for _, values := range []url.Values{{"q": {"tenant-bound"}}, {"node_id": {node.NodeID}}} {
+		page, e := s.AdminTasks(ctx, a, values)
+		if e != nil || len(page.Items) != 0 {
+			t.Fatal(values, page, e)
+		}
+	}
+}
+
 func TestOnlyAdministratorsReadTasks(t *testing.T) {
 	s, a := setup(t)
 	ctx := context.Background()
@@ -358,6 +440,9 @@ func TestOnlyAdministratorsReadTasks(t *testing.T) {
 	portal.Me.Audience = "portal"
 	if _, e := s.AdminTasks(ctx, portal, url.Values{}); e == nil {
 		t.Fatal("the portal listed tasks")
+	}
+	if _, e := s.AdminTasks(ctx, portal, url.Values{"q": {"a"}}); e == nil {
+		t.Fatal("the portal searched tasks")
 	}
 	if _, e := s.AdminTask(ctx, portal, uuid.NewString()); e == nil {
 		t.Fatal("the portal read a task")

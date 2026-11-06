@@ -15,6 +15,7 @@ import {
   runtimeConfigQuery,
   SavedViewsMenu,
   useListView,
+  useTypedFilter,
   type ListDefinition,
   type ListView,
 } from '@ownsolid/shell';
@@ -24,6 +25,7 @@ import {
   Dialog,
   EmptyState,
   ProblemNotice,
+  SearchField,
   Segmented,
   SelectField,
   Skeleton,
@@ -47,6 +49,7 @@ const definition: ListDefinition = {
   key: 'tasks',
   filters: {
     state: { kind: 'choice', values: filters.filter((value) => value !== 'all') },
+    node: { kind: 'text', maximum: 100 },
   },
   columns: [
     { id: 'node', label: 'tasks.column.node' },
@@ -201,11 +204,14 @@ export function TasksPage() {
   const limit = config?.pageSize ?? 20;
   const list = useListView(definition);
   const state = list.state.filters.state as TaskState | undefined;
+  const node = list.state.filters.node;
+  const filtered = state !== undefined || node !== undefined;
+  const [typed, setTyped] = useTypedFilter(list, 'node', config?.searchDebounceMilliseconds ?? 0);
   const [starting, setStarting] = useState(false);
   const tasks = useInfiniteQuery({
-    queryKey: ['tasks', 'list', state],
+    queryKey: ['tasks', 'list', state, node],
     queryFn: ({ pageParam, signal }) =>
-      listTasks({ limit, cursor: pageParam ?? undefined, state }, { signal }),
+      listTasks({ limit, cursor: pageParam ?? undefined, state, search: node }, { signal }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.next_cursor,
   });
@@ -234,14 +240,14 @@ export function TasksPage() {
       <Card>
         <EmptyState
           icon={ListChecks}
-          title={state ? t('tasks.emptyFilter.title') : t('tasks.empty.title')}
+          title={filtered ? t('tasks.emptyFilter.title') : t('tasks.empty.title')}
           action={
-            state ? (
+            filtered ? (
               <Button onClick={list.clearFilters}>{t('tasks.emptyFilter.clear')}</Button>
             ) : undefined
           }
         >
-          {state ? t('tasks.emptyFilter.detail') : t('tasks.empty.detail')}
+          {filtered ? t('tasks.emptyFilter.detail') : t('tasks.empty.detail')}
         </EmptyState>
       </Card>
     );
@@ -284,6 +290,15 @@ export function TasksPage() {
         </Button>
       </div>
       <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
+        <SearchField
+          label={t('tasks.search')}
+          placeholder={t('tasks.search')}
+          className="w-full max-w-[320px] flex-1 basis-[220px]"
+          value={typed}
+          onChange={(event) => {
+            setTyped(event.target.value);
+          }}
+        />
         <Segmented
           label={t('tasks.filter')}
           value={(state as Filter | undefined) ?? 'all'}

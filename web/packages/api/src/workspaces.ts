@@ -24,13 +24,18 @@ const client = createClient<workspacesContract.paths>();
 
 /** Lists every workspace, oldest first. */
 export function listAllWorkspaces(
-  query: { limit: number; cursor?: string | undefined },
+  query: {
+    limit: number;
+    cursor?: string | undefined;
+    /** Text anywhere in the name, in any case. */
+    search?: string | undefined;
+  },
   options?: RequestOptions,
 ): Promise<WorkspaceListPage> {
-  const { limit, cursor } = query;
+  const { limit, cursor, search } = query;
   return client.get('/api/v1/admin/workspaces', {
     ...options,
-    query: { limit, ...(cursor ? { cursor } : {}) },
+    query: { limit, ...(cursor ? { cursor } : {}), ...(search ? { q: search } : {}) },
   });
 }
 

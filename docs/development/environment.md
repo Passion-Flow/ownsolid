@@ -279,6 +279,10 @@ by family and by request, and opens from its own link.
 to its drawer. Stop a joined node's agent so that it goes offline, leave the node active, and run it
 with `OWNSOLID_LIVE_OFFLINE_NODE=true` and the variables above.
 
+`live-search.spec.ts` finds a real node, task, person and workspace from the command menu and opens each.
+It starts one task, so it needs a joined node with a running agent: name it in
+`OWNSOLID_LIVE_SEARCH_NODE`, with the variables above.
+
 `live-idle.spec.ts` waits out a real idle timeout with the page's poll running, so it needs a
 short one. Add this to the installation's `control.yaml`, restart control, and run it with
 `OWNSOLID_LIVE_IDLE_SECONDS=60 OWNSOLID_LIVE_WARNING_SECONDS=30`. It takes about three minutes,

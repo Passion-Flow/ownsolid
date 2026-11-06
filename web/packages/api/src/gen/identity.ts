@@ -1059,6 +1059,8 @@ export interface operations {
                 cursor?: components["parameters"]["Cursor"];
                 email_prefix?: string;
                 status?: "active" | "disabled";
+                /** @description Only accounts with this text anywhere in the address or display name, in any case. */
+                q?: string;
             };
             header?: never;
             path?: never;

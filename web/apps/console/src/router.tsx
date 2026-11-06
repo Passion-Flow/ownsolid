@@ -8,11 +8,13 @@ import {
 } from '@ownsolid/shell';
 import { createRoute, lazyRouteComponent } from '@tanstack/react-router';
 import { navigation, shortcuts } from './navigation.ts';
+import { searchSources } from './search-sources.ts';
 import { operations, taskPath } from './task-names.ts';
 
 const frameRoute = createFrameRoute({
   navigation,
   shortcuts,
+  search: searchSources,
   licensePath: '/license',
   tasks: { taskPath, taskName: (task) => operations[task.operation] },
 });

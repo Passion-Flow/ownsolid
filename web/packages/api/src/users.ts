@@ -27,10 +27,12 @@ export function listUsers(
     cursor?: string | undefined;
     status?: UserStatus | undefined;
     emailPrefix?: string | undefined;
+    /** Text anywhere in the address or display name, in any case. */
+    search?: string | undefined;
   },
   options?: RequestOptions,
 ): Promise<UserPage> {
-  const { limit, cursor, status, emailPrefix } = query;
+  const { limit, cursor, status, emailPrefix, search } = query;
   return client.get('/api/v1/admin/users', {
     ...options,
     query: {
@@ -38,6 +40,7 @@ export function listUsers(
       ...(cursor ? { cursor } : {}),
       ...(status ? { status } : {}),
       ...(emailPrefix ? { email_prefix: emailPrefix } : {}),
+      ...(search ? { q: search } : {}),
     },
   });
 }

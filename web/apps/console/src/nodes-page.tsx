@@ -371,7 +371,7 @@ export function NodesPage() {
     queryKey: ['nodes', 'list', connectivity, status, name],
     queryFn: ({ pageParam, signal }) =>
       listNodes(
-        { limit, cursor: pageParam ?? undefined, connectivity, status, namePrefix: name },
+        { limit, cursor: pageParam ?? undefined, connectivity, status, search: name },
         { signal, background: true },
       ),
     initialPageParam: null as string | null,

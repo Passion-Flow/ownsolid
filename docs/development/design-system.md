@@ -92,6 +92,11 @@ giving its navigation item a `to` in the application's `navigation.ts`; until th
 item shows disabled, as in the prototype. Page navigation and new actions appear in the
 command menu from the same list. Below 1024 pixels the sidebar moves into a drawer.
 
+The command menu also finds things on the server ([research](../research/global-search.md)). A module
+adds a `SearchSource` to the application's `search-sources.ts`, which asks the list its page shows with
+`q`, so the menu shows what the page would and "See all" opens the same rows. Each list page searches
+with the same parameter.
+
 The frame also watches the session: while someone is active it keeps the session going, and
 once they stop it warns before the session ends, with one action to stay signed in
 ([ADR 0024](../decisions/0024-warning-before-a-session-ends.md)). A request the person did

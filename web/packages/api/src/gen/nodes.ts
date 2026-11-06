@@ -2794,6 +2794,8 @@ export interface operations {
                 status?: "active" | "disabled" | "removed";
                 /** @description Only nodes whose name starts with this, ignoring case. */
                 name_prefix?: string;
+                /** @description Only nodes with this text anywhere in the name, in any case. */
+                q?: string;
             };
             header?: never;
             path: {
@@ -2983,6 +2985,8 @@ export interface operations {
                 status?: "active" | "disabled" | "removed";
                 /** @description Only nodes whose name starts with this, ignoring case. */
                 name_prefix?: string;
+                /** @description Only nodes with this text anywhere in the name, in any case. */
+                q?: string;
             };
             header?: never;
             path: {
@@ -4134,6 +4138,8 @@ export interface operations {
                 node_id?: string;
                 /** @description Only unfinished tasks the signed-in person started. */
                 mine?: boolean;
+                /** @description Only tasks of nodes with this text anywhere in the name, in any case. */
+                q?: string;
             };
             header?: never;
             path: {

@@ -314,7 +314,7 @@ export const shellPages: readonly PageState[] = [
     open: async (page, control) => {
       await signedIn(page, control);
       await page.keyboard.press('ControlOrMeta+k');
-      await page.getByPlaceholder('Type a command or a page name').waitFor();
+      await page.getByPlaceholder(/^Type a command/).waitFor();
     },
   },
   {

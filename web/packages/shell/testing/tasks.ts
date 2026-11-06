@@ -154,10 +154,12 @@ export async function routeTasks(
     if (failure) return problem(route, failure);
     const query = new URL(route.request().url()).searchParams;
     const wanted = query.get('state');
+    const search = query.get('q')?.toLowerCase();
     const items = state.tasks
       .map((item) => item.task)
       .filter((task) => (query.get('mine') === 'true' ? !finished(task) : true))
-      .filter((task) => !wanted || task.state === wanted);
+      .filter((task) => !wanted || task.state === wanted)
+      .filter((task) => !search || task.node_name.toLowerCase().includes(search));
     return data(route, { items, next_cursor: null });
   });
   await page.route(`${base}/tasks/*`, (route) => {

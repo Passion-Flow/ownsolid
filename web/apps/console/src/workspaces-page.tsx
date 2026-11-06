@@ -8,13 +8,25 @@ import {
   type ManagedWorkspace as Workspace,
 } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
-import { runtimeConfigQuery, useHashAction, useSession } from '@ownsolid/shell';
+import {
+  ColumnChooser,
+  CopyLinkButton,
+  runtimeConfigQuery,
+  SavedViewsMenu,
+  useHashAction,
+  useListView,
+  useSession,
+  useTypedFilter,
+  type ListDefinition,
+  type ListView,
+} from '@ownsolid/shell';
 import {
   Button,
   Card,
   Dialog,
   EmptyState,
   ProblemNotice,
+  SearchField,
   Skeleton,
   Spinner,
   StatusPill,
@@ -33,6 +45,16 @@ import { useMemo, useState, type SubmitEvent } from 'react';
 
 /** Everything under this key follows a change, including the workspace switcher. */
 export const workspacesKey = ['workspaces'] as const;
+
+const definition: ListDefinition = {
+  key: 'workspaces',
+  filters: { name: { kind: 'text', maximum: 100 } },
+  columns: [
+    { id: 'name', label: 'workspaces.column.name', locked: true },
+    { id: 'status', label: 'workspaces.column.status' },
+    { id: 'created', label: 'workspaces.column.created' },
+  ],
+};
 
 /** Thrown when no account has the address given for the owner. */
 class NoSuchOwner extends Error {}
@@ -128,16 +150,17 @@ function CreateDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function Rows({ items }: { items: readonly Workspace[] }) {
+function Rows({ items, list }: { items: readonly Workspace[]; list: ListView }) {
   const { t, format } = useI18n();
+  const shows = (id: string) => !list.state.hiddenColumns.includes(id);
   return (
     <Card className="overflow-hidden">
       <Table>
         <thead>
           <tr>
             <Th>{t('workspaces.column.name')}</Th>
-            <Th>{t('workspaces.column.status')}</Th>
-            <Th>{t('workspaces.column.created')}</Th>
+            {shows('status') ? <Th>{t('workspaces.column.status')}</Th> : null}
+            {shows('created') ? <Th>{t('workspaces.column.created')}</Th> : null}
           </tr>
         </thead>
         <tbody>
@@ -157,12 +180,16 @@ function Rows({ items }: { items: readonly Workspace[] }) {
                   </span>
                 ) : null}
               </Td>
-              <Td>
-                <StatusPill tone={workspace.status === 'active' ? 'good' : 'neutral'}>
-                  {t(`workspaces.status.${workspace.status}`)}
-                </StatusPill>
-              </Td>
-              <Td className="text-text-2">{format.dateTime(workspace.created_at)}</Td>
+              {shows('status') ? (
+                <Td>
+                  <StatusPill tone={workspace.status === 'active' ? 'good' : 'neutral'}>
+                    {t(`workspaces.status.${workspace.status}`)}
+                  </StatusPill>
+                </Td>
+              ) : null}
+              {shows('created') ? (
+                <Td className="text-text-2">{format.dateTime(workspace.created_at)}</Td>
+              ) : null}
             </Tr>
           ))}
         </tbody>
@@ -174,12 +201,16 @@ function Rows({ items }: { items: readonly Workspace[] }) {
 /** `/users/workspaces`: every workspace, oldest first. */
 export function WorkspacesPage() {
   const { t } = useI18n();
-  const limit = useQuery(runtimeConfigQuery()).data?.ui.pageSize ?? 20;
+  const config = useQuery(runtimeConfigQuery()).data?.ui;
+  const limit = config?.pageSize ?? 20;
+  const list = useListView(definition);
+  const name = list.state.filters.name;
+  const [typed, setTyped] = useTypedFilter(list, 'name', config?.searchDebounceMilliseconds ?? 0);
   const [creating, setCreating] = useState(useHashAction('create'));
   const workspaces = useInfiniteQuery({
-    queryKey: [...workspacesKey, 'all', limit],
+    queryKey: [...workspacesKey, 'all', limit, name],
     queryFn: ({ pageParam, signal }) =>
-      listAllWorkspaces({ limit, cursor: pageParam ?? undefined }, { signal }),
+      listAllWorkspaces({ limit, cursor: pageParam ?? undefined, search: name }, { signal }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.next_cursor,
   });
@@ -208,6 +239,18 @@ export function WorkspacesPage() {
         }}
       />
     ) : null;
+  } else if (items.length === 0 && name !== undefined) {
+    body = (
+      <Card>
+        <EmptyState
+          icon={Building2}
+          title={t('workspaces.emptyFilter.title')}
+          action={<Button onClick={list.clearFilters}>{t('workspaces.emptyFilter.clear')}</Button>}
+        >
+          {t('workspaces.emptyFilter.detail')}
+        </EmptyState>
+      </Card>
+    );
   } else if (items.length === 0) {
     body = (
       <Card>
@@ -228,7 +271,7 @@ export function WorkspacesPage() {
   } else {
     body = (
       <>
-        <Rows items={items} />
+        <Rows items={items} list={list} />
         {workspaces.hasNextPage ? (
           <Button
             className="mt-4"
@@ -264,6 +307,22 @@ export function WorkspacesPage() {
           <Plus aria-hidden />
           {t('workspaces.create.open')}
         </Button>
+      </div>
+      <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
+        <SearchField
+          label={t('workspaces.search')}
+          placeholder={t('workspaces.search')}
+          className="w-full max-w-[320px] flex-1 basis-[220px]"
+          value={typed}
+          onChange={(event) => {
+            setTyped(event.target.value);
+          }}
+        />
+        <div className="ml-auto flex items-center gap-2">
+          <SavedViewsMenu list={list} />
+          <ColumnChooser list={list} />
+          <CopyLinkButton />
+        </div>
       </div>
       {body}
       {creating ? (

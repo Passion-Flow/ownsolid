@@ -1038,6 +1038,16 @@
                 "disabled"
               ]
             }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Only accounts with this text anywhere in the address or display name, in any case.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
           }
         ]
       }

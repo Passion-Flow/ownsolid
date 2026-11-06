@@ -50,10 +50,12 @@ export function listTasks(
     state?: TaskState | undefined;
     /** Only unfinished tasks the signed-in person started. */
     mine?: boolean | undefined;
+    /** Text anywhere in the name of the task's node, in any case. */
+    search?: string | undefined;
   },
   options?: RequestOptions,
 ): Promise<TaskPage> {
-  const { limit, cursor, state, mine } = query;
+  const { limit, cursor, state, mine, search } = query;
   return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks', {
     ...options,
     path: localCell,
@@ -62,6 +64,7 @@ export function listTasks(
       ...(cursor ? { cursor } : {}),
       ...(state ? { state } : {}),
       ...(mine ? { mine } : {}),
+      ...(search ? { q: search } : {}),
     },
   });
 }

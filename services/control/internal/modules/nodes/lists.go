@@ -69,7 +69,7 @@ func nodeListRows[T any](ctx context.Context, q transaction.Executor, statement 
 // nodeFilter narrows the node list. Removed nodes stay out unless asked for: their names can be
 // used again, so they are history rather than part of the fleet.
 type nodeFilter struct {
-	connectivity, status, namePrefix string
+	connectivity, status, namePrefix, search string
 }
 
 // maximumNodeName is the longest name a node can have, so no longer prefix can match.
@@ -80,7 +80,7 @@ func splitNodeFilter(values url.Values) (nodeFilter, url.Values, error) {
 	var f nodeFilter
 	rest := url.Values{}
 	for key, value := range values {
-		if key != "connectivity" && key != "status" && key != "name_prefix" {
+		if key != "connectivity" && key != "status" && key != "name_prefix" && key != pagination.ListSearchParameter {
 			rest[key] = value
 			continue
 		}
@@ -103,6 +103,11 @@ func splitNodeFilter(values url.Values) (nodeFilter, url.Values, error) {
 			if f.namePrefix == "" || !utf8.ValidString(f.namePrefix) || utf8.RuneCountInString(f.namePrefix) > maximumNodeName {
 				return f, nil, fail("VALIDATION_FAILED")
 			}
+		case pagination.ListSearchParameter:
+			f.search = value[0]
+			if !pagination.SearchTerm(f.search, maximumNodeName) {
+				return f, nil, fail("VALIDATION_FAILED")
+			}
 		}
 	}
 	return f, rest, nil
@@ -110,7 +115,7 @@ func splitNodeFilter(values url.Values) (nodeFilter, url.Values, error) {
 
 // scope binds a cursor to the filter it was issued under.
 func (f nodeFilter) scope() string {
-	return ":" + f.connectivity + ":" + f.status + ":" + strconv.Quote(f.namePrefix)
+	return ":" + f.connectivity + ":" + f.status + ":" + strconv.Quote(f.namePrefix) + ":" + strconv.Quote(f.search)
 }
 
 // apply adds the filter to the three dialects' statements. PostgreSQL reads the windows
@@ -132,10 +137,17 @@ func (f nodeFilter) apply(pg, my, dm string, pgArgs, myArgs []any, online, offli
 		myArgs = append(myArgs, f.status)
 	}
 	if f.namePrefix != "" {
-		pattern := strings.NewReplacer("!", "!!", "%", "!%", "_", "!_").Replace(strings.ToLower(f.namePrefix)) + "%"
+		pattern := pagination.EscapeLike(strings.ToLower(f.namePrefix)) + "%"
 		pgArgs = append(pgArgs, pattern)
 		pg += " AND lower(n.name) LIKE $" + strconv.Itoa(len(pgArgs)) + " ESCAPE '!'"
 		my, dm = my+" AND lower(n.name) LIKE ? ESCAPE '!'", dm+" AND lower(n.name) LIKE ? ESCAPE '!'"
+		myArgs = append(myArgs, pattern)
+	}
+	if f.search != "" {
+		pattern := pagination.ContainsPattern(f.search)
+		pgArgs = append(pgArgs, pattern)
+		pg += " AND lower(n.name) LIKE lower($" + strconv.Itoa(len(pgArgs)) + ") ESCAPE '!'"
+		my, dm = my+" AND lower(n.name) LIKE lower(?) ESCAPE '!'", dm+" AND lower(n.name) LIKE lower(?) ESCAPE '!'"
 		myArgs = append(myArgs, pattern)
 	}
 	return pg, my, dm, pgArgs, myArgs

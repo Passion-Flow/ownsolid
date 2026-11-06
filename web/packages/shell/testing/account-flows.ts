@@ -39,7 +39,7 @@ export function accountFlows(audience: ControlPlane['audience']): void {
     await page.goto('/');
     await page.getByRole('heading', { name: 'Welcome, Ada Lovelace' }).waitFor();
     await page.keyboard.press('ControlOrMeta+k');
-    await page.getByPlaceholder('Type a command or a page name').fill('Account');
+    await page.getByPlaceholder(/^Type a command/).fill('Account');
     await page.keyboard.press('Enter');
     await expect(heading).toBeVisible();
   });

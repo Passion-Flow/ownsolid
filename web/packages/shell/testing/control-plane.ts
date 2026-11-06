@@ -521,7 +521,13 @@ export async function mockControlPlane(
     if (state.audience !== owner)
       return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
     if (state.workspacesProblem) return problem(route, state.workspacesProblem);
-    return data(route, { items: state.workspaceList, next_cursor: null });
+    const search = new URL(route.request().url()).searchParams.get('q')?.toLowerCase();
+    return data(route, {
+      items: state.workspaceList.filter(
+        (item) => !search || item.name.toLowerCase().includes(search),
+      ),
+      next_cursor: null,
+    });
   };
   await page.route('**/api/v1/admin/workspaces?*', workspaces('admin'));
   await page.route('**/api/v1/workspaces?*', workspaces('portal'));

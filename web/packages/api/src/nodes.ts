@@ -51,10 +51,12 @@ export function listNodes(
     connectivity?: NodeConnectivity | undefined;
     status?: NodeStatus | undefined;
     namePrefix?: string | undefined;
+    /** Text anywhere in the name, in any case. */
+    search?: string | undefined;
   },
   options?: RequestOptions,
 ): Promise<NodePage> {
-  const { limit, cursor, connectivity, status, namePrefix } = query;
+  const { limit, cursor, connectivity, status, namePrefix, search } = query;
   return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes', {
     ...options,
     path: localCell,
@@ -64,6 +66,7 @@ export function listNodes(
       ...(connectivity ? { connectivity } : {}),
       ...(status ? { status } : {}),
       ...(namePrefix ? { name_prefix: namePrefix } : {}),
+      ...(search ? { q: search } : {}),
     },
   });
 }

@@ -579,10 +579,7 @@ export function UsersPage() {
   const users = useInfiniteQuery({
     queryKey: [...usersKey, status, email],
     queryFn: ({ pageParam, signal }) =>
-      listUsers(
-        { limit, cursor: pageParam ?? undefined, status, emailPrefix: email?.toLowerCase() },
-        { signal },
-      ),
+      listUsers({ limit, cursor: pageParam ?? undefined, status, search: email }, { signal }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.next_cursor,
   });

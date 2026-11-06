@@ -109,9 +109,15 @@ export async function routeUsers(
     const query = new URL(route.request().url()).searchParams;
     const status = query.get('status');
     const prefix = query.get('email_prefix');
+    const search = query.get('q')?.toLowerCase();
     return data(route, {
       items: state.users.filter(
-        (item) => (!status || item.status === status) && (!prefix || item.email.startsWith(prefix)),
+        (item) =>
+          (!status || item.status === status) &&
+          (!prefix || item.email.startsWith(prefix)) &&
+          (!search ||
+            item.email.toLowerCase().includes(search) ||
+            item.display_name.toLowerCase().includes(search)),
       ),
       next_cursor: null,
     });

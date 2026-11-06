@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/url"
+	"slices"
 	"strconv"
 	"time"
 
@@ -15,6 +16,9 @@ import (
 
 const mysqlMemberFields = `m.user_id,u.email_display,u.display_name,u.status,m.role,m.version,m.created_at,m.updated_at`
 const damengMemberFields = `M.USER_ID,U.EMAIL_DISPLAY,U.DISPLAY_NAME,U.STATUS,M.ROLE,M.VERSION,M.CREATED_AT,M.UPDATED_AT`
+
+// maximumWorkspaceName is the longest name a workspace can have, so no longer text can match.
+const maximumWorkspaceName = 100
 
 func listScope(kind, tenant, workspace string, a identity.Auth) string {
 	return kind + ":" + tenant + ":" + workspace + ":" + a.Me.Audience + ":" + a.Me.User.ID
@@ -92,6 +96,25 @@ func scanListedMember(row transaction.Row) (Membership, error) {
 	e := row.Scan(&m.UserID, &m.Email, &m.DisplayName, &m.UserStatus, &m.Role, &m.Version, &m.CreatedAt, &m.UpdatedAt)
 	return m, e
 }
+
+// splitWorkspaceSearch takes the search out of a query and returns the rest for paging.
+func splitWorkspaceSearch(values url.Values) (string, url.Values, error) {
+	found, ok := values[pagination.ListSearchParameter]
+	if !ok {
+		return "", values, nil
+	}
+	if len(found) != 1 || !pagination.SearchTerm(found[0], maximumWorkspaceName) {
+		return "", nil, fail("VALIDATION_FAILED")
+	}
+	rest := url.Values{}
+	for key, value := range values {
+		if key != pagination.ListSearchParameter {
+			rest[key] = value
+		}
+	}
+	return found[0], rest, nil
+}
+
 func (s *Service) List(ctx context.Context, a identity.Auth, values url.Values) (Page[Workspace], error) {
 	var out Page[Workspace]
 	e := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
@@ -103,7 +126,11 @@ func (s *Service) List(ctx context.Context, a identity.Auth, values url.Values) 
 		if e != nil {
 			return e
 		}
-		limit, cursor, fingerprint, e := s.listOptions(values, listScope("workspaces", tenant, "", a))
+		search, paging, e := splitWorkspaceSearch(values)
+		if e != nil {
+			return e
+		}
+		limit, cursor, fingerprint, e := s.listOptions(paging, listScope("workspaces:"+strconv.Quote(search), tenant, "", a))
 		if e != nil {
 			return e
 		}
@@ -111,7 +138,13 @@ func (s *Service) List(ctx context.Context, a identity.Auth, values url.Values) 
 		my := "SELECT " + mysqlWorkspaceFields + `,m.role FROM workspaces w JOIN installation_state i ON i.tenant_id=w.tenant_id JOIN tenants t ON t.id=w.tenant_id LEFT JOIN workspace_memberships m ON m.tenant_id=w.tenant_id AND m.workspace_id=w.id AND m.user_id=? WHERE i.id=1 AND i.bootstrap_complete=1 AND t.status='active' AND i.tenant_id=? AND (? OR (m.user_id IS NOT NULL AND w.status='active'))`
 		dm := "SELECT " + damengWorkspaceFields + `,M.ROLE FROM WORKSPACES W JOIN INSTALLATION_STATE I ON I.TENANT_ID=W.TENANT_ID JOIN TENANTS T ON T.ID=W.TENANT_ID LEFT JOIN WORKSPACE_MEMBERSHIPS M ON M.TENANT_ID=W.TENANT_ID AND M.WORKSPACE_ID=W.ID AND M.USER_ID=? WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1 AND T.STATUS='active' AND I.TENANT_ID=? AND (?=1 OR (M.USER_ID IS NOT NULL AND W.STATUS='active'))`
 		args := []any{a.Me.User.ID, tenant, admin(a)}
-		query, e := listSeek(q, pg, my, dm, args, args, "w.created_at", "w.id", cursor, limit)
+		if search != "" {
+			args = append(args, pagination.ContainsPattern(search))
+			pg += " AND lower(w.name) LIKE lower($4) ESCAPE '!'"
+			my += " AND lower(w.name) LIKE lower(?) ESCAPE '!'"
+			dm += " AND LOWER(W.NAME) LIKE LOWER(?) ESCAPE '!'"
+		}
+		query, e := listSeek(q, pg, my, dm, args, slices.Clone(args), "w.created_at", "w.id", cursor, limit)
 		if e != nil {
 			return e
 		}

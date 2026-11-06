@@ -20,6 +20,16 @@
           },
           {
             "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Only workspaces with this text anywhere in the name, in any case.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
           }
         ],
         "responses": {
@@ -1156,6 +1166,16 @@
           },
           {
             "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Only workspaces with this text anywhere in the name, in any case.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
           }
         ],
         "responses": {

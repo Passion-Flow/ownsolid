@@ -458,6 +458,8 @@ export interface operations {
                 limit?: components["parameters"]["Limit"];
                 /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
                 cursor?: components["parameters"]["Cursor"];
+                /** @description Only workspaces with this text anywhere in the name, in any case. */
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -1251,6 +1253,8 @@ export interface operations {
                 limit?: components["parameters"]["Limit"];
                 /** @description Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page. */
                 cursor?: components["parameters"]["Cursor"];
+                /** @description Only workspaces with this text anywhere in the name, in any case. */
+                q?: string;
             };
             header?: never;
             path?: never;

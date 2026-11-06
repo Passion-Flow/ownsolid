@@ -237,6 +237,19 @@ func TestActualIdentityListRepository(t *testing.T) {
 		if !found {
 			t.Fatal("nonempty invitation projection missing")
 		}
+		found = false
+		for _, item := range list("users", url.Values{"q": {strings.ToUpper(prefix) + "000@"}}).Items {
+			found = found || item["id"] == firstUser
+		}
+		if !found {
+			t.Fatal("a search by address ignores case")
+		}
+		if byName := list("users", url.Values{"q": {"LIST \u4e16"}, "limit": {"100"}}); len(byName.Items) == 0 || byName.Items[0]["display_name"] != "List \u4e16\u754c" {
+			t.Fatal("a search reads display names")
+		}
+		if none := list("users", url.Values{"q": {"%"}}); len(none.Items) != 0 {
+			t.Fatal("a wildcard in a search is plain text")
+		}
 		out := list("users", url.Values{"email_prefix": {prefix}, "limit": {"1"}})
 		if out.Items[0]["display_name"] != "List \u4e16\u754c" || out.Items[0]["is_platform_admin"] != false || out.Items[0]["email_verified_at"] != nil {
 			t.Fatal("typed user projection changed")

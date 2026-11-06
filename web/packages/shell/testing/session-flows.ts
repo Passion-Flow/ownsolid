@@ -306,7 +306,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await page.goto('/');
     await page.getByRole('main').waitFor();
     await page.keyboard.press('ControlOrMeta+k');
-    const input = page.getByPlaceholder('Type a command or a page name');
+    const input = page.getByPlaceholder(/^Type a command/);
     await expect(input).toBeFocused();
     await input.fill('dark');
     await page.keyboard.press('Enter');
@@ -318,9 +318,9 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     control.signedIn = true;
     await page.goto('/');
     await page.getByRole('button', { name: 'Search, or type a command' }).click();
-    const input = page.getByPlaceholder('Type a command or a page name');
+    const input = page.getByPlaceholder(/^Type a command/);
     await input.fill('no such thing');
-    await expect(page.getByText('No results')).toBeVisible();
+    await expect(page.getByRole('listbox').getByText('No results')).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(input).toBeHidden();
     await expect(page.getByRole('button', { name: 'Search, or type a command' })).toBeFocused();
@@ -331,7 +331,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     await page.goto('/');
     await page.getByRole('main').waitFor();
     await page.keyboard.press('ControlOrMeta+k');
-    await page.getByPlaceholder('Type a command or a page name').fill('sign out');
+    await page.getByPlaceholder(/^Type a command/).fill('sign out');
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/sign-in$/);
   });

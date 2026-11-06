@@ -217,7 +217,7 @@ export function keyboardFlows({ audience, pages }: KeyboardFlowOptions): void {
       const search = page.getByRole('button', { name: 'Search, or type a command' });
       await search.focus();
       await page.keyboard.press('Enter');
-      await expect(page.getByPlaceholder('Type a command or a page name')).toBeFocused();
+      await expect(page.getByPlaceholder(/^Type a command/)).toBeFocused();
       await page.keyboard.press('Escape');
       await expect(search).toBeFocused();
     });

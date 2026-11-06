@@ -83,7 +83,7 @@ test('signs in and out of a real installation', async ({ page, browser }) => {
   await expectAccessible(page);
 
   await page.keyboard.press('ControlOrMeta+k');
-  await page.getByPlaceholder('Type a command or a page name').fill('compact');
+  await page.getByPlaceholder(/^Type a command/).fill('compact');
   await page.keyboard.press('Enter');
   await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
   await page.getByRole('button', { name: /^Notifications/ }).click();

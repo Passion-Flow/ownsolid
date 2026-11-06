@@ -16,6 +16,7 @@ import { ChevronRight, Menu as MenuIcon, Search, UserRound } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AccountPreferences } from './account-preferences.tsx';
 import { CommandMenu } from './command-menu.tsx';
+import type { SearchSource } from './command-search.ts';
 import {
   ShortcutsDialog,
   useSingleKeyShortcuts,
@@ -130,6 +131,8 @@ export interface AppFrameProps {
   tasks?: TaskTrayProps | undefined;
   /** One-character actions; the portal has none. */
   shortcuts?: readonly SingleKeyShortcut[] | undefined;
+  /** What the command menu finds on the server; the portal has nothing to find yet. */
+  search?: readonly SearchSource[] | undefined;
   children: ReactNode;
 }
 
@@ -141,6 +144,7 @@ export function AppFrame({
   licensePath,
   tasks,
   shortcuts = noShortcuts,
+  search,
   children,
 }: AppFrameProps) {
   const { t } = useI18n();
@@ -272,6 +276,7 @@ export function AppFrame({
           setCommandOpen(false);
         }}
         navigation={pages}
+        search={search}
         onSignOut={startSignOut}
         onShortcuts={() => {
           setShortcutsOpen(true);

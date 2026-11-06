@@ -385,6 +385,16 @@
               "minLength": 1,
               "maxLength": 100
             }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Only nodes with this text anywhere in the name, in any case.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
           }
         ],
         "responses": {
@@ -926,6 +936,16 @@
             "name": "name_prefix",
             "in": "query",
             "description": "Only nodes whose name starts with this, ignoring case.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Only nodes with this text anywhere in the name, in any case.",
             "schema": {
               "type": "string",
               "minLength": 1,
@@ -3837,6 +3857,16 @@
             "description": "Only unfinished tasks the signed-in person started.",
             "schema": {
               "type": "boolean"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Only tasks of nodes with this text anywhere in the name, in any case.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
             }
           }
         ],
