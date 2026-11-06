@@ -44,7 +44,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [x] UX-121 Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1) - Evidence: 82b0830; real Chromium received Brotli copies on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06
 - [ ] UX-122 Single-key shortcuts for common actions (the prototype's D, I, N, K), with an account setting to turn them off as WCAG 2.2 criterion 2.1.4 requires (P1). Open: `N`, `/`, `?` and the switch work; `D`, `I` and `K` wait for deploying, the catalog and API keys
 
-- [ ] UX-123 Navigation to [ADR 0037](../../decisions/0037-simple-on-the-surface-deep-underneath.md): collapsing groups with only the current one open, self-cleaning open state, a heading that only opens and closes, a filter box, and a collapsed icon-only mode that keeps every accessible name (P1)
+- [x] UX-123 Navigation to [ADR 0037](../../decisions/0037-simple-on-the-surface-deep-underneath.md): collapsing groups with only the current one open, self-cleaning open state, a heading that only opens and closes, a filter box, and a collapsed icon-only mode that keeps every accessible name (P1) - Evidence: d85452f; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 46, two runs
 - [ ] UX-124 Pinned destinations, chosen by the person and kept per person (P1)
 - [ ] UX-125 One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1)
 - [ ] UX-126 Summary tiles above a list filter the list instead of decorating it (P1)
