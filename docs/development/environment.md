@@ -159,6 +159,20 @@ OWNSOLID_LIVE_ORIGIN=https://<admin host>:<port> OWNSOLID_LIVE_EMAIL=<administra
   OWNSOLID_LIVE_HOST_RULES='MAP <admin host> 127.0.0.1' pnpm exec playwright test live
 ```
 
+`live-tasks.spec.ts` needs a real agent as well: it stops the agent so that a task is known to wait,
+leaves the page, starts the agent and checks the console tells how the task ended. Enroll an agent with
+a `read_only` join token, run it in a container on the host network so the host needs no changes, and
+name how to stop and start it:
+
+```sh
+ssh ownsolid-cpu docker run -d --name <agent> --network host --add-host <admin host>:127.0.0.1 \
+  -v <directory>:<directory> -v <agent binary>:/usr/local/bin/agent:ro debian:bookworm-slim \
+  agent run --config <directory>/agent.json
+OWNSOLID_LIVE_AGENT_STOP='ssh ownsolid-cpu docker stop -t 5 <agent>' \
+  OWNSOLID_LIVE_AGENT_START='ssh ownsolid-cpu docker start <agent>' \
+  <the variables above> pnpm exec playwright test live-tasks
+```
+
 The certificate's public key is pinned, so the browser still refuses any other certificate.
 The spec ignores the Mac's system proxy, which cannot reach a forwarded port.
 The spec signs in once with a wrong password, so a few runs in a row against the same

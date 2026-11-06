@@ -17,6 +17,7 @@ The [internal owner index](internal/README.md) links each execution manager and 
 | [training](internal/training) | Approved training container, input/output transfer and journal |
 | [modelpreparations](internal/modelpreparations) | Approved preparation container, input/output binding and journal |
 | [imageregistry](internal/imageregistry) | Verified offline Registry import/loading |
+| [progress](internal/progress) | What a running task reports: its steps and its log, bounded, and never deciding the task |
 | [runtime](internal/runtime) | Profile dispatch, lifecycle and fenced-removal entrypoints |
 | [settings](internal/settings) | Validated bounded runtime policy |
 | [state](internal/state) | Private persisted node identity, process lock and durable creation |

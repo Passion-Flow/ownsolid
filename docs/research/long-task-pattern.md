@@ -84,6 +84,10 @@ server, which has no GPU and too little disk for their images.
   that updates by itself. It follows the end only while it is scrolled to the end, so reading earlier
   lines is not interrupted. Copy and download work on the lines loaded, with no server call.
 
+A failed read of the task list reached a real install as not found until the test covered the public
+path: every family below `/api/v1/admin` must be named in `cellroute`, or it answers 404 on an install
+while a handler test still passes. The contract test now reads tasks through the scoped path.
+
 ## Licences
 
 No new dependency. The server change uses PostgreSQL only, like the task history it reads (ADR 0029).

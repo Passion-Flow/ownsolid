@@ -4670,7 +4670,10 @@
               "MONGODB_RECORD_INVALID",
               "AGENT_PACING_EXCEEDS_ONLINE_WINDOW",
               "AGENT_PACING_UNSUPPORTED",
-              "AGENT_OVERLOADED"
+              "AGENT_OVERLOADED",
+              "TASK_HISTORY_UNAVAILABLE",
+              "TASK_PROGRESS_INVALID",
+              "TASK_PROGRESS_UNAVAILABLE"
             ]
           },
           "request_id": {
