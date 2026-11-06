@@ -40,6 +40,12 @@ const usersRoute = createRoute({
   component: lazyRouteComponent(() => import('./users-page.tsx'), 'UsersPage'),
 });
 
+const auditRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/audit',
+  component: lazyRouteComponent(() => import('./audit-page.tsx'), 'AuditPage'),
+});
+
 const licenseRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/license',
@@ -81,6 +87,7 @@ const routeTree = rootRoute.addChildren([
       nodesRoute,
       pacingRoute,
       usersRoute,
+      auditRoute,
       licenseRoute,
       mailRoute,
       tasksRoute,

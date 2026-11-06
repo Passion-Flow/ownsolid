@@ -34,6 +34,7 @@ export {
   type TaskScript,
 } from './tasks.ts';
 export { disabledNode, joinToken, node, offlineNode, type NodeScript } from './nodes.ts';
+export { failedSignIn, licenseEvent, systemEvent, type AuditScript } from './audit.ts';
 export {
   activeLicense,
   activeSummary,

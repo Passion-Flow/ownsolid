@@ -1758,6 +1758,23 @@
             }
           },
           {
+            "name": "category",
+            "in": "query",
+            "description": "An action family, the part of the action before its first dot.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z]{1,32}$"
+            }
+          },
+          {
+            "name": "actor_user_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "outcome",
             "in": "query",
             "schema": {
@@ -2387,7 +2404,7 @@
         "properties": {
           "email": {
             "type": "string",
-            "maxLength": 320,
+            "maxLength": 254,
             "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes."
           },
           "password": {
@@ -2571,7 +2588,7 @@
         "properties": {
           "email": {
             "type": "string",
-            "maxLength": 320,
+            "maxLength": 254,
             "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes."
           }
         },
@@ -2922,7 +2939,7 @@
         "properties": {
           "email": {
             "type": "string",
-            "maxLength": 320,
+            "maxLength": 254,
             "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes."
           },
           "locale": {
@@ -2990,12 +3007,27 @@
             ],
             "format": "uuid"
           },
+          "actor_email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 254,
+            "description": "The email of the actor, null for the system."
+          },
           "subject_user_id": {
             "type": [
               "string",
               "null"
             ],
             "format": "uuid"
+          },
+          "subject_email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 254
           },
           "audience": {
             "type": "string",
@@ -3049,7 +3081,9 @@
           "id",
           "occurred_at",
           "actor_user_id",
+          "actor_email",
           "subject_user_id",
+          "subject_email",
           "audience",
           "action",
           "outcome",
