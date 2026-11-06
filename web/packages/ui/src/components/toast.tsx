@@ -26,6 +26,8 @@ export interface ToastOptions {
   undo?: (() => unknown) | undefined;
   /** Repeats what failed; the toast stays longer and offers a retry button. */
   retry?: (() => void) | undefined;
+  /** Leads on from the message, such as to what it is about; the toast stays longer. */
+  action?: { label: string; run: () => void } | undefined;
 }
 
 type ShowToast = (options: ToastOptions) => void;
@@ -45,7 +47,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       () => {
         setCurrent(null);
       },
-      options.undo || options.retry ? actionMilliseconds : plainMilliseconds,
+      options.undo || options.retry || options.action ? actionMilliseconds : plainMilliseconds,
     );
   }, []);
 
@@ -103,6 +105,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 }}
               >
                 {t('action.retry')}
+              </button>
+            ) : null}
+            {current.action ? (
+              <button
+                type="button"
+                className={actionClasses}
+                onClick={() => {
+                  current.action?.run();
+                  setCurrent(null);
+                }}
+              >
+                {current.action.label}
               </button>
             ) : null}
           </div>

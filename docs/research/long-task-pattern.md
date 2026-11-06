@@ -71,8 +71,8 @@ server, which has no GPU and too little disk for their images.
   stable keys the console translates.
 - **Durations use the agent's clock at both ends,** so a skewed clock or a delayed report cannot
   distort them.
-- **The console polls with a cursor, every three seconds, only while the task runs and the tab is
-  visible.** A viewer holds no connection on control, a poll passes every proxy and uses the session
+- **The console polls with a cursor, on the installation's poll interval (five seconds by default),
+  only while the task runs and the tab is visible.** A viewer holds no connection on control, a poll passes every proxy and uses the session
   and limits of any other read, and six HTTP/1 connections per domain would otherwise bound how many
   tabs one person can keep open. Server-sent events were rejected for these reasons, and WebSockets
   for the same ones with more machinery. The agent's five seconds, not the poll, sets how fresh a

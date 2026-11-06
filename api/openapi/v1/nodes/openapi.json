@@ -3484,6 +3484,379 @@
           "platform"
         ]
       }
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks": {
+      "get": {
+        "operationId": "listAdminTasks",
+        "x-audiences": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "running",
+                "succeeded",
+                "failed",
+                "cancelled"
+              ]
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "mine",
+            "in": "query",
+            "description": "Only unfinished tasks the signed-in person started.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committed response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSummaryListResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks/{task_id}": {
+      "get": {
+        "operationId": "getAdminTask",
+        "x-audiences": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committed response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDetailResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks/{task_id}/log": {
+      "get": {
+        "operationId": "getAdminTaskLog",
+        "x-audiences": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "description": "The cursor of the previous page.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,2}\\.[0-9]{1,5}$"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committed response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskLogResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/tasks/{task_id}/task-progress": {
+      "post": {
+        "operationId": "submitTaskProgress",
+        "x-audiences": [
+          "agent"
+        ],
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskProgress"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "How many entries of this report were new; a repeated report accepts none and changes nothing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskProgressAcceptedResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable scoped rejection; a refused report records nothing",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
+            }
+          }
+        },
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ],
+        "x-agent-call": "events"
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {
@@ -12458,6 +12831,464 @@
           "reconnect_max_seconds",
           "version",
           "reason"
+        ]
+      },
+      "TaskProgressEntry": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4129
+              },
+              "kind": {
+                "type": "string",
+                "const": "step"
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "step": {
+                "type": "string",
+                "enum": [
+                  "read_system",
+                  "read_memory",
+                  "read_disk",
+                  "preflight",
+                  "download",
+                  "install",
+                  "start",
+                  "stop",
+                  "remove",
+                  "verify"
+                ]
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "running",
+                  "succeeded",
+                  "failed"
+                ]
+              }
+            },
+            "required": [
+              "sequence",
+              "kind",
+              "at",
+              "step",
+              "state"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4129
+              },
+              "kind": {
+                "type": "string",
+                "const": "log"
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "level": {
+                "type": "string",
+                "enum": [
+                  "info",
+                  "warning",
+                  "error"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "sequence",
+              "kind",
+              "at",
+              "level",
+              "message"
+            ]
+          }
+        ]
+      },
+      "TaskProgress": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "lease_token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "entries": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/TaskProgressEntry"
+            }
+          }
+        },
+        "required": [
+          "lease_token",
+          "entries"
+        ]
+      },
+      "TaskProgressAccepted": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "accepted"
+        ]
+      },
+      "TaskProgressAcceptedResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TaskProgressAccepted"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "TaskSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "node_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "node_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "collect_facts.v1",
+              "node_exporter.install.v1",
+              "node_exporter.start.v1",
+              "node_exporter.stop.v1",
+              "node_exporter.remove.v1",
+              "node_exporter.observe.v1",
+              "node_exporter.configure.v1",
+              "node_exporter.restart.v1",
+              "node_exporter.upgrade.v1",
+              "node_exporter.rollback.v1",
+              "node_exporter.logs.v1",
+              "inference.deploy.v1",
+              "inference.stop.v1",
+              "inference.remove.v1",
+              "inference.observe.v1",
+              "inference.verify.v1",
+              "inference.deploy.v1",
+              "inference.stop.v1",
+              "inference.remove.v1",
+              "inference.observe.v1",
+              "inference.verify.v1",
+              "inference.deploy.v1",
+              "inference.stop.v1",
+              "inference.remove.v1",
+              "inference.observe.v1",
+              "inference.verify.v1",
+              "training.run.v1",
+              "training.run.v1",
+              "training.run.v1",
+              "model.prepare.v1",
+              "model.prepare.v1",
+              "model.prepare.v1",
+              "inference.derived.v1",
+              "inference.derived.v1",
+              "inference.derived.v1"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "attempt": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "node_id",
+          "node_name",
+          "operation",
+          "state",
+          "attempt",
+          "error_code",
+          "created_at",
+          "updated_at",
+          "completed_at"
+        ]
+      },
+      "TaskSummaryList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/TaskSummary"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 512
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ]
+      },
+      "TaskSummaryListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TaskSummaryList"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "TaskStep": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "step": {
+            "type": "string",
+            "enum": [
+              "read_system",
+              "read_memory",
+              "read_disk",
+              "preflight",
+              "download",
+              "install",
+              "start",
+              "stop",
+              "remove",
+              "verify"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "running",
+              "succeeded",
+              "failed"
+            ]
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "step",
+          "state",
+          "started_at",
+          "finished_at"
+        ]
+      },
+      "TaskDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task": {
+            "$ref": "#/components/schemas/TaskSummary"
+          },
+          "steps": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/TaskStep"
+            }
+          }
+        },
+        "required": [
+          "task",
+          "steps"
+        ]
+      },
+      "TaskDetailResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TaskDetail"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "TaskLogLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "attempt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4129
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "attempt",
+          "sequence",
+          "at",
+          "level",
+          "message"
+        ]
+      },
+      "TaskLog": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 500,
+            "items": {
+              "$ref": "#/components/schemas/TaskLogLine"
+            }
+          },
+          "cursor": {
+            "type": "string",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "items",
+          "cursor"
+        ]
+      },
+      "TaskLogResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TaskLog"
+          }
+        },
+        "required": [
+          "data"
         ]
       }
     },

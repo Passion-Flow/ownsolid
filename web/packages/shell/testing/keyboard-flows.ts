@@ -4,6 +4,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { account, mockControlPlane, type ControlPlane } from './control-plane.ts';
 import type { PageState } from './pages.ts';
+import { settled } from './accessibility-flows.ts';
 
 /** One element Tab stopped on. */
 interface TabStop {
@@ -17,13 +18,6 @@ interface TabStop {
 
 // More stops than any page has; reaching it means focus is stuck in a loop it cannot leave.
 const maximumStops = 120;
-
-/** Waits until no transition or animation runs, so a look is sampled once it has settled. */
-async function settled(page: Page): Promise<void> {
-  await page.waitForFunction(() =>
-    document.getAnimations().every((animation) => animation.playState !== 'running'),
-  );
-}
 
 /**
  * Presses Tab until focus returns to a control it has visited. Each stop's look is
