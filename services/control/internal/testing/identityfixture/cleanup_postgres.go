@@ -22,7 +22,7 @@ func disposeOwnedPostgresTables(ctx context.Context, pool *pgxpool.Pool, schema 
 	if c.Host != "127.0.0.1" || c.Port < 1024 || !nativeSQLName.MatchString(c.Database) || !strings.HasSuffix(c.Database, "_test") || !nativeSQLName.MatchString(c.User) || c.RuntimeParams["search_path"] != schema {
 		return 0, errors.New("OWNED_FIXTURE_SCHEMA_CLEANUP_CONTEXT_INVALID")
 	}
-	rows, e := pool.Query(ctx, "SELECT tablename FROM pg_tables WHERE schemaname=$1 ORDER BY tablename", schema)
+	rows, e := pool.Query(ctx, "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=$1 AND c.relkind IN ('r','p') AND NOT c.relispartition ORDER BY c.relname", schema)
 	if e != nil {
 		return 0, errors.New("OWNED_FIXTURE_TABLE_INVENTORY_FAILED")
 	}

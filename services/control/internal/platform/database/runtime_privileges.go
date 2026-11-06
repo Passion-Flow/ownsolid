@@ -16,7 +16,7 @@ const currentPrivilegesSQL = `WITH r AS (
  SELECT * FROM pg_roles WHERE rolname=current_user
 ), objects AS (
  SELECT c.oid,c.relname,c.relowner,n.nspname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
- WHERE c.relkind IN ('r','p','v','m','f') AND n.nspname !~ '^pg_' AND n.nspname<>'information_schema'
+ WHERE c.relkind IN ('r','p','v','m','f') AND NOT c.relispartition AND n.nspname !~ '^pg_' AND n.nspname<>'information_schema'
 )
 SELECT CASE WHEN r.rolsuper THEN $1::boolean ELSE
  NOT r.rolinherit AND NOT r.rolcreatedb AND NOT r.rolcreaterole AND r.rolcanlogin AND NOT r.rolreplication AND NOT r.rolbypassrls AND r.rolconnlimit BETWEEN $2 AND $3 AND r.rolvaliduntil IS NULL

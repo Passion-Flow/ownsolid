@@ -232,6 +232,7 @@ runtime:
     invitation_days: 90
     session_days: 7
     rate_grace_seconds: 3600
+    # A minimum on PostgreSQL: rows leave with their whole month (ADR 0029).
     audit_days: 180
   nodes:
     maximum_live_nodes: 100
