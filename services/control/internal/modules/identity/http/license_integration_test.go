@@ -148,6 +148,22 @@ func TestM19ActualHTTPImportAuthorityDiagnosticsAndWallClock(t *testing.T) {
 	portal.request("GET", "/api/v1/admin/license", nil, 404, "", nil)
 	claims := licenseClaims(t, s, time.Now())
 	input := licenseInput(t, s, claims, "")
+	inspection := map[string]any{"artifact": input.Artifact}
+	portal.mutate("POST", "/api/v1/admin/license/inspections", inspection, 404, "")
+	admin.request("POST", "/api/v1/admin/license/inspections", inspection, 403, "", map[string]string{"X-CSRF-Token": "invalid"})
+	for _, raw := range []string{`{}`, `{"artifact":null}`, `{"artifact":""}`, `{"artifact":"x","reason":"unknown"}`} {
+		admin.mutate("POST", "/api/v1/admin/license/inspections", []byte(raw), 400, "")
+	}
+	// No license is installed, so this also proves a missing license cannot block its own remedy.
+	if v := admin.mutate("POST", "/api/v1/admin/license/inspections", inspection, 200, ""); v["outcome"] != "importable" || v["file"].(map[string]any)["license_id"] != claims.LicenseID {
+		t.Fatal("inspection of a good file", v)
+	}
+	if v := admin.mutate("POST", "/api/v1/admin/license/inspections", map[string]any{"artifact": "not a license"}, 200, ""); v["outcome"] != "refused" || v["code"] != "LICENSE_ARTIFACT_INVALID" || v["file"] != nil {
+		t.Fatal("inspection of a bad file", v)
+	}
+	if v := admin.request("GET", "/api/v1/admin/license", nil, 200, "", nil); v["accepted_licenses"] != float64(0) {
+		t.Fatal("an inspection installed a license", v)
+	}
 	admin.request("POST", "/api/v1/admin/license", input, 403, "", map[string]string{"X-CSRF-Token": "invalid"})
 	for _, raw := range []string{`{}`, `{"artifact":null,"reason":"Synthetic","expected_current_license_id":""}`, `{"artifact":"x","reason":"Synthetic","expected_current_license_id":"","unknown":true}`, `{"artifact":"x","artifact":"y","reason":"Synthetic","expected_current_license_id":""}`, `{"Artifact":"x","reason":"Synthetic","expected_current_license_id":""}`} {
 		admin.mutate("POST", "/api/v1/admin/license", []byte(raw), 400, "")

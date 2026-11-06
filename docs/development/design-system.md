@@ -12,7 +12,8 @@ cartoon icons; keep the warm neutral, teal and Figtree direction below.
 The tokens, fonts and components live in `web/packages/ui`. Reach for its components
 before writing new markup: `Button`, `TextField`, `Card`, `StatusPill`, `Tag`, `Kbd`,
 `Meter`, `Segmented`, `Switch`, `Checkbox`, `CopyText`, `EmptyState`, `Skeleton`, `Table`,
-`Menu`, `Dialog`, `Drawer`, `DetailList`, `CodeBlock`, `Notice`, `ProblemNotice` and `useToast`.
+`Menu`, `Dialog`, `Drawer`, `DetailList`, `CodeBlock`, `Notice`, `ProblemNotice`, `useToast` and
+`saveFile`.
 
 ## Tokens
 
@@ -121,6 +122,11 @@ this browser. The server checks access to the workspace on every request.
     on the `BulkBar`. A poll reads with `background: true` and a failed one keeps the rows on screen.
   - A secret shown once stays out of any command on the page: it reaches its file by paste, so it
     never lands in shell history or a process list.
+- **Importing a file that cannot be taken back:** check it on the server first and show what it would
+  do, or each check and why one refused it, with the values involved and a report to download. The
+  preview is the confirmation: a button that names the action, the permanence stated beside it, and
+  a reason. Bind the import to what the person looked at, and check again if that changed
+  ([research](../research/license-page.md)).
 - **Long-running tasks:** step timeline with durations plus a live log; the task keeps
   running when the user leaves the page ([research](../research/long-task-pattern.md)).
   - `StepTimeline` lists steps in order. The running step carries `aria-current="step"`, and a state

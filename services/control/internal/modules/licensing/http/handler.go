@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
 	strict "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/pkg/license/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
 )
 
 type Handler struct{ Service *licensing.Service }
@@ -45,10 +45,17 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, request string) (any,
 		return v, http.StatusOK, e
 	case "POST " + adminPath:
 		var input licensing.ImportInput
-		if e := decodeImport(r, &input); e != nil {
+		if e := decodeExact(r, &input, "artifact", "reason", "expected_current_license_id"); e != nil {
 			return nil, 0, e
 		}
 		v, e := h.Service.Import(r.Context(), a, input, request)
+		return v, http.StatusOK, e
+	case "POST " + adminPath + "/inspections":
+		var input licensing.InspectInput
+		if e := decodeExact(r, &input, "artifact"); e != nil {
+			return nil, 0, e
+		}
+		v, e := h.Service.Inspect(r.Context(), a, input, request)
 		return v, http.StatusOK, e
 	default:
 		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
@@ -57,7 +64,7 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, request string) (any,
 
 // License artifacts have their own larger fixed protocol envelope. Do not
 // enlarge the shared small-business JSON limit to admit a signed file.
-func decodeImport(r *http.Request, input *licensing.ImportInput) error {
+func decodeExact(r *http.Request, input any, names ...string) error {
 	media, parameters, e := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if e != nil || media != "application/json" || len(r.Header.Values("Content-Type")) != 1 || len(parameters) > 1 || len(parameters) == 1 && parameters["charset"] != "utf-8" {
 		return errors.New("UNSUPPORTED_MEDIA_TYPE")
@@ -70,10 +77,10 @@ func decodeImport(r *http.Request, input *licensing.ImportInput) error {
 		return errors.New("PAYLOAD_TOO_LARGE")
 	}
 	var fields map[string]json.RawMessage
-	if strict.DecodeStrict(raw, &fields) != nil || len(fields) != 3 {
+	if strict.DecodeStrict(raw, &fields) != nil || len(fields) != len(names) {
 		return errors.New("VALIDATION_FAILED")
 	}
-	for _, name := range []string{"artifact", "reason", "expected_current_license_id"} {
+	for _, name := range names {
 		if _, ok := fields[name]; !ok {
 			return errors.New("VALIDATION_FAILED")
 		}

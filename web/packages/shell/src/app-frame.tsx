@@ -89,18 +89,22 @@ function Navigation({
 
 function SidebarContent({
   groups,
-  footer,
+  licensePath,
   onNavigate,
 }: {
   groups: readonly NavGroup[];
-  footer: ReactNode;
+  licensePath: string | undefined;
   onNavigate?: (() => void) | undefined;
 }) {
   return (
     <>
       <Brand className="px-[18px] pt-[18px] pb-2.5" />
       <Navigation groups={groups} onNavigate={onNavigate} />
-      {footer ? <div className="mt-auto border-t border-border p-3.5">{footer}</div> : null}
+      {licensePath ? (
+        <div className="mt-auto border-t border-border p-3.5">
+          <LicenseStatus to={licensePath} onNavigate={onNavigate} />
+        </div>
+      ) : null}
     </>
   );
 }
@@ -115,15 +119,15 @@ const accountPage: NavGroup = {
 /** Props for {@link AppFrame}. */
 export interface AppFrameProps {
   navigation: readonly NavGroup[];
-  /** Shows the license condition at the foot of the sidebar. */
-  showLicense?: boolean | undefined;
+  /** Shows the license condition at the foot of the sidebar, as a link to this page. */
+  licensePath?: string | undefined;
   /** Shows the tasks the person started; the portal has none. */
   tasks?: TaskTrayProps | undefined;
   children: ReactNode;
 }
 
 /** The signed-in layout of the console and the portal. */
-export function AppFrame({ navigation, showLicense = false, tasks, children }: AppFrameProps) {
+export function AppFrame({ navigation, licensePath, tasks, children }: AppFrameProps) {
   const { t } = useI18n();
   const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -151,7 +155,6 @@ export function AppFrame({ navigation, showLicense = false, tasks, children }: A
     };
   }, []);
 
-  const footer = showLicense ? <LicenseStatus /> : null;
   const startSignOut = () => {
     signOut.mutate();
   };
@@ -167,7 +170,7 @@ export function AppFrame({ navigation, showLicense = false, tasks, children }: A
         {t('nav.skip')}
       </a>
       <aside className="hidden flex-col overflow-y-auto border-r border-border bg-surface lg:flex">
-        <SidebarContent groups={navigation} footer={footer} />
+        <SidebarContent groups={navigation} licensePath={licensePath} />
       </aside>
       <div className="flex h-dvh min-w-0 flex-col">
         <header className="sticky top-0 z-[5] flex h-[58px] flex-none items-center gap-2.5 border-b border-border px-4 lg:px-6">
@@ -238,7 +241,7 @@ export function AppFrame({ navigation, showLicense = false, tasks, children }: A
       >
         <SidebarContent
           groups={navigation}
-          footer={footer}
+          licensePath={licensePath}
           onNavigate={() => {
             setSidebarOpen(false);
           }}

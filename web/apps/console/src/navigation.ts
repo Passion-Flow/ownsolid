@@ -82,7 +82,7 @@ export const navigation: readonly NavGroup[] = [
   {
     heading: 'nav.group.system',
     items: [
-      { label: 'nav.license', icon: BadgeCheck },
+      { label: 'nav.license', icon: BadgeCheck, to: '/license' },
       { label: 'nav.mail', icon: Mail, to: '/mail' },
       { label: 'nav.settings', icon: Settings, to: '/settings' },
     ],

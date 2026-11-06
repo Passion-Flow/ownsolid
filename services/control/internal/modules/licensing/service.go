@@ -11,11 +11,11 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	wire "github.com/Passion-Flow/ownsolid/pkg/license/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/pkg/license/v1"
 )
 
 type Phase string
@@ -46,6 +46,7 @@ type State struct {
 	Pending              *Summary  `json:"pending"`
 	AcceptedLicenses     int       `json:"accepted_licenses"`
 	HistoryHeadLicenseID string    `json:"history_head_license_id"`
+	MaximumImports       int       `json:"maximum_imports"`
 	ObservedAt           time.Time `json:"observed_at"`
 	PublicKeyFingerprint string    `json:"public_key_fingerprint"`
 }
@@ -102,7 +103,19 @@ func summary(v wire.Verified) *Summary {
 	c := v.Claims
 	return &Summary{c.LicenseID, v.SHA256, c.CustomerReference, c.NotBefore, c.ExpiresAt, c.GraceUntil}
 }
-func renewal(previous, next wire.Claims) bool {
+
+// Why a file cannot follow the newest license, in the words of the inspection contract.
+const (
+	renewalWrongPredecessor = "wrong_predecessor"
+	renewalWrongDeployment  = "wrong_deployment"
+	renewalIssuedBefore     = "issued_before_current"
+	renewalStartsBefore     = "starts_before_current"
+	renewalStartsAfterGrace = "starts_after_grace"
+	renewalExpiresNoLater   = "expires_no_later"
+)
+
+// renewalRefusal says why next cannot follow previous, or "" when it can.
+func renewalRefusal(previous, next wire.Claims) string {
 	priorIssued, _ := wire.Stamp(previous.IssuedAt)
 	issued, _ := wire.Stamp(next.IssuedAt)
 	priorStart, _ := wire.Stamp(previous.NotBefore)
@@ -110,8 +123,24 @@ func renewal(previous, next wire.Claims) bool {
 	priorExpires, _ := wire.Stamp(previous.ExpiresAt)
 	expires, _ := wire.Stamp(next.ExpiresAt)
 	priorGrace, _ := wire.Stamp(previous.GraceUntil)
-	return next.ReplacesLicenseID == previous.LicenseID && next.DeploymentID == previous.DeploymentID && !issued.Before(priorIssued) && !start.Before(priorStart) && !start.After(priorGrace) && expires.After(priorExpires)
+	switch {
+	case next.ReplacesLicenseID != previous.LicenseID:
+		return renewalWrongPredecessor
+	case next.DeploymentID != previous.DeploymentID:
+		return renewalWrongDeployment
+	case issued.Before(priorIssued):
+		return renewalIssuedBefore
+	case start.Before(priorStart):
+		return renewalStartsBefore
+	case start.After(priorGrace):
+		return renewalStartsAfterGrace
+	case !expires.After(priorExpires):
+		return renewalExpiresNoLater
+	}
+	return ""
 }
+
+func renewal(previous, next wire.Claims) bool { return renewalRefusal(previous, next) == "" }
 
 // Every read validates actual signed history, not cached booleans or a client
 // license/deployment override. The original singleton serializes all transitions.
@@ -164,7 +193,7 @@ func (s *Service) read(ctx context.Context, tx transaction.Executor, lock string
 	}
 	rows.Close()
 	out.State, out.ObservedAt, out.PublicKeyFingerprint = Missing, effective, s.fingerprint
-	out.AcceptedLicenses = len(history)
+	out.AcceptedLicenses, out.MaximumImports = len(history), s.policy.MaximumImports
 	for _, proof := range history {
 		out.HistoryHeadLicenseID = proof.Claims.LicenseID
 		start, _ := wire.Stamp(proof.Claims.NotBefore)
@@ -243,6 +272,51 @@ func (s *Service) Check(ctx context.Context) error {
 	return nil
 }
 
+// verdict is what the installation makes of a verified file. An empty code with installed false
+// means the file can be imported.
+type verdict struct {
+	check     string
+	code      string
+	detail    string
+	installed bool
+}
+
+// judge decides whether a verified file may join the history, so inspecting a file and importing
+// it cannot disagree. expected is nil for an inspection, which binds to no earlier reading.
+func (s *Service) judge(proof wire.Verified, state State, history []wire.Verified, now time.Time, expected *string) verdict {
+	if proof.Claims.DeploymentID != state.DeploymentID {
+		return verdict{check: checkDeployment, code: "LICENSE_DEPLOYMENT_MISMATCH"}
+	}
+	for _, old := range history {
+		if old.Claims.LicenseID == proof.Claims.LicenseID {
+			if old.SHA256 != proof.SHA256 {
+				return verdict{check: checkIdentity, code: "LICENSE_ID_CONFLICT"}
+			}
+			return verdict{installed: true}
+		}
+	}
+	if expected != nil && *expected != state.HistoryHeadLicenseID {
+		return verdict{check: checkRenewal, code: "LICENSE_CURRENT_CHANGED"}
+	}
+	if len(history) >= s.policy.MaximumImports {
+		return verdict{check: checkCapacity, code: "LICENSE_IMPORT_CAPACITY_REQUIRED"}
+	}
+	if len(history) == 0 {
+		if proof.Claims.ReplacesLicenseID != "" {
+			return verdict{check: checkRenewal, code: "LICENSE_PREDECESSOR_REQUIRED"}
+		}
+		return verdict{}
+	}
+	last := history[len(history)-1].Claims
+	if start, _ := wire.Stamp(last.NotBefore); start.After(now) {
+		return verdict{check: checkRenewal, code: "LICENSE_PENDING_SUCCESSOR_EXISTS"}
+	}
+	if detail := renewalRefusal(last, proof.Claims); detail != "" {
+		return verdict{check: checkRenewal, code: "LICENSE_RENEWAL_WINDOW_INVALID", detail: detail}
+	}
+	return verdict{}
+}
+
 func (s *Service) Import(ctx context.Context, a identity.Auth, input ImportInput, requestID string) (ImportResult, error) {
 	if a.Me.Audience != "admin" || !a.Me.User.IsPlatformAdmin {
 		return ImportResult{}, fail("ACCESS_DENIED")
@@ -272,37 +346,13 @@ func (s *Service) Import(ctx context.Context, a identity.Auth, input ImportInput
 		if e != nil {
 			return e
 		}
-		if proof.Claims.DeploymentID != state.DeploymentID {
-			return reject("LICENSE_DEPLOYMENT_MISMATCH")
+		found := s.judge(proof, state, history, now, &input.ExpectedCurrentLicenseID)
+		if found.code != "" {
+			return reject(found.code)
 		}
-		for _, old := range history {
-			if old.Claims.LicenseID == proof.Claims.LicenseID {
-				if old.SHA256 != proof.SHA256 {
-					return reject("LICENSE_ID_CONFLICT")
-				}
-				result = ImportResult{State: state, ImportedLicenseID: proof.Claims.LicenseID, Repeated: true}
-				return nil
-			}
-		}
-		if input.ExpectedCurrentLicenseID != state.HistoryHeadLicenseID {
-			return reject("LICENSE_CURRENT_CHANGED")
-		}
-		if len(history) >= s.policy.MaximumImports {
-			return reject("LICENSE_IMPORT_CAPACITY_REQUIRED")
-		}
-		if len(history) == 0 {
-			if proof.Claims.ReplacesLicenseID != "" {
-				return reject("LICENSE_PREDECESSOR_REQUIRED")
-			}
-		} else {
-			last := history[len(history)-1].Claims
-			start, _ := wire.Stamp(last.NotBefore)
-			if start.After(now) {
-				return reject("LICENSE_PENDING_SUCCESSOR_EXISTS")
-			}
-			if !renewal(last, proof.Claims) {
-				return reject("LICENSE_RENEWAL_WINDOW_INVALID")
-			}
+		if found.installed {
+			result = ImportResult{State: state, ImportedLicenseID: proof.Claims.LicenseID, Repeated: true}
+			return nil
 		}
 		changed, e := tx.Exec(ctx, licenseSQL(tx,
 			`INSERT INTO platform_license_artifacts(license_id,sequence,deployment_id,artifact_sha256,artifact,predecessor_id,imported_by,reason) VALUES($1,$2,$3,$4,$5,NULLIF($6,'')::uuid,$7,$8)`,
