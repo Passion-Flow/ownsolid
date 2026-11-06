@@ -86,8 +86,9 @@ server, which has no GPU and too little disk for their images.
 
 ## Licences
 
-No new dependency. The server change uses PostgreSQL only; MySQL and Dameng do not store progress,
-and their tasks show the states the task itself records.
+No new dependency. The server change uses PostgreSQL only, like the task history it reads (ADR 0029).
+On MySQL and Dameng the task pages refuse with `TASK_HISTORY_UNAVAILABLE` and agents stop reporting,
+until CMP-201 and CMP-202 bring those chains level.
 
 ## Failure modes and tests
 

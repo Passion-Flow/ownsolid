@@ -12,6 +12,9 @@ func DiscoveryHumanOwns(path string) bool {
 		if p[1] == "node-join-tokens" {
 			return len(p) == 2 || len(p) == 4 && p[3] == "revocations"
 		}
+		if p[1] == "tasks" {
+			return len(p) <= 4
+		}
 		return p[1] == "nodes" && (len(p) == 2 || len(p) == 3 || len(p) == 4 && p[3] == "tasks")
 	}
 	return p[0] == "workspaces" && len(p) >= 3 && p[2] == "nodes" && (len(p) == 3 || len(p) == 4 || len(p) == 5 && p[4] == "tasks")
