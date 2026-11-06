@@ -269,39 +269,85 @@ function DeliveryDrawer({
   const pendingInvitation = delivery?.invitation?.status === 'pending' ? delivery.invitation : null;
   const canSend = delivery?.state === 'failed';
   return (
-    <Drawer
-      open={delivery !== null}
-      onClose={onClose}
-      title={delivery?.recipient_email}
-      footer={
-        pendingInvitation || canSend ? (
-          <>
-            {pendingInvitation ? (
-              <Button
-                variant="danger"
-                onClick={() => {
-                  setRevoking(true);
-                }}
-              >
-                {t('mail.revoke.open')}
-              </Button>
+    <>
+      <Drawer
+        open={delivery !== null}
+        onClose={onClose}
+        title={delivery?.recipient_email}
+        footer={
+          pendingInvitation || canSend ? (
+            <>
+              {pendingInvitation ? (
+                <Button
+                  variant="danger"
+                  onClick={() => {
+                    setRevoking(true);
+                  }}
+                >
+                  {t('mail.revoke.open')}
+                </Button>
+              ) : null}
+              {canSend ? (
+                <Button
+                  variant="primary"
+                  disabled={send.isPending}
+                  onClick={() => {
+                    send.mutate(delivery.id);
+                  }}
+                >
+                  <RotateCw aria-hidden />
+                  {t('mail.resend')}
+                </Button>
+              ) : null}
+            </>
+          ) : undefined
+        }
+      >
+        {send.error && isProblem(send.error) ? (
+          <ProblemNotice
+            className="mb-4"
+            problem={send.error}
+            onRetry={() => {
+              if (delivery) send.mutate(delivery.id);
+            }}
+          />
+        ) : null}
+        {delivery && state ? (
+          <dl className="m-0 grid grid-cols-[130px_1fr] gap-y-2.5 text-[13.5px]">
+            <Detail label={t('mail.column.state')}>
+              <StatusPill tone={state.tone}>{t(state.label)}</StatusPill>
+            </Detail>
+            <Detail label={t('mail.column.purpose')}>{t(purposes[delivery.purpose])}</Detail>
+            {delivery.invitation ? (
+              <Detail label={t('mail.detail.invitation')}>
+                {t(invitationStates[delivery.invitation.status])}
+              </Detail>
             ) : null}
-            {canSend ? (
-              <Button
-                variant="primary"
-                disabled={send.isPending}
-                onClick={() => {
-                  send.mutate(delivery.id);
-                }}
-              >
-                <RotateCw aria-hidden />
-                {t('mail.resend')}
-              </Button>
+            <Detail label={t('mail.column.reason')}>
+              <Reason delivery={delivery} />
+            </Detail>
+            <Detail label={t('mail.column.attempts')}>
+              {format.number(delivery.attempt_count)}
+            </Detail>
+            <Detail label={t('mail.detail.language')}>{delivery.locale}</Detail>
+            <Detail label={t('mail.detail.created')}>{format.dateTime(delivery.created_at)}</Detail>
+            {delivery.next_attempt_at ? (
+              <Detail label={t('mail.detail.nextAttempt')}>
+                {format.dateTime(delivery.next_attempt_at)}
+              </Detail>
             ) : null}
-          </>
-        ) : undefined
-      }
-    >
+            {delivery.completed_at ? (
+              <Detail label={t('mail.detail.completed')}>
+                {format.dateTime(delivery.completed_at)}
+              </Detail>
+            ) : null}
+            <Detail label={t('mail.detail.id')}>
+              <CopyText text={delivery.id} />
+            </Detail>
+          </dl>
+        ) : null}
+      </Drawer>
+      {/* Beside the drawer, not in it: a modal inside a modal can lose clicks to its parent. */}
       {revoking && pendingInvitation && delivery ? (
         <RevokeInvitation
           invitation={pendingInvitation}
@@ -315,48 +361,7 @@ function DeliveryDrawer({
           }}
         />
       ) : null}
-      {send.error && isProblem(send.error) ? (
-        <ProblemNotice
-          className="mb-4"
-          problem={send.error}
-          onRetry={() => {
-            if (delivery) send.mutate(delivery.id);
-          }}
-        />
-      ) : null}
-      {delivery && state ? (
-        <dl className="m-0 grid grid-cols-[130px_1fr] gap-y-2.5 text-[13.5px]">
-          <Detail label={t('mail.column.state')}>
-            <StatusPill tone={state.tone}>{t(state.label)}</StatusPill>
-          </Detail>
-          <Detail label={t('mail.column.purpose')}>{t(purposes[delivery.purpose])}</Detail>
-          {delivery.invitation ? (
-            <Detail label={t('mail.detail.invitation')}>
-              {t(invitationStates[delivery.invitation.status])}
-            </Detail>
-          ) : null}
-          <Detail label={t('mail.column.reason')}>
-            <Reason delivery={delivery} />
-          </Detail>
-          <Detail label={t('mail.column.attempts')}>{format.number(delivery.attempt_count)}</Detail>
-          <Detail label={t('mail.detail.language')}>{delivery.locale}</Detail>
-          <Detail label={t('mail.detail.created')}>{format.dateTime(delivery.created_at)}</Detail>
-          {delivery.next_attempt_at ? (
-            <Detail label={t('mail.detail.nextAttempt')}>
-              {format.dateTime(delivery.next_attempt_at)}
-            </Detail>
-          ) : null}
-          {delivery.completed_at ? (
-            <Detail label={t('mail.detail.completed')}>
-              {format.dateTime(delivery.completed_at)}
-            </Detail>
-          ) : null}
-          <Detail label={t('mail.detail.id')}>
-            <CopyText text={delivery.id} />
-          </Detail>
-        </dl>
-      ) : null}
-    </Drawer>
+    </>
   );
 }
 
