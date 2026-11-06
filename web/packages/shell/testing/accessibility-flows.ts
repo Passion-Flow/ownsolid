@@ -21,10 +21,19 @@ function findings(violations: Awaited<ReturnType<AxeBuilder['analyze']>>['violat
   );
 }
 
-async function settled(page: Page): Promise<void> {
-  // Elements fading in would be measured at a contrast they never stay at.
+/**
+ * Waits until nothing is fading or moving, so a look is sampled at rest. An animation that
+ * never ends, such as the mark of something running, has no rest to wait for.
+ */
+export async function settled(page: Page): Promise<void> {
   await page.waitForFunction(() =>
-    document.getAnimations().every((animation) => animation.playState !== 'running'),
+    document
+      .getAnimations()
+      .every(
+        (animation) =>
+          animation.playState !== 'running' ||
+          animation.effect?.getComputedTiming().iterations === Infinity,
+      ),
   );
 }
 

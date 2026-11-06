@@ -12,6 +12,7 @@ import {
   KeyRound,
   LayoutDashboard,
   Library,
+  ListChecks,
   Mail,
   Network,
   Package,
@@ -72,6 +73,7 @@ export const navigation: readonly NavGroup[] = [
   {
     heading: 'nav.group.operations',
     items: [
+      { label: 'nav.tasks', icon: ListChecks, to: '/tasks' },
       { label: 'nav.monitoring', icon: Activity },
       { label: 'nav.alerts', icon: Bell },
       { label: 'nav.backups', icon: DatabaseBackup },

@@ -25,3 +25,12 @@ export { expectFocusVisible, keyboardFlows, type KeyboardFlowOptions } from './k
 export { languageFlows } from './language-flows.ts';
 export { registrationFlows, sessionFlows, type SessionFlowOptions } from './session-flows.ts';
 export { sessionWarningFlows } from './session-warning-flows.ts';
+export {
+  failedTask,
+  finishedTask,
+  logLine,
+  node,
+  runningTask,
+  type ScriptedTask,
+  type TaskScript,
+} from './tasks.ts';

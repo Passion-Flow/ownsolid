@@ -23,6 +23,7 @@ import { useDocumentTitle } from './page-focus.ts';
 import { accountPath, signInPath } from './redirect.ts';
 import { SessionWarningDialog } from './session-warning.tsx';
 import { useSignOut } from './sign-out.ts';
+import { TaskTray, type TaskTrayProps } from './task-tray.tsx';
 import { UserMenu } from './user-menu.tsx';
 import { WorkspaceSwitcher } from './workspace-switcher.tsx';
 
@@ -116,11 +117,13 @@ export interface AppFrameProps {
   navigation: readonly NavGroup[];
   /** Shows the license condition at the foot of the sidebar. */
   showLicense?: boolean | undefined;
+  /** Shows the tasks the person started; the portal has none. */
+  tasks?: TaskTrayProps | undefined;
   children: ReactNode;
 }
 
 /** The signed-in layout of the console and the portal. */
-export function AppFrame({ navigation, showLicense = false, children }: AppFrameProps) {
+export function AppFrame({ navigation, showLicense = false, tasks, children }: AppFrameProps) {
   const { t } = useI18n();
   const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -212,6 +215,7 @@ export function AppFrame({ navigation, showLicense = false, children }: AppFrame
             <DensityToggle />
             <ThemeToggle />
           </span>
+          {tasks ? <TaskTray {...tasks} /> : null}
           <NotificationBell />
           <UserMenu onSignOut={startSignOut} />
         </header>
