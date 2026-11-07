@@ -164,6 +164,33 @@ container's own filesystem on the host's disk, so PostgreSQL's WAL syncs compete
 uses that disk; only `/var/lib/docker` inside it is in memory. Shedding is the designed response to
 a slow database, and every agent came back by the end of the run.
 
+**Fixed: one slow WAL sync emptied the connection pool.** Two later runs missed with almost nothing
+beside them, so the disk was not the whole story. PostgreSQL's slow statement log, added to the run,
+showed nine `commit` statements ending at one instant every 30 to 60 seconds, the longest after
+2,176 ms. An idle-host trace of synchronous 8 KB writes gave a median of 0.16 ms and a p99 of
+0.36 ms, with 16 stalls over 50 ms in ten minutes and a longest of 463 ms, so any stall of that size
+is normal. The stalls did not follow checkpoints.
+
+The log names no caller, so the waiters are inferred from the code: an agent call locks its node row,
+the lock gives the transaction an ID, and so a claim that finds no work waits for the disk at commit,
+about 400 times a second. Making only the
+heartbeat's repeat writes asynchronous did not help: one run of three still missed. Letting any agent
+call that changed nothing commit without waiting did ([ADR 0040](../decisions/0040-agent-calls-that-change-nothing-do-not-wait-for-the-disk.md)):
+
+| Measure | Fix run 1 | Fix run 2 | Fix run 3 |
+| --- | --- | --- | --- |
+| Result | Pass | Pass | Pass |
+| Worst steady heartbeat p99 | 14.6 ms | 807.8 ms | 3.8 ms |
+| Failed steady heartbeats, claims | 0, 0 | 0, 0 | 0, 0 |
+| Dispatch p99 | 1.32 s | 2.42 s | 1.25 s |
+| Slow `commit` statements in the run, longest | 22, 688 ms | 166, 972 ms | 10, 576 ms |
+| Moments with five or more together | 0 | 10 | 1 |
+| Full reconnect after a control restart | 18.3 s | 11 s | 17.2 s |
+| Other work on the host | Another project through the steady stretch | Another session's install, under three minutes after the steady stretch | Another project's containers for the last two minutes |
+
+None of these three had the host to itself, so they do not meet the rule below. Run 2 shows that a
+busy disk still slows heartbeats, though none failed.
+
 ARC-015 stays open until three runs in a row pass on a host with nothing else running. That is one
 more than this note first asked, because the old quota also passed two runs of three.
 

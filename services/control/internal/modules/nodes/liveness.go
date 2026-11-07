@@ -164,6 +164,31 @@ func (s *Service) heartbeatUnchanged(ctx context.Context, id, credential string,
 	return wire.Disposition{Status: status, ServerTime: at, Pacing: &pacing}, true
 }
 
+// heartbeatRepeats reports a heartbeat whose only news is that the node is still there: the
+// state it carries is the one last written, and only the refresh sent it down the synchronous
+// path. Any other heartbeat may carry a change, and a change must survive a crash.
+func (s *Service) heartbeatRepeats(id string, h wire.Handshake) bool {
+	table := s.sightings.Load()
+	if table == nil {
+		return false
+	}
+	state, ok := heartbeatDigest(h)
+	return ok && table.Repeats(id, state)
+}
+
+// commitWithoutWaitingForDisk ends the transaction without waiting for its WAL to reach the disk
+// (ADR 0040). It is for a write the next heartbeat repeats, and never for a change of state: a
+// crash may lose the last moments of such a write, and the digest in the table must keep matching
+// what the database holds. Waiting would hold a pooled connection for as long as the disk stalls,
+// which at fleet scale leaves none for the heartbeats that only read.
+func commitWithoutWaitingForDisk(ctx context.Context, q transaction.Executor) error {
+	if q.Dialect() != transaction.PostgreSQL {
+		return nil
+	}
+	_, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `SET LOCAL synchronous_commit=off`))
+	return e
+}
+
 // acceptHeartbeat notes a synchronous write, so the next heartbeat with the same state can
 // skip it. Backdating by up to half the refresh spreads the next synchronous writes of nodes
 // that were all written together, as after a restart.
@@ -294,7 +319,12 @@ func (s *Service) FlushLiveness(ctx context.Context) error {
 		batch := table.Drain(livenessBatch)
 		if len(batch) > 0 {
 			bounded, cancel := context.WithTimeout(ctx, timeout)
-			e = store.Within(bounded, false, func(ctx context.Context, q transaction.Executor) error { return s.writeSightingsWithin(ctx, q, batch) })
+			e = store.Within(bounded, false, func(ctx context.Context, q transaction.Executor) error {
+				if e := commitWithoutWaitingForDisk(ctx, q); e != nil {
+					return e
+				}
+				return s.writeSightingsWithin(ctx, q, batch)
+			})
 			cancel()
 			if e != nil {
 				table.Restore(batch)
