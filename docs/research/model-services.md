@@ -60,6 +60,9 @@ in the same order: node facts, freshness, the probe's own error, the node alread
 GPU against the recipe. It recommends the eligible GPU with the most free memory, the most recently
 observed node winning a tie. It reserves nothing; the create checks again.
 
+- **Free memory.** The agent refuses a load when under 80% of a GPU's memory is free, and the create
+  did not check it, so a GPU could pass here and fail on the node after the commit. The threshold now
+  lives in the agent contract (`InferenceFreeMemoryPercent`) and a new load is refused by control first.
 - **Rejected: judging in the browser.** The page would copy the recipe's thresholds and drift from
   the server the first time either changed. Refactoring the preflight into pure checks shared by both
   paths makes drift impossible, and an integration test proves that what the preview recommends the

@@ -12,6 +12,10 @@ import (
 const DockerInferenceProfile = "docker_inference"
 const InferenceVersion = "1.3"
 const InferenceImageMissing = "INFERENCE_IMAGE_MISSING"
+
+// InferenceFreeMemoryPercent is the share of a GPU's memory that must be free before a model
+// loads on it. Control refuses below it before queuing work; the agent checks again on the node.
+const InferenceFreeMemoryPercent = 80
 const InferenceModelName = "projectone-qwen3-0.6b"
 const InferenceVerificationPrompt = "Reply with one word: hello"
 
