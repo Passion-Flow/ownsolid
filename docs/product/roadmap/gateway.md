@@ -20,6 +20,7 @@ coding tools and the product agent.
 - [ ] GW-110 Optional external OpenAI-compatible upstreams for connected sites (P1) - Catalog: F071
 - [ ] GW-111 Configuration publishing with diff preview and rollback (P1) - Catalog: F083
 - [ ] GW-112 Load tested: requests per second and added latency at measured scale, published (P1) - Catalog: F086
+- [ ] GW-113 Gateway and keys page: issue, rotate and revoke keys, with each key's call log (S-206) (P1)
 
 ## P2 Fleet operations
 

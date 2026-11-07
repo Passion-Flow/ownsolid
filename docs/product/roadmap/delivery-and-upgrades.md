@@ -41,6 +41,7 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 - [ ] DEL-114 Install configuration covers the whole address and transport matrix: a hostname per entrance, published ports, deployments reached by IP address with the address as a certificate name, plain HTTP for an isolated laboratory, and TLS terminated by a trusted proxy with explicit proxy ranges (P1)
 - [ ] DEL-115 Change an entrance address after install: reissue the certificate, reconcile single sign-on callbacks, invalidate affected sessions and roll back, without editing files by hand (P1)
 - [x] DEL-116 License page: status, limits and expiry, import of a license file, diagnostics that say why a file was refused (P1) - Evidence: 5f0110a; real Chromium on an offline install on `ownsolid-cpu` refused real signed files for the real reason, imported a real renewal that survived a reload and downloaded diagnostics, three runs in a row, 2026-11-07
+- [ ] DEL-117 The installer sets up the model store: `data/models` mounted into the control plane and configured, carried by `backup` and put back by `restore` ([ADR 0044](../../decisions/0044-web-lane-follows-the-build-plan.md)) (P1)
 
 ## P2 Fleet operations
 

@@ -17,6 +17,7 @@ Running models as services on GPUs and CPUs, for every model type.
 - [ ] SRV-108 CPU serving path for small models when no GPU is present (P1) - Catalog: F160, F188
 - [ ] SRV-109 Streaming, cancellation and timeouts end to end (P1) - Catalog: F077, F171
 - [ ] SRV-110 Verified on real NVIDIA hardware: deploy, chat, stream, LoRA (RTX 3090 run on 2026-11-04 used the inherited code; repeat on ownsolid) (P1)
+- [ ] SRV-111 Model services pages: the list, a deployment's own page and the deploy flow (S-203, S-204, S-205) (P1)
 
 ## P2 Fleet operations
 

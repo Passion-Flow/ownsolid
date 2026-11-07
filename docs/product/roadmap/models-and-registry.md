@@ -24,6 +24,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
 - [ ] MOD-116 Import a bundle, verifying every model against the hash its registry published before anything is written, and stage tokenizer files so no engine reaches a registry at serving time (P1)
 - [ ] MOD-117 Relay mode: a mirror in a DMZ that the cluster reaches instead of the internet, with the same verification (P2)
 - [ ] MOD-118 Direct download for development and for deployments that allow outbound traffic, with the same verification as a bundle and off unless configured (P2)
+- [ ] MOD-119 Model library page: your models, importing a bundle with resumable upload and verification shown, each model's own page and retiring it (S-201, S-202) (P1)
 
 ## P2 Fleet operations
 
