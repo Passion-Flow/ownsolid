@@ -78,6 +78,30 @@ test('explains a name that is taken', async ({ page }) => {
   await expect(dialog.getByLabel('Name')).toHaveValue(teamWorkspace.name);
 });
 
+test('says when the installation holds as many workspaces as it allows', async ({ page }) => {
+  await page.route('**/api/v1/admin/workspaces', (route) =>
+    route.request().method() === 'POST'
+      ? route.fulfill({
+          status: 409,
+          contentType: 'application/json',
+          json: {
+            type: 'about:blank',
+            title: 'RESOURCE_LIMIT_REACHED',
+            status: 409,
+            code: 'RESOURCE_LIMIT_REACHED',
+            request_id: '6f1c7a1e-0000-4000-8000-0000000000ff',
+          },
+        })
+      : route.fallback(),
+  );
+  await page.goto('/users/workspaces#create');
+  const dialog = page.getByRole('dialog', { name: 'Create a workspace' });
+  await dialog.getByLabel('Name').fill('Vision');
+  await dialog.getByRole('button', { name: 'Create', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('The limit is reached');
+  await expect(dialog.getByLabel('Name')).toHaveValue('Vision');
+});
+
 test('renames with a reason, and undoes it', async ({ page }) => {
   await openTeam(page);
   await page.getByRole('button', { name: 'Rename' }).click();

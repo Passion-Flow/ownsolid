@@ -212,6 +212,8 @@ export interface ControlPlane
   unlinkKeys: string[];
   /** Bodies of the single sign-on starts the server received, in order. */
   ssoStarts: Record<string, unknown>[];
+  /** Fails the next start of single sign-on with this problem. */
+  ssoStartProblem: ScriptedProblem | null;
   /** How many CSRF tokens the page has fetched. */
   csrfFetches: number;
   /** What the session reports having left. A read that is not background extends it. */
@@ -330,6 +332,7 @@ export async function mockControlPlane(
     nextUnlink: null,
     unlinkKeys: [],
     ssoStarts: [],
+    ssoStartProblem: null,
     csrfFetches: 0,
     session: { ...freshSession },
     sessionReads: [],
@@ -508,6 +511,11 @@ export async function mockControlPlane(
   await page.route('**/api/v1/auth/sso/*/starts', (route) => {
     const body = route.request().postDataJSON() as { mode: string; password: string | null };
     state.ssoStarts.push(body);
+    if (state.ssoStartProblem) {
+      const scripted = state.ssoStartProblem;
+      state.ssoStartProblem = null;
+      return problem(route, scripted);
+    }
     if (body.mode === 'link' && body.password !== state.password) {
       return problem(route, { status: 403, code: 'SSO_PASSWORD_REQUIRED' });
     }

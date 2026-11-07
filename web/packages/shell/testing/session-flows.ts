@@ -59,6 +59,57 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     expect(failures).toEqual([]);
   });
 
+  test('a save still on its way for one person never reaches the next', async ({ page }) => {
+    control.signedIn = true;
+    await page.goto('/');
+    const root = page.locator('html');
+    await expect(root).toHaveAttribute('data-theme', 'light');
+    let release = (): void => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/api/v1/preferences', async (route) => {
+      if (route.request().method() === 'GET') return route.fallback();
+      await held;
+      return route.fulfill({
+        json: {
+          data: {
+            ...control.preferences,
+            theme: 'dark',
+            revision: control.preferences.revision + 1,
+            updated_at: '2026-11-04T00:00:00Z',
+          },
+        },
+      });
+    });
+    await page.getByRole('button', { name: 'Use the dark theme' }).click();
+    await signOut(page);
+    await expect(page).toHaveURL(/\/sign-in$/);
+
+    control.user = {
+      ...control.user,
+      id: '6f1c7a1e-0000-4000-8000-000000000002',
+      display_name: 'Grace Hopper',
+    };
+    await signIn(page);
+    await expect(page.getByRole('heading', { name: 'Welcome, Grace Hopper' })).toBeVisible();
+    await expect(root).toHaveAttribute('data-theme', 'light');
+    // The answer must have landed and the page drawn again, or the check below proves nothing.
+    const late = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/v1/preferences') && response.request().method() !== 'GET',
+    );
+    release();
+    await (await late).finished();
+    await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(resolve, 250);
+        }),
+    );
+    expect(await root.getAttribute('data-theme')).toBe('light');
+  });
+
   test('sends a visitor to sign-in and back to the requested page', async ({ page }) => {
     await page.goto('/?from=link');
     await expect(page).toHaveURL(/\/sign-in\?redirect=/);
@@ -470,6 +521,27 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     allowOutside.push('https://idp.example/');
     await page.goto('/sign-in');
     await page.getByRole('button', { name: 'Continue with Company Gitea' }).click();
+    await expect(page).toHaveURL('https://idp.example/authorize');
+  });
+
+  test('explains a refused start of single sign-on, and starts on the next try', async ({
+    page,
+  }) => {
+    control.ssoConnectors = [
+      { id: '6f1c7a1e-0000-4000-8000-000000000008', name: 'Company Gitea', provider: 'gitea' },
+    ];
+    await page.route('**/idp.example/**', (route) =>
+      route.fulfill({ contentType: 'text/html', body: 'provider' }),
+    );
+    control.ssoAddress = 'https://idp.example/authorize';
+    control.ssoStartProblem = { status: 429, code: 'SSO_CAPACITY_EXCEEDED' };
+    allowOutside.push('https://idp.example/');
+    await page.goto('/sign-in');
+    const start = page.getByRole('button', { name: 'Continue with Company Gitea' });
+    await start.click();
+    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page).toHaveURL(/\/sign-in/);
+    await start.click();
     await expect(page).toHaveURL('https://idp.example/authorize');
   });
 
