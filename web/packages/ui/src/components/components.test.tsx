@@ -30,7 +30,17 @@ beforeAll(() => {
   });
 });
 
-const inEnglish = (node: ReactNode) => render(<I18nProvider locale="en">{node}</I18nProvider>);
+// Catalogs load as chunks of their own, so the tree appears once English has arrived.
+async function inEnglish(node: ReactNode) {
+  const result = render(
+    <I18nProvider locale="en">
+      <span data-testid="catalog-loaded" />
+      {node}
+    </I18nProvider>,
+  );
+  await screen.findByTestId('catalog-loaded');
+  return result;
+}
 
 describe('Button', () => {
   it('defaults to type button so it never submits a form by accident', () => {
@@ -88,7 +98,7 @@ describe('TypedConfirmation', () => {
 
   it('stays closed to the action until the target is typed', async () => {
     const onConfirm = vi.fn();
-    inEnglish(<TypedConfirmation {...props} onConfirm={onConfirm} />);
+    await inEnglish(<TypedConfirmation {...props} onConfirm={onConfirm} />);
     const field = screen.getByLabelText('Type Node-1 to confirm', {});
     const remove = screen.getByRole('button', { name: 'Remove', hidden: true });
     expect(remove).toBeDisabled();
@@ -100,7 +110,7 @@ describe('TypedConfirmation', () => {
 
   it('does not act on Enter before the target is typed, or while it is working', async () => {
     const onConfirm = vi.fn();
-    const { rerender } = inEnglish(<TypedConfirmation {...props} onConfirm={onConfirm} />);
+    const { rerender } = await inEnglish(<TypedConfirmation {...props} onConfirm={onConfirm} />);
     const field = screen.getByLabelText('Type Node-1 to confirm', {});
     await userEvent.type(field, 'wrong{Enter}');
     expect(onConfirm).not.toHaveBeenCalled();
@@ -120,7 +130,9 @@ describe('ProblemNotice', () => {
 
   it('shows the cause, the request ID and a retry for a known code', async () => {
     const onRetry = vi.fn();
-    inEnglish(<ProblemNotice problem={{ ...base, code: 'SERVICE_NOT_READY' }} onRetry={onRetry} />);
+    await inEnglish(
+      <ProblemNotice problem={{ ...base, code: 'SERVICE_NOT_READY' }} onRetry={onRetry} />,
+    );
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('The control plane is not ready');
     expect(alert).toHaveTextContent('Request ID');
@@ -130,13 +142,13 @@ describe('ProblemNotice', () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
-  it('names the code when it has no translation', () => {
-    inEnglish(<ProblemNotice problem={{ ...base, code: 'NEW_CODE' }} />);
+  it('names the code when it has no translation', async () => {
+    await inEnglish(<ProblemNotice problem={{ ...base, code: 'NEW_CODE' }} />);
     expect(screen.getByRole('alert')).toHaveTextContent('The request failed with code NEW_CODE');
   });
 
-  it('offers no retry for failures that will not pass on their own', () => {
-    inEnglish(
+  it('offers no retry for failures that will not pass on their own', async () => {
+    await inEnglish(
       <ProblemNotice
         problem={{ ...base, code: 'ACCESS_DENIED', retryable: false }}
         onRetry={() => undefined}
@@ -145,18 +157,18 @@ describe('ProblemNotice', () => {
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
   });
 
-  it('shows how long to wait when the server said so', () => {
-    inEnglish(
+  it('shows how long to wait when the server said so', async () => {
+    await inEnglish(
       <ProblemNotice problem={{ ...base, code: 'RATE_LIMITED', retryAfterSeconds: 526 }} />,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('You can try again in 8m 46s.');
   });
 
-  it('holds the retry until the wait the server asked for is over', () => {
+  it('holds the retry until the wait the server asked for is over', async () => {
     vi.useFakeTimers();
     try {
       const onRetry = vi.fn();
-      inEnglish(
+      await inEnglish(
         <ProblemNotice
           problem={{ ...base, code: 'RATE_LIMITED', retryAfterSeconds: 2 }}
           onRetry={onRetry}
@@ -175,9 +187,9 @@ describe('ProblemNotice', () => {
     }
   });
 
-  it('offers a reload for a page that is out of date, instead of repeating the request', () => {
+  it('offers a reload for a page that is out of date, instead of repeating the request', async () => {
     const onRetry = vi.fn();
-    inEnglish(
+    await inEnglish(
       <ProblemNotice
         problem={{ ...base, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN', retryable: true }}
         onRetry={onRetry}
@@ -191,7 +203,7 @@ describe('ProblemNotice', () => {
 describe('Dialog', () => {
   it('opens with its title as the accessible name and closes from the button', async () => {
     const onClose = vi.fn();
-    inEnglish(
+    await inEnglish(
       <Dialog open onClose={onClose} title="Add node">
         <p>Body</p>
       </Dialog>,
@@ -201,8 +213,8 @@ describe('Dialog', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it('renders no content while closed', () => {
-    inEnglish(
+  it('renders no content while closed', async () => {
+    await inEnglish(
       <Dialog open={false} onClose={() => undefined} title="Add node">
         <p>Body</p>
       </Dialog>,
@@ -210,9 +222,9 @@ describe('Dialog', () => {
     expect(screen.queryByText('Body')).not.toBeInTheDocument();
   });
 
-  it('closes on Escape, which the browser reports as cancel', () => {
+  it('closes on Escape, which the browser reports as cancel', async () => {
     const onClose = vi.fn();
-    inEnglish(
+    await inEnglish(
       <Drawer open onClose={onClose} title="gpu-a01">
         <p>Body</p>
       </Drawer>,
@@ -223,7 +235,7 @@ describe('Dialog', () => {
 
   it('closes on a backdrop click but not on a click inside', async () => {
     const onClose = vi.fn();
-    inEnglish(
+    await inEnglish(
       <Dialog open onClose={onClose} title="Add node">
         <p>Body</p>
       </Dialog>,
@@ -255,7 +267,7 @@ describe('Toast', () => {
 
   it('offers undo, then confirms it', async () => {
     const undo = vi.fn();
-    inEnglish(
+    await inEnglish(
       <ToastProvider>
         <Trigger undo={undo} />
       </ToastProvider>,
@@ -269,7 +281,7 @@ describe('Toast', () => {
 
   it('offers a retry, then steps aside', async () => {
     const retry = vi.fn();
-    inEnglish(
+    await inEnglish(
       <ToastProvider>
         <Trigger retry={retry} />
       </ToastProvider>,
@@ -280,9 +292,9 @@ describe('Toast', () => {
     expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
-  it('disappears on its own', () => {
+  it('disappears on its own', async () => {
     vi.useFakeTimers();
-    inEnglish(
+    await inEnglish(
       <ToastProvider>
         <Trigger />
       </ToastProvider>,
@@ -334,7 +346,7 @@ describe('small components', () => {
 
   it('CodeBlock copies every line as written and confirms', async () => {
     const user = userEvent.setup();
-    inEnglish(<CodeBlock code={'first line\nsecond line'} label="Join commands" />);
+    await inEnglish(<CodeBlock code={'first line\nsecond line'} label="Join commands" />);
     await user.click(screen.getByRole('button', { name: 'Copy: Join commands' }));
     expect(await navigator.clipboard.readText()).toBe('first line\nsecond line');
     expect(
@@ -344,7 +356,7 @@ describe('small components', () => {
 
   it('CopyText copies and confirms', async () => {
     const user = userEvent.setup();
-    inEnglish(<CopyText text="gpu-a01" />);
+    await inEnglish(<CopyText text="gpu-a01" />);
     await user.click(screen.getByRole('button', { name: 'Copy' }));
     expect(await navigator.clipboard.readText()).toBe('gpu-a01');
     expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
