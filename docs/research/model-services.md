@@ -21,9 +21,19 @@ The control plane serves one model on one whole GPU of one node, through the `de
 
 What does not exist yet: replicas, scaling and rolling updates (SRV-105, SRV-106), a choice of engine
 (SRV-101), per-deployment traffic metrics (OBS-101, GW-107) and logs (OBS-102), deployment names
-(SRV-112), revision history and rollback (SRV-113), and the read-only root and egress settings as
-choices (SRV-104, DEL-003). The pages must show each of these as not ready, with its reason, rather
-than hide it ([ADR 0036](../decisions/0036-show-every-option-and-fetch-models-offline.md)).
+(SRV-112) and revision history and rollback (SRV-113). The pages must show each of these as not
+ready, with its reason, rather than hide it
+([ADR 0036](../decisions/0036-show-every-option-and-fetch-models-offline.md)). A read-only root and no
+network egress are not choices at all: every model container has them, and the flow says so.
+
+Two things a person needs before any of this were missing or unsaid:
+
+- **A node that can serve.** *Add a node* always minted a read-only token and wrote a read-only agent
+  configuration, so no console user could reach a GPU. The dialog now asks what the node will do,
+  because the profile is fixed at joining, and writes the `docker_inference` configuration.
+- **The serving image.** No offline bundle carries it yet (DEL-101, DEL-108). The agent finds it by
+  digest, so `docker save` and `docker load` work, and the dialog gives those commands with the digest
+  a unit test holds to the recipe.
 
 ## How others do it
 

@@ -132,13 +132,22 @@ export function listJoinTokens(
 
 /** Mints a token for one new node. Its secret can be read only from this answer. */
 export function createJoinToken(
-  input: { workspaceId: string; nodeName: string },
+  input: {
+    workspaceId: string;
+    nodeName: string;
+    /** What the node may do once joined, fixed from then on. Read-only when left out. */
+    executionProfile?: MintedJoinToken['execution_profile'] | undefined;
+  },
   options?: RequestOptions,
 ): Promise<MintedJoinToken> {
   return client.post('/api/v1/sites/{site_id}/cells/{cell_id}/admin/node-join-tokens', {
     ...options,
     path: localCell,
-    body: { workspace_id: input.workspaceId, node_name: input.nodeName },
+    body: {
+      workspace_id: input.workspaceId,
+      node_name: input.nodeName,
+      ...(input.executionProfile ? { execution_profile: input.executionProfile } : {}),
+    },
   });
 }
 

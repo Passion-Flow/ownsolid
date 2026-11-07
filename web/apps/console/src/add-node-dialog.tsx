@@ -33,21 +33,52 @@ import { useEffect, useState, type SubmitEvent } from 'react';
 const configDirectory = '/etc/ownsolid-agent';
 const stateDirectory = '/var/lib/ownsolid-agent';
 const configFile = `${configDirectory}/agent.json`;
+const inferenceDirectory = '/var/lib/ownsolid-inference';
+
+/** The one socket the agent accepts: rootful Docker's, owned by root. */
+const dockerSocket = '/run/docker.sock';
+
+/** The image the approved recipe runs, by digest (api/agent/v1/inference-recipe.json). */
+export const servingImage =
+  'vllm/vllm-openai@sha256:a4a4c0437bf7240089da5f08aa370c4aee17ae5290f7a3b468825ee26c4c3a6b';
+
+/** What a node can be asked to do. It is fixed when the node joins. */
+const roles = ['read_only', 'docker_inference'] as const;
+
+type Role = (typeof roles)[number];
 
 /** Where the agent keeps what it needs. */
-const directoryCommand = `sudo install -d -m 0700 ${configDirectory} ${stateDirectory}`;
+function directoryCommand(serving: boolean): string {
+  const directories = [configDirectory, stateDirectory, ...(serving ? [inferenceDirectory] : [])];
+  return `sudo install -d -m 0700 ${directories.join(' ')}`;
+}
+
+/** How to bring the serving image to a host with no route to a registry. */
+export const imageCommands = [
+  '# On a machine with a route to the registry:',
+  `docker pull ${servingImage}`,
+  `docker save ${servingImage} -o ownsolid-serving.tar`,
+  '# Copy the file to the host, then on the host:',
+  'sudo docker load -i ownsolid-serving.tar',
+].join('\n');
 
 /** How to store the token: the shell waits, and what is pasted goes only into the file. */
 const tokenCommand = `sudo sh -c 'umask 077; cat > ${configDirectory}/join-token'`;
 
 /** How to write the agent's configuration, join and start reporting. */
-function joinCommands(origin: string): string {
+function joinCommands(origin: string, serving: boolean): string {
   const configuration = JSON.stringify({
     control_origin: origin,
     ca_file: `${configDirectory}/ca.pem`,
     state_directory: stateDirectory,
     disk_path: '/',
     join_token_file: `${configDirectory}/join-token`,
+    ...(serving
+      ? {
+          execution_profile: 'docker_inference',
+          inference: { root_directory: inferenceDirectory, docker_socket: dockerSocket },
+        }
+      : {}),
   });
   return [
     `sudo sh -c 'umask 077; cat > ${configFile}' <<'EOF'`,
@@ -104,6 +135,7 @@ function Waiting({ token, onOpen }: { token: MintedJoinToken; onOpen: (node: Nod
 function Steps({ token, onOpen }: { token: MintedJoinToken; onOpen: (node: Node) => void }) {
   const { t, format } = useI18n();
   const origin = window.location.origin;
+  const serving = token.execution_profile === 'docker_inference';
   return (
     <div className="flex flex-col gap-4">
       <Notice
@@ -115,19 +147,30 @@ function Steps({ token, onOpen }: { token: MintedJoinToken; onOpen: (node: Node)
       <ol className="m-0 flex list-decimal flex-col gap-3.5 pl-5">
         <li>
           <p className="m-0 mb-2">{t('nodes.add.step.directories')}</p>
-          <CodeBlock code={directoryCommand} label={t('nodes.add.step.directoriesLabel')} />
+          <CodeBlock
+            code={directoryCommand(serving)}
+            label={t('nodes.add.step.directoriesLabel')}
+          />
           <p className="m-0 mt-2">{t('nodes.add.step.files', { directory: configDirectory })}</p>
         </li>
+        {serving ? (
+          <li>
+            <p className="m-0 mb-2">{t('nodes.add.step.image')}</p>
+            <CodeBlock code={imageCommands} label={t('nodes.add.step.imageLabel')} />
+          </li>
+        ) : null}
         <li>
           <p className="m-0 mb-2">{t('nodes.add.step.token')}</p>
           <CodeBlock code={tokenCommand} label={t('nodes.add.step.tokenLabel')} />
         </li>
         <li>
           <p className="m-0 mb-2">{t('nodes.add.step.join')}</p>
-          <CodeBlock code={joinCommands(origin)} label={t('nodes.add.step.joinLabel')} />
+          <CodeBlock code={joinCommands(origin, serving)} label={t('nodes.add.step.joinLabel')} />
         </li>
       </ol>
-      <p className="m-0 text-[12.5px] text-text-3">{t('nodes.add.readOnly')}</p>
+      <p className="m-0 text-[12.5px] text-text-3">
+        {t(serving ? 'nodes.add.serving' : 'nodes.add.readOnly')}
+      </p>
       <Waiting token={token} onOpen={onOpen} />
     </div>
   );
@@ -148,9 +191,11 @@ export function AddNodeDialog({
   const systems = readyCapabilityNames(t, capabilities.data, 'node-operating-systems');
   const [name, setName] = useState('');
   const [chosen, setChosen] = useState<string | null>(null);
+  const [role, setRole] = useState<Role>('read_only');
   const workspace = chosen ?? workspaces.active?.id ?? '';
   const mint = useMutation({
-    mutationFn: () => createJoinToken({ workspaceId: workspace, nodeName: name.trim() }),
+    mutationFn: () =>
+      createJoinToken({ workspaceId: workspace, nodeName: name.trim(), executionProfile: role }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['nodes', 'join-tokens'] }),
   });
   const token = mint.data;
@@ -210,6 +255,15 @@ export function AddNodeDialog({
             value={name}
             onChange={(event) => {
               setName(event.target.value);
+            }}
+          />
+          <SelectField
+            label={t('nodes.add.role')}
+            hint={t('nodes.add.role.hint')}
+            value={role}
+            options={roles.map((value) => ({ value, label: t(`nodes.add.role.${value}`) }))}
+            onChange={(event) => {
+              setRole(roles.find((value) => value === event.target.value) ?? 'read_only');
             }}
           />
           {workspaces.items.length > 1 ? (

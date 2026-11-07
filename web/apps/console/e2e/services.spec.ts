@@ -22,6 +22,12 @@ let control: ControlPlane;
 
 const title = `${readyModel.name} on ${node.name}`;
 
+const servingNode: typeof node = {
+  ...node,
+  execution_profile: 'docker_inference',
+  capabilities: ['collect_facts.v1', 'inference.observe.v1'],
+};
+
 test.beforeEach(async ({ page }) => {
   control = await mockControlPlane(page, 'admin');
   control.signedIn = true;
@@ -169,12 +175,31 @@ test('with nothing eligible, gives each reason and follows a fresh read', async 
 
 test('with no node having reported, asks one to read its GPUs', async ({ page }) => {
   control.pollMilliseconds = 1_000;
+  control.nodes = [servingNode];
   control.placement = { ...openPlacement, candidates: [], recommended: null };
   control.placementAfterRead = openPlacement;
   await page.goto('/services/new');
   await expect(page.getByText('No node of this workspace has reported its GPUs')).toBeVisible();
   await page.getByRole('button', { name: 'Read GPUs' }).click();
   await expect(page.getByText(`On ${freeGpu.name} of ${node.name}`)).toBeVisible();
+});
+
+test('asks only a node of this workspace that can serve to read its GPUs', async ({ page }) => {
+  control.placement = { ...openPlacement, candidates: [], recommended: null };
+  await page.goto('/services/new');
+  await expect(
+    page.getByText('No node of this workspace that serves models is online.'),
+  ).toBeVisible();
+  await page.getByRole('link', { name: 'Add a node that serves models' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Add a node' });
+  await dialog.getByLabel('Node name').fill('gpu-b01');
+  await dialog.getByLabel('What it will do').selectOption({ label: 'Serve models' });
+  await dialog.getByRole('button', { name: 'Continue' }).click();
+  const steps = page.getByRole('dialog', { name: 'Join gpu-b01' });
+  await expect(steps).toContainText('"execution_profile":"docker_inference"');
+  await expect(steps).toContainText('/run/docker.sock');
+  await expect(steps).toContainText('sudo docker load -i ownsolid-serving.tar');
+  expect(control.joinTokens[0]?.execution_profile).toBe('docker_inference');
 });
 
 test('with no model, sends the person to the Model library', async ({ page }) => {

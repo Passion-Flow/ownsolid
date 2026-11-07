@@ -62,7 +62,7 @@
        "children": [
         {
          "type": "text",
-         "value": "Rootful Docker, the NVIDIA Container Toolkit, and the serving image from this release's offline\nbundle."
+         "value": "Rootful Docker, the NVIDIA Container Toolkit, and the approved vLLM image, which you load yourself."
         }
        ]
       }
@@ -91,6 +91,42 @@
     {
      "type": "text",
      "value": "A node serves one deployment at a time, so its other GPUs stay idle while it does."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Serve models"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " when you "
+    },
+    {
+     "type": "link",
+     "url": "help:nodes",
+     "children": [
+      {
+       "type": "text",
+       "value": "add the node"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ": this is fixed when it joins, and the\nsteps then show how to bring the image to the host."
     }
    ]
   },

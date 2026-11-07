@@ -221,9 +221,14 @@ export async function routeNodes(
       state.nextMint = null;
       return problem(route, scripted);
     }
-    const body = request.postDataJSON() as { workspace_id: string; node_name: string };
+    const body = request.postDataJSON() as {
+      workspace_id: string;
+      node_name: string;
+      execution_profile?: JoinToken['execution_profile'];
+    };
     const minted: JoinToken = {
       ...joinToken,
+      execution_profile: body.execution_profile ?? 'read_only',
       id: `6f1c7a1e-0000-4000-8000-${String(state.joinTokens.length + 60).padStart(12, '0')}`,
       workspace_id: body.workspace_id,
       node_name: body.node_name,

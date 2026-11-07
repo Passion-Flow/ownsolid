@@ -39,6 +39,12 @@ import { modelKeys } from './model-state.ts';
 
 const mebibyte = 1024 * 1024;
 
+// The largest page of nodes the server gives: the ones that can serve are found among them.
+const lookupSize = 100;
+
+/** The task a node must accept to report its GPUs. */
+const readsGpus = 'inference.observe.v1';
+
 /** One GPU a deployment could take, with the node it sits on. */
 interface Option {
   node: PlacementNode;
@@ -165,14 +171,13 @@ function Reasons({ placement, onRead }: { placement: Placement; onRead: () => vo
   );
 }
 
-/** For a workspace whose nodes never reported GPUs: ask one to. */
-function ReadAnyNode({ onRead }: { onRead: () => void }) {
+/** For a workspace whose nodes never reported GPUs: ask one that can serve to read them. */
+function ReadAnyNode({ workspace, onRead }: { workspace: string; onRead: () => void }) {
   const { t } = useI18n();
-  const size = useQuery(runtimeConfigQuery()).data?.ui.pageSize ?? 20;
   const nodes = useQuery({
-    queryKey: ['nodes', 'online', size],
+    queryKey: ['nodes', 'online', lookupSize],
     queryFn: ({ signal }) =>
-      listNodes({ limit: size, status: 'active', connectivity: 'online' }, { signal }),
+      listNodes({ limit: lookupSize, status: 'active', connectivity: 'online' }, { signal }),
   });
   const [chosen, setChosen] = useState('');
   if (nodes.isPending) return <Skeleton className="h-10 w-full" />;
@@ -186,7 +191,9 @@ function ReadAnyNode({ onRead }: { onRead: () => void }) {
       />
     ) : null;
   }
-  const items = nodes.data.items;
+  const items = nodes.data.items.filter(
+    (node) => node.workspace_id === workspace && node.capabilities.includes(readsGpus),
+  );
   if (items.length === 0) {
     return (
       <p className="m-0 text-[13px] text-text-2">
@@ -379,7 +386,7 @@ function Plan({
             : t('services.new.none.detail')}
         </Notice>
         {placement.data.candidates.length === 0 ? (
-          <ReadAnyNode onRead={onRead} />
+          <ReadAnyNode workspace={placement.data.workspace_id} onRead={onRead} />
         ) : (
           <Reasons placement={placement.data} onRead={onRead} />
         )}
