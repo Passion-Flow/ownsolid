@@ -182,7 +182,7 @@ function RunAgain({ detail }: { detail: TaskDetail }) {
 
 /** Shows one task, live while it runs. */
 export function TaskPage() {
-  const { t, format } = useI18n();
+  const { t, format, knows } = useI18n();
   const { taskId } = route.useParams();
   const poll = useQuery(runtimeConfigQuery()).data?.ui.pollMilliseconds ?? false;
   const detail = useQuery({
@@ -259,6 +259,13 @@ export function TaskPage() {
   const state = states[task.state];
   const name = t(operations[task.operation]);
   const stale = detail.error ?? log.error;
+  // A code the platform explains elsewhere reads the same here; any other shows as itself.
+  const reason = (code: string | null | undefined): string => {
+    const known = reasons[code ?? ''];
+    if (known) return t(known);
+    const explained = `problem.${code ?? ''}.title`;
+    return knows(explained) ? t(explained) : t('tasks.reason.other');
+  };
   return (
     <>
       {back}
@@ -288,7 +295,7 @@ export function TaskPage() {
       ) : null}
       {task.state === 'failed' ? (
         <Notice className="mb-4" tone="critical" title={t('tasks.detail.failed')}>
-          {t(reasons[task.error_code ?? ''] ?? 'tasks.reason.other')}
+          {reason(task.error_code)}
           {task.error_code ? (
             <span className="mt-1 block font-mono text-[12px]">{task.error_code}</span>
           ) : null}

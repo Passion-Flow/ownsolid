@@ -429,7 +429,7 @@ export interface components {
             };
         };
         LoginRequest: {
-            /** @description Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes. */
+            /** @description Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes. */
             email: string;
             /** @description NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate. */
             password: string;
@@ -472,7 +472,7 @@ export interface components {
             };
         };
         RecoveryRequest: {
-            /** @description Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes. */
+            /** @description Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes. */
             email: string;
         };
         AcceptedResponse: {
@@ -557,7 +557,7 @@ export interface components {
             data: components["schemas"]["Invitation"];
         };
         CreateInvitationRequest: {
-            /** @description Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes. */
+            /** @description Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes. */
             email: string;
             locale: string;
         };
@@ -582,7 +582,7 @@ export interface components {
             subject_email: string | null;
             /** @enum {string} */
             audience: "portal" | "admin" | "operator" | "system";
-            /** @description Versioned first-party audit action. Module events remain visible in unfiltered history;the query action enum lists currently supported exact selectors. */
+            /** @description The action, such as `auth.logout`. An unfiltered list shows every module's actions; the `action` query accepts the ones it lists. */
             action: string;
             /** @enum {string} */
             outcome: "success" | "failure" | "accepted";
@@ -1315,9 +1315,9 @@ export interface operations {
                 category?: string;
                 actor_user_id?: string;
                 outcome?: "success" | "failure" | "accepted";
-                /** @description RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy. */
+                /** @description One end of the window, as an RFC 3339 time between the years 1000 and 9999 UTC. A cursor keeps the window it was made with, and the configured audit limit bounds its length. */
                 from?: string;
-                /** @description RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy. */
+                /** @description One end of the window, as an RFC 3339 time between the years 1000 and 9999 UTC. A cursor keeps the window it was made with, and the configured audit limit bounds its length. */
                 to?: string;
                 request_id?: string;
                 /** @description Only events about this resource. */

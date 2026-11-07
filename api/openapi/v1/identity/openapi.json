@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "M01 Account Lifecycle API",
+    "title": "ownsolid identity",
     "version": "0.5.0",
     "description": "Canonical implemented account HTTP contract. Relative paths resolve on the configured portal/admin HTTPS origin; x-audiences is normative. Runtime behavior, local evidence and independent target qualification are recorded in the English milestone and execution documentation."
   },
@@ -1803,7 +1803,7 @@
               "type": "string",
               "format": "date-time"
             },
-            "description": "RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy."
+            "description": "One end of the window, as an RFC 3339 time between the years 1000 and 9999 UTC. A cursor keeps the window it was made with, and the configured audit limit bounds its length."
           },
           {
             "name": "to",
@@ -1812,7 +1812,7 @@
               "type": "string",
               "format": "date-time"
             },
-            "description": "RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy."
+            "description": "One end of the window, as an RFC 3339 time between the years 1000 and 9999 UTC. A cursor keeps the window it was made with, and the configured audit limit bounds its length."
           },
           {
             "name": "request_id",
@@ -2424,7 +2424,7 @@
           "email": {
             "type": "string",
             "maxLength": 254,
-            "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes."
+            "description": "Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes."
           },
           "password": {
             "type": "string",
@@ -2608,7 +2608,7 @@
           "email": {
             "type": "string",
             "maxLength": 254,
-            "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes."
+            "description": "Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes."
           }
         },
         "required": [
@@ -2959,7 +2959,7 @@
           "email": {
             "type": "string",
             "maxLength": 254,
-            "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes."
+            "description": "Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes."
           },
           "locale": {
             "type": "string",
@@ -3060,7 +3060,7 @@
           "action": {
             "type": "string",
             "maxLength": 64,
-            "description": "Versioned first-party audit action. Module events remain visible in unfiltered history;the query action enum lists currently supported exact selectors."
+            "description": "The action, such as `auth.logout`. An unfiltered list shows every module's actions; the `action` query accepts the ones it lists."
           },
           "outcome": {
             "type": "string",

@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one Scoped Training",
+    "title": "ownsolid Scoped Training",
     "version": "0.9.0",
     "description": "Human current-Workspace training lifecycle. Contract precedes handlers; source presence alone is not implementation or NVIDIA qualification."
   },

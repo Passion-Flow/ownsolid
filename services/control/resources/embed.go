@@ -1,7 +1,7 @@
-// Package resources contains offline mail templates and release assets.
+// Package resources contains offline release assets.
 package resources
 
 import "embed"
 
-//go:embed locales/mail/*/*.json security/*
+//go:embed security/*
 var Files embed.FS

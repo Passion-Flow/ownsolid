@@ -18,8 +18,8 @@
   ]
  },
  "account": {
-  "title": "你的账户",
-  "summary": "你的账户保存你的资料、密码，以及 ownsolid 对你的显示方式。",
+  "title": "你的账号",
+  "summary": "你的账号保存你的资料、密码，以及 ownsolid 对你的显示方式。",
   "sections": [
    {
     "title": "可以修改的内容",

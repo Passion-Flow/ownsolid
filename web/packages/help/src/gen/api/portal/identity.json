@@ -1,5 +1,5 @@
 {
- "title": "M01 Account Lifecycle API",
+ "title": "ownsolid identity",
  "operations": [
   {
    "id": "getCsrf",
@@ -574,7 +574,7 @@
    "properties": {
     "email": {
      "type": "string",
-     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "description": "Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes.",
      "maxLength": 254
     },
     "password": {
@@ -690,7 +690,7 @@
    "properties": {
     "email": {
      "type": "string",
-     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "description": "Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes.",
      "maxLength": 254
     }
    }

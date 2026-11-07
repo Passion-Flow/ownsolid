@@ -27,12 +27,12 @@ test('is reached from the navigation and names people, not IDs', async ({ page }
   await page.getByRole('button', { name: 'Governance', exact: true }).click();
   await page.getByRole('navigation').getByRole('link', { name: 'Audit trail' }).click();
   await expect(page.getByRole('heading', { name: 'Audit trail', level: 1 })).toBeFocused();
-  const row = rows(page).filter({ hasText: 'license.imported' });
+  const row = rows(page).filter({ hasText: 'License imported' });
   await expect(row).toContainText('ada@example.test');
-  await expect(row).toContainText('platform_license');
+  await expect(row).toContainText('License');
   await expect(row).toContainText('Succeeded');
-  await expect(rows(page).filter({ hasText: 'auth.login_failed' })).toContainText('Failed');
-  await expect(rows(page).filter({ hasText: 'system.retention' })).toContainText('System');
+  await expect(rows(page).filter({ hasText: 'Sign-in failed' })).toContainText('Failed');
+  await expect(rows(page).filter({ hasText: 'Old records removed' })).toContainText('System');
 });
 
 test('asks the server for a pinned window and pages with its cursor', async ({ page }) => {
@@ -65,25 +65,25 @@ test('filters by kind and outcome on the server, and from a link', async ({ page
   await page.getByLabel('Kind of action').selectOption('');
   await page.getByLabel('Outcome').selectOption('failure');
   await expect(rows(page)).toHaveCount(2);
-  await expect(rows(page).filter({ hasText: 'auth.login_failed' })).toBeVisible();
+  await expect(rows(page).filter({ hasText: 'Sign-in failed' })).toBeVisible();
 
   await page.goto('/audit?category=auth&outcome=failure');
   await expect(page.getByLabel('Kind of action')).toHaveValue('auth');
-  await expect(rows(page).filter({ hasText: 'auth.login_failed' })).toBeVisible();
+  await expect(rows(page).filter({ hasText: 'Sign-in failed' })).toBeVisible();
 });
 
 test('widens and narrows the time', async ({ page }) => {
   await page.goto('/audit');
   await page.getByLabel('Time', { exact: true }).selectOption('24h');
   await expect(page).toHaveURL(/range=24h/);
-  await expect(rows(page).filter({ hasText: 'system.retention' })).toBeHidden();
+  await expect(rows(page).filter({ hasText: 'Old records removed' })).toBeHidden();
   await page.getByLabel('Time', { exact: true }).selectOption('31d');
-  await expect(rows(page).filter({ hasText: 'system.retention' })).toBeVisible();
+  await expect(rows(page).filter({ hasText: 'Old records removed' })).toBeVisible();
 });
 
 test('checks a chosen window before asking', async ({ page }) => {
   await page.goto('/audit');
-  await expect(rows(page).filter({ hasText: 'license.imported' })).toBeVisible();
+  await expect(rows(page).filter({ hasText: 'License imported' })).toBeVisible();
   const asked = control.auditQueries.length;
   await page.getByLabel('Time', { exact: true }).selectOption('custom');
   await expect(page.getByText('Choose when the window starts and ends.')).toBeVisible();
@@ -116,8 +116,8 @@ test('finds a request by its ID, and explains what is not one', async ({ page })
 
 test('shows an event, and follows it to its person', async ({ page }) => {
   await page.goto('/audit');
-  await openEvent(page, 'auth.login_failed').click();
-  const drawer = page.getByRole('dialog', { name: 'auth.login_failed' });
+  await openEvent(page, 'Sign-in failed').click();
+  const drawer = page.getByRole('dialog', { name: 'Sign-in failed' });
   await expect(drawer).toContainText('Portal');
   await expect(drawer).toContainText('Affected account');
   await expect(drawer).toContainText(failedSignIn.request_id);
@@ -133,8 +133,8 @@ test('shows an event, and follows it to its person', async ({ page }) => {
 
 test('follows an event to its request', async ({ page }) => {
   await page.goto('/audit');
-  await openEvent(page, 'license.imported').click();
-  const drawer = page.getByRole('dialog', { name: 'license.imported' });
+  await openEvent(page, 'License imported').click();
+  const drawer = page.getByRole('dialog', { name: 'License imported' });
   await expect(drawer).toContainText('Annual renewal');
   await drawer.getByRole('button', { name: 'Everything from this request' }).click();
   await expect(drawer).toBeHidden();
@@ -144,21 +144,21 @@ test('follows an event to its request', async ({ page }) => {
 
 test('an event with no person says the system did it', async ({ page }) => {
   await page.goto('/audit?range=31d');
-  await openEvent(page, 'system.retention').click();
-  const drawer = page.getByRole('dialog', { name: 'system.retention' });
+  await openEvent(page, 'Old records removed').click();
+  const drawer = page.getByRole('dialog', { name: 'Old records removed' });
   await expect(drawer).toContainText('System');
   await expect(drawer.getByRole('button', { name: "This person's actions" })).toBeHidden();
 });
 
 test("an event's own link opens it, however much time has passed", async ({ page }) => {
   await page.goto('/audit');
-  await openEvent(page, 'license.imported').click();
+  await openEvent(page, 'License imported').click();
   const link = await page
-    .getByRole('dialog', { name: 'license.imported' })
+    .getByRole('dialog', { name: 'License imported' })
     .getByText(/\/audit\?range=custom/)
     .textContent();
   await page.goto(new URL(link ?? '').pathname + new URL(link ?? '').search);
-  await expect(page.getByRole('dialog', { name: 'license.imported' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'License imported' })).toBeVisible();
   const query = control.auditQueries.at(-1);
   expect(Date.parse(query?.get('to') ?? '') - Date.parse(query?.get('from') ?? '')).toBe(120_000);
 });
@@ -187,7 +187,7 @@ test('a list that cannot load offers a retry', async ({ page }) => {
   await expect(retry).toBeVisible();
   control.auditProblem = null;
   await retry.click();
-  await expect(rows(page).filter({ hasText: 'license.imported' })).toBeVisible();
+  await expect(rows(page).filter({ hasText: 'License imported' })).toBeVisible();
 });
 
 test('explains a refusal from the server', async ({ page }) => {
@@ -210,18 +210,35 @@ test('hides a column and keeps it hidden', async ({ page }) => {
 test('is not part of the portal', async ({ page }) => {
   control.audience = 'portal';
   await page.goto('/audit');
-  await expect(page.getByText('license.imported')).toHaveCount(0);
+  await expect(page.getByText('License imported')).toHaveCount(0);
 });
 
 test.describe('in Chinese', () => {
   test.use({ locale: 'zh-CN' });
 
-  test('reads in the interface language, with action codes as they are', async ({ page }) => {
+  test('names actions and targets in the interface language', async ({ page }) => {
     control.tenantSettings.default_locale = 'zh-CN';
     await page.goto('/audit');
     await expect(page.getByRole('heading', { name: chinese['audit.title'] })).toBeVisible();
-    await expect(rows(page).filter({ hasText: 'license.imported' })).toContainText(
-      chinese['audit.outcome.success'],
-    );
+    const row = rows(page).filter({ hasText: chinese['audit.action.license.imported'] });
+    await expect(row).toContainText(chinese['audit.outcome.success']);
+    await expect(row).toContainText(chinese['audit.target.platform_license']);
+    await expect(page.getByText('license.imported')).toHaveCount(0);
   });
+});
+
+test("keeps an action's identifier in its details, and shows an unnamed action's family", async ({
+  page,
+}) => {
+  control.auditEvents = [
+    { ...licenseEvent, id: '6f1c7a1e-0000-4000-8000-0000000000e9', action: 'training.dispatched' },
+    licenseEvent,
+  ];
+  await page.goto('/audit');
+  const unnamed = rows(page).filter({ hasText: 'training.dispatched' });
+  await expect(unnamed).toContainText('Training');
+  await openEvent(page, 'License imported').click();
+  await expect(
+    page.getByRole('dialog', { name: 'License imported' }).getByText('license.imported'),
+  ).toBeVisible();
 });

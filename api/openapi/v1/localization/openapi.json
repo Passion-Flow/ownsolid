@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one offline localization",
+    "title": "ownsolid offline localization",
     "version": "0.16.0"
   },
   "servers": [

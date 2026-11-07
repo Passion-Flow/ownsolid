@@ -38,21 +38,33 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ScrollText, X } from 'lucide-react';
 import { useMemo } from 'react';
 import { auditEventSearch, customRange } from './audit-link.ts';
+import { ActionName, TargetName, useAuditNames } from './audit-names.tsx';
 
 const categories = [
   'account',
   'auth',
+  'dataset',
+  'deployment',
+  'gateway',
+  'inference',
   'installation',
   'invitation',
   'license',
   'mail',
+  'middleware',
   'model',
   'node',
+  'notification',
+  'object',
   'operator',
+  'plugin',
+  'preference',
   'sso',
   'system',
   'tenant',
+  'training',
   'user',
+  'workflow',
   'workspace',
 ] as const;
 
@@ -133,6 +145,7 @@ function Outcome({ outcome }: { outcome: AuditOutcome }) {
 
 function Rows({ items, list }: { items: readonly AuditEvent[]; list: ListView }) {
   const { t, format } = useI18n();
+  const names = useAuditNames();
   const shows = list.isColumnVisible;
   return (
     <Card className="overflow-hidden">
@@ -153,7 +166,7 @@ function Rows({ items, list }: { items: readonly AuditEvent[]; list: ListView })
                 <button
                   type="button"
                   aria-label={t('audit.detail.open', {
-                    action: event.action,
+                    action: names.actionText(event.action),
                     time: format.dateTime(event.occurred_at),
                   })}
                   className="cursor-pointer border-0 bg-transparent p-0 text-left text-text underline-offset-2 hover:underline"
@@ -169,11 +182,14 @@ function Rows({ items, list }: { items: readonly AuditEvent[]; list: ListView })
               ) : null}
               {shows('action') ? (
                 <Td>
-                  <code className="font-mono text-[12.5px]">{event.action}</code>
+                  <ActionName action={event.action} />
                 </Td>
               ) : null}
               {shows('target') ? (
-                <Td className="text-text-2">{event.subject_email ?? event.target_type}</Td>
+                <Td className="text-text-2">
+                  {event.subject_email ??
+                    (event.target_type ? <TargetName type={event.target_type} /> : null)}
+                </Td>
               ) : null}
               {shows('outcome') ? (
                 <Td>
@@ -198,6 +214,7 @@ function EventDrawer({
   list: ListView;
 }) {
   const { t, format } = useI18n();
+  const names = useAuditNames();
   const close = () => {
     list.setOpenRow(null);
   };
@@ -209,7 +226,7 @@ function EventDrawer({
     <Drawer
       open={event !== null || missing}
       onClose={close}
-      title={event ? event.action : t('audit.detail.missing')}
+      title={event ? names.actionText(event.action) : t('audit.detail.missing')}
       footer={
         event ? (
           <>
@@ -259,11 +276,14 @@ function EventDrawer({
           ) : null}
           {event.target_type ? (
             <Detail label={t('audit.column.target')}>
-              <code className="font-mono text-[12.5px]">{event.target_type}</code>
+              <TargetName type={event.target_type} />
               {event.target_id ? <CopyText className="mt-1 flex" text={event.target_id} /> : null}
             </Detail>
           ) : null}
           {event.reason ? <Detail label={t('audit.detail.reason')}>{event.reason}</Detail> : null}
+          <Detail label={t('audit.detail.actionId')}>
+            <CopyText text={event.action} />
+          </Detail>
           <Detail label={t('audit.detail.requestId')}>
             <CopyText text={event.request_id} />
           </Detail>

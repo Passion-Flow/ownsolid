@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one preferences",
+    "title": "ownsolid preferences",
     "version": "0.17.0",
     "description": "Current caller discovery, private internal metadata or fixed preferences. Contract presence alone is not implementation or qualification."
   },

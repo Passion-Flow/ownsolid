@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Project-one Public Model Gateway",
+    "title": "ownsolid Public Model Gateway",
     "version": "0.7.0",
     "description": "Strict scoped text subset of the current OpenAI-shaped model/chat protocol over private loopback TLS. Cookie/Origin/alternate authority headers and query credentials are rejected. Actual NVIDIA qualification is tracked separately."
   },

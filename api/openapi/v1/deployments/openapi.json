@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Project-one Inference Deployments",
+    "title": "ownsolid Inference Deployments",
     "version": "0.10.0",
     "description": "Explicit inference authority, exclusive durable GPU ownership, observed readiness and generation proof remain separate. Synthetic tests do not establish real NVIDIA qualification."
   },

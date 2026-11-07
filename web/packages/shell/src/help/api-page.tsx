@@ -4,6 +4,7 @@
 import {
   apiDomains,
   contractUrl,
+  loadApiDescriptions,
   loadApiDomain,
   type ApiDomain,
   type ApiOperation,
@@ -127,6 +128,20 @@ function fieldRows(
   });
 }
 
+/**
+ * A description in the reader's language. The translations load with the first operation opened;
+ * until then a description shows as the contract wrote it.
+ */
+function useDescribe(): (text: string | undefined) => string {
+  const { locale } = useI18n();
+  const translations = useQuery({
+    queryKey: ['help', 'api', 'descriptions', locale],
+    queryFn: () => loadApiDescriptions(locale),
+    staleTime: 'static',
+  });
+  return (text) => (text ? (translations.data?.[text] ?? text) : '');
+}
+
 function Fields({
   schema,
   schemas,
@@ -137,6 +152,7 @@ function Fields({
   caption: string;
 }) {
   const { t } = useI18n();
+  const describe = useDescribe();
   const rows = fieldRows(schema, schemas);
   if (rows.length === 0) {
     return (
@@ -170,7 +186,7 @@ function Fields({
                   row.schema.maxLength !== undefined
                     ? t('help.api.maxLength', { count: row.schema.maxLength })
                     : '',
-                  row.schema.description ?? '',
+                  describe(row.schema.description),
                 ]
                   .filter(Boolean)
                   .join(' · ')}
@@ -202,7 +218,7 @@ function Errors({ errors }: { errors: Record<string, string[]> }) {
               {knows(title) && knows(detail) ? (
                 <span className="text-text-2">
                   {' '}
-                  — {t(title)}. {t(detail)}
+                  — {t('help.api.meaning', { title: t(title), detail: t(detail) })}
                 </span>
               ) : null}
             </li>
@@ -215,6 +231,7 @@ function Errors({ errors }: { errors: Record<string, string[]> }) {
 
 function OperationDetail({ operation, domain }: { operation: ApiOperation; domain: ApiDomain }) {
   const { t } = useI18n();
+  const describe = useDescribe();
   const parameters = operation.parameters;
   return (
     <div className="flex flex-col gap-4 border-t border-border px-5 pt-4 pb-5">
@@ -230,6 +247,7 @@ function OperationDetail({ operation, domain }: { operation: ApiOperation; domai
                   <Th>{t('help.api.field')}</Th>
                   <Th>{t('help.api.in')}</Th>
                   <Th>{t('help.api.type')}</Th>
+                  <Th>{t('help.api.notes')}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -246,6 +264,9 @@ function OperationDetail({ operation, domain }: { operation: ApiOperation; domai
                     <Td className="text-[12.5px]">{t(`help.api.in.${parameter.in}`)}</Td>
                     <Td className="font-mono text-[12px] whitespace-normal text-text-2">
                       {typeLabel(parameter.schema)}
+                    </Td>
+                    <Td className="text-[12.5px] whitespace-normal text-text-2">
+                      {describe(parameter.description ?? parameter.schema.description)}
                     </Td>
                   </Tr>
                 ))}
@@ -393,13 +414,18 @@ function Domain({
   search: string;
   hash: string;
 }) {
-  const { t } = useI18n();
+  const { t, knows } = useI18n();
+  const domainName = `help.api.domain.${summary.domain}`;
   const operations = summary.operations.filter((operation) => operationMatches(operation, search));
   if (operations.length === 0) return null;
   return (
     <Card aria-labelledby={`domain-${summary.domain}`}>
       <CardHeader
-        title={<span id={`domain-${summary.domain}`}>{summary.domain}</span>}
+        title={
+          <span id={`domain-${summary.domain}`}>
+            {knows(domainName) ? t(domainName) : summary.domain}
+          </span>
+        }
         subtitle={t('help.api.count', { count: operations.length })}
         actions={<SaveContract domain={summary.domain} />}
       />

@@ -86,6 +86,21 @@
        ]
       }
      ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "列表用你的语言显示每个操作的名称。详情中保留操作标识供脚本和技术支持使用，原因按记录时的原文显示。"
+        }
+       ]
+      }
+     ]
     }
    ]
   }

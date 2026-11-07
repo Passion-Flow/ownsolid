@@ -32,6 +32,7 @@ export { expectFocusVisible, keyboardFlows, type KeyboardFlowOptions } from './k
 export { helpFlows } from './help-flows.ts';
 export { languageFlows } from './language-flows.ts';
 export { liveHelpFlows } from './live-help-flows.ts';
+export { localizationFlows, type LocalizationFlowOptions } from './localization-flows.ts';
 export { registrationFlows, sessionFlows, type SessionFlowOptions } from './session-flows.ts';
 export { sessionWarningFlows } from './session-warning-flows.ts';
 export {

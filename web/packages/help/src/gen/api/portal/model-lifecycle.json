@@ -1,5 +1,5 @@
 {
- "title": "Project-one model lifecycle human API",
+ "title": "ownsolid model lifecycle human API",
  "operations": [
   {
    "id": "portalGetHoldoutCapabilities",

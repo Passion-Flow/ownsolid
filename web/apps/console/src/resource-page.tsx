@@ -21,6 +21,7 @@ import { Link, useRouter, useRouterState } from '@tanstack/react-router';
 import { ArrowLeft, History, SearchX } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { auditEventSearch } from './audit-link.ts';
+import { ActionName } from './audit-names.tsx';
 
 const outcomeTones: Record<AuditOutcome, StatusTone> = {
   success: 'good',
@@ -222,7 +223,7 @@ export function ResourceActivity({
                   {event.actor_email ?? event.actor_user_id ?? t('audit.system')}
                 </Td>
                 <Td>
-                  <code className="font-mono text-[12.5px]">{event.action}</code>
+                  <ActionName action={event.action} />
                 </Td>
                 <Td>
                   <StatusPill tone={outcomeTones[event.outcome]}>

@@ -49,6 +49,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { ArrowDown, ArrowUp, Mail, RotateCw } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { RevokeInvitation } from './revoke-invitation.tsx';
+import { languageName } from './user-surface.tsx';
 
 type Filter = 'all' | 'failed' | 'queued' | 'sent';
 
@@ -261,7 +262,7 @@ function DeliveryDrawer({
             <Detail label={t('mail.column.attempts')}>
               {format.number(delivery.attempt_count)}
             </Detail>
-            <Detail label={t('mail.detail.language')}>{delivery.locale}</Detail>
+            <Detail label={t('mail.detail.language')}>{languageName(delivery.locale, t)}</Detail>
             <Detail label={t('mail.detail.created')}>{format.dateTime(delivery.created_at)}</Detail>
             {delivery.next_attempt_at ? (
               <Detail label={t('mail.detail.nextAttempt')}>

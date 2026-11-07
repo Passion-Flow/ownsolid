@@ -2,6 +2,7 @@ export type { AppFrameProps } from './app-frame.tsx';
 export { createApplication, startApplication, type StartOptions } from './application.tsx';
 export type { SearchAnswer, SearchHit, SearchSource } from './command-search.ts';
 export { licenseStateLabels, licenseStatusKey } from './license-status.tsx';
+export { RunFailure } from './notifications.tsx';
 export { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
 export { accountPath, safeRedirect, signInPath } from './redirect.ts';
 export {

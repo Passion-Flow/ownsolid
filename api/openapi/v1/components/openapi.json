@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one Components",
+    "title": "ownsolid Components",
     "version": "0.10.0",
     "description": "Active M03-M10 human and agent contract. The nodes application profile admits only read_only / collect_facts.v1. The cumulative components profile also admits explicitly minted systemd_components / protocol 1.1 and only fixed node_exporter install/start/stop/remove/observe, exact artifact and renewal routes; maintenance/logs require the cumulative maintenance profile with explicit protocol 1.2 enrollment; later owners remain unavailable. Machine routes use only the exact configured machine HTTPS origin (or shared Admin HTTPS origin) with an independent node credential; browser cookies do not grant machine authority. Facts report the agent-visible kernel and filesystem, not target qualification."
   },

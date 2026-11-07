@@ -121,7 +121,7 @@ export function ShortcutsDialog({ shortcuts, onClose }: ShortcutsDialogProps) {
         {shortcuts.map((item) => (
           <Row key={item.key} keys={<Kbd>{item.key.toUpperCase()}</Kbd>} muted={!item.to}>
             {t(item.label)}
-            {item.to ? null : ` (${t('shortcuts.notYet')})`}
+            {item.to ? null : ` ${t('shortcuts.notYet.note', { note: t('shortcuts.notYet') })}`}
           </Row>
         ))}
         {shortcuts.length > 0 ? (

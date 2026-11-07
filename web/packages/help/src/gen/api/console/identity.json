@@ -1,5 +1,5 @@
 {
- "title": "M01 Account Lifecycle API",
+ "title": "ownsolid identity",
  "operations": [
   {
    "id": "getCsrf",
@@ -810,7 +810,7 @@
       "type": "string",
       "format": "date-time"
      },
-     "description": "RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy."
+     "description": "One end of the window, as an RFC 3339 time between the years 1000 and 9999 UTC. A cursor keeps the window it was made with, and the configured audit limit bounds its length."
     },
     {
      "name": "to",
@@ -820,7 +820,7 @@
       "type": "string",
       "format": "date-time"
      },
-     "description": "RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy."
+     "description": "One end of the window, as an RFC 3339 time between the years 1000 and 9999 UTC. A cursor keeps the window it was made with, and the configured audit limit bounds its length."
     },
     {
      "name": "request_id",
@@ -1146,7 +1146,7 @@
     },
     "action": {
      "type": "string",
-     "description": "Versioned first-party audit action. Module events remain visible in unfiltered history;the query action enum lists currently supported exact selectors.",
+     "description": "The action, such as `auth.logout`. An unfiltered list shows every module's actions; the `action` query accepts the ones it lists.",
      "maxLength": 64
     },
     "outcome": {
@@ -1245,7 +1245,7 @@
    "properties": {
     "email": {
      "type": "string",
-     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "description": "Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes.",
      "maxLength": 254
     },
     "locale": {
@@ -1455,7 +1455,7 @@
    "properties": {
     "email": {
      "type": "string",
-     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "description": "Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes.",
      "maxLength": 254
     },
     "password": {
@@ -1732,7 +1732,7 @@
    "properties": {
     "email": {
      "type": "string",
-     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "description": "Surrounding spaces are removed and the address takes its canonical ASCII form; at most 254 bytes.",
      "maxLength": 254
     }
    }

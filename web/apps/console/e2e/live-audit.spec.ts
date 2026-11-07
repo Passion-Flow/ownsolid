@@ -31,21 +31,21 @@ test('shows real events and follows them', async ({ page }) => {
 
   await page.getByLabel('Kind of action').selectOption('auth');
   await expect(page).toHaveURL(/category=auth/);
-  const signIn = page.getByRole('row').filter({ hasText: 'auth.login_succeeded' }).first();
+  const signIn = page.getByRole('row').filter({ hasText: 'Signed in' }).first();
   await expect(signIn).toContainText(email);
   await expect(signIn).toContainText('Succeeded');
   await signIn.getByRole('button', { name: /^Show details of / }).click();
 
-  const drawer = page.getByRole('dialog', { name: 'auth.login_succeeded' });
+  const drawer = page.getByRole('dialog', { name: 'Signed in' });
   await expect(drawer).toContainText('Console');
   await expectAccessible(page);
   const link = (await drawer.getByText(/\/audit\?range=custom/).textContent()) ?? '';
   await drawer.getByRole('button', { name: 'Everything from this request' }).click();
   await expect(page).toHaveURL(/request=/);
-  await expect(page.getByRole('row').filter({ hasText: 'auth.login_succeeded' })).toHaveCount(1);
+  await expect(page.getByRole('row').filter({ hasText: 'Signed in' })).toHaveCount(1);
 
   await page.goto(link);
-  await expect(page.getByRole('dialog', { name: 'auth.login_succeeded' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Signed in' })).toBeVisible();
   await page.keyboard.press('Escape');
 
   await page.goto(`/audit?category=auth&actor=${'0'.repeat(8)}-0000-4000-8000-${'0'.repeat(12)}`);

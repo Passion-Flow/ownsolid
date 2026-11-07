@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one Admin operational monitoring",
+    "title": "ownsolid Admin operational monitoring",
     "version": "0.30.0"
   },
   "servers": [
