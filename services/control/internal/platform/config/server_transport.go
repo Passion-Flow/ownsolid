@@ -47,6 +47,9 @@ type ServerConfiguration struct {
 	AdminAssets        string        `yaml:"admin_assets"`
 	TransportMode      TransportMode `yaml:"transport_mode,omitempty"`
 	TrustedProxyCIDRs  []string      `yaml:"trusted_proxy_cidrs,omitempty"`
+	// OperatorSocket is the Unix socket an operator on the host uses when nothing else reaches
+	// control (ADR 0043). Empty serves no socket.
+	OperatorSocket string `yaml:"operator_socket,omitempty"`
 }
 
 // BrowserOrigin retains the selected canonical authority; Hostname excludes brackets and port.
@@ -216,6 +219,9 @@ func (s ServerConfiguration) ValidateTransport() error {
 	}
 	if e := validateServerListener(s.ListenAddress); e != nil {
 		return e
+	}
+	if s.OperatorSocket != "" && !serverReference(s.OperatorSocket) {
+		return bad
 	}
 	if mode == TransportDirectHTTPS {
 		// Legacy recovery/test snapshots may omit both references; TLSConfig still requires actual material.

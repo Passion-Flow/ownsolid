@@ -6,6 +6,7 @@ require (
 	github.com/Passion-Flow/ownsolid/api v0.0.0
 	github.com/Passion-Flow/ownsolid/pkg/capabilities v0.0.0
 	github.com/Passion-Flow/ownsolid/pkg/license v0.0.0
+	github.com/Passion-Flow/ownsolid/pkg/operatorsocket v0.0.0
 	github.com/Passion-Flow/ownsolid/tools/release/offline v0.0.0
 	github.com/aws/aws-sdk-go-v2 v1.47.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.3
@@ -57,5 +58,7 @@ replace github.com/Passion-Flow/ownsolid/api => ../../api
 replace github.com/Passion-Flow/ownsolid/pkg/capabilities => ../../pkg/capabilities
 
 replace github.com/Passion-Flow/ownsolid/pkg/license => ../../pkg/license
+
+replace github.com/Passion-Flow/ownsolid/pkg/operatorsocket => ../../pkg/operatorsocket
 
 replace github.com/Passion-Flow/ownsolid/tools/release/offline => ../../tools/release/offline

@@ -36,5 +36,5 @@ stored level does not overwrite it.
 
 - At most eight agent calls use the database at once by default, against 64 before. A fleet that needs
   more raises the pool.
-- A level set on the host while the database is down is forgotten by a restart before it is stored.
+- Control stops when it loses its database, so what a host level does across that is in [ADR 0044](0044-a-shed-level-outlives-control.md).
 - MySQL and Dameng cannot store a level until CMP-201 and CMP-202; an administrator is told so.

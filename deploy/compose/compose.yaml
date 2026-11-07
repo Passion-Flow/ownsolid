@@ -94,6 +94,11 @@ services:
         target: /run/projectone
         read_only: true
         bind: {create_host_path: false}
+      # The operator socket: how ownsolid-install reaches control when the network path is full.
+      - type: bind
+        source: ${OWNSOLID_SOCKET_DIR:?}
+        target: /run/projectone-socket
+        bind: {create_host_path: false}
     networks: [state, edge]
     mem_limit: ${OWNSOLID_CONTROL_MEMORY:?}
     cpus: ${OWNSOLID_CONTROL_CPUS:?}

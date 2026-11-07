@@ -5,6 +5,7 @@ WORKDIR /src/services/control
 COPY api/ /src/api/
 COPY pkg/capabilities/ /src/pkg/capabilities/
 COPY pkg/license/ /src/pkg/license/
+COPY pkg/operatorsocket/ /src/pkg/operatorsocket/
 COPY tools/release/offline/ /src/tools/release/offline/
 COPY services/control/ /src/services/control/
 RUN go build -trimpath -ldflags='-s -w' -o /out/control ./cmd/server

@@ -138,6 +138,20 @@ func TestServerTransportModesLegacyDefaultAndStructuralValidation(t *testing.T) 
 	}
 }
 
+func TestOperatorSocketMustBeACleanAbsolutePath(t *testing.T) {
+	s := transportTestServer(TransportDirectHTTPS)
+	s.OperatorSocket = "/run/projectone-socket/control.sock"
+	if e := s.ValidateTransport(); e != nil {
+		t.Fatal(e)
+	}
+	for _, bad := range []string{"control.sock", "/run/../control.sock", "/", "/run/control\n.sock"} {
+		s.OperatorSocket = bad
+		if s.ValidateTransport() == nil {
+			t.Fatalf("%q was accepted", bad)
+		}
+	}
+}
+
 func TestServerTransportRefusesContradictoryModesTLSAndListeners(t *testing.T) {
 	for index, mutate := range []func(*ServerConfiguration){
 		func(s *ServerConfiguration) { s.TransportMode = "false" },

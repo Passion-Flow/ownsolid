@@ -29,6 +29,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { useState, type SubmitEvent } from 'react';
+import { AgentShedSection } from './agent-shed.tsx';
 
 const pacingKey = ['agent-pacing'] as const;
 
@@ -241,7 +242,7 @@ function Current({ pacing }: { pacing: AgentPacing }) {
   );
 }
 
-/** `/nodes/pacing`: how often agents report, changed with a reason. */
+/** `/nodes/pacing`: how often agents report, and how much of their traffic control refuses. */
 export function AgentPacingPage() {
   const { t } = useI18n();
   const pacing = useQuery({
@@ -292,6 +293,7 @@ export function AgentPacingPage() {
           </Card>
         ) : null}
       </div>
+      <AgentShedSection />
     </>
   );
 }

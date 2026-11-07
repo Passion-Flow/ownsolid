@@ -21,6 +21,8 @@ import (
 const (
 	containerConfigDir   = "/run/projectone"
 	containerOperatorDir = "/run/projectone-operator"
+	containerSocketDir   = "/run/projectone-socket"
+	socketName           = "control.sock"
 	imagePortalAssets    = "/opt/projectone/portal"
 	imageAdminAssets     = "/opt/projectone/admin"
 	imageBlocklist       = "/opt/projectone/security/password-blocklist.txt"
@@ -41,18 +43,21 @@ const (
 
 // Layout is every path the installer owns under install_root.
 type Layout struct {
-	Root, ComposeFile, ComposeEnv, Config, Operator, Secrets, Postgres, Metrics, Logs string
+	Root, ComposeFile, ComposeEnv, Config, Operator, Socket, Secrets, Postgres, Metrics, Logs string
 }
 
 func (c Config) Layout() Layout {
 	r := c.InstallRoot
 	return Layout{
 		Root: r, ComposeFile: filepath.Join(r, "compose.yaml"), ComposeEnv: filepath.Join(r, "compose.env"),
-		Config: filepath.Join(r, "config"), Operator: filepath.Join(r, "operator"),
+		Config: filepath.Join(r, "config"), Operator: filepath.Join(r, "operator"), Socket: filepath.Join(r, "socket"),
 		Secrets: filepath.Join(r, "secrets"), Postgres: filepath.Join(r, "data", "postgres"),
 		Metrics: filepath.Join(r, "data", "metrics"), Logs: filepath.Join(r, "data", "logs"),
 	}
 }
+
+// SocketPath is where an operator on the host reaches control.
+func (c Config) SocketPath() string { return filepath.Join(c.Layout().Socket, socketName) }
 
 // CredentialPath is where the generated administrator password is written.
 func (c Config) CredentialPath() string { return filepath.Join(c.Layout().Operator, credentialFile) }
@@ -64,7 +69,7 @@ func Materialize(c Config) error {
 	for _, d := range []struct {
 		path    string
 		runtime bool
-	}{{l.Root, false}, {filepath.Dir(l.Postgres), false}, {l.Postgres, false}, {l.Metrics, true}, {l.Logs, true}, {l.Secrets, false}, {l.Config, true}, {l.Operator, true}} {
+	}{{l.Root, false}, {filepath.Dir(l.Postgres), false}, {l.Postgres, false}, {l.Metrics, true}, {l.Logs, true}, {l.Secrets, false}, {l.Config, true}, {l.Operator, true}, {l.Socket, true}} {
 		if e := privateDirectory(d.path, c, d.runtime); e != nil {
 			return e
 		}
@@ -187,6 +192,7 @@ func (c Config) renderControl(dsnFile string) ([]byte, error) {
 		"listen_address": containerListen, "portal_origin": c.Origins.Portal, "admin_origin": c.Origins.Admin,
 		"tls_certificate_file": containerConfigDir + "/certificate.pem", "tls_private_key_file": containerConfigDir + "/private-key.pem",
 		"portal_assets": imagePortalAssets, "admin_assets": imageAdminAssets,
+		"operator_socket": containerSocketDir + "/" + socketName,
 	}
 	document["database"] = map[string]any{"dsn_file": dsnFile}
 	document["telemetry"] = map[string]any{
@@ -233,7 +239,7 @@ func (c Config) ComposeVariables() map[string]string {
 		"OWNSOLID_PROJECT": c.Project, "OWNSOLID_CONTROL_IMAGE": c.Images.Control, "OWNSOLID_POSTGRES_IMAGE": c.Images.Postgres,
 		"OWNSOLID_RUNTIME_UID": strconv.Itoa(c.Runtime.UID), "OWNSOLID_RUNTIME_GID": strconv.Itoa(c.Runtime.GID),
 		"OWNSOLID_BIND_ADDRESS": c.Network.BindAddress, "OWNSOLID_HTTPS_PORT": strconv.Itoa(c.Network.HTTPSPort),
-		"OWNSOLID_CONFIG_DIR": l.Config, "OWNSOLID_OPERATOR_DIR": l.Operator, "OWNSOLID_POSTGRES_DATA": l.Postgres,
+		"OWNSOLID_CONFIG_DIR": l.Config, "OWNSOLID_OPERATOR_DIR": l.Operator, "OWNSOLID_SOCKET_DIR": l.Socket, "OWNSOLID_POSTGRES_DATA": l.Postgres,
 		"OWNSOLID_POSTGRES_PASSWORD_FILE": filepath.Join(l.Secrets, "postgres-password"),
 		"OWNSOLID_CONTROL_MEMORY":         c.Resources.ControlMemory, "OWNSOLID_CONTROL_CPUS": c.Resources.ControlCPUs,
 		"OWNSOLID_POSTGRES_MEMORY": c.Resources.PostgresMemory, "OWNSOLID_POSTGRES_CPU_SHARES": strconv.Itoa(postgresShares),

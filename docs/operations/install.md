@@ -165,6 +165,44 @@ control_settings:
 
 Limits apply per control process.
 
+### When agents overload control
+
+Agents leave `database.operator_reserved_connections` connections of the pool (default 2) to
+everyone else, so a sign-in and the console keep working while agents hold every serving seat. Raise
+the pool, not the reserve, for a fleet that needs more seats.
+
+To tell a fleet to back off, refuse its calls, lowest priority first:
+
+| Level | Control refuses | Effect |
+| --- | --- | --- |
+| `none` | Nothing | The default |
+| `bulk` | Transfers | Nodes stay online |
+| `telemetry` | Transfers and telemetry | Nodes stay online; metrics and logs from nodes stop arriving |
+| `heartbeats` | Everything except quarantine reports | Nodes turn offline in the console and receive no new work. Tasks and model services already running continue |
+
+Set it in the console under **Nodes**, **Agent pacing**. When the console cannot be reached, set it
+on the server, as root or the runtime user:
+
+```sh
+ownsolid-install agents shed --config install.yaml --level heartbeats --reason "Database saturated"
+ownsolid-install agents status --config install.yaml
+```
+
+This goes through a Unix socket at `<install_root>/socket/control.sock`, mode 0600, and needs no
+TCP connection, so it works with the connection limit full. Agents honor the retry hint they are
+refused with, and return by themselves after `--level none`.
+
+| Line | Meaning |
+| --- | --- |
+| `AGENT_SHED_LEVEL` | Control enforces this level now |
+| `AGENT_SHED_NOT_STORED` | The database did not answer in time. Control acts on the level and keeps trying to store and audit it |
+| `AGENT_SHED_HELD` | Control is not answering, for example because its database is stopped: it stops by design without one. The level waits in `socket/agent-shed.json`, and control starts with it, so the fleet stays out when control returns |
+
+Every change is audited; one set on the server has the `operator` audience and names no user. The
+gauge `ownsolid_agent_shed_level` holds the level from 0 to 3, and refused calls count in
+`ownsolid_agent_admission_refused_total` with the reason `shed`. MySQL and Dameng installs cannot
+store a level yet (CMP-201, CMP-202).
+
 ### Model containers have no network
 
 A model container on a node can answer requests but cannot open a connection to
@@ -252,6 +290,8 @@ instead of issuing a second one.
 | `INSTALL_OPERATOR_TASK_FAILED` | A schema or administrator task failed; its code is in the message |
 | `INSTALL_HEALTH_FAILED` | Serving is up but an origin does not answer through the published port |
 | `INSTALL_BUSY` | A backup or restore is running on this installation; apply again when it ends |
+| `INSTALL_ROOT_TOO_LONG` | `install_root` leaves no room for the operator socket's address; choose a shorter path |
+| `OPERATOR_SOCKET_UNAVAILABLE` | `agents status` found no control on the socket and no held level. Check that control is running and that you are root or its runtime user |
 
 ## Limits of this release
 

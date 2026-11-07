@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/Passion-Flow/ownsolid/pkg/operatorsocket"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/sso"
@@ -398,6 +399,14 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 				})
 			}
 			g.Loop("NODE_LIVENESS", h.Nodes.Service.RunLiveness)
+			if c.Server.OperatorSocket != "" && h.Nodes.Service.Shed != nil {
+				socket, e := operatorsocket.Listen(c.Server.OperatorSocket, h.Nodes.Service)
+				if e != nil {
+					return e
+				}
+				h.Nodes.Service.HoldShedAt(operatorsocket.HeldPath(c.Server.OperatorSocket))
+				g.Go("OPERATOR_SOCKET", socket.Serve)
+			}
 			g.Loop("NODE_AGENT_SHED", h.Nodes.Service.RunAgentShed)
 			g.Loop("NODE_TASK_WAKES", h.Nodes.Service.RunWakes)
 		}

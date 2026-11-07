@@ -170,6 +170,23 @@ mean and what to do. *Save the contract* saves the contract file.
 **Done when** the portal lists no console path and the console no portal-only path, and every
 code shown is explained in both languages.
 
+### S-109  Agent pacing and shedding                  `/nodes/pacing`
+**For** operations · **Archetype** settings · **Primary** change how often agents report.
+
+**Does** sets how the fleet reports and, when the fleet is what overloads the installation,
+refuses its calls, lowest priority first.
+**Content** two sections, saved separately. *Pacing*: the values now and the form. *Refuse agent
+traffic*: the level in force, when it changed, a choice of four levels that says what each one
+does, and a reason. An alert stays on the page while a level is in force.
+**Click** *Apply* acts at once and offers undo. The Nodes page repeats the alert and links here,
+because every node turning offline reads as an outage to anyone who did not set the level.
+**Dialogs** *Refuse all agent traffic* → dialog, typed confirmation on `heartbeats`, stating that
+nodes turn offline and that running work continues. Lower levels offer undo instead.
+**Empty** not applicable: a cell always has a level, and `none` is the default.
+**Done when** a level set here is audited, refused calls carry a retry hint, lifting it brings the
+fleet back, and the same level can be set on the host with `ownsolid-install agents shed` when this
+page cannot be reached.
+
 ---
 
 # Stage 2 — Serve a model
