@@ -4,7 +4,7 @@
 import { expectAccessible } from '@ownsolid/shell/testing';
 import { expect, test, type Page } from '@playwright/test';
 import { execSync } from 'node:child_process';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 // A shell on the host, reading its script from standard input.
 const hostShell = process.env.OWNSOLID_LIVE_NODE_SHELL ?? '';

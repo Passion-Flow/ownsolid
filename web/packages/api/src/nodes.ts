@@ -1,4 +1,5 @@
 // Nodes and the tokens that join them, for platform administrators (api/openapi/v1/nodes).
+import { localCell } from './cell.ts';
 import { createClient } from './client.ts';
 import type { nodesContract } from './gen/index.ts';
 import type { RequestOptions } from './transport.ts';
@@ -37,9 +38,6 @@ export type PacingValues = Pick<
 
 /** One task of one node. */
 export type NodeTask = Schemas['Task'];
-
-// Nodes live in a cell. Every installation has the one local cell until ARC-202.
-const localCell = { site_id: 'default', cell_id: 'default' };
 
 const client = createClient<nodesContract.paths>();
 

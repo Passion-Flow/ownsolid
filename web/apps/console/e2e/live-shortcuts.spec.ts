@@ -3,7 +3,7 @@
 // environment describes an installation; docs/development/environment.md has the recipe.
 import { expectAccessible } from '@ownsolid/shell/testing';
 import { expect, test, type Page } from '@playwright/test';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 test.skip(origin === '', 'needs an installation');
 test.use(liveOptions);

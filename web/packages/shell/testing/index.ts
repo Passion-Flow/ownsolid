@@ -5,6 +5,11 @@ export {
   type AccessibilityFlowOptions,
 } from './accessibility-flows.ts';
 export { accountFlows } from './account-flows.ts';
+export {
+  publishedApplication,
+  recentConversation,
+  type ApplicationScript,
+} from './applications.ts';
 export { supportFlows } from './support-flows.ts';
 export {
   account,

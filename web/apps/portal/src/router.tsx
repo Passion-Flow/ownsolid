@@ -1,5 +1,4 @@
 import {
-  WelcomePage,
   authenticatedRoute,
   createAccountRoute,
   createApplication,
@@ -8,7 +7,7 @@ import {
   publicRoutes,
   rootRoute,
 } from '@ownsolid/shell';
-import { createRoute } from '@tanstack/react-router';
+import { createRoute, lazyRouteComponent } from '@tanstack/react-router';
 import { navigation } from './navigation.ts';
 
 const frameRoute = createFrameRoute({ navigation });
@@ -16,7 +15,7 @@ const frameRoute = createFrameRoute({ navigation });
 const homeRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/',
-  component: WelcomePage,
+  component: lazyRouteComponent(() => import('./home-page.tsx'), 'HomePage'),
 });
 
 const accountRoute = createAccountRoute(frameRoute);

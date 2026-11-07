@@ -5,7 +5,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./testing": "./testing/index.ts",
-    "./testing/pages": "./testing/pages.ts"
+    "./testing/pages": "./testing/pages.ts",
+    "./testing/live": "./testing/live.ts"
   },
   "sideEffects": false,
   "scripts": {

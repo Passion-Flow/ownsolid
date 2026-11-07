@@ -2,11 +2,11 @@ package http
 
 import (
 	"errors"
-	"net/http"
-	"net/url"
+	strict "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	strict "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"net/http"
+	"net/url"
 )
 
 type Handler struct{ Service *applications.Service }

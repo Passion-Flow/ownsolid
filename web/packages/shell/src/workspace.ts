@@ -2,18 +2,42 @@
 // server checks access to a workspace on every request.
 import { listWorkspaces, type Audience, type WorkspaceSummary } from '@ownsolid/api';
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { runtimeConfigQuery } from './routes.tsx';
 import { sessionKey, useSession } from './session.ts';
 
 const storageKey = (userId: string) => `ownsolid.workspace.${userId}`;
 
-function storedWorkspace(userId: string): string | null {
+// Every part of the page reads one choice: the switcher changes it and the pages that show the
+// workspace's rows follow. A choice made while storage is unavailable lives here for the visit.
+const choices = new Map<string, string>();
+const listeners = new Set<() => void>();
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function chosenWorkspace(userId: string): string | null {
+  const chosen = choices.get(userId);
+  if (chosen !== undefined) return chosen;
   try {
     return localStorage.getItem(storageKey(userId));
   } catch {
     return null;
   }
+}
+
+function choose(userId: string, workspaceId: string): void {
+  choices.set(userId, workspaceId);
+  try {
+    localStorage.setItem(storageKey(userId), workspaceId);
+  } catch {
+    // The choice still applies for this visit when storage is unavailable.
+  }
+  for (const listener of listeners) listener();
 }
 
 /** The workspaces the session may use. */
@@ -47,16 +71,11 @@ export function useWorkspaces(): Workspaces {
   const audience = me?.audience ?? 'portal';
   const query = useQuery({ ...workspacesQuery(audience, limit), enabled: me !== null });
   const userId = me?.user.id ?? '';
-  const [chosen, setChosen] = useState(() => storedWorkspace(userId));
+  const chosen = useSyncExternalStore(subscribe, () => chosenWorkspace(userId));
 
   const select = useCallback(
     (workspace: WorkspaceSummary) => {
-      try {
-        localStorage.setItem(storageKey(userId), workspace.id);
-      } catch {
-        // The choice still applies to this page when storage is unavailable.
-      }
-      setChosen(workspace.id);
+      choose(userId, workspace.id);
       // Everything on screen may belong to the previous workspace.
       void queryClient.invalidateQueries({
         predicate: (entry) => entry.queryKey[0] !== sessionKey[0],

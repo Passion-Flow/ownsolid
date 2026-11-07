@@ -16,7 +16,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
 	applicationhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
@@ -26,6 +25,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
+	"github.com/google/uuid"
 )
 
 type portalStory struct {
@@ -312,6 +312,38 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 			t.Fatal("old actor epoch disclosed")
 		}
 	})
+	// The portal home sends the workspace its switcher selected. A workspace the caller
+	// is not a member of answers as if it did not exist, with nothing of it disclosed.
+	t.Run("another_workspace_is_not_found", func(t *testing.T) {
+		g := portalSetup(t)
+		v := g.draft(t, "Own workspace application")
+		g.conversation(t, v.ID, g.publication(t, v, 1), g.f.User)
+		foreign := uuid.NewString()
+		g.exec(t, `INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Workspace of someone else','active')`, `INSERT INTO workspaces(id,tenant_id,name,status) VALUES(?,?,'Workspace of someone else','active')`, foreign, g.f.Tenant)
+		apps, e := g.apps.List(g.ctx, g.a, foreign, url.Values{})
+		portalWant(t, e, "RESOURCE_NOT_FOUND")
+		if len(apps.Items) != 0 || apps.NextCursor != nil {
+			t.Fatal("another workspace's applications disclosed")
+		}
+		conversations, e := g.apps.Conversations(g.ctx, g.a, foreign, url.Values{})
+		portalWant(t, e, "RESOURCE_NOT_FOUND")
+		if len(conversations.Items) != 0 || conversations.NextCursor != nil {
+			t.Fatal("another workspace's conversations disclosed")
+		}
+		ah := &applicationhttp.Handler{Service: g.apps}
+		for _, path := range []string{"/api/v1/applications", "/api/v1/application-conversations"} {
+			r := httptest.NewRequest(http.MethodGet, "https://portal.example.invalid"+path+"?workspace_id="+foreign, nil)
+			body, _, e := ah.Handle(r, g.a, uuid.NewString())
+			portalWant(t, e, "RESOURCE_NOT_FOUND")
+			if raw, _ := json.Marshal(body); strings.Contains(string(raw), v.ID) {
+				t.Fatal("another workspace's row reached the response", path)
+			}
+		}
+		own, e := g.apps.List(g.ctx, g.a, g.f.Workspace, url.Values{})
+		if e != nil || len(own.Items) != 1 || own.Items[0].WorkflowID != v.ID {
+			t.Fatal("own workspace no longer listed", e)
+		}
+	})
 	t.Run("one_transaction_configuration_and_unknown_zero_pages", func(t *testing.T) {
 		g := portalSetup(t)
 		v := g.draft(t, "Actual one transaction")
@@ -393,7 +425,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 			t.Fatal(e)
 		}
 		persisted, e := (&preferences.Service{Identity: g.owner}).Get(g.ctx, g.admin)
-		if e != nil || persisted != p || g.audits(t) != before+1 {
+		if e != nil || !reflect.DeepEqual(persisted, p) || g.audits(t) != before+1 {
 			t.Fatal("dual entrance same recipient persistence", e)
 		}
 		unchanged, e := g.prefs.Get(g.ctx, other)
@@ -409,7 +441,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		for _, input := range []preferences.UpdateRequest{{Theme: new("false"), ExpectedRevision: 1}, {Theme: new("dark"), ExpectedRevision: 0}, {Theme: new("light"), ExpectedRevision: preferences.MaximumRevision}} {
 			p, e := g.prefs.Update(g.ctx, g.a, input, uuid.NewString())
 			portalWant(t, e, "VALIDATION_FAILED")
-			if p != (preferences.Preference{}) {
+			if !reflect.DeepEqual(p, preferences.Preference{}) {
 				t.Fatal("invalid preference projection")
 			}
 		}
@@ -457,18 +489,18 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		audits := g.audits(t)
 		remove := g.refuseAudit(t)
 		p, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: before.Revision}, uuid.NewString())
-		if e == nil || p != (preferences.Preference{}) {
+		if e == nil || !reflect.DeepEqual(p, preferences.Preference{}) {
 			t.Fatal("audit refusal returned value")
 		}
 		after, e := g.prefs.Get(g.ctx, g.a)
-		if e != nil || after != before || g.audits(t) != audits {
+		if e != nil || !reflect.DeepEqual(after, before) || g.audits(t) != audits {
 			t.Fatal("audit refusal mutated persisted preference", e)
 		}
 		remove()
 		g.exec(t, `DELETE FROM user_preferences WHERE user_id=$1`, `DELETE FROM user_preferences WHERE user_id=?`, g.f.User)
 		p, e = g.prefs.Get(g.ctx, g.a)
 		portalWant(t, e, "PREFERENCE_UNAVAILABLE")
-		if p != (preferences.Preference{}) {
+		if !reflect.DeepEqual(p, preferences.Preference{}) {
 			t.Fatal("missing seed fabricated default")
 		}
 		portalWant(t, g.prefs.VerifyStored(g.ctx), "PREFERENCE_UNAVAILABLE")
@@ -479,7 +511,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		before := g.audits(t)
 		p, e := bad.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, uuid.NewString())
 		portalWant(t, e, string(transaction.CommitUnknown))
-		if p != (preferences.Preference{}) {
+		if !reflect.DeepEqual(p, preferences.Preference{}) {
 			t.Fatal("unknown mutation disclosed result")
 		}
 		actual, e := g.prefs.Get(g.ctx, g.a)
@@ -490,7 +522,7 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		portalWant(t, e, "PREFERENCE_REVISION_CONFLICT")
 		p, e = bad.Get(g.ctx, g.a)
 		portalWant(t, e, string(transaction.CommitUnknown))
-		if p != (preferences.Preference{}) {
+		if !reflect.DeepEqual(p, preferences.Preference{}) {
 			t.Fatal("unknown read disclosed")
 		}
 		portalWant(t, bad.VerifyStored(g.ctx), string(transaction.CommitUnknown))
@@ -514,29 +546,29 @@ func TestActualPairedPortalRuntime(t *testing.T) {
 		ctx, cancel := context.WithCancel(g.ctx)
 		cancel()
 		p, e := g.prefs.Get(ctx, g.a)
-		if e == nil || p != (preferences.Preference{}) {
+		if e == nil || !reflect.DeepEqual(p, preferences.Preference{}) {
 			t.Fatal("cancelled preference disclosed")
 		}
 		expired, stop := context.WithDeadline(g.ctx, time.Now().Add(-time.Second))
 		defer stop()
 		p, e = g.prefs.Get(expired, g.a)
-		if e == nil || p != (preferences.Preference{}) {
+		if e == nil || !reflect.DeepEqual(p, preferences.Preference{}) {
 			t.Fatal("expired preference deadline disclosed")
 		}
 		g.exec(t, `UPDATE users SET status='disabled',auth_epoch=auth_epoch+1 WHERE id=$1`, `UPDATE users SET status='disabled',auth_epoch=auth_epoch+1 WHERE id=?`, other.Me.User.ID)
 		p, e = g.prefs.Get(g.ctx, other)
-		if e == nil || p != (preferences.Preference{}) {
+		if e == nil || !reflect.DeepEqual(p, preferences.Preference{}) {
 			t.Fatal("disabled current identity disclosed")
 		}
 		revoked := g.other(t)
-		g.exec(t, `UPDATE sessions SET revoked_at=clock_timestamp() WHERE id=$1`, `UPDATE sessions SET revoked_at=UTC_TIMESTAMP(6) WHERE id=?`, revoked.SessionID)
+		g.exec(t, `UPDATE sessions SET revoked_at=clock_timestamp(),revoke_reason='logout' WHERE id=$1`, `UPDATE sessions SET revoked_at=UTC_TIMESTAMP(6),revoke_reason='logout' WHERE id=?`, revoked.SessionID)
 		p, e = g.prefs.Get(g.ctx, revoked)
-		if e == nil || p != (preferences.Preference{}) {
+		if e == nil || !reflect.DeepEqual(p, preferences.Preference{}) {
 			t.Fatal("revoked current session disclosed")
 		}
 		g.exec(t, `UPDATE tenants SET status='disabled' WHERE id=$1`, `UPDATE tenants SET status='disabled' WHERE id=?`, g.f.Tenant)
 		p, e = g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, uuid.NewString())
-		if e == nil || p != (preferences.Preference{}) {
+		if e == nil || !reflect.DeepEqual(p, preferences.Preference{}) {
 			t.Fatal("inactive installed tenant mutated")
 		}
 		if e = g.prefs.VerifyStored(g.ctx); e == nil {

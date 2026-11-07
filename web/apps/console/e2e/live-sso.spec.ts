@@ -7,7 +7,7 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { expectAccessible } from '@ownsolid/shell/testing';
 import { expect, test, type Page } from '@playwright/test';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 const providerOrigin = process.env.OWNSOLID_LIVE_PROVIDER_ORIGIN ?? '';
 const providerUser = process.env.OWNSOLID_LIVE_PROVIDER_USER ?? '';

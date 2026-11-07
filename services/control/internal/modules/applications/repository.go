@@ -5,11 +5,11 @@ import (
 	"errors"
 	"strings"
 
+	strict "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	strict "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 )
 
 func (s *Service) repository() (transaction.Store, error) {

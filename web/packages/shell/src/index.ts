@@ -5,7 +5,6 @@ export { licenseStateLabels, licenseStatusKey } from './license-status.tsx';
 export { findNavItem, type NavGroup, type NavItem } from './navigation.ts';
 export { accountPath, safeRedirect, signInPath } from './redirect.ts';
 export {
-  WelcomePage,
   authenticatedRoute,
   createAccountRoute,
   createSupportRoute,

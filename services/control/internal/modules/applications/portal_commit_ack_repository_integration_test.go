@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/notifications"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/preferences"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/mysqlstore"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/commitfault"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type portalWireFault interface {
@@ -203,7 +203,7 @@ func TestActualPairedPortalCommitAcknowledgementLoss(t *testing.T) {
 						if e != nil || value.Theme != preferences.DarkTheme || value.Revision != 2 {
 							t.Fatal("acknowledged preference", e)
 						}
-					} else if value != (preferences.Preference{}) {
+					} else if !reflect.DeepEqual(value, preferences.Preference{}) {
 						t.Fatal("uncertain preference exposed result")
 					}
 				} else {
@@ -243,7 +243,7 @@ func TestActualPairedPortalCommitAcknowledgementLoss(t *testing.T) {
 					if operation == "preference" {
 						got, e := g.prefs.Get(g.ctx, g.a)
 						want := int64(1)
-						theme := preferences.LightTheme
+						theme := preferences.SystemTheme
 						if fault.committed {
 							want = 2
 							theme = preferences.DarkTheme
@@ -262,7 +262,7 @@ func TestActualPairedPortalCommitAcknowledgementLoss(t *testing.T) {
 					recoveryRequest := uuid.NewString()
 					if operation == "preference" {
 						got, e := g.prefs.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: 1}, recoveryRequest)
-						if e == nil || e.Error() != "PREFERENCE_REVISION_CONFLICT" || got != (preferences.Preference{}) {
+						if e == nil || e.Error() != "PREFERENCE_REVISION_CONFLICT" || !reflect.DeepEqual(got, preferences.Preference{}) {
 							t.Fatal("stale recovery revision changed preference", e)
 						}
 					} else {
@@ -278,7 +278,7 @@ func TestActualPairedPortalCommitAcknowledgementLoss(t *testing.T) {
 				g.exec(t, "UPDATE users SET auth_epoch=auth_epoch+1 WHERE id=$1", "UPDATE users SET auth_epoch=auth_epoch+1 WHERE id=?", g.f.User)
 				if operation == "preference" {
 					got, e := g.prefs.Get(g.ctx, g.a)
-					if e == nil || got != (preferences.Preference{}) {
+					if e == nil || !reflect.DeepEqual(got, preferences.Preference{}) {
 						t.Fatal("stale actor read durable preference")
 					}
 				} else {
@@ -331,11 +331,11 @@ func TestActualPairedPreferenceAuditCountRollback(t *testing.T) {
 	request := uuid.NewString()
 	_, fault := g.wrapped(portalAuditCountStore{g.f.Store})
 	got, e := fault.Update(g.ctx, g.a, preferences.UpdateRequest{Theme: new(preferences.DarkTheme), ExpectedRevision: before.Revision}, request)
-	if e == nil || e.Error() != string(transaction.Unavailable) || got != (preferences.Preference{}) {
+	if e == nil || e.Error() != string(transaction.Unavailable) || !reflect.DeepEqual(got, preferences.Preference{}) {
 		t.Fatal("non-single audit acknowledgement accepted", e)
 	}
 	after, e := g.prefs.Get(g.ctx, g.a)
-	if e != nil || after != before || portalRequestAudits(t, g, request) != 0 {
+	if e != nil || !reflect.DeepEqual(after, before) || portalRequestAudits(t, g, request) != 0 {
 		t.Fatal("audit count refusal did not roll back preference and audit", e)
 	}
 	// A fresh acknowledged operation still succeeds after the known rollback.

@@ -28,8 +28,8 @@ async function signIn(page: Page, password = account.password): Promise<void> {
 }
 
 /** Registers the shared flows in the current spec file. */
-// The start page's code: the portal's welcome page or the console's overview.
-const startPageCode = '**/assets/{welcome,overview}-page-*.js';
+// The start page's code: the portal's home or the console's overview.
+const startPageCode = '**/assets/{home,overview}-page-*.js';
 
 export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
   let control: ControlPlane;
@@ -390,7 +390,7 @@ export function sessionFlows({ audience, subtitle }: SessionFlowOptions): void {
     control.notificationsProblem = { status: 403, code: 'ACCESS_DENIED' };
     await page.reload();
     await page.getByRole('button', { name: /^Notifications/ }).click();
-    await expect(page.getByRole('alert')).toContainText('You do not have access');
+    await expect(drawer.getByRole('alert')).toContainText('You do not have access');
   });
 
   test('uses a drawer for navigation on a narrow screen', async ({ page }) => {

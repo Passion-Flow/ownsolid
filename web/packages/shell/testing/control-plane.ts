@@ -15,6 +15,11 @@ import {
 } from './workspaces.ts';
 import { emptyUserScript, routeUsers, type UserScript } from './users.ts';
 import { emptySsoScript, routeSso, type SsoScript } from './sso.ts';
+import {
+  emptyApplicationScript,
+  routeApplications,
+  type ApplicationScript,
+} from './applications.ts';
 
 /** The account the mock accepts. */
 export const account = { email: 'ada@example.test', password: 'correct horse battery staple' };
@@ -84,7 +89,7 @@ export const failedRun = {
   workflow_id: '6f1c7a1e-0000-4000-8000-000000000006',
   run_id: '6f1c7a1e-0000-4000-8000-000000000007',
   outcome: 'failed',
-  error_code: 'MODEL_UNAVAILABLE',
+  error_code: 'MODEL_UNAVAILABLE' as string | null,
   occurred_at: '2026-11-04T08:00:00Z',
   read_at: null as string | null,
 };
@@ -175,8 +180,11 @@ export interface ControlPlane
     LicenseScript,
     AuditScript,
     WorkspaceScript,
-    SsoScript {
+    SsoScript,
+    ApplicationScript {
   audience: 'admin' | 'portal';
+  /** The workspace the session reports, or null for a person in none. */
+  sessionWorkspace: typeof workspace | null;
   /** How often pages poll, as the runtime configuration says. */
   pollMilliseconds: number;
   signedIn: boolean;
@@ -305,7 +313,9 @@ export async function mockControlPlane(
     ...emptyAuditScript(),
     ...emptyWorkspaceScript(),
     ...emptySsoScript(),
+    ...emptyApplicationScript(),
     audience,
+    sessionWorkspace: workspace,
     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
     signedIn: false,
     user: { ...user },
@@ -357,7 +367,11 @@ export async function mockControlPlane(
     nextResend: null,
     resendKeys: [],
   };
-  const identity = () => ({ user: state.user, workspace, audience: state.audience });
+  const identity = () => ({
+    user: state.user,
+    workspace: state.sessionWorkspace,
+    audience: state.audience,
+  });
 
   await page.route('**/runtime-config.json', (route) =>
     state.unreachable
@@ -564,8 +578,9 @@ export async function mockControlPlane(
       : data(route, { items: state.notifications, next_cursor: null }),
   );
   await page.route('**/api/v1/notifications/*/read', (route) => {
-    const item = state.notifications[0];
-    if (!item) return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+    const id = new URL(route.request().url()).pathname.split('/').at(-2);
+    const item = state.notifications.find((notification) => notification.id === id);
+    if (!item) return problem(route, { status: 404, code: 'NOTIFICATION_NOT_FOUND' });
     item.read_at = '2026-11-04T09:00:00Z';
     return data(route, item);
   });
@@ -676,6 +691,7 @@ export async function mockControlPlane(
   await routeWorkspaces(page, state, data, problem);
   await routeSso(page, state, data, problem);
   await routeTasks(page, state, data, problem);
+  await routeApplications(page, state, data, problem);
   await page.route('**/api/v1/admin/mail-deliveries?*', (route) => {
     if (state.audience !== 'admin')
       return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });

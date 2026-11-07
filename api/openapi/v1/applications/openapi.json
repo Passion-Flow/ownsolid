@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one applications",
+    "title": "ownsolid applications",
     "version": "0.15.0",
-    "description": "Current caller discovery, private internal metadata or fixed preferences. Contract presence alone is not implementation or qualification."
+    "description": "Applications published to a workspace, and the caller's own conversations with them, for the portal. A workspace the caller is not a member of is not found."
   },
   "servers": [
     {
@@ -14,6 +14,34 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/applications": {
       "get": {
         "operationId": "ListApplications",
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "STORAGE_TIMEOUT",
+            "SERVICE_NOT_READY",
+            "WORKFLOW_UNAVAILABLE"
+          ]
+        },
         "x-audiences": [
           "portal"
         ],
@@ -99,6 +127,34 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/application-conversations": {
       "get": {
         "operationId": "ListApplicationConversations",
+        "x-error-codes": {
+          "400": [
+            "INVALID_CURSOR",
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "STORAGE_TIMEOUT",
+            "SERVICE_NOT_READY",
+            "WORKFLOW_UNAVAILABLE"
+          ]
+        },
         "x-audiences": [
           "portal"
         ],

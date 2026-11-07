@@ -6,7 +6,7 @@ import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import { expectAccessible, expectFocusVisible } from '@ownsolid/shell/testing';
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 // A real provider for the link round trip; its steps are skipped without one.
 const providerName = process.env.OWNSOLID_LIVE_PROVIDER_NAME ?? '';

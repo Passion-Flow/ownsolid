@@ -6,7 +6,7 @@ import { expectAccessible } from '@ownsolid/shell/testing';
 import { expect, test, type Page } from '@playwright/test';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 // Reads the license state as JSON on standard input and prints the test files as JSON.
 const signFiles = process.env.OWNSOLID_LIVE_LICENSE_COMMAND ?? '';

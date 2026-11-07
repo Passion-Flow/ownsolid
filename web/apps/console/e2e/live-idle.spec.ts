@@ -2,7 +2,7 @@
 // whole time. It waits out real timeouts, so it needs a short one configured and runs only
 // when told how long it is; docs/development/environment.md has the recipe.
 import { expect, test, type Page } from '@playwright/test';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 const idleSeconds = Number(process.env.OWNSOLID_LIVE_IDLE_SECONDS ?? '0');
 const warningSeconds = Number(process.env.OWNSOLID_LIVE_WARNING_SECONDS ?? '0');

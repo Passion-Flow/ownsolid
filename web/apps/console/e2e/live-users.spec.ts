@@ -5,7 +5,7 @@
 import { expectAccessible } from '@ownsolid/shell/testing';
 import { expect, test, type Page } from '@playwright/test';
 import { execSync } from 'node:child_process';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 // Prints every message the mail server received, one after another.
 const readMail = process.env.OWNSOLID_LIVE_MAIL_COMMAND ?? '';

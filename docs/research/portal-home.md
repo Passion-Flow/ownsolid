@@ -23,13 +23,21 @@ sees, scoped to their own workspace ([ADR 0035](../decisions/0035-what-belongs-i
 | Published to you | `GET .../applications`: workflows published to my workspace | Yes |
 | Usage | Tokens, calls and GPU hours against my quota | No: POR-111 |
 
-The applications contract has no `x-error-codes`, so the page cannot explain its failures until the
-contract declares them, each checked against what the handler really sends.
+The applications contract declares its `x-error-codes`, each checked against the status the server
+really sends (`TestDeclaredErrorCodesLeaveTheServerAsDeclared`).
 
-Its two routes also take `workspace_id` from the query string, and the handler answers
-`RESOURCE_NOT_FOUND` to a console session. Before the page uses them, confirm the service checks the
-caller's membership of that workspace against the session (AGENTS.md section 9), test the refusal of
-another workspace, and declare each code with the status it really leaves with.
+Both routes take `workspace_id` from the query string, so the service must not trust it. It does
+not: inside one transaction it rechecks the session, then locks the workspace and reads the caller's
+membership (`workspaces.RecheckScopeWithin`); a workspace the caller is not a member of answers
+`RESOURCE_NOT_FOUND`, the same as one that does not exist, and the page is cleared. The repository
+test `another_workspace_is_not_found` proves it for both lists and for the HTTP handler on
+PostgreSQL 18.6. A console session gets `RESOURCE_NOT_FOUND` too: the lists belong to the portal.
+
+A notification carries the workflow's ID but not its name. The page names a run from the
+applications it has already read (a lookup page of up to 100) and from the person's conversations;
+a run of an application no longer published says so. Putting the name in the notification would
+change three dialects' locking queries in another module for a label, so it waits for POR-102,
+which owns runs.
 
 ## The approach
 
@@ -39,13 +47,23 @@ another workspace, and declare each code with the status it really leaves with.
 - A row links once its page ships, as navigation items do. Until POR-102 and POR-103 ship, rows
   name the conversation or application and when it changed, and do not pretend to open.
 - Usage shows the not-ready state: visible, with its reason and POR-111.
-- The workspace is the session's; no section takes a workspace from the address.
+- The workspace is the one the switcher chose, else the session's; no section takes a workspace
+  from the address. Every part of the page reads one shared choice (`useWorkspaces`), so the
+  sections follow a switch at once, and their query keys name the workspace, so a switch never
+  shows the previous workspace's rows. The page waits for the workspace list before reading, as a
+  choice made earlier is only known once it loads.
+- Needs you reads the notification list and keeps the person's unread runs in this workspace
+  that failed, were cancelled or were interrupted. It names five; more say that the rest are in
+  Notifications. Mark as read is the bell's action, and either place refreshes the other.
 
 ### Rejected
 
 - **Building conversation and application pages here.** They are POR-102 and POR-103; ADR 0041
   limits this item to what exists.
 - **Invented figures or sample rows.** ADR 0036 removed them; a new installation has none.
+- **A workspace and outcome filter on the notification list for this page.** A person's notices
+  are bounded by the retention period and read a lookup page at a time; filtering that page in the
+  browser shows the same rows without a new query shape in three dialects.
 
 ## Failure modes and tests
 

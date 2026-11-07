@@ -4,7 +4,7 @@
 // the environment describes an installation; docs/development/environment.md has the recipe.
 import { expectAccessible } from '@ownsolid/shell/testing';
 import { expect, test } from '@playwright/test';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 // An account other than the administrator, to add to the workspace.
 const other = process.env.OWNSOLID_LIVE_OTHER_ACCOUNT ?? '';

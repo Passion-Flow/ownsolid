@@ -418,7 +418,7 @@ export const shellPages: readonly PageState[] = [
     path: '*',
     open: async (page, control) => {
       control.signedIn = true;
-      await page.route('**/assets/{welcome,overview}-page-*.js', (route) =>
+      await page.route('**/assets/{home,overview}-page-*.js', (route) =>
         route.fulfill({ status: 404, body: '' }),
       );
       await page.goto('/');

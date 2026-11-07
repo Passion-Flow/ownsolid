@@ -1,4 +1,5 @@
 // Tasks that run on nodes, for platform administrators (api/openapi/v1/nodes).
+import { localCell } from './cell.ts';
 import { createClient } from './client.ts';
 import type { nodesContract } from './gen/index.ts';
 import type { RequestOptions } from './transport.ts';
@@ -31,9 +32,6 @@ export type TaskLogLine = Schemas['TaskLogLine'];
 
 /** Lines of a task's log, and the cursor to read on from. */
 export type TaskLogPage = Schemas['TaskLog'];
-
-// Tasks live in a cell. Every installation has the one local cell until ARC-202.
-const localCell = { site_id: 'default', cell_id: 'default' };
 
 const client = createClient<nodesContract.paths>();
 

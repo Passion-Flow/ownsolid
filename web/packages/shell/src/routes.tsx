@@ -37,9 +37,6 @@ const RegisterPage = lazyRouteComponent(() => import('./register-page.tsx'), 'Re
 const SsoResultPage = lazyRouteComponent(() => import('./sso.tsx'), 'SsoResultPage');
 const AppFrame = lazyRouteComponent(() => import('./app-frame.tsx'), 'AppFrame');
 
-/** The signed-in start page. Its code loads with the route that shows it. */
-export const WelcomePage = lazyRouteComponent(() => import('./welcome-page.tsx'), 'WelcomePage');
-
 /** The account page. Its code loads with the route that shows it. */
 const AccountPage = lazyRouteComponent(() => import('./account-page.tsx'), 'AccountPage');
 const SupportPage = lazyRouteComponent(() => import('./support-page.tsx'), 'SupportPage');

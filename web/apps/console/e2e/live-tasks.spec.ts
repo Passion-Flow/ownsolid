@@ -4,7 +4,7 @@
 import { expectAccessible } from '@ownsolid/shell/testing';
 import { expect, test } from '@playwright/test';
 import { execSync } from 'node:child_process';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 const stopAgent = process.env.OWNSOLID_LIVE_AGENT_STOP ?? '';
 const startAgent = process.env.OWNSOLID_LIVE_AGENT_START ?? '';

@@ -3,7 +3,7 @@
 // the environment names a joined node with a running agent; docs/development/environment.md has the recipe.
 import { expectAccessible } from '@ownsolid/shell/testing';
 import { expect, test, type Page } from '@playwright/test';
-import { adminPassword, email, liveOptions, origin } from './live-install.ts';
+import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
 
 const nodeName = process.env.OWNSOLID_LIVE_SEARCH_NODE ?? '';
 
