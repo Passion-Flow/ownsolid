@@ -5,6 +5,7 @@ export {
   type AccessibilityFlowOptions,
 } from './accessibility-flows.ts';
 export { accountFlows } from './account-flows.ts';
+export { supportFlows } from './support-flows.ts';
 export {
   account,
   failedMail,
@@ -13,6 +14,7 @@ export {
   giteaBinding,
   giteaConnector,
   linkToken,
+  declaredCapabilities,
   mockControlPlane,
   secondFailedMail,
   sentMail,

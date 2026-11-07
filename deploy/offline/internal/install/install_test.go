@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Passion-Flow/ownsolid/pkg/capabilities"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -167,6 +168,11 @@ func TestEveryOtherTopologySizeIsRefusedBeforeAnyChange(t *testing.T) {
 		_, e := Decode([]byte(raw))
 		if e == nil || !strings.HasPrefix(e.Error(), "CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED") {
 			t.Fatalf("%s: got %v", size, e)
+		}
+		declared, _ := capabilities.Lookup(capabilities.InstallSizes)
+		option, _ := declared.Lookup(size)
+		if !strings.Contains(e.Error(), option.Reason) || !strings.Contains(e.Error(), option.RoadmapItem) {
+			t.Fatalf("%s: the refusal does not quote the declaration: %v", size, e)
 		}
 	}
 	if exists(root) {

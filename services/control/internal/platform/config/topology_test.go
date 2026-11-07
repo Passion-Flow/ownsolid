@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/Passion-Flow/ownsolid/pkg/capabilities"
 )
 
 func topologyFixture(t *testing.T) string {
@@ -25,6 +27,18 @@ func TestTopologyDefaultsAndExplicitSingleNode(t *testing.T) {
 		c, e := Decode([]byte(prefix + body))
 		if e != nil || c.Topology.EffectiveSize() != TopologySingleNode {
 			t.Fatal(prefix, c.Topology, e)
+		}
+	}
+}
+
+func TestTopologySizesAreDeclared(t *testing.T) {
+	sizes, found := capabilities.Lookup(capabilities.InstallSizes)
+	if !found || len(sizes.Options) != len(TopologySizes) {
+		t.Fatal("the topology model and the declaration differ", sizes.Options)
+	}
+	for i, size := range TopologySizes {
+		if sizes.Options[i].ID != string(size) {
+			t.Fatal("the declaration lists sizes in another order", i, size)
 		}
 	}
 }

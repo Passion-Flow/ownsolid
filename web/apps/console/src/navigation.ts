@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   Bell,
   Boxes,
+  ClipboardCheck,
   Cpu,
   Database,
   DatabaseBackup,
@@ -93,6 +94,7 @@ export const navigation: readonly NavGroup[] = [
       { label: 'nav.license', icon: BadgeCheck, to: '/license' },
       { label: 'nav.mail', icon: Mail, to: '/mail' },
       { label: 'nav.settings', icon: Settings, to: '/settings' },
+      { label: 'nav.supported', icon: ClipboardCheck, to: '/support' },
     ],
   },
 ];

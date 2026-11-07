@@ -54,6 +54,7 @@ Tick a box only when all of these hold. Never tick partly done work.
 - Configuration, API contracts, docs and `docs/product/status.md` are updated together.
 - The user-facing part is reachable from the console or portal UI, when the item has one.
 - The evidence link points to the commit or test run that proves it.
+- A row in `pkg/capabilities/declaration.json` that names the item moves with the tick; `make test` fails until it does ([ADR 0042](../../decisions/0042-capability-declaration-follows-the-roadmap.md)).
 
 Item format: `- [ ] ID Title (phase) - Catalog: Fnnn` and when done
 `- [x] ID Title (phase) - Catalog: Fnnn - Evidence: <commit or run>`.

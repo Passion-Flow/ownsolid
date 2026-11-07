@@ -3,6 +3,7 @@ FROM docker.io/library/golang:1.27.3-bookworm@sha256:d9b6a1beb9474adc2a1ce842573
 ENV CGO_ENABLED=0 GOWORK=off GOFLAGS=-mod=readonly
 WORKDIR /src/services/control
 COPY api/ /src/api/
+COPY pkg/capabilities/ /src/pkg/capabilities/
 COPY pkg/license/ /src/pkg/license/
 COPY tools/release/offline/ /src/tools/release/offline/
 COPY services/control/ /src/services/control/

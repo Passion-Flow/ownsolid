@@ -1,0 +1,110 @@
+{
+  "format_version": 1,
+  "registries": [
+    {
+      "id": "node-operating-systems",
+      "name": "Node operating systems",
+      "description": "What a node that joins the fleet can run.",
+      "options": [
+        { "id": "linux-amd64", "name": "Linux, x86-64", "state": "ready", "roadmap_item": "FLT-114", "note": "Run end to end on an Ubuntu 24.04 host." },
+        { "id": "linux-arm64", "name": "Linux, arm64", "state": "planned", "roadmap_item": "CMP-217", "reason": "The agent is not built or tested for arm64 yet." },
+        { "id": "domestic-linux", "name": "Kylin, UOS, openEuler", "state": "planned", "roadmap_item": "CMP-203", "reason": "Not tested yet; these arrive with the work on domestic CPUs and operating systems." },
+        { "id": "windows-server", "name": "Windows Server", "state": "planned", "roadmap_item": "CMP-218", "reason": "The agent runs only on Linux. Windows nodes come after arm64." },
+        { "id": "macos", "name": "macOS", "state": "unsupported", "reason": "A Mac is a development machine, not a fleet node, so the agent does not run on one." }
+      ]
+    },
+    {
+      "id": "accelerators",
+      "name": "Accelerators",
+      "description": "What a node can offer to run work on.",
+      "options": [
+        { "id": "cpu-only", "name": "CPU only", "state": "ready", "roadmap_item": "FLT-114", "note": "A node without an accelerator joins the fleet and runs tasks. Serving models on it is not ready yet." },
+        { "id": "nvidia", "name": "NVIDIA", "state": "planned", "roadmap_item": "GPU-101", "reason": "Health, allocation and serving on NVIDIA GPUs are still being built." },
+        { "id": "ascend", "name": "Huawei Ascend", "state": "planned", "roadmap_item": "GPU-204", "reason": "Comes after NVIDIA." },
+        { "id": "amd", "name": "AMD ROCm", "state": "planned", "roadmap_item": "GPU-401", "reason": "Comes after NVIDIA and Ascend." },
+        { "id": "hygon", "name": "Hygon DCU", "state": "planned", "roadmap_item": "GPU-401", "reason": "Comes after NVIDIA and Ascend." },
+        { "id": "cambricon", "name": "Cambricon", "state": "planned", "roadmap_item": "GPU-401", "reason": "Comes after NVIDIA and Ascend." },
+        { "id": "kunlunxin", "name": "Kunlunxin", "state": "planned", "roadmap_item": "GPU-401", "reason": "Comes after NVIDIA and Ascend." },
+        { "id": "moore-threads", "name": "Moore Threads", "state": "planned", "roadmap_item": "GPU-401", "reason": "Comes after NVIDIA and Ascend." },
+        { "id": "metax", "name": "MetaX", "state": "planned", "roadmap_item": "GPU-401", "reason": "Comes after NVIDIA and Ascend." },
+        { "id": "intel", "name": "Intel", "state": "planned", "roadmap_item": "GPU-401", "reason": "Comes after NVIDIA and Ascend." },
+        { "id": "other-hardware", "name": "Apple silicon, TPU, AWS Neuron", "state": "planned", "roadmap_item": "CMP-412", "reason": "Comes last, on request." }
+      ]
+    },
+    {
+      "id": "serving-engines",
+      "name": "Serving engines",
+      "description": "What a model can be served with.",
+      "options": [
+        { "id": "vllm", "name": "vLLM", "state": "planned", "roadmap_item": "SRV-102", "reason": "Serving imported models with vLLM is still being built." },
+        { "id": "sglang", "name": "SGLang", "state": "planned", "roadmap_item": "SRV-204", "reason": "Comes after vLLM." },
+        { "id": "mindie", "name": "MindIE", "state": "planned", "roadmap_item": "SRV-205", "reason": "Comes with Ascend." },
+        { "id": "vllm-ascend", "name": "vLLM on Ascend", "state": "planned", "roadmap_item": "SRV-205", "reason": "Comes with Ascend." },
+        { "id": "xinference", "name": "Xinference", "state": "planned", "roadmap_item": "CMP-409", "reason": "Comes after the main engines, on the same engine contract." },
+        { "id": "tgi", "name": "Text Generation Inference", "state": "planned", "roadmap_item": "CMP-409", "reason": "Comes after the main engines, on the same engine contract." },
+        { "id": "llama-cpp", "name": "llama.cpp", "state": "planned", "roadmap_item": "CMP-409", "reason": "Comes after the main engines, on the same engine contract." },
+        { "id": "ollama", "name": "Ollama", "state": "planned", "roadmap_item": "CMP-409", "reason": "Comes after the main engines, on the same engine contract." },
+        { "id": "tensorrt-llm", "name": "TensorRT-LLM", "state": "planned", "roadmap_item": "CMP-409", "reason": "Comes after the main engines, on the same engine contract." },
+        { "id": "transformers", "name": "Transformers", "state": "planned", "roadmap_item": "CMP-409", "reason": "Comes after the main engines, on the same engine contract." },
+        { "id": "other-engines", "name": "Triton, LMDeploy, MLX, OpenVINO, ONNX Runtime, KServe, Ray Serve", "state": "planned", "roadmap_item": "CMP-409", "reason": "Comes after the main engines, on the same engine contract." }
+      ]
+    },
+    {
+      "id": "catalogue-sources",
+      "name": "Catalogue sources",
+      "description": "Where the index of models comes from.",
+      "options": [
+        { "id": "signed-index", "name": "Signed index bundle", "state": "planned", "roadmap_item": "MOD-113", "reason": "The index that ships with the product is still being built." },
+        { "id": "hugging-face", "name": "Hugging Face", "state": "planned", "roadmap_item": "MOD-114", "reason": "Arrives through the index; searching it offline is still being built." },
+        { "id": "modelscope", "name": "ModelScope", "state": "planned", "roadmap_item": "MOD-114", "reason": "Arrives through the index; searching it offline is still being built." },
+        { "id": "internal-mirror", "name": "Your own mirror", "state": "planned", "roadmap_item": "MOD-101", "reason": "Importing from local media or an internal mirror is still being built." }
+      ]
+    },
+    {
+      "id": "acquisition-modes",
+      "name": "How weights arrive",
+      "description": "How model files reach an installation.",
+      "options": [
+        { "id": "air-gapped", "name": "Air-gapped transfer", "state": "planned", "roadmap_item": "MOD-116", "reason": "Importing one verified bundle is still being built." },
+        { "id": "relay", "name": "Through a relay", "state": "planned", "roadmap_item": "MOD-117", "reason": "Comes after air-gapped transfer." },
+        { "id": "direct", "name": "Direct download", "state": "planned", "roadmap_item": "MOD-118", "reason": "Comes after air-gapped transfer, for deployments that allow outbound traffic." }
+      ]
+    },
+    {
+      "id": "install-sizes",
+      "name": "Installation sizes",
+      "description": "What the installer can set up. Any other size is refused before anything changes.",
+      "options": [
+        { "id": "single-node", "name": "Single node", "state": "ready", "roadmap_item": "DEL-001", "note": "Installs and runs with no network route." },
+        { "id": "ha", "name": "High availability", "state": "planned", "roadmap_item": "REL-101", "reason": "Control-plane replicas and a database standby are still being built." },
+        { "id": "cell", "name": "One cell", "state": "planned", "roadmap_item": "FLT-111", "reason": "Creating and upgrading a Kubernetes cell is still being built." },
+        { "id": "multi-cell", "name": "Several cells", "state": "planned", "roadmap_item": "ARC-202", "reason": "Comes after one cell." },
+        { "id": "multi-site", "name": "Several sites", "state": "planned", "roadmap_item": "ARC-302", "reason": "Comes after several cells." }
+      ]
+    },
+    {
+      "id": "business-databases",
+      "name": "Business databases",
+      "description": "Where the platform keeps its own records.",
+      "options": [
+        { "id": "postgresql", "name": "PostgreSQL", "state": "ready", "roadmap_item": "ARC-003", "note": "PostgreSQL 18.6 with pgvector 0.8.7." },
+        { "id": "mysql", "name": "MySQL", "state": "planned", "roadmap_item": "CMP-202", "reason": "Its schema lacks what the current release needs." },
+        { "id": "dameng", "name": "Dameng", "state": "planned", "roadmap_item": "CMP-201", "reason": "Its schema lacks what the current release needs." },
+        { "id": "kingbase", "name": "KingbaseES", "state": "planned", "roadmap_item": "CMP-201", "reason": "Not built yet." },
+        { "id": "opengauss", "name": "openGauss", "state": "planned", "roadmap_item": "CMP-201", "reason": "Not built yet." }
+      ]
+    },
+    {
+      "id": "single-sign-on",
+      "name": "Single sign-on",
+      "description": "Which identity providers people can sign in through.",
+      "options": [
+        { "id": "gitea", "name": "Gitea", "state": "ready", "roadmap_item": "IAM-117", "note": "Run end to end against Gitea 28.1." },
+        { "id": "oidc", "name": "Generic OIDC", "state": "planned", "roadmap_item": "IAM-102", "reason": "Connectors speak only to Gitea today." },
+        { "id": "ldap", "name": "LDAP and Active Directory", "state": "planned", "roadmap_item": "IAM-103", "reason": "Not built yet." },
+        { "id": "saml", "name": "SAML 2.0", "state": "planned", "roadmap_item": "IAM-104", "reason": "Not built yet." },
+        { "id": "identity-products", "name": "Entra ID, Okta, Keycloak, Authing, Feishu, DingTalk, WeCom", "state": "planned", "roadmap_item": "CMP-209", "reason": "Comes after generic OIDC and SAML." }
+      ]
+    }
+  ]
+}

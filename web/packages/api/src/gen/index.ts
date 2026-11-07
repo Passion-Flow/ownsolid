@@ -3,6 +3,7 @@
 
 export type * as applicationsContract from './applications.ts';
 export type * as artifactstoresContract from './artifactstores.ts';
+export type * as capabilitiesContract from './capabilities.ts';
 export type * as cloudInventoryContract from './cloud-inventory.ts';
 export type * as componentsContract from './components.ts';
 export type * as datasetsContract from './datasets.ts';

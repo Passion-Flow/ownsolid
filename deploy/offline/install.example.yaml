@@ -7,7 +7,7 @@ format_version: 1
 
 topology:
   # Optional, default single-node. Enum single-node, ha, cell, multi-cell, multi-site.
-  # This release runs single-node only; the others fail with
+  # `ownsolid-install capabilities` lists which this release runs; the others fail with
   # CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED and change nothing.
   size: single-node
 

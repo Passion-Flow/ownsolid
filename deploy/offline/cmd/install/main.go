@@ -16,7 +16,8 @@ import (
 
 const usage = "usage: ownsolid-install validate|apply|status --config <install.yaml>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
-	"       ownsolid-install restore --config <install.yaml> --from <backup directory>"
+	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
+	"       ownsolid-install capabilities"
 
 func main() {
 	if e := run(os.Args[1:], os.Stdout); e != nil {
@@ -28,6 +29,12 @@ func main() {
 func run(args []string, out io.Writer) error {
 	if len(args) < 1 {
 		return errors.New(usage)
+	}
+	if args[0] == "capabilities" {
+		if len(args) != 1 {
+			return errors.New(usage)
+		}
+		return install.WriteCapabilities(out)
 	}
 	flags := flag.NewFlagSet("ownsolid-install", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)

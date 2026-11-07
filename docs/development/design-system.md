@@ -149,6 +149,9 @@ this browser. The server checks access to the workspace on every request.
     on the `BulkBar`. A poll reads with `background: true` and a failed one keeps the rows on screen.
   - A secret shown once stays out of any command on the page: it reaches its file by paste, so it
     never lands in shell history or a process list.
+- **What is supported:** a form or page that names a registry's options reads them with `capabilitiesQuery`
+  from the shell, never from text on the page; a failed read leaves that line out and never blocks the form. An
+  option's text is keyed `capability.<registry>.<option>.*` ([research](../research/capability-registry.md)).
 - **Overview:** quick actions, tiles, Needs attention beside Finish setup ([research](../research/console-overview.md)).
   Attention items carry a link that opens the fix; each source fails on its own, with one notice per
   kind of failure; a page that could not check never says all is clear. The checklist follows real

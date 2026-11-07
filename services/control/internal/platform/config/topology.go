@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 
+	"github.com/Passion-Flow/ownsolid/pkg/capabilities"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -32,11 +33,18 @@ func (s TopologySize) Known() bool {
 	return false
 }
 
-// Supported reports whether this release can run the size. A size becomes
-// supported only when its roadmap item is implemented and tested; selecting
-// a known but unsupported size fails at startup instead of running a
-// different shape than the operator asked for.
-func (s TopologySize) Supported() bool { return s == TopologySingleNode }
+// Supported reports whether this release can run the size, from the capability declaration.
+// A size becomes ready only when its roadmap item is implemented and tested; selecting a known
+// but unsupported size fails at startup instead of running a different shape than the operator
+// asked for.
+func (s TopologySize) Supported() bool {
+	sizes, found := capabilities.Lookup(capabilities.InstallSizes)
+	if !found {
+		return false
+	}
+	option, found := sizes.Lookup(string(s))
+	return found && option.State == capabilities.Ready
+}
 
 // TopologyConfiguration selects the deployment size. Omitting the group or
 // the size selects single-node.

@@ -3,6 +3,7 @@ go 1.27.0
 use (
 	./api
 	./deploy/offline
+	./pkg/capabilities
 	./pkg/license
 	./services/agent
 	./services/control

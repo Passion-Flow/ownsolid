@@ -272,6 +272,9 @@ scratch module and run it where the test key lives.
 other than the administrator in `OWNSOLID_LIVE_OTHER_ACCOUNT`. The API has no deletion, so each run
 leaves one disabled workspace behind.
 
+`live-support.spec.ts` needs only the variables above: it checks a request without a session is refused, then
+compares the running server's page with `pkg/capabilities/declaration.json`.
+
 `live-audit.spec.ts` needs only the variables above: signing in writes the event it then reads, finds
 by family and by request, and opens from its own link.
 

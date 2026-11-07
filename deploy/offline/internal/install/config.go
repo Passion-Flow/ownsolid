@@ -19,16 +19,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Passion-Flow/ownsolid/pkg/capabilities"
 	"go.yaml.in/yaml/v3"
 )
 
 const FormatVersion = 1
 
-// Topology sizes share one configuration format. A size is accepted only when this
-// release can run it; the others are refused before anything changes on the host.
+// SingleNode is the size an omitted topology selects. Topology sizes share one configuration
+// format; which of them this release can run comes from the capability declaration.
 const SingleNode = "single-node"
-
-var topologySizes = map[string]bool{SingleNode: true, "ha": true, "cell": true, "multi-cell": true, "multi-site": true}
 
 var (
 	projectPattern = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,62}$`)
@@ -234,15 +233,34 @@ func invalid(field, rule string) error {
 	return fmt.Errorf("INSTALL_CONFIG_INVALID: %s %s", field, rule)
 }
 
+// validateTopologySize accepts a declared size this release can run, and refuses the others
+// before anything changes on the host, with the declared reason.
+func validateTopologySize(size string) error {
+	sizes, found := capabilities.Lookup(capabilities.InstallSizes)
+	if !found {
+		return errors.New("CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED: this release declares no installation sizes")
+	}
+	option, found := sizes.Lookup(size)
+	if !found {
+		names := make([]string, len(sizes.Options))
+		for i, known := range sizes.Options {
+			names[i] = known.ID
+		}
+		return invalid("topology.size", "must be one of "+strings.Join(names, ", "))
+	}
+	if option.State != capabilities.Ready {
+		return fmt.Errorf("CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED: this release cannot run %s: %s (roadmap item %s). "+
+			"`ownsolid-install capabilities` lists what it can", size, option.Reason, option.RoadmapItem)
+	}
+	return nil
+}
+
 func (c Config) Validate() error {
 	if c.FormatVersion != FormatVersion {
 		return invalid("format_version", fmt.Sprintf("must be %d", FormatVersion))
 	}
-	if !topologySizes[c.Topology.Size] {
-		return invalid("topology.size", "must be single-node, ha, cell, multi-cell or multi-site")
-	}
-	if c.Topology.Size != SingleNode {
-		return fmt.Errorf("CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED: this release runs %s only, not %s", SingleNode, c.Topology.Size)
+	if e := validateTopologySize(c.Topology.Size); e != nil {
+		return e
 	}
 	if !canonicalPath(c.InstallRoot) || c.InstallRoot == "/" {
 		return invalid("install_root", "must be an absolute clean path below /")

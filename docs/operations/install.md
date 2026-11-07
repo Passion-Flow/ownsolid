@@ -243,7 +243,7 @@ instead of issuing a second one.
 
 | Code | Meaning |
 | --- | --- |
-| `CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED` | This release cannot run that size. Nothing changed |
+| `CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED` | This release cannot run that size; the message says why and names the roadmap item. Nothing changed |
 | `INSTALL_CONFIG_INVALID` | A field is unknown or invalid; the message names it |
 | `INSTALL_ROOT_REQUIRED` | Run `apply` as root |
 | `INSTALL_DOCKER_UNAVAILABLE`, `INSTALL_COMPOSE_UNAVAILABLE` | Install or start Docker and the Compose plugin |
@@ -254,6 +254,10 @@ instead of issuing a second one.
 | `INSTALL_BUSY` | A backup or restore is running on this installation; apply again when it ends |
 
 ## Limits of this release
+
+Every option a release offers, and why any of them cannot be chosen yet, is one declaration. Run
+`ownsolid-install capabilities` before you have a configuration, or open **What is supported** in the
+console or the portal; both read the same list, and `apply` refuses a size it marks as not ready.
 
 - The console and portal currently offer sign-in, sign-out, password reset, registration
   by invitation (portal), single sign-on and the application frame. The console's

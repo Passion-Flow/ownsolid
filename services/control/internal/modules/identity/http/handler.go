@@ -44,6 +44,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/notifications"
 	notificationhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/notifications/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/preferences"
+	capabilityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/capabilities/http"
 	preferencehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/preferences/http"
 	privateclusterhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/privateclusters/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/taskdeliveries"
@@ -743,6 +744,12 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 			return nil, 0, e
 		}
 		return h.Notifications.Handle(r, a, requestID)
+	}
+	if capabilityhttp.Owns(path) {
+		if _, e := s.Authenticate(ctx, session, audience); e != nil {
+			return nil, 0, e
+		}
+		return capabilityhttp.Handle(r)
 	}
 	if preferencehttp.Owns(path) {
 		a, e := s.Authenticate(ctx, session, audience)

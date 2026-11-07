@@ -1,10 +1,10 @@
 # Single entry point for development tasks. Run `make help` for the list.
 PYTHON ?= python3
-GO_MODULES := api pkg/license tools/release/offline tools/dev/simulator deploy/offline services/agent services/control tests/e2e
+GO_MODULES := api pkg/capabilities pkg/license tools/release/offline tools/dev/simulator deploy/offline services/agent services/control tests/e2e
 DOCKER ?= docker
 CONTROL_IMAGE ?= ownsolid/control:dev
 E2E_BIN ?= bin/e2e
-IMAGE_PATHS := api pkg/license deploy/images/control tools/release/offline services/control runtimes/data-processing web
+IMAGE_PATHS := api pkg/capabilities pkg/license deploy/images/control tools/release/offline services/control runtimes/data-processing web
 
 .PHONY: help check check-layout check-roadmap check-web test-tools web-install generate build test test-web-browser test-agent-cost image-control e2e-binaries test-offline
 

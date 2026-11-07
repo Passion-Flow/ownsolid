@@ -31,6 +31,13 @@ export {
 } from './client.ts';
 export type * from './gen/index.ts';
 export {
+  listCapabilities,
+  type CapabilityDeclaration,
+  type CapabilityOption,
+  type CapabilityRegistry,
+  type CapabilityState,
+} from './capabilities.ts';
+export {
   getMe,
   getSessionStatus,
   register,

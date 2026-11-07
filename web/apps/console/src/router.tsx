@@ -3,6 +3,7 @@ import {
   createAccountRoute,
   createApplication,
   createFrameRoute,
+  createSupportRoute,
   publicRoutes,
   rootRoute,
 } from '@ownsolid/shell';
@@ -117,12 +118,15 @@ const settingsRoute = createRoute({
 
 const accountRoute = createAccountRoute(frameRoute);
 
+const supportRoute = createSupportRoute(frameRoute);
+
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
   authenticatedRoute.addChildren([
     frameRoute.addChildren([
       homeRoute,
       accountRoute,
+      supportRoute,
       nodesRoute,
       pacingRoute,
       nodeRoute,

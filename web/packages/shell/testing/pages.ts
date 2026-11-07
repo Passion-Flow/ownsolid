@@ -35,8 +35,40 @@ async function openAccount(page: Page, control: ControlPlane): Promise<void> {
   await page.getByRole('heading', { name: 'Account', level: 1 }).waitFor();
 }
 
+async function openSupport(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/support');
+  await page.getByRole('heading', { name: 'What is supported', level: 1 }).waitFor();
+}
+
 /** The pages the shell defines, in every state worth checking on its own. */
 export const shellPages: readonly PageState[] = [
+  {
+    name: 'what is supported',
+    path: '/support',
+    open: async (page, control) => {
+      await openSupport(page, control);
+      await page.getByRole('heading', { name: 'Accelerators', level: 2 }).waitFor();
+    },
+  },
+  {
+    name: 'what is supported, nothing matches',
+    path: '/support',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/support?q=nothing-has-this-name');
+      await page.getByRole('heading', { name: 'No option matches' }).waitFor();
+    },
+  },
+  {
+    name: 'what is supported, read failed',
+    path: '/support',
+    open: async (page, control) => {
+      control.capabilitiesProblem = { status: 503, code: 'SERVICE_NOT_READY' };
+      await openSupport(page, control);
+      await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
   {
     name: 'sign-in',
     path: '/sign-in',

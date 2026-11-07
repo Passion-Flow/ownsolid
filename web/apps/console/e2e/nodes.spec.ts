@@ -121,6 +121,22 @@ test.describe('the list', () => {
     await expect(row(page, 'gpu-a02')).toHaveCount(0);
   });
 
+  test('the add dialog names the systems that can join, and works without them', async ({
+    page,
+  }) => {
+    await page.goto('/nodes#add');
+    const dialog = page.getByRole('dialog', { name: 'Add a node' });
+    await expect(dialog).toContainText('This release joins nodes running: Linux, x86-64.');
+    await dialog.getByRole('link', { name: 'See what is supported' }).click();
+    await expect(page.getByRole('heading', { name: 'What is supported', level: 1 })).toBeFocused();
+
+    control.capabilitiesProblem = { status: 503, code: 'SERVICE_NOT_READY' };
+    await page.goto('/nodes#add');
+    const again = page.getByRole('dialog', { name: 'Add a node' });
+    await expect(again.getByLabel('Node name')).toBeVisible();
+    await expect(again).not.toContainText('This release joins');
+  });
+
   test('keeps removed nodes out unless asked for', async ({ page }) => {
     control.nodes = [{ ...node }, { ...offlineNode, status: 'removed' }];
     await page.goto('/nodes');

@@ -9,7 +9,12 @@ import {
   type Node,
 } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
-import { runtimeConfigQuery, useWorkspaces } from '@ownsolid/shell';
+import {
+  capabilitiesQuery,
+  readyCapabilityNames,
+  runtimeConfigQuery,
+  useWorkspaces,
+} from '@ownsolid/shell';
 import {
   Button,
   CodeBlock,
@@ -22,6 +27,7 @@ import {
   TextField,
 } from '@ownsolid/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { useEffect, useState, type SubmitEvent } from 'react';
 
 const configDirectory = '/etc/ownsolid-agent';
@@ -138,6 +144,8 @@ export function AddNodeDialog({
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const workspaces = useWorkspaces();
+  const capabilities = useQuery(capabilitiesQuery());
+  const systems = readyCapabilityNames(t, capabilities.data, 'node-operating-systems');
   const [name, setName] = useState('');
   const [chosen, setChosen] = useState<string | null>(null);
   const workspace = chosen ?? workspaces.active?.id ?? '';
@@ -213,6 +221,14 @@ export function AddNodeDialog({
                 setChosen(event.target.value);
               }}
             />
+          ) : null}
+          {systems.length > 0 ? (
+            <p className="m-0 text-[13px] text-text-2">
+              {t('nodes.add.systems', { systems: systems.join(', ') })}{' '}
+              <Link to="/support" className="text-accent-ink underline">
+                {t('nodes.add.systems.link')}
+              </Link>
+            </p>
           ) : null}
         </form>
       )}

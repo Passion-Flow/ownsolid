@@ -24,6 +24,7 @@ Modules own business state and authorization. HTTP subpackages adapt bounded tra
 | [plugins](plugins) | Signed built-in tool installation and current Workspace grants; not arbitrary downloaded code execution |
 | [applications](applications) | Portal application projection over workflow owners |
 | [preferences](preferences) | User preference persistence |
+| [capabilities](capabilities) | Serves the capability declaration from `pkg/capabilities`; no state of its own |
 | [notifications](notifications) | User-visible terminal notifications and maintenance |
 | [mongodatasets](mongodatasets) | Read-only granted MongoDB collection adapter, snapshot-session read |
 | [cloudinventory](cloudinventory) | Configured AWS inventory discovery/import; not cloud provisioning |

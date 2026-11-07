@@ -4,6 +4,7 @@ import {
   createAccountRoute,
   createApplication,
   createFrameRoute,
+  createSupportRoute,
   publicRoutes,
   rootRoute,
 } from '@ownsolid/shell';
@@ -20,9 +21,11 @@ const homeRoute = createRoute({
 
 const accountRoute = createAccountRoute(frameRoute);
 
+const supportRoute = createSupportRoute(frameRoute);
+
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
-  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute, accountRoute])]),
+  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute, accountRoute, supportRoute])]),
 ]);
 
 /** The portal application: its router and query client. */

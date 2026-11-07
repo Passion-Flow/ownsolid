@@ -132,8 +132,11 @@ what is scheduled here), Metrics, Activity, Configuration.
 
 **Does** every option the product offers, and which work in this release.
 **Content** one table per registry: operating systems, accelerators, engines,
-catalogue sources, acquisition modes. Columns: option, state, reason, roadmap item.
-**Click** a roadmap item links to the public item.
+catalogue sources, acquisition modes, installation sizes, business databases, single
+sign-on. Columns: option, state, reason, roadmap item. Tiles by state and a search filter
+it from the address.
+**Click** a roadmap item copies its ID; no public roadmap exists and an air-gapped console
+could not open one ([ADR 0042](../../decisions/0042-capability-declaration-follows-the-roadmap.md)).
 **Dialogs** none.
 **Empty** not applicable.
 **Done when** it is generated from the capability registry, so it cannot drift from

@@ -1,5 +1,7 @@
 // A scripted control plane for browser tests. It speaks the real wire format of the
 // paths the shell uses, so specs exercise the production transport end to end.
+import type { CapabilityDeclaration } from '@ownsolid/api';
+import { readFileSync } from 'node:fs';
 import type { Page, Route } from '@playwright/test';
 import { emptyNodeScript, routeNodes, type NodeScript } from './nodes.ts';
 import { emptyTaskScript, routeTasks, type TaskScript } from './tasks.ts';
@@ -158,6 +160,13 @@ export interface ScriptedProblem {
 }
 
 /** Mutable state of the mock, so a spec can change it between steps. */
+/** The declaration the product ships, so the flows cannot pass on rows it does not have. */
+export function declaredCapabilities(): CapabilityDeclaration {
+  const path = new URL('../../../../pkg/capabilities/declaration.json', import.meta.url);
+  const { registries } = JSON.parse(readFileSync(path, 'utf8')) as CapabilityDeclaration;
+  return { registries };
+}
+
 export interface ControlPlane
   extends
     TaskScript,
@@ -183,6 +192,10 @@ export interface ControlPlane
   ssoBindings: (typeof giteaBinding)[];
   /** Fails the linked provider list with this problem while set. */
   ssoBindingsProblem: ScriptedProblem | null;
+  /** The capability declaration; the product's own unless a test replaces it. */
+  capabilities: CapabilityDeclaration;
+  /** Fails reading the capability declaration with this problem while set. */
+  capabilitiesProblem: ScriptedProblem | null;
   /** This session started through the provider, so unlinking it ends the session. */
   sessionFromProvider: boolean;
   /** Answers the next unlink with this failure instead of unlinking. */
@@ -298,6 +311,8 @@ export async function mockControlPlane(
     user: { ...user },
     password: account.password,
     nextProfileSave: null,
+    capabilities: declaredCapabilities(),
+    capabilitiesProblem: null,
     nextPasswordChange: null,
     ssoBindings: [],
     ssoBindingsProblem: null,
@@ -554,6 +569,11 @@ export async function mockControlPlane(
     item.read_at = '2026-11-04T09:00:00Z';
     return data(route, item);
   });
+  await page.route('**/api/v1/capabilities', (route) =>
+    state.capabilitiesProblem
+      ? problem(route, state.capabilitiesProblem)
+      : data(route, state.capabilities),
+  );
   await page.route('**/api/v1/preferences', (route) => {
     const request = route.request();
     if (request.method() === 'GET') {

@@ -42,6 +42,7 @@ export const WelcomePage = lazyRouteComponent(() => import('./welcome-page.tsx')
 
 /** The account page. Its code loads with the route that shows it. */
 const AccountPage = lazyRouteComponent(() => import('./account-page.tsx'), 'AccountPage');
+const SupportPage = lazyRouteComponent(() => import('./support-page.tsx'), 'SupportPage');
 
 /** Router context every application provides. */
 export interface AppContext {
@@ -201,6 +202,15 @@ export function createAccountRoute(frameRoute: AnyRoute) {
     getParentRoute: () => frameRoute,
     path: accountPath,
     component: AccountPage,
+  });
+}
+
+/** The page that says what this release supports, the same in both entrances. */
+export function createSupportRoute(frameRoute: AnyRoute) {
+  return createRoute({
+    getParentRoute: () => frameRoute,
+    path: '/support',
+    component: SupportPage,
   });
 }
 
