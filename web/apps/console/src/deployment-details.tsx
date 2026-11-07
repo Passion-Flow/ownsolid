@@ -83,12 +83,8 @@ export function ReportedFailure({ code }: { code: string }) {
   const detail = `problem.${code}.detail`;
   const known = knows(title) && knows(detail);
   return (
-    <Notice
-      tone="critical"
-      title={known ? t(title as TranslationKey) : t('services.failure.unknown')}
-    >
-      {known ? t(detail as TranslationKey) : null}{' '}
-      <span className="font-mono text-[12px] text-text-3">{code}</span>
+    <Notice tone="critical" title={known ? t(title) : t('services.failure.unknown')}>
+      {known ? t(detail) : null} <span className="font-mono text-[12px] text-text-3">{code}</span>
     </Notice>
   );
 }

@@ -278,6 +278,13 @@ OWNSOLID_LIVE_MODEL_BUNDLE=<bundle.tar> OWNSOLID_LIVE_MODEL_IMPOSTOR=<impostor.t
   <the variables above> pnpm exec playwright test live-models
 ```
 
+`live-services.spec.ts` needs a ready model and two commands. `OWNSOLID_LIVE_SERVING_AGENT_COMMAND`
+starts a real agent: it receives the token on stdin and, as `$1`, the configuration the console's
+*Add a node* dialog wrote. `OWNSOLID_LIVE_SCRIPTED_NODE_COMMAND` starts a node that speaks the agent
+protocol and reports a synthetic GPU: it receives the token on stdin and the node's name as `$1`. The
+first flow ends at the refusal a host with no GPU earns. The second carries a deployment through a real
+control plane and database, and no model runs, so it says nothing about serving on real hardware.
+
 `live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
 to the license history. It needs test files signed with the key the installation trusts.
 `OWNSOLID_LIVE_LICENSE_COMMAND` reads the license state as JSON on standard input and prints a JSON

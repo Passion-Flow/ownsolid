@@ -68,7 +68,8 @@ function status(phase: Phase, word: Status, error: string | null = null): Deploy
  */
 export function deploymentStatus(d: Deployment): DeploymentStatus {
   if (d.removed_at !== null) return status('stopped', 'removed');
-  const error = d.task_error_code ?? (d.observation?.error_code || null);
+  // An observation with nothing wrong carries an empty code, which reads as no failure.
+  const error = d.task_error_code ?? d.observation?.error_code ?? null;
   const working = d.task_state === 'pending' || d.task_state === 'running';
   if (working || d.observed_state === 'loading') {
     if (d.desired_state === 'removed') return status('changing', 'removing');

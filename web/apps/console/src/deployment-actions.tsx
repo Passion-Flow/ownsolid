@@ -236,7 +236,11 @@ export function DeploymentActions({
   const now = (action: DeploymentAction) => {
     act.mutate(
       { action, reason: t(`services.${action}.reason.default`) },
-      { onSuccess: () => toast({ message: t(`services.${action}.done`, { name }) }) },
+      {
+        onSuccess: () => {
+          toast({ message: t(`services.${action}.done`, { name }) });
+        },
+      },
     );
   };
   const changing = act.isPending;
