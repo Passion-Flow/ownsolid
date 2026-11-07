@@ -69,6 +69,7 @@ func (s *Service) RunWakes(ctx context.Context) {
 	ticker := time.NewTicker(time.Duration(policy.OutboxPollMilliseconds) * time.Millisecond)
 	defer ticker.Stop()
 	defer s.delivering.Store(false)
+	defer s.views.setOpen(false)
 	for {
 		bounded, cancel := context.WithTimeout(ctx, timeout)
 		e := reader.Start(bounded)
@@ -77,6 +78,8 @@ func (s *Service) RunWakes(ctx context.Context) {
 			e = s.deliverWakes(bounded, reader)
 		}
 		cancel()
+		// Views are served only while a read has just shown the reader keeps up.
+		s.views.setOpen(e == nil)
 		if e != nil && ctx.Err() == nil {
 			s.wakeCounters.failures.Add(1)
 			slog.Warn("node_task_wakes_read_failed", "code", "STORAGE_UNAVAILABLE")
@@ -97,8 +100,15 @@ func (s *Service) deliverWakes(ctx context.Context, reader *outbox.Reader) error
 			return e
 		}
 		for _, v := range events {
-			if v.Topic == topicTaskWritten {
+			switch v.Topic {
+			case topicTaskWritten:
 				s.wake.wake(v.Key)
+			case topicNodeViewChanged:
+				// A claim held for this node looks at once, and is refused if it should be.
+				s.views.drop(v.Key)
+				s.wake.wake(v.Key)
+			case topicNodeViewsChanged:
+				s.views.dropAll()
 			}
 		}
 		s.wakeCounters.events.Add(uint64(len(events)))
@@ -125,12 +135,12 @@ func (s *Service) trimWakes(ctx context.Context) error {
 	})
 }
 
-// WakeSamples reports the outbox reader for the metrics store.
+// WakeSamples reports the outbox reader and the node views it keeps current for the metrics store.
 func (s *Service) WakeSamples() []telemetrystore.Sample {
 	c := &s.wakeCounters
-	return []telemetrystore.Sample{
-		{Name: "ownsolid_node_task_wake_events_total", Value: float64(c.events.Load())},
-		{Name: "ownsolid_node_task_wake_read_failures_total", Value: float64(c.failures.Load())},
-		{Name: "ownsolid_node_task_wake_lag_seconds", Value: time.Duration(c.lagNanoseconds.Load()).Seconds()},
-	}
+	return append(s.views.samples(),
+		telemetrystore.Sample{Name: "ownsolid_node_task_wake_events_total", Value: float64(c.events.Load())},
+		telemetrystore.Sample{Name: "ownsolid_node_task_wake_read_failures_total", Value: float64(c.failures.Load())},
+		telemetrystore.Sample{Name: "ownsolid_node_task_wake_lag_seconds", Value: time.Duration(c.lagNanoseconds.Load()).Seconds()},
+	)
 }
