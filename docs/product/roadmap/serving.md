@@ -19,7 +19,7 @@ Reviewed 2026-11-07 against GPUStack, KServe, Kubernetes Deployments and vLLM do
 - [ ] SRV-108 CPU serving path for small models when no GPU is present (P1) - Catalog: F160, F188
 - [ ] SRV-109 Streaming, cancellation and timeouts end to end (P1) - Catalog: F077, F171
 - [ ] SRV-110 Verified on real NVIDIA hardware: deploy, chat, stream, LoRA (RTX 3090 run on 2026-11-04 used the inherited code; repeat on ownsolid) (P1)
-- [ ] SRV-111 Model services pages: the list, a deployment's own page and the deploy flow (S-203, S-204, S-205) (P1)
+- [x] SRV-111 Model services pages: the list, a deployment's own page and the deploy flow (S-203, S-204, S-205) (P1) - Evidence: 0a1a46a; live run on an installation, 2026-11-08: real agent to the no-GPU refusal, scripted node with a synthetic GPU through deploy, check, stop, start and remove; no model ran (SRV-110), and SRV-114 holds what the server cannot give yet
 - [ ] SRV-112 Name and describe a deployment, unique in its workspace, shown wherever it is listed (P1)
 - [ ] SRV-113 Deployment revision history with the difference between revisions and rollback to one (P1)
 - [ ] SRV-114 Finish S-204 and S-205 once their server exists: requests and p95 in the list, Traffic and Logs tabs on one clock, the Scale and Roll back dialogs, and a rolling update shown replica by replica (P1)
