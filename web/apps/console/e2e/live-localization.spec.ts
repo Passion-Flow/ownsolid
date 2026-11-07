@@ -38,7 +38,10 @@ function decoded(message: string): string {
 
 function mailTo(address: string): string | undefined {
   const mailbox = execSync(readMail, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-  return mailbox.split(/(?=^Return-Path:|^From: )/m).find((message) => message.includes(address));
+  // The files are joined with nothing between them, so a message starts wherever its headers do.
+  return mailbox
+    .split(/(?=From: [^\r\n]+\r?\nTo: )/)
+    .find((message) => message.includes(`To: ${address}`));
 }
 
 test('reads in Chinese from the pages to the email', async ({ page }) => {

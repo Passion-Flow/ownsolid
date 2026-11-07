@@ -225,6 +225,10 @@ OWNSOLID_LIVE_MAIL_COMMAND='ssh ownsolid-cpu "cat <sink directory>/out/*.eml 2>/
   <the variables above, with the portal host in the host rules> pnpm exec playwright test live-users
 ```
 
+`live-localization` reads every console page of the installation in Chinese, then follows an
+invitation to its email, with the same variables; in `web/apps/portal` it reads the portal without
+`OWNSOLID_LIVE_MAIL_COMMAND`, with the portal's origin and certificate key.
+
 The certificate's public key is pinned, so the browser still refuses any other certificate.
 The spec ignores the Mac's system proxy, which cannot reach a forwarded port.
 The spec signs in once with a wrong password, so a few runs in a row against the same
