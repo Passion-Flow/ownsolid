@@ -54,7 +54,11 @@ func (s *Service) machineWithin(ctx context.Context, id, credential string, fn f
 				return e
 			}
 		}
-		return fn(ctx, q, n, active, legacy)
+		watched := transaction.Watch(q)
+		if e := fn(ctx, watched, n, active, legacy); e != nil {
+			return e
+		}
+		return finishMachineTransaction(ctx, q, watched, legacy != nil)
 	}
 	// Preserve the actual PG component owner's callbacks until it provides its
 	// selected interface. This branch cannot execute on MySQL or an inference node.
@@ -64,6 +68,18 @@ func (s *Service) machineWithin(ctx context.Context, id, credential string, fn f
 		return s.postgresTaskTransaction(bounded, func(ctx context.Context, tx pgx.Tx, q transaction.Executor) error { return operation(ctx, q, tx) })
 	}
 	return taskRuntimeError(store.Within(bounded, false, func(ctx context.Context, q transaction.Executor) error { return operation(ctx, q, nil) }))
+}
+
+// finishMachineTransaction lets an agent call that changed nothing commit without waiting for
+// the disk. Most agent calls only lock the node and read, a claim that finds no work above all;
+// the lock gives the transaction an ID, so its commit would otherwise wait for the disk and hold
+// a pooled connection through every stall (ADR 0040). With nothing changed there is nothing a
+// crash could lose. A call on the legacy transaction writes outside the watch, so it waits.
+func finishMachineTransaction(ctx context.Context, q transaction.Executor, watched *transaction.Watched, legacy bool) error {
+	if legacy || watched.Changed() {
+		return nil
+	}
+	return commitWithoutWaitingForDisk(ctx, q)
 }
 
 // scopeActiveWithin reads whether a node's Workspace and tenant are active. On PostgreSQL
@@ -86,7 +102,13 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 		return out, nil
 	}
 	var out wire.Disposition
+	repeats := s.heartbeatRepeats(id, h)
 	e := s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
+		if repeats {
+			if e := commitWithoutWaitingForDisk(ctx, q); e != nil {
+				return e
+			}
+		}
 		if h.ProtocolVersion != n.ProtocolVersion || h.Profile() != n.ExecutionProfile || !slices.Equal(h.Capabilities, n.Capabilities) {
 			return fail("AGENT_PROFILE_REJECTED")
 		}
