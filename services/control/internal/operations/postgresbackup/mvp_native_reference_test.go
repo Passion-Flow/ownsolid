@@ -98,7 +98,7 @@ func TestMVPReferenceMetadataNeverSubstitutesForOriginalVerification(t *testing.
 	m.Format = "projectone.postgres.matched-backup.v1"
 	m.Request.BackupRoot = root
 	m.RequestSHA256 = requestDigest(m.Request)
-	m.Database.SchemaVersion = 48
+	m.Database.SchemaVersion = 49
 	m.Database.Tables = 115
 	m.Archive.SHA256 = strings.Repeat("d", 64)
 	m.Sources = []TreeReadback{}

@@ -3804,6 +3804,165 @@
         }
       }
     },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-shed": {
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getAgentShed",
+        "x-audiences": [
+          "admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "Current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentShedResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ],
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
+      },
+      "put": {
+        "operationId": "updateAgentShed",
+        "x-audiences": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committed response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentShedResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAgentShed"
+              }
+            }
+          }
+        },
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "409": [
+            "VERSION_CONFLICT",
+            "AGENT_SHED_UNSUPPORTED",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "429": [
+            "RATE_LIMITED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
+      }
+    },
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks": {
       "get": {
         "operationId": "listAdminTasks",
@@ -5029,6 +5188,7 @@
               "MONGODB_RECORD_INVALID",
               "AGENT_PACING_EXCEEDS_ONLINE_WINDOW",
               "AGENT_PACING_UNSUPPORTED",
+              "AGENT_SHED_UNSUPPORTED",
               "AGENT_OVERLOADED",
               "TASK_HISTORY_UNAVAILABLE",
               "TASK_PROGRESS_INVALID",
@@ -13298,6 +13458,78 @@
           "jitter_percent",
           "reconnect_base_seconds",
           "reconnect_max_seconds",
+          "version",
+          "reason"
+        ]
+      },
+      "AgentShed": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "How much agent traffic this cell refuses (ADR 0043).",
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "none",
+              "bulk",
+              "telemetry",
+              "heartbeats"
+            ],
+            "description": "What control refuses from agents: nothing, bulk calls, bulk and telemetry, or everything but quarantine reports."
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "level",
+          "version",
+          "updated_at"
+        ]
+      },
+      "AgentShedResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AgentShed"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "UpdateAgentShed": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "none",
+              "bulk",
+              "telemetry",
+              "heartbeats"
+            ],
+            "description": "What control refuses from agents: nothing, bulk calls, bulk and telemetry, or everything but quarantine reports."
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "level",
           "version",
           "reason"
         ]

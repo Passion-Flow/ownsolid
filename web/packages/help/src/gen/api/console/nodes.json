@@ -840,6 +840,109 @@
    }
   },
   {
+   "id": "getAgentShed",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-shed",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "AgentShedResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "updateAgentShed",
+   "method": "put",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-shed",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "UpdateAgentShed"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "AgentShedResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "409": [
+     "VERSION_CONFLICT",
+     "AGENT_SHED_UNSUPPORTED",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
    "id": "listAdminTasks",
    "method": "get",
    "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks",
@@ -1199,6 +1302,46 @@
    "properties": {
     "data": {
      "$ref": "AgentPacing"
+    }
+   }
+  },
+  "AgentShed": {
+   "type": "object",
+   "description": "How much agent traffic this cell refuses (ADR 0043).",
+   "required": [
+    "level",
+    "version",
+    "updated_at"
+   ],
+   "properties": {
+    "level": {
+     "type": "string",
+     "description": "What control refuses from agents: nothing, bulk calls, bulk and telemetry, or everything but quarantine reports.",
+     "enum": [
+      "none",
+      "bulk",
+      "telemetry",
+      "heartbeats"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "AgentShedResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "AgentShed"
     }
    }
   },
@@ -2901,6 +3044,35 @@
     "version": {
      "type": "integer",
      "format": "int64",
+     "minimum": 1
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "UpdateAgentShed": {
+   "type": "object",
+   "required": [
+    "level",
+    "version",
+    "reason"
+   ],
+   "properties": {
+    "level": {
+     "type": "string",
+     "description": "What control refuses from agents: nothing, bulk calls, bulk and telemetry, or everything but quarantine reports.",
+     "enum": [
+      "none",
+      "bulk",
+      "telemetry",
+      "heartbeats"
+     ]
+    },
+    "version": {
+     "type": "integer",
      "minimum": 1
     },
     "reason": {

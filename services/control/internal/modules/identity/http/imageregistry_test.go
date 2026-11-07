@@ -66,7 +66,7 @@ func TestRegistryEntrancesRetainMiddlewareAndMachineDispatch(t *testing.T) {
 	c.Server.AdminOrigin = "https://admin.example.invalid"
 	c.Server.PortalOrigin = "https://portal.example.invalid"
 	i := &identity.Service{Config: c, HMACKey: make([]byte, 32)}
-	admission, e := agentadmission.New(config.DefaultAgentAdmissionPolicy(), slog.Default())
+	admission, e := agentadmission.New(config.DefaultAgentAdmissionPolicy(), 0, slog.Default())
 	if e != nil {
 		t.Fatal(e)
 	}

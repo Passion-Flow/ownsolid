@@ -173,9 +173,12 @@ func New(s *identity.Service) *Handler {
 		}
 		return preparationService.Referenced(ctx, tx, tenant, workspace, model)
 	}
-	admission, admissionError := agentadmission.New(s.Config.Policy().AgentAdmission, slog.Default())
+	admission, admissionError := agentadmission.New(s.Config.Policy().AgentAdmission, s.Config.AgentDatabaseSeats(), slog.Default())
 	if telemetryMetrics != nil && admission != nil {
 		telemetryMetrics.Add(admission.Samples)
+	}
+	if admission != nil {
+		n.Shed = admission
 	}
 	machine := &nodehttp.Handler{Service: n, Admission: admission, OpenArtifact: c.OpenArtifact, Artifact: c.TaskArtifact, ComponentArtifact: c.DownloadArtifact}
 	sessions, sessionError := agentgateway.New(nodehttp.SessionBackend{Handler: machine}, agentgateway.Policy{MaxSessions: s.Config.Policy().Nodes.MaximumLiveNodes, ExchangeSeconds: s.Config.Policy().HTTP.RequestSeconds}, httpserver.PublicProblem)

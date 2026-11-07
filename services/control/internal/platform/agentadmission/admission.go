@@ -33,9 +33,10 @@ const (
 	reasonNode                  // the node is over its limit for this call
 	reasonSeat                  // no seat was free within the priority's wait
 	reasonTable                 // the limit table is full of active callers
+	reasonShed                  // an operator told control to refuse this priority
 )
 
-var reasonNames = [...]string{"address_rate", "node_rate", "overload", "tracked_keys"}
+var reasonNames = [...]string{"address_rate", "node_rate", "overload", "tracked_keys", "shed"}
 
 // refusalLogInterval spaces the log lines of one priority and reason; the lines in
 // between are counted and reported with the next one.
@@ -72,6 +73,7 @@ type Controller struct {
 	address limit
 	limits  *buckets
 	seats   *seatPool
+	shed    atomic.Int32
 	logger  *slog.Logger
 	now     func() time.Time
 
@@ -87,8 +89,10 @@ func perSecond(l config.AgentCallLimit) limit {
 	return limit{rate: float64(l.PerMinute) / 60, burst: float64(l.Burst)}
 }
 
-// New returns a controller for a validated policy.
-func New(policy config.AgentAdmissionPolicy, logger *slog.Logger) (*Controller, error) {
+// New returns a controller for a validated policy. databaseSeats, when positive, bounds the seats
+// in use so that agents leave the rest of the database pool to operators and background work
+// (ADR 0043).
+func New(policy config.AgentAdmissionPolicy, databaseSeats int, logger *slog.Logger) (*Controller, error) {
 	if e := policy.Validate(); e != nil {
 		return nil, e
 	}
@@ -101,12 +105,29 @@ func New(policy config.AgentAdmissionPolicy, logger *slog.Logger) (*Controller, 
 			c.calls[call] = perSecond(l)
 		}
 	}
-	c.seats = &seatPool{total: policy.Seats}
+	total := policy.Seats
+	if databaseSeats > 0 {
+		total = min(total, databaseSeats)
+	}
+	c.seats = &seatPool{total: total}
 	for _, p := range priorityOrder {
 		bounds := policy.Priority(p)
-		c.seats.classes[p] = seatClass{max: bounds.MaxSeats, queueLength: bounds.QueueLength, wait: time.Duration(bounds.WaitMilliseconds) * time.Millisecond}
+		seats := bounds.MaxSeats
+		if total < policy.Seats {
+			seats = seatCap(p, seats, total)
+		}
+		c.seats.classes[p] = seatClass{max: seats, queueLength: bounds.QueueLength, wait: time.Duration(bounds.WaitMilliseconds) * time.Millisecond}
 	}
 	return c, nil
+}
+
+// seatCap keeps the promise of the policy when the database bounds the seats: telemetry and bulk
+// together never hold every seat, so a heartbeat always finds one.
+func seatCap(p wire.Priority, configured, total int) int {
+	if p == wire.PriorityTelemetry || p == wire.PriorityBulk {
+		return min(configured, (total-1)/2)
+	}
+	return configured
 }
 
 // Admit applies the call's limits and, unless the call waits for work, takes a seat at
@@ -117,6 +138,9 @@ func (c *Controller) Admit(ctx context.Context, r Request) (release func(), err 
 		return nil, errors.New("RESOURCE_NOT_FOUND")
 	}
 	p := r.Call.Priority()
+	if c.Shed().refuses(p) {
+		return nil, c.overloaded(p, reasonShed)
+	}
 	if e := c.limit(p, r); e != nil {
 		return nil, e
 	}
@@ -130,6 +154,9 @@ func (c *Controller) Admit(ctx context.Context, r Request) (release func(), err 
 func (c *Controller) Enter(ctx context.Context, p wire.Priority) (release func(), err error) {
 	if p.String() == "unknown" {
 		return nil, errors.New("AGENT_ADMISSION_PRIORITY_INVALID")
+	}
+	if c.Shed().refuses(p) {
+		return nil, c.overloaded(p, reasonShed)
 	}
 	release, e := c.seats.enter(ctx, p)
 	if errors.As(e, new(errNoSeat)) {

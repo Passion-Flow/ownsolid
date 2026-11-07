@@ -51,7 +51,7 @@ func (c *clock) advance(d time.Duration) {
 func newController(t *testing.T, p config.AgentAdmissionPolicy) (*Controller, *clock, *bytes.Buffer) {
 	t.Helper()
 	logs := &bytes.Buffer{}
-	c, e := New(p, slog.New(slog.NewJSONHandler(logs, nil)))
+	c, e := New(p, 0, slog.New(slog.NewJSONHandler(logs, nil)))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -75,10 +75,10 @@ func refusal(t *testing.T, e error, code string, retry int) {
 func TestNewRefusesAnInvalidPolicyOrNoLogger(t *testing.T) {
 	bad := testPolicy()
 	bad.Seats = 0
-	if _, e := New(bad, slog.Default()); e == nil {
+	if _, e := New(bad, 0, slog.Default()); e == nil {
 		t.Fatal("invalid policy accepted")
 	}
-	if _, e := New(testPolicy(), nil); e == nil {
+	if _, e := New(testPolicy(), 0, nil); e == nil {
 		t.Fatal("missing logger accepted")
 	}
 }

@@ -39,6 +39,10 @@ type Service struct {
 	resync resyncBucket
 	// pacing caches what heartbeat replies tell agents (ADR 0013).
 	pacing pacingCache
+	// Shed is this process's admission controller; nil where no agent traffic is served.
+	Shed ShedSwitch
+	// localShed holds a level set on the host until the database has stored it (ADR 0043).
+	localShed localShed
 	// sightings holds liveness in memory once the worker runs (ADR 0022). Until then every
 	// heartbeat writes synchronously, because nothing would persist what the table holds.
 	sightings atomic.Pointer[liveness.Table[heartbeatReport]]
