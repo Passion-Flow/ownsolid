@@ -219,7 +219,10 @@ func (c *Controller) refuse(p wire.Priority, why reason, r *Refusal) error {
 
 // Samples reports the controller's state for the metrics store.
 func (c *Controller) Samples() []telemetrystore.Sample {
-	out := []telemetrystore.Sample{{Name: "ownsolid_agent_admission_tracked_keys", Value: float64(c.limits.size())}}
+	out := []telemetrystore.Sample{
+		{Name: "ownsolid_agent_admission_tracked_keys", Value: float64(c.limits.size())},
+		{Name: "ownsolid_agent_shed_level", Value: float64(c.Shed())},
+	}
 	for _, p := range priorityOrder {
 		priority := telemetrystore.Label{Name: "priority", Value: p.String()}
 		used, queued := c.seats.load(p)

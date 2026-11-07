@@ -62,3 +62,14 @@ func verifyServingDatabase(ctx context.Context, c config.Config, selected *selec
 	}
 	return database.CheckRuntimeWithin(ctx, selected.store)
 }
+
+// readyServingDatabase is verifyServingDatabase for the readiness probe, which waits for no lock.
+func readyServingDatabase(ctx context.Context, c config.Config, selected *selectedDatabase) error {
+	if c.DatabaseEngine() != config.PostgreSQLDatabaseEngine || selected == nil || selected.postgres == nil {
+		return verifyServingDatabase(ctx, c, selected)
+	}
+	if e := selected.verifyLeaseOrLedger(ctx); e != nil {
+		return e
+	}
+	return database.CheckRuntimeReady(ctx, selected.store)
+}

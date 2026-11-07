@@ -10,10 +10,12 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/Passion-Flow/ownsolid/pkg/operatorsocket"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/sso"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/liveness"
@@ -210,9 +212,11 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 		return e
 	}
 	h.RuntimeReadiness = g.Err
+	// A schema that differs stops control; a database too busy or too far away to answer only
+	// makes it not ready, so that a long lock or a slow disk does not take the console away.
 	h.SchemaReadiness = func(ctx context.Context) error {
-		e := verifyServingDatabase(ctx, c, selected)
-		if e != nil && ctx.Err() == nil {
+		e := readyServingDatabase(ctx, c, selected)
+		if e != nil && ctx.Err() == nil && !database.Unanswered(e) {
 			g.Fail(errors.New("CONTROL_SCHEMA_VERIFICATION_FAILED"))
 		}
 		return e
@@ -398,6 +402,15 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 				})
 			}
 			g.Loop("NODE_LIVENESS", h.Nodes.Service.RunLiveness)
+			if c.Server.OperatorSocket != "" && h.Nodes.Service.Shed != nil {
+				socket, e := operatorsocket.Listen(c.Server.OperatorSocket, h.Nodes.Service)
+				if e != nil {
+					return e
+				}
+				h.Nodes.Service.HoldShedAt(operatorsocket.HeldPath(c.Server.OperatorSocket))
+				g.Go("OPERATOR_SOCKET", socket.Serve)
+			}
+			h.Nodes.Service.RestoreShed(startup)
 			g.Loop("NODE_AGENT_SHED", h.Nodes.Service.RunAgentShed)
 			g.Loop("NODE_TASK_WAKES", h.Nodes.Service.RunWakes)
 		}

@@ -2,10 +2,14 @@ package nodes
 
 import (
 	"context"
+	"errors"
+	"io/fs"
 	"log/slog"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/Passion-Flow/ownsolid/pkg/operatorsocket"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
@@ -32,11 +36,46 @@ type ShedSwitch interface {
 }
 
 // localShed is a level set on this host that the database has not stored yet. While it waits,
-// the stored level must not overwrite it.
+// the stored level must not overwrite it. heldFile keeps it across a restart (ADR 0045).
 type localShed struct {
-	mu      sync.Mutex
-	pending *agentadmission.ShedLevel
-	reason  string
+	mu       sync.Mutex
+	pending  *agentadmission.ShedLevel
+	reason   string
+	heldFile string
+}
+
+// HoldShedAt names the file that keeps a host level until it is stored, and takes up a level
+// already waiting there. Call it before agents are served, so that a fleet held back through a
+// database outage is not let in when control returns.
+func (s *Service) HoldShedAt(path string) {
+	s.localShed.mu.Lock()
+	s.localShed.heldFile = path
+	s.localShed.mu.Unlock()
+	s.adoptHeldShed()
+}
+
+// adoptHeldShed acts on a level ownsolid-install left while control was not answering.
+func (s *Service) adoptHeldShed() {
+	s.localShed.mu.Lock()
+	defer s.localShed.mu.Unlock()
+	if s.localShed.heldFile == "" || s.localShed.pending != nil {
+		return
+	}
+	held, found, e := operatorsocket.ReadHeld(s.localShed.heldFile)
+	if e != nil {
+		slog.Error("agent_shed_held_unreadable", "code", "VALIDATION_FAILED")
+		return
+	}
+	if !found {
+		return
+	}
+	level, e := agentadmission.ParseShedLevel(held.Level)
+	if e != nil {
+		return
+	}
+	s.applyShed(level)
+	s.localShed.pending, s.localShed.reason = &level, held.Reason
+	slog.Warn("agent_shed_adopted_from_host", "level", level.String(), "reason", held.Reason)
 }
 
 func readShedWithin(ctx context.Context, q transaction.Executor, suffix string) (AgentShed, error) {
@@ -117,16 +156,36 @@ func (s *Service) applyShed(level agentadmission.ShedLevel) {
 	}
 }
 
+// LocalShed reports the level this process enforces, for the operator socket.
+func (s *Service) LocalShed() operatorsocket.ShedStatus {
+	s.localShed.mu.Lock()
+	waiting := s.localShed.pending != nil
+	s.localShed.mu.Unlock()
+	return operatorsocket.ShedStatus{Level: s.Shed.Shed().String(), Stored: !waiting}
+}
+
 // SetLocalShed is the last resort of an operator on the host (ADR 0043). It acts at once without
 // the database and reports whether the level was also stored; when it was not, RunAgentShed
-// keeps trying, and a restart before it succeeds forgets the level.
-func (s *Service) SetLocalShed(ctx context.Context, level agentadmission.ShedLevel, reason string) (stored bool) {
+// keeps trying, and the held file carries the level across a restart.
+func (s *Service) SetLocalShed(ctx context.Context, r operatorsocket.ShedRequest) (operatorsocket.ShedStatus, error) {
+	level, e := agentadmission.ParseShedLevel(r.Level)
+	if e != nil || !workspaces.ValidReason(r.Reason) {
+		return operatorsocket.ShedStatus{}, fail("VALIDATION_FAILED")
+	}
 	s.applyShed(level)
-	slog.Warn("agent_shed_set_on_host", "level", level.String(), "reason", reason)
+	slog.Warn("agent_shed_set_on_host", "level", level.String(), "reason", r.Reason)
 	s.localShed.mu.Lock()
-	s.localShed.pending, s.localShed.reason = &level, reason
+	s.localShed.pending, s.localShed.reason = &level, r.Reason
+	if s.localShed.heldFile != "" {
+		if e = operatorsocket.WriteHeld(s.localShed.heldFile, r); e != nil {
+			slog.Error("agent_shed_not_held", "level", level.String())
+		}
+	}
 	s.localShed.mu.Unlock()
-	return s.storeLocalShed(ctx) == nil
+	if e = s.storeLocalShed(ctx); e != nil {
+		slog.Warn("agent_shed_not_stored", "code", e.Error())
+	}
+	return s.LocalShed(), nil
 }
 
 // storeLocalShed writes a pending host level with its audit record. Nobody signed in, so the
@@ -164,12 +223,22 @@ func (s *Service) storeLocalShed(ctx context.Context) error {
 		return e
 	}
 	s.localShed.mu.Lock()
-	if s.localShed.pending == pending {
-		s.localShed.pending = nil
+	defer s.localShed.mu.Unlock()
+	if s.localShed.pending != pending {
+		return nil
 	}
-	s.localShed.mu.Unlock()
+	s.localShed.pending = nil
+	if s.localShed.heldFile != "" {
+		if e = os.Remove(s.localShed.heldFile); e != nil && !errors.Is(e, fs.ErrNotExist) {
+			slog.Error("agent_shed_held_not_cleared")
+		}
+	}
 	return nil
 }
+
+// RestoreShed applies the stored level, or a level held on the host, before agents are served, so
+// that a restart never lets in a fleet an operator held back.
+func (s *Service) RestoreShed(ctx context.Context) { s.syncShed(ctx) }
 
 // RunAgentShed follows the stored level until ctx ends, so a restart restores it and every
 // gateway applies what another one stored. It does not depend on agent traffic, which the
@@ -188,6 +257,7 @@ func (s *Service) RunAgentShed(ctx context.Context) {
 }
 
 func (s *Service) syncShed(ctx context.Context) {
+	s.adoptHeldShed()
 	if e := s.storeLocalShed(ctx); e != nil {
 		slog.Warn("agent_shed_not_stored", "code", e.Error())
 		return

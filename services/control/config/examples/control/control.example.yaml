@@ -11,6 +11,10 @@ server:
   tls_private_key_file: /run/projectone/private-key.pem
   portal_assets: /opt/projectone/portal
   admin_assets: /opt/projectone/admin
+  # Unix socket for an operator on the host when nothing else reaches control (ADR 0043). Absolute
+  # path, in a directory only the runtime user can enter, or control refuses to start. Empty or
+  # omitted serves no socket. The installer sets it; restart to change.
+  operator_socket: /run/projectone-socket/control.sock
 database:
   # Control database owner; string postgresql/mysql, optional default postgresql.
   # Protected PROJECT_ONE_DATABASE_ENGINE overrides valid YAML; no secret; restart/new pool.
@@ -43,8 +47,10 @@ database:
   max_open_connections: 10
   max_idle_connections: 2
   # Connections agent calls never take, so an operator can sign in while every agent seat
-  # is in use. Below max_open_connections.
-  operator_reserved_connections: 2
+  # is in use: two for the operator, one for the liveness writer that waits with agents. The installation lease holds one more, so agents get max_open_connections less
+  # this less one, which must leave at least one; control refuses to serve otherwise
+  # (DATABASE_POOL_TOO_SMALL). Operator commands ignore it.
+  operator_reserved_connections: 3
   statement_timeout_seconds: 5
   # Control PostgreSQL session owner; integer milliseconds, optional default 3000.
   # Permitted 1..30000 and less than statement_timeout_seconds*1000; restart/new pool.

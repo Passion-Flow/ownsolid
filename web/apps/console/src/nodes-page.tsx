@@ -52,6 +52,7 @@ import { Link } from '@tanstack/react-router';
 import { Ban, Gauge, Plus, RefreshCw, Server } from 'lucide-react';
 import { useMemo, useRef } from 'react';
 import { AddNodeDialog } from './add-node-dialog.tsx';
+import { NodesShedNotice } from './agent-shed.tsx';
 import { NodeDrawer } from './node-drawer.tsx';
 import { nodeState } from './node-state.ts';
 
@@ -510,6 +511,7 @@ export function NodesPage() {
           </Button>
         </div>
       </div>
+      <NodesShedNotice />
       <PendingJoins />
       <FilterTiles
         label={t('nodes.filter')}

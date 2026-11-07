@@ -58,11 +58,26 @@ func itoa(v int) string {
 
 func validConfig(t *testing.T) Config {
 	t.Helper()
-	c, e := Decode([]byte(validYAML(t, filepath.Join(t.TempDir(), "install"))))
+	c, e := Decode([]byte(validYAML(t, filepath.Join(shortTempDir(t), "install"))))
 	if e != nil {
 		t.Fatal(e)
 	}
 	return c
+}
+
+// shortTempDir leaves room for the operator socket, which t.TempDir does not on every system.
+func shortTempDir(t *testing.T) string {
+	t.Helper()
+	directory, e := os.MkdirTemp("/tmp", "ownsolid-install-")
+	if e != nil {
+		t.Fatal(e)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(directory) })
+	resolved, e := filepath.EvalSymlinks(directory)
+	if e != nil {
+		t.Fatal(e)
+	}
+	return resolved
 }
 
 func TestDecodeAppliesDefaults(t *testing.T) {
@@ -200,7 +215,7 @@ func TestMaterializeWritesPrivateFilesAndKeepsSecrets(t *testing.T) {
 		}
 		before[path], _ = os.ReadFile(path)
 	}
-	for _, directory := range []string{l.Root, l.Config, l.Operator, l.Secrets, l.Postgres} {
+	for _, directory := range []string{l.Root, l.Config, l.Operator, l.Socket, l.Secrets, l.Postgres} {
 		if st, e := os.Stat(directory); e != nil || st.Mode().Perm() != 0o700 {
 			t.Fatalf("%s: %v %v", directory, st, e)
 		}

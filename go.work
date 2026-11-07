@@ -5,6 +5,7 @@ use (
 	./deploy/offline
 	./pkg/capabilities
 	./pkg/license
+	./pkg/operatorsocket
 	./services/agent
 	./services/control
 	./tests/e2e

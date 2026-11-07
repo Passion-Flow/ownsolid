@@ -1,5 +1,5 @@
 // Scripted nodes and join tokens for browser flows.
-import type { AgentPacing, JoinToken, Node, NodeCounts } from '@ownsolid/api';
+import type { AgentPacing, AgentShed, JoinToken, Node, NodeCounts } from '@ownsolid/api';
 import type { Page, Route } from '@playwright/test';
 
 const stamp = '2026-11-06T08:00:00Z';
@@ -101,6 +101,10 @@ export interface NodeScript {
   pacingProblem: { status: number; code: string } | null;
   /** The next pacing change fails like this. */
   nextPacingChange: { status: number; code: string } | null;
+  shed: AgentShed;
+  shedProblem: { status: number; code: string } | null;
+  /** The next shed change fails like this. */
+  nextShedChange: { status: number; code: string } | null;
 }
 
 /** The state of a mock with nothing scripted. */
@@ -117,6 +121,9 @@ export function emptyNodeScript(): NodeScript {
     pacing: { ...pacing },
     pacingProblem: null,
     nextPacingChange: null,
+    shed: { level: 'none', version: 1, updated_at: '2026-11-07T09:00:00Z' },
+    shedProblem: null,
+    nextShedChange: null,
   };
 }
 
@@ -237,6 +244,29 @@ export async function routeNodes(
     state.nodeReasons.push((request.postDataJSON() as { reason: string }).reason);
     state.joinTokens = state.joinTokens.filter((item) => item !== found);
     return data(route, { ...found, status: 'revoked' });
+  });
+  await page.route(`${base}/agent-shed`, (route) => {
+    const request = route.request();
+    if (request.method() === 'GET') {
+      if (state.shedProblem) return problem(route, state.shedProblem);
+      return data(route, state.shed);
+    }
+    if (state.nextShedChange) {
+      const scripted = state.nextShedChange;
+      state.nextShedChange = null;
+      return problem(route, scripted);
+    }
+    const change = request.postDataJSON() as AgentShed & { reason: string };
+    if (change.version !== state.shed.version) {
+      return problem(route, { status: 409, code: 'VERSION_CONFLICT' });
+    }
+    state.nodeReasons.push(change.reason);
+    state.shed = {
+      level: change.level,
+      version: state.shed.version + 1,
+      updated_at: '2026-11-07T10:00:00Z',
+    };
+    return data(route, state.shed);
   });
   await page.route(`${base}/agent-pacing`, (route) => {
     const request = route.request();

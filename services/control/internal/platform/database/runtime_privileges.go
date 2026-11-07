@@ -36,7 +36,10 @@ SELECT CASE WHEN r.rolsuper THEN $1::boolean ELSE
 
 func checkCurrentPrivileges(ctx context.Context, q transaction.Executor, allowOperator bool) error {
 	var valid bool
-	if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, currentPrivilegesSQL, allowOperator, config.MinimumDatabaseConnections, config.MaximumDatabaseConnections, TableCount)).Scan(&valid); err != nil || !valid {
+	if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, currentPrivilegesSQL, allowOperator, config.MinimumDatabaseConnections, config.MaximumDatabaseConnections, TableCount)).Scan(&valid); err != nil {
+		return queryFailed(err, "DATABASE_RUNTIME_PRIVILEGES_INCOMPATIBLE")
+	}
+	if !valid {
 		return errors.New("DATABASE_RUNTIME_PRIVILEGES_INCOMPATIBLE")
 	}
 	return nil

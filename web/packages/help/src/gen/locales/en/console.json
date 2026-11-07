@@ -36,6 +36,10 @@
    {
     "title": "Agent pacing",
     "anchor": "agent-pacing"
+   },
+   {
+    "title": "Refusing agent traffic",
+    "anchor": "refusing-agent-traffic"
    }
   ]
  },

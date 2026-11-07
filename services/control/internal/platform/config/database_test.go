@@ -63,3 +63,22 @@ func TestDatabaseLockPolicyInvalidEnvironmentAndSafeErrors(t *testing.T) {
 		t.Fatal("missing optional key must preserve YAML", e)
 	}
 }
+
+func TestAgentSeatsLeaveTheLeaseAndTheReserveTheirConnections(t *testing.T) {
+	c := validConfig()
+	if reserve := defaultConfiguration().Database.OperatorReservedConnections; reserve != 3 {
+		t.Fatal("default reserve", reserve)
+	}
+	c.Database.MaxOpenConnections, c.Database.OperatorReservedConnections = 10, 2
+	if seats, e := c.AgentDatabaseSeats(); e != nil || seats != 7 {
+		t.Fatal(seats, e)
+	}
+	c.Database.MaxOpenConnections = 3
+	if seats, e := c.AgentDatabaseSeats(); e == nil || e.Error() != "DATABASE_POOL_TOO_SMALL" || seats != 0 {
+		t.Fatal("a pool with no room for agents was taken as unbounded:", seats, e)
+	}
+	c.Database.Engine = DamengDatabaseEngine
+	if seats, e := c.AgentDatabaseSeats(); e != nil || seats != 0 {
+		t.Fatal(seats, e)
+	}
+}

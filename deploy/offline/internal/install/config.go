@@ -25,6 +25,10 @@ import (
 
 const FormatVersion = 1
 
+// maximumSocketPath is the longest Unix socket address Linux accepts, less its terminator. Going
+// over it would only show the day an operator needs the socket.
+const maximumSocketPath = 107
+
 // SingleNode is the size an omitted topology selects. Topology sizes share one configuration
 // format; which of them this release can run comes from the capability declaration.
 const SingleNode = "single-node"
@@ -261,6 +265,9 @@ func (c Config) Validate() error {
 	}
 	if e := validateTopologySize(c.Topology.Size); e != nil {
 		return e
+	}
+	if len(c.SocketPath()) > maximumSocketPath {
+		return errors.New("INSTALL_ROOT_TOO_LONG: install_root must leave room for the operator socket, at most " + strconv.Itoa(maximumSocketPath) + " bytes")
 	}
 	if !canonicalPath(c.InstallRoot) || c.InstallRoot == "/" {
 		return invalid("install_root", "must be an absolute clean path below /")

@@ -426,6 +426,62 @@
      "value": "设置代理程序多久上报一次，以及断开连接后如何退避重连。代理程序会在下一次上报时采用新的设置。"
     }
    ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "拒绝代理程序流量"
+    }
+   ],
+   "data": {
+    "id": "拒绝代理程序流量"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "当集群本身让这个安装过载时，可以在同一页面按优先级从低到高拒绝代理程序的调用：先是传输，然后是遥测，最后是除隔离报告外的全部流量。更改立即生效，需要填写原因并记入审计记录，代理程序稍后会自行重试。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "拒绝全部流量时，节点会在这里变为离线，并且不会收到新工作，节点上已在运行的任务和模型服务继续运行。页面会先要求输入 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "heartbeats"
+    },
+    {
+     "type": "text",
+     "value": "，并且只要还在拒绝，“节点”页面就会一直提示。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "如果无法打开此页面，请在服务器上运行 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "ownsolid-install agents shed"
+    },
+    {
+     "type": "text",
+     "value": "。"
+    }
+   ]
   }
  ]
 }

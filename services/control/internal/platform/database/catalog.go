@@ -40,7 +40,7 @@ const catalogRestoredSHA256 = "1d0448735e18c738b9f0b9de2543d6d09f48016a779dfa348
 func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
 	var raw string
 	if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, CatalogSQL)).Scan(&raw); err != nil {
-		return errors.New("SCHEMA_CATALOG_INCOMPATIBLE")
+		return queryFailed(err, "SCHEMA_CATALOG_INCOMPATIBLE")
 	}
 	digest := sha256.Sum256([]byte(raw))
 	switch hex.EncodeToString(digest[:]) {
@@ -56,7 +56,7 @@ func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
 func checkLocalCellWithin(ctx context.Context, q transaction.Executor) error {
 	var site, cell string
 	if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT site_id,id FROM cells WHERE is_local")).Scan(&site, &cell); err != nil {
-		return errors.New("SCHEMA_CELL_IDENTITY_INVALID")
+		return queryFailed(err, "SCHEMA_CELL_IDENTITY_INVALID")
 	}
 	if site != wire.DefaultSiteID || cell != wire.DefaultCellID {
 		return errors.New("SCHEMA_CELL_IDENTITY_INVALID")

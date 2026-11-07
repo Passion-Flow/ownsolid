@@ -426,6 +426,62 @@
      "value": " sets how often agents report and how they back off after losing the\nconnection. Agents adopt a change from their next report."
     }
    ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Refusing agent traffic"
+    }
+   ],
+   "data": {
+    "id": "refusing-agent-traffic"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "When the fleet itself is overloading the installation, the same page can refuse agents' calls, lowest\npriority first: transfers, then telemetry, then everything except quarantine reports. A change acts at\nonce, needs a reason and is kept in the audit trail, and agents retry later by themselves."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "With everything refused, nodes turn offline here and receive no new work, while tasks and model\nservices already running on them continue. The page asks you to type "
+    },
+    {
+     "type": "inlineCode",
+     "value": "heartbeats"
+    },
+    {
+     "type": "text",
+     "value": " first, and the\nNodes page says so for as long as it lasts."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "If this page cannot be reached, run "
+    },
+    {
+     "type": "inlineCode",
+     "value": "ownsolid-install agents shed"
+    },
+    {
+     "type": "text",
+     "value": " on the server."
+    }
+   ]
   }
  ]
 }

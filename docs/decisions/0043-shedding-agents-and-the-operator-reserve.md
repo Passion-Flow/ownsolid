@@ -11,8 +11,8 @@ An operator also has no way to tell a fleet to back off, short of stopping contr
 
 ## Decision
 
-**Agents leave a reserve in the pool.** `database.operator_reserved_connections`, default 2: the seats
-in use never exceed the pool less the reserve. Telemetry and bulk keep their promise inside the smaller
+**Agents leave a reserve in the pool.** `database.operator_reserved_connections`, default 3 (two for the operator, one for the liveness writer that waits on the same rows as agents): the seats
+in use never exceed the pool less the reserve and the connection the installation lease pins for the life of the process. Telemetry and bulk keep their promise inside the smaller
 number: together they never hold every seat, so a heartbeat always finds one.
 
 **A shed level refuses agent traffic, lowest priority first.** `none`, `bulk`, `telemetry` (bulk and
@@ -34,7 +34,7 @@ stored level does not overwrite it.
 
 ## Consequences
 
-- At most eight agent calls use the database at once by default, against 64 before. A fleet that needs
+- At most six agent calls use the database at once by default, against 64 before. A fleet that needs
   more raises the pool.
-- A level set on the host while the database is down is forgotten by a restart before it is stored.
+- Control stops when it loses its database, so what a host level does across that is in [ADR 0045](0045-a-shed-level-outlives-control.md).
 - MySQL and Dameng cannot store a level until CMP-201 and CMP-202; an administrator is told so.
