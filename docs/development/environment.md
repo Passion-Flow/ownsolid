@@ -286,6 +286,14 @@ with `OWNSOLID_LIVE_OFFLINE_NODE=true` and the variables above.
 It starts one task, so it needs a joined node with a running agent: name it in
 `OWNSOLID_LIVE_SEARCH_NODE`, with the variables above.
 
+The portal's `live-home.spec.ts` runs from `web/apps/portal` with the same variables, the portal's
+host in `OWNSOLID_LIVE_ORIGIN` and `OWNSOLID_LIVE_HOST_RULES`, and
+`OWNSOLID_LIVE_HOME_APPLICATION` naming an application published to the administrator's workspace
+with one conversation of theirs of two turns and one unread failed run. Publishing needs a signed
+plugin or a knowledge base with a model, so on a test installation make them as rows in its own
+database, moving the run from `pending` to `failed` so the schema's trigger writes the notification.
+The run marks that notification as read.
+
 `live-navigation.spec.ts` needs only the variables above: it opens and filters the sidebar, collapses it, and
 finds the choice in a second browser. It leaves the sidebar open.
 

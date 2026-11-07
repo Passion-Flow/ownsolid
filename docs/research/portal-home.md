@@ -35,7 +35,7 @@ PostgreSQL 18.6. A console session gets `RESOURCE_NOT_FOUND` too: the lists belo
 
 A notification carries the workflow's ID but not its name. The page names a run from the
 applications it has already read (a lookup page of up to 100) and from the person's conversations;
-a run of an application no longer published says so. Putting the name in the notification would
+a run whose application is in neither, because it is no longer published or lies beyond the lookup page, is named "an application in this workspace", which is true either way. Putting the name in the notification would
 change three dialects' locking queries in another module for a label, so it waits for POR-102,
 which owns runs.
 

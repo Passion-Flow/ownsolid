@@ -63,7 +63,7 @@ test('marks a run as read and leaves the rest', async ({ page }) => {
   await page.goto('/');
   const needs = section(page, 'Needs you');
   await needs
-    .getByRole('button', { name: 'Mark as read: An application that is no longer published' })
+    .getByRole('button', { name: 'Mark as read: An application in this workspace' })
     .click();
   await expect(needs.getByText('Nothing needs you')).toBeVisible();
   expect(control.notifications[0]?.read_at).not.toBeNull();

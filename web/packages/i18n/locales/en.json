@@ -294,7 +294,7 @@
   "home.needs.clear.detail": "When a run of yours fails, is cancelled or is interrupted, it shows here until you mark it as read.",
   "home.needs.markRead": "Mark as read: {name}",
   "home.needs.more": "More are in Notifications, behind the bell at the top of the page.",
-  "home.needs.unnamed": "An application that is no longer published",
+  "home.needs.unnamed": "An application in this workspace",
   "home.noWorkspace": "No workspace yet",
   "home.noWorkspace.detail": "An administrator adds you to a workspace. Its applications and your conversations then show here.",
   "home.subtitle": "Working in {workspace}. Switch the workspace at the top to see another one.",

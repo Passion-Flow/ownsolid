@@ -294,7 +294,7 @@
   "home.needs.clear.detail": "你的运行失败、被取消或被中断时会显示在这里，直到你将其标记为已读。",
   "home.needs.markRead": "标记为已读：{name}",
   "home.needs.more": "更多内容在通知中，点击页面顶部的铃铛查看。",
-  "home.needs.unnamed": "已不再发布的应用",
+  "home.needs.unnamed": "此工作空间中的某个应用",
   "home.noWorkspace": "还没有工作空间",
   "home.noWorkspace.detail": "管理员将你加入工作空间后，其中的应用和你的对话会显示在这里。",
   "home.subtitle": "当前工作空间：{workspace}。在页面顶部切换工作空间可查看其他工作空间。",
