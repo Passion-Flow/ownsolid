@@ -22,7 +22,7 @@ func TestKubernetesProjectionUsesActualDistinctUnprivilegedProcess(t *testing.T)
 	s.Profile = "mvp-postgresql-cpu-v1-linux-amd64"
 	s.Events[0].Action = "preparation_prepare_installation"
 	s.Events[0].Outcome = "recorded"
-	s.Kubernetes = &view.KubernetesJournalBinding{IndexFormat: view.KubernetesIndexFormat, ApplicationProfile: "mvp-postgresql-cpu-v1", SchemaVersion: 49, PreparedPlanSHA256: strings.Repeat("1", 64), LastSource: view.KubernetesSourceReference{Kind: "preparation", EventKind: "prepare_installation", OperationID: s.Events[0].OperationID, PlanSHA256: strings.Repeat("1", 64), Sequence: 1, SHA256: strings.Repeat("2", 64)}}
+	s.Kubernetes = &view.KubernetesJournalBinding{IndexFormat: view.KubernetesIndexFormat, ApplicationProfile: "mvp-postgresql-cpu-v1", SchemaVersion: 50, PreparedPlanSHA256: strings.Repeat("1", 64), LastSource: view.KubernetesSourceReference{Kind: "preparation", EventKind: "prepare_installation", OperationID: s.Events[0].OperationID, PlanSHA256: strings.Repeat("1", 64), Sequence: 1, SHA256: strings.Repeat("2", 64)}}
 	if s.Validate() != nil {
 		t.Fatal("invalid fixture")
 	}

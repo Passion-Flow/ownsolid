@@ -133,6 +133,16 @@ must fit inside `nodes.online_seconds`, 30 by default, which allows up to 20 sec
 no jitter. To go slower, raise `nodes.online_seconds` first. With more than one control
 process, the others follow within five seconds.
 
+### Repeated heartbeats
+
+Control answers a heartbeat that repeats the last one from memory, without reading the database.
+When a node, workspace or tenant changes, control forgets what it held within
+`runtime.nodes.outbox_poll_milliseconds`, 200 ms by default, and a held claim ends at once. If
+that news stops arriving, `runtime.nodes.view_max_age_seconds`, 60 by default, is the longest a
+heartbeat goes unchecked. If control cannot read the news, it goes back to reading the database
+for every heartbeat until it can. Tasks, results and transfers always check the database.
+`ownsolid_node_view_hits_total` and `ownsolid_node_view_fallbacks_total` show which is happening.
+
 ### Limits on agent calls
 
 Control admits every agent call in memory before it touches the database
