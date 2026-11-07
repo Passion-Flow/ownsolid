@@ -1,0 +1,603 @@
+// Bringing a model in: choose the bundle, see what it takes, and follow it through upload and
+// verification. An upload continues while the person moves around the console, and resumes from
+// the server's offset when the same file is chosen again (docs/research/model-library.md).
+import {
+  ApiProblem,
+  cancelModelImport,
+  getModelCatalog,
+  getModelImport,
+  isProblem,
+  listModelImports,
+  startModelImport,
+  verifyModelImport,
+  type ModelCatalogAvailability,
+  type ModelImport,
+} from '@ownsolid/api';
+import { useI18n } from '@ownsolid/i18n';
+import { runtimeConfigQuery, useWorkspaces } from '@ownsolid/shell';
+import {
+  AdvancedFold,
+  Button,
+  buttonVariants,
+  Card,
+  Checkbox,
+  CodeBlock,
+  Meter,
+  Notice,
+  ProblemNotice,
+  Spinner,
+  StatusPill,
+  StepTimeline,
+  TextField,
+  TypedConfirmation,
+  useToast,
+  type StepState,
+} from '@ownsolid/ui';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
+import { ArrowRight, FileArchive, Upload } from 'lucide-react';
+import { useRef, useState, type SubmitEvent } from 'react';
+import { ModelFacts, totalBytes } from './model-details.tsx';
+import { importStates, modelKeys, modelsKey } from './model-state.ts';
+import { startTransfer, stopTransfer, useTransfer, type Transfer } from './model-upload.ts';
+import { ResourceHeader, ResourceUnavailable } from './resource-page.tsx';
+
+const route = getRouteApi('/authenticated/frame/library/imports/$importId');
+
+// Written while the server clears an import's files, before it reads as cancelled.
+const cancellationPending = 'MODEL_CANCELLATION_PENDING';
+
+const finished: readonly ModelImport['state'][] = ['ready', 'cancelled'];
+
+/** How to make a bundle of the model's files with the name each must keep. */
+function bundleCommand(catalog: ModelCatalogAvailability): string {
+  const files = catalog.catalog.files.map((file) => file.path).join(' ');
+  // macOS would otherwise add a hidden file for each one, which a bundle may not hold.
+  return `COPYFILE_DISABLE=1 tar --format=ustar -cf bundle.tar ${files}`;
+}
+
+/** A file chooser, with the button that opens it. */
+function FilePicker({
+  label,
+  testId,
+  onChoose,
+}: {
+  label: string;
+  testId: string;
+  onChoose: (file: File) => void;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <input
+        ref={input}
+        hidden
+        type="file"
+        accept=".tar,application/x-tar"
+        data-testid={testId}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) onChoose(file);
+          event.target.value = '';
+        }}
+      />
+      <Button
+        onClick={() => {
+          input.current?.click();
+        }}
+      >
+        <FileArchive aria-hidden />
+        {label}
+      </Button>
+    </>
+  );
+}
+
+function ImportForm({ catalog }: { catalog: ModelCatalogAvailability }) {
+  const { t, format } = useI18n();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const workspaces = useWorkspaces();
+  const workspace = workspaces.active;
+  const entry = catalog.catalog;
+  const [name, setName] = useState(entry.repository.split('/').pop() ?? entry.repository);
+  const [reason, setReason] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [accepted, setAccepted] = useState(false);
+  // One key per intent, so a retry after a lost answer finds the same import.
+  const key = useRef(crypto.randomUUID());
+  const imports = useQuery({
+    ...modelKeys.imports(workspace?.id ?? ''),
+    queryFn: ({ signal }) => listModelImports(workspace?.id ?? '', { signal }),
+    enabled: workspace !== null,
+  });
+  const blocking = imports.data?.find((item) => !finished.includes(item.state));
+  const start = useMutation({
+    mutationFn: (bundle: File) =>
+      startModelImport(
+        {
+          workspaceId: workspace?.id ?? '',
+          name: name.trim(),
+          catalogDigest: catalog.catalog_digest,
+          expectedBytes: bundle.size,
+          reason: reason.trim(),
+        },
+        key.current,
+      ),
+    onSuccess: (created, bundle) => {
+      const refresh = () => queryClient.invalidateQueries({ queryKey: modelsKey });
+      startTransfer(bundle, created, catalog.chunk_bytes, reason.trim(), () => {
+        void refresh();
+      });
+      void refresh();
+      void navigate({ to: '/library/imports/$importId', params: { importId: created.id } });
+    },
+  });
+  const tooSmall = file !== null && file.size < catalog.minimum_bundle_bytes;
+  const tooLarge = file !== null && file.size > catalog.maximum_bundle_bytes;
+  const usable =
+    file !== null &&
+    !tooSmall &&
+    !tooLarge &&
+    name.trim() !== '' &&
+    reason.trim() !== '' &&
+    accepted &&
+    workspace !== null &&
+    catalog.storage_available &&
+    !blocking &&
+    !start.isPending;
+  const submit = (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (usable) start.mutate(file);
+  };
+  const finalBytes = totalBytes(entry.files);
+  return (
+    <form noValidate className="flex max-w-[720px] flex-col gap-4" onSubmit={submit}>
+      {catalog.storage_available ? null : (
+        <Notice tone="critical" title={t('models.import.noStore.title')}>
+          {t('models.import.noStore.detail')}
+        </Notice>
+      )}
+      {blocking ? (
+        <Notice title={t('models.import.blocked.title', { name: blocking.name })}>
+          {t('models.import.blocked.detail')}{' '}
+          <Link
+            to="/library/imports/$importId"
+            params={{ importId: blocking.id }}
+            className="text-accent-ink underline"
+          >
+            {t('models.import.blocked.open')}
+          </Link>
+        </Notice>
+      ) : null}
+      {isProblem(start.error) ? (
+        <ProblemNotice
+          problem={start.error}
+          onRetry={() => {
+            if (file) start.mutate(file);
+          }}
+        />
+      ) : null}
+      <Card className="p-[18px]">
+        <h2 className="m-0 mb-3 text-[15px] font-semibold">{t('models.import.what')}</h2>
+        <ModelFacts
+          summary={{
+            repository: entry.repository,
+            revision: entry.revision,
+            license: entry.license,
+            format: entry.format,
+            architecture: entry.architecture,
+            modelType: entry.model_type,
+            contextTokens: entry.max_context,
+            files: entry.files,
+            bytes: finalBytes,
+          }}
+        />
+      </Card>
+      <Card className="flex flex-col gap-3.5 p-[18px]">
+        <h2 className="m-0 text-[15px] font-semibold">{t('models.import.bundle')}</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <FilePicker
+            label={t('models.import.choose')}
+            testId="model-bundle"
+            onChoose={(chosen) => {
+              setFile(chosen);
+            }}
+          />
+          {file ? (
+            <span className="min-w-0 font-mono text-[13px] break-all">
+              {file.name} · {format.bytes(file.size)}
+            </span>
+          ) : (
+            <span className="text-text-2">{t('models.import.noFile')}</span>
+          )}
+        </div>
+        {tooSmall ? (
+          <Notice tone="critical" title={t('models.import.tooSmall.title')}>
+            {t('models.import.tooSmall.detail', {
+              minimum: format.bytes(catalog.minimum_bundle_bytes),
+            })}
+          </Notice>
+        ) : null}
+        {tooLarge ? (
+          <Notice tone="critical" title={t('models.import.tooLarge.title')}>
+            {t('models.import.tooLarge.detail', {
+              maximum: format.bytes(catalog.maximum_bundle_bytes),
+            })}
+          </Notice>
+        ) : null}
+        <AdvancedFold label={t('models.import.howTo')}>
+          <p className="m-0 mb-2 text-text-2">{t('models.import.howTo.detail')}</p>
+          <CodeBlock code={bundleCommand(catalog)} label={t('models.import.howTo.label')} />
+        </AdvancedFold>
+        <TextField
+          label={t('models.column.name')}
+          name="name"
+          autoComplete="off"
+          maxLength={100}
+          required
+          value={name}
+          onChange={(event) => {
+            setName(event.target.value);
+          }}
+        />
+        <TextField
+          label={t('models.reason')}
+          name="reason"
+          autoComplete="off"
+          maxLength={500}
+          required
+          hint={t('models.reason.hint')}
+          value={reason}
+          onChange={(event) => {
+            setReason(event.target.value);
+          }}
+        />
+        <label className="flex items-start gap-2.5">
+          <Checkbox
+            checked={accepted}
+            onChange={(event) => {
+              setAccepted(event.target.checked);
+            }}
+          />
+          <span>{t('models.import.license', { license: entry.license })}</span>
+        </label>
+      </Card>
+      <p className="m-0 text-text-2">
+        {file
+          ? t('models.import.cost', {
+              workspace: workspace?.name ?? '',
+              during: format.bytes(file.size + finalBytes),
+              after: format.bytes(finalBytes),
+            })
+          : t('models.import.cost.none', { after: format.bytes(finalBytes) })}
+      </p>
+      <div>
+        <Button type="submit" variant="primary" disabled={!usable}>
+          {start.isPending ? <Spinner label={t('models.import.submit')} /> : <Upload aria-hidden />}
+          {t('models.import.submit')}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** `/library/import`: what will arrive, the bundle, and what it takes. */
+export function ModelImportPage() {
+  const { t } = useI18n();
+  const catalog = useQuery({
+    queryKey: modelKeys.catalog,
+    queryFn: ({ signal }) => getModelCatalog({ signal }),
+  });
+  return (
+    <>
+      <ResourceHeader
+        backTo="/library"
+        backLabel={t('models.page.back')}
+        title={t('models.import.title')}
+        description={t('models.import.detail')}
+        status={null}
+        actions={null}
+      />
+      {catalog.data ? (
+        <ImportForm catalog={catalog.data} />
+      ) : (
+        <ResourceUnavailable
+          pending={catalog.isPending}
+          error={catalog.error}
+          onRetry={() => {
+            void catalog.refetch();
+          }}
+          backTo="/library"
+          backLabel={t('models.page.back')}
+          missingTitle={t('models.import.title')}
+          missingDetail={t('models.import.detail')}
+          failedTitle={t('models.import.failed')}
+        />
+      )}
+    </>
+  );
+}
+
+function stepStates(item: ModelImport): [StepState, StepState, StepState] {
+  switch (item.state) {
+    case 'uploading':
+      return ['running', 'pending', 'pending'];
+    case 'queued':
+    case 'verifying':
+      return ['done', 'running', 'pending'];
+    case 'ready':
+      return ['done', 'done', 'done'];
+    case 'failed':
+      return ['done', 'failed', 'pending'];
+    case 'cancelled':
+      return item.uploaded_bytes < item.expected_bytes
+        ? ['failed', 'pending', 'pending']
+        : ['done', 'failed', 'pending'];
+  }
+}
+
+function Sending({ item, transfer }: { item: ModelImport; transfer: Transfer | undefined }) {
+  const { t, format } = useI18n();
+  const sent = transfer?.sent ?? item.uploaded_bytes;
+  return (
+    <div className="flex flex-col gap-2">
+      <Meter
+        accent
+        label={t('models.import.progress.label')}
+        value={(sent / item.expected_bytes) * 100}
+      />
+      <p className="m-0 text-text-2" role="status">
+        {t('models.import.progress', {
+          sent: format.bytes(sent),
+          total: format.bytes(item.expected_bytes),
+        })}
+      </p>
+    </div>
+  );
+}
+
+/** What to do about an upload that is not running in this tab. */
+function Resume({
+  item,
+  onChoose,
+  problem,
+}: {
+  item: ModelImport;
+  onChoose: (file: File) => void;
+  problem: string | null;
+}) {
+  const { t, format } = useI18n();
+  return (
+    <Notice
+      title={t('models.import.resume.title')}
+      actions={
+        <FilePicker
+          label={t('models.import.resume.choose')}
+          testId="model-bundle-resume"
+          onChoose={onChoose}
+        />
+      }
+    >
+      {problem ?? t('models.import.resume.detail', { size: format.bytes(item.expected_bytes) })}
+    </Notice>
+  );
+}
+
+function CancelDialog({ item, onClose }: { item: ModelImport; onClose: () => void }) {
+  const { t } = useI18n();
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const [reason, setReason] = useState('');
+  const cancel = useMutation({
+    mutationFn: () => {
+      stopTransfer(item.id);
+      return cancelModelImport(item.id, reason.trim());
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: modelsKey });
+      toast({ message: t('models.import.cancel.done', { name: item.name }) });
+      onClose();
+    },
+  });
+  return (
+    <TypedConfirmation
+      title={t('models.import.cancel.title', { name: item.name })}
+      consequence={t('models.import.cancel.consequence')}
+      expected={item.name}
+      confirmLabel={t('models.import.cancel.submit')}
+      pending={cancel.isPending}
+      onClose={onClose}
+      onConfirm={() => {
+        if (reason.trim() !== '') cancel.mutate();
+      }}
+    >
+      <TextField
+        label={t('models.reason')}
+        name="reason"
+        autoComplete="off"
+        maxLength={500}
+        required
+        value={reason}
+        onChange={(event) => {
+          setReason(event.target.value);
+        }}
+      />
+      {isProblem(cancel.error) ? <ProblemNotice problem={cancel.error} /> : null}
+    </TypedConfirmation>
+  );
+}
+
+function Loaded({
+  item,
+  chunkBytes,
+  maximumAttempts,
+}: {
+  item: ModelImport;
+  chunkBytes: number;
+  maximumAttempts: number;
+}) {
+  const { t } = useI18n();
+  const queryClient = useQueryClient();
+  const transfer = useTransfer(item.id);
+  const [cancelling, setCancelling] = useState(false);
+  const [wrongSize, setWrongSize] = useState(false);
+  const refresh = () => queryClient.invalidateQueries({ queryKey: modelsKey });
+  const verify = useMutation({
+    mutationFn: () => verifyModelImport(item.id, t('models.import.retryReason')),
+    onSettled: refresh,
+  });
+  const stopping = item.error_code === cancellationPending;
+  const sending = transfer?.state === 'sending';
+  const state = importStates[item.state];
+  const [upload, verification, ready] = stepStates(item);
+  const failure = item.state === 'failed' && item.error_code ? item.error_code : null;
+  const resume = (file: File) => {
+    setWrongSize(file.size !== item.expected_bytes);
+    if (file.size === item.expected_bytes) {
+      startTransfer(file, item, chunkBytes, t('models.import.resumeReason'), () => {
+        void refresh();
+      });
+    }
+  };
+  return (
+    <>
+      <ResourceHeader
+        backTo="/library"
+        backSearch={{ tab: 'imports' }}
+        backLabel={t('models.imports.back')}
+        title={item.name}
+        status={<StatusPill tone={state.tone}>{t(state.label)}</StatusPill>}
+        actions={
+          finished.includes(item.state) ? null : (
+            <Button
+              variant="danger"
+              onClick={() => {
+                setCancelling(true);
+              }}
+            >
+              {t('models.import.cancel.open')}
+            </Button>
+          )
+        }
+      />
+      <div className="flex max-w-[720px] flex-col gap-4">
+        {stopping ? <Notice title={t('models.import.stopping')} /> : null}
+        {item.state === 'uploading' && !stopping ? (
+          <Card className="flex flex-col gap-3 p-[18px]">
+            <Sending item={item} transfer={transfer} />
+            {transfer?.state === 'failed' && isProblem(transfer.problem) ? (
+              <ProblemNotice problem={transfer.problem} onRetry={transfer.retry} />
+            ) : null}
+            {!sending && transfer?.state !== 'failed' ? (
+              <Resume
+                item={item}
+                onChoose={resume}
+                problem={wrongSize ? t('models.import.resume.wrongSize') : null}
+              />
+            ) : null}
+            {sending ? (
+              <p className="m-0 text-[12.5px] text-text-3">{t('models.import.keepOpen')}</p>
+            ) : null}
+          </Card>
+        ) : null}
+        {failure ? <ProblemNotice problem={new ApiProblem(failure, { status: 409 })} /> : null}
+        {isProblem(verify.error) ? <ProblemNotice problem={verify.error} /> : null}
+        {item.state === 'failed' ? (
+          item.attempts < maximumAttempts ? (
+            <div>
+              <Button
+                variant="primary"
+                disabled={verify.isPending}
+                onClick={() => {
+                  verify.mutate();
+                }}
+              >
+                {t('models.import.verifyAgain', { attempt: item.attempts + 1, maximumAttempts })}
+              </Button>
+            </div>
+          ) : (
+            <Notice title={t('models.import.outOfAttempts')} />
+          )
+        ) : null}
+        {item.state === 'ready' && item.model_id ? (
+          <div>
+            <Link
+              to="/library/$modelId"
+              params={{ modelId: item.model_id }}
+              className={buttonVariants({ variant: 'primary' })}
+            >
+              {t('models.import.openModel')}
+              <ArrowRight aria-hidden />
+            </Link>
+          </div>
+        ) : null}
+        <Card className="p-[18px]">
+          <StepTimeline
+            label={t('models.import.steps')}
+            steps={[
+              { id: 'upload', title: t('models.import.step.upload'), state: upload },
+              {
+                id: 'verify',
+                title: t('models.import.step.verify'),
+                detail: t('models.import.step.verify.detail'),
+                state: verification,
+              },
+              { id: 'ready', title: t('models.import.step.ready'), state: ready },
+            ]}
+          />
+        </Card>
+      </div>
+      {cancelling ? (
+        <CancelDialog
+          item={item}
+          onClose={() => {
+            setCancelling(false);
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
+/** `/library/imports/$importId`: one import, followed until it ends. */
+export function ModelImportStatusPage() {
+  const { t } = useI18n();
+  const { importId } = route.useParams();
+  const poll = useQuery(runtimeConfigQuery()).data?.ui.pollMilliseconds ?? false;
+  const catalog = useQuery({
+    queryKey: modelKeys.catalog,
+    queryFn: ({ signal }) => getModelCatalog({ signal }),
+  });
+  const item = useQuery({
+    queryKey: modelKeys.import(importId),
+    queryFn: ({ signal }) => getModelImport(importId, { signal, background: true }),
+    refetchInterval: (query) =>
+      query.state.data && finished.includes(query.state.data.state) ? false : poll,
+    retry: (failures, error) => failures < 2 && isProblem(error) && error.retryable,
+  });
+  if (item.data && catalog.data) {
+    return (
+      <Loaded
+        item={item.data}
+        chunkBytes={catalog.data.chunk_bytes}
+        maximumAttempts={catalog.data.maximum_attempts}
+      />
+    );
+  }
+  return (
+    <ResourceUnavailable
+      pending={item.isPending || catalog.isPending}
+      error={item.error ?? catalog.error}
+      onRetry={() => {
+        void item.refetch();
+        void catalog.refetch();
+      }}
+      backTo="/library"
+      backLabel={t('models.imports.back')}
+      missingTitle={t('models.import.missing.title')}
+      missingDetail={t('models.import.missing.detail')}
+      failedTitle={t('models.import.failed')}
+    />
+  );
+}

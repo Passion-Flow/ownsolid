@@ -4,6 +4,7 @@ import {
   activeSummary,
   adminUser,
   checksStoppingAt,
+  failedImport,
   failedMail,
   disabledNode,
   failedSignIn,
@@ -17,11 +18,13 @@ import {
   node,
   offlineNode,
   pendingInvitation,
+  readyModel,
   retiredConnector,
   runningTask,
   secondFailedMail,
   sentMail,
   ssoOn,
+  stalledImport,
   systemEvent,
   teamWorkspace,
   type ControlPlane,
@@ -103,6 +106,76 @@ async function openSettings(page: Page, control: ControlPlane): Promise<void> {
  */
 export const consolePages: readonly PageState[] = [
   ...shellPages,
+  {
+    name: 'model library with nothing in it',
+    path: '/library',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/library');
+      await page.getByRole('heading', { name: 'No models yet' }).waitFor();
+    },
+  },
+  {
+    name: 'model library with a model and its drawer',
+    path: '/library',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.models = [readyModel];
+      await page.goto(`/library?open=${readyModel.id}`);
+      await page.getByRole('dialog', { name: readyModel.name }).waitFor();
+    },
+  },
+  {
+    name: 'the imports and the catalogue of the model library',
+    path: '/library',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.modelImports = [failedImport];
+      await page.goto('/library?tab=imports');
+      await page.getByRole('link', { name: failedImport.name }).waitFor();
+      await page.getByRole('tab', { name: 'Catalogue' }).click();
+      await page.getByText('Searching both registries is not ready yet').waitFor();
+    },
+  },
+  {
+    name: 'a model of its own, with its files',
+    path: '/library/$modelId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.models = [readyModel];
+      await page.goto(`/library/${readyModel.id}?tab=files`);
+      await page.getByRole('cell', { name: 'model.safetensors' }).waitFor();
+    },
+  },
+  {
+    name: 'importing a bundle',
+    path: '/library/import',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/library/import');
+      await page.getByRole('heading', { name: 'Import a bundle', level: 1 }).waitFor();
+    },
+  },
+  {
+    name: 'an upload to continue',
+    path: '/library/imports/$importId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.modelImports = [{ ...stalledImport }];
+      await page.goto(`/library/imports/${stalledImport.id}`);
+      await page.getByText('The upload is not running').waitFor();
+    },
+  },
+  {
+    name: 'a failed import',
+    path: '/library/imports/$importId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.modelImports = [{ ...failedImport }];
+      await page.goto(`/library/imports/${failedImport.id}`);
+      await page.getByText('A file does not match its published hash').waitFor();
+    },
+  },
   {
     name: 'overview of a new installation',
     path: '/',

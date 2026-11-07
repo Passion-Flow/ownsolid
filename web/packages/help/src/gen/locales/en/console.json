@@ -53,6 +53,28 @@
    }
   ]
  },
+ "model-library": {
+  "title": "Model library",
+  "summary": "The Model library holds the models of the workspace chosen in the switcher, and shows\nhow they arrive. A model arrives as a bundle, so importing one needs no network.",
+  "sections": [
+   {
+    "title": "Importing a model",
+    "anchor": "importing-a-model"
+   },
+   {
+    "title": "If an import fails",
+    "anchor": "if-an-import-fails"
+   },
+   {
+    "title": "Retiring a model",
+    "anchor": "retiring-a-model"
+   },
+   {
+    "title": "The model store",
+    "anchor": "the-model-store"
+   }
+  ]
+ },
  "people-and-workspaces": {
   "title": "People and workspaces",
   "summary": "People sign in to the console or the portal with their own accounts. Workspaces group people and\nthe work they share.",

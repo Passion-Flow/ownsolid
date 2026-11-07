@@ -45,6 +45,30 @@ const nodeRoute = createRoute({
   component: lazyRouteComponent(() => import('./node-page.tsx'), 'NodePage'),
 });
 
+const libraryRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/library',
+  component: lazyRouteComponent(() => import('./model-library-page.tsx'), 'ModelLibraryPage'),
+});
+
+const modelRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/library/$modelId',
+  component: lazyRouteComponent(() => import('./model-page.tsx'), 'ModelPage'),
+});
+
+const modelImportRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/library/import',
+  component: lazyRouteComponent(() => import('./model-import-page.tsx'), 'ModelImportPage'),
+});
+
+const modelImportStatusRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/library/imports/$importId',
+  component: lazyRouteComponent(() => import('./model-import-page.tsx'), 'ModelImportStatusPage'),
+});
+
 const userRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/users/$userId',
@@ -134,6 +158,10 @@ const routeTree = rootRoute.addChildren([
       nodesRoute,
       pacingRoute,
       nodeRoute,
+      libraryRoute,
+      modelRoute,
+      modelImportRoute,
+      modelImportStatusRoute,
       userRoute,
       connectorRoute,
       usersRoute,

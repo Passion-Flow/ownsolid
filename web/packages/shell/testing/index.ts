@@ -10,6 +10,14 @@ export {
   recentConversation,
   type ApplicationScript,
 } from './applications.ts';
+export {
+  derivedModel,
+  failedImport,
+  modelCatalog,
+  readyModel,
+  stalledImport,
+  type ModelScript,
+} from './models.ts';
 export { supportFlows } from './support-flows.ts';
 export {
   account,

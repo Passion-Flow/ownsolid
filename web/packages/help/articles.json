@@ -16,6 +16,11 @@
       "pages": ["/tasks"]
     },
     {
+      "slug": "model-library",
+      "topic": "models",
+      "pages": ["/library"]
+    },
+    {
       "slug": "people-and-workspaces",
       "topic": "people",
       "pages": ["/users"]

@@ -1,0 +1,211 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/library",
+     "children": [
+      {
+       "type": "text",
+       "value": "模型库"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "保存切换器中所选工作空间的模型，并显示它们的导入情况。模型以模型包的形式导入，因此无需联网。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "导入模型"
+    }
+   ],
+   "data": {
+    "id": "导入模型"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "在联网机器上，按“目录”中显示的修订版本获取模型文件。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "在这些文件所在的目录中制作模型包。页面的“如何制作模型包”给出了准确的命令。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "把文件带到能访问控制台的电脑上，选择“导入模型包”并选中它。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "填写原因，接受模型的许可协议，然后选择“开始导入”。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "上传期间可以继续使用控制台的其他页面。关闭标签页会停止上传：从“导入记录”打开这次导入，选择同一个文件，就会从服务器中断的位置继续。不同的文件在写入任何内容之前就会被拒绝。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "随后每个文件都会与其公布的哈希值核对，只有全部一致才会保留。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "导入失败时"
+    }
+   ],
+   "data": {
+    "id": "导入失败时"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "失败的导入会说明原因。“重新校验”可重试有限次数。“丢弃”会删除已上传的内容。一个工作空间一次只能进行一个导入，所以必须先完成或丢弃失败的导入，才能开始下一个。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "退役模型"
+    }
+   ],
+   "data": {
+    "id": "退役模型"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "模型页面上的“退役”会把它从列表中移除，并阻止新的部署。正在使用的模型不能退役：请先停止依赖它的内容。文件保留在存储中，历史保留在审计记录中。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "模型存储"
+    }
+   ],
+   "data": {
+    "id": "模型存储"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "模型保存在安装根目录下的 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "data/models"
+    },
+    {
+     "type": "text",
+     "value": "。导入时模型包和解包后的模型同时存在，因此运行期间存储需要容纳两者。"
+    },
+    {
+     "type": "link",
+     "url": "help:getting-started",
+     "children": [
+      {
+       "type": "text",
+       "value": "备份"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "包含已发布的模型。"
+    }
+   ]
+  }
+ ]
+}

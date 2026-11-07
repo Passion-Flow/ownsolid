@@ -1,0 +1,315 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The "
+    },
+    {
+     "type": "link",
+     "url": "/library",
+     "children": [
+      {
+       "type": "text",
+       "value": "Model library"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " holds the models of the workspace chosen in the switcher, and shows\nhow they arrive. A model arrives as a bundle, so importing one needs no network."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Importing a model"
+    }
+   ],
+   "data": {
+    "id": "importing-a-model"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "On a connected machine, fetch the model's files at the revision shown under "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Catalogue"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "In the folder that holds them, make the bundle. The page shows the exact command under "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "How to\nmake a bundle"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Bring the file to a computer that can reach the console, choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Import a bundle"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " and pick it."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Give a reason, accept the model's licence and choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Start import"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The upload continues while you use the rest of the console. Closing the tab stops it: open the\nimport from "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Imports"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ", choose the same file, and it continues from where the server stopped. A\ndifferent file is refused before any of it is stored."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Then every file is checked against its published hash. Nothing is kept unless all of them match."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "If an import fails"
+    }
+   ],
+   "data": {
+    "id": "if-an-import-fails"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "A failed import says why. "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Verify again"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " retries it a limited number of times. "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Discard"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " deletes\nwhat was uploaded. A workspace takes one import at a time, so a failed import must be finished or\ndiscarded before the next can start."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Retiring a model"
+    }
+   ],
+   "data": {
+    "id": "retiring-a-model"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Retire"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " on a model's page takes it out of the list and stops new deployments of it. A model still\nin use cannot be retired: stop what depends on it first. Its files stay in the store and its history\nstays in the audit trail."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "The model store"
+    }
+   ],
+   "data": {
+    "id": "the-model-store"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Models live in "
+    },
+    {
+     "type": "inlineCode",
+     "value": "data/models"
+    },
+    {
+     "type": "text",
+     "value": " under the installation's root. An import holds the bundle and the\nunpacked model at once, so the store needs room for both while it runs. "
+    },
+    {
+     "type": "link",
+     "url": "help:getting-started",
+     "children": [
+      {
+       "type": "text",
+       "value": "Backups"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "\ncarry published models."
+    }
+   ]
+  }
+ ]
+}

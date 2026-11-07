@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@noble/hashes": "catalog:"
+  },
   "devDependencies": {
     "@ownsolid/config": "workspace:*",
     "@testing-library/jest-dom": "catalog:",

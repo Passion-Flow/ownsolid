@@ -11,6 +11,7 @@ export {
   resetCsrf,
   setRequestTimeout,
   write,
+  writeBytes,
   type RequestOptions,
   type WriteMethod,
 } from './transport.ts';
@@ -107,6 +108,25 @@ export {
   type LicenseInspection,
   type LicenseSummary,
 } from './license.ts';
+export {
+  cancelModelImport,
+  getModel,
+  getModelCatalog,
+  getModelImport,
+  listModelImports,
+  listModels,
+  retireModel,
+  startModelImport,
+  uploadModelChunk,
+  verifyModelImport,
+  type DerivedModelCatalog,
+  type ModelCatalog,
+  type ModelCatalogAvailability,
+  type ModelFile,
+  type ModelImport,
+  type ModelImportState,
+  type ModelVersion,
+} from './models.ts';
 export {
   getLicenseStatus,
   getNotificationSummary,

@@ -151,24 +151,15 @@ function csrfToken(signal?: AbortSignal): Promise<CsrfToken> {
   return pending;
 }
 
-/**
- * Changes state. The call carries a CSRF token, fetched and cached as needed. When
- * the server rejects the token, the call is repeated once with a fresh token.
- */
-export async function write<T>(
-  method: WriteMethod,
+/** Sends a write with a CSRF token. A refused token is replaced once and the call repeated. */
+async function withCsrf<T>(
   path: string,
-  body?: unknown,
-  options: RequestOptions = {},
+  init: (token: string) => RequestInit,
+  signal: AbortSignal | undefined,
 ): Promise<T> {
   const attempt = async (): Promise<T> => {
-    const { token } = await csrfToken(options.signal);
-    const headers: Record<string, string> = { 'X-CSRF-Token': token };
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
-    if (options.idempotencyKey) headers['Idempotency-Key'] = options.idempotencyKey;
-    const init: RequestInit = { method, headers };
-    if (body !== undefined) init.body = JSON.stringify(body);
-    return read<T>(await send(path, init, options.signal));
+    const { token } = await csrfToken(signal);
+    return read<T>(await send(path, init(token), signal));
   };
   try {
     return await attempt();
@@ -177,4 +168,46 @@ export async function write<T>(
     resetCsrf();
     return attempt();
   }
+}
+
+/**
+ * Changes state. The call carries a CSRF token, fetched and cached as needed. When
+ * the server rejects the token, the call is repeated once with a fresh token.
+ */
+export function write<T>(
+  method: WriteMethod,
+  path: string,
+  body?: unknown,
+  options: RequestOptions = {},
+): Promise<T> {
+  return withCsrf<T>(
+    path,
+    (token) => {
+      const headers: Record<string, string> = { 'X-CSRF-Token': token };
+      if (body !== undefined) headers['Content-Type'] = 'application/json';
+      if (options.idempotencyKey) headers['Idempotency-Key'] = options.idempotencyKey;
+      const init: RequestInit = { method, headers };
+      if (body !== undefined) init.body = JSON.stringify(body);
+      return init;
+    },
+    options.signal,
+  );
+}
+
+/** Sends bytes as they are, with the headers the operation names. */
+export function writeBytes<T>(
+  path: string,
+  body: Blob,
+  headers: Readonly<Record<string, string>>,
+  options: RequestOptions = {},
+): Promise<T> {
+  return withCsrf<T>(
+    path,
+    (token) => ({
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/octet-stream', 'X-CSRF-Token': token },
+      body,
+    }),
+    options.signal,
+  );
 }

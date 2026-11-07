@@ -49,10 +49,19 @@ export function ResourceFailure({ error, onRetry }: { error: unknown; onRetry: (
   return isProblem(error) ? <ProblemNotice problem={error} onRetry={onRetry} /> : null;
 }
 
-function BackLink({ to, label }: { to: string; label: string }) {
+function BackLink({
+  to,
+  search,
+  label,
+}: {
+  to: string;
+  search?: Record<string, string> | undefined;
+  label: string;
+}) {
   return (
     <Link
       to={to}
+      {...(search ? { search } : {})}
       className="mb-3 inline-flex items-center gap-1.5 text-[13px] text-text-2 hover:text-text"
     >
       <ArrowLeft aria-hidden className="size-4" />
@@ -64,6 +73,7 @@ function BackLink({ to, label }: { to: string; label: string }) {
 /** The way back, the name and state, and the actions of a resource's page. */
 export function ResourceHeader({
   backTo,
+  backSearch,
   backLabel,
   title,
   description,
@@ -71,6 +81,8 @@ export function ResourceHeader({
   actions,
 }: {
   backTo: string;
+  /** The way back's filters or tab, when they are worth returning to. */
+  backSearch?: Record<string, string> | undefined;
   backLabel: string;
   title: string;
   description?: string | undefined;
@@ -79,7 +91,7 @@ export function ResourceHeader({
 }) {
   return (
     <>
-      <BackLink to={backTo} label={backLabel} />
+      <BackLink to={backTo} search={backSearch} label={backLabel} />
       <div className="mb-6 flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1">
           <h1 className="m-0 mb-1 text-[27px] leading-[1.2] font-[750] tracking-[-0.03em] [overflow-wrap:anywhere]">

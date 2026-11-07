@@ -58,7 +58,7 @@ export const navigation: readonly NavGroup[] = [
     heading: 'nav.group.models',
     items: [
       { label: 'nav.models', icon: Boxes },
-      { label: 'nav.library', icon: Library },
+      { label: 'nav.library', icon: Library, to: '/library' },
       { label: 'nav.gateway', icon: Route },
     ],
   },

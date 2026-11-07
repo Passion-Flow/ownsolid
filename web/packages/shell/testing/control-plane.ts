@@ -3,6 +3,7 @@
 import type { CapabilityDeclaration } from '@ownsolid/api';
 import { readFileSync } from 'node:fs';
 import type { Page, Route } from '@playwright/test';
+import { emptyModelScript, routeModels, type ModelScript } from './models.ts';
 import { emptyNodeScript, routeNodes, type NodeScript } from './nodes.ts';
 import { emptyTaskScript, routeTasks, type TaskScript } from './tasks.ts';
 import { emptyAuditScript, routeAudit, type AuditScript } from './audit.ts';
@@ -176,6 +177,7 @@ export interface ControlPlane
   extends
     TaskScript,
     NodeScript,
+    ModelScript,
     UserScript,
     LicenseScript,
     AuditScript,
@@ -310,6 +312,7 @@ export async function mockControlPlane(
   const state: ControlPlane = {
     ...emptyTaskScript(),
     ...emptyNodeScript(),
+    ...emptyModelScript(),
     ...emptyUserScript(),
     ...emptyLicenseScript(),
     ...emptyAuditScript(),
@@ -693,6 +696,7 @@ export async function mockControlPlane(
     return data(route, state.tenantSettings);
   });
   await routeNodes(page, state, data, problem);
+  await routeModels(page, state, data, problem);
   await routeUsers(page, state, data, problem);
   await routeLicense(page, state, data, problem);
   await routeAudit(page, state, data, problem);

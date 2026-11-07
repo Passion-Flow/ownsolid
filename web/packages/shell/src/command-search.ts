@@ -7,6 +7,7 @@ import { useQueries, useQuery } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { runtimeConfigQuery } from './routes.tsx';
+import { useWorkspaces } from './workspace.ts';
 
 /** One thing a source found. */
 export interface SearchHit {
@@ -36,7 +37,15 @@ export interface SearchSource {
   seeAll: TranslationKey;
   /** The row that says the source failed and offers a retry. */
   failed: TranslationKey;
-  find: (term: string, context: { signal: AbortSignal; t: Translator }) => Promise<SearchAnswer>;
+  find: (
+    term: string,
+    context: {
+      signal: AbortSignal;
+      t: Translator;
+      /** The workspace in the switcher, for a source scoped to one. */
+      workspace: string | undefined;
+    },
+  ) => Promise<SearchAnswer>;
 }
 
 /** What one source has for the menu now. */
@@ -72,13 +81,14 @@ function useSettled(value: string, milliseconds: number): string {
 /** Asks every source about what was typed, once typing pauses. */
 export function useCommandSearch(sources: readonly SearchSource[], typed: string): CommandSearch {
   const { t, locale } = useI18n();
+  const workspace = useWorkspaces().active?.id;
   const pause = useQuery(runtimeConfigQuery()).data?.ui.searchDebounceMilliseconds ?? 0;
   const wanted = typed.trim();
   const term = useSettled(wanted, pause);
   const queries = useQueries({
     queries: sources.map((source) => ({
-      queryKey: ['command-search', source.key, term, locale],
-      queryFn: ({ signal }: { signal: AbortSignal }) => source.find(term, { signal, t }),
+      queryKey: ['command-search', source.key, term, locale, workspace],
+      queryFn: ({ signal }: { signal: AbortSignal }) => source.find(term, { signal, t, workspace }),
       enabled: term !== '',
       // Rows stay until the next answer replaces them, so the list does not flash between keys.
       placeholderData: (previous: SearchAnswer | undefined) => previous,

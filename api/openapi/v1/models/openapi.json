@@ -44,6 +44,22 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "parameters": [
@@ -111,6 +127,28 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "MODEL_DERIVED_CATALOG_INVALID"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "parameters": [
@@ -178,6 +216,25 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "MODEL_DERIVED_CATALOG_INVALID"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "parameters": [
@@ -275,6 +332,39 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "MODEL_VERSION_REFERENCED"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "MODEL_REFERENCE_CHECK_UNAVAILABLE",
+            "MODEL_PREPARATION_UNAVAILABLE"
+          ]
         }
       },
       "parameters": [
@@ -342,6 +432,25 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "post": {
@@ -417,6 +526,45 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "IDEMPOTENCY_CONFLICT",
+            "MODEL_IMPORT_BUSY",
+            "MODEL_ALREADY_EXISTS",
+            "MODEL_PATH_INVALID"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_STORED_STATE_INVALID",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "MODEL_STORAGE_UNAVAILABLE",
+            "MODEL_IO_FAILED"
+          ]
         }
       },
       "parameters": [
@@ -494,6 +642,25 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "parameters": [
@@ -561,6 +728,22 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "parameters": [
@@ -689,7 +872,48 @@
             }
           }
         },
-        "description": "Upload one exact next offset or replay identical bytes. Reuse a current CSRF token across sequential chunks; uncertain results reconcile through import status and the same offset/digest."
+        "description": "Upload one exact next offset or replay identical bytes. Reuse a current CSRF token across sequential chunks; uncertain results reconcile through import status and the same offset/digest.",
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED",
+            "MODEL_CHUNK_INVALID"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "MODEL_CHUNK_CONFLICT",
+            "MODEL_CHUNK_OFFSET_MISMATCH",
+            "MODEL_IMPORT_STATE_CONFLICT",
+            "MODEL_IMPORT_BUSY",
+            "MODEL_PATH_INVALID"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_STORED_STATE_INVALID",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "MODEL_STORAGE_UNAVAILABLE",
+            "MODEL_IO_FAILED"
+          ]
+        }
       },
       "parameters": [
         {
@@ -786,6 +1010,45 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "MODEL_IMPORT_STATE_CONFLICT",
+            "MODEL_IMPORT_INCOMPLETE",
+            "MODEL_IMPORT_BUSY",
+            "MODEL_PATH_INVALID"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_STORED_STATE_INVALID",
+            "LICENSE_CONFIGURATION_REQUIRED",
+            "MODEL_STORAGE_UNAVAILABLE",
+            "MODEL_IO_FAILED"
+          ]
         }
       },
       "parameters": [
@@ -883,6 +1146,42 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "MODEL_IMPORT_STATE_CONFLICT",
+            "MODEL_IMPORT_BUSY",
+            "MODEL_CLEANUP_CONFLICT",
+            "MODEL_PATH_INVALID"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "MODEL_STORAGE_UNAVAILABLE",
+            "MODEL_IO_FAILED"
+          ]
         }
       },
       "parameters": [
@@ -2002,7 +2301,8 @@
               "MODEL_DERIVED_REGISTRATION_UNAVAILABLE",
               "MODEL_DERIVED_REVIEW_REQUIRED",
               "MODEL_DERIVED_IDENTITY_CONFLICT",
-              "MODEL_DERIVED_ALREADY_RETIRED"
+              "MODEL_DERIVED_ALREADY_RETIRED",
+              "MODEL_PREPARATION_UNAVAILABLE"
             ]
           },
           "request_id": {

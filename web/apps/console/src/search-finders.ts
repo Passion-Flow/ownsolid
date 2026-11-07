@@ -3,6 +3,7 @@ import {
   getTask,
   isProblem,
   listAllWorkspaces,
+  listModels,
   listNodes,
   listTasks,
   listUsers,
@@ -39,6 +40,24 @@ export const findNodes: Find = async (term, { signal, t }) => {
       href: opened('/nodes', node.id),
     })),
     more: page.next_cursor ? filtered('/nodes', 'name', term) : undefined,
+  };
+};
+
+/** Models of the workspace in the switcher with the text in their name. */
+export const findModels: Find = async (term, { signal, workspace }) => {
+  if (!workspace) return { hits: [] };
+  const wanted = term.toLowerCase();
+  const found = (await listModels(workspace, { signal })).filter((model) =>
+    model.name.toLowerCase().includes(wanted),
+  );
+  return {
+    hits: found.slice(0, hitsPerSource).map((model) => ({
+      id: model.id,
+      label: model.name,
+      detail: model.model_key,
+      href: opened('/library', model.id),
+    })),
+    more: found.length > hitsPerSource ? filtered('/library', 'name', term) : undefined,
   };
 };
 

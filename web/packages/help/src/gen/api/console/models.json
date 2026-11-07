@@ -32,7 +32,22 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "listAdminModels",
@@ -74,7 +89,28 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "MODEL_DERIVED_CATALOG_INVALID"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "getAdminModel",
@@ -116,7 +152,25 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "MODEL_DERIVED_CATALOG_INVALID"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "retireModelVersion",
@@ -160,7 +214,39 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "MODEL_VERSION_REFERENCED"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "MODEL_REFERENCE_CHECK_UNAVAILABLE",
+     "MODEL_PREPARATION_UNAVAILABLE"
+    ]
+   }
   },
   {
    "id": "listModelImports",
@@ -202,7 +288,25 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "startModelImport",
@@ -237,7 +341,45 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "IDEMPOTENCY_CONFLICT",
+     "MODEL_IMPORT_BUSY",
+     "MODEL_ALREADY_EXISTS",
+     "MODEL_PATH_INVALID"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_STORED_STATE_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "MODEL_STORAGE_UNAVAILABLE",
+     "MODEL_IO_FAILED"
+    ]
+   }
   },
   {
    "id": "resolveModelImportIntent",
@@ -288,7 +430,25 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "getModelImport",
@@ -330,7 +490,22 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "uploadModelImportChunk",
@@ -372,7 +547,47 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED",
+     "MODEL_CHUNK_INVALID"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "MODEL_CHUNK_CONFLICT",
+     "MODEL_CHUNK_OFFSET_MISMATCH",
+     "MODEL_IMPORT_STATE_CONFLICT",
+     "MODEL_IMPORT_BUSY",
+     "MODEL_PATH_INVALID"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_STORED_STATE_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "MODEL_STORAGE_UNAVAILABLE",
+     "MODEL_IO_FAILED"
+    ]
+   }
   },
   {
    "id": "queueModelImport",
@@ -416,7 +631,45 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "MODEL_IMPORT_STATE_CONFLICT",
+     "MODEL_IMPORT_INCOMPLETE",
+     "MODEL_IMPORT_BUSY",
+     "MODEL_PATH_INVALID"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_STORED_STATE_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "MODEL_STORAGE_UNAVAILABLE",
+     "MODEL_IO_FAILED"
+    ]
+   }
   },
   {
    "id": "cancelModelImport",
@@ -460,7 +713,42 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "MODEL_IMPORT_STATE_CONFLICT",
+     "MODEL_IMPORT_BUSY",
+     "MODEL_CLEANUP_CONFLICT",
+     "MODEL_PATH_INVALID"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "MODEL_STORAGE_UNAVAILABLE",
+     "MODEL_IO_FAILED"
+    ]
+   }
   }
  ],
  "schemas": {

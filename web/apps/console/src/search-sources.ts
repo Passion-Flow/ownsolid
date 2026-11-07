@@ -1,7 +1,7 @@
 // What the command menu finds: each source asks the list its page shows, so "See all" opens the
-// same rows (docs/research/global-search.md). Models and applications join with their pages.
+// same rows (docs/research/global-search.md). Applications join with their page.
 import type { SearchSource } from '@ownsolid/shell';
-import { Building2, ListChecks, Server, Users } from 'lucide-react';
+import { Boxes, Building2, ListChecks, Server, Users } from 'lucide-react';
 
 const finders = () => import('./search-finders.ts');
 
@@ -14,6 +14,14 @@ export const searchSources: readonly SearchSource[] = [
     seeAll: 'command.seeAll.nodes',
     failed: 'command.failed.nodes',
     find: async (term, context) => (await finders()).findNodes(term, context),
+  },
+  {
+    key: 'models',
+    icon: Boxes,
+    kind: 'command.kind.model',
+    seeAll: 'command.seeAll.models',
+    failed: 'command.failed.models',
+    find: async (term, context) => (await finders()).findModels(term, context),
   },
   {
     key: 'people',

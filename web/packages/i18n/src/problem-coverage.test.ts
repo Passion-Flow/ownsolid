@@ -29,6 +29,9 @@ function calls(): { method: string; path: string }[] {
     for (const match of text.matchAll(/getFile\(\s*'(\/[^']+)'/g)) {
       found.push({ method: 'get', path: match[1] ?? '' });
     }
+    for (const match of text.matchAll(/writeBytes\(\s*buildUrl\(\s*'(\/[^']+)'/g)) {
+      found.push({ method: 'post', path: match[1] ?? '' });
+    }
   }
   return found;
 }
