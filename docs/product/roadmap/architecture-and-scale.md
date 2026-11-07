@@ -47,7 +47,8 @@ agents is not.
 
 ## P1 Enterprise release
 
-- [ ] ARC-101 Versioned in-memory snapshot cache with watches for per-node reads (P1)
+- [x] ARC-101 Versioned in-memory snapshot cache with watches for per-node reads (P1) - Evidence: commit 21460f6 (ADR 0047); `TestSingleNodeInstall` and `TestFleetLoad` on `ownsolid-cpu`, 2026-11-08
+  - Scope of the evidence: PostgreSQL only; MySQL and Dameng keep reading the database until CMP-201 and CMP-202. Repeated heartbeats only: claims, results and transfers authenticate in their own transactions, and ARC-109 cuts their cost. One gateway, one load run, hit rate at load not recorded. The maximum-age bound rests on unit tests.
 - [ ] ARC-102 Gateway tier scales horizontally; agents connect to one or two gateways (P1)
 - [ ] ARC-103 mTLS agent identity, certificate rotation, enrollment throttled per rack (P1) - Catalog: F575
 - [ ] ARC-104 One Kubernetes cluster per cell installed and managed by ownsolid, with the agent on every node (P1)
