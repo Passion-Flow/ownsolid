@@ -280,6 +280,7 @@ runtime:
     # How often each gateway reads the outbox of task wakes, and how long an event stays for a
     # late reader (ADR 0028).
     outbox_poll_milliseconds: 200
+    view_max_age_seconds: 60
     outbox_retention_seconds: 300
   models:
     maximum_attempts: 3

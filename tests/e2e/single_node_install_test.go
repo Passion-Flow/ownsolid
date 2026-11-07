@@ -20,6 +20,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -549,6 +550,25 @@ func TestSingleNodeInstall(t *testing.T) {
 		e.apply(t, e.configurationWith(t, directory, "single-node", e.controlImage, fleetLimits))
 		defer e.apply(t, config)
 		e.simulatedFleet(t, agent.admin)
+	})
+
+	t.Run("a node changed through the API is announced by the serving role", func(t *testing.T) {
+		row := strings.Split(e.sql(t, "SELECT id||' '||version||' '||name FROM managed_nodes WHERE status='active' ORDER BY created_at LIMIT 1"), " ")
+		id, name := row[0], strings.Join(row[2:], " ")
+		version, err := strconv.Atoi(row[1])
+		if err != nil {
+			t.Fatal(row, err)
+		}
+		for _, status := range []string{"disabled", "active"} {
+			code, raw := agent.admin.request(t, http.MethodPatch, nodesPath+"/"+id, map[string]any{"name": name, "status": status, "version": version, "reason": "Node view drill"}, agent.admin.csrfToken(t))
+			if code != http.StatusOK {
+				t.Fatalf("set %s: %d %s", status, code, raw)
+			}
+			version++
+		}
+		if n := e.sql(t, "SELECT count(*) FROM control_outbox WHERE topic='node.view_changed' AND key='"+id+"'"); n != "2" {
+			t.Fatalf("%s events for two changes", n)
+		}
 	})
 
 	t.Run("the serving role reads and trims the outbox", func(t *testing.T) {

@@ -127,9 +127,9 @@ func (s *Service) stateRefresh() time.Duration {
 	return config.Seconds(s.Identity.Config.Policy().Nodes.StateRefreshSeconds)
 }
 
-// heartbeatUnchanged serves a heartbeat that repeats the state last written, with one
-// read-only statement. It reports false for anything else, including a refused credential,
-// so that the synchronous path, which holds every rule and error, decides.
+// heartbeatUnchanged serves a heartbeat that repeats the state last written, from the node's view
+// or else with one read-only statement. It reports false for anything else, including a refused
+// credential, so that the synchronous path, which holds every rule and error, decides.
 func (s *Service) heartbeatUnchanged(ctx context.Context, id, credential string, h wire.Handshake) (wire.Disposition, bool) {
 	table := s.sightings.Load()
 	if table == nil || ctx == nil || !nodeID(id) || !security.ValidToken(credential) || !s.sightingsRecordable(h) {
@@ -139,29 +139,48 @@ func (s *Service) heartbeatUnchanged(ctx context.Context, id, credential string,
 	if !ok || !table.Unchanged(id, state, time.Now(), s.stateRefresh()) {
 		return wire.Disposition{}, false
 	}
-	store, e := s.repository()
-	if e != nil {
-		return wire.Disposition{}, false
-	}
 	bounded, cancel := context.WithTimeout(ctx, config.Seconds(s.Identity.Config.Policy().HTTP.RequestSeconds))
 	defer cancel()
-	var status, protocol, profile string
-	var capabilities []byte
-	var active bool
-	var at time.Time
-	e = store.QueryRow(bounded, transaction.SQL(transaction.PostgreSQL, `SELECT n.status,w.status='active' AND t.status='active',n.protocol_version,n.execution_profile,n.capabilities,clock_timestamp() FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id JOIN workspaces w ON w.tenant_id=n.tenant_id AND w.id=n.workspace_id JOIN tenants t ON t.id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND n.id=$1 AND n.credential_hash=$2`, id, digest("node-credential", credential))).Scan(&status, &active, &protocol, &profile, &capabilities, &at)
-	if e != nil || status != "active" || !active || protocol != h.ProtocolVersion || profile != h.Profile() {
-		return wire.Disposition{}, false
+	credentialDigest := digest("node-credential", credential)
+	local := time.Now()
+	view, cached := s.views.lookup(id, local)
+	at := s.views.databaseTime(local)
+	if !cached || !view.answers(credentialDigest, h) {
+		var ok bool
+		if view, at, ok = s.loadNodeView(bounded, id, credentialDigest); !ok || !view.answers(credentialDigest, h) {
+			return wire.Disposition{}, false
+		}
 	}
-	var stored []string
-	if json.Unmarshal(capabilities, &stored) != nil || !slices.Equal(stored, h.Capabilities) {
-		return wire.Disposition{}, false
-	}
-	at = at.UTC()
 	table.Observe(id, at, heartbeatReport{component: h.Component, inference: h.Inference})
 	s.livenessCounters.unchanged.Add(1)
 	pacing := s.currentPacing(bounded)
-	return wire.Disposition{Status: status, ServerTime: at, Pacing: &pacing}, true
+	return wire.Disposition{Status: view.status, ServerTime: at, Pacing: &pacing}, true
+}
+
+// loadNodeView reads a node that may be answered from memory and keeps its view. It reports false
+// for anything the synchronous path must decide: a refused credential, or a node, workspace or
+// tenant that is not active. Those are never kept.
+func (s *Service) loadNodeView(ctx context.Context, id string, credential []byte) (nodeView, time.Time, bool) {
+	store, e := s.repository()
+	if e != nil {
+		return nodeView{}, time.Time{}, false
+	}
+	begun := s.views.begin()
+	var view nodeView
+	var capabilities []byte
+	var active bool
+	var at time.Time
+	e = store.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT n.status,w.status='active' AND t.status='active',n.protocol_version,n.execution_profile,n.capabilities,clock_timestamp() FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id JOIN workspaces w ON w.tenant_id=n.tenant_id AND w.id=n.workspace_id JOIN tenants t ON t.id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND n.id=$1 AND n.credential_hash=$2`, id, credential)).Scan(&view.status, &active, &view.protocol, &view.profile, &capabilities, &at)
+	if e != nil || view.status != "active" || !active || json.Unmarshal(capabilities, &view.capabilities) != nil {
+		return nodeView{}, time.Time{}, false
+	}
+	local := time.Now()
+	at = at.UTC()
+	view.credential = credential
+	s.views.noteClock(at, local)
+	policy := s.Identity.Config.Policy().Nodes
+	s.views.keep(id, view, begun, local, config.Seconds(policy.ViewMaxAgeSeconds), policy.MaximumLiveNodes)
+	return view, at, true
 }
 
 // heartbeatRepeats reports a heartbeat whose only news is that the node is still there: the

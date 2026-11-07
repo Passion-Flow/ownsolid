@@ -26,3 +26,16 @@ func (s *Service) WatchedNodes() int {
 	defer s.wake.mu.Unlock()
 	return len(s.wake.waiters)
 }
+
+// ViewsOpen says the node view cache of s is serving.
+func (s *Service) ViewsOpen() bool {
+	s.views.mu.RLock()
+	defer s.views.mu.RUnlock()
+	return s.views.open
+}
+
+// ViewHits is how many heartbeats a view answered.
+func (s *Service) ViewHits() uint64 { return s.views.hits.Load() }
+
+// ViewInvalidations is how many times a view was dropped, for a test to wait on.
+func (s *Service) ViewInvalidations() uint64 { return s.views.begin() }

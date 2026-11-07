@@ -15,6 +15,7 @@ const (
 	nodeStateRefreshEnvironment        = "PROJECT_ONE_NODE_STATE_REFRESH_SECONDS"
 	nodeOutboxPollEnvironment          = "PROJECT_ONE_NODE_OUTBOX_POLL_MILLISECONDS"
 	nodeOutboxRetentionEnvironment     = "PROJECT_ONE_NODE_OUTBOX_RETENTION_SECONDS"
+	nodeViewMaxAgeEnvironment          = "PROJECT_ONE_NODE_VIEW_MAX_AGE_SECONDS"
 	nodeReconcileEnvironment           = "PROJECT_ONE_NODE_RECONCILE_SECONDS"
 	nodeReconcileTimeoutEnvironment    = "PROJECT_ONE_NODE_RECONCILE_TIMEOUT_SECONDS"
 	uiPageEnvironment                  = "PROJECT_ONE_UI_PAGE_SIZE"
@@ -54,6 +55,8 @@ func (p *RuntimePolicy) nodeEnvironmentField(key string) *int {
 		return &p.Nodes.OutboxPollMilliseconds
 	case nodeOutboxRetentionEnvironment:
 		return &p.Nodes.OutboxRetentionSeconds
+	case nodeViewMaxAgeEnvironment:
+		return &p.Nodes.ViewMaxAgeSeconds
 	case nodeReconcileEnvironment:
 		return &p.Nodes.ReconcileSeconds
 	case nodeReconcileTimeoutEnvironment:

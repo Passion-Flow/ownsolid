@@ -33,6 +33,8 @@ type Service struct {
 	delivering atomic.Bool
 	// wakeCounters report that reader to the metrics store.
 	wakeCounters wakeCounters
+	// views answers repeated heartbeats from memory while that reader runs (ADR 0047).
+	views viewCache
 	// prune remembers where the walk of finished tasks stands (ADR 0029).
 	prune taskPruneCursor
 	// resync bounds full resyncs granted by this process (ADR 0011).
