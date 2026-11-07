@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createTranslator, isTranslationKey, placeholders, type Catalog } from './translate.ts';
-import { englishCatalog } from './translate.ts';
+import en from '../locales/en.json';
+import { createTranslator, hasTranslation, placeholders, type Catalog } from './translate.ts';
+
+const englishCatalog: Catalog = en;
 
 describe('createTranslator', () => {
   const t = createTranslator('en', englishCatalog);
@@ -25,19 +27,19 @@ describe('createTranslator', () => {
     expect(t('welcome.title')).toBe('Welcome, {name}');
   });
 
-  it('falls back to English for a key missing from the catalog', () => {
+  it('shows a key the catalog lacks as itself', () => {
     const partial = { 'signIn.title': 'Anmelden' } as unknown as Catalog;
     const de = createTranslator('de', partial);
     expect(de('signIn.title')).toBe('Anmelden');
-    expect(de('signOut.action')).toBe('Sign out');
+    expect(de('signOut.action')).toBe('signOut.action');
   });
 });
 
-describe('isTranslationKey', () => {
+describe('hasTranslation', () => {
   it('accepts plain keys and plural bases', () => {
-    expect(isTranslationKey('signIn.title')).toBe(true);
-    expect(isTranslationKey('workspace.truncated')).toBe(true);
-    expect(isTranslationKey('problem.NOPE.title')).toBe(false);
+    expect(hasTranslation(englishCatalog, 'signIn.title')).toBe(true);
+    expect(hasTranslation(englishCatalog, 'workspace.truncated')).toBe(true);
+    expect(hasTranslation(englishCatalog, 'problem.NOPE.title')).toBe(false);
   });
 });
 

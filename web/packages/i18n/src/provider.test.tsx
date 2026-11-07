@@ -22,13 +22,13 @@ afterEach(() => {
 });
 
 describe('I18nProvider', () => {
-  it('renders English at once and switches language on demand', async () => {
+  it('renders English once it has loaded and switches language on demand', async () => {
     render(
       <I18nProvider locale="en">
         <Probe />
       </I18nProvider>,
     );
-    const button = screen.getByRole('button');
+    const button = await screen.findByRole('button');
     expect(button).toHaveTextContent('Sign in');
     expect(document.documentElement.lang).toBe('en');
     act(() => {

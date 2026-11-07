@@ -70,15 +70,12 @@ function noticesPlugin(): Plugin {
 }
 
 /**
- * The size budget of both applications, in gzip bytes. Set in November 2026, when the
- * first download measured 138 kB and the largest later chunk, the signed-in frame,
- * 39 kB; the headroom is for the shared code P1 pages add. A page that needs more
- * loads it with its route; raising a limit is a reviewed change (ADR 0016).
+ * The size budget of both applications, in gzip bytes. A page that needs more loads it with its route;
+ * raising a limit is a reviewed change (ADR 0016). Set in November 2026 at 160 kB, when the first download
+ * measured 138 kB, and the largest later chunk, the signed-in frame, 39 kB. Lowered with UX-129, when
+ * message catalogs left the first download: it then measured 142 kB.
  */
-// Raised from 160 kB when the sidebar's collapsing groups reached it (UX-123). Most of what grows here
-// is the English catalog and the shared stylesheet, which take a little from every page; UX-129 moves
-// the catalog out, and the limit then comes back down.
-export const bundleBudget: BundleBudget = { initial: 170_000, chunk: 60_000 };
+export const bundleBudget: BundleBudget = { initial: 150_000, chunk: 60_000 };
 
 // The control plane answers these paths; the development server forwards them.
 const controlPaths = ['/api', '/runtime-config.json', '/health'];

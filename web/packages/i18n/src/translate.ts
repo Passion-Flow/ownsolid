@@ -1,6 +1,6 @@
 // Message lookup and formatting. English is the source catalog: its keys define
 // MessageKey, and every other catalog must provide the same keys and placeholders.
-import en from '../locales/en.json';
+import type en from '../locales/en.json';
 
 /** A message catalog: message key to template. */
 export type Catalog = Readonly<Record<MessageKey, string>>;
@@ -20,12 +20,9 @@ export type MessageParams = Readonly<Record<string, string | number>>;
 /** Translates a key in one locale. */
 export type Translator = (key: TranslationKey, params?: MessageParams) => string;
 
-/** The English catalog, always bundled; other catalogs load on demand. */
-export const englishCatalog: Catalog = en;
-
-/** Returns true when the English catalog has the key, directly or as a plural base. */
-export function isTranslationKey(key: string): key is TranslationKey {
-  return Object.hasOwn(englishCatalog, key) || Object.hasOwn(englishCatalog, `${key}_other`);
+/** Returns true when a catalog has the key, directly or as a plural base. */
+export function hasTranslation(catalog: Catalog, key: string): key is TranslationKey {
+  return Object.hasOwn(catalog, key) || Object.hasOwn(catalog, `${key}_other`);
 }
 
 const placeholder = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
@@ -37,14 +34,13 @@ export function placeholders(template: string): string[] {
 
 /**
  * Creates a translator for a locale and catalog. Numbers are formatted for the
- * locale. A missing key falls back to English, so a partly translated catalog never
- * shows raw keys; the catalog tests keep that from shipping.
+ * locale. Every catalog has every key, which the catalog tests enforce, so a missing key can only be a
+ * key the code made up, and it shows as itself.
  */
 export function createTranslator(locale: string, catalog: Catalog): Translator {
   const rules = new Intl.PluralRules(locale);
   const numbers = new Intl.NumberFormat(locale);
-  const lookup = (key: string): string | undefined =>
-    (catalog as Record<string, string>)[key] ?? (englishCatalog as Record<string, string>)[key];
+  const lookup = (key: string): string | undefined => (catalog as Record<string, string>)[key];
 
   return (key, params) => {
     let template: string | undefined;

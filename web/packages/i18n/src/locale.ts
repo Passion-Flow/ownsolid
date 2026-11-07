@@ -1,5 +1,5 @@
 // Supported locales, negotiation and catalog loading.
-import { englishCatalog, type Catalog } from './translate.ts';
+import type { Catalog } from './translate.ts';
 
 /** Locales the product ships, as BCP 47 tags. */
 export const supportedLocales = ['en', 'zh-CN'] as const;
@@ -34,9 +34,10 @@ export function negotiateLocale(preferred: readonly string[]): Locale {
   return defaultLocale;
 }
 
-// Catalogs other than English are separate chunks, loaded only when selected.
+// Every catalog is its own chunk, loaded only when selected, so nobody downloads a language they do not
+// read, and a change of wording does not change the address of the application's code.
 const loaders: Record<Locale, () => Promise<Catalog>> = {
-  en: () => Promise.resolve(englishCatalog),
+  en: () => import('../locales/en.json').then((module) => module.default as Catalog),
   'zh-CN': () => import('../locales/zh-cn.json').then((module) => module.default as Catalog),
 };
 

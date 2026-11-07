@@ -1,7 +1,10 @@
 // Every shipped catalog must match English key for key and placeholder for placeholder.
 import { describe, expect, it } from 'vitest';
-import { englishCatalog, placeholders } from './translate.ts';
+import en from '../locales/en.json';
+import { placeholders, type Catalog } from './translate.ts';
 import { loadCatalog, supportedLocales } from './locale.ts';
+
+const englishCatalog: Catalog = en;
 
 const sorted = (values: Iterable<string>) => [...values].sort();
 

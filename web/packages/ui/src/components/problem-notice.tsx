@@ -1,4 +1,4 @@
-import { isTranslationKey, useI18n } from '@ownsolid/i18n';
+import { useI18n } from '@ownsolid/i18n';
 import { useEffect, useState } from 'react';
 import { Button } from './button.tsx';
 import { CopyText } from './copy-text.tsx';
@@ -68,12 +68,12 @@ export function ProblemNotice(props: ProblemNoticeProps) {
 }
 
 function Explained({ problem, onRetry, titleAs, className }: ProblemNoticeProps) {
-  const { t, format } = useI18n();
+  const { t, format, knows } = useI18n();
   const wait = useWait(problem.retryAfterSeconds);
   const base = `problem.${problem.code}`;
   const title = `${base}.title`;
   const detail = `${base}.detail`;
-  const known = isTranslationKey(title) && isTranslationKey(detail);
+  const known = knows(title) && knows(detail);
   const reload = fixedByReload.has(problem.code);
   let action = null;
   if (reload) {

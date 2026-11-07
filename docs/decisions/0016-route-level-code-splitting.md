@@ -26,7 +26,7 @@ first download grows with every page.
   static imports and their CSS) may be at most 160 kB, and any later chunk at most 60 kB.
   When it was set the first download was 138 kB and the largest chunk, the frame, 39 kB.
   Fonts and images are not counted. Raising a limit is a change to
-  `packages/config/src/vite.ts` that states why. The first download's limit is now 170 kB (UX-123).
+  `packages/config/src/vite.ts` that states why. The first download's limit rose to 170 kB (UX-123), then fell to 150 kB when message catalogs left it (UX-129).
 
 ## Consequences
 

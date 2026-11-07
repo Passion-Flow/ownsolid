@@ -1,7 +1,6 @@
 export {
   createTranslator,
-  englishCatalog,
-  isTranslationKey,
+  hasTranslation,
   placeholders,
   type Catalog,
   type MessageKey,

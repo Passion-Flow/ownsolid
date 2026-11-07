@@ -11,7 +11,13 @@ import {
 } from 'react';
 import { createFormatter, type Formatter } from './format.ts';
 import { defaultLocale, isLocale, loadCatalog, negotiateLocale, type Locale } from './locale.ts';
-import { createTranslator, englishCatalog, type Catalog, type Translator } from './translate.ts';
+import {
+  createTranslator,
+  hasTranslation,
+  type Catalog,
+  type TranslationKey,
+  type Translator,
+} from './translate.ts';
 
 const storageKey = 'ownsolid.locale';
 // Set once the stored language matches the account. Without it, a stored language is a choice
@@ -31,6 +37,8 @@ export interface I18n {
   /** What was chosen; `auto` when `locale` comes from the installation or the browser. */
   choice: LocaleChoice;
   t: Translator;
+  /** Whether a key built at run time, such as one from an error code, has a translation. */
+  knows: (key: string) => key is TranslationKey;
   /** Dates, numbers and units for the active language. */
   format: Formatter;
   /** Applies a language the person chose and saves it through the connected saver. */
@@ -88,18 +96,35 @@ export interface I18nProviderProps {
   locale?: Locale;
 }
 
+// With no catalog there is nothing to translate with, so this is the one message in the code. A deployment
+// replaced under an open page is the usual cause, and a reload finds the new files.
+function CatalogFailure() {
+  return (
+    <div role="alert" style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
+      <p>The console could not load its text. Check the connection and reload the page.</p>
+      <button
+        type="button"
+        onClick={() => {
+          window.location.reload();
+        }}
+      >
+        Reload
+      </button>
+    </div>
+  );
+}
+
 /**
- * Provides translations to the tree. Children render once the starting catalog has
- * loaded; English is bundled, so an English start renders immediately.
+ * Provides translations to the tree. Children render once the starting catalog has loaded. A language that
+ * cannot load falls back to English; when English cannot load either, the tree says so and offers a reload.
  */
 export function I18nProvider({ children, locale: start }: I18nProviderProps) {
   const [choice, setChoice] = useState<LocaleChoice>(() => start ?? storedChoice());
   const [installation, setInstallationLocale] = useState<LocaleChoice>('auto');
   const saver = useRef<LocaleSaver | null>(null);
   const requested = resolve(choice, installation);
-  const [active, setActive] = useState<{ locale: Locale; catalog: Catalog } | null>(() =>
-    requested === defaultLocale ? { locale: defaultLocale, catalog: englishCatalog } : null,
-  );
+  const [active, setActive] = useState<{ locale: Locale; catalog: Catalog } | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let current = true;
@@ -107,10 +132,15 @@ export function I18nProvider({ children, locale: start }: I18nProviderProps) {
       (catalog) => {
         if (current) setActive({ locale: requested, catalog });
       },
-      () => {
-        // A catalog chunk that cannot load leaves the interface usable in English.
-        if (current) setActive({ locale: defaultLocale, catalog: englishCatalog });
-      },
+      () =>
+        loadCatalog(defaultLocale).then(
+          (catalog) => {
+            if (current) setActive({ locale: defaultLocale, catalog });
+          },
+          () => {
+            if (current) setFailed(true);
+          },
+        ),
     );
     return () => {
       current = false;
@@ -150,6 +180,7 @@ export function I18nProvider({ children, locale: start }: I18nProviderProps) {
         locale: active.locale,
         choice,
         t: createTranslator(active.locale, active.catalog),
+        knows: (key: string): key is TranslationKey => hasTranslation(active.catalog, key),
         format: createFormatter(active.locale),
         setLocale,
         adoptLocale,
@@ -159,7 +190,7 @@ export function I18nProvider({ children, locale: start }: I18nProviderProps) {
     [active, choice, setLocale, adoptLocale, connectLocale],
   );
 
-  if (!active) return null;
+  if (!active) return failed ? <CatalogFailure /> : null;
   return <I18nContext value={value}>{children}</I18nContext>;
 }
 

@@ -21,7 +21,7 @@ Lane B continues, in order, with:
 4. **UX-126** summary tiles that filter the list they sit above.
 5. **UX-125** one advanced fold per form.
 6. **UX-127** resource detail pages with their own tabs.
-7. **UX-129** English strings loaded by page, so the first download stops growing with every page.
+7. **UX-129** English strings loaded as their own chunk, so the first download stops growing with every page.
 
 An item that needs a server change makes it in the module that owns the endpoint, small and additive, and stays
 out of the agent session, claim and heartbeat paths lane A is working in.
