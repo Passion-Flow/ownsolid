@@ -191,8 +191,34 @@ call that changed nothing commit without waiting did ([ADR 0040](../decisions/00
 None of these three had the host to itself, so they do not meet the rule below. Run 2 shows that a
 busy disk still slows heartbeats, though none failed.
 
-ARC-015 stays open until three runs in a row pass on a host with nothing else running. That is one
-more than this note first asked, because the old quota also passed two runs of three.
+ARC-015 asked for three runs in a row on a quiet host, one more than this note first asked, because
+the old quota also passed two runs of three. They passed on 2026-11-07, with the image built from
+`147eb49` plus the commits of ADR 0040:
+
+| Measure | Quiet run 1 | Quiet run 2 | Quiet run 3 |
+| --- | --- | --- | --- |
+| Result | Pass | Pass | Pass |
+| Worst steady heartbeat p99 (at most 1 s) | 3.8 ms | 169.4 ms | 211.8 ms |
+| Failed steady heartbeats, claims (none) | 0, 0 | 0, 0 | 0, 0 |
+| Dispatch p99 (at most 5 s) | 1.31 s | 1.32 s | 1.80 s |
+| Full reconnect after a disconnect, a partition's heal, a control restart (at most 300 s) | 3.3 s, 57.5 s, 17.1 s | 3.3 s, 59.5 s, 11.2 s | 3.2 s, 57.7 s, 30.8 s |
+| Long tasks through the restart, on their first attempt | 100 of 100 | 100 of 100 | 100 of 100 |
+| On the stream at the end | 2,000 | 2,000 | 2,000 |
+| PostgreSQL throttled | 0 | 0 | 0 |
+| PostgreSQL CPU, average and highest 5 s sample | 1.00, 1.47 | 0.96, 1.42 | 0.95, 1.28 |
+| Control CPU, average | 1.02 | 1.00 | 0.99 |
+| Outbound attempts | 0 | 0 | 0 |
+
+"Quiet" has a stated limit. Another project's test containers and processes kept being started on
+the host, and a watcher stopped them within 15 seconds, without deleting anything. That happened at
+seconds 850 and 867 of run 2 and 919 and 1,451 of run 3, never in the steady stretch or in the
+stretch from the long tasks to the stream deadline. No other session's install changed during the
+three runs.
+
+PostgreSQL used up to 1.47 CPUs, which the old 2-CPU quota would have allowed on average: the weight
+of ADR 0038 removed stalls, not a shortage. A disk busy with other work still slows heartbeats, as
+fix run 2 shows. Each of these runs is a single host with a disk of that speed; a slower disk is not
+measured.
 
 ## Failure modes
 
