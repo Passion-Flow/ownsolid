@@ -27,6 +27,7 @@ recovery and support tooling.
 - [ ] REL-109 Point-in-time recovery from a base backup and archived WAL, including incremental base backups (P1)
 - [ ] REL-110 Encrypted backups with the key held outside the archive (P1)
 - [ ] REL-111 Backup history, status and failure alerts in the console (P1)
+- [ ] REL-112 `apply` after a `restore` over a running installation: the administrator intent is bound to the database's OIDs, which the restored database does not have, so every later `apply` stops with `BOOTSTRAP_INTENT_MISMATCH` (found on `ownsolid-cpu`, 2026-11-07) (P1)
 
 ## P2 Fleet operations
 

@@ -106,14 +106,14 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | # | Module | File | P0 | P1 | P2 | P3 | P4 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Architecture and scale | [architecture-and-scale.md](architecture-and-scale.md) | 15/16 | 0/10 | 0/7 | 0/4 | - |
-| 2 | Delivery and upgrades | [delivery-and-upgrades.md](delivery-and-upgrades.md) | 3/3 | 1/17 | 0/4 | 0/1 | 0/1 |
+| 2 | Delivery and upgrades | [delivery-and-upgrades.md](delivery-and-upgrades.md) | 3/3 | 2/17 | 0/4 | 0/1 | 0/1 |
 | 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 3/19 | 0/5 | 0/1 | 0/1 |
 | 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 26/30 | 0/4 | - | 0/2 |
 | 5 | Fleet and infrastructure | [fleet-and-infrastructure.md](fleet-and-infrastructure.md) | - | 2/15 | 0/11 | 0/2 | - |
 | 6 | GPU operations | [gpu-operations.md](gpu-operations.md) | - | 0/9 | 0/8 | - | 0/2 |
 | 7 | Scheduling and quota | [scheduling-and-quota.md](scheduling-and-quota.md) | - | 0/11 | 0/7 | 0/2 | 0/1 |
 | 8 | In-product operations | [in-product-operations.md](in-product-operations.md) | - | 0/14 | 0/6 | - | 0/2 |
-| 9 | Models and registry | [models-and-registry.md](models-and-registry.md) | - | 0/16 | 0/6 | - | 0/3 |
+| 9 | Models and registry | [models-and-registry.md](models-and-registry.md) | - | 1/16 | 0/6 | - | 0/3 |
 | 10 | Serving | [serving.md](serving.md) | - | 0/11 | 0/6 | 0/1 | 0/4 |
 | 11 | Gateway | [gateway.md](gateway.md) | - | 0/13 | 0/4 | 0/2 | 0/2 |
 | 12 | Training and fine-tuning | [training-and-finetuning.md](training-and-finetuning.md) | - | 0/10 | 0/5 | - | 0/4 |
@@ -125,7 +125,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 18 | Tenancy, metering and commerce | [tenancy-metering-commerce.md](tenancy-metering-commerce.md) | - | 0/9 | 0/8 | 0/2 | - |
 | 19 | Audit and compliance | [audit-and-compliance.md](audit-and-compliance.md) | - | 1/11 | 0/7 | - | - |
 | 20 | Observability and alerting | [observability-and-alerting.md](observability-and-alerting.md) | 2/2 | 0/13 | 0/5 | 0/1 | - |
-| 21 | Platform reliability | [platform-reliability.md](platform-reliability.md) | 1/2 | 0/11 | 0/4 | 0/2 | - |
+| 21 | Platform reliability | [platform-reliability.md](platform-reliability.md) | 1/2 | 0/12 | 0/4 | 0/2 | - |
 | 22 | Network and storage | [network-and-storage.md](network-and-storage.md) | - | 0/6 | 0/7 | - | 0/1 |
 | 23 | Developer experience | [developer-experience.md](developer-experience.md) | - | 0/8 | 0/5 | - | 0/1 |
 | 24 | Compatibility matrix | [compatibility-matrix.md](compatibility-matrix.md) | - | 1/2 | 0/11 | - | 0/13 |
