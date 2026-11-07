@@ -1,0 +1,40 @@
+{
+ "getting-started": {
+  "title": "Getting started",
+  "summary": "The portal is where you use what your administrators set up for you. Its home page shows what\nneeds you, where you left off and what has been published to your workspace.",
+  "sections": [
+   {
+    "title": "Your workspace",
+    "anchor": "your-workspace"
+   },
+   {
+    "title": "The home page",
+    "anchor": "the-home-page"
+   },
+   {
+    "title": "Notifications",
+    "anchor": "notifications"
+   }
+  ]
+ },
+ "account": {
+  "title": "Your account",
+  "summary": "Your account holds your profile, your password and how ownsolid looks for you.",
+  "sections": [
+   {
+    "title": "What you can change",
+    "anchor": "what-you-can-change"
+   }
+  ]
+ },
+ "what-is-supported": {
+  "title": "What is supported",
+  "summary": "What is supported lists every option the product offers, such as operating systems,\naccelerators and installation sizes, and whether this release can use it.",
+  "sections": [
+   {
+    "title": "States",
+    "anchor": "states"
+   }
+  ]
+ }
+}

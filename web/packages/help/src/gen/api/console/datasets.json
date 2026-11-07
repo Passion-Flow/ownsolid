@@ -1,0 +1,2641 @@
+{
+ "title": "Project-one Text Dataset Lifecycle",
+ "operations": [
+  {
+   "id": "adminDatasetConfiguration",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/configuration",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetConfigurationResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminDatasetPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCreateDataset",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "CreateAdminDataset"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "DatasetResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetDataset",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminRetireDataset",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/retire",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "RetireDataset"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminDatasetDraftPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetDraftPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCreateDatasetDraft",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "CreateDatasetDraft"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "DatasetDraftResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetDatasetDraft",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "draft_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetDraftResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCancelDatasetDraft",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/cancel",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "draft_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DatasetReason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetDraftResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminUploadDatasetSource",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/source",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "draft_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "DatasetDraftResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminDatasetRowPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "draft_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetRowPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminAppendDatasetRow",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "draft_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "AppendDatasetRow"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "DatasetRowResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminReplaceDatasetRow",
+   "method": "patch",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "draft_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "row_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "ReplaceDatasetRow"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetRowResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminDeleteDatasetRow",
+   "method": "delete",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "draft_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "row_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DeleteDatasetRow"
+   },
+   "responses": [
+    {
+     "status": "204",
+     "schema": null
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminPublishDataset",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/publications",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "draft_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "PublishDataset"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "DatasetJobResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetDatasetJob",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetJobResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCancelDatasetJob",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}/cancel",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DatasetReason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetJobResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminRetryDatasetJob",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}/retry",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DatasetReason"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "DatasetJobResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminDatasetVersionPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetVersionPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetDatasetVersion",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "version_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetVersionResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminDatasetVersionFile",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}/files/{asset}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "version_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "asset",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "samples",
+       "train",
+       "validation",
+       "assignments",
+       "duplicates",
+       "manifest"
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "string",
+      "format": "binary"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminRetireDatasetVersion",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}/retire",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "version_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DatasetReason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DatasetVersionResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCloneDatasetVersion",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}/drafts",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "version_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DatasetReason"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "DatasetDraftResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "AppendDatasetRow": {
+   "type": "object",
+   "required": [
+    "expected_revision",
+    "source_id",
+    "prompt",
+    "completion",
+    "reason"
+   ],
+   "properties": {
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "source_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 512
+    },
+    "prompt": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32768
+    },
+    "completion": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32768
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "CreateAdminDataset": {
+   "type": "object",
+   "required": [
+    "workspace_id",
+    "name",
+    "origin",
+    "license",
+    "rights_asserted",
+    "reason"
+   ],
+   "properties": {
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "origin": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 2000
+    },
+    "license": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    },
+    "rights_asserted": {
+     "type": "boolean",
+     "const": true
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "CreateDatasetDraft": {
+   "type": "object",
+   "required": [
+    "source_name",
+    "expected_bytes",
+    "source_sha256",
+    "reason"
+   ],
+   "properties": {
+    "source_name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 255
+    },
+    "expected_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 67108864
+    },
+    "source_sha256": {
+     "type": "string"
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "Dataset": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "name",
+    "origin",
+    "license",
+    "rights_asserted",
+    "created_by",
+    "revision",
+    "created_at",
+    "updated_at",
+    "retired_at",
+    "retire_reason"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "origin": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 2000
+    },
+    "license": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    },
+    "rights_asserted": {
+     "type": "boolean",
+     "const": true
+    },
+    "created_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "retired_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "retire_reason": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 500
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DatasetAsset": {
+   "type": "object",
+   "required": [
+    "path",
+    "size_bytes",
+    "sha256"
+   ],
+   "properties": {
+    "path": {
+     "type": "string",
+     "enum": [
+      "samples.jsonl",
+      "train.jsonl",
+      "validation.jsonl",
+      "assignments.jsonl",
+      "duplicates.jsonl"
+     ]
+    },
+    "size_bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 83886080
+    },
+    "sha256": {
+     "type": "string"
+    }
+   }
+  },
+  "DatasetConfiguration": {
+   "type": "object",
+   "required": [
+    "storage_available",
+    "limits",
+    "row_schema",
+    "processor_version",
+    "split_algorithm",
+    "validation_basis_points",
+    "can_import",
+    "can_publish"
+   ],
+   "properties": {
+    "storage_available": {
+     "type": "boolean"
+    },
+    "limits": {
+     "$ref": "DatasetLimits"
+    },
+    "row_schema": {
+     "type": "string",
+     "const": "projectone.text-sft.v1"
+    },
+    "processor_version": {
+     "type": "string",
+     "const": "0.8.0"
+    },
+    "split_algorithm": {
+     "type": "string",
+     "const": "source-union-sha256.v1"
+    },
+    "validation_basis_points": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 5000
+    },
+    "can_import": {
+     "type": "boolean"
+    },
+    "can_publish": {
+     "type": "boolean"
+    }
+   }
+  },
+  "DatasetConfigurationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DatasetConfiguration"
+    }
+   }
+  },
+  "DatasetDraft": {
+   "type": "object",
+   "required": [
+    "id",
+    "dataset_id",
+    "workspace_id",
+    "created_by",
+    "parent_version_id",
+    "source_name",
+    "source_sha256",
+    "expected_bytes",
+    "source_received_at",
+    "state",
+    "revision",
+    "total_rows",
+    "invalid_rows",
+    "validation_completed_at",
+    "fatal_source_error",
+    "validation_errors",
+    "errors_truncated",
+    "error_code",
+    "error_line_number",
+    "current_job_id",
+    "published_version_id",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "dataset_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "created_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "parent_version_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "source_name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 255
+    },
+    "source_sha256": {
+     "type": "string"
+    },
+    "expected_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 67108864
+    },
+    "source_received_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "uploading",
+      "validating",
+      "editing",
+      "publishing",
+      "published",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "total_rows": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 10000
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "invalid_rows": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 10001
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "validation_completed_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "fatal_source_error": {
+     "type": "boolean"
+    },
+    "validation_errors": {
+     "type": "array",
+     "maxItems": 2000,
+     "items": {
+      "$ref": "DatasetLineError"
+     }
+    },
+    "errors_truncated": {
+     "type": "boolean"
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 80
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "error_line_number": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 10001
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "current_job_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "published_version_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "DatasetDraftPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "DatasetDraft"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DatasetDraftPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DatasetDraftPage"
+    }
+   }
+  },
+  "DatasetDraftResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DatasetDraft"
+    }
+   }
+  },
+  "DatasetJob": {
+   "type": "object",
+   "required": [
+    "reason",
+    "id",
+    "dataset_id",
+    "draft_id",
+    "workspace_id",
+    "kind",
+    "requested_by",
+    "expected_revision",
+    "state",
+    "version_id",
+    "input_sha256",
+    "seed",
+    "validation_basis_points",
+    "attempt_count",
+    "attempt_id",
+    "lease_expires_at",
+    "cancel_requested_at",
+    "error_code",
+    "error_line_number",
+    "retryable",
+    "created_at",
+    "updated_at",
+    "completed_at"
+   ],
+   "properties": {
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    },
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "dataset_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "draft_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "import",
+      "publish"
+     ]
+    },
+    "requested_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "pending",
+      "running",
+      "succeeded",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "version_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "input_sha256": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "seed": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "validation_basis_points": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 100,
+       "maximum": 5000
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "attempt_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 5
+    },
+    "attempt_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "lease_expires_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "cancel_requested_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 80
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "error_line_number": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 0,
+       "maximum": 10001
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "retryable": {
+     "type": "boolean"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "completed_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DatasetJobResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DatasetJob"
+    }
+   }
+  },
+  "DatasetLimits": {
+   "type": "object",
+   "required": [
+    "maximum_bytes",
+    "maximum_rows",
+    "maximum_line_bytes",
+    "maximum_text_bytes",
+    "maximum_source_bytes",
+    "maximum_errors"
+   ],
+   "properties": {
+    "maximum_bytes": {
+     "type": "integer",
+     "minimum": 1024,
+     "maximum": 67108864
+    },
+    "maximum_rows": {
+     "type": "integer",
+     "minimum": 2,
+     "maximum": 10000
+    },
+    "maximum_line_bytes": {
+     "type": "integer",
+     "minimum": 256,
+     "maximum": 131072
+    },
+    "maximum_text_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 32768
+    },
+    "maximum_source_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 512
+    },
+    "maximum_errors": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 2000
+    }
+   }
+  },
+  "DatasetLineError": {
+   "type": "object",
+   "required": [
+    "line_number",
+    "code",
+    "preview",
+    "preview_replaced"
+   ],
+   "properties": {
+    "line_number": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10000
+    },
+    "code": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 80
+    },
+    "preview": {
+     "type": "string",
+     "minLength": 0,
+     "maxLength": 4096
+    },
+    "preview_replaced": {
+     "type": "boolean"
+    }
+   }
+  },
+  "DatasetManifest": {
+   "type": "object",
+   "required": [
+    "schema_version",
+    "row_schema",
+    "processor_version",
+    "split_algorithm",
+    "source_sha256",
+    "seed",
+    "validation_basis_points",
+    "total_rows",
+    "unique_rows",
+    "duplicate_rows",
+    "source_groups",
+    "validation_groups",
+    "train_rows",
+    "validation_rows",
+    "files",
+    "manifest_file"
+   ],
+   "properties": {
+    "schema_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "row_schema": {
+     "type": "string",
+     "const": "projectone.text-sft.v1"
+    },
+    "processor_version": {
+     "type": "string",
+     "const": "0.8.0"
+    },
+    "split_algorithm": {
+     "type": "string",
+     "const": "source-union-sha256.v1"
+    },
+    "source_sha256": {
+     "type": "string"
+    },
+    "seed": {
+     "type": "string"
+    },
+    "validation_basis_points": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 5000
+    },
+    "total_rows": {
+     "type": "integer",
+     "minimum": 2,
+     "maximum": 10000
+    },
+    "unique_rows": {
+     "type": "integer",
+     "minimum": 2,
+     "maximum": 10000
+    },
+    "duplicate_rows": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10000
+    },
+    "source_groups": {
+     "type": "integer",
+     "minimum": 2,
+     "maximum": 10000
+    },
+    "validation_groups": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9999
+    },
+    "train_rows": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9999
+    },
+    "validation_rows": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9999
+    },
+    "files": {
+     "type": "array",
+     "maxItems": 5,
+     "items": {
+      "$ref": "DatasetAsset"
+     }
+    },
+    "manifest_file": {
+     "$ref": "DatasetManifestAsset"
+    }
+   }
+  },
+  "DatasetManifestAsset": {
+   "type": "object",
+   "required": [
+    "path",
+    "size_bytes",
+    "sha256"
+   ],
+   "properties": {
+    "path": {
+     "type": "string",
+     "const": "manifest.json"
+    },
+    "size_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 83886080
+    },
+    "sha256": {
+     "type": "string"
+    }
+   }
+  },
+  "DatasetPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Dataset"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DatasetPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DatasetPage"
+    }
+   }
+  },
+  "DatasetReason": {
+   "type": "object",
+   "required": [
+    "reason"
+   ],
+   "properties": {
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "DatasetResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Dataset"
+    }
+   }
+  },
+  "DatasetRow": {
+   "type": "object",
+   "required": [
+    "id",
+    "line_number",
+    "revision",
+    "source_id",
+    "prompt",
+    "completion",
+    "error_code",
+    "raw_preview",
+    "preview_replaced"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "line_number": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 10000
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "source_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "prompt": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 32768
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "completion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 32768
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 80
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "raw_preview": {
+     "type": "string",
+     "minLength": 0,
+     "maxLength": 4096
+    },
+    "preview_replaced": {
+     "type": "boolean"
+    }
+   }
+  },
+  "DatasetRowPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "DatasetRow"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DatasetRowPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DatasetRowPage"
+    }
+   }
+  },
+  "DatasetRowResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DatasetRow"
+    }
+   }
+  },
+  "DatasetVersion": {
+   "type": "object",
+   "required": [
+    "id",
+    "dataset_id",
+    "workspace_id",
+    "draft_id",
+    "job_id",
+    "attempt_id",
+    "ordinal",
+    "parent_version_id",
+    "published_by",
+    "published_at",
+    "raw_source_sha256",
+    "effective_source_sha256",
+    "manifest_sha256",
+    "manifest",
+    "row_mapping_sha256",
+    "retired_at",
+    "retire_reason"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "dataset_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "draft_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "job_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "attempt_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "ordinal": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "parent_version_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "published_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "published_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "raw_source_sha256": {
+     "type": "string"
+    },
+    "effective_source_sha256": {
+     "type": "string"
+    },
+    "manifest_sha256": {
+     "type": "string"
+    },
+    "manifest": {
+     "$ref": "DatasetManifest"
+    },
+    "row_mapping_sha256": {
+     "type": "string"
+    },
+    "retired_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "retire_reason": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 500
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DatasetVersionPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "DatasetVersion"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DatasetVersionPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DatasetVersionPage"
+    }
+   }
+  },
+  "DatasetVersionResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DatasetVersion"
+    }
+   }
+  },
+  "DeleteDatasetRow": {
+   "type": "object",
+   "required": [
+    "expected_revision",
+    "row_revision",
+    "reason"
+   ],
+   "properties": {
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "row_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "PublishDataset": {
+   "type": "object",
+   "required": [
+    "expected_revision",
+    "seed",
+    "validation_basis_points",
+    "reason"
+   ],
+   "properties": {
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "seed": {
+     "type": "string"
+    },
+    "validation_basis_points": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 5000
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "ReplaceDatasetRow": {
+   "type": "object",
+   "required": [
+    "expected_revision",
+    "row_revision",
+    "source_id",
+    "prompt",
+    "completion",
+    "reason"
+   ],
+   "properties": {
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "row_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "source_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 512
+    },
+    "prompt": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32768
+    },
+    "completion": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32768
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "RetireDataset": {
+   "type": "object",
+   "required": [
+    "expected_revision",
+    "reason"
+   ],
+   "properties": {
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  }
+ }
+}

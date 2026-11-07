@@ -1,0 +1,223 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "平台通过你的邮件服务器发送邀请、密码重置以及密码已修改的通知。"
+    },
+    {
+     "type": "link",
+     "url": "/mail",
+     "children": [
+      {
+       "type": "text",
+       "value": "邮件投递"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "显示每封邮件的投递情况。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "投递状态"
+    }
+   ],
+   "data": {
+    "id": "投递状态"
+   }
+  },
+  {
+   "type": "table",
+   "align": [
+    null,
+    null
+   ],
+   "children": [
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "状态"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "含义"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "等待中"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "等待发送，或等待下一次尝试。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "发送中"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "正在交给邮件服务器。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "已发送"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "邮件服务器已接收。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "失败"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "所有尝试都失败了。错误信息会说明原因，例如无法连接邮件服务器。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "已取消"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "不会再发送。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "重新发送"
+    }
+   ],
+   "data": {
+    "id": "重新发送"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "选中失败的邮件并选择 "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "重新发送"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "，每封都会重新排队。在这里也可以输入邮箱地址确认后撤销邀请。"
+    }
+   ]
+  }
+ ]
+}

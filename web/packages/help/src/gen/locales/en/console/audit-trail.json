@@ -1,0 +1,93 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Every privileged action is recorded. The "
+    },
+    {
+     "type": "link",
+     "url": "/audit",
+     "children": [
+      {
+       "type": "text",
+       "value": "Audit trail"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " shows who did what, to what, when,\nfrom where and with what outcome."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Finding an event"
+    }
+   ],
+   "data": {
+    "id": "finding-an-event"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Filter by kind of action, outcome, person, request and time. The filters are part of the address,\nso a link shows the same events to a colleague."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Open an event to see its details, and follow it to the person or to every event of the same\nrequest."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Each event has its own link that keeps working."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

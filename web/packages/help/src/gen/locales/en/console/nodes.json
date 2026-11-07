@@ -1,0 +1,431 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "A node is a server that runs the ownsolid agent. The "
+    },
+    {
+     "type": "link",
+     "url": "/nodes",
+     "children": [
+      {
+       "type": "text",
+       "value": "Nodes"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " page lists every node with its\nstate and lets you add, change and remove them."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Adding a node"
+    }
+   ],
+   "data": {
+    "id": "adding-a-node"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Add node"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ". The page creates a one-time join token and shows the commands to run on the\nnew server."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Run the commands as shown. They keep the token out of the shell's history."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "The node appears in the list once its agent joins. A token joins one node; an unused token can be\nrevoked."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "A node joins only while the installation has a valid "
+    },
+    {
+     "type": "link",
+     "url": "help:license",
+     "children": [
+      {
+       "type": "text",
+       "value": "license"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "States"
+    }
+   ],
+   "data": {
+    "id": "states"
+   }
+  },
+  {
+   "type": "table",
+   "align": [
+    null,
+    null
+   ],
+   "children": [
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "State"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Meaning"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Online"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "The agent reported recently."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Not responding"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "The agent has not reported for a while, but not long enough to call the node offline."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Offline"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "The agent stopped reporting. Check that the server is up and can reach the control plane."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Disabled"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "An administrator took the node out of service. No new work goes to it."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The tiles above the list count each state and filter the list when chosen."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Changing a node"
+    }
+   ],
+   "data": {
+    "id": "changing-a-node"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Open a node from the list to see its system facts and recent tasks."
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Collect facts"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " asks the agent to report the server's hardware and software again."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Rename"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " and "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Disable"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " can be undone from the notice that follows."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Remove"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " asks you to type the node's name, because it cannot be undone."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Select several nodes in the list to act on them together."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Agent pacing"
+    }
+   ],
+   "data": {
+    "id": "agent-pacing"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/nodes/pacing",
+     "children": [
+      {
+       "type": "text",
+       "value": "Agent pacing"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " sets how often agents report and how they back off after losing the\nconnection. Agents adopt a change from their next report."
+    }
+   ]
+  }
+ ]
+}

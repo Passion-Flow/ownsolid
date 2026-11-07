@@ -1,7 +1,7 @@
 import { useI18n, supportedLocales } from '@ownsolid/i18n';
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '@ownsolid/ui';
 import { useRouter } from '@tanstack/react-router';
-import { Check, LogOut, UserRound } from 'lucide-react';
+import { Check, CircleHelp, LogOut, UserRound } from 'lucide-react';
 import { accountPath } from './redirect.ts';
 import { useSession } from './session.ts';
 
@@ -10,7 +10,7 @@ export interface UserMenuProps {
   onSignOut: () => void;
 }
 
-/** The avatar and its menu: who is signed in, the account page, language and sign-out. */
+/** The avatar and its menu: who is signed in, the account page, help, language and sign-out. */
 export function UserMenu({ onSignOut }: UserMenuProps) {
   const { t, locale, setLocale } = useI18n();
   const router = useRouter();
@@ -43,6 +43,14 @@ export function UserMenu({ onSignOut }: UserMenuProps) {
       >
         <UserRound aria-hidden className="size-4" />
         {t('user.account')}
+      </MenuItem>
+      <MenuItem
+        onSelect={() => {
+          void router.navigate({ to: '/help' });
+        }}
+      >
+        <CircleHelp aria-hidden className="size-4" />
+        {t('help.title')}
       </MenuItem>
       <MenuSeparator />
       <MenuLabel>{t('locale.label')}</MenuLabel>

@@ -1,0 +1,651 @@
+{
+ "title": "Project-one preferences",
+ "operations": [
+  {
+   "id": "GetPreference",
+   "method": "get",
+   "path": "/api/v1/preferences",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "PreferenceResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "PREFERENCE_UNAVAILABLE",
+     "STORAGE_TIMEOUT"
+    ]
+   }
+  },
+  {
+   "id": "UpdatePreference",
+   "method": "patch",
+   "path": "/api/v1/preferences",
+   "parameters": [],
+   "body": {
+    "$ref": "UpdatePreference"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "PreferenceResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "PREFERENCE_REVISION_CONFLICT"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "PREFERENCE_UNAVAILABLE",
+     "STORAGE_TIMEOUT"
+    ]
+   }
+  },
+  {
+   "id": "GetTenantSettings",
+   "method": "get",
+   "path": "/api/v1/admin/tenant-settings",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TenantSettingsResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "PREFERENCE_UNAVAILABLE",
+     "STORAGE_TIMEOUT"
+    ]
+   }
+  },
+  {
+   "id": "UpdateTenantSettings",
+   "method": "patch",
+   "path": "/api/v1/admin/tenant-settings",
+   "parameters": [],
+   "body": {
+    "$ref": "UpdateTenantSettings"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TenantSettingsResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "PREFERENCE_REVISION_CONFLICT"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "PREFERENCE_UNAVAILABLE",
+     "STORAGE_TIMEOUT"
+    ]
+   }
+  },
+  {
+   "id": "ListSavedViews",
+   "method": "get",
+   "path": "/api/v1/saved-views",
+   "parameters": [
+    {
+     "name": "list",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "description": "The list the view belongs to, such as `mail-deliveries`."
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SavedViewListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "PREFERENCE_UNAVAILABLE",
+     "STORAGE_TIMEOUT"
+    ]
+   }
+  },
+  {
+   "id": "PutSavedView",
+   "method": "put",
+   "path": "/api/v1/saved-views/{view_id}",
+   "parameters": [
+    {
+     "name": "view_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "PutSavedView"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SavedViewResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "PREFERENCE_REVISION_CONFLICT",
+     "RESOURCE_LIMIT_REACHED",
+     "SAVED_VIEW_NAME_EXISTS"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "PREFERENCE_UNAVAILABLE",
+     "STORAGE_TIMEOUT"
+    ]
+   }
+  },
+  {
+   "id": "DeleteSavedView",
+   "method": "delete",
+   "path": "/api/v1/saved-views/{view_id}",
+   "parameters": [
+    {
+     "name": "view_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "revision",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740990
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "204",
+     "schema": null
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "PREFERENCE_REVISION_CONFLICT"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "PREFERENCE_UNAVAILABLE",
+     "STORAGE_TIMEOUT"
+    ]
+   }
+  }
+ ],
+ "schemas": {
+  "Preference": {
+   "type": "object",
+   "required": [
+    "theme",
+    "density",
+    "locale",
+    "single_key_shortcuts",
+    "navigation_collapsed",
+    "pinned_destinations",
+    "revision",
+    "updated_at"
+   ],
+   "properties": {
+    "theme": {
+     "type": "string",
+     "description": "`system` leaves the choice to the operating system of each browser.",
+     "enum": [
+      "system",
+      "light",
+      "dark"
+     ]
+    },
+    "density": {
+     "type": "string",
+     "enum": [
+      "comfortable",
+      "compact"
+     ]
+    },
+    "locale": {
+     "type": "string",
+     "description": "`auto` means no choice: the tenant's default, then the browser's languages.",
+     "enum": [
+      "auto",
+      "en",
+      "zh-CN"
+     ]
+    },
+    "pinned_destinations": {
+     "type": "array",
+     "description": "Pages kept at the top of the sidebar of this entrance, in order. The console and the portal each keep their own.",
+     "maxItems": 12,
+     "items": {
+      "type": "string"
+     }
+    },
+    "navigation_collapsed": {
+     "type": "boolean",
+     "description": "Whether the sidebar shows only its icons."
+    },
+    "single_key_shortcuts": {
+     "type": "boolean",
+     "description": "Whether one-character keyboard shortcuts work. A person can turn them off, as WCAG 2.2 criterion 2.1.4 requires."
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "PreferenceResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Preference"
+    }
+   }
+  },
+  "PutSavedView": {
+   "type": "object",
+   "required": [
+    "list",
+    "name",
+    "state",
+    "expected_revision"
+   ],
+   "properties": {
+    "list": {
+     "type": "string",
+     "description": "The list the view belongs to, such as `mail-deliveries`."
+    },
+    "name": {
+     "type": "string",
+     "description": "Unique among the person's views of the list; no leading or trailing spaces.",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "state": {
+     "type": "object",
+     "description": "Filters, sort and columns as the page defines them; at most 4096 bytes. The page ignores what it does not know."
+    },
+    "expected_revision": {
+     "type": "integer",
+     "description": "0 creates the view; a retried create returns the view it made. Otherwise the revision being replaced.",
+     "minimum": 0,
+     "maximum": 9007199254740990
+    }
+   }
+  },
+  "SavedView": {
+   "type": "object",
+   "required": [
+    "id",
+    "list",
+    "name",
+    "state",
+    "revision",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "list": {
+     "type": "string",
+     "description": "The list the view belongs to, such as `mail-deliveries`."
+    },
+    "name": {
+     "type": "string",
+     "description": "Unique among the person's views of the list; no leading or trailing spaces.",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "state": {
+     "type": "object",
+     "description": "Filters, sort and columns as the page defines them; at most 4096 bytes. The page ignores what it does not know."
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "SavedViewListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 51,
+       "items": {
+        "$ref": "SavedView"
+       }
+      }
+     }
+    }
+   }
+  },
+  "SavedViewResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SavedView"
+    }
+   }
+  },
+  "TenantSettings": {
+   "type": "object",
+   "required": [
+    "default_locale",
+    "revision"
+   ],
+   "properties": {
+    "default_locale": {
+     "type": "string",
+     "description": "The language of people who have not chosen one. `auto` leaves it to each browser.",
+     "enum": [
+      "auto",
+      "en",
+      "zh-CN"
+     ]
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "TenantSettingsResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TenantSettings"
+    }
+   }
+  },
+  "UpdatePreference": {
+   "type": "object",
+   "description": "Changes the named fields and keeps the others. At least one of `theme`, `density`, `locale`, `single_key_shortcuts`, `navigation_collapsed` and `pinned_destinations` is required. A chosen locale also becomes the account's email language.",
+   "required": [
+    "expected_revision"
+   ],
+   "properties": {
+    "theme": {
+     "type": "string",
+     "description": "`system` leaves the choice to the operating system of each browser.",
+     "enum": [
+      "system",
+      "light",
+      "dark"
+     ]
+    },
+    "density": {
+     "type": "string",
+     "enum": [
+      "comfortable",
+      "compact"
+     ]
+    },
+    "locale": {
+     "type": "string",
+     "description": "`auto` means no choice: the tenant's default, then the browser's languages.",
+     "enum": [
+      "auto",
+      "en",
+      "zh-CN"
+     ]
+    },
+    "pinned_destinations": {
+     "type": "array",
+     "description": "Pages kept at the top of the sidebar of this entrance, in order. The console and the portal each keep their own.",
+     "maxItems": 12,
+     "items": {
+      "type": "string"
+     }
+    },
+    "navigation_collapsed": {
+     "type": "boolean",
+     "description": "Whether the sidebar shows only its icons."
+    },
+    "single_key_shortcuts": {
+     "type": "boolean",
+     "description": "Whether one-character keyboard shortcuts work. A person can turn them off, as WCAG 2.2 criterion 2.1.4 requires."
+    },
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740990
+    }
+   }
+  },
+  "UpdateTenantSettings": {
+   "type": "object",
+   "required": [
+    "default_locale",
+    "expected_revision"
+   ],
+   "properties": {
+    "default_locale": {
+     "type": "string",
+     "description": "The language of people who have not chosen one. `auto` leaves it to each browser.",
+     "enum": [
+      "auto",
+      "en",
+      "zh-CN"
+     ]
+    },
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740990
+    }
+   }
+  }
+ }
+}

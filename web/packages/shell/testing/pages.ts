@@ -70,6 +70,62 @@ export const shellPages: readonly PageState[] = [
     },
   },
   {
+    name: 'help',
+    path: '/help',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/help');
+      await page.getByRole('heading', { name: 'Help', level: 1 }).waitFor();
+    },
+  },
+  {
+    name: 'help, nothing matches',
+    path: '/help',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/help?q=nothing-has-this-name');
+      await page.getByRole('heading', { name: 'No article matches' }).waitFor();
+    },
+  },
+  {
+    name: 'help article',
+    path: '/help/$slug',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/help/account');
+      await page.getByRole('heading', { name: 'Your account', level: 1 }).waitFor();
+      await page.getByRole('heading', { name: 'What you can change', level: 2 }).waitFor();
+    },
+  },
+  {
+    name: 'help article not found',
+    path: '/help/$slug',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/help/nothing-has-this-name');
+      await page.getByRole('heading', { name: 'This article could not be found' }).waitFor();
+    },
+  },
+  {
+    name: 'API reference with an operation open',
+    path: '/help/api',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/help/api?q=changePassword#identity.changePassword');
+      await page.getByRole('heading', { name: 'API reference', level: 1 }).waitFor();
+      await page.getByRole('heading', { name: 'Request body' }).waitFor();
+    },
+  },
+  {
+    name: 'API reference, nothing matches',
+    path: '/help/api',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/help/api?q=nothing-has-this-name');
+      await page.getByRole('heading', { name: 'No operation matches' }).waitFor();
+    },
+  },
+  {
     name: 'sign-in',
     path: '/sign-in',
     open: async (page) => {

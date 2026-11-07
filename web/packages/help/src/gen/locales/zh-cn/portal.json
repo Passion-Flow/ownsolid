@@ -1,0 +1,40 @@
+{
+ "getting-started": {
+  "title": "入门",
+  "summary": "门户是你使用管理员为你准备的内容的地方。首页显示需要你处理的事情、你上次进行到哪里，以及发布到你所在工作空间的应用。",
+  "sections": [
+   {
+    "title": "你的工作空间",
+    "anchor": "你的工作空间"
+   },
+   {
+    "title": "首页",
+    "anchor": "首页"
+   },
+   {
+    "title": "通知",
+    "anchor": "通知"
+   }
+  ]
+ },
+ "account": {
+  "title": "你的账户",
+  "summary": "你的账户保存你的资料、密码，以及 ownsolid 对你的显示方式。",
+  "sections": [
+   {
+    "title": "可以修改的内容",
+    "anchor": "可以修改的内容"
+   }
+  ]
+ },
+ "what-is-supported": {
+  "title": "支持情况",
+  "summary": "支持情况列出产品提供的每一个选项，例如操作系统、加速卡和安装规模，以及本版本能否使用它。",
+  "sections": [
+   {
+    "title": "状态",
+    "anchor": "状态"
+   }
+  ]
+ }
+}

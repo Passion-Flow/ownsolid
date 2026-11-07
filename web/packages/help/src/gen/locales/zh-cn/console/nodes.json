@@ -1,0 +1,431 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "节点是运行 ownsolid 代理程序的服务器。"
+    },
+    {
+     "type": "link",
+     "url": "/nodes",
+     "children": [
+      {
+       "type": "text",
+       "value": "节点"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "页面列出所有节点及其状态，并可以添加、修改和移除节点。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "添加节点"
+    }
+   ],
+   "data": {
+    "id": "添加节点"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "选择 "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "添加节点"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "。页面会创建一个一次性加入令牌，并显示要在新服务器上运行的命令。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "按显示的内容运行命令。这些命令不会把令牌留在 shell 历史记录中。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "代理程序加入后，节点会出现在列表中。一个令牌只能加入一个节点；未使用的令牌可以撤销。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "只有在平台持有有效"
+    },
+    {
+     "type": "link",
+     "url": "help:license",
+     "children": [
+      {
+       "type": "text",
+       "value": "许可证"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "时，节点才能加入。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "状态"
+    }
+   ],
+   "data": {
+    "id": "状态"
+   }
+  },
+  {
+   "type": "table",
+   "align": [
+    null,
+    null
+   ],
+   "children": [
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "状态"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "含义"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "在线"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "代理程序最近上报过。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "无响应"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "代理程序已有一段时间没有上报，但还没有久到判定节点离线。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "离线"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "代理程序停止上报。请检查服务器是否运行，以及能否连接到控制平面。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "已停用"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "管理员已让节点停止服务，不会再有新工作分配给它。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "列表上方的卡片统计各个状态，选择后会筛选列表。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "修改节点"
+    }
+   ],
+   "data": {
+    "id": "修改节点"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "在列表中打开一个节点，可以查看它的系统信息和最近的任务。"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "采集信息"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 让代理程序重新上报服务器的硬件和软件信息。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "重命名"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 和 "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "停用"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 可以在随后出现的提示中撤销。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "移除"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 无法撤销，因此需要输入节点名称确认。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "在列表中选择多个节点，可以一起对它们执行操作。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "代理程序上报节奏"
+    }
+   ],
+   "data": {
+    "id": "代理程序上报节奏"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/nodes/pacing",
+     "children": [
+      {
+       "type": "text",
+       "value": "代理程序上报节奏"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "设置代理程序多久上报一次，以及断开连接后如何退避重连。代理程序会在下一次上报时采用新的设置。"
+    }
+   ]
+  }
+ ]
+}

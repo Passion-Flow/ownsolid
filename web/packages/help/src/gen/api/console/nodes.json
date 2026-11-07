@@ -1,0 +1,2948 @@
+{
+ "title": "Project-one Nodes",
+ "operations": [
+  {
+   "id": "listNodeJoinTokens",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/node-join-tokens",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     }
+    },
+    {
+     "name": "status",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "pending"
+      ]
+     },
+     "description": "Only tokens that can still be used."
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "JoinTokenListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "createNodeJoinToken",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/node-join-tokens",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "CreateJoinToken"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "MintedTokenResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "revokeNodeJoinToken",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/node-join-tokens/{token_id}/revocations",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "token_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "JoinTokenResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "NODE_JOIN_STATE_CONFLICT"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "listAdminNodes",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     }
+    },
+    {
+     "name": "connectivity",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "online",
+       "unknown",
+       "offline"
+      ]
+     },
+     "description": "Only nodes in this state."
+    },
+    {
+     "name": "status",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "active",
+       "disabled",
+       "removed"
+      ]
+     },
+     "description": "Only nodes with this status. Without it, every node that has not been removed."
+    },
+    {
+     "name": "name_prefix",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+     },
+     "description": "Only nodes whose name starts with this, ignoring case."
+    },
+    {
+     "name": "q",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+     },
+     "description": "Only nodes with this text anywhere in the name, in any case."
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "NodeListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "getAdminNode",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "NodeResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "updateNode",
+   "method": "patch",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "UpdateNode"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "NodeResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "VERSION_CONFLICT",
+     "NODE_NAME_EXISTS",
+     "NODE_REMOVED",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "listAdminNodeTasks",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/tasks",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TaskListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "createNodeTask",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/tasks",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "CreateTask"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "TaskResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "AGENT_PROFILE_REJECTED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "IDEMPOTENCY_CONFLICT",
+     "NODE_BUSY"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "getAdminComponent",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ComponentStateResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "requestComponentAction",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/actions",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "ComponentAction"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "TaskResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "getLatestAdminComponentLogs",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/logs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "LogSnapshotResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "getAgentPacing",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-pacing",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "AgentPacingResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "updateAgentPacing",
+   "method": "put",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-pacing",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "UpdateAgentPacing"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "AgentPacingResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "409": [
+     "VERSION_CONFLICT",
+     "AGENT_PACING_EXCEEDS_ONLINE_WINDOW",
+     "AGENT_PACING_UNSUPPORTED",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "listAdminTasks",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     }
+    },
+    {
+     "name": "state",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "pending",
+       "running",
+       "succeeded",
+       "failed",
+       "cancelled"
+      ]
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "mine",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "boolean"
+     },
+     "description": "Only unfinished tasks the signed-in person started."
+    },
+    {
+     "name": "q",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+     },
+     "description": "Only tasks of nodes with this text anywhere in the name, in any case."
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TaskSummaryListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "TASK_HISTORY_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "getAdminTask",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks/{task_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "task_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TaskDetailResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "TASK_HISTORY_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "getAdminTaskLog",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks/{task_id}/log",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "task_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "after",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string"
+     },
+     "description": "The cursor of the previous page."
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TaskLogResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "TASK_HISTORY_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "readAdminNodeCounts",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/summary",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "NodeCountsResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  }
+ ],
+ "schemas": {
+  "AgentPacing": {
+   "type": "object",
+   "description": "The stored pacing of this cell's agents (ADR 0013).",
+   "required": [
+    "heartbeat_seconds",
+    "jitter_percent",
+    "reconnect_base_seconds",
+    "reconnect_max_seconds",
+    "version",
+    "updated_at",
+    "online_window_seconds"
+   ],
+   "properties": {
+    "heartbeat_seconds": {
+     "type": "integer",
+     "description": "Mean time between two heartbeats of an idle agent.",
+     "minimum": 5,
+     "maximum": 120
+    },
+    "jitter_percent": {
+     "type": "integer",
+     "description": "Spreads each interval evenly around heartbeat_seconds.",
+     "minimum": 0,
+     "maximum": 50
+    },
+    "reconnect_base_seconds": {
+     "type": "integer",
+     "description": "Ceiling of the full-jitter delay after the first failed cycle.",
+     "minimum": 1,
+     "maximum": 60
+    },
+    "reconnect_max_seconds": {
+     "type": "integer",
+     "description": "Largest ceiling of the full-jitter delay; not below reconnect_base_seconds.",
+     "minimum": 1,
+     "maximum": 900
+    },
+    "version": {
+     "type": "integer",
+     "format": "int64",
+     "minimum": 1
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "online_window_seconds": {
+     "type": "integer",
+     "description": "What one and a half of the longest interval, heartbeat_seconds plus its jitter, must fit in. Set by nodes.online_seconds less the liveness flush interval.",
+     "minimum": 1
+    }
+   }
+  },
+  "AgentPacingResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "AgentPacing"
+    }
+   }
+  },
+  "ComponentAction": {
+   "type": "object",
+   "required": [
+    "action",
+    "reason"
+   ],
+   "properties": {
+    "action": {
+     "type": "string",
+     "enum": [
+      "install",
+      "start",
+      "stop",
+      "remove",
+      "observe",
+      "configure",
+      "restart",
+      "upgrade",
+      "rollback",
+      "logs"
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    },
+    "version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "config": {
+     "$ref": "ComponentConfig"
+    }
+   }
+  },
+  "ComponentConfig": {
+   "type": "object",
+   "required": [
+    "log_level",
+    "max_scrape_requests"
+   ],
+   "properties": {
+    "log_level": {
+     "type": "string",
+     "enum": [
+      "debug",
+      "info",
+      "warn",
+      "error"
+     ]
+    },
+    "max_scrape_requests": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 40
+    }
+   }
+  },
+  "ComponentLogEntry": {
+   "type": "object",
+   "required": [
+    "timestamp",
+    "priority",
+    "message",
+    "sanitized"
+   ],
+   "properties": {
+    "timestamp": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "priority": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 7
+    },
+    "message": {
+     "type": "string",
+     "maxLength": 512
+    },
+    "sanitized": {
+     "type": "boolean"
+    }
+   }
+  },
+  "ComponentLogs": {
+   "type": "object",
+   "required": [
+    "source",
+    "available",
+    "observed_at",
+    "since",
+    "truncated",
+    "entries"
+   ],
+   "properties": {
+    "source": {
+     "type": "string",
+     "const": "systemd_journal"
+    },
+    "available": {
+     "type": "boolean",
+     "const": true
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "since": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "truncated": {
+     "type": "boolean"
+    },
+    "entries": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "ComponentLogEntry"
+     }
+    }
+   }
+  },
+  "ComponentMetrics": {
+   "type": "object",
+   "required": [
+    "cpu_seconds_total",
+    "cpu_idle_seconds_total",
+    "memory_total_bytes",
+    "memory_available_bytes",
+    "filesystem_total_bytes",
+    "filesystem_available_bytes"
+   ],
+   "properties": {
+    "cpu_seconds_total": {
+     "type": "number",
+     "maximum": 9007199254740991
+    },
+    "cpu_idle_seconds_total": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "memory_total_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "memory_available_bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "filesystem_total_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "filesystem_available_bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "ComponentState": {
+   "type": "object",
+   "required": [
+    "node_id",
+    "component",
+    "version",
+    "desired_state",
+    "observation",
+    "received_at",
+    "stale",
+    "management_available",
+    "artifact_available",
+    "last_task_id",
+    "desired_version",
+    "desired_config",
+    "applied_config",
+    "previous_version",
+    "last_verified_at",
+    "maintenance_available",
+    "approved_versions",
+    "removal_policy"
+   ],
+   "properties": {
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "component": {
+     "type": "string",
+     "const": "node_exporter"
+    },
+    "version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "desired_state": {
+     "type": "string",
+     "enum": [
+      "running",
+      "stopped",
+      "not_installed"
+     ]
+    },
+    "observation": {
+     "anyOf": [
+      {
+       "$ref": "MaintenanceObservation"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "received_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "stale": {
+     "type": "boolean"
+    },
+    "management_available": {
+     "type": "boolean"
+    },
+    "artifact_available": {
+     "type": "boolean"
+    },
+    "last_task_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "desired_version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "desired_config": {
+     "anyOf": [
+      {
+       "$ref": "ComponentConfig"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "applied_config": {
+     "anyOf": [
+      {
+       "$ref": "ComponentConfig"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "previous_version": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "1.12.0",
+        "1.12.1"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "last_verified_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "maintenance_available": {
+     "type": "boolean"
+    },
+    "approved_versions": {
+     "type": "array",
+     "maxItems": 2,
+     "items": {
+      "$ref": "RecipeAvailability"
+     }
+    },
+    "removal_policy": {
+     "type": "string",
+     "const": "owned_installation_only"
+    }
+   }
+  },
+  "ComponentStateResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ComponentState"
+    }
+   }
+  },
+  "CreateJoinToken": {
+   "type": "object",
+   "required": [
+    "workspace_id",
+    "node_name"
+   ],
+   "properties": {
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "execution_profile": {
+     "type": "string",
+     "enum": [
+      "read_only",
+      "systemd_components",
+      "systemd_maintenance",
+      "docker_inference",
+      "docker_ai",
+      "docker_model_lifecycle"
+     ]
+    }
+   }
+  },
+  "CreateTask": {
+   "type": "object",
+   "required": [
+    "operation"
+   ],
+   "properties": {
+    "operation": {
+     "type": "string",
+     "const": "collect_facts.v1"
+    }
+   }
+  },
+  "Facts": {
+   "type": "object",
+   "required": [
+    "os_id",
+    "os_version",
+    "architecture",
+    "hostname",
+    "logical_cpus",
+    "memory_total_bytes",
+    "disk_path",
+    "disk_total_bytes",
+    "disk_available_bytes",
+    "observed_at",
+    "agent_version"
+   ],
+   "properties": {
+    "os_id": {
+     "type": "string"
+    },
+    "os_version": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 64
+    },
+    "architecture": {
+     "type": "string",
+     "enum": [
+      "amd64",
+      "arm64"
+     ]
+    },
+    "hostname": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 255
+    },
+    "logical_cpus": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 16384
+    },
+    "memory_total_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "disk_path": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 1024
+    },
+    "disk_total_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "disk_available_bytes": {
+     "type": "integer",
+     "description": "Must not exceed disk_total_bytes.",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time",
+     "description": "Agent observation year 2020 through 2200; never used for server connectivity or lease clocks."
+    },
+    "agent_version": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32
+    }
+   }
+  },
+  "JoinToken": {
+   "type": "object",
+   "required": [
+    "id",
+    "tenant_id",
+    "workspace_id",
+    "node_name",
+    "status",
+    "created_by",
+    "node_id",
+    "created_at",
+    "expires_at",
+    "execution_profile"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "tenant_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "pending",
+      "consumed",
+      "revoked",
+      "expired"
+     ]
+    },
+    "created_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "execution_profile": {
+     "type": "string",
+     "enum": [
+      "read_only",
+      "systemd_components",
+      "systemd_maintenance",
+      "docker_inference",
+      "docker_ai",
+      "docker_model_lifecycle"
+     ]
+    }
+   }
+  },
+  "JoinTokenList": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "JoinToken"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "JoinTokenListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "JoinTokenList"
+    }
+   }
+  },
+  "JoinTokenResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "JoinToken"
+    }
+   }
+  },
+  "LogSnapshot": {
+   "type": "object",
+   "required": [
+    "node_id",
+    "snapshot",
+    "task_id",
+    "received_at",
+    "stale"
+   ],
+   "properties": {
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "snapshot": {
+     "anyOf": [
+      {
+       "$ref": "ComponentLogs"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "task_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "received_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "stale": {
+     "type": "boolean"
+    }
+   }
+  },
+  "LogSnapshotResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "LogSnapshot"
+    }
+   }
+  },
+  "MaintenanceObservation": {
+   "type": "object",
+   "required": [
+    "component",
+    "version",
+    "managed",
+    "state",
+    "observed_at",
+    "error_code"
+   ],
+   "properties": {
+    "component": {
+     "type": "string",
+     "const": "node_exporter"
+    },
+    "version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "managed": {
+     "type": "boolean"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "running",
+      "stopped",
+      "not_installed",
+      "unknown"
+     ]
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "error_code": {
+     "type": "string",
+     "enum": [
+      "",
+      "COMPONENT_SYSTEMD_UNAVAILABLE",
+      "COMPONENT_PRIVILEGE_REQUIRED",
+      "COMPONENT_USER_INVALID",
+      "COMPONENT_CONFLICT",
+      "COMPONENT_PORT_CONFLICT",
+      "COMPONENT_DISK_SPACE_LOW",
+      "COMPONENT_ASSET_UNAVAILABLE",
+      "COMPONENT_ASSET_INVALID",
+      "COMPONENT_ARCHIVE_INVALID",
+      "COMPONENT_ARCHITECTURE_MISMATCH",
+      "COMPONENT_STATE_INVALID",
+      "COMPONENT_IO_FAILED",
+      "COMPONENT_SERVICE_FAILED",
+      "COMPONENT_METRICS_UNAVAILABLE",
+      "COMPONENT_METRICS_INVALID",
+      "COMPONENT_CANCELLED",
+      "COMPONENT_PROFILE_UNAVAILABLE",
+      "COMPONENT_CONFIG_INVALID",
+      "COMPONENT_VERSION_UNSUPPORTED",
+      "COMPONENT_VERSION_CONFLICT",
+      "COMPONENT_UPGRADE_NOT_FORWARD",
+      "COMPONENT_ROLLBACK_UNAVAILABLE",
+      "COMPONENT_ROLLBACK_FAILED",
+      "COMPONENT_UPDATE_ROLLED_BACK",
+      "COMPONENT_LOGS_UNAVAILABLE",
+      "COMPONENT_LOGS_TOO_LARGE",
+      "COMPONENT_LOGS_INVALID",
+      "COMPONENT_MAINTENANCE_REQUIRED",
+      "COMPONENT_INTERRUPTED"
+     ]
+    },
+    "metrics": {
+     "$ref": "ComponentMetrics"
+    },
+    "config": {
+     "$ref": "ComponentConfig"
+    },
+    "previous_version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "maintenance_error": {
+     "type": "string",
+     "enum": [
+      "",
+      "COMPONENT_SYSTEMD_UNAVAILABLE",
+      "COMPONENT_PRIVILEGE_REQUIRED",
+      "COMPONENT_USER_INVALID",
+      "COMPONENT_CONFLICT",
+      "COMPONENT_PORT_CONFLICT",
+      "COMPONENT_DISK_SPACE_LOW",
+      "COMPONENT_ASSET_UNAVAILABLE",
+      "COMPONENT_ASSET_INVALID",
+      "COMPONENT_ARCHIVE_INVALID",
+      "COMPONENT_ARCHITECTURE_MISMATCH",
+      "COMPONENT_STATE_INVALID",
+      "COMPONENT_IO_FAILED",
+      "COMPONENT_SERVICE_FAILED",
+      "COMPONENT_METRICS_UNAVAILABLE",
+      "COMPONENT_METRICS_INVALID",
+      "COMPONENT_CANCELLED",
+      "COMPONENT_PROFILE_UNAVAILABLE",
+      "COMPONENT_CONFIG_INVALID",
+      "COMPONENT_VERSION_UNSUPPORTED",
+      "COMPONENT_VERSION_CONFLICT",
+      "COMPONENT_UPGRADE_NOT_FORWARD",
+      "COMPONENT_ROLLBACK_UNAVAILABLE",
+      "COMPONENT_ROLLBACK_FAILED",
+      "COMPONENT_UPDATE_ROLLED_BACK",
+      "COMPONENT_LOGS_UNAVAILABLE",
+      "COMPONENT_LOGS_TOO_LARGE",
+      "COMPONENT_LOGS_INVALID",
+      "COMPONENT_MAINTENANCE_REQUIRED",
+      "COMPONENT_INTERRUPTED"
+     ]
+    },
+    "maintenance_cause": {
+     "type": "string",
+     "enum": [
+      "",
+      "COMPONENT_SYSTEMD_UNAVAILABLE",
+      "COMPONENT_PRIVILEGE_REQUIRED",
+      "COMPONENT_USER_INVALID",
+      "COMPONENT_CONFLICT",
+      "COMPONENT_PORT_CONFLICT",
+      "COMPONENT_DISK_SPACE_LOW",
+      "COMPONENT_ASSET_UNAVAILABLE",
+      "COMPONENT_ASSET_INVALID",
+      "COMPONENT_ARCHIVE_INVALID",
+      "COMPONENT_ARCHITECTURE_MISMATCH",
+      "COMPONENT_STATE_INVALID",
+      "COMPONENT_IO_FAILED",
+      "COMPONENT_SERVICE_FAILED",
+      "COMPONENT_METRICS_UNAVAILABLE",
+      "COMPONENT_METRICS_INVALID",
+      "COMPONENT_CANCELLED",
+      "COMPONENT_PROFILE_UNAVAILABLE",
+      "COMPONENT_CONFIG_INVALID",
+      "COMPONENT_VERSION_UNSUPPORTED",
+      "COMPONENT_VERSION_CONFLICT",
+      "COMPONENT_UPGRADE_NOT_FORWARD",
+      "COMPONENT_ROLLBACK_UNAVAILABLE",
+      "COMPONENT_ROLLBACK_FAILED",
+      "COMPONENT_UPDATE_ROLLED_BACK",
+      "COMPONENT_LOGS_UNAVAILABLE",
+      "COMPONENT_LOGS_TOO_LARGE",
+      "COMPONENT_LOGS_INVALID",
+      "COMPONENT_MAINTENANCE_REQUIRED",
+      "COMPONENT_INTERRUPTED"
+     ]
+    }
+   }
+  },
+  "MintedToken": {
+   "type": "object",
+   "required": [
+    "id",
+    "tenant_id",
+    "workspace_id",
+    "node_name",
+    "status",
+    "created_by",
+    "node_id",
+    "created_at",
+    "expires_at",
+    "token",
+    "execution_profile"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "tenant_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "pending",
+      "consumed",
+      "revoked",
+      "expired"
+     ]
+    },
+    "created_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "token": {
+     "type": "string"
+    },
+    "execution_profile": {
+     "type": "string",
+     "enum": [
+      "read_only",
+      "systemd_components",
+      "systemd_maintenance",
+      "docker_inference",
+      "docker_ai",
+      "docker_model_lifecycle"
+     ]
+    }
+   }
+  },
+  "MintedTokenResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "MintedToken"
+    }
+   }
+  },
+  "Node": {
+   "type": "object",
+   "required": [
+    "id",
+    "site_id",
+    "cell_id",
+    "tenant_id",
+    "workspace_id",
+    "name",
+    "status",
+    "connectivity",
+    "version",
+    "protocol_version",
+    "facts",
+    "connectivity_changed_at",
+    "last_heartbeat_at",
+    "created_at",
+    "updated_at",
+    "execution_profile",
+    "capabilities"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "site_id": {
+     "type": "string"
+    },
+    "cell_id": {
+     "type": "string"
+    },
+    "tenant_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "active",
+      "disabled",
+      "removed"
+     ]
+    },
+    "connectivity": {
+     "type": "string",
+     "enum": [
+      "online",
+      "unknown",
+      "offline"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "protocol_version": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 16
+    },
+    "facts": {
+     "$ref": "Facts"
+    },
+    "connectivity_changed_at": {
+     "description": "When control last recorded a change of connectivity. History only: connectivity is derived from last_heartbeat_at and may be ahead of it. Null on MySQL and Dameng.",
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "last_heartbeat_at": {
+     "type": "string",
+     "format": "date-time",
+     "description": "Last authenticated heartbeat or current task lease renewal, written in batches and so up to the configured flush interval behind them; metric/fact observation timestamps remain independent."
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "execution_profile": {
+     "type": "string",
+     "enum": [
+      "read_only",
+      "systemd_components",
+      "systemd_maintenance",
+      "docker_inference",
+      "docker_ai",
+      "docker_model_lifecycle"
+     ]
+    },
+    "capabilities": {
+     "type": "array",
+     "maxItems": 11,
+     "items": {
+      "type": "string",
+      "enum": [
+       "collect_facts.v1",
+       "node_exporter.install.v1",
+       "node_exporter.start.v1",
+       "node_exporter.stop.v1",
+       "node_exporter.remove.v1",
+       "node_exporter.observe.v1",
+       "node_exporter.configure.v1",
+       "node_exporter.restart.v1",
+       "node_exporter.upgrade.v1",
+       "node_exporter.rollback.v1",
+       "node_exporter.logs.v1",
+       "inference.deploy.v1",
+       "inference.stop.v1",
+       "inference.remove.v1",
+       "inference.observe.v1",
+       "inference.verify.v1",
+       "inference.deploy.v1",
+       "inference.stop.v1",
+       "inference.remove.v1",
+       "inference.observe.v1",
+       "inference.verify.v1",
+       "inference.deploy.v1",
+       "inference.stop.v1",
+       "inference.remove.v1",
+       "inference.observe.v1",
+       "inference.verify.v1",
+       "training.run.v1",
+       "training.run.v1",
+       "training.run.v1",
+       "model.prepare.v1",
+       "model.prepare.v1",
+       "model.prepare.v1",
+       "inference.derived.v1",
+       "inference.derived.v1",
+       "inference.derived.v1"
+      ]
+     }
+    }
+   }
+  },
+  "NodeCounts": {
+   "type": "object",
+   "description": "How many nodes are in each state. Removed nodes do not count; a disabled node counts under its connectivity as well.",
+   "required": [
+    "total",
+    "online",
+    "unknown",
+    "offline",
+    "disabled"
+   ],
+   "properties": {
+    "total": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "online": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "unknown": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "offline": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "disabled": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "NodeCountsResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "NodeCounts"
+    }
+   }
+  },
+  "NodeList": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Node"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "NodeListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "NodeList"
+    }
+   }
+  },
+  "NodeResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Node"
+    }
+   }
+  },
+  "Reason": {
+   "type": "object",
+   "required": [
+    "reason"
+   ],
+   "properties": {
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "RecipeAvailability": {
+   "type": "object",
+   "required": [
+    "version",
+    "available",
+    "forward_upgrade"
+   ],
+   "properties": {
+    "version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "available": {
+     "type": "boolean"
+    },
+    "forward_upgrade": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Task": {
+   "type": "object",
+   "required": [
+    "id",
+    "tenant_id",
+    "workspace_id",
+    "node_id",
+    "operation",
+    "state",
+    "attempt",
+    "error_code",
+    "created_at",
+    "updated_at",
+    "deadline_at",
+    "completed_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "tenant_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "operation": {
+     "type": "string",
+     "enum": [
+      "collect_facts.v1",
+      "node_exporter.install.v1",
+      "node_exporter.start.v1",
+      "node_exporter.stop.v1",
+      "node_exporter.remove.v1",
+      "node_exporter.observe.v1",
+      "node_exporter.configure.v1",
+      "node_exporter.restart.v1",
+      "node_exporter.upgrade.v1",
+      "node_exporter.rollback.v1",
+      "node_exporter.logs.v1",
+      "inference.deploy.v1",
+      "inference.stop.v1",
+      "inference.remove.v1",
+      "inference.observe.v1",
+      "inference.verify.v1",
+      "inference.deploy.v1",
+      "inference.stop.v1",
+      "inference.remove.v1",
+      "inference.observe.v1",
+      "inference.verify.v1",
+      "inference.deploy.v1",
+      "inference.stop.v1",
+      "inference.remove.v1",
+      "inference.observe.v1",
+      "inference.verify.v1",
+      "training.run.v1",
+      "training.run.v1",
+      "training.run.v1",
+      "model.prepare.v1",
+      "model.prepare.v1",
+      "model.prepare.v1",
+      "inference.derived.v1",
+      "inference.derived.v1",
+      "inference.derived.v1"
+     ]
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "pending",
+      "running",
+      "succeeded",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "attempt": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "deadline_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "completed_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TaskDetail": {
+   "type": "object",
+   "required": [
+    "task",
+    "steps"
+   ],
+   "properties": {
+    "task": {
+     "$ref": "TaskSummary"
+    },
+    "steps": {
+     "type": "array",
+     "maxItems": 64,
+     "items": {
+      "$ref": "TaskStep"
+     }
+    }
+   }
+  },
+  "TaskDetailResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TaskDetail"
+    }
+   }
+  },
+  "TaskList": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Task"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TaskListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TaskList"
+    }
+   }
+  },
+  "TaskLog": {
+   "type": "object",
+   "required": [
+    "items",
+    "cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 500,
+     "items": {
+      "$ref": "TaskLogLine"
+     }
+    },
+    "cursor": {
+     "type": "string",
+     "maxLength": 32
+    }
+   }
+  },
+  "TaskLogLine": {
+   "type": "object",
+   "required": [
+    "attempt",
+    "sequence",
+    "at",
+    "level",
+    "message"
+   ],
+   "properties": {
+    "attempt": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 3
+    },
+    "sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 4129
+    },
+    "at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "level": {
+     "type": "string",
+     "enum": [
+      "info",
+      "warning",
+      "error"
+     ]
+    },
+    "message": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 512
+    }
+   }
+  },
+  "TaskLogResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TaskLog"
+    }
+   }
+  },
+  "TaskResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Task"
+    }
+   }
+  },
+  "TaskStep": {
+   "type": "object",
+   "required": [
+    "step",
+    "state",
+    "started_at",
+    "finished_at"
+   ],
+   "properties": {
+    "step": {
+     "type": "string",
+     "enum": [
+      "read_system",
+      "read_memory",
+      "read_disk",
+      "preflight",
+      "download",
+      "install",
+      "start",
+      "stop",
+      "remove",
+      "verify"
+     ]
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "running",
+      "succeeded",
+      "failed"
+     ]
+    },
+    "started_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "finished_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TaskSummary": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "node_id",
+    "node_name",
+    "operation",
+    "state",
+    "attempt",
+    "error_code",
+    "created_at",
+    "updated_at",
+    "completed_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 255
+    },
+    "operation": {
+     "type": "string",
+     "enum": [
+      "collect_facts.v1",
+      "node_exporter.install.v1",
+      "node_exporter.start.v1",
+      "node_exporter.stop.v1",
+      "node_exporter.remove.v1",
+      "node_exporter.observe.v1",
+      "node_exporter.configure.v1",
+      "node_exporter.restart.v1",
+      "node_exporter.upgrade.v1",
+      "node_exporter.rollback.v1",
+      "node_exporter.logs.v1",
+      "inference.deploy.v1",
+      "inference.stop.v1",
+      "inference.remove.v1",
+      "inference.observe.v1",
+      "inference.verify.v1",
+      "inference.deploy.v1",
+      "inference.stop.v1",
+      "inference.remove.v1",
+      "inference.observe.v1",
+      "inference.verify.v1",
+      "inference.deploy.v1",
+      "inference.stop.v1",
+      "inference.remove.v1",
+      "inference.observe.v1",
+      "inference.verify.v1",
+      "training.run.v1",
+      "training.run.v1",
+      "training.run.v1",
+      "model.prepare.v1",
+      "model.prepare.v1",
+      "model.prepare.v1",
+      "inference.derived.v1",
+      "inference.derived.v1",
+      "inference.derived.v1"
+     ]
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "pending",
+      "running",
+      "succeeded",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "attempt": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "completed_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TaskSummaryList": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "TaskSummary"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TaskSummaryListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TaskSummaryList"
+    }
+   }
+  },
+  "UpdateAgentPacing": {
+   "type": "object",
+   "required": [
+    "heartbeat_seconds",
+    "jitter_percent",
+    "reconnect_base_seconds",
+    "reconnect_max_seconds",
+    "version",
+    "reason"
+   ],
+   "properties": {
+    "heartbeat_seconds": {
+     "type": "integer",
+     "description": "Mean time between two heartbeats of an idle agent.",
+     "minimum": 5,
+     "maximum": 120
+    },
+    "jitter_percent": {
+     "type": "integer",
+     "description": "Spreads each interval evenly around heartbeat_seconds.",
+     "minimum": 0,
+     "maximum": 50
+    },
+    "reconnect_base_seconds": {
+     "type": "integer",
+     "description": "Ceiling of the full-jitter delay after the first failed cycle.",
+     "minimum": 1,
+     "maximum": 60
+    },
+    "reconnect_max_seconds": {
+     "type": "integer",
+     "description": "Largest ceiling of the full-jitter delay; not below reconnect_base_seconds.",
+     "minimum": 1,
+     "maximum": 900
+    },
+    "version": {
+     "type": "integer",
+     "format": "int64",
+     "minimum": 1
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "UpdateNode": {
+   "type": "object",
+   "required": [
+    "name",
+    "status",
+    "version",
+    "reason"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "active",
+      "disabled",
+      "removed"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  }
+ }
+}

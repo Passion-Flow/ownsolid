@@ -3,6 +3,7 @@ import {
   createAccountRoute,
   createApplication,
   createFrameRoute,
+  createHelpRoutes,
   createSupportRoute,
   publicRoutes,
   rootRoute,
@@ -22,9 +23,13 @@ const accountRoute = createAccountRoute(frameRoute);
 
 const supportRoute = createSupportRoute(frameRoute);
 
+const helpRoutes = createHelpRoutes(frameRoute);
+
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
-  authenticatedRoute.addChildren([frameRoute.addChildren([homeRoute, accountRoute, supportRoute])]),
+  authenticatedRoute.addChildren([
+    frameRoute.addChildren([homeRoute, accountRoute, supportRoute, ...helpRoutes]),
+  ]),
 ]);
 
 /** The portal application: its router and query client. */

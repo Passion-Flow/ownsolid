@@ -1,0 +1,966 @@
+{
+ "title": "M01 Account Lifecycle API",
+ "operations": [
+  {
+   "id": "getCsrf",
+   "method": "get",
+   "path": "/api/v1/auth/csrf",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "CsrfResponse"
+     }
+    }
+   ],
+   "errors": {
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "SERVICE_NOT_READY",
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "login",
+   "method": "post",
+   "path": "/api/v1/auth/login",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "LoginRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "LoginResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_INVALID_CREDENTIALS"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "AUTH_CAPACITY_EXCEEDED"
+    ]
+   }
+  },
+  {
+   "id": "logout",
+   "method": "post",
+   "path": "/api/v1/auth/logout",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "204",
+     "schema": null
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "validateInvitation",
+   "method": "post",
+   "path": "/api/v1/auth/invitation-validations",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "TokenRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "InvitationValidationResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED",
+     "TOKEN_UNUSABLE"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "register",
+   "method": "post",
+   "path": "/api/v1/auth/register",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "RegisterRequest"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "RegisterResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED",
+     "TOKEN_UNUSABLE"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "422": [
+     "PASSWORD_POLICY_VIOLATION",
+     "PASSWORD_BLOCKED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "AUTH_CAPACITY_EXCEEDED"
+    ]
+   }
+  },
+  {
+   "id": "requestPasswordReset",
+   "method": "post",
+   "path": "/api/v1/auth/password-reset-requests",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "RecoveryRequest"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "AcceptedResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "resetPassword",
+   "method": "post",
+   "path": "/api/v1/auth/password-resets",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "ResetRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ResetResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED",
+     "TOKEN_UNUSABLE"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "422": [
+     "PASSWORD_POLICY_VIOLATION",
+     "PASSWORD_BLOCKED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "AUTH_CAPACITY_EXCEEDED"
+    ]
+   }
+  },
+  {
+   "id": "getMe",
+   "method": "get",
+   "path": "/api/v1/me",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MeResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "updateMe",
+   "method": "patch",
+   "path": "/api/v1/me",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "UpdateMeRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MeResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "409": [
+     "VERSION_CONFLICT"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "getSessionStatus",
+   "method": "get",
+   "path": "/api/v1/me/session",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SessionStatusResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "changePassword",
+   "method": "post",
+   "path": "/api/v1/me/password-changes",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "ChangePasswordRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MeResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "PASSWORD_CURRENT_INVALID"
+    ],
+    "422": [
+     "PASSWORD_POLICY_VIOLATION",
+     "PASSWORD_BLOCKED",
+     "PASSWORD_UNCHANGED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "AUTH_CAPACITY_EXCEEDED"
+    ]
+   }
+  },
+  {
+   "id": "getLiveness",
+   "method": "get",
+   "path": "/health/live",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "HealthResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "getReadiness",
+   "method": "get",
+   "path": "/health/ready",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "HealthResponse"
+     }
+    }
+   ],
+   "errors": {
+    "503": [
+     "SERVICE_NOT_READY"
+    ]
+   }
+  }
+ ],
+ "schemas": {
+  "AcceptedResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "accepted"
+     ],
+     "properties": {
+      "accepted": {
+       "type": "boolean",
+       "const": true
+      }
+     }
+    }
+   }
+  },
+  "ChangePasswordRequest": {
+   "type": "object",
+   "required": [
+    "current_password",
+    "new_password"
+   ],
+   "properties": {
+    "current_password": {
+     "type": "string",
+     "description": "The password the account signs in with now, as typed. Never trim or truncate.",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "new_password": {
+     "type": "string",
+     "description": "NFC-normalize before semantic validation: 15-128 code points and <=512 UTF-8 bytes, local blocklist, different from the current password. Never trim or truncate.",
+     "minLength": 1,
+     "maxLength": 4096
+    }
+   }
+  },
+  "CsrfResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "token",
+      "expires_at"
+     ],
+     "properties": {
+      "token": {
+       "type": "string",
+       "maxLength": 256
+      },
+      "expires_at": {
+       "type": "string",
+       "format": "date-time"
+      }
+     }
+    }
+   }
+  },
+  "HealthResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "status"
+     ],
+     "properties": {
+      "status": {
+       "type": "string",
+       "enum": [
+        "ok"
+       ]
+      }
+     }
+    }
+   }
+  },
+  "InvitationValidationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "email",
+      "locale",
+      "expires_at"
+     ],
+     "properties": {
+      "email": {
+       "type": "string",
+       "maxLength": 254
+      },
+      "locale": {
+       "type": "string",
+       "minLength": 2,
+       "maxLength": 35
+      },
+      "expires_at": {
+       "type": "string",
+       "format": "date-time"
+      }
+     }
+    }
+   }
+  },
+  "LoginRequest": {
+   "type": "object",
+   "required": [
+    "email",
+    "password"
+   ],
+   "properties": {
+    "email": {
+     "type": "string",
+     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "maxLength": 254
+    },
+    "password": {
+     "type": "string",
+     "description": "NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate.",
+     "minLength": 1,
+     "maxLength": 4096
+    }
+   }
+  },
+  "LoginResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "user",
+      "workspace",
+      "audience",
+      "session"
+     ],
+     "properties": {
+      "user": {
+       "$ref": "User"
+      },
+      "workspace": {
+       "oneOf": [
+        {
+         "$ref": "Workspace"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "audience": {
+       "type": "string",
+       "enum": [
+        "portal",
+        "admin"
+       ]
+      },
+      "session": {
+       "type": "object",
+       "required": [
+        "absolute_expires_at",
+        "idle_timeout_seconds"
+       ],
+       "properties": {
+        "absolute_expires_at": {
+         "type": "string",
+         "format": "date-time"
+        },
+        "idle_timeout_seconds": {
+         "type": "integer",
+         "minimum": 1
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "MeData": {
+   "type": "object",
+   "required": [
+    "user",
+    "workspace",
+    "audience"
+   ],
+   "properties": {
+    "user": {
+     "$ref": "User"
+    },
+    "workspace": {
+     "oneOf": [
+      {
+       "$ref": "Workspace"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "audience": {
+     "type": "string",
+     "enum": [
+      "portal",
+      "admin"
+     ]
+    }
+   }
+  },
+  "MeResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "MeData"
+    }
+   }
+  },
+  "RecoveryRequest": {
+   "type": "object",
+   "required": [
+    "email"
+   ],
+   "properties": {
+    "email": {
+     "type": "string",
+     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "maxLength": 254
+    }
+   }
+  },
+  "RegisterRequest": {
+   "type": "object",
+   "required": [
+    "token",
+    "display_name",
+    "password"
+   ],
+   "properties": {
+    "token": {
+     "type": "string",
+     "minLength": 43,
+     "maxLength": 43
+    },
+    "display_name": {
+     "type": "string",
+     "description": "Trim and NFC-normalize; final 1-100 code points, at most 400 UTF-8 bytes; reject control characters.",
+     "minLength": 1,
+     "maxLength": 400
+    },
+    "password": {
+     "type": "string",
+     "description": "NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate.",
+     "minLength": 1,
+     "maxLength": 4096
+    }
+   }
+  },
+  "RegisterResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "registered"
+     ],
+     "properties": {
+      "registered": {
+       "type": "boolean",
+       "const": true
+      }
+     }
+    }
+   }
+  },
+  "ResetRequest": {
+   "type": "object",
+   "required": [
+    "token",
+    "password"
+   ],
+   "properties": {
+    "token": {
+     "type": "string",
+     "minLength": 43,
+     "maxLength": 43
+    },
+    "password": {
+     "type": "string",
+     "description": "NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate.",
+     "minLength": 1,
+     "maxLength": 4096
+    }
+   }
+  },
+  "ResetResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "reset"
+     ],
+     "properties": {
+      "reset": {
+       "type": "boolean",
+       "const": true
+      }
+     }
+    }
+   }
+  },
+  "SessionStatus": {
+   "type": "object",
+   "required": [
+    "idle_timeout_seconds",
+    "idle_remaining_seconds",
+    "absolute_remaining_seconds",
+    "warning_seconds"
+   ],
+   "properties": {
+    "idle_timeout_seconds": {
+     "type": "integer",
+     "description": "How long the session survives without activity.",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "idle_remaining_seconds": {
+     "type": "integer",
+     "description": "How long until it ends if nothing else happens.",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "absolute_remaining_seconds": {
+     "type": "integer",
+     "description": "How long until it ends regardless of activity.",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "warning_seconds": {
+     "type": "integer",
+     "description": "How long before the end to warn the person: the configured time, shortened to fit a short idle timeout.",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "SessionStatusResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SessionStatus"
+    }
+   }
+  },
+  "TokenRequest": {
+   "type": "object",
+   "required": [
+    "token"
+   ],
+   "properties": {
+    "token": {
+     "type": "string",
+     "minLength": 43,
+     "maxLength": 43
+    }
+   }
+  },
+  "UpdateMeRequest": {
+   "type": "object",
+   "required": [
+    "display_name",
+    "locale",
+    "version"
+   ],
+   "properties": {
+    "display_name": {
+     "type": "string",
+     "description": "Trim and NFC-normalize; final 1-100 code points, at most 400 UTF-8 bytes; reject control characters.",
+     "minLength": 1,
+     "maxLength": 400
+    },
+    "locale": {
+     "type": "string",
+     "minLength": 2,
+     "maxLength": 35
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "User": {
+   "type": "object",
+   "required": [
+    "id",
+    "email",
+    "display_name",
+    "locale",
+    "status",
+    "is_platform_admin",
+    "email_verified_at",
+    "version",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "email": {
+     "type": "string",
+     "maxLength": 254
+    },
+    "display_name": {
+     "type": "string",
+     "maxLength": 100
+    },
+    "locale": {
+     "type": "string",
+     "minLength": 2,
+     "maxLength": 35
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "active",
+      "disabled"
+     ]
+    },
+    "is_platform_admin": {
+     "type": "boolean"
+    },
+    "email_verified_at": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "date-time"
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "Workspace": {
+   "type": "object",
+   "required": [
+    "id",
+    "tenant_id",
+    "name",
+    "role"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "tenant_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "maxLength": 100
+    },
+    "role": {
+     "type": "string",
+     "enum": [
+      "owner",
+      "member",
+      "viewer"
+     ]
+    }
+   }
+  }
+ }
+}

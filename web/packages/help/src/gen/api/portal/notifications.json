@@ -1,0 +1,311 @@
+{
+ "title": "Project-one notifications",
+ "operations": [
+  {
+   "id": "NotificationConfiguration",
+   "method": "get",
+   "path": "/api/v1/notifications/configuration",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "NotificationConfigurationResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "NOTIFICATION_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "ListNotifications",
+   "method": "get",
+   "path": "/api/v1/notifications",
+   "parameters": [
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TerminalNotificationPageResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "NOTIFICATION_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "ReadNotification",
+   "method": "post",
+   "path": "/api/v1/notifications/{notification_id}/read",
+   "parameters": [
+    {
+     "name": "notification_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "ReadNotification"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TerminalNotificationResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "NOTIFICATION_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "NOTIFICATION_UNAVAILABLE"
+    ]
+   }
+  }
+ ],
+ "schemas": {
+  "NotificationConfiguration": {
+   "type": "object",
+   "required": [
+    "available",
+    "unread_count",
+    "retention_days"
+   ],
+   "properties": {
+    "available": {
+     "type": "boolean"
+    },
+    "unread_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "retention_days": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 365
+    }
+   }
+  },
+  "NotificationConfigurationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "NotificationConfiguration"
+    }
+   }
+  },
+  "ReadNotification": {
+   "type": "object",
+   "required": [],
+   "properties": {}
+  },
+  "TerminalNotification": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "workflow_id",
+    "run_id",
+    "outcome",
+    "error_code",
+    "occurred_at",
+    "read_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workflow_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "run_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "outcome": {
+     "type": "string",
+     "enum": [
+      "succeeded",
+      "failed",
+      "cancelled",
+      "interrupted"
+     ]
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "occurred_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "read_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TerminalNotificationPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "TerminalNotification"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TerminalNotificationPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TerminalNotificationPage"
+    }
+   }
+  },
+  "TerminalNotificationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TerminalNotification"
+    }
+   }
+  }
+ }
+}

@@ -12,7 +12,7 @@ import {
   usePreferences,
 } from '@ownsolid/ui';
 import { useRouter, useRouterState } from '@tanstack/react-router';
-import { ChevronRight, Menu as MenuIcon, Search, UserRound } from 'lucide-react';
+import { ChevronRight, CircleHelp, Menu as MenuIcon, Search, UserRound } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AccountPreferences } from './account-preferences.tsx';
 import { CommandMenu } from './command-menu.tsx';
@@ -22,6 +22,9 @@ import {
   useSingleKeyShortcuts,
   type SingleKeyShortcut,
 } from './keyboard-shortcuts.tsx';
+import { useHelp } from './help/entrance.ts';
+import { HelpLink } from './help/help-link.tsx';
+import { helpSearchSource } from './help/search-source.ts';
 import { findNavItem, type NavGroup } from './navigation.ts';
 import { NotificationBell } from './notifications.tsx';
 import { useDocumentTitle } from './page-focus.ts';
@@ -35,9 +38,12 @@ import { WorkspaceSwitcher } from './workspace-switcher.tsx';
 
 const macLike = /Mac|iPhone|iPad/.test(navigator.userAgent);
 
-// The account page is reached from the user menu and the command menu, not the sidebar.
-const accountPage: NavGroup = {
-  items: [{ label: 'account.title', icon: UserRound, to: accountPath }],
+// The account and help pages are reached from the top bar and the command menu, not the sidebar.
+const framePages: NavGroup = {
+  items: [
+    { label: 'account.title', icon: UserRound, to: accountPath },
+    { label: 'help.title', icon: CircleHelp, to: '/help' },
+  ],
 };
 
 /** Props for {@link AppFrame}. */
@@ -49,7 +55,7 @@ export interface AppFrameProps {
   tasks?: TaskTrayProps | undefined;
   /** One-character actions; the portal has none. */
   shortcuts?: readonly SingleKeyShortcut[] | undefined;
-  /** What the command menu finds on the server; the portal has nothing to find yet. */
+  /** What the command menu finds on the server, besides the help articles it always finds. */
   search?: readonly SearchSource[] | undefined;
   children: ReactNode;
 }
@@ -78,7 +84,13 @@ export function AppFrame({
   const signOut = useSignOut(() => {
     void router.navigate({ to: signInPath, replace: true });
   });
-  const pages = useMemo(() => [...navigation, accountPage], [navigation]);
+  const pages = useMemo(() => [...navigation, framePages], [navigation]);
+  const { entrance, locale } = useHelp();
+  // Help is found from every page, whatever else the application can search.
+  const sources = useMemo(
+    () => [...(search ?? []), helpSearchSource(entrance, locale)],
+    [search, entrance, locale],
+  );
   const current = findNavItem(pages, pathname);
   const pageTitle = current ? t(current.item.label) : undefined;
 
@@ -161,9 +173,11 @@ export function AppFrame({
             </span>
           </button>
           <WorkspaceSwitcher />
+          {/* A phone has room for none of these; help is also in the user menu. */}
           <span className="hidden sm:contents">
             <DensityToggle />
             <ThemeToggle />
+            <HelpLink />
           </span>
           {tasks ? <TaskTray {...tasks} /> : null}
           <NotificationBell />
@@ -200,7 +214,7 @@ export function AppFrame({
           setCommandOpen(false);
         }}
         navigation={pages}
-        search={search}
+        search={sources}
         onSignOut={startSignOut}
         onShortcuts={() => {
           setShortcutsOpen(true);

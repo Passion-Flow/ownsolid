@@ -1,0 +1,2441 @@
+{
+ "title": "Project-one scoped durable workflows",
+ "operations": [
+  {
+   "id": "adminWorkflowConfiguration",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/configuration",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowConfigurationResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminWorkflowPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCreateWorkflow",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "CreateAdminWorkflow"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "WorkflowResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetWorkflow",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminUpdateWorkflow",
+   "method": "patch",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "UpdateWorkflow"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminValidateWorkflow",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/validations",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "WorkflowRevisionReason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowValidationResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminPublishWorkflow",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/publications",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "WorkflowRevisionReason"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "WorkflowVersionResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminWorkflowVersionPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/versions",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowVersionPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminDebugWorkflow",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/debug-runs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DebugWorkflow"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "WorkflowRunResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminWorkflowConversationPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowConversationPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCreateWorkflowConversation",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "CreateWorkflowConversation"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "WorkflowConversationResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetWorkflowConversation",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "conversation_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowConversationResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminDeleteWorkflowConversation",
+   "method": "delete",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "conversation_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "WorkflowRevisionReason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DeletedWorkflowConversationResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminWorkflowConversationRunPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}/runs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "conversation_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowRunPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminRunWorkflowConversation",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}/runs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "conversation_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "RunWorkflowConversation"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "WorkflowRunResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminWorkflowRunPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/runs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowRunPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetWorkflowRun",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/runs/{run_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "run_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowRunResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCancelWorkflowRun",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/runs/{run_id}/cancellations",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workflow_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "run_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "CancelWorkflowRun"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkflowRunResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "CancelWorkflowRun": {
+   "type": "object",
+   "required": [
+    "reason"
+   ],
+   "properties": {
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "CreateAdminWorkflow": {
+   "type": "object",
+   "required": [
+    "workspace_id",
+    "name",
+    "reason"
+   ],
+   "properties": {
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "CreateWorkflowConversation": {
+   "type": "object",
+   "required": [
+    "version_id",
+    "reason"
+   ],
+   "properties": {
+    "version_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "DebugWorkflow": {
+   "type": "object",
+   "required": [
+    "question",
+    "expected_revision",
+    "reason"
+   ],
+   "properties": {
+    "question": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32768
+    },
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "DeletedWorkflowConversation": {
+   "type": "object",
+   "required": [
+    "deleted"
+   ],
+   "properties": {
+    "deleted": {
+     "type": "boolean",
+     "const": true
+    }
+   }
+  },
+  "DeletedWorkflowConversationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DeletedWorkflowConversation"
+    }
+   }
+  },
+  "RunWorkflowConversation": {
+   "type": "object",
+   "required": [
+    "question",
+    "reason"
+   ],
+   "properties": {
+    "question": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32768
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "UpdateWorkflow": {
+   "type": "object",
+   "required": [
+    "name",
+    "graph",
+    "enabled",
+    "expected_revision",
+    "reason"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "graph": {
+     "$ref": "WorkflowGraph"
+    },
+    "enabled": {
+     "type": "boolean"
+    },
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "Workflow": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "name",
+    "enabled",
+    "revision",
+    "current_version_id",
+    "created_by",
+    "created_at",
+    "updated_at",
+    "can_edit"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "enabled": {
+     "type": "boolean"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "draft_graph": {
+     "$ref": "WorkflowGraph"
+    },
+    "draft_sha256": {
+     "type": "string"
+    },
+    "current_version_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "can_edit": {
+     "type": "boolean"
+    }
+   }
+  },
+  "WorkflowAnswerGraph": {
+   "type": "object",
+   "required": [
+    "schema_version",
+    "nodes",
+    "edges"
+   ],
+   "properties": {
+    "schema_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "nodes": {
+     "type": "array",
+     "maxItems": 4,
+     "items": {
+      "oneOf": [
+       {
+        "$ref": "WorkflowStartNode"
+       },
+       {
+        "$ref": "WorkflowRetrievalNode"
+       },
+       {
+        "$ref": "WorkflowAnswerNode"
+       },
+       {
+        "$ref": "WorkflowEndNode"
+       }
+      ]
+     }
+    },
+    "edges": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "WorkflowEdge"
+     }
+    }
+   }
+  },
+  "WorkflowAnswerNode": {
+   "type": "object",
+   "required": [
+    "id",
+    "kind",
+    "position",
+    "configuration"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "kind": {
+     "type": "string",
+     "const": "answer"
+    },
+    "position": {
+     "$ref": "WorkflowPosition"
+    },
+    "configuration": {
+     "type": "object",
+     "required": [
+      "alias_id",
+      "instructions"
+     ],
+     "properties": {
+      "alias_id": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "string",
+         "const": ""
+        }
+       ]
+      },
+      "instructions": {
+       "type": "string",
+       "minLength": 0,
+       "maxLength": 16384
+      }
+     }
+    }
+   }
+  },
+  "WorkflowConfiguration": {
+   "type": "object",
+   "required": [
+    "enabled",
+    "can_edit",
+    "can_execute",
+    "node_kinds",
+    "limits"
+   ],
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "can_edit": {
+     "type": "boolean"
+    },
+    "can_execute": {
+     "type": "boolean"
+    },
+    "node_kinds": {
+     "type": "array",
+     "maxItems": 5,
+     "items": {
+      "type": "string",
+      "enum": [
+       "start",
+       "retrieval",
+       "answer",
+       "end",
+       "tool"
+      ]
+     }
+    },
+    "limits": {
+     "type": "object",
+     "required": [
+      "graph_bytes",
+      "name_characters",
+      "instructions_bytes",
+      "question_bytes",
+      "answer_bytes",
+      "maximum_top_k",
+      "maximum_runs",
+      "maximum_turns",
+      "workspace_concurrency",
+      "run_seconds",
+      "retention_days",
+      "idempotency_seconds"
+     ],
+     "properties": {
+      "graph_bytes": {
+       "type": "integer",
+       "minimum": 4096,
+       "maximum": 1048576
+      },
+      "name_characters": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 120
+      },
+      "instructions_bytes": {
+       "type": "integer",
+       "minimum": 64,
+       "maximum": 16384
+      },
+      "question_bytes": {
+       "type": "integer",
+       "minimum": 32,
+       "maximum": 32768
+      },
+      "answer_bytes": {
+       "type": "integer",
+       "minimum": 1024,
+       "maximum": 1048576
+      },
+      "maximum_top_k": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 100
+      },
+      "maximum_runs": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 10000
+      },
+      "maximum_turns": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 10000
+      },
+      "workspace_concurrency": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 8
+      },
+      "run_seconds": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 300
+      },
+      "retention_days": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 365
+      },
+      "idempotency_seconds": {
+       "type": "integer",
+       "minimum": 60,
+       "maximum": 604800
+      }
+     }
+    }
+   }
+  },
+  "WorkflowConfigurationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "WorkflowConfiguration"
+    }
+   }
+  },
+  "WorkflowConversation": {
+   "type": "object",
+   "required": [
+    "id",
+    "workflow_id",
+    "version_id",
+    "revision",
+    "turn_count",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workflow_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "version_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "turn_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10000
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "WorkflowConversationPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "WorkflowConversation"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "WorkflowConversationPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "WorkflowConversationPage"
+    }
+   }
+  },
+  "WorkflowConversationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "WorkflowConversation"
+    }
+   }
+  },
+  "WorkflowEdge": {
+   "type": "object",
+   "required": [
+    "id",
+    "source",
+    "target"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "source": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "target": {
+     "type": "string",
+     "format": "uuid"
+    }
+   }
+  },
+  "WorkflowEndNode": {
+   "type": "object",
+   "required": [
+    "id",
+    "kind",
+    "position",
+    "configuration"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "kind": {
+     "type": "string",
+     "const": "end"
+    },
+    "position": {
+     "$ref": "WorkflowPosition"
+    },
+    "configuration": {
+     "type": "object",
+     "required": [],
+     "properties": {}
+    }
+   }
+  },
+  "WorkflowGraph": {
+   "oneOf": [
+    {
+     "$ref": "WorkflowAnswerGraph"
+    },
+    {
+     "$ref": "WorkflowToolGraph"
+    }
+   ]
+  },
+  "WorkflowGraphIssue": {
+   "type": "object",
+   "required": [
+    "code"
+   ],
+   "properties": {
+    "code": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "edge_id": {
+     "type": "string",
+     "format": "uuid"
+    }
+   }
+  },
+  "WorkflowNodeTrace": {
+   "type": "object",
+   "required": [
+    "node_id",
+    "kind",
+    "state",
+    "result",
+    "error_code",
+    "started_at",
+    "finished_at"
+   ],
+   "properties": {
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "start",
+      "retrieval",
+      "answer",
+      "end",
+      "tool"
+     ]
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "not_started",
+      "running",
+      "succeeded",
+      "failed",
+      "cancelled",
+      "interrupted"
+     ]
+    },
+    "result": {
+     "$ref": "WorkflowTraceResult"
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 100
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "started_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "finished_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "WorkflowPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Workflow"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "WorkflowPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "WorkflowPage"
+    }
+   }
+  },
+  "WorkflowPosition": {
+   "type": "object",
+   "required": [
+    "x",
+    "y"
+   ],
+   "properties": {
+    "x": {
+     "type": "number",
+     "minimum": -1000000,
+     "maximum": 1000000
+    },
+    "y": {
+     "type": "number",
+     "minimum": -1000000,
+     "maximum": 1000000
+    }
+   }
+  },
+  "WorkflowResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Workflow"
+    }
+   }
+  },
+  "WorkflowRetrievalNode": {
+   "type": "object",
+   "required": [
+    "id",
+    "kind",
+    "position",
+    "configuration"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "kind": {
+     "type": "string",
+     "const": "retrieval"
+    },
+    "position": {
+     "$ref": "WorkflowPosition"
+    },
+    "configuration": {
+     "type": "object",
+     "required": [
+      "base_id",
+      "top_k",
+      "minimum_score"
+     ],
+     "properties": {
+      "base_id": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "string",
+         "const": ""
+        }
+       ]
+      },
+      "top_k": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 100
+      },
+      "minimum_score": {
+       "type": "number",
+       "minimum": -1,
+       "maximum": 1
+      }
+     }
+    }
+   }
+  },
+  "WorkflowRevisionReason": {
+   "type": "object",
+   "required": [
+    "expected_revision",
+    "reason"
+   ],
+   "properties": {
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "WorkflowRun": {
+   "type": "object",
+   "required": [
+    "result_kind",
+    "tool_result",
+    "id",
+    "workflow_id",
+    "conversation_id",
+    "version_id",
+    "draft_revision",
+    "graph_sha256",
+    "state",
+    "question",
+    "answer",
+    "usage",
+    "sources",
+    "result_available",
+    "result_unavailable_code",
+    "error_code",
+    "cancellation_requested_at",
+    "created_at",
+    "started_at",
+    "finished_at",
+    "deadline_at",
+    "lease_expires_at",
+    "nodes"
+   ],
+   "properties": {
+    "result_kind": {
+     "type": "string",
+     "enum": [
+      "answer",
+      "model_list"
+     ]
+    },
+    "tool_result": {
+     "anyOf": [
+      {
+       "$ref": "WorkflowToolResult"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workflow_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "conversation_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "version_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "draft_revision": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 9007199254740991
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "graph_sha256": {
+     "type": "string"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "pending",
+      "running",
+      "succeeded",
+      "failed",
+      "cancelled",
+      "interrupted"
+     ]
+    },
+    "question": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32768
+    },
+    "answer": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 1048576
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "usage": {
+     "anyOf": [
+      {
+       "$ref": "WorkflowUsage"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "sources": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "WorkflowSourceEvidence"
+     }
+    },
+    "result_available": {
+     "type": "boolean"
+    },
+    "result_unavailable_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 100
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 100
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "cancellation_requested_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "started_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "finished_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "deadline_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "lease_expires_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "nodes": {
+     "type": "array",
+     "maxItems": 4,
+     "items": {
+      "$ref": "WorkflowNodeTrace"
+     }
+    }
+   }
+  },
+  "WorkflowRunPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "WorkflowRun"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "WorkflowRunPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "WorkflowRunPage"
+    }
+   }
+  },
+  "WorkflowRunResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "WorkflowRun"
+    }
+   }
+  },
+  "WorkflowSourceEvidence": {
+   "type": "object",
+   "required": [
+    "citation_id",
+    "document_id",
+    "source_id",
+    "source_version",
+    "source_sha256",
+    "start_byte",
+    "end_byte",
+    "chunk_ordinal"
+   ],
+   "properties": {
+    "citation_id": {
+     "type": "string"
+    },
+    "document_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "source_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "source_version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "source_sha256": {
+     "type": "string"
+    },
+    "start_byte": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 2097151
+    },
+    "end_byte": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 2097152
+    },
+    "chunk_ordinal": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4095
+    }
+   }
+  },
+  "WorkflowStartNode": {
+   "type": "object",
+   "required": [
+    "id",
+    "kind",
+    "position",
+    "configuration"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "kind": {
+     "type": "string",
+     "const": "start"
+    },
+    "position": {
+     "$ref": "WorkflowPosition"
+    },
+    "configuration": {
+     "type": "object",
+     "required": [],
+     "properties": {}
+    }
+   }
+  },
+  "WorkflowToolGraph": {
+   "type": "object",
+   "required": [
+    "schema_version",
+    "nodes",
+    "edges"
+   ],
+   "properties": {
+    "schema_version": {
+     "type": "integer",
+     "const": 2
+    },
+    "nodes": {
+     "type": "array",
+     "maxItems": 3,
+     "items": {
+      "oneOf": [
+       {
+        "$ref": "WorkflowStartNode"
+       },
+       {
+        "$ref": "WorkflowToolNode"
+       },
+       {
+        "$ref": "WorkflowEndNode"
+       }
+      ]
+     }
+    },
+    "edges": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "WorkflowEdge"
+     }
+    }
+   }
+  },
+  "WorkflowToolModel": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "kind",
+    "model_key",
+    "catalog_digest"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "approved_base",
+      "merged_lora"
+     ]
+    },
+    "model_key": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 64
+    },
+    "catalog_digest": {
+     "type": "string"
+    }
+   }
+  },
+  "WorkflowToolNode": {
+   "type": "object",
+   "required": [
+    "id",
+    "kind",
+    "position",
+    "configuration"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "kind": {
+     "type": "string",
+     "const": "tool"
+    },
+    "position": {
+     "$ref": "WorkflowPosition"
+    },
+    "configuration": {
+     "type": "object",
+     "required": [
+      "plugin_version_id"
+     ],
+     "properties": {
+      "plugin_version_id": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "string",
+         "const": ""
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  "WorkflowToolResult": {
+   "type": "object",
+   "required": [
+    "items"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "WorkflowToolModel"
+     }
+    }
+   }
+  },
+  "WorkflowTraceResult": {
+   "type": "object",
+   "required": [],
+   "properties": {
+    "plugin_version_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "model_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 100
+    },
+    "question_bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 32768
+    },
+    "source_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 100
+    },
+    "generation_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "alias_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "answer_bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1048576
+    },
+    "prompt_tokens": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "completion_tokens": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "total_tokens": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "WorkflowUsage": {
+   "type": "object",
+   "required": [
+    "prompt_tokens",
+    "completion_tokens",
+    "total_tokens"
+   ],
+   "properties": {
+    "prompt_tokens": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "completion_tokens": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "total_tokens": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "WorkflowValidation": {
+   "type": "object",
+   "required": [
+    "valid",
+    "issues"
+   ],
+   "properties": {
+    "valid": {
+     "type": "boolean"
+    },
+    "issues": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "WorkflowGraphIssue"
+     }
+    }
+   }
+  },
+  "WorkflowValidationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "WorkflowValidation"
+    }
+   }
+  },
+  "WorkflowVersion": {
+   "type": "object",
+   "required": [
+    "id",
+    "workflow_id",
+    "version_number",
+    "draft_revision",
+    "graph_sha256",
+    "published_by",
+    "published_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workflow_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "version_number": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000
+    },
+    "draft_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "graph": {
+     "$ref": "WorkflowGraph"
+    },
+    "graph_sha256": {
+     "type": "string"
+    },
+    "published_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "published_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "WorkflowVersionPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "WorkflowVersion"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "WorkflowVersionPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "WorkflowVersionPage"
+    }
+   }
+  },
+  "WorkflowVersionResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "WorkflowVersion"
+    }
+   }
+  }
+ }
+}

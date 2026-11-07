@@ -1,0 +1,413 @@
+{
+ "title": "Project-one Model Imports",
+ "operations": [
+  {
+   "id": "listPortalModels",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ModelListResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "getPortalModel",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models/{model_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "model_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ModelVersionResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "DerivedModelCatalog": {
+   "type": "object",
+   "required": [
+    "schema_version",
+    "kind",
+    "scope",
+    "model_id",
+    "base_model_id",
+    "attempt_id",
+    "artifact_id",
+    "base_catalog_sha256",
+    "report_sha256",
+    "recipe_sha256",
+    "base_repository",
+    "base_revision",
+    "license",
+    "format",
+    "architecture",
+    "model_type",
+    "precision",
+    "maximum_context_tokens",
+    "files"
+   ],
+   "properties": {
+    "schema_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "kind": {
+     "type": "string",
+     "const": "merged_lora"
+    },
+    "scope": {
+     "type": "object",
+     "required": [
+      "tenant_id",
+      "workspace_id",
+      "preparation_id"
+     ],
+     "properties": {
+      "tenant_id": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "workspace_id": {
+       "type": "string",
+       "format": "uuid"
+      },
+      "preparation_id": {
+       "type": "string",
+       "format": "uuid"
+      }
+     }
+    },
+    "model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "base_model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "attempt_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "artifact_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "base_catalog_sha256": {
+     "type": "string",
+     "const": "4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc"
+    },
+    "report_sha256": {
+     "type": "string"
+    },
+    "recipe_sha256": {
+     "type": "string",
+     "const": "758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496"
+    },
+    "base_repository": {
+     "type": "string",
+     "const": "Qwen/Qwen3-0.6B"
+    },
+    "base_revision": {
+     "type": "string",
+     "const": "c1899de289a04d12100db370d81485cdf75e47ca"
+    },
+    "license": {
+     "type": "string",
+     "const": "Apache-2.0"
+    },
+    "format": {
+     "type": "string",
+     "const": "safetensors"
+    },
+    "architecture": {
+     "type": "string",
+     "const": "Qwen3ForCausalLM"
+    },
+    "model_type": {
+     "type": "string",
+     "const": "qwen3"
+    },
+    "precision": {
+     "type": "string",
+     "const": "BF16"
+    },
+    "maximum_context_tokens": {
+     "type": "integer",
+     "const": 2048
+    },
+    "files": {
+     "type": "array",
+     "maxItems": 9
+    }
+   }
+  },
+  "ModelCatalog": {
+   "type": "object",
+   "required": [
+    "repository",
+    "revision",
+    "license",
+    "schema_version",
+    "model_key",
+    "format",
+    "architecture",
+    "model_type",
+    "max_context",
+    "files"
+   ],
+   "properties": {
+    "repository": {
+     "type": "string",
+     "const": "Qwen/Qwen3-0.6B"
+    },
+    "revision": {
+     "type": "string",
+     "const": "c1899de289a04d12100db370d81485cdf75e47ca"
+    },
+    "license": {
+     "type": "string",
+     "const": "Apache-2.0"
+    },
+    "schema_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "model_key": {
+     "type": "string",
+     "const": "qwen3-0.6b"
+    },
+    "format": {
+     "type": "string",
+     "const": "safetensors"
+    },
+    "architecture": {
+     "type": "string",
+     "const": "Qwen3ForCausalLM"
+    },
+    "model_type": {
+     "type": "string",
+     "const": "qwen3"
+    },
+    "max_context": {
+     "type": "integer",
+     "const": 2048
+    },
+    "files": {
+     "type": "array",
+     "maxItems": 9,
+     "items": {
+      "$ref": "ModelFile"
+     }
+    }
+   }
+  },
+  "ModelFile": {
+   "type": "object",
+   "required": [
+    "path",
+    "size_bytes",
+    "sha256"
+   ],
+   "properties": {
+    "path": {
+     "type": "string",
+     "enum": [
+      "LICENSE",
+      "README.md",
+      "config.json",
+      "generation_config.json",
+      "merges.txt",
+      "model.safetensors",
+      "tokenizer.json",
+      "tokenizer_config.json",
+      "vocab.json"
+     ]
+    },
+    "size_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 2147483648
+    },
+    "sha256": {
+     "type": "string"
+    }
+   }
+  },
+  "ModelList": {
+   "type": "object",
+   "required": [
+    "items"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "ModelVersion"
+     }
+    }
+   }
+  },
+  "ModelListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ModelList"
+    }
+   }
+  },
+  "ModelVersion": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "name",
+    "model_key",
+    "catalog_digest",
+    "kind",
+    "manifest",
+    "state",
+    "created_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "model_key": {
+     "type": "string",
+     "const": "qwen3-0.6b"
+    },
+    "catalog_digest": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "approved_base",
+      "merged_lora"
+     ]
+    },
+    "manifest": {
+     "anyOf": [
+      {
+       "$ref": "ModelCatalog"
+      },
+      {
+       "$ref": "DerivedModelCatalog"
+      }
+     ]
+    },
+    "state": {
+     "type": "string",
+     "const": "ready"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   },
+   "allOf": [
+    {},
+    {}
+   ]
+  },
+  "ModelVersionResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ModelVersion"
+    }
+   }
+  }
+ }
+}

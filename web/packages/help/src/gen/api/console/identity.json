@@ -1,0 +1,2049 @@
+{
+ "title": "M01 Account Lifecycle API",
+ "operations": [
+  {
+   "id": "getCsrf",
+   "method": "get",
+   "path": "/api/v1/auth/csrf",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "CsrfResponse"
+     }
+    }
+   ],
+   "errors": {
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "SERVICE_NOT_READY",
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "login",
+   "method": "post",
+   "path": "/api/v1/auth/login",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "LoginRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "LoginResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_INVALID_CREDENTIALS"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "AUTH_CAPACITY_EXCEEDED"
+    ]
+   }
+  },
+  {
+   "id": "logout",
+   "method": "post",
+   "path": "/api/v1/auth/logout",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "204",
+     "schema": null
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "requestPasswordReset",
+   "method": "post",
+   "path": "/api/v1/auth/password-reset-requests",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "RecoveryRequest"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "AcceptedResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "resetPassword",
+   "method": "post",
+   "path": "/api/v1/auth/password-resets",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "ResetRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ResetResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED",
+     "TOKEN_UNUSABLE"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "422": [
+     "PASSWORD_POLICY_VIOLATION",
+     "PASSWORD_BLOCKED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "AUTH_CAPACITY_EXCEEDED"
+    ]
+   }
+  },
+  {
+   "id": "getMe",
+   "method": "get",
+   "path": "/api/v1/me",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MeResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "updateMe",
+   "method": "patch",
+   "path": "/api/v1/me",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "UpdateMeRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MeResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "409": [
+     "VERSION_CONFLICT"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "getSessionStatus",
+   "method": "get",
+   "path": "/api/v1/me/session",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SessionStatusResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "changePassword",
+   "method": "post",
+   "path": "/api/v1/me/password-changes",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "ChangePasswordRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MeResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "PASSWORD_CURRENT_INVALID"
+    ],
+    "422": [
+     "PASSWORD_POLICY_VIOLATION",
+     "PASSWORD_BLOCKED",
+     "PASSWORD_UNCHANGED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "AUTH_CAPACITY_EXCEEDED"
+    ]
+   }
+  },
+  {
+   "id": "listUsers",
+   "method": "get",
+   "path": "/api/v1/admin/users",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "name": "email_prefix",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 254
+     }
+    },
+    {
+     "name": "status",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "active",
+       "disabled"
+      ]
+     }
+    },
+    {
+     "name": "q",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 254
+     },
+     "description": "Only accounts with this text anywhere in the address or display name, in any case."
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "UserListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "getUser",
+   "method": "get",
+   "path": "/api/v1/admin/users/{user_id}",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "UserResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "setUserStatus",
+   "method": "patch",
+   "path": "/api/v1/admin/users/{user_id}/status",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "SetUserStatusRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "UserResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "VERSION_CONFLICT",
+     "PROTECTED_ACCOUNT"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "listInvitations",
+   "method": "get",
+   "path": "/api/v1/admin/invitations",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "name": "status",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "pending",
+       "accepted",
+       "revoked",
+       "expired"
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "InvitationListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "createInvitation",
+   "method": "post",
+   "path": "/api/v1/admin/invitations",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "CreateInvitationRequest"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "InvitationResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "409": [
+     "ACCOUNT_EXISTS",
+     "INVITATION_EXISTS",
+     "IDEMPOTENCY_CONFLICT"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "resendInvitation",
+   "method": "post",
+   "path": "/api/v1/admin/invitations/{invitation_id}/resends",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "VersionRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "InvitationResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "ACCOUNT_EXISTS",
+     "INVITATION_EXISTS",
+     "INVITATION_STATE_CONFLICT",
+     "VERSION_CONFLICT",
+     "IDEMPOTENCY_CONFLICT"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "revokeInvitation",
+   "method": "post",
+   "path": "/api/v1/admin/invitations/{invitation_id}/revocations",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "RevokeInvitationRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "InvitationResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "INVITATION_STATE_CONFLICT",
+     "VERSION_CONFLICT"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "listAuditEvents",
+   "method": "get",
+   "path": "/api/v1/admin/audit-events",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "name": "action",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "installation.bootstrapped",
+       "invitation.created",
+       "invitation.resent",
+       "invitation.revoked",
+       "invitation.accepted",
+       "invitation.expired",
+       "auth.login_succeeded",
+       "auth.login_failed",
+       "auth.logout",
+       "auth.recovery_requested",
+       "auth.password_reset",
+       "account.updated",
+       "account.disabled",
+       "account.enabled",
+       "mail.sent",
+       "mail.failed",
+       "mail.cancelled",
+       "system.retention",
+       "operator.admin_recovered",
+       "operator.auth_invalidated",
+       "workspace.created",
+       "workspace.updated",
+       "workspace.archived",
+       "workspace.restored",
+       "workspace.member_added",
+       "workspace.member_updated",
+       "workspace.member_removed",
+       "workspace.note_created",
+       "workspace.note_updated",
+       "workspace.note_deleted",
+       "node.join_token_created",
+       "node.join_token_revoked",
+       "node.enrolled",
+       "node.updated",
+       "node.task_requested",
+       "node.task_claimed",
+       "node.task_succeeded",
+       "node.task_failed",
+       "node.task_cancelled",
+       "node.task_released",
+       "node.resync_granted"
+      ],
+      "maxLength": 64
+     }
+    },
+    {
+     "name": "category",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string"
+     },
+     "description": "An action family, the part of the action before its first dot."
+    },
+    {
+     "name": "actor_user_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "outcome",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "success",
+       "failure",
+       "accepted"
+      ]
+     }
+    },
+    {
+     "name": "from",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "description": "RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy."
+    },
+    {
+     "name": "to",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "description": "RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy."
+    },
+    {
+     "name": "request_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "target_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     },
+     "description": "Only events about this resource."
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "AuditListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "listMailDeliveries",
+   "method": "get",
+   "path": "/api/v1/admin/mail-deliveries",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "name": "state",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "queued",
+       "sending",
+       "sent",
+       "failed",
+       "cancelled"
+      ]
+     }
+    },
+    {
+     "name": "purpose",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "invitation",
+       "password_reset",
+       "password_changed"
+      ]
+     }
+    },
+    {
+     "name": "recipient_prefix",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 254
+     },
+     "description": "Only emails whose recipient address starts with this text, ignoring case."
+    },
+    {
+     "name": "order",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "newest",
+       "oldest"
+      ]
+     },
+     "description": "`newest` (the default) or `oldest` first, by creation time. A cursor belongs to the order it was made with."
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MailListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "getLiveness",
+   "method": "get",
+   "path": "/health/live",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "HealthResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "getReadiness",
+   "method": "get",
+   "path": "/health/ready",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "HealthResponse"
+     }
+    }
+   ],
+   "errors": {
+    "503": [
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "resendMailDelivery",
+   "method": "post",
+   "path": "/api/v1/admin/mail-deliveries/{mail_delivery_id}/resends",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "type": "object",
+    "properties": {}
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MailDeliveryResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "ACCOUNT_EXISTS",
+     "INVITATION_EXISTS",
+     "INVITATION_STATE_CONFLICT",
+     "IDEMPOTENCY_CONFLICT",
+     "MAIL_DELIVERY_NOT_RESENDABLE",
+     "MAIL_RESEND_UNSUPPORTED"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE"
+    ]
+   }
+  }
+ ],
+ "schemas": {
+  "AcceptedResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "accepted"
+     ],
+     "properties": {
+      "accepted": {
+       "type": "boolean",
+       "const": true
+      }
+     }
+    }
+   }
+  },
+  "AuditEvent": {
+   "type": "object",
+   "required": [
+    "id",
+    "occurred_at",
+    "actor_user_id",
+    "actor_email",
+    "subject_user_id",
+    "subject_email",
+    "audience",
+    "action",
+    "outcome",
+    "target_type",
+    "target_id",
+    "reason",
+    "request_id"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "occurred_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "actor_user_id": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "uuid"
+    },
+    "actor_email": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "description": "The email of the actor, null for the system.",
+     "maxLength": 254
+    },
+    "subject_user_id": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "uuid"
+    },
+    "subject_email": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "maxLength": 254
+    },
+    "audience": {
+     "type": "string",
+     "enum": [
+      "portal",
+      "admin",
+      "operator",
+      "system"
+     ]
+    },
+    "action": {
+     "type": "string",
+     "description": "Versioned first-party audit action. Module events remain visible in unfiltered history;the query action enum lists currently supported exact selectors.",
+     "maxLength": 64
+    },
+    "outcome": {
+     "type": "string",
+     "enum": [
+      "success",
+      "failure",
+      "accepted"
+     ]
+    },
+    "target_type": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "maxLength": 48
+    },
+    "target_id": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "uuid"
+    },
+    "reason": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "maxLength": 500
+    },
+    "request_id": {
+     "type": "string",
+     "format": "uuid"
+    }
+   }
+  },
+  "AuditListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items",
+      "next_cursor"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 100,
+       "items": {
+        "$ref": "AuditEvent"
+       }
+      },
+      "next_cursor": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "maxLength": 512
+      }
+     }
+    }
+   }
+  },
+  "ChangePasswordRequest": {
+   "type": "object",
+   "required": [
+    "current_password",
+    "new_password"
+   ],
+   "properties": {
+    "current_password": {
+     "type": "string",
+     "description": "The password the account signs in with now, as typed. Never trim or truncate.",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "new_password": {
+     "type": "string",
+     "description": "NFC-normalize before semantic validation: 15-128 code points and <=512 UTF-8 bytes, local blocklist, different from the current password. Never trim or truncate.",
+     "minLength": 1,
+     "maxLength": 4096
+    }
+   }
+  },
+  "CreateInvitationRequest": {
+   "type": "object",
+   "required": [
+    "email",
+    "locale"
+   ],
+   "properties": {
+    "email": {
+     "type": "string",
+     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "maxLength": 254
+    },
+    "locale": {
+     "type": "string",
+     "minLength": 2,
+     "maxLength": 35
+    }
+   }
+  },
+  "CsrfResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "token",
+      "expires_at"
+     ],
+     "properties": {
+      "token": {
+       "type": "string",
+       "maxLength": 256
+      },
+      "expires_at": {
+       "type": "string",
+       "format": "date-time"
+      }
+     }
+    }
+   }
+  },
+  "DeliverySummary": {
+   "type": "object",
+   "required": [
+    "id",
+    "state",
+    "attempt_count",
+    "error_category"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "queued",
+      "sending",
+      "sent",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "attempt_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 5
+    },
+    "error_category": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "maxLength": 64
+    }
+   }
+  },
+  "HealthResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "status"
+     ],
+     "properties": {
+      "status": {
+       "type": "string",
+       "enum": [
+        "ok"
+       ]
+      }
+     }
+    }
+   }
+  },
+  "Invitation": {
+   "type": "object",
+   "required": [
+    "id",
+    "email",
+    "locale",
+    "status",
+    "version",
+    "expires_at",
+    "created_at",
+    "updated_at",
+    "delivery"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "email": {
+     "type": "string",
+     "maxLength": 254
+    },
+    "locale": {
+     "type": "string",
+     "minLength": 2,
+     "maxLength": 35
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "pending",
+      "accepted",
+      "revoked",
+      "expired"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "delivery": {
+     "oneOf": [
+      {
+       "$ref": "DeliverySummary"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "InvitationListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items",
+      "next_cursor"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 100,
+       "items": {
+        "$ref": "Invitation"
+       }
+      },
+      "next_cursor": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "maxLength": 512
+      }
+     }
+    }
+   }
+  },
+  "InvitationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Invitation"
+    }
+   }
+  },
+  "LoginRequest": {
+   "type": "object",
+   "required": [
+    "email",
+    "password"
+   ],
+   "properties": {
+    "email": {
+     "type": "string",
+     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "maxLength": 254
+    },
+    "password": {
+     "type": "string",
+     "description": "NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate.",
+     "minLength": 1,
+     "maxLength": 4096
+    }
+   }
+  },
+  "LoginResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "user",
+      "workspace",
+      "audience",
+      "session"
+     ],
+     "properties": {
+      "user": {
+       "$ref": "User"
+      },
+      "workspace": {
+       "oneOf": [
+        {
+         "$ref": "Workspace"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "audience": {
+       "type": "string",
+       "enum": [
+        "portal",
+        "admin"
+       ]
+      },
+      "session": {
+       "type": "object",
+       "required": [
+        "absolute_expires_at",
+        "idle_timeout_seconds"
+       ],
+       "properties": {
+        "absolute_expires_at": {
+         "type": "string",
+         "format": "date-time"
+        },
+        "idle_timeout_seconds": {
+         "type": "integer",
+         "minimum": 1
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "MailDelivery": {
+   "type": "object",
+   "required": [
+    "id",
+    "purpose",
+    "recipient_email",
+    "locale",
+    "state",
+    "attempt_count",
+    "next_attempt_at",
+    "error_category",
+    "created_at",
+    "updated_at",
+    "completed_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "purpose": {
+     "type": "string",
+     "enum": [
+      "invitation",
+      "password_reset",
+      "password_changed"
+     ]
+    },
+    "recipient_email": {
+     "type": "string",
+     "maxLength": 254
+    },
+    "locale": {
+     "type": "string",
+     "minLength": 2,
+     "maxLength": 35
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "queued",
+      "sending",
+      "sent",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "attempt_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 5
+    },
+    "next_attempt_at": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "date-time"
+    },
+    "error_category": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "maxLength": 64
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "completed_at": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "date-time"
+    },
+    "invitation": {
+     "description": "The invitation this email carries, in lists only; null for other emails.",
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "required": [
+        "id",
+        "version",
+        "status"
+       ],
+       "properties": {
+        "id": {
+         "type": "string",
+         "format": "uuid"
+        },
+        "version": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 9007199254740991
+        },
+        "status": {
+         "type": "string",
+         "enum": [
+          "pending",
+          "accepted",
+          "revoked",
+          "expired"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   }
+  },
+  "MailDeliveryResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "MailDelivery"
+    }
+   }
+  },
+  "MailListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items",
+      "next_cursor"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 100,
+       "items": {
+        "$ref": "MailDelivery"
+       }
+      },
+      "next_cursor": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "maxLength": 512
+      }
+     }
+    }
+   }
+  },
+  "MeData": {
+   "type": "object",
+   "required": [
+    "user",
+    "workspace",
+    "audience"
+   ],
+   "properties": {
+    "user": {
+     "$ref": "User"
+    },
+    "workspace": {
+     "oneOf": [
+      {
+       "$ref": "Workspace"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "audience": {
+     "type": "string",
+     "enum": [
+      "portal",
+      "admin"
+     ]
+    }
+   }
+  },
+  "MeResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "MeData"
+    }
+   }
+  },
+  "RecoveryRequest": {
+   "type": "object",
+   "required": [
+    "email"
+   ],
+   "properties": {
+    "email": {
+     "type": "string",
+     "description": "Trim ASCII edge whitespace, then apply the M01 ASCII canonical-email policy; canonical maximum 254 bytes.",
+     "maxLength": 254
+    }
+   }
+  },
+  "ResetRequest": {
+   "type": "object",
+   "required": [
+    "token",
+    "password"
+   ],
+   "properties": {
+    "token": {
+     "type": "string",
+     "minLength": 43,
+     "maxLength": 43
+    },
+    "password": {
+     "type": "string",
+     "description": "NFC-normalize before semantic validation. New password: 15-128 code points and <=512 UTF-8 bytes, local blocklist. Login verifies the bounded supplied value without exposing policy/account state. Never trim or truncate.",
+     "minLength": 1,
+     "maxLength": 4096
+    }
+   }
+  },
+  "ResetResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "reset"
+     ],
+     "properties": {
+      "reset": {
+       "type": "boolean",
+       "const": true
+      }
+     }
+    }
+   }
+  },
+  "RevokeInvitationRequest": {
+   "type": "object",
+   "required": [
+    "version",
+    "reason"
+   ],
+   "properties": {
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "SessionStatus": {
+   "type": "object",
+   "required": [
+    "idle_timeout_seconds",
+    "idle_remaining_seconds",
+    "absolute_remaining_seconds",
+    "warning_seconds"
+   ],
+   "properties": {
+    "idle_timeout_seconds": {
+     "type": "integer",
+     "description": "How long the session survives without activity.",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "idle_remaining_seconds": {
+     "type": "integer",
+     "description": "How long until it ends if nothing else happens.",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "absolute_remaining_seconds": {
+     "type": "integer",
+     "description": "How long until it ends regardless of activity.",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "warning_seconds": {
+     "type": "integer",
+     "description": "How long before the end to warn the person: the configured time, shortened to fit a short idle timeout.",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "SessionStatusResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SessionStatus"
+    }
+   }
+  },
+  "SetUserStatusRequest": {
+   "type": "object",
+   "required": [
+    "status",
+    "version",
+    "reason"
+   ],
+   "properties": {
+    "status": {
+     "type": "string",
+     "enum": [
+      "active",
+      "disabled"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "UpdateMeRequest": {
+   "type": "object",
+   "required": [
+    "display_name",
+    "locale",
+    "version"
+   ],
+   "properties": {
+    "display_name": {
+     "type": "string",
+     "description": "Trim and NFC-normalize; final 1-100 code points, at most 400 UTF-8 bytes; reject control characters.",
+     "minLength": 1,
+     "maxLength": 400
+    },
+    "locale": {
+     "type": "string",
+     "minLength": 2,
+     "maxLength": 35
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "User": {
+   "type": "object",
+   "required": [
+    "id",
+    "email",
+    "display_name",
+    "locale",
+    "status",
+    "is_platform_admin",
+    "email_verified_at",
+    "version",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "email": {
+     "type": "string",
+     "maxLength": 254
+    },
+    "display_name": {
+     "type": "string",
+     "maxLength": 100
+    },
+    "locale": {
+     "type": "string",
+     "minLength": 2,
+     "maxLength": 35
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "active",
+      "disabled"
+     ]
+    },
+    "is_platform_admin": {
+     "type": "boolean"
+    },
+    "email_verified_at": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "date-time"
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "UserListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items",
+      "next_cursor"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 100,
+       "items": {
+        "$ref": "User"
+       }
+      },
+      "next_cursor": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "maxLength": 512
+      }
+     }
+    }
+   }
+  },
+  "UserResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "User"
+    }
+   }
+  },
+  "VersionRequest": {
+   "type": "object",
+   "required": [
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "Workspace": {
+   "type": "object",
+   "required": [
+    "id",
+    "tenant_id",
+    "name",
+    "role"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "tenant_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "maxLength": 100
+    },
+    "role": {
+     "type": "string",
+     "enum": [
+      "owner",
+      "member",
+      "viewer"
+     ]
+    }
+   }
+  }
+ }
+}

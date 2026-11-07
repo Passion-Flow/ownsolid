@@ -8,8 +8,8 @@
   },
   "scripts": {
     "build": "pnpm --filter ./apps/console --filter ./apps/portal run build",
-    "generate": "node ../tools/codegen/web-api.mjs",
-    "generate:check": "node ../tools/codegen/web-api.mjs --check",
+    "generate": "node ../tools/codegen/web-api.mjs && node ../tools/codegen/web-help.mjs",
+    "generate:check": "node ../tools/codegen/web-api.mjs --check && node ../tools/codegen/web-help.mjs --check",
     "typecheck": "pnpm --recursive run typecheck",
     "lint": "eslint --config packages/config/eslint.config.js --max-warnings 0 .",
     "format": "prettier --ignore-path ../.gitignore --write . '!pnpm-lock.yaml' '!**/gen/**'",

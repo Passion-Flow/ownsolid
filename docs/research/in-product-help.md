@@ -25,23 +25,35 @@ the product's own navigation, and nothing about it needs the internet, including
 
 - **Help pages at `/help` in each entrance**, written for that entrance's reader: the console's for
   people who run the installation, the portal's for people who use it. Articles are Markdown in
-  `locales/` directories, one file per article and language, since translated product text lives
-  only there (AGENTS.md section 7).
-- **Parsed at build time, rendered with the design system.** A Vite plugin turns each article into
-  an mdast tree with `mdast-util-from-markdown` and the GFM table extension, and the page renders
+  `web/packages/help/locales/<language>/<entrance>/`, one file per article and language, since
+  translated product text lives only in `locales/` (AGENTS.md section 7); an article about a page
+  both entrances have is written once, in `shared/`. `articles.json` orders them, gives each a
+  topic and names the pages whose help link opens it.
+- **Parsed at build time, rendered with the design system.** `tools/codegen/web-help.mjs`, run by
+  `make generate` and checked by `make check`, turns each article into an mdast tree with
+  `mdast-util-from-markdown` and the GFM table extension; it refuses raw HTML, images, headings
+  deeper than three levels and any link that is not a page path or `help:<article>`, so no article
+  can point outside the installation. The page renders
   the tree with the design system's own components (headings, code blocks, tables, links). No HTML
   string reaches the page, so there is no sanitizer to get wrong and the Content-Security-Policy
   stays as it is. An article loads with its route, under the bundle budget.
 - **Search offline.** The help index (titles, headings, a summary) is a `SearchSource` of the
   command menu and the help page's filter, matched in the browser.
-- **Context.** A page names its article; its header shows a help link to it. A link to a page or
-  article that does not exist fails a test, as navigation targets do.
+- **Context.** The top bar's help button opens the article that names the longest prefix of the
+  current path, else the help page; on a phone, where the top bar has no room, help is in the user
+  menu. A link to a page or article that does not exist fails a test, as navigation targets do.
 - **API reference at `/help/api`**, built from `api/openapi/v1` at build time and filtered to the
   entrance's audience (`x-audiences`), so the portal never lists the console's paths. Each
   operation shows its method and path, parameters, request body and response fields, and its
   declared error codes with the explanation the error catalog already gives. The contract itself
-  can be saved as a file. It is a reference, not a console: requests are sent from the person's own
-  tools with their own key, so the page sends nothing.
+  can be saved as a file, filtered to the operations this entrance serves. It is a reference, not a
+  console: the page sends nothing to the API.
+- **What it leaves out, and why.** 122 inherited operations declare no `x-audiences`, so no
+  entrance can claim them, and 257 of the 344 listed declare no `x-error-codes`; the reference says
+  so on each such operation instead of guessing. UX-131 declares both for every operation. The
+  inherited knowledge contract is never listed: knowledge belongs to DeepParser (AGENTS.md
+  section 1). Operation IDs repeat across contracts, so an operation's anchor is
+  `<contract>.<operationId>`.
 
 ### Rejected
 
@@ -57,11 +69,12 @@ the product's own navigation, and nothing about it needs the internet, including
 
 | Dependency | Licence | Use |
 | --- | --- | --- |
-| `mdast-util-from-markdown` | MIT | build time only |
-| `mdast-util-gfm-table`, `micromark-extension-gfm-table` | MIT | build time only |
+| `mdast-util-from-markdown` 2.1.0 and its micromark dependencies | MIT | build time only |
+| `mdast-util-gfm-table` 2.0.0, `micromark-extension-gfm-table` 2.1.2 | MIT | build time only |
 | `@types/mdast` | MIT | types |
 
-Nothing is downloaded at runtime; the installation serves the built files.
+Nothing is downloaded at runtime; the installation serves the built files. `mdast-util-gfm-table`
+2.0.1 was four days old at the time of choosing, so 2.0.0 is pinned.
 
 ## Failure modes and tests
 

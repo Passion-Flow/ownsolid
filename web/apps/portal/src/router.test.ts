@@ -1,3 +1,4 @@
+import { missingHelpPages } from '@ownsolid/shell/testing/help';
 import { describe, expect, it } from 'vitest';
 import { portalPages } from '../e2e/pages.ts';
 import { router } from './router.tsx';
@@ -9,5 +10,9 @@ describe('router', () => {
       .filter((path) => path !== '*')
       .sort();
     expect(checked).toEqual(routes);
+  });
+
+  it('has every page its help explains or links to', async () => {
+    expect(await missingHelpPages('portal', Object.keys(router.routesByPath))).toEqual([]);
   });
 });

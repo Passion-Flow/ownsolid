@@ -1,0 +1,619 @@
+{
+ "title": "Project-one Inference Deployments",
+ "operations": [
+  {
+   "id": "listPortalDeployments",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/deployments",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "model_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "retained",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "boolean",
+      "const": true
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DeploymentListResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "getPortalDeployment",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/deployments/{deployment_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "deployment_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DeploymentResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "BaseDeploymentObservation": {
+   "type": "object",
+   "required": [
+    "deployment_id",
+    "model_id",
+    "catalog_digest",
+    "gpu_uuid",
+    "revision",
+    "managed",
+    "state",
+    "ready"
+   ],
+   "properties": {
+    "deployment_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "catalog_digest": {
+     "type": "string",
+     "const": "4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc"
+    },
+    "gpu_uuid": {
+     "type": "string"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "managed": {
+     "type": "boolean"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "running",
+      "loading",
+      "stopped",
+      "not_installed",
+      "unknown",
+      "failed"
+     ]
+    },
+    "ready": {
+     "type": "boolean"
+    },
+    "container_id": {
+     "type": "string"
+    },
+    "image_id": {
+     "type": "string",
+     "enum": [
+      "sha256:a4a4c0437bf7240089da5f08aa370c4aee17ae5290f7a3b468825ee26c4c3a6b",
+      "sha256:c76d0e2225a4b1cb1e2109ace39639f55e714abd1a7a427acc8b0bbd7f6a83b3"
+     ]
+    },
+    "verification": {
+     "$ref": "GenerationVerification"
+    },
+    "error_code": {
+     "type": "string",
+     "enum": [
+      "",
+      "INFERENCE_CANCELLED",
+      "INFERENCE_CONFIGURATION_INVALID",
+      "INFERENCE_CONTAINER_CONFLICT",
+      "INFERENCE_DISK_SPACE_LOW",
+      "INFERENCE_DOCKER_NOT_FOUND",
+      "INFERENCE_DOCKER_REJECTED",
+      "INFERENCE_DOCKER_SOCKET_INVALID",
+      "INFERENCE_DOCKER_UNAVAILABLE",
+      "INFERENCE_DRIVER_UNSUPPORTED",
+      "INFERENCE_EGRESS_GUARD_UNAVAILABLE",
+      "INFERENCE_GPU_BUSY",
+      "INFERENCE_GPU_MEMORY_LOW",
+      "INFERENCE_GPU_OOM",
+      "INFERENCE_GPU_PROBE_INVALID",
+      "INFERENCE_GPU_UNAVAILABLE",
+      "INFERENCE_GPU_UNSUPPORTED",
+      "INFERENCE_HOST_MEMORY_LOW",
+      "INFERENCE_IMAGE_INVALID",
+      "INFERENCE_IMAGE_MISSING",
+      "INFERENCE_IMAGE_UNAVAILABLE",
+      "INFERENCE_IO_FAILED",
+      "INFERENCE_LOAD_TIMEOUT",
+      "INFERENCE_MIG_UNSUPPORTED",
+      "INFERENCE_MODEL_INVALID",
+      "INFERENCE_NETWORK_CONFLICT",
+      "INFERENCE_NOT_READY",
+      "INFERENCE_NVIDIA_UNAVAILABLE",
+      "INFERENCE_OOM",
+      "INFERENCE_OPERATION_FAILED",
+      "INFERENCE_OWNERSHIP_CONFLICT",
+      "INFERENCE_PLATFORM_UNSUPPORTED",
+      "INFERENCE_PORT_CONFLICT",
+      "INFERENCE_RECOVERY_REQUIRED",
+      "INFERENCE_RESOURCE_LIMITS_UNAVAILABLE",
+      "INFERENCE_RESPONSE_INVALID",
+      "INFERENCE_REVISION_CONFLICT",
+      "INFERENCE_STATE_INVALID",
+      "INFERENCE_TOOLKIT_UNAVAILABLE"
+     ]
+    }
+   }
+  },
+  "Deployment": {
+   "type": "object",
+   "required": [
+    "model_kind",
+    "catalog_digest",
+    "serving_recipe_sha256",
+    "id",
+    "workspace_id",
+    "node_id",
+    "model_id",
+    "gpu_uuid",
+    "desired_state",
+    "observed_state",
+    "revision",
+    "observation",
+    "observed_at",
+    "last_task_id",
+    "task_state",
+    "task_error_code",
+    "task_deadline_at",
+    "resource_state",
+    "stale",
+    "created_at",
+    "removed_at"
+   ],
+   "properties": {
+    "model_kind": {
+     "type": "string",
+     "enum": [
+      "approved_base",
+      "merged_lora"
+     ]
+    },
+    "catalog_digest": {
+     "type": "string"
+    },
+    "serving_recipe_sha256": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "gpu_uuid": {
+     "type": "string"
+    },
+    "desired_state": {
+     "type": "string",
+     "enum": [
+      "running",
+      "stopped",
+      "removed"
+     ]
+    },
+    "observed_state": {
+     "type": "string",
+     "enum": [
+      "running",
+      "loading",
+      "stopped",
+      "not_installed",
+      "unknown",
+      "failed"
+     ]
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "observation": {
+     "anyOf": [
+      {
+       "$ref": "DeploymentObservation"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "observed_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "last_task_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "task_state": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "task_error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "task_deadline_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "resource_state": {
+     "type": "string",
+     "enum": [
+      "held",
+      "released",
+      "recovery_required"
+     ]
+    },
+    "stale": {
+     "type": "boolean"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "removed_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DeploymentList": {
+   "type": "object",
+   "required": [
+    "items"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Deployment"
+     }
+    }
+   }
+  },
+  "DeploymentListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DeploymentList"
+    }
+   }
+  },
+  "DeploymentObservation": {
+   "oneOf": [
+    {
+     "$ref": "BaseDeploymentObservation"
+    },
+    {
+     "$ref": "DerivedDeploymentObservation"
+    }
+   ]
+  },
+  "DeploymentResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Deployment"
+    }
+   }
+  },
+  "DerivedDeploymentObservation": {
+   "type": "object",
+   "required": [
+    "deployment_id",
+    "model_id",
+    "catalog_digest",
+    "gpu_uuid",
+    "revision",
+    "managed",
+    "state",
+    "ready",
+    "model_kind",
+    "serving_recipe_sha256"
+   ],
+   "properties": {
+    "deployment_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "catalog_digest": {
+     "type": "string"
+    },
+    "gpu_uuid": {
+     "type": "string"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "managed": {
+     "type": "boolean"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "running",
+      "loading",
+      "stopped",
+      "not_installed",
+      "unknown",
+      "failed"
+     ]
+    },
+    "ready": {
+     "type": "boolean"
+    },
+    "container_id": {
+     "type": "string"
+    },
+    "image_id": {
+     "type": "string",
+     "enum": [
+      "sha256:a4a4c0437bf7240089da5f08aa370c4aee17ae5290f7a3b468825ee26c4c3a6b",
+      "sha256:c76d0e2225a4b1cb1e2109ace39639f55e714abd1a7a427acc8b0bbd7f6a83b3"
+     ]
+    },
+    "verification": {
+     "$ref": "GenerationVerification"
+    },
+    "error_code": {
+     "type": "string",
+     "enum": [
+      "",
+      "INFERENCE_CANCELLED",
+      "INFERENCE_CONFIGURATION_INVALID",
+      "INFERENCE_CONTAINER_CONFLICT",
+      "INFERENCE_DISK_SPACE_LOW",
+      "INFERENCE_DOCKER_NOT_FOUND",
+      "INFERENCE_DOCKER_REJECTED",
+      "INFERENCE_DOCKER_SOCKET_INVALID",
+      "INFERENCE_DOCKER_UNAVAILABLE",
+      "INFERENCE_DRIVER_UNSUPPORTED",
+      "INFERENCE_EGRESS_GUARD_UNAVAILABLE",
+      "INFERENCE_GPU_BUSY",
+      "INFERENCE_GPU_MEMORY_LOW",
+      "INFERENCE_GPU_OOM",
+      "INFERENCE_GPU_PROBE_INVALID",
+      "INFERENCE_GPU_UNAVAILABLE",
+      "INFERENCE_GPU_UNSUPPORTED",
+      "INFERENCE_HOST_MEMORY_LOW",
+      "INFERENCE_IMAGE_INVALID",
+      "INFERENCE_IMAGE_MISSING",
+      "INFERENCE_IMAGE_UNAVAILABLE",
+      "INFERENCE_IO_FAILED",
+      "INFERENCE_LOAD_TIMEOUT",
+      "INFERENCE_MIG_UNSUPPORTED",
+      "INFERENCE_MODEL_INVALID",
+      "INFERENCE_NETWORK_CONFLICT",
+      "INFERENCE_NOT_READY",
+      "INFERENCE_NVIDIA_UNAVAILABLE",
+      "INFERENCE_OOM",
+      "INFERENCE_OPERATION_FAILED",
+      "INFERENCE_OWNERSHIP_CONFLICT",
+      "INFERENCE_PLATFORM_UNSUPPORTED",
+      "INFERENCE_PORT_CONFLICT",
+      "INFERENCE_RECOVERY_REQUIRED",
+      "INFERENCE_RESOURCE_LIMITS_UNAVAILABLE",
+      "INFERENCE_RESPONSE_INVALID",
+      "INFERENCE_REVISION_CONFLICT",
+      "INFERENCE_STATE_INVALID",
+      "INFERENCE_TOOLKIT_UNAVAILABLE"
+     ]
+    },
+    "model_kind": {
+     "type": "string",
+     "const": "merged_lora"
+    },
+    "serving_recipe_sha256": {
+     "type": "string",
+     "const": "e9088769c0e9bcc91e1b8227d1101b85fe63ebc8561006b3822738a0d001ed31"
+    }
+   }
+  },
+  "GenerationVerification": {
+   "type": "object",
+   "required": [
+    "model",
+    "prompt_sha256",
+    "response_sha256",
+    "input_tokens",
+    "output_tokens",
+    "observed_at"
+   ],
+   "properties": {
+    "model": {
+     "type": "string",
+     "const": "projectone-qwen3-0.6b"
+    },
+    "prompt_sha256": {
+     "type": "string",
+     "const": "629db30bb15622269509c04bfbe5228292c84d2baae27e81d8c902091f1089cb"
+    },
+    "response_sha256": {
+     "type": "string"
+    },
+    "input_tokens": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 2048
+    },
+    "output_tokens": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 16
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  }
+ }
+}

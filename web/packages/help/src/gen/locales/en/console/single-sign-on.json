@@ -1,0 +1,166 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Single sign-on lets people sign in with an account on your company's Gitea instead of a password\nkept by ownsolid. The "
+    },
+    {
+     "type": "link",
+     "url": "/sso",
+     "children": [
+      {
+       "type": "text",
+       "value": "Single sign-on"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " page manages the connectors."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Adding a connector"
+    }
+   ],
+   "data": {
+    "id": "adding-a-connector"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Register an OAuth application on your Gitea with the callback URLs the dialog shows."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Add connector"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " and enter the provider address, client ID and secret. A new connector\nstarts turned off."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Open the connector and run "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Test connection"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ". It names what Gitea refused, such as the client\nID, the secret or a callback URL that is not registered, or says that Gitea cannot be reached or\ntrusted."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Turn the connector on, with a reason."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Single sign-on must also be on for the installation and the provider must be approved there; the\npage says when it is not."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Turning a connector off"
+    }
+   ],
+   "data": {
+    "id": "turning-a-connector-off"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Turning a connector off asks you to type its name. It ends the sessions that started through it,\nand they do not come back, so there is no undo."
+    }
+   ]
+  }
+ ]
+}

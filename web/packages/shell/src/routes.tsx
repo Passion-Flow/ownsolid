@@ -40,6 +40,12 @@ const AppFrame = lazyRouteComponent(() => import('./app-frame.tsx'), 'AppFrame')
 /** The account page. Its code loads with the route that shows it. */
 const AccountPage = lazyRouteComponent(() => import('./account-page.tsx'), 'AccountPage');
 const SupportPage = lazyRouteComponent(() => import('./support-page.tsx'), 'SupportPage');
+const HelpPage = lazyRouteComponent(() => import('./help/help-page.tsx'), 'HelpPage');
+const ArticlePage = lazyRouteComponent(() => import('./help/article-page.tsx'), 'ArticlePage');
+const ApiReferencePage = lazyRouteComponent(
+  () => import('./help/api-page.tsx'),
+  'ApiReferencePage',
+);
 
 /** Router context every application provides. */
 export interface AppContext {
@@ -209,6 +215,22 @@ export function createSupportRoute(frameRoute: AnyRoute) {
     path: '/support',
     component: SupportPage,
   });
+}
+
+/**
+ * The help pages of an entrance under `frameRoute`: the articles, one article, and the API
+ * reference. `/help/api` is static, so the router prefers it to an article slug.
+ */
+export function createHelpRoutes(frameRoute: AnyRoute) {
+  return [
+    createRoute({ getParentRoute: () => frameRoute, path: '/help', component: HelpPage }),
+    createRoute({
+      getParentRoute: () => frameRoute,
+      path: '/help/api',
+      component: ApiReferencePage,
+    }),
+    createRoute({ getParentRoute: () => frameRoute, path: '/help/$slug', component: ArticlePage }),
+  ];
 }
 
 /**

@@ -3,6 +3,7 @@ import {
   createAccountRoute,
   createApplication,
   createFrameRoute,
+  createHelpRoutes,
   createSupportRoute,
   publicRoutes,
   rootRoute,
@@ -120,6 +121,8 @@ const accountRoute = createAccountRoute(frameRoute);
 
 const supportRoute = createSupportRoute(frameRoute);
 
+const helpRoutes = createHelpRoutes(frameRoute);
+
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
   authenticatedRoute.addChildren([
@@ -127,6 +130,7 @@ const routeTree = rootRoute.addChildren([
       homeRoute,
       accountRoute,
       supportRoute,
+      ...helpRoutes,
       nodesRoute,
       pacingRoute,
       nodeRoute,

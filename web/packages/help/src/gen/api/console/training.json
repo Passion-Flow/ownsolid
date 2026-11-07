@@ -1,0 +1,1935 @@
+{
+ "title": "Project-one Scoped Training",
+ "operations": [
+  {
+   "id": "adminGetCapabilities",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/capabilities",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingCapabilitiesResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminListJobs",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 2048
+     }
+    },
+    {
+     "name": "state",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "queued",
+       "preparing",
+       "running",
+       "cancelling",
+       "succeeded",
+       "cancelled",
+       "failed",
+       "recovery_required"
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingJobPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCreateJob",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "CreateTrainingJob"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "TrainingJobResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetJob",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingJobResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCancelJob",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/cancellations",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "TrainingActionRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingJobResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminListRecoveries",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/recoveries",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 2048
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingRecoveryPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminRecoverJob",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/recoveries",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "TrainingRecoveryRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingJobResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminListAttempts",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/attempts",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 2048
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingAttemptPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminListCheckpoints",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/checkpoints",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 2048
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingCheckpointPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminListMetrics",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/metrics",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 2048
+     }
+    },
+    {
+     "name": "attempt_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingMetricRecordPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminExportAcceptedAdapter",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/files/{asset}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "job_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "asset",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "enum": [
+       "adapter_model.safetensors",
+       "adapter_config.json",
+       "README.md",
+       "manifest.json"
+      ]
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "string",
+      "format": "binary"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetTrainingTarget",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/nodes/{node_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "TrainingTargetResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "CreateTrainingJob": {
+   "type": "object",
+   "required": [
+    "workspace_id",
+    "node_id",
+    "model_id",
+    "dataset_id",
+    "dataset_version_id",
+    "gpu_uuid",
+    "configuration",
+    "reason"
+   ],
+   "properties": {
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "dataset_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "dataset_version_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "gpu_uuid": {
+     "type": "string"
+    },
+    "configuration": {
+     "$ref": "TrainingConfiguration"
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "NVIDIAGPU": {
+   "type": "object",
+   "required": [
+    "uuid",
+    "name",
+    "driver_version",
+    "memory_total_mib",
+    "memory_free_mib",
+    "compute_capability",
+    "mig_mode",
+    "observed_at"
+   ],
+   "properties": {
+    "uuid": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "driver_version": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 32
+    },
+    "memory_total_mib": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1048576
+    },
+    "memory_free_mib": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1048576
+    },
+    "compute_capability": {
+     "type": "number",
+     "minimum": 1,
+     "maximum": 99
+    },
+    "mig_mode": {
+     "type": "string",
+     "enum": [
+      "Disabled",
+      "Enabled",
+      "[N/A]",
+      "N/A"
+     ]
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "TrainingActionRequest": {
+   "type": "object",
+   "required": [
+    "expected_revision",
+    "reason"
+   ],
+   "properties": {
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "TrainingAttempt": {
+   "type": "object",
+   "required": [
+    "id",
+    "job_id",
+    "node_id",
+    "task_id",
+    "attempt_number",
+    "state",
+    "resume_checkpoint_id",
+    "last_event_sequence",
+    "last_global_step",
+    "error_code",
+    "physical_stopped_at",
+    "physical_stop_proof",
+    "created_at",
+    "started_at",
+    "finished_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "job_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "task_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "attempt_number": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "pending",
+      "preparing",
+      "running",
+      "stopping",
+      "succeeded",
+      "cancelled",
+      "failed",
+      "recovery_required",
+      "stopped"
+     ]
+    },
+    "resume_checkpoint_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "last_event_sequence": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000000
+    },
+    "last_global_step": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "physical_stopped_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "physical_stop_proof": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "control_never_delivered",
+        "never_created",
+        "owned_container_removed"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "started_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "finished_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TrainingAttemptPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "TrainingAttempt"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TrainingAttemptPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TrainingAttemptPage"
+    }
+   }
+  },
+  "TrainingCapabilities": {
+   "type": "object",
+   "required": [
+    "enabled",
+    "can_create",
+    "configuration_defaults",
+    "resources"
+   ],
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "can_create": {
+     "type": "boolean"
+    },
+    "configuration_defaults": {
+     "$ref": "TrainingConfiguration"
+    },
+    "resources": {
+     "$ref": "TrainingResources"
+    }
+   }
+  },
+  "TrainingCapabilitiesResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TrainingCapabilities"
+    }
+   }
+  },
+  "TrainingCheckpoint": {
+   "type": "object",
+   "required": [
+    "id",
+    "job_id",
+    "attempt_id",
+    "global_step",
+    "receipt_sha256",
+    "created_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "job_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "attempt_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "global_step": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000
+    },
+    "receipt_sha256": {
+     "type": "string"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "TrainingCheckpointPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "TrainingCheckpoint"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TrainingCheckpointPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TrainingCheckpointPage"
+    }
+   }
+  },
+  "TrainingConfiguration": {
+   "type": "object",
+   "required": [
+    "device",
+    "maximum_steps",
+    "maximum_tokens",
+    "batch_size",
+    "gradient_accumulation_steps",
+    "learning_rate",
+    "rank",
+    "alpha",
+    "dropout",
+    "checkpoint_steps",
+    "seed",
+    "threads"
+   ],
+   "properties": {
+    "device": {
+     "type": "string",
+     "const": "nvidia_bfloat16"
+    },
+    "maximum_steps": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000
+    },
+    "maximum_tokens": {
+     "type": "integer",
+     "minimum": 32,
+     "maximum": 2048
+    },
+    "batch_size": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 4
+    },
+    "gradient_accumulation_steps": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 16
+    },
+    "learning_rate": {
+     "type": "string"
+    },
+    "rank": {
+     "type": "integer",
+     "enum": [
+      4,
+      8,
+      16
+     ]
+    },
+    "alpha": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 64
+    },
+    "dropout": {
+     "type": "string"
+    },
+    "checkpoint_steps": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000
+    },
+    "seed": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 2147483647
+    },
+    "threads": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    }
+   }
+  },
+  "TrainingDataLimits": {
+   "type": "object",
+   "required": [
+    "maximum_bytes",
+    "maximum_rows",
+    "maximum_line_bytes",
+    "maximum_text_bytes",
+    "maximum_source_bytes",
+    "maximum_errors"
+   ],
+   "properties": {
+    "maximum_bytes": {
+     "type": "integer",
+     "minimum": 1024,
+     "maximum": 67108864
+    },
+    "maximum_rows": {
+     "type": "integer",
+     "minimum": 2,
+     "maximum": 10000
+    },
+    "maximum_line_bytes": {
+     "type": "integer",
+     "minimum": 256,
+     "maximum": 131072
+    },
+    "maximum_text_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 32768
+    },
+    "maximum_source_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 512
+    },
+    "maximum_errors": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 2000
+    }
+   }
+  },
+  "TrainingExecutionIdentity": {
+   "type": "object",
+   "required": [
+    "profile",
+    "python",
+    "worker_source_sha256",
+    "image_id"
+   ],
+   "properties": {
+    "profile": {
+     "type": "string",
+     "const": "nvidia_bfloat16"
+    },
+    "python": {
+     "type": "string",
+     "const": "3.12.15"
+    },
+    "worker_source_sha256": {
+     "type": "string"
+    },
+    "image_id": {
+     "type": "string"
+    }
+   }
+  },
+  "TrainingJob": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "node_id",
+    "current_node_id",
+    "model_id",
+    "dataset_id",
+    "dataset_version_id",
+    "gpu_uuid",
+    "configuration",
+    "configuration_sha256",
+    "recipe",
+    "dataset_manifest_sha256",
+    "model_catalog_sha256",
+    "created_by",
+    "reason",
+    "state",
+    "wait_code",
+    "revision",
+    "attempt_number",
+    "current_attempt_id",
+    "accepted_artifact_id",
+    "pending_recovery_id",
+    "cancel_requested_at",
+    "error_code",
+    "created_at",
+    "updated_at",
+    "finished_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "current_node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "dataset_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "dataset_version_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "gpu_uuid": {
+     "type": "string"
+    },
+    "configuration": {
+     "$ref": "TrainingConfiguration"
+    },
+    "configuration_sha256": {
+     "type": "string"
+    },
+    "recipe": {
+     "$ref": "TrainingRecipe"
+    },
+    "dataset_manifest_sha256": {
+     "type": "string"
+    },
+    "model_catalog_sha256": {
+     "type": "string"
+    },
+    "created_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "queued",
+      "preparing",
+      "running",
+      "cancelling",
+      "succeeded",
+      "cancelled",
+      "failed",
+      "recovery_required"
+     ]
+    },
+    "wait_code": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "attempt_number": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000
+    },
+    "current_attempt_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "accepted_artifact_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "pending_recovery_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "cancel_requested_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "finished_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TrainingJobPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "TrainingJob"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TrainingJobPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TrainingJobPage"
+    }
+   }
+  },
+  "TrainingJobResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TrainingJob"
+    }
+   }
+  },
+  "TrainingMetricRecord": {
+   "type": "object",
+   "required": [
+    "attempt_id",
+    "sequence",
+    "global_step",
+    "values",
+    "recorded_at"
+   ],
+   "properties": {
+    "attempt_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000000
+    },
+    "global_step": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000
+    },
+    "values": {
+     "$ref": "TrainingMetricValues"
+    },
+    "recorded_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "TrainingMetricRecordPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "TrainingMetricRecord"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TrainingMetricRecordPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TrainingMetricRecordPage"
+    }
+   }
+  },
+  "TrainingMetricValues": {
+   "type": "object",
+   "required": [],
+   "properties": {
+    "loss": {
+     "type": "number"
+    },
+    "learning_rate": {
+     "type": "number",
+     "minimum": 0
+    },
+    "grad_norm": {
+     "type": "number",
+     "minimum": 0
+    },
+    "epoch": {
+     "type": "number",
+     "minimum": 0
+    }
+   }
+  },
+  "TrainingRecipe": {
+   "type": "object",
+   "required": [
+    "schema_version",
+    "worker_version",
+    "image_reference",
+    "execution_identity",
+    "resources",
+    "data_limits"
+   ],
+   "properties": {
+    "schema_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "worker_version": {
+     "type": "string",
+     "const": "0.9.0"
+    },
+    "image_reference": {
+     "type": "string"
+    },
+    "execution_identity": {
+     "$ref": "TrainingExecutionIdentity"
+    },
+    "resources": {
+     "$ref": "TrainingResources"
+    },
+    "data_limits": {
+     "$ref": "TrainingDataLimits"
+    }
+   }
+  },
+  "TrainingRecovery": {
+   "type": "object",
+   "required": [
+    "id",
+    "job_id",
+    "previous_attempt_id",
+    "next_attempt_id",
+    "checkpoint_id",
+    "previous_node_id",
+    "next_node_id",
+    "mode",
+    "requested_by",
+    "reason",
+    "created_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "job_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "previous_attempt_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "next_attempt_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "checkpoint_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "previous_node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "next_node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "mode": {
+     "type": "string",
+     "enum": [
+      "checkpoint",
+      "restart"
+     ]
+    },
+    "requested_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "TrainingRecoveryPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "TrainingRecovery"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TrainingRecoveryPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TrainingRecoveryPage"
+    }
+   }
+  },
+  "TrainingRecoveryRequest": {
+   "type": "object",
+   "required": [
+    "expected_revision",
+    "reason",
+    "node_id",
+    "mode",
+    "checkpoint_id"
+   ],
+   "properties": {
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "mode": {
+     "type": "string",
+     "enum": [
+      "checkpoint",
+      "restart"
+     ]
+    },
+    "checkpoint_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "allOf": [
+    {},
+    {}
+   ]
+  },
+  "TrainingResources": {
+   "type": "object",
+   "required": [
+    "wall_seconds",
+    "cpu_seconds",
+    "memory_bytes",
+    "maximum_output_bytes",
+    "maximum_output_files",
+    "maximum_result_bytes",
+    "maximum_event_bytes",
+    "open_files"
+   ],
+   "properties": {
+    "wall_seconds": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 86400
+    },
+    "cpu_seconds": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 172800
+    },
+    "memory_bytes": {
+     "type": "integer",
+     "minimum": 134217728,
+     "maximum": 17179869184
+    },
+    "maximum_output_bytes": {
+     "type": "integer",
+     "minimum": 1048576,
+     "maximum": 2147483648
+    },
+    "maximum_output_files": {
+     "type": "integer",
+     "minimum": 16,
+     "maximum": 4096
+    },
+    "maximum_result_bytes": {
+     "type": "integer",
+     "minimum": 4096,
+     "maximum": 16777216
+    },
+    "maximum_event_bytes": {
+     "type": "integer",
+     "minimum": 65536,
+     "maximum": 16777216
+    },
+    "open_files": {
+     "type": "integer",
+     "minimum": 64,
+     "maximum": 4096
+    }
+   }
+  },
+  "TrainingTarget": {
+   "type": "object",
+   "required": [
+    "node_id",
+    "gpus",
+    "observed_at",
+    "probe_error_code"
+   ],
+   "properties": {
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "gpus": {
+     "type": "array",
+     "maxItems": 16,
+     "items": {
+      "$ref": "NVIDIAGPU"
+     }
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "probe_error_code": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TrainingTargetResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "TrainingTarget"
+    }
+   }
+  }
+ }
+}

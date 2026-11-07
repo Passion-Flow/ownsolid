@@ -1,0 +1,164 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The license covers the whole platform; there are no paid modules. The "
+    },
+    {
+     "type": "link",
+     "url": "/license",
+     "children": [
+      {
+       "type": "text",
+       "value": "License"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " page shows\nits state, expiry and limits, and imports a new one."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Getting a license"
+    }
+   ],
+   "data": {
+    "id": "getting-a-license"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Send the issuer the "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "deployment ID"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " shown on the page. It identifies this installation, and a\nlicense is signed for one deployment only."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Importing"
+    }
+   ],
+   "data": {
+    "id": "importing"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Import a license file"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " and pick the file. The file is checked before anything changes, and\nevery check is shown: a file from another issuer, changed after signing, made for another deployment or adding\nno time is refused with the values involved. "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Import this license"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " asks for a reason."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "When it runs out"
+    }
+   ],
+   "data": {
+    "id": "when-it-runs-out"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Ahead of expiry the page and the overview show a renewal notice. After the grace period the\ninstallation keeps running what exists but refuses new work, such as joining nodes, until a valid\nlicense is imported."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Diagnostics"
+    }
+   ],
+   "data": {
+    "id": "diagnostics"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Download diagnostics"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " saves the license state as a file to send to whoever supports you."
+    }
+   ]
+  }
+ ]
+}

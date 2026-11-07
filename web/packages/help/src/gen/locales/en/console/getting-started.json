@@ -1,0 +1,372 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The overview is the first page after signing in. It tells you what needs attention, how the fleet\nstands and what is left to set up."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "The first steps"
+    }
+   ],
+   "data": {
+    "id": "the-first-steps"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "A new installation needs three things before people can work on it. The overview lists them under\n"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Finish setup"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " until each is done:"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Import a license."
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " Without one, the installation keeps running what exists but refuses new\nwork. See "
+        },
+        {
+         "type": "link",
+         "url": "help:license",
+         "children": [
+          {
+           "type": "text",
+           "value": "License"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Add a node."
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " A node is a server whose GPUs and CPUs the platform manages. See\n"
+        },
+        {
+         "type": "link",
+         "url": "help:nodes",
+         "children": [
+          {
+           "type": "text",
+           "value": "Nodes"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Invite your team."
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " People sign in with an invitation, or through single sign-on when you set\nit up. See "
+        },
+        {
+         "type": "link",
+         "url": "help:people-and-workspaces",
+         "children": [
+          {
+           "type": "text",
+           "value": "People and workspaces"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "What the overview shows"
+    }
+   ],
+   "data": {
+    "id": "what-the-overview-shows"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Needs attention"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " names nodes that stopped reporting, tasks and emails that failed in the last\nday, and the license when it is close to expiring. Each item links to where it is fixed."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Fleet health"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " counts nodes by state. Choosing a state opens the "
+        },
+        {
+         "type": "link",
+         "url": "/nodes",
+         "children": [
+          {
+           "type": "text",
+           "value": "nodes"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " filtered to it."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "If a source cannot be read, the overview says which part is unknown and offers "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Try again"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "; the\nrest of the page still shows."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Finding your way"
+    }
+   ],
+   "data": {
+    "id": "finding-your-way"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Press "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Ctrl K"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " (or "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "⌘ K"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ") to open the command menu: it finds pages, nodes, tasks, people and\nworkspaces, and runs actions such as switching the theme."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Pin a page you use daily with the pin next to its name in the navigation."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "The help link at the top of every page opens the article about that page."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

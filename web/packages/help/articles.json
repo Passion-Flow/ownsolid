@@ -1,0 +1,76 @@
+{
+  "console": [
+    {
+      "slug": "getting-started",
+      "topic": "start",
+      "pages": ["/"]
+    },
+    {
+      "slug": "nodes",
+      "topic": "fleet",
+      "pages": ["/nodes"]
+    },
+    {
+      "slug": "tasks",
+      "topic": "fleet",
+      "pages": ["/tasks"]
+    },
+    {
+      "slug": "people-and-workspaces",
+      "topic": "people",
+      "pages": ["/users"]
+    },
+    {
+      "slug": "single-sign-on",
+      "topic": "people",
+      "pages": ["/sso"]
+    },
+    {
+      "slug": "audit-trail",
+      "topic": "people",
+      "pages": ["/audit"]
+    },
+    {
+      "slug": "license",
+      "topic": "installation",
+      "pages": ["/license"]
+    },
+    {
+      "slug": "email",
+      "topic": "installation",
+      "pages": ["/mail"]
+    },
+    {
+      "slug": "settings",
+      "topic": "installation",
+      "pages": ["/settings"]
+    },
+    {
+      "slug": "account",
+      "topic": "installation",
+      "pages": ["/account"]
+    },
+    {
+      "slug": "what-is-supported",
+      "topic": "installation",
+      "pages": ["/support"]
+    }
+  ],
+  "portal": [
+    {
+      "slug": "getting-started",
+      "topic": "start",
+      "pages": ["/"]
+    },
+    {
+      "slug": "account",
+      "topic": "start",
+      "pages": ["/account"]
+    },
+    {
+      "slug": "what-is-supported",
+      "topic": "start",
+      "pages": ["/support"]
+    }
+  ]
+}

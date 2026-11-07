@@ -1,0 +1,287 @@
+{
+ "title": "Project-one signed builtin plugins",
+ "operations": [
+  {
+   "id": "portalAvailablePluginPage",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/plugins",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "PluginGrantPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "PluginGrant": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "plugin_version_id",
+    "enabled",
+    "revision",
+    "granted_by",
+    "created_at",
+    "updated_at",
+    "version"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "plugin_version_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "enabled": {
+     "type": "boolean"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "granted_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "version": {
+     "$ref": "PluginVersion"
+    }
+   }
+  },
+  "PluginGrantPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "PluginGrant"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "PluginGrantPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "PluginGrantPage"
+    }
+   }
+  },
+  "PluginVersion": {
+   "type": "object",
+   "required": [
+    "id",
+    "plugin_id",
+    "version",
+    "abi",
+    "executor",
+    "capabilities",
+    "license",
+    "capsule_sha256",
+    "manifest_sha256",
+    "key_id",
+    "state",
+    "revision",
+    "trusted",
+    "available",
+    "unavailable_code",
+    "imported_by",
+    "created_at",
+    "installed_at",
+    "uninstalled_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "plugin_id": {
+     "type": "string",
+     "const": "projectone.model-directory"
+    },
+    "version": {
+     "type": "string"
+    },
+    "abi": {
+     "type": "string",
+     "const": "projectone.tools.v1"
+    },
+    "executor": {
+     "type": "string",
+     "const": "model-directory-v1"
+    },
+    "capabilities": {
+     "type": "array",
+     "maxItems": 1,
+     "items": {
+      "type": "string",
+      "const": "models.list"
+     }
+    },
+    "license": {
+     "type": "string",
+     "minLength": 0,
+     "maxLength": 100
+    },
+    "capsule_sha256": {
+     "type": "string"
+    },
+    "manifest_sha256": {
+     "type": "string"
+    },
+    "key_id": {
+     "type": "string"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "imported",
+      "installed",
+      "uninstalled"
+     ]
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "trusted": {
+     "type": "boolean"
+    },
+    "available": {
+     "type": "boolean"
+    },
+    "unavailable_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 100
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "imported_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "installed_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "uninstalled_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,183 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "People sign in to the console or the portal with their own accounts. Workspaces group people and\nthe work they share."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Inviting people"
+    }
+   ],
+   "data": {
+    "id": "inviting-people"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "On "
+    },
+    {
+     "type": "link",
+     "url": "/users",
+     "children": [
+      {
+       "type": "text",
+       "value": "Users"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ", choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Invite"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ", enter the address and the language of the email. The\ninvitation stays open until it is accepted or expires; you can send it again or revoke it by typing\nthe address. Accounts are not deleted: disable an account instead."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Disabling an account"
+    }
+   ],
+   "data": {
+    "id": "disabling-an-account"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Disabling asks for a reason and ends every session of that account at once. It can be undone, and\nthe person can sign in again after the account is enabled."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Workspaces"
+    }
+   ],
+   "data": {
+    "id": "workspaces"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/users/workspaces",
+     "children": [
+      {
+       "type": "text",
+       "value": "Workspaces"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " lists every workspace. Create one with an owner, rename it, disable\nit or enable it again. Inside a workspace you add people by address, change their role or remove\nthem."
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Every workspace keeps at least one owner, so the last owner cannot be removed."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "The installation's default workspace cannot be disabled."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Each change asks for a reason, which the "
+        },
+        {
+         "type": "link",
+         "url": "help:audit-trail",
+         "children": [
+          {
+           "type": "text",
+           "value": "audit trail"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " records."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

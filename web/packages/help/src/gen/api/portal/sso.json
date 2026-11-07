@@ -1,0 +1,493 @@
+{
+ "title": "Project-one Initial Explicit Account SSO",
+ "operations": [
+  {
+   "id": "listPublicSSOConnectors",
+   "method": "get",
+   "path": "/api/v1/auth/sso/connectors",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "PublicSSOConnectorListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "startSSO",
+   "method": "post",
+   "path": "/api/v1/auth/sso/{connector_id}/starts",
+   "parameters": [
+    {
+     "name": "connector_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "StartSSO"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOStartResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE",
+     "SSO_PASSWORD_REQUIRED"
+    ],
+    "404": [
+     "SSO_CONNECTOR_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "SSO_CONNECTOR_DISABLED",
+     "SSO_BINDING_LIMIT"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "429": [
+     "RATE_LIMITED",
+     "SSO_CAPACITY_EXCEEDED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "SSO_DISABLED",
+     "SSO_PROVIDER_CONFIGURATION_INVALID"
+    ]
+   }
+  },
+  {
+   "id": "listSSOBindings",
+   "method": "get",
+   "path": "/api/v1/account/sso/bindings",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOBindingListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "unlinkSSOBinding",
+   "method": "post",
+   "path": "/api/v1/account/sso/bindings/{binding_id}/unlink",
+   "parameters": [
+    {
+     "name": "binding_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "UnlinkSSOBinding"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOBindingResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "SSO_PASSWORD_REQUIRED"
+    ],
+    "404": [
+     "SSO_BINDING_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "IDEMPOTENCY_CONFLICT",
+     "SSO_REVISION_CONFLICT",
+     "SSO_PASSWORD_CHANGED"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "completeSSO",
+   "method": "get",
+   "path": "/api/v1/auth/sso/{connector_id}/callback",
+   "parameters": [
+    {
+     "name": "connector_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "state",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+     }
+    },
+    {
+     "name": "code",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+     }
+    },
+    {
+     "name": "error",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+     }
+    },
+    {
+     "name": "error_description",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+     }
+    }
+   ],
+   "body": null,
+   "responses": [],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "PublicSSOConnector": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "provider"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "provider": {
+     "type": "string",
+     "enum": [
+      "gitea"
+     ]
+    }
+   }
+  },
+  "PublicSSOConnectorListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 64,
+       "items": {
+        "$ref": "PublicSSOConnector"
+       }
+      }
+     }
+    }
+   }
+  },
+  "SSOBinding": {
+   "type": "object",
+   "required": [
+    "id",
+    "connector_id",
+    "name",
+    "provider",
+    "subject",
+    "active",
+    "revision",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "connector_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "provider": {
+     "type": "string",
+     "enum": [
+      "gitea"
+     ]
+    },
+    "subject": {
+     "type": "string",
+     "description": "Canonical positive signed int64, never a floating point number or an email address."
+    },
+    "active": {
+     "type": "boolean"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "SSOBindingListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 256,
+       "items": {
+        "$ref": "SSOBinding"
+       }
+      }
+     }
+    }
+   }
+  },
+  "SSOBindingResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SSOBinding"
+    }
+   }
+  },
+  "SSOStart": {
+   "type": "object",
+   "required": [
+    "authorization_url",
+    "expires_at"
+   ],
+   "properties": {
+    "authorization_url": {
+     "type": "string",
+     "format": "uri",
+     "maxLength": 8192
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "SSOStartResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SSOStart"
+    }
+   }
+  },
+  "StartSSO": {
+   "type": "object",
+   "required": [
+    "mode",
+    "password",
+    "reason"
+   ],
+   "properties": {
+    "mode": {
+     "type": "string",
+     "enum": [
+      "login",
+      "link"
+     ]
+    },
+    "password": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 4096
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 500
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "allOf": [
+    {},
+    {}
+   ]
+  },
+  "UnlinkSSOBinding": {
+   "type": "object",
+   "required": [
+    "revision",
+    "password",
+    "reason"
+   ],
+   "properties": {
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "password": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  }
+ }
+}

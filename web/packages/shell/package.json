@@ -6,7 +6,8 @@
     ".": "./src/index.ts",
     "./testing": "./testing/index.ts",
     "./testing/pages": "./testing/pages.ts",
-    "./testing/live": "./testing/live.ts"
+    "./testing/live": "./testing/live.ts",
+    "./testing/help": "./testing/help.ts"
   },
   "sideEffects": false,
   "scripts": {
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "@ownsolid/api": "workspace:*",
+    "@ownsolid/help": "workspace:*",
     "@ownsolid/i18n": "workspace:*",
     "@ownsolid/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",

@@ -1,0 +1,164 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "许可证覆盖整个平台，没有付费模块。"
+    },
+    {
+     "type": "link",
+     "url": "/license",
+     "children": [
+      {
+       "type": "text",
+       "value": "许可证"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "页面显示许可证的状态、到期时间和限制，并可以导入新许可证。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "获取许可证"
+    }
+   ],
+   "data": {
+    "id": "获取许可证"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "把页面上显示的 "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "部署 ID"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " 发给签发方。它标识本安装，每份许可证只为一个部署签发。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "导入"
+    }
+   ],
+   "data": {
+    "id": "导入"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "选择 "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "导入许可证文件"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " 并选择文件。文件会在任何变更之前接受检查，并显示每一项检查结果：来自其他签发方、签发后被修改、为其他部署签发或没有增加时长的文件会被拒绝，并显示相关的值。"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "导入此许可证"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " 需要填写原因。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "到期时"
+    }
+   ],
+   "data": {
+    "id": "到期时"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "到期之前，页面和概览会显示续期提醒。宽限期结束后，平台会继续运行已有的工作，但拒绝新的工作（例如加入节点），直到导入有效的许可证。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "诊断信息"
+    }
+   ],
+   "data": {
+    "id": "诊断信息"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "下载诊断信息"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " 会把许可证状态保存为文件，便于发送给为你提供支持的人员。"
+    }
+   ]
+  }
+ ]
+}

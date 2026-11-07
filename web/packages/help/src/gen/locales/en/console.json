@@ -1,0 +1,164 @@
+{
+ "getting-started": {
+  "title": "Getting started",
+  "summary": "The overview is the first page after signing in. It tells you what needs attention, how the fleet\nstands and what is left to set up.",
+  "sections": [
+   {
+    "title": "The first steps",
+    "anchor": "the-first-steps"
+   },
+   {
+    "title": "What the overview shows",
+    "anchor": "what-the-overview-shows"
+   },
+   {
+    "title": "Finding your way",
+    "anchor": "finding-your-way"
+   }
+  ]
+ },
+ "nodes": {
+  "title": "Nodes",
+  "summary": "A node is a server that runs the ownsolid agent. The Nodes page lists every node with its\nstate and lets you add, change and remove them.",
+  "sections": [
+   {
+    "title": "Adding a node",
+    "anchor": "adding-a-node"
+   },
+   {
+    "title": "States",
+    "anchor": "states"
+   },
+   {
+    "title": "Changing a node",
+    "anchor": "changing-a-node"
+   },
+   {
+    "title": "Agent pacing",
+    "anchor": "agent-pacing"
+   }
+  ]
+ },
+ "tasks": {
+  "title": "Tasks",
+  "summary": "A task is work the control plane sends to one node's agent, such as collecting its facts. The\nTasks page lists them, newest first.",
+  "sections": [
+   {
+    "title": "Following a task",
+    "anchor": "following-a-task"
+   },
+   {
+    "title": "When a task fails",
+    "anchor": "when-a-task-fails"
+   }
+  ]
+ },
+ "people-and-workspaces": {
+  "title": "People and workspaces",
+  "summary": "People sign in to the console or the portal with their own accounts. Workspaces group people and\nthe work they share.",
+  "sections": [
+   {
+    "title": "Inviting people",
+    "anchor": "inviting-people"
+   },
+   {
+    "title": "Disabling an account",
+    "anchor": "disabling-an-account"
+   },
+   {
+    "title": "Workspaces",
+    "anchor": "workspaces"
+   }
+  ]
+ },
+ "single-sign-on": {
+  "title": "Single sign-on",
+  "summary": "Single sign-on lets people sign in with an account on your company's Gitea instead of a password\nkept by ownsolid. The Single sign-on page manages the connectors.",
+  "sections": [
+   {
+    "title": "Adding a connector",
+    "anchor": "adding-a-connector"
+   },
+   {
+    "title": "Turning a connector off",
+    "anchor": "turning-a-connector-off"
+   }
+  ]
+ },
+ "audit-trail": {
+  "title": "Audit trail",
+  "summary": "Every privileged action is recorded. The Audit trail shows who did what, to what, when,\nfrom where and with what outcome.",
+  "sections": [
+   {
+    "title": "Finding an event",
+    "anchor": "finding-an-event"
+   }
+  ]
+ },
+ "license": {
+  "title": "License",
+  "summary": "The license covers the whole platform; there are no paid modules. The License page shows\nits state, expiry and limits, and imports a new one.",
+  "sections": [
+   {
+    "title": "Getting a license",
+    "anchor": "getting-a-license"
+   },
+   {
+    "title": "Importing",
+    "anchor": "importing"
+   },
+   {
+    "title": "When it runs out",
+    "anchor": "when-it-runs-out"
+   },
+   {
+    "title": "Diagnostics",
+    "anchor": "diagnostics"
+   }
+  ]
+ },
+ "email": {
+  "title": "Email",
+  "summary": "The installation sends invitations, password resets and notices of password changes through your\nmail server. Email shows each message's delivery.",
+  "sections": [
+   {
+    "title": "Delivery states",
+    "anchor": "delivery-states"
+   },
+   {
+    "title": "Sending again",
+    "anchor": "sending-again"
+   }
+  ]
+ },
+ "settings": {
+  "title": "Settings",
+  "summary": "Settings holds choices an administrator makes for everyone in the tenant. Your own\nchoices are on your account.",
+  "sections": [
+   {
+    "title": "Default language",
+    "anchor": "default-language"
+   }
+  ]
+ },
+ "account": {
+  "title": "Your account",
+  "summary": "Your account holds your profile, your password and how ownsolid looks for you.",
+  "sections": [
+   {
+    "title": "What you can change",
+    "anchor": "what-you-can-change"
+   }
+  ]
+ },
+ "what-is-supported": {
+  "title": "What is supported",
+  "summary": "What is supported lists every option the product offers, such as operating systems,\naccelerators and installation sizes, and whether this release can use it.",
+  "sections": [
+   {
+    "title": "States",
+    "anchor": "states"
+   }
+  ]
+ }
+}

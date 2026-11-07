@@ -1,0 +1,196 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "门户是你使用管理员为你准备的内容的地方。首页显示需要你处理的事情、你上次进行到哪里，以及发布到你所在工作空间的应用。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "你的工作空间"
+    }
+   ],
+   "data": {
+    "id": "你的工作空间"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "你看到的所有内容都属于一个工作空间。页面顶部的切换器显示当前工作空间；如果你属于多个工作空间，可以在那里切换。如果你不属于任何工作空间，请联系管理员把你加入。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "首页"
+    }
+   ],
+   "data": {
+    "id": "首页"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "需要你处理"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 列出你失败、被取消或被中断的运行，直到你将其标记为已读。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "继续上次的工作"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 列出你最近的五个对话。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "发布给你的应用"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 列出管理员发布到此工作空间的应用。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "用量"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 将显示你使用的 Token、调用次数和 GPU 小时；本版本尚未计量这些数据。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "某一部分无法读取时，它会说明情况并提供 "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "重试"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "；页面其余部分照常显示。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "通知"
+    }
+   ],
+   "data": {
+    "id": "通知"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "页面顶部的铃铛显示未读通知的数量。打开它可以阅读通知并标记为已读。"
+    }
+   ]
+  }
+ ]
+}

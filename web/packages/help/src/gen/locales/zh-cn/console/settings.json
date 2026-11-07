@@ -1,0 +1,60 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/settings",
+     "children": [
+      {
+       "type": "text",
+       "value": "设置"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "保存管理员为租户内所有人做出的选择。你自己的选择在"
+    },
+    {
+     "type": "link",
+     "url": "help:account",
+     "children": [
+      {
+       "type": "text",
+       "value": "账户"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "中。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "默认语言"
+    }
+   ],
+   "data": {
+    "id": "默认语言"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "租户的默认语言适用于没有自行选择语言的所有人，以及登录前看到的页面。"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,158 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/account",
+     "children": [
+      {
+       "type": "text",
+       "value": "Your account"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " holds your profile, your password and how ownsolid looks for you."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "What you can change"
+    }
+   ],
+   "data": {
+    "id": "what-you-can-change"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Profile"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ": your display name."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Password"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ": changing it signs out your other sessions."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Language"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ": the language of every page. The user menu at the top right changes it too."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Sign-in providers"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ": link or unlink an account on a single sign-on provider. Unlinking asks for\nyour password."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The theme and density buttons at the top of every page switch between light and dark and between\ncomfortable and compact rows. Like the language, they follow your account to every browser."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Before a session ends for inactivity, a warning offers to keep you signed in."
+    }
+   ]
+  }
+ ]
+}

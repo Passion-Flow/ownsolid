@@ -7,6 +7,7 @@ export { accountPath, safeRedirect, signInPath } from './redirect.ts';
 export {
   authenticatedRoute,
   createAccountRoute,
+  createHelpRoutes,
   createSupportRoute,
   createFrameRoute,
   publicRoutes,

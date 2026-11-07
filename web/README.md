@@ -12,6 +12,7 @@ The console (Admin entrance) and the portal, built with React, TanStack and Tail
 | `packages/ui`     | Design tokens, fonts and components                                                           |
 | `packages/api`    | Transport to the control plane: CSRF, timeouts, problems, runtime configuration               |
 | `packages/i18n`   | Translation runtime and the `locales/` catalogs                                               |
+| `packages/help`   | Help articles of both entrances in `locales/`, and the API reference generated from contracts |
 | `packages/config` | ESLint, Prettier, Vite, Vitest and Playwright settings                                        |
 
 ## Working here
@@ -39,6 +40,15 @@ To run an application against a real control plane:
 OWNSOLID_DEV_ORIGIN=https://admin.ownsolid.test:8443 \
   NODE_EXTRA_CA_CERTS=/path/to/ca.pem pnpm --filter @ownsolid/console dev
 ```
+
+## Writing help
+
+An article is a Markdown file in `packages/help/locales/en/<entrance>/` and the same name under
+`zh-cn/`; an article both entrances need goes in `shared/`. List it in
+`packages/help/articles.json` with its topic and the pages whose help link opens it, then run
+`make generate`. It starts with one `#` title and a summary paragraph; links go to a page path such
+as `/nodes` or to another article as `help:<slug>`. The generator refuses anything else, and the
+tests fail when a language is missing or a link has no page.
 
 ## Calling the API
 

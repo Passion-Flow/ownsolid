@@ -1,0 +1,170 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/support",
+     "children": [
+      {
+       "type": "text",
+       "value": "What is supported"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " lists every option the product offers, such as operating systems,\naccelerators and installation sizes, and whether this release can use it."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "States"
+    }
+   ],
+   "data": {
+    "id": "states"
+   }
+  },
+  {
+   "type": "table",
+   "align": [
+    null,
+    null
+   ],
+   "children": [
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "State"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Meaning"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Available"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Works in this release."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Planned"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Not in this release. The roadmap item that brings it is shown."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Needs your licence"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Works, but only under a licence you hold for a third-party component."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Not supported"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Will not work, for the reason shown."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The page comes from the same declaration the installer and the forms use, so it cannot differ from\nwhat they offer."
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1081 @@
+{
+ "title": "Project-one Initial Explicit Account SSO",
+ "operations": [
+  {
+   "id": "listSSOConnectors",
+   "method": "get",
+   "path": "/api/v1/admin/sso/connectors",
+   "parameters": [
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "maxLength": 2048
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOConnectorPageResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "createSSOConnector",
+   "method": "post",
+   "path": "/api/v1/admin/sso/connectors",
+   "parameters": [],
+   "body": {
+    "$ref": "CreateSSOConnector"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "SSOConnectorResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "SSO_CONNECTOR_ID_CONFLICT",
+     "SSO_CONNECTOR_LIMIT",
+     "IDEMPOTENCY_CONFLICT",
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "SSO_DISABLED",
+     "SSO_PROVIDER_DESTINATION_REJECTED",
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "updateSSOConnector",
+   "method": "patch",
+   "path": "/api/v1/admin/sso/connectors/{connector_id}",
+   "parameters": [
+    {
+     "name": "connector_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "UpdateSSOConnector"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOConnectorResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND",
+     "SSO_CONNECTOR_NOT_FOUND"
+    ],
+    "409": [
+     "SSO_REVISION_CONFLICT",
+     "IDEMPOTENCY_CONFLICT",
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "SSO_DISABLED",
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "testSSOConnector",
+   "method": "post",
+   "path": "/api/v1/admin/sso/connectors/{connector_id}/tests",
+   "parameters": [
+    {
+     "name": "connector_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOConnectorCheckResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND",
+     "SSO_CONNECTOR_NOT_FOUND"
+    ],
+    "429": [
+     "SSO_CAPACITY_EXCEEDED"
+    ],
+    "503": [
+     "SSO_DISABLED",
+     "SSO_ENCRYPTED_STATE_INVALID",
+     "SSO_PROVIDER_CONFIGURATION_INVALID",
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "getSSOConfiguration",
+   "method": "get",
+   "path": "/api/v1/admin/sso/configuration",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOConfigurationResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "listPublicSSOConnectors",
+   "method": "get",
+   "path": "/api/v1/auth/sso/connectors",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "PublicSSOConnectorListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "startSSO",
+   "method": "post",
+   "path": "/api/v1/auth/sso/{connector_id}/starts",
+   "parameters": [
+    {
+     "name": "connector_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "StartSSO"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOStartResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE",
+     "SSO_PASSWORD_REQUIRED"
+    ],
+    "404": [
+     "SSO_CONNECTOR_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "SSO_CONNECTOR_DISABLED",
+     "SSO_BINDING_LIMIT"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "429": [
+     "RATE_LIMITED",
+     "SSO_CAPACITY_EXCEEDED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "SSO_DISABLED",
+     "SSO_PROVIDER_CONFIGURATION_INVALID"
+    ]
+   }
+  },
+  {
+   "id": "listSSOBindings",
+   "method": "get",
+   "path": "/api/v1/account/sso/bindings",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOBindingListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "unlinkSSOBinding",
+   "method": "post",
+   "path": "/api/v1/account/sso/bindings/{binding_id}/unlink",
+   "parameters": [
+    {
+     "name": "binding_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "UnlinkSSOBinding"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "SSOBindingResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "SSO_PASSWORD_REQUIRED"
+    ],
+    "404": [
+     "SSO_BINDING_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "IDEMPOTENCY_CONFLICT",
+     "SSO_REVISION_CONFLICT",
+     "SSO_PASSWORD_CHANGED"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "completeSSO",
+   "method": "get",
+   "path": "/api/v1/auth/sso/{connector_id}/callback",
+   "parameters": [
+    {
+     "name": "connector_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "state",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+     }
+    },
+    {
+     "name": "code",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+     }
+    },
+    {
+     "name": "error",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+     }
+    },
+    {
+     "name": "error_description",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+     }
+    }
+   ],
+   "body": null,
+   "responses": [],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "CreateSSOConnector": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "provider",
+    "origin",
+    "client_id",
+    "enabled",
+    "client_secret",
+    "reason"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "provider": {
+     "type": "string",
+     "enum": [
+      "gitea"
+     ]
+    },
+    "origin": {
+     "type": "string",
+     "format": "uri",
+     "maxLength": 2048
+    },
+    "client_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "enabled": {
+     "type": "boolean"
+    },
+    "client_secret": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "PublicSSOConnector": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "provider"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "provider": {
+     "type": "string",
+     "enum": [
+      "gitea"
+     ]
+    }
+   }
+  },
+  "PublicSSOConnectorListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 64,
+       "items": {
+        "$ref": "PublicSSOConnector"
+       }
+      }
+     }
+    }
+   }
+  },
+  "SSOBinding": {
+   "type": "object",
+   "required": [
+    "id",
+    "connector_id",
+    "name",
+    "provider",
+    "subject",
+    "active",
+    "revision",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "connector_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "provider": {
+     "type": "string",
+     "enum": [
+      "gitea"
+     ]
+    },
+    "subject": {
+     "type": "string",
+     "description": "Canonical positive signed int64, never a floating point number or an email address."
+    },
+    "active": {
+     "type": "boolean"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "SSOBindingListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 256,
+       "items": {
+        "$ref": "SSOBinding"
+       }
+      }
+     }
+    }
+   }
+  },
+  "SSOBindingResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SSOBinding"
+    }
+   }
+  },
+  "SSOConfiguration": {
+   "type": "object",
+   "required": [
+    "enabled",
+    "providers",
+    "callback_origins"
+   ],
+   "properties": {
+    "enabled": {
+     "type": "boolean",
+     "description": "Whether single sign-on is on. When off, connectors still list, and creating or enabling one is refused with SSO_DISABLED."
+    },
+    "providers": {
+     "type": "array",
+     "maxItems": 16,
+     "items": {
+      "type": "object",
+      "required": [
+       "provider",
+       "origin"
+      ],
+      "properties": {
+       "provider": {
+        "type": "string",
+        "enum": [
+         "gitea"
+        ]
+       },
+       "origin": {
+        "type": "string",
+        "format": "uri",
+        "maxLength": 2048
+       }
+      }
+     }
+    },
+    "callback_origins": {
+     "type": "array",
+     "description": "Entrance origins, portal first; a provider must accept {origin}/api/v1/auth/sso/{connector_id}/callback for each. Empty when an entrance is not HTTPS.",
+     "maxItems": 2,
+     "items": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 2048
+     }
+    }
+   }
+  },
+  "SSOConfigurationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SSOConfiguration"
+    }
+   }
+  },
+  "SSOConnector": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "provider",
+    "origin",
+    "client_id",
+    "enabled",
+    "revision",
+    "auth_version",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "provider": {
+     "type": "string",
+     "enum": [
+      "gitea"
+     ]
+    },
+    "origin": {
+     "type": "string",
+     "format": "uri",
+     "maxLength": 2048
+    },
+    "client_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "enabled": {
+     "type": "boolean"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "auth_version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "SSOConnectorCheck": {
+   "type": "object",
+   "required": [
+    "connector_id",
+    "outcome",
+    "callback_url",
+    "provider_error",
+    "checked_at"
+   ],
+   "properties": {
+    "connector_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "outcome": {
+     "type": "string",
+     "description": "passed: credentials and every callback were accepted. not_configured: the origin is no longer approved, and nothing was sent. unreachable: no answer over the configured addresses. certificate_untrusted: the provider's certificate is not trusted by the configured CA. credentials_rejected: the client ID or secret was refused. callback_not_registered: the provider refused callback_url. unexpected_answer: an answer the check does not know.",
+     "enum": [
+      "passed",
+      "not_configured",
+      "unreachable",
+      "certificate_untrusted",
+      "credentials_rejected",
+      "callback_not_registered",
+      "unexpected_answer"
+     ]
+    },
+    "callback_url": {
+     "description": "The callback the provider refused, for callback_not_registered.",
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uri",
+       "maxLength": 2048
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "provider_error": {
+     "description": "The provider's OAuth error code, for unexpected_answer, when it is one.",
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "checked_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "SSOConnectorCheckResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SSOConnectorCheck"
+    }
+   }
+  },
+  "SSOConnectorPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items",
+      "next_cursor"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 100,
+       "items": {
+        "$ref": "SSOConnector"
+       }
+      },
+      "next_cursor": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 2048
+        },
+        {
+         "type": "null"
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  "SSOConnectorResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SSOConnector"
+    }
+   }
+  },
+  "SSOStart": {
+   "type": "object",
+   "required": [
+    "authorization_url",
+    "expires_at"
+   ],
+   "properties": {
+    "authorization_url": {
+     "type": "string",
+     "format": "uri",
+     "maxLength": 8192
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "SSOStartResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "SSOStart"
+    }
+   }
+  },
+  "StartSSO": {
+   "type": "object",
+   "required": [
+    "mode",
+    "password",
+    "reason"
+   ],
+   "properties": {
+    "mode": {
+     "type": "string",
+     "enum": [
+      "login",
+      "link"
+     ]
+    },
+    "password": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 4096
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 500
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "allOf": [
+    {},
+    {}
+   ]
+  },
+  "UnlinkSSOBinding": {
+   "type": "object",
+   "required": [
+    "revision",
+    "password",
+    "reason"
+   ],
+   "properties": {
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "password": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 4096
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "UpdateSSOConnector": {
+   "type": "object",
+   "required": [
+    "revision",
+    "name",
+    "enabled",
+    "client_id",
+    "client_secret",
+    "reason"
+   ],
+   "properties": {
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "enabled": {
+     "type": "boolean"
+    },
+    "client_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "client_secret": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 4096
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   },
+   "allOf": [
+    {}
+   ]
+  }
+ }
+}

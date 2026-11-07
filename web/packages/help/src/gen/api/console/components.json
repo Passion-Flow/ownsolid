@@ -1,0 +1,850 @@
+{
+ "title": "Project-one Components",
+ "operations": [
+  {
+   "id": "getAdminComponent",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ComponentStateResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "requestComponentAction",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/actions",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "ComponentAction"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "TaskResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "getLatestAdminComponentLogs",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/logs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "LogSnapshotResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "ComponentAction": {
+   "type": "object",
+   "required": [
+    "action",
+    "reason"
+   ],
+   "properties": {
+    "action": {
+     "type": "string",
+     "enum": [
+      "install",
+      "start",
+      "stop",
+      "remove",
+      "observe",
+      "configure",
+      "restart",
+      "upgrade",
+      "rollback",
+      "logs"
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    },
+    "version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "config": {
+     "$ref": "ComponentConfig"
+    }
+   }
+  },
+  "ComponentConfig": {
+   "type": "object",
+   "required": [
+    "log_level",
+    "max_scrape_requests"
+   ],
+   "properties": {
+    "log_level": {
+     "type": "string",
+     "enum": [
+      "debug",
+      "info",
+      "warn",
+      "error"
+     ]
+    },
+    "max_scrape_requests": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 40
+    }
+   }
+  },
+  "ComponentLogEntry": {
+   "type": "object",
+   "required": [
+    "timestamp",
+    "priority",
+    "message",
+    "sanitized"
+   ],
+   "properties": {
+    "timestamp": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "priority": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 7
+    },
+    "message": {
+     "type": "string",
+     "maxLength": 512
+    },
+    "sanitized": {
+     "type": "boolean"
+    }
+   }
+  },
+  "ComponentLogs": {
+   "type": "object",
+   "required": [
+    "source",
+    "available",
+    "observed_at",
+    "since",
+    "truncated",
+    "entries"
+   ],
+   "properties": {
+    "source": {
+     "type": "string",
+     "const": "systemd_journal"
+    },
+    "available": {
+     "type": "boolean",
+     "const": true
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "since": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "truncated": {
+     "type": "boolean"
+    },
+    "entries": {
+     "type": "array",
+     "maxItems": 8,
+     "items": {
+      "$ref": "ComponentLogEntry"
+     }
+    }
+   }
+  },
+  "ComponentMetrics": {
+   "type": "object",
+   "required": [
+    "cpu_seconds_total",
+    "cpu_idle_seconds_total",
+    "memory_total_bytes",
+    "memory_available_bytes",
+    "filesystem_total_bytes",
+    "filesystem_available_bytes"
+   ],
+   "properties": {
+    "cpu_seconds_total": {
+     "type": "number",
+     "maximum": 9007199254740991
+    },
+    "cpu_idle_seconds_total": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "memory_total_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "memory_available_bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "filesystem_total_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "filesystem_available_bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "ComponentState": {
+   "type": "object",
+   "required": [
+    "node_id",
+    "component",
+    "version",
+    "desired_state",
+    "observation",
+    "received_at",
+    "stale",
+    "management_available",
+    "artifact_available",
+    "last_task_id",
+    "desired_version",
+    "desired_config",
+    "applied_config",
+    "previous_version",
+    "last_verified_at",
+    "maintenance_available",
+    "approved_versions",
+    "removal_policy"
+   ],
+   "properties": {
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "component": {
+     "type": "string",
+     "const": "node_exporter"
+    },
+    "version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "desired_state": {
+     "type": "string",
+     "enum": [
+      "running",
+      "stopped",
+      "not_installed"
+     ]
+    },
+    "observation": {
+     "anyOf": [
+      {
+       "$ref": "MaintenanceObservation"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "received_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "stale": {
+     "type": "boolean"
+    },
+    "management_available": {
+     "type": "boolean"
+    },
+    "artifact_available": {
+     "type": "boolean"
+    },
+    "last_task_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "desired_version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "desired_config": {
+     "anyOf": [
+      {
+       "$ref": "ComponentConfig"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "applied_config": {
+     "anyOf": [
+      {
+       "$ref": "ComponentConfig"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "previous_version": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "1.12.0",
+        "1.12.1"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "last_verified_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "maintenance_available": {
+     "type": "boolean"
+    },
+    "approved_versions": {
+     "type": "array",
+     "maxItems": 2,
+     "items": {
+      "$ref": "RecipeAvailability"
+     }
+    },
+    "removal_policy": {
+     "type": "string",
+     "const": "owned_installation_only"
+    }
+   }
+  },
+  "ComponentStateResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ComponentState"
+    }
+   }
+  },
+  "LogSnapshot": {
+   "type": "object",
+   "required": [
+    "node_id",
+    "snapshot",
+    "task_id",
+    "received_at",
+    "stale"
+   ],
+   "properties": {
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "snapshot": {
+     "anyOf": [
+      {
+       "$ref": "ComponentLogs"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "task_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "received_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "stale": {
+     "type": "boolean"
+    }
+   }
+  },
+  "LogSnapshotResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "LogSnapshot"
+    }
+   }
+  },
+  "MaintenanceObservation": {
+   "type": "object",
+   "required": [
+    "component",
+    "version",
+    "managed",
+    "state",
+    "observed_at",
+    "error_code"
+   ],
+   "properties": {
+    "component": {
+     "type": "string",
+     "const": "node_exporter"
+    },
+    "version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "managed": {
+     "type": "boolean"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "running",
+      "stopped",
+      "not_installed",
+      "unknown"
+     ]
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "error_code": {
+     "type": "string",
+     "enum": [
+      "",
+      "COMPONENT_SYSTEMD_UNAVAILABLE",
+      "COMPONENT_PRIVILEGE_REQUIRED",
+      "COMPONENT_USER_INVALID",
+      "COMPONENT_CONFLICT",
+      "COMPONENT_PORT_CONFLICT",
+      "COMPONENT_DISK_SPACE_LOW",
+      "COMPONENT_ASSET_UNAVAILABLE",
+      "COMPONENT_ASSET_INVALID",
+      "COMPONENT_ARCHIVE_INVALID",
+      "COMPONENT_ARCHITECTURE_MISMATCH",
+      "COMPONENT_STATE_INVALID",
+      "COMPONENT_IO_FAILED",
+      "COMPONENT_SERVICE_FAILED",
+      "COMPONENT_METRICS_UNAVAILABLE",
+      "COMPONENT_METRICS_INVALID",
+      "COMPONENT_CANCELLED",
+      "COMPONENT_PROFILE_UNAVAILABLE",
+      "COMPONENT_CONFIG_INVALID",
+      "COMPONENT_VERSION_UNSUPPORTED",
+      "COMPONENT_VERSION_CONFLICT",
+      "COMPONENT_UPGRADE_NOT_FORWARD",
+      "COMPONENT_ROLLBACK_UNAVAILABLE",
+      "COMPONENT_ROLLBACK_FAILED",
+      "COMPONENT_UPDATE_ROLLED_BACK",
+      "COMPONENT_LOGS_UNAVAILABLE",
+      "COMPONENT_LOGS_TOO_LARGE",
+      "COMPONENT_LOGS_INVALID",
+      "COMPONENT_MAINTENANCE_REQUIRED",
+      "COMPONENT_INTERRUPTED"
+     ]
+    },
+    "metrics": {
+     "$ref": "ComponentMetrics"
+    },
+    "config": {
+     "$ref": "ComponentConfig"
+    },
+    "previous_version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "maintenance_error": {
+     "type": "string",
+     "enum": [
+      "",
+      "COMPONENT_SYSTEMD_UNAVAILABLE",
+      "COMPONENT_PRIVILEGE_REQUIRED",
+      "COMPONENT_USER_INVALID",
+      "COMPONENT_CONFLICT",
+      "COMPONENT_PORT_CONFLICT",
+      "COMPONENT_DISK_SPACE_LOW",
+      "COMPONENT_ASSET_UNAVAILABLE",
+      "COMPONENT_ASSET_INVALID",
+      "COMPONENT_ARCHIVE_INVALID",
+      "COMPONENT_ARCHITECTURE_MISMATCH",
+      "COMPONENT_STATE_INVALID",
+      "COMPONENT_IO_FAILED",
+      "COMPONENT_SERVICE_FAILED",
+      "COMPONENT_METRICS_UNAVAILABLE",
+      "COMPONENT_METRICS_INVALID",
+      "COMPONENT_CANCELLED",
+      "COMPONENT_PROFILE_UNAVAILABLE",
+      "COMPONENT_CONFIG_INVALID",
+      "COMPONENT_VERSION_UNSUPPORTED",
+      "COMPONENT_VERSION_CONFLICT",
+      "COMPONENT_UPGRADE_NOT_FORWARD",
+      "COMPONENT_ROLLBACK_UNAVAILABLE",
+      "COMPONENT_ROLLBACK_FAILED",
+      "COMPONENT_UPDATE_ROLLED_BACK",
+      "COMPONENT_LOGS_UNAVAILABLE",
+      "COMPONENT_LOGS_TOO_LARGE",
+      "COMPONENT_LOGS_INVALID",
+      "COMPONENT_MAINTENANCE_REQUIRED",
+      "COMPONENT_INTERRUPTED"
+     ]
+    },
+    "maintenance_cause": {
+     "type": "string",
+     "enum": [
+      "",
+      "COMPONENT_SYSTEMD_UNAVAILABLE",
+      "COMPONENT_PRIVILEGE_REQUIRED",
+      "COMPONENT_USER_INVALID",
+      "COMPONENT_CONFLICT",
+      "COMPONENT_PORT_CONFLICT",
+      "COMPONENT_DISK_SPACE_LOW",
+      "COMPONENT_ASSET_UNAVAILABLE",
+      "COMPONENT_ASSET_INVALID",
+      "COMPONENT_ARCHIVE_INVALID",
+      "COMPONENT_ARCHITECTURE_MISMATCH",
+      "COMPONENT_STATE_INVALID",
+      "COMPONENT_IO_FAILED",
+      "COMPONENT_SERVICE_FAILED",
+      "COMPONENT_METRICS_UNAVAILABLE",
+      "COMPONENT_METRICS_INVALID",
+      "COMPONENT_CANCELLED",
+      "COMPONENT_PROFILE_UNAVAILABLE",
+      "COMPONENT_CONFIG_INVALID",
+      "COMPONENT_VERSION_UNSUPPORTED",
+      "COMPONENT_VERSION_CONFLICT",
+      "COMPONENT_UPGRADE_NOT_FORWARD",
+      "COMPONENT_ROLLBACK_UNAVAILABLE",
+      "COMPONENT_ROLLBACK_FAILED",
+      "COMPONENT_UPDATE_ROLLED_BACK",
+      "COMPONENT_LOGS_UNAVAILABLE",
+      "COMPONENT_LOGS_TOO_LARGE",
+      "COMPONENT_LOGS_INVALID",
+      "COMPONENT_MAINTENANCE_REQUIRED",
+      "COMPONENT_INTERRUPTED"
+     ]
+    }
+   }
+  },
+  "RecipeAvailability": {
+   "type": "object",
+   "required": [
+    "version",
+    "available",
+    "forward_upgrade"
+   ],
+   "properties": {
+    "version": {
+     "type": "string",
+     "enum": [
+      "1.12.0",
+      "1.12.1"
+     ]
+    },
+    "available": {
+     "type": "boolean"
+    },
+    "forward_upgrade": {
+     "type": "boolean"
+    }
+   }
+  },
+  "Task": {
+   "type": "object",
+   "required": [
+    "id",
+    "tenant_id",
+    "workspace_id",
+    "node_id",
+    "operation",
+    "state",
+    "attempt",
+    "error_code",
+    "created_at",
+    "updated_at",
+    "deadline_at",
+    "completed_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "tenant_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "operation": {
+     "type": "string",
+     "enum": [
+      "collect_facts.v1",
+      "node_exporter.install.v1",
+      "node_exporter.start.v1",
+      "node_exporter.stop.v1",
+      "node_exporter.remove.v1",
+      "node_exporter.observe.v1",
+      "node_exporter.configure.v1",
+      "node_exporter.restart.v1",
+      "node_exporter.upgrade.v1",
+      "node_exporter.rollback.v1",
+      "node_exporter.logs.v1",
+      "inference.deploy.v1",
+      "inference.stop.v1",
+      "inference.remove.v1",
+      "inference.observe.v1",
+      "inference.verify.v1",
+      "inference.deploy.v1",
+      "inference.stop.v1",
+      "inference.remove.v1",
+      "inference.observe.v1",
+      "inference.verify.v1",
+      "inference.deploy.v1",
+      "inference.stop.v1",
+      "inference.remove.v1",
+      "inference.observe.v1",
+      "inference.verify.v1",
+      "training.run.v1",
+      "training.run.v1",
+      "training.run.v1",
+      "model.prepare.v1",
+      "model.prepare.v1",
+      "model.prepare.v1",
+      "inference.derived.v1",
+      "inference.derived.v1",
+      "inference.derived.v1"
+     ]
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "pending",
+      "running",
+      "succeeded",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "attempt": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 64
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "deadline_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "completed_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "TaskResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Task"
+    }
+   }
+  }
+ }
+}
