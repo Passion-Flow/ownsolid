@@ -10,7 +10,8 @@ recovery and support tooling.
 
 ## P0 Foundation
 
-- [ ] REL-001 Control-plane restart and crash recovery without losing tasks (P0)
+- [x] REL-001 Control-plane restart and crash recovery without losing tasks (P0) - Evidence: commit f966d43 (ADR 0046); `TestControlCrash` passed twice in a row with 2,000 simulated agents on `ownsolid-cpu`
+  - Scope of the evidence: one control process on one host, PostgreSQL only, simulated read-only nodes, model store in memory. Mail and workflow recovery tests ran; dataset, knowledge and task-delivery recovery tests exist but did not run. Training and preparation were not in the drill: ARC-013 covers them against a control outage.
 - [x] REL-002 Database-aware backup and restore of the control plane (P0) - Catalog: F204 - Evidence: commit 5a62c37 (ADR 0014)
 
 ## P1 Enterprise release

@@ -36,12 +36,13 @@ works in its own worktree (AGENTS.md section 10).
 
 | Lane | Items, in order | Code it owns |
 | --- | --- | --- |
-| A. Fleet core | ARC-006 to ARC-016, then REL-001 | `api/agent`, agent client and runtime, control platform and node modules, `tools/dev/simulator` |
+| A. Fleet core | ARC-006 to ARC-016, then REL-001; in P1, the open items of the work order, starting with ARC-101 | `api/agent`, agent client and runtime, control platform and node modules, `tools/dev/simulator` |
 | B. Web console | UX-001 to UX-005, then tick DEL-001; then the P1 console foundations UX-115, UX-116, UX-112, UX-118, UX-120, UX-119, UX-113, UX-110, UX-109 ([ADR 0015](../../decisions/0015-web-lane-after-p0.md)); then UX-121, UX-103, UX-114, UX-107, UX-105, UX-104 ([ADR 0026](../../decisions/0026-web-lane-second-foundations.md)); then FLT-114, FLT-113, IAM-115, DEL-116, UX-101 ([ADR 0031](../../decisions/0031-web-lane-first-module-pages.md)); then AUD-110, IAM-116, IAM-117, UX-122, UX-106 ([ADR 0034](../../decisions/0034-web-lane-governance-pages.md)); then UX-123, UX-124, UX-128, UX-126, UX-125, UX-127, UX-129 ([ADR 0039](../../decisions/0039-web-lane-navigation-and-lists.md)); then CMP-215, UX-102, UX-111, UX-108, UX-117 ([ADR 0041](../../decisions/0041-web-lane-truth-and-portal.md)) | `web/`, `deploy/images/control` web build, `docs/development/design-system.md` |
 | C. Delivery and telemetry | DEL-002, OBS-001, OBS-002, REL-002, DEL-003 | `tests/e2e` egress harness, `deploy/`, monitoring modules, `services/control/internal/operations` |
 
 DEL-003 changes agent container networking: coordinate with lane A by keeping the change
-inside the runtime's network setup. Lanes for P1 are defined when P0 closes.
+inside the runtime's network setup. P0 closed with REL-001: lane A continues in the work order,
+lane B follows [ADR 0044](../../decisions/0044-web-lane-follows-the-build-plan.md), and lane C is finished.
 
 ## Definition of done (the tick rule)
 
@@ -97,7 +98,7 @@ keep them open, and tick them when the run happens.
 | **P3 Multi-site** | Global layer, cross-site quota and routing, site autonomy | Load tested with 20,000 simulated nodes across simulated sites; a WAN cut leaves every site running |
 | **P4 Breadth** | All model types, advanced serving, compatibility-matrix entries | Per item |
 
-**Current phase: P0.**
+**Current phase: P1.**
 
 ## Work order and progress
 
@@ -125,7 +126,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 18 | Tenancy, metering and commerce | [tenancy-metering-commerce.md](tenancy-metering-commerce.md) | - | 0/9 | 0/8 | 0/2 | - |
 | 19 | Audit and compliance | [audit-and-compliance.md](audit-and-compliance.md) | - | 1/11 | 0/7 | - | - |
 | 20 | Observability and alerting | [observability-and-alerting.md](observability-and-alerting.md) | 2/2 | 0/13 | 0/5 | 0/1 | - |
-| 21 | Platform reliability | [platform-reliability.md](platform-reliability.md) | 1/2 | 0/12 | 0/4 | 0/2 | - |
+| 21 | Platform reliability | [platform-reliability.md](platform-reliability.md) | 2/2 | 0/12 | 0/4 | 0/2 | - |
 | 22 | Network and storage | [network-and-storage.md](network-and-storage.md) | - | 0/6 | 0/7 | - | 0/1 |
 | 23 | Developer experience | [developer-experience.md](developer-experience.md) | - | 0/8 | 0/5 | - | 0/1 |
 | 24 | Compatibility matrix | [compatibility-matrix.md](compatibility-matrix.md) | - | 1/2 | 0/11 | - | 0/13 |
