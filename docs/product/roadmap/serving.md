@@ -5,6 +5,8 @@ Running models as services on GPUs and CPUs, for every model type.
 - Owns: `services/agent/internal/inference`, `services/control/internal/modules/deployments`, `distribution`.
 - Depends on: models-and-registry, scheduling-and-quota, gpu-operations.
 
+Reviewed 2026-11-07 against GPUStack, KServe, Kubernetes Deployments and vLLM documentation ([research](../../research/model-services.md)). The review added SRV-112, SRV-113 and SRV-207: a deployment had no name, no history to roll back to, and no way to send part of its traffic to a new version.
+
 ## P1 Enterprise release
 
 - [ ] SRV-101 Engine contract for deploy, health, generate, cancel, metrics and unload, with engine-specific settings passed through validated configuration (P1) - Catalog: F155
@@ -18,6 +20,8 @@ Running models as services on GPUs and CPUs, for every model type.
 - [ ] SRV-109 Streaming, cancellation and timeouts end to end (P1) - Catalog: F077, F171
 - [ ] SRV-110 Verified on real NVIDIA hardware: deploy, chat, stream, LoRA (RTX 3090 run on 2026-11-04 used the inherited code; repeat on ownsolid) (P1)
 - [ ] SRV-111 Model services pages: the list, a deployment's own page and the deploy flow (S-203, S-204, S-205) (P1)
+- [ ] SRV-112 Name and describe a deployment, unique in its workspace, shown wherever it is listed (P1)
+- [ ] SRV-113 Deployment revision history with the difference between revisions and rollback to one (P1)
 
 ## P2 Fleet operations
 
@@ -27,6 +31,7 @@ Running models as services on GPUs and CPUs, for every model type.
 - [ ] SRV-204 SGLang engine (P2) - Catalog: F158
 - [ ] SRV-205 MindIE and vLLM-Ascend engines (P2) - Catalog: F166, F167
 - [ ] SRV-206 Multi-GPU and multi-node tensor and pipeline parallel serving (P2) - Catalog: F179
+- [ ] SRV-207 Canary rollout: send a share of a deployment's traffic to a new revision, promote or roll back (P2)
 
 ## P3 Multi-site
 
