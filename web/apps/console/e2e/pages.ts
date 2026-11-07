@@ -180,6 +180,17 @@ export const consolePages: readonly PageState[] = [
     },
   },
   {
+    name: 'a connector on its own page',
+    path: '/sso/$connectorId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.ssoConfiguration = { ...ssoOn };
+      control.ssoConnectorList = [{ ...activeConnector }];
+      await page.goto(`/sso/${activeConnector.id}`);
+      await page.getByRole('heading', { name: activeConnector.name, level: 1 }).waitFor();
+    },
+  },
+  {
     name: 'a person on their own page',
     path: '/users/$userId',
     open: async (page, control) => {
