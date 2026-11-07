@@ -43,7 +43,7 @@ const formatted =
 const machine = /^[a-z_]+(?:\.[a-z_]+)*$/;
 
 /** The strings of a response: whole values, and every value as a word of a composed fact. */
-interface ResponseData {
+export interface ResponseData {
   whole: Set<string>;
   words: Set<string>;
 }
@@ -96,6 +96,29 @@ function accounted(raw: string, data: ResponseData): boolean {
   return templates.some((template) => template.test(text));
 }
 
+/** Starts gathering what the server sends, so a page's strings can be told from its data. */
+export function collectResponses(page: Page, data: ResponseData): void {
+  page.on('response', (response) => {
+    const type = response.headers()['content-type'] ?? '';
+    if (type.includes('json')) {
+      void response.json().then(
+        (body: unknown) => {
+          collectData(body, data);
+        },
+        () => undefined,
+      );
+    }
+  });
+}
+
+/** The strings on the page that neither catalog nor the server's data accounts for. */
+export async function unexplainedText(page: Page, data: ResponseData): Promise<string[]> {
+  await settled(page);
+  return [...new Set((await readable(page)).map(normalize))]
+    .filter((text) => !accounted(text, data))
+    .sort();
+}
+
 /** Options for {@link localizationFlows}. */
 export interface LocalizationFlowOptions {
   audience: ControlPlane['audience'];
@@ -114,17 +137,7 @@ export function localizationFlows({ audience, pages }: LocalizationFlowOptions):
       data.words.clear();
       control = await mockControlPlane(page, audience);
       await page.emulateMedia({ reducedMotion: 'reduce' });
-      page.on('response', (response) => {
-        const type = response.headers()['content-type'] ?? '';
-        if (type.includes('json')) {
-          void response.json().then(
-            (body: unknown) => {
-              collectData(body, data);
-            },
-            () => undefined,
-          );
-        }
-      });
+      collectResponses(page, data);
     });
 
     const walked = pages.filter(
@@ -133,11 +146,7 @@ export function localizationFlows({ audience, pages }: LocalizationFlowOptions):
     for (const state of walked) {
       test(state.name, async ({ page }) => {
         await state.open(page, control);
-        await settled(page);
-        const unexplained = [...new Set((await readable(page)).map(normalize))]
-          .filter((text) => !accounted(text, data))
-          .sort();
-        expect(unexplained).toEqual([]);
+        expect(await unexplainedText(page, data)).toEqual([]);
       });
     }
   });
