@@ -151,6 +151,136 @@ func TestBackupKeepsTelemetryAndDataOut(t *testing.T) {
 	}
 }
 
+const publishedModel = "data/models/objects/11111111-1111-4111-8111-111111111111/model.safetensors"
+
+// withPublishedModel leaves one published model and one unfinished upload in the store.
+func withPublishedModel(t *testing.T, c Config) {
+	t.Helper()
+	path := filepath.Join(c.InstallRoot, publishedModel)
+	if e := os.MkdirAll(filepath.Dir(path), 0o700); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.WriteFile(path, []byte("weights"), 0o444); e != nil {
+		t.Fatal(e)
+	}
+	upload := filepath.Join(c.Layout().Models, "imports", "22222222-2222-4222-8222-222222222222", "chunk-000000000000")
+	if e := os.MkdirAll(filepath.Dir(upload), 0o700); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.WriteFile(upload, []byte("half"), 0o600); e != nil {
+		t.Fatal(e)
+	}
+}
+
+func TestBackupHoldsPublishedModelsAndNotUploads(t *testing.T) {
+	c := installedConfig(t)
+	withPublishedModel(t, c)
+	manifest, e := readBackup(makeBackup(t, c))
+	if e != nil {
+		t.Fatal(e)
+	}
+	var models []string
+	for _, f := range manifest.Files {
+		if strings.HasPrefix(f.Path, "data") {
+			models = append(models, f.Path)
+		}
+	}
+	if !slices.Equal(models, []string{publishedModel}) {
+		t.Fatal(models)
+	}
+}
+
+func TestBackupHoldsNoModelsBeforeTheFirstImport(t *testing.T) {
+	c := installedConfig(t)
+	out := &bytes.Buffer{}
+	if _, e := testOperation(t, c, &fakeDatabase{}, out).backup(context.Background(), t.TempDir()); e != nil {
+		t.Fatal(e)
+	}
+	if !strings.Contains(out.String(), "step models: ok files=0") {
+		t.Fatal(out.String())
+	}
+}
+
+func TestRestorePutsBackAMissingModelBeforeTheDatabaseChanges(t *testing.T) {
+	c := installedConfig(t)
+	withPublishedModel(t, c)
+	path := makeBackup(t, c)
+	target := filepath.Join(c.InstallRoot, publishedModel)
+	if e := os.RemoveAll(filepath.Dir(target)); e != nil {
+		t.Fatal(e)
+	}
+	out := &bytes.Buffer{}
+	if e := restoreFrom(t, c, &fakeDatabase{}, path, out); e != nil {
+		t.Fatal(e)
+	}
+	raw, e := os.ReadFile(target)
+	if e != nil || string(raw) != "weights" {
+		t.Fatalf("%q %v", raw, e)
+	}
+	st, e := os.Stat(target)
+	if e != nil || st.Mode().Perm() != 0o444 {
+		t.Fatalf("%v %v", st, e)
+	}
+	if !strings.Contains(out.String(), "step restore-models: ok restored=1") {
+		t.Fatal(out.String())
+	}
+	if strings.Index(out.String(), "step restore-models") > strings.Index(out.String(), "step load") {
+		t.Fatal("the models must be back before the database changes")
+	}
+}
+
+func TestRestoreLeavesAMatchingModelAndReplacesADamagedOne(t *testing.T) {
+	c := installedConfig(t)
+	withPublishedModel(t, c)
+	path := makeBackup(t, c)
+	out := &bytes.Buffer{}
+	if e := restoreFrom(t, c, &fakeDatabase{}, path, out); e != nil {
+		t.Fatal(e)
+	}
+	if !strings.Contains(out.String(), "step restore-models: ok restored=0") {
+		t.Fatal(out.String())
+	}
+	target := filepath.Join(c.InstallRoot, publishedModel)
+	if e := os.Chmod(target, 0o644); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.WriteFile(target, []byte("damaged"), 0o644); e != nil {
+		t.Fatal(e)
+	}
+	out.Reset()
+	if e := restoreFrom(t, c, &fakeDatabase{}, path, out); e != nil {
+		t.Fatal(e)
+	}
+	raw, e := os.ReadFile(target)
+	if e != nil || string(raw) != "weights" {
+		t.Fatalf("%q %v", raw, e)
+	}
+	if !strings.Contains(out.String(), "step restore-models: ok restored=1") {
+		t.Fatal(out.String())
+	}
+}
+
+func TestRestoreLeavesTheDatabaseAloneWhenAModelCannotBePutBack(t *testing.T) {
+	c := installedConfig(t)
+	withPublishedModel(t, c)
+	path := makeBackup(t, c)
+	objects := filepath.Join(c.Layout().Models, "objects")
+	if e := os.RemoveAll(objects); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.WriteFile(objects, []byte("not a directory"), 0o600); e != nil {
+		t.Fatal(e)
+	}
+	d := &fakeDatabase{}
+	e := restoreFrom(t, c, d, path, &bytes.Buffer{})
+	if e == nil || !strings.Contains(e.Error(), "INSTALL_RESTORE_MODELS_FAILED") {
+		t.Fatal(e)
+	}
+	if d.ran("pg_restore") {
+		t.Fatal("the database must not change when the models cannot be put back")
+	}
+}
+
 func TestBackupFailureLeavesNothingBehind(t *testing.T) {
 	for name, failing := range map[string]string{"dump": "pg_dump", "verification": "pg_restore", "fingerprint": "UNION ALL", "schema version": "max(version)"} {
 		t.Run(name, func(t *testing.T) {

@@ -26,6 +26,7 @@ does not survive that disk.
 | --- | --- |
 | `database.dump` | The `ownsolid` database, from one consistent snapshot (`pg_dump` custom format) |
 | `files/config`, `files/operator`, `files/secrets` | Session and mail keys, database identities, TLS material and the administrator credential |
+| `files/data/models/objects` | Every published model, because serving will not start on a database that names a model it cannot find |
 | `manifest.json` | Hashes and sizes of every file, the schema version, and a row count and checksum of every table |
 
 A backup is not reported complete until its dump has been restored into a scratch database
@@ -36,8 +37,11 @@ The backup holds the secrets of the installation, including the database passwor
 key that encrypts queued mail. Keep it as carefully as `install_root` itself: mode 0700, on
 storage only operators can read.
 
-Not in a backup: the telemetry stores (`data/metrics`, `data/logs`; OBS-113) and the operator
-log of past backups and restores.
+A backup copies the whole model store each time, so `--output` needs room for it.
+
+Not in a backup: the telemetry stores (`data/metrics`, `data/logs`; OBS-113), the operator log of
+past backups and restores, and uploads still in progress (`data/models/imports`). An import
+interrupted by a restore fails verification and is discarded from the Model library.
 
 ## Restore
 
@@ -49,7 +53,9 @@ Restore first checks every file of the backup against its manifest, and refuses 
 is incomplete or changed (`INSTALL_BACKUP_INVALID`, `INSTALL_BACKUP_CORRUPT`) before it touches
 anything. Then it:
 
-1. Stops serving and starts PostgreSQL and the telemetry stores.
+1. Stops serving, starts PostgreSQL and the telemetry stores, and puts back every model that is
+   missing or damaged. A model that matches the backup is left alone, and models published since
+   the backup stay in the store unused.
 2. Loads the dump into a new database and compares every table with the manifest. If anything
    differs, the current database is left as it was and serving starts again.
 3. Swaps the loaded database in under the name `ownsolid`. The database it replaces is kept as

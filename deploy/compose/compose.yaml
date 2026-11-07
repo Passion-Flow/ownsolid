@@ -94,6 +94,10 @@ services:
         target: /run/projectone
         read_only: true
         bind: {create_host_path: false}
+      - type: bind
+        source: ${OWNSOLID_MODEL_STORE:?}
+        target: /var/lib/ownsolid/models
+        bind: {create_host_path: false}
     networks: [state, edge]
     mem_limit: ${OWNSOLID_CONTROL_MEMORY:?}
     cpus: ${OWNSOLID_CONTROL_CPUS:?}

@@ -311,6 +311,13 @@ func (o *operation) backup(ctx context.Context, output string) (string, error) {
 		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_FILES_FAILED", Detail: e.Error()}
 	}
 	fmt.Fprintf(o.out, "step files: ok files=%d\n", len(manifest.Files))
+	// After the dump, so every model the database names is already published here.
+	models, e := o.copyTree(o.modelObjects(), filepath.Join(partial, backupFilesName))
+	if e != nil {
+		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_FILES_FAILED", Detail: e.Error()}
+	}
+	manifest.Files = append(manifest.Files, models...)
+	fmt.Fprintf(o.out, "step models: ok files=%d\n", len(models))
 	if e = writeManifest(filepath.Join(partial, backupManifestName), manifest); e != nil {
 		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_OUTPUT_FAILED", Detail: e.Error()}
 	}
@@ -356,36 +363,55 @@ func (o *operation) copyKeyFiles(target string) ([]backupFile, error) {
 	l := o.config.Layout()
 	files := []backupFile{}
 	for _, directory := range []string{l.Config, l.Operator, l.Secrets} {
-		e := filepath.WalkDir(directory, func(path string, entry fs.DirEntry, e error) error {
-			if e != nil {
-				return e
-			}
-			if entry.IsDir() {
-				return nil
-			}
-			if !entry.Type().IsRegular() {
-				return fmt.Errorf("%s is not a regular file", path)
-			}
-			if entry.Name() == operationLogName {
-				return nil
-			}
-			relative, e := filepath.Rel(l.Root, path)
-			if e != nil {
-				return e
-			}
-			file, e := copyPrivateFile(path, filepath.Join(target, relative))
-			if e != nil {
-				return e
-			}
-			file.Path = relative
-			files = append(files, file)
-			return nil
-		})
+		copied, e := o.copyTree(directory, target)
 		if e != nil {
 			return nil, e
 		}
+		files = append(files, copied...)
 	}
 	return files, nil
+}
+
+// modelObjects holds published models. They never change once there, unlike the uploads
+// beside them, which only mean something to the client that was sending them.
+func (o *operation) modelObjects() string {
+	return filepath.Join(o.config.Layout().Models, "objects")
+}
+
+// copyTree copies the files under directory into target, at their paths under the install
+// root. A directory that does not exist yet holds nothing to copy.
+func (o *operation) copyTree(directory, target string) ([]backupFile, error) {
+	root := o.config.Layout().Root
+	files := []backupFile{}
+	e := filepath.WalkDir(directory, func(path string, entry fs.DirEntry, e error) error {
+		if errors.Is(e, fs.ErrNotExist) && path == directory {
+			return nil
+		}
+		if e != nil {
+			return e
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		if !entry.Type().IsRegular() {
+			return fmt.Errorf("%s is not a regular file", path)
+		}
+		if entry.Name() == operationLogName {
+			return nil
+		}
+		relative, e := filepath.Rel(root, path)
+		if e != nil {
+			return e
+		}
+		file, e := copyPrivateFile(path, filepath.Join(target, relative))
+		if e != nil {
+			return e
+		}
+		file.Path = relative
+		files = append(files, file)
+		return nil
+	})
+	return files, e
 }
 
 // copyPrivateFile copies source to a new private file and reports what it copied.

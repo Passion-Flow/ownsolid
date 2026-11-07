@@ -135,6 +135,7 @@ func TestDecodeRefusals(t *testing.T) {
 		"smtp credential":    {"smtp: {host: smtp.ownsolid.test,", "smtp: {username: a, host: smtp.ownsolid.test,", "smtp"},
 		"admin email":        {"email: admin@ownsolid.test", "email: nobody", "administrator.email"},
 		"owned setting":      {"format_version: 1\n", "format_version: 1\ncontrol_settings: {server: {}}\n", "control_settings.server"},
+		"owned model store":  {"format_version: 1\n", "format_version: 1\ncontrol_settings: {models: {}}\n", "control_settings.models"},
 		"memory":             {"format_version: 1\n", "format_version: 1\nresources: {control_memory: lots}\n", "resources"},
 		"metrics image":      {"victoriametrics/victoria-metrics:v1.155.0", "victoriametrics/victoria-metrics:latest", "images.metrics"},
 		"logs image":         {"victoriametrics/victoria-logs:v1.53.0", "victoriametrics/victoria-logs", "images.logs"},
@@ -253,7 +254,7 @@ func TestControlConfigurationSeparatesDatabaseIdentities(t *testing.T) {
 	c := validConfig(t)
 	c.ControlSettings = map[string]any{"runtime": map[string]any{"workspaces": map[string]any{"maximum_count": 7}}}
 	for dsn, want := range map[string]string{containerConfigDir + "/runtime-dsn": "/run/projectone/runtime-dsn", containerOperatorDir + "/operator-dsn": "/run/projectone-operator/operator-dsn"} {
-		raw, e := c.renderControl(dsn)
+		raw, e := c.renderControl(dsn, true)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -267,9 +268,46 @@ func TestControlConfigurationSeparatesDatabaseIdentities(t *testing.T) {
 	}
 }
 
+// The control plane refuses a model store until an administrator exists, and the operator
+// tasks that create the administrator read their own file.
+func TestOnlyServingIsGivenTheModelStore(t *testing.T) {
+	c := validConfig(t)
+	if e := Materialize(c); e != nil {
+		t.Fatal(e)
+	}
+	st, e := os.Stat(c.Layout().Models)
+	if e != nil || st.Mode().Perm() != 0o700 {
+		t.Fatalf("%v %v", st, e)
+	}
+	if got := c.ComposeVariables()["OWNSOLID_MODEL_STORE"]; got != c.Layout().Models {
+		t.Fatal(got)
+	}
+	root := func(name string) string {
+		raw, e := os.ReadFile(name)
+		if e != nil {
+			t.Fatal(e)
+		}
+		var document struct {
+			Models struct {
+				ArtifactRoot string `yaml:"artifact_root"`
+			} `yaml:"models"`
+		}
+		if e = yaml.Unmarshal(raw, &document); e != nil {
+			t.Fatal(e)
+		}
+		return document.Models.ArtifactRoot
+	}
+	if got := root(filepath.Join(c.Layout().Config, "control.yaml")); got != containerModelStore {
+		t.Fatal(got)
+	}
+	if got := root(filepath.Join(c.Layout().Operator, "operator.yaml")); got != "" {
+		t.Fatal(got)
+	}
+}
+
 func TestControlConfigurationNamesBothTelemetryStoresByAddress(t *testing.T) {
 	c := validConfig(t)
-	raw, e := c.renderControl(containerConfigDir + "/runtime-dsn")
+	raw, e := c.renderControl(containerConfigDir+"/runtime-dsn", true)
 	if e != nil {
 		t.Fatal(e)
 	}

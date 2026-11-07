@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -125,6 +126,16 @@ func (o *operation) restore(ctx context.Context, from string, manifest backupMan
 		}
 		return o.abandon(ctx, e)
 	}
+	// Before the database changes: serving refuses a database naming a model it cannot find.
+	restored, e := o.restoreModels(from, manifest)
+	if e != nil {
+		e = &StepError{Step: "restore", Code: "INSTALL_RESTORE_MODELS_FAILED", Detail: e.Error()}
+		if fresh {
+			return e
+		}
+		return o.abandon(ctx, e)
+	}
+	fmt.Fprintf(o.out, "step restore-models: ok restored=%d\n", restored)
 	stamp := strings.ToLower(o.now().UTC().Format(backupTimeLayout))
 	incoming, previous := "ownsolid_restore_"+stamp, "ownsolid_before_restore_"+stamp
 	if e = o.createDatabase(ctx, incoming); e != nil {
@@ -181,27 +192,75 @@ func (o *operation) admitKeys(from string, manifest backupManifest) (bool, error
 
 // restoreFiles puts the key files of an empty installation back with their owners.
 func (o *operation) restoreFiles(from string, manifest backupManifest) error {
-	root := o.config.Layout().Root
 	for _, file := range manifest.Files {
-		target := filepath.Join(root, file.Path)
-		if e := os.MkdirAll(filepath.Dir(target), 0o700); e != nil {
-			return e
+		if o.isModelFile(file) {
+			continue
 		}
-		copied, e := copyPrivateFile(filepath.Join(from, backupFilesName, file.Path), target)
-		if e != nil {
-			return e
-		}
-		if copied.SHA256 != file.SHA256 {
-			return fmt.Errorf("%s changed while it was restored", file.Path)
-		}
-		if e = os.Chown(target, file.UID, file.GID); e != nil {
-			return e
-		}
-		if e = os.Chmod(target, os.FileMode(file.Mode)); e != nil {
+		if e := o.restoreFile(from, file); e != nil {
 			return e
 		}
 	}
 	return nil
+}
+
+// restoreFile copies one file of a backup to where it was, with its owner and mode.
+func (o *operation) restoreFile(from string, file backupFile) error {
+	target := filepath.Join(o.config.Layout().Root, file.Path)
+	copied, e := copyPrivateFile(filepath.Join(from, backupFilesName, file.Path), target)
+	if e != nil {
+		return e
+	}
+	if copied.SHA256 != file.SHA256 {
+		return fmt.Errorf("%s changed while it was restored", file.Path)
+	}
+	if e = os.Chown(target, file.UID, file.GID); e != nil {
+		return e
+	}
+	return os.Chmod(target, os.FileMode(file.Mode))
+}
+
+func (o *operation) isModelFile(file backupFile) bool {
+	relative, e := filepath.Rel(o.config.Layout().Root, o.modelObjects())
+	return e == nil && strings.HasPrefix(file.Path, relative+string(filepath.Separator))
+}
+
+// restoreModels puts back every published model that is missing or damaged, and leaves one
+// that matches, so restoring on the same host does not rewrite the whole store. Files the
+// backup does not name stay: an unreferenced model takes space but harms nothing.
+func (o *operation) restoreModels(from string, manifest backupManifest) (int, error) {
+	restored := 0
+	root := o.config.Layout().Root
+	for _, file := range manifest.Files {
+		if !o.isModelFile(file) {
+			continue
+		}
+		if verifyBackupFile(root, file, file.Path) == nil {
+			continue
+		}
+		if e := os.Remove(filepath.Join(root, file.Path)); e != nil && !errors.Is(e, os.ErrNotExist) {
+			return restored, e
+		}
+		if e := o.restoreFile(from, file); e != nil {
+			return restored, e
+		}
+		restored++
+	}
+	return restored, o.ownModelDirectories()
+}
+
+// ownModelDirectories gives the runtime user the directories restoring created, because the
+// store refuses to open any other owner's.
+func (o *operation) ownModelDirectories() error {
+	store := o.config.Layout().Models
+	return filepath.WalkDir(store, func(path string, entry fs.DirEntry, e error) error {
+		if errors.Is(e, fs.ErrNotExist) && path == store {
+			return nil
+		}
+		if e != nil || !entry.IsDir() {
+			return e
+		}
+		return own(path, o.config, true)
+	})
 }
 
 // prepareTarget brings the installation to where a database can be loaded. A cluster

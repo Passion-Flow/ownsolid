@@ -17,10 +17,11 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-// Paths as the containers see them. compose.yaml mounts the two directories.
+// Paths as the containers see them. compose.yaml mounts the directories.
 const (
 	containerConfigDir   = "/run/projectone"
 	containerOperatorDir = "/run/projectone-operator"
+	containerModelStore  = "/var/lib/ownsolid/models"
 	imagePortalAssets    = "/opt/projectone/portal"
 	imageAdminAssets     = "/opt/projectone/admin"
 	imageBlocklist       = "/opt/projectone/security/password-blocklist.txt"
@@ -41,7 +42,7 @@ const (
 
 // Layout is every path the installer owns under install_root.
 type Layout struct {
-	Root, ComposeFile, ComposeEnv, Config, Operator, Secrets, Postgres, Metrics, Logs string
+	Root, ComposeFile, ComposeEnv, Config, Operator, Secrets, Postgres, Metrics, Logs, Models string
 }
 
 func (c Config) Layout() Layout {
@@ -51,6 +52,7 @@ func (c Config) Layout() Layout {
 		Config: filepath.Join(r, "config"), Operator: filepath.Join(r, "operator"),
 		Secrets: filepath.Join(r, "secrets"), Postgres: filepath.Join(r, "data", "postgres"),
 		Metrics: filepath.Join(r, "data", "metrics"), Logs: filepath.Join(r, "data", "logs"),
+		Models: filepath.Join(r, "data", "models"),
 	}
 }
 
@@ -64,7 +66,7 @@ func Materialize(c Config) error {
 	for _, d := range []struct {
 		path    string
 		runtime bool
-	}{{l.Root, false}, {filepath.Dir(l.Postgres), false}, {l.Postgres, false}, {l.Metrics, true}, {l.Logs, true}, {l.Secrets, false}, {l.Config, true}, {l.Operator, true}} {
+	}{{l.Root, false}, {filepath.Dir(l.Postgres), false}, {l.Postgres, false}, {l.Metrics, true}, {l.Logs, true}, {l.Models, true}, {l.Secrets, false}, {l.Config, true}, {l.Operator, true}} {
 		if e := privateDirectory(d.path, c, d.runtime); e != nil {
 			return e
 		}
@@ -119,14 +121,14 @@ func Materialize(c Config) error {
 	if e = writeFile(filepath.Join(l.Operator, "operator-dsn"), dsn(migratorRole, postgresPassword), c, true); e != nil {
 		return e
 	}
-	runtimeYAML, e := c.renderControl(containerConfigDir + "/runtime-dsn")
+	runtimeYAML, e := c.renderControl(containerConfigDir+"/runtime-dsn", true)
 	if e != nil {
 		return e
 	}
 	if e = writeFile(filepath.Join(l.Config, "control.yaml"), runtimeYAML, c, true); e != nil {
 		return e
 	}
-	operatorYAML, e := c.renderControl(containerOperatorDir + "/operator-dsn")
+	operatorYAML, e := c.renderControl(containerOperatorDir+"/operator-dsn", false)
 	if e != nil {
 		return e
 	}
@@ -177,7 +179,9 @@ func (c Config) materializeRuntimeSecrets(l Layout) error {
 }
 
 // renderControl produces the control plane configuration for one database identity.
-func (c Config) renderControl(dsnFile string) ([]byte, error) {
+// Only serving gets the model store: the operator tasks run before the first
+// administrator exists, and the control plane refuses a store until one does.
+func (c Config) renderControl(dsnFile string, serving bool) ([]byte, error) {
 	document := map[string]any{}
 	for key, value := range c.ControlSettings {
 		document[key] = value
@@ -189,6 +193,9 @@ func (c Config) renderControl(dsnFile string) ([]byte, error) {
 		"portal_assets": imagePortalAssets, "admin_assets": imageAdminAssets,
 	}
 	document["database"] = map[string]any{"dsn_file": dsnFile}
+	if serving {
+		document["models"] = map[string]any{"artifact_root": containerModelStore}
+	}
 	document["telemetry"] = map[string]any{
 		"logs_address":            "http://" + net.JoinHostPort(c.Network.stateAddresses().Logs.String(), logsPort),
 		"metrics_address":         "http://" + net.JoinHostPort(c.Network.stateAddresses().Metrics.String(), metricsPort),
@@ -226,7 +233,7 @@ func (c Config) ComposeVariables() map[string]string {
 		"OWNSOLID_STATE_SUBNET": c.Network.StateSubnet, "OWNSOLID_STATE_DYNAMIC_RANGE": addresses.Dynamic.String(),
 		"OWNSOLID_POSTGRES_ADDRESS": addresses.Postgres.String(), "OWNSOLID_METRICS_ADDRESS": addresses.Metrics.String(),
 		"OWNSOLID_LOGS_ADDRESS": addresses.Logs.String(), "OWNSOLID_METRICS_IMAGE": c.Images.Metrics, "OWNSOLID_LOGS_IMAGE": c.Images.Logs,
-		"OWNSOLID_METRICS_DATA": l.Metrics, "OWNSOLID_LOGS_DATA": l.Logs,
+		"OWNSOLID_METRICS_DATA": l.Metrics, "OWNSOLID_LOGS_DATA": l.Logs, "OWNSOLID_MODEL_STORE": l.Models,
 		"OWNSOLID_METRICS_MEMORY": c.Resources.MetricsMemory, "OWNSOLID_METRICS_CPUS": c.Resources.MetricsCPUs,
 		"OWNSOLID_LOGS_MEMORY": c.Resources.LogsMemory, "OWNSOLID_LOGS_CPUS": c.Resources.LogsCPUs,
 		"OWNSOLID_METRICS_RETENTION": c.Telemetry.MetricsRetention, "OWNSOLID_LOGS_RETENTION": c.Telemetry.LogsRetention,
