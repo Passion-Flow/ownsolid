@@ -67,7 +67,9 @@ type Config struct {
 		MaxOpenConnections     int32                            `yaml:"max_open_connections"`
 		MaxIdleConnections     int32                            `yaml:"max_idle_connections"`
 		// OperatorReservedConnections are the pool's connections agent calls never take, so an
-		// operator can sign in while every agent seat is in use.
+		// operator can sign in while every agent seat is in use. The default, 3, is two for the
+		// operator and one for the liveness writer, which waits on the same rows as agents do. The
+		// installation lease holds one more for the life of the process.
 		OperatorReservedConnections int32 `yaml:"operator_reserved_connections"`
 		StatementTimeoutSeconds     int   `yaml:"statement_timeout_seconds"`
 		LockTimeoutMilliseconds     *int  `yaml:"lock_timeout_milliseconds,omitempty"`
@@ -117,7 +119,7 @@ func defaultConfiguration() Config {
 	c.Database.Engine = PostgreSQLDatabaseEngine
 	c.Database.MySQLMigrations = DefaultMySQLMigrationPolicy()
 	c.Database.MaxOpenConnections = 10
-	c.Database.OperatorReservedConnections = 2
+	c.Database.OperatorReservedConnections = 3
 	c.Database.MaxIdleConnections = 5
 	c.Database.StatementTimeoutSeconds = 5
 	c.SMTP.TLSMode = "starttls_required"
@@ -340,7 +342,9 @@ func (c Config) Validate() error {
 	if c.DatabaseEngine() != DamengDatabaseEngine && (c.Database.MaxOpenConnections < MinimumDatabaseConnections || c.Database.MaxOpenConnections > MaximumDatabaseConnections || c.Database.MaxIdleConnections < 0 || c.Database.MaxIdleConnections > c.Database.MaxOpenConnections || c.Database.StatementTimeoutSeconds < 1 || c.Database.StatementTimeoutSeconds > 30) {
 		return errors.New("DATABASE_BOUNDS_INVALID")
 	}
-	if c.Database.OperatorReservedConnections < 0 || c.DatabaseEngine() != DamengDatabaseEngine && c.Database.OperatorReservedConnections >= c.Database.MaxOpenConnections {
+	// Whether the pool leaves agents a seat matters only to a serving process, which refuses to start
+	// with DATABASE_POOL_TOO_SMALL; operator commands run on small pools.
+	if c.Database.OperatorReservedConnections < 0 || c.Database.OperatorReservedConnections > MaximumDatabaseConnections {
 		return errors.New("DATABASE_BOUNDS_INVALID")
 	}
 	if e := c.ValidateDatabaseLockTimeout(); e != nil {
@@ -406,11 +410,20 @@ func DecodeWithEnvironment(raw []byte, environmentFile string) (Config, error) {
 	return decodeWithEnvironment(raw, environmentFile)
 }
 
+// pinnedConnections is the pool connection a serving process holds for its installation lease,
+// for as long as it runs.
+const pinnedConnections = 1
+
 // AgentDatabaseSeats is how many agent calls may use the database at once, or zero when no pool
-// bounds them: the pool less the connections reserved for operators.
-func (c Config) AgentDatabaseSeats() int {
+// bounds them: the pool less the lease's pinned connection and the operators' reserve. A pool
+// that leaves agents nothing cannot serve them.
+func (c Config) AgentDatabaseSeats() (int, error) {
 	if c.DatabaseEngine() == DamengDatabaseEngine {
-		return 0
+		return 0, nil
 	}
-	return int(c.Database.MaxOpenConnections - c.Database.OperatorReservedConnections)
+	seats := int(c.Database.MaxOpenConnections - c.Database.OperatorReservedConnections - pinnedConnections)
+	if seats < 1 {
+		return 0, errors.New("DATABASE_POOL_TOO_SMALL")
+	}
+	return seats, nil
 }

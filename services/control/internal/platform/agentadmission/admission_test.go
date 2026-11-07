@@ -393,7 +393,7 @@ func TestSamplesReportSeatsAndRefusals(t *testing.T) {
 		}
 	}
 	// Four priorities, each with seats, queue, admitted and four refusal reasons.
-	if len(values) != 1+4*(3+len(reasonNames)) {
+	if len(values) != 2+4*(3+len(reasonNames)) {
 		t.Fatalf("%d series", len(values))
 	}
 }

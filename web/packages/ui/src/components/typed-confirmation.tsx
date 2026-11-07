@@ -12,6 +12,8 @@ export interface TypedConfirmationProps {
   title: string;
   /** What will happen and that it cannot be undone. */
   consequence: ReactNode;
+  /** Replaces "This cannot be undone" when the harm is real but the setting can be changed back. */
+  warning?: string | undefined;
   /** The target's own name, which the person types. */
   expected: string;
   /** The button, repeating the verb of the title. */
@@ -35,6 +37,7 @@ function matches(typed: string, expected: string): boolean {
 export function TypedConfirmation({
   title,
   consequence,
+  warning,
   expected,
   confirmLabel,
   pending,
@@ -71,7 +74,7 @@ export function TypedConfirmation({
       }
     >
       <form id={formId} noValidate onSubmit={submit} className="flex flex-col gap-4 py-2">
-        <Notice tone="critical" title={t('confirm.irreversible')}>
+        <Notice tone="critical" title={warning ?? t('confirm.irreversible')}>
           {consequence}
         </Notice>
         <TextField

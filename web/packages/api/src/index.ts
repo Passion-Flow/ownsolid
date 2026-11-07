@@ -173,6 +173,7 @@ export {
 export {
   createJoinToken,
   getAgentPacing,
+  getAgentShed,
   getNode,
   getNodeCounts,
   listJoinTokens,
@@ -181,8 +182,10 @@ export {
   revokeJoinToken,
   slowestHeartbeat,
   updateAgentPacing,
+  updateAgentShed,
   updateNode,
   type AgentPacing,
+  type AgentShed,
   type JoinToken,
   type MintedJoinToken,
   type Node,
@@ -192,6 +195,7 @@ export {
   type NodeStatus,
   type NodeTask,
   type PacingValues,
+  type ShedLevel,
 } from './nodes.ts';
 export {
   createInvitation,

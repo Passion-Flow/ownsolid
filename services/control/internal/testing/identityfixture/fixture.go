@@ -26,6 +26,9 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/migrations"
 )
 
+// fixturePoolSize is the business pool of every fixture.
+const fixturePoolSize = 8
+
 func New(t *testing.T) *identity.Service {
 	return NewWithSetup(t, SetupOptions{})
 }
@@ -119,7 +122,7 @@ func newConfigured(t *testing.T, options SetupOptions, retainFailed bool, versio
 	if !strings.HasSuffix(pc.ConnConfig.Database, "_test") || pc.ConnConfig.Host != "127.0.0.1" {
 		t.Fatal("ISOLATED_LOOPBACK_TEST_DATABASE_REQUIRED")
 	}
-	pc.MaxConns = 8
+	pc.MaxConns = fixturePoolSize
 	pc.ConnConfig.RuntimeParams["statement_timeout"] = fixtureStatementTimeoutMilliseconds
 	pc.ConnConfig.RuntimeParams["lock_timeout"] = fixtureLockTimeoutMilliseconds
 	pc.ConnConfig.RuntimeParams["timezone"] = "UTC"
@@ -206,6 +209,8 @@ func newConfigured(t *testing.T, options SetupOptions, retainFailed bool, versio
 	closeSetup()
 	cancelSetup()
 	c := config.Config{}
+	// The configuration describes the pool it runs on, so agent admission is sized as in a process.
+	c.Database.MaxOpenConnections, c.Database.OperatorReservedConnections = fixturePoolSize, 2
 	c.Server.PortalOrigin = "https://portal.example.invalid"
 	c.Server.AdminOrigin = "https://admin.example.invalid"
 	c.SMTP.FromAddress = "platform@example.invalid"

@@ -30,6 +30,12 @@ export type MintedJoinToken = Schemas['MintedToken'];
 /** How the cell's agents report and back off, and the window it must fit. */
 export type AgentPacing = Schemas['AgentPacing'];
 
+/** How much agent traffic this cell refuses. */
+export type AgentShed = Schemas['AgentShed'];
+
+/** What control refuses from agents, lowest priority first. */
+export type ShedLevel = AgentShed['level'];
+
 /** The values an administrator sets in {@link AgentPacing}. */
 export type PacingValues = Pick<
   AgentPacing,
@@ -167,6 +173,28 @@ export function updateAgentPacing(
     ...options,
     path: localCell,
     body: { ...values, version, reason },
+  });
+}
+
+/** Reads how much agent traffic this cell refuses. */
+export function getAgentShed(options?: RequestOptions): Promise<AgentShed> {
+  return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-shed', {
+    ...options,
+    path: localCell,
+  });
+}
+
+/** Changes the level. `version` refuses a change made on a stale level. */
+export function updateAgentShed(
+  level: ShedLevel,
+  version: number,
+  reason: string,
+  options?: RequestOptions,
+): Promise<AgentShed> {
+  return client.put('/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-shed', {
+    ...options,
+    path: localCell,
+    body: { level, version, reason },
   });
 }
 

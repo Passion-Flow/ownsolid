@@ -173,7 +173,11 @@ func New(s *identity.Service) *Handler {
 		}
 		return preparationService.Referenced(ctx, tx, tenant, workspace, model)
 	}
-	admission, admissionError := agentadmission.New(s.Config.Policy().AgentAdmission, s.Config.AgentDatabaseSeats(), slog.Default())
+	databaseSeats, admissionError := s.Config.AgentDatabaseSeats()
+	var admission *agentadmission.Controller
+	if admissionError == nil {
+		admission, admissionError = agentadmission.New(s.Config.Policy().AgentAdmission, databaseSeats, slog.Default())
+	}
 	if telemetryMetrics != nil && admission != nil {
 		telemetryMetrics.Add(admission.Samples)
 	}

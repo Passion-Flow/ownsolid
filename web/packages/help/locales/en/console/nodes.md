@@ -38,3 +38,15 @@ Select several nodes in the list to act on them together.
 
 [Agent pacing](/nodes/pacing) sets how often agents report and how they back off after losing the
 connection. Agents adopt a change from their next report.
+
+## Refusing agent traffic
+
+When the fleet itself is overloading the installation, the same page can refuse agents' calls, lowest
+priority first: transfers, then telemetry, then everything except quarantine reports. A change acts at
+once, needs a reason and is kept in the audit trail, and agents retry later by themselves.
+
+With everything refused, nodes turn offline here and receive no new work, while tasks and model
+services already running on them continue. The page asks you to type `heartbeats` first, and the
+Nodes page says so for as long as it lasts.
+
+If this page cannot be reached, run `ownsolid-install agents shed` on the server.

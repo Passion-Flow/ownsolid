@@ -219,7 +219,20 @@ func (d *selectedDatabase) identity(c config.Config) *identity.Service {
 	return s
 }
 
+// Verify checks the lease and, on PostgreSQL, the schema. The schema check runs on the pool after
+// the lease semaphore is released: every request's lease check waits on that semaphore, so a schema
+// check slowed by a lock must not hold it.
 func (d *selectedDatabase) Verify(ctx context.Context) error {
+	if e := d.verifyLeaseOrLedger(ctx); e != nil {
+		return e
+	}
+	if d.native == nil && d.postgres != nil {
+		return database.Check(ctx, d.postgres)
+	}
+	return nil
+}
+
+func (d *selectedDatabase) verifyLeaseOrLedger(ctx context.Context) error {
 	if d == nil || d.store == nil {
 		return errors.New("SELECTED_DATABASE_REQUIRED")
 	}
@@ -236,10 +249,7 @@ func (d *selectedDatabase) Verify(ctx context.Context) error {
 		return d.native.Verify(ctx)
 	}
 	if d.postgres != nil {
-		if e := d.verifyPostgreSQLLeaseWithin(ctx); e != nil {
-			return e
-		}
-		return database.Check(ctx, d.postgres)
+		return d.verifyPostgreSQLLeaseWithin(ctx)
 	}
 	_, e := mysqlmigrate.VerifyRuntimeLedger(ctx, d.myLease, d.catalog, d.options)
 	return e

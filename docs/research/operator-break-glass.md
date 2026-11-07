@@ -53,18 +53,34 @@ the pacing row, so it survives a restart and reaches other gateways within the p
 stability (ADR 0032) is what makes the strongest level safe: running work continues while agents
 cannot reach control.
 
-**A reserve in the pool.** `database.operator_reserved_connections`, default 2: agent seats in use
-never exceed the pool minus the reserve. Sign-in and the console keep connections when every seat is
+**A reserve in the pool.** `database.operator_reserved_connections`, default 3: agent seats in use
+never exceed the pool minus the reserve and the one connection the installation lease pins for the
+life of the process. The first 2,000-agent run of `TestBreakGlass` found that pinned connection: with
+it uncounted the reserve was one connection, a fleet worker waiting on the same lock took it, and a
+sign-in waited for the 3-second lock timeout of an agent call. Counting it, the runs listed every
+connection at saturation: the lease, the agent seats, the liveness writer waiting on the same rows,
+and the readiness probe's catalog check. The probe ran under the lease semaphore that every request's
+lease check takes, so it delayed each sign-in by its lock wait, and a lock it timed out on stopped
+control as if the schema were wrong. Now the probe waits 250 ms for a lock, runs outside that
+semaphore, and only a schema that differs stops control. The reserve is two connections for the
+operator and one for the liveness writer. Sign-in and the console keep connections when every seat is
 taken. This also protects background workers.
 
 **A local socket for the last resort.** Control listens on a Unix socket in the install's operator
 directory, mode 0600. `ownsolid-install agents shed --level ... --reason ...` sets the level through it
 on the host. It uses no TCP connection, no TLS, no request slot and no pooled connection to take
-effect, so it works with the connection limit full and the database down. It is audited when the
-database can be reached, and always logged.
+effect, so it works with the connection limit full and with a slow or saturated database. It is audited
+when the database can be reached, and always logged.
 
-**The console for the ordinary case.** `GET` and `PUT /api/v1/admin/agent-admission` on the agent pacing
-page, with the same permission and audit as pacing, and typed confirmation for `heartbeats`.
+**A file on the host for the database outage.** Writing the test showed that control does not survive a
+stopped database: losing its installation lease stops the process by design. So a host level also lives
+in `socket/agent-shed.json` until it is stored. `ownsolid-install` writes it when nothing answers, and
+control reads it before serving agents, which holds the fleet back at the moment control returns
+([ADR 0045](../decisions/0045-a-shed-level-outlives-control.md)).
+
+**The console for the ordinary case.** `GET` and `PUT /api/v1/admin/agent-shed` on the agent pacing page,
+with the same permission and audit as pacing, and typed confirmation for `heartbeats`. The Nodes page
+says so while a level is in force, because every node turning offline reads as an outage.
 
 ## Rejected
 
@@ -87,7 +103,8 @@ No new dependency. Go's `net` Unix listener is standard library.
 | Failure | Coverage |
 | --- | --- |
 | The level cannot be stored because the database is down | Takes effect in memory, is retried, and the reply says it is not yet stored |
-| A restart loses a level never stored | Stated in the reply and the logs; the operator repeats it |
+| Control stops with its database, and a restart would let the fleet in | The held file carries the level across; `TestBreakGlass` stops PostgreSQL and counts agents heard after it returns |
+| The held file is damaged | Logged and ignored; the stored level stays in force |
 | Shedding hides a node going offline | The console says what the level does before it is set; connectivity still changes |
 | Someone other than the operator reaches the socket | Mode 0600 in a directory only the install owner can enter; refused otherwise at startup |
 | Agents all return when the level is lifted | Retry hints carry jitter, and the reconnect test covers a full fleet |
@@ -95,10 +112,11 @@ No new dependency. Go's `net` Unix listener is standard library.
 
 ## What the finished item must do
 
-1. With agents holding every seat, a sign-in and a console read succeed. Measured in `TestFleetLoad`.
+1. With agents holding every seat, a sign-in and a console read succeed. Measured in `TestBreakGlass`,
+   with the fleet of `TestFleetLoad`.
 2. From the console, a level is set, audited, shown, and agents' calls of that priority are refused
    with a hint; lifting it restores them.
-3. With control's connection limit full and with the database stopped, `ownsolid-install agents shed`
-   takes effect.
+3. With control's connection limit full, `ownsolid-install agents shed` takes effect at once. With the
+   database stopped it waits on the host, and control starts with it when the database returns.
 4. A level survives a control restart when it was stored.
 5. Works offline, in both languages, with permission enforced on the server.
