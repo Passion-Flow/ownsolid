@@ -219,14 +219,6 @@ test('explains a refused start and keeps the form', async ({ page }) => {
   await expect(page.getByLabel('Reason')).toHaveValue('For the support team');
 });
 
-test('says deploying is not ready, and why', async ({ page }) => {
-  control.models = [readyModel];
-  await page.goto(`/library/${readyModel.id}`);
-  const deploy = page.getByRole('button', { name: 'Deploy' });
-  await expect(deploy).toHaveAttribute('aria-disabled', 'true');
-  await expect(deploy).toHaveAccessibleDescription(/arrives with SRV-111/);
-});
-
 test('retires a model after its name is typed, and keeps one still in use', async ({ page }) => {
   control.models = [readyModel];
   control.nextRetire = { status: 409, code: 'MODEL_VERSION_REFERENCED' };

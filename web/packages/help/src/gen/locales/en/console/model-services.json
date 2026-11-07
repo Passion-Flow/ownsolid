@@ -1,0 +1,426 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/services",
+     "children": [
+      {
+       "type": "text",
+       "value": "Model services"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " shows the models the workspace in the switcher serves, and how each is\ndoing. A deployment runs one model on one whole GPU of one node, and is called by its model and\nnode. The tiles above the list count deployments by state and filter the list."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "What a node needs"
+    }
+   ],
+   "data": {
+    "id": "what-a-node-needs"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Ubuntu 24.04 on amd64 with at least 12 GiB of memory, online."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Rootful Docker, the NVIDIA Container Toolkit, and the serving image from this release's offline\nbundle."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "An NVIDIA GPU with driver 580 or newer, MIG off, at least 8 GiB of memory, and most of it free."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "A node serves one deployment at a time, so its other GPUs stay idle while it does."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Deploying a model"
+    }
+   ],
+   "data": {
+    "id": "deploying-a-model"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Deploy a model"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ", here or on a model's page, or press "
+        },
+        {
+         "type": "inlineCode",
+         "value": "d"
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Choose the model. The page says which GPU it recommends: the eligible one with the most memory\nfree. "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Advanced settings"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " lets you choose another."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Read "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "What it takes"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ", then choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Deploy"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The deployment's page follows the work, which continues on the node if you leave. It is running\nonce the model has answered a test generation."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "If nothing can take the model, the page gives each node's reason. Where a node's report is out of\ndate, "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Read GPUs"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " asks it for a new one, and the page follows the answer."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Looking after a deployment"
+    }
+   ],
+   "data": {
+    "id": "looking-after-a-deployment"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Start"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " runs a stopped or failed deployment again."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Check"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " asks the node how the deployment is."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Verify"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " runs a test generation."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Stop"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " ends serving and keeps the deployment, so it can start again. Its GPU is released once\nthe node confirms."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Remove"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " deletes its container and releases its GPU. It cannot be brought back."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Stopping and removing name the gateway names and keys that will stop getting answers, and ask you\nto type the model's name."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "What is not ready"
+    }
+   ],
+   "data": {
+    "id": "what-is-not-ready"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Replicas and scaling, a choice of engine, autoscaling, rollback, and a deployment's traffic and logs\nare shown with the roadmap item that brings each. Until then, a deployment's last task shows what\nthe agent reported."
+    }
+   ]
+  }
+ ]
+}

@@ -71,11 +71,12 @@ test('? lists them, and an action without a page says so', async ({ page }) => {
   await overview(page);
   await page.keyboard.press('?');
   await expect(list(page).getByText('Add a node')).toBeVisible();
-  await expect(list(page).getByText('Deploy a model (not available yet)')).toBeVisible();
+  await expect(list(page).getByText('Deploy a model')).toBeVisible();
+  await expect(list(page).getByText('Install an application (not available yet)')).toBeVisible();
   await page.keyboard.press('Escape');
-  await page.keyboard.press('d');
+  await page.keyboard.press('i');
   await expect(
-    page.getByRole('status').filter({ hasText: 'Deploy a model is not available yet.' }),
+    page.getByRole('status').filter({ hasText: 'Install an application is not available yet.' }),
   ).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
 });

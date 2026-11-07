@@ -5,7 +5,7 @@ Running models as services on GPUs and CPUs, for every model type.
 - Owns: `services/agent/internal/inference`, `services/control/internal/modules/deployments`, `distribution`.
 - Depends on: models-and-registry, scheduling-and-quota, gpu-operations.
 
-Reviewed 2026-11-07 against GPUStack, KServe, Kubernetes Deployments and vLLM documentation ([research](../../research/model-services.md)). The review added SRV-112, SRV-113 and SRV-207: a deployment had no name, no history to roll back to, and no way to send part of its traffic to a new version.
+Reviewed 2026-11-07 against GPUStack, KServe, Kubernetes Deployments and vLLM documentation ([research](../../research/model-services.md)). The review added SRV-112, SRV-113 and SRV-207: a deployment had no name, no history to roll back to, and no way to send part of its traffic to a new version. SRV-114 holds what S-204 and S-205 specify and the server cannot yet give.
 
 ## P1 Enterprise release
 
@@ -22,6 +22,7 @@ Reviewed 2026-11-07 against GPUStack, KServe, Kubernetes Deployments and vLLM do
 - [ ] SRV-111 Model services pages: the list, a deployment's own page and the deploy flow (S-203, S-204, S-205) (P1)
 - [ ] SRV-112 Name and describe a deployment, unique in its workspace, shown wherever it is listed (P1)
 - [ ] SRV-113 Deployment revision history with the difference between revisions and rollback to one (P1)
+- [ ] SRV-114 Finish S-204 and S-205 once their server exists: requests and p95 in the list, Traffic and Logs tabs on one clock, the Scale and Roll back dialogs, and a rolling update shown replica by replica (P1)
 
 ## P2 Fleet operations
 

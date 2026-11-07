@@ -109,6 +109,13 @@ observed node winning a tie. It reserves nothing; the create checks again.
 | No model in the workspace | browser flow: sent to the Model library |
 | An agent reports a failure code | browser flow: the code explained in both languages |
 
+## What the screens specify and the server cannot give
+
+S-204's "a rolling update is visible replica by replica" and S-205's "Traffic and Logs line up on the
+same clock" need replicas, revisions and collected metrics that do not exist. Following
+[ADR 0044](../decisions/0044-web-lane-follows-the-build-plan.md), SRV-111 ships those parts as not ready
+with their reasons, and SRV-114 holds finishing them.
+
 ## What done means
 
 - From the console, with the network disconnected from the internet, a person opens Model services,
