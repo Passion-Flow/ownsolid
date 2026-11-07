@@ -35,9 +35,9 @@ function normalize(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
-/** What a date, time or size looks like once formatted, which no catalog holds. */
+/** What a date, time or size looks like once formatted, which no catalog holds; Intl names a size under a kilobyte `byte`. */
 const formatted =
-  /^[\d\s,.:/+%-]*(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*|AM|PM|UTC|GMT|[KMGTP]i?B|B|GHz|[smhd]|ms|sec|min|hr)?[\d\s,.:/+%-]*(?:AM|PM|UTC|GMT)?[\d\s,.:/+%-]*$/;
+  /^[\d\s,.:/+%-]*(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*|AM|PM|UTC|GMT|[KMGTP]i?B|B|byte|GHz|[smhd]|ms|sec|min|hr)?[\d\s,.:/+%-]*(?:AM|PM|UTC|GMT)?[\d\s,.:/+%-]*$/;
 
 /** An enum value or an action: shown raw, it would read the same in every language. */
 const machine = /^[a-z_]+(?:\.[a-z_]+)*$/;
