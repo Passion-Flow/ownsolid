@@ -1,5 +1,0 @@
-{
-  "subject": "Your ownsolid invitation",
-  "text": "Use this one-use invitation to create your account. This link is time-limited. {{.Link}}",
-  "html": "<p>Use this one-use invitation to create your account. This link is time-limited. </p><p><a href=\"{{.Link}}\">{{.Link}}</a></p>"
-}
