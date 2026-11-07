@@ -109,6 +109,29 @@ export {
   type LicenseSummary,
 } from './license.ts';
 export {
+  createDeployment,
+  getDeployment,
+  getInferenceNode,
+  getPlacement,
+  listDeployments,
+  observeInferenceNode,
+  requestDeploymentAction,
+  type Deployment,
+  type DeploymentAction,
+  type DeploymentObservation,
+  type InferenceNodeState,
+  type InferenceTask,
+  type Placement,
+  type PlacementGpu,
+  type PlacementNode,
+} from './deployments.ts';
+export {
+  listGatewayKeys,
+  listModelAliases,
+  type GatewayKey,
+  type ModelAlias,
+} from './distribution.ts';
+export {
   cancelModelImport,
   getModel,
   getModelCatalog,

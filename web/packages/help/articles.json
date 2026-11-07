@@ -21,6 +21,11 @@
       "pages": ["/library"]
     },
     {
+      "slug": "model-services",
+      "topic": "models",
+      "pages": ["/services"]
+    },
+    {
       "slug": "people-and-workspaces",
       "topic": "people",
       "pages": ["/users"]

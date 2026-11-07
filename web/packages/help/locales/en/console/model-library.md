@@ -25,6 +25,8 @@ discarded before the next can start.
 
 ## Retiring a model
 
+**Deploy a model** on a model's page opens [Model services](help:model-services) with the model chosen.
+
 **Retire** on a model's page takes it out of the list and stops new deployments of it. A model still
 in use cannot be retired: stop what depends on it first. Its files stay in the store and its history
 stays in the audit trail.
