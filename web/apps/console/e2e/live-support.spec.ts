@@ -8,7 +8,7 @@ import { adminPassword, email, liveOptions, origin } from './live-install.ts';
 test.skip(origin === '', 'needs an installation');
 test.use(liveOptions);
 
-test('shows the shipped declaration and refuses a stranger', async ({ page, request }) => {
+test('shows the shipped declaration and refuses a stranger', async ({ page }) => {
   test.setTimeout(120_000);
   const refused: string[] = [];
   const elsewhere: string[] = [];
@@ -22,10 +22,16 @@ test('shows the shipped declaration and refuses a stranger', async ({ page, requ
     if (new URL(sent.url()).origin !== origin) elsewhere.push(sent.url());
   });
 
-  const stranger = await request.get(`${origin}/api/v1/capabilities`);
-  expect(stranger.status()).toBe(401);
-
   await page.goto('/support');
+  await expect(page.getByLabel('Email')).toBeVisible();
+  // Asked from the browser, so the request takes the installation's own TLS and host names.
+  const stranger = await page.evaluate(async () => {
+    const response = await fetch('/api/v1/capabilities', { credentials: 'omit' });
+    return response.status;
+  });
+  expect(stranger).toBe(401);
+  refused.length = 0;
+
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(adminPassword());
   await page.getByRole('button', { name: 'Sign in' }).click();
