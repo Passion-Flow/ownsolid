@@ -203,7 +203,7 @@ func ValidateGPU(gpus []wire.NVIDIAGPU, busy []string, id string) error {
 		if gpu.MIGMode == "Enabled" {
 			return fail("INFERENCE_MIG_UNSUPPORTED")
 		}
-		if gpu.MemoryTotalMiB < recipe.MinimumGPUMemoryMiB || gpu.MemoryFreeMiB < gpu.MemoryTotalMiB*80/100 {
+		if gpu.MemoryTotalMiB < recipe.MinimumGPUMemoryMiB || gpu.MemoryFreeMiB < gpu.MemoryTotalMiB*wire.InferenceFreeMemoryPercent/100 {
 			return fail("INFERENCE_GPU_MEMORY_LOW")
 		}
 		for _, processGPU := range busy {

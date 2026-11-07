@@ -101,6 +101,16 @@ func TestActualPlacementAgreesWithDeployment(t *testing.T) {
 						deploymentRuntimeCode(t, e, code)
 					}
 				}
+				// The agent refuses a load below this share of free memory, so nothing may promise it.
+				h = g.handshake
+				occupied := "GPU-" + uuid.NewString()
+				h.Inference = &wire.InferenceObservation{GPUs: []wire.NVIDIAGPU{{UUID: occupied, Name: "Occupied", DriverVersion: "580.1", MemoryTotalMiB: 16384, MemoryFreeMiB: 16384*wire.InferenceFreeMemoryPercent/100 - 1, ComputeCapability: 8, MIGMode: "Disabled", ObservedAt: now}}, ObservedAt: now}
+				held := g.enroll(t, g.f.Workspace, h)
+				placementRefusal(t, placementNode(t, g.placement(t), held.NodeID).GPUs[0].Refusal, "INFERENCE_GPU_MEMORY_LOW")
+				input := g.input()
+				input.NodeID, input.GPUUUID = held.NodeID, occupied
+				_, e := g.s.Create(g.ctx, g.admin, input, uuid.NewString(), uuid.NewString())
+				deploymentRuntimeCode(t, e, "INFERENCE_GPU_MEMORY_LOW")
 				h = g.handshake
 				h.Facts.MemoryTotalBytes = 4 << 30
 				h.Inference = &wire.InferenceObservation{GPUs: []wire.NVIDIAGPU{{UUID: "GPU-" + uuid.NewString(), Name: "Fine card", DriverVersion: "580.1", MemoryTotalMiB: 16384, MemoryFreeMiB: 16384, ComputeCapability: 8, MIGMode: "Disabled", ObservedAt: now}}, ObservedAt: now}
