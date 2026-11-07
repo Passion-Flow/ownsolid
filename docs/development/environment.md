@@ -294,6 +294,10 @@ plugin or a knowledge base with a model, so on a test installation make them as 
 database, moving the run from `pending` to `failed` so the schema's trigger writes the notification.
 The run marks that notification as read.
 
+`live-help.spec.ts`, in both `web/apps/console` and `web/apps/portal`, needs only the variables
+above for that entrance's host. It opens an article from the top bar, an operation of the API
+reference, and saves a contract to check it holds only that entrance's operations.
+
 `live-navigation.spec.ts` needs only the variables above: it opens and filters the sidebar, collapses it, and
 finds the choice in a second browser. It leaves the sidebar open.
 
