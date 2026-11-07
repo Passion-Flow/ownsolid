@@ -129,6 +129,7 @@ test('keeps uploading while the person moves around the console', async ({ page 
   await fillForm(page);
   await start(page);
   await expect(page.getByText('You can use the rest of the console')).toBeVisible();
+  await expect(page.getByRole('meter', { name: 'Uploaded so far' })).toBeVisible();
   await page.getByRole('link', { name: 'Imports' }).click();
   await page.getByRole('link', { name: 'Qwen3-0.6B' }).click();
   await expect(page.getByRole('link', { name: 'Open the model' })).toBeVisible();

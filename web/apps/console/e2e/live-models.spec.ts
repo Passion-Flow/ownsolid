@@ -12,6 +12,8 @@ const modelName = 'Qwen3-0.6B';
 
 test.skip(origin === '' || bundle === '' || impostor === '', 'needs the model bundle');
 test.use(liveOptions);
+// The second retires what the first imports.
+test.describe.configure({ mode: 'serial' });
 
 const signIn = async (page: Page, path: string, heading: string | RegExp) => {
   await page.goto(path);

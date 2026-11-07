@@ -341,14 +341,15 @@ function stepStates(item: ModelImport): [StepState, StepState, StepState] {
 function Sending({ item, transfer }: { item: ModelImport; transfer: Transfer | undefined }) {
   const { t, format } = useI18n();
   const sent = transfer?.sent ?? item.uploaded_bytes;
+  // A row: the meter takes the width the text leaves, and has no height of its own in a column.
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex items-center gap-3">
       <Meter
         accent
         label={t('models.import.progress.label')}
         value={(sent / item.expected_bytes) * 100}
       />
-      <p className="m-0 text-text-2" role="status">
+      <p className="m-0 shrink-0 text-text-2 tabular-nums" role="status">
         {t('models.import.progress', {
           sent: format.bytes(sent),
           total: format.bytes(item.expected_bytes),
