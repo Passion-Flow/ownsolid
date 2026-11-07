@@ -142,6 +142,34 @@ could not open one ([ADR 0042](../../decisions/0042-capability-declaration-follo
 **Done when** it is generated from the capability registry, so it cannot drift from
 what the forms offer. **Built.**
 
+### S-107  Help                                       `/help` in each entrance
+**For** anyone stuck on a page · **Archetype** list + detail · **Primary** find the answer.
+
+**Does** the help for the version installed, written for this entrance's reader, with no
+network ([research](../../research/in-product-help.md)).
+**Content** a search field over titles and headings, then the articles grouped by topic. An
+article is its own page at `/help/<slug>`: title, sections, and the pages it is about, linked.
+**Click** an article opens it; a link inside goes to the page or article it names. Each page
+that has an article shows a help link in its header that opens it.
+**Dialogs** none.
+**Empty** filtered: "No article matches" with the term and *Clear search*.
+**Done when** every article exists in both languages, every link resolves, and search finds
+an article from the page and from the command menu.
+
+### S-108  API reference                              `/help/api`
+**For** people who script against this entrance · **Archetype** list + detail · **Primary**
+find an operation.
+
+**Does** every operation this entrance serves, generated from the contracts, so it cannot drift.
+**Content** operations grouped by contract, filtered by a search over path and name; each shows
+method, path, parameters, request and response fields, and its error codes with what they
+mean and what to do. *Save the contract* saves the contract file.
+**Click** an operation opens its detail in place; its anchor is shareable.
+**Dialogs** none.
+**Empty** filtered: "No operation matches" with *Clear search*.
+**Done when** the portal lists no console path and the console no portal-only path, and every
+code shown is explained in both languages.
+
 ---
 
 # Stage 2 — Serve a model
