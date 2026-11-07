@@ -63,7 +63,9 @@ export function ModelFacts({ summary }: { summary: Omit<ModelSummary, 'baseModel
         {t('models.fact.context.tokens', { count: summary.contextTokens })}
       </Detail>
       <Detail label={t('models.fact.architecture')}>{summary.architecture}</Detail>
-      <Detail label={t('models.fact.format')}>{summary.format}</Detail>
+      <Detail label={t('models.fact.format')}>
+        <span className="font-mono text-[13px]">{summary.format}</span>
+      </Detail>
     </DetailList>
   );
 }
