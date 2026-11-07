@@ -33,6 +33,18 @@ const outcomes: Record<RunOutcome, { tone: StatusTone; label: TranslationKey }> 
   interrupted: { tone: 'warning', label: 'notifications.outcome.interrupted' },
 };
 
+/** Why a run stopped, in words, with the code to quote to whoever maintains the workflow. */
+export function RunFailure({ code }: { code: string }) {
+  const { t, knows } = useI18n();
+  const key = `notifications.reason.${code}`;
+  return (
+    <span className="mt-1 block text-[13px] text-text-2">
+      {knows(key) ? t(key) : t('notifications.reason.other')}
+      <span className="mt-0.5 block font-mono text-[12px] break-all">{code}</span>
+    </span>
+  );
+}
+
 function Row({ notification }: { notification: RunNotification }) {
   const { t, format } = useI18n();
   const queryClient = useQueryClient();
@@ -45,9 +57,7 @@ function Row({ notification }: { notification: RunNotification }) {
     <li className="flex items-start gap-3 border-b border-border py-3 last:border-b-0">
       <div className="min-w-0 flex-1">
         <StatusPill tone={outcome.tone}>{t(outcome.label)}</StatusPill>
-        {notification.error_code ? (
-          <p className="m-0 mt-1 font-mono text-[12px] text-text-2">{notification.error_code}</p>
-        ) : null}
+        {notification.error_code ? <RunFailure code={notification.error_code} /> : null}
         <p className="m-0 mt-0.5 text-[12.5px] text-text-3">
           {format.dateTime(notification.occurred_at)}
         </p>

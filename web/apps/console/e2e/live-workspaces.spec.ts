@@ -79,7 +79,7 @@ test('creates a workspace and changes who belongs', async ({ page }) => {
 
   // The reason reached the audit trail; disabling is recorded as archiving.
   await page.goto('/audit?category=workspace');
-  await page.getByRole('row').filter({ hasText: 'workspace.archived' }).first().waitFor();
+  await page.getByRole('row').filter({ hasText: 'Workspace disabled' }).first().waitFor();
   await page
     .getByRole('button', { name: /^Show details of workspace\.archived/ })
     .first()

@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one Workspace middleware maintenance",
+    "title": "ownsolid Workspace middleware maintenance",
     "version": "0.26.0"
   },
   "servers": [

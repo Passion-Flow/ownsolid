@@ -86,6 +86,21 @@
        ]
       }
      ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "The list names each action in your language. Its details keep the action's identifier for scripts\nand support, and a reason as it was recorded."
+        }
+       ]
+      }
+     ]
     }
    ]
   }

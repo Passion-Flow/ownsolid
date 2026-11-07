@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one scoped durable workflows",
+    "title": "ownsolid scoped durable workflows",
     "version": "0.14.0",
     "description": "Explicit schema1 answer and schema2 signed read-only model-directory workflows with immutable versions, private durable conversations and actual current caller authority. Contract presence does not establish implementation or qualification."
   },

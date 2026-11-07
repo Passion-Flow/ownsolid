@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one AWS read-only inventory",
+    "title": "ownsolid AWS read-only inventory",
     "version": "1.0.0"
   },
   "servers": [

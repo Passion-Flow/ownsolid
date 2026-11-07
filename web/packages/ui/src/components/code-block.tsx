@@ -36,7 +36,7 @@ export function CodeBlock({ code, label, className }: CodeBlockProps) {
       </pre>
       <button
         type="button"
-        aria-label={`${action}: ${label}`}
+        aria-label={t(copied ? 'action.copiedNamed' : 'action.copyNamed', { name: label })}
         title={action}
         onClick={() => {
           // Clipboard access needs a secure context; a refusal leaves the text selectable.

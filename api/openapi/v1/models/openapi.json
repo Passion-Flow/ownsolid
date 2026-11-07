@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Project-one Model Imports",
+    "title": "ownsolid Model Imports",
     "version": "0.11.0",
     "description": "Scoped approved-base imports and explicitly reviewed local derivatives. Inventory is distinct from serving readiness and target qualification."
   },

@@ -86,7 +86,7 @@ func (o *Outbox) Render(id, purpose, locale, recipient string, p Payload, messag
 		return nil, errors.New("MAIL_LOCALIZATION_INVALID")
 	}
 	var document bytes.Buffer
-	wrapper, err := html.New("document").Parse(`<!doctype html><html lang="{{.Locale}}" dir="{{.Direction}}"><body>{{.Content}}{{if .HasAttribution}}<footer><p>{{.Label}}</p><a href="{{.Link}}"><img src="cid:projectone-translation-attribution" alt="Google Translate"></a><p><a href="{{.Documentation}}">{{.Documentation}}</a></p></footer>{{end}}</body></html>`)
+	wrapper, err := html.New("document").Parse(`<!doctype html><html lang="{{.Locale}}" dir="{{.Direction}}"><body>{{.Content}}{{if .HasAttribution}}<footer><p>{{.Label}}</p><a href="{{.Link}}"><img src="cid:ownsolid-translation-attribution" alt="Google Translate"></a><p><a href="{{.Documentation}}">{{.Documentation}}</a></p></footer>{{end}}</body></html>`)
 	if err != nil {
 		return nil, err
 	}
@@ -101,14 +101,14 @@ func (o *Outbox) Render(id, purpose, locale, recipient string, p Payload, messag
 	if len(presentation.TranslationBadge) > 0 {
 		fmt.Fprintf(&plain, "\n\n%s\n%s\n%s\n", presentation.TranslationLabel, presentation.TranslationLink, presentation.TranslationDocumentation)
 	}
-	boundary := "projectone-" + id
+	boundary := "ownsolid-" + id
 	alternative := fmt.Sprintf("--%s\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n%s\r\n--%s\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n%s\r\n--%s--\r\n", boundary, encodeBody(plain.Bytes()), boundary, encodeBody(document.Bytes()), boundary)
 	contentType := fmt.Sprintf("multipart/alternative; boundary=%q", boundary)
 	body := alternative
 	if len(presentation.TranslationBadge) > 0 {
 		related := boundary + "-related"
 		contentType = fmt.Sprintf("multipart/related; boundary=%q", related)
-		body = fmt.Sprintf("--%s\r\nContent-Type: multipart/alternative; boundary=%q\r\n\r\n%s\r\n--%s\r\nContent-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <projectone-translation-attribution>\r\nContent-Disposition: inline; filename=translation-attribution.png\r\n\r\n%s\r\n--%s--\r\n", related, boundary, alternative, related, encodeBody(presentation.TranslationBadge), related)
+		body = fmt.Sprintf("--%s\r\nContent-Type: multipart/alternative; boundary=%q\r\n\r\n%s\r\n--%s\r\nContent-Type: image/png\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <ownsolid-translation-attribution>\r\nContent-Disposition: inline; filename=translation-attribution.png\r\n\r\n%s\r\n--%s--\r\n", related, boundary, alternative, related, encodeBody(presentation.TranslationBadge), related)
 	}
 	message := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nMessage-ID: <%s>\r\nDate: %s\r\nMIME-Version: 1.0\r\nContent-Language: %s\r\nContent-Type: %s\r\n\r\n%s", o.Config.SMTP.FromAddress, recipient, mime.QEncoding.Encode("UTF-8", t.Subject), messageID, time.Now().UTC().Format(time.RFC1123Z), presentation.Locale, contentType, body)
 	return []byte(message), nil

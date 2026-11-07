@@ -12,7 +12,7 @@ import {
   type RunOutcome,
 } from '@ownsolid/api';
 import { useI18n, type TranslationKey } from '@ownsolid/i18n';
-import { runtimeConfigQuery, useSession, useWorkspaces } from '@ownsolid/shell';
+import { RunFailure, runtimeConfigQuery, useSession, useWorkspaces } from '@ownsolid/shell';
 import {
   Button,
   Card,
@@ -157,10 +157,8 @@ function NeedsRow({
             {t(outcomeLabels[notification.outcome])}
           </StatusPill>
           <span>{format.dateTime(notification.occurred_at)}</span>
-          {notification.error_code ? (
-            <span className="font-mono text-[12px] break-all">{notification.error_code}</span>
-          ) : null}
         </p>
+        {notification.error_code ? <RunFailure code={notification.error_code} /> : null}
         {isProblem(read.error) ? (
           <ProblemNotice
             className="mt-2"

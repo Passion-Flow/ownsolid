@@ -10,6 +10,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/localization"
 	"strings"
 	"testing"
+	"unicode"
 )
 
 func readLocalizationParts(t *testing.T, header string, raw []byte) map[string][]byte {
@@ -104,10 +105,10 @@ func TestLocalizationMailExplicitAttributionMIMEFixtureEmbedsOfflineOriginalByte
 		t.Fatal(e)
 	}
 	parts := readLocalizationParts(t, message.Header.Get("Content-Type"), body)
-	if len(parts) != 3 || !bytes.Equal(parts["image/png"], badge) || !bytes.Contains(parts["text/html"], []byte(`lang="ar" dir="rtl"`)) || !bytes.Contains(parts["text/html"], []byte(`src="cid:projectone-translation-attribution"`)) || !bytes.Contains(parts["text/plain"], []byte("https://translate.google.com/")) {
+	if len(parts) != 3 || !bytes.Equal(parts["image/png"], badge) || !bytes.Contains(parts["text/html"], []byte(`lang="ar" dir="rtl"`)) || !bytes.Contains(parts["text/html"], []byte(`src="cid:ownsolid-translation-attribution"`)) || !bytes.Contains(parts["text/plain"], []byte("https://translate.google.com/")) {
 		t.Fatal("offline nested MIME attribution/language invalid")
 	}
-	if !strings.Contains(string(body), "Content-ID: <projectone-translation-attribution>") || message.Header.Get("Content-Language") != "ar" {
+	if !strings.Contains(string(body), "Content-ID: <ownsolid-translation-attribution>") || message.Header.Get("Content-Language") != "ar" {
 		t.Fatal("CID or actual body language absent")
 	}
 }
@@ -121,4 +122,49 @@ func TestLocalizationMailMissingTemplateAndInjectedMetadataRefuse(t *testing.T) 
 	if _, e := outbox.Render("id", "password_reset", "en", "recipient@example.invalid", Payload{}); e == nil {
 		t.Fatal("unsafe language header accepted")
 	}
+}
+
+// Every email reads in both languages from subject to body, and says which one it is in.
+func TestEveryMailPurposeReadsInEachLanguage(t *testing.T) {
+	templates, e := LoadTemplates()
+	if e != nil {
+		t.Fatal(e)
+	}
+	outbox := &Outbox{Templates: templates}
+	outbox.Config.SMTP.FromAddress = "noreply@example.invalid"
+	for _, purpose := range []string{"invitation", "password_reset", "password_changed"} {
+		for _, locale := range []string{"en", "zh-CN"} {
+			t.Run(purpose+"/"+locale, func(t *testing.T) {
+				raw, e := outbox.Render("synthetic-id", purpose, locale, "recipient@example.invalid", Payload{Link: "https://portal.example.invalid/t"})
+				if e != nil {
+					t.Fatal(e)
+				}
+				message, e := internetmail.ReadMessage(bytes.NewReader(raw))
+				if e != nil {
+					t.Fatal(e)
+				}
+				if got := message.Header.Get("Content-Language"); got != locale {
+					t.Fatalf("Content-Language %q", got)
+				}
+				subject, e := new(mime.WordDecoder).DecodeHeader(message.Header.Get("Subject"))
+				if e != nil {
+					t.Fatal(e)
+				}
+				body, e := io.ReadAll(message.Body)
+				if e != nil {
+					t.Fatal(e)
+				}
+				parts := readLocalizationParts(t, message.Header.Get("Content-Type"), body)
+				for name, text := range map[string]string{"subject": subject, "text": string(parts["text/plain"]), "html": string(parts["text/html"])} {
+					if hasHan(text) != (locale == "zh-CN") {
+						t.Fatalf("%s is in the wrong language: %q", name, text)
+					}
+				}
+			})
+		}
+	}
+}
+
+func hasHan(text string) bool {
+	return strings.ContainsFunc(text, func(r rune) bool { return unicode.Is(unicode.Han, r) })
 }

@@ -185,7 +185,7 @@ export function AddNodeDialog({
       {token ? (
         <Steps token={token} onOpen={onOpenNode} />
       ) : (
-        <form id="add-node" className="flex flex-col gap-3.5" onSubmit={submit}>
+        <form id="add-node" noValidate className="flex flex-col gap-3.5" onSubmit={submit}>
           {mint.error && isProblem(mint.error) ? (
             <ProblemNotice
               problem={mint.error}

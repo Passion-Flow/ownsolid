@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Project-one Text Dataset Lifecycle",
+    "title": "ownsolid Text Dataset Lifecycle",
     "version": "0.8.0",
     "description": "Bounded source imports, editable drafts, actual CPU preparation jobs and immutable grouped-split versions. Google translation and downstream hardware qualification are separate."
   },

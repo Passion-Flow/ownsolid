@@ -160,11 +160,11 @@ test('adds, tests and turns on a connector, and someone signs in with it', async
     .click();
   await expect(otherPage.getByRole('heading', { name, level: 1 })).toBeVisible();
   await otherPage.getByRole('tab', { name: 'Activity' }).click();
-  await expect(otherPage.getByRole('tabpanel').getByText('sso.connector_created')).toBeVisible();
+  await expect(otherPage.getByRole('tabpanel').getByText('Connector added')).toBeVisible();
   await expectAccessible(otherPage);
 
   await otherPage.goto('/audit');
-  await expect(otherPage.getByText('sso.connector_tested').first()).toBeVisible();
+  await expect(otherPage.getByText('Connector tested').first()).toBeVisible();
   await other.close();
   expect(elsewhere).toEqual([]);
 });

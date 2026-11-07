@@ -14,6 +14,10 @@ const localeDirectories: Readonly<Record<HelpLocale, string>> = { en: 'en', 'zh-
 
 const articleFiles = import.meta.glob<Root>('./gen/locales/*/*/*.json', { import: 'default' });
 const apiFiles = import.meta.glob<ApiDomain>('./gen/api/*/*.json', { import: 'default' });
+const descriptionFiles = import.meta.glob<Readonly<Record<string, string>>>(
+  './gen/locales/*/api-descriptions.json',
+  { import: 'default' },
+);
 const contractFiles = import.meta.glob<string>('./gen/contracts/*/*.json', {
   query: '?url',
   import: 'default',
@@ -33,6 +37,17 @@ export async function loadArticle(
 export async function loadApiDomain(entrance: Entrance, domain: string): Promise<ApiDomain | null> {
   const load = apiFiles[`./gen/api/${entrance}/${domain}.json`];
   return load ? load() : null;
+}
+
+/**
+ * The translations of the contracts' descriptions, keyed by their English text; empty for
+ * English, which the contracts are written in.
+ */
+export async function loadApiDescriptions(
+  locale: HelpLocale,
+): Promise<Readonly<Record<string, string>>> {
+  const load = descriptionFiles[`./gen/locales/${localeDirectories[locale]}/api-descriptions.json`];
+  return load ? load() : {};
 }
 
 /** The address of a contract as the entrance serves it, as a file to save. */

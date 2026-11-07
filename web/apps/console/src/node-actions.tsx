@@ -48,7 +48,7 @@ function RenameDialog({
         </>
       }
     >
-      <form id="rename-node" className="flex flex-col gap-3.5" onSubmit={submit}>
+      <form id="rename-node" noValidate className="flex flex-col gap-3.5" onSubmit={submit}>
         {isProblem(problem) ? <ProblemNotice problem={problem} /> : null}
         <TextField
           label={t('nodes.add.name')}

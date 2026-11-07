@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Project-one Initial Explicit Account SSO",
+    "title": "ownsolid Initial Explicit Account SSO",
     "version": "0.11.0",
     "description": "Existing local account binding and ordinary sessions, provider-specific Gitea OAuth2 code+PKCE; no JIT/email merge/provider roles. Contract presence is not implementation or qualification."
   },

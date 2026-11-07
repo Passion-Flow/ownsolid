@@ -137,8 +137,8 @@ export function SavedViewsMenu({ list }: { list: ListView }) {
           <Button
             aria-label={
               changed
-                ? `${t('list.views')}: ${activeView?.name ?? ''}, ${t('list.views.changed')}`
-                : `${t('list.views')}: ${activeView?.name ?? t('list.views.all')}`
+                ? t('list.views.currentChanged', { name: activeView?.name ?? '' })
+                : t('list.views.current', { name: activeView?.name ?? t('list.views.all') })
             }
           >
             <Bookmark aria-hidden />

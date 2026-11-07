@@ -156,7 +156,10 @@ export function CommandMenu({
           placeholder={t(search.length > 0 ? 'command.placeholder.search' : 'command.placeholder')}
           className="w-full border-0 border-b border-border bg-transparent px-5 py-[18px] text-base text-text outline-none placeholder:text-text-3 focus-visible:shadow-[inset_0_-2px_0_var(--accent)]"
         />
-        <Command.List className="max-h-[360px] overflow-y-auto p-2">
+        <Command.List
+          label={t('command.suggestions')}
+          className="max-h-[360px] overflow-y-auto p-2"
+        >
           {found.pending ? null : (
             <Command.Empty className="px-3 py-[9px] text-text-3">
               {t('command.empty')}

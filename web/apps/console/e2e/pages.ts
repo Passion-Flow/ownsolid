@@ -678,7 +678,7 @@ export const consolePages: readonly PageState[] = [
     open: async (page, control) => {
       control.auditEvents = [licenseEvent, failedSignIn, systemEvent];
       await openAudit(page, control);
-      await page.getByText('license.imported').waitFor();
+      await page.getByText('License imported').waitFor();
     },
   },
   {
@@ -687,8 +687,8 @@ export const consolePages: readonly PageState[] = [
     open: async (page, control) => {
       control.auditEvents = [licenseEvent];
       await openAudit(page, control);
-      await page.getByRole('button', { name: /^Show details of license.imported/ }).click();
-      await page.getByRole('dialog', { name: 'license.imported' }).waitFor();
+      await page.getByRole('button', { name: /^Show details of License imported/ }).click();
+      await page.getByRole('dialog', { name: 'License imported' }).waitFor();
     },
   },
   {

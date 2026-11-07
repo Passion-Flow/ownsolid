@@ -179,6 +179,19 @@ this browser. The server checks access to the workspace on every request.
 - **Charts:** a single series needs no legend; every chart offers a table view and a
   hover readout.
 
+## Language
+
+Every string a person reads comes from a catalog or from the server's data
+([research](../research/localization-completeness.md)). `localizationFlows` walks every page
+state and fails on anything else, so a new page needs no check of its own.
+
+- Machine identifiers appear only in `code` or the monospaced face, beside words that explain
+  them, and never as the only name of a thing.
+- Join text in the catalog, not in code: `{name}: {value}` needs its own message, because the
+  punctuation and the order differ between languages.
+- Translate from [the glossary](../../web/packages/i18n/locales/glossary-zh-cn.md).
+- Names and recorded text stay as written: a node's name, a log line, an audit reason.
+
 ## Offline rule
 
 The build writes a Brotli and a gzip copy of every text file over 1 kB, and the control plane

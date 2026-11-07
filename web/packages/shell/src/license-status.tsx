@@ -43,7 +43,7 @@ export function LicenseStatus({
     // An icon as well as a colour: without the words, the colour would be all there is.
     const Icon = healthy ? BadgeCheck : TriangleAlert;
     return (
-      <RailTip label={`${t('license.heading')}: ${state}`}>
+      <RailTip label={t('license.standing', { state })}>
         <Link
           to={to}
           className="grid h-[34px] place-items-center rounded-control transition-colors duration-150 hover:bg-surface-2"
@@ -55,7 +55,7 @@ export function LicenseStatus({
               healthy ? 'text-good' : data.new_business_allowed ? 'text-warning' : 'text-critical',
             )}
           />
-          <span className="sr-only">{`${t('license.heading')}: ${state}`}</span>
+          <span className="sr-only">{t('license.standing', { state })}</span>
         </Link>
       </RailTip>
     );

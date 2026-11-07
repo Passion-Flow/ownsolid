@@ -7,6 +7,7 @@ import {
   articleMatches,
   articles,
   contractUrl,
+  loadApiDescriptions,
   loadApiDomain,
   loadArticle,
   type Entrance,
@@ -137,5 +138,26 @@ describe.each(entrances)('%s API reference', (entrance) => {
       }
     }
     expect([...missing].sort()).toEqual([]);
+  });
+});
+
+describe('the reference in Chinese', () => {
+  const catalogs = ['en', 'zh-cn'].map(
+    (name) =>
+      JSON.parse(
+        readFileSync(join(root, 'web', 'packages', 'i18n', 'locales', `${name}.json`), 'utf8'),
+      ) as Record<string, string>,
+  );
+
+  it.each(entrances)('names every contract of the %s in both languages', (entrance) => {
+    const unnamed = apiDomains(entrance)
+      .map(({ domain }) => domain)
+      .filter((domain) => catalogs.some((catalog) => !catalog[`help.api.domain.${domain}`]));
+    expect(unnamed).toEqual([]);
+  });
+
+  it('translates descriptions and leaves English to the contracts', async () => {
+    expect(Object.keys(await loadApiDescriptions('zh-CN')).length).toBeGreaterThan(50);
+    expect(await loadApiDescriptions('en')).toEqual({});
   });
 });
