@@ -24,7 +24,7 @@ func (s *Service) initialCommand(ctx context.Context, version models.Version, n 
 	case "approved_base":
 		return c, c.Validate(c.Operation())
 	case wire.DerivedModelKind:
-		if n.ExecutionProfile != wire.DockerModelLifecycleProfile || n.ProtocolVersion != wire.ModelLifecycleVersion {
+		if !derivedProfile(n) {
 			return c, fail("AGENT_PROFILE_REJECTED")
 		}
 		catalog, e := lifecycle.DecodeDerivedCatalog(version.Manifest)
@@ -78,33 +78,26 @@ func (s *Service) retainedCommand(ctx context.Context, q transaction.Executor, n
 	return c, c.Validate(c.Operation())
 }
 func (s *Service) preflightCommand(ctx context.Context, q transaction.Executor, n nodes.Node, c wire.InferenceCommand, newLoad bool) error {
-	if c.Derived != nil && (n.ExecutionProfile != wire.DockerModelLifecycleProfile || n.ProtocolVersion != wire.ModelLifecycleVersion) {
+	derived := c.Derived != nil
+	if derived && !derivedProfile(n) {
 		return fail("AGENT_PROFILE_REJECTED")
 	}
-	if e := s.preflightCommandWithin(ctx, q, n, c); e != nil {
+	if e := admitNode(n); e != nil {
 		return e
 	}
-	if c.Derived == nil {
-		return nil
-	}
-	observation, e := s.HardwareWithin(ctx, q, n)
+	o, e := s.HardwareWithin(ctx, q, n)
 	if e != nil {
+		return hardwareRefusal(e)
+	}
+	if e := admitObservation(o, c); e != nil {
 		return e
 	}
-	for _, gpu := range observation.GPUs {
-		if gpu.UUID != c.GPUUUID {
-			continue
-		}
-		recipe := wire.ApprovedDerivedServingRecipe()
-		if gpu.ComputeCapability < recipe.MinimumComputeCapability {
-			return fail("INFERENCE_GPU_UNSUPPORTED")
-		}
-		if newLoad && gpu.MemoryFreeMiB < recipe.MinimumGPUMemoryMiB {
-			return fail("INFERENCE_GPU_MEMORY_LOW")
-		}
-		return nil
-	}
-	return fail("INFERENCE_GPU_UNAVAILABLE")
+	return admitGPU(o, c.GPUUUID, derived, newLoad)
+}
+
+// derivedProfile reports whether a node's agent can serve a model made here.
+func derivedProfile(n nodes.Node) bool {
+	return n.ExecutionProfile == wire.DockerModelLifecycleProfile && n.ProtocolVersion == wire.ModelLifecycleVersion
 }
 func matchesStoredServing(d Deployment, o wire.DeploymentObservation) bool {
 	if o.CatalogDigest != d.CatalogDigest {

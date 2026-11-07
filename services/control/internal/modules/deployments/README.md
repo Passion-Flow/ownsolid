@@ -2,7 +2,7 @@
 
 Deployments connects verified model versions to admitted nodes and hardware reservations. It owns desired/observed deployment state, runtime observations and Registry-backed deployment references.
 
-[service.go](service.go) is the action/list boundary; [hardware.go](hardware.go) and hardware_repository.go manage admitted hardware state; [runtime_repository.go](runtime_repository.go), intent_repository.go and observation_repository.go retain the lifecycle. [derived.go](derived.go), [distribution.go](distribution.go) and Registry action/reference files are explicit consumer integrations.
+[service.go](service.go) is the action/list boundary; [placement.go](placement.go) previews where a model can be deployed, judging each observed GPU with the same admission checks creation runs (in [runtime_repository.go](runtime_repository.go) and [derived.go](derived.go)) and reserving nothing; [hardware.go](hardware.go) and hardware_repository.go manage admitted hardware state; [runtime_repository.go](runtime_repository.go), intent_repository.go and observation_repository.go retain the lifecycle. [derived.go](derived.go), [distribution.go](distribution.go) and Registry action/reference files are explicit consumer integrations.
 
 Nodes and models remain the authority for node/profile and artifact identity. Migration 000006 includes deployments and GPU leases. Creating a deployment or accepting desired state does not mean a container is ready; current observations, stale attempts, unknown results and removal/fencing must preserve existing reconciliation.
 

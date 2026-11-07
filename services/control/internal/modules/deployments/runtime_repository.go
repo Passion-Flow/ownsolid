@@ -253,7 +253,32 @@ func (s *Service) nodeSelected(ctx context.Context, a identity.Auth, workspace, 
 	return out, nil
 }
 func (s *Service) preflightCommandWithin(ctx context.Context, q transaction.Executor, n nodes.Node, command wire.InferenceCommand) error {
-	gpu := command.GPUUUID
+	if e := admitNode(n); e != nil {
+		return e
+	}
+	o, e := s.HardwareWithin(ctx, q, n)
+	if e != nil {
+		return hardwareRefusal(e)
+	}
+	if e := admitObservation(o, command); e != nil {
+		return e
+	}
+	return admitGPU(o, command.GPUUUID, false, false)
+}
+
+// hardwareRefusal names why a node's GPU observation cannot be used.
+func hardwareRefusal(e error) error {
+	switch e.Error() {
+	case "TRAINING_PREFLIGHT_REQUIRED":
+		return fail("INFERENCE_PREFLIGHT_REQUIRED")
+	case "TRAINING_DATA_INVALID":
+		return fail("STORAGE_UNAVAILABLE")
+	}
+	return e
+}
+
+// admitNode holds the approved recipe's demands on the node itself, before its GPUs are read.
+func admitNode(n nodes.Node) error {
 	recipe := wire.ApprovedInferenceRecipe()
 	if n.Connectivity != "online" {
 		return fail("NODE_UNAVAILABLE")
@@ -264,22 +289,24 @@ func (s *Service) preflightCommandWithin(ctx context.Context, q transaction.Exec
 	if n.Facts.MemoryTotalBytes < recipe.MinimumHostMemoryBytes {
 		return fail("INFERENCE_HOST_MEMORY_LOW")
 	}
-	o, e := s.HardwareWithin(ctx, q, n)
-	if e != nil {
-		if e.Error() == "TRAINING_PREFLIGHT_REQUIRED" {
-			return fail("INFERENCE_PREFLIGHT_REQUIRED")
-		}
-		if e.Error() == "TRAINING_DATA_INVALID" {
-			return fail("STORAGE_UNAVAILABLE")
-		}
-		return e
-	}
+	return nil
+}
+
+// admitObservation refuses a node whose last GPU probe failed as a whole.
+func admitObservation(o wire.InferenceObservation, command wire.InferenceCommand) error {
 	if e := registryProbeAdmission(o, command); e != nil {
 		return e
 	}
 	if o.ErrorCode != "" && o.Deployment == nil {
 		return fail(o.ErrorCode)
 	}
+	return nil
+}
+
+// admitGPU holds one observed GPU to the approved recipe, and a derived model's GPU to the
+// derived recipe as well. A new load also needs the derived recipe's memory free now.
+func admitGPU(o wire.InferenceObservation, gpu string, derived, newLoad bool) error {
+	recipe := wire.ApprovedInferenceRecipe()
 	for _, g := range o.GPUs {
 		if g.UUID != gpu {
 			continue
@@ -295,6 +322,16 @@ func (s *Service) preflightCommandWithin(ctx context.Context, q transaction.Exec
 			return fail("INFERENCE_MIG_UNSUPPORTED")
 		}
 		if g.MemoryTotalMiB < recipe.MinimumGPUMemoryMiB {
+			return fail("INFERENCE_GPU_MEMORY_LOW")
+		}
+		if !derived {
+			return nil
+		}
+		serving := wire.ApprovedDerivedServingRecipe()
+		if g.ComputeCapability < serving.MinimumComputeCapability {
+			return fail("INFERENCE_GPU_UNSUPPORTED")
+		}
+		if newLoad && g.MemoryFreeMiB < serving.MinimumGPUMemoryMiB {
 			return fail("INFERENCE_GPU_MEMORY_LOW")
 		}
 		return nil
