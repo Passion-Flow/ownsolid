@@ -94,6 +94,8 @@ export interface I18nProviderProps {
   children: ReactNode;
   /** Starting locale; defaults to {@link initialLocale}. */
   locale?: Locale;
+  /** That locale's catalog, when the caller already has it, so the tree renders at once. */
+  catalog?: Catalog;
 }
 
 // With no catalog there is nothing to translate with, so this is the one message in the code. A deployment
@@ -118,12 +120,14 @@ function CatalogFailure() {
  * Provides translations to the tree. Children render once the starting catalog has loaded. A language that
  * cannot load falls back to English; when English cannot load either, the tree says so and offers a reload.
  */
-export function I18nProvider({ children, locale: start }: I18nProviderProps) {
+export function I18nProvider({ children, locale: start, catalog: given }: I18nProviderProps) {
   const [choice, setChoice] = useState<LocaleChoice>(() => start ?? storedChoice());
   const [installation, setInstallationLocale] = useState<LocaleChoice>('auto');
   const saver = useRef<LocaleSaver | null>(null);
   const requested = resolve(choice, installation);
-  const [active, setActive] = useState<{ locale: Locale; catalog: Catalog } | null>(null);
+  const [active, setActive] = useState<{ locale: Locale; catalog: Catalog } | null>(
+    start && given ? { locale: start, catalog: given } : null,
+  );
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
