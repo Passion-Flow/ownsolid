@@ -26,3 +26,6 @@ func (s *Service) WatchedNodes() int {
 	defer s.wake.mu.Unlock()
 	return len(s.wake.waiters)
 }
+
+// SyncShed runs one pass of RunAgentShed.
+func (s *Service) SyncShed(ctx context.Context) { s.syncShed(ctx) }

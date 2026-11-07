@@ -54,6 +54,9 @@ type Handler struct {
 // pacingPath is the pacing of this cell's agents (ADR 0013).
 const pacingPath = "/api/v1/admin/agent-pacing"
 
+// shedPath is how much agent traffic this cell refuses (ADR 0043).
+const shedPath = "/api/v1/admin/agent-shed"
+
 func (h *Handler) agentPacing(r *http.Request, a identity.Auth, request string) (any, int, error) {
 	switch r.Method {
 	case http.MethodGet:
@@ -69,6 +72,26 @@ func (h *Handler) agentPacing(r *http.Request, a identity.Auth, request string) 
 			return nil, 0, e
 		}
 		out, e := h.Service.UpdateAgentPacing(r.Context(), a, input.Pacing, input.Version, input.Reason, request)
+		return out, 200, e
+	}
+	return nil, 0, errors.New("RESOURCE_NOT_FOUND")
+}
+
+func (h *Handler) agentShed(r *http.Request, a identity.Auth, request string) (any, int, error) {
+	switch r.Method {
+	case http.MethodGet:
+		out, e := h.Service.AgentShed(r.Context(), a)
+		return out, 200, e
+	case http.MethodPut:
+		var input struct {
+			Level   string `json:"level"`
+			Version int64  `json:"version"`
+			Reason  string `json:"reason"`
+		}
+		if e := httpserver.DecodeJSON(r, &input); e != nil {
+			return nil, 0, e
+		}
+		out, e := h.Service.UpdateAgentShed(r.Context(), a, input.Level, input.Version, input.Reason, request)
 		return out, 200, e
 	}
 	return nil, 0, errors.New("RESOURCE_NOT_FOUND")
@@ -98,7 +121,7 @@ func (h *Handler) adminTasks(r *http.Request, a identity.Auth) (any, int, error)
 }
 
 func Owns(path string) bool {
-	for _, prefix := range []string{"/api/v1/admin/nodes", "/api/v1/admin/node-join-tokens", pacingPath, tasksPath} {
+	for _, prefix := range []string{"/api/v1/admin/nodes", "/api/v1/admin/node-join-tokens", pacingPath, shedPath, tasksPath} {
 		if path == prefix || strings.HasPrefix(path, prefix+"/") {
 			return true
 		}
@@ -395,6 +418,9 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 	}
 	if path == pacingPath {
 		return h.agentPacing(r, a, request)
+	}
+	if path == shedPath {
+		return h.agentShed(r, a, request)
 	}
 	if path == tasksPath || strings.HasPrefix(path, tasksPath+"/") {
 		return h.adminTasks(r, a)

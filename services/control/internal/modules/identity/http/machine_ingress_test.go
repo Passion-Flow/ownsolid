@@ -89,7 +89,7 @@ func TestMachineDispatcherSeparatesAgentSeatsFromRequestSlots(t *testing.T) {
 	h := machineIngressTestHandler(config.TransportHTTP)
 	policy := config.DefaultAgentAdmissionPolicy()
 	policy.Bulk.MaxSeats, policy.Bulk.WaitMilliseconds = 1, 0
-	admission, e := agentadmission.New(policy, slog.Default())
+	admission, e := agentadmission.New(policy, 0, slog.Default())
 	if e != nil {
 		t.Fatal(e)
 	}

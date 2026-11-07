@@ -398,6 +398,7 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 				})
 			}
 			g.Loop("NODE_LIVENESS", h.Nodes.Service.RunLiveness)
+			g.Loop("NODE_AGENT_SHED", h.Nodes.Service.RunAgentShed)
 			g.Loop("NODE_TASK_WAKES", h.Nodes.Service.RunWakes)
 		}
 		if c.Models.ArtifactRoot != "" {

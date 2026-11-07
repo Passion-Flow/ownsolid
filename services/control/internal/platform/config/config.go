@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"go.yaml.in/yaml/v3"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/registryconfig"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/taskbus"
+	"go.yaml.in/yaml/v3"
 )
 
 const MinimumDatabaseConnections int32 = 1
@@ -57,17 +57,20 @@ type Config struct {
 	} `yaml:"components"`
 	Server   ServerConfiguration `yaml:"server"`
 	Database struct {
-		Dameng                  *DamengServingConfiguration      `yaml:"dameng,omitempty" json:"-"`
-		Engine                  string                           `yaml:"engine,omitempty"`
-		MySQLConfigurationFile  string                           `yaml:"mysql_configuration_file,omitempty"`
-		MySQLMigrations         MySQLMigrationPolicy             `yaml:"mysql_migrations,omitempty"`
-		MySQLBackup             *MySQLBackupConfiguration        `yaml:"mysql_backup,omitempty" json:"MySQLBackup,omitempty"`
-		MySQLRuntimeAccess      *MySQLRuntimeAccessConfiguration `yaml:"mysql_runtime_access,omitempty" json:"MySQLRuntimeAccess,omitempty"`
-		DSNFile                 string                           `yaml:"dsn_file"`
-		MaxOpenConnections      int32                            `yaml:"max_open_connections"`
-		MaxIdleConnections      int32                            `yaml:"max_idle_connections"`
-		StatementTimeoutSeconds int                              `yaml:"statement_timeout_seconds"`
-		LockTimeoutMilliseconds *int                             `yaml:"lock_timeout_milliseconds,omitempty"`
+		Dameng                 *DamengServingConfiguration      `yaml:"dameng,omitempty" json:"-"`
+		Engine                 string                           `yaml:"engine,omitempty"`
+		MySQLConfigurationFile string                           `yaml:"mysql_configuration_file,omitempty"`
+		MySQLMigrations        MySQLMigrationPolicy             `yaml:"mysql_migrations,omitempty"`
+		MySQLBackup            *MySQLBackupConfiguration        `yaml:"mysql_backup,omitempty" json:"MySQLBackup,omitempty"`
+		MySQLRuntimeAccess     *MySQLRuntimeAccessConfiguration `yaml:"mysql_runtime_access,omitempty" json:"MySQLRuntimeAccess,omitempty"`
+		DSNFile                string                           `yaml:"dsn_file"`
+		MaxOpenConnections     int32                            `yaml:"max_open_connections"`
+		MaxIdleConnections     int32                            `yaml:"max_idle_connections"`
+		// OperatorReservedConnections are the pool's connections agent calls never take, so an
+		// operator can sign in while every agent seat is in use.
+		OperatorReservedConnections int32 `yaml:"operator_reserved_connections"`
+		StatementTimeoutSeconds     int   `yaml:"statement_timeout_seconds"`
+		LockTimeoutMilliseconds     *int  `yaml:"lock_timeout_milliseconds,omitempty"`
 	} `yaml:"database"`
 	Security struct {
 		AuthHMACKeyFile       string `yaml:"auth_hmac_key_file"`
@@ -114,6 +117,7 @@ func defaultConfiguration() Config {
 	c.Database.Engine = PostgreSQLDatabaseEngine
 	c.Database.MySQLMigrations = DefaultMySQLMigrationPolicy()
 	c.Database.MaxOpenConnections = 10
+	c.Database.OperatorReservedConnections = 2
 	c.Database.MaxIdleConnections = 5
 	c.Database.StatementTimeoutSeconds = 5
 	c.SMTP.TLSMode = "starttls_required"
@@ -336,6 +340,9 @@ func (c Config) Validate() error {
 	if c.DatabaseEngine() != DamengDatabaseEngine && (c.Database.MaxOpenConnections < MinimumDatabaseConnections || c.Database.MaxOpenConnections > MaximumDatabaseConnections || c.Database.MaxIdleConnections < 0 || c.Database.MaxIdleConnections > c.Database.MaxOpenConnections || c.Database.StatementTimeoutSeconds < 1 || c.Database.StatementTimeoutSeconds > 30) {
 		return errors.New("DATABASE_BOUNDS_INVALID")
 	}
+	if c.Database.OperatorReservedConnections < 0 || c.DatabaseEngine() != DamengDatabaseEngine && c.Database.OperatorReservedConnections >= c.Database.MaxOpenConnections {
+		return errors.New("DATABASE_BOUNDS_INVALID")
+	}
 	if e := c.ValidateDatabaseLockTimeout(); e != nil {
 		return e
 	}
@@ -397,4 +404,13 @@ func tlsConfigForOrigins(certificateFile, privateKeyFile string, origins []strin
 // The caller owns reading/protecting the snapshot; ambient values have no authority.
 func DecodeWithEnvironment(raw []byte, environmentFile string) (Config, error) {
 	return decodeWithEnvironment(raw, environmentFile)
+}
+
+// AgentDatabaseSeats is how many agent calls may use the database at once, or zero when no pool
+// bounds them: the pool less the connections reserved for operators.
+func (c Config) AgentDatabaseSeats() int {
+	if c.DatabaseEngine() == DamengDatabaseEngine {
+		return 0
+	}
+	return int(c.Database.MaxOpenConnections - c.Database.OperatorReservedConnections)
 }

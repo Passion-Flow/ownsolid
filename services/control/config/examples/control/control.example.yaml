@@ -42,6 +42,9 @@ database:
   dsn_file: /run/projectone/runtime-dsn
   max_open_connections: 10
   max_idle_connections: 2
+  # Connections agent calls never take, so an operator can sign in while every agent seat
+  # is in use. Below max_open_connections.
+  operator_reserved_connections: 2
   statement_timeout_seconds: 5
   # Control PostgreSQL session owner; integer milliseconds, optional default 3000.
   # Permitted 1..30000 and less than statement_timeout_seconds*1000; restart/new pool.
