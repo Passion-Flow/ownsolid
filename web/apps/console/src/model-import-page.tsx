@@ -268,9 +268,8 @@ function ImportForm({ catalog }: { catalog: ModelCatalogAvailability }) {
           ? t('models.import.cost', {
               workspace: workspace?.name ?? '',
               during: format.bytes(file.size + finalBytes),
-              after: format.bytes(finalBytes),
             })
-          : t('models.import.cost.none', { after: format.bytes(finalBytes) })}
+          : t('models.import.cost.none', { size: format.bytes(2 * finalBytes) })}
       </p>
       <div>
         <Button type="submit" variant="primary" disabled={!usable}>

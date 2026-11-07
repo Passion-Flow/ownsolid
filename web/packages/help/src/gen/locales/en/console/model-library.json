@@ -293,7 +293,7 @@
     },
     {
      "type": "text",
-     "value": " under the installation's root. An import holds the bundle and the\nunpacked model at once, so the store needs room for both while it runs. "
+     "value": " under the installation's root. The store keeps each uploaded bundle\nbeside the model unpacked from it, so a model takes twice its size there. "
     },
     {
      "type": "link",

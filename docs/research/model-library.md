@@ -77,6 +77,9 @@ the store did not exist and an import could not start.
   before a byte of it is stored. The upload lives outside the page, so moving around the console does not
   stop it; closing the tab warns first.
 - **Deploy** on a model's page is not ready until SRV-111, and says so.
+- **Cost.** The server keeps a finished import's chunks and any failed stage beside the published
+  model, so the page states what the store really holds: the bundle and the model. Removing a
+  finished upload is MOD-120.
 
 ## Failure modes and how the tests cover them
 
@@ -91,6 +94,7 @@ the store did not exist and an import could not start.
 | Retiring a model in use | browser flow: `MODEL_VERSION_REFERENCED` explained, the model stays |
 | `crypto.subtle` missing | unit: the fallback gives the same digests |
 | A restored database without its model files | installer tests; live run of backup and restore |
+| The control process stops in mid-extraction | live: the import fails with `MODEL_STAGE_INVALID`, and *Verify again* unpacks into a fresh stage and publishes |
 
 ## What done means
 

@@ -25,6 +25,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
 - [ ] MOD-117 Relay mode: a mirror in a DMZ that the cluster reaches instead of the internet, with the same verification (P2)
 - [ ] MOD-118 Direct download for development and for deployments that allow outbound traffic, with the same verification as a bundle and off unless configured (P2)
 - [ ] MOD-119 Model library page: your models, importing a bundle with resumable upload and verification shown, each model's own page and retiring it (S-201, S-202) (P1)
+- [ ] MOD-120 Remove a finished import's upload and failed stages from the model store once its model is published, crash-safe, so a model takes its own size (P1)
 
 ## P2 Fleet operations
 

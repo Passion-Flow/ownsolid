@@ -31,6 +31,6 @@ stays in the audit trail.
 
 ## The model store
 
-Models live in `data/models` under the installation's root. An import holds the bundle and the
-unpacked model at once, so the store needs room for both while it runs. [Backups](help:getting-started)
+Models live in `data/models` under the installation's root. The store keeps each uploaded bundle
+beside the model unpacked from it, so a model takes twice its size there. [Backups](help:getting-started)
 carry published models.

@@ -36,7 +36,9 @@ test('imports the model from the console, through an interruption', async ({ bro
   await signIn(first, '/library/import', 'Import a bundle');
   await expectAccessible(first);
   await first.getByTestId('model-bundle').setInputFiles(bundle);
-  await expect(first.getByText(/takes .* of the model store while it runs/)).toBeVisible();
+  await expect(
+    first.getByText(/takes .* of the model store: the bundle, and the model/),
+  ).toBeVisible();
   await first.getByLabel('Reason').fill('Live run of the Model library');
   await first.getByRole('checkbox').check();
   await first.getByRole('button', { name: 'Start import' }).click();
@@ -52,7 +54,11 @@ test('imports the model from the console, through an interruption', async ({ bro
 
   const page = await context.newPage();
   await page.goto('/library?tab=imports');
-  await page.getByRole('link', { name: modelName }).click();
+  // Earlier runs leave their discarded imports in the list.
+  await page
+    .getByRole('row', { name: /Uploading/ })
+    .getByRole('link', { name: modelName })
+    .click();
   await expect(page).toHaveURL(new RegExp(`${importPath}$`));
   await expect(page.getByText('The upload is not running')).toBeVisible();
   await expectAccessible(page);

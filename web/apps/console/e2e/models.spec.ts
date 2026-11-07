@@ -96,7 +96,9 @@ test('says what the catalogue can do in this release', async ({ page }) => {
 
 test('imports a bundle: sends every chunk, verifies, and opens the model', async ({ page }) => {
   await fillForm(page);
-  await expect(page.getByText(/takes .* of the model store while it runs/)).toBeVisible();
+  await expect(
+    page.getByText(/takes .* of the model store: the bundle, and the model/),
+  ).toBeVisible();
   await start(page);
   await expect(page.getByRole('link', { name: 'Open the model' })).toBeVisible();
   const chunks = Object.keys(control.modelChunks[control.modelImports[0]?.id ?? ''] ?? {});

@@ -274,6 +274,7 @@ console or the portal; both read the same list, and `apply` refuses a size it ma
 - Upgrades, rollback and signed bundles are separate roadmap items (DEL-101, DEL-104,
   DEL-105). Do not reuse an install root across versions.
 - The model store is `data/models` under `install_root`, on the same disk unless that directory
-  is a mount. Give it room for every model plus one upload: an import holds the bundle and the
-  unpacked model at once. Dataset and training stores are not set up by the installer.
+  is a mount. Give it twice the size of every model: the store keeps each uploaded bundle beside
+  the model unpacked from it until MOD-120 removes finished uploads. Dataset and training stores
+  are not set up by the installer.
 - Back up with `ownsolid-install backup`; see [Backup and restore](backup-and-restore.md).
