@@ -241,6 +241,21 @@ The portal's rule, from [ADR 0035](../../decisions/0035-what-belongs-in-each-ent
 every screen is scoped to one person's workspace, enforced on the server, and nothing
 here manages the platform.
 
+### S-301  Portal home                                `/` in the portal
+**For** a person who uses the platform · **Archetype** overview · **Primary** continue where they left off.
+
+**Does** what needs them, where they left off, and what has been published to their workspace.
+**Content** *Needs you*: their workflow runs that failed, were cancelled or interrupted, unread.
+*Pick up where you left off*: their five newest conversations, with application, turns and time.
+*Published to you*: applications in their workspace. *Usage*: not ready, with POR-111.
+**Click** a row opens its page once that page ships (POR-102, POR-103); until then it does not
+pretend to.
+**Dialogs** none.
+**Empty** each section names what will appear there and who makes it appear: an administrator
+publishes applications; a conversation starts from an application.
+**Done when** every section reads real data, fails on its own with a retry, and never shows a
+figure the server does not have ([research](../../research/portal-home.md)).
+
 # Stage 4 — Keep control
 
 | ID | Screen | Archetype | Primary |
