@@ -48,7 +48,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [x] UX-124 Pinned destinations, chosen by the person and kept per person (P1) - Evidence: 7a36453; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, with the pin reaching a second browser
 - [x] UX-125 One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1) - Evidence: 6210c2e; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48
 - [x] UX-126 Summary tiles above a list filter the list instead of decorating it (P1) - Evidence: feff70a; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48
-- [ ] UX-127 Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1)
+- [x] UX-127 Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1) - Evidence: 39cc736, cdf7ee9; real Chromium on an installation on `ownsolid-cpu` at schema 48, on a joined node, the administrator and a connector with a real Gitea
 - [x] UX-128 Moving through a list from the keyboard: `j` and `k` move the row selection and Enter opens it, under the switch UX-122 adds (P1) - Evidence: 5823524; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, two runs
 - [ ] UX-129 English strings load by page like the other languages, so the first download stops growing with every page, and its 170 kB limit comes back down (P1)
 
