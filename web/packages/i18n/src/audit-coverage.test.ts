@@ -25,8 +25,8 @@ const named = [
   'workspace',
 ];
 
-// Shaped like an action, but a configuration path.
-const notActions = new Set(['sso.keyring_file']);
+// Shaped like an action, but a configuration path or an outbox topic.
+const notActions = new Set(['sso.keyring_file', 'node.view_changed', 'node.views_changed']);
 
 function sources(directory: string, found: string[] = []): string[] {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
