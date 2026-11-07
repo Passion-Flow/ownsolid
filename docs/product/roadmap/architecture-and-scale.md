@@ -42,7 +42,8 @@ agents is not.
   - Scope of the evidence: 2,000 agents from one process against an offline single-node install on `ownsolid-cpu`, for four minutes at the default interval; this is a fault run, not the load test, which is ARC-015. Simulated nodes are read-only and run `collect_facts.v1`, so renewals, transfers and training events are not simulated. The `https_only` fault ran on unit tests against a fake control. All agents share one client address, so `agent_admission.address` and three other limits were raised for the run.
 - [x] ARC-015 Load tested with 2,000 simulated nodes at twice the planned load; full reconnect within 5 minutes; control-plane restart leaves work running (P0) - Evidence: commits 3a15704, 5b8ddca, 2f7613b (ADR 0038, ADR 0040); `TestFleetLoad`, three runs in a row on `ownsolid-cpu`, 2026-11-07
   - Scope of the evidence: one control process and one PostgreSQL on one host, default resources with the raised limits named in the research note, simulated read-only nodes, runs of 25 minutes. Another project's tests were stopped within 15 seconds each time they started, outside the steady and restart stretches. ARC-105, ARC-203 and ARC-304 repeat it at their own sizes.
-- [ ] ARC-016 Break-glass admin path independent of agent traffic, plus an admission switch that sheds agent load (P0)
+- [x] ARC-016 Break-glass admin path independent of agent traffic, plus an admission switch that sheds agent load (P0) - Evidence: commits bd27727, 2294c33 (ADR 0043, 0045); `TestBreakGlass` passed twice in a row with 2,000 simulated agents on `ownsolid-cpu`
+  - Scope of the evidence: one control process on one host, simulated nodes, PostgreSQL only. With every agent seat waiting on a lock, sign-in 79 to 88 ms; the host path ran with the connection limit full and with PostgreSQL stopped. `TestFleetLoad` passed again with the six default seats.
 
 ## P1 Enterprise release
 
