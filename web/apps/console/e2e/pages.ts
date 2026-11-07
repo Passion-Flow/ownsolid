@@ -4,6 +4,9 @@ import {
   activeSummary,
   adminUser,
   checksStoppingAt,
+  deploymentAlias,
+  deploymentKey,
+  failedDeployment,
   failedImport,
   failedMail,
   disabledNode,
@@ -20,10 +23,12 @@ import {
   pendingInvitation,
   readyModel,
   retiredConnector,
+  runningDeployment,
   runningTask,
   secondFailedMail,
   sentMail,
   ssoOn,
+  stalePlacement,
   stalledImport,
   systemEvent,
   teamWorkspace,
@@ -106,6 +111,77 @@ async function openSettings(page: Page, control: ControlPlane): Promise<void> {
  */
 export const consolePages: readonly PageState[] = [
   ...shellPages,
+  {
+    name: 'model services with nothing deployed',
+    path: '/services',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/services');
+      await page.getByRole('heading', { name: 'Nothing deployed' }).waitFor();
+    },
+  },
+  {
+    name: 'model services with a deployment and its drawer',
+    path: '/services',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      control.models = [readyModel];
+      control.deployments = [runningDeployment, failedDeployment];
+      await page.goto(`/services?open=${runningDeployment.id}`);
+      await page.getByRole('dialog').getByText('Replicas').waitFor();
+    },
+  },
+  {
+    name: 'a deployment of its own, with what stopping it breaks',
+    path: '/services/$deploymentId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      control.models = [readyModel];
+      control.deployments = [runningDeployment];
+      control.aliases = [deploymentAlias];
+      control.gatewayKeys = [deploymentKey];
+      await page.goto(`/services/${runningDeployment.id}`);
+      await page.getByRole('button', { name: 'Stop', exact: true }).click();
+      await page.getByText(deploymentAlias.name).waitFor();
+    },
+  },
+  {
+    name: 'the tabs of a deployment that failed',
+    path: '/services/$deploymentId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      control.models = [readyModel];
+      control.deployments = [failedDeployment];
+      await page.goto(`/services/${failedDeployment.id}?tab=configuration`);
+      await page.getByText('Catalogue digest').waitFor();
+      await page.getByRole('tab', { name: 'Traffic' }).click();
+      await page.getByText('Traffic is not ready yet').waitFor();
+    },
+  },
+  {
+    name: 'deploying a model, with the cost shown',
+    path: '/services/new',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.models = [readyModel];
+      await page.goto('/services/new');
+      await page.getByText('What it takes').waitFor();
+    },
+  },
+  {
+    name: 'deploying a model nothing can take',
+    path: '/services/new',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.models = [readyModel];
+      control.placement = stalePlacement;
+      await page.goto('/services/new');
+      await page.getByText('Nothing here can take this model now').waitFor();
+    },
+  },
   {
     name: 'model library with nothing in it',
     path: '/library',

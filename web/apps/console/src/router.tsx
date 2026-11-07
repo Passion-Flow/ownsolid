@@ -69,6 +69,24 @@ const modelImportStatusRoute = createRoute({
   component: lazyRouteComponent(() => import('./model-import-page.tsx'), 'ModelImportStatusPage'),
 });
 
+const servicesRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/services',
+  component: lazyRouteComponent(() => import('./services-page.tsx'), 'ServicesPage'),
+});
+
+const deployRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/services/new',
+  component: lazyRouteComponent(() => import('./deploy-page.tsx'), 'DeployPage'),
+});
+
+const deploymentRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/services/$deploymentId',
+  component: lazyRouteComponent(() => import('./deployment-page.tsx'), 'DeploymentPage'),
+});
+
 const userRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/users/$userId',
@@ -162,6 +180,9 @@ const routeTree = rootRoute.addChildren([
       modelRoute,
       modelImportRoute,
       modelImportStatusRoute,
+      servicesRoute,
+      deployRoute,
+      deploymentRoute,
       userRoute,
       connectorRoute,
       usersRoute,

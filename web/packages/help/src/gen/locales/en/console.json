@@ -79,6 +79,28 @@
    }
   ]
  },
+ "model-services": {
+  "title": "Model services",
+  "summary": "Model services shows the models the workspace in the switcher serves, and how each is\ndoing. A deployment runs one model on one whole GPU of one node, and is called by its model and\nnode. The tiles above the list count deployments by state and filter the list.",
+  "sections": [
+   {
+    "title": "What a node needs",
+    "anchor": "what-a-node-needs"
+   },
+   {
+    "title": "Deploying a model",
+    "anchor": "deploying-a-model"
+   },
+   {
+    "title": "Looking after a deployment",
+    "anchor": "looking-after-a-deployment"
+   },
+   {
+    "title": "What is not ready",
+    "anchor": "what-is-not-ready"
+   }
+  ]
+ },
  "people-and-workspaces": {
   "title": "People and workspaces",
   "summary": "People sign in to the console or the portal with their own accounts. Workspaces group people and\nthe work they share.",

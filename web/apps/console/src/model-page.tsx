@@ -1,8 +1,9 @@
 // One model on its own page: what it is, what it is made of, where it came from and who touched it
-// (docs/research/model-library.md). Deploying arrives with SRV-111, and the button says so until then.
+// (docs/research/model-library.md).
 import {
   getModel,
   isProblem,
+  listDeployments,
   listModelImports,
   retireModel,
   type ModelVersion,
@@ -13,18 +14,26 @@ import {
   Card,
   Detail,
   DetailList,
+  EmptyState,
   ProblemNotice,
+  Skeleton,
   StatusPill,
+  Table,
   Tabs,
   Tag,
+  Td,
   TextField,
+  Th,
+  Tr,
   TypedConfirmation,
   useToast,
 } from '@ownsolid/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
-import { Rocket, Trash2 } from 'lucide-react';
+import { ServerOff, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { DeployLink, DeploymentStatePill, useDeploymentNames } from './deployment-details.tsx';
+import { deploymentKeys } from './deployment-state.ts';
 import { ModelFacts, ModelFiles, modelSummary } from './model-details.tsx';
 import { modelKeys, modelKinds, modelsKey } from './model-state.ts';
 import {
@@ -36,7 +45,7 @@ import {
 
 const route = getRouteApi('/authenticated/frame/library/$modelId');
 
-const tabs = ['overview', 'files', 'activity'] as const;
+const tabs = ['overview', 'files', 'deployments', 'activity'] as const;
 
 function RetireDialog({ model, onClose }: { model: ModelVersion; onClose: () => void }) {
   const { t } = useI18n();
@@ -120,6 +129,73 @@ function Origin({ model }: { model: ModelVersion }) {
   );
 }
 
+/** The deployments serving a model, or the way to make the first. */
+function ModelDeployments({ model }: { model: ModelVersion }) {
+  const { t, format } = useI18n();
+  const deployments = useQuery({
+    queryKey: deploymentKeys.list(model.workspace_id, model.id),
+    queryFn: ({ signal }) => listDeployments(model.workspace_id, { modelId: model.id }, { signal }),
+  });
+  const name = useDeploymentNames(model.workspace_id, deployments.data ?? []);
+  if (deployments.isPending) return <Skeleton className="h-11 w-full" />;
+  if (!deployments.data) {
+    return isProblem(deployments.error) ? (
+      <ProblemNotice
+        problem={deployments.error}
+        onRetry={() => {
+          void deployments.refetch();
+        }}
+      />
+    ) : null;
+  }
+  if (deployments.data.length === 0) {
+    return (
+      <Card>
+        <EmptyState
+          icon={ServerOff}
+          title={t('models.deployments.empty.title')}
+          action={<DeployLink model={model.id} />}
+        >
+          {t('models.deployments.empty.detail')}
+        </EmptyState>
+      </Card>
+    );
+  }
+  return (
+    <Card className="overflow-x-auto">
+      <Table>
+        <caption className="sr-only">{t('models.deployments.title')}</caption>
+        <thead>
+          <tr>
+            <Th>{t('services.fact.node')}</Th>
+            <Th>{t('services.column.state')}</Th>
+            <Th>{t('services.config.created')}</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {deployments.data.map((deployment) => (
+            <Tr key={deployment.id}>
+              <Td className="font-semibold">
+                <Link
+                  to="/services/$deploymentId"
+                  params={{ deploymentId: deployment.id }}
+                  className="text-text underline-offset-2 hover:underline"
+                >
+                  {name(deployment).node}
+                </Link>
+              </Td>
+              <Td>
+                <DeploymentStatePill deployment={deployment} />
+              </Td>
+              <Td className="text-text-2">{format.dateTime(deployment.created_at)}</Td>
+            </Tr>
+          ))}
+        </tbody>
+      </Table>
+    </Card>
+  );
+}
+
 function Loaded({ model }: { model: ModelVersion }) {
   const { t, format } = useI18n();
   const [tab, setTab] = useChosenTab(tabs);
@@ -140,10 +216,7 @@ function Loaded({ model }: { model: ModelVersion }) {
         }
         actions={
           <>
-            <Button aria-disabled aria-describedby="model-deploy-not-ready">
-              <Rocket aria-hidden />
-              {t('models.deploy')}
-            </Button>
+            <DeployLink model={model.id} />
             <Button
               variant="danger"
               onClick={() => {
@@ -156,13 +229,13 @@ function Loaded({ model }: { model: ModelVersion }) {
           </>
         }
       />
-      <p id="model-deploy-not-ready" className="mt-[-12px] mb-4 text-[12.5px] text-text-3">
-        {t('models.deploy.notReady')}
-      </p>
       <Tabs
         label={t('resource.tabs')}
         value={tab}
-        tabs={tabs.map((value) => ({ value, label: t(`resource.tab.${value}`) }))}
+        tabs={tabs.map((value) => ({
+          value,
+          label: t(value === 'deployments' ? 'models.deployments.title' : `resource.tab.${value}`),
+        }))}
         onChange={setTab}
       >
         {tab === 'overview' ? (
@@ -179,6 +252,7 @@ function Loaded({ model }: { model: ModelVersion }) {
             <ModelFiles files={summary.files} />
           </Card>
         ) : null}
+        {tab === 'deployments' ? <ModelDeployments model={model} /> : null}
         {tab === 'activity' ? (
           <ResourceActivity target={model.id} since={model.created_at} />
         ) : null}

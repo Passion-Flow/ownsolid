@@ -257,6 +257,38 @@
      "children": [
       {
        "type": "text",
+       "value": "Deploy a model"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " on a model's page opens "
+    },
+    {
+     "type": "link",
+     "url": "help:model-services",
+     "children": [
+      {
+       "type": "text",
+       "value": "Model services"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " with the model chosen."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
        "value": "Retire"
       }
      ]

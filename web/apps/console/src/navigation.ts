@@ -29,7 +29,7 @@ import {
 
 /** The console's one-character shortcuts. One gets a `to` when its page ships. */
 export const shortcuts: readonly SingleKeyShortcut[] = [
-  { key: 'd', label: 'shortcuts.deploy' },
+  { key: 'd', label: 'shortcuts.deploy', to: '/services/new' },
   { key: 'i', label: 'shortcuts.install' },
   { key: 'n', label: 'shortcuts.addNode', to: '/nodes', hash: 'add' },
   { key: 'k', label: 'shortcuts.apiKey' },
@@ -57,7 +57,7 @@ export const navigation: readonly NavGroup[] = [
   {
     heading: 'nav.group.models',
     items: [
-      { label: 'nav.models', icon: Boxes },
+      { label: 'nav.models', icon: Boxes, to: '/services' },
       { label: 'nav.library', icon: Library, to: '/library' },
       { label: 'nav.gateway', icon: Route },
     ],

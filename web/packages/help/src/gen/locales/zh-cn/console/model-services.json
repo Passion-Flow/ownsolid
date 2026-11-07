@@ -1,0 +1,426 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/services",
+     "children": [
+      {
+       "type": "text",
+       "value": "模型服务"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "显示切换器中所选工作空间提供的模型及其状态。一个部署在一个节点的一整块 GPU 上运行一个模型，并以模型和节点来称呼。列表上方的磁贴按状态统计部署，也可用来筛选列表。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "节点需要什么"
+    }
+   ],
+   "data": {
+    "id": "节点需要什么"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "在线，amd64 上的 Ubuntu 24.04，至少 12 GiB 内存。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "root 运行的 Docker、NVIDIA Container Toolkit，以及此版本离线包中的服务镜像。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "NVIDIA GPU：驱动 580 或更高版本，关闭 MIG，至少 8 GiB 显存，且大部分显存空闲。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "一个节点同时只运行一个部署，因此运行期间其余 GPU 会闲置。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "部署模型"
+    }
+   ],
+   "data": {
+    "id": "部署模型"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "在这里或模型页面选择"
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "部署模型"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "，或按 "
+        },
+        {
+         "type": "inlineCode",
+         "value": "d"
+        },
+        {
+         "type": "text",
+         "value": "。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "选择模型。页面会说明推荐哪块 GPU：符合条件且空闲显存最多的一块。在"
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "高级设置"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "中可以选择其他 GPU。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "阅读"
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "资源占用"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "，然后选择"
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "部署"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "部署页面会跟踪进度；离开页面后，工作仍会在节点上继续。模型通过一次测试生成后，部署才算运行中。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "如果没有位置可以运行该模型，页面会列出各节点的原因。节点报告过期时，"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "读取 GPU"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " 会让它重新报告，页面随后自动更新。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "管理部署"
+    }
+   ],
+   "data": {
+    "id": "管理部署"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "启动"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "：重新运行已停止或失败的部署。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "检查"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "：询问节点部署的状态。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "验证"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "：运行一次测试生成。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "停止"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "：结束服务但保留部署，之后可以重新启动。节点确认后释放 GPU。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "移除"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "：删除容器并释放 GPU。部署无法恢复。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "停止和移除时，页面会列出将停止响应的网关名称和密钥，并要求你输入模型名称。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "尚未就绪的内容"
+    }
+   ],
+   "data": {
+    "id": "尚未就绪的内容"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "副本和扩缩容、选择引擎、自动扩缩容、回滚，以及部署的流量和日志，都会显示提供它们的路线图条目。在此之前，部署最近的任务会显示节点代理报告的内容。"
+    }
+   ]
+  }
+ ]
+}

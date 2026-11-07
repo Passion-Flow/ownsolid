@@ -11,6 +11,20 @@ export {
   type ApplicationScript,
 } from './applications.ts';
 export {
+  deploymentAlias,
+  deploymentKey,
+  failedDeployment,
+  freeGpu,
+  openPlacement,
+  placementNode,
+  runningDeployment,
+  smallerGpu,
+  staleDeployment,
+  stalePlacement,
+  stoppedDeployment,
+  type DeploymentScript,
+} from './deployments.ts';
+export {
   derivedModel,
   failedImport,
   modelCatalog,
