@@ -6,6 +6,8 @@ product". Each entry gets its own box for real-environment verification.
 
 - Depends on: the owning module's contract item.
 
+Reviewed 2026-11-07 against GPUStack's published accelerators, engines and node systems, and against how Kubernetes and Grafana declare stages in one registry ([research](../../research/capability-registry.md)). The review added CMP-217 and CMP-218: node systems beyond Linux amd64 had no item of their own.
+
 ## P2 Fleet operations
 
 - [ ] CMP-201 Domestic business databases: Dameng, KingbaseES, openGauss and its family (P2) - Catalog: F244, F245, F247, F518
@@ -41,3 +43,5 @@ product". Each entry gets its own box for real-environment verification.
 
 - [ ] CMP-215 Capability registry: every option the product offers, each declared ready, planned, licensed or unsupported, with a reason and the roadmap item behind it; the installer, the API and both entrances read the same declaration ([ADR 0036](../../decisions/0036-show-every-option-and-fetch-models-offline.md)) (P1)
 - [ ] CMP-216 Unavailable options stay visible and announced: `aria-disabled` rather than removal, a readable reason beside each, and a test that no option is disabled without one (P1)
+- [ ] CMP-217 Linux arm64 nodes: the agent builds for arm64 and a node joins, reports and runs tasks (P2)
+- [ ] CMP-218 Windows Server nodes: the agent runs as a service, joins, reports and runs tasks (P4)

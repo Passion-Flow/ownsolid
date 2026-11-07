@@ -23,6 +23,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
 - [ ] MOD-115 Fetch manifest: pick models, export exact repositories, revisions and expected hashes; `ownsolid fetch` turns one on a connected machine into one bundle (P1)
 - [ ] MOD-116 Import a bundle, verifying every model against the hash its registry published before anything is written, and stage tokenizer files so no engine reaches a registry at serving time (P1)
 - [ ] MOD-117 Relay mode: a mirror in a DMZ that the cluster reaches instead of the internet, with the same verification (P2)
+- [ ] MOD-118 Direct download for development and for deployments that allow outbound traffic, with the same verification as a bundle and off unless configured (P2)
 
 ## P2 Fleet operations
 
