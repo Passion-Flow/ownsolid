@@ -17,6 +17,7 @@ Fully offline training jobs, from small LoRA fine-tunes to large distributed run
 - [ ] TRN-108 Isolated runtime images per framework, built offline with pinned locks (P1) - Catalog: F121
 - [ ] TRN-109 Notebook and remote development environments separated from production jobs (P1) - Catalog: F593
 - [ ] TRN-110 Verified on real NVIDIA hardware: offline LoRA run, adapter served (RTX 3090 run on 2026-11-04 used the inherited code; repeat on ownsolid) (P1)
+- [ ] TRN-111 Training compute record, part of the experiment record and built after TRN-105: tokens processed, operations by 6NT with a hardware ceiling, lineage and spent totals, declared base compute and configured reference values ([research](../../research/training-compute-record.md)) (P1)
 
 ## P2 Fleet operations
 
