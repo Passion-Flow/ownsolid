@@ -7,11 +7,13 @@ node. The tiles above the list count deployments by state and filter the list.
 ## What a node needs
 
 - Ubuntu 24.04 on amd64 with at least 12 GiB of memory, online.
-- Rootful Docker, the NVIDIA Container Toolkit, and the serving image from this release's offline
-  bundle.
+- Rootful Docker, the NVIDIA Container Toolkit, and the approved vLLM image, which you load yourself.
 - An NVIDIA GPU with driver 580 or newer, MIG off, at least 8 GiB of memory, and most of it free.
 
 A node serves one deployment at a time, so its other GPUs stay idle while it does.
+
+Choose **Serve models** when you [add the node](help:nodes): this is fixed when it joins, and the
+steps then show how to bring the image to the host.
 
 ## Deploying a model
 

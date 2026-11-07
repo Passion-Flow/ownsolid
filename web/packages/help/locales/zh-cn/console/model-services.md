@@ -5,10 +5,12 @@
 ## 节点需要什么
 
 - 在线，amd64 上的 Ubuntu 24.04，至少 12 GiB 内存。
-- root 运行的 Docker、NVIDIA Container Toolkit，以及此版本离线包中的服务镜像。
+- root 运行的 Docker、NVIDIA Container Toolkit，以及需要你自行加载的批准 vLLM 镜像。
 - NVIDIA GPU：驱动 580 或更高版本，关闭 MIG，至少 8 GiB 显存，且大部分显存空闲。
 
 一个节点同时只运行一个部署，因此运行期间其余 GPU 会闲置。
+
+[添加节点](help:nodes)时请选择**提供模型服务**：节点加入后不能更改，随后的步骤会说明如何把镜像带到主机上。
 
 ## 部署模型
 

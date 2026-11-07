@@ -62,7 +62,7 @@
        "children": [
         {
          "type": "text",
-         "value": "root 运行的 Docker、NVIDIA Container Toolkit，以及此版本离线包中的服务镜像。"
+         "value": "root 运行的 Docker、NVIDIA Container Toolkit，以及需要你自行加载的批准 vLLM 镜像。"
         }
        ]
       }
@@ -91,6 +91,38 @@
     {
      "type": "text",
      "value": "一个节点同时只运行一个部署，因此运行期间其余 GPU 会闲置。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "help:nodes",
+     "children": [
+      {
+       "type": "text",
+       "value": "添加节点"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "时请选择"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "提供模型服务"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "：节点加入后不能更改，随后的步骤会说明如何把镜像带到主机上。"
     }
    ]
   },
