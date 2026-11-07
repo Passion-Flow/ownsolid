@@ -64,9 +64,11 @@ on the packages it touches (nodes, identity HTTP, machine composition, agent tes
 `deploy/images/control/assets/index.html`, the old placeholder page, is unused and awaits
 removal by the owner: no image build copies it.
 
-The inherited browser suite in `services/control/internal/testing/browser` cannot run: its
-`tests/acceptance` scripts did not move to this repository (UX-117). It skips unless
-`PROJECT_ONE_BROWSER=1`, and it is not part of these runs.
+What remains of the inherited browser suite in `services/control/internal/testing/browser` cannot
+run: its `tests/acceptance` scripts did not move to this repository. It skips unless
+`PROJECT_ONE_BROWSER=1`, and it is not part of these runs. Its tests for pages that exist are
+replaced by Playwright flows; the rest wait for their pages
+([UX-117](../research/browser-suite-replacement.md)).
 
 ## Not supported
 
