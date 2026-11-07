@@ -11,6 +11,9 @@ state and lets you add, change and remove them.
 3. The node appears in the list once its agent joins. A token joins one node; an unused token can be
    revoked.
 
+Choose what the node will do when you add it: **Report its facts**, or **Serve models** for a GPU host
+that will take [deployments](help:model-services). This is fixed when the node joins.
+
 A node joins only while the installation has a valid [license](help:license).
 
 ## States

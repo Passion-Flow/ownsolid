@@ -127,6 +127,55 @@
    ]
   },
   {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "添加时选择节点用途："
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "报告节点信息"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "，或用于承载"
+    },
+    {
+     "type": "link",
+     "url": "help:model-services",
+     "children": [
+      {
+       "type": "text",
+       "value": "部署"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "的 GPU 主机选择"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "提供模型服务"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "。节点加入后不能更改。"
+    }
+   ]
+  },
+  {
    "type": "heading",
    "depth": 2,
    "children": [

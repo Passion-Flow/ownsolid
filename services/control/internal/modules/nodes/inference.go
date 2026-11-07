@@ -116,7 +116,13 @@ func (s *Service) CreateInferenceTaskBoundWithin(ctx context.Context, q transact
 	if e = record(ctx, q, n, out, command); e != nil {
 		return Task{}, e
 	}
-	if e = s.taskAuditWithin(ctx, q, a.Me.User.ID, "admin", n, "inference."+command.Action+"_requested", out.ID, reason, request); e != nil {
+	// What a person asked of a deployment belongs to its history; a read of the node's GPUs has
+	// no deployment, so it stays on its task.
+	targetType, target := "node_task", out.ID
+	if command.DeploymentID != "" {
+		targetType, target = "deployment", command.DeploymentID
+	}
+	if e = s.auditTargetWithin(ctx, q, a.Me.User.ID, "admin", n, "inference."+command.Action+"_requested", targetType, target, reason, request); e != nil {
 		return Task{}, e
 	}
 	return out, nil

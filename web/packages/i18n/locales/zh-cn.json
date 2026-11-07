@@ -2081,5 +2081,10 @@
   "nodes.add.role.docker_inference": "提供模型服务",
   "nodes.add.serving": "节点加入后即可提供模型服务。它还需要 root 运行的 Docker、NVIDIA 驱动和 NVIDIA Container Toolkit。",
   "nodes.add.step.image": "把服务镜像带到主机上。目前还没有包含它的离线包，需要从能访问镜像仓库的机器获取。",
-  "nodes.add.step.imageLabel": "获取服务镜像的命令"
+  "nodes.add.step.imageLabel": "获取服务镜像的命令",
+  "audit.action.inference.deploy_requested": "已请求启动部署",
+  "audit.action.inference.stop_requested": "已请求停止部署",
+  "audit.action.inference.remove_requested": "已请求移除部署",
+  "audit.action.inference.observe_requested": "已请求检查部署",
+  "audit.action.inference.verify_requested": "已请求验证部署"
 }

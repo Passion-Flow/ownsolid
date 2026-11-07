@@ -58,7 +58,9 @@ test('a real agent joins as the console says, and a host with no GPU is refused'
     timeout: 60_000,
   });
   await expect(page.getByRole('link', { name: agentNode })).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByText('No NVIDIA driver answers on this node')).toBeVisible();
+  await expect(
+    page.getByRole('listitem').filter({ hasText: agentNode }).getByText('No NVIDIA driver answers'),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Deploy', exact: true })).toHaveCount(0);
   await expectAccessible(page);
 });
@@ -127,9 +129,10 @@ test('a deployment goes through its life on the real control plane', async ({ br
   await removing.getByRole('textbox').first().fill(modelName);
   await removing.getByRole('button', { name: 'Remove deployment' }).click();
   await expect(page.getByRole('heading', { name: 'Model services', level: 1 })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Nothing deployed' })).toBeVisible({
-    timeout: 60_000,
-  });
+  // The list follows the removal: the row shows it, then goes once the node confirms.
+  const row = page.getByRole('row', { name: new RegExp(scriptedNode) });
+  await expect(row).toContainText('Removing');
+  await expect(row).toHaveCount(0, { timeout: 60_000 });
   expect(outside).toEqual([]);
   await context.close();
 });

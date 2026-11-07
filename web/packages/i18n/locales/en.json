@@ -2081,5 +2081,10 @@
   "nodes.add.role.docker_inference": "Serve models",
   "nodes.add.serving": "The node joins ready to serve models. It also needs rootful Docker, an NVIDIA driver and the NVIDIA Container Toolkit.",
   "nodes.add.step.image": "Bring the serving image to the host. There is no offline bundle for it yet, so it comes from a machine with a route to a registry.",
-  "nodes.add.step.imageLabel": "Commands that bring the serving image"
+  "nodes.add.step.imageLabel": "Commands that bring the serving image",
+  "audit.action.inference.deploy_requested": "Deployment start requested",
+  "audit.action.inference.stop_requested": "Deployment stop requested",
+  "audit.action.inference.remove_requested": "Deployment removal requested",
+  "audit.action.inference.observe_requested": "Deployment check requested",
+  "audit.action.inference.verify_requested": "Deployment verification requested"
 }

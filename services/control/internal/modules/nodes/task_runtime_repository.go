@@ -118,7 +118,12 @@ func (s *Service) taskByIDWithin(ctx context.Context, q transaction.Executor, n 
 	return scanTask(q.QueryRow(ctx, nodeSQL(q, pg, my, dm, n.TenantID, n.WorkspaceID, n.ID, id)))
 }
 func (s *Service) taskAuditWithin(ctx context.Context, q transaction.Executor, actor, audience string, n Node, action, id, reason, request string) error {
-	_, e := q.Exec(ctx, nodeSQL(q, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES($1,clock_timestamp(),NULLIF($2,'')::uuid,$3,$4,$5,$6,'success','node_task',$7,NULLIF($8,''),$9)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,UTC_TIMESTAMP(6),NULLIF(?,''),?,?,?,?,'success','node_task',?,NULLIF(?,''),?)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),NULLIF(?,''),?,?,?,?,'success','node_task',?,NULLIF(?,''),?)`, uuid.NewString(), actor, n.TenantID, n.WorkspaceID, audience, action, id, reason, request))
+	return s.auditTargetWithin(ctx, q, actor, audience, n, action, "node_task", id, reason, request)
+}
+
+// auditTargetWithin records one successful action against what it acted on.
+func (s *Service) auditTargetWithin(ctx context.Context, q transaction.Executor, actor, audience string, n Node, action, targetType, id, reason, request string) error {
+	_, e := q.Exec(ctx, nodeSQL(q, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES($1,clock_timestamp(),NULLIF($2,'')::uuid,$3,$4,$5,$6,'success',$7,$8,NULLIF($9,''),$10)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,UTC_TIMESTAMP(6),NULLIF(?,''),?,?,?,?,'success',?,?,NULLIF(?,''),?)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES(?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),NULLIF(?,''),?,?,?,?,'success',?,?,NULLIF(?,''),?)`, uuid.NewString(), actor, n.TenantID, n.WorkspaceID, audience, action, targetType, id, reason, request))
 	return e
 }
 func (s *Service) insertTaskWithin(ctx context.Context, q transaction.Executor, a identity.Auth, n Node, operation, key string, payload, fingerprint []byte, seconds int, epoch *int64) (Task, error) {
