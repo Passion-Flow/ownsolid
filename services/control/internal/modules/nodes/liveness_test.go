@@ -171,6 +171,106 @@ func TestWithoutTheWorkerEveryHeartbeatWrites(t *testing.T) {
 	}
 }
 
+// recordCommitModes returns a reader of the commit mode of each transaction that writes a node
+// row since this call, oldest first. It asks the database itself, not the code under test.
+func recordCommitModes(t *testing.T, s *nodes.Service) func() []string {
+	t.Helper()
+	ctx := context.Background()
+	for _, statement := range []string{
+		`CREATE TABLE commit_modes(id bigserial PRIMARY KEY, mode text NOT NULL)`,
+		`CREATE FUNCTION record_commit_mode() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN INSERT INTO commit_modes(mode) VALUES(current_setting('synchronous_commit')); RETURN NEW; END $$`,
+		`CREATE TRIGGER record_commit_mode AFTER UPDATE ON managed_nodes FOR EACH ROW EXECUTE FUNCTION record_commit_mode()`,
+	} {
+		if _, e := s.DB.Exec(ctx, statement); e != nil {
+			t.Fatal(e)
+		}
+	}
+	return func() []string {
+		t.Helper()
+		rows, e := s.DB.Query(ctx, `SELECT mode FROM commit_modes ORDER BY id`)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer rows.Close()
+		var modes []string
+		for rows.Next() {
+			var mode string
+			if e = rows.Scan(&mode); e != nil {
+				t.Fatal(e)
+			}
+			modes = append(modes, mode)
+		}
+		if e = rows.Err(); e != nil {
+			t.Fatal(e)
+		}
+		return modes
+	}
+}
+
+func TestOnlyARepeatedStateCommitsWithoutWaitingForTheDisk(t *testing.T) {
+	s, node := liveHeartbeats(t)
+	ctx := context.Background()
+	modes := recordCommitModes(t, s)
+	policy := config.DefaultRuntimePolicy()
+	policy.Nodes.StateRefreshSeconds = 0
+	s.Identity.Config.Runtime = &policy
+
+	if _, e := s.Heartbeat(ctx, node.NodeID, node.Credential, handshake()); e != nil {
+		t.Fatal(e)
+	}
+	if got := modes(); len(got) != 1 || got[0] != "off" {
+		t.Fatalf("a refresh of the same state committed in modes %v", got)
+	}
+	changed := handshake()
+	changed.Facts.Hostname = "renamed-node"
+	if _, e := s.Heartbeat(ctx, node.NodeID, node.Credential, changed); e != nil {
+		t.Fatal(e)
+	}
+	if got := modes(); len(got) != 2 || got[1] != "on" {
+		t.Fatalf("a change of state committed in modes %v", got)
+	}
+}
+
+func TestAFlushOfSightingsCommitsWithoutWaitingForTheDisk(t *testing.T) {
+	s, node := liveHeartbeats(t)
+	ctx := context.Background()
+	if e := s.FlushLiveness(ctx); e != nil {
+		t.Fatal(e)
+	}
+	modes := recordCommitModes(t, s)
+	if _, e := s.Heartbeat(ctx, node.NodeID, node.Credential, handshake()); e != nil {
+		t.Fatal(e)
+	}
+	if e := s.FlushLiveness(ctx); e != nil {
+		t.Fatal(e)
+	}
+	if got := modes(); len(got) != 1 || got[0] != "off" {
+		t.Fatalf("a flush of sightings committed in modes %v", got)
+	}
+}
+
+func TestAConnectivityChangeWaitsForTheDisk(t *testing.T) {
+	s, a := setup(t)
+	ctx := context.Background()
+	node := enroll(t, s, a, "Silent node")
+	if _, e := s.DB.Exec(ctx, `UPDATE managed_nodes SET last_heartbeat_at=clock_timestamp()-interval '1 hour' WHERE id=$1`, node.NodeID); e != nil {
+		t.Fatal(e)
+	}
+	modes := recordCommitModes(t, s)
+	if e := s.EnableLivenessStartedAt(ctx, time.Now().Add(-time.Hour)); e != nil {
+		t.Fatal(e)
+	}
+	if e := s.FlushLiveness(ctx); e != nil {
+		t.Fatal(e)
+	}
+	if connectivity := readNode(t, s, node.NodeID).connectivity; connectivity != "offline" {
+		t.Fatalf("connectivity %q", connectivity)
+	}
+	if got := modes(); len(got) == 0 || got[len(got)-1] != "on" {
+		t.Fatalf("a connectivity change committed in modes %v", got)
+	}
+}
+
 func TestFlushSkipsARowAnotherTransactionHolds(t *testing.T) {
 	s, node := liveHeartbeats(t)
 	ctx := context.Background()

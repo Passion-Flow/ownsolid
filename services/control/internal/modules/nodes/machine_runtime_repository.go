@@ -54,7 +54,18 @@ func (s *Service) machineWithin(ctx context.Context, id, credential string, fn f
 				return e
 			}
 		}
-		return fn(ctx, q, n, active, legacy)
+		watched := transaction.Watch(q)
+		if e := fn(ctx, watched, n, active, legacy); e != nil {
+			return e
+		}
+		// Most agent calls only lock the node and read: a claim that finds no work is the
+		// commonest. The lock gives the transaction an ID, so its commit would wait for the disk
+		// and hold a pooled connection through every stall (ADR 0040). With nothing changed
+		// there is nothing a crash could lose.
+		if legacy == nil && !watched.Changed() {
+			return commitWithoutWaitingForDisk(ctx, q)
+		}
+		return nil
 	}
 	// Preserve the actual PG component owner's callbacks until it provides its
 	// selected interface. This branch cannot execute on MySQL or an inference node.
@@ -86,7 +97,13 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 		return out, nil
 	}
 	var out wire.Disposition
+	repeats := s.heartbeatRepeats(id, h)
 	e := s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
+		if repeats {
+			if e := commitWithoutWaitingForDisk(ctx, q); e != nil {
+				return e
+			}
+		}
 		if h.ProtocolVersion != n.ProtocolVersion || h.Profile() != n.ExecutionProfile || !slices.Equal(h.Capabilities, n.Capabilities) {
 			return fail("AGENT_PROFILE_REJECTED")
 		}

@@ -296,3 +296,22 @@ func BenchmarkObserve(b *testing.B) {
 		l.Observe(nodes[i%len(nodes)], base.Add(time.Duration(i)), "")
 	}
 }
+
+func TestRepeatsIgnoresAgeAndAnUnwrittenNode(t *testing.T) {
+	base := time.Now()
+	l := table(t, base)
+	state, other := [32]byte{1}, [32]byte{2}
+	if l.Repeats("n", state) {
+		t.Fatal("a node never written repeats a state")
+	}
+	l.Accept("n", state, base, base)
+	if !l.Repeats("n", state) {
+		t.Fatal("the state last written does not repeat")
+	}
+	if l.Unchanged("n", state, base.Add(time.Hour), time.Minute) || !l.Repeats("n", state) {
+		t.Fatal("age must end Unchanged and leave Repeats")
+	}
+	if l.Repeats("n", other) {
+		t.Fatal("a different state repeats")
+	}
+}

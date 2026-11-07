@@ -240,6 +240,16 @@ func (t *Table[R]) Unchanged(node string, digest [32]byte, now time.Time, maximu
 	return same
 }
 
+// Repeats reports whether digest is the state last written for node, however long ago. A table
+// that has not heard of the node, as after a restart, reports false.
+func (t *Table[R]) Repeats(node string, digest [32]byte) bool {
+	same := false
+	t.locked(node, false, func(e *entry[R]) {
+		same = !e.written.IsZero() && e.digest == digest
+	})
+	return same
+}
+
 // Drain returns up to limit sightings not yet drained and clears their mark. The caller
 // returns the ones it could not persist with Restore.
 func (t *Table[R]) Drain(limit int) []Sighting[R] {
