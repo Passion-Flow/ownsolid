@@ -131,5 +131,15 @@ with their reasons, and SRV-114 holds finishing them.
 - From the console, with the network disconnected from the internet, a person opens Model services,
   starts the deploy flow from a model, sees the recommendation and its cost or every reason it cannot
   run, deploys, follows the task, and stops and removes the deployment, typing its name.
-- On an installation without an NVIDIA GPU (lane B's test install), the same run reaches the flow's
-  refusal, explained, which is as far as that environment allows.
+- On an installation without an NVIDIA GPU (lane B's test install), a real agent reaches the flow's
+  refusal, explained, which is as far as real hardware allows there. A scripted node then carries a
+  deployment through the real control plane; it proves the console and the server, not serving, which
+  stays with SRV-110.
+
+## What the live run found
+
+Mocked flows passed all of these; only a real installation showed them.
+
+- A node joined from the console could never serve, as *Add a node* minted only read-only tokens.
+- The agent demands 80% of a GPU's memory free, which control never checked.
+- Every action was audited against its task, so a deployment's Activity tab was always empty.

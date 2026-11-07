@@ -167,3 +167,23 @@ func TestActualPlacementAgreesWithDeployment(t *testing.T) {
 		})
 	}
 }
+
+// A deployment's page reads its history by its own identifier, so what people asked of it must
+// be recorded against it, and a read of the node's GPUs must not be.
+func TestActualDeploymentHistoryNamesTheDeployment(t *testing.T) {
+	g := deploymentRuntimeSetup(t)
+	d := g.create(t)
+	g.complete(t, g.claim(t), "running")
+	d, e := g.s.Get(g.ctx, g.admin, "", d.ID)
+	if e != nil {
+		t.Fatal(e)
+	}
+	g.action(t, d, "stop")
+	var events int
+	if e := g.f.Store.QueryRow(g.ctx, g.f.Statement("SELECT count(*) FROM audit_events WHERE target_type='deployment' AND target_id=$1", "SELECT count(*) FROM audit_events WHERE target_type='deployment' AND target_id=?", d.ID)).Scan(&events); e != nil {
+		t.Fatal(e)
+	}
+	if events != 2 {
+		t.Fatalf("recorded %d events against the deployment, wanted its deploy and its stop", events)
+	}
+}

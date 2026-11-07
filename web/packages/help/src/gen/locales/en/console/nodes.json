@@ -108,6 +108,55 @@
    "children": [
     {
      "type": "text",
+     "value": "Choose what the node will do when you add it: "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Report its facts"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ", or "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Serve models"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " for a GPU host\nthat will take "
+    },
+    {
+     "type": "link",
+     "url": "help:model-services",
+     "children": [
+      {
+       "type": "text",
+       "value": "deployments"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ". This is fixed when the node joins."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
      "value": "A node joins only while the installation has a valid "
     },
     {
