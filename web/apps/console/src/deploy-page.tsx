@@ -179,7 +179,7 @@ function ReadAnyNode({ workspace, onRead }: { workspace: string; onRead: () => v
     queryFn: ({ signal }) =>
       listNodes({ limit: lookupSize, status: 'active', connectivity: 'online' }, { signal }),
   });
-  const [chosen, setChosen] = useState('');
+  const [chosen, setChosen] = useState<string | null>(null);
   if (nodes.isPending) return <Skeleton className="h-10 w-full" />;
   if (!nodes.data) {
     return isProblem(nodes.error) ? (
@@ -204,7 +204,7 @@ function ReadAnyNode({ workspace, onRead }: { workspace: string; onRead: () => v
       </p>
     );
   }
-  const node = chosen || items[0]?.id || '';
+  const node = chosen ?? items[0]?.id ?? '';
   return (
     <div className="flex flex-wrap items-end gap-2.5">
       <SelectField
