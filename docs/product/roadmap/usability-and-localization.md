@@ -32,7 +32,8 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [ ] UX-108 English and Simplified Chinese complete for every page, email and error (P1) - Catalog: F537, F552
 - [x] UX-109 Language preference per user, tenant default and browser negotiation (P1) - Catalog: F553 - Evidence: dfc68b2; real Chromium on both entrances of an offline install on `ownsolid-cpu` upgraded in place to schema 37, 2026-11-06
 - [x] UX-110 Locale formatting for dates, numbers and units (P1) - Catalog: F555 - Evidence: bee9124; real Chromium switched languages on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06
-- [ ] UX-111 In-product help and API documentation available offline (P1) - Catalog: F431
+- [x] UX-111 In-product help and API documentation available offline (P1) - Catalog: F431 - Evidence: c25cb2c, 779c155; real-browser run on both entrances of lane B's install on `ownsolid-cpu`, 2026-11-07
+  - Operations that declare no entrance or no errors are listed or explained once UX-131 declares them.
 - [x] UX-112 Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569 - Evidence: 27d03fc; keyboard walk and axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05
 - [x] UX-113 Warn before a session ends from inactivity, with one action to stay signed in (P1) - Evidence: 62b3448; a real 60-second idle timeout with the page's poll running in Chromium on the admin entrance of an offline install on `ownsolid-cpu`, 2026-11-06
 - [x] UX-114 Shareable links: filters, sort order and the open drawer live in the URL (P1) - Evidence: fb4eac6; real Chromium reloaded a filtered email list from its address on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06
