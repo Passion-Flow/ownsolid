@@ -7,9 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"syscall"
 
-	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
@@ -129,50 +127,25 @@ func discardUpload(root *os.Root, id string, expectedBytes int64) error {
 	directories := []string{}
 	chunkName := regexp.MustCompile(`^chunk-([0-9]{12})$`)
 	temporaryName := regexp.MustCompile(`^\.upload-[a-f0-9]{32}$`)
-	regular := func(path string) bool {
-		info, e := root.Lstat(path)
-		if e != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0111 != 0 {
-			return false
-		}
-		owner, ok := info.Sys().(*syscall.Stat_t)
-		return ok && owner.Uid == uint32(os.Geteuid()) && owner.Nlink == 1
-	}
 	for _, entry := range entries {
 		path := filepath.Join(scope, entry.Name())
 		if matched := chunkName.FindStringSubmatch(entry.Name()); matched != nil {
 			offset, e := strconv.ParseInt(matched[1], 10, 64)
-			if e != nil || offset%ChunkBytes != 0 || offset >= expectedBytes || !regular(path) {
+			if _, regular := ownedRegular(root, path); e != nil || offset%ChunkBytes != 0 || offset >= expectedBytes || !regular {
 				return fail("MODEL_CLEANUP_CONFLICT")
 			}
 			files = append(files, path)
 		} else if temporaryName.MatchString(entry.Name()) {
-			if !regular(path) {
+			if _, regular := ownedRegular(root, path); !regular {
 				return fail("MODEL_CLEANUP_CONFLICT")
 			}
 			files = append(files, path)
-		} else if entry.Name() == "stage-1" || entry.Name() == "stage-2" || entry.Name() == "stage-3" {
-			if e := directory(root, path); e != nil {
+		} else if isStageName(entry.Name()) {
+			children, e := stageFiles(root, path)
+			if e != nil {
 				return e
 			}
-			stage, e := root.Open(path)
-			if e != nil {
-				return fail("MODEL_CLEANUP_CONFLICT")
-			}
-			children, e := stage.ReadDir(11)
-			stage.Close()
-			if e != nil && e != io.EOF {
-				return fail("MODEL_CLEANUP_CONFLICT")
-			}
-			if len(children) > 9 {
-				return fail("MODEL_CLEANUP_CONFLICT")
-			}
-			for _, child := range children {
-				item := filepath.Join(path, child.Name())
-				if _, ok := wire.ModelFileForName(child.Name()); !ok || !regular(item) {
-					return fail("MODEL_CLEANUP_CONFLICT")
-				}
-				files = append(files, item)
-			}
+			files = append(files, children...)
 			directories = append(directories, path)
 		} else {
 			return fail("MODEL_CLEANUP_CONFLICT")

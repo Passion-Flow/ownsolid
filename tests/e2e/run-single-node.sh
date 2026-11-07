@@ -14,6 +14,8 @@
 # memory. Together they keep a run off a full disk: /dev/shm and 12g need no disk at all.
 # OWNSOLID_E2E_SIMULATED_AGENTS sizes the simulated fleet (default 2000).
 # The fleet load test runs alone, with OWNSOLID_E2E_LOAD=1 and OWNSOLID_E2E_RUN=TestFleetLoad.
+# TestControlCrash runs the same way and also needs OWNSOLID_E2E_MODEL_ARCHIVE, the approved
+# model bundle, and OWNSOLID_E2E_ROOT_TMPFS, for example 8g, to keep the install in memory.
 set -euo pipefail
 
 binaries=${1:?binaries directory}
@@ -44,7 +46,14 @@ storage=()
 if [ -n "${OWNSOLID_E2E_DOCKER_TMPFS:-}" ]; then
 	storage=(--tmpfs "/var/lib/docker:size=$OWNSOLID_E2E_DOCKER_TMPFS")
 fi
-docker run --detach --name "$name" --privileged --network none "${storage[@]}" \
+if [ -n "${OWNSOLID_E2E_ROOT_TMPFS:-}" ]; then
+	storage+=(--tmpfs "/srv/ownsolid:size=$OWNSOLID_E2E_ROOT_TMPFS,mode=0755")
+fi
+model_archive=()
+if [ -n "${OWNSOLID_E2E_MODEL_ARCHIVE:-}" ]; then
+	model_archive=(--volume "$OWNSOLID_E2E_MODEL_ARCHIVE:/model-bundle.tar:ro")
+fi
+docker run --detach --name "$name" --privileged --network none "${storage[@]}" "${model_archive[@]}" \
 	--env DOCKER_TLS_CERTDIR= --volume "$work:/bundle:ro" "$dind_image" >/dev/null
 
 echo "waiting for the isolated Docker daemon"
@@ -89,4 +98,5 @@ docker exec \
 	--env OWNSOLID_E2E_EGRESS_LOG="$egress_log" \
 	--env OWNSOLID_E2E_EGRESS_INTERFACE="$egress_interface" \
 	--env OWNSOLID_E2E_LOAD="${OWNSOLID_E2E_LOAD:-}" \
+	--env OWNSOLID_E2E_MODEL_ARCHIVE="${OWNSOLID_E2E_MODEL_ARCHIVE:+/model-bundle.tar}" \
 	"$name" /bundle/e2e.test -test.v -test.timeout="${OWNSOLID_E2E_TIMEOUT:-30m}" -test.run="${OWNSOLID_E2E_RUN:-.}"

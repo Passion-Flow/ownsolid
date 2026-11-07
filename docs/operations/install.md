@@ -294,6 +294,25 @@ instead of issuing a second one.
 | `INSTALL_ROOT_TOO_LONG` | `install_root` leaves no room for the operator socket's address; choose a shorter path |
 | `OPERATOR_SOCKET_UNAVAILABLE` | `agents status` found no control on the socket and no held level. Check that control is running and that you are root or its runtime user |
 
+## When control stops unexpectedly
+
+Control needs no shutdown to be safe. If its process is killed, by the out-of-memory
+killer or a failing host, Docker starts it again and it picks up from the database:
+
+- Work on nodes keeps running, and agents reconnect and report what finished.
+- Accepted tasks stay accepted. A write repeated with the same `Idempotency-Key` finds the
+  first result.
+- A model upload continues from the import's `uploaded_bytes`. The console does this when
+  the same file is chosen again.
+- A model import that was being unpacked starts again by itself and spends one of its three
+  attempts, which the import's `attempts` shows. An import that uses them all stops with
+  `MODEL_RECOVERY_REQUIRED`: cancel it and import the bundle again.
+- Mail whose delivery was cut off is sent again. If control cannot tell whether the server
+  took it, a repeat is possible, and after the last attempt it is marked failed.
+
+A restart count that keeps rising means something is stopping control:
+`docker inspect --format '{{.RestartCount}} {{.State.OOMKilled}}' <project>-control-1`.
+
 ## Limits of this release
 
 Every option a release offers, and why any of them cannot be chosen yet, is one declaration. Run

@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/api/agent/modelartifact"
@@ -154,9 +154,17 @@ func (s *Service) claimImport(ctx context.Context, session transaction.Store, id
 			if current.Attempts < 1 || current.Attempts > config.ModelImportSchemaMaximumAttempts {
 				return fail("MODEL_RECOVERY_REQUIRED")
 			}
-			claimed = current
-			eligible = true
-			return nil
+			// This session holds the import's lock, so the process that ran the attempt
+			// has stopped: it crashed, was stopped, or ran out of time.
+			abandoned, e := s.abandonAttempt(current)
+			if e != nil {
+				return e
+			}
+			if !abandoned {
+				claimed = current
+				eligible = true
+				return nil
+			}
 		}
 		if current.Attempts >= s.Identity.Config.Policy().Models.MaximumAttempts {
 			return fail("MODEL_RECOVERY_REQUIRED")
@@ -177,6 +185,34 @@ func (s *Service) claimImport(ctx context.Context, session transaction.Store, id
 		return original, false, false, e
 	}
 	return claimed, eligible, ready, nil
+}
+
+// abandonAttempt reads the stage a stopped attempt left. A stage that is empty,
+// finished or foreign is taken up by the same attempt: verification extracts into an
+// empty one, publishes a finished one after checking its digests, and refuses a
+// foreign one as MODEL_STAGE_INVALID without touching it. A part-written stage is
+// never resumed: its files are removed and the attempt counts as spent, so the
+// caller starts the next attempt in a stage of its own, and an import that keeps
+// stopping control ends as MODEL_RECOVERY_REQUIRED after the maximum attempts.
+func (s *Service) abandonAttempt(current workerImport) (bool, error) {
+	if !validID(current.ID) {
+		return false, fail("MODEL_PATH_INVALID")
+	}
+	root, e := openStore(s.RootDirectory)
+	if e != nil {
+		return false, e
+	}
+	defer root.Close()
+	stage := stagePath(current.ID, current.Attempts)
+	condition, e := classifyStage(root, stage)
+	if e != nil || condition != stagePartial {
+		return false, e
+	}
+	if e = removeStage(root, stage); e != nil {
+		return false, e
+	}
+	slog.Warn("model_import_attempt_abandoned", "import_id", current.ID, "attempt", current.Attempts)
+	return true, nil
 }
 
 func (s *Service) verifyImportFiles(ctx context.Context, session transaction.Store, current workerImport) error {
@@ -207,7 +243,7 @@ func (s *Service) verifyImportFiles(ctx context.Context, session transaction.Sto
 	if e = directory(root, scope); e != nil {
 		return e
 	}
-	stage := scope + "/stage-" + strconv.Itoa(current.Attempts)
+	stage := stagePath(current.ID, current.Attempts)
 	if e = directory(root, stage); e != nil {
 		return e
 	}

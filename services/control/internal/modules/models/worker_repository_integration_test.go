@@ -53,6 +53,25 @@ func workerResult(t *testing.T, x humanImportFixture, code string) {
 	modelReadError(t, e, code)
 }
 
+// workerPartialStage leaves what control leaves when it dies while extracting: one
+// finished read-only file and one still open for writing.
+func workerPartialStage(t *testing.T, x humanImportFixture, id string, attempt int) string {
+	t.Helper()
+	x.exec(t, `UPDATE model_imports SET expected_bytes=$1,uploaded_bytes=$2 WHERE id=$3`, `UPDATE model_imports SET expected_bytes=?,uploaded_bytes=? WHERE id=?`, modelartifact.MinimumArchiveBytes(), modelartifact.MinimumArchiveBytes(), id)
+	stage := filepath.Join(x.root, "imports", id, fmt.Sprintf("stage-%d", attempt))
+	if e := os.MkdirAll(stage, 0700); e != nil {
+		t.Fatal(e)
+	}
+	files := wire.ApprovedModel().Files
+	if e := os.WriteFile(filepath.Join(stage, files[0].Path), []byte("finished"), 0400); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.WriteFile(filepath.Join(stage, files[1].Path), []byte("part"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	return stage
+}
+
 // Explicit lost-outcome double after a real claim transaction. Wire faults are
 // separately required; this double does not emulate the SQL/filesystem engine.
 type workerUnknownOwner struct{ transaction.Store }
@@ -102,7 +121,7 @@ func TestModelWorkerFileLockChild(t *testing.T) {
 }
 
 func TestActualModelImportWorker(t *testing.T) {
-	for _, name := range []string{"idle", "pending_marker", "invalid_total_failure", "disabled_user", "demoted_admin", "changed_epoch", "disabled_workspace", "inactive_tenant", "foreign_selector", "verifying_attempt_reuse", "exhausted_queue", "orphan_ready_audit", "orphan_model", "claim_audit_rollback", "failure_audit_rollback", "partial_stage_retained", "cross_process_file_busy", "database_lock_busy", "unknown_claim_double", "cancelled_context"} {
+	for _, name := range []string{"idle", "pending_marker", "invalid_total_failure", "disabled_user", "demoted_admin", "changed_epoch", "disabled_workspace", "inactive_tenant", "foreign_selector", "verifying_attempt_reuse", "exhausted_queue", "orphan_ready_audit", "orphan_model", "claim_audit_rollback", "failure_audit_rollback", "partial_stage_retained", "partial_stage_spends_the_attempt", "partial_stage_on_the_last_attempt", "empty_stage_keeps_the_attempt", "cross_process_file_busy", "database_lock_busy", "unknown_claim_double", "cancelled_context"} {
 		t.Run(name, func(t *testing.T) {
 			x := humanSetup(t)
 			switch name {
@@ -217,6 +236,38 @@ func TestActualModelImportWorker(t *testing.T) {
 				workerState(t, x, v.ID, "failed", 1, "MODEL_STAGE_INVALID")
 				if raw, e := os.ReadFile(sentinel); e != nil || string(raw) != "PRESERVE_PARTIAL_STAGE" {
 					t.Fatal("partial stage was changed", e)
+				}
+			case "partial_stage_spends_the_attempt":
+				v := workerQueued(t, x, "verifying", 1)
+				stage := workerPartialStage(t, x, v.ID, 1)
+				workerResult(t, x, "MODEL_IMPORT_INCOMPLETE")
+				workerState(t, x, v.ID, "failed", 2, "MODEL_IMPORT_INCOMPLETE")
+				if _, e := os.Lstat(stage); !os.IsNotExist(e) {
+					t.Fatal("the stopped attempt's stage survived", e)
+				}
+				if x.count(t, "model.import_verification_started", v.ID) != 1 {
+					t.Fatal("the new attempt was not audited")
+				}
+			case "partial_stage_on_the_last_attempt":
+				v := workerQueued(t, x, "verifying", 3)
+				stage := workerPartialStage(t, x, v.ID, 3)
+				workerResult(t, x, "MODEL_RECOVERY_REQUIRED")
+				workerState(t, x, v.ID, "failed", 3, "MODEL_RECOVERY_REQUIRED")
+				if _, e := os.Lstat(stage); !os.IsNotExist(e) {
+					t.Fatal("the stopped attempt's stage survived", e)
+				}
+				if x.count(t, "model.import_verification_started", v.ID) != 0 || x.count(t, "model.import_failed", v.ID) != 1 {
+					t.Fatal("exhausted import audits")
+				}
+			case "empty_stage_keeps_the_attempt":
+				v := workerQueued(t, x, "verifying", 1)
+				if e := os.MkdirAll(filepath.Join(x.root, "imports", v.ID, "stage-1"), 0700); e != nil {
+					t.Fatal(e)
+				}
+				workerResult(t, x, "MODEL_IMPORT_INCOMPLETE")
+				workerState(t, x, v.ID, "failed", 1, "MODEL_IMPORT_INCOMPLETE")
+				if x.count(t, "model.import_verification_started", v.ID) != 0 {
+					t.Fatal("an attempt that wrote nothing was spent")
 				}
 			case "cross_process_file_busy":
 				v := workerQueued(t, x, "queued", 0)
