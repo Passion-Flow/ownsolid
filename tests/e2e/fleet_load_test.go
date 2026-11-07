@@ -80,6 +80,16 @@ func logResources(t *testing.T, when string) {
 // loadSampleEvery is how often the run samples what control and PostgreSQL wait on.
 const loadSampleEvery = 5 * time.Second
 
+// loadSlowStatement is the duration from which PostgreSQL logs a statement during the load test.
+// It sits below the stalls that reach a heartbeat's p99, and far above the usual statement.
+const loadSlowStatement = "100ms"
+
+// A storm can log many statements: the run keeps the first of them, each cut to a readable length.
+const (
+	loadSlowLines      = 2000
+	loadSlowLineLength = 220
+)
+
 // pressureStalled reads the cumulative microseconds in the "some" line of a /proc/pressure
 // file: time in which at least one task on the host waited for that resource.
 func pressureStalled(text string) int64 {
@@ -226,6 +236,11 @@ func TestFleetLoad(t *testing.T) {
 	})
 	targets := fleet.targets()
 	fleet.start(t, time.Duration(loadSteadyFrom)*time.Second)
+	// Slow statements place a stall to the millisecond, which five second samples cannot. Their
+	// parameters stay out of the log.
+	e.sql(t, "ALTER SYSTEM SET log_min_duration_statement='"+loadSlowStatement+"'")
+	e.sql(t, "ALTER SYSTEM SET log_parameter_max_length=0")
+	e.sql(t, "SELECT pg_reload_conf()")
 	stopSampling := make(chan struct{})
 	samples := e.sampleLoad(fleet.started, stopSampling)
 
@@ -289,13 +304,17 @@ func TestFleetLoad(t *testing.T) {
 	close(stopSampling)
 	t.Logf("samples every %s:\n%s", loadSampleEvery, strings.Join(<-samples, "\n"))
 	if output, err := e.compose(t, "logs", "--no-color", "postgres"); err == nil {
-		var checkpoints []string
+		var checkpoints, slow []string
 		for _, line := range strings.Split(output, "\n") {
-			if strings.Contains(line, "checkpoint") || strings.Contains(line, "automatic vacuum") {
+			switch {
+			case strings.Contains(line, "duration: "):
+				slow = append(slow, line[:min(len(line), loadSlowLineLength)])
+			case strings.Contains(line, "checkpoint") || strings.Contains(line, "automatic vacuum"):
 				checkpoints = append(checkpoints, line)
 			}
 		}
 		t.Logf("PostgreSQL checkpoints and vacuums:\n%s", strings.Join(checkpoints, "\n"))
+		t.Logf("PostgreSQL statements of at least %s, %d in all:\n%s", loadSlowStatement, len(slow), strings.Join(slow[:min(len(slow), loadSlowLines)], "\n"))
 	}
 	final := e.sampleDatabase(t)
 	logRates(t, "whole run", before, final)
