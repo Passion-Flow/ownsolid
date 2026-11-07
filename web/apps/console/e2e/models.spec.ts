@@ -149,7 +149,8 @@ test('continues after the tab closed, from what the server holds', async ({ page
   await expect(page.getByText('That file is a different size')).toBeVisible();
   await page.getByTestId('model-bundle-resume').setInputFiles(bundle());
   await expect(page.getByText('This is not the file this import began with')).toBeVisible();
-  expect(stalledImport.uploaded_bytes).toBe(8);
+  expect(control.modelImports[0]?.uploaded_bytes).toBe(8);
+  await expect(page.getByTestId('model-bundle-resume')).toBeAttached();
 });
 
 test('continues with the same file', async ({ page }) => {

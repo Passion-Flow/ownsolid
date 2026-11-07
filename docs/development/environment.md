@@ -265,6 +265,19 @@ it, and the schema refuses to delete connectors. Keep the keyring with the insta
 `live-shortcuts.spec.ts` needs only the variables above. It uses two browsers and two sign-ins per run, and
 leaves the shortcuts on.
 
+`live-models.spec.ts` imports the real approved model from the console: it uploads the bundle,
+closes the tab part way, refuses a different file of the same size, continues with the right one and
+waits for the server's verification, then a second test retires the model. Fetch the files named in
+`api/agent/v1/model-catalog.json` at its revision, check each against its hash, and make the bundle
+with the command the import page shows. The impostor is any file of the bundle's size, such as
+`truncate -s <size> impostor.tar`. The installation needs about twice the bundle's size free under
+`data/models`; on a full disk, mount a tmpfs there before `apply`.
+
+```sh
+OWNSOLID_LIVE_MODEL_BUNDLE=<bundle.tar> OWNSOLID_LIVE_MODEL_IMPOSTOR=<impostor.tar> \
+  <the variables above> pnpm exec playwright test live-models
+```
+
 `live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
 to the license history. It needs test files signed with the key the installation trusts.
 `OWNSOLID_LIVE_LICENSE_COMMAND` reads the license state as JSON on standard input and prints a JSON

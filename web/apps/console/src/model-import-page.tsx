@@ -289,6 +289,22 @@ export function ModelImportPage() {
     queryKey: modelKeys.catalog,
     queryFn: ({ signal }) => getModelCatalog({ signal }),
   });
+  if (!catalog.data) {
+    return (
+      <ResourceUnavailable
+        pending={catalog.isPending}
+        error={catalog.error}
+        onRetry={() => {
+          void catalog.refetch();
+        }}
+        backTo="/library"
+        backLabel={t('models.page.back')}
+        missingTitle={t('models.import.title')}
+        missingDetail={t('models.import.detail')}
+        failedTitle={t('models.import.failed')}
+      />
+    );
+  }
   return (
     <>
       <ResourceHeader
@@ -299,22 +315,7 @@ export function ModelImportPage() {
         status={null}
         actions={null}
       />
-      {catalog.data ? (
-        <ImportForm catalog={catalog.data} />
-      ) : (
-        <ResourceUnavailable
-          pending={catalog.isPending}
-          error={catalog.error}
-          onRetry={() => {
-            void catalog.refetch();
-          }}
-          backTo="/library"
-          backLabel={t('models.page.back')}
-          missingTitle={t('models.import.title')}
-          missingDetail={t('models.import.detail')}
-          failedTitle={t('models.import.failed')}
-        />
-      )}
+      <ImportForm catalog={catalog.data} />
     </>
   );
 }
@@ -449,6 +450,9 @@ function Loaded({
   });
   const stopping = item.error_code === cancellationPending;
   const sending = transfer?.state === 'sending';
+  // A refusal that will not pass needs another file; one that may pass offers Try again instead.
+  const stuck =
+    transfer?.state === 'failed' && !(isProblem(transfer.problem) && transfer.problem.retryable);
   const state = importStates[item.state];
   const [upload, verification, ready] = stepStates(item);
   const failure = item.state === 'failed' && item.error_code ? item.error_code : null;
@@ -489,7 +493,7 @@ function Loaded({
             {transfer?.state === 'failed' && isProblem(transfer.problem) ? (
               <ProblemNotice problem={transfer.problem} onRetry={transfer.retry} />
             ) : null}
-            {!sending && transfer?.state !== 'failed' ? (
+            {transfer === undefined || stuck ? (
               <Resume
                 item={item}
                 onChoose={resume}
