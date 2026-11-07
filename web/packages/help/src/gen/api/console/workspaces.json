@@ -1,0 +1,879 @@
+{
+ "title": "ownsolid Workspaces API",
+ "operations": [
+  {
+   "id": "listAdminWorkspaces",
+   "method": "get",
+   "path": "/api/v1/admin/workspaces",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "name": "q",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+     },
+     "description": "Only workspaces with this text anywhere in the name, in any case."
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkspaceListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "createWorkspace",
+   "method": "post",
+   "path": "/api/v1/admin/workspaces",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "CreateWorkspace"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "WorkspaceResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "WORKSPACE_EXISTS",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "LICENSE_STORED_STATE_INVALID"
+    ]
+   }
+  },
+  {
+   "id": "getAdminWorkspace",
+   "method": "get",
+   "path": "/api/v1/admin/workspaces/{workspace_id}",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkspaceResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "updateAdminWorkspace",
+   "method": "patch",
+   "path": "/api/v1/admin/workspaces/{workspace_id}",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "UpdateWorkspace"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "WorkspaceResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "WORKSPACE_EXISTS",
+     "VERSION_CONFLICT",
+     "DEFAULT_WORKSPACE_PROTECTED",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "LICENSE_STORED_STATE_INVALID"
+    ]
+   }
+  },
+  {
+   "id": "listAdminMembers",
+   "method": "get",
+   "path": "/api/v1/admin/workspaces/{workspace_id}/members",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MembershipListResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "addAdminMember",
+   "method": "post",
+   "path": "/api/v1/admin/workspaces/{workspace_id}/members",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "AddMember"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "MembershipResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "MEMBERSHIP_EXISTS",
+     "VERSION_CONFLICT",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "LICENSE_STORED_STATE_INVALID"
+    ]
+   }
+  },
+  {
+   "id": "updateAdminMember",
+   "method": "patch",
+   "path": "/api/v1/admin/workspaces/{workspace_id}/members/{user_id}",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "UpdateMember"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MembershipResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "VERSION_CONFLICT",
+     "LAST_WORKSPACE_OWNER",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "LICENSE_STORED_STATE_INVALID"
+    ]
+   }
+  },
+  {
+   "id": "removeAdminMember",
+   "method": "delete",
+   "path": "/api/v1/admin/workspaces/{workspace_id}/members/{user_id}",
+   "parameters": [
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    },
+    {
+     "required": false,
+     "schema": {}
+    }
+   ],
+   "body": {
+    "$ref": "RemoveMember"
+   },
+   "responses": [
+    {
+     "status": "204",
+     "schema": null
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "VERSION_CONFLICT",
+     "LAST_WORKSPACE_OWNER",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "LICENSE_STORED_STATE_INVALID"
+    ]
+   }
+  },
+  {
+   "id": "getAdminWorkspaceOperation",
+   "method": "get",
+   "path": "/api/v1/admin/workspaces/operations/{request_id}",
+   "parameters": [
+    {
+     "name": "request_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "OperationReceiptResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "AddMember": {
+   "type": "object",
+   "required": [
+    "email",
+    "role"
+   ],
+   "properties": {
+    "email": {
+     "type": "string",
+     "maxLength": 320
+    },
+    "role": {
+     "type": "string",
+     "enum": [
+      "owner",
+      "member",
+      "viewer"
+     ]
+    }
+   }
+  },
+  "CreateWorkspace": {
+   "type": "object",
+   "required": [
+    "name",
+    "owner_user_id"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 400
+    },
+    "owner_user_id": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    }
+   }
+  },
+  "Membership": {
+   "type": "object",
+   "required": [
+    "user_id",
+    "email",
+    "display_name",
+    "user_status",
+    "role",
+    "version",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "user_id": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    },
+    "email": {
+     "type": "string",
+     "maxLength": 254
+    },
+    "display_name": {
+     "type": "string",
+     "maxLength": 100
+    },
+    "user_status": {
+     "type": "string",
+     "enum": [
+      "active",
+      "disabled"
+     ]
+    },
+    "role": {
+     "type": "string",
+     "enum": [
+      "owner",
+      "member",
+      "viewer"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "MembershipListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items",
+      "next_cursor"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 100,
+       "items": {
+        "$ref": "Membership"
+       }
+      },
+      "next_cursor": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "maxLength": 512
+      }
+     }
+    }
+   }
+  },
+  "MembershipResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Membership"
+    }
+   }
+  },
+  "OperationEvent": {
+   "type": "object",
+   "required": [
+    "action",
+    "workspace_id",
+    "target_type",
+    "target_id"
+   ],
+   "properties": {
+    "action": {
+     "type": "string",
+     "enum": [
+      "workspace.created",
+      "workspace.updated",
+      "workspace.archived",
+      "workspace.restored",
+      "workspace.member_added",
+      "workspace.member_updated",
+      "workspace.member_removed",
+      "workspace.note_created",
+      "workspace.note_updated",
+      "workspace.note_deleted"
+     ]
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    },
+    "target_type": {
+     "type": "string",
+     "enum": [
+      "workspace",
+      "workspace_membership",
+      "workspace_note"
+     ]
+    },
+    "target_id": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    }
+   }
+  },
+  "OperationReceipt": {
+   "type": "object",
+   "required": [
+    "request_id",
+    "state",
+    "event"
+   ],
+   "properties": {
+    "request_id": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "committed",
+      "unconfirmed"
+     ]
+    },
+    "event": {
+     "anyOf": [
+      {
+       "$ref": "OperationEvent"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "allOf": [
+    {},
+    {}
+   ]
+  },
+  "OperationReceiptResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "OperationReceipt"
+    }
+   }
+  },
+  "RemoveMember": {
+   "type": "object",
+   "required": [
+    "version",
+    "reason"
+   ],
+   "properties": {
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "description": "Nonblank UTF-8 without NUL; at most 500 code points.",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "UpdateMember": {
+   "type": "object",
+   "required": [
+    "role",
+    "version",
+    "reason"
+   ],
+   "properties": {
+    "role": {
+     "type": "string",
+     "enum": [
+      "owner",
+      "member",
+      "viewer"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "description": "Nonblank UTF-8 without NUL; at most 500 code points.",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "UpdateWorkspace": {
+   "type": "object",
+   "required": [
+    "name",
+    "status",
+    "version",
+    "reason"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 400
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "active",
+      "disabled"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "description": "Nonblank UTF-8 without NUL; at most 500 code points.",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "Workspace": {
+   "type": "object",
+   "required": [
+    "id",
+    "tenant_id",
+    "name",
+    "status",
+    "version",
+    "is_default",
+    "role",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    },
+    "tenant_id": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "active",
+      "disabled"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "is_default": {
+     "type": "boolean"
+    },
+    "role": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "owner",
+      "member",
+      "viewer",
+      null
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "WorkspaceListResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "type": "object",
+     "required": [
+      "items",
+      "next_cursor"
+     ],
+     "properties": {
+      "items": {
+       "type": "array",
+       "maxItems": 100,
+       "items": {
+        "$ref": "Workspace"
+       }
+      },
+      "next_cursor": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "maxLength": 512
+      }
+     }
+    }
+   }
+  },
+  "WorkspaceResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Workspace"
+    }
+   }
+  }
+ }
+}

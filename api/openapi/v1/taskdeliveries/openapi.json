@@ -14,6 +14,9 @@
     "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries": {
       "get": {
         "operationId": "adminListTaskDeliveries",
+        "x-audiences": [
+          "admin"
+        ],
         "parameters": [
           {
             "name": "node_id",
@@ -185,6 +188,9 @@
     "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}": {
       "get": {
         "operationId": "adminReadTaskDelivery",
+        "x-audiences": [
+          "admin"
+        ],
         "parameters": [
           {
             "name": "node_id",
@@ -345,6 +351,9 @@
     "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}/dead-letters": {
       "get": {
         "operationId": "adminReadTaskDeadLetters",
+        "x-audiences": [
+          "admin"
+        ],
         "parameters": [
           {
             "name": "node_id",
@@ -525,6 +534,9 @@
     "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}/retry": {
       "post": {
         "operationId": "adminRetryTaskDelivery",
+        "x-audiences": [
+          "admin"
+        ],
         "description": "Current Admin, current task scope, exact dead generation, reason and immutable replay receipt. Creates no physical task execution. Requires root origin/CSRF/License middleware.",
         "parameters": [
           {
@@ -705,6 +717,9 @@
     "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries": {
       "get": {
         "operationId": "portalListTaskDeliveries",
+        "x-audiences": [
+          "portal"
+        ],
         "parameters": [
           {
             "name": "node_id",
@@ -876,6 +891,9 @@
     "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries/{event_id}": {
       "get": {
         "operationId": "portalReadTaskDelivery",
+        "x-audiences": [
+          "portal"
+        ],
         "parameters": [
           {
             "name": "node_id",
@@ -1036,6 +1054,9 @@
     "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries/{event_id}/dead-letters": {
       "get": {
         "operationId": "portalReadTaskDeadLetters",
+        "x-audiences": [
+          "portal"
+        ],
         "parameters": [
           {
             "name": "node_id",
@@ -1216,6 +1237,9 @@
     "/sites/{site_id}/cells/{cell_id}/admin/task-delivery-quarantine": {
       "get": {
         "operationId": "adminReadTaskDeliveryQuarantine",
+        "x-audiences": [
+          "admin"
+        ],
         "parameters": [
           {
             "name": "limit",

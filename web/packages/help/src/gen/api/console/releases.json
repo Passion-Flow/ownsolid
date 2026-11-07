@@ -1,0 +1,508 @@
+{
+ "title": "Admin installation release view",
+ "operations": [
+  {
+   "id": "readReleaseCurrent",
+   "method": "get",
+   "path": "/api/v1/admin/releases/current",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Current"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "readReleaseHistory",
+   "method": "get",
+   "path": "/api/v1/admin/releases/history",
+   "parameters": [
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+     },
+     "description": "Opaque original scope/head-bound cursor; a new head invalidates prior pages."
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "History"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "Current": {
+   "type": "object",
+   "required": [
+    "snapshot",
+    "database",
+    "applied_schema",
+    "locales",
+    "live_health"
+   ],
+   "properties": {
+    "snapshot": {
+     "$ref": "Snapshot"
+    },
+    "database": {
+     "enum": [
+      "postgresql",
+      "mysql"
+     ]
+    },
+    "applied_schema": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "locales": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "locale",
+       "package_sha256",
+       "translation_state",
+       "google_translated_complete"
+      ],
+      "properties": {
+       "locale": {
+        "type": "string"
+       },
+       "package_sha256": {
+        "type": "string"
+       },
+       "translation_state": {
+        "type": "string"
+       },
+       "google_translated_complete": {
+        "type": "boolean"
+       }
+      }
+     }
+    },
+    "live_health": {
+     "const": false
+    }
+   }
+  },
+  "Event": {
+   "type": "object",
+   "required": [
+    "sequence",
+    "operation_id",
+    "action",
+    "outcome",
+    "code",
+    "time"
+   ],
+   "properties": {
+    "sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "operation_id": {
+     "type": "string"
+    },
+    "action": {
+     "type": "string"
+    },
+    "outcome": {
+     "type": "string"
+    },
+    "code": {
+     "type": "string"
+    },
+    "time": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "History": {
+   "type": "object",
+   "required": [
+    "scope_id",
+    "head_sha256",
+    "sequence",
+    "first_sequence",
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "scope_id": {
+     "type": "string"
+    },
+    "head_sha256": {
+     "type": "string"
+    },
+    "sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "first_sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Event"
+     }
+    },
+    "next_cursor": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "InstalledRelease": {
+   "type": "object",
+   "description": "The installed release that last completed. A record, not live health.",
+   "required": [
+    "release_id",
+    "profile",
+    "archive_sha256",
+    "manifest_sha256",
+    "source_commit",
+    "schema_version",
+    "activation_sequence"
+   ],
+   "properties": {
+    "release_id": {
+     "type": "string"
+    },
+    "profile": {
+     "const": "m17-postgresql-cpu-linux-amd64"
+    },
+    "archive_sha256": {
+     "type": "string"
+    },
+    "manifest_sha256": {
+     "type": "string"
+    },
+    "source_commit": {
+     "type": "string"
+    },
+    "schema_version": {
+     "const": 22
+    },
+    "activation_sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "KubernetesBinding": {
+   "type": "object",
+   "required": [
+    "index_format",
+    "application_profile",
+    "schema_version",
+    "prepared_plan_sha256",
+    "last_source"
+   ],
+   "properties": {
+    "index_format": {
+     "const": "projectone.kubernetes-operation-index.v1"
+    },
+    "application_profile": {
+     "const": "mvp-postgresql-cpu-v1"
+    },
+    "schema_version": {
+     "const": 29
+    },
+    "prepared_plan_sha256": {
+     "type": "string"
+    },
+    "last_source": {
+     "$ref": "KubernetesSource"
+    },
+    "installed_release": {
+     "$ref": "KubernetesInstalledRelease"
+    }
+   }
+  },
+  "KubernetesInstalledRelease": {
+   "type": "object",
+   "description": "The last verified serving completion on record. A record, not live health.",
+   "required": [
+    "release_id",
+    "profile",
+    "archive_sha256",
+    "manifest_sha256",
+    "source_commit",
+    "schema_version",
+    "activation_sequence"
+   ],
+   "properties": {
+    "release_id": {
+     "type": "string"
+    },
+    "profile": {
+     "type": "string"
+    },
+    "archive_sha256": {
+     "type": "string"
+    },
+    "manifest_sha256": {
+     "type": "string"
+    },
+    "source_commit": {
+     "type": "string"
+    },
+    "schema_version": {
+     "const": 29
+    },
+    "activation_sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "KubernetesSnapshot": {
+   "type": "object",
+   "required": [
+    "format",
+    "scope_id",
+    "release_id",
+    "profile",
+    "archive_sha256",
+    "manifest_sha256",
+    "configuration_sha256",
+    "sequence",
+    "head_sha256",
+    "journal_bytes",
+    "recorded_at",
+    "first_sequence",
+    "events",
+    "kubernetes"
+   ],
+   "properties": {
+    "format": {
+     "const": "projectone.kubernetes-release-view.v1"
+    },
+    "scope_id": {
+     "type": "string"
+    },
+    "release_id": {
+     "type": "string"
+    },
+    "profile": {
+     "type": "string"
+    },
+    "archive_sha256": {
+     "type": "string"
+    },
+    "manifest_sha256": {
+     "type": "string"
+    },
+    "configuration_sha256": {
+     "type": "string"
+    },
+    "sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "head_sha256": {
+     "type": "string"
+    },
+    "journal_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "recorded_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "first_sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "events": {
+     "type": "array",
+     "maxItems": 256,
+     "items": {
+      "$ref": "Event"
+     }
+    },
+    "kubernetes": {
+     "$ref": "KubernetesBinding"
+    }
+   }
+  },
+  "KubernetesSource": {
+   "type": "object",
+   "description": "Actual last original event reference. source.sequence cannot exceed containing snapshot.sequence; operation_id and kind + underscore + event_kind must match the last retained event. Index order never sorts timestamps.",
+   "required": [
+    "kind",
+    "event_kind",
+    "operation_id",
+    "plan_sha256",
+    "sequence",
+    "sha256"
+   ],
+   "properties": {
+    "kind": {
+     "enum": [
+      "preparation",
+      "installation",
+      "maintenance",
+      "drain",
+      "schema",
+      "postgres_backup",
+      "postgres_restore",
+      "restore_observer",
+      "restored_readiness",
+      "restored_serving",
+      "upgrade_jobs",
+      "upgrade_serving",
+      "uninstall"
+     ]
+    },
+    "event_kind": {
+     "type": "string"
+    },
+    "operation_id": {
+     "type": "string"
+    },
+    "plan_sha256": {
+     "type": "string"
+    },
+    "sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "sha256": {
+     "type": "string"
+    }
+   }
+  },
+  "LegacySnapshot": {
+   "type": "object",
+   "required": [
+    "format",
+    "scope_id",
+    "release_id",
+    "profile",
+    "archive_sha256",
+    "manifest_sha256",
+    "configuration_sha256",
+    "sequence",
+    "head_sha256",
+    "journal_bytes",
+    "recorded_at",
+    "first_sequence",
+    "events"
+   ],
+   "properties": {
+    "format": {
+     "const": "projectone.release-view.v1"
+    },
+    "scope_id": {
+     "type": "string"
+    },
+    "release_id": {
+     "type": "string"
+    },
+    "profile": {
+     "type": "string"
+    },
+    "archive_sha256": {
+     "type": "string"
+    },
+    "manifest_sha256": {
+     "type": "string"
+    },
+    "configuration_sha256": {
+     "type": "string"
+    },
+    "sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "head_sha256": {
+     "type": "string"
+    },
+    "journal_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "recorded_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "first_sequence": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "events": {
+     "type": "array",
+     "maxItems": 256,
+     "items": {
+      "$ref": "Event"
+     }
+    },
+    "installed_release": {
+     "$ref": "InstalledRelease"
+    }
+   }
+  },
+  "Snapshot": {
+   "oneOf": [
+    {
+     "$ref": "LegacySnapshot"
+    },
+    {
+     "$ref": "KubernetesSnapshot"
+    }
+   ]
+  }
+ }
+}

@@ -72,7 +72,7 @@ export interface components {
             items: components["schemas"]["Event"][];
             next_cursor: string | null;
         };
-        /** @description Completed installed M17 release; original Snapshot bindings remain immutable and this is not live health. */
+        /** @description The installed release that last completed. A record, not live health. */
         InstalledRelease: {
             release_id: string;
             /** @constant */
@@ -120,7 +120,7 @@ export interface components {
             events: components["schemas"]["Event"][];
             kubernetes: components["schemas"]["KubernetesBinding"];
         };
-        /** @description Recorded last serving_verified completion from one actual ordered K18 source; never live health. */
+        /** @description The last verified serving completion on record. A record, not live health. */
         KubernetesInstalledRelease: {
             release_id: string;
             profile: string;

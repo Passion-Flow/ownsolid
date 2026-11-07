@@ -8,6 +8,9 @@
     "/api/v1/admin/workspaces": {
       "get": {
         "operationId": "listAdminWorkspaces",
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "listAdminWorkspaces",
         "security": [
           {
@@ -147,6 +150,9 @@
       },
       "post": {
         "operationId": "createWorkspace",
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "createWorkspace",
         "security": [
           {
@@ -294,6 +300,9 @@
     "/api/v1/admin/workspaces/{workspace_id}": {
       "get": {
         "operationId": "getAdminWorkspace",
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "getAdminWorkspace",
         "security": [
           {
@@ -420,6 +429,9 @@
       },
       "patch": {
         "operationId": "updateAdminWorkspace",
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "updateAdminWorkspace",
         "security": [
           {
@@ -572,6 +584,9 @@
     "/api/v1/admin/workspaces/{workspace_id}/members": {
       "get": {
         "operationId": "listAdminMembers",
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "listAdminMembers",
         "security": [
           {
@@ -704,6 +719,9 @@
       },
       "post": {
         "operationId": "addAdminMember",
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "addAdminMember",
         "security": [
           {
@@ -855,6 +873,9 @@
     "/api/v1/admin/workspaces/{workspace_id}/members/{user_id}": {
       "patch": {
         "operationId": "updateAdminMember",
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "updateAdminMember",
         "security": [
           {
@@ -1007,6 +1028,9 @@
       },
       "delete": {
         "operationId": "removeAdminMember",
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "removeAdminMember",
         "security": [
           {
@@ -1154,6 +1178,9 @@
     "/api/v1/workspaces": {
       "get": {
         "operationId": "listPortalWorkspaces",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "listPortalWorkspaces",
         "security": [
           {
@@ -1275,6 +1302,9 @@
     "/api/v1/workspaces/{workspace_id}": {
       "get": {
         "operationId": "getPortalWorkspace",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "getPortalWorkspace",
         "security": [
           {
@@ -1381,6 +1411,9 @@
       },
       "patch": {
         "operationId": "updatePortalWorkspace",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "updatePortalWorkspace",
         "security": [
           {
@@ -1502,6 +1535,9 @@
     "/api/v1/workspaces/{workspace_id}/members": {
       "get": {
         "operationId": "listPortalMembers",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "listPortalMembers",
         "security": [
           {
@@ -1614,6 +1650,9 @@
       },
       "post": {
         "operationId": "addPortalMember",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "addPortalMember",
         "security": [
           {
@@ -1735,6 +1774,9 @@
     "/api/v1/workspaces/{workspace_id}/members/{user_id}": {
       "patch": {
         "operationId": "updatePortalMember",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "updatePortalMember",
         "security": [
           {
@@ -1857,6 +1899,9 @@
       },
       "delete": {
         "operationId": "removePortalMember",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "removePortalMember",
         "security": [
           {
@@ -1974,6 +2019,9 @@
     "/api/v1/workspaces/{workspace_id}/notes": {
       "get": {
         "operationId": "listNotes",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "listNotes",
         "security": [
           {
@@ -2086,6 +2134,9 @@
       },
       "post": {
         "operationId": "createNote",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "createNote",
         "security": [
           {
@@ -2207,6 +2258,9 @@
     "/api/v1/workspaces/{workspace_id}/notes/{note_id}": {
       "get": {
         "operationId": "getNote",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "getNote",
         "security": [
           {
@@ -2316,6 +2370,9 @@
       },
       "patch": {
         "operationId": "updateNote",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "updateNote",
         "security": [
           {
@@ -2438,6 +2495,9 @@
       },
       "delete": {
         "operationId": "deleteNote",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "deleteNote",
         "security": [
           {
@@ -2555,6 +2615,9 @@
     "/api/v1/workspaces/{workspace_id}/notes/{note_id}/export": {
       "get": {
         "operationId": "exportNote",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "exportNote",
         "security": [
           {
@@ -2666,6 +2729,9 @@
     "/api/v1/workspaces/operations/{request_id}": {
       "get": {
         "operationId": "getPortalWorkspaceOperation",
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "Confirm the current actor own atomic write; absence remains unconfirmed. Never resubmit automatically.",
         "security": [
           {
@@ -2725,6 +2791,9 @@
     "/api/v1/admin/workspaces/operations/{request_id}": {
       "get": {
         "operationId": "getAdminWorkspaceOperation",
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "Confirm the current actor own atomic write; absence remains unconfirmed. Never resubmit automatically.",
         "security": [
           {

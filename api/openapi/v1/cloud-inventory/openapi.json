@@ -48,6 +48,9 @@
         }
       ],
       "get": {
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "Read retained AWS observations and authorized choices",
         "parameters": [
           {
@@ -138,6 +141,9 @@
         }
       ],
       "post": {
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "Import one complete authorized account/region snapshot",
         "parameters": [
           {
@@ -245,6 +251,9 @@
         }
       ],
       "get": {
+        "x-audiences": [
+          "portal"
+        ],
         "summary": "Reconcile the current actor’s immutable import receipt",
         "responses": {
           "200": {
@@ -308,6 +317,9 @@
         }
       ],
       "get": {
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "Read retained AWS observations and authorized choices",
         "parameters": [
           {
@@ -398,6 +410,9 @@
         }
       ],
       "post": {
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "Import one complete authorized account/region snapshot",
         "parameters": [
           {
@@ -505,6 +520,9 @@
         }
       ],
       "get": {
+        "x-audiences": [
+          "admin"
+        ],
         "summary": "Reconcile the current actor’s immutable import receipt",
         "responses": {
           "200": {

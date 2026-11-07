@@ -48,10 +48,10 @@ the product's own navigation, and nothing about it needs the internet, including
   declared error codes with the explanation the error catalog already gives. The contract itself
   can be saved as a file, filtered to the operations this entrance serves. It is a reference, not a
   console: the page sends nothing to the API.
-- **What it leaves out, and why.** 122 inherited operations declare no `x-audiences`, so no
-  entrance can claim them, and 257 of the 344 listed declare no `x-error-codes`; the reference says
-  so on each such operation instead of guessing. UX-131 declares both for every operation. The
-  inherited knowledge contract is never listed: knowledge belongs to DeepParser (AGENTS.md
+- **What it leaves out, and why.** Every operation declares its entrance, and the generator fails
+  on one that does not. Most inherited operations declare no `x-error-codes`; the reference says
+  so on each such operation instead of guessing, until UX-131 declares them. The inherited
+  knowledge contract is never listed: knowledge belongs to DeepParser (AGENTS.md
   section 1). Operation IDs repeat across contracts, so an operation's anchor is
   `<contract>.<operationId>`.
 

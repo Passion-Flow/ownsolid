@@ -13,6 +13,10 @@
     "/api/v1/localization/catalog": {
       "get": {
         "operationId": "GetLocalizationCatalog",
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
         "security": [],
         "responses": {
           "200": {
@@ -41,6 +45,10 @@
     "/api/v1/localization/packages/{sha256}": {
       "get": {
         "operationId": "GetLocalizationPackage",
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
         "security": [],
         "parameters": [
           {
@@ -92,6 +100,10 @@
     "/api/v1/localization/fonts/{sha256}": {
       "get": {
         "operationId": "GetLocalizationFont",
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
         "security": [],
         "parameters": [
           {
@@ -143,6 +155,10 @@
     "/api/v1/localization/assets/{sha256}": {
       "get": {
         "operationId": "GetLocalizationAsset",
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
         "security": [],
         "parameters": [
           {

@@ -13,6 +13,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware": {
       "get": {
         "operationId": "portalListMiddleware",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -64,6 +67,9 @@
       },
       "post": {
         "operationId": "portalRegisterMiddleware",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -158,6 +164,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/profiles": {
       "get": {
         "operationId": "portalMiddlewareProfiles",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -222,6 +231,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}": {
       "get": {
         "operationId": "portalReadMiddleware",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -274,6 +286,9 @@
       },
       "patch": {
         "operationId": "portalChangeMiddleware",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -378,6 +393,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}/operations": {
       "get": {
         "operationId": "portalMiddlewareHistory",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -439,6 +457,9 @@
       },
       "post": {
         "operationId": "portalEnqueueMiddleware",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -543,6 +564,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}": {
       "get": {
         "operationId": "portalMiddlewareRegistrationIntent",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -617,6 +641,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}": {
       "get": {
         "operationId": "portalMiddlewareOperationIntent",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -691,6 +718,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operations/{operation_id}": {
       "get": {
         "operationId": "portalMiddlewareOperation",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalCookie": []
@@ -765,6 +795,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware": {
       "get": {
         "operationId": "adminListMiddleware",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []
@@ -816,6 +849,9 @@
       },
       "post": {
         "operationId": "adminRegisterMiddleware",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []
@@ -910,6 +946,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/profiles": {
       "get": {
         "operationId": "adminMiddlewareProfiles",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []
@@ -974,6 +1013,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}": {
       "get": {
         "operationId": "adminReadMiddleware",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []
@@ -1026,6 +1068,9 @@
       },
       "patch": {
         "operationId": "adminChangeMiddleware",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []
@@ -1130,6 +1175,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}/operations": {
       "get": {
         "operationId": "adminMiddlewareHistory",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []
@@ -1191,6 +1239,9 @@
       },
       "post": {
         "operationId": "adminEnqueueMiddleware",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []
@@ -1295,6 +1346,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}": {
       "get": {
         "operationId": "adminMiddlewareRegistrationIntent",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []
@@ -1369,6 +1423,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}": {
       "get": {
         "operationId": "adminMiddlewareOperationIntent",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []
@@ -1443,6 +1500,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operations/{operation_id}": {
       "get": {
         "operationId": "adminMiddlewareOperation",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []

@@ -14,6 +14,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways": {
       "get": {
         "operationId": "adminListGatewayInstance",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -79,6 +82,9 @@
       },
       "post": {
         "operationId": "adminProvisionGateway",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -199,6 +205,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}": {
       "get": {
         "operationId": "adminGetGatewayInstance",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -279,6 +288,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases": {
       "get": {
         "operationId": "adminListModelAlias",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -344,6 +356,9 @@
       },
       "post": {
         "operationId": "adminPublishAlias",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -454,6 +469,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}": {
       "get": {
         "operationId": "adminGetModelAlias",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -534,6 +552,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys": {
       "get": {
         "operationId": "adminListDistributionKey",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -599,6 +620,9 @@
       },
       "post": {
         "operationId": "adminMintDistributionKey",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -719,6 +743,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}": {
       "get": {
         "operationId": "adminGetDistributionKey",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -799,6 +826,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests": {
       "get": {
         "operationId": "adminListGatewayRequest",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -886,6 +916,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{resource_id}": {
       "get": {
         "operationId": "adminGetGatewayRequest",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -966,6 +999,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}/revoke": {
       "post": {
         "operationId": "adminrevokeDistributionKey",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -1076,6 +1112,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}/revoke": {
       "post": {
         "operationId": "adminrevokeGatewayInstance",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -1186,6 +1225,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/disable": {
       "post": {
         "operationId": "admindisableModelAlias",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -1296,6 +1338,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/cutovers": {
       "post": {
         "operationId": "adminCutoverAlias",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -1419,6 +1464,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/targets": {
       "get": {
         "operationId": "adminAliasTargets",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -1519,6 +1567,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries": {
       "post": {
         "operationId": "adminCreateGatewayRecovery",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -1642,6 +1693,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}": {
       "get": {
         "operationId": "adminGetGatewayRecovery",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -1735,6 +1789,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/fence": {
       "post": {
         "operationId": "adminAcceptGatewayFence",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -1858,6 +1915,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/confirm": {
       "post": {
         "operationId": "adminConfirmGatewayRecovery",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminSession": []
@@ -1981,6 +2041,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases": {
       "get": {
         "operationId": "portalListModelAlias",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalSession": []
@@ -2068,6 +2131,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id}": {
       "get": {
         "operationId": "portalGetModelAlias",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalSession": []
@@ -2148,6 +2214,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys": {
       "get": {
         "operationId": "portalListDistributionKey",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalSession": []
@@ -2213,6 +2282,9 @@
       },
       "post": {
         "operationId": "portalMintDistributionKey",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalSession": []
@@ -2333,6 +2405,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}": {
       "get": {
         "operationId": "portalGetDistributionKey",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalSession": []
@@ -2413,6 +2488,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests": {
       "get": {
         "operationId": "portalListGatewayRequest",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalSession": []
@@ -2500,6 +2578,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests/{resource_id}": {
       "get": {
         "operationId": "portalGetGatewayRequest",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalSession": []
@@ -2580,6 +2661,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}/revoke": {
       "post": {
         "operationId": "portalrevokeDistributionKey",
+        "x-audiences": [
+          "portal"
+        ],
         "security": [
           {
             "portalSession": []
@@ -2690,6 +2774,9 @@
     "/gateway/v1/sites/{site_id}/cells/{cell_id}/instances/{gateway_id}/models": {
       "post": {
         "operationId": "gatewayModels",
+        "x-audiences": [
+          "gateway"
+        ],
         "security": [
           {
             "gatewayCredential": []
@@ -2767,6 +2854,9 @@
     "/gateway/v1/sites/{site_id}/cells/{cell_id}/instances/{gateway_id}/admissions": {
       "post": {
         "operationId": "gatewayAdmissions",
+        "x-audiences": [
+          "gateway"
+        ],
         "security": [
           {
             "gatewayCredential": []
@@ -2844,6 +2934,9 @@
     "/gateway/v1/sites/{site_id}/cells/{cell_id}/instances/{gateway_id}/outcomes": {
       "post": {
         "operationId": "gatewayOutcomes",
+        "x-audiences": [
+          "gateway"
+        ],
         "security": [
           {
             "gatewayCredential": []

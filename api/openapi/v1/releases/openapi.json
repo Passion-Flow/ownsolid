@@ -9,6 +9,9 @@
     "/api/v1/admin/releases/current": {
       "get": {
         "operationId": "readReleaseCurrent",
+        "x-audiences": [
+          "admin"
+        ],
         "description": "Current platform administrator only. No path/scope/tenant/limit selector. Dirty/missing projection never serves cached data.",
         "responses": {
           "200": {
@@ -51,6 +54,9 @@
     "/api/v1/admin/releases/history": {
       "get": {
         "operationId": "readReleaseHistory",
+        "x-audiences": [
+          "admin"
+        ],
         "description": "Current platform administrator only. No path/scope/tenant/limit selector. Dirty/missing projection never serves cached data.",
         "responses": {
           "200": {
@@ -256,7 +262,7 @@
       "InstalledRelease": {
         "type": "object",
         "additionalProperties": false,
-        "description": "Completed installed M17 release; original Snapshot bindings remain immutable and this is not live health.",
+        "description": "The installed release that last completed. A record, not live health.",
         "required": [
           "release_id",
           "profile",
@@ -460,7 +466,7 @@
       "KubernetesInstalledRelease": {
         "type": "object",
         "additionalProperties": false,
-        "description": "Recorded last serving_verified completion from one actual ordered K18 source; never live health.",
+        "description": "The last verified serving completion on record. A record, not live health.",
         "required": [
           "release_id",
           "profile",

@@ -1,0 +1,2435 @@
+{
+ "title": "ownsolid Distribution",
+ "operations": [
+  {
+   "id": "adminListGatewayInstance",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "GatewayInstancePageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminProvisionGateway",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "ProvisionGateway"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ProvisionedGatewayResponse"
+     }
+    },
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "ProvisionedGatewayResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetGatewayInstance",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "GatewayInstanceResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminListModelAlias",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ModelAliasPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminPublishAlias",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "PublishAlias"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ModelAliasResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetModelAlias",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ModelAliasResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminListDistributionKey",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DistributionKeyPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminMintDistributionKey",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "MintDistributionKey"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MintedDistributionKeyResponse"
+     }
+    },
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "MintedDistributionKeyResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetDistributionKey",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DistributionKeyResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminListGatewayRequest",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "GatewayRequestPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetGatewayRequest",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{resource_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "GatewayRequestResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminrevokeDistributionKey",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}/revoke",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "DistributionKeyResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminrevokeGatewayInstance",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}/revoke",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "GatewayInstanceResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "admindisableModelAlias",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/disable",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DisableAlias"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ModelAliasResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCutoverAlias",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/cutovers",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "AliasCutover"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "AliasCutoverResultResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminAliasTargets",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/targets",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "AliasTargetPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminCreateGatewayRecovery",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "request_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "GatewayRecoveryResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminGetGatewayRecovery",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "request_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "recovery_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "GatewayRecoveryResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminAcceptGatewayFence",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/fence",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "request_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "recovery_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "AcceptRecoveryFence"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "GatewayRecoveryResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminConfirmGatewayRecovery",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/confirm",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "request_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "recovery_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "ConfirmRecovery"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "GatewayRecoveryResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "AcceptRecoveryFence": {
+   "type": "object",
+   "required": [
+    "receipt",
+    "reason"
+   ],
+   "properties": {
+    "receipt": {
+     "$ref": "GatewayFenceReceipt"
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "ActualUsage": {
+   "type": "object",
+   "required": [
+    "prompt_tokens",
+    "completion_tokens",
+    "total_tokens"
+   ],
+   "properties": {
+    "prompt_tokens": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 65536
+    },
+    "completion_tokens": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 512
+    },
+    "total_tokens": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 65536
+    }
+   }
+  },
+  "AliasCutover": {
+   "type": "object",
+   "required": [
+    "action",
+    "expected_revision",
+    "deployment_id",
+    "deployment_revision",
+    "source_revision",
+    "reason"
+   ],
+   "properties": {
+    "action": {
+     "type": "string",
+     "enum": [
+      "pause",
+      "resume",
+      "retarget",
+      "rollback"
+     ]
+    },
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "deployment_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "deployment_revision": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 9007199254740991
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "source_revision": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 9007199254740991
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "AliasCutoverResult": {
+   "type": "object",
+   "required": [
+    "alias",
+    "applied_revision",
+    "replayed"
+   ],
+   "properties": {
+    "alias": {
+     "$ref": "ModelAlias"
+    },
+    "applied_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "replayed": {
+     "type": "boolean"
+    }
+   }
+  },
+  "AliasCutoverResultResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "AliasCutoverResult"
+    }
+   }
+  },
+  "AliasTarget": {
+   "type": "object",
+   "required": [
+    "source_revision",
+    "id",
+    "alias_id",
+    "revision",
+    "action",
+    "deployment_id",
+    "deployment_revision",
+    "model_id",
+    "model_kind",
+    "catalog_digest",
+    "serving_recipe_sha256",
+    "created_at"
+   ],
+   "properties": {
+    "source_revision": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 9007199254740991
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "alias_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "action": {
+     "type": "string",
+     "enum": [
+      "migration_current",
+      "published",
+      "disabled",
+      "paused",
+      "resumed",
+      "retargeted",
+      "rolled_back"
+     ]
+    },
+    "deployment_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "deployment_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "model_kind": {
+     "type": "string",
+     "enum": [
+      "approved_base",
+      "merged_lora"
+     ]
+    },
+    "catalog_digest": {
+     "type": "string"
+    },
+    "serving_recipe_sha256": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "AliasTargetPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "AliasTarget"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "AliasTargetPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "AliasTargetPage"
+    }
+   }
+  },
+  "ConfirmRecovery": {
+   "type": "object",
+   "required": [
+    "deployment_revision",
+    "reason"
+   ],
+   "properties": {
+    "deployment_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "DisableAlias": {
+   "type": "object",
+   "required": [
+    "expected_revision",
+    "reason"
+   ],
+   "properties": {
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "DistributionKey": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "alias_id",
+    "alias_name",
+    "label",
+    "prefix",
+    "created_by",
+    "state",
+    "created_at",
+    "expires_at",
+    "last_used_at",
+    "revoked_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "alias_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "alias_name": {
+     "type": "string"
+    },
+    "label": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "prefix": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "created_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "active",
+      "expired",
+      "revoked",
+      "invalidated",
+      "unavailable"
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "last_used_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "revoked_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DistributionKeyPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "DistributionKey"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "DistributionKeyPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DistributionKeyPage"
+    }
+   }
+  },
+  "DistributionKeyResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "DistributionKey"
+    }
+   }
+  },
+  "GatewayFenceReceipt": {
+   "type": "object",
+   "required": [
+    "schema_version",
+    "gateway_id",
+    "node_id",
+    "control_origin_sha256",
+    "challenge_id",
+    "state_fence_sha256",
+    "fenced_at_unix_milliseconds",
+    "checked_at_unix_milliseconds",
+    "exclusive_state_lock_confirmed",
+    "persistent_fence_confirmed",
+    "pending_outcomes",
+    "gateway_version"
+   ],
+   "properties": {
+    "schema_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "gateway_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "control_origin_sha256": {
+     "type": "string"
+    },
+    "challenge_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "state_fence_sha256": {
+     "type": "string"
+    },
+    "fenced_at_unix_milliseconds": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "checked_at_unix_milliseconds": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "exclusive_state_lock_confirmed": {
+     "type": "boolean",
+     "const": true
+    },
+    "persistent_fence_confirmed": {
+     "type": "boolean",
+     "const": true
+    },
+    "pending_outcomes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 65536
+    },
+    "gateway_version": {
+     "type": "string"
+    }
+   }
+  },
+  "GatewayInstance": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "node_id",
+    "name",
+    "client_origin",
+    "created_by",
+    "state",
+    "created_at",
+    "revoked_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "client_origin": {
+     "type": "string",
+     "format": "uri",
+     "description": "Canonical HTTPS origin only; advertised metadata, never an outbound control destination.",
+     "minLength": 9,
+     "maxLength": 2048
+    },
+    "created_by": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "active",
+      "revoked",
+      "invalidated"
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "revoked_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "GatewayInstancePage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "GatewayInstance"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "GatewayInstancePageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "GatewayInstancePage"
+    }
+   }
+  },
+  "GatewayInstanceResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "GatewayInstance"
+    }
+   }
+  },
+  "GatewayOutcome": {
+   "type": "object",
+   "required": [
+    "request_id",
+    "status",
+    "error_code",
+    "usage",
+    "elapsed_milliseconds",
+    "output_started"
+   ],
+   "properties": {
+    "request_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "succeeded",
+      "client_cancelled",
+      "upstream_timeout",
+      "upstream_error",
+      "invalid_response",
+      "gateway_shutdown",
+      "usage_storage_failed",
+      "incomplete"
+     ]
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "client_cancelled",
+        "context_length_exceeded",
+        "upstream_unavailable",
+        "upstream_timeout",
+        "upstream_response_invalid",
+        "gateway_unavailable",
+        "gateway_shutdown",
+        "usage_storage_unavailable",
+        "gateway_interrupted"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "usage": {
+     "anyOf": [
+      {
+       "$ref": "ActualUsage"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "elapsed_milliseconds": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3600000
+    },
+    "output_started": {
+     "type": "boolean"
+    }
+   }
+  },
+  "GatewayRecovery": {
+   "type": "object",
+   "required": [
+    "id",
+    "request_id",
+    "workspace_id",
+    "state",
+    "created_at",
+    "expires_at",
+    "fence_accepted_at",
+    "confirmed_at",
+    "fence_receipt"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "request_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "pending_fence",
+      "fenced",
+      "completed",
+      "expired",
+      "invalidated",
+      "superseded"
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "fence_accepted_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "confirmed_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "fence_receipt": {
+     "anyOf": [
+      {
+       "$ref": "GatewayFenceReceipt"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "GatewayRecoveryResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "GatewayRecovery"
+    }
+   }
+  },
+  "GatewayRequest": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "gateway_id",
+    "node_id",
+    "api_key_id",
+    "actor_id",
+    "alias_id",
+    "alias_name",
+    "deployment_id",
+    "deployment_revision",
+    "state",
+    "capacity_held",
+    "stream",
+    "admitted_at",
+    "deadline_at",
+    "reported_at",
+    "reconciled_at",
+    "active_recovery_id",
+    "outcome"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "gateway_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "api_key_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "actor_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "alias_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "alias_name": {
+     "type": "string"
+    },
+    "deployment_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "deployment_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "admitted",
+      "reported",
+      "reconciled"
+     ]
+    },
+    "capacity_held": {
+     "type": "boolean"
+    },
+    "stream": {
+     "type": "boolean"
+    },
+    "admitted_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "deadline_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "reported_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reconciled_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "active_recovery_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "outcome": {
+     "anyOf": [
+      {
+       "$ref": "GatewayOutcome"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "GatewayRequestPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "GatewayRequest"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "GatewayRequestPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "GatewayRequestPage"
+    }
+   }
+  },
+  "GatewayRequestResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "GatewayRequest"
+    }
+   }
+  },
+  "MintDistributionKey": {
+   "type": "object",
+   "required": [
+    "alias_id",
+    "label",
+    "ttl_seconds",
+    "reason"
+   ],
+   "properties": {
+    "alias_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "label": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "ttl_seconds": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "const": 0
+      },
+      {
+       "type": "integer",
+       "minimum": 300,
+       "maximum": 7776000
+      }
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "MintedDistributionKey": {
+   "type": "object",
+   "required": [
+    "key",
+    "secret",
+    "secret_available"
+   ],
+   "properties": {
+    "key": {
+     "$ref": "DistributionKey"
+    },
+    "secret": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "secret_available": {
+     "type": "boolean"
+    }
+   }
+  },
+  "MintedDistributionKeyResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "MintedDistributionKey"
+    }
+   }
+  },
+  "ModelAlias": {
+   "type": "object",
+   "required": [
+    "held_requests",
+    "id",
+    "workspace_id",
+    "gateway_id",
+    "node_id",
+    "name",
+    "client_origin",
+    "deployment_id",
+    "deployment_revision",
+    "revision",
+    "disabled_at",
+    "created_at",
+    "available",
+    "unavailable_code"
+   ],
+   "properties": {
+    "held_requests": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "gateway_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string"
+    },
+    "client_origin": {
+     "type": "string",
+     "format": "uri",
+     "description": "Canonical HTTPS origin only; advertised metadata, never an outbound control destination.",
+     "minLength": 9,
+     "maxLength": 2048
+    },
+    "deployment_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "deployment_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "disabled_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "available": {
+     "type": "boolean"
+    },
+    "unavailable_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "const": "MODEL_ALIAS_UNAVAILABLE"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "ModelAliasPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "ModelAlias"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "ModelAliasPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ModelAliasPage"
+    }
+   }
+  },
+  "ModelAliasResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ModelAlias"
+    }
+   }
+  },
+  "ProvisionGateway": {
+   "type": "object",
+   "required": [
+    "node_id",
+    "name",
+    "client_origin",
+    "reason"
+   ],
+   "properties": {
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "client_origin": {
+     "type": "string",
+     "format": "uri",
+     "description": "Canonical HTTPS origin only; advertised metadata, never an outbound control destination.",
+     "minLength": 9,
+     "maxLength": 2048
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "ProvisionedGateway": {
+   "type": "object",
+   "required": [
+    "gateway",
+    "secret",
+    "secret_available"
+   ],
+   "properties": {
+    "gateway": {
+     "$ref": "GatewayInstance"
+    },
+    "secret": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 256
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "secret_available": {
+     "type": "boolean"
+    }
+   }
+  },
+  "ProvisionedGatewayResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ProvisionedGateway"
+    }
+   }
+  },
+  "PublishAlias": {
+   "type": "object",
+   "required": [
+    "gateway_id",
+    "name",
+    "deployment_id",
+    "deployment_revision",
+    "reason"
+   ],
+   "properties": {
+    "gateway_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string"
+    },
+    "deployment_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "deployment_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "Reason": {
+   "type": "object",
+   "required": [
+    "reason"
+   ],
+   "properties": {
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  }
+ }
+}

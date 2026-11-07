@@ -1,0 +1,1440 @@
+{
+ "title": "ownsolid Workspace middleware maintenance",
+ "operations": [
+  {
+   "id": "adminListMiddleware",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "InstancePageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminRegisterMiddleware",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Register"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "InstanceResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminMiddlewareProfiles",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/profiles",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ProfilesResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminReadMiddleware",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "instance_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "InstanceResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminChangeMiddleware",
+   "method": "patch",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "instance_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Change"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "InstanceResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminMiddlewareHistory",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}/operations",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "instance_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "OperationPageResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminEnqueueMiddleware",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}/operations",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "instance_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Enqueue"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "$ref": "OperationResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminMiddlewareRegistrationIntent",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "intent_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "InstanceResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminMiddlewareOperationIntent",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "intent_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "OperationResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminMiddlewareOperation",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operations/{operation_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "operation_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "OperationResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "Change": {
+   "type": "object",
+   "required": [
+    "name",
+    "state",
+    "version",
+    "refresh_inputs",
+    "reason"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "active",
+      "archived"
+     ]
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "refresh_inputs": {
+     "type": "boolean"
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "DatabaseSource": {
+   "type": "object",
+   "required": [
+    "database",
+    "operator",
+    "server_version_number",
+    "tenant_id",
+    "schema_version",
+    "vector_version"
+   ],
+   "properties": {
+    "database": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 63
+    },
+    "operator": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 63
+    },
+    "server_version_number": {
+     "type": "integer",
+     "minimum": 100000,
+     "maximum": 9007199254740991
+    },
+    "tenant_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "schema_version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "vector_version": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    }
+   }
+  },
+  "Enqueue": {
+   "type": "object",
+   "required": [
+    "kind",
+    "reason",
+    "idempotency_key",
+    "version",
+    "confirm_isolated"
+   ],
+   "properties": {
+    "kind": {
+     "type": "string",
+     "enum": [
+      "health",
+      "backup",
+      "isolated_restore",
+      "reconcile"
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 448
+    },
+    "idempotency_key": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "backup_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "target_key": {
+     "type": "string"
+    },
+    "confirm_isolated": {
+     "type": "boolean"
+    },
+    "original_operation_id": {
+     "type": "string",
+     "format": "uuid"
+    }
+   }
+  },
+  "Evidence": {
+   "type": "object",
+   "required": [
+    "format_version",
+    "kind"
+   ],
+   "properties": {
+    "format_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "health",
+      "backup",
+      "isolated_restore"
+     ]
+    },
+    "observation": {
+     "$ref": "Observation"
+    },
+    "mysql_observation": {
+     "$ref": "MySQLObservation"
+    },
+    "stages": {
+     "type": "array",
+     "maxItems": 5,
+     "items": {
+      "$ref": "Stage"
+     }
+    },
+    "original_operation_id": {
+     "type": "string",
+     "format": "uuid"
+    }
+   },
+   "oneOf": [
+    {
+     "required": [
+      "observation"
+     ],
+     "properties": {
+      "kind": {
+       "const": "health"
+      }
+     }
+    },
+    {
+     "required": [
+      "mysql_observation"
+     ],
+     "properties": {
+      "kind": {
+       "const": "health"
+      }
+     }
+    },
+    {
+     "required": [
+      "stages"
+     ],
+     "properties": {
+      "kind": {
+       "type": "string",
+       "enum": [
+        "backup",
+        "isolated_restore"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "Instance": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "profile_key",
+    "kind",
+    "name",
+    "version",
+    "state",
+    "created_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "profile_key": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "platform_owned",
+      "customer_external"
+     ]
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "version": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "active",
+      "archived"
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "InstancePage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 200,
+     "items": {
+      "$ref": "Instance"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "InstancePageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "InstancePage"
+    }
+   }
+  },
+  "InstanceResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Instance"
+    }
+   }
+  },
+  "MySQLObservation": {
+   "type": "object",
+   "required": [
+    "observed_at",
+    "database",
+    "user",
+    "server_uuid",
+    "version",
+    "tls_version",
+    "tls_cipher",
+    "read_only",
+    "super_read_only",
+    "visible_table_count"
+   ],
+   "properties": {
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "database": {
+     "type": "string"
+    },
+    "user": {
+     "type": "string"
+    },
+    "server_uuid": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "version": {
+     "type": "string"
+    },
+    "tls_version": {
+     "type": "string",
+     "enum": [
+      "TLSv1.2",
+      "TLSv1.3"
+     ]
+    },
+    "tls_cipher": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "read_only": {
+     "type": "boolean"
+    },
+    "super_read_only": {
+     "type": "boolean"
+    },
+    "visible_table_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "NativePostgreSQLBackupReference": {
+   "type": "object",
+   "required": [
+    "format_version",
+    "application_profile",
+    "source_manifest_sha256",
+    "schema_version",
+    "table_count",
+    "request_sha256",
+    "candidate_sha256",
+    "completion_sha256",
+    "readback_sha256",
+    "mvp_source_sha256",
+    "registry_configured"
+   ],
+   "properties": {
+    "format_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "application_profile": {
+     "type": "string",
+     "const": "mvp-postgresql-cpu-v1"
+    },
+    "source_manifest_sha256": {
+     "type": "string"
+    },
+    "schema_version": {
+     "type": "integer",
+     "const": 29
+    },
+    "table_count": {
+     "type": "integer",
+     "const": 108
+    },
+    "request_sha256": {
+     "type": "string"
+    },
+    "candidate_sha256": {
+     "type": "string"
+    },
+    "completion_sha256": {
+     "type": "string"
+    },
+    "readback_sha256": {
+     "type": "string"
+    },
+    "mvp_source_sha256": {
+     "type": "string"
+    },
+    "registry_configured": {
+     "type": "boolean"
+    },
+    "registry": {
+     "$ref": "NativePostgreSQLRegistryReference"
+    }
+   },
+   "allOf": [
+    {}
+   ]
+  },
+  "NativePostgreSQLRegistryImportReference": {
+   "type": "object",
+   "required": [
+    "snapshot_receipt_sha256",
+    "import_receipt_sha256",
+    "readback_sha256"
+   ],
+   "properties": {
+    "snapshot_receipt_sha256": {
+     "type": "string"
+    },
+    "import_receipt_sha256": {
+     "type": "string"
+    },
+    "readback_sha256": {
+     "type": "string"
+    }
+   }
+  },
+  "NativePostgreSQLRegistryReference": {
+   "type": "object",
+   "required": [
+    "receipt_sha256",
+    "manifest_sha256",
+    "payload_tree_sha256",
+    "pins",
+    "files",
+    "bytes"
+   ],
+   "properties": {
+    "receipt_sha256": {
+     "type": "string"
+    },
+    "manifest_sha256": {
+     "type": "string"
+    },
+    "payload_tree_sha256": {
+     "type": "string"
+    },
+    "pins": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "files": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "NativePostgreSQLRestoreReference": {
+   "type": "object",
+   "required": [
+    "format_version",
+    "application_profile",
+    "backup",
+    "request_sha256",
+    "manifest_sha256",
+    "intent_sha256",
+    "files_sha256",
+    "completion_sha256",
+    "files_readback_sha256",
+    "observation_sha256",
+    "target_binding_sha256",
+    "post_data_sha256"
+   ],
+   "properties": {
+    "format_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "application_profile": {
+     "type": "string",
+     "const": "mvp-postgresql-cpu-v1"
+    },
+    "backup": {
+     "$ref": "NativePostgreSQLBackupReference"
+    },
+    "request_sha256": {
+     "type": "string"
+    },
+    "manifest_sha256": {
+     "type": "string"
+    },
+    "intent_sha256": {
+     "type": "string"
+    },
+    "files_sha256": {
+     "type": "string"
+    },
+    "completion_sha256": {
+     "type": "string"
+    },
+    "files_readback_sha256": {
+     "type": "string"
+    },
+    "observation_sha256": {
+     "type": "string"
+    },
+    "target_binding_sha256": {
+     "type": "string"
+    },
+    "post_data_sha256": {
+     "type": "string"
+    },
+    "registry": {
+     "$ref": "NativePostgreSQLRegistryImportReference"
+    }
+   },
+   "allOf": [
+    {}
+   ]
+  },
+  "Observation": {
+   "type": "object",
+   "required": [
+    "observed_at",
+    "database",
+    "user",
+    "server_address",
+    "server_port",
+    "version_number",
+    "in_recovery",
+    "tls_version",
+    "tls_cipher",
+    "superuser",
+    "create_role",
+    "create_database",
+    "create_schema",
+    "create_any_schema_objects",
+    "read_all_tables",
+    "write_any_table",
+    "table_count"
+   ],
+   "properties": {
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "database": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 63
+    },
+    "user": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 63
+    },
+    "server_address": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 253
+    },
+    "server_port": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 65535
+    },
+    "version_number": {
+     "type": "integer",
+     "minimum": 140000,
+     "maximum": 189999
+    },
+    "in_recovery": {
+     "type": "boolean"
+    },
+    "tls_version": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "tls_cipher": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "superuser": {
+     "type": "boolean"
+    },
+    "create_role": {
+     "type": "boolean"
+    },
+    "create_database": {
+     "type": "boolean"
+    },
+    "create_schema": {
+     "type": "boolean"
+    },
+    "create_any_schema_objects": {
+     "type": "boolean"
+    },
+    "read_all_tables": {
+     "type": "boolean"
+    },
+    "write_any_table": {
+     "type": "boolean"
+    },
+    "table_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "platform_tenant_id": {
+     "type": "string",
+     "format": "uuid"
+    }
+   }
+  },
+  "Operation": {
+   "type": "object",
+   "required": [
+    "id",
+    "instance_id",
+    "kind",
+    "state",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "instance_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "health",
+      "backup",
+      "isolated_restore",
+      "reconcile"
+     ]
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "queued",
+      "running",
+      "succeeded",
+      "failed",
+      "unknown"
+     ]
+    },
+    "error_code": {
+     "type": "string"
+    },
+    "result": {
+     "$ref": "Evidence"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "OperationPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 200,
+     "items": {
+      "$ref": "Operation"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "OperationPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "OperationPage"
+    }
+   }
+  },
+  "OperationResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Operation"
+    }
+   }
+  },
+  "Profile": {
+   "type": "object",
+   "required": [
+    "key",
+    "kind",
+    "health",
+    "backup",
+    "restore_targets"
+   ],
+   "properties": {
+    "key": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "platform_owned",
+      "customer_external"
+     ]
+    },
+    "health": {
+     "type": "boolean"
+    },
+    "backup": {
+     "type": "boolean"
+    },
+    "restore_targets": {
+     "type": "array",
+     "maxItems": 10000,
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "Profiles": {
+   "type": "array",
+   "maxItems": 10000,
+   "items": {
+    "$ref": "Profile"
+   }
+  },
+  "ProfilesResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Profiles"
+    }
+   }
+  },
+  "Register": {
+   "type": "object",
+   "required": [
+    "profile_key",
+    "name",
+    "idempotency_key"
+   ],
+   "properties": {
+    "profile_key": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "idempotency_key": {
+     "type": "string",
+     "format": "uuid"
+    }
+   }
+  },
+  "Stage": {
+   "type": "object",
+   "required": [
+    "command",
+    "status",
+    "pending",
+    "qualification",
+    "evidence_sha256"
+   ],
+   "properties": {
+    "command": {
+     "type": "string",
+     "enum": [
+      "backup",
+      "inspect-backup",
+      "reconcile-backup",
+      "inspect-restore-source",
+      "inspect-restore-target",
+      "prepare-restore",
+      "reconcile-restore-reservation",
+      "restore-sql",
+      "reconcile-restore-sql",
+      "qualify-restored-database",
+      "reconcile-restored-database",
+      "restore-stores",
+      "reconcile-restored-stores"
+     ]
+    },
+    "status": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 200
+    },
+    "scope_id": {
+     "type": "string"
+    },
+    "attempt_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "pending": {
+     "type": "boolean"
+    },
+    "completed_steps": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "total_steps": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "manifest_sha256": {
+     "type": "string"
+    },
+    "proof_sha256": {
+     "type": "string"
+    },
+    "qualification": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 65536
+    },
+    "evidence_sha256": {
+     "type": "string"
+    },
+    "source_scope_id": {
+     "type": "string"
+    },
+    "source": {
+     "$ref": "DatabaseSource"
+    },
+    "plan_sha256": {
+     "type": "string"
+    },
+    "stores": {
+     "type": "array",
+     "maxItems": 4,
+     "items": {
+      "type": "string",
+      "enum": [
+       "datasets",
+       "models",
+       "preparations",
+       "training"
+      ]
+     }
+    },
+    "profile": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 200
+    },
+    "release_manifest_sha256": {
+     "type": "string"
+    },
+    "native_postgresql": {
+     "oneOf": [
+      {
+       "$ref": "NativePostgreSQLBackupReference"
+      },
+      {
+       "$ref": "NativePostgreSQLRestoreReference"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

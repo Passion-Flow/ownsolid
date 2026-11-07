@@ -13,6 +13,9 @@
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/monitoring": {
       "get": {
         "operationId": "adminMonitoring",
+        "x-audiences": [
+          "admin"
+        ],
         "security": [
           {
             "adminCookie": []

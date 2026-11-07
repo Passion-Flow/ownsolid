@@ -217,6 +217,9 @@ function api(files, index) {
       for (const [path, item] of Object.entries(contract.paths ?? {})) {
         for (const method of methods) {
           const operation = item[method];
+          if (operation && !operation['x-audiences']) {
+            fail(`${domain}: ${method} ${path} declares no x-audiences`);
+          }
           if (!operation?.['x-audiences']?.includes(audience)) continue;
           const parameters = [...(item.parameters ?? []), ...(operation.parameters ?? [])]
             // Origin and CSRF headers are the browser's business, not the caller's.

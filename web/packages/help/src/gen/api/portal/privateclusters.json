@@ -1,0 +1,1161 @@
+{
+ "title": "ownsolid scoped private Kubernetes ledger",
+ "operations": [
+  {
+   "id": "portalPrivateClusterConnections",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "ConnectionPage"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalPrivateClusterConnection",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "connection_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Connection"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalPrivateClusterRuns",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "connection_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "RunPage"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalPrivateClusterStart",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "connection_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Mutation"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Run"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalPrivateClusterRun",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "connection_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "run_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Run"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalPrivateClusterProof",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/proof",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "connection_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "run_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "ExecutionProof"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalPrivateClusterContinue",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/continue",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "connection_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "run_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Mutation"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Run"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalPrivateClusterReconcile",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/reconcile",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "connection_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "run_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Mutation"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Run"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalPrivateClusterCancel",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/cancel",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "connection_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "run_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Mutation"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Run"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalPrivateClusterCleanup",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/cleanup",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "connection_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "run_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Mutation"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Run"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "Connection": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "profile_id",
+    "profile",
+    "namespace",
+    "state",
+    "revision",
+    "active_run_id",
+    "observation",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "profile_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 63
+    },
+    "profile": {
+     "type": "string",
+     "enum": [
+      "kubernetes1.36.4-linux-amd64",
+      "local-kind1.36.4-linux-arm64"
+     ]
+    },
+    "namespace": {
+     "type": "string",
+     "minLength": 17,
+     "maxLength": 63
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "active",
+      "disabled",
+      "restore_fenced"
+     ]
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "active_run_id": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "observation": {
+     "anyOf": [
+      {
+       "$ref": "Observation"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "ConnectionPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Connection"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "ExecutionProof": {
+   "type": "object",
+   "required": [
+    "run_id",
+    "profile",
+    "manufacturer_manifest_sha256",
+    "image_digest",
+    "config_digest",
+    "observed_image_id",
+    "node_name",
+    "container_id",
+    "proof",
+    "logs",
+    "qualification"
+   ],
+   "properties": {
+    "run_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "profile": {
+     "type": "string",
+     "enum": [
+      "kubernetes1.36.4-linux-amd64",
+      "local-kind1.36.4-linux-arm64"
+     ]
+    },
+    "manufacturer_manifest_sha256": {
+     "type": "string",
+     "minLength": 64,
+     "maxLength": 64
+    },
+    "image_digest": {
+     "type": "string",
+     "minLength": 71,
+     "maxLength": 71
+    },
+    "config_digest": {
+     "type": "string",
+     "minLength": 71,
+     "maxLength": 71
+    },
+    "observed_image_id": {
+     "type": "string",
+     "minLength": 71,
+     "maxLength": 71
+    },
+    "node_name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 253
+    },
+    "container_id": {
+     "type": "string",
+     "minLength": 14,
+     "maxLength": 512
+    },
+    "proof": {
+     "$ref": "Proof"
+    },
+    "logs": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 16384
+    },
+    "qualification": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 1000
+    }
+   }
+  },
+  "Mutation": {
+   "type": "object",
+   "required": [
+    "reason",
+    "expected_revision"
+   ],
+   "properties": {
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    },
+    "expected_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740990
+    }
+   }
+  },
+  "NodeCapacity": {
+   "type": "object",
+   "required": [
+    "uid",
+    "name",
+    "cpu",
+    "memory",
+    "architecture"
+   ],
+   "properties": {
+    "uid": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 253
+    },
+    "cpu": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 64
+    },
+    "memory": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 64
+    },
+    "architecture": {
+     "type": "string",
+     "enum": [
+      "amd64",
+      "arm64"
+     ]
+    }
+   }
+  },
+  "Observation": {
+   "type": "object",
+   "required": [
+    "server_version",
+    "cluster_uid",
+    "namespace_uid",
+    "quota_uid",
+    "policy_uid",
+    "service_account_uid",
+    "namespace",
+    "nodes",
+    "observed_at",
+    "qualification"
+   ],
+   "properties": {
+    "server_version": {
+     "type": "string",
+     "const": "v1.36.4"
+    },
+    "cluster_uid": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "namespace_uid": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "quota_uid": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "policy_uid": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "service_account_uid": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "namespace": {
+     "type": "string",
+     "minLength": 17,
+     "maxLength": 63
+    },
+    "nodes": {
+     "type": "array",
+     "maxItems": 10000,
+     "items": {
+      "$ref": "NodeCapacity"
+     }
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "qualification": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 1000
+    }
+   }
+  },
+  "Proof": {
+   "type": "object",
+   "required": [
+    "format_version",
+    "run_id",
+    "namespace_uid",
+    "installation_id",
+    "pod_uid",
+    "architecture",
+    "uid",
+    "challenge_sha256"
+   ],
+   "properties": {
+    "format_version": {
+     "type": "integer",
+     "const": 1
+    },
+    "run_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "namespace_uid": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "installation_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "pod_uid": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "architecture": {
+     "type": "string",
+     "enum": [
+      "amd64",
+      "arm64"
+     ]
+    },
+    "uid": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 2147483647
+    },
+    "challenge_sha256": {
+     "type": "string",
+     "minLength": 64,
+     "maxLength": 64
+    }
+   }
+  },
+  "Run": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "connection_id",
+    "phase",
+    "result",
+    "revision",
+    "lease_uid",
+    "job_uid",
+    "pod_uid",
+    "created_at",
+    "updated_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "connection_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "phase": {
+     "type": "string",
+     "enum": [
+      "prepared",
+      "lease_pending",
+      "lease_acquired",
+      "job_pending",
+      "observing",
+      "job_delete_pending",
+      "job_absent",
+      "lease_delete_pending",
+      "cleaned"
+     ]
+    },
+    "result": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "succeeded",
+        "failed",
+        "cancelled"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "lease_uid": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "job_uid": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "pod_uid": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "RunPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Run"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  }
+ }
+}
