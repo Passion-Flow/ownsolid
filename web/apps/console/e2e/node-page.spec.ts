@@ -168,6 +168,6 @@ test.describe('in Chinese', () => {
   test('names its tabs', async ({ page }) => {
     control.tenantSettings.default_locale = 'zh-CN';
     await page.goto(path);
-    await expect(tab(page, chinese['nodes.page.tab.activity'])).toBeVisible();
+    await expect(tab(page, chinese['resource.tab.activity'])).toBeVisible();
   });
 });

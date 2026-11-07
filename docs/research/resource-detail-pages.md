@@ -29,10 +29,18 @@ that a node's Activity show who did what.
   undo is in reach on the page, and removing a node goes back to the list.
 - **A tab's data loads when the tab opens.** A person who came for the overview does not pay for the history.
 
-## What is still open
+## Which resources
 
-Only the node has its page. People and single sign-on connectors still have only a drawer, so UX-127 stays open
-until they do. Workspaces and tasks already have their own pages.
+Nodes, people and single sign-on connectors, the lists whose row opened only a drawer. Workspaces and tasks already
+had pages. Their parts are shared in `resource-page.tsx`, and each resource's facts and actions sit in one file used
+by its drawer and its page. The API has no read of one connector, and an installation has a handful, so that page
+finds its connector in the list.
+
+A person has a third tab: **Activity** is what was done to them, and **Their actions** is what they did, through the
+`actor_user_id` filter the audit trail already had.
+
+Audit events and email deliveries stay with only a drawer. They are records rather than things with a life, and
+everything about one fits there; a page would hold one screen of the same.
 
 Rejected: replacing the drawer with the page, which loses the quick look a list relies on; a page that repeats the
 list on the left, which is a layout this console has nowhere else.
@@ -50,7 +58,8 @@ No new dependency.
 - A filter value that is not an ID is refused, and a cursor belongs to its target; Go test.
 - The index reaches a partition created later; Go test on PostgreSQL.
 - A real node's enrolment shows under Activity and opens in the audit trail; live run.
+- A real connector's creation shows under its Activity, and a real administrator's actions under theirs; live runs.
 
 ## What the finished item must do
 
-From any resource's list, reach a page of its own with tabs for what it is, what it has run and who did what.
+From the Nodes, Users and Single sign-on lists, reach a page of its own with tabs for what it is and who did what.

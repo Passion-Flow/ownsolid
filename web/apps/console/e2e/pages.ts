@@ -180,6 +180,16 @@ export const consolePages: readonly PageState[] = [
     },
   },
   {
+    name: 'a person on their own page',
+    path: '/users/$userId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.users = [adminUser, memberUser];
+      await page.goto(`/users/${memberUser.id}`);
+      await page.getByRole('heading', { name: 'Grace Hopper', level: 1 }).waitFor();
+    },
+  },
+  {
     name: 'nodes with none yet',
     path: '/nodes',
     open: async (page, control) => {

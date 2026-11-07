@@ -40,7 +40,7 @@ export function NodeDrawer({
               params={{ nodeId: node.id }}
               className="mb-4 inline-flex items-center gap-1.5 font-medium text-accent-ink hover:underline"
             >
-              {t('nodes.detail.openPage')}
+              {t('resource.openPage')}
               <ArrowRight aria-hidden className="size-4" />
             </Link>
             <QuietNotice node={node} />

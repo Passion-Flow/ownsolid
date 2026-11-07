@@ -43,6 +43,18 @@ const nodeRoute = createRoute({
   component: lazyRouteComponent(() => import('./node-page.tsx'), 'NodePage'),
 });
 
+const userRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/users/$userId',
+  component: lazyRouteComponent(() => import('./user-page.tsx'), 'UserPage'),
+});
+
+const connectorRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/sso/$connectorId',
+  component: lazyRouteComponent(() => import('./connector-page.tsx'), 'ConnectorPage'),
+});
+
 const usersRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/users',
@@ -114,6 +126,8 @@ const routeTree = rootRoute.addChildren([
       nodesRoute,
       pacingRoute,
       nodeRoute,
+      userRoute,
+      connectorRoute,
       usersRoute,
       workspacesRoute,
       workspaceRoute,

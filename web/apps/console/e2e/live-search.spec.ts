@@ -111,7 +111,12 @@ test('finds real nodes, people, tasks and workspaces, and opens each', async ({ 
   await row(page, new RegExp(`${email}.*Person$`)).click();
   await expect(page).toHaveURL(/\/users\?open=/);
   await expect(page.getByRole('dialog')).toContainText(email);
-  await page.keyboard.press('Escape');
+  // Their own page holds what they did.
+  await page.getByRole('dialog').getByRole('link', { name: 'Open the full page' }).click();
+  await expect(page).toHaveURL(/\/users\/[0-9a-f-]{36}$/);
+  await page.getByRole('tab', { name: 'Their actions' }).click();
+  await expect(page.getByRole('tabpanel').getByRole('table')).toBeVisible();
+  await expectAccessible(page);
 
   // The first workspace, by its name in the other case.
   await page.goto('/users/workspaces');

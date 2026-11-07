@@ -258,8 +258,8 @@ here manages the platform.
 **Does** lets people sign in with the company's Gitea, and says which part of a connector is wrong.
 **Content** a notice when the installation has single sign-on off or approves no provider →
 columns: connector, status (on, off, provider not approved), provider address, client ID, updated.
-**Click** row name → drawer: the connection check, details, callback URLs to copy. The detail page
-comes with UX-127.
+**Click** row name → drawer: the connection check, details, callback URLs to copy, and a link to the
+connector's own page at `/sso/<id>`, with the same and its Activity.
 **Dialogs**
 - *Add a connector* → dialog, five fields and the callback URLs to register first. It starts off.
 - *Test connection* → in the drawer, no dialog; the result names what was refused and the next step.
