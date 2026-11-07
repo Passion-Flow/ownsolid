@@ -306,6 +306,9 @@ func TestActualIdentityListRepository(t *testing.T) {
 			exec("INSERT INTO audit_events(id,occurred_at,audience,action,outcome,request_id) VALUES($1,$2,'admin','auth.logout','success',$3)", "INSERT INTO audit_events(id,occurred_at,audience,action,outcome,request_id) VALUES(?,?,'admin','auth.logout','success',?)", v.id, v.time, request)
 		}
 		first := list("audit-events", url.Values{"action": {"auth.logout"}, "limit": {"1"}})
+		if none := list("audit-events", url.Values{"target_id": {uuid.NewString()}}); len(none.Items) != 0 {
+			t.Fatal("a resource with no events")
+		}
 		if first.NextCursor == nil {
 			t.Fatal("audit window fixture missing cursor")
 		}

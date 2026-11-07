@@ -88,6 +88,7 @@ export async function routeAudit(
     const outcome = query.get('outcome');
     const actor = query.get('actor_user_id');
     const request = query.get('request_id');
+    const target = query.get('target_id');
     const from = query.get('from');
     const to = query.get('to');
     const matching = state.auditEvents.filter(
@@ -96,6 +97,7 @@ export async function routeAudit(
         (!outcome || event.outcome === outcome) &&
         (!actor || event.actor_user_id === actor) &&
         (!request || event.request_id === request) &&
+        (!target || event.target_id === target) &&
         (!from || Date.parse(event.occurred_at) >= Date.parse(from)) &&
         (!to || Date.parse(event.occurred_at) <= Date.parse(to)),
     );

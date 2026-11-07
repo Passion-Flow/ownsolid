@@ -84,6 +84,22 @@ func TestLineageUpgradeKeepsChosenThemesOnly(t *testing.T) {
 }
 
 
+// Migration 000048's index reaches a partition created later, so history stays quick to read.
+func TestAuditTargetIndexReachesNewPartitions(t *testing.T) {
+	s := fixture.New(t)
+	ctx := t.Context()
+	if _, e := s.DB.Exec(ctx, "CREATE TABLE audit_events_p209912 PARTITION OF audit_events FOR VALUES FROM ('2099-12-01') TO ('2100-01-01')"); e != nil {
+		t.Fatal(e)
+	}
+	var indexes int
+	if e := s.DB.QueryRow(ctx, "SELECT count(*) FROM pg_indexes WHERE schemaname=current_schema() AND tablename='audit_events_p209912' AND indexdef LIKE '%(target_id, occurred_at DESC, id DESC)%'").Scan(&indexes); e != nil {
+		t.Fatal(e)
+	}
+	if indexes != 1 {
+		t.Fatal(indexes)
+	}
+}
+
 // Migration 000047 starts everyone with no pins and changes no one's revision.
 func TestLineageUpgradeStartsWithoutPinsOrARevision(t *testing.T) {
 	s := fixture.NewAtVersion(t, 46) // before 000047

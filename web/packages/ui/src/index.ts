@@ -1,4 +1,5 @@
 export { cn } from './cn.ts';
+export { Tabs, type TabItem, type TabsProps } from './components/tabs.tsx';
 export { AdvancedFold, type AdvancedFoldProps } from './components/advanced-fold.tsx';
 export { FilterTiles, type FilterTile, type FilterTilesProps } from './components/filter-tiles.tsx';
 export { saveFile } from './save-file.ts';

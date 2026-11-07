@@ -37,6 +37,7 @@ import {
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ScrollText, X } from 'lucide-react';
 import { useMemo } from 'react';
+import { auditEventSearch, customRange } from './audit-link.ts';
 
 const categories = [
   'account',
@@ -66,11 +67,9 @@ const outcomeTones: Record<AuditOutcome, StatusTone> = {
 /** Choices of time, in hours. The longest is the default audit_max_days. */
 const ranges: Record<string, number> = { '24h': 24, '7d': 168, '31d': 744 };
 const defaultRange = '7d';
-const customRange = 'custom';
 const longestWindowMilliseconds = 744 * 3_600_000;
 
 /** How far around an event its own link looks. */
-const eventLinkMilliseconds = 60_000;
 
 const identifier = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -120,13 +119,7 @@ function fromLocalField(value: string): string {
 
 /** The address of a list narrowed to one event, which keeps working as time passes. */
 function eventLink(event: AuditEvent): string {
-  const moment = Date.parse(event.occurred_at);
-  const search = new URLSearchParams({
-    range: customRange,
-    from: new Date(moment - eventLinkMilliseconds).toISOString(),
-    to: new Date(moment + eventLinkMilliseconds).toISOString(),
-    open: event.id,
-  });
+  const search = new URLSearchParams(auditEventSearch(event));
   return `${window.location.origin}/audit?${search.toString()}`;
 }
 

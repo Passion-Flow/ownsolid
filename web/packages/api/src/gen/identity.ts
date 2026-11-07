@@ -1320,6 +1320,8 @@ export interface operations {
                 /** @description RFC3339 audit window bound with supported UTC year1000-9999. The effective window is pinned in new audit cursors and constrained by the configured audit interval policy. */
                 to?: string;
                 request_id?: string;
+                /** @description Only events about this resource. */
+                target_id?: string;
             };
             header?: never;
             path?: never;

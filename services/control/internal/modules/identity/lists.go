@@ -285,6 +285,13 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 			}
 			p.compare("a.action", "=", v, "")
 		}
+		allowed["target_id"] = true
+		if v := q.Get("target_id"); v != "" {
+			if !sessionID(v) {
+				return fail("VALIDATION_FAILED")
+			}
+			p.compare("a.target_id", "=", v, "")
+		}
 		allowed["category"], allowed["actor_user_id"] = true, true
 		if v := q.Get("category"); v != "" {
 			if !auditCategory.MatchString(v) {

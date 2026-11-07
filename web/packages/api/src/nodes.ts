@@ -103,13 +103,14 @@ export function updateNode(
 /** Lists a node's latest tasks, newest first. */
 export function listNodeTasks(
   id: string,
-  query: { limit: number },
+  query: { limit: number; cursor?: string | undefined },
   options?: RequestOptions,
 ): Promise<Schemas['TaskList']> {
+  const { limit, cursor } = query;
   return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/tasks', {
     ...options,
     path: { ...localCell, node_id: id },
-    query,
+    query: { limit, ...(cursor ? { cursor } : {}) },
   });
 }
 

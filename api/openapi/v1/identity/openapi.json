@@ -1821,6 +1821,15 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "target_id",
+            "in": "query",
+            "description": "Only events about this resource.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ]
       }

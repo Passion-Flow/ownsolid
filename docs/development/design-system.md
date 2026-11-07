@@ -85,6 +85,12 @@ comes back empty offers to clear the filters.
 7. **When something breaks, show the answer.** Diagnostics, exact commands and a
    downloadable diagnostic bundle sit next to the failure.
 
+## Detail pages
+
+A list's drawer is the quick look; a resource's own page holds its history ([research](../research/resource-detail-pages.md)).
+The page has a way back to the list, the name and state, the actions, then `Tabs` for views that exist today.
+The chosen tab lives in the address. The drawer links to the page, and both use the same actions.
+
 ## Forms
 
 A form shows the common path first. A field with a default that works goes behind `AdvancedFold`, which says how

@@ -70,6 +70,25 @@ test('finds real nodes, people, tasks and workspaces, and opens each', async ({ 
   const taskId = new URL(page.url()).pathname.split('/').at(-1) ?? '';
   await expect(page.getByText('Succeeded').first()).toBeVisible({ timeout: 90_000 });
 
+  // The node's own page holds that task and who enrolled it.
+  await page.goto(`/nodes?name=${encodeURIComponent(part)}`);
+  await page.getByRole('row').filter({ hasText: nodeName }).getByRole('button').first().click();
+  await page.getByRole('dialog').getByRole('link', { name: 'Open the full page' }).click();
+  await expect(page.getByRole('heading', { name: nodeName, level: 1 })).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('tab', { name: 'Tasks' }).click();
+  await expect(page.getByRole('tabpanel').getByRole('link').first()).toHaveAttribute(
+    'href',
+    new RegExp(`/tasks/${taskId}$`),
+  );
+  await page.getByRole('tab', { name: 'Activity' }).click();
+  await expect(page.getByRole('tabpanel').getByText('node.enrolled')).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('tabpanel').getByRole('row').nth(1).getByRole('link').last().click();
+  await expect(page).toHaveURL(/\/audit\?.*open=/);
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /^Welcome, / })).toBeVisible();
   await menu(page, part);

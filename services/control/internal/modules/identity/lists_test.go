@@ -115,3 +115,20 @@ func TestListAuditCursorPinsWindowAndRejectsFilterDrift(t *testing.T) {
 		t.Fatal("old implicit-window cursor did not require restart", e)
 	}
 }
+
+func TestAuditTargetFilterAcceptsOnlyAnIdentifierAndBindsItsCursor(t *testing.T) {
+	policy := config.DefaultRuntimePolicy()
+	now := time.Date(2026, 11, 7, 0, 0, 0, 0, time.UTC)
+	target := "6f1c7a1e-0000-4000-8000-000000000031"
+	first, e := makeListPlan("audit-events", url.Values{"target_id": {target}}, policy, now)
+	if e != nil {
+		t.Fatal(e)
+	}
+	other, e := makeListPlan("audit-events", url.Values{"target_id": {"6f1c7a1e-0000-4000-8000-000000000032"}}, policy, now)
+	if e != nil || first.filter == other.filter {
+		t.Fatal("a cursor belongs to its target", e)
+	}
+	if _, e = makeListPlan("audit-events", url.Values{"target_id": {"not-an-id"}}, policy, now); e == nil || e.Error() != "VALIDATION_FAILED" {
+		t.Fatal(e)
+	}
+}

@@ -28,12 +28,14 @@ export function listAuditEvents(
     outcome?: AuditOutcome | undefined;
     actorUserId?: string | undefined;
     requestId?: string | undefined;
+    /** Only events about this resource. */
+    targetId?: string | undefined;
     from?: string | undefined;
     to?: string | undefined;
   },
   options?: RequestOptions,
 ): Promise<AuditPage> {
-  const { limit, cursor, category, outcome, actorUserId, requestId, from, to } = query;
+  const { limit, cursor, category, outcome, actorUserId, requestId, targetId, from, to } = query;
   return client.get('/api/v1/admin/audit-events', {
     ...options,
     query: {
@@ -43,6 +45,7 @@ export function listAuditEvents(
       ...(outcome ? { outcome } : {}),
       ...(actorUserId ? { actor_user_id: actorUserId } : {}),
       ...(requestId ? { request_id: requestId } : {}),
+      ...(targetId ? { target_id: targetId } : {}),
     },
   });
 }

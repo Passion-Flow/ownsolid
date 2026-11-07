@@ -148,6 +148,38 @@ export const consolePages: readonly PageState[] = [
     },
   },
   {
+    name: 'a node on its own page',
+    path: '/nodes/$nodeId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      await page.goto(`/nodes/${node.id}`);
+      await page.getByRole('heading', { name: node.name, level: 1 }).waitFor();
+    },
+  },
+  {
+    name: 'a node with its tasks',
+    path: '/nodes/$nodeId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      control.tasks = [finishedTask, failedTask];
+      await page.goto(`/nodes/${node.id}?tab=tasks`);
+      await page.getByRole('tabpanel').getByRole('link').first().waitFor();
+    },
+  },
+  {
+    name: 'a node with its activity',
+    path: '/nodes/$nodeId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      control.auditEvents = [{ ...systemEvent, occurred_at: node.created_at, target_id: node.id }];
+      await page.goto(`/nodes/${node.id}?tab=activity`);
+      await page.getByRole('tabpanel').getByRole('table').waitFor();
+    },
+  },
+  {
     name: 'nodes with none yet',
     path: '/nodes',
     open: async (page, control) => {
