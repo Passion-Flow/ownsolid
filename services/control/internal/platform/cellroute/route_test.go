@@ -60,7 +60,7 @@ func TestPublicInvertsResolve(t *testing.T) {
 // Global lists every OpenAPI path family the global layer keeps. A new contract path has
 // to be scoped or added here, so no resource lands in the global layer by accident.
 var global = []string{
-	"/api/v1/account/", "/api/v1/admin/audit-events", "/api/v1/admin/invitations", "/api/v1/admin/license",
+	"/api/v1/account/", "/api/v1/capabilities", "/api/v1/admin/audit-events", "/api/v1/admin/invitations", "/api/v1/admin/license",
 	"/api/v1/admin/mail-deliveries", "/api/v1/admin/releases/", "/api/v1/admin/sso/", "/api/v1/admin/tenant-settings", "/api/v1/admin/users",
 	"/api/v1/admin/workspaces", "/api/v1/auth/", "/api/v1/license/", "/api/v1/localization/", "/api/v1/me",
 	"/api/v1/notifications", "/api/v1/preferences", "/api/v1/saved-views", "/api/v1/workspaces", "/agent/v1/enroll", "/health/",

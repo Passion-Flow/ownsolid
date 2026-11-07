@@ -57,7 +57,7 @@ export interface components {
             title: string;
             status: number;
             /** @enum {string} */
-            code: "ACCESS_DENIED" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "MISDIRECTED_REQUEST" | "RESOURCE_NOT_FOUND" | "SERVICE_NOT_READY" | "STORAGE_TIMEOUT" | "STORAGE_UNAVAILABLE" | "VALIDATION_FAILED";
+            code: "ACCESS_DENIED" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "LICENSE_CONFIGURATION_REQUIRED" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "MISDIRECTED_REQUEST" | "RESOURCE_NOT_FOUND" | "SERVICE_NOT_READY" | "STORAGE_TIMEOUT" | "STORAGE_UNAVAILABLE" | "VALIDATION_FAILED";
             /** Format: uuid */
             request_id: string;
             detail?: string;
