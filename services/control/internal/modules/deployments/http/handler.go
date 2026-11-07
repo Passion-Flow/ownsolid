@@ -85,6 +85,14 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, request string) (any,
 		workspace = all[0]
 		parts = all[2:]
 	}
+	if admin && len(parts) == 1 && parts[0] == "placement" && r.Method == "GET" {
+		q := r.URL.Query()
+		if len(q) != 1 || len(q["model_id"]) != 1 || !id(q.Get("model_id")) {
+			return nil, 0, bad
+		}
+		out, e := h.Service.Placement(r.Context(), a, q.Get("model_id"))
+		return out, 200, e
+	}
 	if len(parts) == 0 && r.Method == "GET" {
 		q := r.URL.Query()
 		for name, values := range q {
