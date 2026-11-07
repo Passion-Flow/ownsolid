@@ -45,11 +45,11 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
 - [ ] UX-122 Single-key shortcuts for common actions (the prototype's D, I, N, K), with an account setting to turn them off as WCAG 2.2 criterion 2.1.4 requires (P1). Open: `N`, `/`, `?` and the switch work; `D`, `I` and `K` wait for deploying, the catalog and API keys
 
 - [x] UX-123 Navigation to [ADR 0037](../../decisions/0037-simple-on-the-surface-deep-underneath.md): collapsing groups with only the current one open, self-cleaning open state, a heading that only opens and closes, a filter box, and a collapsed icon-only mode that keeps every accessible name (P1) - Evidence: d85452f; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 46, two runs
-- [ ] UX-124 Pinned destinations, chosen by the person and kept per person (P1)
-- [ ] UX-125 One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1)
-- [ ] UX-126 Summary tiles above a list filter the list instead of decorating it (P1)
+- [x] UX-124 Pinned destinations, chosen by the person and kept per person (P1) - Evidence: 7a36453; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, with the pin reaching a second browser
+- [x] UX-125 One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1) - Evidence: 6210c2e; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48
+- [x] UX-126 Summary tiles above a list filter the list instead of decorating it (P1) - Evidence: feff70a; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48
 - [ ] UX-127 Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1). Open: a node has its page; people and single sign-on connectors still have only a drawer.
-- [ ] UX-128 Moving through a list from the keyboard: `j` and `k` move the row selection and Enter opens it, under the switch UX-122 adds (P1)
+- [x] UX-128 Moving through a list from the keyboard: `j` and `k` move the row selection and Enter opens it, under the switch UX-122 adds (P1) - Evidence: 5823524; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, two runs
 - [ ] UX-129 English strings load by page like the other languages, so the first download stops growing with every page, and its 170 kB limit comes back down (P1)
 
 ## P2 Fleet operations

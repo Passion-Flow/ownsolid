@@ -51,8 +51,13 @@ test('shortcuts work, and turning them off follows the account', async ({ page, 
   await expect(otherToggle).toHaveAttribute('aria-checked', 'false');
   await elsewhere.keyboard.press('n');
   await expect(elsewhere).toHaveURL(/\/account$/);
+  // The switch flips at once and saves behind it, so wait for the save before closing the browser.
+  const saved = elsewhere.waitForResponse(
+    (response) => response.url().endsWith('/api/v1/preferences') && response.ok(),
+  );
   await otherToggle.click();
   await expect(otherToggle).toHaveAttribute('aria-checked', 'true');
+  await saved;
   await other.close();
 
   await page.reload();
