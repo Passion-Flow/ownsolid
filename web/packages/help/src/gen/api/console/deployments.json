@@ -59,7 +59,25 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "createDeployment",
@@ -94,7 +112,153 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED",
+     "INFERENCE_CONFIGURATION_INVALID"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE",
+     "AGENT_PROFILE_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "IDEMPOTENCY_CONFLICT",
+     "MODEL_FILE_INVALID",
+     "MODEL_DERIVED_CATALOG_INVALID",
+     "MODEL_FILE_CHANGED",
+     "INFERENCE_CANCELLED",
+     "INFERENCE_CONTAINER_CONFLICT",
+     "INFERENCE_DISK_SPACE_LOW",
+     "INFERENCE_DOCKER_NOT_FOUND",
+     "INFERENCE_DOCKER_REJECTED",
+     "INFERENCE_DOCKER_SOCKET_INVALID",
+     "INFERENCE_DOCKER_UNAVAILABLE",
+     "INFERENCE_DRIVER_UNSUPPORTED",
+     "INFERENCE_EGRESS_GUARD_UNAVAILABLE",
+     "INFERENCE_GPU_BUSY",
+     "INFERENCE_GPU_MEMORY_LOW",
+     "INFERENCE_GPU_OOM",
+     "INFERENCE_GPU_PROBE_INVALID",
+     "INFERENCE_GPU_UNAVAILABLE",
+     "INFERENCE_GPU_UNSUPPORTED",
+     "INFERENCE_HOST_MEMORY_LOW",
+     "INFERENCE_IMAGE_INVALID",
+     "INFERENCE_IMAGE_MISSING",
+     "INFERENCE_IMAGE_UNAVAILABLE",
+     "INFERENCE_IO_FAILED",
+     "INFERENCE_LOAD_TIMEOUT",
+     "INFERENCE_MIG_UNSUPPORTED",
+     "INFERENCE_MODEL_INVALID",
+     "INFERENCE_NETWORK_CONFLICT",
+     "INFERENCE_NOT_READY",
+     "INFERENCE_NVIDIA_UNAVAILABLE",
+     "INFERENCE_OOM",
+     "INFERENCE_OPERATION_FAILED",
+     "INFERENCE_OWNERSHIP_CONFLICT",
+     "INFERENCE_PLATFORM_UNSUPPORTED",
+     "INFERENCE_PORT_CONFLICT",
+     "INFERENCE_PREFLIGHT_REQUIRED",
+     "INFERENCE_RECOVERY_REQUIRED",
+     "INFERENCE_RESOURCE_BUSY",
+     "INFERENCE_RESOURCE_LIMITS_UNAVAILABLE",
+     "INFERENCE_RESPONSE_INVALID",
+     "INFERENCE_REVISION_CONFLICT",
+     "INFERENCE_STATE_INVALID",
+     "INFERENCE_TOOLKIT_UNAVAILABLE",
+     "NODE_BUSY",
+     "NODE_UNAVAILABLE",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_STORED_STATE_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "MODEL_IO_FAILED",
+     "MODEL_STORAGE_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "getDeploymentPlacement",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/deployments/placement",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "model_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "PlacementResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "MODEL_FILE_INVALID",
+     "MODEL_DERIVED_CATALOG_INVALID"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "getAdminDeployment",
@@ -136,7 +300,25 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "requestDeploymentAction",
@@ -180,7 +362,88 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED",
+     "INFERENCE_CONFIGURATION_INVALID"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE",
+     "AGENT_PROFILE_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "IDEMPOTENCY_CONFLICT",
+     "VERSION_CONFLICT",
+     "MODEL_FILE_INVALID",
+     "MODEL_DERIVED_CATALOG_INVALID",
+     "INFERENCE_CANCELLED",
+     "INFERENCE_CONTAINER_CONFLICT",
+     "INFERENCE_DISK_SPACE_LOW",
+     "INFERENCE_DOCKER_NOT_FOUND",
+     "INFERENCE_DOCKER_REJECTED",
+     "INFERENCE_DOCKER_SOCKET_INVALID",
+     "INFERENCE_DOCKER_UNAVAILABLE",
+     "INFERENCE_DRIVER_UNSUPPORTED",
+     "INFERENCE_EGRESS_GUARD_UNAVAILABLE",
+     "INFERENCE_GPU_BUSY",
+     "INFERENCE_GPU_MEMORY_LOW",
+     "INFERENCE_GPU_OOM",
+     "INFERENCE_GPU_PROBE_INVALID",
+     "INFERENCE_GPU_UNAVAILABLE",
+     "INFERENCE_GPU_UNSUPPORTED",
+     "INFERENCE_HOST_MEMORY_LOW",
+     "INFERENCE_IMAGE_INVALID",
+     "INFERENCE_IMAGE_MISSING",
+     "INFERENCE_IMAGE_UNAVAILABLE",
+     "INFERENCE_IO_FAILED",
+     "INFERENCE_LOAD_TIMEOUT",
+     "INFERENCE_MIG_UNSUPPORTED",
+     "INFERENCE_MODEL_INVALID",
+     "INFERENCE_NETWORK_CONFLICT",
+     "INFERENCE_NOT_READY",
+     "INFERENCE_NVIDIA_UNAVAILABLE",
+     "INFERENCE_OOM",
+     "INFERENCE_OPERATION_FAILED",
+     "INFERENCE_OWNERSHIP_CONFLICT",
+     "INFERENCE_PLATFORM_UNSUPPORTED",
+     "INFERENCE_PORT_CONFLICT",
+     "INFERENCE_PREFLIGHT_REQUIRED",
+     "INFERENCE_RECOVERY_REQUIRED",
+     "INFERENCE_RESOURCE_BUSY",
+     "INFERENCE_RESOURCE_LIMITS_UNAVAILABLE",
+     "INFERENCE_RESPONSE_INVALID",
+     "INFERENCE_REVISION_CONFLICT",
+     "INFERENCE_STATE_INVALID",
+     "INFERENCE_TOOLKIT_UNAVAILABLE",
+     "NODE_BUSY",
+     "NODE_UNAVAILABLE",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_STORED_STATE_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "REGISTRY_OWNER_REQUIRED"
+    ]
+   }
   },
   {
    "id": "getInferenceNodeState",
@@ -222,7 +485,25 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "observeInferenceNode",
@@ -266,7 +547,43 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE",
+     "AGENT_PROFILE_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "IDEMPOTENCY_CONFLICT",
+     "NODE_BUSY",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_STORED_STATE_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED"
+    ]
+   }
   }
  ],
  "schemas": {
@@ -1045,6 +1362,244 @@
     "observed_at": {
      "type": "string",
      "format": "date-time"
+    }
+   }
+  },
+  "Placement": {
+   "type": "object",
+   "description": "Where a model can be deployed now, judged by the checks a deployment makes. It reserves nothing.",
+   "required": [
+    "model_id",
+    "workspace_id",
+    "candidates",
+    "recommended"
+   ],
+   "properties": {
+    "model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "candidates": {
+     "type": "array",
+     "description": "The nodes of the model's workspace that most recently reported their GPUs, newest first, at most one lookup page.",
+     "maxItems": 100,
+     "items": {
+      "$ref": "PlacementNode"
+     }
+    },
+    "recommended": {
+     "description": "The eligible GPU with the most free memory, or null when none is eligible.",
+     "anyOf": [
+      {
+       "$ref": "PlacementChoice"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "PlacementChoice": {
+   "type": "object",
+   "required": [
+    "node_id",
+    "gpu_uuid"
+   ],
+   "properties": {
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "gpu_uuid": {
+     "type": "string"
+    }
+   }
+  },
+  "PlacementGPU": {
+   "type": "object",
+   "description": "One GPU as its node last reported it, and why it cannot take the model, if it cannot.",
+   "required": [
+    "uuid",
+    "name",
+    "memory_total_mib",
+    "memory_free_mib",
+    "refusal"
+   ],
+   "properties": {
+    "uuid": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "memory_total_mib": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1048576
+    },
+    "memory_free_mib": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1048576
+    },
+    "refusal": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "AGENT_PROFILE_REJECTED",
+        "INFERENCE_CANCELLED",
+        "INFERENCE_CONFIGURATION_INVALID",
+        "INFERENCE_CONTAINER_CONFLICT",
+        "INFERENCE_DISK_SPACE_LOW",
+        "INFERENCE_DOCKER_NOT_FOUND",
+        "INFERENCE_DOCKER_REJECTED",
+        "INFERENCE_DOCKER_SOCKET_INVALID",
+        "INFERENCE_DOCKER_UNAVAILABLE",
+        "INFERENCE_DRIVER_UNSUPPORTED",
+        "INFERENCE_EGRESS_GUARD_UNAVAILABLE",
+        "INFERENCE_GPU_BUSY",
+        "INFERENCE_GPU_MEMORY_LOW",
+        "INFERENCE_GPU_OOM",
+        "INFERENCE_GPU_PROBE_INVALID",
+        "INFERENCE_GPU_UNAVAILABLE",
+        "INFERENCE_GPU_UNSUPPORTED",
+        "INFERENCE_HOST_MEMORY_LOW",
+        "INFERENCE_IMAGE_INVALID",
+        "INFERENCE_IMAGE_MISSING",
+        "INFERENCE_IMAGE_UNAVAILABLE",
+        "INFERENCE_IO_FAILED",
+        "INFERENCE_LOAD_TIMEOUT",
+        "INFERENCE_MIG_UNSUPPORTED",
+        "INFERENCE_MODEL_INVALID",
+        "INFERENCE_NETWORK_CONFLICT",
+        "INFERENCE_NOT_READY",
+        "INFERENCE_NVIDIA_UNAVAILABLE",
+        "INFERENCE_OOM",
+        "INFERENCE_OPERATION_FAILED",
+        "INFERENCE_OWNERSHIP_CONFLICT",
+        "INFERENCE_PLATFORM_UNSUPPORTED",
+        "INFERENCE_PORT_CONFLICT",
+        "INFERENCE_PREFLIGHT_REQUIRED",
+        "INFERENCE_RECOVERY_REQUIRED",
+        "INFERENCE_RESOURCE_BUSY",
+        "INFERENCE_RESOURCE_LIMITS_UNAVAILABLE",
+        "INFERENCE_RESPONSE_INVALID",
+        "INFERENCE_REVISION_CONFLICT",
+        "INFERENCE_STATE_INVALID",
+        "INFERENCE_TOOLKIT_UNAVAILABLE",
+        "NODE_UNAVAILABLE"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "PlacementNode": {
+   "type": "object",
+   "description": "A node that has reported its GPUs. A refusal here holds for every GPU on it.",
+   "required": [
+    "node_id",
+    "name",
+    "observed_at",
+    "refusal",
+    "gpus"
+   ],
+   "properties": {
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "refusal": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "AGENT_PROFILE_REJECTED",
+        "INFERENCE_CANCELLED",
+        "INFERENCE_CONFIGURATION_INVALID",
+        "INFERENCE_CONTAINER_CONFLICT",
+        "INFERENCE_DISK_SPACE_LOW",
+        "INFERENCE_DOCKER_NOT_FOUND",
+        "INFERENCE_DOCKER_REJECTED",
+        "INFERENCE_DOCKER_SOCKET_INVALID",
+        "INFERENCE_DOCKER_UNAVAILABLE",
+        "INFERENCE_DRIVER_UNSUPPORTED",
+        "INFERENCE_EGRESS_GUARD_UNAVAILABLE",
+        "INFERENCE_GPU_BUSY",
+        "INFERENCE_GPU_MEMORY_LOW",
+        "INFERENCE_GPU_OOM",
+        "INFERENCE_GPU_PROBE_INVALID",
+        "INFERENCE_GPU_UNAVAILABLE",
+        "INFERENCE_GPU_UNSUPPORTED",
+        "INFERENCE_HOST_MEMORY_LOW",
+        "INFERENCE_IMAGE_INVALID",
+        "INFERENCE_IMAGE_MISSING",
+        "INFERENCE_IMAGE_UNAVAILABLE",
+        "INFERENCE_IO_FAILED",
+        "INFERENCE_LOAD_TIMEOUT",
+        "INFERENCE_MIG_UNSUPPORTED",
+        "INFERENCE_MODEL_INVALID",
+        "INFERENCE_NETWORK_CONFLICT",
+        "INFERENCE_NOT_READY",
+        "INFERENCE_NVIDIA_UNAVAILABLE",
+        "INFERENCE_OOM",
+        "INFERENCE_OPERATION_FAILED",
+        "INFERENCE_OWNERSHIP_CONFLICT",
+        "INFERENCE_PLATFORM_UNSUPPORTED",
+        "INFERENCE_PORT_CONFLICT",
+        "INFERENCE_PREFLIGHT_REQUIRED",
+        "INFERENCE_RECOVERY_REQUIRED",
+        "INFERENCE_RESOURCE_BUSY",
+        "INFERENCE_RESOURCE_LIMITS_UNAVAILABLE",
+        "INFERENCE_RESPONSE_INVALID",
+        "INFERENCE_REVISION_CONFLICT",
+        "INFERENCE_STATE_INVALID",
+        "INFERENCE_TOOLKIT_UNAVAILABLE",
+        "NODE_UNAVAILABLE"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "gpus": {
+     "type": "array",
+     "maxItems": 32,
+     "items": {
+      "$ref": "PlacementGPU"
+     }
+    }
+   }
+  },
+  "PlacementResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Placement"
     }
    }
   },
