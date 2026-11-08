@@ -19,10 +19,12 @@ cluster as the server or a worker ([ADR 0051](../../../../docs/decisions/0051-ku
 The journal `kubernetes.json` in the agent's state directory records the membership the agent
 installed. A join that disagrees with it (another cluster, role, address or resolver) is
 refused with `KUBERNETES_CONFIG_CONFLICT`, because a server whose address changes loses its
-etcd membership; a worker's retry may bring a fresh token. RKE2 files ownsolid did not install
-are never overwritten (`KUBERNETES_CONFLICT`). An install interrupted by a crash resumes:
-verified staged files are kept and [client.KubernetesArtifact](../client/kubernetes.go)
-resumes a partial download from its last whole range.
+etcd membership. A worker's retry may bring a fresh token. The agent restarts a unit still
+activating so it reads the new configuration. It keeps an active unit running.
+RKE2 files ownsolid did not install are never overwritten (`KUBERNETES_CONFLICT`).
+After a crash, the agent keeps verified staged files and
+[client.KubernetesArtifact](../client/kubernetes.go) resumes a partial download
+from its last whole range.
 
 Readiness is read with the kubelet's own kubeconfig, which the node authorizer limits to the
 node's own object; the cluster admin kubeconfig stays on the server. When a join times out,
@@ -30,4 +32,5 @@ the task log gets a diagnosis the agent recognises in the RKE2 journal (wrong CA
 unreachable, token refused), never the journal itself.
 
 Check: `go -C services/agent test ./internal/kubernetes`. The unit tests use a fake host and a
-synthetic release; a real install runs in the cell end-to-end test.
+synthetic release. The ARC-104 research note records the real Linux node runs
+and the remaining cell acceptance tests.
