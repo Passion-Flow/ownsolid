@@ -1,6 +1,6 @@
 # Delivery and upgrades
 
-Module reviewed: 2026-11-04.
+Module reviewed: 2026-11-09.
 
 Fully offline installation, upgrades and supply-chain integrity, for Docker Compose on a
 single host and Helm on Kubernetes cells, from the same artifacts and configuration.
