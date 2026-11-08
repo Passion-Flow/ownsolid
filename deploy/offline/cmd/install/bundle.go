@@ -58,5 +58,8 @@ func runBundle(command string, args []string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	if command == "bundle-notices" {
+		return json.NewEncoder(out).Encode(bundleNotices(result))
+	}
 	return json.NewEncoder(out).Encode(result)
 }
