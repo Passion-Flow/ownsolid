@@ -17,3 +17,9 @@ preserving the existing retention DELETE authority. Native audit persistence is
 exercised by the opt-in account repository chain, including rollback and operation
 readback. See [the handoff](../../../../../docs/execution/mvp/parallel-wave5-account.md);
 these sources have not yet passed native target execution.
+
+PostgreSQL appends each new event to an installation-wide hash chain in the
+same transaction as its insert. A shared database tail orders commits across
+connections and time partitions. Existing events remain readable and precede
+the integrity coverage boundary. See the [operator export and offline verifier](../../../../../tools/audit-verify/README.md)
+and the [serialization and threat model](../../../../../docs/research/audit-chain.md).
