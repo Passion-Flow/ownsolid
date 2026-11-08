@@ -28,7 +28,7 @@ func (p *nativeDistributionProbe) Exec(context.Context, transaction.Statement) (
 func TestNativeHistoryCursorPreservesScopeAndMicroseconds(t *testing.T) {
 	stamp := time.Date(2026, 10, 24, 1, 2, 3, 123456000, time.UTC)
 	actor := "actor' OR 1=1 --"
-	statement, e := nativeHistoryPage("requests", "tenant", "workspace", actor, false, stamp, "cursor", 100)
+	statement, e := nativeHistoryPage("requests", "tenant", "workspace", actor, false, "", stamp, "cursor", 100)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -41,17 +41,31 @@ func TestNativeHistoryCursorPreservesScopeAndMicroseconds(t *testing.T) {
 		t.Fatal("statement exposed a business value")
 	}
 	for _, invalid := range []time.Time{stamp.Add(time.Nanosecond), time.Date(1969, 12, 31, 23, 59, 59, 0, time.UTC), time.Date(10000, 1, 1, 0, 0, 0, 0, time.UTC), stamp.In(time.FixedZone("offset", 3600)), stamp.In(time.FixedZone("zero-offset", 0))} {
-		if _, e := nativeHistoryPage("requests", "tenant", "workspace", actor, false, invalid, "cursor", 1); e == nil || e.Error() != "INVALID_CURSOR" {
+		if _, e := nativeHistoryPage("requests", "tenant", "workspace", actor, false, "", invalid, "cursor", 1); e == nil || e.Error() != "INVALID_CURSOR" {
 			t.Fatal("unrepresentable native cursor must be rejected, never rounded")
 		}
 	}
 	for _, limit := range []int{0, -1, 101} {
-		if _, e := nativeHistoryPage("keys", "t", "w", "u", false, time.Time{}, "", limit); e == nil {
+		if _, e := nativeHistoryPage("keys", "t", "w", "u", false, "", time.Time{}, "", limit); e == nil {
 			t.Fatal("page bound accepted")
 		}
 	}
-	if _, e := nativeHistoryPage("injected table", "t", "w", "u", true, time.Time{}, "", 1); e == nil {
+	if _, e := nativeHistoryPage("injected table", "t", "w", "u", true, "", time.Time{}, "", 1); e == nil {
 		t.Fatal("unowned selector accepted")
+	}
+}
+func TestNativeHistoryNarrowsRequestsToOneKey(t *testing.T) {
+	key := "8d3f0c52-1b7a-4f60-9a3e-2c51d0e7b4a9"
+	statement, e := nativeHistoryPage("requests", "tenant", "workspace", "actor", true, key, time.Time{}, "", 20)
+	if e != nil {
+		t.Fatal(e)
+	}
+	expected := "SELECT " + nativeRequestFields + nativeRequestJoins + " WHERE R.TENANT_ID=? AND R.WORKSPACE_ID=? AND R.API_KEY_ID=? ORDER BY R.ADMITTED_AT DESC,R.ID DESC LIMIT 21"
+	if !reflect.DeepEqual(statement, transaction.SQL(transaction.Dameng, expected, "tenant", "workspace", key)) {
+		t.Fatal("the key predicate or its binding changed")
+	}
+	if _, e := nativeHistoryPage("keys", "tenant", "workspace", "actor", true, key, time.Time{}, "", 20); e == nil {
+		t.Fatal("a key filter was accepted on a list that is not of requests")
 	}
 }
 func TestNativeMutationDoesNotRetryPoisonedConnection(t *testing.T) {

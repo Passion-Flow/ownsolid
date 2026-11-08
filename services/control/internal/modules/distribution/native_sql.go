@@ -9,7 +9,7 @@ import (
 
 const nativeGatewayFields = `ID,WORKSPACE_ID,NODE_ID,NAME,CLIENT_ORIGIN,CREATED_BY,CASE WHEN AUTHORITY_INVALIDATED_AT IS NOT NULL THEN 'invalidated' WHEN REVOKED_AT IS NOT NULL THEN 'revoked' ELSE 'active' END,CREATED_AT,REVOKED_AT`
 const nativeAliasFields = `ID,WORKSPACE_ID,GATEWAY_ID,NODE_ID,NAME,DEPLOYMENT_ID,DEPLOYMENT_REVISION,REVISION,DISABLED_AT,CREATED_AT`
-const nativeKeyFields = `K.ID,K.WORKSPACE_ID,K.ALIAS_ID,A.NAME,K.LABEL,K.CREATED_BY,CASE WHEN K.REVOKED_AT IS NOT NULL THEN 'revoked' WHEN K.EXPIRES_AT<=CURRENT_TIMESTAMP(6) THEN 'expired' WHEN K.REQUESTED_EPOCH<>U.AUTH_EPOCH OR U.STATUS<>'active' OR NOT EXISTS(SELECT 1 FROM WORKSPACE_MEMBERSHIPS M WHERE M.TENANT_ID=K.TENANT_ID AND M.WORKSPACE_ID=K.WORKSPACE_ID AND M.USER_ID=K.CREATED_BY AND M.AUTHORITY_ID=K.MEMBERSHIP_AUTHORITY) THEN 'invalidated' WHEN W.STATUS<>'active' THEN 'unavailable' ELSE 'active' END,K.CREATED_AT,K.EXPIRES_AT,K.LAST_USED_AT,K.REVOKED_AT`
+const nativeKeyFields = `K.ID,K.WORKSPACE_ID,K.ALIAS_ID,A.NAME,K.LABEL,K.CREATED_BY,CASE WHEN K.REVOKED_AT IS NOT NULL THEN 'revoked' WHEN K.EXPIRES_AT<=CURRENT_TIMESTAMP(6) THEN 'expired' WHEN K.REQUESTED_EPOCH<>U.AUTH_EPOCH OR U.STATUS<>'active' OR NOT EXISTS(SELECT 1 FROM WORKSPACE_MEMBERSHIPS M WHERE M.TENANT_ID=K.TENANT_ID AND M.WORKSPACE_ID=K.WORKSPACE_ID AND M.USER_ID=K.CREATED_BY AND M.AUTHORITY_ID=K.MEMBERSHIP_AUTHORITY) THEN 'invalidated' WHEN W.STATUS<>'active' THEN 'unavailable' ELSE 'active' END,K.CREATED_AT,K.EXPIRES_AT,K.LAST_USED_AT,K.REVOKED_AT,NULL,NULL`
 const nativeKeyJoins = ` FROM API_KEYS K JOIN MODEL_ALIASES A ON A.ID=K.ALIAS_ID AND A.TENANT_ID=K.TENANT_ID AND A.WORKSPACE_ID=K.WORKSPACE_ID JOIN USERS U ON U.ID=K.CREATED_BY JOIN WORKSPACES W ON W.ID=K.WORKSPACE_ID AND W.TENANT_ID=K.TENANT_ID`
 const nativeRequestFields = `R.ID,R.WORKSPACE_ID,R.GATEWAY_ID,R.NODE_ID,R.API_KEY_ID,R.ACTOR_USER_ID,R.ALIAS_ID,A.NAME,R.DEPLOYMENT_ID,R.DEPLOYMENT_REVISION,R.STATE,R.CAPACITY_HELD,R.STREAM,R.ADMITTED_AT,R.DEADLINE_AT,R.REPORTED_AT,R.RECONCILED_AT,R.ACTIVE_RECOVERY_ID,R.OUTCOME`
 const nativeRequestJoins = ` FROM GATEWAY_REQUESTS R JOIN MODEL_ALIASES A ON A.TENANT_ID=R.TENANT_ID AND A.WORKSPACE_ID=R.WORKSPACE_ID AND A.ID=R.ALIAS_ID`
@@ -72,7 +72,7 @@ func distributionNativePageBound(native string, args []any) transaction.Statemen
 
 // The resource enum selects native projections; SQL text from another dialect
 // never enters this builder. Every cursor value remains a bound parameter.
-func nativeHistoryPage(resource, tenant, workspace, actor string, administrator bool, stamp time.Time, cursor string, limit int) (transaction.Statement, error) {
+func nativeHistoryPage(resource, tenant, workspace, actor string, administrator bool, apiKey string, stamp time.Time, cursor string, limit int) (transaction.Statement, error) {
 	var query, table, clock, owner string
 	switch resource {
 	case "gateways":
@@ -109,6 +109,13 @@ func nativeHistoryPage(resource, tenant, workspace, actor string, administrator 
 		if resource == "aliases" {
 			query += " AND A.DISABLED_AT IS NULL"
 		}
+	}
+	if apiKey != "" {
+		if resource != "requests" {
+			return transaction.Statement{}, fail("VALIDATION_FAILED")
+		}
+		query += " AND R.API_KEY_ID=?"
+		args = append(args, apiKey)
 	}
 	if cursor != "" {
 		if !nativeTime(stamp) {

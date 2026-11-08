@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "ownsolid Distribution",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "description": "M07 scoped human administration and fresh metadata-only Go/Rust authority. Never stores prompts/output. Actual target qualification remains separate."
   },
   "servers": [
@@ -757,6 +757,42 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "IDEMPOTENCY_CONFLICT",
+            "MODEL_ALIAS_UNAVAILABLE",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_STORED_STATE_INVALID",
+            "LICENSE_CONFIGURATION_REQUIRED"
+          ]
         }
       },
       "parameters": [
@@ -907,6 +943,20 @@
               "minLength": 1,
               "maxLength": 512
             }
+          },
+          {
+            "name": "api_key_id",
+            "in": "query",
+            "required": false,
+            "description": "Only the calls made with this key: the key's call log.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
           }
         ],
         "responses": {
@@ -930,6 +980,26 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED",
+            "INVALID_CURSOR"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "parameters": [
@@ -1126,7 +1196,211 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}/rotate": {
+      "post": {
+        "operationId": "adminRotateDistributionKey",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result; creation replay never repeats a secret.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MintedDistributionKeyResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Scoped result; creation replay never repeats a secret.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MintedDistributionKeyResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable safe error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateDistributionKey"
+              }
+            }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "IDEMPOTENCY_CONFLICT",
+            "API_KEY_NOT_ACTIVE",
+            "API_KEY_ALREADY_ROTATED",
+            "API_KEY_ROTATION_UNAVAILABLE"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_STORED_STATE_INVALID",
+            "LICENSE_CONFIGURATION_REQUIRED"
+          ]
+        },
+        "description": "Issue a successor with a new secret, shown once, and stop this key after the overlap. A key is rotated at most once; repeating the request returns the successor without its secret."
       },
       "parameters": [
         {
@@ -2419,6 +2693,42 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "IDEMPOTENCY_CONFLICT",
+            "MODEL_ALIAS_UNAVAILABLE",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_STORED_STATE_INVALID",
+            "LICENSE_CONFIGURATION_REQUIRED"
+          ]
         }
       },
       "parameters": [
@@ -2569,6 +2879,20 @@
               "minLength": 1,
               "maxLength": 512
             }
+          },
+          {
+            "name": "api_key_id",
+            "in": "query",
+            "required": false,
+            "description": "Only the calls made with this key: the key's call log.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
           }
         ],
         "responses": {
@@ -2592,6 +2916,26 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED",
+            "INVALID_CURSOR"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "parameters": [
@@ -2788,7 +3132,211 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}/rotate": {
+      "post": {
+        "operationId": "portalRotateDistributionKey",
+        "x-audiences": [
+          "portal"
+        ],
+        "security": [
+          {
+            "portalSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scoped result; creation replay never repeats a secret.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MintedDistributionKeyResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Scoped result; creation replay never repeats a secret.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MintedDistributionKeyResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable safe error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateDistributionKey"
+              }
+            }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED",
+            "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+            "IDEMPOTENCY_CONFLICT",
+            "API_KEY_NOT_ACTIVE",
+            "API_KEY_ALREADY_ROTATED",
+            "API_KEY_ROTATION_UNAVAILABLE"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "LICENSE_STORED_STATE_INVALID",
+            "LICENSE_CONFIGURATION_REQUIRED"
+          ]
+        },
+        "description": "Issue a successor with a new secret, shown once, and stop this key after the overlap. A key is rotated at most once; repeating the request returns the successor without its secret."
       },
       "parameters": [
         {
@@ -3688,6 +4236,38 @@
                 "type": "null"
               }
             ]
+          },
+          "rotated_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+                "not": {
+                  "const": "00000000-0000-0000-0000-000000000000"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The key this one replaced, when it was issued by a rotation."
+          },
+          "replaced_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+                "not": {
+                  "const": "00000000-0000-0000-0000-000000000000"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The key that replaced this one; until the overlap ends both work."
           }
         },
         "required": [
@@ -3702,7 +4282,9 @@
           "created_at",
           "expires_at",
           "last_used_at",
-          "revoked_at"
+          "revoked_at",
+          "rotated_from",
+          "replaced_by"
         ]
       },
       "MintDistributionKey": {
@@ -4667,8 +5249,11 @@
               "ALIAS_PAUSE_REQUIRED",
               "ALIAS_REQUESTS_UNDRAINED",
               "ALIAS_ROLLBACK_TARGET_INVALID",
+              "API_KEY_ALREADY_ROTATED",
               "API_KEY_EXPIRED",
               "API_KEY_INVALID",
+              "API_KEY_NOT_ACTIVE",
+              "API_KEY_ROTATION_UNAVAILABLE",
               "AUTH_CAPACITY_EXCEEDED",
               "AUTH_INVALID_CREDENTIALS",
               "AUTH_REQUIRED",
@@ -5538,6 +6123,27 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "RotateDistributionKey": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Replace a key's secret. The successor keeps the workspace, alias, label and owner; the old key stops after the overlap, or at once when it is 0.",
+        "properties": {
+          "overlap_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 604800
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "overlap_seconds",
+          "reason"
         ]
       }
     },

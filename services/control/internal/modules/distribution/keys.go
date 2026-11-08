@@ -18,12 +18,12 @@ const gatewayCredentialPrefix = "gw1"
 const ordinaryKeyPurpose = "api-key"
 const operationKeyPurpose = "accepted-operation-key"
 const maximumKeyTTLSeconds = 90 * 24 * 60 * 60
-const keyFields = `k.id::text,k.workspace_id::text,k.alias_id::text,a.name,k.label,k.created_by::text,CASE WHEN k.revoked_at IS NOT NULL THEN 'revoked' WHEN k.expires_at<=clock_timestamp() THEN 'expired' WHEN k.requested_epoch<>u.auth_epoch OR u.status<>'active' OR NOT EXISTS(SELECT 1 FROM workspace_memberships m WHERE m.tenant_id=k.tenant_id AND m.workspace_id=k.workspace_id AND m.user_id=k.created_by AND m.authority_id=k.membership_authority) THEN 'invalidated' WHEN w.status<>'active' THEN 'unavailable' ELSE 'active' END,k.created_at,k.expires_at,k.last_used_at,k.revoked_at`
+const keyFields = `k.id::text,k.workspace_id::text,k.alias_id::text,a.name,k.label,k.created_by::text,CASE WHEN k.revoked_at IS NOT NULL THEN 'revoked' WHEN k.expires_at<=clock_timestamp() THEN 'expired' WHEN k.requested_epoch<>u.auth_epoch OR u.status<>'active' OR NOT EXISTS(SELECT 1 FROM workspace_memberships m WHERE m.tenant_id=k.tenant_id AND m.workspace_id=k.workspace_id AND m.user_id=k.created_by AND m.authority_id=k.membership_authority) THEN 'invalidated' WHEN w.status<>'active' THEN 'unavailable' ELSE 'active' END,k.created_at,k.expires_at,k.last_used_at,k.revoked_at,k.rotated_from::text,(SELECT s.id::text FROM api_keys s WHERE s.rotated_from=k.id)`
 const keyJoins = ` FROM api_keys k JOIN model_aliases a ON a.id=k.alias_id AND a.tenant_id=k.tenant_id AND a.workspace_id=k.workspace_id JOIN users u ON u.id=k.created_by JOIN workspaces w ON w.id=k.workspace_id AND w.tenant_id=k.tenant_id`
 
 func scanKey(row transaction.Row) (APIKey, error) {
 	var out APIKey
-	e := row.Scan(&out.ID, &out.WorkspaceID, &out.AliasID, &out.AliasName, &out.Label, &out.CreatedBy, &out.State, &out.CreatedAt, &out.ExpiresAt, &out.LastUsedAt, &out.RevokedAt)
+	e := row.Scan(&out.ID, &out.WorkspaceID, &out.AliasID, &out.AliasName, &out.Label, &out.CreatedBy, &out.State, &out.CreatedAt, &out.ExpiresAt, &out.LastUsedAt, &out.RevokedAt, &out.RotatedFrom, &out.ReplacedBy)
 	if errors.Is(e, sql.ErrNoRows) {
 		return APIKey{}, fail("RESOURCE_NOT_FOUND")
 	}
@@ -168,13 +168,7 @@ func (s *Service) RevokeKey(ctx context.Context, a identity.Auth, workspace, id,
 	if _, e := s.Workspaces.Get(ctx, a, workspace, false); e != nil {
 		return APIKey{}, e
 	}
-	var owner string
-	e := s.storageTransaction(ctx, func(ctx context.Context, q transaction.Executor) error {
-		return q.QueryRow(ctx, distributionNativeSQL(q, `SELECT CREATED_BY FROM API_KEYS WHERE ID=? AND WORKSPACE_ID=? AND (?=1 OR CREATED_BY=?)`, "SELECT created_by::text FROM api_keys WHERE id=$1 AND workspace_id=$2 AND ($3 OR created_by=$4)", "SELECT created_by FROM api_keys WHERE id=? AND workspace_id=? AND (? OR created_by=?)", id, workspace, admin(a), a.Me.User.ID)).Scan(&owner)
-	})
-	if errors.Is(e, sql.ErrNoRows) || e != nil && e.Error() == string(transaction.NoRows) {
-		return APIKey{}, fail("RESOURCE_NOT_FOUND")
-	}
+	owner, e := s.keyOwner(ctx, a, workspace, id)
 	if e != nil {
 		return APIKey{}, e
 	}

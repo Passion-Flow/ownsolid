@@ -73,12 +73,20 @@ func scanRequest(row transaction.Row) (RequestRecord, error) {
 }
 
 // listPage uses trusted module-owned SQL selectors. Cursor values are data; scope is rechecked on every page.
-func listPage[T any](ctx context.Context, s *Service, a identity.Auth, workspace string, values url.Values, resource, query, mysqlQuery, table, timeColumn, idColumn string, scan func(transaction.Row) (T, error), position func(T) (time.Time, string), prepare func(context.Context, transaction.Executor, workspaces.Workspace, *T) error) (Page[T], error) {
+// A non-empty apiKey narrows requests to one key's calls and binds the cursor to that key.
+func listPage[T any](ctx context.Context, s *Service, a identity.Auth, workspace string, values url.Values, apiKey string, resource, query, mysqlQuery, table, timeColumn, idColumn string, scan func(transaction.Row) (T, error), position func(T) (time.Time, string), prepare func(context.Context, transaction.Executor, workspaces.Workspace, *T) error) (Page[T], error) {
 	out := Page[T]{Items: []T{}}
 	if _, e := s.repository(); e != nil {
 		return Page[T]{}, distributionError(e)
 	}
-	limit, cursor, scope, e := pagination.ParseWithDefault(values, "distribution:"+resource+":"+a.Me.Audience+":"+a.Me.User.ID+":"+workspace, s.Identity.Config.Policy().UI.PageSize)
+	if apiKey != "" && resource != "requests" {
+		return out, fail("VALIDATION_FAILED")
+	}
+	scope := "distribution:" + resource + ":" + a.Me.Audience + ":" + a.Me.User.ID + ":" + workspace
+	if apiKey != "" {
+		scope += ":key:" + apiKey
+	}
+	limit, cursor, scope, e := pagination.ParseWithDefault(values, scope, s.Identity.Config.Policy().UI.PageSize)
 	if e != nil {
 		return out, e
 	}
@@ -101,6 +109,11 @@ func listPage[T any](ctx context.Context, s *Service, a identity.Auth, workspace
 				mysqlStatement += " AND disabled_at IS NULL"
 			}
 		}
+		if apiKey != "" {
+			args = append(args, apiKey)
+			statement += " AND r.api_key_id=$" + strconv.Itoa(len(args))
+			mysqlStatement += " AND r.api_key_id=?"
+		}
 		if cursor.ID != "" {
 			args = append(args, cursor.Time, cursor.ID)
 			n := len(args)
@@ -112,7 +125,7 @@ func listPage[T any](ctx context.Context, s *Service, a identity.Auth, workspace
 		mysqlStatement += " ORDER BY " + timeColumn + " DESC," + idColumn + " DESC LIMIT ?"
 		selected := distributionSQL(tx, statement, mysqlStatement, args...)
 		if tx.Dialect() == transaction.Dameng {
-			selected, e = nativeHistoryPage(resource, w.TenantID, w.ID, a.Me.User.ID, admin(a), cursor.Time, cursor.ID, limit)
+			selected, e = nativeHistoryPage(resource, w.TenantID, w.ID, a.Me.User.ID, admin(a), apiKey, cursor.Time, cursor.ID, limit)
 			if e != nil {
 				return e
 			}
@@ -157,16 +170,30 @@ func (s *Service) GatewayPage(ctx context.Context, a identity.Auth, workspace st
 	if !admin(a) {
 		return Page[Gateway]{}, fail("ACCESS_DENIED")
 	}
-	return listPage(ctx, s, a, workspace, values, "gateways", "SELECT "+gatewayFields+" FROM gateway_instances g", "SELECT "+mysqlGatewayFields+" FROM gateway_instances g", "g", "g.created_at", "g.id", scanGateway, func(v Gateway) (time.Time, string) { return v.CreatedAt, v.ID }, nil)
+	return listPage(ctx, s, a, workspace, values, "", "gateways", "SELECT "+gatewayFields+" FROM gateway_instances g", "SELECT "+mysqlGatewayFields+" FROM gateway_instances g", "g", "g.created_at", "g.id", scanGateway, func(v Gateway) (time.Time, string) { return v.CreatedAt, v.ID }, nil)
 }
 func (s *Service) AliasPage(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[Alias], error) {
-	return listPage(ctx, s, a, workspace, values, "aliases", "SELECT "+aliasFields+" FROM model_aliases a", "SELECT "+mysqlAliasFields+" FROM model_aliases a", "a", "a.created_at", "a.id", scanAlias, func(v Alias) (time.Time, string) { return v.CreatedAt, v.ID }, s.aliasAvailability)
+	return listPage(ctx, s, a, workspace, values, "", "aliases", "SELECT "+aliasFields+" FROM model_aliases a", "SELECT "+mysqlAliasFields+" FROM model_aliases a", "a", "a.created_at", "a.id", scanAlias, func(v Alias) (time.Time, string) { return v.CreatedAt, v.ID }, s.aliasAvailability)
 }
 func (s *Service) KeyPage(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[APIKey], error) {
-	return listPage(ctx, s, a, workspace, values, "keys", "SELECT "+keyFields+keyJoins, "SELECT "+mysqlKeyFields+keyJoins, "k", "k.created_at", "k.id", scanKey, func(v APIKey) (time.Time, string) { return v.CreatedAt, v.ID }, nil)
+	return listPage(ctx, s, a, workspace, values, "", "keys", "SELECT "+keyFields+keyJoins, "SELECT "+mysqlKeyFields+keyJoins, "k", "k.created_at", "k.id", scanKey, func(v APIKey) (time.Time, string) { return v.CreatedAt, v.ID }, nil)
 }
+// RequestPage lists a workspace's admitted calls, newest first; `api_key_id` narrows them to one
+// key's calls, which is the key's call log.
 func (s *Service) RequestPage(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[RequestRecord], error) {
-	return listPage(ctx, s, a, workspace, values, "requests", "SELECT "+requestFields+requestJoins, "SELECT "+mysqlRequestFields+requestJoins, "r", "r.admitted_at", "r.id", scanRequest, func(v RequestRecord) (time.Time, string) { return v.AdmittedAt, v.ID }, nil)
+	query := url.Values{}
+	for name, value := range values {
+		query[name] = value
+	}
+	apiKey := ""
+	if value, exists := query["api_key_id"]; exists {
+		if len(value) != 1 || !wire.ValidID(value[0]) {
+			return Page[RequestRecord]{Items: []RequestRecord{}}, fail("VALIDATION_FAILED")
+		}
+		apiKey = value[0]
+		delete(query, "api_key_id")
+	}
+	return listPage(ctx, s, a, workspace, query, apiKey, "requests", "SELECT "+requestFields+requestJoins, "SELECT "+mysqlRequestFields+requestJoins, "r", "r.admitted_at", "r.id", scanRequest, func(v RequestRecord) (time.Time, string) { return v.AdmittedAt, v.ID }, nil)
 }
 func (s *Service) Request(ctx context.Context, a identity.Auth, workspace, id string) (RequestRecord, error) {
 	if !wire.ValidID(id) {

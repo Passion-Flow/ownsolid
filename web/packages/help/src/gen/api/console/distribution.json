@@ -469,7 +469,42 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "IDEMPOTENCY_CONFLICT",
+     "MODEL_ALIAS_UNAVAILABLE",
+     "RESOURCE_LIMIT_REACHED"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_STORED_STATE_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED"
+    ]
+   }
   },
   {
    "id": "adminGetDistributionKey",
@@ -571,6 +606,16 @@
       "minLength": 1,
       "maxLength": 512
      }
+    },
+    {
+     "name": "api_key_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     },
+     "description": "Only the calls made with this key: the key's call log."
     }
    ],
    "body": null,
@@ -582,7 +627,26 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED",
+     "INVALID_CURSOR"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "adminGetGatewayRequest",
@@ -686,7 +750,131 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
+  },
+  {
+   "id": "adminRotateDistributionKey",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}/rotate",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "resource_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "RotateDistributionKey"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "MintedDistributionKeyResponse"
+     }
+    },
+    {
+     "status": "201",
+     "schema": {
+      "$ref": "MintedDistributionKeyResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+     "IDEMPOTENCY_CONFLICT",
+     "API_KEY_NOT_ACTIVE",
+     "API_KEY_ALREADY_ROTATED",
+     "API_KEY_ROTATION_UNAVAILABLE"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_STORED_STATE_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED"
+    ]
+   }
   },
   {
    "id": "adminrevokeGatewayInstance",
@@ -1482,7 +1670,9 @@
     "created_at",
     "expires_at",
     "last_used_at",
-    "revoked_at"
+    "revoked_at",
+    "rotated_from",
+    "replaced_by"
    ],
    "properties": {
     "id": {
@@ -1548,6 +1738,30 @@
       {
        "type": "string",
        "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "rotated_from": {
+     "description": "The key this one replaced, when it was issued by a rotation.",
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "replaced_by": {
+     "description": "The key that replaced this one; until the overlap ends both work.",
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "uuid"
       },
       {
        "type": "null"
@@ -2462,6 +2676,26 @@
     "reason"
    ],
    "properties": {
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  },
+  "RotateDistributionKey": {
+   "type": "object",
+   "description": "Replace a key's secret. The successor keeps the workspace, alias, label and owner; the old key stops after the overlap, or at once when it is 0.",
+   "required": [
+    "overlap_seconds",
+    "reason"
+   ],
+   "properties": {
+    "overlap_seconds": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 604800
+    },
     "reason": {
      "type": "string",
      "minLength": 1,

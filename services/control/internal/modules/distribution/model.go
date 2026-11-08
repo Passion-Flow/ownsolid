@@ -92,6 +92,10 @@ type APIKey struct {
 	ExpiresAt   time.Time  `json:"expires_at"`
 	LastUsedAt  *time.Time `json:"last_used_at"`
 	RevokedAt   *time.Time `json:"revoked_at"`
+	// RotatedFrom is the key this one replaced; ReplacedBy is the key that replaced this one.
+	// Only PostgreSQL records rotation, so other chains read both as null.
+	RotatedFrom *string `json:"rotated_from"`
+	ReplacedBy  *string `json:"replaced_by"`
 }
 type KeyRequest struct {
 	WorkspaceID string `json:"workspace_id"`
@@ -99,6 +103,11 @@ type KeyRequest struct {
 	Label       string `json:"label"`
 	TTLSeconds  int    `json:"ttl_seconds"`
 	Reason      string `json:"reason"`
+}
+// RotateRequest replaces a key's secret and stops the old key after an overlap.
+type RotateRequest struct {
+	OverlapSeconds int    `json:"overlap_seconds"`
+	Reason         string `json:"reason"`
 }
 type MintedKey struct {
 	Key             APIKey  `json:"key"`

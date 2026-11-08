@@ -112,7 +112,7 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 		return nil, 0, bad
 	}
 	intent := ""
-	if r.Method == http.MethodPost && (len(parts) == 1 || len(parts) == 3 && parts[0] == "requests" && parts[2] == "recoveries" || len(parts) == 3 && parts[0] == "aliases" && parts[2] == "cutovers") {
+	if r.Method == http.MethodPost && (len(parts) == 1 || len(parts) == 3 && parts[0] == "requests" && parts[2] == "recoveries" || len(parts) == 3 && parts[0] == "aliases" && parts[2] == "cutovers" || len(parts) == 3 && parts[0] == "keys" && parts[2] == "rotate") {
 		keys := r.Header.Values("Idempotency-Key")
 		if len(keys) != 1 || !wire.ValidID(keys[0]) {
 			return nil, 0, bad
@@ -210,6 +210,18 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 		}
 	}
 	if len(parts) == 3 && r.Method == http.MethodPost {
+		if parts[0] == "keys" && parts[2] == "rotate" {
+			var input distribution.RotateRequest
+			if e := decode(r, &input); e != nil {
+				return nil, 0, e
+			}
+			v, e := h.Service.RotateKey(r.Context(), a, workspace, id, input, intent, request)
+			status := 200
+			if v.Created {
+				status = 201
+			}
+			return v, status, e
+		}
 		if parts[0] == "aliases" && parts[2] == "disable" && isAdmin {
 			var input struct {
 				ExpectedRevision int64  `json:"expected_revision"`

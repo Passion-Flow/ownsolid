@@ -13,7 +13,7 @@ func kubernetesSample() Snapshot {
 	s.Profile = "mvp-postgresql-cpu-v1-linux-amd64"
 	s.Events[0].Action = "installation_terminal"
 	s.Events[0].Outcome = "serving_verified"
-	s.Kubernetes = &KubernetesJournalBinding{IndexFormat: KubernetesIndexFormat, ApplicationProfile: wire.MVPPostgreSQLCPUApplicationProfile, SchemaVersion: 50, PreparedPlanSHA256: strings.Repeat("1", 64), LastSource: KubernetesSourceReference{Kind: "installation", EventKind: "terminal", OperationID: s.Events[0].OperationID, PlanSHA256: strings.Repeat("2", 64), Sequence: 1, SHA256: strings.Repeat("3", 64)}, InstalledRelease: &KubernetesInstalledRelease{ReleaseID: s.ReleaseID, Profile: s.Profile, ArchiveSHA256: s.ArchiveSHA256, ManifestSHA256: s.ManifestSHA256, SourceCommit: strings.Repeat("4", 40), SchemaVersion: 50, ActivationSequence: 1}}
+	s.Kubernetes = &KubernetesJournalBinding{IndexFormat: KubernetesIndexFormat, ApplicationProfile: wire.MVPPostgreSQLCPUApplicationProfile, SchemaVersion: 51, PreparedPlanSHA256: strings.Repeat("1", 64), LastSource: KubernetesSourceReference{Kind: "installation", EventKind: "terminal", OperationID: s.Events[0].OperationID, PlanSHA256: strings.Repeat("2", 64), Sequence: 1, SHA256: strings.Repeat("3", 64)}, InstalledRelease: &KubernetesInstalledRelease{ReleaseID: s.ReleaseID, Profile: s.Profile, ArchiveSHA256: s.ArchiveSHA256, ManifestSHA256: s.ManifestSHA256, SourceCommit: strings.Repeat("4", 40), SchemaVersion: 51, ActivationSequence: 1}}
 	return s
 }
 func TestKubernetesViewBindsActualOrderedSourceAndServingActivation(t *testing.T) {

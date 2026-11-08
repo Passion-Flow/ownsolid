@@ -147,7 +147,7 @@ const mysqlGatewayFields = `id,workspace_id,node_id,name,client_origin,created_b
 
 const mysqlAliasFields = `id,workspace_id,gateway_id,node_id,name,deployment_id,deployment_revision,revision,disabled_at,created_at`
 
-const mysqlKeyFields = `k.id,k.workspace_id,k.alias_id,a.name,k.label,k.created_by,CASE WHEN k.revoked_at IS NOT NULL THEN 'revoked' WHEN k.expires_at<=UTC_TIMESTAMP(6) THEN 'expired' WHEN k.requested_epoch<>u.auth_epoch OR u.status<>'active' OR NOT EXISTS(SELECT 1 FROM workspace_memberships m WHERE m.tenant_id=k.tenant_id AND m.workspace_id=k.workspace_id AND m.user_id=k.created_by AND m.authority_id=k.membership_authority) THEN 'invalidated' WHEN w.status<>'active' THEN 'unavailable' ELSE 'active' END,k.created_at,k.expires_at,k.last_used_at,k.revoked_at`
+const mysqlKeyFields = `k.id,k.workspace_id,k.alias_id,a.name,k.label,k.created_by,CASE WHEN k.revoked_at IS NOT NULL THEN 'revoked' WHEN k.expires_at<=UTC_TIMESTAMP(6) THEN 'expired' WHEN k.requested_epoch<>u.auth_epoch OR u.status<>'active' OR NOT EXISTS(SELECT 1 FROM workspace_memberships m WHERE m.tenant_id=k.tenant_id AND m.workspace_id=k.workspace_id AND m.user_id=k.created_by AND m.authority_id=k.membership_authority) THEN 'invalidated' WHEN w.status<>'active' THEN 'unavailable' ELSE 'active' END,k.created_at,k.expires_at,k.last_used_at,k.revoked_at,NULL,NULL`
 
 const mysqlRequestFields = `r.id,r.workspace_id,r.gateway_id,r.node_id,r.api_key_id,r.actor_user_id,r.alias_id,a.name,r.deployment_id,r.deployment_revision,r.state,r.capacity_held,r.stream,r.admitted_at,r.deadline_at,r.reported_at,r.reconciled_at,r.active_recovery_id,r.outcome`
 
