@@ -7,3 +7,14 @@
 This package has no persistent business state, credentials or control-plane permissions. Runtime/managers consume its facts, and [agent contracts](../../../../contracts/agent) define the wire representation. When changing a field or parser, synchronize handshake/preflight consumers and invalid/missing/overflow cases.
 
 Focused native check: `go -C services/agent test ./internal/discovery`. Parser tests qualify the supplied fixtures only; actual host collection and GPU/workload support require their distinct target checks.
+
+## NVIDIA DCGM readings
+
+`CollectDCGM` reads DCGM Exporter 4.9.0 with DCGM 4.7.0 on a numeric loopback
+address supplied by the caller. Use the physical GPU device selector and
+disable workload label enrichment. Start with the pinned default metrics
+and enable the two volatile ECC totals and the NVLink recovery counters
+from the collector list where available. The snapshot carries physical GPU
+UUIDs and canonical DCGM field names. A missing sample means the exporter
+did not provide a usable reading. See [GPU telemetry research](../../../../docs/research/gpu-telemetry.md)
+for source versions, units and deployment gates.
