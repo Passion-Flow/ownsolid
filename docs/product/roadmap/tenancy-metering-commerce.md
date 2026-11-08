@@ -1,5 +1,11 @@
 # Tenancy, metering and commerce
 
+Reviewed 2026-11-09 against [Slurm accounting](https://slurm.schedmd.com/accounting.html),
+[OpenMeter](https://openmeter.io/docs/metering/overview) and
+[FinOps allocation](https://www.finops.org/framework/capabilities/allocation/).
+The P1 allocation, usage and prepaid flow still fits. Closed-period corrections
+are tracked separately with operator commerce.
+
 Tenants and organizations, usage records, chargeback for enterprises, and commerce for
 compute-center operators who resell capacity. The ownsolid platform license is separate
 from how a customer bills its own tenants.
@@ -29,6 +35,7 @@ from how a customer bills its own tenants.
 - [ ] TEN-206 Tenant export, migration and restore (P2) - Catalog: F477
 - [ ] TEN-207 Ownership transfer on staff departure (P2) - Catalog: F471
 - [ ] TEN-208 Service catalog with availability explanations (P2) - Catalog: F566
+- [ ] TEN-209 Close billing periods and record auditable corrections and reversals (P2)
 
 ## P3 Multi-site
 
