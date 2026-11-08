@@ -27,6 +27,7 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install scheduled-backup --config <install.yaml>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
+	"       ownsolid-install recover-restore --config <install.yaml> [--rollback]\n" +
 	"       ownsolid-install agents status --config <install.yaml>\n" +
 	"       ownsolid-install agents shed --config <install.yaml> --level none|bulk|telemetry|heartbeats --reason <text>\n" +
 	"       ownsolid-install capabilities"
@@ -65,13 +66,14 @@ func run(args []string, out io.Writer) error {
 	path := flags.String("config", "", "typed install configuration")
 	output := flags.String("output", "", "backup directory or new support archive path")
 	from := flags.String("from", "", "backup directory to restore")
+	rollback := flags.Bool("rollback", false, "return to the original database and retain the candidate")
 	level := flags.String("level", "", "agent traffic to refuse, lowest priority first")
 	reason := flags.String("reason", "", "why, kept in the audit record")
 	if e := flags.Parse(args); e != nil || flags.NArg() != 0 || *path == "" {
 		return errors.New(usage)
 	}
 	shed := command == "agents shed"
-	if (command == "backup" || command == "support-bundle") != (*output != "") || (command == "restore") != (*from != "") || shed != (*level != "") || shed != (*reason != "") {
+	if (command == "backup" || command == "support-bundle") != (*output != "") || (command == "restore") != (*from != "") || shed != (*level != "") || shed != (*reason != "") || (*rollback && command != "recover-restore") {
 		return errors.New(usage)
 	}
 	load := install.LoadOperational
@@ -105,6 +107,8 @@ func run(args []string, out io.Writer) error {
 		return install.ScheduledBackup(ctx, c, install.ExecRunner{}, out)
 	case "restore":
 		return install.Restore(ctx, c, install.ExecRunner{}, *from, out)
+	case "recover-restore":
+		return install.RecoverRestore(ctx, c, install.ExecRunner{}, *rollback, out)
 	case "agents status":
 		return install.AgentStatus(ctx, c, out)
 	case "agents shed":

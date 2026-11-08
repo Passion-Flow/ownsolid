@@ -12,7 +12,11 @@ WHERE d.datname = current_database()`
 // The adoption record belongs to the restored database. Renaming a failed
 // candidate aside cannot grant its authority to the database put back in place.
 func (o *operation) recordRestoreAdoption(ctx context.Context) error {
-	const statement = `DO $adopt$
+	// The host may persist writer admission immediately after this command.
+	// Flush this marker and all preceding database changes before it can.
+	const statement = `BEGIN;
+SET LOCAL synchronous_commit = on;
+DO $adopt$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM public.installation_state WHERE id = 1 AND bootstrap_complete) THEN
         RAISE EXCEPTION 'the restored database has no completed administrator bootstrap';
@@ -20,7 +24,8 @@ BEGIN
     EXECUTE format('ALTER DATABASE %I SET ` + restoreAdoptionSetting + ` TO %L',
         current_database(), (SELECT ` + restoreAdoptionBinding + `));
 END;
-$adopt$`
+$adopt$;
+COMMIT;`
 	if _, err := o.query(ctx, databaseName, statement); err != nil {
 		return &StepError{Code: "INSTALL_RESTORE_ADOPTION_FAILED", Detail: err.Error()}
 	}

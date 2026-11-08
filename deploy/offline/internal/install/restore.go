@@ -33,6 +33,9 @@ func Restore(ctx context.Context, c Config, runner StreamRunner, from string, ou
 	if os.Geteuid() != 0 {
 		return errors.New("INSTALL_ROOT_REQUIRED: restore writes files owned by the service users; run it as root")
 	}
+	if e := restorePendingError(c); e != nil {
+		return e
+	}
 	manifest, e := readBackup(from)
 	if e != nil {
 		return e
@@ -50,7 +53,11 @@ func Restore(ctx context.Context, c Config, runner StreamRunner, from string, ou
 	defer cancel()
 	o := newOperation(c, runner, out)
 	if e = o.restore(ctx, from, manifest); e != nil {
-		e = retryWith(e, "restore")
+		command := "restore"
+		if restorePendingError(c) != nil {
+			command = "recover-restore"
+		}
+		e = retryWith(e, command)
 		o.record("restore", "failed", from+": "+e.Error())
 		return e
 	}
@@ -124,53 +131,70 @@ func (o *operation) restore(ctx context.Context, from string, manifest backupMan
 		fmt.Fprintln(o.out, "step restore-files: ok")
 	}
 	if e = o.prepareTarget(ctx); e != nil {
-		if fresh {
-			return e
-		}
-		return o.abandon(ctx, e)
+		return e
 	}
-	// Before the database changes: serving refuses a database naming a model it cannot find.
-	restored, e := o.restoreModels(from, manifest)
+	suffix, e := randomBytes(12)
 	if e != nil {
-		e = &StepError{Step: "restore", Code: "INSTALL_RESTORE_MODELS_FAILED", Detail: e.Error()}
-		if fresh {
-			return e
-		}
-		return o.abandon(ctx, e)
+		return e
 	}
-	fmt.Fprintf(o.out, "step restore-models: ok restored=%d\n", restored)
-	stamp := strings.ToLower(o.now().UTC().Format(backupTimeLayout))
-	incoming, previous := "ownsolid_restore_"+stamp, "ownsolid_before_restore_"+stamp
+	site, e := restoreSite(o.config)
+	if e != nil {
+		return e
+	}
+	i := restoreIntent{Version: 1, Site: site, Phase: restorePending, Suffix: hex.EncodeToString(suffix), Fresh: fresh}
+	incoming := i.incomingName()
 	if e = o.createDatabase(ctx, incoming); e != nil {
-		return o.abandon(ctx, &StepError{Step: "restore", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()})
+		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
 	}
-	swapped := false
+	// Once a recovery record might be visible, its databases belong to recovery.
+	journaled := false
 	defer func() {
-		if !swapped {
+		if !journaled {
 			o.dropDatabase(ctx, incoming)
 		}
 	}()
 	if e = o.loadDump(ctx, incoming, filepath.Join(from, backupDatabaseName)); e != nil {
-		return o.abandon(ctx, &StepError{Step: "restore", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()})
+		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
 	}
 	tables, e := o.fingerprint(ctx, incoming)
 	if e != nil {
-		return o.abandon(ctx, &StepError{Step: "restore", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()})
+		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
 	}
 	if !slices.Equal(tables, manifest.Tables) {
-		return o.abandon(ctx, &StepError{Step: "restore", Code: "INSTALL_RESTORE_CONTENT_MISMATCH", Detail: "the restored tables differ from what the backup recorded"})
+		return &StepError{Step: "load", Code: "INSTALL_RESTORE_CONTENT_MISMATCH", Detail: "the restored tables differ from what the backup recorded"}
 	}
 	fmt.Fprintf(o.out, "step load: ok tables=%d\n", len(tables))
-	if e = o.swap(ctx, databaseName, previous, incoming); e != nil {
-		return o.abandon(ctx, &StepError{Step: "restore", Code: "INSTALL_RESTORE_SWAP_FAILED", Detail: e.Error()})
+	catalog, e := o.restoreCatalog(ctx, i)
+	if e != nil {
+		return e
 	}
-	swapped = true
-	if e = o.adoptRestored(ctx); e != nil {
-		return o.rollBack(ctx, previous, incoming, e)
+	i.Cluster, i.Original, i.Incoming = catalog.cluster, catalog.current, catalog.incoming
+	if catalog != i.before() || i.Original == 0 || i.Incoming == 0 || i.Original == i.Incoming {
+		return restoreIdentityError()
 	}
-	fmt.Fprintf(o.out, "RESTORE_COMPLETE previous_database=%s\n", previous)
-	fmt.Fprintln(o.out, "Everyone signs in again and node agents join again: restoring revokes sessions and node credentials.")
-	return nil
+	journaled = true
+	if e = writeReleaseRecord(o.config, restoreIntentName, i); e != nil {
+		return restoreRecoveryRequired(e)
+	}
+	step, cancel := context.WithTimeout(ctx, time.Duration(o.config.StepSeconds)*time.Second)
+	e = o.stopControl(step)
+	stepErr := step.Err()
+	cancel()
+	if e != nil {
+		return o.failRestore(ctx, i, errors.Join(wrapStep("stop-control", e), stepErr))
+	}
+	fmt.Fprintln(o.out, "step stop-control: ok")
+	// The writer checks every referenced model when it starts. Restore files
+	// before moving the verified database into its live name.
+	restored, e := o.restoreModels(from, manifest)
+	if e != nil {
+		return o.failRestore(ctx, i, &StepError{Step: "restore-models", Code: "INSTALL_RESTORE_MODELS_FAILED", Detail: e.Error()})
+	}
+	fmt.Fprintf(o.out, "step restore-models: ok restored=%d\n", restored)
+	if e = o.renameForRestore(ctx, i, false); e != nil {
+		return o.failRestore(ctx, i, &StepError{Step: "swap", Code: "INSTALL_RESTORE_SWAP_FAILED", Detail: e.Error()})
+	}
+	return o.finishRestored(ctx, i)
 }
 
 // admitKeys reports whether this is an empty installation that takes its files from the
@@ -277,7 +301,6 @@ func (o *operation) prepareTarget(ctx context.Context) error {
 		{"preflight", o.preflight},
 		{"configuration", func(context.Context) error { return Materialize(o.config) }},
 		{"images", o.images},
-		{"stop-control", o.stopControl},
 		{"database", o.database},
 		{"telemetry", o.telemetry},
 	}
@@ -304,41 +327,18 @@ func (o *operation) runSteps(ctx context.Context, steps []struct {
 	for _, step := range steps {
 		stepContext, cancel := context.WithTimeout(ctx, time.Duration(o.config.StepSeconds)*time.Second)
 		e := step.run(stepContext)
+		contextErr := stepContext.Err()
 		cancel()
 		if e != nil {
-			return wrapStep(step.name, e)
+			return errors.Join(wrapStep(step.name, e), contextErr)
 		}
 		fmt.Fprintf(o.out, "step %s: ok\n", step.name)
 	}
 	return nil
 }
 
-// swap renames both databases in one transaction, so the name always resolves. It ends
-// other sessions first; control is stopped, and what remains is the health check.
-func (o *operation) swap(ctx context.Context, current, keepAs, next string) error {
-	statement := fmt.Sprintf(`BEGIN; ALTER DATABASE "%s" RENAME TO "%s"; ALTER DATABASE "%s" RENAME TO "%s"; COMMIT;`, current, keepAs, next, current)
-	var e error
-	for attempt := 0; attempt < swapAttempts; attempt++ {
-		if attempt > 0 {
-			select {
-			case <-time.After(swapRetryDelay):
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-		}
-		if _, e = o.query(ctx, maintenanceDatabase, fmt.Sprintf(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname IN ('%s','%s') AND pid<>pg_backend_pid()`, current, next)); e != nil {
-			continue
-		}
-		if _, e = o.query(ctx, maintenanceDatabase, statement); e == nil {
-			return nil
-		}
-	}
-	return e
-}
-
-// adoptRestored upgrades the restored database to this release, checks it, revokes what
-// the backup's point in time may no longer justify, and starts serving on it.
-func (o *operation) adoptRestored(ctx context.Context) error {
+// prepareRestored adopts the candidate before the writer may connect to it.
+func (o *operation) prepareRestored(ctx context.Context) error {
 	return o.runSteps(ctx, []struct {
 		name string
 		run  func(context.Context) error
@@ -348,38 +348,10 @@ func (o *operation) adoptRestored(ctx context.Context) error {
 		{"check-schema", o.checkSchema},
 		{"invalidate-restored-authority", o.invalidateRestored},
 		{"record-restore-adoption", o.recordRestoreAdoption},
-		{"control", o.control},
-		{"health", o.health},
 	})
 }
 
 func (o *operation) invalidateRestored(ctx context.Context) error {
 	_, e := o.operator(ctx, "RESTORED_AUTH_INVALIDATED", "invalidate-restored-auth", "--config", o.operatorConfig(), "--reason", "Restored from a backup")
 	return e
-}
-
-// abandon returns the installation to serving on its current database after a failure
-// that left that database untouched. A failure to start is added to the cause.
-func (o *operation) abandon(ctx context.Context, cause error) error {
-	restart, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Duration(o.config.StepSeconds)*time.Second)
-	defer cancel()
-	if e := o.control(restart); e != nil {
-		return errors.Join(cause, fmt.Errorf("control did not start again: %w", e))
-	}
-	return cause
-}
-
-// rollBack puts the previous database back after the restored one failed its checks.
-func (o *operation) rollBack(ctx context.Context, previous, incoming string, cause error) error {
-	restart, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Duration(o.config.StepSeconds)*time.Second)
-	defer cancel()
-	if e := o.stopControl(restart); e != nil {
-		return errors.Join(cause, fmt.Errorf("control did not stop for the rollback: %w", e))
-	}
-	if e := o.swap(restart, databaseName, incoming, previous); e != nil {
-		return errors.Join(cause, fmt.Errorf("the previous database is still named %s and was not put back: %w", previous, e))
-	}
-	o.dropDatabase(restart, incoming)
-	fmt.Fprintf(o.out, "step roll-back: the database from before the restore is back\n")
-	return o.abandon(restart, cause)
 }

@@ -53,19 +53,54 @@ Restore first checks every file of the backup against its manifest, and refuses 
 is incomplete or changed (`INSTALL_BACKUP_INVALID`, `INSTALL_BACKUP_CORRUPT`) before it touches
 anything. Then it:
 
-1. Stops serving, starts PostgreSQL and the telemetry stores, and puts back every model that is
-   missing or damaged. A model that matches the backup is left alone, and models published since
-   the backup stay in the store unused.
-2. Loads the dump into a new database and compares every table with the manifest. If anything
-   differs, the current database is left as it was and serving starts again.
-3. Swaps the loaded database in under the name `ownsolid`. The database it replaces is kept as
-   `ownsolid_before_restore_<time>`.
-4. Applies this release's migrations, checks the schema and grants, and revokes every session,
-   invitation, password reset and node credential the backup contained.
-5. Starts serving and checks both origins.
+1. Starts PostgreSQL and the telemetry stores, loads the dump into a new database,
+   and compares every table with the manifest while the original database can still
+   serve. A dump that fails verification leaves serving on the original database.
+2. Records both database identities, stops serving, and restores missing or damaged
+   model files. Matching files and models absent from the backup stay in the store.
+3. Swaps the checked database in under the name `ownsolid` in one PostgreSQL
+   transaction. It retains the original as `ownsolid_before_restore_<id>`.
+4. Applies this release's migrations, checks the schema and grants, and revokes
+   every session, invitation, password reset and node credential the backup held.
+5. Records that the candidate can accept writes, starts serving and checks both origins.
 
-If a step after the swap fails, restore swaps the previous database back and starts serving
-on it. The message names the step that failed.
+If an observed failure requires rollback, the installer puts the original
+database back and restarts serving. It keeps the candidate as
+`ownsolid_failed_restore_<id>` so any writes it accepted can still be inspected.
+
+### Recover an interrupted restore
+
+If the installer is killed, the host restarts, or a command reports
+`INSTALL_RESTORE_PENDING`, run this on the same installation:
+
+```sh
+ownsolid-install recover-restore --config install.yaml
+```
+
+Use the original site configuration. You can increase `backup_seconds` or
+`step_seconds` to give recovery more time. The command needs the existing
+installation files and PostgreSQL cluster. The backup directory can be offline.
+
+- `RESTORE_ROLLED_BACK` means the original database is back. This is the
+  normal outcome when the exchange never committed or rollback was already
+  decided. On a fresh target there is no original application to start.
+- `RESTORE_COMPLETE` means the checked replacement is serving. If it had
+  already started serving, recovery keeps writes made since the restore.
+- `RESTORE_NO_RECOVERY_PENDING` means there is no unfinished recorded exchange.
+  An interruption during scratch loading can leave an unreferenced
+  `ownsolid_restore_<id>` database, with the original still in service.
+
+If the candidate cannot start, retry after fixing the cause or run
+`recover-restore --config install.yaml --rollback` to serve on the original.
+The candidate, including any writes it accepted, stays in
+`ownsolid_failed_restore_<id>` and is no longer the live database.
+
+If the recorded cluster or OIDs disagree with PostgreSQL, recovery stops
+before starting control. Preserve the record at
+`<install_root>/restore-intent.json` and the databases for inspection.
+While a restore is pending, the installer refuses apply, backup, restore,
+upgrade and release rollback. Leave Compose service starts and database
+renames to the recovery command until it finishes.
 
 After a restore, everyone signs in again and node agents join again. Work recorded after the
 backup was taken is gone.
@@ -85,11 +120,13 @@ lost installation; its `install_root` may differ.
 
 ### Removing the previous database
 
-Once the restored installation is confirmed, drop the database that restore kept:
+Once the restored installation is confirmed, drop the database that restore kept. Use the exact name printed by the
+installer. A failed candidate can be removed the same way once its contents
+are accounted for:
 
 ```sh
 docker compose --env-file <install_root>/compose.env -f <install_root>/compose.yaml \
-  exec postgres psql -U ownsolid_migrator -d postgres -c 'DROP DATABASE "ownsolid_before_restore_<time>"'
+  exec postgres psql -U ownsolid_migrator -d postgres -c 'DROP DATABASE "ownsolid_before_restore_<id>"'
 ```
 
 ## Limits
@@ -114,7 +151,10 @@ docker compose --env-file <install_root>/compose.env -f <install_root>/compose.y
 | `INSTALL_BACKUP_INVALID`, `INSTALL_BACKUP_CORRUPT` | The backup is incomplete or changed; nothing was touched |
 | `INSTALL_RESTORE_KEYS_DIFFER` | The installation's keys differ from the backup's; nothing was touched |
 | `INSTALL_RESTORE_LOAD_FAILED`, `INSTALL_RESTORE_CONTENT_MISMATCH` | The backup did not load as recorded; the current database serves again |
-| `INSTALL_RESTORE_SWAP_FAILED` | The databases could not be renamed; the current database serves again |
+| `INSTALL_RESTORE_SWAP_FAILED` | The databases could not be renamed. If rollback also failed, use `recover-restore` |
+| `INSTALL_RESTORE_PENDING` | Run `recover-restore` before other installer maintenance |
+| `INSTALL_RESTORE_SITE_CHANGED` | Use the site configuration that started the restore |
+| `INSTALL_RESTORE_IDENTITY_CHANGED`, `INSTALL_RESTORE_INTENT_INVALID` | Preserve the recovery record and both databases for inspection |
 | `INSTALL_BUSY` | Another apply, backup or restore is running on this installation |
 
 Each backup and restore, and its outcome, is appended to `<install_root>/operator/operations.log`.

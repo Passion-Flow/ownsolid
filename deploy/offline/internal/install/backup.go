@@ -99,9 +99,23 @@ func newOperation(c Config, runner StreamRunner, out io.Writer) *operation {
 	return &operation{installer: &installer{config: c, runner: runner, probe: ProbeOrigin, out: out}, stream: runner, now: time.Now}
 }
 
-// lockOperation excludes a second apply, backup or restore on this installation. The
-// kernel releases the lock when the process ends, so a crash cannot leave it held.
+// lockOperation excludes other mutating installer commands and refuses work
+// while a restore requires reconciliation.
 func lockOperation(c Config) (func(), error) {
+	unlock, err := lockRestoreOperation(c)
+	if err != nil {
+		return nil, err
+	}
+	if err := restorePendingError(c); err != nil {
+		unlock()
+		return nil, err
+	}
+	return unlock, nil
+}
+
+// The kernel releases the operation lock when the process ends. Only restore
+// recovery may operate while an unresolved restore record exists.
+func lockRestoreOperation(c Config) (func(), error) {
 	if e := os.MkdirAll(c.InstallRoot, 0o700); e != nil {
 		return nil, fmt.Errorf("INSTALL_DIRECTORY_FAILED: %s", c.InstallRoot)
 	}
