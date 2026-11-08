@@ -20,6 +20,9 @@ import (
 
 func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	fixture := repositoryfixture.New(t)
+	if fixture.PostgreSQL == nil {
+		t.Skip("The scoped assistant audit writer requires PostgreSQL")
+	}
 	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	defer cancel()
 	owner := &identity.Service{Storage: fixture.Store}
@@ -29,7 +32,8 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	owner.Config.Runtime = &policy
 	spaces := &workspaces.Service{Identity: owner}
 	flow := &workflows.Service{Identity: owner, Workspaces: spaces}
-	service, err := New(&applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow})
+	apps := &applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow}
+	service, err := New(apps)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,9 +43,12 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	workspace := uuid.NewString()
+	exec(`INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Non-default assistant workspace','active')`,
+		`INSERT INTO workspaces(id,tenant_id,name,status) VALUES(?,?,'Non-default assistant workspace','active')`, workspace, fixture.Tenant)
 	exec(`INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role,authority_id) VALUES($1,$2,$3,'owner',$4)`,
 		`INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role,authority_id) VALUES(?,?,?,'owner',?)`,
-		fixture.User, fixture.Tenant, fixture.Workspace, uuid.NewString())
+		fixture.User, fixture.Tenant, workspace, uuid.NewString())
 	authenticate := func(audience string) identity.Auth {
 		t.Helper()
 		var issued identity.IssuedSession
@@ -60,6 +67,9 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	}
 	admin := authenticate("admin")
 	portal := authenticate("portal")
+	if portal.Me.Workspace == nil || portal.Me.Workspace.ID != workspace || workspace == fixture.Workspace {
+		t.Fatal("portal authentication did not select the non-default workspace")
+	}
 	assertCommands := func(actor identity.Auth, locale string, want ...string) []CommandHelp {
 		t.Helper()
 		help, err := service.Commands(ctx, actor, locale)
@@ -90,7 +100,10 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	assertCommands(portal, "zh-CN", portalCommands...)
 	noWorkspace := portal
 	noWorkspace.Me.Workspace = nil
-	assertCommands(noWorkspace, "en", "open_home", "open_keys", "open_models", "open_support")
+	assertCommands(noWorkspace, "en")
+	if result, err := service.Run(ctx, noWorkspace, "open home", ""); result != (Result{}) || !errors.Is(err, ErrWorkspaceRequired) {
+		t.Fatalf("unscoped navigation returned %#v, %v", result, err)
+	}
 	if help, err := service.Commands(ctx, portal, "fr"); help != nil || !errors.Is(err, ErrUnsupportedCommandLocale) {
 		t.Fatalf("unsupported locale: %v, %v", help, err)
 	}
@@ -108,7 +121,7 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	}
 	publish := func(name string) (string, string) {
 		t.Helper()
-		workflow, err := flow.Create(ctx, portal, workflows.CreateRequest{WorkspaceID: fixture.Workspace, Name: name, Reason: "Assistant projection fixture"}, uuid.NewString(), uuid.NewString())
+		workflow, err := flow.Create(ctx, portal, workflows.CreateRequest{WorkspaceID: workspace, Name: name, Reason: "Assistant projection fixture"}, uuid.NewString(), uuid.NewString())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -140,7 +153,7 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	conversation := func(user string) string {
 		id := uuid.NewString()
 		exec(`INSERT INTO workflow_conversations(id,tenant_id,workspace_id,workflow_id,version_id,owner_id) VALUES($1,$2,$3,$4,$5,$6)`,
-			`INSERT INTO workflow_conversations(id,tenant_id,workspace_id,workflow_id,version_id,owner_id) VALUES(?,?,?,?,?,?)`, id, fixture.Tenant, fixture.Workspace, workflow, version, user)
+			`INSERT INTO workflow_conversations(id,tenant_id,workspace_id,workflow_id,version_id,owner_id) VALUES(?,?,?,?,?,?)`, id, fixture.Tenant, workspace, workflow, version, user)
 		return id
 	}
 	ownConversation := conversation(fixture.User)
@@ -149,13 +162,24 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 		t.Fatalf("private conversation list: %#v, %v", result, err)
 	}
 
+	verifyScopedCommandAudit(t, ctx, fixture.PostgreSQL, service, apps, admin, portal)
+
 	otherTenant, otherWorkspace := uuid.NewString(), uuid.NewString()
 	exec(`INSERT INTO tenants(id,name,status) VALUES($1,'Other tenant','active')`, `INSERT INTO tenants(id,name,status) VALUES(?,'Other tenant','active')`, otherTenant)
 	exec(`INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Other workspace','active')`, `INSERT INTO workspaces(id,tenant_id,name,status) VALUES(?,?,'Other workspace','active')`, otherWorkspace, otherTenant)
+	exec(`INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role,authority_id) VALUES($1,$2,$3,'viewer',$4)`,
+		`INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role,authority_id) VALUES(?,?,?,'viewer',?)`,
+		fixture.User, otherTenant, otherWorkspace, uuid.NewString())
 	outsideWorkspace := portal
 	outsideWorkspace.Me.Workspace = &identity.Workspace{ID: otherWorkspace, TenantID: otherTenant}
-	if result, err := service.Run(ctx, outsideWorkspace, "show applications", ""); err == nil || err.Error() != "RESOURCE_NOT_FOUND" || result != (Result{}) {
-		t.Fatalf("read outside scope: %#v, %v", result, err)
+	before := readAuditHead(t, ctx, fixture.PostgreSQL)
+	for _, cmd := range []string{"open home", "show applications", "show conversations"} {
+		if result, err := service.Run(ctx, outsideWorkspace, cmd, ""); err == nil || err.Error() != "RESOURCE_NOT_FOUND" || result != (Result{}) {
+			t.Errorf("%s outside scope: %#v, %v", cmd, result, err)
+		}
+	}
+	if after := readAuditHead(t, ctx, fixture.PostgreSQL); after != before {
+		t.Fatal("a foreign-scope command advanced the audit chain")
 	}
 
 	exec(`UPDATE sessions SET revoked_at=clock_timestamp(),revoke_reason='logout' WHERE id=$1`, `UPDATE sessions SET revoked_at=UTC_TIMESTAMP(6),revoke_reason='logout' WHERE id=?`, portal.SessionID)

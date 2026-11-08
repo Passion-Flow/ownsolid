@@ -63,7 +63,19 @@ func (s *Service) options(values url.Values) url.Values {
 	}
 	return out
 }
+
+// List returns the ordinary portal application projection.
 func (s *Service) List(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[Application], error) {
+	return s.list(ctx, a, workspace, values, nil)
+}
+
+// ListForAssistant returns applications after committing the scoped assistant audit.
+// requestID must be assigned by the server.
+func (s *Service) ListForAssistant(ctx context.Context, a identity.Auth, values url.Values, requestID string) (Page[Application], error) {
+	return s.list(ctx, a, assistantWorkspace(a), values, &assistantRead{requestID: requestID, toolID: "list_applications"})
+}
+
+func (s *Service) list(ctx context.Context, a identity.Auth, workspace string, values url.Values, assistant *assistantRead) (Page[Application], error) {
 	out := Page[Application]{Items: []Application{}}
 	if _, e := s.repository(); e != nil {
 		return out, applicationError(e)
@@ -78,7 +90,7 @@ func (s *Service) List(ctx context.Context, a identity.Auth, workspace string, v
 	if s.Workflows == nil {
 		return out, failure("WORKFLOW_UNAVAILABLE")
 	}
-	e = s.transaction(ctx, a, workspace, func(operation context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+	e = s.transaction(ctx, a, workspace, assistant, func(operation context.Context, tx transaction.Executor, w workspaces.Workspace) error {
 		configuration, e := s.Workflows.ConfigurationWithin(operation, tx, a, workspace)
 		if e != nil {
 			return e
@@ -117,7 +129,19 @@ func (s *Service) List(ctx context.Context, a identity.Auth, workspace string, v
 	}
 	return out, nil
 }
+
+// Conversations returns the ordinary caller-private portal projection.
 func (s *Service) Conversations(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[Conversation], error) {
+	return s.conversations(ctx, a, workspace, values, nil)
+}
+
+// ConversationsForAssistant returns caller-private conversations after committing
+// the scoped assistant audit. requestID must be assigned by the server.
+func (s *Service) ConversationsForAssistant(ctx context.Context, a identity.Auth, values url.Values, requestID string) (Page[Conversation], error) {
+	return s.conversations(ctx, a, assistantWorkspace(a), values, &assistantRead{requestID: requestID, toolID: "list_conversations"})
+}
+
+func (s *Service) conversations(ctx context.Context, a identity.Auth, workspace string, values url.Values, assistant *assistantRead) (Page[Conversation], error) {
 	out := Page[Conversation]{Items: []Conversation{}}
 	if _, e := s.repository(); e != nil {
 		return out, applicationError(e)
@@ -132,7 +156,7 @@ func (s *Service) Conversations(ctx context.Context, a identity.Auth, workspace 
 	if s.Workflows == nil {
 		return out, failure("WORKFLOW_UNAVAILABLE")
 	}
-	e = s.transaction(ctx, a, workspace, func(operation context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+	e = s.transaction(ctx, a, workspace, assistant, func(operation context.Context, tx transaction.Executor, w workspaces.Workspace) error {
 		configuration, e := s.Workflows.ConfigurationWithin(operation, tx, a, workspace)
 		if e != nil {
 			return e
@@ -172,4 +196,11 @@ func (s *Service) Conversations(ctx context.Context, a identity.Auth, workspace 
 		return Page[Conversation]{}, e
 	}
 	return out, nil
+}
+
+func assistantWorkspace(a identity.Auth) string {
+	if a.Me.Workspace == nil {
+		return ""
+	}
+	return a.Me.Workspace.ID
 }
