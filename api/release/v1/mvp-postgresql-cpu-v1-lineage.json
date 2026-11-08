@@ -285,7 +285,7 @@
     {
       "version": 56,
       "source_path": "services/control/migrations/postgresql/000056_agent_gateways.up.sql",
-      "sha256": "cdcfd0b043231a426e93c962573015bc15372e8eb03675796662756e573a847b"
+      "sha256": "0a7b3c7ce08a45aef32f6213c41a9d95ddee1e4c71b3c59546b5eb42caef4c20"
     }
   ]
 }
