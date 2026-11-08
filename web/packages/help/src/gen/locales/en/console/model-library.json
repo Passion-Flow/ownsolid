@@ -80,20 +80,34 @@
        "children": [
         {
          "type": "text",
-         "value": "In the folder that holds them, make the bundle. The page shows the exact command under "
+         "value": "Open "
+        },
+        {
+         "type": "link",
+         "url": "/library/import",
+         "children": [
+          {
+           "type": "text",
+           "value": "Import a bundle"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " and expand "
         },
         {
          "type": "strong",
          "children": [
           {
            "type": "text",
-           "value": "How to\nmake a bundle"
+           "value": "How to make a bundle"
           }
          ]
         },
         {
          "type": "text",
-         "value": "."
+         "value": ". Copy the command\nfor your tool and run it in the folder with the files for that revision."
         }
        ]
       }
@@ -108,20 +122,15 @@
        "children": [
         {
          "type": "text",
-         "value": "Bring the file to a computer that can reach the console, choose "
+         "value": "Bring the resulting "
         },
         {
-         "type": "strong",
-         "children": [
-          {
-           "type": "text",
-           "value": "Import a bundle"
-          }
-         ]
+         "type": "inlineCode",
+         "value": "bundle.tar"
         },
         {
          "type": "text",
-         "value": " and pick it."
+         "value": " to a computer that can reach the console and choose the file."
         }
        ]
       }
@@ -198,6 +207,160 @@
     {
      "type": "text",
      "value": " to see the published record."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Making a bundle"
+    }
+   ],
+   "data": {
+    "id": "making-a-bundle"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Use an installed tool on the machine that holds the model files. The commands on the import page\nlist the exact filenames for the approved revision."
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Python 3"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " writes an uncompressed archive using "
+        },
+        {
+         "type": "inlineCode",
+         "value": "tarfile.USTAR_FORMAT"
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "GNU tar on macOS"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " uses the "
+        },
+        {
+         "type": "inlineCode",
+         "value": "gtar"
+        },
+        {
+         "type": "text",
+         "value": " command if GNU tar is installed there."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "GNU tar as "
+          },
+          {
+           "type": "inlineCode",
+           "value": "tar"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " applies only when "
+        },
+        {
+         "type": "inlineCode",
+         "value": "tar --version"
+        },
+        {
+         "type": "text",
+         "value": " reports GNU tar."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The built-in macOS tar writes headers the importer rejects, even with "
+    },
+    {
+     "type": "inlineCode",
+     "value": "--format=ustar"
+    },
+    {
+     "type": "text",
+     "value": ". Each\ncommand packs only the listed files. Upload "
+    },
+    {
+     "type": "inlineCode",
+     "value": "bundle.tar"
+    },
+    {
+     "type": "text",
+     "value": " as written, with no compression or extra\nentries."
     }
    ]
   },

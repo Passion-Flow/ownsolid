@@ -66,6 +66,10 @@
     "anchor": "importing-a-model"
    },
    {
+    "title": "Making a bundle",
+    "anchor": "making-a-bundle"
+   },
+   {
     "title": "If an import fails",
     "anchor": "if-an-import-fails"
    },
