@@ -88,52 +88,81 @@ func LoadOperational(path string) (Config, error) {
 }
 
 func readBundleBinding(c Config) (*bundleBinding, error) {
-	path := filepath.Join(c.InstallRoot, bundleBindingName)
+	return readReleaseBinding(c, bundleBindingName)
+}
+
+func readReleaseBinding(c Config, name string) (*bundleBinding, error) {
+	path := filepath.Join(c.InstallRoot, name)
 	if _, err := os.Lstat(path); errors.Is(err, os.ErrNotExist) {
 		return nil, nil
 	}
 	raw, err := bundle.ReadProtectedConfiguration(path)
 	var binding bundleBinding
-	if err != nil || wire.StrictJSON(raw, &binding) != nil || binding.FormatVersion != 1 ||
-		binding.ReleaseID == "" || !wire.ValidSHA256(binding.ManifestSHA256) {
+	if err != nil || wire.StrictJSON(raw, &binding) != nil || !validBundleBinding(binding) {
 		return nil, errors.New("INSTALL_BUNDLE_BINDING_INVALID: the local release binding is unreadable or invalid")
-	}
-	for _, id := range binding.ImageIDs {
-		digest, ok := strings.CutPrefix(id, "sha256:")
-		if !ok || !wire.ValidSHA256(digest) {
-			return nil, errors.New("INSTALL_BUNDLE_BINDING_INVALID: the local release binding has an invalid image identity")
-		}
 	}
 	return &binding, nil
 }
 
-// ApplyBundle installs a verified single-node bundle or resumes its installation.
-// A different release or an existing unsigned installation requires an upgrade path.
-func ApplyBundle(ctx context.Context, configPath, archive string, policy bundle.Verification, runner StreamRunner, out io.Writer) error {
+func validBundleBinding(binding bundleBinding) bool {
+	if binding.FormatVersion != 1 || binding.ReleaseID == "" || !wire.ValidSHA256(binding.ManifestSHA256) {
+		return false
+	}
+	for _, id := range binding.ImageIDs {
+		digest, ok := strings.CutPrefix(id, "sha256:")
+		if !ok || !wire.ValidSHA256(digest) {
+			return false
+		}
+	}
+	return true
+}
+
+type preparedBundle struct {
+	config  Config
+	result  bundle.Result
+	assets  map[string]wire.Asset
+	binding bundleBinding
+	root    string
+}
+
+func prepareBundle(ctx context.Context, configPath, archive string, policy bundle.Verification) (preparedBundle, func(), error) {
+	var candidate preparedBundle
 	if runtime.GOOS != "linux" || runtime.GOARCH != "amd64" || os.Geteuid() != 0 {
-		return errors.New("INSTALL_BUNDLE_HOST_REQUIRED: run as root on the Linux amd64 Docker host")
+		return candidate, nil, errors.New("INSTALL_BUNDLE_HOST_REQUIRED: run as root on the Linux amd64 Docker host")
 	}
 	c, err := readConfiguration(configPath)
 	if err != nil {
-		return err
+		return candidate, nil, err
 	}
 	if err := c.validate(true); err != nil {
-		return err
+		return candidate, nil, err
 	}
 	mount, err := filepath.EvalSymlinks(policy.MountRoot)
 	if err != nil || mount != policy.MountRoot || !canonicalPath(mount) || mount == "/" {
-		return errors.New("INSTALL_BUNDLE_STAGING_UNAVAILABLE: use a real mounted volume for release preparation")
+		return candidate, nil, errors.New("INSTALL_BUNDLE_STAGING_UNAVAILABLE: use a real mounted volume for release preparation")
 	}
 	stage, err := os.MkdirTemp(mount, ".ownsolid-install-")
 	if err != nil {
-		return errors.New("INSTALL_BUNDLE_STAGING_UNAVAILABLE: check the mounted volume's permissions and free space")
+		return candidate, nil, errors.New("INSTALL_BUNDLE_STAGING_UNAVAILABLE: check the mounted volume's permissions and free space")
 	}
-	defer os.RemoveAll(stage)
+	cleanup := func() { _ = os.RemoveAll(stage) }
 	prepared := filepath.Join(stage, "prepared")
 	result, err := bundle.UnpackCurrent(ctx, policy, archive, prepared)
 	if err != nil {
-		return fmt.Errorf("INSTALL_BUNDLE_VERIFICATION_FAILED: %w", err)
+		cleanup()
+		return candidate, nil, fmt.Errorf("INSTALL_BUNDLE_VERIFICATION_FAILED: %w", err)
 	}
+	assets, binding := bundleInventory(result)
+	c.ComposeFile = filepath.Join(prepared, filepath.FromSlash(assets["compose"].Path))
+	c.Images = binding.images()
+	if err := checkBundleCompose(c.ComposeFile); err != nil {
+		cleanup()
+		return candidate, nil, err
+	}
+	return preparedBundle{config: c, result: result, assets: assets, binding: binding, root: prepared}, cleanup, nil
+}
+
+func bundleInventory(result bundle.Result) (map[string]wire.Asset, bundleBinding) {
 	assets := make(map[string]wire.Asset, len(result.Manifest.Assets))
 	for _, asset := range result.Manifest.Assets {
 		assets[asset.ID] = asset
@@ -142,14 +171,33 @@ func ApplyBundle(ctx context.Context, configPath, archive string, policy bundle.
 	for n, role := range bundleImageRoles {
 		binding.ImageIDs[n] = assets[role].ImageID
 	}
-	c.ComposeFile = filepath.Join(prepared, filepath.FromSlash(assets["compose"].Path))
-	c.Images = binding.images()
-	if err := checkBundleCompose(c.ComposeFile); err != nil {
-		return err
+	return assets, binding
+}
+
+func checkInstalledProject(c Config) error {
+	raw, err := os.ReadFile(c.Layout().ComposeEnv)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
 	}
+	if err != nil {
+		return errors.New("INSTALL_BUNDLE_PROJECT_UNAVAILABLE: cannot read the installed Compose identity")
+	}
+	prefix := "OWNSOLID_PROJECT="
+	for _, line := range strings.Split(string(raw), "\n") {
+		if project, found := strings.CutPrefix(line, prefix); found {
+			if project == c.Project {
+				return nil
+			}
+			break
+		}
+	}
+	return errors.New("INSTALL_BUNDLE_PROJECT_CHANGED: keep the installed Compose project in the site configuration")
+}
+
+func checkBundleHost(ctx context.Context, c Config, runner Runner, out io.Writer) error {
 	if c.Preflight != nil {
 		if err := Preflight(ctx, c, runner, out); err != nil {
-			return retryWith(err, "apply-bundle")
+			return err
 		}
 	} else {
 		if err := checkLocalDocker(ctx, runner); err != nil {
@@ -157,7 +205,7 @@ func ApplyBundle(ctx context.Context, configPath, archive string, policy bundle.
 		}
 		i := installer{config: c, runner: runner}
 		if err := i.preflight(ctx); err != nil {
-			return retryWith(wrapStep("preflight", err), "apply-bundle")
+			return wrapStep("preflight", err)
 		}
 	}
 	backend, err := runner.Run(ctx, "docker", "info", "--format", "{{json .DriverStatus}}")
@@ -165,32 +213,64 @@ func ApplyBundle(ctx context.Context, configPath, archive string, policy bundle.
 	if err != nil || json.Unmarshal([]byte(backend), &drivers) != nil || !slices.Contains(drivers, [2]string{"driver-type", "io.containerd.snapshotter.v1"}) {
 		return errors.New("INSTALL_BUNDLE_DOCKER_STORE_REQUIRED: enable Docker's local containerd image store")
 	}
+	return nil
+}
+
+func (p preparedBundle) loadImages(ctx context.Context, runner StreamRunner, policy bundle.Verification) error {
+	for _, role := range bundleImageRoles {
+		step, cancel := context.WithTimeout(ctx, time.Duration(p.config.StepSeconds)*time.Second)
+		err := loadBundleImage(step, runner, policy, p.root, p.assets[role])
+		cancel()
+		if err != nil {
+			return wrapStep("image/"+role, err)
+		}
+	}
+	return nil
+}
+
+func (p preparedBundle) operation(runner StreamRunner, out io.Writer) *operation {
+	op := newOperation(p.config, runner, out)
+	op.installer.verifySchema = func(ctx context.Context) error {
+		version, err := op.schemaVersion(ctx, databaseName)
+		if err != nil || version != p.result.Manifest.SchemaVersion {
+			return errors.New("INSTALL_BUNDLE_SCHEMA_MISMATCH: database schema does not match the signed release")
+		}
+		return nil
+	}
+	return op
+}
+
+// ApplyBundle installs a verified single-node bundle or resumes its installation.
+// A different release or an existing unsigned installation requires an upgrade path.
+func ApplyBundle(ctx context.Context, configPath, archive string, policy bundle.Verification, runner StreamRunner, out io.Writer) error {
+	p, cleanup, err := prepareBundle(ctx, configPath, archive, policy)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+	c := p.config
+	if err := checkBundleHost(ctx, c, runner, out); err != nil {
+		return retryWith(err, "apply-bundle")
+	}
 	unlock, err := lockOperation(c)
 	if err != nil {
 		return err
 	}
 	defer unlock()
-	if err := bindRelease(c, binding); err != nil {
+	if err := checkInstalledProject(c); err != nil {
 		return err
 	}
-	fmt.Fprintf(out, "INSTALL_BUNDLE_VERIFIED release=%s manifest_sha256=%s\n", result.ReleaseID, result.ManifestSHA256)
-	for _, role := range bundleImageRoles {
-		step, cancel := context.WithTimeout(ctx, time.Duration(c.StepSeconds)*time.Second)
-		err := loadBundleImage(step, runner, policy, prepared, assets[role])
-		cancel()
-		if err != nil {
-			return retryWith(wrapStep("image/"+role, err), "apply-bundle")
-		}
+	if exists(filepath.Join(c.InstallRoot, upgradeIntentName)) {
+		return errors.New("INSTALL_UPGRADE_PENDING: resume the existing upgrade before applying a bundle")
 	}
-	op := newOperation(c, runner, out)
-	op.installer.verifySchema = func(ctx context.Context) error {
-		version, err := op.schemaVersion(ctx, databaseName)
-		if err != nil || version != result.Manifest.SchemaVersion {
-			return errors.New("INSTALL_BUNDLE_SCHEMA_MISMATCH: database schema does not match the signed release")
-		}
-		return nil
+	if err := bindRelease(c, p.binding); err != nil {
+		return err
 	}
-	return retryWith(op.installer.apply(ctx), "apply-bundle")
+	fmt.Fprintf(out, "INSTALL_BUNDLE_VERIFIED release=%s manifest_sha256=%s\n", p.result.ReleaseID, p.result.ManifestSHA256)
+	if err := p.loadImages(ctx, runner, policy); err != nil {
+		return retryWith(err, "apply-bundle")
+	}
+	return retryWith(p.operation(runner, out).installer.apply(ctx), "apply-bundle")
 }
 
 func bindRelease(c Config, binding bundleBinding) error {
@@ -217,21 +297,18 @@ func bindRelease(c Config, binding bundleBinding) error {
 			return errors.New("INSTALL_BUNDLE_UPGRADE_REQUIRED: the installation root already contains unbound deployment state")
 		}
 	}
-	raw, err := json.Marshal(binding)
+	return writeReleaseRecord(c, bundleBindingName, binding)
+}
+
+func writeReleaseRecord(c Config, name string, value any) error {
+	raw, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
-	if err := writeFile(filepath.Join(c.InstallRoot, bundleBindingName), append(raw, '\n'), c, false); err != nil {
+	if err := writeFile(filepath.Join(c.InstallRoot, name), append(raw, '\n'), c, false); err != nil {
 		return err
 	}
-	root, err := os.Open(c.InstallRoot)
-	if err != nil {
-		return errors.New("INSTALL_BUNDLE_BINDING_SYNC_FAILED: the binding may already exist; retry the same bundle")
-	}
-	if err := errors.Join(root.Sync(), root.Close()); err != nil {
-		return errors.New("INSTALL_BUNDLE_BINDING_SYNC_FAILED: the binding may already exist; retry the same bundle")
-	}
-	return nil
+	return syncDirectory(c.InstallRoot)
 }
 
 func loadBundleImage(ctx context.Context, runner StreamRunner, policy bundle.Verification, prepared string, asset wire.Asset) error {

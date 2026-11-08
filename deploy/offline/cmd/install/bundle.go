@@ -22,9 +22,11 @@ func runBundle(command string, args []string, out io.Writer) error {
 	policy := flags.String("verification", "", "protected public verification configuration")
 	config := flags.String("config", "", "typed site configuration without delivery inputs")
 	output := flags.String("output", "", "new directory for verified payloads on the configured mount")
+	baseline := flags.String("baseline", "", "previous independently verified signed archive")
+	backup := flags.String("backup-output", "", "private directory for the verified pre-upgrade recovery point")
 	timeout := flags.Duration("timeout", 30*time.Minute, "time limit for verifying or applying the release")
 	if err := flags.Parse(args); err != nil || flags.NArg() != 0 || *archive == "" || *policy == "" ||
-		(command == "apply-bundle") != (*config != "") || (command == "prepare-bundle") != (*output != "") || *timeout <= 0 {
+		(command == "apply-bundle" || command == "upgrade-plan" || command == "upgrade-bundle" || command == "upgrade-patch" || command == "rollback-bundle") != (*config != "") || (command == "prepare-bundle") != (*output != "") || (command == "upgrade-bundle" || command == "upgrade-patch") != (*backup != "") || (command == "upgrade-patch") != (*baseline != "") || *timeout <= 0 {
 		return errors.New(usage)
 	}
 	verification, err := install.LoadBundleVerification(*policy)
@@ -35,8 +37,17 @@ func runBundle(command string, args []string, out io.Writer) error {
 	defer stop()
 	ctx, cancel := context.WithTimeout(ctx, *timeout)
 	defer cancel()
-	if command == "apply-bundle" {
+	switch command {
+	case "apply-bundle":
 		return install.ApplyBundle(ctx, *config, *archive, verification, install.ExecRunner{}, out)
+	case "upgrade-plan":
+		return install.PlanUpgrade(ctx, *config, *archive, verification, install.ExecRunner{}, out)
+	case "upgrade-bundle":
+		return install.UpgradeBundle(ctx, *config, *archive, *backup, verification, install.ExecRunner{}, out)
+	case "upgrade-patch":
+		return install.UpgradePatch(ctx, *config, *baseline, *archive, *backup, verification, install.ExecRunner{}, out)
+	case "rollback-bundle":
+		return install.RollbackBundle(ctx, *config, *archive, verification, install.ExecRunner{}, out)
 	}
 	var result bundle.Result
 	if command == "prepare-bundle" {

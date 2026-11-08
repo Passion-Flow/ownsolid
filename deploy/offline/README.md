@@ -131,3 +131,61 @@ and `OWNSOLID_CURRENT_FACTORY_SCHEMA`. Put the resulting `ownsolid.tar.gz` and
 `OWNSOLID_E2E_MODEL_ARCHIVE` to the existing isolated runner. Set
 `OWNSOLID_E2E_RUN='^TestSignedBundleIsolatedDocker$'`. The test starts with an
 empty Docker daemon and checks that a truncated bundle cannot load an image.
+
+## Upgrade or roll back the signed application release
+
+Keep the previous archive and use a separate private backup directory. The
+candidate must name an accepted predecessor schema and keep the same PostgreSQL
+and telemetry image identities. Review the plan before starting maintenance:
+
+```sh
+ownsolid-install upgrade-plan --bundle /mnt/release/next.tar.gz \
+  --verification /private/release-verification.json --config /private/site.yaml
+ownsolid-install upgrade-bundle --bundle /mnt/release/next.tar.gz \
+  --verification /private/release-verification.json --config /private/site.yaml \
+  --backup-output /private/recovery
+```
+
+The plan reads the installed schema and lists the service stop, recovery point,
+and target schema. Applying the candidate loads its signed images first, stops
+the application writer, and produces a recovery point verified by restoring it
+into a scratch database. It then migrates and starts the candidate. Keep the
+backup location and archive unchanged when retrying a pending upgrade.
+
+```sh
+ownsolid-install rollback-bundle --bundle /mnt/release/previous.tar.gz \
+  --verification /private/release-verification.json --config /private/site.yaml
+```
+
+The rollback accepts the exact previous signed release and checks that the live
+database is at the schema that release expects. It changes the application
+configuration and image, leaving the database and telemetry stores running.
+When the schema has advanced, keep the recovery point and use a separate
+database recovery procedure with the prior release. The rollback command never
+runs a reverse migration or swaps the database.
+
+The isolated upgrade test uses the same runner with
+`OWNSOLID_E2E_RUN='^TestSignedUpgradeIsolatedDocker$'`. Pass two extra signed
+files, `upgrade.tar.gz` with a newer control schema and `delta.tar.gz` with an
+incremental transfer to a different control image at the same schema. Both
+must use the fixture's independent release trust. In the factory fixture, set
+`OWNSOLID_CURRENT_FACTORY_RELEASE` and
+`OWNSOLID_CURRENT_FACTORY_PREDECESSOR` for each candidate. For the incremental
+candidate, pass the newer complete archive in `OWNSOLID_CURRENT_PATCH_BASELINE`.
+
+### Upgrade from an incremental transfer
+
+Keep the exact previous archive, including its signature. Copy the incremental
+transfer into the same mounted workspace and apply it through the existing
+upgrade procedure:
+
+```sh
+ownsolid-install upgrade-patch --baseline /mnt/release/previous.tar.gz \
+  --bundle /mnt/release/delta.tar.gz --verification /private/release-verification.json \
+  --config /private/site.yaml --backup-output /private/recovery
+```
+
+The installer compares the signed baseline digest with the installation's
+release binding, reconstructs the complete candidate from the two local
+files, and verifies every candidate payload before starting the upgrade.
+The staging volume must hold the retained archives and reconstructed payloads.
