@@ -26,6 +26,13 @@ After a crash, the agent keeps verified staged files and
 [client.KubernetesArtifact](../client/kubernetes.go) resumes a partial download
 from its last whole range.
 
+Without a site-supplied `/etc/rancher/rke2/registries.yaml`, the Agent writes
+`ownsolid-registries.yaml` beside the RKE2 configuration and disables Docker
+Hub fallback. A sandbox that starts before the bundled image imports fails
+locally and can retry from the cache. A native registry file remains the
+site's policy. For already running nodes the default takes effect at the
+next RKE2 start.
+
 Readiness is read with the kubelet's own kubeconfig, which the node authorizer limits to the
 node's own object; the cluster admin kubeconfig stays on the server. When a join times out,
 the task log gets a diagnosis the agent recognises in the RKE2 journal (wrong CA, server

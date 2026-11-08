@@ -205,7 +205,7 @@ func TestServerJoinInstallsAndReportsTheCA(t *testing.T) {
 		t.Fatalf("images %q", got)
 	}
 	config := f.read(configFile)
-	for _, line := range []string{`node-name: "` + nodeID + `"`, `node-ip: "172.22.0.2"`, `resolv-conf: "/etc/resolv.conf"`, `ingress-controller: "none"`, `write-kubeconfig-mode: "0600"`} {
+	for _, line := range []string{`node-name: "` + nodeID + `"`, `node-ip: "172.22.0.2"`, `resolv-conf: "/etc/resolv.conf"`, `ingress-controller: "none"`, `write-kubeconfig-mode: "0600"`, `private-registry: "/etc/rancher/rke2/ownsolid-registries.yaml"`, `disable-default-registry-endpoint: true`} {
 		if !strings.Contains(config, line+"\n") {
 			t.Errorf("config lacks %s:\n%s", line, config)
 		}
@@ -216,6 +216,9 @@ func TestServerJoinInstallsAndReportsTheCA(t *testing.T) {
 	info, _ = os.Stat(f.manager.path(configFile))
 	if info.Mode().Perm() != 0o600 {
 		t.Fatalf("config mode %v", info.Mode())
+	}
+	if got := f.read(offlineRegistryFile); !strings.Contains(got, "  docker.io:\n    endpoint:\n      - \"https://127.0.0.1:0\"\n") {
+		t.Fatalf("offline registry has no loopback mirror: %q", got)
 	}
 	if f.host.called("systemctl start --no-block rke2-server.service") != 1 || f.host.called("systemctl enable rke2-server.service") != 1 {
 		t.Fatalf("calls %v", f.host.calls)
@@ -232,7 +235,7 @@ func TestWorkerJoinWritesTheServerAndToken(t *testing.T) {
 		t.Fatalf("%+v %v", observation, e)
 	}
 	config := f.read(configFile)
-	for _, line := range []string{`server: "https://172.22.0.2:9345"`, `token: "` + worker().JoinToken + `"`, `node-ip: "172.22.0.3"`} {
+	for _, line := range []string{`server: "https://172.22.0.2:9345"`, `token: "` + worker().JoinToken + `"`, `node-ip: "172.22.0.3"`, `private-registry: "/etc/rancher/rke2/ownsolid-registries.yaml"`, `disable-default-registry-endpoint: true`} {
 		if !strings.Contains(config, line+"\n") {
 			t.Errorf("config lacks %s:\n%s", line, config)
 		}
@@ -242,6 +245,26 @@ func TestWorkerJoinWritesTheServerAndToken(t *testing.T) {
 	}
 	if f.host.called("systemctl start --no-block rke2-agent.service") != 1 {
 		t.Fatalf("calls %v", f.host.calls)
+	}
+}
+
+func TestJoinKeepsTheSiteRegistryPolicy(t *testing.T) {
+	f := newFixture(t, tarball(t, binaryContents(), nil))
+	const site = "mirrors:\n  docker.io:\n    endpoint: [https://registry.example.invalid]\n"
+	if e := writeBytes(f.manager.path(nativeRegistryFile), []byte(site)); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := f.execute(wire.KubernetesJoinOperation, worker()); e != nil {
+		t.Fatal(e)
+	}
+	if got := f.read(nativeRegistryFile); got != site {
+		t.Fatalf("site registry policy was rewritten: %q", got)
+	}
+	if got := f.read(configFile); strings.Contains(got, "private-registry:") || strings.Contains(got, "disable-default-registry-endpoint:") {
+		t.Fatal("generated configuration overrides the site registry policy")
+	}
+	if _, e := os.Stat(f.manager.path(offlineRegistryFile)); !errors.Is(e, os.ErrNotExist) {
+		t.Fatalf("unexpected generated registry file: %v", e)
 	}
 }
 
@@ -386,11 +409,19 @@ func TestRepeatedJoinIsIdempotentAndAnotherAddressIsRefused(t *testing.T) {
 	if _, e := f.execute(wire.KubernetesJoinOperation, server()); e != nil {
 		t.Fatal(e)
 	}
+	// An installed node can predate the Agent-owned registry file.
+	if e := os.Remove(f.manager.path(offlineRegistryFile)); e != nil {
+		t.Fatal(e)
+	}
+	f.host.activeState = "active"
 	if _, e := f.execute(wire.KubernetesJoinOperation, server()); e != nil {
 		t.Fatal(e)
 	}
 	if f.downloads["rke2.linux-amd64.tar.gz"] != 1 {
 		t.Fatalf("downloads %v", f.downloads)
+	}
+	if got := f.read(offlineRegistryFile); got != offlineRegistry || f.host.called("systemctl restart") != 0 {
+		t.Fatal("join replay did not restore the policy without restarting the unit")
 	}
 	before := f.read(configFile)
 	moved := server()
