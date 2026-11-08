@@ -75,8 +75,8 @@ func TestRecorderCountsFromManyGoroutines(t *testing.T) {
 		})
 	}
 	group.Wait()
-	out := r.Finish(time.Now(), 90, 80, 1)
-	if c := out.Calls[CallHeartbeat]; c.Succeeded != 100 || c.Failed["RATE_LIMITED"] != 100 || out.Tasks.Succeeded != 100 || out.Connected != 90 {
+	out := r.Finish(time.Now(), 90, 80, 1, map[string]int{"10.0.0.1:9443": 80})
+	if c := out.Calls[CallHeartbeat]; c.Succeeded != 100 || c.Failed["RATE_LIMITED"] != 100 || out.Tasks.Succeeded != 100 || out.Connected != 90 || out.Gateways["10.0.0.1:9443"] != 80 {
 		t.Fatalf("report %+v", out)
 	}
 	raw, e := Encode(out)

@@ -158,6 +158,17 @@ func (c *control) log() []string {
 // serve starts control; with http2 false it speaks only HTTP/1.1, like many proxies.
 func serve(t *testing.T, c *control, http2 bool) *Session {
 	t.Helper()
+	server := start(t, c, http2)
+	connection := connect(t, server)
+	session := connection.Session(sessionNode)
+	t.Cleanup(session.Close)
+	return session
+}
+
+// start serves c's session stream and HTTPS paths. Every test server presents the same
+// certificate, so an agent gateway verifies for the control origin's host as control does.
+func start(t *testing.T, c *control, http2 bool) *httptest.Server {
+	t.Helper()
 	g := grpc.NewServer()
 	g.RegisterService(&grpc.ServiceDesc{ServiceName: wire.SessionService, HandlerType: (*any)(nil), Streams: []grpc.StreamDesc{{
 		StreamName: wire.SessionMethod, ServerStreams: true, ClientStreams: true,
@@ -173,6 +184,11 @@ func serve(t *testing.T, c *control, http2 bool) *Session {
 	server.EnableHTTP2 = http2
 	server.StartTLS()
 	t.Cleanup(server.Close)
+	return server
+}
+
+func connect(t *testing.T, server *httptest.Server) *Client {
+	t.Helper()
 	ca := filepath.Join(t.TempDir(), "ca.pem")
 	if e := os.WriteFile(ca, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw}), 0600); e != nil {
 		t.Fatal(e)
@@ -183,9 +199,7 @@ func serve(t *testing.T, c *control, http2 bool) *Session {
 	}
 	connection.Credential = strings.Repeat("C", 43)
 	t.Cleanup(connection.Close)
-	session := connection.Session(sessionNode)
-	t.Cleanup(session.Close)
-	return session
+	return connection
 }
 
 func equal(a, b []string) bool {

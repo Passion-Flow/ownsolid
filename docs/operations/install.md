@@ -108,6 +108,53 @@ that speaks only HTTP/1.1, agents fall back to HTTPS long-polling, which works b
 more requests. An agent logs `agent_session_transport` with `stream` or `https` when its
 transport changes, and `agent_session_fallback` when it falls back.
 
+### Agent gateways
+
+Control serves agents' session streams itself, which is all a single node needs. To spread the
+connections and exchanges of a large fleet over more hosts, run agent gateways beside it
+([ADR 0048](../decisions/0048-agent-gateways-beside-control.md)). A gateway is the control image
+started with `serve-agent-gateway --config <file>`, where the file is control's configuration
+with an `agent_gateway` section added:
+
+```yaml
+agent_gateway:
+  listen_address: 0.0.0.0:9443
+  tls_certificate_file: /run/projectone/certificate.pem
+  tls_private_key_file: /run/projectone/private-key.pem
+```
+
+The certificate must name the host of the origin agents use (the admin origin unless
+`machine_server` is set), because agents verify that name on every gateway. A gateway needs
+PostgreSQL, the database identity control serves with and a route to the database. It opens a
+pool of `database.max_open_connections`, 10 by default, under the same database role as control,
+whose connection limit is control's pool unless `resources.database_role_connections` in the
+install configuration raises it: set it to 10 plus each gateway's pool and apply again. A gateway
+that finds the limit full stops with `DATABASE_CONNECTION_LIMIT_REACHED`. It serves only the session stream and `/health/live` and `/health/ready`; agents keep
+sending enrollment, results, renewals and transfers to the origin.
+
+Give agents the gateways in their configuration, the addresses they reach them on:
+
+```json
+"session_addresses": ["10.0.0.21:9443", "10.0.0.22:9443"]
+```
+
+Each agent holds one session, on the first gateway of an order of its own, so the fleet spreads
+evenly. When that gateway stops answering or is full, the agent's next attempt goes to the next
+one; it falls back to HTTPS only after every gateway failed. A gateway that is stopped with
+SIGTERM ends its sessions first, so its agents move at once. Agents that moved stay where they
+are when the gateway returns.
+
+A gateway serves only while control is running: with control stopped, its readiness probe and
+every agent call answer `SERVICE_NOT_READY`, and it logs `agent_gateway_fenced`. When control
+returns, the gateway checks the schema and logs `agent_gateway_serving`; after an upgrade that
+changed the schema it stops, and must be upgraded with control. Stop the gateways before a
+restore or a database maintenance command, which refuse while other clients are connected.
+Limits on agent calls apply per gateway. `ownsolid_agent_gateway_sessions` counts each
+gateway's open sessions, under `service="agent-gateway"`.
+
+`ownsolid-install` does not place gateways on hosts yet: that comes with the topologies of more
+than one host (REL-101).
+
 ### Pacing the agents
 
 Control tells every agent how often to report and how to back off, in each heartbeat

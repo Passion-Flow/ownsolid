@@ -4,9 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"net"
 	"net/http"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"sync"
 )
 
@@ -69,6 +69,24 @@ func serve(ctx context.Context, address string, tlsConfig *tls.Config, handler h
 	if e != nil {
 		return e
 	}
+	return serveListener(ctx, listener, tlsConfig, handler, policy)
+}
+
+// ServeListener serves direct TLS on a listener the caller bound, as Serve does on an
+// address, and closes it. It returns once the bounded shutdown that ctx starts has ended.
+func ServeListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) error {
+	check := config.DefaultRuntimePolicy()
+	check.HTTP = policy
+	if listener == nil || tlsConfig == nil || check.Validate() != nil {
+		if listener != nil {
+			listener.Close()
+		}
+		return errors.New("CONFIG_TRANSPORT_INVALID")
+	}
+	return serveListener(ctx, listener, tlsConfig, handler, policy)
+}
+
+func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) error {
 	server := &http.Server{BaseContext: func(net.Listener) context.Context { return ctx }, Handler: handler, ReadHeaderTimeout: config.Seconds(policy.ReadHeaderSeconds), ReadTimeout: config.Seconds(policy.RequestSeconds), WriteTimeout: config.Seconds(policy.RequestSeconds), IdleTimeout: config.Seconds(policy.IdleSeconds), MaxHeaderBytes: MaxJSONBytes, TLSConfig: tlsConfig}
 	servingDone := make(chan struct{})
 	shutdownDone := make(chan error, 1)
@@ -89,7 +107,7 @@ func serve(ctx context.Context, address string, tlsConfig *tls.Config, handler h
 	if tlsConfig != nil {
 		accepted = tls.NewListener(accepted, tlsConfig)
 	}
-	e = server.Serve(accepted)
+	e := server.Serve(accepted)
 	close(servingDone)
 	if shutdownError := <-shutdownDone; shutdownError != nil {
 		return shutdownError

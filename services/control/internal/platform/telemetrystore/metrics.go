@@ -64,9 +64,15 @@ func NewMetricsPusher(client *Client, interval time.Duration, service, instance 
 	return p, nil
 }
 
-// OpenMetrics returns the pusher for this control process. Add its sources, then start
-// Run for the values to reach the store.
-func OpenMetrics(s Settings, logger *slog.Logger) (*MetricsPusher, error) {
+// The services a series names: control, or an agent gateway beside it (ADR 0048).
+const (
+	ServiceControl      = "control"
+	ServiceAgentGateway = "agent-gateway"
+)
+
+// OpenMetrics returns the pusher for this process, labelled as service. Add its sources,
+// then start Run for the values to reach the store.
+func OpenMetrics(s Settings, service string, logger *slog.Logger) (*MetricsPusher, error) {
 	client, e := NewClient(s.MetricsAddress, s.RequestTimeout)
 	if e != nil {
 		return nil, e
@@ -75,7 +81,7 @@ func OpenMetrics(s Settings, logger *slog.Logger) (*MetricsPusher, error) {
 	if e != nil || instance == "" {
 		instance = unknownInstance
 	}
-	return NewMetricsPusher(client, s.MetricsPushInterval, "control", instance, logger)
+	return NewMetricsPusher(client, s.MetricsPushInterval, service, instance, logger)
 }
 
 // Add registers a source. Call it before Run.

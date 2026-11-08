@@ -70,6 +70,9 @@ func run() (result error) {
 	if command == postgresMaintenanceCheckCommand {
 		return runPostgresMaintenanceCheck(os.Args[2:], os.Stdout)
 	}
+	if command == agentGatewayCommand {
+		return runAgentGateway(os.Args[2:])
+	}
 	if command == healthProbeCommand {
 		return runHealthProbeCommand(os.Args[2:], os.Stdout)
 	}

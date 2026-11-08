@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"mime"
 	"net/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores"
@@ -26,11 +25,8 @@ import (
 	applicationhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/cloudinventory"
 	cloudhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/cloudinventory/http"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	componenthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/components/http"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	datasethttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets/http"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	deploymenthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
 	distributionhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution/http"
@@ -56,9 +52,7 @@ import (
 	knowledgehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/knowledge/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations"
 	preparationhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/http"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
 	modelhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/models/http"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	nodehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/plugins"
 	pluginhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/plugins/http"
@@ -68,7 +62,6 @@ import (
 	traininghttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/training/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
 	workflowhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows/http"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	workspacehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/health"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
@@ -128,37 +121,11 @@ func New(s *identity.Service) *Handler {
 	if !ok {
 		ssoService, ssoError = sso.New(s)
 	}
-	w := &workspaces.Service{DB: s.DB, Identity: s}
-	n := &nodes.Service{DB: s.DB, Identity: s, Workspaces: w}
-	c := &components.Service{Nodes: n, ArchiveFile: s.Config.Components.NodeExporterArchiveFile, CatalogDirectory: s.Config.Components.NodeExporterCatalogDirectory}
-	var telemetryLogs *telemetrystore.Logs
-	var telemetryMetrics *telemetrystore.MetricsPusher
-	if s.Config.Telemetry != nil {
-		// The settings were validated with the configuration, so these cannot fail here.
-		if telemetryLogs, _ = telemetrystore.Open(s.Config.Telemetry.Settings(), slog.Default()); telemetryLogs != nil {
-			c.LogStore = telemetryLogs
-		}
-		if telemetryMetrics, _ = telemetrystore.OpenMetrics(s.Config.Telemetry.Settings(), slog.Default()); telemetryMetrics != nil && telemetryLogs != nil {
-			telemetryMetrics.Add(telemetryLogs.Samples)
-		}
-	}
-	n.Components = c
-	m := &models.Service{DB: s.DB, Identity: s, Workspaces: w, RootDirectory: s.Config.Models.ArtifactRoot}
-	d := &deployments.Service{Nodes: n, Models: m}
-	n.Inference = d
+	p := newAgentPath(s, telemetrystore.ServiceControl, nil)
+	w, n, c, m, d := p.workspaces, p.nodes, p.components, p.models, p.deployments
+	datasetService, trainingService, preparationService := p.datasets, p.training, p.preparations
+	telemetryLogs, telemetryMetrics, machine, sessions := p.logs, p.metrics, p.machine, p.sessions
 	distributionService := &distribution.Service{DB: s.DB, Identity: s, Workspaces: w, Nodes: n, Deployments: d}
-	datasetService := &datasets.Service{DB: s.DB, Identity: s, Workspaces: w}
-	trainingService := &training.Service{DB: s.DB, Identity: s, Workspaces: w, Nodes: n, Models: m, Datasets: datasetService, Inference: d}
-	preparationService, preparationError := modelpreparations.New(s.DB, s, w, datasetService)
-	if preparationService != nil {
-		preparationService.Training = trainingService
-		preparationService.Nodes = n
-		preparationService.Models = m
-		preparationService.Inference = d
-		n.Preparations = preparationService
-		trainingService.Holdouts = preparationService
-	}
-	n.Training = trainingService
 	m.Referenced = func(ctx context.Context, tx transaction.Executor, tenant, workspace, model string) (bool, error) {
 		found, e := distributionService.HasModelReferences(ctx, tx, tenant, workspace, model)
 		if e != nil || found {
@@ -173,64 +140,11 @@ func New(s *identity.Service) *Handler {
 		}
 		return preparationService.Referenced(ctx, tx, tenant, workspace, model)
 	}
-	databaseSeats, admissionError := s.Config.AgentDatabaseSeats()
-	var admission *agentadmission.Controller
-	if admissionError == nil {
-		admission, admissionError = agentadmission.New(s.Config.Policy().AgentAdmission, databaseSeats, slog.Default())
-	}
-	if telemetryMetrics != nil && admission != nil {
-		telemetryMetrics.Add(admission.Samples)
-	}
-	if admission != nil {
-		n.Shed = admission
-	}
-	machine := &nodehttp.Handler{Service: n, Admission: admission, OpenArtifact: c.OpenArtifact, Artifact: c.TaskArtifact, ComponentArtifact: c.DownloadArtifact}
-	sessions, sessionError := agentgateway.New(nodehttp.SessionBackend{Handler: machine}, agentgateway.Policy{MaxSessions: s.Config.Policy().Nodes.MaximumLiveNodes, ExchangeSeconds: s.Config.Policy().HTTP.RequestSeconds}, httpserver.PublicProblem)
-	if preparationService != nil {
-		machine.PreparationInputFile = preparationService.InputFile
-		machine.PreparationEvents = preparationService.RecordEvents
-		machine.BeginPreparationUpload = preparationService.BeginUpload
-		machine.PreparationChunk = preparationService.UploadChunk
-		machine.FinishPreparationUpload = preparationService.FinishUpload
-		machine.PreparationStop = preparationService.RecordStop
-	}
-	machine.TrainingInputFile = trainingService.InputFile
-	machine.TrainingEvents = trainingService.RecordEvents
-	machine.BeginTrainingUpload = trainingService.BeginUpload
-	machine.TrainingChunk = trainingService.UploadChunk
-	machine.FinishTrainingUpload = trainingService.FinishUpload
-	machine.TrainingStop = trainingService.RecordStop
-	machine.ModelManifestWithin = func(ctx context.Context, q transaction.Executor, node nodes.Node, task nodes.Task) (wire.ModelCatalog, error) {
-		command, e := n.ReadInferenceCommandWithin(ctx, q, node, task)
-		if e != nil {
-			return wire.ModelCatalog{}, e
-		}
-		if command.Action != "deploy" || command.Derived != nil {
-			return wire.ModelCatalog{}, errors.New("AGENT_OPERATION_UNSUPPORTED")
-		}
-		if e = m.ReadyWithin(ctx, q, node.TenantID, node.WorkspaceID, command.ModelID); e != nil {
-			return wire.ModelCatalog{}, e
-		}
-		return wire.ApprovedModel(), nil
-	}
-	machine.ModelFileWithin = func(ctx context.Context, q transaction.Executor, node nodes.Node, task nodes.Task, input wire.ModelFileRequest) (httpserver.Download, error) {
-		command, e := n.ReadInferenceCommandWithin(ctx, q, node, task)
-		if e != nil {
-			return httpserver.Download{}, e
-		}
-		if command.Action != "deploy" {
-			return httpserver.Download{}, errors.New("AGENT_OPERATION_UNSUPPORTED")
-		}
-		if command.Derived != nil {
-			return m.OpenDerivedTransferWithin(ctx, q, node.TenantID, node.WorkspaceID, command, input)
-		}
-		return m.OpenTransferWithin(ctx, q, node.TenantID, node.WorkspaceID, command.ModelID, input)
-	}
 	knowledgeService := &knowledge.Service{DB: s.DB, Identity: s, Workspaces: w, Distribution: distributionService}
 	pluginService := &plugins.Service{DB: s.DB, Identity: s, Workspaces: w, Models: m}
 	workflowService := &workflows.Service{Plugins: pluginService, DB: s.DB, Identity: s, Workspaces: w, Knowledge: knowledgeService, Distribution: distributionService}
 	localeRegistry, localeError := s.LocaleRegistry()
-	return &Handler{TelemetryLogs: telemetryLogs, TelemetryMetrics: telemetryMetrics, AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, preparationError, localeError, admissionError, sessionError, n.CheckRecoveryOwners()), AgentSessions: sessions, Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}}
+	return &Handler{TelemetryLogs: telemetryLogs, TelemetryMetrics: telemetryMetrics, AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, localeError, p.err), AgentSessions: sessions, Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}}
 }
 
 func Problem(w http.ResponseWriter, requestID string, e error) { httpserver.Problem(w, requestID, e) }

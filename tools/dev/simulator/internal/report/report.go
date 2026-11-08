@@ -148,16 +148,19 @@ type Window struct {
 
 // Report is the result of a run.
 type Report struct {
-	StartedAt time.Time         `json:"started_at"`
-	EndedAt   time.Time         `json:"ended_at"`
-	Agents    int               `json:"agents"`
-	Connected int               `json:"connected_at_end"`
-	OnStream  int               `json:"on_stream_at_end"`
-	Revoked   int               `json:"revoked"`
-	Calls     map[string]*Calls `json:"calls"`
-	Tasks     Tasks             `json:"tasks"`
-	Faults    []*Fault          `json:"faults"`
-	Windows   []Window          `json:"windows"`
+	StartedAt time.Time `json:"started_at"`
+	EndedAt   time.Time `json:"ended_at"`
+	Agents    int       `json:"agents"`
+	Connected int       `json:"connected_at_end"`
+	OnStream  int       `json:"on_stream_at_end"`
+	// Gateways counts the agents on a stream at the end by agent gateway, when the run has
+	// gateways (ADR 0048).
+	Gateways map[string]int    `json:"gateways_at_end,omitempty"`
+	Revoked  int               `json:"revoked"`
+	Calls    map[string]*Calls `json:"calls"`
+	Tasks    Tasks             `json:"tasks"`
+	Faults   []*Fault          `json:"faults"`
+	Windows  []Window          `json:"windows"`
 }
 
 // Recorder collects a run's counts from every agent goroutine.
@@ -294,10 +297,10 @@ func (r *Recorder) Snapshot() Report {
 }
 
 // Finish records the state at the end of the run and returns the final report.
-func (r *Recorder) Finish(ended time.Time, connected, onStream, revoked int) Report {
+func (r *Recorder) Finish(ended time.Time, connected, onStream, revoked int, gateways map[string]int) Report {
 	r.mu.Lock()
 	r.report.EndedAt = ended.UTC()
-	r.report.Connected, r.report.OnStream, r.report.Revoked = connected, onStream, revoked
+	r.report.Connected, r.report.OnStream, r.report.Revoked, r.report.Gateways = connected, onStream, revoked, gateways
 	r.mu.Unlock()
 	return r.Snapshot()
 }

@@ -98,6 +98,10 @@ resources:
   # CPUs, because a hard limit stalls every query once a burst has spent it (ADR 0038).
   postgres_cpus: "2"
   postgres_max_connections: 50
+  # The serving role's connection limit, shared by control and any agent gateways beside it
+  # (ADR 0048): control's pool of 10 plus each gateway's. 0 keeps control's pool. At most
+  # postgres_max_connections less 10, which stay for operator commands and the database's own.
+  database_role_connections: 0
   metrics_memory: 2g
   metrics_cpus: "2"
   logs_memory: 1g

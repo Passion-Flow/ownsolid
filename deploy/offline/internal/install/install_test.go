@@ -821,3 +821,38 @@ func TestApplyStopsWhenGrantingFails(t *testing.T) {
 		}
 	}
 }
+
+// Agent gateways share the serving role with control (ADR 0048), so the install can raise the
+// role's connection limit, within what PostgreSQL leaves after operators.
+func TestDatabaseRoleConnectionsReachControlsConfiguration(t *testing.T) {
+	render := func(c Config) map[string]any {
+		raw, e := c.renderControl(containerConfigDir+"/runtime-dsn", true)
+		if e != nil {
+			t.Fatal(e)
+		}
+		var document struct {
+			Database map[string]any `yaml:"database"`
+		}
+		if e = yaml.Unmarshal(raw, &document); e != nil {
+			t.Fatal(e)
+		}
+		return document.Database
+	}
+	c := validConfig(t)
+	if _, present := render(c)["role_connection_limit"]; present {
+		t.Fatal("a limit was rendered without database_role_connections")
+	}
+	c.Resources.DatabaseRoleConnections = 30
+	if e := c.Validate(); e != nil {
+		t.Fatal(e)
+	}
+	if got := render(c)["role_connection_limit"]; got != 30 {
+		t.Fatalf("rendered %v", got)
+	}
+	for _, invalid := range []int{controlPoolConnections - 1, c.Resources.PostgresMaxConnections - operatorConnections + 1} {
+		c.Resources.DatabaseRoleConnections = invalid
+		if e := c.Validate(); e == nil {
+			t.Fatalf("%d accepted", invalid)
+		}
+	}
+}

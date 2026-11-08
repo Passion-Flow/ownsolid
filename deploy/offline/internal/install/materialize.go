@@ -198,6 +198,9 @@ func (c Config) renderControl(dsnFile string, serving bool) ([]byte, error) {
 		"portal_assets": imagePortalAssets, "admin_assets": imageAdminAssets,
 	}
 	document["database"] = map[string]any{"dsn_file": dsnFile}
+	if c.Resources.DatabaseRoleConnections != 0 {
+		document["database"].(map[string]any)["role_connection_limit"] = c.Resources.DatabaseRoleConnections
+	}
 	if serving {
 		document["models"] = map[string]any{"artifact_root": containerModelStore}
 		// Only the serving container mounts the socket directory.

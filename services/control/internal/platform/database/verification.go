@@ -16,7 +16,7 @@ const schemaUnavailable = "SCHEMA_UNAVAILABLE"
 // unreachable. A serving process reports not ready for them and keeps running, because a lock held
 // for a minute or a database restart says nothing about the schema it verified at startup.
 var unanswered = map[string]bool{
-	schemaUnavailable: true, "DATABASE_UNAVAILABLE": true, "DATABASE_NETWORK_UNREACHABLE": true, "DATABASE_DNS_UNRESOLVED": true,
+	schemaUnavailable: true, "DATABASE_UNAVAILABLE": true, "DATABASE_NETWORK_UNREACHABLE": true, "DATABASE_DNS_UNRESOLVED": true, "DATABASE_CONNECTION_LIMIT_REACHED": true,
 }
 
 // Unanswered reports whether a verification failed without reaching a verdict.

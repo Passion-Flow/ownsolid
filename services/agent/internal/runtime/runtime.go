@@ -29,9 +29,12 @@ import (
 )
 
 type Config struct {
-	ImageRegistry    *imageregistry.Config    `json:"-"`
-	Runtime          *settings.Policy         `json:"runtime,omitempty"`
-	ControlOrigin    string                   `json:"control_origin"`
+	ImageRegistry *imageregistry.Config `json:"-"`
+	Runtime       *settings.Policy      `json:"runtime,omitempty"`
+	ControlOrigin string                `json:"control_origin"`
+	// SessionAddresses are the agent gateways, host:port, that carry the session stream
+	// when the cell runs them (ADR 0048). HTTPS calls stay on ControlOrigin.
+	SessionAddresses []string                 `json:"session_addresses,omitempty"`
 	CAFile           string                   `json:"ca_file"`
 	StateDirectory   string                   `json:"state_directory"`
 	DiskPath         string                   `json:"disk_path"`
@@ -107,6 +110,9 @@ func validateConfig(c Config) (Config, error) {
 			return c, errors.New("AGENT_CONFIG_INVALID")
 		}
 	} else if c.Preparation.RootDirectory != "" || c.Preparation.DockerSocket != "" || c.Preparation.ImageID != "" || c.Preparation.ImageReference != "" || c.Preparation.WorkerSourceSHA256 != "" || c.Preparation.Runtime != nil || c.Preparation.OutputSeconds != 0 {
+		return c, errors.New("AGENT_CONFIG_INVALID")
+	}
+	if wire.ValidateSessionAddresses(c.SessionAddresses) != nil {
 		return c, errors.New("AGENT_CONFIG_INVALID")
 	}
 	if !filepath.IsAbs(c.DiskPath) || c.CAFile != "" && !filepath.IsAbs(c.CAFile) || c.JoinTokenFile != "" && !filepath.IsAbs(c.JoinTokenFile) {
@@ -441,6 +447,7 @@ func Run(ctx context.Context, c Config) error {
 	defer connection.Close()
 	connection.Credential = identity.Credential
 	connection.Scope = identity.Scope()
+	connection.SessionAddresses = c.SessionAddresses
 	m, e := manager(c)
 	if e != nil {
 		return e

@@ -20,6 +20,8 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 )
 
 // Backend is the node service as the gateway sees it. Errors carry public codes.
@@ -41,6 +43,10 @@ type Policy struct {
 	MaxSessions int
 	// ExchangeSeconds bounds one heartbeat or claim, excluding the claim wait.
 	ExchangeSeconds int
+	// Ready, when set, fences the gateway: a stream opened while it fails is refused as
+	// unavailable, and an exchange while it fails is answered with its error. An agent
+	// gateway process sets it to say that the installation's control is running (ADR 0048).
+	Ready func() error
 }
 
 // Problem converts an error to the public code and status the HTTPS paths would return.
@@ -54,6 +60,9 @@ type Gateway struct {
 	slots    chan struct{}
 	mu       sync.Mutex
 	sessions map[string]*session
+	// draining ends when Drain is called, and every session with it.
+	draining context.Context
+	drain    context.CancelFunc
 }
 
 type session struct{ cancel context.CancelCauseFunc }
@@ -61,6 +70,9 @@ type session struct{ cancel context.CancelCauseFunc }
 type addressKey struct{}
 
 var errReplaced = errors.New("AGENT_SESSION_REPLACED")
+
+// errDraining ends the sessions of a gateway that is stopping; agents move to another one.
+var errDraining = errors.New("SERVICE_NOT_READY")
 
 // idleTimeout closes a session that sends nothing; tests shorten it.
 var idleTimeout = time.Duration(wire.SessionIdleSeconds) * time.Second
@@ -76,6 +88,7 @@ func New(backend Backend, policy Policy, problem Problem) (*Gateway, error) {
 		return nil, errors.New("AGENT_GATEWAY_CONFIGURATION_INVALID")
 	}
 	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}}
+	g.draining, g.drain = context.WithCancel(context.Background())
 	g.server = grpc.NewServer(
 		grpc.MaxRecvMsgSize(wire.MaxSessionMessageBytes),
 		grpc.MaxSendMsgSize(wire.MaxSessionMessageBytes),
@@ -115,6 +128,10 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request, address stri
 	g.server.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), addressKey{}, address)))
 }
 
+// Drain ends every session and refuses new ones, so that agents move to another gateway
+// before this one stops. It does not wait; the sessions end as their streams return.
+func (g *Gateway) Drain() { g.drain() }
+
 // Sessions reports the number of open streams and held long-poll claims.
 func (g *Gateway) Sessions() int { return len(g.slots) }
 
@@ -144,6 +161,9 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 	default:
 		return status.Error(codes.ResourceExhausted, "AUTH_CAPACITY_EXCEEDED")
 	}
+	if g.draining.Err() != nil || g.policy.Ready != nil && g.policy.Ready() != nil {
+		return status.Error(codes.Unavailable, "SERVICE_NOT_READY")
+	}
 	md, _ := metadata.FromIncomingContext(stream.Context())
 	node, okNode := header(md, wire.SessionNodeHeader)
 	site, okSite := header(md, wire.SessionSiteHeader)
@@ -163,6 +183,7 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 	address, _ := stream.Context().Value(addressKey{}).(string)
 	ctx, cancel := context.WithCancelCause(stream.Context())
 	defer cancel(nil)
+	defer context.AfterFunc(g.draining, func() { cancel(errDraining) })()
 	current := &session{cancel: cancel}
 	registered := false
 	defer func() {
@@ -262,6 +283,11 @@ func (g *Gateway) exchange(ctx context.Context, address, node, credential string
 		reply.Problem = &wire.SessionProblem{Code: code, Status: status, RetryAfterSeconds: retryAfter(e)}
 		return reply
 	}
+	if g.policy.Ready != nil {
+		if e := g.policy.Ready(); e != nil {
+			return fail(e)
+		}
+	}
 	release, e := g.backend.Admit(bounded, address, node, credential, m.Call())
 	if e != nil {
 		return fail(e)
@@ -289,4 +315,9 @@ func (g *Gateway) exchange(ctx context.Context, address, node, credential string
 	}
 	reply.Claim = &claim
 	return reply
+}
+
+// Samples reports the open sessions and held claims for the metrics store.
+func (g *Gateway) Samples() []telemetrystore.Sample {
+	return []telemetrystore.Sample{{Name: "ownsolid_agent_gateway_sessions", Value: float64(g.Sessions())}}
 }
