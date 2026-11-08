@@ -1,0 +1,13 @@
+{
+  "control_origin": "https://admin.platform.example.invalid",
+  "ca_file": "/etc/projectone/ca.pem",
+  "state_directory": "/var/lib/projectone-agent",
+  "disk_path": "/",
+  "join_token_file": "/etc/projectone/join-token",
+  "execution_profile": "kubernetes_node",
+  "kubernetes": {
+    "ready_seconds": 600,
+    "minimum_free_bytes": 17179869184,
+    "task_seconds": 1800
+  }
+}

@@ -17,6 +17,9 @@ const (
 	// install: the staged and placed archives (about 1.7 GB) and the unpacked images
 	// (about 3.5 GB), with room for pods.
 	DefaultMinimumFreeBytes int64 = 16 << 30
+	// DefaultTaskSeconds bounds one task: downloading about 850 MB, installing and waiting
+	// for readiness. It matches control's default join deadline.
+	DefaultTaskSeconds = 1800
 )
 
 // Config is the agent's Kubernetes section.
@@ -25,6 +28,8 @@ type Config struct {
 	ReadySeconds int `json:"ready_seconds,omitempty"`
 	// MinimumFreeBytes is the free space the RKE2 data directory needs before an install.
 	MinimumFreeBytes int64 `json:"minimum_free_bytes,omitempty"`
+	// TaskSeconds bounds one Kubernetes task from claim to result.
+	TaskSeconds int `json:"task_seconds,omitempty"`
 }
 
 // WithDefaults fills the zero fields.
@@ -35,16 +40,24 @@ func (c Config) WithDefaults() Config {
 	if c.MinimumFreeBytes == 0 {
 		c.MinimumFreeBytes = DefaultMinimumFreeBytes
 	}
+	if c.TaskSeconds == 0 {
+		c.TaskSeconds = DefaultTaskSeconds
+	}
 	return c
 }
 
 // Validate refuses values that would make a join wait too briefly or forever, or install
 // onto a disk that cannot hold the images.
 func (c Config) Validate() error {
-	if c.ReadySeconds < 60 || c.ReadySeconds > 3600 || c.MinimumFreeBytes < 2<<30 {
+	if c.ReadySeconds < 60 || c.ReadySeconds > 3600 || c.MinimumFreeBytes < 2<<30 || c.TaskSeconds <= c.ReadySeconds || c.TaskSeconds > 7200 {
 		return errors.New("AGENT_CONFIG_INVALID")
 	}
 	return nil
 }
 
 func (c Config) readyTimeout() time.Duration { return time.Duration(c.ReadySeconds) * time.Second }
+
+// TaskTimeout is how long one task may run, defaults filled.
+func (c Config) TaskTimeout() time.Duration {
+	return time.Duration(c.WithDefaults().TaskSeconds) * time.Second
+}

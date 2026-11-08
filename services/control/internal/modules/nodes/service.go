@@ -30,6 +30,9 @@ type Service struct {
 	Components   ComponentObserver
 	Inference    InferenceObserver
 	Training     TrainingAuthority
+	// Kubernetes owns cell clusters (ADR 0051); nil where none are configured, and then
+	// Kubernetes tasks fail closed.
+	Kubernetes KubernetesAuthority
 	// wake lets claims held open for new work (ClaimWaiting) see tasks as they are written.
 	wake wakeHub
 	// delivering says the outbox reader runs, so wakes arrive after commit (ADR 0028).

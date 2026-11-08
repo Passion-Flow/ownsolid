@@ -101,6 +101,7 @@ func TestPathCallClassifiesEveryAgentPath(t *testing.T) {
 		base + "/tasks/" + task + "/model-preparation-input-files":                 CallDownload,
 		base + "/tasks/" + task + "/image-registry/manifest":                       CallDownload,
 		base + "/tasks/" + task + "/image-registry/ranges":                         CallDownload,
+		base + "/tasks/" + task + "/" + KubernetesArtifactsPath:                    CallDownload,
 		base + "/tasks/" + task + "/training-uploads":                              CallUpload,
 		base + "/tasks/" + task + "/training-uploads/" + task + "/chunks":          CallUpload,
 		base + "/tasks/" + task + "/model-preparation-uploads/" + task + "/finish": CallUpload,

@@ -23,6 +23,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/discovery"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/imageregistry"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/inference"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/kubernetes"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/modelpreparations"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/progress"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/state"
@@ -45,6 +46,8 @@ type Config struct {
 	Inference        inference.Config         `json:"inference,omitempty"`
 	Training         training.Config          `json:"training,omitempty"`
 	Preparation      modelpreparations.Config `json:"model_preparation,omitempty"`
+	// Kubernetes bounds how a node of the Kubernetes profile installs RKE2 (ADR 0051).
+	Kubernetes kubernetes.Config `json:"kubernetes,omitempty"`
 }
 
 func LoadConfig(path string) (Config, error) { return loadConfig(path) }
@@ -113,6 +116,13 @@ func validateConfig(c Config) (Config, error) {
 	} else if c.Preparation.RootDirectory != "" || c.Preparation.DockerSocket != "" || c.Preparation.ImageID != "" || c.Preparation.ImageReference != "" || c.Preparation.WorkerSourceSHA256 != "" || c.Preparation.Runtime != nil || c.Preparation.OutputSeconds != 0 {
 		return c, errors.New("AGENT_CONFIG_INVALID")
 	}
+	if c.ExecutionProfile == wire.KubernetesNodeProfile {
+		if c.Kubernetes.WithDefaults().Validate() != nil {
+			return c, errors.New("AGENT_CONFIG_INVALID")
+		}
+	} else if c.Kubernetes != (kubernetes.Config{}) {
+		return c, errors.New("AGENT_CONFIG_INVALID")
+	}
 	if wire.ValidateSessionAddresses(c.SessionAddresses) != nil {
 		return c, errors.New("AGENT_CONFIG_INVALID")
 	}
@@ -168,6 +178,11 @@ func token(v string) bool {
 func Enroll(ctx context.Context, c Config) error {
 	if _, e := manager(c); e != nil {
 		return e
+	}
+	if profile(c) == wire.KubernetesNodeProfile {
+		if _, e := kubernetes.New(c.Kubernetes, c.StateDirectory); e != nil {
+			return e
+		}
 	}
 	if wire.IsInferenceProfile(profile(c)) {
 		m, e := inference.New(c.Inference, c.StateDirectory, c.Policy())
@@ -296,27 +311,27 @@ func enrollPaced(ctx context.Context, connection *client.Client, enrollment wire
 }
 
 // cycle runs one cycle on a session of its own, for callers outside the run loop.
-func cycle(ctx context.Context, c Config, connection *client.Client, identity state.Identity, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
+func cycle(ctx context.Context, c Config, connection *client.Client, identity state.Identity, x executors) error {
 	var session *client.Session
 	if connection != nil {
 		session = connection.Session(identity.NodeID)
 		defer session.Close()
 	}
-	return sessionCycle(ctx, c, connection, session, identity, m, im, tm, pm, rm)
+	return sessionCycle(ctx, c, connection, session, identity, x)
 }
 
 // sessionCycle recovers interrupted work, reports the node, then claims and runs at most
 // one task. Heartbeats, claims and acknowledgements use the session; task traffic uses
 // HTTPS.
-func sessionCycle(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
-	if e := recoverLocalWork(ctx, c, connection, identity, m, tm, pm); e != nil {
+func sessionCycle(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, x executors) error {
+	if e := recoverLocalWork(ctx, c, connection, identity, x.components, x.training, x.preparations); e != nil {
 		return e
 	}
 	f, e := discovery.Collect(c.DiskPath)
 	if e != nil {
 		return e
 	}
-	return claimAndRun(ctx, c, connection, session, identity, f, m, im, tm, pm, rm)
+	return claimAndRun(ctx, c, connection, session, identity, f, x)
 }
 
 // recoverLocalWork reconciles interrupted work from the local journals: an attempt an
@@ -354,7 +369,8 @@ func recoverLocalWork(ctx context.Context, c Config, connection *client.Client, 
 	return nil
 }
 
-func claimAndRun(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, f wire.Facts, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
+func claimAndRun(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, f wire.Facts, x executors) error {
+	m, im, tm, pm, rm := x.components, x.inference, x.training, x.preparations, x.registry
 	base := "/agent/v1/nodes/" + url.PathEscape(identity.NodeID)
 	h := handshake(f, c)
 	if m != nil {
@@ -437,6 +453,15 @@ func claimAndRun(ctx context.Context, c Config, connection *client.Client, sessi
 		return executeInference(ctx, connection, base, identity.NodeID, *lease, im, rm)
 	}
 	if lease.Inference != nil {
+		return errors.New("AGENT_TASK_UNSUPPORTED")
+	}
+	if wire.IsKubernetesOperation(lease.Operation) {
+		if x.kubernetes == nil || lease.Kubernetes == nil || lease.Kubernetes.Validate(lease.Operation) != nil {
+			return errors.New("AGENT_TASK_UNSUPPORTED")
+		}
+		return executeKubernetes(ctx, connection, base, *lease, x.kubernetes, c.Kubernetes.TaskTimeout())
+	}
+	if lease.Kubernetes != nil {
 		return errors.New("AGENT_TASK_UNSUPPORTED")
 	}
 	if wire.IsComponentOperation(lease.Operation) {
@@ -551,13 +576,19 @@ func Run(ctx context.Context, c Config) error {
 			return e
 		}
 	}
+	var km *kubernetes.Manager
+	if profile(c) == wire.KubernetesNodeProfile {
+		if km, e = kubernetes.New(c.Kubernetes, c.StateDirectory); e != nil {
+			return e
+		}
+	}
 	session := connection.Session(identity.NodeID)
 	defer session.Close()
 	pace := newPacer()
 	transport := ""
 	for {
 		started := time.Now()
-		e = sessionCycle(ctx, c, connection, session, identity, m, im, tm, pm, rm)
+		e = sessionCycle(ctx, c, connection, session, identity, executors{components: m, inference: im, training: tm, preparations: pm, registry: rm, kubernetes: km})
 		if ctx.Err() != nil {
 			return nil
 		}

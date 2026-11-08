@@ -48,6 +48,9 @@ func Capabilities(profile string) []string {
 			result = append(result, ComponentOperation(action))
 		}
 	}
+	if profile == KubernetesNodeProfile {
+		result = append(result, KubernetesJoinOperation, KubernetesTokenOperation, KubernetesObserveOperation)
+	}
 	return result
 }
 func ProfileVersion(profile string) string {
@@ -66,10 +69,13 @@ func ProfileVersion(profile string) string {
 	if profile == SystemdComponentsProfile {
 		return ManagementVersion
 	}
+	if profile == KubernetesNodeProfile {
+		return KubernetesVersion
+	}
 	return Version
 }
 func KnownProfile(profile string) bool {
-	return profile == ReadOnlyProfile || IsManagementProfile(profile) || IsInferenceProfile(profile)
+	return profile == ReadOnlyProfile || IsManagementProfile(profile) || IsInferenceProfile(profile) || profile == KubernetesNodeProfile
 }
 
 type ComponentCommand struct {

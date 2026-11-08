@@ -799,6 +799,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/tasks/{task_id}/kubernetes-artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["downloadLeasedKubernetesArtifactRange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2767,6 +2786,14 @@ export interface components {
         CertificateConfirmedResponse: {
             data: components["schemas"]["CertificateConfirmed"];
         };
+        /** @description POST /agent/v1/nodes/{node}/tasks/{task}/kubernetes-artifacts: one 8 MiB range of an approved RKE2 file. */
+        KubernetesArtifactRequest: {
+            lease_token: string;
+            /** @enum {string} */
+            name: "rke2.linux-amd64.tar.gz" | "rke2-images-core.linux-amd64.tar.zst" | "rke2-images-canal.linux-amd64.tar.zst";
+            offset: number;
+            length: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -4556,6 +4583,47 @@ export interface operations {
                 };
             };
             /** @description Structured failure; no fake success */
+            default: {
+                headers: {
+                    "Retry-After": components["headers"]["AgentRetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    downloadLeasedKubernetesArtifactRange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                node_id: string;
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KubernetesArtifactRequest"];
+            };
+        };
+        responses: {
+            /** @description One 8 MiB range of an approved RKE2 file, for the node whose join task holds this lease (ADR 0051); Content-Length and X-Artifact-SHA256 describe these bytes */
+            200: {
+                headers: {
+                    "X-Artifact-SHA256": string;
+                    "Content-Length": number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Fenced error */
             default: {
                 headers: {
                     "Retry-After": components["headers"]["AgentRetryAfter"];

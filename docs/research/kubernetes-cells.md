@@ -83,6 +83,25 @@ install into the cluster (SCH-107, GPU-105, NET-106) place manifests in the serv
 **Artifacts travel over the existing agent download call**, in 8 MiB ranges at bulk
 priority, and control joins workers in batches of at most 50, the figure K3s gives.
 
+## Control side, as built
+
+- **One table per concept.** `cell_clusters` holds a cell's cluster (one per cell, enforced by a
+  unique index), `cell_cluster_members` its nodes (a node in at most one cluster, one server per
+  cluster). `managed_nodes.enrolled_address` keeps the address an agent enrolled from; a node of
+  the Kubernetes profile cannot enroll without a unicast one.
+- **Results record; one reconciler writes.** A task result only updates its member. The
+  reconciler, every `reconcile_seconds`, locks a cluster (skipping one another process holds),
+  settles members whose task ended without a result, asks the server for a token and joins
+  workers. Locks go cluster first, then nodes, so a result never waits on another node.
+- **Join tokens are sealed at rest.** The token is stored only on the cluster row, encrypted with
+  AES-256-GCM under a key derived (HKDF-SHA256) from a key file of its own, with the cluster ID as
+  associated data, and added to a worker's lease at claim. Task rows never hold it. The auth HMAC
+  key was rejected for this: agent gateways must open tokens and must not hold the session key.
+- **Busy and offline nodes.** A node with another task stays pending and joins on a later pass;
+  one that is offline or gone fails at once with `NODE_UNAVAILABLE`, so an administrator sees it.
+- **Control verifies the RKE2 files** once per file version (SHA-256 of the whole file) before it
+  serves any range, so a damaged bundle is refused at control rather than by every worker.
+
 ## Prototype
 
 Run on `ownsolid-cpu` on 2026-11-08, outside the product code, with nodes as privileged

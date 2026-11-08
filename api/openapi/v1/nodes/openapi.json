@@ -4653,6 +4653,121 @@
           }
         }
       ]
+    },
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/tasks/{task_id}/kubernetes-artifacts": {
+      "post": {
+        "operationId": "downloadLeasedKubernetesArtifactRange",
+        "x-audiences": [
+          "agent"
+        ],
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KubernetesArtifactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One 8 MiB range of an approved RKE2 file, for the node whose join task holds this lease (ADR 0051); Content-Length and X-Artifact-SHA256 describe these bytes",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "maxLength": 8388608
+                }
+              }
+            },
+            "headers": {
+              "X-Artifact-SHA256": {
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "Content-Length": {
+                "required": true,
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 8388608
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Fenced error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
+            }
+          }
+        },
+        "x-application-profiles": [
+          "platform"
+        ],
+        "x-agent-call": "download"
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {
@@ -14316,6 +14431,41 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "KubernetesArtifactRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "POST /agent/v1/nodes/{node}/tasks/{task}/kubernetes-artifacts: one 8 MiB range of an approved RKE2 file.",
+        "properties": {
+          "lease_token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "rke2.linux-amd64.tar.gz",
+              "rke2-images-core.linux-amd64.tar.zst",
+              "rke2-images-canal.linux-amd64.tar.zst"
+            ]
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "multipleOf": 8388608
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8388608
+          }
+        },
+        "required": [
+          "lease_token",
+          "name",
+          "offset",
+          "length"
         ]
       }
     },

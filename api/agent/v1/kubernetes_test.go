@@ -70,7 +70,7 @@ func TestKubernetesNodeAddress(t *testing.T) {
 			t.Errorf("%s refused", address)
 		}
 	}
-	for _, address := range []string{"", "127.0.0.1", "0.0.0.0", "::1", "fe80::1", "fe80::1%eth0", "224.0.0.1", "node-1", "172.022.0.2", " 172.22.0.2"} {
+	for _, address := range []string{"", "127.0.0.1", "0.0.0.0", "::1", "fe80::1", "fe80::1%eth0", "224.0.0.1", "node-1", "172.022.0.2", " 172.22.0.2", "::ffff:10.0.0.1"} {
 		if ValidKubernetesNodeAddress(address) {
 			t.Errorf("%q accepted", address)
 		}
@@ -206,5 +206,67 @@ func TestKubernetesArtifactRequest(t *testing.T) {
 		if r.Validate() == nil {
 			t.Errorf("%+v accepted", r)
 		}
+	}
+}
+
+func TestKubernetesProfileHandshake(t *testing.T) {
+	want := []string{CollectFacts, KubernetesJoinOperation, KubernetesTokenOperation, KubernetesObserveOperation}
+	got := Capabilities(KubernetesNodeProfile)
+	if strings.Join(got, ",") != strings.Join(want, ",") || !KnownProfile(KubernetesNodeProfile) || ProfileVersion(KubernetesNodeProfile) != KubernetesVersion {
+		t.Fatalf("capabilities %v", got)
+	}
+	h := Handshake{ProtocolVersion: KubernetesVersion, ExecutionProfile: KubernetesNodeProfile, Capabilities: got, Facts: validFacts()}
+	if e := h.Validate(); e != nil {
+		t.Fatal(e)
+	}
+	for _, operation := range want[1:] {
+		if !OperationAllowed(KubernetesNodeProfile, operation) || OperationAllowed(DockerAIProfile, operation) || OperationAllowed(ReadOnlyProfile, operation) {
+			t.Errorf("%s allowed on the wrong profiles", operation)
+		}
+	}
+	if OperationAllowed(KubernetesNodeProfile, InferenceOperation("deploy")) {
+		t.Fatal("a Kubernetes node took an inference operation")
+	}
+	h.Capabilities = Capabilities(ReadOnlyProfile)
+	if h.Validate() == nil {
+		t.Fatal("a Kubernetes node without its operations was accepted")
+	}
+	h.Capabilities, h.Inference = got, &InferenceObservation{}
+	if h.Validate() == nil {
+		t.Fatal("a Kubernetes node reporting inference was accepted")
+	}
+}
+
+func TestResultValidateKubernetes(t *testing.T) {
+	now := time.Now().UTC()
+	server := serverCommand()
+	good := Result{Outcome: "success", Kubernetes: &KubernetesObservation{ClusterID: testCluster, Version: server.Version, Role: KubernetesServerRole, State: KubernetesReady, CASHA256: testCAHash, ObservedAt: now}}
+	if e := good.ValidateKubernetes(server, KubernetesJoinOperation); e != nil {
+		t.Fatal(e)
+	}
+	failed := Result{Outcome: "failure", ErrorCode: "KUBERNETES_NOT_READY", Kubernetes: &KubernetesObservation{ClusterID: testCluster, Version: server.Version, Role: KubernetesServerRole, State: KubernetesNotReady, ErrorCode: "KUBERNETES_NOT_READY", ObservedAt: now}}
+	if e := failed.ValidateKubernetes(server, KubernetesJoinOperation); e != nil {
+		t.Fatal(e)
+	}
+	for name, change := range map[string]func(*Result){
+		"no observation":         func(r *Result) { r.Kubernetes = nil },
+		"facts beside it":        func(r *Result) { r.Facts = &Facts{} },
+		"component beside it":    func(r *Result) { r.Component = &ComponentObservation{} },
+		"inference beside it":    func(r *Result) { r.Inference = &InferenceObservation{} },
+		"logs beside it":         func(r *Result) { r.Logs = &ComponentLogs{} },
+		"error codes disagree":   func(r *Result) { r.ErrorCode = "KUBERNETES_IO_FAILED" },
+		"observation disagrees":  func(r *Result) { r.Kubernetes.ClusterID = testNode },
+		"outcome without status": func(r *Result) { r.Outcome = "" },
+	} {
+		bad := good
+		observation := *good.Kubernetes
+		bad.Kubernetes = &observation
+		change(&bad)
+		if bad.ValidateKubernetes(server, KubernetesJoinOperation) == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	if good.ValidateKubernetes(server, CollectFacts) == nil {
+		t.Fatal("a Kubernetes result for another operation was accepted")
 	}
 }

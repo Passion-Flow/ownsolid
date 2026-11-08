@@ -119,7 +119,7 @@ func TestActualLinuxLifecycleConcreteCycleAndNativeEngineArchitectureRefusal(t *
 	}
 	defer connection.Close()
 	connection.Credential = credential
-	if e = cycle(ctx, loaded, connection, identity, nil, im, tm, pm, nil); e != nil && ctx.Err() == nil {
+	if e = cycle(ctx, loaded, connection, identity, executors{inference: im, training: tm, preparations: pm}); e != nil && ctx.Err() == nil {
 		t.Fatal("actual composite resident cycle", e)
 	}
 	if heartbeats.Load() != 1 || claims.Load() != 1 {

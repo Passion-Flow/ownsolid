@@ -4,9 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
-	"mime"
-	"net/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores"
 	artifacthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/artifactstores/http"
 	releasehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/releases/http"
@@ -15,14 +12,18 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
+	"io"
+	"mime"
+	"net/http"
 	"strings"
 	"time"
 	"unicode/utf8"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
 	applicationhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications/http"
+	capabilityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/capabilities/http"
+	cellclusterhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/cellclusters/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/cloudinventory"
 	cloudhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/cloudinventory/http"
 	componenthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/components/http"
@@ -40,12 +41,12 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/notifications"
 	notificationhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/notifications/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/preferences"
-	capabilityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/capabilities/http"
 	preferencehttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/preferences/http"
 	privateclusterhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/privateclusters/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/taskdeliveries"
 	taskdeliveryhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/taskdeliveries/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/knowledge"
@@ -70,8 +71,11 @@ import (
 )
 
 type Handler struct {
-	Releases                   *releasehttp.Handler
-	PrivateClusters            *privateclusterhttp.Handler
+	Releases        *releasehttp.Handler
+	PrivateClusters *privateclusterhttp.Handler
+	// CellClusters serves the cell's Kubernetes cluster (ADR 0051); its Service is nil
+	// without a kubernetes_cells configuration.
+	CellClusters               *cellclusterhttp.Handler
 	Monitoring                 *monitoringhttp.Handler
 	TaskDeliveries             *taskdeliveries.Service
 	Middleware                 *middlewarehttp.Handler
@@ -102,9 +106,9 @@ type Handler struct {
 	// AgentSessions serves the agent session stream (ADR 0007).
 	AgentSessions *agentgateway.Gateway
 	Components    *componenthttp.Handler
-	Models            *modelhttp.Handler
-	Deployments       *deploymenthttp.Handler
-	Distribution      *distributionhttp.Handler
+	Models        *modelhttp.Handler
+	Deployments   *deploymenthttp.Handler
+	Distribution  *distributionhttp.Handler
 	// TelemetryLogs and TelemetryMetrics are nil when no telemetry stores are configured.
 	TelemetryLogs    *telemetrystore.Logs
 	TelemetryMetrics *telemetrystore.MetricsPusher
@@ -144,7 +148,7 @@ func New(s *identity.Service) *Handler {
 	pluginService := &plugins.Service{DB: s.DB, Identity: s, Workspaces: w, Models: m}
 	workflowService := &workflows.Service{Plugins: pluginService, DB: s.DB, Identity: s, Workspaces: w, Knowledge: knowledgeService, Distribution: distributionService}
 	localeRegistry, localeError := s.LocaleRegistry()
-	return &Handler{TelemetryLogs: telemetryLogs, TelemetryMetrics: telemetryMetrics, AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, localeError, p.err), AgentSessions: sessions, Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}}
+	return &Handler{TelemetryLogs: telemetryLogs, TelemetryMetrics: telemetryMetrics, AWS: &cloudhttp.Handler{Service: cloudinventory.New(s, w)}, Licensing: &licensehttp.Handler{Service: licenseService}, licenseInitializationError: licenseError, initializationError: errors.Join(licenseError, ssoError, localeError, p.err), AgentSessions: sessions, Locales: localeRegistry, Applications: &applicationhttp.Handler{Service: &applications.Service{DB: s.DB, Identity: s, Workspaces: w, Workflows: workflowService}}, Notifications: &notificationhttp.Handler{Service: &notifications.Service{DB: s.DB, Identity: s}}, Preferences: &preferencehttp.Handler{Service: &preferences.Service{DB: s.DB, Identity: s}}, Plugins: &pluginhttp.Handler{Service: pluginService}, Workflows: &workflowhttp.Handler{Service: workflowService}, Knowledge: &knowledgehttp.Handler{Service: knowledgeService}, SSO: &ssohttp.Handler{Service: ssoService}, ModelPreparations: preparationService, Training: trainingService, Datasets: &datasethttp.Handler{Service: datasetService}, Distribution: &distributionhttp.Handler{Service: distributionService}, Deployments: &deploymenthttp.Handler{Service: d}, Models: &modelhttp.Handler{Service: m}, Service: s, active: make(chan struct{}, s.Config.Policy().HTTP.MaxActiveRequests), Workspaces: &workspacehttp.Handler{Service: w}, Nodes: machine, Components: &componenthttp.Handler{Service: c}, CellClusters: &cellclusterhttp.Handler{Service: p.cellClusters}}
 }
 
 func Problem(w http.ResponseWriter, requestID string, e error) { httpserver.Problem(w, requestID, e) }
@@ -568,6 +572,16 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 	}
 	if e := h.licenseAdmission(r, audience, session); e != nil {
 		return nil, 0, e
+	}
+	if cellclusterhttp.Owns(path) {
+		if r.Header.Get("Origin") != "" && r.Header.Get("Origin") != origin {
+			return nil, 0, errors.New("ORIGIN_REJECTED")
+		}
+		a, e := s.Authenticate(ctx, session, audience)
+		if e != nil {
+			return nil, 0, e
+		}
+		return h.CellClusters.Handle(r, a, requestID)
 	}
 	if privateclusterhttp.Owns(path) {
 		if r.Header.Get("Origin") != "" && r.Header.Get("Origin") != origin {
