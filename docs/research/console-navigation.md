@@ -104,3 +104,16 @@ and the shared stylesheet. The limit rises to 170 kB, and UX-129 moves the catal
 Sign in and see only the group in use open; open another with a heading; move on and see it close; find any
 page by typing part of its name; collapse to icons, have every name still announced and shown on focus or
 hover, and find the choice in another browser. Pin a page and find it at the top there too.
+
+## Focus after lazy navigation
+
+The path that has resolved is the focus boundary. The initial pathname is captured when the
+shell mounts. Comparing it with the [router state](https://tanstack.com/router/latest/docs/api/router/RouterStateType)
+also covers a second navigation started while the first render is settling. In that case the
+[render event](https://tanstack.com/router/latest/docs/api/router/RouterEventsType) can lack a
+previous location, even though the account menu was available and the user navigated from it.
+A React effect after the resolved path commits moves focus to the heading. Query and hash changes
+do not move it, and an initial page load keeps the browser's focus. The account browser flow checks
+the heading after navigating from the menu, and route tests cover the other focus transitions.
+This follows [WCAG focus order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html) and
+adds no dependency.
