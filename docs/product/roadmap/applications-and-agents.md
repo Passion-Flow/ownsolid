@@ -1,5 +1,7 @@
 # Applications and agents
 
+Last reviewed: 2026-11-09. See [workflow and app references](../../research/application-workflow-scope.md).
+
 What customers build on top of their models: workflows, agents, tools and published apps.
 This is separate from the product agent that operates ownsolid itself.
 
@@ -27,6 +29,8 @@ This is separate from the product agent that operates ownsolid itself.
 - [ ] APP-203 Multi-agent collaboration with budget trees and cancellation (P2) - Catalog: F042, F597
 - [ ] APP-204 Checkpointed long tasks with idempotent external actions (P2) - Catalog: F040, F595
 - [ ] APP-205 Approval bound to exact action and version; channels and async tasks (P2) - Catalog: F598, F599
+- [ ] APP-206 Reusable subworkflows pinned to published versions, with typed inputs and outputs, inherited permissions and linked traces (P2)
+- [ ] APP-207 Offline app package export and import with dependency validation and credential exclusion (P2)
 
 ## P4 Breadth
 
