@@ -97,3 +97,10 @@ with conditional GET and truncated/mismatched object cases. Measure fresh
 process peak RSS at two actual file sizes above and below 100 MiB. Keep
 production route, UI, persistence and offline-image qualification separate from
 the intake test evidence.
+
+The disconnected Linux arm64 run used a two-CPU container and PyArrow 26.0.1
+installed from a local wheel. The JSONL regression imported actual files of
+16,777,216 bytes (4,096 rows) and 134,217,728 bytes (32,768 rows). The two fresh
+processes peaked at 25,411,584 and 27,693,056 resident bytes. The regression
+fixes Go CPU parallelism and uses the default GC pacing with no heap cap so
+host-wide concurrency does not obscure the size comparison.
