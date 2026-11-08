@@ -1,10 +1,10 @@
 # Managed cell scale validation
 
-Research for ARC-105 and ARC-106. The Agent-side RKE2 installer ran on
-disconnected Linux with a site-local resolver and an external packet recorder
-([ARC-104](kubernetes-cells.md)). Signed delivery and the console cell flow
-remain separate acceptance gates. A developer installation using a local
-image archive must be reported separately from either gate.
+Research for ARC-105 and ARC-106. The Agent-side installer and signed
+test release ran with two real RKE2 nodes on disconnected Linux
+([ARC-104](kubernetes-cells.md#signed-release-and-managed-api-acceptance)).
+The managed console remains a separate acceptance gate. Record developer
+installations separately from the signed managed API run.
 
 ## Simulation and proof boundaries
 
@@ -279,3 +279,81 @@ lookup for the same Calico hostname and the TUN recorder detected
 deliberate packets on both IP routes. Felix logged no usage reporter startup
 or report attempt. The site DNS and packet logs are retained under
 `observations/` alongside the staged fixture.
+
+## Signed managed cell scale fixture
+
+The [ARC-104 signed API run](kubernetes-cells.md#signed-release-and-managed-api-acceptance)
+provides the control-plane and real-node fixture. The load fixture reuses
+its test-signed package, verified installer, and two real Kubernetes
+members in the same isolated site. It adds a second Agent gateway and
+preloads the pinned KWOK archive into the managed RKE2 server. Only the
+simulator's 1,000 enrolled UUIDs are selected by KWOK. The actual
+Kubernetes scheduler binds one simulated Pod per UUID while the Agent
+simulator is active. Each Ready Pod, Ready synthetic Node and persisted
+Agent identity must match the same scope and UUID.
+
+Keep ten complete 60-second windows after the fleet and the Kubernetes
+workload are both ready. Offer heartbeats and claims at the five-second
+pacing and distribute one hundred facts tasks per minute across the
+fleet. Judge connected and on-stream counts, failed requests, heartbeat
+p99, and dispatch p99 against the ARC-015 steady thresholds. Measure
+gateway loss to full stream recovery on the survivor, fresh persisted
+heartbeats after the loss, and redistribution after the gateway
+returns. Record the exact scope, count, and duration of every sample.
+Take [PostgreSQL 18 database statistics](https://www.postgresql.org/docs/18/monitoring-stats.html#MONITORING-PG-STAT-DATABASE-VIEW)
+at steady and recovery boundaries. Report commits separately from the
+sum of inserted, updated and deleted rows per second, and report WAL
+bytes per second as a separate measurement.
+
+Keep the three unmodified packet logs and the site DNS log from before
+provisioning through the load. The dedicated test entry point checks
+one exact IPv4 probe and one exact IPv6 probe before allowing a zero
+product-packet result. A duplicate probe, any other external packet,
+a public-name DNS query, or a nonzero test process status fails the
+gate. Retain the simulator report and resource samples even on failure.
+
+Before starting, check disk, host MemAvailable and free memory, and
+the DEL recovery workload. Reserve 8 GiB for the nested Control,
+PostgreSQL, two gateways and simulator, 6 GiB per real RKE2 node and
+2 GiB for the host. Require at least 22 GiB MemAvailable, 2 GiB free
+memory and 30 GiB free disk, with full I/O PSI avg10 at most 5%.
+Before starting the generator, require 8 GiB host MemAvailable and
+2 GiB of effective cgroup headroom for the control fixture and 1 GiB
+for each RKE2 node. Read the live
+[cgroup v2 memory limits and counters](https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files)
+including finite ancestor limits. Sample every five seconds and stop
+the fixture if DEL starts or new memory-limit or OOM events appear.
+These fixture budgets are separate from product capacity claims.
+
+
+### Prepared launch and admission result
+
+The launch and observation package is staged privately at
+`/root/lane-arc105-launch.XuP5zk` on `ownsolid-cpu`. Run
+`bash launch.sh --check` in that directory to record a fresh admission
+sample. The explicit `--run` action uses the same gate before copying
+the signed test archive or starting containers. The runner sources
+and Linux amd64 simulator and test binaries passed SHA-256 checks.
+The signed media and KWOK inputs stay in the previous ARC fixture
+directories. The prepared runner carries no signing or enrollment key.
+
+While DEL recovery was active, the host had about 20.6 GiB
+MemAvailable and 357 MiB free memory. Full I/O PSI avg10 reached
+45.77% in the sampled refusal. A second check after DEL finished
+recorded 20.78 GiB MemAvailable, about 5.03 GiB free memory,
+about 809 GiB free disk and 0.70% full I/O PSI avg10. The Docker
+systemd parent slice had unlimited `memory.high` and `memory.max`.
+The second admission check exited 75 on the 22 GiB host reservation.
+A further check after staging returned 75 with 20.80 GiB MemAvailable
+and 18.88% full I/O PSI avg10. No fixture container or live test cgroup
+was created.
+
+The launcher refusal path was tested before fixture creation. Synthetic
+verification checked the full set of 1,000 identity, Node and Pod
+mappings, wrong-scope and wrong-node refusals, finite cgroup ancestors,
+and changed OOM counters. The dedicated Go test entry point accepted
+the prior unmodified ARC-104 dual-stack probe capture and rejected an
+extra IPv6 packet with a nonzero exit. This is a test of the new gate,
+separate from the historical nonzero process status and from a live
+ARC-105 scale run. No dispatch, reconnect or database write-rate
+measurement was collected at 1,000 nodes.
