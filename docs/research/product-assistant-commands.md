@@ -40,7 +40,7 @@ admit compound or negated text as an instruction. Keep these out of the dispatch
 No new module dependency, model, dataset or shipped service is needed. The Go
 standard library is [BSD-licensed](https://go.dev/LICENSE), permits commercial use,
 offline operation and redistribution with notices. Application reads use the
-existing control-plane package, its already pinned [pgx driver](https://github.com/jackc/pgx/blob/master/LICENSE)
+existing control-plane package, its already pinned [pgx driver](https://github.com/jackc/pgx/blob/v5.11.0/LICENSE)
 (MIT) and already deployed [PostgreSQL](https://www.postgresql.org/about/licence/)
 (PostgreSQL License). Those permissive licenses allow commercial and offline use
 and redistribution with their notices. The comparable products are references only.

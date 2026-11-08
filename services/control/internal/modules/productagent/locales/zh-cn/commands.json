@@ -1,0 +1,13 @@
+{
+  "open_home": ["打开首页", "打开概览"],
+  "open_nodes": ["打开节点"],
+  "open_model_library": ["打开模型库"],
+  "open_model_services": ["打开模型服务"],
+  "open_gateway": ["打开网关"],
+  "open_audit": ["打开审计"],
+  "open_models": ["打开模型"],
+  "open_keys": ["打开密钥", "打开接口密钥"],
+  "open_support": ["打开支持范围"],
+  "list_applications": ["查看应用", "列出应用"],
+  "list_conversations": ["查看会话", "列出会话"]
+}
