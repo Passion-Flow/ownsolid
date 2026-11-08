@@ -45,6 +45,7 @@ const (
 	importFieldCeiling   = 4096
 	importFieldNameBytes = 1024
 	importIssueCeiling   = 10000
+	sourceReadFailedCode = "DATASET_IMPORT_SOURCE_READ_FAILED"
 )
 
 // SourceImportOptions controls recovery and optional binding to a source receipt.
@@ -233,7 +234,8 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 	if opts.ExpectedBytes > 0 {
 		limit = opts.ExpectedBytes
 	}
-	limited := &io.LimitedReader{R: boundedContextReader{ctx, body}, N: limit + 1}
+	input := sourceReadObserver{Reader: boundedContextReader{ctx, body}}
+	limited := &io.LimitedReader{R: &input, N: limit + 1}
 	sourceHash := sha256.New()
 	outputHash := sha256.New()
 	source := io.TeeReader(limited, sourceHash)
@@ -262,6 +264,13 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 	}
 	if opts.ExpectedBytes > 0 && report.SourceBytes > opts.ExpectedBytes {
 		return report, failure("DATASET_SOURCE_CHANGED")
+	}
+	if input.interrupted {
+		var issue SourceIssue
+		if errors.As(err, &issue) && issue.Code == sourceReadFailedCode {
+			return report, issue
+		}
+		return report, failure(sourceReadFailedCode)
 	}
 	if err != nil {
 		return report, err
@@ -302,6 +311,21 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 		report.Cleaning.Samples = state.cleaning.report.Samples
 	}
 	return report, nil
+}
+
+// sourceReadObserver records body failures before buffered parsers can
+// reclassify an interrupted transfer as a format error.
+type sourceReadObserver struct {
+	io.Reader
+	interrupted bool
+}
+
+func (s *sourceReadObserver) Read(p []byte) (int, error) {
+	n, err := s.Reader.Read(p)
+	if err != nil && !errors.Is(err, io.EOF) {
+		s.interrupted = true
+	}
+	return n, err
 }
 
 type sourceFieldCount struct {

@@ -124,6 +124,11 @@ directory, and configure budgets for the source, output, record, fields,
 diagnostics and duration. Parquet additionally stages the original bytes on
 disk and requires the [optional decoder runtime](../../../../../runtimes/data-processing/README.md#parquet-source-intake).
 
+If the upload or object body is interrupted, intake reports
+`DATASET_IMPORT_SOURCE_READ_FAILED`. Retry with a complete upload or a new
+read of the same authorized object. The failed transfer publishes no
+candidate or private previews.
+
 The intake result and artifact are ready for a product caller to register
 under its authenticated workspace. A commit-uncertain error means the
 destination may exist and requires reconciliation before a retry. The older
