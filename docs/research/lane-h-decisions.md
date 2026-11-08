@@ -89,11 +89,18 @@ ownership. Keep these lines open.
 
 ## Roadmap evidence boundary
 
-Do not tick a line while the repository-wide verification gate fails. The
-isolated installation can substantiate this lane's Linux amd64 results while
-browser and agent failures remain open in their owning lanes. The coordinator
-also owns roadmap index and product status updates. Ticking here in isolation
-would make the repository's progress check stale.
+The isolated installation substantiates the signed Linux amd64 Compose path.
+The production gate still requires the exact release inputs for DEL-101 and
+DEL-110. Physical NVIDIA driver checks and agent-managed GPU serving need an
+authorized GPU host. Keep this scope separate from the CPU model result.
+
+The repository-wide suite also needs a passing run. A full run reached the Web
+unit stage after Go, Rust and both browser suites passed, then failed on the
+initial language attribute in the Web internationalization provider. The
+complete Web unit stage passed when repeated independently. A standalone
+pass cannot replace the full gate. The roadmap index, product status and
+capability declaration are coordinated outside this lane. Ticking a line on
+its own would leave the repository's progress checks out of sync.
 
 ## DEL-104 initial planning boundary
 
