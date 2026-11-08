@@ -2,7 +2,7 @@ package productagent
 
 import (
 	_ "embed"
-	"encoding/json"
+	json "encoding/json/v2"
 	"errors"
 	"net/http"
 )
