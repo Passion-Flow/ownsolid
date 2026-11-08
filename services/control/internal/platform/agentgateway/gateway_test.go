@@ -12,6 +12,7 @@ import (
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -34,6 +35,15 @@ type fakeBackend struct {
 	cursors   []uint64
 	acks      []wire.TaskAcknowledgement
 	lease     *wire.Lease
+	// peerRefusal, when set, refuses the connection's certificate.
+	peerRefusal error
+}
+
+// CheckPeer refuses the connection when the test says so.
+func (b *fakeBackend) CheckPeer(context.Context, string, agentidentity.Peer) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.peerRefusal
 }
 
 func (b *fakeBackend) Admit(_ context.Context, address, node, credential string, call wire.Call) (func(), error) {
@@ -189,6 +199,29 @@ func TestSessionCarriesHeartbeatsAndClaims(t *testing.T) {
 	}
 	if backend.held != 0 {
 		t.Fatalf("%d admissions not released", backend.held)
+	}
+}
+
+func TestSessionRefusesACertificateItCannotUse(t *testing.T) {
+	backend := &fakeBackend{peerRefusal: errors.New("AGENT_CERTIFICATE_REQUIRED")}
+	_, conn := start(t, backend, 4)
+	if _, e := exchange(t, open(t, conn), heartbeat(1)); status.Code(e) != codes.Unauthenticated || status.Convert(e).Message() != "AGENT_CERTIFICATE_REQUIRED" {
+		t.Fatalf("refused opening %v", e)
+	}
+}
+
+func TestRotationReachesAnOpenSession(t *testing.T) {
+	backend := &fakeBackend{}
+	_, conn := start(t, backend, 4)
+	stream := open(t, conn)
+	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
+		t.Fatal(e)
+	}
+	backend.mu.Lock()
+	backend.peerRefusal = errors.New("AGENT_CERTIFICATE_SUPERSEDED")
+	backend.mu.Unlock()
+	if _, e := exchange(t, stream, heartbeat(2)); status.Code(e) != codes.Unauthenticated || status.Convert(e).Message() != "AGENT_CERTIFICATE_SUPERSEDED" {
+		t.Fatalf("refused exchange %v", e)
 	}
 }
 

@@ -759,6 +759,8 @@
        "node.join_token_created",
        "node.join_token_revoked",
        "node.enrolled",
+       "node.certificate_renewed",
+       "node.certificate_recovered",
        "node.updated",
        "node.task_requested",
        "node.task_claimed",

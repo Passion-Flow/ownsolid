@@ -79,6 +79,8 @@
   "audit.action.mail.sent": "Email sent",
   "audit.action.node.agents_shed": "Agent traffic shed level changed",
   "audit.action.node.enrolled": "Node joined",
+  "audit.action.node.certificate_renewed": "Node certificate renewed",
+  "audit.action.node.certificate_recovered": "Node certificate recovered",
   "audit.action.node.join_token_created": "Join token created",
   "audit.action.node.join_token_revoked": "Join token revoked",
   "audit.action.node.pacing_updated": "Agent pacing changed",

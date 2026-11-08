@@ -170,6 +170,7 @@ func (s *Session) heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 		reply, e := s.exchange(ctx, wire.AgentMessage{Heartbeat: &h})
 		if e != nil {
 			s.dropStream()
+			s.closeForCertificate(e)
 			return wire.Disposition{}, e
 		}
 		return s.disposition(reply)
@@ -199,6 +200,7 @@ func (s *Session) heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 		return s.fallBack(ctx, h)
 	}
 	if e != nil {
+		s.closeForCertificate(e)
 		var refused *Problem
 		unanswered := !errors.Is(e, errStreamRefused) && !errors.As(e, &refused) && ctx.Err() == nil
 		// Another gateway gets the next attempt while some have not been tried. Only when
@@ -323,6 +325,15 @@ func (s *Session) disposition(reply wire.ControlMessage) (wire.Disposition, erro
 // sessionProblem is the error of a problem control answered on the stream.
 func sessionProblem(p *wire.SessionProblem) error {
 	return remoteProblem(p.Code, p.Status, time.Duration(p.RetryAfterSeconds)*time.Second)
+}
+
+// closeForCertificate closes the connection after a refusal of its certificate: the stream
+// shared it, and the next dial presents the certificate the agent has now.
+func (s *Session) closeForCertificate(e error) {
+	if CertificateRefused(e) && s.conn != nil {
+		s.conn.Close()
+		s.conn = nil
+	}
 }
 
 func (s *Session) dropStream() {
@@ -462,6 +473,9 @@ func (s *Session) exchange(ctx context.Context, m wire.AgentMessage) (wire.Contr
 func streamError(e error) error {
 	switch status.Code(e) {
 	case codes.Unauthenticated:
+		if code := status.Convert(e).Message(); certificateCodes[code] {
+			return &Problem{Code: code, Status: http.StatusUnauthorized}
+		}
 		return &Problem{Code: "AGENT_UNAUTHORIZED", Status: http.StatusUnauthorized}
 	case codes.ResourceExhausted:
 		return errStreamBusy

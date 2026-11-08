@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/netip"
 	"os"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentadmission"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	lifecyclewire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
@@ -132,6 +134,43 @@ func Owns(path string) bool {
 	}
 	return false
 }
+// rackNetwork names the rack an address enrolls from: its source network, because each rack of a
+// leaf-spine fabric has a subnet of its own. An address that does not parse keys no limit.
+func rackNetwork(host string, policy config.RatesPolicy) (string, bool) {
+	address, e := netip.ParseAddr(host)
+	if e != nil {
+		return "", false
+	}
+	address = address.Unmap()
+	bits := policy.AgentEnrollRackIPv6Prefix
+	if address.Is4() {
+		bits = policy.AgentEnrollRackIPv4Prefix
+	}
+	network, e := address.Prefix(bits)
+	if e != nil {
+		return "", false
+	}
+	return network.String(), true
+}
+
+// certificates serves the two certificate paths of a node, which check the connection's
+// certificate themselves because a node may have to come here without one.
+func (h *Handler) certificates(r *http.Request, parts []string, credential, request string, peer agentidentity.Peer) (any, int, error) {
+	switch {
+	case len(parts) == 3:
+		var input wire.CertificateRenewal
+		if e := httpserver.DecodeJSON(r, &input); e != nil {
+			return nil, 0, e
+		}
+		out, e := h.Service.RenewCertificate(r.Context(), parts[1], credential, request, input, peer)
+		return out, 200, e
+	case len(parts) == 4 && parts[3] == wire.CertificateConfirmationsPath:
+		out, e := h.Service.ConfirmCertificate(r.Context(), parts[1], credential, peer)
+		return out, 200, e
+	}
+	return nil, 0, errors.New("RESOURCE_NOT_FOUND")
+}
+
 func id(v string) bool     { _, e := uuid.Parse(v); return e == nil && len(v) == 36 }
 func reason(v string) bool { return strings.TrimSpace(v) != "" && utf8.RuneCountInString(v) <= 500 }
 func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
@@ -148,7 +187,13 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 		// every control process, on top of its admission.
 		policy := h.Service.Identity.Config.Policy().Rates
 		host := httpserver.RequestClientIP(r)
-		if _, e := h.Service.Identity.Admit(r.Context(), identity.Limit{Purpose: "agent.enroll.ip", Identifier: host, Count: policy.AgentEnrollIPCount, Window: config.Seconds(policy.AgentEnrollIPWindowSeconds)}); e != nil {
+		// A rack that powers on enrolls together, from one network, and waits its turn
+		// here before any enrollment work (ADR 0050).
+		limits := []identity.Limit{{Purpose: "agent.enroll.ip", Identifier: host, Count: policy.AgentEnrollIPCount, Window: config.Seconds(policy.AgentEnrollIPWindowSeconds)}}
+		if rack, known := rackNetwork(host, policy); known {
+			limits = append(limits, identity.Limit{Purpose: "agent.enroll.rack", Identifier: rack, Count: policy.AgentEnrollRackCount, Window: config.Seconds(policy.AgentEnrollRackWindowSeconds)})
+		}
+		if _, e := h.Service.Identity.Admit(r.Context(), limits...); e != nil {
 			return nil, 0, e
 		}
 		var input wire.Enrollment
@@ -169,6 +214,13 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 	credential := strings.TrimPrefix(values[0], "Bearer ")
 	if !security.ValidToken(credential) {
 		return nil, 0, errors.New("AGENT_UNAUTHORIZED")
+	}
+	peer := agentidentity.PeerOf(r.TLS)
+	if parts[2] == wire.CertificatesPath {
+		return h.certificates(r, parts, credential, request, peer)
+	}
+	if e := h.Service.CheckPeer(r.Context(), parts[1], peer); e != nil {
+		return nil, 0, e
 	}
 	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && parts[4] == "model-preparation-input-files" {
 		return h.preparationInput(r, parts, credential)

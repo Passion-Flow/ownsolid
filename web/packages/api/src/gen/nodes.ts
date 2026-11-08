@@ -761,6 +761,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/certificates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["renewAgentCertificate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/certificates/confirmations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmAgentCertificate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -899,6 +937,8 @@ export interface components {
             /** @constant */
             execution_profile?: "read_only";
             join_token: string;
+            /** @description PEM certificate request from a key generated on the node; required where control issues certificates. */
+            certificate_request?: string;
         } | {
             /** @constant */
             protocol_version: "1.1";
@@ -914,6 +954,8 @@ export interface components {
             /** @constant */
             execution_profile: "systemd_components";
             join_token: string;
+            /** @description PEM certificate request from a key generated on the node; required where control issues certificates. */
+            certificate_request?: string;
         } | {
             /** @constant */
             protocol_version: "1.2";
@@ -934,6 +976,8 @@ export interface components {
             /** @constant */
             execution_profile: "systemd_maintenance";
             join_token: string;
+            /** @description PEM certificate request from a key generated on the node; required where control issues certificates. */
+            certificate_request?: string;
         } | {
             /** @constant */
             protocol_version: "1.3";
@@ -949,6 +993,8 @@ export interface components {
             ];
             facts: components["schemas"]["Facts"];
             join_token: string;
+            /** @description PEM certificate request from a key generated on the node; required where control issues certificates. */
+            certificate_request?: string;
         } | {
             /** @constant */
             protocol_version: "1.4";
@@ -965,6 +1011,8 @@ export interface components {
             ];
             facts: components["schemas"]["Facts"];
             join_token: string;
+            /** @description PEM certificate request from a key generated on the node; required where control issues certificates. */
+            certificate_request?: string;
         } | {
             /** @constant */
             protocol_version: "1.5";
@@ -983,6 +1031,8 @@ export interface components {
             ];
             facts: components["schemas"]["Facts"];
             join_token: string;
+            /** @description PEM certificate request from a key generated on the node; required where control issues certificates. */
+            certificate_request?: string;
         };
         Enrolled: {
             /** Format: uuid */
@@ -994,6 +1044,8 @@ export interface components {
             protocol_version: "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5";
             /** @constant */
             heartbeat_seconds: 10;
+            /** @description The node certificate, leaf first, in PEM. */
+            certificate?: string;
         };
         Disposition: {
             /** @enum {string} */
@@ -2698,6 +2750,22 @@ export interface components {
         };
         NodeCountsResponse: {
             data: components["schemas"]["NodeCounts"];
+        };
+        CertificateRenewal: {
+            /** @description PEM certificate request from a key generated on the node; required where control issues certificates. */
+            certificate_request: string;
+        };
+        IssuedCertificate: {
+            certificate: string;
+        };
+        IssuedCertificateResponse: {
+            data: components["schemas"]["IssuedCertificate"];
+        };
+        CertificateConfirmed: {
+            confirmed: boolean;
+        };
+        CertificateConfirmedResponse: {
+            data: components["schemas"]["CertificateConfirmed"];
         };
     };
     responses: never;
@@ -4415,6 +4483,82 @@ export interface operations {
             /** @description Structured failure; no fake success */
             default: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    renewAgentCertificate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateRenewal"];
+            };
+        };
+        responses: {
+            /** @description Committed response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedCertificateResponse"];
+                };
+            };
+            /** @description Structured failure; no fake success */
+            default: {
+                headers: {
+                    "Retry-After": components["headers"]["AgentRetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    confirmAgentCertificate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Committed response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateConfirmedResponse"];
+                };
+            };
+            /** @description Structured failure; no fake success */
+            default: {
+                headers: {
+                    "Retry-After": components["headers"]["AgentRetryAfter"];
                     [name: string]: unknown;
                 };
                 content: {

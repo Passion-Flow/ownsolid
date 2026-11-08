@@ -36,7 +36,7 @@ type Policy struct {
 }
 
 func Default() Policy {
-	return Policy{EnrollSeconds: 20, RemoveSeconds: 120, ControlRequestSeconds: 15, ControlHeaderSeconds: 10, TLSHandshakeSeconds: 5, IdleConnectionSeconds: 30, ControlConnections: 2, BackoffInitialSeconds: 1, BackoffMaxSeconds: 30, ComponentTaskSeconds: 120, InferenceTaskSeconds: 1740, SystemdSeconds: 25, MaintenanceSeconds: 10, MetricsSeconds: 3, MetricsHeaderSeconds: 2, DockerStopSeconds: 15, DockerSeconds: 30, DockerHeaderSeconds: 25, DockerDialSeconds: 5, DockerConnections: 2, ProbeSeconds: 30, ProbeHeaderSeconds: 5, ProbeDialSeconds: 2, GPUProbeSeconds: 10, ModelLoadSeconds: 600, ModelPollMilliseconds: 1000}
+	return Policy{EnrollSeconds: 120, RemoveSeconds: 120, ControlRequestSeconds: 15, ControlHeaderSeconds: 10, TLSHandshakeSeconds: 5, IdleConnectionSeconds: 30, ControlConnections: 2, BackoffInitialSeconds: 1, BackoffMaxSeconds: 30, ComponentTaskSeconds: 120, InferenceTaskSeconds: 1740, SystemdSeconds: 25, MaintenanceSeconds: 10, MetricsSeconds: 3, MetricsHeaderSeconds: 2, DockerStopSeconds: 15, DockerSeconds: 30, DockerHeaderSeconds: 25, DockerDialSeconds: 5, DockerConnections: 2, ProbeSeconds: 30, ProbeHeaderSeconds: 5, ProbeDialSeconds: 2, GPUProbeSeconds: 10, ModelLoadSeconds: 600, ModelPollMilliseconds: 1000}
 }
 func Resolve(p *Policy) Policy {
 	if p == nil {
@@ -46,7 +46,7 @@ func Resolve(p *Policy) Policy {
 }
 func Seconds(n int) time.Duration { return time.Duration(n) * time.Second }
 func (p Policy) Validate() error {
-	if p.EnrollSeconds < 1 || p.EnrollSeconds > 120 {
+	if p.EnrollSeconds < 1 || p.EnrollSeconds > 600 {
 		return errors.New("AGENT_RUNTIME_BOUNDS_INVALID")
 	}
 	if p.RemoveSeconds < 30 || p.RemoveSeconds > 300 {

@@ -3,6 +3,7 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/url"
@@ -13,12 +14,17 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/imageregistry"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 )
 
 const adminRoot = "/api/v1/admin/image-registry"
 
-type Handler struct{ Service *imageregistry.Service }
+type Handler struct {
+	Service *imageregistry.Service
+	// CheckPeer decides whether a connection's certificate may act for a node (ADR 0050).
+	CheckPeer func(ctx context.Context, node string, peer agentidentity.Peer) error
+}
 
 func Owns(path string) bool {
 	if path == adminRoot || strings.HasPrefix(path, adminRoot+"/") {
@@ -216,6 +222,12 @@ func (h *Handler) Machine(r *http.Request) (any, int, error) {
 	credential := strings.TrimPrefix(values[0], "Bearer ")
 	if !security.ValidToken(credential) {
 		return nil, 0, errors.New("AGENT_UNAUTHORIZED")
+	}
+	if h.CheckPeer == nil {
+		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
+	}
+	if e := h.CheckPeer(r.Context(), parts[1], agentidentity.PeerOf(r.TLS)); e != nil {
+		return nil, 0, e
 	}
 	if parts[5] == "manifest" {
 		var in wire.LeaseRenewal

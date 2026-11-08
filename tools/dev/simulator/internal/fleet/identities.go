@@ -16,7 +16,7 @@ import (
 // identitiesFormat is the version of the identities file.
 const identitiesFormat = 1
 
-// maximumIdentitiesBytes bounds the identities file: about 300 bytes per agent.
+// maximumIdentitiesBytes bounds the identities file: about 2 KiB per agent.
 const maximumIdentitiesBytes = 64 << 20
 
 var (
@@ -32,6 +32,9 @@ type Identity struct {
 	CellID               string `json:"cell_id"`
 	Credential           string `json:"credential"`
 	AcknowledgedSequence uint64 `json:"acknowledged_sequence"`
+	// PrivateKey and Certificate identify the node on its connections, in PEM (ADR 0050).
+	PrivateKey  string `json:"private_key,omitempty"`
+	Certificate string `json:"certificate,omitempty"`
 }
 
 func (i Identity) node() link.Node {

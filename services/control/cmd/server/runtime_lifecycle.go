@@ -187,6 +187,9 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 	}
 	g.closers = append(g.closers, func() error { ssoService.Close(); return nil })
 	service.Sources = ssoService
+	if e := c.CheckAgentIdentity(); e != nil {
+		return e
+	}
 	tlsConfig, e := c.TLSConfig()
 	if e != nil {
 		return e

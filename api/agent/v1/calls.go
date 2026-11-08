@@ -50,6 +50,8 @@ const (
 	CallEvents      Call = "events"
 	CallDownload    Call = "download"
 	CallUpload      Call = "upload"
+	// CallCertificate renews a node certificate or confirms a rotation (ADR 0050).
+	CallCertificate Call = "certificate"
 )
 
 var callPriorities = map[Call]Priority{
@@ -59,6 +61,7 @@ var callPriorities = map[Call]Priority{
 	CallClaim:       PriorityHeartbeat,
 	CallAcknowledge: PriorityHeartbeat,
 	CallRenew:       PriorityHeartbeat,
+	CallCertificate: PriorityHeartbeat,
 	CallEvents:      PriorityTelemetry,
 	CallEnroll:      PriorityBulk,
 	CallDownload:    PriorityBulk,
@@ -93,22 +96,25 @@ type Cost struct {
 	Growth     Growth
 }
 
+// A call on a connection reads the node's certificate pins, one statement unless a node view
+// holds them, and enrollment adds the limit per rack (ADR 0050).
 var callCosts = map[Call]Cost{
-	CallEnroll:      {Statements: 33, Growth: GrowthFixed},
-	CallHeartbeat:   {Statements: 10, Growth: GrowthFixed},
+	CallEnroll:      {Statements: 36, Growth: GrowthFixed},
+	CallHeartbeat:   {Statements: 11, Growth: GrowthFixed},
 	CallClaim:       {Statements: 51, Growth: GrowthFixed},
-	CallAcknowledge: {Statements: 8, Growth: GrowthFixed},
-	CallRenew:       {Statements: 21, Growth: GrowthFixed},
+	CallAcknowledge: {Statements: 9, Growth: GrowthFixed},
+	CallRenew:       {Statements: 22, Growth: GrowthFixed},
 	CallResult:      {Statements: 16, Growth: GrowthFixed},
 	CallStop:        {Statements: 28, Growth: GrowthFixed},
 	CallEvents:      {Statements: 75, Growth: GrowthBatch},
-	CallDownload:    {Statements: 38, Growth: GrowthBytes},
+	CallDownload:    {Statements: 39, Growth: GrowthBytes},
 	CallUpload:      {Statements: 76, Growth: GrowthBytes},
+	CallCertificate: {Statements: 13, Growth: GrowthFixed},
 }
 
 // Calls lists every call.
 func Calls() []Call {
-	return []Call{CallEnroll, CallHeartbeat, CallClaim, CallAcknowledge, CallRenew, CallResult, CallStop, CallEvents, CallDownload, CallUpload}
+	return []Call{CallEnroll, CallHeartbeat, CallClaim, CallAcknowledge, CallRenew, CallResult, CallStop, CallEvents, CallDownload, CallUpload, CallCertificate}
 }
 
 // Known reports whether c is a call of this protocol version.
@@ -178,6 +184,8 @@ func PathCall(path string) (Call, string, bool) {
 	switch {
 	case len(parts) == 3 && parts[2] == "heartbeat":
 		return CallHeartbeat, node, true
+	case len(parts) == 3 && parts[2] == CertificatesPath, len(parts) == 4 && parts[2] == CertificatesPath && parts[3] == CertificateConfirmationsPath:
+		return CallCertificate, node, true
 	case len(parts) == 4 && parts[2] == "tasks" && parts[3] == "claims":
 		return CallClaim, node, true
 	case len(parts) >= 5 && parts[2] == "tasks" && parts[3] != "":

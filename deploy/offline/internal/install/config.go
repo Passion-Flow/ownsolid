@@ -42,7 +42,7 @@ var (
 )
 
 // controlOwnedKeys are written by the installer and cannot be set through control_settings.
-var controlOwnedKeys = []string{"topology", "server", "database", "security", "licensing", "smtp", "telemetry", "models"}
+var controlOwnedKeys = []string{"topology", "server", "database", "security", "licensing", "smtp", "telemetry", "models", "agent_identity"}
 
 type Config struct {
 	FormatVersion int             `yaml:"format_version"`
@@ -125,10 +125,12 @@ type OriginsConfig struct {
 	Admin  string `yaml:"admin"`
 }
 type TLSConfig struct {
-	Source          string `yaml:"source"`
-	CertificateFile string `yaml:"certificate_file"`
-	PrivateKeyFile  string `yaml:"private_key_file"`
-	CAFile          string `yaml:"ca_file"`
+	Source string `yaml:"source"`
+	// AgentCertificateLifetimeHours is how long a node's certificate lasts; zero means control's default.
+	AgentCertificateLifetimeHours int    `yaml:"agent_certificate_lifetime_hours"`
+	CertificateFile               string `yaml:"certificate_file"`
+	PrivateKeyFile                string `yaml:"private_key_file"`
+	CAFile                        string `yaml:"ca_file"`
 }
 type LicenseConfig struct {
 	TrustFile string `yaml:"trust_file"`
@@ -376,6 +378,9 @@ func (c Config) validateOrigins() error {
 }
 
 func (c Config) validateTLS() error {
+	if hours := c.TLS.AgentCertificateLifetimeHours; hours != 0 && (hours < 24 || hours > 8760) {
+		return invalid("tls.agent_certificate_lifetime_hours", "must be from 24 to 8760")
+	}
 	t := c.TLS
 	switch t.Source {
 	case "generate":

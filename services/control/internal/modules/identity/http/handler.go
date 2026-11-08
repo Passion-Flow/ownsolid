@@ -442,7 +442,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 		}
 		defer release()
 		if registryhttp.MachineOwns(r.URL.Path) {
-			data, status, e := (&registryhttp.Handler{Service: h.ImageRegistry}).Machine(r)
+			data, status, e := (&registryhttp.Handler{Service: h.ImageRegistry, CheckPeer: h.Nodes.Service.CheckPeer}).Machine(r)
 			if e != nil {
 				h.problem(w, requestID, e)
 				return
