@@ -167,6 +167,10 @@ licence texts. Every payload other than the SPDX document itself must have its
 SHA-256 represented by a package checksum in that SPDX 2.3 JSON document.
 Generate component inventories and notices on the connected release machine
 before signing. Outer asset checksums do not replace component SBOMs.
+For the Linux installer, include the compiled age, hpke, x/crypto and x/sys
+BSD notices. Read the selected versions from `go version -m` on the
+packaged binary. See the [dependency inventory](../../../docs/research/encrypted-backups.md#licensing).
+
 
 ```sh
 factory validate-current --config /path/to/release.json
