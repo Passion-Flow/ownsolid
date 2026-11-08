@@ -2,7 +2,7 @@
   "format_version": 1,
   "kind": "projectone-postgresql-lineage-v1",
   "application_profile": "mvp-postgresql-cpu-v1",
-  "schema_version": 54,
+  "schema_version": 55,
   "table_count_including_ledger": 116,
   "prefix_lineage": "account22",
   "prefix_schema_version": 22,
@@ -276,6 +276,11 @@
       "version": 54,
       "source_path": "services/control/migrations/postgresql/000054_audit_chain_scope.up.sql",
       "sha256": "8aab33c9fc7d87adceec2f5e57d321c26b1ba86945e0d47042c7acae7e5f7bb4"
+    },
+    {
+      "version": 55,
+      "source_path": "services/control/migrations/postgresql/000055_audit_append_only.up.sql",
+      "sha256": "21a35b57f58041b09750767286bd509e3c225c51c28bfe7a55de81dbbd53c037"
     }
   ]
 }
