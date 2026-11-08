@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -138,6 +139,17 @@ func TestPreflightRequiresAnInstalledNVIDIADriverAndRuntime(t *testing.T) {
 // It needs an isolated Docker-in-Docker daemon, the existing egress recorder and
 // the production Compose images, all mounted by that runner.
 func TestPreflightIsolatedDocker(t *testing.T) {
+	testIsolatedDocker(t, false)
+}
+
+// TestSignedBundleIsolatedDocker uses the same real zero-egress runner with a
+// signed fixture manufactured from real Linux amd64 image archives.
+func TestSignedBundleIsolatedDocker(t *testing.T) {
+	testIsolatedDocker(t, true)
+}
+
+func testIsolatedDocker(t *testing.T, signed bool) {
+	t.Helper()
 	installer := os.Getenv("OWNSOLID_E2E_INSTALLER")
 	logPath := os.Getenv("OWNSOLID_E2E_EGRESS_LOG")
 	if installer == "" || logPath == "" || os.Getenv("OWNSOLID_E2E_EGRESS_INTERFACE") == "" {
@@ -236,6 +248,12 @@ func TestPreflightIsolatedDocker(t *testing.T) {
 	policy.ContainerdRoot = filepath.Join(strings.TrimSpace(storage), "containerd", "daemon")
 	c.Preflight = &policy
 	config := filepath.Join(dir, "install.yaml")
+	var signedArchive, verification string
+	if signed {
+		c.ComposeFile = ""
+		c.Images = ImagesConfig{}
+		signedArchive, verification = stageSignedFixture(t, run)
+	}
 	command := func(t *testing.T, action, want string, fail bool) {
 		t.Helper()
 		raw, err := yaml.Marshal(c)
@@ -245,11 +263,44 @@ func TestPreflightIsolatedDocker(t *testing.T) {
 		if err := os.WriteFile(config, raw, 0o600); err != nil {
 			t.Fatal(err)
 		}
-		out, err := run(installer, action, "--config", config)
+		args := []string{action, "--config", config}
+		if signed && action == "apply" {
+			args[0] = "apply-bundle"
+			args = append(args, "--bundle", signedArchive, "--verification", verification)
+		}
+		out, err := run(installer, args...)
 		t.Logf("%s:\n%s", action, out)
 		if (err != nil) != fail || !strings.Contains(out, want) {
 			t.Fatalf("want %s (fail=%t), got %v", want, fail, err)
 		}
+	}
+
+	if signed {
+		t.Run("refuses a truncated signed archive without installing", func(t *testing.T) {
+			original := signedArchive
+			signedArchive = filepath.Join(filepath.Dir(signedArchive), "truncated.tar.gz")
+			source, err := os.Open(original)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bad, err := os.OpenFile(signedArchive, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+			if err != nil {
+				source.Close()
+				t.Fatal(err)
+			}
+			_, err = io.CopyN(bad, source, 512)
+			if err := errors.Join(err, source.Close(), bad.Close()); err != nil {
+				t.Fatal(err)
+			}
+			command(t, "apply", "INSTALL_BUNDLE_VERIFICATION_FAILED", true)
+			signedArchive = original
+			if _, err := os.Stat(c.Layout().ComposeFile); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("unverified bundle prepared an installation: %v", err)
+			}
+			if images, err := run("docker", "image", "ls", "--quiet"); err != nil || strings.TrimSpace(images) != "" {
+				t.Fatalf("unverified bundle loaded Docker images: %v: %s", err, images)
+			}
+		})
 	}
 
 	t.Run("refuses without preparing files", func(t *testing.T) {
@@ -282,6 +333,17 @@ func TestPreflightIsolatedDocker(t *testing.T) {
 			t.Fatal("repeat apply changed the administrator credential")
 		}
 		command(t, "status", c.Origins.Portal+": ready", false)
+		if signed {
+			images, err := run("docker", "image", "ls", "--format", "{{.Repository}}:{{.Tag}}")
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, image := range strings.Fields(images) {
+				if image != "<none>:<none>" {
+					t.Fatalf("signed bundle restored an image tag: %s", image)
+				}
+			}
+		}
 		// Prove a packet from a running application container also reaches the recorder.
 		probe := "import socket,sys; s=socket.socket(); s.settimeout(3); sys.exit(0 if s.connect_ex(('192.0.2.2',9)) else 1)"
 		layout := c.Layout()
@@ -306,4 +368,47 @@ func TestPreflightIsolatedDocker(t *testing.T) {
 		}
 		t.Logf("support archive reports control %s and PostgreSQL schema %d", report.Services[0].State, *report.SchemaVersion)
 	})
+}
+
+// stageSignedFixture copies the archive and the independently passed trust file
+// into a disposable real mount in the isolated host.
+func stageSignedFixture(t *testing.T, run func(string, ...string) (string, error)) (string, string) {
+	t.Helper()
+	delivery := os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE")
+	if delivery == "" {
+		t.Fatal("the signed test needs the delivery directory mounted by the harness")
+	}
+	mount := t.TempDir()
+	if out, err := run("mount", "-t", "tmpfs", "-o", "size=2g,mode=0700", "tmpfs", mount); err != nil {
+		t.Fatalf("mount signed release staging: %v: %s", err, out)
+	}
+	t.Cleanup(func() {
+		if out, err := exec.Command("umount", mount).CombinedOutput(); err != nil {
+			t.Errorf("unmount signed release staging: %v: %s", err, out)
+		}
+	})
+	for _, name := range []string{"ownsolid.tar.gz", "release-trust.json"} {
+		input, err := os.Open(filepath.Join(delivery, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		output, err := os.OpenFile(filepath.Join(mount, name), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+		if err != nil {
+			input.Close()
+			t.Fatal(err)
+		}
+		_, err = io.Copy(output, input)
+		if err := errors.Join(err, input.Close(), output.Close()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	policy := filepath.Join(mount, "verification.json")
+	raw, err := json.Marshal(map[string]any{"mount_root": mount, "trust_file": filepath.Join(mount, "release-trust.json"), "minimum_free_bytes": 1 << 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(policy, raw, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return filepath.Join(mount, "ownsolid.tar.gz"), policy
 }

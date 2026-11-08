@@ -226,14 +226,36 @@ func defaults() Config {
 
 // Load reads and validates the configuration. Unknown keys and invalid values fail.
 func Load(path string) (Config, error) {
+	c, err := readConfiguration(path)
+	if err != nil {
+		return Config{}, err
+	}
+	if err := c.Validate(); err != nil {
+		return Config{}, err
+	}
+	return c, nil
+}
+
+func readConfiguration(path string) (Config, error) {
 	raw, e := os.ReadFile(path)
 	if e != nil {
 		return Config{}, errors.New("INSTALL_CONFIG_UNREADABLE")
 	}
-	return Decode(raw)
+	return decodeConfiguration(raw)
 }
 
 func Decode(raw []byte) (Config, error) {
+	c, err := decodeConfiguration(raw)
+	if err != nil {
+		return Config{}, err
+	}
+	if err = c.Validate(); err != nil {
+		return Config{}, err
+	}
+	return c, nil
+}
+
+func decodeConfiguration(raw []byte) (Config, error) {
 	c := defaults()
 	decoder := yaml.NewDecoder(bytes.NewReader(raw))
 	decoder.KnownFields(true)
@@ -242,9 +264,6 @@ func Decode(raw []byte) (Config, error) {
 	}
 	if e := decoder.Decode(&struct{}{}); !errors.Is(e, io.EOF) {
 		return Config{}, errors.New("INSTALL_CONFIG_INVALID: more than one document")
-	}
-	if e := c.Validate(); e != nil {
-		return Config{}, e
 	}
 	return c, nil
 }
@@ -275,7 +294,9 @@ func validateTopologySize(size string) error {
 	return nil
 }
 
-func (c Config) Validate() error {
+func (c Config) Validate() error { return c.validate(false) }
+
+func (c Config) validate(fromBundle bool) error {
 	if c.FormatVersion != FormatVersion {
 		return invalid("format_version", fmt.Sprintf("must be %d", FormatVersion))
 	}
@@ -288,7 +309,10 @@ func (c Config) Validate() error {
 	if !canonicalPath(c.InstallRoot) || c.InstallRoot == "/" {
 		return invalid("install_root", "must be an absolute clean path below /")
 	}
-	if !canonicalPath(c.ComposeFile) {
+	if fromBundle && (c.ComposeFile != "" || c.Images != (ImagesConfig{})) {
+		return invalid("compose_file and images", "must be omitted when installing a signed bundle")
+	}
+	if !fromBundle && !canonicalPath(c.ComposeFile) {
 		return invalid("compose_file", "must be an absolute clean path")
 	}
 	if !projectPattern.MatchString(c.Project) {
@@ -300,9 +324,11 @@ func (c Config) Validate() error {
 	if c.Images.ArchiveFile != "" && !canonicalPath(c.Images.ArchiveFile) {
 		return invalid("images.archive_file", "must be an absolute clean path")
 	}
-	for field, image := range map[string]string{"images.control": c.Images.Control, "images.postgres": c.Images.Postgres, "images.metrics": c.Images.Metrics, "images.logs": c.Images.Logs} {
-		if !pinnedImage(image) {
-			return invalid(field, "must name an image by tag or digest, and never latest")
+	if !fromBundle {
+		for field, image := range map[string]string{"images.control": c.Images.Control, "images.postgres": c.Images.Postgres, "images.metrics": c.Images.Metrics, "images.logs": c.Images.Logs} {
+			if !pinnedImage(image) {
+				return invalid(field, "must name an image by tag or digest, and never latest")
+			}
 		}
 	}
 	if net.ParseIP(c.Network.BindAddress) == nil {

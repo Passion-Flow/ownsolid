@@ -15,6 +15,9 @@ import (
 )
 
 const usage = "usage: ownsolid-install validate|preflight|apply|status --config <install.yaml>\n" +
+	"       ownsolid-install verify-bundle --bundle <archive.tar.gz> --verification <policy.json>\n" +
+	"       ownsolid-install prepare-bundle --bundle <archive.tar.gz> --verification <policy.json> --output <new directory>\n" +
+	"       ownsolid-install apply-bundle --bundle <archive.tar.gz> --verification <policy.json> --config <site.yaml>\n" +
 	"       ownsolid-install support-bundle --config <install.yaml> --output <new archive.tar.gz>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
@@ -32,6 +35,9 @@ func main() {
 func run(args []string, out io.Writer) error {
 	if len(args) < 1 {
 		return errors.New(usage)
+	}
+	if args[0] == "verify-bundle" || args[0] == "prepare-bundle" || args[0] == "apply-bundle" {
+		return runBundle(args[0], args[1:], out)
 	}
 	if args[0] == "capabilities" {
 		if len(args) != 1 {
@@ -62,7 +68,14 @@ func run(args []string, out io.Writer) error {
 	if (command == "backup" || command == "support-bundle") != (*output != "") || (command == "restore") != (*from != "") || shed != (*level != "") || shed != (*reason != "") {
 		return errors.New(usage)
 	}
-	c, e := install.Load(*path)
+	load := install.LoadOperational
+	switch command {
+	case "apply", "validate":
+		load = install.Load
+	case "preflight":
+		load = install.LoadPreflight
+	}
+	c, e := load(*path)
 	if e != nil {
 		return e
 	}
