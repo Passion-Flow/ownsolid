@@ -245,3 +245,20 @@ LANE_D_MODEL_BUNDLE=/path/to/model.tar LANE_D_COMPONENT_STATE=/path/to/state \
 The fixture runs the actual archive verifier and reads settled component
 logs from VictoriaLogs. It uses synthetic node results for systemd and GPU
 operations and verifies publication against a provisioned gateway record.
+
+### Register a node-managed gateway
+
+When the installation has a model gateway CA and the selected inference node
+supports gateway tasks, queue the node's gateway with:
+
+```sh
+ownsolid deployment alias provision "$NODE_ID" --name rack-seven \
+  --idempotency-key "$REQUEST_KEY" --reason 'Start the node gateway' --output json
+ownsolid deployment alias gateways --output json
+```
+
+Use the same request key and arguments after a lost response. Read
+`delivery_state` and `delivery_error_code` in the gateway list. Once the
+state is `running`, use `deployment alias publish` with the gateway ID
+and the deployment's current revision. The agent keeps the gateway's
+credential and supplies its configured serving origin.
