@@ -306,15 +306,22 @@ impl Configuration {
         if let Some(policy) = &self.quota_policy {
             policy.validate()?;
         }
-        if self.gateway_id.is_nil()
-            || self.node_id.is_nil()
-            || !self.listen_address.ip().is_loopback()
-            || self.listen_address.port() == 0
-            || !self.backend_address.ip().is_loopback()
-            || self.backend_address.port() == 0
-            || self.listen_address == self.backend_address
-        {
+        if self.gateway_id.is_nil() || self.node_id.is_nil() {
+            return Err("GATEWAY_CONFIGURATION_INVALID");
+        }
+        // The backend has no authentication of its own, so it stays on loopback; callers reach
+        // the gateway's own TLS listener on whichever address the operator chose for it.
+        if !self.backend_address.ip().is_loopback() || self.backend_address.port() == 0 {
             return Err("GATEWAY_LOOPBACK_BINDING_REQUIRED");
+        }
+        let listen = self.listen_address.ip();
+        if self.listen_address.port() == 0
+            || listen.is_multicast()
+            || listen.is_broadcast()
+            || (self.listen_address.port() == self.backend_address.port()
+                && (listen.is_unspecified() || *listen == *self.backend_address.ip()))
+        {
+            return Err("GATEWAY_LISTEN_ADDRESS_INVALID");
         }
         let url = reqwest::Url::parse(&self.control_origin)
             .map_err(|_| "GATEWAY_CONTROL_ORIGIN_INVALID")?;
@@ -408,6 +415,47 @@ mod tests {
             Configuration::load(&path),
             Err("GATEWAY_FILE_PERMISSIONS_OR_SIZE_INVALID")
         ));
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn listener_may_leave_loopback_while_the_backend_may_not() {
+        let root = directory();
+        let mut value = json!({"gateway_id":Uuid::new_v4(),"node_id":Uuid::new_v4(),"listen_address":"192.0.2.10:19443","backend_address":"127.0.0.1:19001","control_origin":"https://admin.example.invalid:19444","control_ca_file":root.join("ca.pem"),"gateway_credential_file":root.join("credential"),"tls_certificate_file":root.join("certificate.pem"),"tls_private_key_file":root.join("key.pem"),"state_directory":root});
+        let check = |value: &serde_json::Value| {
+            serde_json::from_value::<Configuration>(value.clone())
+                .unwrap()
+                .validate()
+        };
+        assert_eq!(check(&value), Ok(()));
+        for (listen, expected) in [
+            ("0.0.0.0:19443", Ok(())),
+            ("127.0.0.1:19443", Ok(())),
+            ("0.0.0.0:19001", Err("GATEWAY_LISTEN_ADDRESS_INVALID")),
+            ("127.0.0.1:19001", Err("GATEWAY_LISTEN_ADDRESS_INVALID")),
+            ("192.0.2.10:19001", Ok(())),
+            ("192.0.2.10:0", Err("GATEWAY_LISTEN_ADDRESS_INVALID")),
+            ("224.0.0.1:19443", Err("GATEWAY_LISTEN_ADDRESS_INVALID")),
+            (
+                "255.255.255.255:19443",
+                Err("GATEWAY_LISTEN_ADDRESS_INVALID"),
+            ),
+        ] {
+            value["listen_address"] = json!(listen);
+            assert_eq!(check(&value), expected, "{listen}");
+        }
+        value["listen_address"] = json!("192.0.2.10:19443");
+        for backend in ["0.0.0.0:19001", "192.0.2.10:19001", "127.0.0.1:0"] {
+            value["backend_address"] = json!(backend);
+            assert_eq!(
+                check(&value),
+                Err("GATEWAY_LOOPBACK_BINDING_REQUIRED"),
+                "{backend}"
+            );
+        }
+        value["backend_address"] = json!("127.0.0.1:19001");
+        value["node_id"] = json!(Uuid::nil());
+        assert_eq!(check(&value), Err("GATEWAY_CONFIGURATION_INVALID"));
         fs::remove_dir_all(root).unwrap();
     }
 

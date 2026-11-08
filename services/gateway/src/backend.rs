@@ -68,7 +68,11 @@ impl Backend {
         configuration.validate()?;
         crate::control::initialize_tls_provider();
         let limits = &configuration.limits;
+        // The backend is plain HTTP on loopback. An empty trust list keeps the client from
+        // loading the platform's roots, which a minimal image does not have and which no
+        // backend call may use.
         let client = reqwest::Client::builder()
+            .tls_certs_only(Vec::<reqwest::Certificate>::new())
             .http1_only()
             .no_proxy()
             .redirect(reqwest::redirect::Policy::none())

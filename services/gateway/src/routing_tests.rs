@@ -571,6 +571,45 @@ async fn real_gateway_tls_models_chat_sse_and_durable_metadata_receipts() {
 }
 
 #[tokio::test]
+async fn real_gateway_tls_negotiates_http1_with_a_client_that_prefers_http2() {
+    // curl, Go's net/http and browsers offer h2 first; a listener that accepted it would drop
+    // the connection after the handshake, because the server speaks HTTP/1.1 only.
+    let fixture = Fixture::new().await;
+    let address = fixture.origin.trim_start_matches("https://").to_owned();
+    let authority = fs::read(fixture.root.join("ca.pem")).unwrap();
+    let (negotiated, head) = tokio::task::spawn_blocking(move || {
+        use rustls::pki_types::{CertificateDer, ServerName, pem::PemObject};
+        use std::io::{Read, Write};
+        let mut roots = rustls::RootCertStore::empty();
+        for certificate in CertificateDer::pem_slice_iter(&authority) {
+            roots.add(certificate.unwrap()).unwrap();
+        }
+        let mut client = rustls::ClientConfig::builder()
+            .with_root_certificates(roots)
+            .with_no_client_auth();
+        client.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
+        let name = ServerName::try_from("127.0.0.1").unwrap();
+        let connection = rustls::ClientConnection::new(Arc::new(client), name).unwrap();
+        let socket = std::net::TcpStream::connect(&address).unwrap();
+        socket
+            .set_read_timeout(Some(Duration::from_secs(3)))
+            .unwrap();
+        let mut stream = rustls::StreamOwned::new(connection, socket);
+        stream
+            .write_all(b"GET /health/live HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n")
+            .unwrap();
+        let mut response = Vec::new();
+        let _ = stream.read_to_end(&mut response);
+        let negotiated = stream.conn.alpn_protocol().map(<[u8]>::to_vec);
+        (negotiated, String::from_utf8_lossy(&response).into_owned())
+    })
+    .await
+    .unwrap();
+    assert_eq!(negotiated.as_deref(), Some(&b"http/1.1"[..]));
+    assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+}
+
+#[tokio::test]
 async fn real_gateway_incomplete_sse_and_actual_client_disconnect_never_fabricate_success() {
     let fixture = Fixture::new().await;
     fixture.state.backend_mode.store(1, Ordering::SeqCst);

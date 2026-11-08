@@ -14,6 +14,7 @@ use tokio::net::TcpStream;
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 const MAX_REQUEST_HEADERS: usize = 32;
+const HTTP1_PROTOCOL: &[u8] = b"http/1.1";
 
 struct Connection {
     stream: TcpStream,
@@ -111,6 +112,24 @@ impl<S> Accept<TcpStream, S> for ConnectionAcceptor {
     }
 }
 
+/// The listener's TLS configuration. The server speaks HTTP/1.1 only, so ALPN offers only
+/// `http/1.1`: axum-server's default also offers `h2`, which clients such as curl and Go's
+/// `net/http` then select, and the HTTP/1-only server drops the connection after the handshake.
+async fn tls_configuration(
+    configuration: &Configuration,
+) -> Result<axum_server::tls_rustls::RustlsConfig> {
+    let certificate = certificate_file(&configuration.tls_certificate_file)?;
+    let key = secret_file(&configuration.tls_private_key_file)?;
+    let defaults = axum_server::tls_rustls::RustlsConfig::from_pem(certificate, key)
+        .await
+        .map_err(|_| "GATEWAY_TLS_CONFIGURATION_INVALID")?;
+    let mut server = (*defaults.get_inner()).clone();
+    server.alpn_protocols = vec![HTTP1_PROTOCOL.to_vec()];
+    Ok(axum_server::tls_rustls::RustlsConfig::from_config(
+        Arc::new(server),
+    ))
+}
+
 pub async fn serve(
     configuration: &Configuration,
     application: Arc<Application>,
@@ -128,11 +147,7 @@ pub async fn serve(
     listener
         .set_nonblocking(true)
         .map_err(|_| "GATEWAY_LISTENER_INVALID")?;
-    let certificate = certificate_file(&configuration.tls_certificate_file)?;
-    let key = secret_file(&configuration.tls_private_key_file)?;
-    let tls = axum_server::tls_rustls::RustlsConfig::from_pem(certificate, key)
-        .await
-        .map_err(|_| "GATEWAY_TLS_CONFIGURATION_INVALID")?;
+    let tls = tls_configuration(configuration).await?;
     let limits = &configuration.limits;
     let mut server = axum_server::from_tcp_rustls(listener, tls)
         .map_err(|_| "GATEWAY_LISTENER_INVALID")?

@@ -33,7 +33,7 @@ UX-131 keeps closing page by page, as ADR 0044 set out.
 
 POR-104 goes before GW-114. [The research on GW-114](../research/gateway-delivery.md) showed that the gateway has to
 run beside the model on the serving node, so the item reaches the agent paths this decision kept lane B out of, and
-lane A has uncommitted work in exactly those files. GW-114 stays next once its prototype and decision are done.
+lane A has uncommitted work in exactly those files. GW-114 stays next once its prototype and decision are done. The prototype ran and the decision is [ADR 0051](0051-the-model-gateway-runs-beside-the-model.md).
 
 ## Consequences
 
