@@ -35,6 +35,17 @@ type bundleIndex struct {
 // from outside the bundle. maximumPayloadBytes bounds the two payloads in sum.
 // The caller must verify the OCI image identities and admit the rendered workload.
 func VerifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64) (Release, error) {
+	return verifyBundle(ctx, root, key, maximumPayloadBytes, false)
+}
+
+// VerifyInstallBundle verifies the signed payloads and their complete Linux
+// amd64 OCI image inventory. The installer must keep staging immutable, check
+// expanded layers and verify the registered images before starting workloads.
+func VerifyInstallBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64) (Release, error) {
+	return verifyBundle(ctx, root, key, maximumPayloadBytes, true)
+}
+
+func verifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64, install bool) (Release, error) {
 	if root == nil || len(key) != ed25519.PublicKeySize || maximumPayloadBytes <= 0 {
 		return Release{}, fmt.Errorf("%w: supply a local bundle, trusted publisher key and payload limit", ErrBundle)
 	}
@@ -52,11 +63,17 @@ func VerifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, max
 		return Release{}, fmt.Errorf("%w: %w", ErrBundle, err)
 	}
 	artifact := release.Manifest.Artifact
-	bytes, err := verifyPayload(ctx, root, artifact.Filename(), artifact.SHA256, maximumPayloadBytes)
+	artifactBytes, err := verifyPayload(ctx, root, artifact.Filename(), artifact.SHA256, maximumPayloadBytes)
 	if err != nil {
 		return Release{}, err
 	}
-	if _, err = verifyPayload(ctx, root, ImageArchiveName, index.Images, maximumPayloadBytes-bytes); err != nil {
+	remaining := maximumPayloadBytes - artifactBytes
+	if install {
+		err = verifyOCIArchive(ctx, root, index.Images, remaining, release.Manifest.Images)
+	} else {
+		_, err = verifyPayload(ctx, root, ImageArchiveName, index.Images, remaining)
+	}
+	if err != nil {
 		return Release{}, err
 	}
 	return release, nil

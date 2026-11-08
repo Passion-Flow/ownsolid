@@ -83,10 +83,18 @@ separately from the bundle. `apps.VerifyBundle` accepts that key, an
 limit for the engine input and image archive. It checks signature, manifest,
 both locales and both payloads before returning release metadata.
 
-Use only the paths covered by the signed inventory. Keep the same immutable
-staging directory until the installer has finished using it. The installer
-must verify the archive's OCI closure and match its local image identities to
-`Manifest.Images` before executing the rendered workload.
+Use `apps.VerifyInstallBundle` for the Linux amd64 installation path. In addition
+to the signature and payload checks it requires a complete OCI image layout in
+`images.tar`, with direct amd64 manifest digests exactly matching
+`Manifest.Images`. Pack the root index, layout metadata and all referenced
+manifest, configuration and layer blobs. Use USTAR headers or PAX headers with
+only a size extension. Include regular files and the optional `blobs/` and
+`blobs/sha256/` directories. Pack only the runtime closure for that platform.
+Layer compression may be gzip or uncompressed.
+
+Keep staging immutable through import. The installer checks expanded layer
+limits and DiffIDs, registers the approved local images, checks their registered
+digests and admits the rendered workload before execution.
 
 ## Verification
 
