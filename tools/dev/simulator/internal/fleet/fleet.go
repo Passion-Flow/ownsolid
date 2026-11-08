@@ -62,6 +62,9 @@ func Run(ctx context.Context, c config.Config) (report.Report, error) {
 	agents := make([]*agent, c.Agents)
 	for i := range agents {
 		agents[i] = newAgent(all[i], dialers[i], connections[i/c.AgentsPerConnection], recorder, time.Duration(c.LongTaskSeconds)*time.Second)
+		if c.AgentsPerConnection == 1 && len(c.SessionAddresses) > 1 {
+			agents[i].rebalanceInterval = time.Duration(c.GatewayRebalanceIntervalSeconds()) * time.Second
+		}
 	}
 	running, stop := context.WithTimeout(ctx, time.Duration(c.DurationSeconds)*time.Second)
 	defer stop()

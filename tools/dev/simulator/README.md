@@ -84,6 +84,7 @@ A JSON file; unknown fields are refused and paths are absolute.
 | `ca_file` | system roots only | Extra CA that verifies control |
 | `dial_address` | the origin's host and port | Where connections go; TLS still verifies the origin's name |
 | `session_addresses` | none | Agent gateways, `host:port`, up to 16. Each agent opens its session stream on them in its own order and moves to the next when one fails, as a real agent does ([ADR 0048](../../../docs/decisions/0048-agent-gateways-beside-control.md)); HTTPS stays on `dial_address` |
+| `gateway_rebalance_seconds` | 60 | Minimum wait between jittered checks of higher-ranked gateways, as on a real agent. Applies with multiple gateways and one agent per connection |
 | `identities_file` | required | Written by `enroll`, read and updated by `run` |
 | `join_tokens_file` | required by `enroll` | One join token per line |
 | `agents` | required | Agents to enroll or run, 1 to 100,000 |
@@ -140,6 +141,9 @@ The shape of the report, shortened, with example values:
 - `calls` covers `enroll`, `heartbeat`, `claim`, `acknowledge`, `renew`, `events` (progress),
   `result` and `stream_open` (opening a stream with its first heartbeat). Latency covers successful calls;
   a claim's includes the time control held it.
+- `gateway_rebalance` counts successful and refused preference checks. A refused
+  check leaves the fallback heartbeat on its current session, so it is counted
+  separately from heartbeat failures.
 - Recovery is measured for `disconnect`, `restart` and `partition`: from the fault (from the
   heal for a partition) to each hit agent's next good heartbeat. `full_recovery_seconds` is set
   only when every hit agent recovered.

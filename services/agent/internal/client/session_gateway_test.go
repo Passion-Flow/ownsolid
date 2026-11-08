@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"google.golang.org/grpc/codes"
@@ -128,5 +129,58 @@ func TestSessionWithoutGatewaysUsesTheControlOrigin(t *testing.T) {
 	}
 	if got := c.control.log(); !equal(got, []string{"stream heartbeat"}) || c.session.Gateway() != "" {
 		t.Fatalf("control saw %v, gateway %q", got, c.session.Gateway())
+	}
+}
+
+func TestSessionKeepsFallbackUntilPreferredGatewayAcceptsHeartbeat(t *testing.T) {
+	c := gatewayCell(t, 2)
+	preferred, fallback := c.gateways[c.order[0]], c.gateways[c.order[1]]
+	preferred.refuse = codes.Unavailable
+	now := time.Now()
+	c.session.now = func() time.Time { return now }
+	c.session.client.GatewayRebalanceSeconds = wire.MinGatewayRebalanceSeconds
+	ctx := t.Context()
+	h := wire.Handshake{}
+	if _, e := c.session.Heartbeat(ctx, h); e == nil {
+		t.Fatal("the preferred gateway is down")
+	}
+	if _, e := c.session.Heartbeat(ctx, h); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := c.session.Heartbeat(ctx, h); e != nil {
+		t.Fatal(e)
+	}
+	preferred.mu.Lock()
+	preferred.refuse = codes.OK
+	preferred.problem = &wire.SessionProblem{Status: 503, Code: "SERVICE_NOT_READY"}
+	preferred.mu.Unlock()
+
+	now = now.Add(2 * time.Duration(wire.MinGatewayRebalanceSeconds) * time.Second)
+	if _, e := c.session.Heartbeat(ctx, h); e != nil {
+		t.Fatalf("a refused preference check disrupted the heartbeat: %v", e)
+	}
+	if _, e := c.session.Claim(ctx, 0, 12); e != nil {
+		t.Fatal(e)
+	}
+	if c.session.Gateway() != c.order[1] || !equal(fallback.log(), []string{"stream heartbeat", "stream heartbeat", "stream heartbeat", "stream claim"}) {
+		t.Fatalf("lost fallback session after refusal: %q %v", c.session.Gateway(), fallback.log())
+	}
+	preferred.mu.Lock()
+	preferred.problem = nil
+	preferred.mu.Unlock()
+	now = now.Add(2 * time.Duration(wire.MinGatewayRebalanceSeconds) * time.Second)
+	if _, e := c.session.Heartbeat(ctx, h); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := c.session.Claim(ctx, 0, 12); e != nil {
+		t.Fatal(e)
+	}
+	if c.session.Gateway() != c.order[0] || !equal(preferred.log(), []string{"stream heartbeat", "stream claim"}) || len(c.control.log()) != 0 {
+		t.Fatalf("gateway %q preferred %v control %v", c.session.Gateway(), preferred.log(), c.control.log())
+	}
+	preferred.mu.Lock()
+	defer preferred.mu.Unlock()
+	if len(preferred.cursors) != 1 || preferred.cursors[0] != 12 {
+		t.Fatalf("claim cursor after switching: %v", preferred.cursors)
 	}
 }
