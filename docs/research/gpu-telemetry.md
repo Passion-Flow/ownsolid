@@ -74,3 +74,14 @@ offline exporter configuration. On supported real NVIDIA hardware, verify the
 metrics and identifiers against the pinned exporter, with ECC and NVLink
 availability recorded per model. A CPU-only protocol test cannot prove that
 qualification.
+
+## PCI identity for fault correlation
+
+The [exporter entity label reference](https://docs.nvidia.com/datacenter/dcgm/latest/reference/dcgm-exporter-metrics.html#entity-labels)
+includes `pci_bus_id` on physical GPU series. Preserve its explicit function
+and normalize the PCI domain width to agree with journal observations.
+When the label is absent, retain readings without a PCI identity. Conflicting
+addresses for one UUID or one address claimed by two UUIDs make the scrape
+ambiguous and unusable for attribution. Exclude both the current and legacy
+workload labels. Tests cover collisions, function preservation and legacy
+workload labels. Boot and time correlation still belong to the event consumer.
