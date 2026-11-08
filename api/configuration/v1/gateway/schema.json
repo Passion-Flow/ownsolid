@@ -31,7 +31,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 4096,
-      "description": "Numeric IPv4 loopback host:nonzero-port only; validated at startup.",
+      "description": "Numeric IPv4 host:nonzero-port the TLS listener binds, chosen by the operator; not multicast or broadcast, and not the backend port on the backend address or on every address. Validated at startup.",
       "x-environment": "PROJECT_ONE_GATEWAY_LISTEN_ADDRESS"
     },
     "backend_address": {
