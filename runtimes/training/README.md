@@ -17,11 +17,12 @@ The [package guide](projectone_training/README.md) details request, dataset, com
 
 Generated configuration/processor files come from [api/training/v1](../../api/training/v1). [runtime.json](runtime.json), [pyproject.toml](pyproject.toml) and [requirements](requirements) pin the execution/manufacturing profiles. Model-lifecycle inherits this runtime; dependency changes require its build and source binding to be reconsidered.
 
-The existing release selector/builder supports explicit healthy-Linux
-manufacturing inputs and an early CPU runtime-ready receipt. It preserves the
-original 56-wheel lock, metadata/license validation and actual CPU image checks;
-runtime readiness remains separate from archive/GPU/package qualification. See
-the [manufacturing procedure](../../docs/runbooks/model-lifecycle-manufacturing.md).
+The release image must install dependencies from the pinned wheelhouse and
+include the approved catalogue under api/agent/v1/model-catalog.json. Images
+using the inherited contracts/agent/v1 layout can still supply the catalogue.
+The worker checks the selected file against the request's catalogue digest.
+The [runtime delivery research](../../docs/research/training-runtime-delivery.md)
+describes the release and Agent verification gates.
 
 ## Attempt and recovery contract
 
@@ -40,7 +41,7 @@ Offline model loading disables remote model code. Explicit CPU verification flag
 Keep the [training API](../../api/training/v1), control and Agent validators,
 and runtime image in sync when changing the request or output format.
 
-Run the checkpoint seal and verification tests from the repository root. They
+Run the checkpoint and catalogue tests from the repository root. They
 use synthetic checkpoint files and the Python standard library:
 
     PYTHONPATH=runtimes/training:runtimes/data-processing python3 -B -m unittest discover -s runtimes/training/tests
