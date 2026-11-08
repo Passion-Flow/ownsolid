@@ -154,6 +154,18 @@ progress database, or a separate install workflow. Treat inability to observe
 the configured check as failure. Verify low resources, occupied ports, invalid
 clock state, unresolved names and a missing driver. Exercise refusal before
 materialization, repair, install, and repeat apply on the zero-egress harness.
+To check durable resume, stop the real installer after it confirms the
+administrator step and before it starts the control service. Reuse the
+same command and configuration. Compare the credential file and the
+committed administrator, tenant, and workspace in PostgreSQL across the
+retry, then check that both entrances are ready.
+The isolated Linux amd64 run at schema 52 reached that checkpoint,
+confirmed the control service was stopped and PostgreSQL contained one
+active platform administrator, and resumed with the identical command.
+The administrator, tenant, workspace, and credential bytes matched and
+both entrances became ready. The recorder observed only the host and
+workload probes. This qualifies the CPU single-node flow. The optional
+NVIDIA check has automated coverage and still needs real hardware evidence.
 The OS or daemon can change after checks complete. Docker remains the authority
 at the point it binds ports and starts containers.
 

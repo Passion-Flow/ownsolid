@@ -338,7 +338,11 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 	})
 	t.Run("installs and safely repeats with its own HTTPS port in use", func(t *testing.T) {
 		command(t, "preflight", "INSTALL_PREFLIGHT_PASSED", false)
-		command(t, "apply", "INSTALL_COMPLETE", false)
+		if signed {
+			command(t, "apply", "INSTALL_COMPLETE", false)
+		} else {
+			assertInterruptedApplyResumes(t, c, installer, config, run)
+		}
 		credential, err := os.ReadFile(c.CredentialPath())
 		if err != nil {
 			t.Fatal(err)
