@@ -127,9 +127,9 @@ func BuildQuotaTree(nodes []QuotaNode) (*QuotaTree, error) {
 // WorkspacePath returns independently owned limits from the workspace up to
 // the platform. A workspace outside the requested tenant is treated as absent.
 func (t *QuotaTree) WorkspacePath(tenantID, workspaceID string) ([]QuotaNode, error) {
-	node := t.nodes[workspaceID]
-	if node.Level != WorkspaceQuota || node.TenantID != tenantID {
-		return nil, ErrQuotaScopeNotFound
+	node, err := t.workspace(tenantID, workspaceID)
+	if err != nil {
+		return nil, err
 	}
 	var path []QuotaNode
 	for node.ID != "" {
@@ -139,4 +139,12 @@ func (t *QuotaTree) WorkspacePath(tenantID, workspaceID string) ([]QuotaNode, er
 		node = t.nodes[node.ParentID]
 	}
 	return path, nil
+}
+
+func (t *QuotaTree) workspace(tenantID, workspaceID string) (QuotaNode, error) {
+	node := t.nodes[workspaceID]
+	if node.Level != WorkspaceQuota || node.TenantID != tenantID {
+		return QuotaNode{}, ErrQuotaScopeNotFound
+	}
+	return node, nil
 }

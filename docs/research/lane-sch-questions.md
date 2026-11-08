@@ -20,8 +20,11 @@ database owner to land or authorize the exact fresh and restored fingerprints.
 
 ## Remaining scheduling items
 
-- SCH-104, SCH-108, SCH-110 have snapshot checks. Transactional whole-job
-  reservations, runtime reconciliation and the product entrance are still needed.
+- SCH-101 has a PostgreSQL reservation and release seam. The
+  [training and database handoff](scheduling-training-reservations.md) names the
+  existing owner transactions and records fresh and restored catalog evidence.
+- SCH-104, SCH-108, SCH-110 have snapshot checks. The repository can reserve
+  whole demand, and the runtime reconciliation and product entrance are still needed.
 - SCH-105 requires a durable preemption attempt, explicit checkpoint support
   from the workload owner, a bounded retry policy and cell confirmation before
   resource release. Kueue [preemption](https://kueue.sigs.k8s.io/docs/concepts/preemption/)
