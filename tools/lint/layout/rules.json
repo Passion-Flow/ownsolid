@@ -13,7 +13,7 @@
     "runtimes": null,
     "services": ["control", "agent", "gateway"],
     "tests": ["e2e", "fixtures"],
-    "tools": ["codegen", "dev", "lint", "release"],
+    "tools": ["cli", "codegen", "dev", "lint", "release"],
     "web": ["apps", "packages"]
   },
   "top_directory_files": [
