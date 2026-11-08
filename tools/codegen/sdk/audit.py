@@ -30,6 +30,7 @@ def inventory(contracts):
                     "domain": domain, "method": method.upper(), "path": path, "audiences": audiences,
                     "operation_id": operation_id, "summary": bool(operation.get("summary")),
                     "description": bool(operation.get("description")),
+                    "deprecated": operation.get("deprecated", False) is True,
                 }
                 operations.append(row)
                 if not isinstance(operation_id, str) or not operation_id.strip():
@@ -54,18 +55,43 @@ def inventory(contracts):
     return {"operations": operations, "findings": findings}
 
 
+
+def compare_operations(baseline, current):
+    """Find released operation identities no longer preserved by the current contracts."""
+    current_ids = {
+        (op["domain"], op["method"], op["path"], audience): op["operation_id"]
+        for op in current["operations"] for audience in op["audiences"]
+    }
+    findings = []
+    for old in baseline["operations"]:
+        for audience in old["audiences"]:
+            key = old["domain"], old["method"], old["path"], audience
+            detail = {"domain": old["domain"], "method": old["method"], "path": old["path"],
+                      "audience": audience, "previous_operation_id": old["operation_id"]}
+            if key not in current_ids:
+                findings.append({"code": "PUBLIC_OPERATION_REMOVED", **detail})
+            elif current_ids[key] != old["operation_id"]:
+                findings.append({"code": "PUBLIC_OPERATION_ID_CHANGED", **detail,
+                                 "current_operation_id": current_ids[key]})
+    return findings
+
+
 def main():
     """Print a deterministic report and fail when the audit finds conflicts."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--contracts", type=Path, default=CONTRACTS,
                         help="local versioned contracts directory")
+    parser.add_argument("--baseline", type=Path,
+                        help="released local contract directory of the same API major")
     args = parser.parse_args()
     try:
         report = inventory(args.contracts)
+        if args.baseline is not None:
+            report["compatibility_findings"] = compare_operations(inventory(args.baseline), report)
     except (ValueError, KeyError, TypeError, OSError) as exc:
         parser.exit(2, f"OpenAPI audit failed: {exc}\n")
     print(json.dumps(report, indent=2))
-    return int(bool(report["findings"]))
+    return int(bool(report["findings"] or report.get("compatibility_findings")))
 
 
 if __name__ == "__main__":
