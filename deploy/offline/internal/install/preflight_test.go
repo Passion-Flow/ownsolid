@@ -139,16 +139,21 @@ func TestPreflightRequiresAnInstalledNVIDIADriverAndRuntime(t *testing.T) {
 // It needs an isolated Docker-in-Docker daemon, the existing egress recorder and
 // the production Compose images, all mounted by that runner.
 func TestPreflightIsolatedDocker(t *testing.T) {
-	testIsolatedDocker(t, false)
+	testIsolatedDocker(t, false, false)
 }
 
 // TestSignedBundleIsolatedDocker uses the same real zero-egress runner with a
 // signed fixture manufactured from real Linux amd64 image archives.
 func TestSignedBundleIsolatedDocker(t *testing.T) {
-	testIsolatedDocker(t, true)
+	testIsolatedDocker(t, true, false)
 }
 
-func testIsolatedDocker(t *testing.T, signed bool) {
+// TestSignedUpgradeIsolatedDocker uses real signed releases and PostgreSQL.
+func TestSignedUpgradeIsolatedDocker(t *testing.T) {
+	testIsolatedDocker(t, true, true)
+}
+
+func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 	t.Helper()
 	installer := os.Getenv("OWNSOLID_E2E_INSTALLER")
 	logPath := os.Getenv("OWNSOLID_E2E_EGRESS_LOG")
@@ -252,7 +257,7 @@ func testIsolatedDocker(t *testing.T, signed bool) {
 	if signed {
 		c.ComposeFile = ""
 		c.Images = ImagesConfig{}
-		signedArchive, verification = stageSignedFixture(t, run)
+		signedArchive, verification = stageSignedFixture(t, run, upgrade)
 	}
 	command := func(t *testing.T, action, want string, fail bool) {
 		t.Helper()
@@ -351,6 +356,93 @@ func testIsolatedDocker(t *testing.T, signed bool) {
 			t.Fatalf("workload isolation probe: %v: %s", err, out)
 		}
 	})
+	if upgrade {
+		t.Run("upgrades the real database after a verified backup", func(t *testing.T) {
+			backupRoot := t.TempDir()
+			if err := os.Chmod(backupRoot, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			newArchive := filepath.Join(filepath.Dir(signedArchive), "upgrade.tar.gz")
+			runBundle := func(action, archive string, args ...string) (string, error) {
+				command := []string{action, "--config", config, "--verification", verification, "--bundle", archive}
+				return run(installer, append(command, args...)...)
+			}
+			out, err := runBundle("upgrade-plan", newArchive)
+			t.Logf("upgrade-plan: %s", out)
+			var plan upgradePlan
+			if err != nil || json.Unmarshal([]byte(out), &plan) != nil || !plan.MigrationRequired || plan.CurrentSchema >= plan.TargetSchema {
+				t.Fatalf("upgrade plan: %v: %s", err, out)
+			}
+			if out, err := runBundle("upgrade-bundle", newArchive, "--backup-output", c.InstallRoot); err == nil || !strings.Contains(out, "INSTALL_BACKUP_OUTPUT_INVALID") {
+				t.Fatalf("backup path inside the installation was accepted: %v: %s", err, out)
+			}
+			command(t, "status", c.Origins.Portal+": ready", false)
+			out, err = runBundle("upgrade-bundle", newArchive, "--backup-output", backupRoot)
+			t.Logf("upgrade-bundle:\n%s", out)
+			if err != nil || !strings.Contains(out, "UPGRADE_BACKUP_VERIFIED") || !strings.Contains(out, "UPGRADE_COMPLETE") {
+				t.Fatalf("upgrade: %v: %s", err, out)
+			}
+			backups, err := filepath.Glob(filepath.Join(backupRoot, "ownsolid-upgrade-*", "ownsolid-backup-*"))
+			if err != nil || len(backups) != 1 {
+				t.Fatalf("expected one verified backup, got %v: %v", backups, err)
+			}
+			recovery, err := readBackup(backups[0])
+			if err != nil || recovery.SchemaVersion != plan.CurrentSchema {
+				t.Fatalf("pre-upgrade backup: %v, schema %d", err, recovery.SchemaVersion)
+			}
+			out, err = runBundle("upgrade-bundle", newArchive, "--backup-output", backupRoot)
+			if err != nil || !strings.Contains(out, "UPGRADE_ALREADY_ACTIVE") {
+				t.Fatalf("repeat upgrade: %v: %s", err, out)
+			}
+			out, err = runBundle("rollback-bundle", signedArchive)
+			t.Logf("rollback-bundle with advanced schema: %s", out)
+			if err == nil || !strings.Contains(out, "INSTALL_ROLLBACK_DATABASE_RESTORE_REQUIRED") {
+				t.Fatalf("schema-unsafe rollback was not refused: %v: %s", err, out)
+			}
+			command(t, "status", c.Origins.Portal+": ready", false)
+
+			prior, err := readBundleBinding(c)
+			if err != nil || prior == nil {
+				t.Fatalf("missing verified upgrade binding: %v", err)
+			}
+			patchArchive := filepath.Join(filepath.Dir(signedArchive), "delta.tar.gz")
+			if out, err := runBundle("upgrade-patch", patchArchive, "--baseline", signedArchive, "--backup-output", backupRoot); err == nil || !strings.Contains(out, "RELEASE_PATCH_BASELINE_MISMATCH") {
+				t.Fatalf("wrong patch baseline was accepted: %v: %s", err, out)
+			}
+			out, err = runBundle("upgrade-patch", patchArchive, "--baseline", newArchive, "--backup-output", backupRoot)
+			t.Logf("upgrade-patch:\n%s", out)
+			if err != nil || !strings.Contains(out, "UPGRADE_COMPLETE") {
+				t.Fatalf("same-schema application upgrade: %v: %s", err, out)
+			}
+			out, err = runBundle("upgrade-patch", patchArchive, "--baseline", newArchive, "--backup-output", backupRoot)
+			if err != nil || !strings.Contains(out, "UPGRADE_ALREADY_ACTIVE") {
+				t.Fatalf("repeat incremental upgrade: %v: %s", err, out)
+			}
+			patch, err := readBundleBinding(c)
+			if err != nil || patch == nil || patch.ImageIDs[0] == prior.ImageIDs[0] {
+				t.Fatalf("application upgrade did not change the running release: %v", err)
+			}
+			out, err = runBundle("rollback-bundle", newArchive)
+			t.Logf("rollback-bundle with matching schema:\n%s", out)
+			if err != nil || !strings.Contains(out, "ROLLBACK_COMPLETE") {
+				t.Fatalf("application rollback: %v: %s", err, out)
+			}
+			restored, err := readBundleBinding(c)
+			if err != nil || restored == nil || *restored != *prior {
+				t.Fatalf("application rollback restored the wrong binding: %v", err)
+			}
+			layout := c.Layout()
+			id, err := run("docker", "compose", "--env-file", layout.ComposeEnv, "-f", layout.ComposeFile, "ps", "-q", "control")
+			if err != nil || strings.TrimSpace(id) == "" {
+				t.Fatalf("cannot inspect restored control: %v", err)
+			}
+			image, err := run("docker", "inspect", "--format", "{{.Image}}", strings.TrimSpace(id))
+			if err != nil || strings.TrimSpace(image) != prior.ImageIDs[0] {
+				t.Fatalf("restored control image %q: %v", image, err)
+			}
+		})
+	}
+
 	t.Run("collects support with control stopped", func(t *testing.T) {
 		layout := c.Layout()
 		if out, err := run("docker", "compose", "--env-file", layout.ComposeEnv, "-f", layout.ComposeFile, "stop", "control"); err != nil {
@@ -372,7 +464,7 @@ func testIsolatedDocker(t *testing.T, signed bool) {
 
 // stageSignedFixture copies the archive and the independently passed trust file
 // into a disposable real mount in the isolated host.
-func stageSignedFixture(t *testing.T, run func(string, ...string) (string, error)) (string, string) {
+func stageSignedFixture(t *testing.T, run func(string, ...string) (string, error), upgrade bool) (string, string) {
 	t.Helper()
 	delivery := os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE")
 	if delivery == "" {
@@ -387,7 +479,11 @@ func stageSignedFixture(t *testing.T, run func(string, ...string) (string, error
 			t.Errorf("unmount signed release staging: %v: %s", err, out)
 		}
 	})
-	for _, name := range []string{"ownsolid.tar.gz", "release-trust.json"} {
+	files := []string{"ownsolid.tar.gz", "release-trust.json"}
+	if upgrade {
+		files = append(files, "upgrade.tar.gz", "delta.tar.gz")
+	}
+	for _, name := range files {
 		input, err := os.Open(filepath.Join(delivery, name))
 		if err != nil {
 			t.Fatal(err)

@@ -18,6 +18,10 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install verify-bundle --bundle <archive.tar.gz> --verification <policy.json>\n" +
 	"       ownsolid-install prepare-bundle --bundle <archive.tar.gz> --verification <policy.json> --output <new directory>\n" +
 	"       ownsolid-install apply-bundle --bundle <archive.tar.gz> --verification <policy.json> --config <site.yaml>\n" +
+	"       ownsolid-install upgrade-plan --bundle <archive.tar.gz> --verification <policy.json> --config <site.yaml>\n" +
+	"       ownsolid-install upgrade-bundle --bundle <archive.tar.gz> --verification <policy.json> --config <site.yaml> --backup-output <directory>\n" +
+	"       ownsolid-install upgrade-patch --baseline <previous.tar.gz> --bundle <patch.tar.gz> --verification <policy.json> --config <site.yaml> --backup-output <directory>\n" +
+	"       ownsolid-install rollback-bundle --bundle <previous.tar.gz> --verification <policy.json> --config <site.yaml>\n" +
 	"       ownsolid-install support-bundle --config <install.yaml> --output <new archive.tar.gz>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
@@ -36,7 +40,7 @@ func run(args []string, out io.Writer) error {
 	if len(args) < 1 {
 		return errors.New(usage)
 	}
-	if args[0] == "verify-bundle" || args[0] == "prepare-bundle" || args[0] == "apply-bundle" {
+	if args[0] == "verify-bundle" || args[0] == "prepare-bundle" || args[0] == "apply-bundle" || args[0] == "upgrade-plan" || args[0] == "upgrade-bundle" || args[0] == "upgrade-patch" || args[0] == "rollback-bundle" {
 		return runBundle(args[0], args[1:], out)
 	}
 	if args[0] == "capabilities" {
