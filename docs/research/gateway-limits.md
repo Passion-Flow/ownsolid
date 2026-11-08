@@ -82,11 +82,10 @@ Requests limited only by rate or concurrency do not write quota state. Reject a
 wall clock regression into an earlier persisted budget period to avoid resetting
 spend on a backward clock adjustment.
 
-This is a single-gateway quota authority. Shared counters across gateways,
-authoritative application metadata, automatic key registration and Console
-policy management need control-plane and deployment work. Static configuration
-and local persistence let the Rust path enforce a complete local hierarchy
-with the current wire.
+This is the standalone quota path. The shared mode below also uses the
+same policy and durable ledger. Authoritative application metadata, automatic
+key registration and Console policy management need control-plane and
+deployment work.
 
 ## Dependencies and acceptance
 
@@ -182,3 +181,59 @@ the same usage. A final request was refused. PostgreSQL acknowledged all
 four outcomes, released all admission holds and retained 64 used tokens
 across the two successful streams. The deterministic Rust suite exercises
 exact reset delays, interrupted streams and each configured scope.
+
+## Shared enforcement between gateway instances
+
+[Envoy global rate limiting](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/other_features/global_rate_limiting.html)
+shows the central decision-point pattern for limits spanning proxies.
+[Kubernetes leases](https://kubernetes.io/docs/concepts/architecture/leases/)
+show bounded ownership in a cluster. Use one gateway as the authority for
+a configured group of serving peers. Add a versioned machine-only route
+to its existing TLS listener. Peers keep the Go authority checks and
+then identify the already authenticated workspace and key by UUID. The
+peer credential is separate from the user's API key and from the Go
+machine credential. Each peer is scoped to one workspace. Authenticate
+with an [RFC 6750-style bearer header](https://www.rfc-editor.org/rfc/rfc6750.html#section-2.1)
+over verified TLS and pin the authority's CA. Promote the already locked
+[subtle](https://github.com/dalek-cryptography/subtle/blob/main/LICENSE)
+2.6.1 (BSD-3-Clause) crate to compare peer digests in constant time. The
+existing reqwest (MIT OR Apache-2.0), sha2 (MIT OR Apache-2.0) and Rustls
+(Apache-2.0 OR ISC OR MIT) dependencies handle transport and hashing.
+Their licenses allow commercial distribution with applicable notices
+and offline use. The design adds no runtime database, model or dataset.
+
+Acquire a lease before tokenization. Apply RPS and concurrency at the
+authority and then reserve the estimated tokens using the existing
+durable writer. Finish with verified actual usage or retain the debit
+when usage is unknown. The peer stops backend work by its local monotonic
+deadline, calculated from before its acquire request with a guard margin.
+The authority measures the lease from its own admission. A lost peer
+holds capacity until the lease expires. A restarted authority fences new
+admission for the maximum previous lease horizon. The state directory
+lock and deployment must ensure one authority per group. Serving nodes
+must keep bounded clock drift and stay awake while running inference.
+The ordinary no-policy and standalone-policy paths keep their behavior.
+
+A per-instance quota split can protect the aggregate ceiling only with
+static allocations and leaves idle capacity stranded. A new Redis-style
+datastore would add deployment and clock/transaction dependencies, and
+moving this into the Go service requires a cross-lane change. The
+centralized Rust path reuses the same policy and snapshots, requires
+explicit private configuration, and trades an internal round trip for
+exact shared admission. A lost authority stops new work. Automatic
+authority failover and installation-managed peer credentials are outside
+this standalone path.
+
+Exercise two TLS peers sharing an application budget and verify refusal
+before inference, final refunds, expiry and rejection of another peer's
+lease. Test that stale authority state fences restart and unavailable
+authority never falls back to local counters. Report admitted request
+latency through a real loopback TLS peer against local acquisition.
+
+The optimized loopback test measured 250 acquire RPCs with established
+HTTP/TLS clients. The observed p50/p95/p99 were 3.372/16.848/29.861 ms.
+This is the round trip, including validation and the in-memory rate and
+concurrency check. Chat makes a separate durable reserve call and a
+terminal finish call. The test excludes the Go authorization and model
+latency. The two-peer integration uses independent gateway applications
+and connections, with synthetic control and backend fixtures.

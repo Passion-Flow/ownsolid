@@ -1,5 +1,6 @@
 //! Local quotas for keys whose authority was verified by control.
 mod budget;
+pub(crate) mod shared;
 
 use crate::configuration::{Configuration, Result as ConfigResult};
 use crate::errors::Failure;
@@ -176,7 +177,6 @@ struct Tenant {
     budget: Option<Budget>,
 }
 
-#[derive(Clone)]
 struct Account {
     workspace: Uuid,
     tenant: Arc<Tenant>,
@@ -184,7 +184,7 @@ struct Account {
 }
 
 pub(crate) struct Quotas {
-    keys: HashMap<Uuid, Account>,
+    keys: HashMap<Uuid, Arc<Account>>,
 }
 
 impl Quotas {
@@ -245,11 +245,11 @@ impl Quotas {
             for (workspace, hierarchy) in accounts {
                 keys.insert(
                     hierarchy[2].id,
-                    Account {
+                    Arc::new(Account {
                         workspace,
                         tenant: tenant.clone(),
                         hierarchy,
-                    },
+                    }),
                 );
             }
         }
@@ -258,20 +258,59 @@ impl Quotas {
 
     /// The workspace and credential must have passed control authorization first.
     pub(crate) fn acquire(&self, workspace: Uuid, credential: &str) -> Result<Permit, Failure> {
-        let id = credential
-            .strip_prefix("pk1.")
-            .and_then(|value| value.split_once('.'))
-            .and_then(|(id, _)| Uuid::parse_str(id).ok());
-        let account = id
-            .and_then(|id| self.keys.get(&id))
+        self.acquire_key(
+            workspace,
+            credential_key(credential).ok_or("quota_scope_unconfigured")?,
+        )
+    }
+
+    fn acquire_key(&self, workspace: Uuid, id: Uuid) -> Result<Permit, Failure> {
+        let account = self
+            .keys
+            .get(&id)
             .filter(|account| account.workspace == workspace)
             .ok_or("quota_scope_unconfigured")?;
         account.acquire(Instant::now)
     }
 }
 
+fn credential_key(credential: &str) -> Option<Uuid> {
+    credential
+        .strip_prefix("pk1.")
+        .and_then(|value| value.split_once('.'))
+        .and_then(|(id, _)| Uuid::parse_str(id).ok())
+}
+
+pub(crate) enum RequestPermit {
+    Local(Permit),
+    Shared(shared::RemotePermit),
+}
+
+impl RequestPermit {
+    pub(crate) fn deadline(&self, maximum: tokio::time::Instant) -> tokio::time::Instant {
+        match self {
+            Self::Local(_) => maximum,
+            Self::Shared(permit) => maximum.min(permit.deadline),
+        }
+    }
+
+    pub(crate) async fn reserve(&mut self, estimate: u32) -> Result<(), Failure> {
+        match self {
+            Self::Local(permit) => permit.reserve(estimate).await,
+            Self::Shared(permit) => permit.reserve(estimate).await,
+        }
+    }
+
+    pub(crate) async fn settle(&mut self, actual: u32) -> ConfigResult<()> {
+        match self {
+            Self::Local(permit) => permit.settle(actual).await,
+            Self::Shared(permit) => permit.settle(actual).await,
+        }
+    }
+}
+
 impl Account {
-    fn acquire(&self, clock: impl FnOnce() -> Instant) -> Result<Permit, Failure> {
+    fn acquire(self: &Arc<Self>, clock: impl FnOnce() -> Instant) -> Result<Permit, Failure> {
         let mut traffic = self
             .tenant
             .traffic
@@ -321,7 +360,7 @@ impl Account {
 }
 
 pub(crate) struct Permit {
-    account: Account,
+    account: Arc<Account>,
     hold: Option<Hold>,
 }
 
