@@ -98,7 +98,11 @@ The repository-wide suite also needs a passing run. A full run reached the Web
 unit stage after Go, Rust and both browser suites passed, then failed on the
 initial language attribute in the Web internationalization provider. The
 complete Web unit stage passed when repeated independently. A standalone
-pass cannot replace the full gate. The roadmap index, product status and
+pass cannot replace the full gate. The next full run passed both browser
+suites and stopped in the agent training revocation test with
+`TRAINING_OUTPUT_CHANGED`. The same test passed five focused repetitions
+with a canonical temporary path. Both failures are outside the delivery
+paths owned by this lane. The roadmap index, product status and
 capability declaration are coordinated outside this lane. Ticking a line on
 its own would leave the repository's progress checks out of sync.
 
