@@ -1,5 +1,8 @@
 # Evaluation
 
+Module reviewed on 2026-11-09 against MLflow, lm-evaluation-harness, PyTorch and
+vLLM. See [evaluation sets and reproducibility](../../research/evaluation-reproducibility.md).
+
 Measuring models and applications before release, and gating releases on the result.
 
 - Owns: `runtimes/model-lifecycle` evaluation, `services/control` evaluation APIs.
@@ -13,6 +16,12 @@ Measuring models and applications before release, and gating releases on the res
 - [ ] EVL-104 Production traces turned into regression cases (P1)
 - [ ] EVL-105 Performance benchmark: latency, throughput and cost per model and hardware (P1) - Catalog: F150
 - [ ] EVL-106 Safety and regression sets: injection, leakage, unsupported answers (P1) - Catalog: F149
+
+EVL-101 records the immutable dataset, scorer and model revisions, seed and execution
+profile. Re-scoring the same captured outputs must give the same scores. EVL-102
+pairs cases by dataset revision and case identity. Fresh inference is repeatable
+only on a tested execution profile that pins the engine, hardware, precision and
+generation settings. A report identifies any profile where repeatability is unverified.
 
 ## P2 Fleet operations
 
