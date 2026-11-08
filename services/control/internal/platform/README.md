@@ -5,6 +5,7 @@ Platform packages provide bounded shared mechanisms. Domain owners still decide 
 | Package | Owner boundary |
 | --- | --- |
 | agentadmission | In-memory admission of every agent call before database work: address and per-node call limits, priority seats and retry hints ([ADR 0018](../../../../docs/decisions/0018-agent-call-admission.md)) |
+| agentidentity | Signs node certificates with the agent CA and reads what a connection's verified client certificate says ([ADR 0050](../../../../docs/decisions/0050-agent-certificates.md)) |
 | agentgateway | Stateless gateway for the agent session stream: holds open streams and passes each heartbeat and claim to the node service ([ADR 0007](../../../../docs/decisions/0007-agent-session-protocol.md)). Runs inside control and in `serve-agent-gateway` processes beside it, fenced by `Policy.Ready` and drained on stop ([ADR 0048](../../../../docs/decisions/0048-agent-gateways-beside-control.md)) |
 | cellroute | Maps scoped public paths to the cell-relative paths modules route on ([ADR 0006](../../../../docs/decisions/0006-cell-and-site-scope.md)) |
 | [config](config/README.md) | Main typed configuration, defaults, explicit env-file overlays and protected references |

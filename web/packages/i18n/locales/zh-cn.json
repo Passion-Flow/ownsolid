@@ -79,6 +79,8 @@
   "audit.action.mail.sent": "发送邮件",
   "audit.action.node.agents_shed": "更改了代理流量卸载级别",
   "audit.action.node.enrolled": "节点加入",
+  "audit.action.node.certificate_renewed": "节点证书已轮换",
+  "audit.action.node.certificate_recovered": "节点证书已恢复",
   "audit.action.node.join_token_created": "创建加入令牌",
   "audit.action.node.join_token_revoked": "撤销加入令牌",
   "audit.action.node.pacing_updated": "修改代理节奏",

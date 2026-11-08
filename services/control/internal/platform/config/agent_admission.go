@@ -61,6 +61,7 @@ type AgentCallLimits struct {
 	Claim       AgentCallLimit `yaml:"claim"`
 	Acknowledge AgentCallLimit `yaml:"acknowledge"`
 	Renew       AgentCallLimit `yaml:"renew"`
+	Certificate AgentCallLimit `yaml:"certificate"`
 	Result      AgentCallLimit `yaml:"result"`
 	Stop        AgentCallLimit `yaml:"stop"`
 	Events      AgentCallLimit `yaml:"events"`
@@ -83,6 +84,7 @@ func DefaultAgentAdmissionPolicy() AgentAdmissionPolicy {
 			Claim:       AgentCallLimit{PerMinute: 60, Burst: 20},
 			Acknowledge: AgentCallLimit{PerMinute: 60, Burst: 20},
 			Renew:       AgentCallLimit{PerMinute: 120, Burst: 30},
+			Certificate: AgentCallLimit{PerMinute: 12, Burst: 4},
 			Result:      AgentCallLimit{PerMinute: 60, Burst: 20},
 			Stop:        AgentCallLimit{PerMinute: 60, Burst: 20},
 			Events:      AgentCallLimit{PerMinute: 120, Burst: 30},
@@ -114,6 +116,8 @@ func (p AgentAdmissionPolicy) Call(c agentwire.Call) (AgentCallLimit, bool) {
 		return p.Calls.Claim, true
 	case agentwire.CallAcknowledge:
 		return p.Calls.Acknowledge, true
+	case agentwire.CallCertificate:
+		return p.Calls.Certificate, true
 	case agentwire.CallRenew:
 		return p.Calls.Renew, true
 	case agentwire.CallResult:

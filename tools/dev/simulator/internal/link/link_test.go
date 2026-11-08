@@ -1,6 +1,7 @@
 package link
 
 import (
+	"crypto/tls"
 	"encoding/pem"
 	"errors"
 	"net/http"
@@ -87,5 +88,30 @@ func TestUnreachableControl(t *testing.T) {
 func TestRevokedIsA401(t *testing.T) {
 	if !Revoked(&Problem{Code: "AGENT_UNAUTHORIZED", Status: http.StatusUnauthorized}) || Revoked(ErrUnreachable) {
 		t.Fatal("revocation misread")
+	}
+}
+
+func TestForAgentHasItsOwnIdentityAndConnections(t *testing.T) {
+	d, e := NewDialer("https://control.test", "", "", 4, time.Second)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer d.Close()
+	certificate := tls.Certificate{Certificate: [][]byte{{1}}}
+	own := d.ForAgent(certificate)
+	defer own.Close()
+	if len(own.tls.Certificates) != 1 || len(d.tls.Certificates) != 0 {
+		t.Fatal("the certificate must stay with the agent's dialer")
+	}
+	if own.https == d.https || own.poll == d.poll {
+		t.Fatal("a certificate's connections must not be shared between agents")
+	}
+	transport := own.https.Transport.(*http.Transport)
+	if len(transport.TLSClientConfig.Certificates) != 1 || transport.MaxConnsPerHost != agentConnections {
+		t.Fatal("the short calls must present the certificate on a pool of the agent's own")
+	}
+	poll := own.poll.Transport.(*http.Transport)
+	if len(poll.TLSClientConfig.Certificates) != 1 {
+		t.Fatal("long polls must present the certificate")
 	}
 }

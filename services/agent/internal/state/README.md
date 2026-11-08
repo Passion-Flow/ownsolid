@@ -15,3 +15,5 @@ identity without them, and the client addresses that cell on every node path (AD
 acknowledged, in `task-cursor.json`. A missing file reads as 0. SaveCursor replaces the
 file atomically and syncs the directory; the runtime saves the cursor before it
 acknowledges a lease (ADR 0011).
+
+[certificate.go](certificate.go) keeps the node's private key, its certificate and what a rotation has reached in `certificate.json`, replaced atomically. A new key is saved before it is asked about, so a lost reply is retried with the same key ([ADR 0050](../../../../docs/decisions/0050-agent-certificates.md)).

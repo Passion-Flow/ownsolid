@@ -113,18 +113,31 @@ func readTokens(path string) ([]string, error) {
 // enroll enrolls one agent, coming back while control asks it to or cannot be reached.
 func enroll(ctx context.Context, dialer *link.Dialer, recorder *report.Recorder, token, host string) (Identity, error) {
 	pacing := wire.DefaultPacing()
-	var e error
+	key, e := wire.NewCertificateKey()
+	if e != nil {
+		return Identity{}, e
+	}
+	certificateRequest, e := wire.NewCertificateRequest(key)
+	if e != nil {
+		return Identity{}, e
+	}
 	for attempt := range enrollAttempts {
 		started := time.Now()
 		var out wire.Enrolled
-		e = dialer.Post(ctx, "/agent/v1/enroll", "", wire.Enrollment{JoinToken: token, Handshake: handshake(host)}, &out)
+		e = dialer.Post(ctx, "/agent/v1/enroll", "", wire.Enrollment{JoinToken: token, CertificateRequest: certificateRequest, Handshake: handshake(host)}, &out)
 		if e == nil {
 			if !nodeID.MatchString(out.NodeID) || !credential.MatchString(out.Credential) || out.ProtocolVersion != wire.ProfileVersion(wire.ReadOnlyProfile) || !(wire.Scope{SiteID: out.SiteID, CellID: out.CellID}).Valid() {
 				recorder.Failed(report.CallEnroll, "ENROLLMENT_RESPONSE_INVALID")
 				return Identity{}, errors.New("ENROLLMENT_RESPONSE_INVALID")
 			}
 			recorder.Succeeded(report.CallEnroll, time.Since(started))
-			return Identity{Hostname: host, NodeID: out.NodeID, SiteID: out.SiteID, CellID: out.CellID, Credential: out.Credential}, nil
+			if out.Certificate != "" {
+				if _, e := wire.CheckIssuedCertificate(out.Certificate, key, out.NodeID); e != nil {
+					recorder.Failed(report.CallEnroll, "ENROLLMENT_RESPONSE_INVALID")
+					return Identity{}, errors.New("ENROLLMENT_RESPONSE_INVALID")
+				}
+			}
+			return Identity{Hostname: host, NodeID: out.NodeID, SiteID: out.SiteID, CellID: out.CellID, Credential: out.Credential, PrivateKey: key, Certificate: out.Certificate}, nil
 		}
 		recorder.Failed(report.CallEnroll, link.Code(e))
 		if !comeBack(e) || link.Code(e) == commitUnknown {

@@ -4,6 +4,7 @@ package httpfixture
 import (
 	"bytes"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -27,6 +28,51 @@ type Client struct {
 	CSRF     string
 	Headers  map[string]string
 	schemas  map[string]*jsonschema.Schema
+}
+
+// WithCertificate is a copy of the client that presents certificate on its own connections.
+func (c *Client) WithCertificate(certificate tls.Certificate) *Client {
+	c.t.Helper()
+	base, ok := c.client.Transport.(*http.Transport)
+	if !ok {
+		c.t.Fatal("HTTP_FIXTURE_TRANSPORT_INVALID")
+	}
+	transport := base.Clone()
+	transport.TLSClientConfig.Certificates = []tls.Certificate{certificate}
+	http := *c.client
+	http.Transport = transport
+	own := *c
+	own.client = &http
+	return &own
+}
+
+// Problem expects a refusal with status and returns its code.
+func (c *Client) Problem(method, path string, body any, status int) string {
+	c.t.Helper()
+	b, e := json.Marshal(body)
+	if e != nil {
+		c.t.Fatal("HTTP_FIXTURE_REQUEST_INVALID")
+	}
+	r, e := http.NewRequestWithContext(c.t.Context(), method, c.origin+cellroute.Public(path, wire.LocalScope()), bytes.NewReader(b))
+	if e != nil {
+		c.t.Fatal("HTTP_FIXTURE_REQUEST_INVALID")
+	}
+	r.Header.Set("Origin", c.origin)
+	r.Header.Set("Content-Type", "application/json")
+	for name, value := range c.Headers {
+		r.Header.Set(name, value)
+	}
+	response, e := c.client.Do(r)
+	if e != nil {
+		c.t.Fatal(e)
+	}
+	defer response.Body.Close()
+	var p struct{ Code string }
+	json.NewDecoder(response.Body).Decode(&p)
+	if response.StatusCode != status {
+		c.t.Fatalf("%s %s: expected %d, observed %d (%s)", method, path, status, response.StatusCode, p.Code)
+	}
+	return p.Code
 }
 
 func (c *Client) Call(method, path string, body any, status int, schema string) map[string]any {

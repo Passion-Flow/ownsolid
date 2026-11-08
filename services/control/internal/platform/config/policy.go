@@ -161,6 +161,11 @@ type RatesPolicy struct {
 	AdminInviteWindowSeconds   int `yaml:"admin_invite_window_seconds"`
 	AgentEnrollIPCount         int `yaml:"agent_enroll_ip_count"`
 	AgentEnrollIPWindowSeconds int `yaml:"agent_enroll_ip_window_seconds"`
+	// A rack is the source network of the enrollment: nodes of a rack share a subnet.
+	AgentEnrollRackCount         int `yaml:"agent_enroll_rack_count"`
+	AgentEnrollRackWindowSeconds int `yaml:"agent_enroll_rack_window_seconds"`
+	AgentEnrollRackIPv4Prefix    int `yaml:"agent_enroll_rack_ipv4_prefix"`
+	AgentEnrollRackIPv6Prefix    int `yaml:"agent_enroll_rack_ipv6_prefix"`
 	ResetCooldownSeconds       int `yaml:"reset_cooldown_seconds"`
 }
 
@@ -185,7 +190,7 @@ func DefaultRuntimePolicy() RuntimePolicy {
 		Models:         DefaultModelsPolicy(),
 		Distribution:   DistributionPolicy{RecoverySeconds: 600, KeyTTLSeconds: 86400, KeyMaxTTLSeconds: 7776000, KeyMaxActive: 100, AliasMaxActive: 16, MaxConcurrentRequests: 4, RequestSeconds: 90, ContextTokens: 2048, OutputTokens: 512, RequestsPerWindow: 60, RateWindowSeconds: 60},
 		AgentAdmission: DefaultAgentAdmissionPolicy(),
-		Rates:          RatesPolicy{CSRFCount: 60, CSRFWindowSeconds: 60, LoginEmailCount: 10, LoginEmailWindowSeconds: 900, LoginIPCount: 30, LoginIPWindowSeconds: 300, ResetIPCount: 20, ResetIPWindowSeconds: 900, ResetEmailCount: 3, ResetEmailWindowSeconds: 900, TokenIPCount: 30, TokenIPWindowSeconds: 900, AdminInviteCount: 30, AdminInviteWindowSeconds: 3600, AgentEnrollIPCount: 20, AgentEnrollIPWindowSeconds: 60, ResetCooldownSeconds: 60},
+		Rates:          RatesPolicy{CSRFCount: 60, CSRFWindowSeconds: 60, LoginEmailCount: 10, LoginEmailWindowSeconds: 900, LoginIPCount: 30, LoginIPWindowSeconds: 300, ResetIPCount: 20, ResetIPWindowSeconds: 900, ResetEmailCount: 3, ResetEmailWindowSeconds: 900, TokenIPCount: 30, TokenIPWindowSeconds: 900, AdminInviteCount: 30, AdminInviteWindowSeconds: 3600, AgentEnrollIPCount: 20, AgentEnrollIPWindowSeconds: 60, AgentEnrollRackCount: 120, AgentEnrollRackWindowSeconds: 60, AgentEnrollRackIPv4Prefix: 24, AgentEnrollRackIPv6Prefix: 64, ResetCooldownSeconds: 60},
 	}
 }
 
@@ -442,6 +447,10 @@ func (p RuntimePolicy) Validate() error {
 		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
 	}
 	if p.Rates.AgentEnrollIPWindowSeconds < 1 || p.Rates.AgentEnrollIPWindowSeconds > 86400 {
+		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
+	}
+	if p.Rates.AgentEnrollRackCount < 1 || p.Rates.AgentEnrollRackCount > 100000 || p.Rates.AgentEnrollRackWindowSeconds < 1 || p.Rates.AgentEnrollRackWindowSeconds > 86400 ||
+		p.Rates.AgentEnrollRackIPv4Prefix < 8 || p.Rates.AgentEnrollRackIPv4Prefix > 32 || p.Rates.AgentEnrollRackIPv6Prefix < 32 || p.Rates.AgentEnrollRackIPv6Prefix > 128 {
 		return errors.New("CONFIG_RATES_BOUNDS_INVALID")
 	}
 	if p.Rates.ResetCooldownSeconds < 1 || p.Rates.ResetCooldownSeconds > 3600 {

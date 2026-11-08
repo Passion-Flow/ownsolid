@@ -36,7 +36,7 @@ const fleetLimits = `control_settings:
   runtime:
     http: {max_connections: 4096}
     nodes: {maximum_live_nodes: 10000, maximum_live_join_tokens: 10000}
-    rates: {agent_enroll_ip_count: 10000}
+    rates: {agent_enroll_ip_count: 10000, agent_enroll_rack_count: 100000}
     agent_admission:
       address: {per_minute: 60000, burst: 10000}
 `

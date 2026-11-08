@@ -84,6 +84,9 @@ func (n Node) Base() string {
 	return "/agent/v1" + n.Scope.Path() + "/nodes/" + url.PathEscape(n.ID)
 }
 
+// agentConnections bounds one agent's short HTTPS calls, like a real agent's.
+const agentConnections = 2
+
 // Dialer holds what every agent of the simulator shares: the origin, TLS, and the HTTPS
 // pool of task traffic.
 type Dialer struct {
@@ -145,6 +148,24 @@ func NewDialer(origin, caFile, address string, httpsConnections int, request tim
 	poll.MaxConnsPerHost = 0
 	d.poll = &http.Client{Transport: poll, Timeout: request + extra, CheckRedirect: refuseRedirect}
 	return d, nil
+}
+
+// ForAgent is a dialer of its own for one agent, presenting certificate (ADR 0050). Control
+// binds a connection to the node its certificate names, so agents do not share one.
+func (d *Dialer) ForAgent(certificate tls.Certificate) *Dialer {
+	own := *d
+	own.tls = d.tls.Clone()
+	own.tls.Certificates = []tls.Certificate{certificate}
+	https, _ := d.https.Transport.(*http.Transport)
+	short := https.Clone()
+	short.TLSClientConfig = own.tls.Clone()
+	short.MaxIdleConns, short.MaxIdleConnsPerHost, short.MaxConnsPerHost = 1, 1, agentConnections
+	own.https = &http.Client{Transport: short, Timeout: d.https.Timeout, CheckRedirect: d.https.CheckRedirect}
+	poll, _ := d.poll.Transport.(*http.Transport)
+	long := poll.Clone()
+	long.TLSClientConfig = own.tls.Clone()
+	own.poll = &http.Client{Transport: long, Timeout: d.poll.Timeout, CheckRedirect: d.poll.CheckRedirect}
+	return &own
 }
 
 // Close closes the idle HTTPS connections.

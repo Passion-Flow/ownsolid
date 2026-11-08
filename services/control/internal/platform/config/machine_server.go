@@ -71,7 +71,11 @@ func (c Config) MachineTLSConfig() (*tls.Config, error) {
 		return nil, nil
 	}
 	m := c.MachineServer
-	return tlsConfigForOrigins(m.TLSCertificateFile, m.TLSPrivateKeyFile, []string{m.Origin})
+	t, e := tlsConfigForOrigins(m.TLSCertificateFile, m.TLSPrivateKeyFile, []string{m.Origin})
+	if e != nil {
+		return nil, e
+	}
+	return c.requestAgentCertificates(t)
 }
 
 // MachineOrigin is the selected binding for new machine identities, not an

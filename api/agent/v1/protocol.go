@@ -39,6 +39,8 @@ type Handshake struct {
 }
 type Enrollment struct {
 	JoinToken string `json:"join_token"`
+	// CertificateRequest is the PEM request for the node's first certificate (ADR 0050).
+	CertificateRequest string `json:"certificate_request,omitempty"`
 	Handshake
 }
 type Enrolled struct {
@@ -48,6 +50,8 @@ type Enrolled struct {
 	Credential       string `json:"credential"`
 	ProtocolVersion  string `json:"protocol_version"`
 	HeartbeatSeconds int    `json:"heartbeat_seconds"`
+	// Certificate is the node's certificate, leaf first, in PEM (ADR 0050).
+	Certificate string `json:"certificate,omitempty"`
 }
 type Disposition struct {
 	Status     string    `json:"status"`
