@@ -371,6 +371,11 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 			t.Fatalf("workload isolation probe: %v: %s", err, out)
 		}
 	})
+	if !signed {
+		t.Run("applies again after a verified database restore", func(t *testing.T) {
+			assertApplyAfterRestore(t, c, installer, config, run)
+		})
+	}
 	if upgrade {
 		t.Run("upgrades the real database after a verified backup", func(t *testing.T) {
 			backupRoot := t.TempDir()
