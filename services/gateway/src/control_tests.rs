@@ -122,6 +122,7 @@ impl Fixture {
                 .unwrap()
         });
         let configuration = Configuration {
+            quota_policy: None,
             gateway_id: gateway,
             node_id: node,
             listen_address: SocketAddrV4::new(*address.ip(), 19443),

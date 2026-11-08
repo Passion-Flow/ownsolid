@@ -21,6 +21,7 @@ impl Fixture {
         fs::create_dir(&state).unwrap();
         fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).unwrap();
         let configuration = Configuration {
+            quota_policy: None,
             gateway_id: Uuid::new_v4(),
             node_id: Uuid::new_v4(),
             listen_address: "127.0.0.1:19443".parse().unwrap(),

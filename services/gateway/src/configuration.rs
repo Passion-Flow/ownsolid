@@ -36,6 +36,8 @@ pub struct Configuration {
     pub state_directory: PathBuf,
     #[serde(default)]
     pub limits: Limits,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) quota_policy: Option<crate::quota::Policy>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -187,7 +189,7 @@ pub fn private_directory(path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn file_bytes(path: &Path, maximum: u64, private: bool) -> Result<Vec<u8>> {
+pub(crate) fn file_bytes(path: &Path, maximum: u64, private: bool) -> Result<Vec<u8>> {
     canonical(path)?;
     let file = OpenOptions::new()
         .read(true)
@@ -267,7 +269,7 @@ impl Configuration {
                 value
                     .get_mut("limits")
                     .and_then(|limits| limits.get_mut(name))
-            } else if name == "limits" {
+            } else if matches!(name.as_str(), "limits" | "quota_policy") {
                 None
             } else {
                 value.get_mut(&name)
@@ -301,6 +303,9 @@ impl Configuration {
 
     pub fn validate(&self) -> Result<()> {
         self.limits.validate()?;
+        if let Some(policy) = &self.quota_policy {
+            policy.validate()?;
+        }
         if self.gateway_id.is_nil()
             || self.node_id.is_nil()
             || !self.listen_address.ip().is_loopback()
