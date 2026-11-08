@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Passion-Flow/ownsolid/api/agent/modelartifact"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/google/uuid"
@@ -49,6 +48,7 @@ func (s *Service) cleanupNextImport(ctx context.Context, after string) (string, 
 
 func (s *Service) cleanupPublishedImport(ctx context.Context, session transaction.Store, id, tenant, workspace string) error {
 	var expectedBytes int64
+	var manifest *importManifest
 	e := session.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
 		current, e := workerImportRow(ctx, q, id, &workerImport{TenantID: tenant, Import: Import{WorkspaceID: workspace}})
 		if e != nil {
@@ -58,7 +58,8 @@ func (s *Service) cleanupPublishedImport(ctx context.Context, session transactio
 		if e != nil {
 			return e
 		}
-		if !ready || current.UploadedBytes != current.ExpectedBytes {
+		manifest = resolveImportManifest(current.CatalogDigest)
+		if !ready || manifest == nil || current.UploadedBytes != current.ExpectedBytes {
 			return fail("MODEL_PUBLICATION_CONFLICT")
 		}
 		expectedBytes = current.ExpectedBytes
@@ -79,11 +80,11 @@ func (s *Service) cleanupPublishedImport(ctx context.Context, session transactio
 		if e != nil {
 			return fail("MODEL_IO_FAILED")
 		}
-		if e = modelartifact.VerifyDirectory(ctx, filepath.Join(s.RootDirectory, "objects", id)); e != nil {
+		if e = manifest.verifyDirectory(ctx, filepath.Join(s.RootDirectory, "objects", id)); e != nil {
 			return fail("MODEL_PUBLICATION_CONFLICT")
 		}
 	}
-	if e = discardUpload(root, id, expectedBytes); e != nil {
+	if e = discardUpload(root, id, expectedBytes, manifest); e != nil {
 		return e
 	}
 

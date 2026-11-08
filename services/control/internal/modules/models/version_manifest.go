@@ -1,27 +1,16 @@
 package models
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 
-	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 )
 
 func decodeVersionManifest(version *Version, raw []byte, tenant string) error {
 	switch version.Kind {
 	case "approved_base":
-		var c agentwire.ModelCatalog
-		if wire.DecodeStrict(raw, &c) != nil {
-			return fail("MODEL_FILE_INVALID")
-		}
-		canonical, e := json.Marshal(c)
-		if e != nil {
-			return fail("MODEL_FILE_INVALID")
-		}
-		sum := sha256.Sum256(canonical)
-		if version.CatalogDigest != agentwire.ModelCatalogDigest() || hex.EncodeToString(sum[:]) != version.CatalogDigest {
+		manifest := resolveImportManifest(version.CatalogDigest)
+		if manifest == nil || !manifest.matchesStored(raw) {
 			return fail("MODEL_FILE_INVALID")
 		}
 	case "merged_lora":

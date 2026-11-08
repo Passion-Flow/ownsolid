@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"syscall"
 
-	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 )
 
@@ -55,7 +54,10 @@ func ownedRegular(root *os.Root, path string) (os.FileInfo, bool) {
 
 // stageFiles lists the approved model files in one stage directory. Anything else in
 // it, or more entries than the approved model has, is MODEL_CLEANUP_CONFLICT.
-func stageFiles(root *os.Root, path string) ([]string, error) {
+func stageFiles(root *os.Root, path string, manifest *importManifest) ([]string, error) {
+	if manifest == nil {
+		return nil, fail("MODEL_CLEANUP_CONFLICT")
+	}
 	if e := directory(root, path); e != nil {
 		return nil, e
 	}
@@ -63,7 +65,7 @@ func stageFiles(root *os.Root, path string) ([]string, error) {
 	if e != nil {
 		return nil, fail("MODEL_CLEANUP_CONFLICT")
 	}
-	approved := len(wire.ApprovedModel().Files)
+	approved := len(manifest.catalog.Files)
 	children, e := stage.ReadDir(approved + 1)
 	stage.Close()
 	if e != nil && e != io.EOF {
@@ -75,7 +77,7 @@ func stageFiles(root *os.Root, path string) ([]string, error) {
 	files := make([]string, 0, len(children))
 	for _, child := range children {
 		item := filepath.Join(path, child.Name())
-		if _, ok := wire.ModelFileForName(child.Name()); !ok {
+		if _, ok := manifest.file(child.Name()); !ok {
 			return nil, fail("MODEL_CLEANUP_CONFLICT")
 		}
 		if _, ok := ownedRegular(root, item); !ok {
@@ -89,7 +91,7 @@ func stageFiles(root *os.Root, path string) ([]string, error) {
 // classifyStage reads a stage without hashing it. modelartifact.ExtractArchive makes
 // a file read-only only after writing and syncing all of it, so a read-only file of
 // the approved size is finished; the digests are checked later by VerifyDirectory.
-func classifyStage(root *os.Root, path string) (stageCondition, error) {
+func classifyStage(root *os.Root, path string, manifest *importManifest) (stageCondition, error) {
 	info, e := root.Lstat(path)
 	if os.IsNotExist(e) {
 		return stageEmpty, nil
@@ -100,7 +102,7 @@ func classifyStage(root *os.Root, path string) (stageCondition, error) {
 	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
 		return stageForeign, nil
 	}
-	files, e := stageFiles(root, path)
+	files, e := stageFiles(root, path, manifest)
 	if e != nil {
 		return stageForeign, nil
 	}
@@ -109,20 +111,20 @@ func classifyStage(root *os.Root, path string) (stageCondition, error) {
 	}
 	finished := 0
 	for _, item := range files {
-		expected, _ := wire.ModelFileForName(filepath.Base(item))
+		expected, _ := manifest.file(filepath.Base(item))
 		if info, ok := ownedRegular(root, item); ok && info.Mode().Perm() == 0444 && info.Size() == expected.SizeBytes {
 			finished++
 		}
 	}
-	if finished == len(wire.ApprovedModel().Files) {
+	if finished == len(manifest.catalog.Files) {
 		return stageFinished, nil
 	}
 	return stagePartial, nil
 }
 
 // removeStage deletes a stage's approved files and then the stage directory.
-func removeStage(root *os.Root, path string) error {
-	files, e := stageFiles(root, path)
+func removeStage(root *os.Root, path string, manifest *importManifest) error {
+	files, e := stageFiles(root, path, manifest)
 	if e != nil {
 		return e
 	}

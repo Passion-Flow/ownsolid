@@ -2,15 +2,11 @@ package models
 
 import (
 	"context"
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
 
-	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	lifecyclewire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
 // Borrowed access never authenticates, opens or commits a transaction. Its owner
@@ -56,16 +52,8 @@ func (s *Service) ReadyWithin(ctx context.Context, q transaction.Executor, tenan
 	if e != nil {
 		return modelReadError(e)
 	}
-	var stored wire.ModelCatalog
-	if lifecyclewire.DecodeStrict(manifest, &stored) != nil {
-		return fail("MODEL_FILE_INVALID")
-	}
-	encoded, e := json.Marshal(stored)
-	if e != nil {
-		return fail("MODEL_FILE_INVALID")
-	}
-	sum := sha256.Sum256(encoded)
-	if digest != wire.ModelCatalogDigest() || hex.EncodeToString(sum[:]) != digest {
+	approved := resolveImportManifest(digest)
+	if approved == nil || !approved.matchesStored(manifest) {
 		return fail("MODEL_FILE_INVALID")
 	}
 	return nil

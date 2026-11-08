@@ -144,7 +144,7 @@ func TestNativeModelProcessStopsAfterSQLFailure(t *testing.T) {
 						failureCalls++
 						return nativeWorkerProbeMutation(ctx, store)
 					},
-					verifyReady: func(context.Context, string) error { panic("no ready publication in failure probe") },
+					verifyReady: func(context.Context, workerImport) error { panic("no ready publication in failure probe") },
 				}
 				e := processWorkerSession(t.Context(), session, current.ID, operations)
 				if e != original || !session.poisoned || session.withinAfterPoison != 0 || failureCalls != 0 {
@@ -191,7 +191,7 @@ func TestNativeModelProcessRecordsOnlyKnownHealthyFailure(t *testing.T) {
 					}
 					return nativeWorkerProbeMutation(ctx, store)
 				},
-				verifyReady: func(context.Context, string) error { panic("unexpected ready branch") },
+				verifyReady: func(context.Context, workerImport) error { panic("unexpected ready branch") },
 			}
 			if e := processWorkerSession(t.Context(), session, current.ID, operations); e != original {
 				t.Fatal("original file/business failure changed")

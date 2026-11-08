@@ -114,7 +114,7 @@ func TestClassifyStage(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			root, directory := stageRoot(t)
 			c.prepare(t, directory)
-			got, e := classifyStage(root, testStage)
+			got, e := classifyStage(root, testStage, &qwenImportManifest)
 			if e != nil || got != c.want {
 				t.Fatalf("condition %d, error %v; want %d", got, e, c.want)
 			}
@@ -130,7 +130,7 @@ func TestRemoveStageDeletesApprovedFilesOnly(t *testing.T) {
 		if e := os.WriteFile(filepath.Join(directory, files[0].Path), []byte("part"), 0600); e != nil {
 			t.Fatal(e)
 		}
-		if e := removeStage(root, testStage); e != nil {
+		if e := removeStage(root, testStage, &qwenImportManifest); e != nil {
 			t.Fatal(e)
 		}
 		if _, e := os.Lstat(directory); !os.IsNotExist(e) {
@@ -146,7 +146,7 @@ func TestRemoveStageDeletesApprovedFilesOnly(t *testing.T) {
 		if e := os.WriteFile(filepath.Join(directory, "unknown-sentinel"), []byte("keep"), 0600); e != nil {
 			t.Fatal(e)
 		}
-		if e := removeStage(root, testStage); e == nil || e.Error() != "MODEL_CLEANUP_CONFLICT" {
+		if e := removeStage(root, testStage, &qwenImportManifest); e == nil || e.Error() != "MODEL_CLEANUP_CONFLICT" {
 			t.Fatal(e)
 		}
 		if _, e := os.Lstat(kept); e != nil {
@@ -183,7 +183,7 @@ func TestDiscardUploadRefusesSymlinkedImportsDirectory(t *testing.T) {
 		t.Fatal(e)
 	}
 	defer root.Close()
-	if e = discardUpload(root, id, ChunkBytes); e == nil || e.Error() != "MODEL_PATH_INVALID" {
+	if e = discardUpload(root, id, ChunkBytes, &qwenImportManifest); e == nil || e.Error() != "MODEL_PATH_INVALID" {
 		t.Fatalf("symlinked imports directory: %v", e)
 	}
 	if got, e := os.ReadFile(chunk); e != nil || string(got) != "keep" {

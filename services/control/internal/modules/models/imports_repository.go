@@ -9,14 +9,12 @@ import (
 	"errors"
 	"io"
 
-	"github.com/google/uuid"
-	"github.com/Passion-Flow/ownsolid/api/agent/modelartifact"
-	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 type ImportResolutionStatus string
@@ -56,7 +54,8 @@ func (s *Service) startImport(ctx context.Context, a identity.Auth, input Import
 		return Import{}, e
 	}
 	input.Name = name
-	if !validID(key) || !validID(input.WorkspaceID) || !reasonValid(input.Reason) || !input.LicenseAcknowledged || input.CatalogDigest != wire.ModelCatalogDigest() || input.ExpectedBytes < modelartifact.MinimumArchiveBytes() || input.ExpectedBytes > MaximumBundleBytes {
+	manifest := resolveImportManifest(input.CatalogDigest)
+	if !validID(key) || !validID(input.WorkspaceID) || !reasonValid(input.Reason) || !input.LicenseAcknowledged || manifest == nil || !manifest.admitsArchiveSize(input.ExpectedBytes) {
 		return Import{}, fail("VALIDATION_FAILED")
 	}
 	intent, _ := json.Marshal(struct {
@@ -189,6 +188,9 @@ func (s *Service) uploadChunk(ctx context.Context, a identity.Auth, id string, o
 			if current.State != "uploading" || importCancellationPending(current) {
 				return fail("MODEL_IMPORT_STATE_CONFLICT")
 			}
+			if current.CatalogDigest != initial.CatalogDigest || current.ExpectedBytes != initial.ExpectedBytes || resolveImportManifest(current.CatalogDigest) == nil {
+				return fail("MODEL_IMPORT_STATE_CONFLICT")
+			}
 			if offset > current.UploadedBytes {
 				return fail("MODEL_CHUNK_OFFSET_MISMATCH")
 			}
@@ -267,6 +269,9 @@ func (s *Service) queueImport(ctx context.Context, a identity.Auth, id, reason, 
 		}
 		if importCancellationPending(current) {
 			return fail("MODEL_IMPORT_STATE_CONFLICT")
+		}
+		if resolveImportManifest(current.CatalogDigest) == nil {
+			return fail("MODEL_IMPORT_INCOMPLETE")
 		}
 		out = current
 		if current.State == "ready" || current.State == "queued" || current.State == "verifying" {
