@@ -110,3 +110,27 @@ selects it through the [readonly owner contract](../../../../../docs/milestones/
 Unsupported readonly-exclusive locking fails closed and still needs filesystem/
 CSI qualification. The original readonly failure remains in its dated checkpoint;
 new image/fresh-target execution has separate evidence.
+
+## Streaming source intake
+
+[SourceImporter](source_import.go) accepts an upload body or an object receipt
+already authorized by the configured object store's owner. It converts JSONL,
+JSON arrays, CSV, and Parquet to private JSONL and returns byte and row counts,
+field types, null counts, and bounded diagnostics. Callers choose the format
+and may opt into skipping recoverable records. CSV accepts UTF-8 with an
+optional BOM or explicitly declared GBK. Use a new destination in a private
+directory, and configure budgets for the source, output, record, fields,
+diagnostics and duration. Parquet additionally stages the original bytes on
+disk and requires the [optional decoder runtime](../../../../../runtimes/data-processing/README.md#parquet-source-intake).
+
+The intake result and artifact are ready for a product caller to register
+under its authenticated workspace. A commit-uncertain error means the
+destination may exist and requires reconciliation before a retry. The older
+draft and object-ingestion routes continue to use their existing JSONL contract.
+
+To include the real Parquet decoder and the 128 MiB RSS test in the Go suite,
+set `OWNSOLID_TEST_PARQUET_PYTHON` to the protected Python 3.12 executable
+with the pinned Parquet dependency, resolve macOS temporary paths, and run
+`go test ./services/control/internal/modules/datasets/... -count=1 -v` from
+the workspace root. See [the source import research](../../../../../docs/research/dataset-import.md)
+for supported encodings and recovery rules.
