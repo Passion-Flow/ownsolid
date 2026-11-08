@@ -145,3 +145,22 @@ dependency is required.
 - Build a standalone executable, export synthetic audit rows from PostgreSQL,
   and run the verifier using only the resulting JSONL. Verify both text and
   JSON output and nonzero exits on failure.
+
+## Version 2 site and cell coverage
+
+The audit table also stores site and cell identifiers from the cell-scope
+migration. V1 covers the fields listed above. V2 adds the stored site and
+cell identifiers so modifications to placement metadata break verification
+as well. V2 changes the domain prefix and transport format to
+`ownsolid.audit.v2` and appends nonnull `site_id` and `cell_id` UTF-8 frames,
+in that order, after the metadata commitment.
+
+The migration preserves all existing hashes and appends V2 records to the
+same tail. The private head records the position of the first V2 append. Old
+records and exports remain V1. A verifier accepts one transition from V1 to
+V2 and rejects a return to V1. An independent checkpoint still covers the
+same prefix across an upgrade. The previous V1 portion cannot attest to
+site or cell identifiers that were not hashed when its rows were written.
+The upgrade test must create a V1 record before activation, append a V2
+record after activation, verify both together and detect a changed V2
+placement field.
