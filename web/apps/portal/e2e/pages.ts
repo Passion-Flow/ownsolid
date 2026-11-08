@@ -74,6 +74,32 @@ export const portalPages: readonly PageState[] = [
     },
   },
   {
+    name: 'home waiting for workspaces',
+    path: '/',
+    open: async (page, control) => {
+      await page.route('**/api/v1/workspaces?*', () => {
+        // Keep the request pending while the loading state is checked.
+      });
+      await openHome(page, control);
+      await page
+        .getByRole('main')
+        .getByRole('status')
+        .getByText('Loading', { exact: true })
+        .waitFor();
+    },
+  },
+  {
+    name: 'home whose workspace list could not be read',
+    path: '/',
+    open: async (page, control) => {
+      control.workspaceList = [];
+      control.sessionWorkspace = null;
+      control.workspacesProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await openHome(page, control);
+      await page.getByRole('main').getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
     name: 'models with one that cannot be called',
     path: '/models',
     open: async (page, control) => {
