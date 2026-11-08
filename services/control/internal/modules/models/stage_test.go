@@ -162,3 +162,31 @@ func TestIsStageName(t *testing.T) {
 		}
 	}
 }
+
+func TestDiscardUploadRefusesSymlinkedImportsDirectory(t *testing.T) {
+	path := t.TempDir()
+	id := "a87bb20c-438b-42fd-a640-73eb2cb7a375"
+	other := filepath.Join(path, "other")
+	upload := filepath.Join(other, id)
+	if e := os.MkdirAll(upload, 0700); e != nil {
+		t.Fatal(e)
+	}
+	chunk := filepath.Join(upload, "chunk-000000000000")
+	if e := os.WriteFile(chunk, []byte("keep"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.Symlink("other", filepath.Join(path, "imports")); e != nil {
+		t.Fatal(e)
+	}
+	root, e := os.OpenRoot(path)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer root.Close()
+	if e = discardUpload(root, id, ChunkBytes); e == nil || e.Error() != "MODEL_PATH_INVALID" {
+		t.Fatalf("symlinked imports directory: %v", e)
+	}
+	if got, e := os.ReadFile(chunk); e != nil || string(got) != "keep" {
+		t.Fatalf("cleanup changed data outside imports: %q, %v", got, e)
+	}
+}

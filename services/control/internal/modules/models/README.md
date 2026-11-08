@@ -6,6 +6,14 @@ Models owns import intent/chunks, approved model versions, durable bytes, integr
 
 Model/version/import state originates in migration 000006. Bytes and SQL must agree on catalog/source/scope and digest. Queued/uploaded does not mean verified; cancellation, interrupted import, inconsistent directory identity and retirement need existing worker/recovery paths.
 
+After the import's version and audit event commit, the worker reclaims the
+upload chunks and failed stages. During import the store still needs space
+for the bundle and extracted model. The worker retains staging and logs
+`model_import_cleanup_failed` with the import ID if it finds unexpected files
+or cannot verify the published copy. Inspect the model store and restore damaged
+published files from a verified backup before retrying. The worker retries
+automatically, and the import's history and model files remain in the store.
+
 This is a large owner with distinct import, verified storage and derived-model areas. A future split should preserve one authority and the exact acceptance/retirement transaction; do not create parallel “base” and “derived” authorization systems just to reduce file count.
 
 Synchronize contracts/agent model catalogs and model-lifecycle references, [M06](../../../../../docs/milestones/m06-models), control/deployment consumers, [models frontend](../../../../../web/README.md), model-cache policy/examples and offline/image source manifests.
