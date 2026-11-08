@@ -26,3 +26,19 @@ Synchronize dataset contract/generator, Go processor and publication validator, 
     python3 -B tools/quality/datasets/processor.py
 
 Run from repository root with the configured external state/toolchain. The harness includes controlled core and actual child-process cases; Linux resource and full business/database/browser acceptance are separate profiles.
+
+## Parquet source intake
+
+[import_parquet.py](import_parquet.py) is the private decoder for the Go
+[dataset intake boundary](../../services/control/internal/modules/datasets/source_import_parquet.go).
+Its optional `parquet` dependency installs PyArrow 26.0.1. Use a protected
+Python 3.12 installation and pre-stage the pinned wheel for the target
+architecture. Install the wheel from the offline wheel directory with
+`pip install --no-index --find-links <wheel-directory> pyarrow==26.0.1`.
+The process opens a private local file, checks its footer and row-group
+budgets, and emits the schema and one row at a time over its private pipe.
+Linux also enforces the configured address-space limit.
+
+The normal training processor continues to run without PyArrow. The release
+image and user-facing upload lifecycle must explicitly enable this intake
+decoder before serving Parquet requests.
