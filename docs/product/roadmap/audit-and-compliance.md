@@ -8,6 +8,12 @@ evidence packs for security assessments.
 - Owns: `services/control/internal/modules/audit`, `licensing`.
 - Depends on: identity-and-access, architecture-and-scale.
 
+PostgreSQL audit integrity coverage begins when the hash-chain migration activates.
+Earlier records remain readable outside that coverage. Verification against a database
+owner or superuser requires a checkpoint captured before the suspected rewrite and kept
+under the auditor's separate control. See the
+[checkpoint capture and offline verification procedure](../../../tools/audit-verify/README.md#coverage-and-custody).
+
 ## P1 Enterprise release
 
 - [ ] AUD-101 Unified audit log for people, services and the product agent (P1) - Catalog: F007

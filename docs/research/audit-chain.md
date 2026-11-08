@@ -21,6 +21,22 @@ within that checkpoint's coverage. The operator must preserve checkpoints outsid
 the database administrator's control. The chain also cannot prove that an event was
 captured in the first place.
 
+[PostgreSQL object ownership](https://www.postgresql.org/docs/18/ddl-priv.html)
+lets the owner modify the object regardless of privileges assigned to the serving
+role. A checkpoint stored only in PostgreSQL would share that authority. Follow
+CloudTrail's separate custody principle using an offline auditor-controlled
+store. No signing service, cloud storage or new dependency is required. Capture
+the head and export in one [read-only repeatable-read snapshot](https://www.postgresql.org/docs/18/transaction-iso.html)
+so a concurrent append cannot produce a checkpoint for a different export.
+Backfilling legacy rows was rejected because a digest computed during upgrade
+cannot attest to the rows before the upgrade. Preserve those records under
+existing retention and document the gap in customer-facing instructions.
+
+Exercise the documented capture against PostgreSQL and check the archived head
+against the export. Confirm the export excludes pre-chain rows, an internally
+consistent replacement chain can pass without the original checkpoint, and
+the independently retained checkpoint rejects a replacement or truncated tail.
+
 ## Persistence
 
 PostgreSQL is the first implementation. Many PostgreSQL modules insert directly
