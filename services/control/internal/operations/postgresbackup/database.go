@@ -177,7 +177,9 @@ func readProfileDatabaseContents(ctx context.Context, tx pgx.Tx, p release.Postg
 			case err != nil || !isHead:
 				return out, errors.New("POSTGRES_RESTORE_AUDIT_HEAD_MISMATCH")
 			default:
-				source = `(SELECT singleton,$1::bigint AS chain_position,$2::bytea AS hash FROM public.audit_chain_head)`
+				source = `(SELECT singleton,$1::bigint AS chain_position,$2::bytea AS hash,
+					CASE WHEN scoped_from <= $1::bigint THEN scoped_from END AS scoped_from
+					FROM public.audit_chain_head)`
 				args = append(args, position, predecessor)
 			}
 		}

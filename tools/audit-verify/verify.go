@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -15,8 +16,9 @@ import (
 )
 
 const (
-	format    = "ownsolid.audit.v1"
-	timestamp = "2006-01-02T15:04:05.000000Z"
+	format      = "ownsolid.audit.v1"
+	scopeFormat = "ownsolid.audit.v2"
+	timestamp   = "2006-01-02T15:04:05.000000Z"
 	// This bounds one record, independent of the size of the export.
 	maxRecordBytes = 16 * 1024
 )
@@ -28,6 +30,7 @@ var (
 		"audience", "action", "outcome", "target_type", "target_id", "request_id",
 		"reason_sha256", "identifier_digest_sha256", "metadata_sha256",
 	}
+	scopeFields = append(slices.Clone(fields), "site_id", "cell_id")
 )
 
 type report struct {
@@ -85,23 +88,38 @@ func decodeRecord(line []byte) (record, string) {
 	if _, err := decoder.Token(); err != io.EOF {
 		return nil, "unexpected content after the JSON object"
 	}
-	if len(row) != len(fields)+3 {
+	ordered := recordFields(row.value("format"))
+	if ordered == nil {
+		return nil, "unsupported format"
+	}
+	if len(row) != len(ordered)+3 {
 		return nil, "unexpected number of fields"
 	}
-	for _, field := range fields {
+	for _, field := range ordered {
 		if _, exists := row[field]; !exists {
 			return nil, "missing required field"
 		}
-	}
-	if row.value("format") != format {
-		return nil, "unsupported format"
 	}
 	for _, field := range []string{"id", "audience", "action", "outcome", "request_id"} {
 		if row[field] == nil {
 			return nil, "required field is null"
 		}
 	}
+	if row.value("format") == scopeFormat && (row["site_id"] == nil || row["cell_id"] == nil) {
+		return nil, "site and cell identifiers are required"
+	}
 	return row, ""
+}
+
+func recordFields(version string) []string {
+	switch version {
+	case format:
+		return fields
+	case scopeFormat:
+		return scopeFields
+	default:
+		return nil
+	}
 }
 
 func hashBytes(value string) ([]byte, bool) {
@@ -114,10 +132,10 @@ func hashBytes(value string) ([]byte, bool) {
 
 func calculateHash(row record, predecessor []byte) string {
 	digest := sha256.New()
-	digest.Write([]byte(format + "\x00"))
+	digest.Write([]byte(row.value("format") + "\x00"))
 	digest.Write(predecessor)
 	var length [4]byte
-	for _, field := range fields {
+	for _, field := range recordFields(row.value("format")) {
 		value := row[field]
 		if value == nil {
 			binary.BigEndian.PutUint32(length[:], ^uint32(0))
@@ -140,6 +158,7 @@ func verify(input io.Reader, previousHash, expectedLastHash string) report {
 	scanner := bufio.NewScanner(input)
 	scanner.Buffer(make([]byte, 4096), maxRecordBytes)
 	var position int64
+	var scoped bool
 	lastHash := previousHash
 	for scanner.Scan() {
 		line := result.Records + 1
@@ -147,6 +166,11 @@ func verify(input io.Reader, previousHash, expectedLastHash string) report {
 		if problem != "" {
 			return fail(line, "record", problem)
 		}
+
+		if scoped && row.value("format") != scopeFormat {
+			return fail(line, "format", "record format moved backwards")
+		}
+		scoped = row.value("format") == scopeFormat
 
 		rawPosition := row.value("position")
 		current, err := strconv.ParseInt(rawPosition, 10, 64)

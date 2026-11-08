@@ -21,6 +21,8 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 )
 
+const auditChainFirstSchema = 53
+
 const chainInsert = `INSERT INTO audit_events(id,occurred_at,audience,action,outcome,request_id)
 VALUES($1,$2,'system','fixture.audit','success',$1)`
 
@@ -124,7 +126,7 @@ func TestAuditChainExportAcrossPartitions(t *testing.T) {
 }
 
 func TestAuditChainPreservesEarlierRowsOnUpgrade(t *testing.T) {
-	db := identityfixture.NewAtVersion(t, database.SchemaVersion-1).DB
+	db := identityfixture.NewAtVersion(t, auditChainFirstSchema-1).DB
 	ctx := t.Context()
 	at := time.Now().UTC().Truncate(time.Microsecond)
 	if _, err := db.Exec(ctx, chainInsert, uuid.NewString(), at); err != nil {
@@ -143,6 +145,48 @@ func TestAuditChainPreservesEarlierRowsOnUpgrade(t *testing.T) {
 	var legacy int
 	if err := db.QueryRow(ctx, "SELECT count(*) FROM audit_events WHERE chain_position IS NULL").Scan(&legacy); err != nil || legacy != 1 {
 		t.Fatalf("pre-upgrade event count = %d: %v", legacy, err)
+	}
+}
+
+func TestAuditChainUpgradeBindsPlacementWithoutRewritingV1(t *testing.T) {
+	db := identityfixture.NewAtVersion(t, auditChainFirstSchema).DB
+	ctx := t.Context()
+	at := time.Now().UTC().Truncate(time.Microsecond)
+	for i := range 2 {
+		if i == 1 {
+			if err := database.Migrate(ctx, db); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if _, err := db.Exec(ctx, chainInsert, uuid.NewString(), at); err != nil {
+			t.Fatal(err)
+		}
+	}
+	lines := auditExport(t, db)
+	if len(lines) != 2 || field(t, lines[0], "format") != "ownsolid.audit.v1" ||
+		field(t, lines[1], "format") != "ownsolid.audit.v2" ||
+		field(t, lines[1], "prev_hash") != field(t, lines[0], "hash") ||
+		field(t, lines[1], "site_id") == "" || field(t, lines[1], "cell_id") == "" {
+		t.Fatal("upgrade broke continuity or omitted placement scope")
+	}
+	binary := os.Getenv("OWNSOLID_TEST_AUDIT_VERIFY")
+	if binary == "" {
+		t.Log("set OWNSOLID_TEST_AUDIT_VERIFY to test the built standalone executable")
+		return
+	}
+	verify := func(input [][]byte) ([]byte, error) {
+		cmd := exec.CommandContext(ctx, binary, "--file", "-", "--output", "json")
+		cmd.Stdin = bytes.NewReader(bytes.Join(input, []byte("\n")))
+		return cmd.CombinedOutput()
+	}
+	if out, err := verify(lines); err != nil {
+		t.Fatalf("mixed chain did not verify: %v: %s", err, out)
+	}
+	if _, err := db.Exec(ctx, "UPDATE audit_events SET site_id='fixture-changed' WHERE chain_position=2"); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := verify(auditExport(t, db)); err == nil || !strings.Contains(string(out), `"line":2,"field":"hash"`) {
+		t.Fatalf("modified placement was accepted: %v: %s", err, out)
 	}
 }
 

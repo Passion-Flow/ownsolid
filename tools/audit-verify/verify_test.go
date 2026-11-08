@@ -108,3 +108,19 @@ func TestRunOutputsJSONFailure(t *testing.T) {
 		t.Fatalf("exit=%d, JSON=%s, error=%v", exit, output.String(), err)
 	}
 }
+
+func TestVerifyRejectsReturnToV1AfterV2(t *testing.T) {
+	rows := testChain(t)
+	newFormat, site, cell := scopeFormat, "fixture-site", "fixture-cell"
+	rows[1]["format"], rows[1]["site_id"], rows[1]["cell_id"] = &newFormat, &site, &cell
+	previous, _ := hashBytes(rows[1].value("prev_hash"))
+	scopedHash := calculateHash(rows[1], previous)
+	rows[1]["hash"], rows[2]["prev_hash"] = &scopedHash, &scopedHash
+	previous, _ = hashBytes(scopedHash)
+	downgradedHash := calculateHash(rows[2], previous)
+	rows[2]["hash"] = &downgradedHash
+	result := verify(strings.NewReader(encodeRows(t, rows)), zeroHash, downgradedHash)
+	if result.Valid || result.Line != 3 || result.Field != "format" {
+		t.Fatalf("accepted a format downgrade: %+v", result)
+	}
+}

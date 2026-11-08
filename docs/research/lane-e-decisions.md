@@ -37,3 +37,29 @@ fingerprints were recalculated from PostgreSQL 18.6 after rebasing.
 The coordinator owns the roadmap progress index. Ticking the module line alone
 makes `make check` fail its progress-table check. Keep AUD-102 open until the
 module line, the index and the product status can be updated together.
+
+## Next eligible P1 item
+
+- AUD-101 requires first-class service and product-agent actors. The current
+  audit list projects user actors from identity, and the control plane has no
+  product-agent mutation owner to exercise. Leave the item open until there is a
+  real product-agent write path and coordinated ownership of the audit list.
+- AUD-103 requires one trace carried through application, gateway, model
+  selection and execution on a GPU. The trace and export need changes at those
+  owners' boundaries. A database-only correlation cannot prove the full path.
+- AUD-104 depends on the retention and telemetry owners. PostgreSQL's audit
+  retention setting defaults to 180 days but permits shorter periods. The
+  network-log minimum must be enforced by the relevant log-store and operator
+  configuration paths, which are outside lane E.
+- Proceed with AUD-105. PostgreSQL can enforce audit immutability for the
+  serving principal without changing the public audit API or retention
+  behavior. The guard can be added to the parent audit table in a new migration.
+
+## AUD-102 cell-scope correction
+
+The live PostgreSQL catalog showed that migration 000030 adds site and cell
+identifiers to audit events. V1 did not hash those columns. Keep the published
+migration and existing V1 records intact, and append V2 records with both
+identifiers under a new hash domain. Rehashing old records would invalidate
+independent checkpoints. Treat old exports as V1 coverage and clearly record
+their narrower field scope.
