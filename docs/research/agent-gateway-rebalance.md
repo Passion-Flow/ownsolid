@@ -78,3 +78,9 @@ The local simulator test passed under the Go race detector. Its 40 agents split
 23/17 before the first gateway went down, 0/40 during the outage, and 23/17 after
 13.032 seconds from restoration. The test used a 5-second minimum check interval
 and local TLS/HTTP/2 listeners with simulated control responses.
+
+The same test ran as a Linux amd64 binary on `ownsolid-cpu` in a network
+namespace with only loopback. All 40 agents went from 18/22 sessions to 0/40 and
+returned to their original 18/22 split in 12.732 seconds. The separate
+500-agent installation drill stopped when its Docker-in-Docker container exited
+during setup. No installation-level result is recorded for ARC-107.
