@@ -1,11 +1,15 @@
 // What a gateway key's state means to a person, which tile counts it, and the lifetimes a new key
 // can be given (docs/research/gateway-keys.md).
 import {
+  listModelAliases,
   maximumRotationOverlapSeconds,
+  type Audience,
   type GatewayKey,
   type GatewayKeyPolicy,
 } from '@ownsolid/api';
 import type { StatusTone } from '@ownsolid/ui';
+import { queryOptions } from '@tanstack/react-query';
+import { everyPage, pageSize } from '../every-page.ts';
 
 /** Where the page's queries live, so a write refreshes exactly what it changed. */
 export const gatewayKeys = {
@@ -14,6 +18,17 @@ export const gatewayKeys = {
   calls: (workspace: string, key: string) => ['gateway-keys', 'calls', workspace, key] as const,
   aliases: (workspace: string) => ['gateway-keys', 'aliases', workspace] as const,
 };
+
+/** The workspace's models on the gateway: which can take a key, and where each is called. */
+export function gatewayAliasesQuery(audience: Audience, workspace: string) {
+  return queryOptions({
+    queryKey: gatewayKeys.aliases(workspace),
+    queryFn: ({ signal }) =>
+      everyPage((cursor) =>
+        listModelAliases(audience, workspace, { limit: pageSize, cursor }, { signal }),
+      ),
+  });
+}
 
 /**
  * A key ending within this long is expiring soon: the longest overlap a rotation can give, so a

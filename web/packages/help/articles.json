@@ -78,6 +78,11 @@
       "pages": ["/"]
     },
     {
+      "slug": "api-keys",
+      "topic": "models",
+      "pages": ["/keys"]
+    },
+    {
       "slug": "account",
       "topic": "start",
       "pages": ["/account"]

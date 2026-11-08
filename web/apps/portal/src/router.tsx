@@ -9,14 +9,20 @@ import {
   rootRoute,
 } from '@ownsolid/shell';
 import { createRoute, lazyRouteComponent } from '@tanstack/react-router';
-import { navigation } from './navigation.ts';
+import { navigation, shortcuts } from './navigation.ts';
 
-const frameRoute = createFrameRoute({ navigation });
+const frameRoute = createFrameRoute({ navigation, shortcuts });
 
 const homeRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/',
   component: lazyRouteComponent(() => import('./home-page.tsx'), 'HomePage'),
+});
+
+const keysRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/keys',
+  component: lazyRouteComponent(() => import('./keys-page.tsx'), 'KeysPage'),
 });
 
 const accountRoute = createAccountRoute(frameRoute);
@@ -28,7 +34,7 @@ const helpRoutes = createHelpRoutes(frameRoute);
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
   authenticatedRoute.addChildren([
-    frameRoute.addChildren([homeRoute, accountRoute, supportRoute, ...helpRoutes]),
+    frameRoute.addChildren([homeRoute, keysRoute, accountRoute, supportRoute, ...helpRoutes]),
   ]),
 ]);
 

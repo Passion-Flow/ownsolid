@@ -12,6 +12,7 @@ import {
   type ModelAlias,
 } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
+import { everyPage, pageSize } from '@ownsolid/shell';
 import {
   Button,
   ProblemNotice,
@@ -24,7 +25,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Activity, BadgeCheck, Play, Square, Trash2 } from 'lucide-react';
 import { useRef, useState, type ReactNode } from 'react';
 import { canStart, canStop, deploymentKeys, deploymentsKey } from './deployment-state.ts';
-import { everyPage, pageSize } from './every-page.ts';
 
 /** The gateway names that send traffic to a deployment, and the keys that call them. */
 async function readCallers(
@@ -33,14 +33,14 @@ async function readCallers(
   signal: AbortSignal,
 ): Promise<{ aliases: ModelAlias[]; keys: GatewayKey[]; complete: boolean }> {
   const aliases = await everyPage((cursor) =>
-    listModelAliases(workspace, { limit: pageSize, cursor }, { signal }),
+    listModelAliases('admin', workspace, { limit: pageSize, cursor }, { signal }),
   );
   const mine = aliases.items.filter(
     (alias) => alias.deployment_id === deployment && alias.disabled_at === null,
   );
   if (mine.length === 0) return { aliases: [], keys: [], complete: aliases.complete };
   const keys = await everyPage((cursor) =>
-    listGatewayKeys(workspace, { limit: pageSize, cursor }, { signal }),
+    listGatewayKeys('admin', workspace, { limit: pageSize, cursor }, { signal }),
   );
   const named = new Set(mine.map((alias) => alias.id));
   return {

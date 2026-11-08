@@ -17,6 +17,28 @@
    }
   ]
  },
+ "api-keys": {
+  "title": "My API keys",
+  "summary": "My API keys lists the keys you issued in the workspace chosen in the switcher. A key lets an\napplication or a script call one model. It stops working when it expires, when you revoke it, or if you\nleave the workspace. Nobody else's keys appear here, and yours do not appear in anyone else's portal.",
+  "sections": [
+   {
+    "title": "Issuing a key",
+    "anchor": "issuing-a-key"
+   },
+   {
+    "title": "Calling a model",
+    "anchor": "calling-a-model"
+   },
+   {
+    "title": "Rotating and revoking",
+    "anchor": "rotating-and-revoking"
+   },
+   {
+    "title": "Reading your calls",
+    "anchor": "reading-your-calls"
+   }
+  ]
+ },
  "account": {
   "title": "Your account",
   "summary": "Your account holds your profile, your password and how ownsolid looks for you.",

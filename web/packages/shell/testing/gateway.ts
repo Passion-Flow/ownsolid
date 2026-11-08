@@ -321,7 +321,9 @@ export async function routeGateway(
   data: Reply,
   problem: Refuse,
 ): Promise<void> {
-  const base = /\/admin\/distribution\/workspaces\/[0-9a-f-]{36}/;
+  // The console's and the portal's paths to the same keys.
+  const base =
+    /\/(?:admin\/distribution\/workspaces\/[0-9a-f-]{36}|workspaces\/[0-9a-f-]{36}\/distribution)/;
   const madeBy = new Map<string, string>();
   const written = (route: Route, kind: GatewayScript['keyWrites'][number]['kind']) => {
     const request = route.request();

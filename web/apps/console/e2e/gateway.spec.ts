@@ -79,8 +79,12 @@ test('issues a key for an available model and shows its secret once', async ({ p
   const secret = `pk1.6f1c7a1e-0000-4000-8002-${write?.key.replaceAll('-', '').slice(0, 12)}`;
   await expect(done.getByText(new RegExp(`^${secret}\\.`))).toBeVisible();
   await done.getByRole('button', { name: 'Done' }).click();
-  await expect(page.getByRole('row', { name: /Support bot/ })).toContainText(deploymentAlias.name);
+  // Done opens the new key, where its endpoint and sample calls are; the secret is gone.
+  const drawer = page.getByRole('dialog', { name: 'Support bot' });
+  await expect(drawer.getByRole('heading', { name: 'Use this key' })).toBeVisible();
   await expect(page.getByText(new RegExp(`^${secret}\\.`))).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('row', { name: /Support bot/ })).toContainText(deploymentAlias.name);
 });
 
 test('says there is nothing to call when no model is on the gateway', async ({ page }) => {

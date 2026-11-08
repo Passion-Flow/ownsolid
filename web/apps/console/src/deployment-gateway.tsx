@@ -16,6 +16,16 @@ import {
 } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
 import {
+  everyPage,
+  gatewayBaseUrl,
+  gatewayKeys,
+  IssueKeyDialog,
+  pageSize,
+  ReasonField,
+  sampleCall,
+  useIntentKeys,
+} from '@ownsolid/shell';
+import {
   Button,
   Card,
   CodeBlock,
@@ -35,18 +45,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, Send, Unplug } from 'lucide-react';
 import { useId, useState, type SubmitEvent } from 'react';
 import { deploymentKeys } from './deployment-state.ts';
-import { everyPage, pageSize } from './every-page.ts';
-import { IssueKeyDialog, ReasonField, useIntentKeys } from './gateway-key-dialogs.tsx';
-import { gatewayKeys } from './gateway-key-state.ts';
+import { PublishModelHint } from './publish-model-hint.tsx';
 import {
   aliasMaximumLength,
   aliasNameProblem,
-  gatewayBaseUrl,
   gatewayOrigin,
   gatewayPublishKeys,
   nodeGateway,
   publishedNames,
-  sampleCall,
   suggestedAliasName,
   unpublishable,
 } from './gateway-publish-state.ts';
@@ -56,7 +62,9 @@ function useAliases(workspace: string) {
   return useQuery({
     queryKey: gatewayKeys.aliases(workspace),
     queryFn: ({ signal }) =>
-      everyPage((cursor) => listModelAliases(workspace, { limit: pageSize, cursor }, { signal })),
+      everyPage((cursor) =>
+        listModelAliases('admin', workspace, { limit: pageSize, cursor }, { signal }),
+      ),
   });
 }
 
@@ -419,7 +427,9 @@ function StopDialog({
   const keys = useQuery({
     queryKey: gatewayKeys.list(workspace),
     queryFn: ({ signal }) =>
-      everyPage((cursor) => listGatewayKeys(workspace, { limit: pageSize, cursor }, { signal })),
+      everyPage((cursor) =>
+        listGatewayKeys('admin', workspace, { limit: pageSize, cursor }, { signal }),
+      ),
   });
   const callers = (keys.data?.items ?? []).filter(
     (key) => key.alias_id === alias.id && key.state === 'active',
@@ -525,7 +535,7 @@ function Published({
       )}
       <CodeBlock
         label={t('services.gateway.sample')}
-        code={sampleCall(alias.client_origin, alias.name)}
+        code={sampleCall('curl', alias.client_origin, alias.name)}
       />
       <div className="flex flex-wrap gap-2">
         {alias.available ? (
@@ -628,7 +638,12 @@ export function DeploymentGateway({
         <PublishDialog deployment={deployment} model={model} node={node} onClose={close} />
       ) : null}
       {open?.kind === 'issue' ? (
-        <IssueKeyDialog workspace={workspace} alias={open.alias.id} onClose={close} />
+        <IssueKeyDialog
+          workspace={workspace}
+          alias={open.alias.id}
+          noModel={<PublishModelHint />}
+          onClose={close}
+        />
       ) : null}
       {open?.kind === 'stop' ? (
         <StopDialog deployment={deployment} alias={open.alias} onClose={close} />

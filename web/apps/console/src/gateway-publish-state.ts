@@ -84,22 +84,6 @@ export function gatewayOrigin(typed: string): string | null {
   return url.origin;
 }
 
-/** The base URL an OpenAI-compatible client is given for a gateway. */
-export function gatewayBaseUrl(origin: string): string {
-  return `${origin}/v1`;
-}
-
-/** A call that works as typed once `$OWNSOLID_KEY` holds a key for the name. */
-export function sampleCall(origin: string, alias: string): string {
-  const body = JSON.stringify({ model: alias, messages: [{ role: 'user', content: 'Hello' }] });
-  return [
-    `curl ${gatewayBaseUrl(origin)}/chat/completions \\`,
-    '  -H "Authorization: Bearer $OWNSOLID_KEY" \\',
-    '  -H "Content-Type: application/json" \\',
-    `  -d '${body}'`,
-  ].join('\n');
-}
-
 /** The names that currently send callers to one deployment. */
 export function publishedNames(
   aliases: readonly ModelAlias[],

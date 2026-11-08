@@ -322,6 +322,34 @@
        ]
       }
      ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Done"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ". The key opens with its base URL and a sample call in cURL, Python and Node.js."
+        }
+       ]
+      }
+     ]
     }
    ]
   },

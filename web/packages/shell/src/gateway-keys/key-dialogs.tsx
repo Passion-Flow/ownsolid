@@ -4,14 +4,12 @@
 import {
   isProblem,
   issueGatewayKey,
-  listModelAliases,
   revokeGatewayKey,
   rotateGatewayKey,
   type GatewayKey,
   type MintedGatewayKey,
 } from '@ownsolid/api';
 import { useI18n, type Translator } from '@ownsolid/i18n';
-import { runtimeConfigQuery } from '@ownsolid/shell';
 import {
   Button,
   CopyText,
@@ -25,10 +23,16 @@ import {
   useToast,
 } from '@ownsolid/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { useRef, useState, type SubmitEvent } from 'react';
-import { everyPage, pageSize } from './every-page.ts';
-import { gatewayKeys, lifetimes, overlaps, type Overlap } from './gateway-key-state.ts';
+import { useRef, useState, type ReactNode, type SubmitEvent } from 'react';
+import { runtimeConfigQuery } from '../routes.tsx';
+import { useAudience } from '../session.ts';
+import {
+  gatewayAliasesQuery,
+  gatewayKeys,
+  lifetimes,
+  overlaps,
+  type Overlap,
+} from './key-state.ts';
 
 /**
  * One idempotency key per request body until it is answered, so a retry after a lost answer
@@ -123,21 +127,24 @@ function lifetimeLabel(t: Translator) {
 export function IssueKeyDialog({
   workspace,
   alias: initialAlias,
+  noModel,
+  onIssued,
   onClose,
 }: {
   workspace: string;
   alias?: string | undefined;
+  /** What to do when no model can take a key: it differs by who is asking. */
+  noModel: ReactNode;
+  /** Called when the person is done with the secret, before the dialog closes. */
+  onIssued?: ((key: GatewayKey) => void) | undefined;
   onClose: () => void;
 }) {
   const { t } = useI18n();
+  const audience = useAudience();
   const queryClient = useQueryClient();
   const policy = useQuery(runtimeConfigQuery()).data?.gatewayKeys;
   // The workspace's models on the gateway; only an available one can take a new key.
-  const aliases = useQuery({
-    queryKey: gatewayKeys.aliases(workspace),
-    queryFn: ({ signal }) =>
-      everyPage((cursor) => listModelAliases(workspace, { limit: pageSize, cursor }, { signal })),
-  });
+  const aliases = useQuery(gatewayAliasesQuery(audience, workspace));
   const choices = (aliases.data?.items ?? []).filter(
     (item) => item.available && item.disabled_at === null,
   );
@@ -154,7 +161,7 @@ export function IssueKeyDialog({
   const body = { aliasId: alias, label: label.trim(), ttlSeconds: seconds, reason: reason.trim() };
   const issue = useMutation({
     mutationFn: () =>
-      issueGatewayKey(workspace, body, intents.take(body)).then((minted) => {
+      issueGatewayKey(audience, workspace, body, intents.take(body)).then((minted) => {
         intents.done(body);
         return minted;
       }),
@@ -177,7 +184,12 @@ export function IssueKeyDialog({
       description={minted ? undefined : t('gateway.issue.detail')}
       footer={
         minted ? (
-          <SecretFooter onClose={onClose} />
+          <SecretFooter
+            onClose={() => {
+              onIssued?.(minted.key);
+              onClose();
+            }}
+          />
         ) : (
           <>
             <Button onClick={onClose}>{t('action.cancel')}</Button>
@@ -216,10 +228,7 @@ export function IssueKeyDialog({
           {aliases.isPending ? <Skeleton className="h-11 w-full" /> : null}
           {aliases.data && choices.length === 0 ? (
             <Notice title={t('gateway.issue.noModel.title')} className="m-0">
-              {t('gateway.issue.noModel.detail')}{' '}
-              <Link to="/services" className="text-accent-ink underline">
-                {t('gateway.issue.noModel.link')}
-              </Link>
+              {noModel}
             </Notice>
           ) : null}
           <TextField
@@ -285,6 +294,7 @@ export function RotateKeyDialog({
   onClose: () => void;
 }) {
   const { t, format } = useI18n();
+  const audience = useAudience();
   const queryClient = useQueryClient();
   const [overlap, setOverlap] = useState<Overlap>(overlaps[2]);
   const [reason, setReason] = useState('');
@@ -292,10 +302,12 @@ export function RotateKeyDialog({
   const body = { overlapSeconds: overlap, reason: reason.trim() };
   const rotate = useMutation({
     mutationFn: () =>
-      rotateGatewayKey(workspace, gatewayKey.id, body, intents.take(body)).then((minted) => {
-        intents.done(body);
-        return minted;
-      }),
+      rotateGatewayKey(audience, workspace, gatewayKey.id, body, intents.take(body)).then(
+        (minted) => {
+          intents.done(body);
+          return minted;
+        },
+      ),
     onSettled: () => queryClient.invalidateQueries({ queryKey: gatewayKeys.list(workspace) }),
   });
   // When the dialog opened: the server counts the overlap from the rotation, a moment later.
@@ -383,11 +395,12 @@ export function RevokeKeyDialog({
   onClose: () => void;
 }) {
   const { t, format } = useI18n();
+  const audience = useAudience();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [reason, setReason] = useState('');
   const revoke = useMutation({
-    mutationFn: () => revokeGatewayKey(workspace, gatewayKey.id, reason.trim()),
+    mutationFn: () => revokeGatewayKey(audience, workspace, gatewayKey.id, reason.trim()),
     onSuccess: () => {
       toast({ message: t('gateway.revoke.done', { name: gatewayKey.label }) });
       onClose();

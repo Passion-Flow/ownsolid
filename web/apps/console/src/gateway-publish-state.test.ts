@@ -5,7 +5,6 @@ import {
   gatewayOrigin,
   nodeGateway,
   publishedNames,
-  sampleCall,
   suggestedAliasName,
   unpublishable,
 } from './gateway-publish-state.ts';
@@ -115,13 +114,6 @@ describe('the address of a new gateway', () => {
 });
 
 describe('how a published deployment is called', () => {
-  it('gives a call that names the model and reads the key from the environment', () => {
-    const call = sampleCall('https://gateway.lab.internal', 'qwen3-chat');
-    expect(call).toContain('https://gateway.lab.internal/v1/chat/completions');
-    expect(call).toContain('"model":"qwen3-chat"');
-    expect(call).toContain('Bearer $OWNSOLID_KEY');
-  });
-
   it('lists only the names that still send callers to the deployment', () => {
     const aliases = [
       { id: 'a', deployment_id: 'd1', disabled_at: null },

@@ -322,6 +322,34 @@
        ]
       }
      ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "选择 "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "完成"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "。密钥详情会打开，并显示 Base URL 以及 cURL、Python 和 Node.js 的示例调用。"
+        }
+       ]
+      }
+     ]
     }
    ]
   },

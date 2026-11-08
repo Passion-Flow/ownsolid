@@ -1,4 +1,6 @@
 import {
+  deploymentAlias,
+  deploymentKey,
   failedRun,
   publishedApplication,
   recentConversation,
@@ -11,6 +13,12 @@ async function openHome(page: Page, control: ControlPlane): Promise<void> {
   control.signedIn = true;
   await page.goto('/');
   await page.getByRole('heading', { name: 'Welcome, Ada Lovelace', level: 1 }).waitFor();
+}
+
+async function openKeys(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/keys');
+  await page.getByRole('heading', { name: 'My API keys', level: 1 }).waitFor();
 }
 
 /**
@@ -47,6 +55,45 @@ export const portalPages: readonly PageState[] = [
       control.workspaceList = [];
       control.sessionWorkspace = null;
       await openHome(page, control);
+      await page.getByRole('heading', { name: 'No workspace yet' }).waitFor();
+    },
+  },
+  {
+    name: 'keys with one key',
+    path: '/keys',
+    open: async (page, control) => {
+      control.aliases = [deploymentAlias];
+      control.gatewayKeys = [deploymentKey];
+      await openKeys(page, control);
+      await page.getByRole('row', { name: /Support bot/ }).waitFor();
+    },
+  },
+  {
+    name: "a key's drawer with its sample calls",
+    path: '/keys',
+    open: async (page, control) => {
+      control.aliases = [deploymentAlias];
+      control.gatewayKeys = [deploymentKey];
+      await openKeys(page, control);
+      await page.getByRole('button', { name: 'Show Support bot' }).click();
+      await page.getByRole('heading', { name: 'Use this key' }).waitFor();
+    },
+  },
+  {
+    name: 'keys, none yet',
+    path: '/keys',
+    open: async (page, control) => {
+      await openKeys(page, control);
+      await page.getByRole('heading', { name: 'No keys yet' }).waitFor();
+    },
+  },
+  {
+    name: 'keys without a workspace',
+    path: '/keys',
+    open: async (page, control) => {
+      control.workspaceList = [];
+      control.sessionWorkspace = null;
+      await openKeys(page, control);
       await page.getByRole('heading', { name: 'No workspace yet' }).waitFor();
     },
   },

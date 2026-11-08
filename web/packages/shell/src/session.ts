@@ -1,5 +1,5 @@
 // The signed-in identity as shared query state, and what happens when it ends.
-import { getMe, isProblem, type Me } from '@ownsolid/api';
+import { getMe, isProblem, type Audience, type Me } from '@ownsolid/api';
 import {
   MutationCache,
   QueryCache,
@@ -42,6 +42,11 @@ export function sessionQuery() {
  * The signed-in identity for pages under the authenticated route, which loads it
  * before they render. Returns `null` in the moment between sign-out and leaving the page.
  */
+/** Which entrance this session is in, or the portal's before the session is known. */
+export function useAudience(): Audience {
+  return useSession()?.audience ?? 'portal';
+}
+
 export function useSession(): Me | null {
   return useQuery(sessionQuery()).data ?? null;
 }

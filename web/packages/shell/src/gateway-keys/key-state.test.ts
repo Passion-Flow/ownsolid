@@ -10,7 +10,7 @@ import {
   lifetimes,
   overlaps,
   unused,
-} from './gateway-key-state.ts';
+} from './key-state.ts';
 
 const now = Date.parse('2026-11-08T00:00:00Z');
 const day = 24 * 60 * 60 * 1000;

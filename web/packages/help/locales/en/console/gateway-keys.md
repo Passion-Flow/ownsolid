@@ -36,6 +36,7 @@ you type the name to confirm. The name cannot be published again, and the deploy
    lifetime is set by the installation.
 3. Give a reason, then choose **Issue**.
 4. Copy the key. It is shown only this once and is never stored in a form anyone can read back.
+5. Choose **Done**. The key opens with its base URL and a sample call in cURL, Python and Node.js.
 
 Send the key as a bearer token. If the answer is lost on the way, choosing **Try again** returns
 the same key, but its secret cannot be shown again: revoke it and issue another.
