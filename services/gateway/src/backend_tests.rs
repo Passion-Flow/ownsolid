@@ -123,6 +123,7 @@ impl Fixture {
         let router = Router::new().fallback(upstream).with_state(state.clone());
         let server = tokio::spawn(async move { axum::serve(listener, router).await.unwrap() });
         let configuration = Configuration {
+            shared_quota: None,
             quota_policy: None,
             gateway_id: Uuid::new_v4(),
             node_id: Uuid::new_v4(),

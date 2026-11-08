@@ -22,9 +22,10 @@ See [the design and sources](gateway-limits.md).
 ### Boundaries
 
 The gateway protocol does not convey authoritative tenant, app or key
-metadata and no shared quota store is wired. Product-wide GW-106 remains
-open pending control-side metadata, policy management, and enforcement across
-gateway instances. The opt-in runtime configuration and descriptive 429
+metadata. The shared Rust path uses an explicit workspace/key mapping
+and peer credential, so product-wide GW-106 remains open pending
+control-side metadata, Console policy management and installation
+provisioning. The opt-in runtime configuration and descriptive 429
 messages need integration into the shared configuration and public API
 contracts. Existing no-policy responses keep their prior body shape and text.
 Lane G leaves the roadmap index to the coordinator.
@@ -79,3 +80,17 @@ so the gateway continues waiting for a durable debit. The snapshot format
 stays compatible and the existing active-request limit bounds the queue.
 An error in a shared write fails all tentative changes in that batch and
 closes the tenant's writer. See [the benchmark and failure model](gateway-limits.md).
+
+## GW-106: Use a shared runtime authority
+
+Reuse the bounded gateway TLS listener and the same hierarchical policy
+and durable ledger for a designated authority. Each authenticated peer
+is scoped to the Go-authorized workspace and sends key UUIDs only.
+This closes the independent-counter gap without changing Go contracts
+or adding a database to the quota check. Static slices would strand idle
+quota and a new datastore would expand the offline delivery surface.
+Fail closed on loss of the authority and fence startup from leases left
+by the previous process. An authority restart can delay new requests for
+up to six minutes. Keep authority state and peer credentials private and
+provision exactly one authority per group. Automatic management and
+failover require deployment and control integration.
