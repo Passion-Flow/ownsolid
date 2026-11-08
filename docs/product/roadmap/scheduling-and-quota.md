@@ -1,5 +1,10 @@
 # Scheduling and quota
 
+Reviewed 2026-11-09 against [Kueue](https://kueue.sigs.k8s.io/docs/concepts/),
+[Volcano](https://volcano.sh/docs/concepts/volcanojob/) and
+[Slurm](https://slurm.schedmd.com/sbatch.html). The P1 policy and cell adapter boundary
+still fit. Recurring jobs and explicit job dependencies extend the P1 submission path in P2.
+
 Who gets which GPUs, when. Two levels: ownsolid owns admission, quota and topology;
 Kueue and Volcano place work inside each cell behind an adapter boundary.
 
@@ -29,6 +34,8 @@ Kueue and Volcano place work inside each cell behind an adapter boundary.
 - [ ] SCH-205 Slurm cluster adoption: submit and observe through ownsolid (P2) - Catalog: F626
 - [ ] SCH-206 Ascend-aware scheduling through Volcano (P2)
 - [ ] SCH-207 Load tested: 10,000 nodes across cells with fair-share convergence measured (P2)
+- [ ] SCH-208 Recurring batch schedules with time zones, overlap policy and missed-run limits (P2)
+- [ ] SCH-209 Job dependencies with explicit completion conditions and failure propagation (P2)
 
 ## P3 Multi-site
 
