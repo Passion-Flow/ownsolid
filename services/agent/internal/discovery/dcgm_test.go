@@ -161,3 +161,26 @@ func TestCollectDCGMRefusesBadTransport(t *testing.T) {
 		t.Fatalf("cancelled context: %v", err)
 	}
 }
+
+func TestParseDCGMPCIIdentity(t *testing.T) {
+	pciSample := func(name, uuid, address string) string {
+		return fmt.Sprintf("%s{UUID=%q,pci_bus_id=%q} 0\n", name, uuid, address)
+	}
+	base := gaugeText(gpuUtil, pciSample(gpuUtil, gpuA, "0000:AB:00.3")+
+		fmt.Sprintf("%s{uuid=%q,pod_name=%q} 0.8\n", gpuUtil, gpuA, "fixture"))
+	devices, err := parseDCGM([]byte(base))
+	if err != nil || len(devices) != 1 || devices[0].PCIAddress != "00000000:ab:00.3" ||
+		devices[0].Samples[gpuUtil] != 0 {
+		t.Fatalf("parseDCGM = %+v, %v", devices, err)
+	}
+	power := "DCGM_FI_DEV_BOARD_POWER_WATTS"
+	for _, body := range []string{
+		base + pciSample(gpuUtil, gpuB, "00000000:ab:00.3"),
+		base + gaugeText(power, pciSample(power, gpuA, "00000000:ab:00.4")),
+		gaugeText(gpuUtil, pciSample(gpuUtil, gpuA, "0000:ab:00")),
+	} {
+		if got, err := parseDCGM([]byte(body)); got != nil || !errors.Is(err, ErrDCGMInvalid) {
+			t.Fatalf("ambiguous PCI identity returned %+v, %v", got, err)
+		}
+	}
+}
