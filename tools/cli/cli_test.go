@@ -134,7 +134,7 @@ func TestCommandHelp(t *testing.T) {
 		{"deployment", "placement"}, {"deployment", "create"}, {"deployment", "start"}, {"deployment", "stop"},
 		{"deployment", "observe"}, {"deployment", "verify"}, {"deployment", "remove"},
 		{"deployment", "alias"}, {"deployment", "alias", "gateways"}, {"deployment", "alias", "list"},
-		{"deployment", "alias", "get"}, {"deployment", "alias", "publish"}, {"deployment", "alias", "disable"},
+		{"deployment", "alias", "get"}, {"deployment", "alias", "provision"}, {"deployment", "alias", "publish"}, {"deployment", "alias", "disable"},
 	} {
 		out, _, err := run(t, append(slices.Clone(args), "--help")...)
 		if err != nil || !strings.Contains(out, "Examples:") || !strings.Contains(out, "ownsolid ") {

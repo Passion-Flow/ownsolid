@@ -17,6 +17,7 @@ var aliases = resource{key: "aliases", columns: []column{
 
 var gateways = resource{key: "gateways", columns: []column{
 	{"NAME", "name"}, {"ID", "id"}, {"NODE ID", "node_id"}, {"ORIGIN", "client_origin"}, {"STATE", "state"},
+	{"DELIVERY", "delivery"}, {"DELIVERY STATE", "delivery_state"}, {"DELIVERY ERROR", "delivery_error_code"},
 }}
 
 var aliasName = regexp.MustCompile(`^[a-z][a-z0-9.-]{0,63}$`)
@@ -47,7 +48,7 @@ func (opts *options) aliasCommand(workspace *string) *cobra.Command {
 				return opts.renderDetail(cmd.OutOrStdout(), cmd.Context(), client, aliases, path, args[0], scope)
 			},
 		},
-		opts.publishAliasCommand(workspace), opts.disableAliasCommand(workspace),
+		opts.provisionManagedGatewayCommand(workspace), opts.publishAliasCommand(workspace), opts.disableAliasCommand(workspace),
 	)
 	return group
 }
