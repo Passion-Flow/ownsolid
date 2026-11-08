@@ -89,6 +89,7 @@ type installer struct {
 	probe        Probe
 	out          io.Writer
 	verifySchema func(context.Context) error
+	complete     func() error
 }
 
 // Apply brings the installation to the configured state. It is safe to repeat: each
@@ -145,6 +146,11 @@ func (i *installer) apply(ctx context.Context) error {
 			return wrapStep(step.name, e)
 		}
 		fmt.Fprintf(i.out, "step %s: ok\n", step.name)
+	}
+	if i.complete != nil {
+		if err := i.complete(); err != nil {
+			return wrapStep("finalize-release", err)
+		}
 	}
 	fmt.Fprintf(i.out, "INSTALL_COMPLETE portal=%s admin=%s administrator_credential=%s\n", i.config.Origins.Portal, i.config.Origins.Admin, i.config.CredentialPath())
 	return nil

@@ -91,3 +91,20 @@ func TestSignedBundleComposeOnlyUsesVerifiedImages(t *testing.T) {
 		})
 	}
 }
+
+func TestSignedInstallRefusesChangingTheComposeProject(t *testing.T) {
+	c := validConfig(t)
+	if err := os.MkdirAll(c.InstallRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(c.Layout().ComposeEnv, []byte(c.renderComposeEnv()), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkInstalledProject(c); err != nil {
+		t.Fatal(err)
+	}
+	c.Project = "another-installation"
+	if err := checkInstalledProject(c); err == nil || !strings.Contains(err.Error(), "INSTALL_BUNDLE_PROJECT_CHANGED") {
+		t.Fatalf("accepted a second Compose project on the same data directories: %v", err)
+	}
+}
