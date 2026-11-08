@@ -9,6 +9,7 @@ use (
 	./services/agent
 	./services/control
 	./tests/e2e
+	./tools/cli
 	./tools/dev/simulator
 	./tools/release/offline
 )
