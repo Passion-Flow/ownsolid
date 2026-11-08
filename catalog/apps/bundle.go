@@ -21,6 +21,25 @@ const ImageArchiveName = "images.tar"
 // ErrBundle identifies an invalid signature, inventory or signed payload.
 var ErrBundle = errors.New("CATALOG_BUNDLE_INVALID")
 
+// InstallBundle pairs verified release metadata with the signed OCI import facts.
+type InstallBundle struct {
+	Release
+	Archive OCIArchive
+}
+
+// OCIArchive describes the exact images.tar bytes and its OCI root inventory.
+type OCIArchive struct {
+	Digest string
+	Bytes  int64
+	Images []OCIImage
+}
+
+// OCIImage identifies the verified manifest and config for one local image.
+type OCIImage struct {
+	ManifestDigest string
+	ConfigDigest   string
+}
+
 type bundleIndex struct {
 	SchemaVersion int    `json:"schema_version"`
 	Manifest      string `json:"manifest"`
@@ -35,48 +54,50 @@ type bundleIndex struct {
 // from outside the bundle. maximumPayloadBytes bounds the two payloads in sum.
 // The caller must verify the OCI image identities and admit the rendered workload.
 func VerifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64) (Release, error) {
-	return verifyBundle(ctx, root, key, maximumPayloadBytes, false)
+	bundle, err := verifyBundle(ctx, root, key, maximumPayloadBytes, false)
+	return bundle.Release, err
 }
 
 // VerifyInstallBundle verifies the signed payloads and their complete Linux
 // amd64 OCI image inventory. The installer must keep staging immutable, check
 // expanded layers and verify the registered images before starting workloads.
-func VerifyInstallBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64) (Release, error) {
+func VerifyInstallBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64) (InstallBundle, error) {
 	return verifyBundle(ctx, root, key, maximumPayloadBytes, true)
 }
 
-func verifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64, install bool) (Release, error) {
+func verifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64, install bool) (InstallBundle, error) {
 	if root == nil || len(key) != ed25519.PublicKeySize || maximumPayloadBytes <= 0 {
-		return Release{}, fmt.Errorf("%w: supply a local bundle, trusted publisher key and payload limit", ErrBundle)
+		return InstallBundle{}, fmt.Errorf("%w: supply a local bundle, trusted publisher key and payload limit", ErrBundle)
 	}
 	if err := ctx.Err(); err != nil {
-		return Release{}, err
+		return InstallBundle{}, err
 	}
 	index, err := readIndex(root, key)
 	if err != nil {
-		return Release{}, err
+		return InstallBundle{}, err
 	}
 	release, err := load(root, map[string]string{
 		manifestName: index.Manifest, englishName: index.English, chineseName: index.Chinese,
 	})
 	if err != nil {
-		return Release{}, fmt.Errorf("%w: %w", ErrBundle, err)
+		return InstallBundle{}, fmt.Errorf("%w: %w", ErrBundle, err)
 	}
 	artifact := release.Manifest.Artifact
 	artifactBytes, err := verifyPayload(ctx, root, artifact.Filename(), artifact.SHA256, maximumPayloadBytes)
 	if err != nil {
-		return Release{}, err
+		return InstallBundle{}, err
 	}
 	remaining := maximumPayloadBytes - artifactBytes
+	var archive OCIArchive
 	if install {
-		err = verifyOCIArchive(ctx, root, index.Images, remaining, release.Manifest.Images)
+		archive, err = verifyOCIArchive(ctx, root, index.Images, remaining, release.Manifest.Images)
 	} else {
 		_, err = verifyPayload(ctx, root, ImageArchiveName, index.Images, remaining)
 	}
 	if err != nil {
-		return Release{}, err
+		return InstallBundle{}, err
 	}
-	return release, nil
+	return InstallBundle{Release: release, Archive: archive}, nil
 }
 
 func readIndex(root *os.Root, key ed25519.PublicKey) (bundleIndex, error) {
