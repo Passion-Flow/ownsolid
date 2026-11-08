@@ -56,7 +56,7 @@ func TestComponentCycleRecoversBeforeHeartbeatAndDisabledClaimGate(t *testing.T)
 		}
 	}))
 	defer server.Close()
-	connection := &client.Client{Origin: server.URL, HTTP: server.Client(), Credential: identity.Credential}
+	connection := &client.Client{Origin: server.URL, HTTP: server.Client(), Credential: identity.Credential, Scope: identity.Scope()}
 	defer connection.Close()
 	failure := errors.New("COMPONENT_ROLLBACK_FAILED")
 	calls := 0
