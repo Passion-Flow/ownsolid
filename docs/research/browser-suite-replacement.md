@@ -40,7 +40,8 @@ and removed with it, so a scenario is not lost by deleting its only record.
 | `TestM08DatasetBrowser`                                                | S-503 Datasets                                                              |
 | `TestM09TrainingBrowser`                                               | S-501 Fine-tuning                                                           |
 | `TestM10HoldoutBrowser`                                                | S-504 Evaluation                                                            |
-| `TestM20ModelImportRecoveryBrowser`, `TestM20ModelRecoveryTailBrowser` | S-201 Model market                                                          |
+| `TestM20ModelImportRecoveryBrowser` | S-201 Model library: upload, lost replies, resume and retirement have Playwright flows in `models.spec.ts` and `live-models.spec.ts`. The old harness also checks cancellation before the first chunk and reads scoped audit rows and retained file hashes directly. |
+| `TestM20ModelRecoveryTailBrowser` | Recovery when an already verified immutable object exists without a retained chunk history. The interrupted upload flow does not cover that precondition. |
 | `TestM12KnowledgeBrowser`                                              | Never a page of ours: knowledge is DeepParser's. Removed when the module is |
 
 ## Rejected

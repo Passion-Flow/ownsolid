@@ -59,8 +59,8 @@ with "O or Enter". The interaction system takes `j`, `k` and `Enter`.
 
 They sit under the same switch and rules as the other keys, so nothing moves while typing or behind a layer.
 
-Only `N` has a page today. `D`, `I` and `K` need deploying, the catalog and API keys, so UX-122 stays open
-until they have. `j` and `k` for moving through rows are in the interaction system and are UX-128.
+`N` opens node enrolment, `D` opens model deployment, and `K` opens key issuance. The install action `I`
+waits for the application catalog (S-309), so UX-122 stays open. `j` and `k` for moving through rows are in the interaction system and are UX-128.
 
 Rejected: remapping keys, which is more work for a person than the off switch and which neither GitHub
 nor Gmail offers in this form; shortcuts active only on focus, which removes the point of a global key.
