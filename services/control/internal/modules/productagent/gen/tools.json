@@ -1,0 +1,25 @@
+{
+  "generated": "Code generated from OpenAPI and the tool overlay. DO NOT EDIT.",
+  "tools": {
+    "list_applications": {
+      "operation_id": "ListApplications",
+      "risk": "read",
+      "permission": "workspace_member",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/applications",
+      "audiences": [
+        "portal"
+      ]
+    },
+    "list_conversations": {
+      "operation_id": "ListApplicationConversations",
+      "risk": "read",
+      "permission": "workspace_member",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/application-conversations",
+      "audiences": [
+        "portal"
+      ]
+    }
+  }
+}
