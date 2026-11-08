@@ -446,6 +446,15 @@ task_events:
 #   ca_private_key_file: /run/secrets/agent-ca-key.pem
 #   certificate_lifetime_hours: 720
 #
+# model_gateway_identity names the CA that signs the serving certificates of the model
+# gateways agents run beside their models (ADR 0052). Kept apart from the agent CA and the
+# console's certificate; callers of a node's gateway trust ca_certificate_file. Without it,
+# registering a node's gateway shows its credential once instead (PostgreSQL only).
+# model_gateway_identity:
+#   ca_certificate_file: /etc/ownsolid/model-gateway-ca.pem
+#   ca_private_key_file: /run/secrets/model-gateway-ca-key.pem
+#   certificate_lifetime_hours: 8760
+#
 # Optional. Read only by `serve-agent-gateway`, which serves agent session streams beside
 # control (ADR 0048); control ignores it. The certificate must name the agent entrance's host
 # (machine_server.origin, else server.admin_origin), because agents verify that name. Agents

@@ -202,7 +202,8 @@
         },
         "x-error-codes": {
           "400": [
-            "VALIDATION_FAILED"
+            "VALIDATION_FAILED",
+            "GATEWAY_ORIGIN_DECLARED_BY_NODE"
           ],
           "401": [
             "AUTH_REQUIRED",
@@ -221,7 +222,8 @@
             "STORAGE_COMMIT_OUTCOME_UNKNOWN",
             "IDEMPOTENCY_CONFLICT",
             "GATEWAY_NODE_UNAVAILABLE",
-            "GATEWAY_INSTANCE_EXISTS"
+            "GATEWAY_INSTANCE_EXISTS",
+            "NODE_BUSY"
           ],
           "413": [
             "PAYLOAD_TOO_LARGE"
@@ -545,7 +547,8 @@
             "MODEL_ALIAS_UNAVAILABLE",
             "MODEL_FILE_INVALID",
             "MODEL_ALIAS_EXISTS",
-            "RESOURCE_LIMIT_REACHED"
+            "RESOURCE_LIMIT_REACHED",
+            "GATEWAY_NOT_STARTED"
           ],
           "413": [
             "PAYLOAD_TOO_LARGE"
@@ -3834,11 +3837,18 @@
             "maxLength": 100
           },
           "client_origin": {
-            "type": "string",
-            "format": "uri",
-            "minLength": 9,
-            "maxLength": 2048,
-            "description": "Canonical HTTPS origin only; advertised metadata, never an outbound control destination."
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "minLength": 9,
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where callers reach the gateway: a canonical HTTPS origin. Null for a gateway the node's agent runs until it activates the gateway with the origin its node declares."
           },
           "created_by": {
             "type": "string",
@@ -3870,6 +3880,56 @@
                 "type": "null"
               }
             ]
+          },
+          "delivery": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "agent"
+            ],
+            "description": "agent: the node's agent runs the gateway, with a credential it generated on the node (ADR 0052). manual: an administrator placed the credential shown once at registration."
+          },
+          "delivery_state": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "starting",
+                  "running",
+                  "failed",
+                  "stopping",
+                  "stopped"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How far the agent got with the gateway. Null for a manual gateway."
+          },
+          "delivery_error_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^GATEWAY_[A-Z_]{1,56}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why the agent's last start or stop failed; GATEWAY_TASK_EXPIRED when its task ended without a result."
+          },
+          "certificate_not_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the serving certificate issued at activation expires."
           }
         },
         "required": [
@@ -3881,7 +3941,11 @@
           "created_by",
           "state",
           "created_at",
-          "revoked_at"
+          "revoked_at",
+          "delivery",
+          "delivery_state",
+          "delivery_error_code",
+          "certificate_not_after"
         ]
       },
       "ProvisionGateway": {
@@ -3906,7 +3970,7 @@
             "format": "uri",
             "minLength": 9,
             "maxLength": 2048,
-            "description": "Canonical HTTPS origin only; advertised metadata, never an outbound control destination."
+            "description": "Where callers reach a gateway an administrator runs; required then. Omitted when the node's agent runs the gateway: the node declares its origin."
           },
           "reason": {
             "type": "string",
@@ -3917,7 +3981,6 @@
         "required": [
           "node_id",
           "name",
-          "client_origin",
           "reason"
         ]
       },

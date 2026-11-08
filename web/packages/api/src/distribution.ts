@@ -176,13 +176,14 @@ export function listGatewayInstances(
 }
 
 /**
- * Registers the gateway that serves one node, reached by callers at `clientOrigin`. The credential
- * the gateway signs in with comes back once; the same `idempotencyKey` returns the instance
- * without it.
+ * Registers the gateway that serves one node. When the node's agent runs gateways, it starts this
+ * one with a credential generated on the node, and `clientOrigin` is left out: the node declares
+ * where callers reach it. Otherwise callers reach it at `clientOrigin`, and the credential the
+ * gateway signs in with comes back once; the same `idempotencyKey` returns the instance without it.
  */
 export function provisionGateway(
   workspaceId: string,
-  input: { nodeId: string; name: string; clientOrigin: string; reason: string },
+  input: { nodeId: string; name: string; clientOrigin: string | null; reason: string },
   idempotencyKey: string,
 ): Promise<ProvisionedGateway> {
   return client.post(
@@ -193,7 +194,7 @@ export function provisionGateway(
       body: {
         node_id: input.nodeId,
         name: input.name,
-        client_origin: input.clientOrigin,
+        ...(input.clientOrigin === null ? {} : { client_origin: input.clientOrigin }),
         reason: input.reason,
       },
     },

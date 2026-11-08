@@ -105,7 +105,7 @@ func TestAgentAcknowledgesBeforeExecutingAndKeepsItsCursor(t *testing.T) {
 	run := func() error {
 		session := connection.Session(identity.NodeID)
 		defer session.Close()
-		return claimAndRun(t.Context(), c, connection, session, identity, wire.Facts{}, nil, nil, nil, nil, nil)
+		return claimAndRun(t.Context(), c, connection, session, identity, wire.Facts{}, workers{})
 	}
 	reset := func(claim wire.Claim, refuseAck bool) {
 		d.mu.Lock()

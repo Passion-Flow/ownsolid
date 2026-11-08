@@ -38,7 +38,7 @@ func (s *Service) aliasAvailability(ctx context.Context, tx transaction.Executor
 	out.Available = false
 	out.UnavailableCode = &unavailable
 	var active bool
-	if e := tx.QueryRow(ctx, distributionNativeStatement(tx, `SELECT CASE WHEN REVOKED_AT IS NULL AND AUTHORITY_INVALIDATED_AT IS NULL AND CREDENTIAL_HASH IS NOT NULL THEN 1 ELSE 0 END,CLIENT_ORIGIN FROM GATEWAY_INSTANCES WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=?`, []any{w.TenantID, w.ID, out.GatewayID}, "SELECT revoked_at IS NULL AND authority_invalidated_at IS NULL AND credential_hash IS NOT NULL,client_origin FROM gateway_instances WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3", `SELECT revoked_at IS NULL AND authority_invalidated_at IS NULL AND credential_hash IS NOT NULL,client_origin FROM gateway_instances WHERE tenant_id=? AND workspace_id=? AND id=?`, []any{w.TenantID, w.ID, out.GatewayID}, []any{w.TenantID, w.ID, out.GatewayID})).Scan(&active, &out.ClientOrigin); e != nil {
+	if e := tx.QueryRow(ctx, distributionNativeStatement(tx, `SELECT CASE WHEN REVOKED_AT IS NULL AND AUTHORITY_INVALIDATED_AT IS NULL AND CREDENTIAL_HASH IS NOT NULL THEN 1 ELSE 0 END,CLIENT_ORIGIN FROM GATEWAY_INSTANCES WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=?`, []any{w.TenantID, w.ID, out.GatewayID}, "SELECT revoked_at IS NULL AND authority_invalidated_at IS NULL AND credential_hash IS NOT NULL,COALESCE(client_origin,'') FROM gateway_instances WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3", `SELECT revoked_at IS NULL AND authority_invalidated_at IS NULL AND credential_hash IS NOT NULL,client_origin FROM gateway_instances WHERE tenant_id=? AND workspace_id=? AND id=?`, []any{w.TenantID, w.ID, out.GatewayID}, []any{w.TenantID, w.ID, out.GatewayID})).Scan(&active, &out.ClientOrigin); e != nil {
 		return e
 	}
 	if !active || out.DisabledAt != nil {
@@ -90,6 +90,10 @@ func (s *Service) Publish(ctx context.Context, a identity.Auth, input PublishReq
 		}
 		if gateway.State != "active" {
 			return fail("GATEWAY_INSTANCE_REVOKED")
+		}
+		// A gateway the agent runs has no address until it is running.
+		if gateway.Delivery == "agent" && (gateway.DeliveryState == nil || *gateway.DeliveryState != "running") {
+			return fail("GATEWAY_NOT_STARTED")
 		}
 		target, e := s.Deployments.ReadyGatewayTargetWithin(ctx, tx, w.TenantID, w.ID, gateway.NodeID, input.DeploymentID, input.DeploymentRevision)
 		if e != nil {

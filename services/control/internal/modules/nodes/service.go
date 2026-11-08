@@ -29,7 +29,10 @@ type Service struct {
 	Workspaces   *workspaces.Service
 	Components   ComponentObserver
 	Inference    InferenceObserver
-	Training     TrainingAuthority
+	// Gateways records what agents do with the model gateways of their nodes (GW-114).
+	// Without it, gateway tasks are refused.
+	Gateways GatewayOwnerWithin
+	Training TrainingAuthority
 	// wake lets claims held open for new work (ClaimWaiting) see tasks as they are written.
 	wake wakeHub
 	// delivering says the outbox reader runs, so wakes arrive after commit (ADR 0028).

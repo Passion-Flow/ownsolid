@@ -37,7 +37,7 @@ func TestComponentRecoveryFailureBlocksCycleBeforeDiscoveryAndNetwork(t *testing
 	m := &componentRecoveryDouble{recover: func(context.Context) error { calls++; return failure }}
 	for range 2 {
 		// Nil client and invalid discovery path ensure no subsequent work can run.
-		if e := cycle(t.Context(), Config{DiskPath: "/not-used"}, nil, state.Identity{}, m, nil, nil, nil, nil); !errors.Is(e, failure) {
+		if e := cycle(t.Context(), Config{DiskPath: "/not-used"}, nil, state.Identity{}, workers{components: m}); !errors.Is(e, failure) {
 			t.Fatal("recovery failure did not fence the next cycle", e)
 		}
 	}

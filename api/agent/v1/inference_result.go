@@ -5,7 +5,7 @@ import "errors"
 // ValidateInference binds a bounded observation to the exact typed task intent.
 func (r Result) ValidateInference(command InferenceCommand) error {
 	bad := errors.New("VALIDATION_FAILED")
-	if command.Validate(command.Operation()) != nil || r.Facts != nil || r.Component != nil || r.Logs != nil || r.Inference == nil || r.Inference.Validate() != nil {
+	if command.Validate(command.Operation()) != nil || r.Facts != nil || r.Component != nil || r.Logs != nil || r.Gateway != nil || r.Inference == nil || r.Inference.Validate() != nil {
 		return bad
 	}
 	o := r.Inference

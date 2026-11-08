@@ -53,6 +53,7 @@ const runtimeConfig = {
     lookup_page_size: 100,
   },
   gateway_keys: { default_ttl_seconds: 86_400, maximum_ttl_seconds: 7_776_000 },
+  agent_gateways: true,
 };
 
 /** A provider connector the account page offers to link. */

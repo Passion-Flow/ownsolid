@@ -2,12 +2,13 @@
 package distribution
 
 import (
-	"github.com/jackc/pgx/v5/pgxpool"
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
 
@@ -17,6 +18,9 @@ type Service struct {
 	Workspaces  *workspaces.Service
 	Nodes       *nodes.Service
 	Deployments *deployments.Service
+	// Certificates signs the serving certificates of gateways agents run (ADR 0052). Only
+	// the agent path, which activates them, holds it.
+	Certificates *agentidentity.Authority
 }
 
 type RecoveryChallenge struct {
@@ -31,15 +35,27 @@ type RecoveryChallenge struct {
 	FenceReceipt    *wire.FenceReceipt `json:"fence_receipt"`
 }
 type Gateway struct {
-	ID           string     `json:"id"`
-	WorkspaceID  string     `json:"workspace_id"`
-	NodeID       string     `json:"node_id"`
-	Name         string     `json:"name"`
-	ClientOrigin string     `json:"client_origin"`
+	ID          string `json:"id"`
+	WorkspaceID string `json:"workspace_id"`
+	NodeID      string `json:"node_id"`
+	Name        string `json:"name"`
+	// ClientOrigin is where callers reach the gateway. A gateway the agent runs has none
+	// until the agent activates it with the origin its node declares.
+	ClientOrigin *string    `json:"client_origin"`
 	CreatedBy    string     `json:"created_by"`
 	State        string     `json:"state"`
 	CreatedAt    time.Time  `json:"created_at"`
 	RevokedAt    *time.Time `json:"revoked_at"`
+	// Delivery says who runs the gateway: "agent" when the node's agent runs it (ADR 0052),
+	// "manual" when an administrator placed the credential shown at registration.
+	Delivery string `json:"delivery"`
+	// DeliveryState is how far the agent got: starting, running, failed, stopping or stopped.
+	// A manual gateway has none.
+	DeliveryState *string `json:"delivery_state"`
+	// DeliveryErrorCode says why the agent's last task on the gateway failed.
+	DeliveryErrorCode *string `json:"delivery_error_code"`
+	// CertificateNotAfter is when the serving certificate issued at activation expires.
+	CertificateNotAfter *time.Time `json:"certificate_not_after"`
 }
 type ProvisionRequest struct {
 	WorkspaceID  string `json:"workspace_id"`
@@ -104,6 +120,7 @@ type KeyRequest struct {
 	TTLSeconds  int    `json:"ttl_seconds"`
 	Reason      string `json:"reason"`
 }
+
 // RotateRequest replaces a key's secret and stops the old key after an overlap.
 type RotateRequest struct {
 	OverlapSeconds int    `json:"overlap_seconds"`

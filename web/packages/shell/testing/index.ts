@@ -23,6 +23,7 @@ export {
   type DeploymentScript,
 } from './deployments.ts';
 export {
+  agentGatewayOrigin,
   deploymentAlias,
   deploymentKey,
   expiringKey,
