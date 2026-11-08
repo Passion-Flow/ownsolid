@@ -97,6 +97,11 @@ func Apply(ctx context.Context, c Config, runner Runner, out io.Writer) error {
 	if os.Geteuid() != 0 {
 		return errors.New("INSTALL_ROOT_REQUIRED: apply creates files owned by the service users; run it as root")
 	}
+	if c.Preflight != nil {
+		if e := Preflight(ctx, c, runner, out); e != nil {
+			return retryWith(e, "apply")
+		}
+	}
 	unlock, e := lockOperation(c)
 	if e != nil {
 		return e
