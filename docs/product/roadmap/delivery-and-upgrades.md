@@ -20,11 +20,11 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 ## P1 Enterprise release
 
 - [ ] DEL-101 Signed offline bundle per architecture: images, charts, models, plugins, fonts, docs; SBOM and checksums (P1) - Catalog: F215, F221, F490, F505
-- [ ] DEL-102 Installer with preflight (OS, kernel, ports, disk, memory, time, DNS, drivers), idempotent and resumable (P1) - Catalog: F220, F498
+- [x] DEL-102 Installer with preflight (OS, kernel, ports, disk, memory, time, DNS, drivers), idempotent and resumable (P1) - Catalog: F220, F498 - Evidence: b8535ef. The Linux amd64 isolated installation resumed after SIGKILL with both entrances ready and the same administrator, tenant, workspace and credential.
 - [ ] DEL-103 First-run setup: administrator, tenant, workspace, certificates; setup endpoint closes afterwards (P1) - Catalog: F499
-- [ ] DEL-104 Offline upgrade with required stops, pre-upgrade backup and database migration plan (P1) - Catalog: F222, F503
-- [ ] DEL-105 Rollback of application versions, separated from database restore (P1) - Catalog: F533
-- [ ] DEL-106 Incremental patch bundles verified against the installed baseline (P1) - Catalog: F504
+- [x] DEL-104 Offline upgrade with required stops, pre-upgrade backup and database migration plan (P1) - Catalog: F222, F503 - Evidence: c54fed2. A disconnected Compose installation verified its recovery backup before migrating PostgreSQL from schema 52 to 54.
+- [x] DEL-105 Rollback of application versions, separated from database restore (P1) - Catalog: F533 - Evidence: 2bd0729. An injected candidate startup failure was followed by a rollback to the previous signed image with the same PostgreSQL container and schema.
+- [x] DEL-106 Incremental patch bundles verified against the installed baseline (P1) - Catalog: F504 - Evidence: 4e22094 and c54fed2. The isolated installer refused the wrong baseline and verified and applied the patch against the exact installed signed release.
 - [ ] DEL-107 Helm chart with values schema, image-address rewrite, secret references, ingress and TLS (P1) - Catalog: F216, F228, F492
 - [ ] DEL-108 In-site OCI registry bootstrapped from the bundle; images pinned by digest (P1) - Catalog: F494
 - [ ] DEL-109 Offline license activation, renewal and migration with the ownsolid-entitlement file format (P1) - Catalog: F443, F501, F646
@@ -35,8 +35,8 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
     starting from the old issuer CLI in project-one `tools/release/licensing`. Test this
     item against licenses signed by that issuer.
 - [ ] DEL-110 Third-party license and notice inventory shipped in every bundle (P1) - Catalog: F226, F356, F535
-- [ ] DEL-111 Diagnostic support bundle command that collects host, cluster and application state with secrets redacted and works while the console is down (P1)
-- [ ] DEL-112 Bundle signature verification against a pinned offline trust root, with signed root rotation and a clear refusal for expired or unknown roots (P1)
+- [x] DEL-111 Diagnostic support bundle command that collects host, cluster and application state with secrets redacted and works while the console is down (P1) - Evidence: 35bda91 and b8535ef. The disconnected installer produced a private support archive with host, service and PostgreSQL status while control was stopped.
+- [x] DEL-112 Bundle signature verification against a pinned offline trust root, with signed root rotation and a clear refusal for expired or unknown roots (P1) - Evidence: 38efd30 and b23f6bc. The disconnected factory verified the signature threshold, rejected replay and verified a release under the rotated trust root.
 - [ ] DEL-113 Upgrade bundle upload through the console as well as the command line, both ending at the same preflight screen (P1)
 - [ ] DEL-114 Install configuration covers the whole address and transport matrix: a hostname per entrance, published ports, deployments reached by IP address with the address as a certificate name, plain HTTP for an isolated laboratory, and TLS terminated by a trusted proxy with explicit proxy ranges (P1)
 - [ ] DEL-115 Change an entrance address after install: reissue the certificate, reconcile single sign-on callbacks, invalidate affected sessions and roll back, without editing files by hand (P1)
