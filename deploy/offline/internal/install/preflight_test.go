@@ -141,27 +141,44 @@ func TestPreflightRequiresAnInstalledNVIDIADriverAndRuntime(t *testing.T) {
 // It needs an isolated Docker-in-Docker daemon, the existing egress recorder and
 // the production Compose images, all mounted by that runner.
 func TestPreflightIsolatedDocker(t *testing.T) {
-	testIsolatedDocker(t, false, false, false)
+	testIsolatedDocker(t, isolatedPreflight)
 }
 
 // TestSignedBundleIsolatedDocker uses the same real zero-egress runner with a
 // signed fixture manufactured from real Linux amd64 image archives.
 func TestSignedBundleIsolatedDocker(t *testing.T) {
-	testIsolatedDocker(t, true, false, false)
+	testIsolatedDocker(t, isolatedSigned)
 }
 
 // TestSignedUpgradeIsolatedDocker uses real signed releases and PostgreSQL.
 func TestSignedUpgradeIsolatedDocker(t *testing.T) {
-	testIsolatedDocker(t, true, true, false)
+	testIsolatedDocker(t, isolatedUpgrade)
 }
 
 // TestPITRIsolatedDocker runs the installer against real PostgreSQL and the egress recorder.
 func TestPITRIsolatedDocker(t *testing.T) {
-	testIsolatedDocker(t, false, false, true)
+	testIsolatedDocker(t, isolatedPITR)
 }
 
-func testIsolatedDocker(t *testing.T, signed, upgrade, pitr bool) {
+// TestEncryptedBackupIsolatedDocker proves encrypted backup and restore with no uplink.
+func TestEncryptedBackupIsolatedDocker(t *testing.T) {
+	testIsolatedDocker(t, isolatedEncryptedBackup)
+}
+
+type isolatedDockerScenario int
+
+const (
+	isolatedPreflight isolatedDockerScenario = iota
+	isolatedSigned
+	isolatedUpgrade
+	isolatedPITR
+	isolatedEncryptedBackup
+)
+
+func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	t.Helper()
+	signed, upgrade := scenario == isolatedSigned || scenario == isolatedUpgrade, scenario == isolatedUpgrade
+	pitr, encrypted := scenario == isolatedPITR, scenario == isolatedEncryptedBackup
 	installer := os.Getenv("OWNSOLID_E2E_INSTALLER")
 	logPath := os.Getenv("OWNSOLID_E2E_EGRESS_LOG")
 	if installer == "" || logPath == "" || os.Getenv("OWNSOLID_E2E_EGRESS_INTERFACE") == "" {
@@ -264,6 +281,8 @@ func testIsolatedDocker(t *testing.T, signed, upgrade, pitr bool) {
 		if err := os.Chmod(c.PITR.Directory, 0o700); err != nil {
 			t.Fatal(err)
 		}
+	}
+	if pitr || encrypted {
 		c.Resources.ControlMemory, c.Resources.PostgresMemory = "256m", "512m"
 		c.Resources.MetricsMemory, c.Resources.LogsMemory = "256m", "256m"
 		c.Resources.ControlCPUs, c.Resources.PostgresCPUs = "1", "1"
@@ -354,9 +373,9 @@ func testIsolatedDocker(t *testing.T, signed, upgrade, pitr bool) {
 	})
 	t.Run("installs and safely repeats with its own HTTPS port in use", func(t *testing.T) {
 		command(t, "preflight", "INSTALL_PREFLIGHT_PASSED", false)
-		if signed || pitr {
+		if signed || pitr || encrypted {
 			command(t, "apply", "INSTALL_COMPLETE", false)
-			if pitr {
+			if pitr || encrypted {
 				c.Images.ArchiveFile = ""
 			}
 		} else {
@@ -392,6 +411,12 @@ func testIsolatedDocker(t *testing.T, signed, upgrade, pitr bool) {
 	if pitr {
 		if !t.Failed() {
 			assertPITRIsolatedDocker(t, installer, config, run)
+		}
+		return
+	}
+	if encrypted {
+		if !t.Failed() {
+			assertEncryptedBackupIsolatedDocker(t, installer, config, run)
 		}
 		return
 	}

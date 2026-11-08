@@ -43,6 +43,67 @@ Not in a backup: the telemetry stores (`data/metrics`, `data/logs`; OBS-113), th
 past backups and restores, and uploads still in progress (`data/models/imports`). An import
 interrupted by a restore fails verification and is discarded from the Model library.
 
+## Encrypt an operator-run backup
+
+Generate an [age X25519 identity](https://github.com/FiloSottile/age/blob/v1.3.2/README.md)
+on an offline recovery station. Transfer only the public recipient to the
+backup host. Store the private identity on separately controlled recovery
+media and keep a verified spare. If the identity is lost, the archive
+cannot be decrypted. For a new key, generate another pair, use the new
+recipient for new backups, and retain the old identity until its last
+archive expires.
+
+```sh
+umask 077
+age-keygen -o /mnt/recovery/ownsolid-identity.txt
+age-keygen -y /mnt/recovery/ownsolid-identity.txt > /path/to/ownsolid-recipient.txt
+```
+
+On the backup host, install the recipient as a root-owned mode 0600 file.
+Make the archive directory root-owned mode 0700 and keep it outside
+`install_root`. Use absolute paths without symlinks and a filesystem
+that supports hard links. Back up to a new filename each time.
+
+```sh
+ownsolid-install backup --config install.yaml \
+  --output /srv/ownsolid-encrypted/20261109T080000Z.tar.age \
+  --recipient-file /etc/ownsolid-backup/recipient.txt
+```
+
+The command checks the PostgreSQL dump by restoring it to a scratch
+database, then publishes the complete encrypted archive with mode 0600.
+The repository receives ciphertext only. Allow space under `install_root`
+for one plaintext staging copy and in the repository for the ciphertext.
+A failed run can reuse an unpublished filename. If the archive already
+exists, retain it and select a new name for a new recovery point.
+
+For recovery, mount the protected identity outside both the archive
+directory and `install_root`. Use a root-owned regular file with mode
+0400 or 0600. Keep the archive directory at mode 0700 and the archive at
+mode 0400 or 0600.
+
+```sh
+ownsolid-install restore --config install.yaml \
+  --from /srv/ownsolid-encrypted/20261109T080000Z.tar.age \
+  --identity-file /mnt/recovery/ownsolid-identity.txt
+```
+
+Restore authenticates the entire archive and checks the manifest and file
+digests before changing the database. It then follows the same restore
+and recovery procedure below. The installer has no default key and needs
+no age executable. Keep the identity out of backups, configuration
+values, command arguments and environment variables. Only the file path
+is passed as an argument. Repository permissions protect archive
+provenance because anyone who has the public recipient can create
+ciphertext for it.
+
+A process killed without cleanup can leave plaintext under the private
+`<install_root>/.encrypted-backup-work/data` and an unpublished ciphertext
+file whose name starts with `.ownsolid-encrypted-partial-`. The next
+encrypted operation that reaches staging removes the old staging copy.
+Once no backup is running, an operator can remove the exact leftover
+partial file. Keep the install root on protected storage.
+
 ## Restore
 
 ```sh
@@ -137,13 +198,17 @@ docker compose --env-file <install_root>/compose.env -f <install_root>/compose.y
   for a large database.
 - A backup, restore or `apply` refuses to start while another one runs on the same installation
   (`INSTALL_BUSY`).
-- Scheduling, retention, encryption and point-in-time recovery are separate roadmap items
-  (REL-108 to REL-110).
+- Encryption is available for explicit logical backup and restore. The
+  scheduled backup, upgrade checkpoint and physical WAL formats are
+  independent. Protect the storage where those are kept.
 
 ## Codes
 
 | Code | Meaning |
 | --- | --- |
+| `INSTALL_ENCRYPTED_BACKUP_EXISTS` | A published archive already has that name. Keep it and choose a new output name. |
+| `INSTALL_ENCRYPTED_BACKUP_WRONG_IDENTITY` | Use the protected identity matching the archive's recipient. |
+| `INSTALL_ENCRYPTED_BACKUP_INVALID` | Restore from an intact ownsolid encrypted archive. |
 | `INSTALL_BACKUP_OUTPUT_INVALID` | `--output` is missing, relative, a symlink, or inside `install_root` |
 | `INSTALL_BACKUP_EXISTS` | A backup with this time already exists; run the command again |
 | `INSTALL_DATABASE_UNAVAILABLE` | PostgreSQL does not answer; run `ownsolid-install status` |
