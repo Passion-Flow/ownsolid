@@ -37,7 +37,9 @@ async function open(page: Page, path = '/models') {
 
 test('is reached from the navigation and lists what may be called', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('navigation').getByRole('link', { name: 'Models' }).click();
+  const navigation = page.getByRole('navigation');
+  await navigation.getByRole('button', { name: 'AI tools' }).click();
+  await navigation.getByRole('link', { name: 'Models' }).click();
   await expect(page.getByRole('heading', { name: 'Models', level: 1 })).toBeVisible();
   const row = page.getByRole('row', { name: /support-chat/ });
   await expect(row.getByText('Qwen3-0.6B')).toBeVisible();

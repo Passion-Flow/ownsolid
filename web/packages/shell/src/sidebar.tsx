@@ -62,10 +62,16 @@ function Item({
 }) {
   const { t } = useI18n();
   const label = t(item.label);
+  const reason = item.unavailableReason ? t(item.unavailableReason) : undefined;
   const content = (
     <>
       <item.icon aria-hidden className="shrink-0" />
-      <span className={rail ? 'sr-only' : 'truncate'}>{label}</span>
+      <span className={rail ? 'sr-only' : 'min-w-0'}>
+        <span className="block truncate">{label}</span>
+        {!item.to && reason ? (
+          <span className="block text-[11px] leading-tight text-text-3">{reason}</span>
+        ) : null}
+      </span>
     </>
   );
   const row = item.to ? (
@@ -80,15 +86,21 @@ function Item({
   ) : (
     <span
       aria-disabled
-      title={t('nav.notAvailable')}
-      className={cn(itemClasses, 'cursor-default opacity-50', rail && 'justify-center px-0')}
+      title={reason ?? t('nav.notAvailable')}
+      className={cn(
+        itemClasses,
+        'cursor-default',
+        reason ? 'text-text-3' : 'opacity-50',
+        reason && !rail && 'h-auto min-h-[34px] py-1',
+        rail && 'justify-center px-0',
+      )}
     >
       {content}
     </span>
   );
   return (
     <li className="group/item relative">
-      {rail ? <RailTip label={label}>{row}</RailTip> : row}
+      {rail ? <RailTip label={!item.to && reason ? reason : label}>{row}</RailTip> : row}
       {pin && item.to ? <PinButton label={label} {...pin} /> : null}
     </li>
   );

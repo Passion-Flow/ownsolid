@@ -19,6 +19,8 @@ export interface ProblemNoticeProps {
   onRetry?: (() => void) | undefined;
   /** The title's element: a heading when the notice is all the page shows. */
   titleAs?: 'p' | 'h1' | 'h2' | undefined;
+  /** A next step that depends on where the failure happened. */
+  detail?: string | undefined;
   className?: string | undefined;
 }
 
@@ -67,13 +69,13 @@ export function ProblemNotice(props: ProblemNoticeProps) {
   return <Explained key={`${code}:${requestId}:${String(retryAfterSeconds)}`} {...props} />;
 }
 
-function Explained({ problem, onRetry, titleAs, className }: ProblemNoticeProps) {
+function Explained({ problem, onRetry, titleAs, detail, className }: ProblemNoticeProps) {
   const { t, format, knows } = useI18n();
   const wait = useWait(problem.retryAfterSeconds);
   const base = `problem.${problem.code}`;
   const title = `${base}.title`;
-  const detail = `${base}.detail`;
-  const known = knows(title) && knows(detail);
+  const detailKey = `${base}.detail`;
+  const known = knows(title) && knows(detailKey);
   const reload = fixedByReload.has(problem.code);
   let action = null;
   if (reload) {
@@ -102,7 +104,9 @@ function Explained({ problem, onRetry, titleAs, className }: ProblemNoticeProps)
       title={known ? t(title) : t('problem.UNKNOWN.title')}
       actions={action ?? undefined}
     >
-      <p>{known ? t(detail) : t('problem.UNKNOWN.detail', { code: problem.code })}</p>
+      <p>
+        {detail ?? (known ? t(detailKey) : t('problem.UNKNOWN.detail', { code: problem.code }))}
+      </p>
       {wait > 0 ? (
         <p role="timer">{t('problem.retryAfter', { time: format.duration(wait) })}</p>
       ) : null}
