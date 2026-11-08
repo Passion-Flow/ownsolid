@@ -43,3 +43,9 @@ Logging out with either renamed value leaves both original sessions valid.
 This regression passed in a Docker fixture with no network interfaces beyond
 loopback. The earlier live browser checks are recorded in
 [capability status](../product/status.md).
+
+The lane's Linux amd64 install also served both built applications to
+Chromium with separate hostnames, a pinned TLS public key and no default
+route from control. The browser held both sessions in one context. Each
+host received only its own session cookie. Admin sign-out ended its session
+while the Portal session remained usable.

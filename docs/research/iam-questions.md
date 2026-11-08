@@ -22,3 +22,9 @@ was reproduced from an unmodified `origin/main` archive. The agent code
 belongs to a different lane. The IAM account and entrance evidence is
 recorded in [local accounts](local-accounts.md) and
 [browser entrance sessions](browser-entrance-sessions.md).
+
+With dedicated test ports, 372 Portal and 1,029 Console browser tests passed.
+Two Console navigation focus assertions failed in the full run and passed
+when rerun alone. The repository-wide gate has no clean run, so both IAM
+items remain open despite passing the targeted PostgreSQL and live browser
+flows.
