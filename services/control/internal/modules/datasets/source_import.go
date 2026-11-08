@@ -87,11 +87,14 @@ type SourceField struct {
 }
 
 // SourceImportReport describes the original source and the accepted rows.
+// OutputSHA256 identifies the exact normalized bytes once the destination
+// link is created. A directory sync error can still leave that link visible.
 type SourceImportReport struct {
 	TrainingFormat SourceTrainingFormat   `json:"training_format,omitempty"`
 	SourceBytes    int64                  `json:"source_bytes"`
 	SourceSHA256   string                 `json:"source_sha256"`
 	OutputBytes    int64                  `json:"output_bytes"`
+	OutputSHA256   string                 `json:"output_sha256,omitempty"`
 	Rows           int64                  `json:"rows"`
 	RejectedRows   int64                  `json:"rejected_rows"`
 	FieldCount     int                    `json:"field_count"`
@@ -226,10 +229,11 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 		limit = opts.ExpectedBytes
 	}
 	limited := &io.LimitedReader{R: boundedContextReader{ctx, body}, N: limit + 1}
-	hash := sha256.New()
-	source := io.TeeReader(limited, hash)
+	sourceHash := sha256.New()
+	outputHash := sha256.New()
+	source := io.TeeReader(limited, sourceHash)
 	state := sourceImportState{
-		ctx: ctx, limits: i.limits, opts: opts, output: bufio.NewWriter(output),
+		ctx: ctx, limits: i.limits, opts: opts, output: bufio.NewWriter(io.MultiWriter(output, outputHash)),
 		fields: make(map[string]*sourceFieldCount),
 	}
 	switch opts.Format {
@@ -257,7 +261,7 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 	if err != nil {
 		return report, err
 	}
-	report.SourceSHA256 = hex.EncodeToString(hash.Sum(nil))
+	report.SourceSHA256 = hex.EncodeToString(sourceHash.Sum(nil))
 	if opts.ExpectedBytes > 0 && report.SourceBytes != opts.ExpectedBytes ||
 		opts.ExpectedSHA256 != "" && report.SourceSHA256 != opts.ExpectedSHA256 {
 		return report, failure("DATASET_SOURCE_CHANGED")
@@ -285,6 +289,7 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 		}
 		return report, failure("DATASET_STORAGE_UNAVAILABLE")
 	}
+	report.OutputSHA256 = hex.EncodeToString(outputHash.Sum(nil))
 	if dir.Sync() != nil {
 		return report, failure("DATASET_IMPORT_COMMIT_UNCERTAIN")
 	}

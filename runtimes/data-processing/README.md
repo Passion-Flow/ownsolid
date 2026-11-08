@@ -31,14 +31,33 @@ Run from repository root with the configured external state/toolchain. The harne
 
 [import_parquet.py](import_parquet.py) is the private decoder for the Go
 [dataset intake boundary](../../services/control/internal/modules/datasets/source_import_parquet.go).
-Its optional `parquet` dependency installs PyArrow 26.0.1. Use a protected
-Python 3.12 installation and pre-stage the pinned wheel for the target
-architecture. Install the wheel from the offline wheel directory with
-`pip install --no-index --find-links <wheel-directory> pyarrow==26.0.1`.
-The process opens a private local file, checks its footer and row-group
+The worker opens a private local file, checks its footer and row-group
 budgets, and emits the schema and one row at a time over its private pipe.
 Linux also enforces the configured address-space limit.
 
-The normal training processor continues to run without PyArrow. The release
-image and user-facing upload lifecycle must explicitly enable this intake
-decoder before serving Parquet requests.
+For the CPython 3.12 Linux amd64 release target, use the
+[Parquet wheel lock](requirements/linux-amd64-parquet.lock). On a connected
+release builder, set `wheelhouse` to the staging directory and run from this
+directory:
+
+```sh
+python3.12 -I -m pip --isolated --disable-pip-version-check download \
+  --dest "$wheelhouse" --platform manylinux_2_28_x86_64 --implementation cp \
+  --python-version 3.12 --abi cp312 --only-binary=:all: --require-hashes \
+  -r requirements/linux-amd64-parquet.lock
+```
+
+In the disconnected Debian Bookworm build stage, install from the staged
+wheel directory before switching to the runtime user:
+
+```sh
+python3.12 -I -m pip --isolated --disable-pip-version-check install \
+  --no-index --find-links "$wheelhouse" --only-binary=:all: --require-hashes \
+  -r requirements/linux-amd64-parquet.lock
+```
+
+Keep the installed wheel's licence and notice files in the distribution.
+The optional `parquet` extra remains available for development on other
+targets. The normal training processor uses the standard library. The
+production image and user-facing upload lifecycle must enable the decoder
+before serving Parquet requests.
