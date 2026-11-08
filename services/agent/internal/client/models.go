@@ -18,10 +18,10 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 )
 
-// modelRangeAttempts bounds how often one range is requested while control answers 503
-// or refuses it with a retry hint.
+// rangeAttempts bounds how often one range of a model file or an artifact is requested
+// while control answers 503 or refuses it with a retry hint.
 // The task is not retried on top of this, so these attempts are the only retry layer.
-const modelRangeAttempts = 3
+const rangeAttempts = 3
 
 var modelTaskPath = regexp.MustCompile(`^/agent/v1/nodes/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/tasks/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/model-files$`)
 
@@ -85,17 +85,23 @@ func (c *Client) downloadModelFile(ctx context.Context, path, lease string, appr
 	return nil
 }
 
-// modelRangeWithRetry requests one range up to modelRangeAttempts times while control
+// modelRangeWithRetry requests one range up to rangeAttempts times while control
 // answers 503 or refuses it with a retry hint, waiting at least the hint between tries.
 func (c *Client) modelRangeWithRetry(ctx context.Context, path string, input wire.ModelFileRequest) ([]byte, error) {
+	return c.rangeWithRetry(ctx, path, input, input.Length)
+}
+
+// rangeWithRetry requests one bounded range, again while control answers 503 or refuses it
+// with a retry hint.
+func (c *Client) rangeWithRetry(ctx context.Context, path string, input any, length int64) ([]byte, error) {
 	var content []byte
 	var e error
 	var delay time.Duration
-	for attempt := 0; attempt < modelRangeAttempts; attempt++ {
+	for attempt := 0; attempt < rangeAttempts; attempt++ {
 		if attempt > 0 && !sleep(ctx, delay) {
 			break
 		}
-		content, e = c.modelRange(ctx, path, input)
+		content, e = c.byteRange(ctx, path, input, length)
 		if e == nil || ctx.Err() != nil {
 			break
 		}
@@ -112,7 +118,9 @@ func (c *Client) modelRangeWithRetry(ctx context.Context, path string, input wir
 	return content, e
 }
 
-func (c *Client) modelRange(ctx context.Context, path string, input wire.ModelFileRequest) ([]byte, error) {
+// byteRange posts a range request and returns exactly length bytes whose SHA-256 control
+// states in X-Artifact-SHA256.
+func (c *Client) byteRange(ctx context.Context, path string, input any, length int64) ([]byte, error) {
 	b, _ := json.Marshal(input)
 	r, e := http.NewRequestWithContext(ctx, "POST", c.target(path), bytes.NewReader(b))
 	if e != nil {
@@ -134,12 +142,12 @@ func (c *Client) modelRange(ctx context.Context, path string, input wire.ModelFi
 		p.Status, p.RetryAfter = response.StatusCode, retryAfter(response.Header)
 		return nil, &p
 	}
-	if response.ContentLength != input.Length || response.Header.Get("Content-Type") != "application/octet-stream" {
+	if response.ContentLength != length || response.Header.Get("Content-Type") != "application/octet-stream" {
 		return nil, errors.New("CONTROL_RESPONSE_INVALID")
 	}
-	b, e = io.ReadAll(io.LimitReader(response.Body, input.Length+1))
+	b, e = io.ReadAll(io.LimitReader(response.Body, length+1))
 	sum := sha256.Sum256(b)
-	if e != nil || int64(len(b)) != input.Length || response.Header.Get("X-Artifact-SHA256") != hex.EncodeToString(sum[:]) {
+	if e != nil || int64(len(b)) != length || response.Header.Get("X-Artifact-SHA256") != hex.EncodeToString(sum[:]) {
 		return nil, errors.New("CONTROL_RESPONSE_INVALID")
 	}
 	return b, nil

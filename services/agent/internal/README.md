@@ -14,6 +14,7 @@ These packages execute admitted node work under the profile selected by [cmd/age
 | [training](training/README.md) | Training attempt lifecycle, private inputs, events and output transfers |
 | [modelpreparations](modelpreparations/README.md) | Preparation attempt lifecycle and exact held-out/adapter/result binding |
 | [imageregistry](imageregistry/README.md) | Verified offline image import, loading and retained receipts |
+| [kubernetes](kubernetes/README.md) | RKE2 install, cluster join, join tokens and readiness of a Kubernetes node ([ADR 0051](../../../docs/decisions/0051-kubernetes-cells-with-rke2.md)) |
 
 Runtime composes owners and validates complete task leases before dispatch. Managers borrow the configured client/transport and persist exact attempt identities. Shared helpers must not weaken workload-specific image, profile, root, GPU or cleanup requirements. A manager may close only the transport/resources it owns.
 
