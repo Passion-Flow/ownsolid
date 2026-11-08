@@ -347,6 +347,7 @@ func (o *operation) adoptRestored(ctx context.Context) error {
 		{"runtime-access", o.runtimeAccess},
 		{"check-schema", o.checkSchema},
 		{"invalidate-restored-authority", o.invalidateRestored},
+		{"record-restore-adoption", o.recordRestoreAdoption},
 		{"control", o.control},
 		{"health", o.health},
 	})
