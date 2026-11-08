@@ -59,7 +59,7 @@ func TestTransportDispatcherProjectionAndRefusalBeforeSQL(t *testing.T) {
 					publicFields := []string{
 						"topology", "default_locale", "sso_callback_origins", "transport", "private_clusters", "monitoring",
 						"middleware", "task_events", "image_registry", "artifact_storage",
-						"workspaces", "ui", "request_timeout_milliseconds", "component_default_version",
+						"workspaces", "ui", "gateway_keys", "request_timeout_milliseconds", "component_default_version",
 						"component_max_scrapes", "component_default_config",
 					}
 					if w.Code != http.StatusOK || json.Unmarshal(w.Body.Bytes(), &response) != nil || len(response.Data) != len(publicFields) || w.Header().Get("Cache-Control") != "no-store" {
