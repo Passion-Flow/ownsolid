@@ -47,6 +47,43 @@ func TestScheduledBackupRetentionRequiresAnOwnedArchive(t *testing.T) {
 	}
 }
 
+func TestScheduledBackupRejectsOccupiedOrForeignRepositories(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		file string
+		code string
+	}{
+		{"occupied", "manual-backup", "INSTALL_BACKUP_SCHEDULE_DIRECTORY_OCCUPIED"},
+		{"foreign", scheduleOwnerFile, "INSTALL_BACKUP_SCHEDULE_OWNER_MISMATCH"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			directory := t.TempDir()
+			root, err := os.OpenRoot(directory)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer root.Close()
+			dir, err := root.Open(".")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer dir.Close()
+			const original = "another installation"
+			if err := root.WriteFile(test.file, []byte(original), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			err = claimScheduleDirectory(validConfig(t), root, dir, directory, []byte("current installation"))
+			if err == nil || !strings.Contains(err.Error(), test.code) {
+				t.Fatalf("expected %s: %v", test.code, err)
+			}
+			after, err := root.ReadFile(test.file)
+			if err != nil || string(after) != original {
+				t.Fatal("claim modified an unowned repository")
+			}
+		})
+	}
+}
+
 func TestScheduledBackupConfigurationIsValidated(t *testing.T) {
 	base := validYAML(t, filepath.Join(shortTempDir(t), "install"))
 	for _, test := range []string{

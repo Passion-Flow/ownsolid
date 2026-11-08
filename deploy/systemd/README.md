@@ -2,7 +2,7 @@
 
 On a Linux amd64 Compose installation, select a new empty directory owned by
 root with mode 0700. Put it outside the installation root on the site's
-backup filesystem. Add this policy to the installation configuration:
+backup filesystem. Add the policy below to the installation configuration.
 
 ```yaml
 backup_schedule:
@@ -10,7 +10,7 @@ backup_schedule:
   retain: 7
 ```
 
-Run a first backup as root and verify the reported path:
+Run a first backup as root and verify the reported path.
 
 ```sh
 ownsolid-install scheduled-backup --config /private/site.yaml
@@ -18,7 +18,7 @@ ownsolid-install scheduled-backup --config /private/site.yaml
 
 Install the two unit files into the host's systemd unit directory. Set the
 configuration path in the service's local drop-in with
-`systemctl edit ownsolid-backup.service`:
+`systemctl edit ownsolid-backup.service`.
 
 ```ini
 [Service]
