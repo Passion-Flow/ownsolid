@@ -3,17 +3,17 @@ package components_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/google/uuid"
-	"os"
-	"path/filepath"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/logstorefixture"
+	"github.com/google/uuid"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -235,6 +235,63 @@ func TestLogsSkipRecordsWhoseTaskDidNotSucceed(t *testing.T) {
 	}
 	if view, e := f.service.Logs(ctx, f.admin, f.node.NodeID); e != nil || view.Snapshot != nil {
 		t.Fatal("a record without a succeeded task was shown", e)
+	}
+}
+
+func TestLogsMatchTheSettledOperation(t *testing.T) {
+	f := maintenanceSetup(t)
+	ctx := context.Background()
+	s := f.service
+	configuration := wire.DefaultComponentConfig()
+	maintenanceInstalled(t, f, configuration)
+	request := func(action string) nodes.Task {
+		t.Helper()
+		task, err := s.Request(ctx, f.admin, f.node.NodeID, action, uuid.NewString(), "Synthetic snapshot operation", uuid.NewString())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return task
+	}
+
+	observation := maintenanceObservation("1.12.0", &configuration)
+	restart := request("restart")
+	completeMaintenance(t, f, restart, observation, nil)
+	logs := request("logs")
+	now := time.Now().UTC()
+	snapshot := wire.ComponentLogs{
+		Source: "systemd_journal", Available: true, ObservedAt: now, Since: now.Add(-time.Minute),
+		Entries: []wire.ComponentLogEntry{{Timestamp: now, Priority: 6, Message: "verified snapshot"}},
+	}
+	completeMaintenance(t, f, logs, observation, &snapshot)
+	view, err := s.Logs(ctx, f.admin, f.node.NodeID)
+	if err != nil || view.ReceivedAt == nil {
+		t.Fatalf("missing committed snapshot: %v", err)
+	}
+	scope := telemetrystore.Scope{NodeID: f.node.NodeID, Component: wire.NodeExporter}
+	if err := s.Nodes.DB.QueryRow(ctx, "SELECT tenant_id::text,workspace_id::text FROM managed_nodes WHERE id=$1", f.node.NodeID).Scan(&scope.TenantID, &scope.WorkspaceID); err != nil {
+		t.Fatal(err)
+	}
+	store := s.LogStore.(*logstorefixture.Memory)
+	snapshot.Entries[0].Message = "unverified snapshot"
+	body, err := json.Marshal(snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	store.Enqueue(telemetrystore.Record{Scope: scope, Time: view.ReceivedAt.Add(time.Second), TaskID: restart.ID, Body: body})
+	store.Enqueue(telemetrystore.Record{Scope: scope, Time: view.ReceivedAt.Add(2 * time.Second), TaskID: logs.ID, Removed: true})
+	view, err = s.Logs(ctx, f.admin, f.node.NodeID)
+	if err != nil || view.TaskID == nil || *view.TaskID != logs.ID ||
+		view.Snapshot == nil || view.Snapshot.Entries[0].Message != "verified snapshot" {
+		t.Fatalf("unrelated task or forged tombstone displaced the snapshot: %v", err)
+	}
+
+	remove := request("remove")
+	absent := wire.ComponentObservation{Component: wire.NodeExporter, Version: "1.12.0", State: "not_installed", ObservedAt: time.Now().UTC()}
+	completeMaintenance(t, f, remove, absent, nil)
+	store.Enqueue(telemetrystore.Record{Scope: scope, Time: time.Now().Add(3 * time.Second), TaskID: remove.ID, Body: body})
+	view, err = s.Logs(ctx, f.admin, f.node.NodeID)
+	if err != nil || view.Snapshot != nil {
+		t.Fatalf("forged snapshot displaced the verified removal: %v", err)
 	}
 }
 
