@@ -89,3 +89,13 @@ Reconstruct with the retained independently verified baseline. Reject trying
 to reconstruct from local Docker tags or a writable staging cache. If the
 baseline or any payload is wrong, the assembled release must fail before the
 existing upgrade procedure can stop a service.
+
+## DEL-112 root policy
+
+Use a versioned public root file with distinct thresholds for its current and
+successor policy. The rotation signatures cover the exact successor bytes in
+a root-specific signature domain. A root can delegate release signing without
+giving the release signer authority to replace the root. A shared unversioned
+key list cannot express expiry or detect skipped versions, so retain it only
+as a compatibility input and use the versioned file for rotation. The scope is
+local trust rotation for the signed delivery path.

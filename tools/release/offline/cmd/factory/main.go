@@ -21,6 +21,9 @@ func run(args []string) error {
 	if len(args) < 1 {
 		return errors.New("RELEASE_COMMAND_REQUIRED")
 	}
+	if args[0] == "root-signature" || args[0] == "rotate-root" {
+		return runRoot(args[0], args[1:])
+	}
 	flags := flag.NewFlagSet("offline-factory", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	config := flags.String("config", "", "Protected explicit JSON configuration")

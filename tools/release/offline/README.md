@@ -197,3 +197,34 @@ The protected config selects the mounted workspace, public trust and an
 unused `output_file`. The command reuses the target signature. It writes only
 changed or new payloads. Its reported archive digest refers to the transfer
 file and its asset count counts transferred payloads.
+
+## Versioned release trust
+
+The current commands accept a private public-trust JSON file with
+`format_version: 2`, `version`, `expires` as an RFC 3339 timestamp,
+`root_threshold`, `root_keys` and `release_keys`. Each key map is keyed by
+the SHA-256 of the raw Ed25519 public key and stores that key in standard
+base64. Root keys and release signing keys are distinct. Provision the
+initial trust file through the independent release-trust channel.
+
+On each offline root signing host, sign the same successor file:
+
+```sh
+factory root-signature --candidate /private/root-2.json --key-file /private/root-signer.key
+```
+
+Collect the detached signature objects into one JSON array per successor.
+Bring the protected files into the isolated installation and apply the
+rotation to the existing pinned file:
+
+```sh
+factory rotate-root --trust-file /private/root.json \
+  --candidate /private/root-2.json --signatures /private/root-2-signatures.json
+```
+
+For more than one step, repeat the `--candidate` and `--signatures` options
+in version order. Every transition needs both root thresholds. The tool
+publishes only the final, unexpired root. Bundle verification refuses an
+expired active root and a signer that is absent from its delegated keys.
+The host clock must be correct. Legacy public key maps remain available for
+existing unversioned trust provisioning.
