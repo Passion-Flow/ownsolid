@@ -7,12 +7,11 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"testing"
 
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 )
 
 func tensorFixture(t *testing.T, mutation string) (*os.File, training.BaseShape, wire.Configuration) {
@@ -20,27 +19,41 @@ func tensorFixture(t *testing.T, mutation string) (*os.File, training.BaseShape,
 	shape := training.BaseShape{ModelType: "qwen3", HiddenSize: 16, Layers: 1, AttentionHeads: 2, KeyValueHeads: 1, HeadDimension: 8}
 	configuration := wire.DefaultConfiguration()
 	configuration.Rank = 4
+	path := filepath.Join(t.TempDir(), "synthetic.safetensors")
+	if e := os.WriteFile(path, syntheticAdapterTensors(t, shape, configuration, mutation), 0600); e != nil {
+		t.Fatal(e)
+	}
+	file, e := os.Open(path)
+	if e != nil {
+		t.Fatal(e)
+	}
+	t.Cleanup(func() { file.Close() })
+	return file, shape, configuration
+}
+
+func syntheticAdapterTensors(t *testing.T, shape training.BaseShape, c wire.Configuration, mutation string) []byte {
+	t.Helper()
 	header := map[string]any{"__metadata__": map[string]string{"format": "pt"}}
 	var names []string
-	for _, module := range []string{"q_proj", "v_proj"} {
-		for _, matrix := range []string{"A", "B"} {
-			names = append(names, "base_model.model.model.layers.0.self_attn."+module+".lora_"+matrix+".weight")
-		}
-	}
-	sort.Strings(names)
-	position := int64(0)
-	for _, name := range names {
-		dimensions := []int64{4, 16}
-		if name[len(name)-8:] != "A.weight" {
+	var position int64
+	for layer := int64(0); layer < shape.Layers; layer++ {
+		for _, module := range []string{"q_proj", "v_proj"} {
 			heads := shape.AttentionHeads
-			if name == "base_model.model.model.layers.0.self_attn.v_proj.lora_B.weight" {
+			if module == "v_proj" {
 				heads = shape.KeyValueHeads
 			}
-			dimensions = []int64{heads * 8, 4}
+			for _, matrix := range []string{"A", "B"} {
+				name := "base_model.model.model.layers." + strconv.FormatInt(layer, 10) + ".self_attn." + module + ".lora_" + matrix + ".weight"
+				dimensions := []int64{c.Rank, shape.HiddenSize}
+				if matrix == "B" {
+					dimensions = []int64{heads * shape.HeadDimension, c.Rank}
+				}
+				size := dimensions[0] * dimensions[1] * 4
+				header[name] = map[string]any{"dtype": "F32", "shape": dimensions, "data_offsets": []int64{position, position + size}}
+				names = append(names, name)
+				position += size
+			}
 		}
-		bytes := dimensions[0] * dimensions[1] * 4
-		header[name] = map[string]any{"dtype": "F32", "shape": dimensions, "data_offsets": []int64{position, position + bytes}}
-		position += bytes
 	}
 	data := make([]byte, position)
 	switch mutation {
@@ -63,7 +76,10 @@ func tensorFixture(t *testing.T, mutation string) (*os.File, training.BaseShape,
 	case "trailing_payload":
 		data = append(data, 0, 0, 0, 0)
 	}
-	raw, _ := json.Marshal(header)
+	raw, e := json.Marshal(header)
+	if e != nil {
+		t.Fatal(e)
+	}
 	if mutation == "duplicate_key" {
 		raw = append([]byte(`{"__metadata__":{"format":"pt"},`), raw[1:]...)
 	}
@@ -72,17 +88,7 @@ func tensorFixture(t *testing.T, mutation string) (*os.File, training.BaseShape,
 	if mutation == "oversized_header" {
 		binary.LittleEndian.PutUint64(prefix, 1<<30)
 	}
-	path := filepath.Join(t.TempDir(), "synthetic.safetensors")
-	file, e := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
-	if e != nil {
-		t.Fatal(e)
-	}
-	t.Cleanup(func() { file.Close() })
-	file.Write(prefix)
-	file.Write(raw)
-	file.Write(data)
-	file.Sync()
-	return file, shape, configuration
+	return append(append(prefix, raw...), data...)
 }
 func TestTrainingF32AdapterTensorEnvelopeAndFiniteValues(t *testing.T) {
 	file, shape, configuration := tensorFixture(t, "")

@@ -6,13 +6,13 @@ import (
 	"errors"
 
 	"database/sql"
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 const finalizationAsset = ".finalize"
@@ -107,7 +107,13 @@ func (s *Service) FinishUpload(ctx context.Context, node, credential, task, toke
 	if e != nil {
 		return out, e
 	}
-	defer s.clearUploadTicket(ctx, node, credential, task, token, id, ticket)
+	// A confirmed acceptance clears the exact ticket in its own transaction.
+	committed := false
+	defer func() {
+		if !committed {
+			s.clearUploadTicket(ctx, node, credential, task, token, id, ticket)
+		}
+	}()
 	if e = s.verifyMachineInputFiles(ctx, node, credential, task, token); e != nil {
 		return out, e
 	}
@@ -120,7 +126,7 @@ func (s *Service) FinishUpload(ctx context.Context, node, credential, task, toke
 	if e = s.Store.VerifyPublishedOutput(verification, descriptor, shape, configuration, agentwire.ApprovedModel().Repository); e != nil {
 		return out, e
 	}
-	e = s.withMachineLease(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, j Job, command wire.Command) error {
+	e = s.withMachineLeaseActor(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, actor identity.Auth, w workspaces.Workspace, j Job, command wire.Command) error {
 		u, d, e := s.lockedUpload(ctx, tx, w, j, command, id)
 		if e != nil {
 			return e
@@ -176,16 +182,18 @@ func (s *Service) FinishUpload(ctx context.Context, node, credential, task, toke
 			if e != nil {
 				return e
 			}
-			var a identity.Auth
-			if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT requested_by::text,requested_audience FROM training_attempts WHERE id=$1", "SELECT requested_by,requested_audience FROM training_attempts WHERE id=?", []any{command.AttemptID}, []any{command.AttemptID})).Scan(&a.Me.User.ID, &a.Me.Audience); e != nil {
-				return e
-			}
-			if e = transferAuditWithin(ctx, tx, a, w, "training."+d.Kind+"_accepted", j.ID, "Independently verified immutable training output", uuid.NewString()); e != nil {
+			if e = transferAuditWithin(ctx, tx, actor, w, "training."+d.Kind+"_accepted", j.ID, "Independently verified immutable training output", uuid.NewString()); e != nil {
 				return e
 			}
 		}
-		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_uploads SET state='accepted',active_chunk_id=NULL,active_asset=NULL,active_offset=NULL,active_expires_at=NULL,updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_uploads SET state='accepted',active_chunk_id=NULL,active_asset=NULL,active_offset=NULL,active_expires_at=NULL,updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{id}, []any{id})); e != nil {
+		cleared, e := tx.Exec(ctx, transferStatement(tx,
+			"UPDATE training_uploads SET state='accepted',active_chunk_id=NULL,active_asset=NULL,active_offset=NULL,active_expires_at=NULL,updated_at=clock_timestamp() WHERE id=$1 AND active_chunk_id=$2",
+			"UPDATE training_uploads SET state='accepted',active_chunk_id=NULL,active_asset=NULL,active_offset=NULL,active_expires_at=NULL,updated_at=UTC_TIMESTAMP(6) WHERE id=? AND active_chunk_id=?", []any{id, ticket}, []any{id, ticket}))
+		if e != nil {
 			return e
+		}
+		if cleared != 1 {
+			return fail("TRAINING_UPLOAD_TICKET_STALE")
 		}
 		out = OutputAcceptance{UploadID: id, ReferenceID: id, Kind: d.Kind, GlobalStep: d.GlobalStep, Duplicate: duplicate}
 		return nil
@@ -193,5 +201,6 @@ func (s *Service) FinishUpload(ctx context.Context, node, credential, task, toke
 	if e != nil {
 		return OutputAcceptance{}, e
 	}
+	committed = true
 	return out, nil
 }
