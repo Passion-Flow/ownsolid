@@ -114,7 +114,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 6 | GPU operations | [gpu-operations.md](gpu-operations.md) | - | 0/9 | 0/8 | - | 0/2 |
 | 7 | Scheduling and quota | [scheduling-and-quota.md](scheduling-and-quota.md) | - | 0/11 | 0/7 | 0/2 | 0/1 |
 | 8 | In-product operations | [in-product-operations.md](in-product-operations.md) | - | 0/14 | 0/6 | - | 0/2 |
-| 9 | Models and registry | [models-and-registry.md](models-and-registry.md) | - | 1/16 | 0/6 | - | 0/3 |
+| 9 | Models and registry | [models-and-registry.md](models-and-registry.md) | - | 1/17 | 0/6 | - | 0/3 |
 | 10 | Serving | [serving.md](serving.md) | - | 1/14 | 0/7 | 0/1 | 0/4 |
 | 11 | Gateway | [gateway.md](gateway.md) | - | 3/22 | 0/7 | 0/2 | 0/2 |
 | 12 | Training and fine-tuning | [training-and-finetuning.md](training-and-finetuning.md) | - | 0/11 | 0/5 | - | 0/4 |
