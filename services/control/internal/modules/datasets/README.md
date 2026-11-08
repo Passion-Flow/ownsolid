@@ -134,3 +134,9 @@ with the pinned Parquet dependency, resolve macOS temporary paths, and run
 `go test ./services/control/internal/modules/datasets/... -count=1 -v` from
 the workspace root. See [the source import research](../../../../../docs/research/dataset-import.md)
 for supported encodings and recovery rules.
+
+An optional training format validates each accepted row against a text,
+messages, instruction or preference schema before writing the artifact. The
+report retains the selected schema and adds a field path to applicable issues.
+See [training format research](../../../../../docs/research/dataset-training-formats.md)
+for the accepted shapes and the separate training handoff requirements.
