@@ -63,9 +63,9 @@ In this order. Do not skip any of them.
 - **Never edit `docs/product/roadmap/index.md`**, and **never run
   `python3 tools/dev/roadmap_progress.py`.** That table has many writers and the
   coordinator updates it. You tick only your own line, in your own module's file.
-- **Never choose a database migration number yourself.** Stop and ask. Parallel
-  lanes picking their own numbers will collide, and a wrong migration order is
-  painful to find later.
+- **Never take a migration number outside your lane's reserved block** (section 8),
+  and **never edit a migration that already exists**. One that has run on a
+  customer's installation cannot be changed; changing it breaks their upgrade.
 
 ## 5. The five steps, every item
 
@@ -165,3 +165,32 @@ After **each** item, in Chinese. Do not save them up.
   wrong
 
 A report that says the item is done, and nothing else, is not a report.
+
+## 8. Database migration numbers
+
+`services/control/migrations/postgresql/` is numbered in sequence, and two lanes
+choosing the next free number will collide. Each lane therefore owns a block. Take
+the lowest free number inside your block, in order, and never ask: the blocks exist
+so that nobody has to coordinate.
+
+| Lane | Block |
+| --- | --- |
+| A fleet core, B web console | from `000053`, in sequence |
+| D command line | none needed |
+| E audit | `000100`–`000119` |
+| F datasets | `000120`–`000139` |
+| G gateway | `000140`–`000159` |
+| H offline delivery | none needed |
+| M models and serving | `000160`–`000179` |
+
+Write both files, matching the existing names:
+
+```
+000100_audit_hash_chain.up.sql
+000100_audit_hash_chain.down.sql
+```
+
+Gaps between blocks are fine. The runner sorts by number and applies in order; it
+does not require the numbers to be contiguous.
+
+If your block runs out, ask for another. Do not spill into the next lane's block.
