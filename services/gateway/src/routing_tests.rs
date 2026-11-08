@@ -20,6 +20,8 @@ use std::time::Duration;
 use tokio::time::Instant;
 use uuid::Uuid;
 
+mod throughput;
+
 const QUOTA_TEST_NOW: i64 = 1_794_116_800;
 
 #[derive(Clone)]
@@ -39,6 +41,7 @@ struct Synthetic {
     generations: Arc<AtomicUsize>,
     dropped_generations: Arc<AtomicUsize>,
     admissions: Arc<Mutex<HashSet<Uuid>>>,
+    backend_request_ids: Arc<Mutex<Vec<Uuid>>>,
     outcomes: Arc<Mutex<Vec<Outcome>>>,
 }
 impl Synthetic {
@@ -156,9 +159,10 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
         .into_response();
     }
     let tokenize = request.uri().path() == "/tokenize";
-    if !tokenize {
-        let id = Uuid::parse_str(request.headers()["x-request-id"].to_str().unwrap()).unwrap();
+    if !tokenize && let Some(value) = request.headers().get("x-request-id") {
+        let id = Uuid::parse_str(value.to_str().unwrap()).unwrap();
         assert!(state.admissions.lock().unwrap().contains(&id));
+        state.backend_request_ids.lock().unwrap().push(id);
     }
     let body: Value = serde_json::from_slice(
         &axum::body::to_bytes(request.into_body(), 65_536)
@@ -359,6 +363,7 @@ impl Fixture {
             generations: Arc::default(),
             dropped_generations: Arc::default(),
             admissions: Arc::default(),
+            backend_request_ids: Arc::default(),
             outcomes: Arc::default(),
         };
         let control_listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -559,7 +564,7 @@ async fn real_gateway_tls_models_chat_sse_and_durable_metadata_receipts() {
     assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
     let id = Uuid::parse_str(response.headers()["x-request-id"].to_str().unwrap()).unwrap();
     assert_ne!(id, caller_id);
-    assert!(fixture.state.admissions.lock().unwrap().contains(&id));
+    assert_eq!(*fixture.state.backend_request_ids.lock().unwrap(), [id]);
     let value: Value = response.json().await.unwrap();
     assert_eq!(value["model"], "public-alias");
     assert_eq!(value["usage"]["total_tokens"], 9);
@@ -1336,14 +1341,14 @@ async fn actual_binary_fence_refuses_suspended_owner_blocks_restart_and_delivers
     fs::write(output,serde_json::to_vec_pretty(&json!({"status":"passed_real_native_operator_fence","scope":"Actual private filesystem/owned suspended process/CLI/TLS; synthetic control/model replies, no hardware attestation or NVIDIA qualification.","assertions":["SIGSTOP retains exclusive state lock; fence refuses","SIGTERM permits scope-bound durable fencing","fenced serve refuses before inference","receipt overwrite refused","delivery-only retries existing metadata after control repair","metadata acknowledgment leaves permanent fence intact"],"generations":1})).unwrap()).unwrap();
 }
 
-struct QuotaGateway {
+struct TestGateway {
     app: Arc<Application>,
     origin: String,
     handle: axum_server::Handle<SocketAddr>,
     server: tokio::task::JoinHandle<()>,
 }
 
-impl QuotaGateway {
+impl TestGateway {
     async fn start(
         mut configuration: Configuration,
         root: PathBuf,
@@ -1397,7 +1402,7 @@ impl QuotaGateway {
     }
 }
 
-impl Drop for QuotaGateway {
+impl Drop for TestGateway {
     fn drop(&mut self) {
         self.app.shutdown();
         self.handle.shutdown();
@@ -1406,8 +1411,8 @@ impl Drop for QuotaGateway {
 }
 
 struct QuotaFleet {
-    authority: QuotaGateway,
-    peers: [QuotaGateway; 2],
+    authority: TestGateway,
+    peers: [TestGateway; 2],
     fixtures: [Fixture; 2],
 }
 
@@ -1457,7 +1462,7 @@ impl QuotaFleet {
         );
         config.listen_address.set_ip("127.0.0.1".parse().unwrap());
         let authority =
-            QuotaGateway::start(config, root.join("authority"), &fixtures[0].client).await;
+            TestGateway::start(config, root.join("authority"), &fixtures[0].client).await;
         let mut peers = Vec::new();
         for (index, fixture) in fixtures.iter().enumerate() {
             let mut config = fixture.app().configuration.clone();
@@ -1469,9 +1474,8 @@ impl QuotaFleet {
                 }))
                 .unwrap(),
             );
-            peers.push(
-                QuotaGateway::start(config, fixture.root.join("peer"), &fixture.client).await,
-            );
+            peers
+                .push(TestGateway::start(config, fixture.root.join("peer"), &fixture.client).await);
         }
         Self {
             authority,
