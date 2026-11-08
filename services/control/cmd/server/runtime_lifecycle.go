@@ -416,6 +416,9 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 			h.Nodes.Service.RestoreShed(startup)
 			g.Loop("NODE_AGENT_SHED", h.Nodes.Service.RunAgentShed)
 			g.Loop("NODE_TASK_WAKES", h.Nodes.Service.RunWakes)
+			if h.CellClusters != nil && h.CellClusters.Service != nil {
+				g.Loop("CELL_CLUSTER_RECONCILIATION", h.CellClusters.Service.Run)
+			}
 		}
 		if c.Models.ArtifactRoot != "" {
 			g.Loop("MODEL_IMPORT", h.Models.Service.Run)
