@@ -147,8 +147,9 @@ new signed backups.
 If the writer fails to start during a cold restore, the original
 unbootstrapped database is restored and the writer stays stopped. Fix the
 reported issue and rerun `restore-bundle` with the same inputs. If a restore
-record remains, follow the [interrupted restore procedure](../../docs/operations/backup-and-restore.md#recover-an-interrupted-restore). After recovery,
-trust the configured site CA, confirm both entrances, sign in with your
+record remains, follow the
+[interrupted restore procedure](../../docs/operations/backup-and-restore.md#recover-an-interrupted-restore).
+After recovery, trust the configured site CA, confirm both entrances, sign in with your
 current administrator credentials and verify the data you recovered.
 
 ## Verify a cold restore of a signed release

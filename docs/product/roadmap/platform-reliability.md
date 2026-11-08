@@ -21,6 +21,7 @@ recovery and support tooling.
 - [ ] REL-102 Published reliability targets for the reference topology (availability, RPO, RTO) (P1) - Catalog: F528
 - [ ] REL-103 Coordinated backup of database, objects, models and keys with a consistency point (P1) - Catalog: F355, F507
 - [ ] REL-104 Restore into an empty air-gapped environment, tested every release (P1) - Catalog: F507
+  - The temporary-signed Linux amd64 Compose drill passed for legacy and encrypted backups, rollback, both entrances and restored model files. The every-release production gate remains open. See the [acceptance evidence](../../research/signed-release-recovery.md#linux-amd64-acceptance).
 - [ ] REL-105 Diagnostic bundle: redacted logs, configuration and state for support (P1) - Catalog: F647
 - [ ] REL-106 Long-running tasks idempotent, retryable and resumable after any component restart (P1) - Catalog: F530
 - [ ] REL-107 Self-monitoring of control-plane components with alerts (P1)
