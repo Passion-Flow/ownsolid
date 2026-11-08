@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestSupportBundleReportsStoppedControlWithoutCollectingSecrets(t *testing.T) {
@@ -19,6 +20,16 @@ func TestSupportBundleReportsStoppedControlWithoutCollectingSecrets(t *testing.T
 	t.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
 	path := filepath.Join(shortTempDir(t), "support.tar.gz")
 	const sentinel = "sensitive-fixture-value"
+	c.Administrator.DisplayName = sentinel
+	c.SMTP.PasswordFile = filepath.Join(c.InstallRoot, sentinel)
+	c.ControlSettings = map[string]any{"custom": sentinel}
+	c.Preflight = &PreflightPolicy{DNSServer: sentinel}
+	writeSupportLog(t, c, `{"time":"2026-11-09T10:00:00+08:00","action":"backup","outcome":"failed","detail":"`+sentinel+`"}
+{"time":"2026-11-09T10:01:00+08:00","action":"`+sentinel+`","outcome":"failed"}
+{"time":"2026-11-09T10:02:00+08:00","action":"restore","outcome":"complete"}
+{"time":"2026-11-09T10:03:00+08:00","action":"backup","outcome":"`+sentinel+`"}
+{"time":"`+sentinel+`","action":"backup","outcome":"failed"}
+{"time":"2026-11-09T10:04:00+08:00","action":"backup","outcome":"complete"}`)
 	runner := &fakeRunner{answer: func(command string) (string, error) {
 		switch {
 		case strings.Contains(command, " ps --all "):
@@ -47,6 +58,54 @@ func TestSupportBundleReportsStoppedControlWithoutCollectingSecrets(t *testing.T
 		report.Services[0].State != "exited" || report.Services[1].Health != "healthy" ||
 		report.Services[2].State != "unknown" || report.Services[3].State != "not_found" {
 		t.Fatalf("unexpected report: %+v", report)
+	}
+	if report.Configuration.TLSSource != c.TLS.Source || !report.Configuration.PreflightEnabled ||
+		report.Configuration.PostgresMaxConnections != c.Resources.PostgresMaxConnections ||
+		report.Configuration.Resources["control"].Memory != c.Resources.ControlMemory {
+		t.Fatalf("unexpected support configuration: %+v", report.Configuration)
+	}
+	if len(report.Operations) != 2 || report.Operations[0].Action != "backup" ||
+		report.Operations[0].Outcome != "failed" || report.Operations[0].Time.Format(time.RFC3339) != "2026-11-09T02:00:00Z" ||
+		report.Operations[1].Action != "restore" || report.Operations[1].Outcome != "complete" {
+		t.Fatalf("unexpected operations: %+v", report.Operations)
+	}
+}
+
+func writeSupportLog(t *testing.T, c Config, records string) {
+	t.Helper()
+	if err := os.MkdirAll(c.Layout().Operator, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(c.Layout().Operator, operationLogName), []byte(records), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSupportOperationLogIsBounded(t *testing.T) {
+	c := validConfig(t)
+	const record = `{"time":"2026-11-09T02:00:00Z","action":"backup","outcome":"complete"}` + "\n"
+	writeSupportLog(t, c, strings.Repeat(record, supportOperationLogBytes/len(record)+1))
+	operations, err := collectSupportOperations(c)
+	if err != nil || len(operations) != supportOperationLimit {
+		t.Fatalf("recent operations count = %d: %v", len(operations), err)
+	}
+}
+
+func TestSupportRefusesAnOperationLogSymlink(t *testing.T) {
+	c := validConfig(t)
+	if err := os.MkdirAll(c.Layout().Operator, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(c.Layout().Operator, "external.log")
+	if err := os.WriteFile(target, []byte(`{"time":"2026-11-09T02:00:00Z","action":"backup","outcome":"complete"}`+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(target, filepath.Join(c.Layout().Operator, operationLogName)); err != nil {
+		t.Fatal(err)
+	}
+	operations, err := collectSupportOperations(c)
+	if err == nil || len(operations) != 0 {
+		t.Fatalf("a symlink was read as an operation log: %+v, %v", operations, err)
 	}
 }
 
