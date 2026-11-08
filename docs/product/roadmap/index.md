@@ -111,7 +111,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 3/19 | 0/5 | 0/1 | 0/1 |
 | 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 26/30 | 0/4 | - | 0/2 |
 | 5 | Fleet and infrastructure | [fleet-and-infrastructure.md](fleet-and-infrastructure.md) | - | 2/15 | 0/11 | 0/2 | - |
-| 6 | GPU operations | [gpu-operations.md](gpu-operations.md) | - | 0/9 | 0/8 | - | 0/2 |
+| 6 | GPU operations | [gpu-operations.md](gpu-operations.md) | - | 0/9 | 0/9 | - | 0/2 |
 | 7 | Scheduling and quota | [scheduling-and-quota.md](scheduling-and-quota.md) | - | 0/11 | 0/7 | 0/2 | 0/1 |
 | 8 | In-product operations | [in-product-operations.md](in-product-operations.md) | - | 0/14 | 0/6 | - | 0/2 |
 | 9 | Models and registry | [models-and-registry.md](models-and-registry.md) | - | 1/16 | 0/6 | - | 0/3 |
