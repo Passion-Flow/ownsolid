@@ -59,7 +59,35 @@ func readPreparedDirectory(ctx context.Context, directory string, before os.File
 			err = fail("RELEASE_PREPARED_DIRECTORY_READ_FAILED")
 		}
 	}()
-	folder, e := root.Open(".")
+	seen := map[string]os.FileMode{}
+	if err := scanPreparedEntries(ctx, root, ".", func(entry os.DirEntry) error {
+		if _, duplicate := seen[entry.Name()]; duplicate {
+			return fail("RELEASE_PREPARED_DIRECTORY_CHANGED")
+		}
+		seen[entry.Name()] = entry.Type()
+		return visit(root, entry)
+	}); err != nil {
+		return err
+	}
+	// A directory can gain an entry in the same filesystem clock tick.
+	if err := scanPreparedEntries(ctx, root, ".", func(entry os.DirEntry) error {
+		mode, present := seen[entry.Name()]
+		if !present || mode != entry.Type() {
+			return fail("RELEASE_PREPARED_DIRECTORY_CHANGED")
+		}
+		delete(seen, entry.Name())
+		return nil
+	}); err != nil {
+		return err
+	}
+	if len(seen) != 0 || !preparedDirectoryUnchanged(root, before) {
+		return fail("RELEASE_PREPARED_DIRECTORY_CHANGED")
+	}
+	return nil
+}
+
+func scanPreparedEntries(ctx context.Context, root *os.Root, name string, visit func(os.DirEntry) error) (err error) {
+	folder, e := root.OpenFile(name, os.O_RDONLY|syscall.O_DIRECTORY|syscall.O_NOFOLLOW, 0)
 	if e != nil {
 		return fail("RELEASE_PREPARED_DIRECTORY_UNAVAILABLE")
 	}
@@ -80,7 +108,7 @@ func readPreparedDirectory(ctx context.Context, directory string, before os.File
 			if ctx.Err() != nil {
 				return fail("RELEASE_PREPARED_VERIFICATION_INTERRUPTED")
 			}
-			if e := visit(root, entry); e != nil {
+			if e := visit(entry); e != nil {
 				return e
 			}
 		}
@@ -90,9 +118,6 @@ func readPreparedDirectory(ctx context.Context, directory string, before os.File
 	}
 	if ctx.Err() != nil {
 		return fail("RELEASE_PREPARED_VERIFICATION_INTERRUPTED")
-	}
-	if !preparedDirectoryUnchanged(root, before) {
-		return fail("RELEASE_PREPARED_DIRECTORY_CHANGED")
 	}
 	return nil
 }
@@ -134,6 +159,7 @@ func verifyPreparedSnapshot(ctx context.Context, root *os.Root, files, directori
 	if !preparedDirectoryUnchanged(root, directories["."]) {
 		return fail("RELEASE_PREPARED_DIRECTORY_CHANGED")
 	}
+	entries := make(map[string]struct{}, len(files)+len(directories)-1)
 	for name, before := range directories {
 		if ctx.Err() != nil {
 			return fail("RELEASE_PREPARED_VERIFICATION_INTERRUPTED")
@@ -142,6 +168,22 @@ func verifyPreparedSnapshot(ctx context.Context, root *os.Root, files, directori
 		if e != nil || !samePreparedDirectory(before, current) {
 			return fail("RELEASE_PREPARED_DIRECTORY_CHANGED")
 		}
+		if err := scanPreparedEntries(ctx, root, filepath.FromSlash(name), func(entry os.DirEntry) error {
+			path := filepath.ToSlash(filepath.Join(filepath.FromSlash(name), entry.Name()))
+			_, knownDirectory := directories[path]
+			_, knownFile := files[path]
+			_, duplicate := entries[path]
+			if duplicate || !(entry.IsDir() && knownDirectory || entry.Type().IsRegular() && knownFile) {
+				return fail("RELEASE_PREPARED_DIRECTORY_CHANGED")
+			}
+			entries[path] = struct{}{}
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+	if len(entries) != len(files)+len(directories)-1 {
+		return fail("RELEASE_PREPARED_DIRECTORY_CHANGED")
 	}
 	for name, before := range files {
 		if ctx.Err() != nil {
