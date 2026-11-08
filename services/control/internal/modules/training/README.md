@@ -18,7 +18,15 @@ covers idempotent creation, failure recovery and cancellation. Cancellation,
 terminal dispatch failure and restore invalidation clear the pending reference
 and preserve its history. Active cancellation holds the physical lease until
 the exact attempt stop is accepted.
-The scheduling creation boundary shares the final job and audit transaction.
+
+The scheduling candidate reserves quota inside the dispatch savepoint after
+the physical GPU hold. Exact stop and proven non-delivery release quota and
+the physical hold in the same transaction. The integration test applies both
+scheduler SQL fixtures to a test-owned PostgreSQL schema. Production
+activation requires the admitted catalog and accounting for existing
+physical holds. Run the candidate cases with the usual local PostgreSQL
+fixture and pinned CPython using
+`go -C services/control test ./internal/modules/training -run '^TestActualTrainingScheduling' -count=1`.
 
 This owner has separate admission, execution, transfer and accepted-artifact areas. Any future extraction must retain current creator/Workspace/license checks and lock ordering, without inventing a second scheduler or artifact acceptance path.
 
