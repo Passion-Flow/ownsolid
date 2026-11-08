@@ -103,3 +103,21 @@ exists for the same cell.
 The native test above also verifies that vmalert writes these aggregates
 only to the long store. The operator sets the retention periods on each
 VictoriaMetrics instance.
+
+### Offline snapshot restore check
+
+The [snapshot restore check](testdata/check-telemetry-restore.sh) starts
+disposable stores, makes live snapshots and restores their data into fresh
+directories. It uses VictoriaMetrics 1.155.0, the matching vmbackup and
+vmrestore binaries, VictoriaLogs 1.53.0 and local rsync. Verify the upstream
+release archives and extract those four binaries into one directory.
+From the repository root on Linux, run as a user allowed to create a
+network namespace:
+
+    unshare --net sh -ec 'ip link set lo up; bash "$1" "$2"' sh \
+      services/control/internal/modules/monitoring/testdata/check-telemetry-restore.sh \
+      /absolute/path/to/verified/upstream-binaries
+
+The fixture stops each store before starting the restored instance and
+queries both restored values. Installation scheduling and recovery remain
+separate from this check.
