@@ -88,6 +88,16 @@ SDK. The assistant's in-process generator verifies that scheme's cookie type,
 location and name before accepting the legacy reference. The generated tool
 metadata carries no cookie and does not perform HTTP calls.
 
+## Audit handoff for AGT-107 and AUD-101
+
+The shared writer currently accepts a user actor and user subject and takes
+its scope from the installation default. The audit API has no assistant actor.
+A typed actor and resolved-scope writer, shared audit projection, and request
+correlation are the minimum shared changes. Once those exist, the current
+navigation and application read transactions can append events before returning
+results. See [product assistant audit attribution](product-assistant-audit.md)
+for the owning paths and acceptance cases.
+
 ## Repository test gate
 
 The previous console run on isolated ports had 18 failures, 1013 passes and 23
@@ -114,12 +124,10 @@ pnpm exec playwright test e2e/account.spec.ts e2e/models.spec.ts \
   --workers=1 --grep 'reaches the page from the account menu|shows a failed read and retries it|Tasks says when there are none|a new installation is walked through setup|two people acting at once'
 ```
 
-If the default preview port 4310 is occupied, use a temporary Playwright
-configuration via `--config`. Retain the checked-in test settings and set
-`testDir` and `webServer.cwd` to the console checkout's paths, use an unused
-loopback port for `use.baseURL` and `webServer.url`, and add `--port <port>
---strictPort` to the preview command. Run the same selection serially on the
-baseline and lane. Do not reuse another lane's server.
+For current revisions, set `OWNSOLID_PLAYWRIGHT_PORT_OFFSET` to move ports
+4310 and 4311 onto an unused loopback pair. Keep browser comparisons serial
+with one worker. The historical baseline predates that setting and used a
+temporary Playwright configuration with the same settings on both revisions.
 
 All 18 previously failing cases passed on both `609d5198` and `356b241b`
 with one worker and the same isolated port. A gateway case shared one failure
@@ -141,4 +149,7 @@ lane. The revocation case failed once on the baseline and twice on the lane.
 The observed failure signatures included `TRAINING_OUTPUT_CHANGED` before
 container start and cancellation returning a receipt. Both cases failed
 without the APP commits. The Agent, API and Go workspace trees were
-identical. They remain Agent-owned blockers for the full test gate.
+identical at the time. After syncing `aa5e712f`, the same cases each passed
+five serial repetitions. The complete Agent training and model-preparation
+packages passed with one test worker. This resolves the two reproduced
+failures. The repository-wide test gate remains separate from these checks.
