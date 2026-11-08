@@ -3,7 +3,9 @@ package productagent
 import (
 	"context"
 	"errors"
+	"maps"
 	"net/url"
+	"slices"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
@@ -20,7 +22,15 @@ var (
 	ErrCommandDenied = errors.New("ACCESS_DENIED")
 	// ErrWorkspaceRequired means the authenticated portal has no active workspace.
 	ErrWorkspaceRequired = errors.New("PRODUCT_AGENT_WORKSPACE_REQUIRED")
+	// ErrUnsupportedCommandLocale means no command phrases are bundled for that locale.
+	ErrUnsupportedCommandLocale = errors.New("PRODUCT_AGENT_COMMAND_LOCALE_UNSUPPORTED")
 )
+
+// CommandHelp describes the phrases a caller can enter for a command.
+type CommandHelp struct {
+	ID      string   `json:"id"`
+	Aliases []string `json:"aliases"`
+}
 
 // Result holds exactly one navigation or read result. Paths belong to the current entrance.
 type Result struct {
@@ -32,7 +42,7 @@ type Result struct {
 
 // Service dispatches only fixed destinations and scoped, typed reads.
 type Service struct {
-	aliases      map[string]command
+	catalog      commandCatalog
 	tools        map[string]tool
 	identity     *identity.Service
 	applications *applications.Service
@@ -43,7 +53,7 @@ func New(apps *applications.Service) (*Service, error) {
 	if apps == nil || apps.Identity == nil {
 		return nil, errors.New("PRODUCT_AGENT_IDENTITY_REQUIRED")
 	}
-	aliases, err := loadAliases(locales)
+	catalog, err := loadCommands(locales)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +61,32 @@ func New(apps *applications.Service) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Service{aliases: aliases, tools: tools, identity: apps.Identity, applications: apps}, nil
+	return &Service{catalog: catalog, tools: tools, identity: apps.Identity, applications: apps}, nil
+}
+
+// Commands lists the exact phrases for the authenticated entrance and the
+// requested locale. Run still verifies current workspace and resource access.
+func (s *Service) Commands(ctx context.Context, actor identity.Auth, locale string) ([]CommandHelp, error) {
+	audience := actor.Me.Audience
+	if ctx == nil || audience != "admin" && audience != "portal" {
+		return nil, ErrCommandDenied
+	}
+	phrases, ok := s.catalog.locales[locale]
+	if !ok {
+		return nil, ErrUnsupportedCommandLocale
+	}
+	if err := s.recheck(ctx, actor); err != nil {
+		return nil, err
+	}
+	result := make([]CommandHelp, 0, len(phrases))
+	for _, id := range slices.Sorted(maps.Keys(phrases)) {
+		canNavigate := commands[id].destination(audience) != ""
+		canRead := actor.Me.Workspace != nil && s.tools[id].allowsRead(audience)
+		if canNavigate || canRead {
+			result = append(result, CommandHelp{ID: id, Aliases: slices.Clone(phrases[id])})
+		}
+	}
+	return result, nil
 }
 
 // Run accepts the authenticated server context. A cursor belongs to a preceding
@@ -64,7 +99,7 @@ func (s *Service) Run(ctx context.Context, actor identity.Auth, input, cursor st
 	if normalized == "" {
 		return Result{}, ErrInvalidCommand
 	}
-	cmd, ok := s.aliases[normalized]
+	cmd, ok := s.catalog.aliases[normalized]
 	if !ok {
 		return Result{}, ErrUnknownCommand
 	}
