@@ -56,7 +56,7 @@ agents is not.
 - [ ] ARC-104 One Kubernetes cluster per cell installed and managed by ownsolid, with the agent on every node (P1)
   - [Signed test release and managed API evidence](../../research/kubernetes-cells.md#signed-release-and-managed-api-acceptance). The managed console flow remains open.
 - [ ] ARC-105 Load tested with 1,000 simulated nodes per cell at twice the load, including a Kubernetes cell simulated with KWOK (P1)
-  - [Offline KWOK fixture and eight-node simulator evidence](../../research/cell-scale-validation.md). Signed managed-cell delivery and the 1,000-node run at twice the load remain open.
+  - [Prepared signed managed-cell load fixture and admission evidence](../../research/cell-scale-validation.md#prepared-launch-and-admission-result). The combined 1,000-node run at twice the load remains open.
 - [ ] ARC-106 Published fleet KPIs: dispatch p99, reconnect time, database writes per second at measured scale (P1)
 - [ ] ARC-107 Gateway connection lifecycle: maximum connection age with jitter, GOAWAY drain, and rebalancing after a gateway roll so long-lived streams do not pile onto old gateways (P1)
   - Client-side rebalancing is implemented with the existing v1 wire contract. [Simulator and listener evidence](../../research/agent-gateway-rebalance.md).
