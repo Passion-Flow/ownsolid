@@ -67,3 +67,41 @@ and [Helm](https://github.com/helm/helm/blob/main/LICENSE) are Apache-2.0
 references. The verifier adds no third-party code or application images. A
 release publisher must verify the redistribution rights and retain the
 required notices for the chart, application and every image layer.
+
+## OCI preflight for installation
+
+[OCI Image Layout 1.1.1](https://github.com/opencontainers/image-spec/blob/v1.1.1/image-layout.md)
+allows references to blobs supplied by an external store. Ownsolid's
+installation preflight requires the entire closure in the signed tar.
+Follow the [descriptor](https://github.com/opencontainers/image-spec/blob/v1.1.1/descriptor.md),
+[manifest](https://github.com/opencontainers/image-spec/blob/v1.1.1/manifest.md)
+and [configuration](https://github.com/opencontainers/image-spec/blob/v1.1.1/config.md)
+specifications for digests, byte counts and platform identity.
+
+The first installable archive form contains a root index of direct Linux
+amd64 image manifests, their configurations and their layers. Its root digests
+must exactly match the signed catalog manifest. Reject missing, duplicate,
+unreferenced and remote blobs, foreign platforms, secondary Docker wrapper
+metadata and unsafe tar entries. Verify the signed archive bytes and each
+blob digest with a bounded scan. Read OCI metadata through the same open
+file, using bounded sections, so memory use does not depend on layer size.
+Existing signature-only callers can still inspect packages with other image
+layouts. The importer owns expanded layer limits, DiffID verification,
+local image registration and post-import digest checks before execution.
+
+The platform factory's `OpenCurrentImageSource` validates and rewrites a
+single platform release asset through its internal release profile and
+mount policy. Calling it with fabricated platform metadata would conflate
+app trust with platform release trust. This catalog preflight uses the Go
+standard library and the Apache-2.0 OCI specification already cited above.
+No new code or image dependency is shipped. Test an authenticated offline
+archive and its failure cases, including valid signatures over an incomplete
+closure and a signed catalog digest absent from the root index.
+
+The preflight also verified a signed archive with the 16 runtime blobs of the
+cached VictoriaLogs 1.53.0 Linux amd64 image. The exported Docker archive held
+a second, attestation manifest. The fixture selected the runtime image and
+repacked its complete closure as USTAR. The verifier ran in a Linux amd64
+container with `--network none` and `--pull never`. This exercised the exact
+archive accepted by the preflight. The deployment owner still needs the
+import and registered-digest checks for this archive.
