@@ -43,8 +43,23 @@ def digest(value):
 def worker_source_digest(root):
     files = {str(path.relative_to(root.parent)): file_digest(path)
              for directory in [root, root.parent / 'data-processing']
-             for path in sorted(directory.rglob('*.py')) if '__pycache__' not in path.parts}
+             for path in sorted(directory.rglob('*.py'))
+             if not {'__pycache__', 'tests'}.intersection(path.relative_to(directory).parts)}
     return hashlib.sha256(json.dumps(files, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+
+
+def read_installed_catalog(root):
+    release = root.parents[1]
+    for contract_root in ('api', 'contracts'):
+        path = release / contract_root / 'agent/v1/model-catalog.json'
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            continue
+        if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o022 or info.st_size > CONTRACT['maximum_catalog_bytes']:
+            raise TrainingError('TRAINING_MODEL_INVALID')
+        return json.loads(path.read_text(encoding='utf-8'), object_pairs_hook=unique, parse_constant=invalid_constant)
+    raise TrainingError('TRAINING_MODEL_INVALID')
 
 
 def read_request(path, root, verification_cpu, fixture_catalog):
@@ -104,7 +119,6 @@ def validated_request(path, root, verification_cpu, fixture_catalog):
         exact(request['execution_identity'], {'profile', 'python', 'worker_source_sha256', 'image_id'})
         if request['execution_identity']['profile'] != CONTRACT['production_profile'] or request['execution_identity']['python'] != platform.python_version() or request['execution_identity']['worker_source_sha256'] != worker_source_digest(root) or not re.fullmatch('sha256:[a-f0-9]{64}', request['execution_identity']['image_id']):
             raise TrainingError('TRAINING_EXECUTION_IDENTITY_REQUIRED')
-    canonical_catalog = root.parents[1] / 'contracts/agent/v1/model-catalog.json'
     if fixture_catalog:
         catalog_file = private_file(request['fixture_catalog_file'], CONTRACT['maximum_catalog_bytes'], scope)
         if catalog_file != inputs / 'synthetic-catalog.json':
@@ -113,11 +127,7 @@ def validated_request(path, root, verification_cpu, fixture_catalog):
     else:
         if request['fixture_catalog_file'] is not None:
             raise TrainingError('TRAINING_EXECUTION_PROFILE_INVALID')
-        catalog_file = canonical_catalog
-        info = catalog_file.lstat()
-        if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o022 or info.st_size > CONTRACT['maximum_catalog_bytes']:
-            raise TrainingError('TRAINING_MODEL_INVALID')
-        catalog = json.loads(catalog_file.read_text(encoding='utf-8'), object_pairs_hook=unique, parse_constant=invalid_constant)
+        catalog = read_installed_catalog(root)
     if catalog_digest(catalog) != request['model_catalog_sha256']:
         raise TrainingError('TRAINING_MODEL_CHANGED')
     model = Path(request['model_directory'])
