@@ -64,7 +64,8 @@ go -C services/control test -p 1 -count=1 -json ./internal/modules/datasets \
 | `services/agent/internal/{modelpreparations,training}/static_stability_test.go` | Shutdown/adoption failed in 2 of 6 attempts on main and 1 of 6 on OPS. The errors included `context canceled` and `TRAINING_OUTPUT_CHANGED`. Revocation passed in all six attempts per tree. |
 | `services/control/internal/operations/postgresbackup/restore_roots_binding_test.go` | Both measured-root tests failed on both trees with `POSTGRES_RESTORE_EXPECTED_ROOT_CHANGED`. The backup owner must validate the pinned filesystem root through the restore path. |
 | `services/control/internal/platform/config/tls_material_test.go` | Both setgid subcases failed on both trees. The TLS material owner must preserve rejection and redaction for unsafe file modes on supported test filesystems. |
-| Dataset source-import memory and password admission deadline | Both tests passed in both trees in this controlled comparison. |
+| Dataset source-import memory | The focused test passed on both trees. The full non-browser gate failed it on OPS. A subsequent three-run package comparison using `go -C services/control test -p 1 -count=3 -v ./internal/modules/datasets` reproduced the RSS failure once on main and passed all three attempts on OPS. |
+| Password admission deadline | Passed on both trees in the controlled comparison. |
 
 OPS has no diff in these packages. The browser gate can use the repository's
 Chromium specs and built apps with two workers, private loopback preview
