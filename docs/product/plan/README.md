@@ -309,6 +309,22 @@ publishes applications; a conversation starts from an application.
 **Done when** every section reads real data, fails on its own with a retry, and never shows a
 figure the server does not have ([research](../../research/portal-home.md)).
 
+### S-306  My API keys                                `/keys` in the portal
+**For** a person who uses the platform · **Archetype** list · **Primary** issue a key.
+
+**Does** "give me a key for a model of my workspace, show me how to call it, and let me stop it."
+**Content** columns: name, prefix, scope (the model), last used, expiry, state. There is no owner: every key
+here is the person's own. Tiles filter by expiring soon / never used; over limit is not ready (GW-106).
+**Click** row → drawer: *Use this key* (base URL, model, a sample in cURL, Python and Node.js, and what to set
+for a private certificate authority), the key's details, and its call log.
+**Dialogs** *Issue* → dialog, five fields, shows the key **once**; *Done* opens the new key's drawer. *Rotate* →
+dialog stating the overlap window. *Revoke* → typed confirmation naming what breaks.
+**Empty** "No keys yet" with what a key is for. Filtered: which filter, and clear it. No workspace: an
+administrator adds you to one. No model on the gateway: an administrator publishes one; there is no link,
+because that page is not the person's.
+**Done when** a person issues, rotates and revokes only their own keys and reads only their own calls, and the
+samples on the page work as written ([research](../../research/portal-api-keys.md)).
+
 # Stage 4 — Keep control
 
 | ID | Screen | Archetype | Primary |
