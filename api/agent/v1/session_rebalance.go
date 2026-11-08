@@ -43,3 +43,10 @@ func (r *SessionRebalance) Candidate(now time.Time, interval time.Duration, rank
 	r.next = now.Add(interval + time.Duration(rand.Int64N(int64(interval))))
 	return candidate
 }
+
+// AcceptsSessionRebalance reports whether an answered heartbeat can replace a live
+// fallback session. Pacing is validated separately so an invalid pacing hint cannot
+// stop the agent.
+func (d *Disposition) AcceptsSessionRebalance() bool {
+	return d != nil && !d.ServerTime.IsZero() && (d.Status == "active" || d.Status == "disabled")
+}

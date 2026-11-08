@@ -26,20 +26,21 @@ const sessionNode = "3b0c8f1e-2d4a-4c6b-8e9f-1a2b3c4d5e6f"
 // control is a stand-in control plane: the session stream on HTTP/2 and the HTTPS
 // heartbeat and claims paths, recording which transport each exchange used.
 type control struct {
-	mu        sync.Mutex
-	exchanges []string
-	waits     []int
-	cursors   []uint64
-	acks      []string
-	dropAck   bool
-	headers   metadata.MD
-	refuse    codes.Code
-	problem   *wire.SessionProblem
-	closeAt   int
-	streams   int
-	lease     *wire.Lease
-	httpDown  bool
-	pacing    *wire.Pacing
+	mu              sync.Mutex
+	exchanges       []string
+	waits           []int
+	cursors         []uint64
+	acks            []string
+	dropAck         bool
+	headers         metadata.MD
+	refuse          codes.Code
+	problem         *wire.SessionProblem
+	heartbeatStatus string
+	closeAt         int
+	streams         int
+	lease           *wire.Lease
+	httpDown        bool
+	pacing          *wire.Pacing
 }
 
 func (c *control) record(kind string) {
@@ -75,7 +76,11 @@ func (c *control) connect(stream grpc.ServerStream) error {
 		case m.Heartbeat != nil:
 			c.record("stream heartbeat")
 			c.mu.Lock()
-			reply.Disposition = &wire.Disposition{Status: "active", ServerTime: time.Now().UTC(), Pacing: c.pacing}
+			status := c.heartbeatStatus
+			if status == "" {
+				status = "active"
+			}
+			reply.Disposition = &wire.Disposition{Status: status, ServerTime: time.Now().UTC(), Pacing: c.pacing}
 			c.mu.Unlock()
 		case m.Ack != nil:
 			c.mu.Lock()
