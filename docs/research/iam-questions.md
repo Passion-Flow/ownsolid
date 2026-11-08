@@ -24,9 +24,7 @@ recorded in [local accounts](local-accounts.md) and
 
 With dedicated test ports, 372 Portal and 1,029 Console browser tests passed.
 Two Console navigation focus assertions failed in the full run and passed
-when rerun alone. The repository-wide gate has no clean run, so both IAM
-items remain open despite passing the targeted PostgreSQL and live browser
-flows.
+when rerun alone. That run did not satisfy the repository-wide gate.
 
 On the next run, the Linux component recovery case failed twice in an
 isolated arm64 container before `a8d66a32`. The fixture's
@@ -40,3 +38,9 @@ serial Console and Portal suites. The targeted cases passed in both
 applications, including the distinct registration behavior, sign-out and
 password recovery. The actual cross-tenant and cross-audience replays ran
 against TLS and PostgreSQL 18.6 in a container with `--network none`.
+
+The subsequent `make check && make build && make test` run passed at
+`bfca2f3ad0de`, based on `a8d66a32`. Console passed
+1,039 Chromium cases and Portal passed 387. Twenty-eight live cases that
+require separately configured installations were skipped by the suites.
+The actual IAM live results are recorded in the two feature notes above.
