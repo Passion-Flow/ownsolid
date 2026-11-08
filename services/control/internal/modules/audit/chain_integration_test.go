@@ -20,7 +20,6 @@ import (
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 )
 
 const auditChainFirstSchema = 53
@@ -29,7 +28,7 @@ const chainInsert = `INSERT INTO audit_events(id,occurred_at,audience,action,out
 VALUES($1,$2,'system','fixture.audit','success',$1)`
 
 func TestAuditChainConcurrentAppends(t *testing.T) {
-	db := identityfixture.New(t).DB
+	db := newAuditFixture(t, 0)
 	ctx, cancel := context.WithTimeout(t.Context(), 90*time.Second)
 	defer cancel()
 	start := make(chan struct{})
@@ -75,7 +74,7 @@ func TestAuditChainConcurrentAppends(t *testing.T) {
 }
 
 func TestAuditChainExportAcrossPartitions(t *testing.T) {
-	db := identityfixture.New(t).DB
+	db := newAuditFixture(t, 0)
 	ctx := t.Context()
 	now := time.Now().UTC()
 	boundary := time.Date(now.Year(), now.Month()+1, 1, 0, 0, 0, 0, time.UTC)
@@ -139,7 +138,7 @@ func TestAuditChainExportAcrossPartitions(t *testing.T) {
 }
 
 func TestAuditChainPreservesEarlierRowsOnUpgrade(t *testing.T) {
-	db := identityfixture.NewAtVersion(t, auditChainFirstSchema-1).DB
+	db := newAuditFixture(t, auditChainFirstSchema-1)
 	ctx := t.Context()
 	at := time.Now().UTC().Truncate(time.Microsecond)
 	if _, err := db.Exec(ctx, chainInsert, uuid.NewString(), at); err != nil {
@@ -162,7 +161,7 @@ func TestAuditChainPreservesEarlierRowsOnUpgrade(t *testing.T) {
 }
 
 func TestAuditChainUpgradeBindsPlacementWithoutRewritingV1(t *testing.T) {
-	db := identityfixture.NewAtVersion(t, auditChainFirstSchema).DB
+	db := newAuditFixture(t, auditChainFirstSchema)
 	ctx := t.Context()
 	at := time.Now().UTC().Truncate(time.Microsecond)
 	for i := range 2 {
@@ -204,7 +203,7 @@ func TestAuditChainUpgradeBindsPlacementWithoutRewritingV1(t *testing.T) {
 }
 
 func TestAuditChainCanonicalMetadata(t *testing.T) {
-	db := identityfixture.New(t).DB
+	db := newAuditFixture(t, 0)
 	var same bool
 	err := db.QueryRow(t.Context(), `SELECT audit_chain_metadata($1::jsonb) = audit_chain_metadata($2::jsonb)`,
 		`{"y": [null, false, true, "", "\u4e16"], "long": 9007199254740993.00, "x": -0.0}`,
