@@ -2,6 +2,7 @@ use crate::configuration::{Configuration, Limits, Result, certificate_file, secr
 use crate::control::initialize_tls_provider;
 use crate::routing::{Application, router};
 use axum_server::accept::Accept;
+use axum_server::tls_rustls::RustlsConfig;
 use std::future::{Future, Ready, ready};
 use std::io;
 use std::net::{SocketAddr, TcpListener};
@@ -115,28 +116,34 @@ impl<S> Accept<TcpStream, S> for ConnectionAcceptor {
 /// The listener's TLS configuration. The server speaks HTTP/1.1 only, so ALPN offers only
 /// `http/1.1`: axum-server's default also offers `h2`, which clients such as curl and Go's
 /// `net/http` then select, and the HTTP/1-only server drops the connection after the handshake.
-async fn tls_configuration(
-    configuration: &Configuration,
-) -> Result<axum_server::tls_rustls::RustlsConfig> {
-    let certificate = certificate_file(&configuration.tls_certificate_file)?;
-    let key = secret_file(&configuration.tls_private_key_file)?;
-    let defaults = axum_server::tls_rustls::RustlsConfig::from_pem(certificate, key)
+pub async fn tls_configuration(configuration: &Configuration) -> Result<RustlsConfig> {
+    initialize_tls_provider();
+    let certificate_path = configuration.tls_certificate_file.clone();
+    let key_path = configuration.tls_private_key_file.clone();
+    let (certificate, key) = tokio::task::spawn_blocking(move || -> Result<_> {
+        Ok((
+            certificate_file(&certificate_path)?,
+            secret_file(&key_path)?,
+        ))
+    })
+    .await
+    .map_err(|_| "GATEWAY_TLS_CONFIGURATION_INVALID")??;
+    let defaults = RustlsConfig::from_pem(certificate, key)
         .await
         .map_err(|_| "GATEWAY_TLS_CONFIGURATION_INVALID")?;
     let mut server = (*defaults.get_inner()).clone();
     server.alpn_protocols = vec![HTTP1_PROTOCOL.to_vec()];
-    Ok(axum_server::tls_rustls::RustlsConfig::from_config(
-        Arc::new(server),
-    ))
+    Ok(RustlsConfig::from_config(Arc::new(server)))
 }
 
+/// Serve on the supplied socket using the shared TLS configuration.
 pub async fn serve(
     configuration: &Configuration,
     application: Arc<Application>,
     listener: TcpListener,
     handle: axum_server::Handle<SocketAddr>,
+    tls: RustlsConfig,
 ) -> Result<()> {
-    initialize_tls_provider();
     if listener
         .local_addr()
         .map_err(|_| "GATEWAY_LISTENER_INVALID")?
@@ -147,7 +154,6 @@ pub async fn serve(
     listener
         .set_nonblocking(true)
         .map_err(|_| "GATEWAY_LISTENER_INVALID")?;
-    let tls = tls_configuration(configuration).await?;
     let limits = &configuration.limits;
     let mut server = axum_server::from_tcp_rustls(listener, tls)
         .map_err(|_| "GATEWAY_LISTENER_INVALID")?
