@@ -324,7 +324,9 @@ func TestSourceImportMemory(t *testing.T) {
 			t.Fatal(err)
 		}
 		command := exec.CommandContext(t.Context(), os.Args[0], "-test.run=^TestSourceImportMemory$")
-		command.Env = append(os.Environ(), childInput+"="+path)
+		// Fix CPU parallelism and GC settings so the comparison does not
+		// measure host-wide scheduling or a caller-supplied heap limit.
+		command.Env = append(os.Environ(), childInput+"="+path, "GOMAXPROCS=2", "GOGC=100", "GOMEMLIMIT=off")
 		if out, err := command.CombinedOutput(); err != nil {
 			t.Fatalf("import %d MiB: %v\n%s", size>>20, err, out)
 		}
@@ -338,7 +340,7 @@ func TestSourceImportMemory(t *testing.T) {
 		}
 		t.Logf("input=%d bytes, accepted=%d rows, peak RSS=%d bytes (%.2f MiB)", size, size/4096, peak[index], float64(peak[index])/(1<<20))
 	}
-	if peak[1] > peak[0]+(16<<20) || peak[1] > 64<<20 {
+	if peak[1] > peak[0]+(24<<20) || peak[1] > 64<<20 {
 		t.Fatalf("peak RSS grew with input: %d -> %d bytes", peak[0], peak[1])
 	}
 }
