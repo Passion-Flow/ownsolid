@@ -258,3 +258,13 @@ still need an end-to-end run.
   Workers should pull images from the cluster's [embedded registry mirror](https://docs.rke2.io/install/registry_mirror)
   instead: ARC-116.
 - Upgrade and certificate rotation of the cluster stay with FLT-111.
+
+## Delayed Canal usage report
+
+The earlier server and worker run covered registry fallback and the
+join sequence. A longer [ARC-105 test fixture](cell-scale-validation.md#delayed-felix-reporting)
+observed the pinned Canal component asking the site resolver for
+`usage.projectcalico.org` after the first reporting delay. The resolver
+returned NXDOMAIN and forwarded nothing. A zero-egress acceptance run
+must cover the delayed window as well as startup, with a site DNS
+positive control and separate IPv4 and IPv6 packet recording.

@@ -55,6 +55,7 @@ agents is not.
   - Scope of the evidence: PostgreSQL only; MySQL and Dameng keep the credential alone until CMP-201 and CMP-202. `TestSingleNodeInstall` on `ownsolid-cpu`, offline, with one real agent that enrolled with a certificate, rotated it without restarting and had the old one refused; `TestAgentGateways` with 500 simulated agents, each with its own certificate. A rack is the source network until FLT-101 names racks (ARC-112). Rotation at fleet scale is ARC-105.
 - [ ] ARC-104 One Kubernetes cluster per cell installed and managed by ownsolid, with the agent on every node (P1)
 - [ ] ARC-105 Load tested with 1,000 simulated nodes per cell at twice the load, including a Kubernetes cell simulated with KWOK (P1)
+  - [Offline KWOK fixture and eight-node simulator evidence](../../research/cell-scale-validation.md). Signed managed-cell delivery and the 1,000-node run at twice the load remain open.
 - [ ] ARC-106 Published fleet KPIs: dispatch p99, reconnect time, database writes per second at measured scale (P1)
 - [ ] ARC-107 Gateway connection lifecycle: maximum connection age with jitter, GOAWAY drain, and rebalancing after a gateway roll so long-lived streams do not pile onto old gateways (P1)
   - Client-side rebalancing is implemented with the existing v1 wire contract. [Simulator and listener evidence](../../research/agent-gateway-rebalance.md).
