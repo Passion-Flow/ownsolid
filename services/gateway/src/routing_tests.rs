@@ -20,11 +20,15 @@ use std::time::Duration;
 use tokio::time::Instant;
 use uuid::Uuid;
 
+const QUOTA_TEST_NOW: i64 = 1_794_116_800;
+
 #[derive(Clone)]
 struct Synthetic {
     gateway: Uuid,
     node: Uuid,
     workspace: Uuid,
+    client_key: String,
+    complete_stream: Arc<tokio::sync::Notify>,
     alias: Uuid,
     deployment: Uuid,
     control_mode: Arc<AtomicUsize>,
@@ -102,7 +106,7 @@ async fn control(
         state.outcomes.lock().unwrap().push(outcome);
         return Json(json!({"data":{"request_id":id,"canonical_sha256":digest}})).into_response();
     }
-    assert_eq!(body["api_key"], "synthetic-client-secret");
+    assert_eq!(body["api_key"], state.client_key);
     if operation == "models" {
         state.model_checks.fetch_add(1, Ordering::SeqCst);
     }
@@ -110,6 +114,14 @@ async fn control(
         return (
             StatusCode::UNAUTHORIZED,
             Json(json!({"code":"API_KEY_INVALID","detail":"private synthetic diagnostic"})),
+        )
+            .into_response();
+    }
+    if mode == 7 {
+        return (
+            StatusCode::TOO_MANY_REQUESTS,
+            [(header::RETRY_AFTER, "17")],
+            Json(json!({"code":"RATE_LIMITED"})),
         )
             .into_response();
     }
@@ -169,6 +181,7 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
         let first=event(json!([{"index":0,"delta":{"role":"assistant","content":"Synthetic \u{4e2d}\u{6587}"},"finish_reason":null}]),Value::Null);
         yield Ok::<_,std::io::Error>(first);
         if mode==2 {std::future::pending::<()>().await;}
+        if mode==4 {state.complete_stream.notified().await;}
         if mode!=1 {
             yield Ok(event(json!([{"index":0,"delta":{},"finish_reason":"stop"}]),Value::Null));
             yield Ok(event(json!([]),json!({"prompt_tokens":7,"completion_tokens":2,"total_tokens":9})));
@@ -285,6 +298,9 @@ impl Fixture {
         }
     }
     async fn new() -> Self {
+        Self::with_quota(None).await
+    }
+    async fn with_quota(quota_limits: Option<Value>) -> Self {
         crate::control::initialize_tls_provider();
         let root = std::env::temp_dir().join(format!("gateway-routing-{}", Uuid::new_v4()));
         fs::create_dir(&root).unwrap();
@@ -305,10 +321,18 @@ impl Fixture {
             fs::write(root.join(name), bytes).unwrap();
             fs::set_permissions(root.join(name), fs::Permissions::from_mode(0o600)).unwrap();
         }
+        let key_id = Uuid::new_v4();
+        let client_key = if quota_limits.is_some() {
+            format!("pk1.{key_id}.{}", Uuid::new_v4())
+        } else {
+            "synthetic-client-secret".to_owned()
+        };
         let state = Synthetic {
             gateway: Uuid::new_v4(),
             node: Uuid::new_v4(),
             workspace: Uuid::new_v4(),
+            client_key,
+            complete_stream: Arc::default(),
             alias: Uuid::new_v4(),
             deployment: Uuid::new_v4(),
             control_mode: Arc::default(),
@@ -353,7 +377,16 @@ impl Fixture {
         let SocketAddr::V4(listen_address) = gateway_listener.local_addr().unwrap() else {
             panic!("IPv4 fixture")
         };
+        let scoped = quota_limits.is_some();
         let configuration = Configuration {
+            quota_policy: quota_limits.map(|limits| {
+                serde_json::from_value(json!({
+                    "tenants": [{"id": Uuid::new_v4(), "workspaces": [state.workspace],
+                        "applications": [{"id": Uuid::new_v4(), "limits": limits,
+                            "keys": [{"id": key_id, "workspace_id": state.workspace}]}]}]
+                }))
+                .unwrap()
+            }),
             gateway_id: state.gateway,
             node_id: state.node,
             listen_address,
@@ -367,19 +400,19 @@ impl Fixture {
             tls_private_key_file: root.join("key.pem"),
             state_directory,
             limits: Limits {
-                active_requests: 1,
+                active_requests: if scoped { 2 } else { 1 },
                 backend_idle_connections: 1,
                 queued_requests: 1,
                 queue_milliseconds: 500,
                 connect_seconds: 1,
                 control_seconds: 1,
                 request_seconds: 5,
-                idle_seconds: 1,
+                idle_seconds: if scoped { 3 } else { 1 },
                 header_seconds: 1,
                 ..Limits::default()
             },
         };
-        let app = Application::new(configuration.clone()).unwrap();
+        let app = Application::with_quota_clock(configuration.clone(), || QUOTA_TEST_NOW).unwrap();
         let gateway_handle = axum_server::Handle::new();
         let server_app = app.clone();
         let server_handle = gateway_handle.clone();
@@ -431,7 +464,7 @@ impl Fixture {
         self.app.as_ref().expect("in-process fixture")
     }
     fn chat(&self, stream: bool) -> reqwest::RequestBuilder {
-        self.client.post(format!("{}/v1/chat/completions",self.origin)).bearer_auth("synthetic-client-secret")
+        self.client.post(format!("{}/v1/chat/completions",self.origin)).bearer_auth(&self.state.client_key)
             .json(&json!({"model":"public-alias","messages":[{"role":"user","content":"Synthetic request \u{4e2d}\u{6587}"}],"max_tokens":16,"stream":stream}))
     }
 }
@@ -750,6 +783,83 @@ async fn real_upstream_with_unread_bounded_publisher_times_out_and_releases_perm
     let outcome = fixture.app().spool.next_pending().unwrap().unwrap();
     assert_eq!(outcome.status, Status::ClientCancelled);
     assert!(outcome.usage.is_none());
+}
+
+#[tokio::test]
+async fn stream_reserves_before_generation_and_refunds_verified_usage() {
+    let fixture = Fixture::with_quota(Some(json!({"tokens": {"daily": 32}}))).await;
+    fixture.state.backend_mode.store(4, Ordering::SeqCst);
+    let pending = fixture.chat(true).send().await.unwrap();
+    assert_eq!(pending.status(), StatusCode::OK);
+
+    // The first call holds 23 tokens while the upstream stream is incomplete.
+    let denied = fixture.chat(false).send().await.unwrap();
+    assert_eq!(denied.status(), StatusCode::TOO_MANY_REQUESTS);
+    let retry = 86_400 - QUOTA_TEST_NOW.rem_euclid(86_400);
+    assert_eq!(denied.headers()[header::RETRY_AFTER], retry.to_string());
+    let error: Value = denied.json().await.unwrap();
+    assert_eq!(error["error"]["code"], "daily_token_budget_exceeded");
+    assert!(
+        error["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("application daily token budget")
+    );
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
+
+    fixture.state.complete_stream.notify_one();
+    let completed = pending.text().await.unwrap();
+    assert!(completed.ends_with("data: [DONE]\n\n"));
+    assert!(!completed.contains(r#""total_tokens""#));
+    // The successful stream charged only 9 actual tokens, leaving 23 available.
+    assert_eq!(
+        fixture.chat(false).send().await.unwrap().status(),
+        StatusCode::OK
+    );
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test]
+async fn incomplete_stream_keeps_debit_and_releases_concurrency() {
+    let fixture = Fixture::with_quota(Some(json!({
+        "concurrent_requests": 1, "tokens": {"monthly": 32}
+    })))
+    .await;
+    fixture.state.backend_mode.store(4, Ordering::SeqCst);
+    let pending = fixture.chat(true).send().await.unwrap();
+    let denied = fixture.chat(false).send().await.unwrap();
+    assert_eq!(denied.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(denied.headers()[header::RETRY_AFTER], "1");
+    let error: Value = denied.json().await.unwrap();
+    assert_eq!(error["error"]["code"], "concurrency_limit_exceeded");
+
+    drop(pending);
+    // Wait for the execution guard to drop, without spending any tokens on these checks.
+    tokio::time::timeout(Duration::from_secs(3), async {
+        loop {
+            let denied = fixture.chat(false).send().await.unwrap();
+            assert_eq!(denied.status(), StatusCode::TOO_MANY_REQUESTS);
+            let body: Value = denied.json().await.unwrap();
+            if body["error"]["code"] == "monthly_token_budget_exceeded" {
+                break;
+            }
+            assert_eq!(body["error"]["code"], "concurrency_limit_exceeded");
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
+}
+
+#[tokio::test]
+async fn control_throttle_preserves_retry_after() {
+    let fixture = Fixture::new().await;
+    fixture.state.control_mode.store(7, Ordering::SeqCst);
+    let denied = fixture.chat(false).send().await.unwrap();
+    assert_eq!(denied.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(denied.headers()[header::RETRY_AFTER], "17");
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 0);
 }
 
 #[cfg(feature = "process-integration")]
