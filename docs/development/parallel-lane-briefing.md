@@ -143,20 +143,32 @@ case proves very little.
    ```
    If the push is rejected, rebase and retry. **Never `--force`.**
 
-## 6. When you are stuck
+## 6. When you are stuck, decide and keep going
 
-Do not guess, and do not hardcode a fake result to get past it.
+**You never stop and wait.** The owner may be away for a day, and a lane that waits
+has stopped for that day. There is no question worth that.
 
-1. Re-read the README and the existing code near your change. The answer is usually
-   already there.
-2. If you are blocked by missing hardware, a missing external service or a missing
-   account, that is a **boundary**: record it in your research note, leave the item
-   unticked, and move to the next one.
-3. If the requirement itself is unclear, **stop and ask.** Do not invent one.
+When you reach something you would have asked about:
+
+1. Decide it yourself with the defaults in section 11.
+2. Write the decision in `docs/research/<lane>-decisions.md`: what you decided, why,
+   what you considered and rejected, and how much damage it does if you were wrong.
+3. Carry on.
+
+If there is genuinely no safe option: leave the item unticked, record it in the same
+file as a boundary saying what blocks it and what you need from the owner, and
+**move to the next item in your module**.
+
+Before deciding, re-read the README and the code around your change. The answer is
+usually already there, and a decision taken from the code beats one taken from a
+default.
 
 ## 7. How to report
 
-After **each** item, in Chinese. Do not save them up.
+After **each** item, in Chinese. Do not save them up, and **do not wait for a
+reply**: write the report, then start the next unticked P1 item in your module.
+Work down the list until the owner tells you to stop. If an item's dependencies are
+not met, skip it and take the next one.
 
 - What you finished, in one sentence, in plain language — not a description of code
 - Which files changed
@@ -256,3 +268,26 @@ never inventing an answer.
 
 Put every question in that one file so the owner can read them all at once, rather
 than finding them scattered through a transcript.
+
+## 11. Defaults, so nothing has to be asked
+
+| Situation | What you do |
+| --- | --- |
+| Migration number | Highest on `origin/main` plus one; move `SchemaVersion` and `TableCount` with it. If another lane lands first, rebase, rename, rerun, push again |
+| A shared file from section 9 | Add your own entry. Leave every other line alone |
+| The requirement is unclear | Take the reading that changes the least of other people's work, and record it |
+| You would have to change a shared contract | Do not. Go around it additively: keep the existing behaviour, put yours behind a new path or a new field. If that is impossible, record a boundary and skip the item |
+| A dependency's licence cannot be verified | Do not use it. Find one you can verify, or write it yourself |
+| Missing hardware, service or account | Record a boundary, leave the item unticked, take the next one |
+| The environment a test needs will not start | Write the test, mark that it needs that environment, record the boundary, take the next item |
+
+### No default, and no exception
+
+These have no "ask the owner" path either. They are simply not done:
+
+- A stub that returns success to look finished
+- A design guessed because the sources could not be found
+- Editing or deleting another lane's work
+- `--force`, rebasing away someone's commits, rewriting history
+- A credential in the repository
+- Anything that reaches the network at runtime
