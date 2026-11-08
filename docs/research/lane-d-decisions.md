@@ -112,3 +112,40 @@ import and verifier retry, exporter maintenance with VictoriaLogs, and
 alias publication and disable. The remaining DEV-102 gates are the
 installed gateway delivery in GW-114 and an installed systemd component
 run with the archive delivery in FLT-109.
+
+## NVIDIA operations ownership and qualification
+
+| Item | Available lane D slice or required boundary |
+| --- | --- |
+| GPU-101 | The device collector reads DCGM locally. The managed exporter, authenticated reporting, retention and operator view cross delivery, architecture and UI ownership. The loopback-only Linux fixture passed. NVIDIA hardware qualification remains open. |
+| GPU-102 | The journal reader and advisory catalogue have offline tests. The architecture lane owns authenticated cursor delivery and identity reconciliation. The control and UI owners must surface the events. |
+| GPU-103 | Quarantine must be enforced at every allocation path and persisted with an atomic fleet-wide breaker. A local collector cannot enforce this. It exposes no quarantine action. |
+| GPU-104 | Chronic-node classification needs persistent, deduplicated incident and replacement history after GPU-102 and GPU-103. It belongs with the fleet control owner. |
+| GPU-105 | Device plugin and DRA admission require cell runtime, offline packaging and scheduler ownership. The published NVIDIA and Kubernetes driver contracts keep allocation with the device driver. |
+| GPU-106 | MIG and time-slicing change device allocations and isolation guarantees. The scheduler, runtime, delivery and operator UI own the live configuration. |
+| GPU-107 | Exclusive leases need a durable authoritative allocator and fencing at workload admission and execution. Those paths belong to the scheduler and architecture owners. |
+| GPU-108 | Effective-use reports need stored GPU-101 observations, workload attribution and the reporting UI. Device samples alone cannot provide utilization over time. |
+| GPU-109 | The Linux amd64 server has no NVIDIA hardware. Keep the real-hardware verification open. |
+
+## Developer and compatibility boundaries after the lane review
+
+| Item | Available lane D slice or required boundary |
+| --- | --- |
+| DEV-101 | The local OpenAPI audit enumerates 419 public declarations. Six cloud inventory declarations lack operation IDs and four node exporter routes are duplicated across the nodes and components contracts. These require coordinated contract and generated-client changes. API coverage for features still in development remains with the module owners. |
+| DEV-102 | GW-114 now allows the CLI to register an agent-managed gateway through the existing Admin endpoint. The full CLI item still depends on common operations across the owning modules and an installed exporter run with FLT-109 delivery. |
+| DEV-103 | The SDK tick and its existing evidence are already on main. |
+| DEV-104 | Signed delivery requires authenticated subscriptions, committed events in all four families, per-subscriber retries and private endpoint policy. There is no public webhook contract in the current tree. The domain producers, persistence and the operator flow require their owners. |
+| DEV-105 | Notebook GPU admission and runtime lifecycle are outside CLI and contract ownership. A notebook schema alone would advertise an unsupported operation. |
+| DEV-106 | Workspace development containers and their scoped SSH authority must exist before SSH or IDE integration can be exercised. |
+| DEV-107 | An approved base registry is a prerequisite. The isolated build worker, sandbox and trusted result admission remain outside the lane. |
+| DEV-108 | Job callbacks need durable job state and delegated tenant authorization with quota admission. The current API slices do not provide that complete flow. |
+| CMP-216 | The option visibility and accessible-announcement behavior is enforced in the console and portal. The lane cannot change or qualify every option from the shared declaration alone. |
+| DEV-201 | A provider needs stable scoped machine identity and CRUD or lifecycle contracts for its managed resources. The existing interactive CLI session is unsuitable as its provider credential. |
+| DEV-202 | A new adapter SDK needs a public extension boundary in engine, device and storage owners. The current SDK generates operator API clients. |
+| DEV-203 | Pipeline persistence, execution, recovery and authorization belong to the workflow owner. |
+| DEV-205 | ELN and LIMS integrations need supported import and export boundaries and offline target systems selected by the laboratory data owner. |
+| DEV-206 | Delivery history and replay depend on the subscription and delivery records from DEV-104. |
+| GPU-201 to GPU-203 | Remediation and active tests need authoritative fencing, scheduling and control tasks. Straggler detection needs job-attributed telemetry. Active burn testing also needs a qualified real GPU. |
+| GPU-204 to GPU-208 | Ascend requires an approved local driver and qualified hardware. Allocation and heterogeneous pools need the cell scheduler, and capacity planning needs retained fleet observations. |
+| GPU-209 | Intra-node topology and failure attribution require GPU-101 telemetry and real PCIe and NVLink/NVSwitch configurations to establish attribution. |
+| DEV-204 | The versioning guide and local comparison cover published operation identities. A release baseline, schema and behavioral compatibility checks, and runtime deprecation signaling need their owning release and API paths. |
