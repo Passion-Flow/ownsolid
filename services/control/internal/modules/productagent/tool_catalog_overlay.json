@@ -1,0 +1,12 @@
+{
+  "list_applications": {
+    "operation_id": "ListApplications",
+    "risk": "read",
+    "permission": "workspace_member"
+  },
+  "list_conversations": {
+    "operation_id": "ListApplicationConversations",
+    "risk": "read",
+    "permission": "workspace_member"
+  }
+}
