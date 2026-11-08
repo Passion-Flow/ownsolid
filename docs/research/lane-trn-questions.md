@@ -27,6 +27,16 @@ and backup inventory entry. Reusing the legacy draft would materialize rows
 and impose its 64 MiB and three-field limits. The lane keeps the existing
 generic candidate pipeline streaming and leaves the product items open.
 
+## SCH-101 durable training admission
+
+Scheduling needs a durable intent writer and a production schema with its
+matching catalog fingerprints. Prefer writing the intent in the authenticated
+training creation transaction, then reserving resources in the existing
+dispatch transaction. The scheduling and database owners supply the shared
+write contract and schema. The training lane keeps the existing dispatch
+authority until that contract is available. See the
+[training transaction handoff](training-job-lifecycle.md#scheduler-handoff).
+
 ## P2 dependency order
 
 TRN-201, TRN-202 and TRN-204 need the admitted runtime and scheduler path for
