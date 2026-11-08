@@ -90,8 +90,9 @@ func (opts *options) resourceCommand(r resource) *cobra.Command {
 	case deployments.key:
 		group.AddCommand(opts.getCommand(r, &workspace, "Show a deployment by UUID or by its model name when unique.", "qwen3"))
 		opts.addDeploymentOperations(group, &workspace)
+		group.AddCommand(opts.aliasCommand(&workspace))
 	case models.key:
-		group.AddCommand(opts.modelGetCommand(&workspace), opts.retireModelCommand(&workspace))
+		group.AddCommand(opts.modelGetCommand(&workspace), opts.retireModelCommand(&workspace), opts.modelImportsCommand(&workspace))
 	}
 	return group
 }

@@ -158,6 +158,69 @@ Retire a model after its references have been released:
 ownsolid model retire "$MODEL_ID" --reason 'Superseded by approved version' --confirm
 ```
 
+## Import a local model bundle
+
+Read the installation's approved catalog and prepare the matching archive
+before entering the disconnected site. The CLI reads the bundle from the
+local filesystem and transfers it to the selected workspace.
+
+```sh
+ownsolid model import catalog --output json
+ownsolid model import start /path/to/model.tar --name qwen3 --accept-license \
+  --idempotency-key "$IMPORT_KEY" --reason 'Import approved model'
+ownsolid model import list
+ownsolid model import resume "$IMPORT_ID" /path/to/model.tar --reason 'Continue approved import'
+ownsolid model import get "$IMPORT_ID" --output json
+```
+
+If the response to creating the import is lost, repeat `start` with the
+original key and arguments. After a transfer interruption, use the reported
+import ID with `resume` and the original bundle. The CLI checks the size
+and replays the last stored chunk before appending new data. `queued`
+means the server accepted the request to verify. Read the import until
+it becomes `ready` and reports a model ID, or until it reports a failure.
+After correcting a verification failure, use `model import verify` with
+the ID and an audit reason. Use `model import cancel` with an audit reason
+and `--confirm` to withdraw the import and discard the uploaded bytes.
+
+## Maintain the node exporter
+
+Use a node with an approved systemd management profile and the pinned
+archives in the installation's component catalog. The maintenance profile
+also supports configuration, upgrades, rollback and journal collection.
+
+```sh
+ownsolid node exporter status "$NODE_ID" --output json
+ownsolid node exporter install "$NODE_ID" --idempotency-key "$INSTALL_KEY" --reason 'Enable monitoring'
+ownsolid node exporter configure "$NODE_ID" --log-level warn --max-scrape-requests 4 \
+  --idempotency-key "$CONFIGURE_KEY" --reason 'Tune scrape load'
+ownsolid node exporter upgrade "$NODE_ID" --version "$APPROVED_VERSION" \
+  --idempotency-key "$UPGRADE_KEY" --reason 'Apply approved exporter upgrade'
+ownsolid node exporter collect-logs "$NODE_ID" --idempotency-key "$LOG_KEY" --reason 'Diagnose exporter'
+ownsolid node exporter logs "$NODE_ID"
+```
+
+Use `node task` with the returned task ID to follow execution. The status
+command shows desired and observed state separately. To repeat a write
+whose result is uncertain, reuse its original key, node UUID and arguments.
+Removal requires `--confirm`. Read the approved versions from `status`.
+
+## Publish a deployment alias
+
+Choose an existing gateway in the workspace and the current revision of
+its ready deployment. These commands manage the alias record in control.
+Serving requests also requires the running gateway and model backend.
+
+```sh
+ownsolid deployment alias gateways
+ownsolid deployment alias publish "$DEPLOYMENT_ID" --gateway "$GATEWAY_ID" --name qwen3 \
+  --revision "$DEPLOYMENT_REVISION" --idempotency-key "$PUBLISH_KEY" --reason 'Publish approved model'
+ownsolid deployment alias list
+ownsolid deployment alias get "$ALIAS_ID" --output json
+ownsolid deployment alias disable "$ALIAS_ID" --revision "$ALIAS_REVISION" \
+  --reason 'Withdraw published model' --confirm
+```
+
 ## Test the Admin workflow offline
 
 With the Go module cache and pinned PostgreSQL image already prepared, run
@@ -166,3 +229,18 @@ the CLI and dispatcher fixture for the image's Linux architecture and runs
 both against a disposable PostgreSQL instance in a Docker network namespace
 with only loopback reachable. The test uses synthetic agent facts and
 inference observations to verify control-plane state and writes.
+
+To include the approved model import and component catalog tests, prepare
+the bundle and archives described in
+[development environment](../../docs/development/environment.md) and the
+pinned VictoriaLogs image in the runner. Run the combined fixture with
+both paths set.
+
+```sh
+LANE_D_MODEL_BUNDLE=/path/to/model.tar LANE_D_COMPONENT_STATE=/path/to/state \
+  tools/cli/testdata/run-admin-tls.sh
+```
+
+The fixture runs the actual archive verifier and reads settled component
+logs from VictoriaLogs. It uses synthetic node results for systemd and GPU
+operations and verifies publication against a provisioned gateway record.

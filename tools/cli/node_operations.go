@@ -21,7 +21,7 @@ type nodeUpdate struct {
 
 func (opts *options) addNodeOperations(group *cobra.Command) {
 	group.AddCommand(opts.nodeTasksCommand(), opts.nodeTaskCommand(), opts.nodeTaskLogCommand(), opts.collectFactsCommand(),
-		opts.joinTokensCommand(), opts.nodeInferenceCommand(), opts.probeInferenceCommand())
+		opts.joinTokensCommand(), opts.nodeInferenceCommand(), opts.probeInferenceCommand(), opts.exporterCommand())
 	for _, change := range []struct {
 		command, status, description string
 	}{
@@ -245,7 +245,7 @@ func (opts *options) collectFactsCommand() *cobra.Command {
 	return cmd
 }
 
-func (opts *options) submitNodeTask(cmd *cobra.Command, target, key, suffix string, input map[string]string) error {
+func (opts *options) submitNodeTask(cmd *cobra.Command, target, key, suffix string, input any) error {
 	if err := requireID(key, "--idempotency-key"); err != nil {
 		return err
 	}

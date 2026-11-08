@@ -33,9 +33,9 @@ when SSH is the only interface.
 | --- | --- | --- |
 | 1 | Prepare, pause and resume a worker | Issue, list and revoke enrollment invitations. Read and update node status and name. Remove a node, collect facts and inspect its tasks and logs. |
 | 1 | Run and maintain an approved model | Inspect GPU facts and placement, refresh GPU observations, create a deployment, and start, observe, verify, stop or remove it. Inspect the model manifest and retire an unreferenced version. |
-| 2 | Bring a new approved model into the installation | Complete the resumable bundle upload and verification path with the exact approved artifact. The TLS fixture seeds metadata and cannot verify import or file integrity. This lane has no prepared approved bundle for that run. |
-| 2 | Publish a deployment to callers | Exercise gateway provisioning, alias publication and protected credentials with the gateway delivery path. The current installation fixture stops at control-plane admission and the installer does not start the agent-managed gateway. |
-| 2 | Manage node monitoring components | The component flows need the approved node exporter assets and the corresponding agent execution profile. The current inference fixture provides neither. |
+| 2 | Bring a new approved model into the installation | The CLI uploads, resumes, verifies and cancels imports through the existing Admin API. The real verifier published the approved Qwen3-0.6B archive in the disconnected fixture. |
+| 2 | Publish a deployment to callers | The CLI lists provisioned gateways and publishes or disables aliases with persisted Admin TLS evidence. Starting the agent-managed gateway and delivering its certificate and credential depend on GW-114. Caller credential handoff and serving traffic need the installed gateway. |
+| 2 | Manage node monitoring components | The CLI manages node exporter tasks and reads their journal snapshots. The disconnected fixture used both pinned archives, PostgreSQL, VictoriaLogs and synthetic agent reports. The installed agent's systemd lifecycle needs the exporter delivery path in FLT-109 and its own target-host run. |
 
 Keep the broader roadmap item open. Splitting these workflows preserves the
 existing Admin contracts and puts the maintenance path in operators' hands

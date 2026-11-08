@@ -124,9 +124,17 @@ func TestCommandHelp(t *testing.T) {
 		{"node", "disable"}, {"node", "enable"}, {"node", "rename"}, {"node", "remove"},
 		{"node", "collect-facts"}, {"node", "tasks"}, {"node", "task"}, {"node", "task-log"}, {"node", "inference"}, {"node", "probe-inference"},
 		{"node", "join-token"}, {"node", "join-token", "list"}, {"node", "join-token", "create"}, {"node", "join-token", "revoke"},
+		{"node", "exporter"}, {"node", "exporter", "status"}, {"node", "exporter", "logs"},
+		{"node", "exporter", "install"}, {"node", "exporter", "start"}, {"node", "exporter", "stop"},
+		{"node", "exporter", "remove"}, {"node", "exporter", "observe"}, {"node", "exporter", "configure"},
+		{"node", "exporter", "restart"}, {"node", "exporter", "upgrade"}, {"node", "exporter", "rollback"}, {"node", "exporter", "collect-logs"},
 		{"model", "get"}, {"model", "retire"},
+		{"model", "import"}, {"model", "import", "catalog"}, {"model", "import", "list"}, {"model", "import", "get"},
+		{"model", "import", "start"}, {"model", "import", "resume"}, {"model", "import", "verify"}, {"model", "import", "cancel"},
 		{"deployment", "placement"}, {"deployment", "create"}, {"deployment", "start"}, {"deployment", "stop"},
 		{"deployment", "observe"}, {"deployment", "verify"}, {"deployment", "remove"},
+		{"deployment", "alias"}, {"deployment", "alias", "gateways"}, {"deployment", "alias", "list"},
+		{"deployment", "alias", "get"}, {"deployment", "alias", "publish"}, {"deployment", "alias", "disable"},
 	} {
 		out, _, err := run(t, append(slices.Clone(args), "--help")...)
 		if err != nil || !strings.Contains(out, "Examples:") || !strings.Contains(out, "ownsolid ") {

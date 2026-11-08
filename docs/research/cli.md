@@ -182,3 +182,98 @@ Neither is included in the standalone CLI.
 [ec2-retry]: https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html
 [postgres-license]: https://www.postgresql.org/about/licence/
 [pgvector-license]: https://github.com/pgvector/pgvector/blob/v0.8.7/LICENSE
+
+## Resumable model import
+
+Use the same [Admin import contract](../../api/openapi/v1/models/openapi.json)
+and store exercised by MOD-119 and DEL-117. The [tus specification][tus]
+uses a server-owned offset and rejects writes beyond it. ownsolid's
+equivalent is the import's `uploaded_bytes` and a SHA-256 per chunk.
+Read the installation's catalog and limits, acknowledge its license, and
+create the intent with the caller's idempotency key. Reopen the same local
+bundle to resume and replay the final recorded chunk before appending. The
+CLI reads only one bounded chunk at a time. The server validates the final
+archive against every approved path, size and digest before publishing it.
+
+Reuse the Admin CSRF token and context cookie for a transfer, refreshing
+them on an explicit CSRF refusal. A lost chunk response stops the process
+with the import ID and resume command. The next process reads the durable
+offset and replays safely. This avoids a local transfer journal, trusting a
+client offset, parallel writes to a single import, or a second archive
+verifier that could disagree with the server. Verification, cancellation and
+status use the existing import lifecycle endpoints.
+
+The real fixture uses a lane-owned archive of the cached, catalog-checked
+[Qwen3-0.6B revision][qwen-license]. Its Apache-2.0 license permits commercial
+use and offline redistribution with the required notices. Preserve its
+license and model card in the archive. All CLI additions use existing Go
+dependencies. Test a lost response after a durable chunk, an alternate file
+of the same size, an out-of-scope request, exact-byte continuation, and the
+real verifier publishing a ready model with its approved manifest.
+
+[tus]: https://tus.io/protocols/resumable-upload
+[qwen-license]: https://huggingface.co/Qwen/Qwen3-0.6B/blob/c1899de289a04d12100db370d81485cdf75e47ca/LICENSE
+
+## Node exporter maintenance
+
+Expose the [component contract](../../api/openapi/v1/components/openapi.json)
+for the single managed node exporter. Read desired and observed state
+separately. Submit the server's typed action, optional catalog version and
+bounded configuration using the existing task idempotency key. Inspect
+the returned task for completion and use the separate journal snapshot
+endpoint for collected logs. Never issue SSH or systemd commands from the
+CLI or transfer arbitrary executable files. The agent and its execution
+profile own host changes, and control checks pinned assets before leasing.
+
+The approved Linux amd64 archives for [1.12.0][exporter-120] and
+[1.12.1][exporter-121] are Apache-2.0, permitting commercial use and offline
+redistribution with the required notices. Prepare both in the fixture's
+catalog directory and check their size and SHA-256 against the repository.
+The CLI consumes the Admin API using its existing Go dependencies.
+Test install and upgrade with verified assets, configure, rollback, task
+replay, refusal on an ineligible profile and a journal snapshot through
+the existing log store. Distinguish synthetic agent results from systemd
+execution on a node.
+
+[exporter-120]: https://github.com/prometheus/node_exporter/blob/v1.12.0/LICENSE
+[exporter-121]: https://github.com/prometheus/node_exporter/blob/v1.12.1/LICENSE
+
+## Gateway alias publication
+
+Use the [Admin distribution contract](../../api/openapi/v1/distribution/openapi.json)
+to list existing gateway instances and list, inspect, publish or disable
+their aliases. A publish pins the selected workspace, gateway, deployment
+revision and idempotency key. Disabling requires the current alias revision
+and explicit confirmation. Let control decide whether the gateway and target
+are ready. The existing [gateway delivery plan](gateway-delivery.md) gives
+agent-managed startup and credentials to GW-114. Keep that separate from
+publication, and keep caller credential handoff outside this CLI slice.
+
+The CLI uses existing dependencies. Verify the mutation against the real
+Admin handler and PostgreSQL with a provisioned gateway record and a
+synthetic deployment observation. Test a lost publish response, exact
+replay, cross-workspace and stale-revision refusal, and the persisted disable.
+This verifies the publication record. A live route requires an installed
+gateway process and model backend.
+
+## Priority 2 integration evidence
+
+The disconnected Admin fixture uploaded the 1,519,216,640-byte archive
+assembled from nine catalog-verified Qwen3-0.6B files. A response lost after
+the first committed chunk was followed by a same-size wrong-file refusal,
+then a successful continuation and publication by the real verifier. A
+foreign file in a lane-owned verification stage produced
+`MODEL_STAGE_INVALID`. The CLI requeued verification and the next attempt
+published from the same upload. A separate cancelled import had its stored
+bytes removed. The fixture also checked refusal after the session lost
+administrator eligibility.
+
+The same runner leased and checked both pinned node exporter archives and
+settled install, configure, restart, upgrade, rollback, stop, start,
+observe, log collection and removal tasks using synthetic agent reports.
+It read the settled journal snapshot from real [VictoriaLogs 1.53.0][vlogs],
+an Apache-2.0 test dependency. The gateway fixture tested the persisted
+publish, retry and disable against a provisioned gateway record. Agent
+systemd execution and gateway process delivery have their own qualification.
+
+[vlogs]: https://github.com/VictoriaMetrics/VictoriaLogs/blob/v1.53.0/LICENSE

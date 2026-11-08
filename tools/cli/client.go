@@ -122,6 +122,7 @@ func (c *apiClient) prepareWrite(ctx context.Context, input *request) error {
 type request struct {
 	method, path string
 	query        url.Values
+	header       http.Header
 	csrf, key    string
 	body         []byte
 	status       int
@@ -134,8 +135,11 @@ func (c *apiClient) request(ctx context.Context, input request, out any) error {
 	if err != nil {
 		return fmt.Errorf("cannot construct the request to %s", c.origin.String())
 	}
+	if input.header != nil {
+		req.Header = input.header.Clone()
+	}
 	req.Header.Set("Accept", "application/json")
-	if len(input.body) > 0 {
+	if len(input.body) > 0 && req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
 	if input.csrf != "" {
@@ -241,6 +245,18 @@ func (e *apiError) Error() string {
 		detail = "refresh the node with ownsolid node probe-inference, then check placement again"
 	case e.code == "MODEL_VERSION_REFERENCED":
 		detail = "inspect deployments and other workloads using the model before retiring it"
+	case e.code == "MODEL_CHUNK_CONFLICT":
+		detail = "the stored chunk has different bytes; resume with the original bundle"
+	case e.code == "MODEL_IMPORT_BUSY":
+		detail = "inspect ownsolid model import list and continue or cancel the active import"
+	case e.code == "MODEL_IMPORT_INCOMPLETE":
+		detail = "read the import state and resume the original bundle before requesting verification"
+	case e.code == "MODEL_ALIAS_UNAVAILABLE":
+		detail = "check the provisioned gateway and the deployment's ready state and current revision"
+	case e.code == "COMPONENT_ASSET_UNAVAILABLE", e.code == "COMPONENT_ASSET_INVALID":
+		detail = "check the pinned node exporter archive in the installation's component catalog"
+	case e.code == "COMPONENT_PROFILE_UNAVAILABLE", e.code == "COMPONENT_MAINTENANCE_REQUIRED":
+		detail = "use a node with the approved exporter management or maintenance execution profile"
 	case e.status == http.StatusUnauthorized:
 		detail = "the Admin session is invalid or expired; run ownsolid login"
 	case e.status == http.StatusForbidden:

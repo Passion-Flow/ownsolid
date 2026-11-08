@@ -2,11 +2,9 @@ package http_test
 
 import (
 	"encoding/json"
-	"encoding/pem"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -15,9 +13,7 @@ import (
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
-	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"github.com/google/uuid"
 )
 
@@ -35,82 +31,23 @@ type cliRow struct {
 
 func TestLaneDAdminTLS(t *testing.T) {
 	ctx := t.Context()
-	binary := os.Getenv("LANE_D_CLI_BINARY")
-	if binary == "" {
-		t.Fatal("set LANE_D_CLI_BINARY to the compiled CLI")
-	}
-	service := fixture.New(t)
-	var handler *transport.Handler
 	var loseResponse atomic.Bool
 	var committed atomic.Bool
-	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost && strings.Contains(r.URL.Path, "/admin/deployments") && loseResponse.CompareAndSwap(true, false) {
-			reply := httptest.NewRecorder()
-			handler.ServeHTTP(reply, r)
-			committed.Store(reply.Code == http.StatusAccepted)
-			// Simulate the proxy losing the reply after dispatching the real request.
-			w.WriteHeader(http.StatusServiceUnavailable)
-			return
-		}
-		handler.ServeHTTP(w, r)
-	}))
-	defer server.Close()
-	service.Config.Server.AdminOrigin = "https://" + server.Listener.Addr().String()
-	password := fixture.Bootstrap(t, service)
-	auth := fixture.Login(t, service, "admin@example.invalid", password, "admin")
-	handler = transport.New(service)
-	if err := handler.LicenseInitializationError(); err != nil {
-		t.Fatal(err)
-	}
-	if err := handler.Licensing.Service.VerifyStored(ctx); err != nil {
-		t.Fatal(err)
-	}
-	server.StartTLS()
-
-	dir := t.TempDir()
-	if err := os.Chmod(dir, 0700); err != nil {
-		t.Fatal(err)
-	}
-	caPath := filepath.Join(dir, "ca.pem")
-	passwordPath := filepath.Join(dir, "password")
-	config, err := json.Marshal(map[string]string{"ca_file": caPath})
-	if err != nil {
-		t.Fatal(err)
-	}
-	for path, content := range map[string][]byte{
-		caPath:                            pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw}),
-		passwordPath:                      []byte(password),
-		filepath.Join(dir, "config.json"): config,
-	} {
-		if err := os.WriteFile(path, content, 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
-	t.Setenv("OWNSOLID_CONFIG_DIR", dir)
-	t.Setenv("OWNSOLID_SERVER", server.URL)
-	call := func(args ...string) (string, error) {
-		t.Helper()
-		output, err := exec.CommandContext(ctx, binary, args...).CombinedOutput()
-		if strings.Contains(string(output), password) {
-			t.Fatal("CLI printed its password")
-		}
-		return string(output), err
-	}
-	ok := func(want string, args ...string) string {
-		t.Helper()
-		out, err := call(args...)
-		if err != nil || want != "" && !strings.Contains(out, want) {
-			t.Fatalf("CLI %v, want %q: %v %s", args, want, err, out)
-		}
-		return out
-	}
-	refused := func(want string, args ...string) {
-		t.Helper()
-		out, err := call(args...)
-		if err == nil || !strings.Contains(out, want) {
-			t.Fatalf("CLI %v, want refusal %q: %v %s", args, want, err, out)
-		}
-	}
+	c := newWorkflowCLI(t, nil, func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPost && strings.Contains(r.URL.Path, "/admin/deployments") && loseResponse.CompareAndSwap(true, false) {
+				reply := httptest.NewRecorder()
+				next.ServeHTTP(reply, r)
+				committed.Store(reply.Code == http.StatusAccepted)
+				// Simulate the proxy losing the reply after dispatching the real request.
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
+	service, handler, auth, dir := c.service, c.handler, c.auth, c.config
+	ok, refused, count := c.ok, c.refused, c.count
 	row := func(args ...string) cliRow {
 		t.Helper()
 		out := ok("", append(args, "-o", "json")...)
@@ -126,17 +63,8 @@ func TestLaneDAdminTLS(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	count := func(want int, statement string, args ...any) {
-		t.Helper()
-		var got int
-		if err := service.DB.QueryRow(ctx, statement, args...).Scan(&got); err != nil || got != want {
-			t.Fatalf("fixture count %d, want %d: %v", got, want, err)
-		}
-	}
-
 	ok("Examples:", "--help")
 	ok("Examples:", "node", "list", "--help")
-	ok("signed in", "login", "--email", "admin@example.invalid", "--password-file", passwordPath)
 	const nodeName = "Lane D synthetic node"
 	tokenFile := filepath.Join(dir, "enrollment")
 	issued := ok("", "node", "join-token", "create", nodeName, "--profile", wire.DockerInferenceProfile, "--token-file", tokenFile, "-o", "json")
