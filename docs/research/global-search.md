@@ -50,8 +50,11 @@ first opening the page that lists it.
   at; a browser flow caught exactly that.
 - **Typing waits for a pause and a new search cancels the old one**, through the query's abort signal.
 
-Models and applications have no console page to land on yet (S-201, S-309). A source is added with each,
-so UX-106 stays open until then, as [ADR 0034](../decisions/0034-web-lane-governance-pages.md) expected.
+The console's Model library supplies a model provider from the workspace in the switcher. The library
+and the command menu filter the same complete list by name, since the contract returns the workspace's
+model directory without a search parameter. A result opens the library drawer, and the console's
+`models.spec.ts` covers that route. Applications still need the S-309 catalog, so UX-106 stays open,
+as [ADR 0034](../decisions/0034-web-lane-governance-pages.md) expected.
 
 Rejected: a server endpoint that searches everything, which would duplicate each module's permission
 rule, and cross cells once ARC-202 lands; a search index or `pg_trgm`, which adds an extension for a
