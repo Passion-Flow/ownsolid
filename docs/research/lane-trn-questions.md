@@ -29,13 +29,12 @@ generic candidate pipeline streaming and leaves the product items open.
 
 ## SCH-101 durable training admission
 
-Scheduling needs a durable intent writer and a production schema with its
-matching catalog fingerprints. Prefer writing the intent in the authenticated
-training creation transaction, then reserving resources in the existing
-dispatch transaction. The scheduling and database owners supply the shared
-write contract and schema. The training lane keeps the existing dispatch
-authority until that contract is available. See the
-[training transaction handoff](training-job-lifecycle.md#scheduler-handoff).
+The scheduler now supplies the durable attempt writer and candidate SQL.
+Train dispatch can reserve and release within the existing owner transaction
+on that candidate. Production activation needs the matching catalog
+fingerprints, runtime grants and a plan for existing physical leases. Keep
+the training create operation as queued demand and take capacity in dispatch.
+See the [training transaction handoff](training-job-lifecycle.md#scheduler-handoff).
 
 ## P2 dependency order
 

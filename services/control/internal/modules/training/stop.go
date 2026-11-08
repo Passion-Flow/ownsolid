@@ -7,15 +7,15 @@ import (
 	"errors"
 
 	"database/sql"
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 // RecordStop accepts only restricted exact-owner absence evidence. It grants no execution/output authority.
@@ -152,6 +152,9 @@ func (s *Service) RecordStop(ctx context.Context, node, credential, task, token 
 			return e
 		}
 		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE gpu_leases SET state='released',updated_at=clock_timestamp() WHERE training_job_id=$1 AND revision=$2 AND node_id=$3", "UPDATE gpu_leases SET state='released',updated_at=UTC_TIMESTAMP(6) WHERE training_job_id=? AND revision=? AND node_id=?", []any{j.ID, command.AttemptNumber, node}, []any{j.ID, command.AttemptNumber, node})); e != nil {
+			return e
+		}
+		if e = s.releaseSchedulingWithin(ctx, tx, w, j, command); e != nil {
 			return e
 		}
 		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE node_tasks SET state=$2,error_code=NULLIF($3,''),completed_lease_hash=COALESCE(completed_lease_hash,lease_token_hash),lease_token_hash=NULL,lease_expires_at=NULL,completed_at=COALESCE(completed_at,clock_timestamp()),updated_at=clock_timestamp() WHERE id=$1", "UPDATE node_tasks SET state=?,error_code=NULLIF(?,''),completed_lease_hash=COALESCE(completed_lease_hash,lease_token_hash),lease_token_hash=NULL,lease_expires_at=NULL,completed_at=COALESCE(completed_at,UTC_TIMESTAMP(6)),updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{task, state, code}, []any{state, code, task})); e != nil {

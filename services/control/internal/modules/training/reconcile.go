@@ -6,12 +6,12 @@ import (
 	"errors"
 
 	"database/sql"
-	"github.com/google/uuid"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 type undeliveredReceipt struct {
@@ -141,6 +141,9 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 				return e
 			}
 			if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE gpu_leases SET state='released',updated_at=clock_timestamp() WHERE training_job_id=$1 AND revision=$2", "UPDATE gpu_leases SET state='released',updated_at=UTC_TIMESTAMP(6) WHERE training_job_id=? AND revision=?", []any{j.ID, command.AttemptNumber}, []any{j.ID, command.AttemptNumber})); e != nil {
+				return e
+			}
+			if e = s.releaseSchedulingWithin(ctx, tx, w, j, command); e != nil {
 				return e
 			}
 			if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_jobs SET state=$2,error_code=$3,wait_code=NULL,revision=revision+1,finished_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_jobs SET state=?,error_code=?,wait_code=NULL,revision=revision+1,finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{j.ID, state, code}, []any{state, code, j.ID})); e != nil {

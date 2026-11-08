@@ -292,6 +292,13 @@ func (s *Service) reserveDispatchWithin(ctx context.Context, q transaction.Execu
 		}
 		return false, e
 	}
+	waitCode, e := s.reserveSchedulingWithin(ctx, q, w, j, snapshot.command)
+	if e != nil {
+		return false, e
+	}
+	if waitCode != "" {
+		return false, dispatchRollbackWait(ctx, s, q, j, waitCode)
+	}
 	var deadline time.Time
 	if e := q.QueryRow(ctx, acceptedAdapterSQL(q, "SELECT clock_timestamp()+make_interval(secs=>$1)", "SELECT TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6))", j.Recipe.Resources.WallSeconds)).Scan(&deadline); e != nil {
 		return false, e

@@ -37,28 +37,39 @@ nullable response field and status codes cover these outcomes.
 
 ## Scheduler handoff
 
-The training creation hook belongs in the final callback of
-[Create](../../services/control/internal/modules/training/creator_repository.go),
-after idempotency replay, repeated authority and current input checks. A
-durable scheduling writer must borrow that same transaction and take the
-generated training job ID plus the authenticated tenant and workspace.
-An exact replay must resolve the existing scheduler intent. Its insertion,
-the training row and the creation audit must all roll back on failure.
-External placement calls belong outside the transaction.
-
-Creation represents queued demand. A scheduler reservation belongs with
+[Create](../../services/control/internal/modules/training/creator_repository.go)
+continues to commit the authenticated, queued training job and its audit.
+[Kueue admission](https://kueue.sigs.k8s.io/docs/concepts/admission/) separates
+queued demand from a resource hold. Take quota only in
 [reserveDispatchWithin](../../services/control/internal/modules/training/dispatch.go)
-and must roll back with a rejected node task, a stale attempt or an audit
-failure. Preserve the exact stop and lease release boundary when reconciling
-scheduler state. Use the verified whole NVIDIA GPU and the frozen memory
-budget when defining the resource mapping. The training CPU-seconds budget
-measures cumulative CPU time. A millicore request needs its own policy.
+after current authority, immutable input and physical GPU checks. The existing
+[PostgreSQL savepoint](https://www.postgresql.org/docs/18/sql-rollback-to.html)
+contains the physical hold, scheduling hold, node task and numbered attempt.
+Use the locked workspace and job and the frozen command identity. Demand is
+one NVIDIA GPU and the frozen worker memory budget. CPU seconds are a
+cumulative CPU-time budget. A millicore request needs its own policy.
 
-Main has the typed scheduling intent and preflight. Its PostgreSQL repository
-currently persists only a quota policy in a candidate test schema. A durable
-job writer, production schema lineage and cell composition are still needed.
-An in-memory projection at creation would disappear after restart and leave
-no transaction to prove.
+Use stable training wait codes for quota exhaustion, an unconfigured policy
+and a missing workspace allocation. Roll the savepoint back before writing
+the wait state. A held replay on the queued-only branch indicates stale owner
+state and must abort. A failed or unknown owner commit publishes no dispatch
+success. A retry starts by reading current job state.
+
+The stop and reconcile paths release the scheduling hold next to the physical
+lease, only after exact stop proof or transactional proof of no delivery.
+They keep the physical GPU lock ahead of scheduling locks. Replaying an
+accepted receipt follows the existing owner replay path. A missing or
+prematurely released hold aborts a new stop acceptance. Expiry of a delivered
+lease or loss of human access does not by itself establish physical stop.
+
+The [scheduler candidate](scheduling-training-reservations.md) supplies the
+borrowed PostgreSQL writer and fixture SQL. Enable this training path only in
+a test-owned candidate schema. Table-existence probing or a configurable quota
+bypass would let a damaged or partly migrated installation ignore capacity.
+Production activation needs catalog validation, runtime grants and a cutover
+that drains or accounts for pre-existing physical holds. Dispatch and stop
+owners must switch together. There is no new dependency, model or dataset. The linked scheduler research records the
+existing PostgreSQL, pgx, Go and UUID licence terms and offline use.
 
 ## Verification
 
@@ -78,3 +89,21 @@ The change adds no dependency, model or dataset. The existing Go, pgx and
 PostgreSQL licensing and offline requirements are recorded in the
 [scheduling model research](scheduling-job-model.md#licensing-and-offline-operation).
 The fixture uses synthetic rows, node reports and stop receipts.
+
+For the candidate integration, apply the two scheduler SQL fixtures to the
+test-owned training schema, then seed the quota through the existing writer.
+Verify a denied dispatch leaves no task, attempt, physical hold or scheduling
+hold. Verify node busy rolls both holds back and retains its wait code. Inject
+audit failure after reservation and after stop proof to check transaction
+rollback. Retry through the regular dispatcher and replay an accepted stop
+without taking or releasing another hold. Check both exact stop and proven
+never-delivered paths, including an absent reservation and a delivered lease
+that has lost contact. Exercise the default service with the unchanged catalog.
+
+On Linux amd64, the three candidate cases passed against a disconnected
+PostgreSQL 18.6 fixture with pgvector 0.8.7 and CPython 3.12.15. The fixture
+started with the 118-table installation lineage, added the two candidate
+tables, and removed the isolated schema after each case. Three control cases
+passed against the unchanged catalog. Node hardware facts and container
+absence proofs were synthetic. The authorized training, task, reservation,
+stop and audit writes were real.
