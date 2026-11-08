@@ -186,7 +186,7 @@ hours. Archived WAL stays until an explicit prune. Incremental creation
 uses the server's WAL summaries, independently of archived WAL retention.
 
 Choose a UTC time after the selected base finished and within the retained
-archive. Replay runs in a separate PostgreSQL container with no network.
+archive. Use RFC3339 with a trailing `Z` and at most six fractional digits. Replay runs in a separate PostgreSQL container with no network.
 A missing segment or an unreached target leaves the live database serving.
 The command publishes a checked logical recovery point under
 `<pitr.directory>/recovered/<id>` and prints its path.

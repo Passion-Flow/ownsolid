@@ -260,7 +260,7 @@ func testIsolatedDocker(t *testing.T, signed, upgrade, pitr bool) {
 	policy.ContainerdRoot = filepath.Join(strings.TrimSpace(storage), "containerd", "daemon")
 	c.Preflight = &policy
 	if pitr {
-		c.PITR = &PITRConfig{Directory: t.TempDir(), ArchiveSeconds: 1}
+		c.PITR = &PITRConfig{Directory: t.TempDir()}
 		if err := os.Chmod(c.PITR.Directory, 0o700); err != nil {
 			t.Fatal(err)
 		}
