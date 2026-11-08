@@ -6,6 +6,10 @@ node-impacting failures happen every day, so detection and remediation must be a
 - Owns: `services/agent` device collectors, `services/control` health and remediation.
 - Depends on: fleet-and-infrastructure, observability-and-alerting.
 
+Reviewed 2026-11-09 against NVIDIA DCGM, GPU Operator and Kubernetes device
+allocation. The review added GPU-209 for the intra-node fabric, separate from
+inter-node fabric monitoring. See [GPU telemetry research](../../research/gpu-telemetry.md).
+
 ## P1 Enterprise release
 
 - [ ] GPU-101 NVIDIA health through DCGM: utilization, memory, temperature, power, clocks, ECC, NVLink (P1)
@@ -28,6 +32,7 @@ node-impacting failures happen every day, so detection and remediation must be a
 - [ ] GPU-206 Capacity degradation tracking and spare planning (P2) - Catalog: F636
 - [ ] GPU-207 Verified on real Ascend hardware (record model and count) (P2)
 - [ ] GPU-208 Heterogeneous pools with capability tiers (P2) - Catalog: F634
+- [ ] GPU-209 Intra-node PCIe and NVLink/NVSwitch topology and link health, with fault attribution to the affected GPU or switch (P2)
 
 ## P4 Breadth
 
