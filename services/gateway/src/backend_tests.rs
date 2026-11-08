@@ -182,7 +182,7 @@ async fn actual_http_models_tokenize_and_completion_use_fixed_destination_and_sa
     );
     let bytes = bounded_json(
         backend
-            .completion(&request, "synthetic-internal")
+            .completion(&request, "synthetic-internal", Uuid::new_v4())
             .await
             .unwrap(),
         limits.response_bytes,

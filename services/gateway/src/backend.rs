@@ -4,6 +4,7 @@ use futures_util::StreamExt;
 use reqwest::{Response, StatusCode, header};
 use serde::Deserialize;
 use std::time::Duration;
+use uuid::Uuid;
 
 /// One operator-configured colocated backend. No request data can select a destination.
 pub struct Backend {
@@ -136,10 +137,17 @@ impl Backend {
         request.validate_tokenization(&bytes, limits)
     }
 
-    pub async fn completion(&self, request: &ChatRequest, model: &str) -> Result<Response> {
+    /// Sends the gateway-generated request ID to the engine for correlation.
+    pub async fn completion(
+        &self,
+        request: &ChatRequest,
+        model: &str,
+        request_id: Uuid,
+    ) -> Result<Response> {
         let response = self
             .client
             .post(format!("{}/v1/chat/completions", self.origin))
+            .header("x-request-id", request_id.to_string())
             .json(&request.completion_payload(model))
             .send()
             .await

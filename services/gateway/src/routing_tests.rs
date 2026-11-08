@@ -156,6 +156,10 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
         .into_response();
     }
     let tokenize = request.uri().path() == "/tokenize";
+    if !tokenize {
+        let id = Uuid::parse_str(request.headers()["x-request-id"].to_str().unwrap()).unwrap();
+        assert!(state.admissions.lock().unwrap().contains(&id));
+    }
     let body: Value = serde_json::from_slice(
         &axum::body::to_bytes(request.into_body(), 65_536)
             .await
@@ -544,9 +548,18 @@ async fn real_gateway_tls_models_chat_sse_and_durable_metadata_receipts() {
         .unwrap();
     assert_eq!(models["data"][0]["id"], "public-alias");
     assert!(!models.to_string().contains("synthetic-internal"));
-    let response = fixture.chat(false).send().await.unwrap();
+    let caller_id = Uuid::new_v4();
+    let response = fixture
+        .chat(false)
+        .header("x-request-id", caller_id.to_string())
+        .send()
+        .await
+        .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    let id = Uuid::parse_str(response.headers()["x-request-id"].to_str().unwrap()).unwrap();
+    assert_ne!(id, caller_id);
+    assert!(fixture.state.admissions.lock().unwrap().contains(&id));
     let value: Value = response.json().await.unwrap();
     assert_eq!(value["model"], "public-alias");
     assert_eq!(value["usage"]["total_tokens"], 9);
@@ -866,13 +879,14 @@ async fn actual_tls_permanent_outcome_rejection_preserves_metadata_and_refuses_n
 async fn real_upstream_with_unread_bounded_publisher_times_out_and_releases_permits() {
     let fixture = Fixture::new().await;
     let request=crate::protocol::ChatRequest::parse(&serde_json::to_vec(&json!({"model":"public-alias","messages":[{"role":"user","content":"Synthetic request \u{4e2d}\u{6587}"}],"max_tokens":16,"stream":true})).unwrap(),&fixture.app().configuration.limits).unwrap();
+    let id = Uuid::new_v4();
+    fixture.state.admissions.lock().unwrap().insert(id);
     let response = fixture
         .app()
         .backend
-        .completion(&request, "synthetic-internal")
+        .completion(&request, "synthetic-internal", id)
         .await
         .unwrap();
-    let id = Uuid::new_v4();
     let execution = crate::admission::Execution::new(fixture.app().spool.reserve(id).unwrap(), id);
     let semaphore = Arc::new(tokio::sync::Semaphore::new(2));
     let (sender, _unread_receiver) = tokio::sync::mpsc::channel(1);
@@ -917,6 +931,11 @@ async fn offline_vllm_stream_reports_real_tokens_and_durable_usage() {
         "temperature": 0, "max_tokens": 16, "stream_options": {"include_usage": true}
     })).send().await.unwrap();
     let status = response.status();
+    let request_id = response.headers()["x-request-id"]
+        .to_str()
+        .unwrap()
+        .to_owned();
+    let completion_id = format!("chatcmpl-{request_id}");
     let body = response.text().await.unwrap();
     assert_eq!(status, StatusCode::OK, "{body}");
     let events = body.strip_suffix("data: [DONE]\n\n").expect(&body);
@@ -925,6 +944,7 @@ async fn offline_vllm_stream_reports_real_tokens_and_durable_usage() {
     for event in events.split("\n\n").filter(|event| !event.is_empty()) {
         let chunk: Value = serde_json::from_str(event.strip_prefix("data: ").unwrap()).unwrap();
         assert_eq!(chunk["model"], "public-alias");
+        assert_eq!(chunk["id"], completion_id);
         if let Some(text) = chunk
             .pointer("/choices/0/delta/content")
             .and_then(Value::as_str)
@@ -949,8 +969,9 @@ async fn offline_vllm_stream_reports_real_tokens_and_durable_usage() {
     let outcome = fixture.app().spool.next_pending().unwrap().unwrap();
     assert_eq!(outcome.status, Status::Succeeded);
     assert_eq!(outcome.usage, Some(usage.clone()));
+    assert_eq!(outcome.request_id.to_string(), request_id);
     println!(
-        "offline vLLM: {} prompt tokens, {} completion tokens, durable outcome",
+        "offline vLLM: {} prompt tokens, {} completion tokens, correlated durable outcome",
         usage.prompt_tokens, usage.completion_tokens
     );
 }
