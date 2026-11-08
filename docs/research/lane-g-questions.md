@@ -23,7 +23,7 @@ open until the named integration is usable.
 | GW-121 | One entrance needs installation TLS routing and a control-authorized alias lookup across node gateways. It must resolve overlapping names using server-authenticated scope. |
 | GW-122 | The Rust listener already reads certificate and key files. Agent-managed gateways need a way to validate and mount site-managed material and deliver the matching trust chain. |
 | GW-123 | Profile capability registration, task dispatch, and offline provisioning belong to the agent and delivery paths. |
-| GW-124 | A live certificate handoff needs a renewal task or explicit reload trigger from the agent and the control CA. The listener can be exercised independently once that handoff is specified. |
+| GW-124 | The Rust listener reloads a protected certificate pair on SIGHUP and preserves open streams. Control CA renewal and the agent's delivery, validation and signal are still needed. [Certificate reload](gateway-tls-renewal.md). |
 | GW-125 | Publishing the correct CA requires a control route with installation trust metadata and presentation next to the console and portal endpoint examples. |
 
 The remaining P2 work follows the P1 boundaries. Route policy depends on

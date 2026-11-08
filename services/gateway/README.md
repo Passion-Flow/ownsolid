@@ -24,6 +24,21 @@ The TLS listener binds the IPv4 address the operator chooses and offers only HTT
 
 Update control/distribution, gateway/public contracts, config/schema/env projection, systemd/container recipes and failure/recovery tests together when changing protocol, admission or outcome semantics. Never add a permissive backend fallback after authorization or TLS failure.
 
+## Reload the serving certificate
+
+The node supervisor can send SIGHUP to a running gateway after publishing a
+verified serving certificate and key at the existing configured paths.
+Verify the chain, advertised hostname, validity and private key match before
+replacing the files. Use atomic file replacements, retaining the configured
+ownership and permissions, then signal the process after both replacements.
+New TLS connections use the replacement pair. Open streams finish on their
+existing connections.
+
+Check the process log for `gateway_tls_reloaded`. A rejected candidate emits
+`gateway_tls_reload_failed` with a stable code and leaves the previous pair
+active. Correct the files and signal again. The signal reloads the serving
+pair. The node agent's automatic renewal workflow is tracked in GW-124.
+
 ## Verification
 
 With pinned Rust and external cargo/build/temp roots:

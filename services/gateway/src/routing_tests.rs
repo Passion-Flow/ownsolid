@@ -452,9 +452,18 @@ impl Fixture {
         let server_app = app.clone();
         let server_handle = gateway_handle.clone();
         let gateway_server = tokio::spawn(async move {
-            crate::listener::serve(&configuration, server_app, gateway_listener, server_handle)
+            let tls = crate::listener::tls_configuration(&configuration)
                 .await
                 .unwrap();
+            crate::listener::serve(
+                &configuration,
+                server_app,
+                gateway_listener,
+                server_handle,
+                tls,
+            )
+            .await
+            .unwrap();
         });
         let client = reqwest::Client::builder()
             .tls_certs_only(reqwest::Certificate::from_pem_bundle(&certificate).unwrap())
@@ -631,6 +640,101 @@ async fn real_gateway_tls_negotiates_http1_with_a_client_that_prefers_http2() {
     .unwrap();
     assert_eq!(negotiated.as_deref(), Some(&b"http/1.1"[..]));
     assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+}
+
+#[cfg(feature = "process-integration")]
+#[tokio::test]
+async fn native_gateway_reloads_serving_tls_without_interrupting_a_stream() {
+    let mut fixture = Fixture::with_quota(Some(json!({}))).await;
+    fixture.use_real_process().await;
+    let generated = rcgen::generate_simple_self_signed(vec!["127.0.0.1".into()]).unwrap();
+    let next_certificate = generated.cert.pem();
+    let replace = |name: &str, bytes: &[u8]| {
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let candidate = fixture.root.join(format!("{name}.next"));
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(&candidate)
+            .unwrap();
+        file.write_all(bytes).unwrap();
+        file.sync_all().unwrap();
+        fs::rename(candidate, fixture.root.join(name)).unwrap();
+    };
+    let signal = || {
+        let pid = fixture.process.as_ref().unwrap().id().to_string();
+        assert!(
+            std::process::Command::new("kill")
+                .args(["-HUP", &pid])
+                .status()
+                .unwrap()
+                .success()
+        );
+    };
+    let events = fixture.root.join("process.log");
+    let ready = format!("{}/health/live", fixture.origin);
+
+    replace("certificate.pem", next_certificate.as_bytes());
+    signal();
+    wait_until(|| {
+        fs::read_to_string(&events)
+            .unwrap()
+            .contains(r#""event":"gateway_tls_reload_failed""#)
+    })
+    .await;
+    assert_eq!(
+        fixture.client.get(&ready).send().await.unwrap().status(),
+        StatusCode::OK
+    );
+
+    fixture.state.backend_mode.store(4, Ordering::SeqCst);
+    let mut stream = fixture
+        .chat(true)
+        .json(&json!({
+            "model": "public-alias", "stream": true, "max_tokens": 16,
+            "messages": [{"role": "user", "content": "Synthetic prompt"}],
+            "stream_options": {"include_usage": true}
+        }))
+        .send()
+        .await
+        .unwrap()
+        .bytes_stream();
+    let mut head = Vec::new();
+    while !head.ends_with(b"\n\n") {
+        head.extend(stream.next().await.unwrap().unwrap());
+    }
+    assert!(String::from_utf8_lossy(&head).contains("Synthetic"));
+
+    let next_key = generated.signing_key.serialize_pem();
+    replace("key.pem", next_key.as_bytes());
+    signal();
+    wait_until(|| {
+        fs::read_to_string(&events)
+            .unwrap()
+            .contains(r#""event":"gateway_tls_reloaded""#)
+    })
+    .await;
+    let next_client = reqwest::Client::builder()
+        .tls_certs_only(reqwest::Certificate::from_pem_bundle(next_certificate.as_bytes()).unwrap())
+        .http1_only()
+        .timeout(Duration::from_secs(3))
+        .no_proxy()
+        .build()
+        .unwrap();
+    assert_eq!(
+        next_client.get(&ready).send().await.unwrap().status(),
+        StatusCode::OK
+    );
+
+    fixture.state.complete_stream.notify_one();
+    let mut tail = Vec::new();
+    while let Some(chunk) = stream.next().await {
+        tail.extend(chunk.unwrap());
+    }
+    assert!(tail.ends_with(crate::streaming::DONE_EVENT));
+    assert!(String::from_utf8_lossy(&tail).contains(r#""total_tokens":9"#));
 }
 
 #[tokio::test]
@@ -1367,7 +1471,10 @@ impl TestGateway {
         let server_app = app.clone();
         let server_handle = handle.clone();
         let server = tokio::spawn(async move {
-            crate::listener::serve(&configuration, server_app, listener, server_handle)
+            let tls = crate::listener::tls_configuration(&configuration)
+                .await
+                .unwrap();
+            crate::listener::serve(&configuration, server_app, listener, server_handle, tls)
                 .await
                 .unwrap();
         });

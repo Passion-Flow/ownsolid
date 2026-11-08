@@ -120,6 +120,23 @@ async fn run(configuration: Configuration) -> Result<()> {
     let shutdown_app = application.clone();
     let mut terminate = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
         .map_err(|_| "GATEWAY_SIGNAL_FAILED")?;
+    let mut hangup = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::hangup())
+        .map_err(|_| "GATEWAY_SIGNAL_FAILED")?;
+    let tls = listener::tls_configuration(&configuration).await?;
+    let reload_tls = tls.clone();
+    let reload_app = application.clone();
+    let reloader = tokio::spawn(async move {
+        while hangup.recv().await.is_some() {
+            let event = match listener::tls_configuration(&reload_app.configuration).await {
+                Ok(candidate) => {
+                    reload_tls.reload_from_config(candidate.get_inner());
+                    serde_json::json!({"event":"gateway_tls_reloaded"})
+                }
+                Err(code) => serde_json::json!({"event":"gateway_tls_reload_failed","code":code}),
+            };
+            eprintln!("{event}");
+        }
+    });
     let signal = tokio::spawn(async move {
         tokio::select! {_=tokio::signal::ctrl_c()=>{},_=terminate.recv()=>{}}
         shutdown_app.shutdown();
@@ -129,7 +146,9 @@ async fn run(configuration: Configuration) -> Result<()> {
     });
     let (reporter_stop, reporter_receiver) = tokio::sync::watch::channel(false);
     let reporter = tokio::spawn(reporting::run(application.clone(), reporter_receiver));
-    let result = listener::serve(&configuration, application.clone(), listener, handle).await;
+    let result = listener::serve(&configuration, application.clone(), listener, handle, tls).await;
+    reloader.abort();
+    let _ = reloader.await;
     application.shutdown();
     application.finish_workers().await;
     reporter_stop.send_replace(true);
