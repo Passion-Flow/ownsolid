@@ -188,8 +188,16 @@ func TestProductAssistantAuditWithin(t *testing.T) {
 		}
 	}
 
+	subjects := runProductAssistantAuditCommands(t, ctx, store, subject, workspace)
+	subjects[event.RequestID] = subject
+	subjects[adminEvent.RequestID] = admin
+	seed(`INSERT INTO audit_events(id,occurred_at,audience,action,outcome,request_id,tenant_id,workspace_id,subject_user_id,metadata)
+		VALUES($1,clock_timestamp(),'portal','product_assistant.fixture_redacted','success',$2,$3,$4,$5,
+		'{"actor_kind":"product_assistant","actor_id":"ownsolid.product-assistant","extra":"fixture-private-metadata"}'::jsonb)`,
+		uuid.NewString(), uuid.NewString(), tenant, workspace, subject)
+
 	lines := auditExport(t, db)
-	if len(lines) != 3 || field(t, lines[0], "format") != "ownsolid.audit.v1" ||
+	if len(lines) != 7 || field(t, lines[0], "format") != "ownsolid.audit.v1" ||
 		field(t, lines[0], "actor_user_id") != admin || field(t, lines[0], "workspace_id") != defaultWorkspace ||
 		field(t, lines[0], "hash") != legacyHash || field(t, lines[1], "prev_hash") != legacyHash ||
 		field(t, lines[1], "format") != "ownsolid.audit.v2" || field(t, lines[1], "workspace_id") != workspace ||
@@ -207,14 +215,16 @@ func TestProductAssistantAuditWithin(t *testing.T) {
 		t.Log("set OWNSOLID_TEST_AUDIT_VERIFY to test the built standalone executable")
 		return
 	}
-	verify := func(input [][]byte) ([]byte, error) {
-		cmd := exec.CommandContext(ctx, binary, "--file", "-", "--output", "json", "--expected-last-hash", checkpoint)
+	verify := func(input [][]byte, flags ...string) ([]byte, error) {
+		args := []string{"--file", "-", "--output", "json", "--expected-last-hash", checkpoint}
+		cmd := exec.CommandContext(ctx, binary, append(args, flags...)...)
 		cmd.Stdin = bytes.NewReader(bytes.Join(input, []byte("\n")))
 		return cmd.CombinedOutput()
 	}
 	if out, err := verify(lines); err != nil {
 		t.Fatalf("mixed chain rejected: %v: %s", err, out)
 	}
+	verifyProductAssistantDisclosure(t, ctx, db, lines, subjects, verify)
 	seed(`UPDATE audit_events SET metadata=jsonb_set(metadata,'{actor_id}','"fixture-other-actor"'::jsonb)
 		WHERE request_id=$1`, event.RequestID)
 	if out, err := verify(auditExport(t, db)); err == nil || !strings.Contains(string(out), `"line":2,"field":"hash"`) {

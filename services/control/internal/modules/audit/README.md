@@ -44,6 +44,7 @@ authorization and retries.
 The writer stores `actor_kind=product_assistant` and
 `actor_id=ownsolid.product-assistant` in fixed metadata, with an empty human
 actor and a separate user subject. The action is `product_assistant.<tool_id>`.
-The existing chain binds the metadata digest and retains the prior export
-format. A readable assistant actor in audit search or JSONL needs its own
-projection. See the [implementation research](../../../../../docs/research/product-assistant-audit-writer.md).
+The existing chain binds the metadata digest. The operator can
+[disclose and verify the assistant actor offline](../../../../../tools/audit-verify/README.md#verify-a-disclosed-assistant-actor).
+The public audit list still needs a projection for the distinct actor and
+subject. See the [writer research](../../../../../docs/research/product-assistant-audit-writer.md).

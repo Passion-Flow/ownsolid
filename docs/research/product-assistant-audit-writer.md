@@ -33,9 +33,11 @@ operation. The writer must not independently retry or commit an uncertain write.
 Set the actor kind and stable ID in the existing audit metadata. V1 and V2
 already hash that metadata's canonical commitment. This keeps old chain bytes,
 exports, checkpoints and user writers compatible. Raw storage identifies the
-assistant separately from the user subject. The existing offline JSONL proves
-the metadata commitment and redacts its contents. A readable, independently
-verifiable actor projection still needs the audit read and export owners.
+assistant separately from the user subject. The standard offline JSONL
+keeps the metadata redacted. The
+[opt-in disclosure](audit-assistant-disclosure.md) verifies the exact built-in
+actor object against its commitment. The public audit list needs its own
+actor projection.
 Do not put the assistant in the human actor column or infer its identity from
 the action prefix. A schema and hash-format revision would be larger than
 the initial write boundary and would need coordinated projection and migration
@@ -59,5 +61,5 @@ back a business write and that caller rollback removes the event and tail
 advance. Export a chain spanning V1 and V2 through a new assistant event. The
 offline verifier must accept it with the expected checkpoint and reject actor
 metadata tampering. Preserve the existing redaction. AUD-101 stays open
-pending the service-account identity and the product assistant's use of the
-writer and read projection.
+pending service-account identity, the remaining AGT-107 command paths and
+the public audit read projection.

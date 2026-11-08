@@ -92,7 +92,16 @@ func decodeRecord(line []byte) (record, string) {
 	if ordered == nil {
 		return nil, "unsupported format"
 	}
-	if len(row) != len(ordered)+3 {
+	expectedFields := len(ordered) + 3
+	_, hasActorKind := row["actor_kind"]
+	_, hasActorID := row["actor_id"]
+	if hasActorKind != hasActorID || hasActorKind && row.value("format") != scopeFormat {
+		return nil, "assistant actor disclosure requires both fields on a V2 record"
+	}
+	if hasActorKind {
+		expectedFields += 2
+	}
+	if len(row) != expectedFields {
 		return nil, "unexpected number of fields"
 	}
 	for _, field := range ordered {
@@ -149,7 +158,7 @@ func calculateHash(row record, predecessor []byte) string {
 	return hex.EncodeToString(digest.Sum(nil))
 }
 
-func verify(input io.Reader, previousHash, expectedLastHash string) report {
+func verify(input io.Reader, previousHash, expectedLastHash string, requireAssistantActors bool) report {
 	var result report
 	fail := func(line int64, field, problem string) report {
 		result.Line, result.Field, result.Error = line, field, problem
@@ -208,6 +217,9 @@ func verify(input io.Reader, previousHash, expectedLastHash string) report {
 		lastHash = row.value("hash")
 		if calculateHash(row, predecessor) != lastHash {
 			return fail(line, "hash", "record content hash does not match")
+		}
+		if field, problem := assistantDisclosureProblem(row, requireAssistantActors); problem != "" {
+			return fail(line, field, problem)
 		}
 
 		if result.From == "" || occurred < result.From {

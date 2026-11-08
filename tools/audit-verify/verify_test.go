@@ -73,7 +73,7 @@ func TestVerifyIntegrity(t *testing.T) {
 			if tc.edit != nil {
 				rows = tc.edit(rows)
 			}
-			result := verify(strings.NewReader(encodeRows(t, rows)), zeroHash, tip)
+			result := verify(strings.NewReader(encodeRows(t, rows)), zeroHash, tip, false)
 			if result.Valid != (tc.wantLine == 0) || result.Line != tc.wantLine || result.Field != tc.wantField {
 				t.Fatalf("unexpected result: %+v", result)
 			}
@@ -91,7 +91,7 @@ func TestVerifyMalformedTransport(t *testing.T) {
 		"", encoded + " {}", strings.Replace(encoded, `"action":`, `"Action":`, 1),
 		`{"action":"replacement",` + encoded[1:], strings.Repeat("x", maxRecordBytes+1),
 	} {
-		result := verify(strings.NewReader(input), zeroHash, "")
+		result := verify(strings.NewReader(input), zeroHash, "", false)
 		if result.Valid || result.Line != 1 || result.Field != "record" {
 			t.Errorf("accepted malformed transport: %+v", result)
 		}
@@ -119,7 +119,7 @@ func TestVerifyRejectsReturnToV1AfterV2(t *testing.T) {
 	previous, _ = hashBytes(scopedHash)
 	downgradedHash := calculateHash(rows[2], previous)
 	rows[2]["hash"] = &downgradedHash
-	result := verify(strings.NewReader(encodeRows(t, rows)), zeroHash, downgradedHash)
+	result := verify(strings.NewReader(encodeRows(t, rows)), zeroHash, downgradedHash, false)
 	if result.Valid || result.Line != 3 || result.Field != "format" {
 		t.Fatalf("accepted a format downgrade: %+v", result)
 	}

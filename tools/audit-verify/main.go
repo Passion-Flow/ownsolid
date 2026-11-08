@@ -19,6 +19,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	output := flags.String("output", "text", "output format: text or json")
 	previous := flags.String("previous-hash", zeroHash, "trusted hash immediately before a retained export")
 	expected := flags.String("expected-last-hash", "", "trusted hash of the last record in the export")
+	requireAssistantActors := flags.Bool("require-assistant-actors", false, "require disclosure for each eligible product assistant record")
 	if err := flags.Parse(args); err != nil {
 		if err == flag.ErrHelp {
 			return 0
@@ -49,7 +50,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		defer file.Close()
 		input = file
 	}
-	return printReport(verify(input, *previous, *expected), *output, stdout, stderr)
+	return printReport(verify(input, *previous, *expected, *requireAssistantActors), *output, stdout, stderr)
 }
 
 func printReport(result report, output string, stdout, stderr io.Writer) int {

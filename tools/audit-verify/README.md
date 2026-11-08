@@ -104,4 +104,34 @@ invocation returns exit status 2. A zero exit without a trusted checkpoint
 establishes internal consistency. Comparing against a trusted checkpoint
 also detects complete rewrites and truncation through that checkpoint.
 
-See [AUD-102 serialization and threat model](../../docs/research/audit-chain.md).
+## Verify a disclosed assistant actor
+
+The standard export keeps the metadata redacted. To disclose the built-in
+assistant's actor kind and ID, add this statement immediately after the
+`BEGIN` in the checkpoint capture above.
+
+```sql
+SET LOCAL ownsolid.audit_disclose_assistant = on;
+```
+
+The setting applies only to that transaction. The query adds `actor_kind` and
+`actor_id` to eligible V2 events. Each disclosed event already carries its
+user `subject_user_id`, request ID and workspace in the chain. Use the
+updated verifier and the checkpoint retrieved from the auditor's records.
+
+```sh
+audit-verify --file exported-audit.jsonl --require-assistant-actors \
+  --expected-last-hash "$trusted_checkpoint"
+```
+
+The verifier checks the actor values against the metadata commitment and the
+subject against the record hash. The strict flag also rejects a missing pair
+on eligible records. Eligibility requires exactly the built-in assistant
+metadata object, a user subject and no human actor. Metadata with additional
+keys remains redacted. The export preserves all record positions and hashes,
+so an existing checkpoint for the same range still applies. Use the standard
+redacted export with older verifier binaries. The updated binary can verify
+older exports without the strict flag.
+
+See [assistant actor disclosure](../../docs/research/audit-assistant-disclosure.md)
+and [AUD-102 serialization and threat model](../../docs/research/audit-chain.md).
