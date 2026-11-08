@@ -98,3 +98,39 @@ also logged into the real Admin TLS dispatcher, listed an enrolled synthetic
 node and logged out with PostgreSQL 18 and pgvector 0.8.7. Both ran in a Docker
 network namespace without an external route. Python installed its locked
 runtime wheels with `--no-index`. PostgreSQL held the logout audit events.
+
+## Streaming and negotiated responses
+
+The gateway's successful chat response can be JSON or `text/event-stream`.
+The pinned Python generator picks the JSON decoder for status 200. With
+`stream=true`, the generated call buffers the stream and raises a JSON
+decoding error. The dataset, training, and localization contracts also have
+successful responses with multiple media types.
+
+Keep the generated typed API for structured responses. Provide a raw response
+context manager for both HTTPX clients. [HTTPX streaming][httpx-stream] returns
+the response before reading its body and closes it when the context exits.
+Reuse the pinned generator's [request builder][python-request-builder] to retain
+path escaping, parameters, body encoding, and the caller's configured
+authentication. A hand-maintained route map would create a second contract and
+changing every endpoint template would replace working typed behavior. The
+adapter adds no dependency and leaves event framing and content negotiation
+visible to the caller. The Go generator already exposes raw responses through
+methods without the `WithResponse` suffix.
+
+Verify the Python adapter with an actual generated chat request. The first
+event must be available before the rest of the response is read, early context
+exit must close the response, and HTTP failures must remain available as raw
+status, media type, and body. The existing loopback checks cover structured
+requests, CSRF, session cookies, and NDJSON uploads.
+
+The two pinned generators emitted clients for all 412 projected method and
+path pairs across 27 domains. Repeated generation produced identical source
+trees. The Go packages compiled with the module proxy disabled, and the
+Python smoke test ran with cached wheels and an in-process SSE transport.
+Both Python clients read the first event before the next chunk was consumed
+and closed the response when the context exited. The asynchronous client
+also retained the body of a 403 response.
+
+[httpx-stream]: https://www.python-httpx.org/quickstart/#streaming-responses
+[python-request-builder]: https://raw.githubusercontent.com/openapi-generators/openapi-python-client/v0.29.1/openapi_python_client/templates/endpoint_module.py.jinja

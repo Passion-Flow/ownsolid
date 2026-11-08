@@ -1,6 +1,7 @@
 """Exercise both generated clients over loopback without an installation."""
 
 import argparse
+import asyncio
 from datetime import datetime, timezone
 from hashlib import sha256
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -128,7 +129,79 @@ def exercise(sdk):
     print("Go and Python SDKs verified CSRF, login, session cookies, node lists and NDJSON requests")
 
 
+def exercise_streaming():
+    import httpx
+    from ownsolid_sdk.model_gateway import AuthenticatedClient
+    from ownsolid_sdk.model_gateway.api.default import create_scoped_chat_completion
+    from ownsolid_sdk.model_gateway.models.chat_request import ChatRequest
+    from ownsolid_sdk.streaming import open_async_response, open_response
+
+    token = secrets.token_urlsafe(32)
+    chunks_read = []
+    closed = []
+
+    class Events(httpx.SyncByteStream, httpx.AsyncByteStream):
+        def __iter__(self):
+            chunks_read.append("first")
+            yield b'data: {"choices":[]}\n\n'
+            chunks_read.append("last")
+            yield b"data: [DONE]\n\n"
+
+        async def __aiter__(self):
+            for chunk in self:
+                yield chunk
+
+        def close(self):
+            closed.append(True)
+
+        async def aclose(self):
+            self.close()
+
+    def respond(request):
+        assert request.method == "POST" and request.url.path == "/v1/chat/completions"
+        assert request.headers["Authorization"] == f"Bearer {token}"
+        body = json.loads(request.content)
+        assert body["stream"] is True
+        if body["model"] == "unavailable":
+            return httpx.Response(403, json={"error": {"message": "forbidden"}})
+        return httpx.Response(200, headers={"Content-Type": "text/event-stream"}, stream=Events())
+
+    gateway = AuthenticatedClient(
+        base_url="https://gateway.example.invalid",
+        token=token,
+        httpx_args={"transport": httpx.MockTransport(respond), "trust_env": False},
+    )
+    body = ChatRequest.from_dict({
+        "model": "fixture", "messages": [{"role": "user", "content": "hello"}], "stream": True,
+    })
+    with gateway:
+        with open_response(create_scoped_chat_completion, client=gateway, body=body) as response:
+            assert response.status_code == 200 and response.headers["Content-Type"] == "text/event-stream"
+            assert not chunks_read
+            assert next(response.iter_lines()) == 'data: {"choices":[]}'
+            assert chunks_read == ["first"]
+        assert closed == [True]
+
+    async def check_async():
+        async with gateway:
+            async with open_async_response(create_scoped_chat_completion, client=gateway, body=body) as response:
+                assert chunks_read == ["first"]
+                assert await anext(response.aiter_lines()) == 'data: {"choices":[]}'
+                assert chunks_read == ["first", "first"]
+            assert closed == [True, True]
+
+            body.model = "unavailable"
+            async with open_async_response(create_scoped_chat_completion, client=gateway, body=body) as response:
+                assert response.status_code == 403
+                await response.aread()
+                assert response.json() == {"error": {"message": "forbidden"}}
+
+    asyncio.run(check_async())
+    print("Python SDK verified incremental SSE, early close, and error responses")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("sdk", type=Path)
     exercise(parser.parse_args().sdk.resolve())
+    exercise_streaming()
