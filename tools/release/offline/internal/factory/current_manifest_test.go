@@ -124,11 +124,22 @@ func TestManufactureCurrentRelease(t *testing.T) {
 	c.PrivateKeyFile = filepath.Join(keyDir, "ephemeral-release-signer")
 	c.OutputFile = filepath.Join(stage, "ownsolid.tar.gz")
 	c.MinimumFreeBytes = 1 << 20
-	public, private, err := ed25519.GenerateKey(nil)
-	if err != nil {
+	var private ed25519.PrivateKey
+	if raw, err := os.ReadFile(c.PrivateKeyFile); err == nil {
+		private, err = base64.StdEncoding.Strict().DecodeString(string(raw))
+		if err != nil || len(private) != ed25519.PrivateKeySize {
+			t.Fatal("invalid ephemeral fixture key")
+		}
+	} else if os.IsNotExist(err) {
+		_, private, err = ed25519.GenerateKey(nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		put(t, c.PrivateKeyFile, []byte(base64.StdEncoding.EncodeToString(private)))
+	} else {
 		t.Fatal(err)
 	}
-	put(t, c.PrivateKeyFile, []byte(base64.StdEncoding.EncodeToString(private)))
+	public := private.Public().(ed25519.PublicKey)
 	put(t, c.TrustFile, Encode(Trust{Keys: map[string]string{wire.Digest(public): base64.StdEncoding.EncodeToString(public)}}))
 	m := currentInventory()
 	m.SchemaVersion, err = strconv.Atoi(os.Getenv("OWNSOLID_CURRENT_FACTORY_SCHEMA"))
@@ -136,6 +147,16 @@ func TestManufactureCurrentRelease(t *testing.T) {
 		t.Fatal("expected the exported control image's schema version")
 	}
 	m.MinimumPredecessor, m.MaximumPredecessor = m.SchemaVersion, m.SchemaVersion
+	if id := os.Getenv("OWNSOLID_CURRENT_FACTORY_RELEASE"); id != "" {
+		m.ReleaseID = id
+	}
+	if predecessor := os.Getenv("OWNSOLID_CURRENT_FACTORY_PREDECESSOR"); predecessor != "" {
+		version, err := strconv.Atoi(predecessor)
+		if err != nil || version <= 0 {
+			t.Fatal("invalid fixture predecessor")
+		}
+		m.MinimumPredecessor, m.MaximumPredecessor = version, version
+	}
 	if source := os.Getenv("OWNSOLID_CURRENT_FACTORY_SOURCE_SHA256"); wire.ValidSHA256(source) {
 		m.SourceSHA256 = source
 	}
@@ -160,6 +181,14 @@ func TestManufactureCurrentRelease(t *testing.T) {
 			asset.ImageID, asset.ImageConfigDigest = testDockerExportIdentity(t, filename)
 		}
 	}
+	baseline := os.Getenv("OWNSOLID_CURRENT_PATCH_BASELINE")
+	if baseline != "" {
+		result, err := Inspect(t.Context(), c, baseline)
+		if err != nil {
+			t.Fatal(err)
+		}
+		m.Prerequisites = append(m.Prerequisites, patchBaselinePrefix+result.ManifestSHA256)
+	}
 	put(t, c.ManifestFile, Encode(m))
 	result, err := Build(t.Context(), c)
 	if err != nil {
@@ -171,6 +200,23 @@ func TestManufactureCurrentRelease(t *testing.T) {
 	t.Logf("signed archive %s, manifest %s, profile %s", result.ArchiveSHA256, result.ManifestSHA256, result.Profile)
 	if _, err := Inspect(t.Context(), c, c.OutputFile); err != nil {
 		t.Fatal(err)
+	}
+	if baseline != "" {
+		target := c.OutputFile
+		c.OutputFile = filepath.Join(stage, "delta.tar.gz")
+		patch, err := BuildCurrentPatch(t.Context(), c, baseline, target)
+		if err != nil {
+			t.Fatal(err)
+		}
+		patchInfo, err := os.Stat(c.OutputFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fullInfo, err := os.Stat(target)
+		if err != nil || patchInfo.Size() >= fullInfo.Size() {
+			t.Fatalf("incremental archive is not smaller: patch=%d full=%v err=%v", patchInfo.Size(), fullInfo, err)
+		}
+		t.Logf("incremental archive %s changes %d assets and uses %d bytes; full archive uses %d bytes", patch.ArchiveSHA256, patch.Assets, patchInfo.Size(), fullInfo.Size())
 	}
 }
 

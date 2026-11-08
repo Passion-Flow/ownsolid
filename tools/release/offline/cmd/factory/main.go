@@ -25,6 +25,11 @@ func run(args []string) error {
 	flags.SetOutput(io.Discard)
 	config := flags.String("config", "", "Protected explicit JSON configuration")
 	env := flags.String("env-file", "", "Optional protected explicit component environment mapping")
+	var baseline, target *string
+	if args[0] == "build-current-patch" {
+		baseline = flags.String("baseline", "", "verified previous signed archive")
+		target = flags.String("target", "", "complete signed candidate archive")
+	}
 	var prepared, archiveSHA, manifestSHA, assetID *string
 	if args[0] == "image-proof" {
 		prepared = flags.String("prepared", "", "Complete private prepared release root")
@@ -77,6 +82,15 @@ func run(args []string) error {
 			json.NewEncoder(os.Stdout).Encode(v)
 		}
 		return e
+	case "build-current-patch":
+		if *baseline == "" || *target == "" {
+			return errors.New("RELEASE_ARGUMENT_INVALID")
+		}
+		result, err := factory.BuildCurrentPatch(ctx, c, *baseline, *target)
+		if err != nil {
+			return err
+		}
+		return json.NewEncoder(os.Stdout).Encode(result)
 	case "image-proof":
 		proof, _, e := factory.PreparedImageProof(ctx, c, *prepared, *archiveSHA, *manifestSHA, *assetID)
 		if e != nil {

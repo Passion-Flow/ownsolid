@@ -37,3 +37,13 @@ func OpenCurrentImageSource(ctx context.Context, p Verification, filename string
 	}
 	return factory.OpenImageSource(ctx, factory.WithCurrentProfile(c), filename, asset, maximumExpandedBytes)
 }
+
+// RebuildCurrentPatch expands a verified patch against the exact installed baseline.
+func RebuildCurrentPatch(ctx context.Context, p Verification, baseline, patch, output, expectedBaseline string) (Result, error) {
+	c, err := p.config()
+	if err != nil {
+		return Result{}, err
+	}
+	c.OutputFile = output
+	return factory.RebuildCurrentPatch(ctx, c, baseline, patch, expectedBaseline)
+}
