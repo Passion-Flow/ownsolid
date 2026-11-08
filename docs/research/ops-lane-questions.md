@@ -22,3 +22,18 @@ The current screen plan has a node drawer and an app-catalog placeholder. The
 full operator flows also need their screen specifications. Keep 1Panel strictly
 a behavior reference. Use the platform's own agent connection and Kubernetes
 identities for execution.
+
+## Repository acceptance gate
+
+The local browser harness reserves ports 4310 and 4311. Other worktrees can
+occupy either port and stop `make test` before the suite starts. An alternate
+preview on private ports exercised part of both browser suites. Full acceptance
+still requires the normal harness on free ports.
+
+Running the non-browser gate and then repeating the focused tests with a
+resolved macOS temporary directory also exposed failures in the unchanged agent
+packages `internal/modelpreparations` and `internal/training`. The shutdown and
+revocation tests reported cancellation or changed output while verifying
+ownership of the container. These tests belong to the agent owner. The OPS
+increment has separate passing catalog and component evidence. The repository
+gate remains open.
