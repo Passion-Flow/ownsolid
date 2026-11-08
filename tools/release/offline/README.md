@@ -185,6 +185,34 @@ trust file. `TestManufactureCurrentRelease` uses ephemeral test trust and a
 fixture SBOM with real Docker exports for the isolated installer test. Those
 inputs do not qualify a production release.
 
+### Optional RKE2 inventory
+
+To carry the approved Linux amd64 RKE2 release in a current bundle, add
+`rke2-linux-amd64=v1.36.6+rke2r1` to the signed prerequisites and include
+all four assets below. Use the exact bytes and digests in the
+[approved inventory](../../../docs/research/rke2-signed-delivery.md#pinned-upstream-bytes).
+
+| Asset ID | Path | Kind | Architecture |
+| --- | --- | --- | --- |
+| `rke2.linux-amd64.tar.gz` | `rke2/rke2.linux-amd64.tar.gz` | `rke2_binary` | `amd64` |
+| `rke2-images-core.linux-amd64.tar.zst` | `rke2/rke2-images-core.linux-amd64.tar.zst` | `rke2_image_set` | `amd64` |
+| `rke2-images-canal.linux-amd64.tar.zst` | `rke2/rke2-images-canal.linux-amd64.tar.zst` | `rke2_image_set` | `amd64` |
+| `rke2-sha256sum-amd64` | `rke2/sha256sum-amd64.txt` | `dependency_lock` | Omit |
+
+Each asset needs the applicable signed licence references and an SPDX
+SHA-256 checksum. Keep the upstream archives byte-for-byte and omit Docker
+image identity fields for them. The RKE2 image sets contain multiple images
+for the RKE2 runtime to import. Set `require_rke2: true` in the factory or
+verifier JSON when the package must carry the complete group. The separate
+KWOK scale fixture is outside this inventory.
+
+For an isolated test with real staged upstream bytes, set
+`OWNSOLID_CURRENT_FACTORY_RKE2=1` in `TestManufactureCurrentRelease`.
+Put the four files under its `assets/rke2/` and the binary tarball's
+`share/rke2/LICENSE.txt` at `assets/licenses/rke2.txt` before manufacturing.
+The fixture uses an ephemeral key and a fixture SPDX document.
+See the [site preparation and handoff](../../../deploy/offline/README.md#prepare-rke2-artifacts-for-agent-delivery).
+
 ### Incremental release transfer
 
 Include exactly one `baseline-manifest-sha256=<digest>` prerequisite in the

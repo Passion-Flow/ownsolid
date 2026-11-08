@@ -10,8 +10,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/Passion-Flow/ownsolid/tools/release/offline/internal/factory"
 	wire "github.com/Passion-Flow/ownsolid/api/release/v1"
+	"github.com/Passion-Flow/ownsolid/tools/release/offline/internal/factory"
 )
 
 type Verification struct {
@@ -24,7 +24,9 @@ type Verification struct {
 	MaximumMetadataBytes  int64  `json:"maximum_metadata_bytes"`
 	MaximumArchiveEntries int    `json:"maximum_archive_entries"`
 	AllowTestFixture      bool   `json:"allow_test_fixture"`
-	MinimumFreeBytes      int64  `json:"minimum_free_bytes,omitempty"`
+	// RequireRKE2 requires the approved RKE2 group when verifying a current release.
+	RequireRKE2      bool  `json:"require_rke2,omitempty"`
+	MinimumFreeBytes int64 `json:"minimum_free_bytes,omitempty"`
 }
 type Result = factory.Result
 type ImageSource = factory.ImageSource

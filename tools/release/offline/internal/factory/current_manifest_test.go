@@ -14,6 +14,7 @@ import (
 	"strings"
 	"testing"
 
+	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/release/v1"
 )
 
@@ -159,6 +160,18 @@ func TestManufactureCurrentRelease(t *testing.T) {
 	}
 	if source := os.Getenv("OWNSOLID_CURRENT_FACTORY_SOURCE_SHA256"); wire.ValidSHA256(source) {
 		m.SourceSHA256 = source
+	}
+	if os.Getenv("OWNSOLID_CURRENT_FACTORY_RKE2") == "1" {
+		release := agent.ApprovedKubernetesRelease()
+		m.Prerequisites = append(m.Prerequisites, rke2Prerequisite+release.Version)
+		notice := wire.Asset{ID: "notice-rke2", Path: "licenses/rke2.txt", Kind: "license", Licenses: []string{}}
+		assets := []wire.Asset{notice}
+		for _, asset := range rke2Inventory(release) {
+			asset.Licenses = []string{notice.ID}
+			assets = append(assets, asset)
+		}
+		// Measure every payload and notice before constructing the fixture SPDX.
+		m.Assets = slices.Insert(m.Assets, len(m.Assets)-1, assets...)
 	}
 	for n := range m.Assets {
 		asset := &m.Assets[n]
