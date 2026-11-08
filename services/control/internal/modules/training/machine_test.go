@@ -6,16 +6,16 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/operations/recovery"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 func dispatched(t *testing.T, f scenario) training.Job {
@@ -32,6 +32,7 @@ func dispatched(t *testing.T, f scenario) training.Job {
 	}
 	return j
 }
+
 // claimed claims and acknowledges the training lease, as the agent does before it starts.
 func claimed(t *testing.T, f scenario) agentwire.Lease {
 	t.Helper()
@@ -256,6 +257,30 @@ func TestActualTrainingNodeDisableAndRestoreKeepUncertainReservations(t *testing
 				t.Fatal("disabled/restored node renewed training")
 			}
 		})
+	}
+}
+
+func TestActualTrainingRestoreWithdrawsQueuedRecovery(t *testing.T) {
+	f := setup(t)
+	job := stoppedJob(t, f)
+	ctx := t.Context()
+	queued, err := f.s.Recover(ctx, f.portal, f.input.WorkspaceID, job.ID, training.RecoveryRequest{
+		ExpectedRevision: job.Revision, Reason: "Queue retry before restore invalidation",
+		NodeID: f.input.NodeID, Mode: "restart",
+	}, uuid.NewString(), uuid.NewString())
+	if err != nil || queued.PendingRecoveryID == nil {
+		t.Fatal("queue recovery", err)
+	}
+	if err = recovery.InvalidateRestored(ctx, f.s.Identity, "Invalidate a restored queued training recovery"); err != nil {
+		t.Fatal(err)
+	}
+	if count(t, f, "SELECT count(*) FROM training_jobs WHERE id=$1 AND state='cancelled' AND pending_recovery_id IS NULL", job.ID) != 1 {
+		t.Fatal("restore left the cancelled job with a pending recovery")
+	}
+	if count(t, f, "SELECT count(*) FROM training_recoveries WHERE id=$1 AND next_attempt_id IS NULL", *queued.PendingRecoveryID) != 1 ||
+		count(t, f, "SELECT count(*) FROM training_attempts WHERE job_id=$1", job.ID) != 1 ||
+		count(t, f, "SELECT count(*) FROM gpu_leases WHERE training_job_id=$1 AND state='released'", job.ID) != 1 {
+		t.Fatal("restore changed historical recovery or physical ownership")
 	}
 }
 

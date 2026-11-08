@@ -5,6 +5,7 @@ package datasets
 import (
 	"context"
 	"errors"
+	"io"
 	"os"
 	"os/exec"
 	"strconv"
@@ -127,6 +128,55 @@ func TestLinuxProcessorExitReceiptActualRapidCPython(t *testing.T) {
 	}
 }
 
+func TestLinuxProcessorExitAfterStatusOpenUsesOwnedWaitReceipt(t *testing.T) {
+	command := processorExitLinuxCommand(t, "pass")
+	status, openErr := os.Open("/proc/" + strconv.Itoa(command.Process.Pid) + "/status")
+	exitErr := command.Wait()
+	if openErr != nil {
+		t.Fatal(openErr)
+	}
+	defer status.Close()
+	if exitErr != nil {
+		t.Fatal(exitErr)
+	}
+	_, readErr := io.ReadAll(status)
+	if !errors.Is(readErr, syscall.ESRCH) {
+		t.Fatalf("reaped child status read: %v", readErr)
+	}
+	sample := linuxChildSampleError(command.Process.Pid, readErr)
+	if !errors.Is(sample, errProcessorExitSampleUnavailable) {
+		t.Fatalf("reaped child status read did not permit exit reconciliation: %v", sample)
+	}
+	done := make(chan error, 1)
+	done <- exitErr
+	exit, err := processorMemoryExitReceipt(t.Context(), done, sample, nil, time.Second)
+	if exit != nil || err != nil {
+		t.Fatalf("successful owned receipt was rejected: %v / %v", exit, err)
+	}
+}
+
+func TestLinuxProcessorExitFlagsBeforeZombieState(t *testing.T) {
+	if _, err := linuxChildResidentBytes([]byte("State:\tR (running)\n")); !errors.Is(err, errLinuxChildRSSUnavailable) {
+		t.Fatalf("missing RSS in a recognized state did not require an exit check: %v", err)
+	}
+	for _, fixture := range []struct {
+		stat    string
+		exiting bool
+	}{
+		{"13 (python3.12) R 1 13 1 0 -1 4194316", true},
+		{"13 (python ) name) R 1 13 1 0 -1 4194316", true},
+		{"13 (python3.12) R 1 13 1 0 -1 4194312", false},
+		{"13 (python3.12) R 1 13 1 0 -1 4294967300", false},
+		{"13 (python3.12) R 1 13 1 0 -1 invalid", false},
+		{"13 (python3.12) R 1 13 1 0 -1", false},
+		{"13 (python3.12 R 1 13 1 0 -1 4194316", false},
+	} {
+		if exiting := linuxTaskExiting([]byte(fixture.stat)); exiting != fixture.exiting {
+			t.Errorf("exit flags for %q: got %t, want %t", fixture.stat, exiting, fixture.exiting)
+		}
+	}
+}
+
 func TestLinuxProcessorMemoryStateRemainsFailClosed(t *testing.T) {
 	for _, value := range []struct {
 		name, raw string
@@ -185,11 +235,11 @@ func TestLinuxProcessorMemoryStateRemainsFailClosed(t *testing.T) {
 		}
 		time.Sleep(time.Millisecond)
 	}
-	unavailable := linuxChildSampleError(command.Process.Pid, os.ErrNotExist)
-	if unavailable == nil || errors.Is(unavailable, errProcessorExitSampleUnavailable) {
-		t.Fatal("missing proc observation classified an actual live PID as exited", unavailable)
-	}
-	for _, sample := range []error{os.ErrPermission, unavailable} {
+	for _, readErr := range []error{os.ErrNotExist, syscall.ESRCH, os.ErrPermission} {
+		sample := linuxChildSampleError(command.Process.Pid, readErr)
+		if !errors.Is(sample, readErr) || errors.Is(sample, errProcessorExitSampleUnavailable) {
+			t.Fatalf("live PID sampling error %v was reclassified: %v", readErr, sample)
+		}
 		_, err := processorMemoryExitReceipt(context.Background(), done, sample, nil, time.Duration(p.policy.ChildStopSeconds)*time.Second)
 		if err == nil || err.Error() != "DATASET_PROCESSOR_MEMORY_MONITOR_FAILED" {
 			t.Fatal("actual live child sampling error was forgiven", err)

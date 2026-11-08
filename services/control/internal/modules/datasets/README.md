@@ -47,16 +47,19 @@ requirements](../../../../../docs/milestones/m08-datasets/dameng-native.md) and
 
 [service.go](service.go), upload.go, drafts.go and rows.go form the business input surface. [worker.go](worker.go), worker_authority.go and runtime_repository.go separate claims/state from the [processor](processor.go). Publications and publication_storage.go bind prepared artifacts before making a version usable. Snapshot/initialization/integrity/retirement files handle durable namespace and recovery.
 
-On Linux, a missing owned `/proc/PID/status` with a kernel-confirmed absent PID,
-or terminal Z/X state without RSS,
-permits only bounded reconciliation of that same child's `Cmd.Wait` receipt;
-it is not a successful memory sample or exit. The existing typed child-stop
-budget bounds this wait, still subject to the original wall/cancellation limits.
-Live or malformed RSS reads fail closed, including numeric overflow. Missing
-receipts still fail and join the owned child group; nonzero exits and all result,
-digest and publication fences remain authoritative. The tagged
-`processor_exit_linux_test.go` controls receipt delivery around real rapid
-CPython exits and checks live errors, cancellation and the receipt deadline.
+On Linux, a kernel-confirmed missing owned PID or terminal Z/X state without
+RSS permits bounded reconciliation of that same child's `Cmd.Wait` receipt.
+The status path can disappear before open (ENOENT) or during the read (ESRCH).
+A task can also lose its address space while it still reports a nonterminal
+state. When such a status omits RSS, the sampler checks the exact PID's
+`PF_EXITING` flag. The existing child-stop budget bounds the wait subject to
+the original wall and cancellation limits. Unconfirmed or malformed reads
+fail closed. Missing receipts fail and join the owned child group. Nonzero
+exits and all result, digest and publication fences remain authoritative.
+The tagged tests cover exit flags and use real CPython children to exercise
+the descriptor race, delayed receipt delivery, live errors, cancellation and
+the receipt deadline. See the
+[Linux exit research](../../../../../docs/research/dataset-worker-exit.md).
 
 Migration 000008 retains datasets/drafts/rows/jobs/attempts/versions; MongoDB import receipts are separate. Every mutation rechecks current identity/Workspace and uses explicit scoped SQL. Python prepares files without business credentials; Go independently accepts current source/attempt and output hashes. Published training input must not silently change when a draft changes.
 
