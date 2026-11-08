@@ -37,3 +37,9 @@ revocation tests reported cancellation or changed output while verifying
 ownership of the container. These tests belong to the agent owner. The OPS
 increment has separate passing catalog and component evidence. The repository
 gate remains open.
+
+The standalone control suite also reported failures in dataset import memory,
+password admission deadlines, backup restore roots and TLS file mode checks.
+Those paths are outside OPS ownership. Gateway tests and the isolated i18n
+rerun passed. The fixed-port and independent runs are distinct from the
+PostgreSQL and VictoriaLogs component integration run.
