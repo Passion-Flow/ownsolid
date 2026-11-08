@@ -39,13 +39,6 @@ and admit the rendered workload before running it. Prepare all charts and image
 archives before delivery. Runtime pulls, builds and chart dependency downloads
 are disabled by the deployer.
 
-Run the catalog's local checks from the repository root.
-
-```sh
-GOPROXY=off GOSUMDB=off go -C catalog test -race ./...
-go -C catalog vet ./...
-```
-
 ## Dependency bindings
 
 The optional `dependencies` array declares up to 32 required slots. Each
@@ -67,3 +60,39 @@ the resolved files read-only under a slot-specific directory. The installer
 controls the parent directory and selected containers. Manifest authors supply
 neither credentials nor endpoints, and ordinary configuration values cannot
 override a binding.
+
+## Signed bundle inventory
+
+An application bundle staged for verification adds `bundle.json`,
+`bundle.sig` and `images.tar` alongside the manifest, locale files and
+selected engine artifact. The index has `schema_version` set to `1` and
+four SHA-256 digest strings.
+
+| Index key | File it covers |
+| --- | --- |
+| `manifest` | `manifest.json`, which carries the engine artifact digest |
+| `en` | `locales/en.json` |
+| `zh_cn` | `locales/zh-cn.json` |
+| `images` | `images.tar`, the local OCI image archive |
+
+Create a detached binary Ed25519 signature over the bytes of
+`apps.BundleSigningDomain` followed by the exact bytes of `bundle.json`.
+Preserve those bytes through transfer. Configure the publisher public key
+separately from the bundle. `apps.VerifyBundle` accepts that key, an
+`os.Root` for a private immutable staging directory, and a combined byte
+limit for the engine input and image archive. It checks signature, manifest,
+both locales and both payloads before returning release metadata.
+
+Use only the paths covered by the signed inventory. Keep the same immutable
+staging directory until the installer has finished using it. The installer
+must verify the archive's OCI closure and match its local image identities to
+`Manifest.Images` before executing the rendered workload.
+
+## Verification
+
+Run the catalog's local checks from the repository root.
+
+```sh
+GOPROXY=off GOSUMDB=off go -C catalog test -race ./...
+go -C catalog vet ./...
+```
