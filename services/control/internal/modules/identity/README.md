@@ -14,6 +14,10 @@ Resending a failed email ([mail_resend.go](mail_resend.go), ADR 0021) issues ane
 carried: invitations go through `inviteWithin`, reset emails get a new token that replaces
 the unused one. Writes that take an `Idempotency-Key` use `idempotentWithin`; a new
 operation also needs its name in the `idempotency_records` check constraint.
+Invitation lists and invitation mail use the tenant in the server's completed
+installation state. An invitation ID or mail delivery ID from another tenant
+returns the same response as an unknown ID. The invitation link itself has the
+same tenant boundary during validation and registration.
 
 Changing a password while signed in ([password_change.go](password_change.go), ADR 0023) ends
 every session of the account and issues the caller a new one in the same transaction, so the
