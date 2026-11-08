@@ -33,6 +33,15 @@ locally and can retry from the cache. A native registry file remains the
 site's policy. For already running nodes the default takes effect at the
 next RKE2 start.
 
+On a new server using bundled Canal, the Agent holds the packaged HelmChart
+while the local API starts. It creates the Felix configuration schema from
+the bundled chart and sets `usageReportingEnabled: false` before releasing
+the chart. A failed join keeps the Agent-owned hold for retry. The Agent
+keeps a site-owned skip file, existing registry policy, and any explicit
+Felix usage-reporting value. Workers inherit the server's setting.
+An existing server with no Agent-owned hold keeps its running cluster
+configuration on join replay.
+
 Readiness is read with the kubelet's own kubeconfig, which the node authorizer limits to the
 node's own object; the cluster admin kubeconfig stays on the server. When a join times out,
 the task log gets a diagnosis the agent recognises in the RKE2 journal (wrong CA, server

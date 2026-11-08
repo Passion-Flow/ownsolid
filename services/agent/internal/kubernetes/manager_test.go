@@ -43,6 +43,7 @@ type fakeHost struct {
 	tokenOutput string
 	tokenError  error
 	calls       []string
+	onRun       func(string, []string) ([]byte, error, bool)
 }
 
 func (h *fakeHost) Privileged() bool                      { return h.privileged }
@@ -54,6 +55,11 @@ func (h *fakeHost) Run(_ context.Context, name string, args ...string) ([]byte, 
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.calls = append(h.calls, filepath.Base(name)+" "+strings.Join(args, " "))
+	if h.onRun != nil {
+		if output, err, handled := h.onRun(filepath.Base(name), args); handled {
+			return output, err
+		}
+	}
 	switch filepath.Base(name) {
 	case "kubectl":
 		if h.ready {
@@ -245,6 +251,9 @@ func TestWorkerJoinWritesTheServerAndToken(t *testing.T) {
 	}
 	if f.host.called("systemctl start --no-block rke2-agent.service") != 1 {
 		t.Fatalf("calls %v", f.host.calls)
+	}
+	if _, e = os.Lstat(f.manager.path(canalHold)); !errors.Is(e, os.ErrNotExist) {
+		t.Fatalf("worker created a Canal hold: %v", e)
 	}
 }
 

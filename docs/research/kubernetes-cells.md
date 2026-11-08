@@ -268,3 +268,61 @@ observed the pinned Canal component asking the site resolver for
 returned NXDOMAIN and forwarded nothing. A zero-egress acceptance run
 must cover the delayed window as well as startup, with a site DNS
 positive control and separate IPv4 and IPv6 packet recording.
+
+### Bootstrap ordering for the packaged Canal chart
+
+RKE2 `v1.36.6+rke2r1` embeds Canal
+[`v3.32.2-build2026102200`](https://rke2-charts.rancher.io/assets/rke2-canal/rke2-canal-v3.32.2-build2026102200.tgz).
+The exact release chart has no Helm value for `FELIX_USAGEREPORTINGENABLED`
+or an arbitrary container environment entry. Felix v3.32.2 reads
+[`FelixConfiguration/default`](https://docs.tigera.io/calico/latest/reference/resources/felixconfig)
+from its datastore before starting the reporter. With
+`spec.usageReportingEnabled: false` the
+[reporter is not constructed](https://github.com/projectcalico/calico/blob/v3.32.2/felix/daemon/daemon.go).
+Calico's startup fills missing logging defaults without resetting the
+usage-reporting field. Environment, file, selector and node settings
+retain their native precedence.
+
+A regular AddOn for the setting can race the first Canal Pod because the
+chart installs the CRD. Use the [RKE2 AddOn skip mechanism](https://docs.rke2.io/install/packaged_components)
+to hold only the packaged Canal manifest on a fresh server.
+[RKE2 stages the manifest from its verified runtime image](https://github.com/rancher/rke2/blob/v1.36.6%2Brke2r1/pkg/bootstrap/bootstrap.go)
+before the AddOn controller applies it. Extract only the Felix CRD
+from the staged HelmChart's inline archive, create it with
+[Helm release ownership metadata](https://github.com/helm/helm/blob/v4.0.0/pkg/action/validate.go),
+and set the default through the local API before releasing the hold.
+The pinned [K3s deploy controller](https://github.com/k3s-io/k3s/blob/c2fdd7c56c2c/pkg/deploy/controller.go)
+rescans the directory and applies the original chart when the hold is
+removed. The disconnected prototype extracted the same CRD bytes as the
+release chart and installed the untouched packaged HelmChart successfully.
+The first Canal Pod logged the disabled setting.
+
+RKE2 briefly stages charts that the site has explicitly disabled. File
+presence alone cannot establish that Canal was selected. Once its
+manifest appears, publish an Agent-owned comment-only AddOn after it
+in the deploy controller's sorted manifest order. Wait for the checksum
+of this attempt before inspecting the Canal file again. A disabled
+chart is removed by that scan, while an enabled chart is still held
+by the skip file. This prevents the Agent from creating a Canal-owned
+CRD in a cluster that uses a site-selected CNI. The marker carries no
+Kubernetes resources and is removed when bootstrap completes.
+
+The Agent owns its temporary hold and resumes it after a failed join.
+Create the CRD only if absent. Create the default resource if absent, or
+set only an unset usage-reporting field with a resource-version check.
+This keeps site fields and explicit boolean settings, including
+concurrent updates. A native skip file and existing Helm chart and
+registry configuration remain site-owned. A healthy pre-existing
+cluster has no bootstrap hold. Workers use the server's persisted
+configuration. No new dependency, model, data set or wire protocol
+change is needed. RKE2, its K3s deploy controller, the bundled chart,
+Helm and Calico use Apache-2.0, permitting commercial and offline use
+and redistribution with applicable notices.
+
+A missing API, unestablished CRD or refused write must leave the hold
+in place and report a bounded readiness failure. Verify the ordering
+on a fresh server and worker using the Agent join path. Run wrong-CA
+refusal, retry with a distinct token, healthy replay and a cached Pod
+scheduled to the worker. The disconnected site resolver and the IPv4
+and IPv6 capture must cover startup and at least 330 seconds with both
+Canal Pods ready.
