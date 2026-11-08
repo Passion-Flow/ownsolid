@@ -148,3 +148,9 @@ backup_seconds: 3600
 #   # dns_server: 192.168.100.53:53
 #   # Optional. Enable only on a host that must already have NVIDIA GPUs.
 #   require_nvidia: false
+
+# Optional systemd scheduled backup policy. Use an empty private directory on the
+# backup filesystem. deploy/systemd/README.md describes the timer.
+# backup_schedule:
+#   directory: /private/ownsolid-backups
+#   retain: 7

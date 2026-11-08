@@ -270,8 +270,12 @@ func Backup(ctx context.Context, c Config, runner StreamRunner, output string, o
 }
 
 func (o *operation) backup(ctx context.Context, output string) (string, error) {
+	return o.backupWithPrefix(ctx, output, backupPrefix, nil)
+}
+
+func (o *operation) backupWithPrefix(ctx context.Context, output, prefix string, seal func(string) error) (string, error) {
 	stamp := o.now().UTC().Format(backupTimeLayout)
-	final := filepath.Join(output, backupPrefix+stamp)
+	final := filepath.Join(output, prefix+stamp)
 	if exists(final) {
 		return "", fmt.Errorf("INSTALL_BACKUP_EXISTS: %s", final)
 	}
@@ -323,6 +327,11 @@ func (o *operation) backup(ctx context.Context, output string) (string, error) {
 	fmt.Fprintf(o.out, "step models: ok files=%d\n", len(models))
 	if e = writeManifest(filepath.Join(partial, backupManifestName), manifest); e != nil {
 		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_OUTPUT_FAILED", Detail: e.Error()}
+	}
+	if seal != nil {
+		if err := seal(partial); err != nil {
+			return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_OUTPUT_FAILED", Detail: err.Error()}
+		}
 	}
 	if e = os.Rename(partial, final); e != nil {
 		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_OUTPUT_FAILED", Detail: e.Error()}
