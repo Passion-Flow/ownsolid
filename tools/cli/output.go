@@ -1,17 +1,17 @@
 package cli
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
-	"text/tabwriter"
 	"unicode"
 
 	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v3"
+	"golang.org/x/text/width"
 )
 
 type column struct {
@@ -46,38 +46,76 @@ func render(w io.Writer, format string, columns []column, result any, rows []jso
 }
 
 func writeTable(w io.Writer, columns []column, rows []json.RawMessage) error {
-	table := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-	cells := make([]string, len(columns))
-	for i, col := range columns {
-		cells[i] = col.header
+	type cell struct {
+		text  string
+		width int
 	}
-	if _, err := fmt.Fprintln(table, strings.Join(cells, "\t")); err != nil {
-		return err
+	table := make([][]cell, 1, len(rows)+1)
+	table[0] = make([]cell, len(columns))
+	widths := make([]int, len(columns))
+	for i, col := range columns {
+		size := displayWidth(col.header)
+		table[0][i] = cell{col.header, size}
+		widths[i] = size
 	}
 	for _, row := range rows {
 		var fields map[string]json.RawMessage
 		if err := json.Unmarshal(row, &fields); err != nil || fields == nil {
 			return errors.New("the server returned a row that is not a resource object")
 		}
+		cells := make([]cell, len(columns))
 		for i, col := range columns {
 			raw := fields[col.field]
-			var text string
+			var value string
 			switch {
 			case len(raw) == 0 || string(raw) == "null":
-				text = "-"
-			case json.Unmarshal(raw, &text) != nil:
-				text = string(raw)
+				value = "-"
+			case json.Unmarshal(raw, &value) != nil:
+				value = string(raw)
 			}
-			if strings.ContainsFunc(text, func(r rune) bool { return !unicode.IsPrint(r) }) {
-				text = strconv.Quote(text)
+			if strings.ContainsFunc(value, func(r rune) bool { return !unicode.IsPrint(r) }) {
+				value = strconv.Quote(value)
 			}
-			cells[i] = text
+			size := displayWidth(value)
+			cells[i] = cell{value, size}
+			widths[i] = max(widths[i], size)
 		}
-		if _, err := fmt.Fprintln(table, strings.Join(cells, "\t")); err != nil {
+		table = append(table, cells)
+	}
+	output := bufio.NewWriter(w)
+	for _, cells := range table {
+		for i, entry := range cells {
+			if _, err := output.WriteString(entry.text); err != nil {
+				return err
+			}
+			if i < len(cells)-1 {
+				padding := strings.Repeat(" ", widths[i]-entry.width+2)
+				if _, err := output.WriteString(padding); err != nil {
+					return err
+				}
+			}
+		}
+		if err := output.WriteByte('\n'); err != nil {
 			return err
 		}
 	}
-	return table.Flush()
+	return output.Flush()
+}
+
+func displayWidth(value string) int {
+	size := 0
+	for _, r := range value {
+		if unicode.Is(unicode.Mn, r) || unicode.Is(unicode.Me, r) {
+			continue
+		}
+		switch width.LookupRune(r).Kind() {
+		case width.EastAsianWide, width.EastAsianFullwidth:
+			size += 2
+		default:
+			size++
+		}
+	}
+	return size
 }
 
 func writeYAML(w io.Writer, result any) error {

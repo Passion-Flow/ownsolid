@@ -477,3 +477,19 @@ func TestEmptyListAndTerminalEscaping(t *testing.T) {
 		t.Fatalf("unsafe table output %q, error %v", out.String(), err)
 	}
 }
+
+func TestTableAlignsWideNames(t *testing.T) {
+	rows := []json.RawMessage{
+		json.RawMessage(`{"name":"x","id":"1"}`),
+		json.RawMessage(`{"name":"\u8282\u70b9","id":"2"}`),
+		json.RawMessage(`{"name":"e\u0301","id":"3"}`),
+	}
+	var out bytes.Buffer
+	if err := writeTable(&out, []column{{"NAME", "name"}, {"ID", "id"}}, rows); err != nil {
+		t.Fatal(err)
+	}
+	want := "NAME  ID\nx     1\n\u8282\u70b9  2\ne\u0301     3\n"
+	if out.String() != want {
+		t.Fatalf("table = %q, want %q", out.String(), want)
+	}
+}

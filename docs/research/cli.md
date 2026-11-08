@@ -37,7 +37,9 @@ origin using the scheme, host and port [origin rules][origin].
   conceal a duplicate, or the selection is ambiguous, direct the operator to a
   deployment UUID.
 - Preserve the API resource fields in JSON and YAML and use selected columns in
-  tables. Escape control characters in human output. Write actionable failures
+  tables. Measure table columns using the Go Unicode width data so East Asian
+  wide characters occupy two columns. Escape control characters in human output.
+  Write actionable failures
   and prompts to stderr so automation can parse stdout.
 - Use `--server`, then `OWNSOLID_SERVER`, then the local JSON config. Follow the
   [XDG base directory specification][xdg], with `OWNSOLID_CONFIG_DIR` as an explicit
@@ -57,6 +59,7 @@ origin using the scheme, host and port [origin rules][origin].
 | [go-yaml v3][yaml] | 3.0.5 | Apache-2.0 and MIT for the libyaml-derived files |
 | [x/term][term] | 0.47.0 | BSD-3-Clause |
 | [x/sys][sys] | 0.49.0 | BSD-3-Clause |
+| [x/text width][width] | 0.43.0 | BSD-3-Clause, with Unicode width data under the [Unicode data license][unicode-license] |
 
 These licenses permit commercial use, redistribution and offline execution.
 Distribute their license texts and applicable notices with the binary. No model
@@ -104,6 +107,8 @@ dependency and persist the CSRF context unnecessarily.
 [yaml]: https://github.com/yaml/go-yaml/blob/v3.0.5/LICENSE
 [term]: https://go.googlesource.com/term/+/refs/tags/v0.47.0/LICENSE
 [sys]: https://go.googlesource.com/sys/+/refs/tags/v0.49.0/LICENSE
+[width]: https://pkg.go.dev/golang.org/x/text/width
+[unicode-license]: https://www.unicode.org/license.txt
 [darwin-trust]: https://go.dev/src/crypto/x509/root_darwin.go
 [apple-trust]: https://developer.apple.com/documentation/security/sectrustsetnetworkfetchallowed(_:_:)
 
