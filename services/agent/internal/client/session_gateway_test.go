@@ -167,6 +167,14 @@ func TestSessionKeepsFallbackUntilPreferredGatewayAcceptsHeartbeat(t *testing.T)
 	}
 	preferred.mu.Lock()
 	preferred.problem = nil
+	preferred.heartbeatStatus = "unknown"
+	preferred.mu.Unlock()
+	now = now.Add(2 * time.Duration(wire.MinGatewayRebalanceSeconds) * time.Second)
+	if out, e := c.session.Heartbeat(ctx, h); e != nil || out.Status != "active" || c.session.Gateway() != c.order[1] {
+		t.Fatalf("an invalid preferred disposition displaced the fallback: %q %v", out.Status, e)
+	}
+	preferred.mu.Lock()
+	preferred.heartbeatStatus = ""
 	preferred.mu.Unlock()
 	now = now.Add(2 * time.Duration(wire.MinGatewayRebalanceSeconds) * time.Second)
 	if _, e := c.session.Heartbeat(ctx, h); e != nil {
@@ -175,7 +183,7 @@ func TestSessionKeepsFallbackUntilPreferredGatewayAcceptsHeartbeat(t *testing.T)
 	if _, e := c.session.Claim(ctx, 0, 12); e != nil {
 		t.Fatal(e)
 	}
-	if c.session.Gateway() != c.order[0] || !equal(preferred.log(), []string{"stream heartbeat", "stream claim"}) || len(c.control.log()) != 0 {
+	if c.session.Gateway() != c.order[0] || !equal(preferred.log(), []string{"stream heartbeat", "stream heartbeat", "stream claim"}) || len(c.control.log()) != 0 {
 		t.Fatalf("gateway %q preferred %v control %v", c.session.Gateway(), preferred.log(), c.control.log())
 	}
 	preferred.mu.Lock()
