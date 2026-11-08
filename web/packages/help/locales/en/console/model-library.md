@@ -15,7 +15,8 @@ The upload continues while you use the rest of the console. Closing the tab stop
 import from **Imports**, choose the same file, and it continues from where the server stopped. A
 different file is refused before any of it is stored.
 
-Then every file is checked against its published hash. Nothing is kept unless all of them match.
+The server checks every file against its published hash before publishing the model. When the import
+is ready, choose **Open the model** to see the published record.
 
 ## If an import fails
 
@@ -33,6 +34,12 @@ stays in the audit trail.
 
 ## The model store
 
-Models live in `data/models` under the installation's root. The store keeps each uploaded bundle
-beside the model unpacked from it, so a model takes twice its size there. [Backups](help:getting-started)
-carry published models.
+Models live in `data/models` under the installation's root. During import, allow space for both the
+uploaded bundle and the unpacked model. The form estimates the total from the selected bundle
+and the model's published file sizes.
+
+After publication, the server removes the bundle and temporary verification files in the
+background and retries if needed. The import history and published model files remain available.
+The import page shows publication status. If storage stays in use, an administrator can look for
+`model_import_cleanup_failed` and the import ID in the control service logs.
+[Backups](help:getting-started) carry published models.

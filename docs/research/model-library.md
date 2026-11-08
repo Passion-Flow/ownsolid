@@ -77,15 +77,27 @@ the store did not exist and an import could not start.
   before a byte of it is stored. The upload lives outside the page, so moving around the console does not
   stop it; closing the tab warns first.
 - **Deploy** on a model's page is not ready until SRV-111, and says so.
-- **Cost.** The server keeps a finished import's chunks and any failed stage beside the published
-  model, so the page states what the store really holds: the bundle and the model. Removing a
-  finished upload is MOD-120.
+- **Cost (MOD-120).** The form shows the approved files' size before a bundle is chosen, and an
+  estimate of the selected bundle plus those files afterward. Both copies need room during import.
+  The estimate does not stand in for a free-space check. The [worker research](model-import-cleanup.md)
+  separates publication from cleanup, following the [S3 multipart lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html).
+- **Publication and cleanup.** The import read exposes `state`, `model_id`, `uploaded_bytes` and
+  `error_code`, with no field for post-publication cleanup. Once the API returns `ready` and a model
+  ID, show the publication and make Open the model the primary action. A persistent note explains
+  background cleanup and automatic retry. The worker can retain staging after a failed attempt.
+  The UI keeps the publication timeline at three steps and shows no cleanup progress, completion,
+  released bytes or manual retry. Upload counters and timestamps are historical. A verification
+  failure still uses the existing Verify again and Discard actions. The operator diagnoses a
+  background failure from `model_import_cleanup_failed` and the import ID in the service logs.
+  The console and bundled help use the same distinction. No new dependency is needed.
 
 ## Failure modes and how the tests cover them
 
 | Failure | Coverage |
 | --- | --- |
 | A chunk's answer is lost | unit: the same chunk is sent again and accepted |
+| A published import still has upload records | Browser flow: the model opens after reload, with a background cleanup explanation and no fourth timeline step |
+| A verification attempt fails before publication | Browser flow: verify or discard with the existing controls, without a published notice |
 | The connection drops in mid-upload | browser flow: *Try again* continues from the server's offset |
 | A different file is chosen to resume | unit and browser flow: refused, nothing stored |
 | The tab closed | browser flow: resuming from the Imports tab |
