@@ -175,60 +175,82 @@ impl Decoder {
         } else {
             self.identity = Some((value.id.clone(), value.created));
         }
-        let output = if value.choices.is_empty() {
+        if value.choices.is_empty() {
             if !self.finish_seen || self.usage.is_some() {
                 return Err("upstream_response_invalid");
             }
             let usage = value.usage.ok_or("upstream_response_invalid")?;
             usage.validate(self.prompt_tokens, self.maximum_tokens)?;
-            self.usage = Some(usage.clone());
-            if !self.include_usage {
-                return Ok(None);
-            }
-            json!({"id":value.id,"object":"chat.completion.chunk","created":value.created,"model":self.alias,"choices":[],"usage":usage})
-        } else {
-            if self.finish_seen || value.choices.len() != 1 || value.usage.is_some() {
-                return Err("upstream_response_invalid");
-            }
-            let choice = &value.choices[0];
-            if choice.index != 0
-                || choice
-                    .delta
-                    .role
-                    .as_ref()
-                    .is_some_and(|role| role != "assistant")
-                || choice.delta.tool_calls.is_some()
-                || choice.delta.function_call.is_some()
-                || choice.finish_reason.as_ref().is_some_and(|reason| {
-                    !matches!(reason.as_str(), "stop" | "length" | "content_filter")
-                })
-            {
-                return Err("upstream_response_invalid");
-            }
-            self.finish_seen = choice.finish_reason.is_some();
-            let mut delta = serde_json::Map::new();
-            if let Some(role) = &choice.delta.role {
-                delta.insert("role".into(), json!(role));
-            }
-            if let Some(content) = &choice.delta.content {
-                delta.insert("content".into(), json!(content));
-            }
-            json!({"id":value.id,"object":"chat.completion.chunk","created":value.created,"model":self.alias,"choices":[{"index":0,"delta":delta,"finish_reason":choice.finish_reason}],"usage":null})
-        };
-        let json = serde_json::to_vec(&output).map_err(|_| "upstream_response_invalid")?;
-        let mut encoded = Vec::with_capacity(json.len() + b"data: \n\n".len());
-        encoded.extend_from_slice(b"data: ");
-        encoded.extend(json);
-        encoded.extend_from_slice(b"\n\n");
-        Ok(Some(encoded))
+            self.usage = Some(usage);
+            return Ok(None);
+        }
+        if self.finish_seen || value.choices.len() != 1 || value.usage.is_some() {
+            return Err("upstream_response_invalid");
+        }
+        let choice = &value.choices[0];
+        if choice.index != 0
+            || choice
+                .delta
+                .role
+                .as_ref()
+                .is_some_and(|role| role != "assistant")
+            || choice.delta.tool_calls.is_some()
+            || choice.delta.function_call.is_some()
+            || choice.finish_reason.as_ref().is_some_and(|reason| {
+                !matches!(reason.as_str(), "stop" | "length" | "content_filter")
+            })
+        {
+            return Err("upstream_response_invalid");
+        }
+        self.finish_seen = choice.finish_reason.is_some();
+        let mut delta = serde_json::Map::new();
+        if let Some(role) = &choice.delta.role {
+            delta.insert("role".into(), json!(role));
+        }
+        if let Some(content) = &choice.delta.content {
+            delta.insert("content".into(), json!(content));
+        }
+        encode_event(json!({
+            "id": value.id,
+            "object": "chat.completion.chunk",
+            "created": value.created,
+            "model": self.alias,
+            "choices": [{"index": 0, "delta": delta, "finish_reason": choice.finish_reason}],
+            "usage": null,
+        }))
+        .map(Some)
     }
 
-    pub fn finish(self) -> Result<Usage> {
+    /// Builds the terminal write once EOF confirms the full upstream stream.
+    pub fn finish(self) -> Result<(Usage, Vec<u8>)> {
         if !self.done_seen || !self.buffer.iter().all(u8::is_ascii_whitespace) {
             return Err("upstream_response_invalid");
         }
-        self.usage.ok_or("upstream_response_invalid")
+        let usage = self.usage.ok_or("upstream_response_invalid")?;
+        let mut terminal = Vec::new();
+        if self.include_usage {
+            let (id, created) = self.identity.ok_or("upstream_response_invalid")?;
+            terminal = encode_event(json!({
+                "id": id,
+                "object": "chat.completion.chunk",
+                "created": created,
+                "model": self.alias,
+                "choices": [],
+                "usage": usage,
+            }))?;
+        }
+        terminal.extend_from_slice(DONE_EVENT);
+        Ok((usage, terminal))
     }
+}
+
+fn encode_event(output: Value) -> Result<Vec<u8>> {
+    let json = serde_json::to_vec(&output).map_err(|_| "upstream_response_invalid")?;
+    let mut encoded = Vec::with_capacity(json.len() + b"data: \n\n".len());
+    encoded.extend_from_slice(b"data: ");
+    encoded.extend(json);
+    encoded.extend_from_slice(b"\n\n");
+    Ok(encoded)
 }
 
 pub const DONE_EVENT: &[u8] = b"data: [DONE]\n\n";
@@ -298,7 +320,7 @@ mod tests {
                     for chunk in bytes.chunks(chunk_size) {
                         events.extend(feed(&mut decoder, chunk).unwrap())
                     }
-                    assert_eq!(events.len(), if include { 3 } else { 2 });
+                    assert_eq!(events.len(), 2);
                     for event in events {
                         let text = String::from_utf8(event).unwrap();
                         assert!(text.contains("public-alias"));
@@ -307,7 +329,18 @@ mod tests {
                         assert!(!text.contains("private_diagnostic"));
                         assert!(!text.contains("[DONE]"));
                     }
-                    assert_eq!(decoder.finish().unwrap().total_tokens, 9);
+                    let (usage, terminal) = decoder.finish().unwrap();
+                    assert_eq!(usage.total_tokens, 9);
+                    let event = terminal.strip_suffix(DONE_EVENT).unwrap();
+                    if include {
+                        let chunk: Value =
+                            serde_json::from_slice(event.strip_prefix(b"data: ").unwrap()).unwrap();
+                        assert_eq!(chunk["model"], "public-alias");
+                        assert_eq!(chunk["choices"], json!([]));
+                        assert_eq!(chunk["usage"], json!(usage));
+                    } else {
+                        assert!(event.is_empty());
+                    }
                 }
             }
         }
@@ -367,7 +400,7 @@ mod tests {
             events.extend(feed(&mut decoder, &[byte]).unwrap());
         }
         assert_eq!(events, expected_events);
-        assert_eq!(decoder.finish().unwrap().total_tokens, 9);
+        assert_eq!(decoder.finish().unwrap().0.total_tokens, 9);
     }
     #[test]
     fn raw_event_and_total_limits_include_crlf_even_after_event_dispatch() {

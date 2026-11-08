@@ -14,11 +14,13 @@ The [source guide](src/README.md) maps request admission, backend streaming, dur
 
 [storage.rs](src/storage.rs) owns the private locked spool, exact owner/digest binding, reserved capacity and restart recovery. [reporting.rs](src/reporting.rs) sends retained outcomes separately from the client response. Unacknowledged outcomes must remain durable; a client receiving bytes does not prove control received usage.
 
+Streaming chat sends text as it arrives. With `stream_options.include_usage` enabled, the final usage event immediately precedes `[DONE]`. Both are sent after the gateway validates upstream completion and stores the outcome locally. An invalid or incomplete upstream stream can deliver partial text followed by an error.
+
 Shutdown stops admission, joins stream workers and the reporter and retains recovery state. Operator delivery can flush existing outcomes without authorizing new inference. Fence uses an explicit challenge and new private receipt path.
 
 ## Configuration and changes
 
-The TLS listener binds the IPv4 address the operator chooses and offers only HTTP/1.1 over ALPN; the backend address must stay on loopback, because the engine has no authentication of its own ([ADR 0052](../../docs/decisions/0052-the-model-gateway-runs-beside-the-model.md)). Start from [gateway examples](../../config/examples/gateway/README.md) and [configuration contract](../../contracts/configuration/v1/gateway). Limits include connection/queue/thread/body/event/spool/time/disk bounds. Current socket address types are IPv4 and the current TLS/control-origin contracts are specific; do not claim the broader requested transport/IPv6 matrix from these settings.
+The TLS listener binds the IPv4 address the operator chooses and offers only HTTP/1.1 over ALPN; the backend address must stay on loopback, because the engine has no authentication of its own ([ADR 0052](../../docs/decisions/0052-the-model-gateway-runs-beside-the-model.md)). Start from [gateway examples](../control/config/examples/gateway/README.md) and [configuration contract](../../api/configuration/v1/gateway/schema.json). Limits include connection/queue/thread/body/event/spool/time/disk bounds. Current socket address types are IPv4 and the current TLS/control-origin contracts are specific; do not claim the broader requested transport/IPv6 matrix from these settings.
 
 Update control/distribution, gateway/public contracts, config/schema/env projection, systemd/container recipes and failure/recovery tests together when changing protocol, admission or outcome semantics. Never add a permissive backend fallback after authorization or TLS failure.
 

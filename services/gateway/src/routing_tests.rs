@@ -188,6 +188,7 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
             yield Ok(event(json!([{"index":0,"delta":{},"finish_reason":"stop"}]),Value::Null));
             yield Ok(event(json!([]),json!({"prompt_tokens":7,"completion_tokens":2,"total_tokens":9})));
             yield Ok(crate::streaming::DONE_EVENT.to_vec());
+            if mode==5 {yield Ok(b"data: unexpected\n\n".to_vec());}
         }
     };
     (
@@ -612,6 +613,51 @@ async fn real_gateway_tls_negotiates_http1_with_a_client_that_prefers_http2() {
     .unwrap();
     assert_eq!(negotiated.as_deref(), Some(&b"http/1.1"[..]));
     assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+}
+
+#[tokio::test]
+async fn final_usage_requires_a_valid_stream_and_durable_outcome() {
+    let fixture = Fixture::new().await;
+    let request = || {
+        fixture.chat(true).json(&json!({
+            "model": "public-alias", "stream": true, "max_tokens": 16,
+            "messages": [{"role": "user", "content": "Synthetic prompt"}],
+            "stream_options": {"include_usage": true}
+        }))
+    };
+    fixture.state.backend_mode.store(5, Ordering::SeqCst);
+    let body = request().send().await.unwrap().text().await.unwrap();
+    assert!(body.contains("Synthetic \u{4e2d}\u{6587}"));
+    assert!(body.contains("upstream_response_invalid"));
+    assert!(!body.contains("total_tokens"));
+    assert!(!body.contains("[DONE]"));
+    let outcome = fixture.app().spool.next_pending().unwrap().unwrap();
+    assert_eq!(outcome.status, Status::InvalidResponse);
+    assert!(outcome.usage.is_none());
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 1);
+
+    fixture.state.backend_mode.store(4, Ordering::SeqCst);
+    let mut response = request().send().await.unwrap();
+    let id = response.headers()["x-request-id"]
+        .to_str()
+        .unwrap()
+        .to_owned();
+    // Wait until generation has started, then force the atomic spool publication to fail.
+    assert!(response.chunk().await.unwrap().is_some());
+    let stage = fixture
+        .app()
+        .configuration
+        .state_directory
+        .join("outcomes")
+        .join(format!(".stage-{id}.json"));
+    fs::write(&stage, b"occupied").unwrap();
+    fixture.state.complete_stream.notify_one();
+    let tail = response.text().await.unwrap();
+    assert!(tail.contains("usage_storage_unavailable"));
+    assert!(!tail.contains("total_tokens"));
+    assert!(!tail.contains("[DONE]"));
+    assert!(!fixture.app().spool.ready());
+    assert_eq!(fs::read(stage).unwrap(), b"occupied");
 }
 
 #[tokio::test]
