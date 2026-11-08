@@ -189,7 +189,7 @@ inputs do not qualify a production release.
 
 To carry the approved Linux amd64 RKE2 release in a current bundle, add
 `rke2-linux-amd64=v1.36.6+rke2r1` to the signed prerequisites and include
-all four assets below. Use the exact bytes and digests in the
+the RKE2 assets below. Use the exact upstream bytes and digests in the
 [approved inventory](../../../docs/research/rke2-signed-delivery.md#pinned-upstream-bytes).
 
 | Asset ID | Path | Kind | Architecture |
@@ -198,18 +198,33 @@ all four assets below. Use the exact bytes and digests in the
 | `rke2-images-core.linux-amd64.tar.zst` | `rke2/rke2-images-core.linux-amd64.tar.zst` | `rke2_image_set` | `amd64` |
 | `rke2-images-canal.linux-amd64.tar.zst` | `rke2/rke2-images-canal.linux-amd64.tar.zst` | `rke2_image_set` | `amd64` |
 | `rke2-sha256sum-amd64` | `rke2/sha256sum-amd64.txt` | `dependency_lock` | Omit |
+| `rke2-component-spdx` | `rke2/components.spdx.json` | `sbom` | Omit |
+| `rke2-component-notices` | `rke2/component-notices.tar` | `license` | Omit |
 
 Each asset needs the applicable signed licence references and an SPDX
 SHA-256 checksum. Keep the upstream archives byte-for-byte and omit Docker
 image identity fields for them. The RKE2 image sets contain multiple images
-for the RKE2 runtime to import. Set `require_rke2: true` in the factory or
-verifier JSON when the package must carry the complete group. The separate
-KWOK scale fixture is outside this inventory.
+for the RKE2 runtime to import. Every RKE2 payload other than the notice
+archive references the signed notice archive in its `licenses` list.
+
+The main SPDX document includes the checksum of both companions and an
+`externalDocumentRefs` entry for `DocumentRef-RKE2`. Set `spdxDocument` to
+`urn:ownsolid:spdx:rke2:v1.36.6-rke2r1:linux-amd64:1` and its `checksum`
+to the component SPDX's SHA-256. Add a `DESCRIBES` relationship from
+`SPDXRef-DOCUMENT` to `DocumentRef-RKE2:SPDXRef-RKE2`. Use the
+[reviewed evidence pins](../../../docs/research/rke2-component-inventory.md#reviewed-companion-assets).
+
+New RKE2 manufacturing requires the companions. Verifiers can require them
+with `require_rke2_components: true`. The compatible `require_rke2: true`
+policy still admits earlier signed RKE2 releases. If either component asset
+is declared, both and their main SPDX link must verify. The separate KWOK
+scale fixture is outside this inventory.
 
 For an isolated test with real staged upstream bytes, set
 `OWNSOLID_CURRENT_FACTORY_RKE2=1` in `TestManufactureCurrentRelease`.
-Put the four files under its `assets/rke2/` and the binary tarball's
-`share/rke2/LICENSE.txt` at `assets/licenses/rke2.txt` before manufacturing.
+Put the four upstream files and both reviewed companion assets under its
+`assets/rke2/`. Put the binary tarball's `share/rke2/LICENSE.txt` at
+`assets/licenses/rke2.txt` before manufacturing.
 The fixture uses an ephemeral key and a fixture SPDX document.
 See the [site preparation and handoff](../../../deploy/offline/README.md#prepare-rke2-artifacts-for-agent-delivery).
 

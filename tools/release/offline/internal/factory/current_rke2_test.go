@@ -2,6 +2,7 @@ package factory
 
 import (
 	"slices"
+	"strings"
 	"testing"
 
 	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -62,6 +63,77 @@ func TestCurrentRKE2InventoryRequiresTheWholeApprovedRelease(t *testing.T) {
 			tc.change(&m)
 			if err := config.validateManifest(m); ErrorCode(err) != tc.code {
 				t.Fatalf("want %s, got %v", tc.code, err)
+			}
+		})
+	}
+}
+
+func TestCurrentRKE2ComponentEvidenceIsRequiredAndLinked(t *testing.T) {
+	config, err := LoadConfig([]byte(`{"require_rke2_components":true}`), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	config = WithCurrentProfile(config)
+	m := currentInventory()
+	release := agent.ApprovedKubernetesRelease()
+	m.Prerequisites = append(m.Prerequisites, rke2Prerequisite+release.Version)
+	for _, asset := range rke2Inventory(release) {
+		asset.Licenses = []string{"test-notice"}
+		m.Assets = append(m.Assets, asset)
+	}
+	if err := config.validateManifest(m); ErrorCode(err) != "RELEASE_RKE2_COMPONENTS_REQUIRED" {
+		t.Fatalf("required evidence was omitted: %v", err)
+	}
+	config.RequireRKE2Components = false
+	if err := config.validateManifest(m); err != nil {
+		t.Fatalf("legacy RKE2 inventory cannot be inspected: %v", err)
+	}
+
+	for index := range m.Assets {
+		if strings.HasPrefix(m.Assets[index].Path, rke2Prefix) {
+			m.Assets[index].Licenses = []string{rke2NoticeID}
+		}
+	}
+	for _, asset := range rke2ComponentAssets {
+		if asset.Kind != "license" {
+			asset.Licenses = []string{rke2NoticeID}
+		}
+		m.Assets = append(m.Assets, asset)
+	}
+	if err := config.validateManifest(m); err != nil {
+		t.Fatal(err)
+	}
+	changed := m
+	changed.Assets = slices.Clone(m.Assets)
+	changed.Assets[len(changed.Assets)-2].SHA256 = wire.Digest([]byte("changed document"))
+	if err := config.validateManifest(changed); ErrorCode(err) != "RELEASE_RKE2_ASSET_INVALID" {
+		t.Fatalf("changed component evidence pin was accepted: %v", err)
+	}
+
+	raw := testSPDX(m.Assets)
+	if err := checkSBOM(raw, m.Assets); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name   string
+		change func(map[string]any)
+	}{
+		{"missing reference", func(doc map[string]any) { delete(doc, "externalDocumentRefs") }},
+		{"missing relationship", func(doc map[string]any) { delete(doc, "relationships") }},
+		{"wrong external checksum", func(doc map[string]any) {
+			doc["externalDocumentRefs"].([]any)[0].(map[string]any)["checksum"] = spdxChecksum{
+				Algorithm: "SHA256", Value: wire.Digest([]byte("different document")),
+			}
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var document map[string]any
+			if err := wire.UniqueJSON(raw, &document); err != nil {
+				t.Fatal(err)
+			}
+			tc.change(document)
+			if err := checkSBOM(Encode(document), m.Assets); ErrorCode(err) != "RELEASE_RKE2_SPDX_REFERENCE_INVALID" {
+				t.Fatalf("invalid component evidence reference was accepted: %v", err)
 			}
 		})
 	}

@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"slices"
 	"strings"
 
 	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -30,7 +31,7 @@ func rke2Inventory(release agent.KubernetesRelease) []wire.Asset {
 		Size: 3558, SHA256: "2a9ae019e47798ab98691f26b2b588a68ca2387cc6c3c3c50efd32b89ac21980"})
 }
 
-func validateRKE2Inventory(m wire.Manifest, required bool) error {
+func validateRKE2Inventory(m wire.Manifest, required, requireComponents bool) error {
 	release := agent.ApprovedKubernetesRelease()
 	declared := false
 	for _, prerequisite := range m.Prerequisites {
@@ -43,6 +44,9 @@ func validateRKE2Inventory(m wire.Manifest, required bool) error {
 	}
 	expected := make(map[string]wire.Asset)
 	for _, asset := range rke2Inventory(release) {
+		expected[asset.ID] = asset
+	}
+	for _, asset := range rke2ComponentAssets {
 		expected[asset.ID] = asset
 	}
 	for _, actual := range m.Assets {
@@ -61,8 +65,23 @@ func validateRKE2Inventory(m wire.Manifest, required bool) error {
 		}
 		delete(expected, actual.ID)
 	}
+	_, missingSPDX := expected[rke2SPDXID]
+	_, missingNotices := expected[rke2NoticeID]
+	if (requireComponents || !missingSPDX || !missingNotices) && (missingSPDX || missingNotices) {
+		return fail("RELEASE_RKE2_COMPONENTS_REQUIRED")
+	}
+	for _, asset := range rke2ComponentAssets {
+		delete(expected, asset.ID)
+	}
 	if (declared || required) && len(expected) != 0 {
 		return fail("RELEASE_RKE2_ASSETS_REQUIRED")
+	}
+	if !missingNotices {
+		for _, asset := range m.Assets {
+			if asset.Kind != "license" && strings.HasPrefix(asset.Path, rke2Prefix) && !slices.Contains(asset.Licenses, rke2NoticeID) {
+				return fail("RELEASE_RKE2_NOTICES_REQUIRED")
+			}
+		}
 	}
 	return nil
 }

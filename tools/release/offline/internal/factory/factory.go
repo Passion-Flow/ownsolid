@@ -127,6 +127,16 @@ func Validate(ctx context.Context, c Config) (Validation, error) {
 		}
 		return v, e
 	}
+	if c.current {
+		rke2, components := false, false
+		for _, asset := range m.Assets {
+			rke2 = rke2 || asset.Kind == rke2BinaryKind
+			components = components || asset.ID == rke2SPDXID
+		}
+		if rke2 && !components {
+			return v, fail("RELEASE_RKE2_COMPONENTS_REQUIRED")
+		}
+	}
 	if len(m.Assets)+2 > c.MaximumArchiveEntries {
 		return v, fail("RELEASE_ARCHIVE_ENTRY_LIMIT")
 	}

@@ -87,12 +87,24 @@ func testSPDX(assets []wire.Asset) []byte {
 			"filesAnalyzed": false, "checksums": []map[string]string{{"algorithm": "SHA256", "checksumValue": asset.SHA256}},
 		})
 	}
-	return Encode(map[string]any{
+	document := map[string]any{
 		"spdxVersion": "SPDX-2.3", "dataLicense": "CC0-1.0", "SPDXID": "SPDXRef-DOCUMENT",
 		"name": "ownsolid integration fixture", "documentNamespace": "https://ownsolid.test/spdx/integration-fixture",
 		"creationInfo": map[string]any{"created": "2026-11-08T00:00:00Z", "creators": []string{"Tool: ownsolid-integration-test"}},
 		"packages":     packages,
-	})
+	}
+	for _, asset := range assets {
+		if asset.ID == rke2SPDXID {
+			document["externalDocumentRefs"] = []spdxExternalDocument{{
+				ID: rke2DocumentID, Namespace: rke2DocumentURI,
+				Checksum: spdxChecksum{Algorithm: "SHA256", Value: asset.SHA256},
+			}}
+			document["relationships"] = []spdxRelationship{{
+				From: "SPDXRef-DOCUMENT", Type: "DESCRIBES", To: rke2DocumentID + ":SPDXRef-RKE2",
+			}}
+		}
+	}
+	return Encode(document)
 }
 
 func TestCurrentSBOMMustBindEveryPayload(t *testing.T) {
@@ -166,8 +178,11 @@ func TestManufactureCurrentRelease(t *testing.T) {
 		m.Prerequisites = append(m.Prerequisites, rke2Prerequisite+release.Version)
 		notice := wire.Asset{ID: "notice-rke2", Path: "licenses/rke2.txt", Kind: "license", Licenses: []string{}}
 		assets := []wire.Asset{notice}
-		for _, asset := range rke2Inventory(release) {
-			asset.Licenses = []string{notice.ID}
+		for _, asset := range append(rke2Inventory(release), rke2ComponentAssets...) {
+			asset.Licenses = []string{}
+			if asset.Kind != "license" {
+				asset.Licenses = []string{notice.ID, rke2NoticeID}
+			}
 			assets = append(assets, asset)
 		}
 		// Measure every payload and notice before constructing the fixture SPDX.
