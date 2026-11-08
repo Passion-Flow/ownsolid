@@ -7,13 +7,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/pagination"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/jackc/pgx/v5"
 )
 
 const jobFields = `id::text,workspace_id::text,node_id::text,current_node_id::text,model_id::text,dataset_id::text,dataset_version_id::text,gpu_uuid,configuration,configuration_sha256,execution_recipe,dataset_manifest_sha256,model_catalog_sha256,created_by::text,reason,state,wait_code,revision,attempt_number,current_attempt_id::text,accepted_artifact_id::text,cancel_requested_at,error_code,created_at,updated_at,finished_at,pending_recovery_id::text`
@@ -39,6 +39,11 @@ func scanJob(row pgx.Row) (Job, error) {
 	case "queued", "preparing", "running", "cancelling", "succeeded", "cancelled", "failed", "recovery_required":
 	default:
 		return Job{}, fail("TRAINING_DATA_INVALID")
+	}
+	// Older jobs could reach a terminal state with the queued recovery pointer
+	// still set. The immutable recovery record remains available in history.
+	if terminal(j.State) {
+		j.PendingRecoveryID = nil
 	}
 	j.CreatedAt, j.UpdatedAt = j.CreatedAt.UTC(), j.UpdatedAt.UTC()
 	for _, stamp := range []**time.Time{&j.CancelRequestedAt, &j.FinishedAt} {

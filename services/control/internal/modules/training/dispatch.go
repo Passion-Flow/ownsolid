@@ -10,14 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 func (s *Service) resourcePreflight(ctx context.Context, tx pgx.Tx, n nodes.Node, gpu string) error {
@@ -89,8 +89,8 @@ func (s *Service) failQueued(ctx context.Context, tx pgx.Tx, a identity.Auth, w 
 }
 func (s *Service) failQueuedWithin(ctx context.Context, q transaction.Executor, a identity.Auth, w workspaces.Workspace, j Job, code string) error {
 	n, e := q.Exec(ctx, acceptedAdapterSQL(q,
-		`UPDATE training_jobs SET state='failed',error_code=$2,wait_code=NULL,revision=revision+1,finished_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND tenant_id=$3 AND workspace_id=$4`,
-		`UPDATE training_jobs SET state='failed',error_code=?,wait_code=NULL,revision=revision+1,finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE id=? AND tenant_id=? AND workspace_id=?`, dispatchFailureArgs(q, w, j, code)...))
+		`UPDATE training_jobs SET state='failed',error_code=$2,wait_code=NULL,pending_recovery_id=NULL,revision=revision+1,finished_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=$1 AND tenant_id=$3 AND workspace_id=$4`,
+		`UPDATE training_jobs SET state='failed',error_code=?,wait_code=NULL,pending_recovery_id=NULL,revision=revision+1,finished_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE id=? AND tenant_id=? AND workspace_id=?`, dispatchFailureArgs(q, w, j, code)...))
 	if e != nil {
 		return e
 	}

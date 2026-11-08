@@ -2,10 +2,10 @@ package training
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 func terminal(state string) bool {
@@ -43,7 +43,7 @@ func (s *Service) Cancel(ctx context.Context, a identity.Auth, workspace, id str
 		if tx.Dialect() == transaction.MySQL {
 			args = []any{state, state, w.TenantID, w.ID, j.ID}
 		}
-		n, e := tx.Exec(ctx, acceptedAdapterSQL(tx, `UPDATE training_jobs SET state=$2::varchar,cancel_requested_at=clock_timestamp(),wait_code=NULL,revision=revision+1,finished_at=CASE WHEN $2::varchar='cancelled' THEN clock_timestamp() ELSE NULL END,updated_at=clock_timestamp() WHERE tenant_id=$3 AND workspace_id=$4 AND id=$1`, `UPDATE training_jobs SET state=?,cancel_requested_at=UTC_TIMESTAMP(6),wait_code=NULL,revision=revision+1,finished_at=CASE WHEN ?='cancelled' THEN UTC_TIMESTAMP(6) ELSE NULL END,updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND id=?`, cancellationArguments(tx, args, w)...))
+		n, e := tx.Exec(ctx, acceptedAdapterSQL(tx, `UPDATE training_jobs SET state=$2::varchar,cancel_requested_at=clock_timestamp(),wait_code=NULL,pending_recovery_id=NULL,revision=revision+1,finished_at=CASE WHEN $2::varchar='cancelled' THEN clock_timestamp() ELSE NULL END,updated_at=clock_timestamp() WHERE tenant_id=$3 AND workspace_id=$4 AND id=$1`, `UPDATE training_jobs SET state=?,cancel_requested_at=UTC_TIMESTAMP(6),wait_code=NULL,pending_recovery_id=NULL,revision=revision+1,finished_at=CASE WHEN ?='cancelled' THEN UTC_TIMESTAMP(6) ELSE NULL END,updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND id=?`, cancellationArguments(tx, args, w)...))
 		if e != nil {
 			return e
 		}
