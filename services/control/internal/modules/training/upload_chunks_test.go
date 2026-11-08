@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
+	"github.com/google/uuid"
 )
 
 func chunkIntent(t *testing.T, f scenario) (agentwire.Lease, training.Upload, training.ChunkRequest) {
@@ -144,8 +144,9 @@ func TestActualTrainingChunkReplayChecksBodyAuditRollbackAndIntentImmutability(t
 	if _, e = put("x"); e == nil {
 		t.Fatal("audit failure reported chunk accepted")
 	}
-	if count(t, f, "SELECT count(*) FROM training_upload_chunks") != 0 {
-		t.Fatal("chunk accounting survived audit rollback")
+	if count(t, f, "SELECT count(*) FROM training_upload_chunks") != 0 ||
+		count(t, f, "SELECT count(*) FROM training_uploads WHERE id=$1 AND active_chunk_id IS NULL", u.ID) != 1 {
+		t.Fatal("failed audit retained accounting or its cleanup ticket")
 	}
 	if _, e = f.s.DB.Exec(ctx, "DROP TRIGGER reject_training_chunk ON audit_events"); e != nil {
 		t.Fatal(e)
@@ -162,6 +163,12 @@ func TestActualTrainingChunkReplayChecksBodyAuditRollbackAndIntentImmutability(t
 	expected(t, e, "TRAINING_UPLOAD_CHECKSUM_MISMATCH")
 	if count(t, f, "SELECT count(*) FROM audit_events WHERE action='training.upload_chunk_accepted'") != 1 {
 		t.Fatal("replay duplicated audit")
+	}
+	if count(t, f, `SELECT count(*) FROM audit_events WHERE action='training.upload_chunk_accepted' AND target_id=$1
+ AND tenant_id=$2 AND workspace_id=$3 AND actor_user_id=$4 AND audience='portal'`,
+		l.Training.Scope.JobID, f.portal.Me.Workspace.TenantID, f.input.WorkspaceID, f.portal.Me.User.ID) != 1 ||
+		count(t, f, "SELECT count(*) FROM training_uploads WHERE id=$1 AND active_chunk_id IS NULL", u.ID) != 1 {
+		t.Fatal("chunk acceptance lost audit authority or retained its ticket")
 	}
 	_, e = f.s.UploadChunk(ctx, f.input.NodeID, f.credential, l.TaskID, l.LeaseToken, uuid.NewString(), input, strings.NewReader("x"))
 	expected(t, e, "TRAINING_UPLOAD_NOT_FOUND")

@@ -10,17 +10,24 @@ import (
 
 	"database/sql"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 )
 
 // withMachineLease checks current human, Workspace, node credential, exact live attempt and shared GPU fence.
 func (s *Service) withMachineLease(ctx context.Context, node, credential, task, token string, fn func(context.Context, transaction.Executor, workspaces.Workspace, Job, wire.Command) error) error {
+	return s.withMachineLeaseActor(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, _ identity.Auth, w workspaces.Workspace, j Job, command wire.Command) error {
+		return fn(ctx, tx, w, j, command)
+	})
+}
+
+// withMachineLeaseActor also returns the exact attempt's audit principal to the transaction callback.
+func (s *Service) withMachineLeaseActor(ctx context.Context, node, credential, task, token string, fn func(context.Context, transaction.Executor, identity.Auth, workspaces.Workspace, Job, wire.Command) error) error {
 	c, _, e := s.machineCandidate(ctx, node, task)
 	if errors.Is(e, sql.ErrNoRows) {
 		return fail("AGENT_LEASE_STALE")
@@ -40,10 +47,11 @@ func (s *Service) withMachineLease(ctx context.Context, node, credential, task, 
 		if e != nil {
 			return e
 		}
-		if e = bindAttempt(ctx, tx, j, command, task); e != nil {
+		actor, e := bindAttempt(ctx, tx, j, command, task)
+		if e != nil {
 			return e
 		}
-		return fn(ctx, tx, w, j, command)
+		return fn(ctx, tx, actor, w, j, command)
 	})
 }
 

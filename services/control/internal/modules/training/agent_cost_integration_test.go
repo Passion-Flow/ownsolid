@@ -1,12 +1,12 @@
 package training_test
 
 import (
-	"strings"
 	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,9 +14,9 @@ import (
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/outbox"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/agentca"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/agentcost"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
@@ -394,14 +394,63 @@ func TestAgentCallCostDoesNotGrowWithTheFleet(t *testing.T) {
 	sort.Strings(names)
 	for _, name := range names {
 		exchange := large[name]
-		t.Logf("%-22s statements %3d  blocks %4d/%-4d  rows %4d/%-4d", name, len(exchange.cost.Statements), small[name].cost.Blocks(), exchange.cost.Blocks(), small[name].cost.Rows(), exchange.cost.Rows())
-		for _, violation := range agentcost.Violations(exchange.call.Cost(), small[name].cost, exchange.cost) {
-			t.Errorf("%s (%s) %s", name, exchange.call, violation)
+		t.Logf("%-22s statements %3d/%-3d  blocks %4d/%-4d  rows %4d/%-4d", name, len(small[name].cost.Statements), len(exchange.cost.Statements), small[name].cost.Blocks(), exchange.cost.Blocks(), small[name].cost.Rows(), exchange.cost.Rows())
+	}
+	t.Run("training_authority", func(t *testing.T) {
+		for _, exchange := range []struct {
+			name            string
+			authorityPasses int
+		}{
+			{"training events", 1},
+			{"training upload", 2},
+			{"training chunk", 2},
+		} {
+			for _, sample := range []struct {
+				fleet int
+				cost  agentcost.Cost
+			}{
+				{costSmallFleet, small[exchange.name].cost},
+				{costLargeFleet, large[exchange.name].cost},
+			} {
+				for _, check := range []struct {
+					prefix string
+					want   int
+				}{
+					{"SELECT requested_by::text,requested_audience FROM training_attempts", 0},
+					{"SELECT auth_epoch,status,is_platform_admin FROM users", exchange.authorityPasses},
+					{"SELECT credential_hash FROM managed_nodes WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3", exchange.authorityPasses},
+					{"SELECT lease_token_hash,COALESCE(deadline_at>clock_timestamp(),false) FROM node_tasks", exchange.authorityPasses},
+					{"SELECT a.requested_by::text,a.requested_audience FROM training_attempts a JOIN gpu_leases", exchange.authorityPasses},
+					{"UPDATE training_uploads SET active_chunk_id=NULL,active_asset=NULL,active_offset=NULL,active_expires_at=NULL WHERE id=", 0},
+				} {
+					if got := countCostStatements(sample.cost, check.prefix); got != check.want {
+						t.Errorf("%s on %d peers: %q ran %d times, want %d", exchange.name, sample.fleet, check.prefix, got, check.want)
+					}
+				}
+			}
+		}
+	})
+	t.Run("declared_cost", func(t *testing.T) {
+		for _, name := range names {
+			exchange := large[name]
+			for _, violation := range agentcost.Violations(exchange.call.Cost(), small[name].cost, exchange.cost) {
+				t.Errorf("%s (%s) %s", name, exchange.call, violation)
+			}
+		}
+		for _, call := range agentwire.Calls() {
+			if !covered[call] {
+				t.Errorf("no exchange measures %s", call)
+			}
+		}
+	})
+}
+
+func countCostStatements(cost agentcost.Cost, prefix string) int {
+	n := 0
+	for _, statement := range cost.Statements {
+		if strings.HasPrefix(strings.TrimSpace(statement.Query), prefix) {
+			n++
 		}
 	}
-	for _, call := range agentwire.Calls() {
-		if !covered[call] {
-			t.Errorf("no exchange measures %s", call)
-		}
-	}
+	return n
 }
