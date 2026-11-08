@@ -51,5 +51,56 @@ history and file transfer stay intact. Exercise a restarted worker, missing or
 damaged publication, unexpected staging files, concurrent ownership and a retry
 where the files are gone but the SQL cleanup has not committed. Run against real
 PostgreSQL with the model already on local media. Disk sizing still needs room
-for both copies until publication. The existing console text about retained disk
-space needs a copy update from the web lane.
+for both copies until publication. The [console flow](model-library.md) reports
+publication separately from background cleanup.
+
+The real-model integration test separates the cleanup assertions from backup,
+restore and retirement. This lets a shared Linux host run only the acceptance
+path with one worker, an isolated PostgreSQL instance and bounded temporary
+storage. The acceptance path verifies the model bytes again after the temporary
+files and chunk records have been removed. Stage logs identify whether a
+timeout occurred during upload, publication, cleanup or the final readback.
+
+## Linux amd64 acceptance
+
+On 2026-11-09, the real-model test passed in 43.17 seconds on `ownsolid-cpu`
+with PostgreSQL 18.6, pgvector 0.8.7 and Docker `--network none`. The
+container had one CPU and a 4 GiB memory limit. PostgreSQL data and test staging
+were on bounded tmpfs mounts. The 1,519,216,640-byte USTAR archive used the
+approved Qwen3-0.6B revision already on the host. The test uploaded every chunk,
+forced a publication audit rollback, confirmed the upload remained, then
+published the same verified revision. An injected SQL cleanup failure left
+chunk records after the upload directory and failed stage disappeared. A fresh
+worker removed the records, preserved the ready import and byte count, and
+verified the published files again.
+
+With the original archive bind-mounted from the shared disk, the same test
+timed out at 150 seconds in `io.ReadFull` on the source archive before
+publication. Its last logged committed offset was 268,435,456 bytes and a
+thread sample showed `folio_wait_bit_common`. Packing the same existing files
+into a tmpfs archive removed the cold source-disk read from the verification
+run. The archive and test instance were removed afterward.
+
+Cross-compile the `model_integration` tests for Linux amd64. In the isolated
+PostgreSQL container, provide `PROJECT_ONE_STATE_ROOT` with the approved
+archive and `PROJECT_ONE_TEST_DSN_FILE` pointing to a private loopback test
+database DSN. Run the selected test with the directory for `TMPDIR` on bounded
+tmpfs.
+
+```sh
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C services/control test \
+  -tags model_integration -c -o "$fixture_dir/models.test" ./internal/modules/models
+
+GOMAXPROCS=1 "$fixture_dir/models.test" \
+  -test.run '^TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery$' \
+  -test.skip '/snapshot-and-retirement$' -test.v -test.timeout 150s
+```
+
+The console evidence is commit `bbf09930`, which keeps the published model
+accessible after reload and presents disk usage as the import estimate.
+Browser tests use mocked responses for publication and retries. The Linux
+test above supplies the actual filesystem and PostgreSQL evidence.
+
+With the acceptance assertions in this change on baseline `1bbdca7e`,
+`make check`, `make build` and `make test` passed in sequence.
+Chromium passed 1,039 console and 387 portal tests.
