@@ -49,14 +49,23 @@ tarball, image sets and checksum file.
 The binary tarball carries the upstream [RKE2 Apache-2.0
 license and notices](https://github.com/rancher/rke2/blob/v1.36.6%2Brke2r1/LICENSE)
 at `share/rke2/LICENSE.txt`. The upstream checksums are release metadata
-distributed by that project. The image sets include the RKE2 runtime, upstream
-[Kubernetes](https://github.com/kubernetes/kubernetes/blob/v1.36.6/LICENSE)
-and [etcd](https://github.com/etcd-io/etcd/blob/main/LICENSE), with
-[Calico](https://github.com/projectcalico/calico/blob/v3.32.2/LICENSE) and
-[Flannel](https://github.com/flannel-io/flannel/blob/master/LICENSE) in Canal,
-and [Traefik](https://github.com/traefik/traefik/blob/v3.7/LICENSE.md) in core.
-The upstream projects permit commercial and offline use and redistribution
-under their applicable terms. Retain the full archive notices and record
+distributed by that project.
+
+The image sets' top-level components are covered by the source projects'
+licences:
+
+| Image components | Upstream licence |
+| --- | --- |
+| RKE2 runtime and cloud provider | [Apache-2.0](https://github.com/rancher/rke2/blob/v1.36.6%2Brke2r1/LICENSE) |
+| Kubernetes, pause and node-local DNS cache | [Apache-2.0 for Kubernetes](https://github.com/kubernetes/kubernetes/blob/v1.36.6/LICENSE) and [Apache-2.0 for Kubernetes DNS](https://github.com/kubernetes/dns/blob/master/LICENSE) |
+| CoreDNS and etcd | [Apache-2.0 for CoreDNS](https://github.com/coredns/coredns/blob/v1.14.7/LICENSE) and [Apache-2.0 for etcd](https://github.com/etcd-io/etcd/blob/main/LICENSE) |
+| Cluster Autoscaler, addon-resizer, metrics-server and snapshot controller | [Apache-2.0 for autoscaler and addon-resizer](https://github.com/kubernetes/autoscaler/blob/master/LICENSE), [Apache-2.0 for metrics-server](https://github.com/kubernetes-sigs/metrics-server/blob/master/LICENSE) and [Apache-2.0 for external-snapshotter](https://github.com/kubernetes-csi/external-snapshotter/blob/master/LICENSE) |
+| Klipper Helm and Klipper LB | [Apache-2.0 for Klipper Helm](https://github.com/k3s-io/klipper-helm/blob/master/LICENSE) and [Apache-2.0 for Klipper LB](https://github.com/k3s-io/klipper-lb/blob/master/LICENSE) |
+| Canal's Calico and Flannel | [Apache-2.0 for Calico](https://github.com/projectcalico/calico/blob/v3.32.2/LICENSE) and [Apache-2.0 for Flannel](https://github.com/flannel-io/flannel/blob/v0.28.10/LICENSE) |
+| Traefik | [MIT](https://github.com/traefik/traefik/blob/v3.7/LICENSE.md) |
+
+These licences permit commercial and offline use and redistribution under
+their terms. Retain the full archive notices and record
 each distributed image's components, base packages, licences and applicable
 source obligations in the production SPDX and notice inventory. The
 fixture verifies that the signed release binds the archive bytes and notice

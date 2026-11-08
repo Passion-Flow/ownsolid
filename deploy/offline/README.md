@@ -249,8 +249,8 @@ kubernetes_cells:
 ```
 
 Provision the same independently generated key file, at least 32 random
-bytes and readable only by the service identity, on each process that
-seals or opens join tokens. Keep the key outside the release archive.
+bytes, with mode 0600 and owned by the service identity on each host that
+runs a process that seals or opens join tokens. Keep the key outside the release archive.
 Restart those services after updating their configuration. Kubernetes-profile
 Agents receive the three approved files over the existing authenticated
 artifact transport and install them locally when assigned a cluster join.

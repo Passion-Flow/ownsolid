@@ -20,6 +20,7 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 ## P1 Enterprise release
 
 - [ ] DEL-101 Signed offline bundle per architecture: images, charts, models, plugins, fonts, docs; SBOM and checksums (P1) - Catalog: F215, F221, F490, F505
+  - The optional signed RKE2 Linux amd64 inventory passed disconnected preparation with real upstream artifacts and a temporary signer. See the [status evidence](../status.md) and [ADR 0057](../../decisions/0057-bind-rke2-artifacts-to-the-approved-agent-release.md). The production inventory is still open.
 - [x] DEL-102 Installer with preflight (OS, kernel, ports, disk, memory, time, DNS, drivers), idempotent and resumable (P1) - Catalog: F220, F498 - Evidence: b8535ef. The Linux amd64 isolated installation resumed after SIGKILL with both entrances ready and the same administrator, tenant, workspace and credential.
 - [ ] DEL-103 First-run setup: administrator, tenant, workspace, certificates; setup endpoint closes afterwards (P1) - Catalog: F499
 - [x] DEL-104 Offline upgrade with required stops, pre-upgrade backup and database migration plan (P1) - Catalog: F222, F503 - Evidence: c54fed2. A disconnected Compose installation verified its recovery backup before migrating PostgreSQL from schema 52 to 54.
