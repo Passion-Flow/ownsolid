@@ -55,7 +55,7 @@ pub struct Spool {
     maximum_bytes: u64,
     minimum_free_bytes: u64,
     state: Mutex<State>,
-    _lock: Flock<File>,
+    lock: Arc<Flock<File>>,
 }
 
 pub struct Reservation {
@@ -63,13 +63,13 @@ pub struct Reservation {
     request_id: Uuid,
 }
 
-fn sync_directory(path: &Path) -> Result<()> {
+pub(crate) fn sync_directory(path: &Path) -> Result<()> {
     File::open(path)
         .and_then(|file| file.sync_all())
         .map_err(|_| "GATEWAY_SPOOL_SYNC_FAILED")
 }
 
-fn new_private_file(path: &Path) -> Result<File> {
+pub(crate) fn new_private_file(path: &Path) -> Result<File> {
     OpenOptions::new()
         .write(true)
         .read(true)
@@ -172,7 +172,14 @@ impl Spool {
             let entry = entry.map_err(|_| "GATEWAY_SPOOL_IO_FAILED")?;
             if !matches!(
                 entry.file_name().to_str(),
-                Some("owner.json" | "spool.lock" | "outcomes" | "fence.json" | "fence.stage.json")
+                Some(
+                    "owner.json"
+                        | "spool.lock"
+                        | "outcomes"
+                        | "fence.json"
+                        | "fence.stage.json"
+                        | "quotas"
+                )
             ) {
                 return Err("GATEWAY_STATE_UNKNOWN_ENTRY");
             }
@@ -200,7 +207,7 @@ impl Spool {
                 recovery_required: false,
                 fenced,
             }),
-            _lock: lock,
+            lock: Arc::new(lock),
         };
         spool.recover()?;
         let state = spool
@@ -209,6 +216,11 @@ impl Spool {
             .map_err(|_| "GATEWAY_SPOOL_STATE_INVALID")?;
         state.recovery_required = !state.pending.is_empty();
         Ok(Arc::new(spool))
+    }
+
+    /// Keep the gateway state exclusive while a quota write can still finish.
+    pub(crate) fn state_lock(&self) -> Arc<Flock<File>> {
+        self.lock.clone()
     }
 
     fn owned_directory(&self) -> Result<()> {

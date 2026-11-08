@@ -2,8 +2,9 @@ use crate::admission::{Execution, Limiter, stopped};
 use crate::backend::{Backend, bounded_json};
 use crate::configuration::{Configuration, Limits, Result};
 use crate::control::{AdmissionRequest, Control};
-use crate::errors;
+use crate::errors::{self, Failure};
 use crate::protocol::{ChatRequest, normalize_completion};
+use crate::quota::Quotas;
 use crate::storage::Spool;
 use axum::body::Body;
 use axum::extract::{Request, State};
@@ -28,16 +29,27 @@ pub struct Application {
     pub backend: Backend,
     pub spool: Arc<Spool>,
     limiter: Limiter,
+    quotas: Option<Quotas>,
     shutdown: watch::Sender<bool>,
     workers: Mutex<JoinSet<()>>,
 }
 
 impl Application {
     pub fn new(configuration: Configuration) -> Result<Arc<Self>> {
+        Self::with_quota_clock(configuration, || {
+            time::OffsetDateTime::now_utc().unix_timestamp()
+        })
+    }
+
+    pub(crate) fn with_quota_clock(
+        configuration: Configuration,
+        clock: fn() -> i64,
+    ) -> Result<Arc<Self>> {
         let control = Control::new(&configuration)?;
         let backend = Backend::new(&configuration)?;
         let limiter = Limiter::new(&configuration.limits)?;
         let spool = Spool::open(&configuration)?;
+        let quotas = Quotas::open(&configuration, &spool, clock)?;
         let (shutdown, _) = watch::channel(false);
         Ok(Arc::new(Self {
             configuration,
@@ -45,10 +57,22 @@ impl Application {
             backend,
             spool,
             limiter,
+            quotas,
             shutdown,
             workers: Mutex::new(JoinSet::new()),
         }))
     }
+    fn quota_permit(
+        &self,
+        workspace: Uuid,
+        key: &str,
+    ) -> std::result::Result<Option<crate::quota::Permit>, Failure> {
+        self.quotas
+            .as_ref()
+            .map(|quotas| quotas.acquire(workspace, key))
+            .transpose()
+    }
+
     pub fn receiver(&self) -> watch::Receiver<bool> {
         self.shutdown.subscribe()
     }
@@ -158,29 +182,44 @@ fn metadata(request: &Request, post: bool) -> Result<String> {
     Ok(key.to_owned())
 }
 
-pub(crate) async fn bounded<T>(
+pub(crate) async fn bounded<T, E: From<&'static str>>(
     shutdown: watch::Receiver<bool>,
     deadline: Instant,
-    future: impl Future<Output = Result<T>>,
-) -> Result<T> {
+    future: impl Future<Output = std::result::Result<T, E>>,
+) -> std::result::Result<T, E> {
     tokio::select! {
         biased;
-        _=stopped(shutdown)=>Err("gateway_shutdown"),
+        _=stopped(shutdown)=>Err("gateway_shutdown".into()),
         result=tokio::time::timeout_at(deadline,future)=>result.map_err(|_|"upstream_timeout")?,
     }
 }
 
 async fn models(State(app): State<Arc<Application>>, request: Request) -> Response {
     let id = Uuid::new_v4();
-    let result=async move {
-        if app.is_stopped(){return Err("gateway_shutdown");}
-        let _ingress=app.limiter.enter()?;
-        let key=metadata(&request,false)?;
-        let authorization=app.control.models(&key).await?;
-        let Some(first)=authorization.models.first()else{return Ok(json!({"object":"list","data":[]}));};
-        if authorization.models.iter().any(|binding|binding.backend_model!=first.backend_model){return Err("gateway_unavailable");}
-        bounded(app.receiver(),Instant::now()+Duration::from_secs(app.configuration.limits.request_seconds),app.backend.verify_model(&first.backend_model,&app.configuration.limits)).await?;
-        Ok(json!({"object":"list","data":authorization.models.iter().map(|binding|json!({"id":binding.name,"object":"model","created":binding.created,"owned_by":"workspace"})).collect::<Vec<_>>()}))
+    let result = async move {
+        if app.is_stopped() {
+            return Err(Failure::from("gateway_shutdown"));
+        }
+        let _ingress = app.limiter.enter()?;
+        let key = metadata(&request, false)?;
+        let authorization = app.control.models_with_retry(&key).await?;
+        let _quota = app.quota_permit(authorization.workspace_id, &key)?;
+        let Some(first) = authorization.models.first() else {
+            return Ok(json!({"object":"list","data":[]}));
+        };
+        if authorization.models.iter().any(|binding| binding.backend_model != first.backend_model) {
+            return Err("gateway_unavailable".into());
+        }
+        let limits = &app.configuration.limits;
+        bounded(
+            app.receiver(),
+            Instant::now() + Duration::from_secs(limits.request_seconds),
+            app.backend.verify_model(&first.backend_model, limits),
+        ).await?;
+        let models = authorization.models.iter().map(|binding| {
+            json!({"id":binding.name,"object":"model","created":binding.created,"owned_by":"workspace"})
+        }).collect::<Vec<_>>();
+        Ok(json!({"object":"list","data":models}))
     }.await;
     match result {
         Ok(value) => {
@@ -188,7 +227,7 @@ async fn models(State(app): State<Arc<Application>>, request: Request) -> Respon
             errors::protect(&mut response, id);
             response
         }
-        Err(code) => errors::response(code, id),
+        Err(error) => errors::respond(error, id),
     }
 }
 
@@ -202,13 +241,17 @@ struct Accepted {
     active: OwnedSemaphorePermit,
 }
 
-async fn accept(app: &Application, request: Request, id: Uuid) -> Result<Accepted> {
+async fn accept(
+    app: &Application,
+    request: Request,
+    id: Uuid,
+) -> std::result::Result<Accepted, Failure> {
     if app.is_stopped() {
-        return Err("gateway_shutdown");
+        return Err("gateway_shutdown".into());
     }
     let ingress = app.limiter.enter()?;
     if !app.spool.ready() {
-        return Err("usage_storage_unavailable");
+        return Err("usage_storage_unavailable".into());
     }
     let key = metadata(&request, true)?;
     let body = tokio::time::timeout(
@@ -222,20 +265,21 @@ async fn accept(app: &Application, request: Request, id: Uuid) -> Result<Accepte
     .map_err(|_| "invalid_request_error")?
     .map_err(|_| "request_too_large")?;
     let request = ChatRequest::parse(&body, &app.configuration.limits)?;
-    let authorization = app.control.models(&key).await?;
+    let authorization = app.control.models_with_retry(&key).await?;
     if !authorization
         .models
         .iter()
         .any(|binding| binding.name == request.alias)
     {
-        return Err("model_not_found");
+        return Err("model_not_found".into());
     }
+    let quota = app.quota_permit(authorization.workspace_id, &key)?;
     let active = app.limiter.active(app.receiver()).await?;
     let reservation = app.spool.reserve(id)?;
     // Authorization is repeated after the queue, immediately before any backend operation.
     let admission = app
         .control
-        .admit(&AdmissionRequest {
+        .admit_with_retry(&AdmissionRequest {
             request_id: id,
             api_key: &key,
             model: &request.alias,
@@ -243,7 +287,12 @@ async fn accept(app: &Application, request: Request, id: Uuid) -> Result<Accepte
             stream: request.stream,
         })
         .await?;
-    let execution = Execution::new(reservation, id);
+    let mut execution = Execution::new(reservation, id);
+    if admission.workspace_id != authorization.workspace_id {
+        execution.refused_before_generation()?;
+        return Err("gateway_unavailable".into());
+    }
+    execution.attach_quota(quota);
     let mut limits = app.configuration.limits.clone();
     limits.maximum_context_tokens = limits
         .maximum_context_tokens
@@ -267,22 +316,45 @@ async fn chat(State(app): State<Arc<Application>>, request: Request) -> Response
     let id = Uuid::new_v4();
     let mut accepted = match accept(&app, request, id).await {
         Ok(value) => value,
-        Err(code) => return errors::response(code, id),
+        Err(error) => return errors::respond(error, id),
     };
-    let prepared = bounded(app.receiver(), accepted.deadline, async {
-        let prompt = app
-            .backend
-            .tokenize(&accepted.request, &accepted.backend_model, &accepted.limits)
-            .await?;
-        let response = app
-            .backend
-            .completion(&accepted.request, &accepted.backend_model)
-            .await?;
-        Ok((prompt, response))
-    })
+    let prompt = match bounded(
+        app.receiver(),
+        accepted.deadline,
+        app.backend
+            .tokenize(&accepted.request, &accepted.backend_model, &accepted.limits),
+    )
+    .await
+    {
+        Ok(prompt) => prompt,
+        Err(code) => {
+            let code = accepted.execution.failure(code, None).err().unwrap_or(code);
+            return errors::response(code, id);
+        }
+    };
+    let reserved = bounded(
+        app.receiver(),
+        accepted.deadline,
+        accepted
+            .execution
+            .reserve_tokens(prompt + accepted.request.maximum_tokens),
+    )
     .await;
-    let (prompt, response) = match prepared {
-        Ok(value) => value,
+    if let Err(error) = reserved {
+        return match accepted.execution.refused_before_generation() {
+            Ok(()) => errors::respond(error, id),
+            Err(code) => errors::response(code, id),
+        };
+    }
+    let response = match bounded(
+        app.receiver(),
+        accepted.deadline,
+        app.backend
+            .completion(&accepted.request, &accepted.backend_model),
+    )
+    .await
+    {
+        Ok(response) => response,
         Err(code) => {
             let code = accepted.execution.failure(code, None).err().unwrap_or(code);
             return errors::response(code, id);
@@ -301,14 +373,17 @@ async fn chat(State(app): State<Arc<Application>>, request: Request) -> Response
         })
         .await;
         return match result {
-            Ok((value, usage)) => match accepted.execution.success(usage) {
-                Ok(()) => {
-                    let mut response = Json(value).into_response();
-                    errors::protect(&mut response, id);
-                    response
+            Ok((value, usage)) => {
+                accepted.execution.settle_tokens(&usage).await;
+                match accepted.execution.success(usage) {
+                    Ok(()) => {
+                        let mut response = Json(value).into_response();
+                        errors::protect(&mut response, id);
+                        response
+                    }
+                    Err(code) => errors::response(code, id),
                 }
-                Err(code) => errors::response(code, id),
-            },
+            }
             Err(code) => {
                 let code = accepted.execution.failure(code, None).err().unwrap_or(code);
                 errors::response(code, id)

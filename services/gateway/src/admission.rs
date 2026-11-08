@@ -1,6 +1,8 @@
 use crate::configuration::{Limits, Result};
+use crate::errors::Failure;
 use crate::outcome::{ErrorCode, Outcome, Status};
 use crate::protocol::Usage;
+use crate::quota::Permit;
 use crate::storage::Reservation;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -66,6 +68,7 @@ pub struct Execution {
     request_id: Uuid,
     started: Instant,
     output_started: bool,
+    quota: Option<Permit>,
 }
 
 impl Execution {
@@ -75,10 +78,50 @@ impl Execution {
             request_id,
             started: Instant::now(),
             output_started: false,
+            quota: None,
         }
     }
     pub fn output_started(&mut self) {
         self.output_started = true;
+    }
+
+    pub(crate) fn attach_quota(&mut self, quota: Option<Permit>) {
+        self.quota = quota;
+    }
+
+    pub(crate) async fn reserve_tokens(
+        &mut self,
+        estimate: u32,
+    ) -> std::result::Result<(), Failure> {
+        if let Some(quota) = &mut self.quota {
+            quota.reserve(estimate).await?;
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn settle_tokens(&mut self, usage: &Usage) {
+        if let Some(quota) = &mut self.quota
+            && let Err(code) = quota.settle(usage.total_tokens).await
+        {
+            eprintln!(
+                "{}",
+                serde_json::json!({
+                    "event": "gateway_quota_settlement_failed",
+                    "code": code,
+                    "request_id": self.request_id,
+                })
+            );
+        }
+    }
+
+    pub(crate) fn refused_before_generation(&mut self) -> Result<()> {
+        // The existing wire has no quota outcome. Report that no upstream work began
+        // using its terminal unavailable outcome so control releases the admission.
+        self.finish(
+            Status::UpstreamError,
+            Some(ErrorCode::GatewayUnavailable),
+            None,
+        )
     }
 
     fn finish(
