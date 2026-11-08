@@ -60,3 +60,18 @@ The operator's private SMTP relay handles invitation and recovery messages.
   correct password works again after the retry window.
 - Verify the existing account forms and mail flow against an installation with
   no Internet route, in addition to the full repository gates.
+
+## Verification
+
+`TestInvitationTenantIsolation` uses a real TLS listener and PostgreSQL 18.6
+with two tenants. Before the fix, the foreign row appeared on both lists, and
+mail resend disclosed its state with a conflict response. With the fix, both
+lists page only the installation's rows, the foreign identifier returns
+`RESOURCE_NOT_FOUND`, and the foreign token cannot validate or register an
+account. The test checks that the foreign rows and credentials are unchanged.
+
+On a Linux amd64 fixture with Docker networking set to `none`, the
+cross-tenant test passed along with direct TLS account recovery, lockout and
+retry, reset and invitation token states, Origin and CSRF, and logout audience
+checks. A separate local no-network PostgreSQL fixture passed the durable
+reset rollback, account revocation race and real mail resend repository tests.
