@@ -388,7 +388,7 @@ async fn chat(State(app): State<Arc<Application>>, request: Request) -> Response
         app.receiver(),
         accepted.deadline,
         app.backend
-            .completion(&accepted.request, &accepted.backend_model),
+            .completion(&accepted.request, &accepted.backend_model, id),
     )
     .await
     {
