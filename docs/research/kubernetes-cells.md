@@ -362,3 +362,86 @@ neither started the reporter. The packet and DNS evidence is retained
 on the test host under
 `/root/lane-arc-felix-final.v1xoN1/evidence`. The shared host reached
 1,428 MiB free memory during the run. No scale load was started.
+
+## Signed release and managed API acceptance
+
+Use the [signed delivery handoff](rke2-signed-delivery.md), the
+[cell-clusters API](../../api/openapi/v1/cell-clusters/openapi.json),
+and the [Agent gateway arrangement](agent-gateway-tier.md). The
+acceptance fixture uses the release verifier and Compose installer,
+real Control and PostgreSQL, a separate TLS Agent Gateway, and two real
+Kubernetes-profile Agents. It leaves provisioning to the API and the
+Agent tasks. The node containers start with clean systemd state and
+receive only the Agent executable and enrollment inputs. This exercises
+artifact authorization and installation together. A direct Agent manager
+probe remains useful for first-start diagnostics and cannot exercise
+the control-plane task authority.
+
+On `ownsolid-cpu`, the repository factory manufactured an isolated
+test release with an ephemeral signer under the `cb83eb64` delivery
+contract. The installed Control, installer and Agents came from
+`4a3f0aba`. The Control image reused the cached amd64 base's static
+assets. The test used the release's packaged installer after
+`prepare-bundle` with `require_rke2: true` verified the signature and
+payloads on a separate filesystem. `apply-bundle` installed PostgreSQL,
+telemetry and Control from the verified archive. The release signing key
+was outside the runtime mounts. The generated cell join-token key was
+outside the release. Control and the Agent Gateway had a read-only
+mount for the approved artifact directory. This fixture verifies the
+original RKE2 archive contract. The later reviewed component inventory
+is tracked separately in [DEL-101](rke2-component-inventory.md).
+
+| Verified identity | SHA-256 |
+| --- | --- |
+| Signed test archive | `3b02a9934f2adec70cdc614b2a9764ddb111a226609ec1e92c0aac2284d9bb90` |
+| Signed manifest | `b4127041ce56f7517aa8492306387c87f10a9eecaf5e617418d1f3d64a29823f` |
+
+- Both real Agents opened TLS sessions on the separate gateway. Admin
+  API creation assigned the server and the server join settled Ready
+  after 112 seconds. The stored enrollment address matched the real
+  site interface. Its returned CA hash matched the RKE2 server CA.
+- Temporarily remove one approved file from the fixture's artifact
+  directory and add the worker through the members API. Its first join
+  settled with `KUBERNETES_ASSET_UNAVAILABLE` after 13 seconds, and the
+  task log identified the missing binary archive. Restoring the original
+  verified bytes and invoking member retry yielded a distinct join task
+  and a Ready worker after 71 seconds. The API retained both attempts.
+- Both successful join task logs named exactly the three approved
+  RKE2 files. The two installed image archives on each node matched
+  the upstream SHA-256 values, and the installed binary reported the
+  pinned release. With a real Agent certificate and credential, the
+  scoped artifact route refused the signed but unapproved checksum
+  filename with `400 VALIDATION_FAILED`. It refused an approved filename
+  for a task that did not exist with `404 RESOURCE_NOT_FOUND`.
+- The observations API refreshed both members' Ready timestamps and
+  returned to two Ready members. Kubernetes also reported both real
+  Linux amd64 nodes Ready. Felix's offline configuration preceded the
+  Canal DaemonSet by 14 seconds. The real scheduler placed the cached
+  pause Pod on the worker, where it reached Ready with a pod-network IP.
+
+The captures ran from before signed preparation through 334 seconds
+with the worker workload and both Canal Pods Ready. The two
+`calico-node` containers kept their original start times and each
+logged the disabled reporting setting. The site resolver received two
+internal CoreDNS HINFO questions and zero public-name questions.
+The server and worker packet logs were empty. The Control host log
+contained exactly the two deliberate IPv4 and IPv6 probes.
+
+The managed Go test body passed. The generic e2e process exited 1
+because its `TestMain` recognizes the IPv4 test subnet only and
+classified the deliberate IPv6 probe as outbound product traffic.
+An independent replay checked the unchanged raw captures, allowing
+exactly one packet to each deliberate probe destination. It rejected
+additional IPv4, IPv6 and duplicate probe packets. The API test log,
+the nonzero wrapper result and both egress checks remain in
+`/root/lane-arc-managed.JFUrp5/capture` on `ownsolid-cpu`.
+A query escaping issue in the scratch Pod check was corrected against
+the same running nodes before the timed observation. The capture
+files and their start boundaries were retained across that correction.
+
+The shared host was checked before manufacture and before the
+isolated run, with no DEL test containers running. Free memory
+dropped below 2 GiB during staging and testing, so only ARC-owned
+file cache was reclaimed before subsequent heavy steps. This run
+did not include fleet load. The managed console remains a separate
+ARC-104 acceptance gate.

@@ -54,7 +54,7 @@ agents is not.
 - [x] ARC-103 mTLS agent identity, certificate rotation, enrollment throttled per rack (P1) - Catalog: F575 - Evidence: commit 1c8f02a (ADR 0050)
   - Scope of the evidence: PostgreSQL only; MySQL and Dameng keep the credential alone until CMP-201 and CMP-202. `TestSingleNodeInstall` on `ownsolid-cpu`, offline, with one real agent that enrolled with a certificate, rotated it without restarting and had the old one refused; `TestAgentGateways` with 500 simulated agents, each with its own certificate. A rack is the source network until FLT-101 names racks (ARC-112). Rotation at fleet scale is ARC-105.
 - [ ] ARC-104 One Kubernetes cluster per cell installed and managed by ownsolid, with the agent on every node (P1)
-  - [Agent-side disconnected server and worker evidence](../../research/kubernetes-cells.md#agent-startup-regression). Signed delivery and the managed console flow remain separate acceptance gates.
+  - [Signed test release and managed API evidence](../../research/kubernetes-cells.md#signed-release-and-managed-api-acceptance). The managed console flow remains open.
 - [ ] ARC-105 Load tested with 1,000 simulated nodes per cell at twice the load, including a Kubernetes cell simulated with KWOK (P1)
   - [Offline KWOK fixture and eight-node simulator evidence](../../research/cell-scale-validation.md). Signed managed-cell delivery and the 1,000-node run at twice the load remain open.
 - [ ] ARC-106 Published fleet KPIs: dispatch p99, reconnect time, database writes per second at measured scale (P1)
