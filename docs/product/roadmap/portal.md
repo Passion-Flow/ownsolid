@@ -24,7 +24,7 @@ Reviewed 2026-11-08 against OpenAI's [API key guidance](https://help.openai.com/
 - [ ] POR-103 Applications: open and install the apps an administrator published to this workspace, and nothing else (P1)
 - [ ] POR-104 Model catalogue for users: which models this workspace may call, what each one costs, and what it is good for (P1)
 - [ ] POR-105 Playground: try a model against a prompt, compare two, and copy the call that produced the answer (P1)
-- [ ] POR-106 API keys and endpoints: issue, name, rotate and revoke my own keys; the endpoint, a code sample per language, and my own call log (P1)
+- [x] POR-106 API keys and endpoints: issue, name, rotate and revoke my own keys; the endpoint, a code sample per language, and my own call log (P1) - Evidence: c20a9df, 4b62fef; live run on an installation, 2026-11-08: a non-administrator invited through a real mail flow issued, rotated and revoked a key from the portal against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; an administrator's portal session got 404 for that key, and another workspace was refused. No model ran; the three samples were run against a local HTTPS stub with the real OpenAI SDKs and curl
 - [ ] POR-107 Jobs: submit training, batch and scientific jobs, watch their steps and logs, open their results, and re-run one (P1)
 - [ ] POR-108 Workspaces: notebooks and development environments I own, with the resource they hold shown against my quota (P1)
 - [ ] POR-109 Data: my datasets and files, their size against my storage quota, and what a job did with them (P1)

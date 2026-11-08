@@ -131,7 +131,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 23 | Developer experience | [developer-experience.md](developer-experience.md) | - | 0/8 | 0/5 | - | 0/1 |
 | 24 | Compatibility matrix | [compatibility-matrix.md](compatibility-matrix.md) | - | 1/2 | 0/11 | - | 0/13 |
 | 25 | Scientific computing | [scientific-computing.md](scientific-computing.md) | - | 0/9 | 0/10 | - | - |
-| 26 | Portal | [portal.md](portal.md) | - | 0/14 | 0/3 | - | - |
+| 26 | Portal | [portal.md](portal.md) | - | 1/14 | 0/3 | - | - |
 
 ## Sources
 

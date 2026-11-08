@@ -293,6 +293,12 @@ many were accepted; it fails when the control plane refuses. `wrong <state> <sec
 model and prints the status and code. The command stands in for the gateway process, which the
 installer does not run yet (GW-114), so the run proves keys and the call log, never model traffic.
 
+`web/apps/portal/e2e/live-keys.spec.ts` runs a person's own keys against the portal entrance, in a session that
+is not an administrator's. It needs what `live-gateway.spec.ts` needs, with `OWNSOLID_LIVE_ORIGIN` set to the
+portal's address, and `OWNSOLID_LIVE_PERSON_COMMAND`, which is run with one argument, a name: it creates a
+non-administrator account through a real invitation, adds it to the workspace as a member, creates a workspace
+it does not belong to, and prints their `email`, `password`, `workspace` and `other_workspace` as JSON.
+
 `live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
 to the license history. It needs test files signed with the key the installation trusts.
 `OWNSOLID_LIVE_LICENSE_COMMAND` reads the license state as JSON on standard input and prints a JSON
