@@ -41,12 +41,18 @@ func decode(r *http.Request, v any) error {
 	if json.Unmarshal(body, &fields) != nil || fields == nil {
 		return errors.New("VALIDATION_FAILED")
 	}
+	// Every field is required unless its tag says omitempty, and no other field is accepted.
 	expected := reflect.TypeOf(v).Elem()
-	if len(fields) != expected.NumField() {
-		return errors.New("VALIDATION_FAILED")
-	}
+	known := map[string]bool{}
 	for i := 0; i < expected.NumField(); i++ {
-		if _, ok := fields[expected.Field(i).Tag.Get("json")]; !ok {
+		name, options, _ := strings.Cut(expected.Field(i).Tag.Get("json"), ",")
+		known[name] = true
+		if _, ok := fields[name]; !ok && options != "omitempty" {
+			return errors.New("VALIDATION_FAILED")
+		}
+	}
+	for name := range fields {
+		if !known[name] {
 			return errors.New("VALIDATION_FAILED")
 		}
 	}
@@ -128,7 +134,8 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 			var input struct {
 				NodeID       string `json:"node_id"`
 				Name         string `json:"name"`
-				ClientOrigin string `json:"client_origin"`
+				// The node declares where callers reach a gateway its agent runs.
+				ClientOrigin string `json:"client_origin,omitempty"`
 				Reason       string `json:"reason"`
 			}
 			if e := decode(r, &input); e != nil {

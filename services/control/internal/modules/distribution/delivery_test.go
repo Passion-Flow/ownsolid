@@ -16,8 +16,10 @@ import (
 
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
+	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	"github.com/google/uuid"
 )
 
@@ -302,4 +304,25 @@ func TestOnlyTheNodeOfAGatewayCanActivateIt(t *testing.T) {
 	// The node is still busy with that start, so a new gateway waits for it.
 	_, e = c.s.Provision(ctx, c.a, c.deliveredInput(), uuid.NewString(), uuid.NewString())
 	check(t, e, "NODE_BUSY")
+}
+
+func TestTheConsoleRegistersAnAgentsGatewayWithoutAnAddressOverHTTP(t *testing.T) {
+	c, _ := deliveredScenario(t)
+	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
+	defer server.Close()
+	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
+	admin := httpfixture.New(t, server, "admin", schemas)
+	admin.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": c.password}, 200, "")
+	base := "/api/v1/admin/distribution/workspaces/" + c.a.Me.Workspace.ID + "/gateways"
+	admin.Headers = map[string]string{"Idempotency-Key": uuid.NewString()}
+	made := admin.Write("POST", base, map[string]any{"node_id": c.node.NodeID, "name": "Agent gateway", "reason": "Publish"}, 201, "ProvisionedGatewayResponse")
+	gateway := made["gateway"].(map[string]any)
+	if made["secret"] != nil || made["secret_available"] != false || gateway["delivery"] != "agent" || gateway["delivery_state"] != "starting" || gateway["client_origin"] != nil {
+		t.Fatalf("%v", made)
+	}
+	admin.Headers = map[string]string{"Idempotency-Key": uuid.NewString()}
+	refused := admin.Write("POST", base, map[string]any{"node_id": c.node.NodeID, "name": "Agent gateway", "reason": "Publish", "unknown": true}, 400, "")
+	if refused["code"] != "VALIDATION_FAILED" {
+		t.Fatalf("%v", refused)
+	}
 }
