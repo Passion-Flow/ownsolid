@@ -70,3 +70,21 @@ In the alerting directory run the following on a Linux development host:
 The test binds ephemeral loopback ports and stops the three processes after
 the check. It verifies the webhook batch and queries the notifier's active,
 inhibited and silenced states.
+
+### Local SMTP delivery
+
+The [SMTP example](alerting/alertmanager-smtp.example.yaml) uses implicit
+TLS and a site CA file. Set the relay address and sender and recipient
+mailboxes to values approved for the customer intranet. For a relay that
+requires authentication, set auth_username and auth_password_file. Add
+the email_configs entry to the webhook receiver if both delivery paths
+should share the rack grouping and inhibition policy.
+
+From the repository root, point OWNSOLID_TEST_ALERTMANAGER at the verified
+Alertmanager 0.34.2 binary and run the TLS SMTP check as root on Linux:
+
+    unshare --net sh -ec 'ip link set lo up; bash services/control/internal/modules/monitoring/alerting/testdata/check-local-smtp.sh'
+
+It reuses the repository's disposable SMTP sink and refuses to start if
+the namespace has a non-loopback interface. It starts and stops both
+processes and verifies the alert subject and recipient in the received mail.
