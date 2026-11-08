@@ -4,13 +4,25 @@ import { Boxes, ClipboardCheck, Cpu, Gauge, House, KeyRound, MessagesSquare } fr
 /** The portal's navigation. An item gets a `to` when its page ships. */
 export const navigation: readonly NavGroup[] = [
   {
+    items: [{ label: 'nav.home', icon: House, to: '/' }],
+  },
+  {
+    heading: 'nav.portalGroup.tools',
     items: [
-      { label: 'nav.home', icon: House, to: '/' },
-      { label: 'nav.apps', icon: Boxes },
-      { label: 'nav.conversations', icon: MessagesSquare },
+      { label: 'nav.apps', icon: Boxes, unavailableReason: 'nav.portalUnavailable.apps' },
+      {
+        label: 'nav.conversations',
+        icon: MessagesSquare,
+        unavailableReason: 'nav.portalUnavailable.conversations',
+      },
       { label: 'nav.portalModels', icon: Cpu, to: '/models' },
+    ],
+  },
+  {
+    heading: 'nav.portalGroup.workspace',
+    items: [
       { label: 'nav.keys', icon: KeyRound, to: '/keys' },
-      { label: 'nav.resources', icon: Gauge },
+      { label: 'nav.resources', icon: Gauge, unavailableReason: 'nav.portalUnavailable.usage' },
       { label: 'nav.supported', icon: ClipboardCheck, to: '/support' },
     ],
   },
