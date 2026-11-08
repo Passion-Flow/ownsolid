@@ -151,3 +151,57 @@ that secrets in command output do not appear, that a stopped control service is
 represented correctly, that Docker failures still yield a readable host report,
 and that an occupied destination is preserved. Exercise the collector with no
 external route and a stopped control service.
+
+## DEL-104 and DEL-105 database upgrade boundary
+
+PostgreSQL's custom-format dump is a consistent, portable application database
+snapshot. For an upgrade recovery point, stop the platform writer before taking
+the snapshot. Reuse the installer's verified backup, which restores into a
+scratch database and records its schema and table fingerprints. A PostgreSQL
+engine major upgrade has a different format and compatibility procedure. Keep
+its image fixed during application upgrades in this path.
+
+- [PostgreSQL 18 pg_dump](https://www.postgresql.org/docs/18/app-pgdump.html)
+- [PostgreSQL 18 pg_upgrade](https://www.postgresql.org/docs/18/pgupgrade.html)
+- [K3s offline upgrades](https://docs.k3s.io/installation/airgap)
+
+A read-only plan compares the live schema with the verified candidate release's
+signed predecessor interval and target version. The installation lock keeps that
+snapshot consistent with this installer's operations. The apply phase needs to
+recheck that plan, load candidate images before stopping service, and keep a
+verified backup outside the install root. Persist the pending transition before
+changing application configuration. A retry must use the same signed target and
+the same recovery point.
+
+A separate application rollback may use the previous verified release only when
+the live schema is accepted by that release. Never run reverse migrations as a
+side effect of an image rollback. Use the explicit restore procedure for a
+database recovery. There are no new dependencies or datasets. These steps reuse
+the staged Docker, Compose and PostgreSQL binaries and their existing licenses.
+
+Tests need two actual release images and cover a refused predecessor, backup
+failure before the migration, successful migration, interruption and retry,
+post-migration health failure and explicit rollback admission. A plan alone
+establishes none of the apply or rollback outcomes.
+
+## DEL-106 incremental archive
+
+OSTree offline deltas identify both the source and the target revision. OCI
+descriptors bind each file's byte length and content digest. Use the same
+principles at whole-asset granularity. The signed candidate manifest records
+one predecessor manifest digest. The patch carries the candidate's existing
+signature and only the payloads that differ from that exact predecessor.
+The customer supplies the previously retained signed archive. Every reused
+or transferred file must match its signed size and SHA-256.
+
+- [OSTree offline static deltas](https://ostreedev.github.io/ostree/copying-deltas/)
+- [OCI content descriptors](https://github.com/opencontainers/image-spec/blob/main/descriptor.md)
+
+The installer compares the old archive with the installed release binding and
+rechecks that binding under the upgrade lock. Reconstitute and verify a normal
+current release before running the existing upgrade procedure. Reject a patch
+for the wrong baseline, duplicate or missing members, an untrusted target,
+changed baseline bytes, and extra data after the archive. Use existing Go
+archive and cryptographic code. There is no new dependency or dataset.
+Retaining a baseline archive costs local storage. It permits a small transfer
+without introducing binary delta tooling or a mutable shared cache.

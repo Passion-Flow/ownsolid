@@ -180,3 +180,20 @@ through an independent channel. The product license issuer has a separate
 trust file. `TestManufactureCurrentRelease` uses ephemeral test trust and a
 fixture SBOM with real Docker exports for the isolated installer test. Those
 inputs do not qualify a production release.
+
+### Incremental release transfer
+
+Include exactly one `baseline-manifest-sha256=<digest>` prerequisite in the
+signed target manifest. Use the manifest digest from the exact previously
+shipped archive. Then build the transfer with both complete signed archives
+available on the factory mount:
+
+```sh
+factory build-current-patch --config /private/patch-factory.json \
+  --baseline /mnt/release/previous.tar.gz --target /mnt/release/next.tar.gz
+```
+
+The protected config selects the mounted workspace, public trust and an
+unused `output_file`. The command reuses the target signature. It writes only
+changed or new payloads. Its reported archive digest refers to the transfer
+file and its asset count counts transferred payloads.
