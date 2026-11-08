@@ -122,3 +122,23 @@ bounded CPU threads did not reach readiness during the run. The server
 showed sustained disk I/O waits. The earlier live evidence still
 applies to the installed path it exercised. Acceptance of the changed
 stream tail and engine request identifier against real vLLM remains open.
+
+## Bounded readiness rerun
+
+On 2026-11-09 the same pinned CPU image was preloaded, and all nine
+model files were copied to tmpfs and matched their catalogue SHA-256
+digests. The container used `--network none`, one sequence, four
+assigned CPUs, an 8 GiB memory limit with no container swap, and
+128-token context and batch limits. It exposed only a Unix socket.
+
+The 361-second readiness window ended with harness exit 22. The
+container was still running, without an OOM event. Python started at
+03:16:54 China time, completed its Torch import at 03:18:02, and
+completed the vLLM CLI module import at 03:19:41. The process was
+repeatedly in uninterruptible kernel file or buffer waits. The CLI
+did not log server arguments, weight loading or a bound socket.
+The final direct socket probe failed to connect (curl exit 7).
+The direct generation and gateway streaming probes were never reached.
+The logs establish a startup limit on this shared host before model
+loading. They provide no result for the selected CPU configuration or
+for the gateway's handling of actual model events.
