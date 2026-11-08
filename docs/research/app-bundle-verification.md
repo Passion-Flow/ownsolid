@@ -41,6 +41,24 @@ with a local public key and no network. Product acceptance also needs an
 approved publisher's real archive imported and installed from the console on
 a disconnected Linux amd64 target.
 
+## Local Compose prototype
+
+Docker Compose 5.5.1 on Linux arm64 accepted the Compose file after the catalog
+verifier checked its signature, the locale documents and a real OCI-format
+archive from the local image store. With the pinned image already present,
+`compose up --pull never --no-build` ran the fixture under `network_mode: none`
+and the workload confirmed that it had no Ethernet interface. The installation
+gate still needs an import from the staged archive into an empty local store.
+
+The platform-filtered archive's root index referred to the arm64 image manifest
+digest, which differed from the registry's multi-platform index digest for the
+same cached image. The packaging and import paths must carry and verify the
+specific image identities retained in the archive and render against those
+verified identities. Copying a registry index digest into a platform-filtered
+package without checking the archive is insufficient.
+
+## Licenses
+
 [Ed25519](https://www.rfc-editor.org/rfc/rfc8032.html) and SHA-256 come from
 the [BSD-3-Clause Go standard library](https://go.dev/LICENSE), usable
 commercially and offline and redistributable with its notice. The
