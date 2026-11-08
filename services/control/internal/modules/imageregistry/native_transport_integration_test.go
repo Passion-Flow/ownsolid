@@ -8,7 +8,9 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/registryfixture"
+	"github.com/google/uuid"
 )
 
 // These are injected only by the bounded native quality producer. No ambient
@@ -130,7 +132,7 @@ func nativeTransportConfiguration(n *registryfixture.Native) Config {
 
 func TestActualNativeRegistryTransport(t *testing.T) {
 	binary, sha, seconds, memory := nativeTransportInputs(t)
-	for _, name := range []string{"actual_tls_auth_blob_manifest_roundtrip", "actual_mutable_tag_preserves_digest_reads", "actual_restart_and_gc"} {
+	for _, name := range []string{"actual_tls_auth_blob_manifest_roundtrip", "actual_path_relative_upload_location", "actual_mutable_tag_preserves_digest_reads", "actual_restart_and_gc"} {
 		t.Run(name, func(t *testing.T) {
 			n := registryfixture.New(t, binary, sha, seconds, memory)
 			remote, e := newDistribution(nativeTransportConfiguration(n))
@@ -138,6 +140,9 @@ func TestActualNativeRegistryTransport(t *testing.T) {
 				t.Fatal(e)
 			}
 			defer remote.Close()
+			if name == "actual_path_relative_upload_location" {
+				remote.http.Transport = relativeUploadLocation{remote.http.Transport}
+			}
 			ctx, cancel := context.WithTimeout(t.Context(), time.Duration(seconds)*time.Second)
 			defer cancel()
 			image := nativeTransportBytes(t, n.Root)
@@ -222,4 +227,32 @@ func TestActualNativeRegistryTransport(t *testing.T) {
 			}
 		})
 	}
+}
+
+// relativeUploadLocation models an in-site registry front end that returns the
+// upload session URI relative to the POST target. Only the header is rewritten.
+type relativeUploadLocation struct {
+	http.RoundTripper
+}
+
+func (p relativeUploadLocation) RoundTrip(req *http.Request) (*http.Response, error) {
+	res, err := p.RoundTripper.RoundTrip(req)
+	if err != nil || req.Method != http.MethodPost || !strings.HasSuffix(req.URL.Path, "/blobs/uploads/") || res.StatusCode != http.StatusAccepted {
+		return res, err
+	}
+	// RoundTripper does not set Response.Request. Resolve the real response
+	// header against the outgoing request URL before making it path-relative.
+	location, err := req.URL.Parse(res.Header.Get("Location"))
+	if err != nil {
+		res.Body.Close()
+		return nil, err
+	}
+	upload, ok := strings.CutPrefix(location.EscapedPath(), req.URL.EscapedPath())
+	if !ok || upload == "" {
+		res.Body.Close()
+		return nil, fmt.Errorf("registry did not return an upload location under %s", req.URL.Path)
+	}
+	relative := &url.URL{Path: upload, RawQuery: location.RawQuery}
+	res.Header.Set("Location", relative.String())
+	return res, nil
 }

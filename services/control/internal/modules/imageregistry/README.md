@@ -11,3 +11,10 @@ Use [registry configuration examples](../../../../../config/examples/registry/RE
 Focused native check: `go -C services/control test ./internal/modules/imageregistry`. The native-transport, stored-state and runtime-repository integration sources exercise different failure boundaries and need their declared fixtures. Do not replace those profiles with a mocked successful pull.
 
 The [installation operator snapshot](../../../../../docs/milestones/m24-image-registry/operator-snapshot.md) adds explicit borrowed-session/all-Workspace CAS export/import and independent byte readback. It is a distinct supplementary payload, preserves the original four domain stores and browser APIs, and grants no HTTP path or browser actor bypass. The native owner retains canonical maintenance/physical stop and completion authority.
+
+Upload session locations are resolved against the initiating POST URL, as
+required for a path-relative Location. The resolved URL must stay on the
+configured registry and within that repository's upload collection.
+TestActualNativeRegistryTransport covers the path-relative case using
+a header rewrite over the real TLS Distribution connection and verifies
+the blobs by digest after upload.
