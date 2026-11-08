@@ -19,13 +19,50 @@ import (
 )
 
 type supportReport struct {
-	FormatVersion int              `json:"format_version"`
-	CollectedAt   time.Time        `json:"collected_at"`
-	Host          supportHost      `json:"host"`
-	Topology      string           `json:"topology"`
-	Services      []supportService `json:"services"`
-	SchemaVersion *int             `json:"schema_version,omitempty"`
-	Issues        []string         `json:"collection_issues"`
+	FormatVersion int                  `json:"format_version"`
+	CollectedAt   time.Time            `json:"collected_at"`
+	Host          supportHost          `json:"host"`
+	Topology      string               `json:"topology"`
+	Configuration supportConfiguration `json:"configuration"`
+	Operations    []supportOperation   `json:"recent_operations"`
+	Services      []supportService     `json:"services"`
+	SchemaVersion *int                 `json:"schema_version,omitempty"`
+	Issues        []string             `json:"collection_issues"`
+}
+
+// The deployment configuration contains secret references and site data. Only
+// the fields listed here may be written to a support archive.
+type supportConfiguration struct {
+	TLSSource              string                             `json:"tls_source"`
+	SMTPTLSMode            string                             `json:"smtp_tls_mode"`
+	StepSeconds            int                                `json:"step_seconds"`
+	BackupSeconds          int                                `json:"backup_seconds"`
+	PreflightEnabled       bool                               `json:"preflight_enabled"`
+	PostgresMaxConnections int                                `json:"postgres_max_connections"`
+	MetricsRetention       string                             `json:"metrics_retention"`
+	LogsRetention          string                             `json:"logs_retention"`
+	Resources              map[string]supportServiceResources `json:"resources"`
+}
+
+type supportServiceResources struct {
+	Memory string `json:"memory"`
+	CPUs   string `json:"cpus"`
+}
+
+func supportConfig(c Config) supportConfiguration {
+	r := c.Resources
+	return supportConfiguration{
+		TLSSource: c.TLS.Source, SMTPTLSMode: c.SMTP.TLSMode,
+		StepSeconds: c.StepSeconds, BackupSeconds: c.BackupSeconds, PreflightEnabled: c.Preflight != nil,
+		PostgresMaxConnections: r.PostgresMaxConnections,
+		MetricsRetention:       c.Telemetry.MetricsRetention, LogsRetention: c.Telemetry.LogsRetention,
+		Resources: map[string]supportServiceResources{
+			"control":  {Memory: r.ControlMemory, CPUs: r.ControlCPUs},
+			"postgres": {Memory: r.PostgresMemory, CPUs: r.PostgresCPUs},
+			"metrics":  {Memory: r.MetricsMemory, CPUs: r.MetricsCPUs},
+			"logs":     {Memory: r.LogsMemory, CPUs: r.LogsCPUs},
+		},
+	}
 }
 
 type supportHost struct {
@@ -79,8 +116,13 @@ func SupportBundle(ctx context.Context, c Config, runner Runner, output string, 
 func collectSupport(ctx context.Context, c Config, runner Runner) supportReport {
 	report := supportReport{
 		FormatVersion: 1, CollectedAt: time.Now().UTC(), Topology: c.Topology.Size,
-		Host:   supportHost{OS: runtime.GOOS, Architecture: runtime.GOARCH},
-		Issues: []string{},
+		Host:          supportHost{OS: runtime.GOOS, Architecture: runtime.GOARCH},
+		Configuration: supportConfig(c), Issues: []string{},
+	}
+	operations, err := collectSupportOperations(c)
+	report.Operations = operations
+	if err != nil {
+		report.Issues = append(report.Issues, "OPERATION_LOG_UNAVAILABLE")
 	}
 	if raw, err := os.ReadFile("/proc/sys/kernel/osrelease"); err == nil {
 		if version, ok := kernelRelease(strings.TrimSpace(string(raw))); ok {
