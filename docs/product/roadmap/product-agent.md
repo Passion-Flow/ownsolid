@@ -1,5 +1,7 @@
 # Product agent
 
+Last reviewed: 2026-11-09. See [product assistant references](../../research/product-assistant-commands.md).
+
 One assistant that operates the whole product: customers tell it to open a page, find
 something, deploy a model or drain a node instead of clicking. Clicking always remains a
 complete path.
