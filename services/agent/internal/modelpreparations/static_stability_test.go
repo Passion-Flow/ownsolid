@@ -157,9 +157,10 @@ func TestTheWallLimitEndsAnAttemptDuringAnOutage(t *testing.T) {
 
 func TestARevokedAttemptStopsItsContainer(t *testing.T) {
 	m, lease, d, transport := preparedManager(t)
-	d.afterStart = func(*Container) {}
 	ctx, revoke := context.WithCancelCause(t.Context())
-	time.AfterFunc(150*time.Millisecond, func() { revoke(errors.New("AGENT_LEASE_STALE")) })
+	// Revoke once the container exists: a timer could fire before it starts on a busy
+	// machine, and then there is no container to remove.
+	d.afterStart = func(*Container) { revoke(errors.New("AGENT_LEASE_STALE")) }
 	receipt, _, e := m.Execute(ctx, fixtureID, lease, transport)
 	if !errors.Is(e, context.Canceled) || receipt.Proof != "owned_container_removed" || receipt.AgentErrorCode != "MODEL_PREPARATION_AGENT_INTERRUPTED" || d.container != nil {
 		t.Fatalf("revocation: %v, %+v", e, receipt)
