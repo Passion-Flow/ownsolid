@@ -13,7 +13,7 @@ func TestExplicitInferenceAuthorityAndLegacySeparation(t *testing.T) {
 	if e := h.Validate(); e != nil {
 		t.Fatal(e)
 	}
-	if len(h.Capabilities) != 6 || OperationAllowed(DockerInferenceProfile, ComponentOperation("install")) {
+	if len(h.Capabilities) != 8 || OperationAllowed(DockerInferenceProfile, ComponentOperation("install")) {
 		t.Fatal("inference inherited component authority")
 	}
 	for _, profile := range []string{ReadOnlyProfile, SystemdComponentsProfile, SystemdMaintenanceProfile} {
