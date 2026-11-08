@@ -49,3 +49,17 @@ Closing IAM-101 and IAM-112 also requires the synchronized capability
 status update in `docs/product/status.md`, outside this lane's shared-file
 allowlist. The evidence above is ready for that status update and the
 corresponding roadmap ticks.
+
+## Product status handoff
+
+The product status owner can use these rows in `docs/product/status.md`.
+
+```markdown
+| Local account lifecycle (IAM-101) | Yes. Invitation and invitation mail operations enforce the installation tenant on the server. | Chromium on an isolated Linux amd64 install with TLS SMTP exercised invitation, resend, registration, account disable and enable, password reset, lockout, and retry. Disconnected PostgreSQL 18.6 tests refused foreign tenant invitation IDs, mail IDs, and tokens. [Evidence](../research/local-accounts.md) | No | None known |
+| Separate Admin and Portal sessions (IAM-112) | Yes. The entrances use host-only cookies and server-enforced session audiences. | Chromium on an isolated Linux amd64 install verified independent sign-out. TLS tests on disconnected PostgreSQL 18.6 refused cookie replay in both directions and verified that cross-audience logout leaves both valid sessions usable. [Evidence](../research/browser-entrance-sessions.md) | No | None known |
+```
+
+The status owner coordinates `docs/product/status.md` with the IAM owner,
+who owns `docs/product/roadmap/identity-and-access.md` and regenerates
+`docs/product/roadmap/index.md`. Both boxes stay open until the status rows
+and ticks land together.
