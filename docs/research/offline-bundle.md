@@ -205,3 +205,47 @@ changed baseline bytes, and extra data after the archive. Use existing Go
 archive and cryptographic code. There is no new dependency or dataset.
 Retaining a baseline archive costs local storage. It permits a small transfer
 without introducing binary delta tooling or a mutable shared cache.
+
+## DEL-112 offline trust rotation
+
+The Update Framework rotates a pinned root one version at a time. A successor
+requires distinct signatures meeting both the old and the new root thresholds.
+The final trusted root has an expiry. Use those rules for an explicitly
+transported local file. Keep the current Ed25519 release signature envelope
+and delegate its signing keys from the versioned root.
+
+- [TUF root update rules](https://theupdateframework.github.io/specification/latest/#update-root)
+- [Ed25519 specification](https://www.rfc-editor.org/rfc/rfc8032)
+
+Keep root signing separate from release signing. Store the independently
+provisioned public root in a private local file. Rotate under a local exclusive
+lock and persist by atomic rename. One transition accepts only the immediate
+successor. Operators with an older pinned root bring the signed successors in
+sequence, with only the final unexpired root published. Rotation may renew an
+expired root through this authenticated chain. Release verification always
+rejects the expired active root.
+The legacy public key map remains a compatibility input for sites that have
+not provisioned versioned root metadata. These rules are local and use the Go
+standard library without adding dependencies or a TUF client.
+
+Verify duplicate, unknown, missing and bad signatures, thresholds on both
+sides, replay or version skips, expiry, preservation on failed writes, and a
+bundle verified with the post-rotation delegated key on an isolated host.
+
+## DEL-110 notice inventory
+
+The SPDX package information section distinguishes package identity, declared
+licence terms, and copyright text. Keep the actual applicable notices and
+licence files as signed payloads, with explicit references from each asset.
+The existing manifest and SBOM checks bind their presence and bytes. Provide
+an offline inventory view from a fully verified archive so an operator can
+find the applicable notice files for each payload before installing.
+
+- [SPDX package information](https://spdx.github.io/spdx-spec/v2.3.1/package-information/)
+- [SPDX License List](https://spdx.org/licenses/)
+
+No new dependencies. The view must have stable ordering and include the
+path and checksum for each declared notice. Reject inferring licence
+permissions from filenames or supplying a transitive inventory from only
+image tags. A production release still needs the exact notices from its
+selected dependency, model, and plug-in inputs.

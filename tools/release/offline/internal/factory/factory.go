@@ -56,12 +56,22 @@ func loadTrust(c Config) (map[string]ed25519.PublicKey, error) {
 	if e != nil {
 		return nil, fail("RELEASE_PROTECTED_TRUST_REQUIRED")
 	}
+	if c.current && isVersionedTrust(raw) {
+		return releaseTrustKeys(raw, time.Now())
+	}
 	var trust Trust
-	if wire.StrictJSON(raw, &trust) != nil || len(trust.Keys) < 1 || len(trust.Keys) > 16 {
+	if wire.StrictJSON(raw, &trust) != nil {
 		return nil, fail("RELEASE_TRUST_INVALID")
 	}
-	out := map[string]ed25519.PublicKey{}
-	for id, value := range trust.Keys {
+	return decodePublicKeys(trust.Keys)
+}
+
+func decodePublicKeys(keys map[string]string) (map[string]ed25519.PublicKey, error) {
+	if len(keys) < 1 || len(keys) > 16 {
+		return nil, fail("RELEASE_TRUST_INVALID")
+	}
+	out := make(map[string]ed25519.PublicKey, len(keys))
+	for id, value := range keys {
 		key, e := base64.StdEncoding.Strict().DecodeString(value)
 		if e != nil || len(key) != ed25519.PublicKeySize || base64.StdEncoding.EncodeToString(key) != value || wire.Digest(key) != id {
 			return nil, fail("RELEASE_TRUST_INVALID")
@@ -330,18 +340,9 @@ func build(ctx context.Context, c Config, operations durableIO) (result Result, 
 	if within(c.ArtifactRoot, c.PrivateKeyFile) {
 		return result, fail("RELEASE_SIGNING_KEY_INSIDE_ASSETS_REFUSED")
 	}
-	keyRaw, e := readRegular(c.PrivateKeyFile, 4096, true)
+	private, e := readReleaseSigningKey(c.PrivateKeyFile)
 	if e != nil {
-		return result, fail("RELEASE_PRIVATE_SIGNING_KEY_REQUIRED")
-	}
-	encoded := strings.TrimSpace(string(keyRaw))
-	key, e := base64.StdEncoding.Strict().DecodeString(encoded)
-	if e != nil || len(key) != ed25519.PrivateKeySize || base64.StdEncoding.EncodeToString(key) != encoded {
-		return result, fail("RELEASE_SIGNING_KEY_INVALID")
-	}
-	private := ed25519.PrivateKey(key)
-	if !bytes.Equal(ed25519.NewKeyFromSeed(private.Seed()), private) {
-		return result, fail("RELEASE_SIGNING_KEY_INVALID")
+		return result, e
 	}
 	public := private.Public().(ed25519.PublicKey)
 	id := wire.Digest(public)
@@ -464,6 +465,23 @@ func build(ctx context.Context, c Config, operations durableIO) (result Result, 
 		return result, e
 	}
 	return result, nil
+}
+
+func readReleaseSigningKey(filename string) (ed25519.PrivateKey, error) {
+	keyRaw, e := readRegular(filename, 4096, true)
+	if e != nil {
+		return nil, fail("RELEASE_PRIVATE_SIGNING_KEY_REQUIRED")
+	}
+	encoded := strings.TrimSpace(string(keyRaw))
+	key, e := base64.StdEncoding.Strict().DecodeString(encoded)
+	if e != nil || len(key) != ed25519.PrivateKeySize || base64.StdEncoding.EncodeToString(key) != encoded {
+		return nil, fail("RELEASE_SIGNING_KEY_INVALID")
+	}
+	private := ed25519.PrivateKey(key)
+	if !bytes.Equal(ed25519.NewKeyFromSeed(private.Seed()), private) {
+		return nil, fail("RELEASE_SIGNING_KEY_INVALID")
+	}
+	return private, nil
 }
 
 func ReadConfigFile(name string) ([]byte, error) { return readRegular(name, 1048576, true) }
