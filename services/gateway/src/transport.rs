@@ -3,7 +3,7 @@ use crate::backend::transport_error;
 use crate::configuration::Result;
 use crate::errors;
 use crate::protocol::Usage;
-use crate::streaming::{DONE_EVENT, Decoder};
+use crate::streaming::Decoder;
 use futures_util::StreamExt;
 use std::time::Duration;
 use tokio::sync::{OwnedSemaphorePermit, mpsc, watch};
@@ -53,7 +53,7 @@ impl StreamWork {
             active: _active,
         } = self;
         let mut stream = response.bytes_stream();
-        let result:Result<Usage>=async {
+        let result: Result<(Usage, Vec<u8>)> = async {
             loop {
                 if deadline <= Instant::now() {
                     return Err("upstream_timeout");
@@ -81,10 +81,10 @@ impl StreamWork {
         // Dropping the response stream before reporting prevents an incomplete backend connection lingering.
         drop(stream);
         let terminal = match result {
-            Ok(usage) => {
+            Ok((usage, terminal)) => {
                 execution.settle_tokens(&usage).await;
                 match execution.success(usage) {
-                    Ok(()) => DONE_EVENT.to_vec(),
+                    Ok(()) => terminal,
                     Err(code) => error_event(code, request_id),
                 }
             }

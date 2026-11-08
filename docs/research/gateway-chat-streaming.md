@@ -73,3 +73,34 @@ completion tokens and terminated with DONE. PostgreSQL acknowledged the
 two outcomes with identical usage. The [quota note](gateway-limits.md)
 records the admission and two rejected calls. Installer and production
 backend qualification remain separate.
+
+## Deliver final usage only after a durable outcome
+
+The [OpenAI Chat Completions request reference](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
+defines a usage-only chunk immediately before the DONE marker when
+`stream_options.include_usage` is set. The
+[WHATWG event-stream format](https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation)
+delimits events with a blank line. Continue forwarding bounded text chunks
+incrementally. Keep the validated usage-only chunk for the terminal write so a
+truncated or malformed upstream tail cannot report final usage to the caller
+before the gateway has verified and stored the outcome.
+
+Sending usage on arrival leaves the caller with final counts even if the
+upstream then sends an invalid frame or the spool cannot publish the result.
+Buffering the entire stream would defeat incremental delivery. Buffer only
+the terminal payload and send it after a valid DONE, EOF and successful local
+outcome publication. Persist the same usage even when the caller omits the
+usage chunk. The combined terminal write still contains two complete SSE
+events for clients that request usage.
+
+The TLS fixture must receive text and a safe error without a usage-only chunk
+or DONE when an otherwise valid stream ends with malformed trailing data.
+A forced spool publication failure must also suppress both terminal events.
+A complete stream must expose exactly one usage-only chunk immediately before
+DONE, with counts matching the durable outcome. Decoder tests must continue
+to cover fragmented line endings and byte bounds. The offline vLLM fixture
+exercises the same successful path against a real engine.
+
+The change uses the existing Rust runtime and JSON stack. It introduces no
+dependency, model or dataset. The existing offline engine and model licences
+are listed above.
