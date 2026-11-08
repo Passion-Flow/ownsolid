@@ -64,7 +64,7 @@ function FilePicker({
 }: {
   label: string;
   testId: string;
-  onChoose: (file: File) => void;
+  onChoose: ((file: File) => void) | undefined;
 }) {
   const input = useRef<HTMLInputElement>(null);
   return (
@@ -77,13 +77,14 @@ function FilePicker({
         data-testid={testId}
         onChange={(event) => {
           const file = event.target.files?.[0];
-          if (file) onChoose(file);
+          if (file) onChoose?.(file);
           event.target.value = '';
         }}
       />
       <Button
+        aria-disabled={onChoose === undefined || undefined}
         onClick={() => {
-          input.current?.click();
+          if (onChoose) input.current?.click();
         }}
       >
         <FileArchive aria-hidden />
@@ -263,14 +264,18 @@ function ImportForm({ catalog }: { catalog: ModelCatalogAvailability }) {
           <span>{t('models.import.license', { license: entry.license })}</span>
         </label>
       </Card>
-      <p className="m-0 text-text-2">
-        {file
-          ? t('models.import.cost', {
-              workspace: workspace?.name ?? '',
-              during: format.bytes(file.size + finalBytes),
-            })
-          : t('models.import.cost.none', { size: format.bytes(2 * finalBytes) })}
-      </p>
+      <Card className="p-[18px]">
+        <h2 className="m-0 mb-1 text-[15px] font-semibold">{t('models.import.storage.title')}</h2>
+        <p className="m-0 text-text-2" aria-live="polite">
+          {file
+            ? t('models.import.cost', {
+                during: format.bytes(file.size + finalBytes),
+                size: format.bytes(finalBytes),
+              })
+            : t('models.import.cost.none', { size: format.bytes(finalBytes) })}
+        </p>
+        <p className="m-0 mt-1 text-text-2">{t('models.import.storage.cleanup')}</p>
+      </Card>
       <div>
         <Button type="submit" variant="primary" disabled={!usable}>
           {start.isPending ? <Spinner label={t('models.import.submit')} /> : <Upload aria-hidden />}
@@ -319,10 +324,10 @@ export function ModelImportPage() {
   );
 }
 
-function stepStates(item: ModelImport): [StepState, StepState, StepState] {
+function stepStates(item: ModelImport, sending: boolean): [StepState, StepState, StepState] {
   switch (item.state) {
     case 'uploading':
-      return ['running', 'pending', 'pending'];
+      return [sending ? 'running' : 'pending', 'pending', 'pending'];
     case 'queued':
     case 'verifying':
       return ['done', 'running', 'pending'];
@@ -365,7 +370,7 @@ function Resume({
   problem,
 }: {
   item: ModelImport;
-  onChoose: (file: File) => void;
+  onChoose: ((file: File) => void) | undefined;
   problem: string | null;
 }) {
   const { t, format } = useI18n();
@@ -429,15 +434,7 @@ function CancelDialog({ item, onClose }: { item: ModelImport; onClose: () => voi
   );
 }
 
-function Loaded({
-  item,
-  chunkBytes,
-  maximumAttempts,
-}: {
-  item: ModelImport;
-  chunkBytes: number;
-  maximumAttempts: number;
-}) {
+function Loaded({ item }: { item: ModelImport }) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const transfer = useTransfer(item.id);
@@ -453,13 +450,23 @@ function Loaded({
   // A refusal that will not pass needs another file; one that may pass offers Try again instead.
   const stuck =
     transfer?.state === 'failed' && !(isProblem(transfer.problem) && transfer.problem.retryable);
+  const canResume = item.state === 'uploading' && !stopping && (transfer === undefined || stuck);
+  const needsCatalog = canResume || item.state === 'failed';
+  const catalog = useQuery({
+    queryKey: modelKeys.catalog,
+    queryFn: ({ signal }) => getModelCatalog({ signal }),
+    enabled: needsCatalog,
+  });
+  const rules = catalog.data;
   const state = importStates[item.state];
-  const [upload, verification, ready] = stepStates(item);
+  const [upload, verification, publication] = stepStates(item, sending);
+  const uploadIncomplete = item.state === 'uploading' && !sending;
+  const publishedModelId = item.state === 'ready' ? item.model_id : null;
   const failure = item.state === 'failed' && item.error_code ? item.error_code : null;
   const resume = (file: File) => {
     setWrongSize(file.size !== item.expected_bytes);
-    if (file.size === item.expected_bytes) {
-      startTransfer(file, item, chunkBytes, t('models.import.resumeReason'), () => {
+    if (rules && file.size === item.expected_bytes) {
+      startTransfer(file, item, rules.chunk_bytes, t('models.import.resumeReason'), () => {
         void refresh();
       });
     }
@@ -471,9 +478,22 @@ function Loaded({
         backSearch={{ tab: 'imports' }}
         backLabel={t('models.imports.back')}
         title={item.name}
-        status={<StatusPill tone={state.tone}>{t(state.label)}</StatusPill>}
+        status={
+          <StatusPill tone={state.tone}>
+            {t(uploadIncomplete ? 'models.import.resume.incomplete' : state.label)}
+          </StatusPill>
+        }
         actions={
-          finished.includes(item.state) ? null : (
+          publishedModelId ? (
+            <Link
+              to="/library/$modelId"
+              params={{ modelId: publishedModelId }}
+              className={buttonVariants({ variant: 'primary' })}
+            >
+              {t('models.import.openModel')}
+              <ArrowRight aria-hidden />
+            </Link>
+          ) : finished.includes(item.state) ? null : (
             <Button
               variant="danger"
               onClick={() => {
@@ -487,16 +507,31 @@ function Loaded({
       />
       <div className="flex max-w-[720px] flex-col gap-4">
         {stopping ? <Notice title={t('models.import.stopping')} /> : null}
+        {needsCatalog && !rules ? (
+          catalog.isPending ? (
+            <p role="status" className="m-0 text-text-2">
+              {t('models.import.controls.loading')}
+            </p>
+          ) : isProblem(catalog.error) ? (
+            <ProblemNotice
+              problem={catalog.error}
+              detail={catalog.error.retryable ? t('models.import.controls.unavailable') : undefined}
+              onRetry={() => {
+                void catalog.refetch();
+              }}
+            />
+          ) : null
+        ) : null}
         {item.state === 'uploading' && !stopping ? (
           <Card className="flex flex-col gap-3 p-[18px]">
             <Sending item={item} transfer={transfer} />
             {transfer?.state === 'failed' && isProblem(transfer.problem) ? (
               <ProblemNotice problem={transfer.problem} onRetry={transfer.retry} />
             ) : null}
-            {transfer === undefined || stuck ? (
+            {canResume ? (
               <Resume
                 item={item}
-                onChoose={resume}
+                onChoose={rules ? resume : undefined}
                 problem={wrongSize ? t('models.import.resume.wrongSize') : null}
               />
             ) : null}
@@ -508,33 +543,32 @@ function Loaded({
         {failure ? <ProblemNotice problem={new ApiProblem(failure, { status: 409 })} /> : null}
         {isProblem(verify.error) ? <ProblemNotice problem={verify.error} /> : null}
         {item.state === 'failed' ? (
-          item.attempts < maximumAttempts ? (
+          !rules || item.attempts < rules.maximum_attempts ? (
             <div>
               <Button
                 variant="primary"
                 disabled={verify.isPending}
+                aria-disabled={!rules || undefined}
                 onClick={() => {
-                  verify.mutate();
+                  if (rules) verify.mutate();
                 }}
               >
-                {t('models.import.verifyAgain', { attempt: item.attempts + 1, maximumAttempts })}
+                {rules
+                  ? t('models.import.verifyAgain', {
+                      attempt: item.attempts + 1,
+                      maximumAttempts: rules.maximum_attempts,
+                    })
+                  : t('models.import.verifyAgain.action')}
               </Button>
             </div>
           ) : (
             <Notice title={t('models.import.outOfAttempts')} />
           )
         ) : null}
-        {item.state === 'ready' && item.model_id ? (
-          <div>
-            <Link
-              to="/library/$modelId"
-              params={{ modelId: item.model_id }}
-              className={buttonVariants({ variant: 'primary' })}
-            >
-              {t('models.import.openModel')}
-              <ArrowRight aria-hidden />
-            </Link>
-          </div>
+        {publishedModelId ? (
+          <Notice title={t('models.import.published.title')}>
+            {t('models.import.published.detail')}
+          </Notice>
         ) : null}
         <Card className="p-[18px]">
           <StepTimeline
@@ -547,7 +581,7 @@ function Loaded({
                 detail: t('models.import.step.verify.detail'),
                 state: verification,
               },
-              { id: 'ready', title: t('models.import.step.ready'), state: ready },
+              { id: 'publish', title: t('models.import.step.publish'), state: publication },
             ]}
           />
         </Card>
@@ -569,10 +603,6 @@ export function ModelImportStatusPage() {
   const { t } = useI18n();
   const { importId } = route.useParams();
   const poll = useQuery(runtimeConfigQuery()).data?.ui.pollMilliseconds ?? false;
-  const catalog = useQuery({
-    queryKey: modelKeys.catalog,
-    queryFn: ({ signal }) => getModelCatalog({ signal }),
-  });
   const item = useQuery({
     queryKey: modelKeys.import(importId),
     queryFn: ({ signal }) => getModelImport(importId, { signal, background: true }),
@@ -580,22 +610,13 @@ export function ModelImportStatusPage() {
       query.state.data && finished.includes(query.state.data.state) ? false : poll,
     retry: (failures, error) => failures < 2 && isProblem(error) && error.retryable,
   });
-  if (item.data && catalog.data) {
-    return (
-      <Loaded
-        item={item.data}
-        chunkBytes={catalog.data.chunk_bytes}
-        maximumAttempts={catalog.data.maximum_attempts}
-      />
-    );
-  }
+  if (item.data) return <Loaded item={item.data} />;
   return (
     <ResourceUnavailable
-      pending={item.isPending || catalog.isPending}
-      error={item.error ?? catalog.error}
+      pending={item.isPending}
+      error={item.error}
       onRetry={() => {
         void item.refetch();
-        void catalog.refetch();
       }}
       backTo="/library"
       backLabel={t('models.imports.back')}

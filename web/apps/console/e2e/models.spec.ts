@@ -1,10 +1,12 @@
 // The Model library: finding what a workspace has, bringing a model in through upload and
 // verification, and what happens when any of that goes wrong (docs/research/model-library.md).
+import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import {
   derivedModel,
   failedImport,
   mockControlPlane,
   modelCatalog,
+  publishedImport,
   readyModel,
   stalledImport,
   type ControlPlane,
@@ -95,18 +97,71 @@ test('says what the catalogue can do in this release', async ({ page }) => {
 });
 
 test('imports a bundle: sends every chunk, verifies, and opens the model', async ({ page }) => {
+  control.modelCatalog = {
+    ...modelCatalog,
+    catalog: {
+      ...modelCatalog.catalog,
+      files: modelCatalog.catalog.files.map((file) => ({ ...file, size_bytes: 8 })),
+    },
+  };
   await fillForm(page);
+  await expect(page.getByRole('heading', { name: 'Storage needed' })).toBeVisible();
   await expect(
-    page.getByText(/takes .* of the model store: the bundle, and the model/),
+    page.getByText('Allow about 40 byte in the model store', { exact: false }),
+  ).toContainText('The model files use 16 byte.');
+  await expect(
+    page.getByText(
+      'After publication, the server removes temporary import files in the background.',
+    ),
   ).toBeVisible();
   await start(page);
   await expect(page.getByRole('link', { name: 'Open the model' })).toBeVisible();
   const chunks = Object.keys(control.modelChunks[control.modelImports[0]?.id ?? ''] ?? {});
   expect(chunks).toEqual(['0', '8', '16']);
+
+  // Ready is a publication result, even while temporary upload records remain.
+  await page.reload();
+  await expect(page.getByRole('status').filter({ hasText: 'Model published' })).toContainText(
+    'These files may still take up space.',
+  );
+  const timeline = page.getByRole('list', { name: 'Steps of this import' });
+  await expect(timeline.getByRole('listitem')).toHaveCount(3);
+  await expect(timeline.getByRole('listitem').last()).toContainText('Publish the model');
+  await expect(page.getByRole('button', { name: 'Try again' })).toHaveCount(0);
   await page.getByRole('link', { name: 'Open the model' }).click();
   await expect(page.getByRole('heading', { name: 'Qwen3-0.6B', level: 1 })).toBeVisible();
   await page.getByRole('link', { name: 'Model library' }).first().click();
   await expect(page.getByRole('button', { name: 'Show Qwen3-0.6B' })).toBeVisible();
+});
+
+test('shows publication without reading the import catalogue', async ({ page }) => {
+  control.modelImports = [publishedImport];
+  control.catalogProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+  const requests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.endsWith('/models/catalog')) requests.push(request.url());
+  });
+  await page.goto(`/library/imports/${publishedImport.id}`);
+  await expect(page.getByRole('link', { name: 'Open the model' })).toBeVisible();
+  await expect(page.getByText('Model published', { exact: true })).toBeVisible();
+  expect(requests).toEqual([]);
+});
+
+test('keeps a paused upload visible while its resume settings are unavailable', async ({
+  page,
+}) => {
+  control.modelImports = [stalledImport];
+  control.catalogProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+  await page.goto(`/library/imports/${stalledImport.id}`);
+  await expect(page.getByText('Upload incomplete', { exact: true })).toBeVisible();
+  const timeline = page.getByRole('list', { name: 'Steps of this import' });
+  await expect(timeline.getByRole('listitem').first()).not.toContainText('Running');
+  const choose = page.getByRole('button', { name: 'Choose the file' });
+  await expect(choose).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.getByText(/The import status is available/)).toBeVisible();
+  control.catalogProblem = null;
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(choose).toBeEnabled();
 });
 
 test('rides out a lost answer and a dropped connection without help', async ({ page }) => {
@@ -177,7 +232,7 @@ test('continues after the tab closed, from what the server holds', async ({ page
   control.chunkFailures = [];
   await page.goto('/library?tab=imports');
   await page.getByRole('link', { name: stalledImport.name }).click();
-  await expect(page.getByText('The upload is not running')).toBeVisible();
+  await expect(page.getByText('This tab is not uploading')).toBeVisible();
   await page.getByTestId('model-bundle-resume').setInputFiles(bundle('too short'));
   await expect(page.getByText('That file is a different size')).toBeVisible();
   await page.getByTestId('model-bundle-resume').setInputFiles(bundle());
@@ -199,6 +254,9 @@ test('explains a failed verification, verifies again, and can discard', async ({
   control.verificationOutcome = 'MODEL_DIGEST_MISMATCH';
   await page.goto(`/library/imports/${failedImport.id}`);
   await expect(page.getByText('A file does not match its published hash')).toBeVisible();
+  await expect(page.getByText(/Discard this import, then fetch the model again/)).toBeVisible();
+  await expect(page.getByText('Model published', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Open the model' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Verify again (try 2 of 3)' }).click();
   await expect(page.getByRole('button', { name: 'Verify again (try 3 of 3)' })).toBeVisible();
   await page.getByRole('button', { name: 'Discard' }).click();
@@ -277,4 +335,21 @@ test('says when a model or an import does not exist', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'No such model', level: 1 })).toBeVisible();
   await page.goto(`/library/imports/${failedImport.id}`);
   await expect(page.getByRole('heading', { name: 'No such import', level: 1 })).toBeVisible();
+});
+
+test('explains import storage and background cleanup in Simplified Chinese', async ({ page }) => {
+  control.preferences.locale = 'zh-CN';
+  control.modelImports = [publishedImport];
+  await page.goto('/library/import');
+  await expect(
+    page.getByRole('heading', { name: chinese['models.import.storage.title'] }),
+  ).toBeVisible();
+  await expect(page.getByText(chinese['models.import.storage.cleanup'])).toBeVisible();
+  await expect(page.getByRole('button', { name: chinese['models.import.submit'] })).toBeDisabled();
+
+  await page.goto(`/library/imports/${publishedImport.id}`);
+  await expect(
+    page.getByRole('status').filter({ hasText: chinese['models.import.published.title'] }),
+  ).toContainText(chinese['models.import.published.detail']);
+  await expect(page.getByRole('link', { name: chinese['models.import.openModel'] })).toBeVisible();
 });
