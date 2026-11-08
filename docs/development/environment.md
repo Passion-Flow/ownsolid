@@ -285,6 +285,14 @@ protocol and reports a synthetic GPU: it receives the token on stdin and the nod
 first flow ends at the refusal a host with no GPU earns. The second carries a deployment through a real
 control plane and database, and no model runs, so it says nothing about serving on real hardware.
 
+`live-gateway.spec.ts` needs a ready model and `OWNSOLID_LIVE_GATEWAY_COMMAND`, which the spec runs
+with three verbs. `prepare <name>` joins a scripted node, deploys the model on it, provisions a gateway
+instance, publishes an alias named `<name>` and prints a state file. `call <state> <secret> <n>`
+admits `n` calls with a key over the real `/gateway/v1` protocol, reports each outcome and prints how
+many were accepted; it fails when the control plane refuses. `wrong <state> <secret>` asks for another
+model and prints the status and code. The command stands in for the gateway process, which the
+installer does not run yet (GW-114), so the run proves keys and the call log, never model traffic.
+
 `live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
 to the license history. It needs test files signed with the key the installation trusts.
 `OWNSOLID_LIVE_LICENSE_COMMAND` reads the license state as JSON on standard input and prints a JSON
