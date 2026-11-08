@@ -27,3 +27,16 @@ Two Console navigation focus assertions failed in the full run and passed
 when rerun alone. The repository-wide gate has no clean run, so both IAM
 items remain open despite passing the targeted PostgreSQL and live browser
 flows.
+
+On the next run, the Linux component recovery case failed twice in an
+isolated arm64 container before `a8d66a32`. The fixture's
+`state.Identity` contained the site and cell, but its HTTP client emitted
+`/agent/v1/sites//cells//nodes/.../heartbeat` and the server refused it.
+The same test passed twice in the isolated container after syncing ARC's
+client fixture fix.
+
+The rerun used browser ports 24156 and 24157 with two Chromium workers and
+serial Console and Portal suites. The targeted cases passed in both
+applications, including the distinct registration behavior, sign-out and
+password recovery. The actual cross-tenant and cross-audience replays ran
+against TLS and PostgreSQL 18.6 in a container with `--network none`.
