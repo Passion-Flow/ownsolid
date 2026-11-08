@@ -120,7 +120,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 12 | Training and fine-tuning | [training-and-finetuning.md](training-and-finetuning.md) | - | 0/11 | 0/6 | - | 0/4 |
 | 13 | Data | [data.md](data.md) | - | 0/7 | 0/5 | - | 0/2 |
 | 14 | Evaluation | [evaluation.md](evaluation.md) | - | 0/6 | 0/3 | - | 0/2 |
-| 15 | Applications and agents | [applications-and-agents.md](applications-and-agents.md) | - | 0/11 | 0/5 | - | 0/3 |
+| 15 | Applications and agents | [applications-and-agents.md](applications-and-agents.md) | - | 0/11 | 0/7 | - | 0/3 |
 | 16 | Product agent | [product-agent.md](product-agent.md) | - | 0/12 | 0/3 | - | 0/2 |
 | 17 | App catalog | [app-catalog.md](app-catalog.md) | - | 0/8 | 0/7 | - | - |
 | 18 | Tenancy, metering and commerce | [tenancy-metering-commerce.md](tenancy-metering-commerce.md) | - | 0/9 | 0/9 | 0/2 | - |
