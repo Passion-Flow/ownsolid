@@ -1,5 +1,14 @@
 # In-product operations
 
+Upstream review: 2026-11-09. The existing terminal, inventory, log, file and
+lifecycle work covers the core operations in the
+[1Panel documentation](https://1panel.pro/docs/v2/) and
+[Rancher](https://ranchermanager.docs.rancher.com/v2.11/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/manage-role-based-access-control-rbac/cluster-and-project-roles).
+Continue with native agent operations and Kubernetes RBAC. The
+[Cockpit package update flow](https://docs.cockpit-project.org/cockpit-guide/360/guide/feature-packagekit.html)
+and [Ubuntu's offline package staging](https://documentation.ubuntu.com/landscape/how-to-guides/landscape-installation-and-set-up/install-landscape-in-an-air-gapped-or-offline-environment/)
+expose a gap in operating the host OS after platform installation (OPS-207).
+
 Customers do every operation inside ownsolid instead of logging in elsewhere. This module
 covers the operations capabilities of 1Panel and Rancher, built natively.
 
@@ -37,6 +46,7 @@ behavior, not its source.
 - [ ] OPS-204 Certificate management for platform and app endpoints (P2)
 - [ ] OPS-205 Disk and mount management (P2)
 - [ ] OPS-206 Remote file transfer between nodes and object storage (P2)
+- [ ] OPS-207 Host OS security updates from signed offline package repositories, with a package and reboot preview, staged execution and per-node verification (P2)
 
 ## P4 Breadth
 
