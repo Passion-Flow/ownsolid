@@ -70,3 +70,22 @@ isolated installation can substantiate this lane's Linux amd64 results while
 browser and agent failures remain open in their owning lanes. The coordinator
 also owns roadmap index and product status updates. Ticking here in isolation
 would make the repository's progress check stale.
+
+## DEL-104 initial planning boundary
+
+Use the installed signed release binding and the database's observed schema for
+the plan. Keep PostgreSQL and telemetry images unchanged for an application
+release transition. Decline an unbound install, a schema downgrade, or a target
+outside its declared predecessor range. Treating a Docker tag or the target's
+version string as the source baseline was rejected because either can misstate
+the installed data. A wrong predecessor decision could make the database
+unreadable, so apply must independently revalidate it before a backup or migration.
+
+## DEL-106 incremental packaging
+
+Reuse complete signed target metadata. Sign the predecessor manifest digest in
+the target's prerequisites and omit only byte-identical assets from the patch.
+Reconstruct with the retained independently verified baseline. Reject trying
+to reconstruct from local Docker tags or a writable staging cache. If the
+baseline or any payload is wrong, the assembled release must fail before the
+existing upgrade procedure can stop a service.
