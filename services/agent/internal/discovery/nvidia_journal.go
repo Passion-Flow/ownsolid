@@ -21,7 +21,7 @@ var (
 	// ErrNVIDIAJournalInvalid means the collector could not safely read a batch.
 	ErrNVIDIAJournalInvalid = errors.New("NVIDIA_JOURNAL_INVALID: check the current boot, journal cursor and batch bounds")
 	journalBootID           = regexp.MustCompile(`^[0-9a-f]{32}$`)
-	nvidiaXIDMessage        = regexp.MustCompile(`^NVRM: Xid \((?:PCI:)?([0-9A-Fa-f]{4}(?:[0-9A-Fa-f]{4})?):([0-9A-Fa-f]{2}):([01][0-9A-Fa-f])(\.[0-7])?\): ([1-9][0-9]{0,5})(?:,|$)`)
+	nvidiaXIDMessage        = regexp.MustCompile(`^NVRM: Xid \((?:PCI:)?([0-9A-Fa-f:.]{10,16})\): ([1-9][0-9]{0,5})(?:,|$)`)
 )
 
 // NVIDIAXID records a kernel observation. The PCI function is absent when
@@ -70,16 +70,15 @@ func ReadNVIDIAJournal(reader io.Reader, bootID string) ([]NVIDIAXID, error) {
 		if match == nil {
 			continue
 		}
+		address := canonicalPCIAddress(match[1])
+		if address == "" {
+			continue
+		}
 		usec, err := strconv.ParseInt(entry.Time, 10, 64)
 		if err != nil || usec <= 0 || len(entry.Cursor) == 0 || len(entry.Cursor) > 512 || seen[entry.Cursor] || len(events) >= maximumNVIDIAXIDs {
 			return nil, ErrNVIDIAJournalInvalid
 		}
-		domain := match[1]
-		if len(domain) == 4 {
-			domain = "0000" + domain
-		}
-		address := strings.ToLower(domain + ":" + match[2] + ":" + match[3] + match[4])
-		code, _ := strconv.ParseUint(match[5], 10, 32)
+		code, _ := strconv.ParseUint(match[2], 10, 32)
 		events = append(events, NVIDIAXID{BootID: bootID, Cursor: entry.Cursor, PCIAddress: address, Code: uint32(code), ObservedAt: time.UnixMicro(usec).UTC()})
 		seen[entry.Cursor] = true
 	}
@@ -87,4 +86,17 @@ func ReadNVIDIAJournal(reader io.Reader, bootID string) ([]NVIDIAXID, error) {
 		return nil, ErrNVIDIAJournalInvalid
 	}
 	return events, nil
+}
+
+var pciAddress = regexp.MustCompile(`^([0-9a-fA-F]{4}(?:[0-9a-fA-F]{4})?):([0-9a-fA-F]{2}):([01][0-9a-fA-F])(\.[0-7])?$`)
+
+func canonicalPCIAddress(address string) string {
+	parts := pciAddress.FindStringSubmatch(address)
+	if parts == nil {
+		return ""
+	}
+	if len(parts[1]) == 4 {
+		return "0000" + strings.ToLower(address)
+	}
+	return strings.ToLower(address)
 }
