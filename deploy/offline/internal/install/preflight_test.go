@@ -165,6 +165,12 @@ func TestEncryptedBackupIsolatedDocker(t *testing.T) {
 	testIsolatedDocker(t, isolatedEncryptedBackup)
 }
 
+// TestSignedRestoreIsolatedDocker restores legacy and encrypted logical backups
+// onto separate empty sites with only the signed fixture and no network uplink.
+func TestSignedRestoreIsolatedDocker(t *testing.T) {
+	testIsolatedDocker(t, isolatedSignedRestore)
+}
+
 type isolatedDockerScenario int
 
 const (
@@ -173,11 +179,13 @@ const (
 	isolatedUpgrade
 	isolatedPITR
 	isolatedEncryptedBackup
+	isolatedSignedRestore
 )
 
 func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	t.Helper()
-	signed, upgrade := scenario == isolatedSigned || scenario == isolatedUpgrade, scenario == isolatedUpgrade
+	recovery := scenario == isolatedSignedRestore
+	signed, upgrade := scenario == isolatedSigned || scenario == isolatedUpgrade || recovery, scenario == isolatedUpgrade
 	pitr, encrypted := scenario == isolatedPITR, scenario == isolatedEncryptedBackup
 	installer := os.Getenv("OWNSOLID_E2E_INSTALLER")
 	logPath := os.Getenv("OWNSOLID_E2E_EGRESS_LOG")
@@ -282,7 +290,7 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 			t.Fatal(err)
 		}
 	}
-	if pitr || encrypted {
+	if pitr || encrypted || recovery {
 		c.Resources.ControlMemory, c.Resources.PostgresMemory = "256m", "512m"
 		c.Resources.MetricsMemory, c.Resources.LogsMemory = "256m", "256m"
 		c.Resources.ControlCPUs, c.Resources.PostgresCPUs = "1", "1"
@@ -417,6 +425,12 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	if encrypted {
 		if !t.Failed() {
 			assertEncryptedBackupIsolatedDocker(t, installer, config, run)
+		}
+		return
+	}
+	if recovery {
+		if !t.Failed() {
+			assertSignedRestoreIsolatedDocker(t, installer, config, signedArchive, verification, run)
 		}
 		return
 	}
@@ -581,6 +595,12 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 			t.Log("support archive reports the selected configuration and two redacted installer events")
 		}
 	})
+	if recovery {
+		if !t.Failed() {
+			assertSignedRestoreIsolatedDocker(t, installer, config, signedArchive, verification, run)
+		}
+		return
+	}
 	if !signed {
 		t.Run("scheduled backups verify before expiring older copies", func(t *testing.T) {
 			schedule := c.BackupSchedule
@@ -642,15 +662,18 @@ func stageSignedFixture(t *testing.T, run func(string, ...string) (string, error
 	if delivery == "" {
 		t.Fatal("the signed test needs the delivery directory mounted by the harness")
 	}
-	mount := t.TempDir()
-	if out, err := run("mount", "-t", "tmpfs", "-o", "size=2g,mode=0700", "tmpfs", mount); err != nil {
-		t.Fatalf("mount signed release staging: %v: %s", err, out)
-	}
-	t.Cleanup(func() {
-		if out, err := exec.Command("umount", mount).CombinedOutput(); err != nil {
-			t.Errorf("unmount signed release staging: %v: %s", err, out)
+	mount := os.Getenv("OWNSOLID_E2E_RELEASE_MOUNT")
+	if mount == "" {
+		mount = t.TempDir()
+		if out, err := run("mount", "-t", "tmpfs", "-o", "size=2g,mode=0700", "tmpfs", mount); err != nil {
+			t.Fatalf("mount signed release staging: %v: %s", err, out)
 		}
-	})
+		t.Cleanup(func() {
+			if out, err := exec.Command("umount", mount).CombinedOutput(); err != nil {
+				t.Errorf("unmount signed release staging: %v: %s", err, out)
+			}
+		})
+	}
 	files := []string{"ownsolid.tar.gz", "release-trust.json"}
 	if upgrade {
 		files = append(files, "upgrade.tar.gz", "patch.tar.gz", "delta.tar.gz")

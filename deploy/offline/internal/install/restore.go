@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -68,6 +69,9 @@ func (o *operation) restoreVerified(ctx context.Context, from, source string, ma
 	}
 	if e := o.restore(ctx, from, manifest); e != nil {
 		command := "restore"
+		if o.signedRestore {
+			command = restoreBundleCommand
+		}
 		if restorePendingError(o.config) != nil {
 			command = "recover-restore"
 		}
@@ -146,7 +150,7 @@ func verifyBackupFile(root string, file backupFile, relative string) error {
 }
 
 func (o *operation) restore(ctx context.Context, from string, manifest backupManifest) error {
-	fresh, e := o.admitKeys(from, manifest)
+	fresh, e := o.admitKeys(manifest)
 	if e != nil {
 		return e
 	}
@@ -158,6 +162,15 @@ func (o *operation) restore(ctx context.Context, from string, manifest backupMan
 	}
 	if e = o.prepareTarget(ctx); e != nil {
 		return e
+	}
+	if o.signedRestore {
+		// Recovery reloads site YAML after the verified extraction is gone.
+		o.config.ComposeFile = o.config.Layout().ComposeFile
+		writer, err := o.compose(ctx, "ps", "--status", "running", "--quiet", "control")
+		if err != nil {
+			return &StepError{Step: "restore", Code: "INSTALL_COMPOSE_FAILED", Detail: lastLines(writer)}
+		}
+		fresh = strings.TrimSpace(writer) == ""
 	}
 	suffix, e := randomBytes(12)
 	if e != nil {
@@ -181,6 +194,12 @@ func (o *operation) restore(ctx context.Context, from string, manifest backupMan
 	}()
 	if e = o.loadDump(ctx, incoming, filepath.Join(from, backupDatabaseName)); e != nil {
 		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
+	}
+	if o.signedRestore {
+		version, err := o.schemaVersion(ctx, incoming)
+		if err != nil || version != manifest.SchemaVersion {
+			return &StepError{Step: "load", Code: "INSTALL_BUNDLE_SCHEMA_MISMATCH", Detail: "the dump schema does not match the signed release"}
+		}
 	}
 	tables, e := o.fingerprint(ctx, incoming)
 	if e != nil {
@@ -225,7 +244,7 @@ func (o *operation) restore(ctx context.Context, from string, manifest backupMan
 
 // admitKeys reports whether this is an empty installation that takes its files from the
 // backup. A running one keeps its files, and they must match the backup's keys.
-func (o *operation) admitKeys(from string, manifest backupManifest) (bool, error) {
+func (o *operation) admitKeys(manifest backupManifest) (bool, error) {
 	l := o.config.Layout()
 	if !exists(filepath.Join(l.Secrets, "postgres-password")) {
 		return true, nil
@@ -245,31 +264,71 @@ func (o *operation) admitKeys(from string, manifest backupManifest) (bool, error
 
 // restoreFiles puts the key files of an empty installation back with their owners.
 func (o *operation) restoreFiles(from string, manifest backupManifest) error {
+	const password = "secrets/postgres-password"
 	for _, file := range manifest.Files {
-		if o.isModelFile(file) {
+		if o.isModelFile(file) || (o.signedRestore && file.Path == password) {
 			continue
 		}
-		if e := o.restoreFile(from, file); e != nil {
+		if e := o.restoreKeyFile(from, file); e != nil {
 			return e
 		}
+	}
+	if o.signedRestore {
+		// Publish the fresh-target sentinel only once all the other keys exist.
+		i := slices.IndexFunc(manifest.Files, func(f backupFile) bool { return f.Path == password })
+		if i < 0 {
+			return errors.New("the backup has no PostgreSQL password")
+		}
+		return o.restoreKeyFile(from, manifest.Files[i])
 	}
 	return nil
 }
 
-// restoreFile copies one file of a backup to where it was, with its owner and mode.
+func (o *operation) restoreKeyFile(from string, file backupFile) error {
+	if o.signedRestore {
+		root := o.config.Layout().Root
+		st, err := os.Lstat(filepath.Join(root, file.Path))
+		if err == nil && st.Mode().IsRegular() {
+			owner := st.Sys().(*syscall.Stat_t)
+			if st.Mode().Perm() == os.FileMode(file.Mode) && int(owner.Uid) == file.UID && int(owner.Gid) == file.GID &&
+				verifyBackupFile(root, file, file.Path) == nil {
+				return nil
+			}
+		}
+	}
+	return o.restoreFile(from, file)
+}
+
+// restoreFile publishes a checked file with its final owner and mode in one step.
 func (o *operation) restoreFile(from string, file backupFile) error {
 	target := filepath.Join(o.config.Layout().Root, file.Path)
-	copied, e := copyPrivateFile(filepath.Join(from, backupFilesName, file.Path), target)
+	parent := filepath.Dir(target)
+	if e := os.MkdirAll(parent, 0o700); e != nil {
+		return e
+	}
+	temp, e := os.MkdirTemp(parent, ".restore-")
 	if e != nil {
 		return e
 	}
-	if copied.SHA256 != file.SHA256 {
-		return fmt.Errorf("%s changed while it was restored", file.Path)
-	}
-	if e = os.Chown(target, file.UID, file.GID); e != nil {
+	defer os.RemoveAll(temp)
+	staged := filepath.Join(temp, "file")
+	copied, e := copyPrivateFile(filepath.Join(from, backupFilesName, file.Path), staged)
+	if e != nil {
 		return e
 	}
-	return os.Chmod(target, os.FileMode(file.Mode))
+	if copied.SHA256 != file.SHA256 || copied.Bytes != file.Bytes {
+		return fmt.Errorf("%s changed while it was restored", file.Path)
+	}
+	if e = os.Chown(staged, file.UID, file.GID); e != nil {
+		return e
+	}
+	if e = os.Chmod(staged, os.FileMode(file.Mode)); e != nil {
+		return e
+	}
+	if e = os.Link(staged, target); e != nil {
+		return e
+	}
+	return syncDirectory(parent)
 }
 
 func (o *operation) isModelFile(file backupFile) bool {

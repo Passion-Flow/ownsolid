@@ -114,6 +114,31 @@ restore, rejects an unrelated identity and changed or truncated ciphertext,
 interrupts backup and restore, and checks the unencrypted commands.
 See the [operator procedure](../../docs/operations/backup-and-restore.md#encrypt-an-operator-run-backup).
 
+## Verify a cold restore of a signed release
+
+Stage one single-node Linux amd64 archive with its independently provisioned
+public trust file. For a development fixture, use the release factory's
+`TestManufactureCurrentRelease` with real image exports and an ephemeral
+signer. Put `ownsolid.tar.gz`, `release-trust.json` and an executable
+`legacy-ownsolid-install` in the delivery directory. Build the legacy binary
+from a revision that supports signed installs and predates release digests
+in backup manifests, such as `33095551`.
+
+Build the installer test payload as shown for preflight. Select
+`OWNSOLID_E2E_RUN='^TestSignedRestoreIsolatedDocker$'` and point
+`OWNSOLID_E2E_MODEL_ARCHIVE` at the delivery directory for
+`tests/e2e/run-single-node.sh`. The test creates legacy plaintext and current
+encrypted backups of one installed release, then removes the four images
+from its private daemon before restoring onto separate empty targets. It
+rejects corrupt inputs and an unrelated identity, injects a writer startup
+failure after the PostgreSQL exchange, retries the legacy restore, and
+checks both browser entrances with the recovered administrator. Host and
+workload probes must reach the egress recorder. Any unexpected destination
+fails the test. A native namespace runner can optionally provide an empty
+disk-backed mount with `OWNSOLID_E2E_RELEASE_MOUNT` in place of the test's tmpfs.
+
+See [Restore a signed release onto an empty site](../../docs/operations/backup-and-restore.md#restore-a-signed-release-onto-an-empty-site).
+
 ## Schedule verified backups
 
 Configure a dedicated backup directory and keep count. The

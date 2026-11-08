@@ -24,9 +24,21 @@ func runBundle(command string, args []string, out io.Writer) error {
 	output := flags.String("output", "", "new directory for verified payloads on the configured mount")
 	baseline := flags.String("baseline", "", "previous independently verified signed archive")
 	backup := flags.String("backup-output", "", "private directory for the verified pre-upgrade recovery point")
+	from := flags.String("from", "", "backup directory or encrypted archive to restore")
+	identity := flags.String("identity-file", "", "protected X25519 private recovery identity file")
 	timeout := flags.Duration("timeout", 30*time.Minute, "time limit for verifying or applying the release")
+	restore := command == "restore-bundle"
 	if err := flags.Parse(args); err != nil || flags.NArg() != 0 || *archive == "" || *policy == "" ||
-		(command == "apply-bundle" || command == "upgrade-plan" || command == "upgrade-bundle" || command == "upgrade-patch" || command == "rollback-bundle") != (*config != "") || (command == "prepare-bundle") != (*output != "") || (command == "upgrade-bundle" || command == "upgrade-patch") != (*backup != "") || (command == "upgrade-patch") != (*baseline != "") || *timeout <= 0 {
+		(restore || command == "apply-bundle" || command == "upgrade-plan" || command == "upgrade-bundle" || command == "upgrade-patch" || command == "rollback-bundle") != (*config != "") || (command == "prepare-bundle") != (*output != "") || (command == "upgrade-bundle" || command == "upgrade-patch") != (*backup != "") || (command == "upgrade-patch") != (*baseline != "") || restore != (*from != "") || *timeout <= 0 {
+		return errors.New(usage)
+	}
+	invalidIdentity := false
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == "identity-file" {
+			invalidIdentity = !restore || *identity == ""
+		}
+	})
+	if invalidIdentity {
 		return errors.New(usage)
 	}
 	verification, err := install.LoadBundleVerification(*policy)
@@ -38,6 +50,8 @@ func runBundle(command string, args []string, out io.Writer) error {
 	ctx, cancel := context.WithTimeout(ctx, *timeout)
 	defer cancel()
 	switch command {
+	case "restore-bundle":
+		return install.RestoreBundle(ctx, *config, *archive, *from, *identity, verification, install.ExecRunner{}, out)
 	case "apply-bundle":
 		return install.ApplyBundle(ctx, *config, *archive, verification, install.ExecRunner{}, out)
 	case "upgrade-plan":

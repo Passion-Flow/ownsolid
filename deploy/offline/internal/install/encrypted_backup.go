@@ -155,60 +155,71 @@ func RestoreEncrypted(ctx context.Context, c Config, runner StreamRunner, from, 
 		return err
 	}
 	defer unlock()
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.BackupSeconds)*time.Second)
+	defer cancel()
+	o := newOperation(c, runner, out)
+	work, manifest, cleanup, err := loadEncryptedBackup(ctx, c, from, identityFile, out)
+	if err != nil {
+		if errors.Is(err, errArchiveInvalid) {
+			o.record("restore", "failed", from+": "+err.Error())
+		}
+		return err
+	}
+	defer cleanup()
+	if err := checkBoundOperation(c); err != nil {
+		return err
+	}
+	return o.restoreVerified(ctx, work, from, manifest)
+}
+
+func loadEncryptedBackup(ctx context.Context, c Config, from, identityFile string, out io.Writer) (string, backupManifest, func(), error) {
 	root, dir, err := openEncryptedDirectory(c, from)
 	if err != nil {
-		return err
+		return "", backupManifest{}, nil, err
 	}
 	defer root.Close()
 	defer dir.Close()
 	installed, err := filepath.EvalSymlinks(c.InstallRoot)
 	if err != nil {
-		return err
+		return "", backupManifest{}, nil, err
 	}
 	for _, protected := range []string{installed, filepath.Dir(from)} {
 		relative, err := filepath.Rel(protected, identityFile)
 		if err == nil && filepath.IsLocal(relative) {
-			return errors.New("INSTALL_ENCRYPTED_BACKUP_IDENTITY_LOCATION: keep the recovery identity outside the installation and the archive directory")
+			return "", backupManifest{}, nil, errors.New("INSTALL_ENCRYPTED_BACKUP_IDENTITY_LOCATION: keep the recovery identity outside the installation and the archive directory")
 		}
 	}
 	key, err := readEncryptionKey(identityFile)
 	identity, parseErr := age.ParseX25519Identity(key)
 	if err != nil || parseErr != nil {
-		return errors.New("INSTALL_ENCRYPTED_BACKUP_IDENTITY_INVALID: supply a protected file containing one native age X25519 private identity")
+		return "", backupManifest{}, nil, errors.New("INSTALL_ENCRYPTED_BACKUP_IDENTITY_INVALID: supply a protected file containing one native age X25519 private identity")
 	}
 	archive, err := openEncryptedArchive(root, filepath.Base(from))
 	if err != nil {
-		return err
+		return "", backupManifest{}, nil, err
 	}
 	defer archive.Close()
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.BackupSeconds)*time.Second)
-	defer cancel()
 	plaintext, err := age.Decrypt(archiveReader{ctx, archive}, identity)
 	var noMatch *age.NoIdentityMatchError
 	if errors.As(err, &noMatch) {
-		return errors.New("INSTALL_ENCRYPTED_BACKUP_WRONG_IDENTITY: use the identity for this archive's recipient")
+		return "", backupManifest{}, nil, errors.New("INSTALL_ENCRYPTED_BACKUP_WRONG_IDENTITY: use the identity for this archive's recipient")
 	}
 	if err != nil {
-		return errArchiveInvalid
+		return "", backupManifest{}, nil, errArchiveInvalid
 	}
 	work, cleanup, err := encryptedScratch(c, out)
 	if err != nil {
-		return err
+		return "", backupManifest{}, nil, err
 	}
-	defer cleanup()
-	o := newOperation(c, runner, out)
 	manifest, err := readEncryptedArchive(ctx, plaintext, work)
+	if err == nil {
+		err = ctx.Err()
+	}
 	if err != nil {
-		o.record("restore", "failed", from+": "+err.Error())
-		return err
+		cleanup()
+		return "", backupManifest{}, nil, err
 	}
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	if err := checkBoundOperation(c); err != nil {
-		return err
-	}
-	return o.restoreVerified(ctx, work, from, manifest)
+	return work, manifest, cleanup, nil
 }
 
 func openEncryptedArchive(root *os.Root, name string) (*os.File, error) {
