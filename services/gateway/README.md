@@ -32,7 +32,11 @@ With pinned Rust and external cargo/build/temp roots:
 
 The bounded [quality harness](../../tools/quality/gateway/run.py) adds formatting/build/lint and explicit process/tokenizer profiles. It requires state-root, volume-root and preflight-script inputs. Actual target backend/GPU and full control authorization are distinct gates; synthetic upstreams do not qualify them.
 
-`Configuration::load_with_environment` is the single JSON/explicit protected env-file owner; `main.rs` forwards the optional trailing `--env-file` for every operator/serve command. All fields map through the documented gateway.env.example with final typed validation; ambient variables never select runtime policy.
+`Configuration::load_with_environment` loads private JSON and the explicit
+protected env file. Operator and serve commands accept a trailing `--env-file`
+for settings listed in `gateway.env.example`. Configure quota policy and peer
+roles in the private JSON. The gateway validates the resulting configuration
+at startup. Ambient variables never select runtime policy.
 
 ## Scoped quotas
 
