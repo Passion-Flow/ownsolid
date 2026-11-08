@@ -126,6 +126,10 @@ func decodeListCursor(raw []byte) (cursor, error) {
 	return c, nil
 }
 func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now time.Time) (listPlan, error) {
+	return makeScopedListPlan(kind, q, policy, now, "")
+}
+
+func makeScopedListPlan(kind string, q url.Values, policy config.RuntimePolicy, now time.Time, auditWorkspaceID string) (listPlan, error) {
 	p := listPlan{kind: kind, limit: policy.UI.PageSize, order: "created_at", pgWhere: []string{"true"}, myWhere: []string{"true"}, dmWhere: []string{"1=1"}}
 	fail := func(code string) (listPlan, error) { return listPlan{}, failure(code) }
 	if p.limit < 1 || p.limit > maximumListLimit {
@@ -147,7 +151,11 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 		}
 		p.limit = n
 	}
-	sum := sha256.Sum256([]byte(kind + ":" + fingerprint.Encode()))
+	cursorScope := kind
+	if auditWorkspaceID != "" {
+		cursorScope += ":workspace:" + auditWorkspaceID
+	}
+	sum := sha256.Sum256([]byte(cursorScope + ":" + fingerprint.Encode()))
 	p.filter = hex.EncodeToString(sum[:])
 	var c cursor
 	if raw := q.Get("cursor"); raw != "" {
@@ -275,6 +283,11 @@ func makeListPlan(kind string, q url.Values, policy config.RuntimePolicy, now ti
 		p.alias, p.order, p.pgFrom, p.myFrom = "a", "occurred_at", "audit_events a"+auditJoins, "audit_events a"+auditJoins
 		p.pgProjection = "a.id::text,a.occurred_at,a.actor_user_id::text,actor_user.email_display,a.subject_user_id::text,subject_user.email_display,a.audience,a.action,a.outcome,a.target_type,a.target_id::text,a.reason,a.request_id::text"
 		p.myProjection = "a.id,a.occurred_at,a.actor_user_id,actor_user.email_display,a.subject_user_id,subject_user.email_display,a.audience,a.action,a.outcome,a.target_type,a.target_id,a.reason,a.request_id"
+		if auditWorkspaceID != "" {
+			p.pgProjection += "," + auditAssistantProjectionSQL
+			p.pgWhere = append(p.pgWhere, "a.tenant_id=("+installedAuditTenant+")")
+			p.compare("a.workspace_id", "=", auditWorkspaceID, "")
+		}
 		if e := enum("outcome", "success|failure|accepted"); e != nil {
 			return listPlan{}, e
 		}
@@ -408,10 +421,16 @@ func (s *Service) List(ctx context.Context, kind string, q url.Values) (List, er
 	}
 	ctx, cancel := s.sessionContext(ctx)
 	defer cancel()
-	out, e := readList(ctx, store, p)
+	out, e := readList(ctx, store, p, nil)
 	return out, sessionError(e)
 }
+
+// ListForActor reads an existing Admin list using the current authenticated session.
 func (s *Service) ListForActor(ctx context.Context, a Auth, kind string, q url.Values) (List, error) {
+	return s.listForActor(ctx, a, kind, q, nil)
+}
+
+func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.Values, audit *workspaceAuditProjection) (List, error) {
 	empty := List{Items: []map[string]any{}}
 	if !sessionActor(a) {
 		return empty, failure("AUTH_SESSION_EXPIRED")
@@ -419,7 +438,14 @@ func (s *Service) ListForActor(ctx context.Context, a Auth, kind string, q url.V
 	if a.Me.Audience != "admin" {
 		return empty, failure("ACCESS_DENIED")
 	}
-	p, e := makeListPlan(kind, q, s.Config.Policy(), time.Now().UTC().Truncate(time.Microsecond))
+	var auditWorkspaceID string
+	if audit != nil {
+		auditWorkspaceID = audit.workspaceID
+		if !sessionID(auditWorkspaceID) {
+			return empty, failure("VALIDATION_FAILED")
+		}
+	}
+	p, e := makeScopedListPlan(kind, q, s.Config.Policy(), time.Now().UTC().Truncate(time.Microsecond), auditWorkspaceID)
 	if e != nil {
 		return empty, e
 	}
@@ -448,8 +474,13 @@ func (s *Service) ListForActor(ctx context.Context, a Auth, kind string, q url.V
 		if e := s.RecheckWithin(ctx, tx, a); e != nil {
 			return e
 		}
+		if audit != nil {
+			if e := audit.authorize(ctx, tx); e != nil {
+				return e
+			}
+		}
 		var e error
-		out, e = readList(ctx, tx, p)
+		out, e = readList(ctx, tx, p, audit)
 		return e
 	})
 	if e != nil {
@@ -457,7 +488,7 @@ func (s *Service) ListForActor(ctx context.Context, a Auth, kind string, q url.V
 	}
 	return out, nil
 }
-func readList(ctx context.Context, q transaction.Executor, p listPlan) (List, error) {
+func readList(ctx context.Context, q transaction.Executor, p listPlan, audit *workspaceAuditProjection) (List, error) {
 	empty := List{Items: []map[string]any{}}
 	if q.Dialect() == transaction.Dameng {
 		if e := p.validateDamengTimes(); e != nil {
@@ -473,11 +504,19 @@ func readList(ctx context.Context, q transaction.Executor, p listPlan) (List, er
 	var lastTime time.Time
 	var lastID string
 	for rows.Next() {
-		item, stamp, id, e := scanListRow(p.kind, rows)
+		var assistant *bool
+		if audit != nil {
+			assistant = new(bool)
+		}
+		item, stamp, id, e := scanListRow(p.kind, rows, assistant)
 		if e != nil {
 			return empty, e
 		}
 		out.Items = append(out.Items, item)
+		if assistant != nil && *assistant && len(out.Items) <= p.limit {
+			key := AuditEventKey{ID: id, OccurredAt: listStamp(stamp)}
+			audit.actors[key] = AuditAssistantActor{Kind: auditAssistantKind, ID: auditAssistantID}
+		}
 		if len(out.Items) == p.limit {
 			lastTime, lastID = stamp, id
 		}
