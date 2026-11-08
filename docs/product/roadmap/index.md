@@ -117,7 +117,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 9 | Models and registry | [models-and-registry.md](models-and-registry.md) | - | 1/16 | 0/6 | - | 0/3 |
 | 10 | Serving | [serving.md](serving.md) | - | 1/14 | 0/7 | 0/1 | 0/4 |
 | 11 | Gateway | [gateway.md](gateway.md) | - | 3/22 | 0/7 | 0/2 | 0/2 |
-| 12 | Training and fine-tuning | [training-and-finetuning.md](training-and-finetuning.md) | - | 0/11 | 0/5 | - | 0/4 |
+| 12 | Training and fine-tuning | [training-and-finetuning.md](training-and-finetuning.md) | - | 0/11 | 0/6 | - | 0/4 |
 | 13 | Data | [data.md](data.md) | - | 0/7 | 0/4 | - | 0/2 |
 | 14 | Evaluation | [evaluation.md](evaluation.md) | - | 0/6 | 0/3 | - | 0/2 |
 | 15 | Applications and agents | [applications-and-agents.md](applications-and-agents.md) | - | 0/11 | 0/5 | - | 0/3 |
