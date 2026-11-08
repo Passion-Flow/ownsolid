@@ -49,11 +49,46 @@ const cancellationPending = 'MODEL_CANCELLATION_PENDING';
 
 const finished: readonly ModelImport['state'][] = ['ready', 'cancelled'];
 
-/** How to make a bundle of the model's files with the name each must keep. */
-function bundleCommand(catalog: ModelCatalogAvailability): string {
-  const files = catalog.catalog.files.map((file) => file.path).join(' ');
-  // macOS would otherwise add a hidden file for each one, which a bundle may not hold.
-  return `COPYFILE_DISABLE=1 tar --format=ustar -cf bundle.tar ${files}`;
+function BundleInstructions({ catalog }: { catalog: ModelCatalogAvailability }) {
+  const { t } = useI18n();
+  // Keep each path literal when the command is pasted into a POSIX shell.
+  const files = catalog.catalog.files
+    .map(({ path }) => `'${path.replaceAll("'", "'\\''")}'`)
+    .join(' ');
+  const tarOptions = `--format=ustar --no-recursion -cf bundle.tar -- ${files}`;
+  const python = [
+    `python3 - ${files} <<'PY'`,
+    'import sys',
+    'import tarfile',
+    '',
+    'with tarfile.open("bundle.tar", "w", format=tarfile.USTAR_FORMAT) as bundle:',
+    '    for name in sys.argv[1:]:',
+    '        bundle.add(name, recursive=False)',
+    'PY',
+  ].join('\n');
+  const commands = [
+    { label: t('models.import.howTo.python'), code: python },
+    { label: t('models.import.howTo.gnuMac'), code: `gtar ${tarOptions}` },
+    { label: t('models.import.howTo.gnu'), code: `tar ${tarOptions}` },
+  ];
+  return (
+    <AdvancedFold label={t('models.import.howTo')}>
+      <div className="flex flex-col gap-3">
+        <p className="m-0 text-text-2">{t('models.import.howTo.detail')}</p>
+        <p className="m-0 text-text-2">{t('models.import.howTo.tools')}</p>
+        {commands.map(({ label, code }) => (
+          <div key={label} className="min-w-0">
+            <h3 className="m-0 mb-1.5 text-[13px] font-semibold">{label}</h3>
+            <CodeBlock
+              code={code}
+              label={label}
+              className="[&_pre]:[overflow-wrap:anywhere] [&_pre]:[word-break:normal]"
+            />
+          </div>
+        ))}
+      </div>
+    </AdvancedFold>
+  );
 }
 
 /** A file chooser, with the button that opens it. */
@@ -227,10 +262,7 @@ function ImportForm({ catalog }: { catalog: ModelCatalogAvailability }) {
             })}
           </Notice>
         ) : null}
-        <AdvancedFold label={t('models.import.howTo')}>
-          <p className="m-0 mb-2 text-text-2">{t('models.import.howTo.detail')}</p>
-          <CodeBlock code={bundleCommand(catalog)} label={t('models.import.howTo.label')} />
-        </AdvancedFold>
+        <BundleInstructions catalog={catalog} />
         <TextField
           label={t('models.column.name')}
           name="name"
