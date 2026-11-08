@@ -12,3 +12,13 @@
 | IAM-113, IAM-114 | Installation configuration lives in `deploy/`. Shared-hostname policy also needs control configuration validation and sign-in notices in `web/`. | Keep current configured audience checks and treat same-hostname validation as its own item. |
 | IAM-118, IAM-119 | Real connector testing and keyring loss recovery live in the SSO callback, connector and startup owners outside the lane. Both need connector UI states. | Preserve fail-closed credential checks. Design a separate test callback outcome and explicit unavailable credential state with the SSO owner. |
 | IAM-201 to IAM-206 | P2 follows the P1 completion gate. Its provisioning, policy, approval, emergency access, delegation and WebAuthn flows need public interfaces and operator or user screens. | Preserve the P2 order and keep the items open until their dependencies and delivery paths are available. |
+
+## Repository acceptance gate
+
+The agent training shutdown test
+`TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt` can fail with
+`TRAINING_OUTPUT_CHANGED` under shared workstation load. The same failure
+was reproduced from an unmodified `origin/main` archive. The agent code
+belongs to a different lane. The IAM account and entrance evidence is
+recorded in [local accounts](local-accounts.md) and
+[browser entrance sessions](browser-entrance-sessions.md).
