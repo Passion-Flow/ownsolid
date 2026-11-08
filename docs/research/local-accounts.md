@@ -75,3 +75,13 @@ cross-tenant test passed along with direct TLS account recovery, lockout and
 retry, reset and invitation token states, Origin and CSRF, and logout audience
 checks. A separate local no-network PostgreSQL fixture passed the durable
 reset rollback, account revocation race and real mail resend repository tests.
+
+A dedicated Linux amd64 installation ran the workstation-built control binary
+and console and portal builds through read-only mounts on the cached control
+base image. The serving container had no default route. Chromium completed
+invitation, resend and registration through the fixture's TLS SMTP relay,
+then verified disable, session termination, enable and fresh login.
+A separate Chromium run followed a real reset email. It refused the other
+entrance and the replayed link, invalidated both old sessions, refused the old
+password, and accepted the replacement password after the lockout's
+`Retry-After` interval.
