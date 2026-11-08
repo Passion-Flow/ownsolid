@@ -62,3 +62,13 @@ ownership and admission changes, Workspace integration, public contract and
 UI remain outside that assignment. The current schema and API provide no
 existing adapter seam that can preserve the lifecycle with a real service
 principal, so this item remains open.
+
+## Existing lifecycle verification
+
+With PostgreSQL 18.6 in a container without a network route, six existing
+Distribution tests passed. They cover one-time disclosure and creator
+isolation, configured expiry, rotation preserving the human owner and
+Workspace, unauthorized rotation, concurrent successors, and serialization
+between admission and revocation. These runs establish the existing human
+key integration point. Service principal acceptance depends on the shared
+connections described above.
