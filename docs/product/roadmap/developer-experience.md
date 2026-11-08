@@ -5,6 +5,10 @@ How engineers and integrators use ownsolid programmatically.
 - Owns: `api/openapi`, `tools/`, CLI and SDK packages (new).
 - Depends on: every module's API.
 
+Reviewed 2026-11-09 against Kubernetes CLI, GitHub webhooks, JupyterHub,
+VS Code Dev Containers and BuildKit. The review added DEV-206 for inspecting
+and replaying webhook attempts. See [developer experience research](../../research/developer-experience.md).
+
 ## P1 Enterprise release
 
 - [ ] DEV-101 Complete public REST API documented by OpenAPI (P1) - Catalog: F236
@@ -23,6 +27,7 @@ How engineers and integrators use ownsolid programmatically.
 - [ ] DEV-203 Pipelines: data, training, evaluation and deployment steps chained (P2)
 - [ ] DEV-204 API versioning and deprecation policy (P2) - Catalog: F653, F655
 - [ ] DEV-205 Laboratory system connectors: an ELN and LIMS adapter contract to import experiment records and export results with links back, first adapters chosen by research, laboratory data standards such as Allotrope and SiLA 2 evaluated (P2)
+- [ ] DEV-206 Webhook delivery history, receiver verification and scoped, audited redelivery (P2)
 
 ## P4 Breadth
 
