@@ -16,15 +16,16 @@ the sum of their ceilings must each fit the matching parent limit. This admits
 unused parent headroom without allocating more capacity than the parent has.
 Borrowing and reclaim (SCH-109) must respect these hard ceilings.
 
-Use an additive PostgreSQL tree of immutable node identities with mutable quota
-limits. Serialize competing writes with the immediate parent's row lock and lock
-ancestors before descendants when multiple rows are needed. Recheck sibling sums
-and child totals under that lock at READ COMMITTED. PostgreSQL
-[explicit locks](https://www.postgresql.org/docs/18/explicit-locking.html) and
-[transaction isolation](https://www.postgresql.org/docs/18/transaction-iso.html)
-document the ordering and visibility guarantees. Bound arithmetic with exact
-integers. Reject reductions below child allocations. A tenant/workspace binding
-must come from authenticated control scope before the caller enters the module.
+Use a versioned PostgreSQL snapshot for the first, single-platform policy.
+Quota configuration updates are infrequent. Validate the complete proposed
+tree and use a compare-and-set write against the revision the operator read.
+A second concurrent edit must reread and validate the combined changes.
+PostgreSQL [transaction isolation](https://www.postgresql.org/docs/18/transaction-iso.html)
+documents the behavior of concurrent updates and predicate rechecks. An exact
+retry immediately after a committed update resolves to the same revision.
+Runtime admission must use the effective revision and own its reservation
+locks separately. A tenant/workspace binding must come from authenticated
+control scope before the caller enters the module.
 
 Pure in-memory checks cannot serialize distinct control processes. Independent
 Kueue or Volcano policy edits would bypass ownsolid's allocation and split
