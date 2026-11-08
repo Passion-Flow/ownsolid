@@ -73,6 +73,30 @@ explicitly require component evidence when preparing a bundle.
   path. Run preparation with test trust in an isolated Linux namespace and
   prove the egress recorder sees its IPv4 and IPv6 probes.
 
+## Verified image identity
+
+The SHA-256 columns identify the Linux amd64 manifest and config. The
+SPDX document also records every compressed layer in its original order.
+
+| Archive | Published image reference | Manifest SHA-256 | Config SHA-256 |
+| --- | --- | --- | --- |
+| canal | `docker.io/rancher/hardened-calico:v3.32.2-build20261022` | `16e26488ced90cff8fd3df2f2192ed6dfab92ac8ab9a48e35307c884503c06d7` | `214e1b27975528e8711e406a64a20bf61cf19d5f6927784e915f9e3fe492b95b` |
+| canal | `docker.io/rancher/hardened-flannel:v0.28.10-build20261022` | `a00813cb869d19ab43b0a6ad724c95ffe9981bc6ad1bc8310e65255e45c402ab` | `4f23b420044ae3a951f38e4b9db7ed82ce4a496459c503aec31b54942f5f13b5` |
+| core | `docker.io/rancher/hardened-addon-resizer:1.8.24-build20261021` | `3a8850d570c1a8b30e240ca09b3d4c9692bd6aaa9628370a12bc018ad3b0e5a6` | `b49fdaff5f4c62435a98cade133531776c3eb65a743102cbd523b18353525abe` |
+| core | `docker.io/rancher/hardened-cluster-autoscaler:v1.11.0-build20261020` | `1fb3234a3e49c7f8bd1d173325872e546596770b2764dca7978331481965513a` | `2f0503377f4c945d9881b61fef37056935d2d2ec5881ce27e876501305dd1027` |
+| core | `docker.io/rancher/hardened-coredns:v1.14.7-build20261020` | `ba10d45d1a938a6be192eb63eecdc738e0a7efd035dee756ea5fd7cbacbda216` | `fece0a9b1a8b52a2b76569dcfe7e1cf219898c180ed0a8151f444ae758ce04cc` |
+| core | `docker.io/rancher/hardened-dns-node-cache:1.27.2-r1-build20261022` | `dd00f782dc9b8b6385c5d0cc245e9c4109f034117ee30556e9a65b359a4e4ac9` | `586f32c9ff4210bdfb32122e20b64e1bd62e0eea48e2be44bfd3393879304e6a` |
+| core | `docker.io/rancher/hardened-etcd:v3.6.14-k3s3-build20261020` | `7b8c5c6b45d34b6b39c7acd20aa3e30b46444df801122ccbe2c8f641141d4891` | `3635bedd5cf463b95d02768957269fcf812b9a53d8496d2e26098edaa7b453be` |
+| core | `docker.io/rancher/hardened-k8s-metrics-server:v0.9.0-build20261020` | `55eba130634c424451c5d907a40edca5fd6e052a6f9189d464ddaf764a98e772` | `5512cb91ff065a5554c773c9aa835b3bb4be7871f2c1c8d598e1b87b36075fff` |
+| core | `docker.io/rancher/hardened-kubernetes:v1.36.6-rke2r1-build20261029` | `d94933c0c61bab445780c085b75da36c070ec875bc328c9dbdd0b79f75b9aecf` | `73e5aadcbade720bbf28f64e4c11d7790dde168de1474b93377720c2518efee2` |
+| core | `docker.io/rancher/hardened-snapshot-controller:v8.7.0-build20261021` | `fd6348c446dd27932d84a785a494aa36b91f7609ec36aeb70fb0634a1f265227` | `87bfd98d5d9a677a912d44b669f7dbd44bdc55b01c07f6e95f786cf63ab7fca6` |
+| core | `docker.io/rancher/hardened-traefik:v3.7.16-build20261028` | `c7d907e9cabd97b1f98c082627fb2d9a2e05fc15315bb7ef3c92ee34bb772c31` | `6579fce137078f50b905109091dd3ffa1eb6a44c0f7960f2ef13073d577dde7b` |
+| core | `docker.io/rancher/klipper-helm:v0.13.3-build20261021` | `7819a12c069a6e046d54560b5c9005b263910a51f8ef5d77d8dcea272e057272` | `4c0594a91721547ec7b6179a046e9cb305f7febfd26a1e2aea5345495eb20231` |
+| core | `docker.io/rancher/klipper-lb:v0.4.17` | `d64ea02dfa3a29433a754fe59b56c6e1a05877528bdd6e20da587841ef22b0ac` | `eaa1212a2b4569c811bfa0ad5708428703ad3120a6dbae3b4353ec3cb36f36d2` |
+| core | `docker.io/rancher/mirrored-pause:3.10.2` | `412c4a7219cb8a299a37337f3d87810c5340095322e15594a1637785adad0f17` | `4a83b15d3ecfe0d916b2d0a7991bc2854a629b8097017c2ee1ff65b30ae4c07c` |
+| core | `docker.io/rancher/rke2-cloud-provider:v1.36.6-0.20261016153003-c2fdd7c56c2c-build20261021` | `3b2f7053e3292f580c55e452ec254a1bd3ab88c0700f199d5f550d74ac781656` | `187ad7d873e3fe0875ecf06bdafb71f878eb86e1c5b0f0bd50524c7f64c0406f` |
+| core | `docker.io/rancher/rke2-runtime:v1.36.6-rke2r1` | `951817e2b1f0f60c9a4b0158e531a68d04a33dff831936ac4f5a530762a37fc4` | `e925758e26eacb3f69effc7f8187f092f5b57f06fcd8a3139bceeb209d3b3dae` |
+
 ## Reviewed companion assets
 
 | Signed file under `rke2/` | Bytes | SHA-256 |
@@ -125,7 +149,10 @@ was absent, even when it can link exact upstream source text. After
 matching those texts and available embedded notices, 511 component
 records still have neither a normalized declaration nor a linked text.
 The measured binaries for those records do not provide a verified
-source ZIP checksum or a matching embedded notice. Resolve the exact
+source ZIP checksum or a matching embedded notice. Of those records,
+236 have a source notice for the same named version verified in another
+image. That supplies source context without binding it to the as-built
+record. Forty-three have an unknown measured version. Resolve the exact
 as-built source and licence correspondence before production distribution.
 The Alpine recipes and SUSE source indexes are available. Qualification
 of any corresponding-source payload a distributor must include remains
