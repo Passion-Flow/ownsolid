@@ -119,7 +119,12 @@ func ScheduledBackup(ctx context.Context, c Config, runner StreamRunner, out io.
 }
 
 func openScheduleDirectory(c Config, path string) (*os.Root, *os.File, error) {
-	invalidDirectory := errors.New("INSTALL_BACKUP_SCHEDULE_DIRECTORY_INVALID: use a root-owned private directory outside the installation with no symlinks")
+	return openBackupDirectory(c, path,
+		errors.New("INSTALL_BACKUP_SCHEDULE_DIRECTORY_INVALID: use a root-owned private directory outside the installation with no symlinks"),
+		errors.New("INSTALL_BACKUP_SCHEDULE_BUSY: another job holds the scheduled backup directory"))
+}
+
+func openBackupDirectory(c Config, path string, invalidDirectory, busy error) (*os.Root, *os.File, error) {
 	actual, err := filepath.EvalSymlinks(path)
 	installed, installErr := filepath.EvalSymlinks(c.InstallRoot)
 	if err != nil || installErr != nil || actual != path ||
@@ -144,7 +149,7 @@ func openScheduleDirectory(c Config, path string) (*os.Root, *os.File, error) {
 	if err := syscall.Flock(int(dir.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
 		dir.Close()
 		root.Close()
-		return nil, nil, errors.New("INSTALL_BACKUP_SCHEDULE_BUSY: another job holds the scheduled backup directory")
+		return nil, nil, busy
 	}
 	return root, dir, nil
 }

@@ -111,7 +111,7 @@ func assertInterruptedRestores(t *testing.T, installer, config string, run func(
 			writeName(t, "Original contains newer data")
 			const oid = "SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database()"
 			original := query(t, databaseName, oid)
-			interruptRestoreDocker(t, test.checkpoint)
+			interruptInstallerDocker(t, test.checkpoint)
 			out, err := run(installer, "restore", "--config", config, "--from", backup)
 			t.Logf("interrupted restore:\n%s", out)
 			var exit *exec.ExitError
@@ -160,7 +160,7 @@ func assertInterruptedRestores(t *testing.T, installer, config string, run func(
 				wantName, wantStatus, wantOID, kept, keptName = "Original contains newer data", "RESTORE_ROLLED_BACK", original, i.failedName(), wantName
 			} else if test.checkpoint == "after-control" {
 				t.Run("keeps the promoted database through a failed retry", func(t *testing.T) {
-					interruptRestoreDocker(t, "fail-control")
+					interruptInstallerDocker(t, "fail-control")
 					checkedCommand(t, "recover-restore", "INSTALL_RESTORE_PENDING", true)
 					if live, state := query(t, databaseName, oid), query(t, databaseName, name); live != wantOID || state != wantName {
 						t.Fatalf("failed recovery changed the promoted database: %s %q", live, state)
@@ -198,7 +198,7 @@ func assertInterruptedRestores(t *testing.T, installer, config string, run func(
 	}
 }
 
-func interruptRestoreDocker(t *testing.T, checkpoint string) {
+func interruptInstallerDocker(t *testing.T, checkpoint string) {
 	t.Helper()
 	docker, err := exec.LookPath("docker")
 	if err != nil {
@@ -218,6 +218,7 @@ docker=$(readlink "$dir/docker-real")
 if [ -f "$dir/checkpoint" ]; then
     point=$(cat "$dir/checkpoint")
     case "$point:$*" in
+        before-dump:*'postgres pg_dump '*|\
         before-swap:*'ALTER DATABASE "ownsolid" RENAME TO "ownsolid_before_restore_'*)
             unlink "$dir/checkpoint"
             kill -KILL "$PPID"

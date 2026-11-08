@@ -1,6 +1,7 @@
 package install
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -40,7 +41,6 @@ func Restore(ctx context.Context, c Config, runner StreamRunner, from string, ou
 	if e != nil {
 		return e
 	}
-	fmt.Fprintf(out, "step verify-backup: ok created_at=%s schema=%d\n", manifest.CreatedAt.Format(time.RFC3339), manifest.SchemaVersion)
 	unlock, e := lockOperation(c)
 	if e != nil {
 		return e
@@ -51,27 +51,31 @@ func Restore(ctx context.Context, c Config, runner StreamRunner, from string, ou
 	}
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.BackupSeconds)*time.Second)
 	defer cancel()
-	o := newOperation(c, runner, out)
+	return newOperation(c, runner, out).restoreVerified(ctx, from, from, manifest)
+}
+
+func (o *operation) restoreVerified(ctx context.Context, from, source string, manifest backupManifest) error {
+	fmt.Fprintf(o.out, "step verify-backup: ok created_at=%s schema=%d\n", manifest.CreatedAt.Format(time.RFC3339), manifest.SchemaVersion)
 	if manifest.Recovery != nil {
 		active, err := o.admitPITRRestore(ctx, manifest)
 		if err != nil {
 			return err
 		}
 		if active {
-			fmt.Fprintln(out, "PITR_ACTIVATION_ALREADY_COMPLETE")
+			fmt.Fprintln(o.out, "PITR_ACTIVATION_ALREADY_COMPLETE")
 			return nil
 		}
 	}
-	if e = o.restore(ctx, from, manifest); e != nil {
+	if e := o.restore(ctx, from, manifest); e != nil {
 		command := "restore"
-		if restorePendingError(c) != nil {
+		if restorePendingError(o.config) != nil {
 			command = "recover-restore"
 		}
 		e = retryWith(e, command)
-		o.record("restore", "failed", from+": "+e.Error())
+		o.record("restore", "failed", source+": "+e.Error())
 		return e
 	}
-	o.record("restore", "complete", from)
+	o.record("restore", "complete", source)
 	return nil
 }
 
@@ -85,16 +89,9 @@ func readBackup(from string) (backupManifest, error) {
 	if e != nil {
 		return manifest, fmt.Errorf("INSTALL_BACKUP_INVALID: %s has no readable manifest, so it is not a complete backup", from)
 	}
-	decoder := json.NewDecoder(strings.NewReader(string(raw)))
-	decoder.DisallowUnknownFields()
-	if e = decoder.Decode(&manifest); e != nil {
-		return manifest, fmt.Errorf("INSTALL_BACKUP_INVALID: %s: %v", backupManifestName, e)
-	}
-	if manifest.FormatVersion != backupFormatVersion {
-		return manifest, fmt.Errorf("INSTALL_BACKUP_INVALID: format version %d is not %d", manifest.FormatVersion, backupFormatVersion)
-	}
-	if manifest.SchemaVersion < 1 || len(manifest.Tables) == 0 {
-		return manifest, errors.New("INSTALL_BACKUP_INVALID: the manifest describes no database")
+	manifest, e = decodeBackupManifest(raw)
+	if e != nil {
+		return manifest, e
 	}
 	if e = verifyBackupFile(from, manifest.Database, backupDatabaseName); e != nil {
 		return manifest, e
@@ -103,6 +100,25 @@ func readBackup(from string) (backupManifest, error) {
 		if e = verifyBackupFile(filepath.Join(from, backupFilesName), file, file.Path); e != nil {
 			return manifest, e
 		}
+	}
+	return manifest, nil
+}
+
+func decodeBackupManifest(raw []byte) (backupManifest, error) {
+	var manifest backupManifest
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	if e := decoder.Decode(&manifest); e != nil {
+		return manifest, fmt.Errorf("INSTALL_BACKUP_INVALID: %s: %v", backupManifestName, e)
+	}
+	if manifest.FormatVersion != backupFormatVersion {
+		return manifest, fmt.Errorf("INSTALL_BACKUP_INVALID: format version %d is not %d", manifest.FormatVersion, backupFormatVersion)
+	}
+	if manifest.SchemaVersion < 1 || len(manifest.Tables) == 0 {
+		return manifest, errors.New("INSTALL_BACKUP_INVALID: the manifest describes no database")
+	}
+	if e := decoder.Decode(new(any)); e != io.EOF {
+		return manifest, errors.New("INSTALL_BACKUP_INVALID: the manifest has trailing data")
 	}
 	return manifest, nil
 }
