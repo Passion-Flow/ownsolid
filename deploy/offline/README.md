@@ -70,6 +70,11 @@ an explicit local DNS resolver, installation from the image archive, repeat
 apply with the original credential, and readiness. Host and workload probes
 must both be observed and blocked. Any other recorded destination fails the test.
 
+The preflight test kills the installer after the administrator step and
+before the control service starts. It reruns the same apply command and
+checks that both entrances are ready and the administrator identity,
+tenant, workspace, and credential bytes match the committed state.
+
 ### Check a bundled model with a cold runtime cache
 
 Prepare the signed bundle with `prepare-bundle`. On a disposable Linux amd64
