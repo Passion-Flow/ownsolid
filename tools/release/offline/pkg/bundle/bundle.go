@@ -25,8 +25,10 @@ type Verification struct {
 	MaximumArchiveEntries int    `json:"maximum_archive_entries"`
 	AllowTestFixture      bool   `json:"allow_test_fixture"`
 	// RequireRKE2 requires the approved RKE2 group when verifying a current release.
-	RequireRKE2      bool  `json:"require_rke2,omitempty"`
-	MinimumFreeBytes int64 `json:"minimum_free_bytes,omitempty"`
+	RequireRKE2 bool `json:"require_rke2,omitempty"`
+	// RequireRKE2Components requires the pinned component SPDX and notices as well.
+	RequireRKE2Components bool  `json:"require_rke2_components,omitempty"`
+	MinimumFreeBytes      int64 `json:"minimum_free_bytes,omitempty"`
 }
 type Result = factory.Result
 type ImageSource = factory.ImageSource

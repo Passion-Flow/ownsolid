@@ -216,13 +216,15 @@ trust file and the RKE2 requirement:
 {
   "mount_root": "/mnt/release",
   "trust_file": "/etc/ownsolid-release/public-trust.json",
-  "require_rke2": true
+  "require_rke2_components": true
 }
 ```
 
 Prepare to a new directory on that mount, under a root-owned mode 0700
 parent. The command verifies the signature, approved RKE2 inventory and
-all asset bytes before writing the prepared files.
+all asset bytes before writing the prepared files. This policy requires
+the linked RKE2 SPDX and notice archive. Use `require_rke2: true` to
+prepare an earlier signed RKE2 release with the compatible inventory policy.
 
 ```sh
 ownsolid-install prepare-bundle --bundle /mnt/release/ownsolid.tar.gz \

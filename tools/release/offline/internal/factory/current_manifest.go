@@ -38,7 +38,7 @@ func (c Config) requiredAssets(m wire.Manifest) map[string]string {
 
 func (c Config) validateManifest(m wire.Manifest) error {
 	if !c.current {
-		if c.RequireRKE2 {
+		if c.RequireRKE2 || c.RequireRKE2Components {
 			return fail("RELEASE_RKE2_CURRENT_PROFILE_REQUIRED")
 		}
 		return m.Validate(c.MaximumAssets, c.MaximumAssetBytes, c.MaximumTotalBytes, c.AllowTestFixture)
@@ -75,7 +75,7 @@ func (c Config) validateManifest(m wire.Manifest) error {
 				return fail("RELEASE_IMAGE_IDENTITY_INVALID")
 			}
 		case "sbom":
-			if asset.ID != currentSBOM || asset.Size > c.MaximumMetadataBytes {
+			if (asset.ID != currentSBOM && asset.ID != rke2SPDXID) || asset.Size > c.MaximumMetadataBytes {
 				return fail("RELEASE_SBOM_INVALID")
 			}
 		case "compose", "operator", "runbook", "license", "chart", "model", "plugin", "font", "dependency_lock", rke2BinaryKind, rke2ImageSetKind:
@@ -116,7 +116,7 @@ func (c Config) validateManifest(m wire.Manifest) error {
 			return fail("RELEASE_REQUIRED_ASSET_MISSING")
 		}
 	}
-	return validateRKE2Inventory(m, c.RequireRKE2)
+	return validateRKE2Inventory(m, c.RequireRKE2, c.RequireRKE2Components)
 }
 
 func imageDigest(value string) bool {
@@ -147,18 +147,17 @@ func checkManifestAsset(ctx context.Context, r io.Reader, w io.Writer, a wire.As
 
 func checkSBOM(raw []byte, assets []wire.Asset) error {
 	var document struct {
-		Version   string `json:"spdxVersion"`
-		License   string `json:"dataLicense"`
-		ID        string `json:"SPDXID"`
-		Name      string `json:"name"`
-		Namespace string `json:"documentNamespace"`
-		Packages  []struct {
-			ID        string `json:"SPDXID"`
-			Name      string `json:"name"`
-			Checksums []struct {
-				Algorithm string `json:"algorithm"`
-				Value     string `json:"checksumValue"`
-			} `json:"checksums"`
+		Version       string                 `json:"spdxVersion"`
+		License       string                 `json:"dataLicense"`
+		ID            string                 `json:"SPDXID"`
+		Name          string                 `json:"name"`
+		Namespace     string                 `json:"documentNamespace"`
+		References    []spdxExternalDocument `json:"externalDocumentRefs"`
+		Relationships []spdxRelationship     `json:"relationships"`
+		Packages      []struct {
+			ID        string         `json:"SPDXID"`
+			Name      string         `json:"name"`
+			Checksums []spdxChecksum `json:"checksums"`
 		} `json:"packages"`
 	}
 	if wire.UniqueJSON(raw, &document) != nil || document.Version != "SPDX-2.3" ||
@@ -189,5 +188,5 @@ func checkSBOM(raw []byte, assets []wire.Asset) error {
 			return fail("RELEASE_SBOM_ASSET_CHECKSUM_MISSING")
 		}
 	}
-	return nil
+	return checkRKE2SPDXLink(assets, document.References, document.Relationships)
 }
