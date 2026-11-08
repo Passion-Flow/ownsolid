@@ -6,6 +6,8 @@ coding tools and the product agent.
 - Owns: `services/gateway`, `services/control/internal/modules/distribution`.
 - Depends on: serving, identity-and-access, tenancy-metering-commerce.
 
+Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API keys and Bifrost documentation ([research](../../research/gateway-keys.md)). The review added GW-114, GW-115 and GW-116: the installer starts no model gateway at all, keys cannot rotate on a schedule or warn their owner before they expire, and a key cannot be narrowed to some endpoints or made read-only.
+
 ## P1 Enterprise release
 
 - [ ] GW-101 OpenAI Chat Completions with streaming (P1) - Catalog: F073
@@ -21,6 +23,7 @@ coding tools and the product agent.
 - [ ] GW-111 Configuration publishing with diff preview and rollback (P1) - Catalog: F083
 - [ ] GW-112 Load tested: requests per second and added latency at measured scale, published (P1) - Catalog: F086
 - [ ] GW-113 Gateway and keys page: issue, rotate and revoke keys, with each key's call log (S-206) (P1)
+- [ ] GW-114 The installer delivers and starts the model gateway on its entrance, with its identity provisioned and no network needed (P1)
 
 ## P2 Fleet operations
 
@@ -28,6 +31,8 @@ coding tools and the product agent.
 - [ ] GW-202 Content safety hooks and data-flow rules per tenant (P2) - Catalog: F085
 - [ ] GW-203 Result cache with invalidation on permission change (P2) - Catalog: F620
 - [ ] GW-204 Client setup templates for SDKs, CLIs and coding tools (P2) - Catalog: F084, F087
+- [ ] GW-115 Scheduled key rotation, and a notice to a key's owner before the key expires (P2)
+- [ ] GW-116 Restricted keys: allow a key only some endpoints, or only reads (P2)
 
 ## P3 Multi-site
 
