@@ -88,3 +88,18 @@ Alertmanager 0.34.2 binary and run the TLS SMTP check as root on Linux:
 It reuses the repository's disposable SMTP sink and refuses to start if
 the namespace has a non-loopback interface. It starts and stops both
 processes and verifies the alert subject and recipient in the received mail.
+
+### Long retention for fleet health aggregates
+
+Run the [fleet recording rules](alerting/fleet-rollup-rules.yaml) in a separate
+vmalert process. Point -datasource.url at the short-retention raw store and
+-remoteWrite.url at a second VictoriaMetrics instance with a longer
+-retentionPeriod. Give the two stores disjoint data directories. Use the raw
+store for node drilldowns and the long store for the
+ownsolid:cell_nodes_observed:count and ownsolid:cell_nodes_reachable:count
+series. A zero reachable count is meaningful only when the observed count
+exists for the same cell.
+
+The native test above also verifies that vmalert writes these aggregates
+only to the long store. The operator sets the retention periods on each
+VictoriaMetrics instance.
