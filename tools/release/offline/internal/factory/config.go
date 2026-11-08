@@ -13,6 +13,7 @@ import (
 )
 
 type Config struct {
+	current               bool
 	MountRoot             string `json:"mount_root"`
 	ArtifactRoot          string `json:"artifact_root"`
 	ManifestFile          string `json:"manifest_file"`
@@ -41,6 +42,9 @@ func LoadConfig(raw, environment []byte) (Config, error) {
 	keys := map[string]int{}
 	fields := map[string]bool{}
 	for i := 0; i < v.NumField(); i++ {
+		if !typ.Field(i).IsExported() {
+			continue
+		}
 		name := strings.Split(typ.Field(i).Tag.Get("json"), ",")[0]
 		keys["PROJECT_ONE_OFFLINE_FACTORY_"+strings.ToUpper(name)] = i
 		fields[name] = true

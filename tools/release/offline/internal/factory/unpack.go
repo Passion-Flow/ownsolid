@@ -41,13 +41,25 @@ func Unpack(ctx context.Context, c Config, source, destination, archiveSHA, mani
 	return unpack(ctx, c, source, destination, archiveSHA, manifestSHA, unpackIO{syncDirectory: func(f *os.File) error { return f.Sync() }, afterInspection: func() {}})
 }
 
+func inspectForPreparation(ctx context.Context, c Config, source, archiveSHA, manifestSHA string) (Result, error) {
+	if !c.current || archiveSHA != "" || manifestSHA != "" {
+		return InspectExpected(ctx, c, source, archiveSHA, manifestSHA)
+	}
+	result, err := Inspect(ctx, c, source)
+	if err == nil && result.Status != "passed_signed_archive_full_readback" {
+		return Result{}, fail("RELEASE_UNCERTAIN_PUBLICATION_NOT_PREPARABLE")
+	}
+	return result, err
+}
+
 type unpackIO struct {
 	syncDirectory   func(*os.File) error
 	afterInspection func()
 }
 
 func unpack(ctx context.Context, c Config, source, destination, archiveSHA, manifestSHA string, operations unpackIO) (result Result, err error) {
-	verified, e := InspectExpected(ctx, c, source, archiveSHA, manifestSHA)
+	verified, e := inspectForPreparation(ctx, c, source, archiveSHA, manifestSHA)
+	archiveSHA, manifestSHA = verified.ArchiveSHA256, verified.ManifestSHA256
 	if e != nil {
 		return result, e
 	}

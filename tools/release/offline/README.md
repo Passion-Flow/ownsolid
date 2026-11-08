@@ -133,3 +133,50 @@ The original pre-journal swap interruption remains failed; a distinct validated
 output succeeds with unchanged budgets. Cold runtime and final external return/
 cleanup remain separate. The standard deployment-license issuer stays distinct
 from the additive restore-compatibility certificate issuer.
+
+## Current single-node release
+
+The `validate-current`, `build-current` and `inspect-current` commands select
+`ownsolid-single-node-linux-amd64`. They use the same protected JSON options,
+archive format, Ed25519 signing envelope, and publication checks as the existing
+factory. Current commands accept only the current profile. Existing commands
+keep their original profile admission.
+
+Stage exact payloads and their SHA-256 digests in the private `artifact_root`.
+Export one Linux amd64 image per archive with
+`docker image save --platform linux/amd64`. Record the OCI platform manifest and
+config digests as `image_id` and `image_config_digest` respectively. The factory
+verifies the local descriptor closure and accepts uncompressed or gzip layers
+for the current installer. It rejects external OCI layer URLs.
+
+The signed inventory requires these IDs and kinds:
+
+| IDs | Kind |
+| --- | --- |
+| `control-image`, `postgres-image`, `metrics-image`, `logs-image` | `image_archive` |
+| `compose` | `compose` |
+| `installer` | `operator` |
+| `operator-docs` | `runbook` |
+| `release-sbom` | `sbom` |
+
+The manifest uses format version 1, an empty `capabilities` array, the control
+image's schema version, and the actual source digest. Extra `chart`, `model`,
+`plugin`, `font`, `dependency_lock`, and `license` assets can be included.
+Every payload other than a licence text references its applicable signed
+licence texts. Every payload other than the SPDX document itself must have its
+SHA-256 represented by a package checksum in that SPDX 2.3 JSON document.
+Generate component inventories and notices on the connected release machine
+before signing. Outer asset checksums do not replace component SBOMs.
+
+```sh
+factory validate-current --config /path/to/release.json
+factory build-current --config /path/to/release.json
+factory inspect-current --config /path/to/verify.json
+```
+
+The signing key stays on the manufacturing host outside the release mount.
+Send the archive as the delivery file and establish the release public trust
+through an independent channel. The product license issuer has a separate
+trust file. `TestManufactureCurrentRelease` uses ephemeral test trust and a
+fixture SBOM with real Docker exports for the isolated installer test. Those
+inputs do not qualify a production release.

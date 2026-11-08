@@ -103,7 +103,7 @@ func VerifyPrepared(ctx context.Context, c Config, directory, archiveSHA, manife
 		return result, e
 	}
 	var m wire.Manifest
-	if wire.StrictJSON(raw, &m) != nil || m.Validate(c.MaximumAssets, c.MaximumAssetBytes, c.MaximumTotalBytes, c.AllowTestFixture) != nil || marker.Profile != m.Profile || marker.ReleaseID != m.ReleaseID {
+	if wire.StrictJSON(raw, &m) != nil || c.validateManifest(m) != nil || marker.Profile != m.Profile || marker.ReleaseID != m.ReleaseID {
 		return result, fail("RELEASE_PREPARED_INVENTORY_INVALID")
 	}
 	type expectedFile struct {
