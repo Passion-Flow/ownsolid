@@ -115,3 +115,15 @@ tagless transport to a test sink. An importer can use this boundary for a
 verified single-image archive and needs an explicit per-image selection
 path for multi-image catalogs. Engine registration and digest readback
 remain the next integration gate.
+
+## Verified input for the importer
+
+The current factory input contract consumes the archive digest and byte size
+plus the selected image manifest and config digests. Return those facts
+directly from the catalog preflight, using the same signed byte stream and
+verified OCI graph. This lets the installer pass the facts to the existing
+importer without opening the tar to discover a second identity. Keep the
+signature-only API unchanged. Exercise the returned facts against the
+tagless writer in the disconnected fixture. The factory accepted these facts
+from the returned catalog value and reproduced the same layer and transport
+measurements without a second caller-side tar parse.
