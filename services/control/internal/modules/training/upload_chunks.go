@@ -7,13 +7,13 @@ import (
 	"net"
 
 	"database/sql"
-	"github.com/google/uuid"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 type ChunkRequest = wire.ChunkRequest
@@ -98,14 +98,13 @@ func (s *Service) UploadChunk(ctx context.Context, node, credential, task, token
 	if e != nil {
 		return out, e
 	}
-	// Cleanup can clear only this exact ticket and only while current authority remains valid; otherwise it expires naturally.
+	// A confirmed acceptance clears the ticket in its own transaction. A failure
+	// or unknown commit still needs bounded, exact-ticket cleanup.
+	committed := false
 	defer func() {
-		cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), config.Seconds(s.policy().TransactionSeconds))
-		defer cancel()
-		_ = s.withMachineLease(cleanup, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, j Job, command wire.Command) error {
-			_, e := tx.Exec(ctx, transferStatement(tx, "UPDATE training_uploads SET active_chunk_id=NULL,active_asset=NULL,active_offset=NULL,active_expires_at=NULL WHERE id=$1 AND active_chunk_id=$2", "UPDATE training_uploads SET active_chunk_id=NULL,active_asset=NULL,active_offset=NULL,active_expires_at=NULL WHERE id=? AND active_chunk_id=?", []any{id, ticket}, []any{id, ticket}))
-			return e
-		})
+		if !committed {
+			s.clearUploadTicket(ctx, node, credential, task, token, id, ticket)
+		}
 	}()
 	stream, cancel := context.WithTimeout(ctx, config.Seconds(s.policy().UploadSeconds))
 	_, e = s.Store.WriteChunk(stream, descriptor, input.Asset, input.Offset, input.Length, input.SHA256, body)
@@ -120,7 +119,7 @@ func (s *Service) UploadChunk(ctx context.Context, node, credential, task, token
 		}
 		return out, e
 	}
-	e = s.withMachineLease(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, j Job, command wire.Command) error {
+	e = s.withMachineLeaseActor(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, actor identity.Auth, w workspaces.Workspace, j Job, command wire.Command) error {
 		u, d, e := s.lockedUpload(ctx, tx, w, j, command, id)
 		if e != nil {
 			return e
@@ -150,11 +149,7 @@ func (s *Service) UploadChunk(ctx context.Context, node, credential, task, token
 			if _, e = tx.Exec(ctx, transferStatement(tx, "INSERT INTO training_upload_chunks(upload_id,asset,byte_offset,size_bytes,sha256) VALUES($1,$2,$3,$4,$5)", "INSERT INTO training_upload_chunks(upload_id,asset,byte_offset,size_bytes,sha256) VALUES(?,?,?,?,?)", []any{id, input.Asset, input.Offset, input.Length, input.SHA256}, []any{id, input.Asset, input.Offset, input.Length, input.SHA256})); e != nil {
 				return e
 			}
-			var a identity.Auth
-			if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT requested_by::text,requested_audience FROM training_attempts WHERE id=$1", "SELECT requested_by,requested_audience FROM training_attempts WHERE id=?", []any{command.AttemptID}, []any{command.AttemptID})).Scan(&a.Me.User.ID, &a.Me.Audience); e != nil {
-				return e
-			}
-			if e = transferAuditWithin(ctx, tx, a, w, "training.upload_chunk_accepted", j.ID, "Accepted exact current-authority output chunk", uuid.NewString()); e != nil {
+			if e = transferAuditWithin(ctx, tx, actor, w, "training.upload_chunk_accepted", j.ID, "Accepted exact current-authority output chunk", uuid.NewString()); e != nil {
 				return e
 			}
 		}
@@ -171,5 +166,6 @@ func (s *Service) UploadChunk(ctx context.Context, node, credential, task, token
 	if e != nil {
 		return ChunkAcceptance{}, e
 	}
+	committed = true
 	return out, nil
 }

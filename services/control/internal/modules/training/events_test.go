@@ -6,11 +6,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/uuid"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 // These are explicitly synthetic authenticated node reports for real business transactions, not GPU computation evidence.
@@ -31,6 +31,12 @@ func TestActualTrainingAtomicOrderedEventBatchConcurrentReplayAndRevocation(t *t
 	j := dispatched(t, f)
 	l := claimed(t, f)
 	ctx := context.Background()
+	_, e := f.s.RecordEvents(ctx, uuid.NewString(), f.credential, l.TaskID, l.LeaseToken, prelude(*l.Training))
+	expected(t, e, "AGENT_LEASE_STALE")
+	foreign := *l.Training
+	foreign.AttemptID = uuid.NewString()
+	_, e = f.s.RecordEvents(ctx, f.input.NodeID, f.credential, l.TaskID, l.LeaseToken, prelude(foreign))
+	expected(t, e, "TRAINING_EVENT_INVALID")
 	accepted, e := f.s.RecordEvents(ctx, f.input.NodeID, f.credential, l.TaskID, l.LeaseToken, prelude(*l.Training))
 	if e != nil || len(accepted) != 2 || accepted[0].JobState != "preparing" || accepted[1].JobState != "running" {
 		t.Fatal("actual metadata phase transitions", e)
@@ -76,6 +82,11 @@ func TestActualTrainingAtomicOrderedEventBatchConcurrentReplayAndRevocation(t *t
 	expected(t, e, "TRAINING_EVENT_ORDER_CONFLICT")
 	if count(t, f, "SELECT count(*) FROM audit_events WHERE action='training.event_recorded' AND target_id=$1", j.ID) != 3 {
 		t.Fatal("replayed metadata duplicated audit")
+	}
+	if count(t, f, `SELECT count(*) FROM audit_events WHERE action='training.event_recorded' AND target_id=$1
+ AND tenant_id=$2 AND workspace_id=$3 AND actor_user_id=$4 AND audience='portal'`,
+		j.ID, f.portal.Me.Workspace.TenantID, f.input.WorkspaceID, f.portal.Me.User.ID) != 3 {
+		t.Fatal("event audit lost the exact attempt principal or scope")
 	}
 	if _, e = f.s.DB.Exec(ctx, "UPDATE users SET auth_epoch=auth_epoch+1 WHERE id=$1", f.portal.Me.User.ID); e != nil {
 		t.Fatal(e)

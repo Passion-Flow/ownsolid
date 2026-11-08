@@ -8,13 +8,13 @@ import (
 	"strings"
 
 	"database/sql"
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 type Upload = wire.Upload
@@ -110,7 +110,7 @@ func (s *Service) BeginUpload(ctx context.Context, node, credential, task, token
 			return Upload{}, e
 		}
 	}
-	e := s.withMachineLease(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, j Job, command wire.Command) error {
+	e := s.withMachineLeaseActor(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, actor identity.Auth, w workspaces.Workspace, j Job, command wire.Command) error {
 		var e error
 		descriptor, e = s.outputDescriptor(ctx, tx, w, j, command, kind, metadata)
 		if e != nil {
@@ -142,11 +142,7 @@ func (s *Service) BeginUpload(ctx context.Context, node, credential, task, token
 			if e != nil {
 				return e
 			}
-			var a identity.Auth
-			if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT requested_by::text,requested_audience FROM training_attempts WHERE id=$1", "SELECT requested_by,requested_audience FROM training_attempts WHERE id=?", []any{command.AttemptID}, []any{command.AttemptID})).Scan(&a.Me.User.ID, &a.Me.Audience); e != nil {
-				return e
-			}
-			if e = transferAuditWithin(ctx, tx, a, w, "training.upload_started", j.ID, "Current-authority immutable output upload intent", uuid.NewString()); e != nil {
+			if e = transferAuditWithin(ctx, tx, actor, w, "training.upload_started", j.ID, "Current-authority immutable output upload intent", uuid.NewString()); e != nil {
 				return e
 			}
 		}

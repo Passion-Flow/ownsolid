@@ -6,11 +6,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	"github.com/google/uuid"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 type EventAcceptance = wire.EventAcceptance
@@ -30,9 +30,9 @@ func (s *Service) RecordEvents(ctx context.Context, node, credential, task, toke
 	if len(raw) < 1 || len(raw) > wire.MaximumEventBatch {
 		return out, fail("TRAINING_EVENT_INVALID")
 	}
-	e := s.withMachineLease(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, j Job, command wire.Command) error {
+	e := s.withMachineLeaseActor(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, actor identity.Auth, w workspaces.Workspace, j Job, command wire.Command) error {
 		for _, item := range raw {
-			accepted, e := s.recordEvent(ctx, tx, w, j, command, item)
+			accepted, e := s.recordEvent(ctx, tx, actor, w, j, command, item)
 			if e != nil {
 				return e
 			}
@@ -47,7 +47,7 @@ func (s *Service) RecordEvents(ctx context.Context, node, credential, task, toke
 	return out, nil
 }
 
-func (s *Service) recordEvent(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, j Job, command wire.Command, raw []byte) (EventAcceptance, error) {
+func (s *Service) recordEvent(ctx context.Context, tx transaction.Executor, actor identity.Auth, w workspaces.Workspace, j Job, command wire.Command, raw []byte) (EventAcceptance, error) {
 	var out EventAcceptance
 	event, e := wire.DecodeEvent(raw, j.ID, command.AttemptID, j.Configuration.MaximumSteps)
 	if e != nil {
@@ -111,10 +111,5 @@ func (s *Service) recordEvent(ctx context.Context, tx transaction.Executor, w wo
 		}
 		out.JobState = "running"
 	}
-	a := identity.Auth{}
-	// The actor is the stored delegated principal, never a job/node identifier supplied as a user.
-	if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT requested_by::text,requested_audience FROM training_attempts WHERE id=$1", "SELECT requested_by,requested_audience FROM training_attempts WHERE id=?", []any{command.AttemptID}, []any{command.AttemptID})).Scan(&a.Me.User.ID, &a.Me.Audience); e != nil {
-		return out, e
-	}
-	return out, transferAuditWithin(ctx, tx, a, w, "training.event_recorded", j.ID, "Accepted current-authority ordered training metadata", uuid.NewString())
+	return out, transferAuditWithin(ctx, tx, actor, w, "training.event_recorded", j.ID, "Accepted current-authority ordered training metadata", uuid.NewString())
 }

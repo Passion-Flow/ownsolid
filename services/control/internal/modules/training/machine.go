@@ -10,12 +10,12 @@ import (
 
 	"database/sql"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 )
 
 func (s *Service) machineCandidate(ctx context.Context, node, task string) (candidate, string, error) {
@@ -65,24 +65,22 @@ func bindFrozenCommand(j Job, command wire.Command) error {
 	}
 	return nil
 }
-func bindAttempt(ctx context.Context, tx transaction.Executor, j Job, command wire.Command, task string) error {
+func bindAttempt(ctx context.Context, tx transaction.Executor, j Job, command wire.Command, task string) (identity.Auth, error) {
 	if e := bindFrozenCommand(j, command); e != nil {
-		return e
+		return identity.Auth{}, e
 	}
 	inventory, _ := json.Marshal(command.Inputs)
 	var checkpoint *string
 	if command.Resume != nil {
 		checkpoint = &command.Resume.CheckpointID
 	}
-	var bound bool
-	e := tx.QueryRow(ctx, transferStatement(tx, `SELECT EXISTS(SELECT 1 FROM training_attempts a JOIN gpu_leases g ON g.training_job_id=a.job_id AND g.node_id=a.node_id AND g.revision=a.attempt_number WHERE a.id=$1 AND a.job_id=$2 AND a.task_id=$3 AND a.input_inventory=$4::jsonb AND a.resume_checkpoint_id IS NOT DISTINCT FROM $5::uuid AND a.physical_stopped_at IS NULL AND a.state IN ('pending','preparing','running') AND g.state='held' AND g.gpu_uuid=$6)`, `SELECT EXISTS(SELECT 1 FROM training_attempts a JOIN gpu_leases g ON g.training_job_id=a.job_id AND g.node_id=a.node_id AND g.revision=a.attempt_number WHERE a.id=? AND a.job_id=? AND a.task_id=? AND a.input_inventory=CAST(? AS JSON) AND a.resume_checkpoint_id <=> ? AND a.physical_stopped_at IS NULL AND a.state IN ('pending','preparing','running') AND g.state='held' AND g.gpu_uuid=?)`, []any{command.AttemptID, j.ID, task, inventory, checkpoint, command.GPUUUID}, []any{command.AttemptID, j.ID, task, inventory, checkpoint, command.GPUUUID})).Scan(&bound)
-	if e != nil {
-		return e
+	// Read the immutable audit principal from the same exact attempt that passed the fence.
+	var actor identity.Auth
+	e := tx.QueryRow(ctx, transferStatement(tx, `SELECT a.requested_by::text,a.requested_audience FROM training_attempts a JOIN gpu_leases g ON g.training_job_id=a.job_id AND g.node_id=a.node_id AND g.revision=a.attempt_number WHERE a.id=$1 AND a.job_id=$2 AND a.task_id=$3 AND a.input_inventory=$4::jsonb AND a.resume_checkpoint_id IS NOT DISTINCT FROM $5::uuid AND a.physical_stopped_at IS NULL AND a.state IN ('pending','preparing','running') AND g.state='held' AND g.gpu_uuid=$6`, `SELECT a.requested_by,a.requested_audience FROM training_attempts a JOIN gpu_leases g ON g.training_job_id=a.job_id AND g.node_id=a.node_id AND g.revision=a.attempt_number WHERE a.id=? AND a.job_id=? AND a.task_id=? AND a.input_inventory=CAST(? AS JSON) AND a.resume_checkpoint_id <=> ? AND a.physical_stopped_at IS NULL AND a.state IN ('pending','preparing','running') AND g.state='held' AND g.gpu_uuid=?`, []any{command.AttemptID, j.ID, task, inventory, checkpoint, command.GPUUUID}, []any{command.AttemptID, j.ID, task, inventory, checkpoint, command.GPUUUID})).Scan(&actor.Me.User.ID, &actor.Me.Audience)
+	if errors.Is(e, sql.ErrNoRows) {
+		return identity.Auth{}, fail("TRAINING_ATTEMPT_STALE")
 	}
-	if !bound {
-		return fail("TRAINING_ATTEMPT_STALE")
-	}
-	return nil
+	return actor, e
 }
 func (s *Service) ClaimTraining(ctx context.Context, node, credential, request string) (agentwire.Claim, bool, error) {
 	var out agentwire.Claim
@@ -142,7 +140,7 @@ func (s *Service) ClaimTraining(ctx context.Context, node, credential, request s
 		if out.Lease == nil {
 			return nil
 		}
-		if e = bindAttempt(ctx, tx, j, *out.Lease.Training, task); e != nil {
+		if _, e = bindAttempt(ctx, tx, j, *out.Lease.Training, task); e != nil {
 			return e
 		}
 		// A lease delivered again after it was never acknowledged binds a new stop
@@ -185,7 +183,8 @@ func (s *Service) RenewTraining(ctx context.Context, node, credential, task, tok
 		if e != nil {
 			return e
 		}
-		return bindAttempt(ctx, tx, j, command, task)
+		_, e = bindAttempt(ctx, tx, j, command, task)
+		return e
 	})
 	if e != nil {
 		return agentwire.RenewedLease{}, true, e
