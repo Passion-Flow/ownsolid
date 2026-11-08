@@ -47,8 +47,9 @@ The schema 57 run validates restore and reapply at that schema. It does not
 resolve REL-113, where a restored predecessor reaches migration 000056 with
 a differently deparsed constraint. That work needs catalog comparison or
 migration admission changes in the shared database owner. Keep the published
-migration files immutable. REL-114 still needs durable recovery across an
-interruption between swapping the database and completing restore adoption.
+migration files immutable. REL-114 binds the restore to the live PostgreSQL
+identities and persists the decision to admit writes. See
+[interrupted restore recovery](interrupted-database-restore.md).
 
 The single-node backup verified the database dump, keys and configured model
 store. REL-103 also needs the actual selected object store and a consistency
