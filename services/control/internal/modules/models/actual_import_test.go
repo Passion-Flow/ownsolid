@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -23,6 +24,9 @@ import (
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"github.com/google/uuid"
 )
+
+//go:embed testdata/smollm2-model-catalog.json
+var alternateModelManifest []byte
 
 func TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery(t *testing.T) {
 	s := fixture.NewWithSetup(t, fixture.SetupOptions{TimeoutSeconds: 180, StatementTimeoutSeconds: 30})
@@ -44,6 +48,25 @@ func TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery(t *test
 		t.Fatal(e)
 	}
 	input := models.ImportRequest{WorkspaceID: admin.Me.Workspace.ID, Name: "Actual approved offline model", CatalogDigest: wire.ModelCatalogDigest(), ExpectedBytes: info.Size(), LicenseAcknowledged: true, Reason: "Actual isolated import evidence"}
+	var alternateChunk []byte
+	if path := os.Getenv("OWNSOLID_TEST_ALTERNATE_MODEL_ARCHIVE"); path != "" {
+		alternateChunk = readAlternateModelChunk(t, path)
+		var alternate wire.ModelCatalog
+		if e = json.Unmarshal(alternateModelManifest, &alternate); e != nil {
+			t.Fatal(e)
+		}
+		canonical, e := json.Marshal(alternate)
+		if e != nil {
+			t.Fatal(e)
+		}
+		digest := sha256.Sum256(canonical)
+		unavailable := input
+		unavailable.CatalogDigest = hex.EncodeToString(digest[:])
+		// Use an otherwise admissible size so the rejection proves digest admission.
+		if _, e = service.StartImport(ctx, admin, unavailable, uuid.NewString(), uuid.NewString()); e == nil || e.Error() != "VALIDATION_FAILED" {
+			t.Fatalf("unconsumable SmolLM2 digest was admitted: %v", e)
+		}
+	}
 	value, e := service.StartImport(ctx, admin, input, uuid.NewString(), uuid.NewString())
 	if e != nil {
 		t.Fatal(e)
@@ -58,6 +81,19 @@ func TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery(t *test
 		hash := sha256.Sum256(buffer[:n])
 		if _, e = service.UploadChunk(ctx, admin, value.ID, offset, int64(n), hex.EncodeToString(hash[:]), bytes.NewReader(buffer[:n])); e != nil {
 			t.Fatal(e)
+		}
+		if offset == 0 && alternateChunk != nil {
+			resumed := *service
+			service = &resumed
+			different := sha256.Sum256(alternateChunk)
+			if _, e = service.UploadChunk(ctx, admin, value.ID, 0, int64(n), hex.EncodeToString(different[:]), bytes.NewReader(alternateChunk)); e == nil || e.Error() != "MODEL_CHUNK_CONFLICT" {
+				t.Fatalf("alternate archive replay was accepted: %v", e)
+			}
+			replay, e := service.UploadChunk(ctx, admin, value.ID, 0, int64(n), hex.EncodeToString(hash[:]), bytes.NewReader(buffer[:n]))
+			if e != nil || replay.UploadedBytes != int64(n) || replay.CatalogDigest != input.CatalogDigest {
+				t.Fatalf("original chunk could not resume with its durable digest and offset: %v", e)
+			}
+			t.Log("Resumed Qwen import refused the SmolLM2 chunk and accepted the original replay")
 		}
 		offset += int64(n)
 		if offset <= 3*models.ChunkBytes || offset%(32*models.ChunkBytes) == 0 || offset == info.Size() {
@@ -182,6 +218,20 @@ func TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery(t *test
 			t.Fatal("retired model still admitted", e)
 		}
 	})
+}
+
+func readAlternateModelChunk(t *testing.T, path string) []byte {
+	t.Helper()
+	source, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer source.Close()
+	chunk := make([]byte, models.ChunkBytes)
+	if _, err = io.ReadFull(source, chunk); err != nil {
+		t.Fatal(err)
+	}
+	return chunk
 }
 
 // waitForModelWorker runs a fresh instance of the installed background worker.

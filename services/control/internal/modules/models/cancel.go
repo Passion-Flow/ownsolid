@@ -28,6 +28,7 @@ func (s *Service) CancelImport(ctx context.Context, a identity.Auth, id, reason,
 	defer cancel()
 	var out Import
 	var expectedBytes int64
+	var manifest *importManifest
 	e = withImportFileLock(ctx, s.RootDirectory, id, func() error {
 		return s.withImportSession(ctx, id, func(ctx context.Context, session transaction.Store) error {
 			terminal := false
@@ -37,6 +38,7 @@ func (s *Service) CancelImport(ctx context.Context, a identity.Auth, id, reason,
 					return e
 				}
 				expectedBytes = current.ExpectedBytes
+				manifest = resolveImportManifest(current.CatalogDigest)
 				if current.State == "ready" {
 					return fail("MODEL_IMPORT_STATE_CONFLICT")
 				}
@@ -63,7 +65,7 @@ func (s *Service) CancelImport(ctx context.Context, a identity.Auth, id, reason,
 			if e != nil {
 				return e
 			}
-			e = discardUpload(root, id, expectedBytes)
+			e = discardUpload(root, id, expectedBytes, manifest)
 			root.Close()
 			if e != nil {
 				return e
@@ -100,7 +102,7 @@ func (s *Service) CancelImport(ctx context.Context, a identity.Auth, id, reason,
 	out.CreatedAt, out.UpdatedAt = out.CreatedAt.UTC(), out.UpdatedAt.UTC()
 	return out, nil
 }
-func discardUpload(root *os.Root, id string, expectedBytes int64) error {
+func discardUpload(root *os.Root, id string, expectedBytes int64, manifest *importManifest) error {
 	if !validID(id) {
 		return fail("MODEL_PATH_INVALID")
 	}
@@ -153,7 +155,7 @@ func discardUpload(root *os.Root, id string, expectedBytes int64) error {
 			}
 			files = append(files, path)
 		} else if isStageName(entry.Name()) {
-			children, e := stageFiles(root, path)
+			children, e := stageFiles(root, path, manifest)
 			if e != nil {
 				return e
 			}

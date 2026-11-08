@@ -6,6 +6,11 @@ Models owns import intent/chunks, approved model versions, durable bytes, integr
 
 Model/version/import state originates in migration 000006. Bytes and SQL must agree on catalog/source/scope and digest. Queued/uploaded does not mean verified; cancellation, interrupted import, inconsistent directory identity and retirement need existing worker/recovery paths.
 
+[import_manifest.go](import_manifest.go) resolves the persisted catalogue digest
+to canonical metadata and the installed archive and directory verifiers.
+Admission, chunk writes, recovery and publication use that authority.
+The existing Qwen digest retains the shared Agent verification path.
+
 After the import's version and audit event commit, the worker reclaims the
 upload chunks and failed stages. During import the store still needs space
 for the bundle and extracted model. The worker retains staging and logs

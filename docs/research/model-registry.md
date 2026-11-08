@@ -126,3 +126,70 @@ outside Git.
 The prototype validates the source and transport integrity steps. Importing
 and serving the second model through the product requires the shared catalogue,
 verifier, schema and Agent changes above.
+
+## Import authority within the models module
+
+The import row already persists the content digest. Resolve it against the
+server's immutable manifest and its installed archive verifier. The embedded
+Qwen manifest retains its canonical encoding, digest and the shared Agent
+verifier for archive layout, weights and tokenizer. The models module selects
+that verifier with the manifest. It does not duplicate the USTAR parser or
+select a verifier from an uploaded name, file or request field.
+
+Use the resolved manifest at admission, on the locked row before chunk writes
+and retries, when inspecting an interrupted stage, and when verifying or
+publishing the resulting version. The import's byte framing and per-chunk
+hashes are separate from the archive file checks. An acknowledged offset can
+only be replayed with its committed chunk digest. The final archive must
+still match every expected file before publication. A stored Qwen digest
+continues to resolve after restart without a schema change. Apply the existing
+configured bundle limit when creating a new import and retain an existing
+import's admitted size across policy changes.
+
+Keep the allowlist limited to entries with a complete database and Agent
+path. The SmolLM2 manifest is a real negative-control fixture. Its digest must
+fail admission and its archive must fail Qwen verification. The paired
+integration test replays a different model's chunk at an acknowledged offset,
+then continues the original archive across a fresh service instance. It also
+forces publication rollback and cleanup retry using PostgreSQL. The current
+archive checks remain in the shared [model artifact verifier](../../api/agent/modelartifact/archive.go).
+This change introduces no dependency and uses the two Apache-2.0 test models
+described above.
+
+### Contract handoff
+
+These additions require review by the named owners. The current slice changes
+no OpenAPI fields, Agent protocol fields or database columns.
+
+| Owner | Proposed wire addition | Required behaviour |
+| --- | --- | --- |
+| API | Add `GET .../admin/models/catalog/entries` and `GET .../admin/models/catalog/entries/{catalog_digest}`. Each entry contains `catalog_digest`, `catalog` with the existing `ModelCatalog` shape, `minimum_bundle_bytes`, `importable` and nullable `unavailable_code`. The list has `entries`, nullable `next_cursor` and the existing storage and upload limits. | Keep the current singleton `GET .../admin/models/catalog` response intact. The digest lookup must resolve the exact retained entry for an older import, even if it no longer appears in the list. `importable` becomes true only after the entry has a matching database, verifier and Agent path. An unavailable entry carries a stable reason code. |
+| Web | Use the selected entry's existing `catalog_digest` in `POST .../admin/model-imports`. Resolve a resumed import using the `catalog_digest` in its persisted response. | Use that entry's exact file sizes, licence and minimum archive size. Preserve the existing request key, file proof and chunk offsets. Refuse a different selection or file when resuming. |
+| API and delivery | For configured mirrors, add optional `source` to creation with a discriminator `kind` of `upload` or `mirror`. Only `mirror` requires `mirror_id`. Omission means `upload`. | Resolve `mirror_id` from typed installation configuration and bind the resolved source and digest to the idempotent intent. The client sends neither a URL nor a credential. Both sources publish only after the same archive checks. |
+| ARC | In a capability-negotiated inference command, add optional `approved_model_manifest` of type `ModelCatalog`. Continue sending `model_id` and `catalog_digest`. Keep `lease_token`, `file`, `offset` and `length` in file requests. | Check the manifest's canonical digest against `catalog_digest`, bind the manifest to the scoped model and lease, and validate requested ranges against that manifest's file size. Cache and recover by digest. Use local tokenizer files. A node without the negotiated capability receives only the existing Qwen command and recipe. |
+| Models and database | Register immutable manifest records keyed by `catalog_digest`, seed the legacy Qwen record and retain any digest still referenced by an import or version. Broaden the existing base model key constraint in a new migration. | Preserve the current Qwen digest, import fingerprints and published manifest representation. Generic archive verification must receive the selected manifest and an architecture verifier before a second digest can be admitted. |
+
+ARC must also carry the digest and manifest binding through stop, remove,
+observation and lost-outcome recovery. Applying it only to deployment would
+allow an Agent to start a model it cannot reconcile later.
+
+### Focused verification
+
+On 2026-11-09, Linux arm64 with Docker `--network none`, PostgreSQL 18.6
+and pgvector 0.8.7 passed both real-archive tests. The resolver refused
+SmolLM2 admission at an otherwise admissible size. The Qwen verifier refused
+the real SmolLM2 archive before staging its first file. On the same Qwen
+import, a fresh service refused an alternate archive's first 8 MiB at the
+committed offset and accepted replay of the original chunk. The 1,519,216,640-byte
+Qwen archive then published after an injected audit rollback. A fresh worker
+reconciled the interrupted cleanup and verified the stored files.
+
+Build the models tests with `-tags model_integration` and provide the pinned
+Qwen archive under `PROJECT_ONE_STATE_ROOT` as for
+[MOD-120](model-import-cleanup.md#linux-amd64-acceptance). Set
+`OWNSOLID_TEST_ALTERNATE_MODEL_ARCHIVE` to the local SmolLM2 USTAR archive
+assembled from the nine-file fixture above. Run
+`TestActualApprovedImportManifestRejectsAlternateArchive` and
+`TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery`
+against the disconnected fixture. The models, Agent wire and model artifact
+packages and the legacy inference container test also passed.

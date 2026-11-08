@@ -3,18 +3,16 @@ package models
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/api/agent/modelartifact"
-	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 type workerImport struct {
@@ -125,7 +123,8 @@ func publicationReady(ctx context.Context, q transaction.Executor, current worke
 	if e != nil {
 		return false, e
 	}
-	if current.State != "ready" || current.ModelID == nil || *current.ModelID != current.ID || count != 1 || matching != 1 || creator != current.ActorID || v.Name != current.Name || v.Kind != "approved_base" || v.ModelKey != wire.ApprovedModel().ModelKey || v.CatalogDigest != current.CatalogDigest || v.State != "ready" && v.State != "deleted" || decodeVersionManifest(&v, raw, current.TenantID) != nil {
+	manifest := resolveImportManifest(current.CatalogDigest)
+	if manifest == nil || current.State != "ready" || current.ModelID == nil || *current.ModelID != current.ID || count != 1 || matching != 1 || creator != current.ActorID || v.Name != current.Name || v.Kind != "approved_base" || v.ModelKey != manifest.catalog.ModelKey || v.CatalogDigest != current.CatalogDigest || v.State != "ready" && v.State != "deleted" || !manifest.matchesStored(raw) {
 		return false, fail("MODEL_PUBLICATION_CONFLICT")
 	}
 	return true, nil
@@ -142,6 +141,7 @@ func (s *Service) claimImport(ctx context.Context, session transaction.Store, id
 			return e
 		}
 		if ready {
+			claimed = current
 			return nil
 		}
 		if importCancellationPending(current.Import) || current.State != "queued" && current.State != "verifying" {
@@ -150,13 +150,17 @@ func (s *Service) claimImport(ctx context.Context, session transaction.Store, id
 		if !authorized {
 			return fail("MODEL_ACTOR_UNAVAILABLE")
 		}
+		manifest := resolveImportManifest(current.CatalogDigest)
+		if manifest == nil {
+			return fail("MODEL_IMPORT_INCOMPLETE")
+		}
 		if current.State == "verifying" {
 			if current.Attempts < 1 || current.Attempts > config.ModelImportSchemaMaximumAttempts {
 				return fail("MODEL_RECOVERY_REQUIRED")
 			}
 			// This session holds the import's lock, so the process that ran the attempt
 			// has stopped: it crashed, was stopped, or ran out of time.
-			abandoned, e := s.abandonAttempt(current)
+			abandoned, e := s.abandonAttempt(current, manifest)
 			if e != nil {
 				return e
 			}
@@ -194,7 +198,7 @@ func (s *Service) claimImport(ctx context.Context, session transaction.Store, id
 // never resumed: its files are removed and the attempt counts as spent, so the
 // caller starts the next attempt in a stage of its own, and an import that keeps
 // stopping control ends as MODEL_RECOVERY_REQUIRED after the maximum attempts.
-func (s *Service) abandonAttempt(current workerImport) (bool, error) {
+func (s *Service) abandonAttempt(current workerImport, manifest *importManifest) (bool, error) {
 	if !validID(current.ID) {
 		return false, fail("MODEL_PATH_INVALID")
 	}
@@ -204,11 +208,11 @@ func (s *Service) abandonAttempt(current workerImport) (bool, error) {
 	}
 	defer root.Close()
 	stage := stagePath(current.ID, current.Attempts)
-	condition, e := classifyStage(root, stage)
+	condition, e := classifyStage(root, stage, manifest)
 	if e != nil || condition != stagePartial {
 		return false, e
 	}
-	if e = removeStage(root, stage); e != nil {
+	if e = removeStage(root, stage, manifest); e != nil {
 		return false, e
 	}
 	slog.Warn("model_import_attempt_abandoned", "import_id", current.ID, "attempt", current.Attempts)
@@ -216,7 +220,8 @@ func (s *Service) abandonAttempt(current workerImport) (bool, error) {
 }
 
 func (s *Service) verifyImportFiles(ctx context.Context, session transaction.Store, current workerImport) error {
-	if !validID(current.ID) || current.CatalogDigest != wire.ModelCatalogDigest() || current.ExpectedBytes < modelartifact.MinimumArchiveBytes() || current.ExpectedBytes > MaximumBundleBytes || current.UploadedBytes != current.ExpectedBytes {
+	manifest := resolveImportManifest(current.CatalogDigest)
+	if !validID(current.ID) || manifest == nil || !manifest.admitsArchiveSize(current.ExpectedBytes) || current.UploadedBytes != current.ExpectedBytes {
 		return fail("MODEL_IMPORT_INCOMPLETE")
 	}
 	root, e := openStore(s.RootDirectory)
@@ -229,7 +234,7 @@ func (s *Service) verifyImportFiles(ctx context.Context, session transaction.Sto
 	}
 	final := "objects/" + current.ID
 	if _, e = root.Lstat(final); e == nil {
-		if e = modelartifact.VerifyDirectory(ctx, filepath.Join(s.RootDirectory, final)); e != nil {
+		if e = manifest.verifyDirectory(ctx, filepath.Join(s.RootDirectory, final)); e != nil {
 			return fail("MODEL_PUBLICATION_CONFLICT")
 		}
 		return nil
@@ -257,7 +262,7 @@ func (s *Service) verifyImportFiles(ctx context.Context, session transaction.Sto
 		return fail("MODEL_IO_FAILED")
 	}
 	if len(entries) > 0 {
-		if e = modelartifact.VerifyDirectory(ctx, filepath.Join(s.RootDirectory, stage)); e != nil {
+		if e = manifest.verifyDirectory(ctx, filepath.Join(s.RootDirectory, stage)); e != nil {
 			return fail("MODEL_STAGE_INVALID")
 		}
 	} else {
@@ -290,7 +295,7 @@ func (s *Service) verifyImportFiles(ctx context.Context, session transaction.Sto
 		}
 		source := &chunkReader{root: root, id: current.ID, chunks: chunks}
 		defer source.Close()
-		if e = modelartifact.ExtractArchive(ctx, source, filepath.Join(s.RootDirectory, stage)); e != nil {
+		if e = manifest.extractArchive(ctx, source, filepath.Join(s.RootDirectory, stage)); e != nil {
 			return e
 		}
 	}
@@ -318,10 +323,13 @@ func (s *Service) publishWorker(ctx context.Context, session transaction.Store, 
 		if current.State != "verifying" || importCancellationPending(current.Import) {
 			return fail("MODEL_IMPORT_STATE_CONFLICT")
 		}
-		manifest, _ := json.Marshal(wire.ApprovedModel())
+		manifest := resolveImportManifest(current.CatalogDigest)
+		if manifest == nil {
+			return fail("MODEL_IMPORT_INCOMPLETE")
+		}
 		if _, e = modelExecOne(ctx, q, modelNativeSQL(q, `INSERT INTO MODEL_VERSIONS(ID,TENANT_ID,WORKSPACE_ID,NAME,MODEL_KEY,CATALOG_DIGEST,MANIFEST,STATE,CREATED_BY,KIND) VALUES(?,?,?,?,?,?,?,'ready',?,'approved_base')`,
 			`INSERT INTO model_versions(id,tenant_id,workspace_id,name,model_key,catalog_digest,manifest,state,created_by,kind) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,'ready',$8,'approved_base')`,
-			`INSERT INTO model_versions(id,tenant_id,workspace_id,name,model_key,catalog_digest,manifest,state,created_by,kind) VALUES(?,?,?,?,?,?,CAST(? AS JSON),'ready',?,'approved_base')`, current.ID, current.TenantID, current.WorkspaceID, current.Name, wire.ApprovedModel().ModelKey, current.CatalogDigest, string(manifest), current.ActorID)); e != nil {
+			`INSERT INTO model_versions(id,tenant_id,workspace_id,name,model_key,catalog_digest,manifest,state,created_by,kind) VALUES(?,?,?,?,?,?,CAST(? AS JSON),'ready',?,'approved_base')`, current.ID, current.TenantID, current.WorkspaceID, current.Name, manifest.catalog.ModelKey, current.CatalogDigest, manifest.canonical, current.ActorID)); e != nil {
 			return e
 		}
 		if _, e = modelExecOne(ctx, q, modelNativeSQL(q, `UPDATE MODEL_IMPORTS SET STATE='ready',MODEL_ID=?,ERROR_CODE=NULL,UPDATED_AT=CURRENT_TIMESTAMP(6) WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=?`,
@@ -416,8 +424,12 @@ func (s *Service) processNext(ctx context.Context) (bool, error) {
 			return processWorkerSession(ctx, session, id, workerSessionOperations{
 				claim: s.claimImport, verify: s.verifyImportFiles,
 				publish: s.publishWorker, recordFailure: s.recordWorkerFailure,
-				verifyReady: func(ctx context.Context, id string) error {
-					return modelartifact.VerifyDirectory(ctx, filepath.Join(s.RootDirectory, "objects", id))
+				verifyReady: func(ctx context.Context, current workerImport) error {
+					manifest := resolveImportManifest(current.CatalogDigest)
+					if manifest == nil {
+						return fail("MODEL_PUBLICATION_CONFLICT")
+					}
+					return manifest.verifyDirectory(ctx, filepath.Join(s.RootDirectory, "objects", current.ID))
 				},
 			})
 		})
@@ -436,13 +448,13 @@ type workerSessionOperations struct {
 	verify        func(context.Context, transaction.Store, workerImport) error
 	publish       func(context.Context, transaction.Store, workerImport) error
 	recordFailure func(context.Context, transaction.Store, workerImport, error) error
-	verifyReady   func(context.Context, string) error
+	verifyReady   func(context.Context, workerImport) error
 }
 
 func processWorkerSession(ctx context.Context, session transaction.Store, id string, operations workerSessionOperations) error {
 	current, eligible, ready, e := operations.claim(ctx, session, id)
 	if e == nil && ready {
-		return operations.verifyReady(ctx, id)
+		return operations.verifyReady(ctx, current)
 	}
 	if e == nil && !eligible {
 		return nil

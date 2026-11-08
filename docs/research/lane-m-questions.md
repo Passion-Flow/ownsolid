@@ -6,7 +6,7 @@ responsible owners can extend their respective boundaries.
 
 | Item | Boundary and continuation |
 | --- | --- |
-| MOD-101 | Two real pinned manifests pass source and offline readback checks. The Admin catalogue, database model-key restriction, archive verifier and Agent transfer still bind the product to one approved digest. Agree the additive catalogue and digest-bound transfer contract with the API, web and architecture owners. See the [verified snapshots and integration boundary](model-registry.md#two-pinned-source-manifests). |
+| MOD-101 | The models module resolves the legacy digest for upload, archive verification, publication and recovery. The two real archives exercised fail-closed admission and Qwen replay. The next slice needs the shared multi-entry API, immutable catalogue persistence and digest-bound Agent transfer in the [contract handoff](model-registry.md#contract-handoff). |
 | MOD-102 | The Admin catalogue endpoint returns a single approved descriptor, and the existing UI facets cover that descriptor or already imported rows. Type and capability coverage for the catalogue needs a multi-entry read contract and its UI consumer. |
 | MOD-103 | Imported and derived manifests preserve some provenance today. Multiple versions and complete training and evaluation lineage require shared lifecycle producers and a version/lineage view. Evaluation is owned by SCI. |
 | MOD-104 | Chat-template defaults need to reach the serving engine with an explicit command or request policy. The Agent inference adapter and its wire command are shared boundaries. |
