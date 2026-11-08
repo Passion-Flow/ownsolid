@@ -65,10 +65,10 @@ export function ArticlePage() {
   return (
     <>
       <BackLink />
-      <h1 className="m-0 mb-1 max-w-[720px] text-[27px] leading-[1.2] font-[750] tracking-[-0.03em]">
+      <h1 className="m-0 mb-3 max-w-[720px] text-[27px] leading-[1.2] font-[750] tracking-[-0.03em]">
         {entry.title}
       </h1>
-      <p className="m-0 mb-4 max-w-[720px] text-text-2">{entry.summary}</p>
+      {!body.data ? <p className="m-0 mb-4 max-w-[720px] text-text-2">{entry.summary}</p> : null}
       {entry.sections.length > 1 ? (
         <nav aria-label={t('help.contents')} className="mb-2">
           <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[13px]">
