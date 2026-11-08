@@ -52,16 +52,9 @@ type JobIntent struct {
 // Normalize validates the job intent and returns an independently owned,
 // deterministically ordered copy and its exact aggregate demand.
 func (j JobIntent) Normalize() (JobIntent, Resources, error) {
-	switch j.Kind {
-	case Training, Inference, Notebook, Batch:
-	default:
-		return JobIntent{}, nil, fmt.Errorf("%w: unknown workload kind", ErrInvalidJob)
-	}
-	if j.Version != IntentVersion || j.SourceID == "" || len(j.SourceID) > 128 ||
-		strings.IndexFunc(j.SourceID, func(r rune) bool {
-			return r < 33 || r > 126
-		}) != -1 || len(j.Groups) == 0 || len(j.Groups) > 64 {
-		return JobIntent{}, nil, fmt.Errorf("%w: check version, source identity and group count", ErrInvalidJob)
+	if j.Version != IntentVersion || !validJobIdentity(j.Kind, j.SourceID) ||
+		len(j.Groups) == 0 || len(j.Groups) > 64 {
+		return JobIntent{}, nil, fmt.Errorf("%w: check version, workload kind, source identity and group count", ErrInvalidJob)
 	}
 	out := j
 	out.Groups = make([]ReplicaGroup, 0, len(j.Groups))
@@ -87,6 +80,17 @@ func (j JobIntent) Normalize() (JobIntent, Resources, error) {
 	}
 	slices.SortFunc(out.Groups, func(a, b ReplicaGroup) int { return strings.Compare(a.Name, b.Name) })
 	return out, total, nil
+}
+
+func validJobIdentity(kind Kind, sourceID string) bool {
+	switch kind {
+	case Training, Inference, Notebook, Batch:
+	default:
+		return false
+	}
+	return sourceID != "" && len(sourceID) <= 128 && strings.IndexFunc(sourceID, func(r rune) bool {
+		return r < 33 || r > 126
+	}) == -1
 }
 
 // JobState is the control plane's lifecycle view of a workload.

@@ -22,11 +22,11 @@ import (
 //go:embed testdata/quota.sql
 var testQuotaSQL string
 
-func quotaDatabase(t *testing.T) *pgxpool.Pool {
+func schedulingTestConfig(t *testing.T, variable string) *pgxpool.Config {
 	t.Helper()
-	file := os.Getenv("OWNSOLID_SCHEDULING_TEST_DSN_FILE")
+	file := os.Getenv(variable)
 	if file == "" {
-		t.Skip("set OWNSOLID_SCHEDULING_TEST_DSN_FILE to a disposable local PostgreSQL database")
+		t.Skipf("set %s to a disposable local PostgreSQL database", variable)
 	}
 	data, err := bundle.ReadProtectedConfiguration(file)
 	if err != nil {
@@ -41,6 +41,12 @@ func quotaDatabase(t *testing.T) *pgxpool.Pool {
 		len(cfg.ConnConfig.Fallbacks) != 0 {
 		t.Fatal("test database must use a local socket or loopback with no fallbacks and end in _test")
 	}
+	return cfg
+}
+
+func quotaDatabase(t *testing.T) *pgxpool.Pool {
+	t.Helper()
+	cfg := schedulingTestConfig(t, "OWNSOLID_SCHEDULING_TEST_DSN_FILE")
 	admin, err := pgxpool.NewWithConfig(t.Context(), cfg.Copy())
 	if err != nil {
 		t.Fatal(err)
@@ -64,8 +70,10 @@ func quotaDatabase(t *testing.T) *pgxpool.Pool {
 		t.Fatal(err)
 	}
 	t.Cleanup(pool.Close)
-	if _, err := pool.Exec(t.Context(), testQuotaSQL); err != nil {
-		t.Fatal(err)
+	for _, ddl := range []string{testQuotaSQL, reservationParentsSQL, testReservationSQL} {
+		if _, err := pool.Exec(t.Context(), ddl); err != nil {
+			t.Fatal(err)
+		}
 	}
 	return pool
 }
