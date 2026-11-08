@@ -4,7 +4,7 @@ use crate::configuration::{Configuration, Limits, Result};
 use crate::control::{AdmissionRequest, Control};
 use crate::errors::{self, Failure};
 use crate::protocol::{ChatRequest, normalize_completion};
-use crate::quota::Quotas;
+use crate::quota::{Quotas, RequestPermit, shared};
 use crate::storage::Spool;
 use axum::body::Body;
 use axum::extract::{Request, State};
@@ -29,7 +29,9 @@ pub struct Application {
     pub backend: Backend,
     pub spool: Arc<Spool>,
     limiter: Limiter,
-    quotas: Option<Quotas>,
+    quotas: Option<Arc<Quotas>>,
+    quota_authority: Option<Arc<shared::Authority>>,
+    quota_client: Option<Arc<shared::Client>>,
     shutdown: watch::Sender<bool>,
     workers: Mutex<JoinSet<()>>,
 }
@@ -49,7 +51,10 @@ impl Application {
         let backend = Backend::new(&configuration)?;
         let limiter = Limiter::new(&configuration.limits)?;
         let spool = Spool::open(&configuration)?;
-        let quotas = Quotas::open(&configuration, &spool, clock)?;
+        shared::verify_role(&configuration)?;
+        let quotas = Quotas::open(&configuration, &spool, clock)?.map(Arc::new);
+        let quota_authority = shared::Authority::open(&configuration, quotas.as_ref())?;
+        let quota_client = shared::Client::open(&configuration)?;
         let (shutdown, _) = watch::channel(false);
         Ok(Arc::new(Self {
             configuration,
@@ -58,18 +63,30 @@ impl Application {
             spool,
             limiter,
             quotas,
+            quota_authority,
+            quota_client,
             shutdown,
             workers: Mutex::new(JoinSet::new()),
         }))
     }
-    fn quota_permit(
+    async fn quota_permit(
         &self,
         workspace: Uuid,
         key: &str,
-    ) -> std::result::Result<Option<crate::quota::Permit>, Failure> {
+    ) -> std::result::Result<Option<RequestPermit>, Failure> {
+        if let Some(client) = &self.quota_client {
+            return client
+                .acquire(workspace, key)
+                .await
+                .map(RequestPermit::Shared)
+                .map(Some);
+        }
+        if let Some(authority) = &self.quota_authority {
+            authority.prune()?;
+        }
         self.quotas
             .as_ref()
-            .map(|quotas| quotas.acquire(workspace, key))
+            .map(|quotas| quotas.acquire(workspace, key).map(RequestPermit::Local))
             .transpose()
     }
 
@@ -77,6 +94,9 @@ impl Application {
         self.shutdown.subscribe()
     }
     pub fn shutdown(&self) {
+        if let Some(authority) = &self.quota_authority {
+            authority.stop();
+        }
         self.shutdown.send_replace(true);
     }
     pub fn is_stopped(&self) -> bool {
@@ -102,7 +122,7 @@ impl Application {
 }
 
 pub fn router(application: Arc<Application>) -> Router {
-    Router::new()
+    let mut router = Router::new()
         .route("/v1/models", get(models))
         .route("/v1/chat/completions", post(chat))
         .route(
@@ -113,12 +133,21 @@ pub fn router(application: Arc<Application>) -> Router {
         .fallback(|| async { errors::response("not_found", Uuid::new_v4()) })
         .method_not_allowed_fallback(|| async {
             errors::response("method_not_allowed", Uuid::new_v4())
-        })
-        .with_state(application)
+        });
+    if let Some(authority) = &application.quota_authority {
+        router = router.merge(authority.clone().router());
+    }
+    router.with_state(application)
 }
 
 async fn ready(State(app): State<Arc<Application>>) -> Response {
-    if app.is_stopped() || !app.spool.ready() {
+    if app.is_stopped()
+        || !app.spool.ready()
+        || app
+            .quota_authority
+            .as_ref()
+            .is_some_and(|authority| !authority.ready())
+    {
         return errors::response("gateway_unavailable", Uuid::new_v4());
     }
     let mut response = Json(json!({"status":"locally_ready"})).into_response();
@@ -187,10 +216,14 @@ pub(crate) async fn bounded<T, E: From<&'static str>>(
     deadline: Instant,
     future: impl Future<Output = std::result::Result<T, E>>,
 ) -> std::result::Result<T, E> {
+    if deadline <= Instant::now() {
+        return Err("upstream_timeout".into());
+    }
     tokio::select! {
         biased;
         _=stopped(shutdown)=>Err("gateway_shutdown".into()),
-        result=tokio::time::timeout_at(deadline,future)=>result.map_err(|_|"upstream_timeout")?,
+        _=tokio::time::sleep_until(deadline)=>Err("upstream_timeout".into()),
+        result=future=>result,
     }
 }
 
@@ -203,7 +236,7 @@ async fn models(State(app): State<Arc<Application>>, request: Request) -> Respon
         let _ingress = app.limiter.enter()?;
         let key = metadata(&request, false)?;
         let authorization = app.control.models_with_retry(&key).await?;
-        let _quota = app.quota_permit(authorization.workspace_id, &key)?;
+        let quota = app.quota_permit(authorization.workspace_id, &key).await?;
         let Some(first) = authorization.models.first() else {
             return Ok(json!({"object":"list","data":[]}));
         };
@@ -211,9 +244,11 @@ async fn models(State(app): State<Arc<Application>>, request: Request) -> Respon
             return Err("gateway_unavailable".into());
         }
         let limits = &app.configuration.limits;
+        let maximum = Instant::now() + Duration::from_secs(limits.request_seconds);
+        let deadline = quota.as_ref().map_or(maximum, |permit| permit.deadline(maximum));
         bounded(
             app.receiver(),
-            Instant::now() + Duration::from_secs(limits.request_seconds),
+            deadline,
             app.backend.verify_model(&first.backend_model, limits),
         ).await?;
         let models = authorization.models.iter().map(|binding| {
@@ -273,7 +308,7 @@ async fn accept(
     {
         return Err("model_not_found".into());
     }
-    let quota = app.quota_permit(authorization.workspace_id, &key)?;
+    let quota = app.quota_permit(authorization.workspace_id, &key).await?;
     let active = app.limiter.active(app.receiver()).await?;
     let reservation = app.spool.reserve(id)?;
     // Authorization is repeated after the queue, immediately before any backend operation.
@@ -292,7 +327,6 @@ async fn accept(
         execution.refused_before_generation()?;
         return Err("gateway_unavailable".into());
     }
-    execution.attach_quota(quota);
     let mut limits = app.configuration.limits.clone();
     limits.maximum_context_tokens = limits
         .maximum_context_tokens
@@ -300,7 +334,11 @@ async fn accept(
     limits.request_seconds = limits
         .request_seconds
         .min(admission.maximum_request_seconds);
-    let deadline = Instant::now() + Duration::from_secs(limits.request_seconds);
+    let maximum = Instant::now() + Duration::from_secs(limits.request_seconds);
+    let deadline = quota
+        .as_ref()
+        .map_or(maximum, |permit| permit.deadline(maximum));
+    execution.attach_quota(quota);
     Ok(Accepted {
         request,
         backend_model: admission.binding.backend_model,
