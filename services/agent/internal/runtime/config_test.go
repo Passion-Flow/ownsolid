@@ -122,3 +122,33 @@ func TestLifecycleConfigurationSeparatesAllOwnedRootsAndExplicitProfile(t *testi
 		t.Fatal("implicit old profile upgrade")
 	}
 }
+
+func TestSessionAddressesAreValidated(t *testing.T) {
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.Chmod(root, 0700); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, "agent.json")
+	load := func(addresses any) (Config, error) {
+		raw, err := json.Marshal(map[string]any{"control_origin": "https://agents.example.invalid", "state_directory": root, "disk_path": root, "session_addresses": addresses})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = os.WriteFile(path, raw, 0600); err != nil {
+			t.Fatal(err)
+		}
+		return LoadConfig(path)
+	}
+	c, err := load([]string{"10.0.0.11:9443", "10.0.0.12:9443"})
+	if err != nil || len(c.SessionAddresses) != 2 {
+		t.Fatalf("gateways refused: %v", err)
+	}
+	for _, invalid := range []any{[]string{"10.0.0.11"}, []string{"10.0.0.11:9443", "10.0.0.11:9443"}, "10.0.0.11:9443"} {
+		if _, err = load(invalid); err == nil {
+			t.Fatalf("%v accepted", invalid)
+		}
+	}
+}

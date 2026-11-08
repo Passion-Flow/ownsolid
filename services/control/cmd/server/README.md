@@ -30,6 +30,8 @@ restoration, the existing restored-access owner consumes its bound context in a
 separate explicit command. See the [restore runbook](../../../../docs/runbooks/kubernetes/postgres-restore.md)
 for partial/unknown outcomes, role/serving writes and Kubernetes qualification.
 
+[agent_gateway.go](agent_gateway.go) serves `serve-agent-gateway`: the agent session stream from a process beside control, with its own pool and no installation lock, fenced on the lock's holder and drained on stop ([ADR 0048](../../../../docs/decisions/0048-agent-gateways-beside-control.md)). It builds the agent path with `identityhttp.NewAgentGateway`, the constructor control's own handler uses.
+
 [runtime_lifecycle.go](runtime_lifecycle.go) owns dependency construction, cancellation, worker readiness, stop/join order and closers. Component helpers such as artifactstores.go, imageregistry.go, task_events.go, middleware.go and monitoring.go connect their existing owners. The identity HTTP package still composes/routes domains; extracting that historical hub is a separate verified change, not an invitation to create duplicate owners here.
 
 Configuration comes from [platform/config](../../internal/platform/config/README.md), protected command inputs and explicit policy environment mapping. Bootstrap packets and verification-store helpers preserve exact installation/artifact identity. Unknown commit, failed readiness, interrupted backup or failed worker shutdown must remain visible; cleanup cannot silently destroy the only recovery evidence.

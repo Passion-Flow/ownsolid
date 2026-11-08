@@ -21,12 +21,15 @@ import (
 )
 
 type Client struct {
-	Scope           wire.Scope
-	Origin          string
-	HTTP            *http.Client
-	Credential      string
-	runtime         *settings.Policy
-	preparationHTTP *http.Client
+	Scope      wire.Scope
+	Origin     string
+	HTTP       *http.Client
+	Credential string
+	// SessionAddresses are the agent gateways the session stream may use, host:port each,
+	// verified for the origin's host name (ADR 0048). None means the control origin.
+	SessionAddresses []string
+	runtime          *settings.Policy
+	preparationHTTP  *http.Client
 	// tls verifies control for the session stream with the same roots as HTTP.
 	tls *tls.Config
 }

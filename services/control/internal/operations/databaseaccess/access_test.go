@@ -335,3 +335,38 @@ func TestFreshRuntimeGrants(t *testing.T) {
 		t.Fatal(status, e)
 	}
 }
+
+// Agent gateways share the serving role (ADR 0048), so its connection limit follows
+// role_connection_limit on an existing role; nothing else about the role changes.
+func TestActualRuntimeAccessFollowsTheConfiguredConnectionLimit(t *testing.T) {
+	f := newActualFixture(t)
+	ctx := context.Background()
+	if status, e := Prepare(ctx, f.service.DB, f.lease, f.input); e != nil || status != Verified {
+		t.Fatal(status, e)
+	}
+	limit := func() int {
+		var n int
+		if e := f.lease.QueryRow(ctx, "SELECT rolconnlimit FROM pg_roles WHERE rolname=$1", f.role).Scan(&n); e != nil {
+			t.Fatal(e)
+		}
+		return n
+	}
+	if got := limit(); got != int(f.input.configuration.Database.MaxOpenConnections) {
+		t.Fatalf("a new role holds %d connections, not the pool", got)
+	}
+	raised := f.input
+	raised.configuration.Database.RoleConnectionLimit = 12
+	if status, e := Prepare(ctx, f.service.DB, f.lease, raised); e != nil || status != Verified || limit() != 12 {
+		t.Fatalf("raised limit: %s %v, role holds %d", status, e, limit())
+	}
+	// The pool alone still verifies a role that holds more, as an older control would.
+	if status, e := Check(ctx, f.service.DB, f.lease, f.input); e != nil || status != Verified {
+		t.Fatal(status, e)
+	}
+	if _, e := f.lease.Exec(ctx, "ALTER ROLE "+pgx.Identifier{f.role}.Sanitize()+" CONNECTION LIMIT 2"); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := Check(ctx, f.service.DB, f.lease, f.input); e == nil || e.Error() != "RUNTIME_ACCESS_ROLE_OR_CREDENTIAL_CONFLICT" {
+		t.Fatalf("a limit below the pool: %v", e)
+	}
+}

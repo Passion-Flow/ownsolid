@@ -106,7 +106,12 @@ func problem(e error) (string, int) {
 
 func start(t *testing.T, backend Backend, sessions int) (*Gateway, *grpc.ClientConn) {
 	t.Helper()
-	g, e := New(backend, Policy{MaxSessions: sessions, ExchangeSeconds: 5}, problem)
+	return startWith(t, backend, Policy{MaxSessions: sessions, ExchangeSeconds: 5})
+}
+
+func startWith(t *testing.T, backend Backend, policy Policy) (*Gateway, *grpc.ClientConn) {
+	t.Helper()
+	g, e := New(backend, policy, problem)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -436,6 +441,64 @@ func TestSilentSessionIsClosed(t *testing.T) {
 	var reply wire.ControlMessage
 	if e := stream.RecvMsg(&reply); status.Code(e) != codes.DeadlineExceeded || !strings.Contains(e.Error(), "AGENT_SESSION_IDLE") {
 		t.Fatalf("silent session %v", e)
+	}
+	deadline := time.Now().Add(5 * time.Second)
+	for g.Sessions() != 0 && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if g.Sessions() != 0 {
+		t.Fatalf("open sessions %d", g.Sessions())
+	}
+}
+
+func TestReadyFencesStreamsAndExchanges(t *testing.T) {
+	var mu sync.Mutex
+	fence := errors.New("SERVICE_NOT_READY")
+	ready := func() error {
+		mu.Lock()
+		defer mu.Unlock()
+		return fence
+	}
+	set := func(e error) {
+		mu.Lock()
+		defer mu.Unlock()
+		fence = e
+	}
+	backend := &fakeBackend{}
+	_, conn := startWith(t, backend, Policy{MaxSessions: 4, ExchangeSeconds: 5, Ready: ready})
+	if _, e := exchange(t, open(t, conn), heartbeat(1)); status.Code(e) != codes.Unavailable || !strings.Contains(e.Error(), "SERVICE_NOT_READY") {
+		t.Fatalf("stream opened while fenced: %v", e)
+	}
+	set(nil)
+	stream := open(t, conn)
+	if reply, e := exchange(t, stream, heartbeat(1)); e != nil || reply.Disposition == nil {
+		t.Fatalf("heartbeat reply %+v %v", reply, e)
+	}
+	set(errors.New("SERVICE_NOT_READY"))
+	reply, e := exchange(t, stream, heartbeat(2))
+	if e != nil || reply.Problem == nil || reply.Problem.Status != 503 {
+		t.Fatalf("fenced exchange %+v %v", reply, e)
+	}
+	backend.mu.Lock()
+	defer backend.mu.Unlock()
+	if len(backend.admitted) != 1 {
+		t.Fatalf("a fenced exchange reached the backend: %v", backend.admitted)
+	}
+}
+
+func TestDrainEndsSessionsAndRefusesNewOnes(t *testing.T) {
+	g, conn := start(t, &fakeBackend{}, 4)
+	stream := open(t, conn)
+	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
+		t.Fatal(e)
+	}
+	g.Drain()
+	var reply wire.ControlMessage
+	if e := stream.RecvMsg(&reply); status.Code(e) != codes.Unavailable || !strings.Contains(e.Error(), "SERVICE_NOT_READY") {
+		t.Fatalf("drained session %v", e)
+	}
+	if _, e := exchange(t, open(t, conn), heartbeat(1)); status.Code(e) != codes.Unavailable {
+		t.Fatalf("stream opened on a drained gateway: %v", e)
 	}
 	deadline := time.Now().Add(5 * time.Second)
 	for g.Sessions() != 0 && time.Now().Before(deadline) {

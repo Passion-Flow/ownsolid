@@ -251,9 +251,13 @@ func (a *agent) openWithHeartbeat(ctx context.Context, h wire.Handshake) (wire.D
 	if e != nil && reply.Problem == nil {
 		a.dropStream()
 		a.fail(ctx, report.CallStreamOpen, e)
-		a.probeHTTPS = errors.Is(e, link.ErrUnreachable) && ctx.Err() == nil
+		unanswered := errors.Is(e, link.ErrUnreachable) && ctx.Err() == nil
+		// As in the agent, another gateway gets the next attempt while some are untried.
+		untried := (unanswered || errors.Is(e, link.ErrBusy)) && a.conn.Next()
+		a.probeHTTPS = unanswered && !untried
 		return wire.Disposition{}, e
 	}
+	a.conn.Opened()
 	a.recorder.Succeeded(report.CallStreamOpen, time.Since(started))
 	a.probes = 0
 	if e != nil {

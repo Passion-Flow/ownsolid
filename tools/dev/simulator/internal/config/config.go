@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"io"
 	"net"
 	"net/url"
@@ -81,6 +82,9 @@ type Config struct {
 	// DialAddress, when set, is the host:port connections go to instead of the origin's
 	// host; TLS still verifies the origin's host name.
 	DialAddress string `json:"dial_address,omitempty"`
+	// SessionAddresses are agent gateways, host:port, for the session streams, as on a real
+	// node (ADR 0048). Each agent tries them in its own order; HTTPS stays on DialAddress.
+	SessionAddresses []string `json:"session_addresses,omitempty"`
 	// IdentitiesFile holds the enrolled agents. enroll writes it; run reads it and writes
 	// the task cursors back.
 	IdentitiesFile string `json:"identities_file"`
@@ -176,6 +180,9 @@ func (c Config) Validate() error {
 		if _, _, e := net.SplitHostPort(c.DialAddress); e != nil {
 			return invalid
 		}
+	}
+	if wire.ValidateSessionAddresses(c.SessionAddresses) != nil {
+		return invalid
 	}
 	for _, path := range []string{c.CAFile, c.JoinTokensFile, c.ReportFile} {
 		if path != "" && !filepath.IsAbs(path) {

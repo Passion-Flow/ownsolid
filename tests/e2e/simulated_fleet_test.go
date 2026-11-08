@@ -90,6 +90,7 @@ type simulatedRun struct {
 	exit                          error
 	usage                         *os.ProcessState
 	started                       time.Time
+	command                       *exec.Cmd
 }
 
 // enrollFleet mints a join token per agent, writes the simulator's configuration with
@@ -158,6 +159,7 @@ func (f *simulatedRun) start(t *testing.T, within time.Duration) {
 	if err := command.Start(); err != nil {
 		t.Fatal(err)
 	}
+	f.command = command
 	go func() {
 		f.exit = command.Wait()
 		f.usage = command.ProcessState
@@ -180,6 +182,22 @@ func (f *simulatedRun) start(t *testing.T, within time.Duration) {
 		time.Sleep(time.Second)
 	}
 	t.Logf("every simulated agent connected %s after the start", time.Since(f.started).Round(time.Second))
+}
+
+// stop ends the run before its duration, as an operator does, and waits for its report.
+func (f *simulatedRun) stop(t *testing.T, grace time.Duration) {
+	t.Helper()
+	if err := f.command.Process.Signal(syscall.SIGTERM); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-f.finished:
+	case <-time.After(grace):
+		t.Fatalf("the simulator did not stop:\n%s", f.log.String())
+	}
+	if !strings.Contains(f.log.String(), "simulator_finished") {
+		t.Fatalf("simulator log:\n%s", f.log.String())
+	}
 }
 
 // at waits until seconds into the run.

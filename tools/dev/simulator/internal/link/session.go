@@ -3,6 +3,7 @@ package link
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -22,16 +23,69 @@ func init() { encoding.RegisterCodec(wire.SessionCodec{}) }
 // stream for HTTPS.
 var ErrRefused = errors.New("AGENT_SESSION_REFUSED")
 
+// ErrBusy is a stream refused because its gateway holds all the sessions it may; another
+// gateway can still take it.
+var ErrBusy = fmt.Errorf("%w: gateway full", ErrRefused)
+
 // Connection is one HTTP/2 connection that one or more agents open their sessions on. It
 // connects lazily, and Reset closes it, ending every stream on it.
 type Connection struct {
 	dialer *Dialer
 	mu     sync.Mutex
 	conn   *grpc.ClientConn
+	// gateways are the agent gateways in the order of the connection's first node; gateway
+	// is the one in use and unanswered counts those that failed in a row (ADR 0048).
+	gateways   []string
+	gateway    int
+	unanswered int
 }
 
-// Connection returns a new, unconnected session connection.
+// Connection returns a new, unconnected session connection to the dialer's address.
 func (d *Dialer) Connection() *Connection { return &Connection{dialer: d} }
+
+// GatewayConnection returns a new, unconnected session connection to the agent gateways,
+// tried in node's order as a real agent tries them.
+func (d *Dialer) GatewayConnection(node string, gateways []string) *Connection {
+	return &Connection{dialer: d, gateways: wire.SessionAddressOrder(node, gateways)}
+}
+
+// Gateway is the gateway in use, or "" when there are none.
+func (c *Connection) Gateway() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.gateways) == 0 {
+		return ""
+	}
+	return c.gateways[c.gateway]
+}
+
+// Next moves to the next gateway after the one in use failed, closing the connection. It
+// reports whether that gateway has not been tried since a stream last opened; once all have
+// failed the round starts again and the failure counts as control being away.
+func (c *Connection) Next() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.gateways) < 2 {
+		return false
+	}
+	if c.conn != nil {
+		c.conn.Close()
+		c.conn = nil
+	}
+	c.gateway = (c.gateway + 1) % len(c.gateways)
+	if c.unanswered++; c.unanswered < len(c.gateways) {
+		return true
+	}
+	c.unanswered = 0
+	return false
+}
+
+// Opened records that a stream opened, which starts a new round of gateways.
+func (c *Connection) Opened() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.unanswered = 0
+}
 
 func (c *Connection) get() (*grpc.ClientConn, error) {
 	c.mu.Lock()
@@ -40,7 +94,11 @@ func (c *Connection) get() (*grpc.ClientConn, error) {
 		return c.conn, nil
 	}
 	d := c.dialer
-	conn, e := grpc.NewClient("passthrough:///"+d.address,
+	address := d.address
+	if len(c.gateways) > 0 {
+		address = c.gateways[c.gateway]
+	}
+	conn, e := grpc.NewClient("passthrough:///"+address,
 		grpc.WithTransportCredentials(credentials.NewTLS(d.tls.Clone())),
 		grpc.WithAuthority(d.origin.Host),
 		grpc.WithNoProxy(),
@@ -129,7 +187,9 @@ func streamError(e error) error {
 	switch status.Code(e) {
 	case codes.Unauthenticated:
 		return &Problem{Code: "AGENT_UNAUTHORIZED", Status: http.StatusUnauthorized}
-	case codes.ResourceExhausted, codes.NotFound, codes.InvalidArgument:
+	case codes.ResourceExhausted:
+		return ErrBusy
+	case codes.NotFound, codes.InvalidArgument:
 		return ErrRefused
 	}
 	return ErrUnreachable

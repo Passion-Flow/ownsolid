@@ -276,6 +276,11 @@ func connectionError(e error) error {
 	if errors.As(e, &pg) && (pg.Code == "28P01" || pg.Code == "28000") {
 		return errors.New("DATABASE_AUTHENTICATION_FAILED")
 	}
+	// too_many_connections: the role's or the server's limit is full, for example by agent
+	// gateways that share the serving role with control (ADR 0048).
+	if pg != nil && pg.Code == "53300" {
+		return errors.New("DATABASE_CONNECTION_LIMIT_REACHED")
+	}
 	var dns *net.DNSError
 	if errors.As(e, &dns) {
 		return errors.New("DATABASE_DNS_UNRESOLVED")

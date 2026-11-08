@@ -76,7 +76,7 @@ func inspectRoleIdentity(ctx context.Context, q queryer, t target, input Runtime
 	if e != nil {
 		return 0, false, errors.New("RUNTIME_ACCESS_ROLE_UNAVAILABLE")
 	}
-	if super || inherit || createRole || createDB || !login || replication || bypass || !unlimitedValidity || limit != int(input.configuration.Database.MaxOpenConnections) || !verifyCredential(verifier, input.connection.ConnConfig.Password) {
+	if super || inherit || createRole || createDB || !login || replication || bypass || !unlimitedValidity || limit < int(input.configuration.Database.MaxOpenConnections) || limit > int(config.MaximumRoleConnections) || !verifyCredential(verifier, input.connection.ConnConfig.Password) {
 		return 0, true, errors.New("RUNTIME_ACCESS_ROLE_OR_CREDENTIAL_CONFLICT")
 	}
 	var forbidden bool
@@ -174,8 +174,27 @@ func Check(ctx context.Context, p *pgxpool.Pool, lease *pgxpool.Conn, input Runt
 	return Verified, nil
 }
 
+// setConnectionLimit gives a verified serving role the configured connection limit. The limit is
+// the one attribute of the role that follows configuration, because agent gateways beside control
+// share the role (ADR 0048); grants are never repaired.
+func setConnectionLimit(ctx context.Context, lease *pgxpool.Conn, input RuntimeInput) error {
+	var limit int
+	if e := lease.QueryRow(ctx, `SELECT rolconnlimit FROM pg_roles WHERE rolname=$1`, input.connection.ConnConfig.User).Scan(&limit); e != nil {
+		return errors.New("RUNTIME_ACCESS_ROLE_UNAVAILABLE")
+	}
+	want := int(input.configuration.RoleConnections())
+	if limit == want {
+		return nil
+	}
+	if _, e := lease.Exec(ctx, "ALTER ROLE "+pgx.Identifier{input.connection.ConnConfig.User}.Sanitize()+" CONNECTION LIMIT "+strconv.Itoa(want)); e != nil {
+		return errors.New("RUNTIME_ACCESS_ROLE_UPDATE_FAILED")
+	}
+	return nil
+}
+
 // Prepare creates only a new role. Existing identities are inspected and
-// preserved; missing or conflicting grants are never silently repaired.
+// preserved; missing or conflicting grants are never silently repaired. The
+// connection limit of a verified role is set to the configured one.
 func Prepare(ctx context.Context, p *pgxpool.Pool, lease *pgxpool.Conn, input RuntimeInput) (string, error) {
 	return prepare(ctx, p, lease, input, nil)
 }
@@ -191,8 +210,11 @@ func prepare(ctx context.Context, p *pgxpool.Pool, lease *pgxpool.Conn, input Ru
 		}
 	}
 	status, e := Check(ctx, p, lease, input)
-	if e != nil || status == Verified {
+	if e != nil {
 		return status, e
+	}
+	if status == Verified {
+		return status, setConnectionLimit(ctx, lease, input)
 	}
 	if e = database.Check(ctx, p); e != nil {
 		return "", errors.New("RUNTIME_ACCESS_SCHEMA_INCOMPATIBLE")
@@ -226,7 +248,7 @@ func prepare(ctx context.Context, p *pgxpool.Pool, lease *pgxpool.Conn, input Ru
 		return "", errors.New("RUNTIME_ACCESS_PRIVATE_TRANSACTION_UNAVAILABLE")
 	}
 	role := pgx.Identifier{input.connection.ConnConfig.User}.Sanitize()
-	statement := "CREATE ROLE " + role + " WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS CONNECTION LIMIT " + strconv.Itoa(int(input.configuration.Database.MaxOpenConnections)) + " PASSWORD '" + verifier + "'"
+	statement := "CREATE ROLE " + role + " WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS CONNECTION LIMIT " + strconv.Itoa(int(input.configuration.RoleConnections())) + " PASSWORD '" + verifier + "'"
 	if _, e = tx.Exec(ctx, statement); e != nil {
 		return "", errors.New("RUNTIME_ACCESS_ROLE_CREATE_FAILED")
 	}

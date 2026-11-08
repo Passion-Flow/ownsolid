@@ -431,6 +431,15 @@ task_events:
 #   bucket: ownsolid-liveness
 #   replicas: 3
 
+# Optional. Read only by `serve-agent-gateway`, which serves agent session streams beside
+# control (ADR 0048); control ignores it. The certificate must name the agent entrance's host
+# (machine_server.origin, else server.admin_origin), because agents verify that name. Agents
+# list the address they reach the gateway on in their session_addresses.
+# agent_gateway:
+#   listen_address: 0.0.0.0:9443
+#   tls_certificate_file: /run/projectone/agent-gateway-certificate.pem
+#   tls_private_key_file: /run/projectone/agent-gateway-private-key.pem
+
 # M30 owner: optional canonical absolute protected JSON file, no default.
 # Omit to disable diagnostics; present empty/null/false/relative values fail.
 # PROJECT_ONE_MONITORING_CONFIG_FILE in explicit serve --env-file overrides valid

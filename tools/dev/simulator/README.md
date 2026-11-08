@@ -83,6 +83,7 @@ A JSON file; unknown fields are refused and paths are absolute.
 | `control_origin` | required | The origin agents use, as on a real node (`https`, no path) |
 | `ca_file` | system roots only | Extra CA that verifies control |
 | `dial_address` | the origin's host and port | Where connections go; TLS still verifies the origin's name |
+| `session_addresses` | none | Agent gateways, `host:port`, up to 16. Each agent opens its session stream on them in its own order and moves to the next when one fails, as a real agent does ([ADR 0048](../../../docs/decisions/0048-agent-gateways-beside-control.md)); HTTPS stays on `dial_address` |
 | `identities_file` | required | Written by `enroll`, read and updated by `run` |
 | `join_tokens_file` | required by `enroll` | One join token per line |
 | `agents` | required | Agents to enroll or run, 1 to 100,000 |
@@ -131,6 +132,7 @@ The shape of the report, shortened, with example values:
 }
 ```
 
+- `gateways_at_end`, with `session_addresses`, counts the agents on a stream at the end by gateway.
 - `windows` repeats the counts for each `window_seconds` of the run, with the connected agents at
   its end, so a steady stretch can be judged apart from the storms around it. Each also carries
   `generator_lag_max_milliseconds`, the longest the simulator's own timers ran late, which tells a

@@ -36,7 +36,11 @@ func Run(ctx context.Context, c config.Config) (report.Report, error) {
 	recorder := report.New(c.Agents, started)
 	connections := make([]*link.Connection, (c.Agents+c.AgentsPerConnection-1)/c.AgentsPerConnection)
 	for i := range connections {
-		connections[i] = dialer.Connection()
+		if len(c.SessionAddresses) > 0 {
+			connections[i] = dialer.GatewayConnection(all[i*c.AgentsPerConnection].NodeID, c.SessionAddresses)
+		} else {
+			connections[i] = dialer.Connection()
+		}
 	}
 	agents := make([]*agent, c.Agents)
 	for i := range agents {
@@ -63,7 +67,7 @@ func Run(ctx context.Context, c config.Config) (report.Report, error) {
 		all[i].AcknowledgedSequence = a.cursor
 	}
 	connected, onStream, revoked := counts(agents)
-	out := recorder.Finish(time.Now(), connected, onStream, revoked)
+	out := recorder.Finish(time.Now(), connected, onStream, revoked, gatewayCounts(agents))
 	if e := saveIdentities(c.IdentitiesFile, c.ControlOrigin, all); e != nil {
 		return out, errors.New("SIMULATOR_IDENTITIES_UNWRITABLE")
 	}
@@ -92,6 +96,21 @@ func counts(agents []*agent) (connected, onStream, revoked int) {
 		}
 	}
 	return connected, onStream, revoked
+}
+
+// gatewayCounts reports how many agents on a stream at the end held it on each gateway, or
+// nil when the run has no gateways.
+func gatewayCounts(agents []*agent) map[string]int {
+	var out map[string]int
+	for _, a := range agents {
+		if gateway := a.conn.Gateway(); gateway != "" && a.connected.Load() && a.onStream.Load() {
+			if out == nil {
+				out = map[string]int{}
+			}
+			out[gateway]++
+		}
+	}
+	return out
 }
 
 // inject applies each fault at its time to its share of agents, chosen at random.

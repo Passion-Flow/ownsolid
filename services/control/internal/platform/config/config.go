@@ -20,9 +20,15 @@ import (
 const MinimumDatabaseConnections int32 = 1
 const MaximumDatabaseConnections int32 = 32
 
+// MaximumRoleConnections bounds the serving role's connection limit, which covers control's
+// pool and every agent gateway's (ADR 0048). It is the largest connection limit the installer
+// gives PostgreSQL.
+const MaximumRoleConnections int32 = 1000
+
 type Config struct {
 	Telemetry                 *TelemetryConfiguration       `yaml:"telemetry,omitempty"`
 	LivenessReplica           *LivenessReplicaConfiguration `yaml:"liveness_replica,omitempty"`
+	AgentGateway              *AgentGatewayConfiguration    `yaml:"agent_gateway,omitempty" json:"-"`
 	Topology                  TopologyConfiguration         `yaml:"topology,omitempty" json:"topology"`
 	ReleaseViewConfigFile     string                        `yaml:"release_view_config_file,omitempty" json:"-"`
 	MachineServer             *MachineServerConfiguration   `yaml:"machine_server,omitempty" json:"machine_server,omitempty"`
@@ -71,8 +77,12 @@ type Config struct {
 		// operator and one for the liveness writer, which waits on the same rows as agents do. The
 		// installation lease holds one more for the life of the process.
 		OperatorReservedConnections int32 `yaml:"operator_reserved_connections"`
-		StatementTimeoutSeconds     int   `yaml:"statement_timeout_seconds"`
-		LockTimeoutMilliseconds     *int  `yaml:"lock_timeout_milliseconds,omitempty"`
+		// RoleConnectionLimit is the connection limit of the serving role, shared by control
+		// and the agent gateways beside it (ADR 0048). Zero means max_open_connections, which is
+		// enough without gateways; with them it is control's pool plus each gateway's.
+		RoleConnectionLimit     int32 `yaml:"role_connection_limit,omitempty"`
+		StatementTimeoutSeconds int   `yaml:"statement_timeout_seconds"`
+		LockTimeoutMilliseconds *int  `yaml:"lock_timeout_milliseconds,omitempty"`
 	} `yaml:"database"`
 	Security struct {
 		AuthHMACKeyFile       string `yaml:"auth_hmac_key_file"`
@@ -247,6 +257,9 @@ func (c Config) Validate() error {
 	if e := c.LivenessReplica.Validate(); e != nil {
 		return e
 	}
+	if e := c.validateAgentGateway(); e != nil {
+		return e
+	}
 	if e := c.ValidateReleaseViewReference(); e != nil {
 		return e
 	}
@@ -347,6 +360,9 @@ func (c Config) Validate() error {
 	if c.Database.OperatorReservedConnections < 0 || c.Database.OperatorReservedConnections > MaximumDatabaseConnections {
 		return errors.New("DATABASE_BOUNDS_INVALID")
 	}
+	if c.Database.RoleConnectionLimit != 0 && (c.Database.RoleConnectionLimit < c.Database.MaxOpenConnections || c.Database.RoleConnectionLimit > MaximumRoleConnections) {
+		return errors.New("DATABASE_BOUNDS_INVALID")
+	}
 	if e := c.ValidateDatabaseLockTimeout(); e != nil {
 		return e
 	}
@@ -413,6 +429,15 @@ func DecodeWithEnvironment(raw []byte, environmentFile string) (Config, error) {
 // pinnedConnections is the pool connection a serving process holds for its installation lease,
 // for as long as it runs.
 const pinnedConnections = 1
+
+// RoleConnections is the serving role's connection limit: role_connection_limit, or the pool
+// when it is not set.
+func (c Config) RoleConnections() int32 {
+	if c.Database.RoleConnectionLimit != 0 {
+		return c.Database.RoleConnectionLimit
+	}
+	return c.Database.MaxOpenConnections
+}
 
 // AgentDatabaseSeats is how many agent calls may use the database at once, or zero when no pool
 // bounds them: the pool less the lease's pinned connection and the operators' reserve. A pool

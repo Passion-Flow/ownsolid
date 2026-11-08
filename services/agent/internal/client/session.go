@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -54,6 +55,12 @@ type Session struct {
 	pacing       wire.Pacing
 	lastExchange time.Time
 	now          func() time.Time
+	// gateways are the agent gateways in this node's order, or none when the session goes
+	// to the control origin (ADR 0048). gateway is the one in use, and unanswered counts
+	// the gateways that failed one after another since a stream last opened.
+	gateways   []string
+	gateway    int
+	unanswered int
 }
 
 type sessionStream struct {
@@ -66,6 +73,10 @@ type sessionStream struct {
 // to leave the stream for HTTPS.
 var errStreamRefused = errors.New("AGENT_SESSION_REFUSED")
 
+// errStreamBusy marks a stream refused because its gateway holds all the sessions it may;
+// another gateway can still take it.
+var errStreamBusy = fmt.Errorf("%w: gateway full", errStreamRefused)
+
 // errStreamUnavailable marks a client that cannot open a stream at all, so no request was
 // made.
 var errStreamUnavailable = errors.New("AGENT_SESSION_UNAVAILABLE")
@@ -75,7 +86,36 @@ func (c *Client) Session(node string) *Session {
 	// Until control says otherwise, a failed cycle backs off as this agent is configured.
 	pacing := wire.DefaultPacing()
 	pacing.ReconnectBaseSeconds, pacing.ReconnectMaxSeconds = c.Policy().BackoffInitialSeconds, c.Policy().BackoffMaxSeconds
-	return &Session{client: c, node: node, pacing: pacing, now: time.Now}
+	return &Session{client: c, node: node, pacing: pacing, now: time.Now, gateways: wire.SessionAddressOrder(node, c.SessionAddresses)}
+}
+
+// Gateway reports the gateway address the session uses, or "" for the control origin.
+func (s *Session) Gateway() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.gateways) == 0 {
+		return ""
+	}
+	return s.gateways[s.gateway]
+}
+
+// nextGateway moves to the next gateway in this node's order after the one in use failed. It
+// reports whether that gateway is one this round has not tried yet; once every gateway has
+// failed, the round starts again and the caller treats the failure as control being away.
+func (s *Session) nextGateway() bool {
+	if len(s.gateways) < 2 {
+		return false
+	}
+	if s.conn != nil {
+		s.conn.Close()
+		s.conn = nil
+	}
+	s.gateway = (s.gateway + 1) % len(s.gateways)
+	if s.unanswered++; s.unanswered < len(s.gateways) {
+		return true
+	}
+	s.unanswered = 0
+	return false
 }
 
 // Pacing reports the pacing control last asked for.
@@ -160,11 +200,16 @@ func (s *Session) heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 	}
 	if e != nil {
 		var refused *Problem
-		s.probeHTTPS = !errors.Is(e, errStreamRefused) && !errors.As(e, &refused) && ctx.Err() == nil
+		unanswered := !errors.Is(e, errStreamRefused) && !errors.As(e, &refused) && ctx.Err() == nil
+		// Another gateway gets the next attempt while some have not been tried. Only when
+		// none answers may the path to control lack HTTP/2, so only then is HTTPS probed.
+		untried := (unanswered || errors.Is(e, errStreamBusy)) && s.nextGateway()
+		s.probeHTTPS = unanswered && !untried
 		return wire.Disposition{}, e
 	}
 	s.transport = TransportStream
 	s.probes = 0
+	s.unanswered = 0
 	return s.disposition(reply)
 }
 
@@ -323,11 +368,16 @@ func (s *Session) connection() (*grpc.ClientConn, error) {
 	if port == "" {
 		port = "443"
 	}
-	// The certificate is verified for the authority's host name.
+	address := net.JoinHostPort(origin.Hostname(), port)
+	if len(s.gateways) > 0 {
+		address = s.gateways[s.gateway]
+	}
+	// The certificate is verified for the authority's host name, which is the origin's on a
+	// gateway as on control, so every gateway presents the agent entrance's certificate.
 	verify := s.client.tls.Clone()
-	// passthrough dials the origin host exactly as the HTTPS client does, without a proxy.
+	// passthrough dials the address exactly as the HTTPS client does, without a proxy.
 	// The authority is the origin's, which control checks as it checks the Host header.
-	s.conn, e = grpc.NewClient("passthrough:///"+net.JoinHostPort(origin.Hostname(), port),
+	s.conn, e = grpc.NewClient("passthrough:///"+address,
 		grpc.WithTransportCredentials(credentials.NewTLS(verify)),
 		grpc.WithAuthority(origin.Host),
 		grpc.WithNoProxy(),
@@ -413,7 +463,9 @@ func streamError(e error) error {
 	switch status.Code(e) {
 	case codes.Unauthenticated:
 		return &Problem{Code: "AGENT_UNAUTHORIZED", Status: http.StatusUnauthorized}
-	case codes.ResourceExhausted, codes.NotFound, codes.InvalidArgument:
+	case codes.ResourceExhausted:
+		return errStreamBusy
+	case codes.NotFound, codes.InvalidArgument:
 		return errStreamRefused
 	}
 	return errors.New("CONTROL_CONNECTION_FAILED")

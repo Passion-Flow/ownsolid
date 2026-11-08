@@ -148,16 +148,28 @@ type AdminConfig struct {
 	InstallationName string `yaml:"installation_name"`
 	WorkspaceName    string `yaml:"workspace_name"`
 }
+
+// controlPoolConnections is control's database pool, which the installer leaves at control's
+// default, and operatorConnections what PostgreSQL keeps beyond the serving role: operator
+// commands and its own reserved connections.
+const (
+	controlPoolConnections = 10
+	operatorConnections    = 10
+)
+
 type ResourceConfig struct {
 	ControlMemory          string `yaml:"control_memory"`
 	ControlCPUs            string `yaml:"control_cpus"`
 	PostgresMemory         string `yaml:"postgres_memory"`
 	PostgresCPUs           string `yaml:"postgres_cpus"`
 	PostgresMaxConnections int    `yaml:"postgres_max_connections"`
-	MetricsMemory          string `yaml:"metrics_memory"`
-	MetricsCPUs            string `yaml:"metrics_cpus"`
-	LogsMemory             string `yaml:"logs_memory"`
-	LogsCPUs               string `yaml:"logs_cpus"`
+	// DatabaseRoleConnections is the serving role's connection limit, for control and the agent
+	// gateways beside it (ADR 0048). Zero leaves it at control's pool.
+	DatabaseRoleConnections int    `yaml:"database_role_connections"`
+	MetricsMemory           string `yaml:"metrics_memory"`
+	MetricsCPUs             string `yaml:"metrics_cpus"`
+	LogsMemory              string `yaml:"logs_memory"`
+	LogsCPUs                string `yaml:"logs_cpus"`
 }
 
 // TelemetryConfig sets how long the stores keep data, as a number of days like 30d.
@@ -333,6 +345,9 @@ func (c Config) Validate() error {
 	}
 	if r.PostgresMaxConnections < 20 || r.PostgresMaxConnections > 1000 {
 		return invalid("resources.postgres_max_connections", "must be 20 to 1000")
+	}
+	if r.DatabaseRoleConnections != 0 && (r.DatabaseRoleConnections < controlPoolConnections || r.DatabaseRoleConnections > r.PostgresMaxConnections-operatorConnections) {
+		return invalid("resources.database_role_connections", fmt.Sprintf("must be 0, or %d to postgres_max_connections less %d", controlPoolConnections, operatorConnections))
 	}
 	if c.StepSeconds < 30 || c.StepSeconds > 7200 {
 		return invalid("step_seconds", "must be 30 to 7200")
