@@ -26,6 +26,12 @@ fixed required set, explicit asset kinds, and checksummed SPDX coverage. Full
 DEL-101 remains open until the production chart, plug-in, font and model runtime
 inputs are qualified.
 
+The delivered archive includes the installer. For a site without a trusted
+installed copy, authenticate the archive digest through the release channel
+before extracting that binary. The signed release root is provisioned
+independently. Executing an installer merely because it appears inside a tar
+file would let a replacement archive select its own verification program.
+
 ## DEL-101 model runtime boundary
 
 Keep the existing no-egress admission rule for runtime tests. The first CPU run

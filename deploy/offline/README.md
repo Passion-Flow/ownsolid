@@ -113,6 +113,25 @@ obtained release trust file private and owned by the operator. The verification
 JSON needs the absolute `mount_root` and `trust_file` paths. See the
 [factory instructions](../../tools/release/offline/README.md#current-single-node-release).
 
+When the archive is the only file delivered, authenticate its SHA-256 against
+the value supplied through the trusted release channel before extracting its
+installer. Obtain the installer member path through the same channel. Keep the
+archive read-only during bootstrap and use a private executable temporary directory.
+
+```sh
+set -eu
+umask 077
+test "$(sha256sum -- "$ARCHIVE" | cut -d ' ' -f1)" = "$EXPECTED_ARCHIVE_SHA256"
+installer_dir=$(mktemp -d)
+tar -xOzf "$ARCHIVE" -- "$INSTALLER_MEMBER" >"$installer_dir/ownsolid-install"
+chmod 700 "$installer_dir/ownsolid-install"
+"$installer_dir/ownsolid-install" verify-bundle --bundle "$ARCHIVE" \
+  --verification "$VERIFICATION_POLICY"
+```
+
+Use that verified executable for the following commands. Provision the public
+verification root separately from the archive.
+
 ```sh
 ownsolid-install verify-bundle --bundle /mnt/release/ownsolid.tar.gz \
   --verification /private/release-verification.json
