@@ -2,6 +2,7 @@
 PYTHON ?= python3
 GO_MODULES := api pkg/capabilities pkg/license pkg/operatorsocket tools/release/offline tools/dev/simulator deploy/offline services/agent services/control tests/e2e
 GO_MODULES += tools/audit-verify
+GO_MODULES += tools/cli
 DOCKER ?= docker
 CONTROL_IMAGE ?= ownsolid/control:dev
 GATEWAY_IMAGE ?= ownsolid/gateway:dev

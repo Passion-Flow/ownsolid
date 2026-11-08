@@ -10,6 +10,7 @@ use (
 	./services/control
 	./tests/e2e
 	./tools/audit-verify
+	./tools/cli
 	./tools/dev/simulator
 	./tools/release/offline
 )
