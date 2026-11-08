@@ -29,3 +29,21 @@ rejects its UPDATE, DELETE and TRUNCATE operations, including row mutations
 against attached partitions. The database owner retains authority to operate
 the database and expire partitions through retention.
 [Audit mutation authority](../../../../../docs/research/audit-immutability.md)
+
+## Product assistant append
+
+Use `WriteProductAssistantWithin` in the PostgreSQL transaction that rechecks the
+user session, resolves the workspace and completes the operation. Pass the
+authenticated user's ID as `SubjectUserID`, the resolved tenant and workspace,
+the entrance, the server request ID, the registered command or tool ID and the
+outcome. Return an append error from the transaction callback before releasing a
+result. The append checks the local tenant and subject's workspace authority in
+its insert. The operation owner remains responsible for the session, operation
+authorization and retries.
+
+The writer stores `actor_kind=product_assistant` and
+`actor_id=ownsolid.product-assistant` in fixed metadata, with an empty human
+actor and a separate user subject. The action is `product_assistant.<tool_id>`.
+The existing chain binds the metadata digest and retains the prior export
+format. A readable assistant actor in audit search or JSONL needs its own
+projection. See the [implementation research](../../../../../docs/research/product-assistant-audit-writer.md).
