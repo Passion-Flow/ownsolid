@@ -1,5 +1,7 @@
 # Network and storage
 
+Module reviewed: 2026-11-09. See [the module review](../../research/network-storage-module-review.md).
+
 Fabric and storage operations for GPU clusters, and the storage contracts ownsolid uses.
 
 - Owns: `services/control/internal/modules/artifactstores`, `imageregistry`, agent collectors.
@@ -23,6 +25,7 @@ Fabric and storage operations for GPU clusters, and the storage contracts ownsol
 - [ ] NET-205 Storage metadata load checks before large job launches (P2)
 - [ ] NET-206 Peer-to-peer image and model distribution (P2) - Catalog: F642
 - [ ] NET-207 Model and dataset distribution capacity controls (P2) - Catalog: F642
+- [ ] NET-208 Scheduled integrity scans for retained artifacts against their recorded digests, with scoped recovery from a verified copy (P2)
 
 ## P4 Breadth
 
