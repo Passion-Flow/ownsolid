@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -82,6 +83,52 @@ func TestSourceImportFormats(t *testing.T) {
 			}
 			if got := readImported(t, path); got != tc.expected {
 				t.Fatalf("got %q, want %q", got, tc.expected)
+			}
+		})
+	}
+}
+
+type interruptedSource struct {
+	*strings.Reader
+}
+
+func (s interruptedSource) Read(p []byte) (int, error) {
+	n, err := s.Reader.Read(p)
+	if s.Len() == 0 {
+		return n, io.ErrUnexpectedEOF
+	}
+	return n, err
+}
+
+func TestSourceImportInterruptedTransfer(t *testing.T) {
+	importer := testImporter(t, testImportLimits(), nil)
+	for _, tc := range []struct {
+		format  SourceFormat
+		valid   string
+		partial string
+	}{
+		{SourceJSONL, "{\"text\":\" one \"}\n", "{\"text\":\" one \"}\n{"},
+		{SourceJSON, "[{\"text\":\" one \"}]", "[{\"text\":\" one \"},"},
+		{SourceCSV, "text\n one \n", "text\n one \n\""},
+	} {
+		t.Run(string(tc.format), func(t *testing.T) {
+			dir := privateImportDir(t)
+			destination := filepath.Join(dir, "rows.jsonl")
+			opts := SourceImportOptions{Format: tc.format, SkipInvalid: true,
+				Cleaning: &SourceCleaningPolicy{TrimFields: []string{"text"}, PreviewRows: 1, PreviewBytes: 128}}
+			for _, prefix := range []string{"", tc.partial, tc.valid} {
+				report, err := importer.ImportUpload(t.Context(), interruptedSource{strings.NewReader(prefix)}, destination, opts)
+				if err == nil || !strings.HasPrefix(err.Error(), sourceReadFailedCode) {
+					t.Fatalf("interrupted input of %d bytes: %v", len(prefix), err)
+				}
+				if report.OutputSHA256 != "" || report.Cleaning == nil || len(report.Cleaning.Samples) != 0 {
+					t.Fatalf("interrupted transfer exposed an output: %+v", report)
+				}
+				assertNoImports(t, dir)
+			}
+			report, err := importer.ImportUpload(t.Context(), strings.NewReader(tc.valid), destination, opts)
+			if err != nil || report.Rows != 1 || readImported(t, destination) != "{\"text\":\"one\"}\n" {
+				t.Fatalf("complete retry: %+v, %v", report, err)
 			}
 		})
 	}
@@ -253,6 +300,13 @@ pq.write_table(table, sys.argv[1], row_group_size=2, write_page_checksum=True)
 	outDir := privateImportDir(t)
 	output := filepath.Join(outDir, "rows.jsonl")
 	opts := SourceImportOptions{Format: SourceParquet}
+	interrupted := interruptedSource{strings.NewReader(string(raw))}
+	_, err = importer.ImportUpload(t.Context(), interrupted, output, opts)
+	if err == nil || err.Error() != sourceReadFailedCode {
+		t.Fatalf("interrupted Parquet transfer: %v", err)
+	}
+	assertNoImports(t, outDir)
+
 	_, err = importer.ImportUpload(t.Context(), bytes.NewReader(raw), output, opts)
 	if err != (SourceIssue{Code: "DATASET_PARQUET_ROW_INVALID", Row: 2}) {
 		t.Fatal(err)

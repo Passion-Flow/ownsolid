@@ -81,7 +81,7 @@ func (s *sourceImportState) readJSONL(source io.Reader) error {
 		} else if err == nil {
 			err = s.acceptJSONObject(raw, position)
 		} else {
-			position.Code = "DATASET_IMPORT_SOURCE_READ_FAILED"
+			position.Code = sourceReadFailedCode
 			return position
 		}
 		if err != nil {
@@ -144,7 +144,7 @@ func (s *sourceImportState) readCSV(source io.Reader) error {
 	buffer := bufio.NewReader(source)
 	prefix, err := buffer.Peek(4)
 	if err != nil && !errors.Is(err, io.EOF) {
-		return failure("DATASET_IMPORT_SOURCE_READ_FAILED")
+		return failure(sourceReadFailedCode)
 	}
 	switch {
 	case bytes.HasPrefix(prefix, []byte{0xef, 0xbb, 0xbf}):
