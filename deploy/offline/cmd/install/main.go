@@ -26,7 +26,9 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install support-bundle --config <install.yaml> --output <new archive.tar.gz>\n" +
 	"       ownsolid-install scheduled-backup --config <install.yaml>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
+	"       ownsolid-install backup --config <install.yaml> --output <new archive.tar.age> --recipient-file <public key file>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
+	"       ownsolid-install restore --config <install.yaml> --from <archive.tar.age> --identity-file <private key file>\n" +
 	"       ownsolid-install recover-restore --config <install.yaml> [--rollback]\n" +
 	"       ownsolid-install agents status --config <install.yaml>\n" +
 	"       ownsolid-install agents shed --config <install.yaml> --level none|bulk|telemetry|heartbeats --reason <text>\n" +
@@ -68,8 +70,10 @@ func run(args []string, out io.Writer) error {
 	flags := flag.NewFlagSet("ownsolid-install", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	path := flags.String("config", "", "typed install configuration")
-	output := flags.String("output", "", "backup directory or new support archive path")
-	from := flags.String("from", "", "backup directory to restore")
+	output := flags.String("output", "", "backup directory or new archive path")
+	from := flags.String("from", "", "backup directory or encrypted archive to restore")
+	recipient := flags.String("recipient-file", "", "protected X25519 public recipient file")
+	identity := flags.String("identity-file", "", "protected X25519 private recovery identity file")
 	rollback := flags.Bool("rollback", false, "return to the original database and retain the candidate")
 	level := flags.String("level", "", "agent traffic to refuse, lowest priority first")
 	reason := flags.String("reason", "", "why, kept in the audit record")
@@ -78,6 +82,22 @@ func run(args []string, out io.Writer) error {
 	}
 	shed := command == "agents shed"
 	if (command == "backup" || command == "support-bundle") != (*output != "") || (command == "restore") != (*from != "") || shed != (*level != "") || shed != (*reason != "") || (*rollback && command != "recover-restore") {
+		return errors.New(usage)
+	}
+	// Even an explicitly empty encryption option must never select plaintext.
+	encrypted := false
+	invalidKeyFlag := false
+	flags.Visit(func(f *flag.Flag) {
+		switch f.Name {
+		case "recipient-file":
+			encrypted = true
+			invalidKeyFlag = invalidKeyFlag || command != "backup" || *recipient == ""
+		case "identity-file":
+			encrypted = true
+			invalidKeyFlag = invalidKeyFlag || command != "restore" || *identity == ""
+		}
+	})
+	if invalidKeyFlag {
 		return errors.New(usage)
 	}
 	load := install.LoadOperational
@@ -106,10 +126,16 @@ func run(args []string, out io.Writer) error {
 	case "support-bundle":
 		return install.SupportBundle(ctx, c, install.ExecRunner{}, *output, out)
 	case "backup":
+		if encrypted {
+			return install.BackupEncrypted(ctx, c, install.ExecRunner{}, *output, *recipient, out)
+		}
 		return install.Backup(ctx, c, install.ExecRunner{}, *output, out)
 	case "scheduled-backup":
 		return install.ScheduledBackup(ctx, c, install.ExecRunner{}, out)
 	case "restore":
+		if encrypted {
+			return install.RestoreEncrypted(ctx, c, install.ExecRunner{}, *from, *identity, out)
+		}
 		return install.Restore(ctx, c, install.ExecRunner{}, *from, out)
 	case "recover-restore":
 		return install.RecoverRestore(ctx, c, install.ExecRunner{}, *rollback, out)

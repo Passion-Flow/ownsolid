@@ -193,7 +193,7 @@ func assertPITRIsolatedDocker(t *testing.T, installer, config string, run func(s
 	checked("PITR_RECOVERY_ALREADY_COMPLETE", false, recoverArgs...)
 	assertTenant("After target")
 	t.Run("activation resumes after the database exchange", func(t *testing.T) {
-		interruptRestoreDocker(t, "after-swap")
+		interruptInstallerDocker(t, "after-swap")
 		out, err := run(installer, "restore", "--config", config, "--from", recovered)
 		t.Logf("interrupted activation:\n%s", out)
 		var exit *exec.ExitError

@@ -105,6 +105,15 @@ earlier UTC time. It withholds a required segment, kills an installer during
 activation, and checks retained dependencies, later writes and foreign files.
 See the [operator procedure](../../docs/operations/backup-and-restore.md#postgresql-point-in-time-recovery).
 
+## Verify encrypted logical backup and restore
+
+Use the same Linux amd64 fixture and egress recorder as the preflight test.
+Set `OWNSOLID_E2E_RUN='^TestEncryptedBackupIsolatedDocker$'` when invoking
+`tests/e2e/run-single-node.sh`. The test checks the real PostgreSQL dump and
+restore, rejects an unrelated identity and changed or truncated ciphertext,
+interrupts backup and restore, and checks the unencrypted commands.
+See the [operator procedure](../../docs/operations/backup-and-restore.md#encrypt-an-operator-run-backup).
+
 ## Schedule verified backups
 
 Configure a dedicated backup directory and keep count. The
