@@ -1,11 +1,13 @@
 {
   "list_applications": {
     "operation_id": "ListApplications",
+    "path": "/api/v1/sites/{site_id}/cells/{cell_id}/applications",
     "risk": "read",
     "permission": "workspace_member"
   },
   "list_conversations": {
     "operation_id": "ListApplicationConversations",
+    "path": "/api/v1/sites/{site_id}/cells/{cell_id}/application-conversations",
     "risk": "read",
     "permission": "workspace_member"
   }
