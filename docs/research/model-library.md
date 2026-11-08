@@ -83,7 +83,11 @@ the store did not exist and an import could not start.
   separates publication from cleanup, following the [S3 multipart lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html).
 - **Publication and cleanup.** The import read exposes `state`, `model_id`, `uploaded_bytes` and
   `error_code`, with no field for post-publication cleanup. Once the API returns `ready` and a model
-  ID, show the publication and make Open the model the primary action. A persistent note explains
+  ID, show the publication and make Open the model the primary action. The import record alone
+  supplies its status. Read the catalogue only when resuming an upload or offering a new
+  verification attempt needs its limits. If that read fails, keep the known state visible and
+  explain which control is unavailable. The upload step shows activity when this tab is
+  sending, and preserves the server's byte count when the upload is incomplete. A persistent note explains
   background cleanup and automatic retry. The worker can retain staging after a failed attempt.
   The UI keeps the publication timeline at three steps and shows no cleanup progress, completion,
   released bytes or manual retry. Upload counters and timestamps are historical. A verification
@@ -97,6 +101,7 @@ the store did not exist and an import could not start.
 | --- | --- |
 | A chunk's answer is lost | unit: the same chunk is sent again and accepted |
 | A published import still has upload records | Browser flow: the model opens after reload, with a background cleanup explanation and no fourth timeline step |
+| The catalogue read is unavailable | Browser flow: a published record opens without a catalogue request. A paused upload keeps its progress, explains why it cannot resume, and recovers after a retry |
 | A verification attempt fails before publication | Browser flow: verify or discard with the existing controls, without a published notice |
 | The connection drops in mid-upload | browser flow: *Try again* continues from the server's offset |
 | A different file is chosen to resume | unit and browser flow: refused, nothing stored |

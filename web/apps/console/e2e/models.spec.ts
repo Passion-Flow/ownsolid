@@ -134,6 +134,36 @@ test('imports a bundle: sends every chunk, verifies, and opens the model', async
   await expect(page.getByRole('button', { name: 'Show Qwen3-0.6B' })).toBeVisible();
 });
 
+test('shows publication without reading the import catalogue', async ({ page }) => {
+  control.modelImports = [publishedImport];
+  control.catalogProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+  const requests: string[] = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.endsWith('/models/catalog')) requests.push(request.url());
+  });
+  await page.goto(`/library/imports/${publishedImport.id}`);
+  await expect(page.getByRole('link', { name: 'Open the model' })).toBeVisible();
+  await expect(page.getByText('Model published', { exact: true })).toBeVisible();
+  expect(requests).toEqual([]);
+});
+
+test('keeps a paused upload visible while its resume settings are unavailable', async ({
+  page,
+}) => {
+  control.modelImports = [stalledImport];
+  control.catalogProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+  await page.goto(`/library/imports/${stalledImport.id}`);
+  await expect(page.getByText('Upload incomplete', { exact: true })).toBeVisible();
+  const timeline = page.getByRole('list', { name: 'Steps of this import' });
+  await expect(timeline.getByRole('listitem').first()).not.toContainText('Running');
+  const choose = page.getByRole('button', { name: 'Choose the file' });
+  await expect(choose).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.getByText(/The import status is available/)).toBeVisible();
+  control.catalogProblem = null;
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(choose).toBeEnabled();
+});
+
 test('rides out a lost answer and a dropped connection without help', async ({ page }) => {
   control.chunkFailures = ['lost', 'dropped'];
   await fillForm(page);
@@ -202,7 +232,7 @@ test('continues after the tab closed, from what the server holds', async ({ page
   control.chunkFailures = [];
   await page.goto('/library?tab=imports');
   await page.getByRole('link', { name: stalledImport.name }).click();
-  await expect(page.getByText('The upload is not running')).toBeVisible();
+  await expect(page.getByText('This tab is not uploading')).toBeVisible();
   await page.getByTestId('model-bundle-resume').setInputFiles(bundle('too short'));
   await expect(page.getByText('That file is a different size')).toBeVisible();
   await page.getByTestId('model-bundle-resume').setInputFiles(bundle());

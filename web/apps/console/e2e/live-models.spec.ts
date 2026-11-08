@@ -60,7 +60,7 @@ test('imports the model from the console, through an interruption', async ({ bro
     .getByRole('link', { name: modelName })
     .click();
   await expect(page).toHaveURL(new RegExp(`${importPath}$`));
-  await expect(page.getByText('The upload is not running')).toBeVisible();
+  await expect(page.getByText('This tab is not uploading')).toBeVisible();
   await expectAccessible(page);
 
   await page.getByTestId('model-bundle-resume').setInputFiles(impostor);

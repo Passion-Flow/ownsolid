@@ -375,7 +375,7 @@ export const consolePages: readonly PageState[] = [
       control.signedIn = true;
       control.modelImports = [{ ...stalledImport }];
       await page.goto(`/library/imports/${stalledImport.id}`);
-      await page.getByText('The upload is not running').waitFor();
+      await page.getByText('This tab is not uploading').waitFor();
     },
   },
   {
