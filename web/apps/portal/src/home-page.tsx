@@ -27,15 +27,9 @@ import {
 } from '@ownsolid/ui';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import {
-  Boxes,
-  CircleAlert,
-  CircleCheck,
-  MessagesSquare,
-  TriangleAlert,
-  UsersRound,
-} from 'lucide-react';
+import { Boxes, CircleAlert, CircleCheck, MessagesSquare, TriangleAlert } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { WorkspaceBody, WorkspaceSkeleton } from './workspace-body.tsx';
 
 /** How many runs that need the person are named; the rest are behind the bell. */
 const needsShown = 5;
@@ -110,11 +104,21 @@ type Sources = ReturnType<typeof useSources>;
 
 /** What a section shows while its source has nothing to show. */
 function SourceState({ query, skeleton }: { query: UseQueryResult; skeleton: string }): ReactNode {
-  if (query.isPending) return <Skeleton aria-busy className={skeleton} />;
+  const { t } = useI18n();
+  if (query.isPending) {
+    return (
+      <WorkspaceSkeleton>
+        <Skeleton className={skeleton} />
+      </WorkspaceSkeleton>
+    );
+  }
   if (isProblem(query.error)) {
     return (
       <ProblemNotice
         problem={query.error}
+        detail={
+          isProblem(query.error, 'RESOURCE_NOT_FOUND') ? t('home.workspaceUnavailable') : undefined
+        }
         onRetry={() => {
           void query.refetch();
         }}
@@ -200,7 +204,7 @@ function NeedsYou({
     body = <SourceState query={sources.notifications} skeleton="h-[64px] w-full" />;
   } else if (needs.length === 0) {
     body = (
-      <EmptyState icon={CircleCheck} title={t('home.needs.clear')}>
+      <EmptyState className="py-4" icon={CircleCheck} title={t('home.needs.clear')}>
         {t('home.needs.clear.detail')}
       </EmptyState>
     );
@@ -234,7 +238,7 @@ function Conversations({ sources }: { sources: Sources }) {
     body = <SourceState query={sources.conversations} skeleton="h-[150px] w-full" />;
   } else if (page.items.length === 0) {
     body = (
-      <EmptyState icon={MessagesSquare} title={t('home.conversations.empty')}>
+      <EmptyState className="py-4" icon={MessagesSquare} title={t('home.conversations.empty')}>
         {t('home.conversations.empty.detail')}
       </EmptyState>
     );
@@ -299,7 +303,7 @@ function Published({ sources }: { sources: Sources }) {
     body = <SourceState query={sources.applications} skeleton="h-[150px] w-full" />;
   } else if (page.items.length === 0) {
     body = (
-      <EmptyState icon={Boxes} title={t('home.apps.empty')}>
+      <EmptyState className="py-4" icon={Boxes} title={t('home.apps.empty')}>
         {t('home.apps.empty.detail')}
       </EmptyState>
     );
@@ -338,7 +342,7 @@ function Usage() {
         actions={<StatusPill tone="neutral">{t('capability.state.planned')}</StatusPill>}
       />
       <CardBody>
-        <div aria-disabled className="text-[13.5px] text-text-2">
+        <div className="text-[13.5px] text-text-2">
           <p className="m-0">{t('home.usage.reason')}</p>
           <p className="m-0 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
             <span className="font-mono text-[12px] text-text-3">{usageItem}</span>
@@ -387,22 +391,25 @@ export function HomePage() {
       <h1 className="m-0 mb-1 text-[27px] leading-[1.2] font-[750] tracking-[-0.03em]">
         {t('welcome.title', { name })}
       </h1>
-      <p className="m-0 mb-6 text-text-2">
-        {active ? t('home.subtitle', { workspace: active.name }) : t('home.subtitle.none')}
-      </p>
-      {workspaces.isPending ? (
-        // A workspace chosen earlier is known only once the list has loaded; reading the
-        // session's meanwhile would show another workspace's rows for a moment.
-        <Skeleton aria-busy className="h-[320px] w-full" />
-      ) : active ? (
-        <WorkspaceHome key={active.id} workspaceId={active.id} />
-      ) : (
-        <Card>
-          <EmptyState icon={UsersRound} title={t('home.noWorkspace')}>
-            {t('home.noWorkspace.detail')}
-          </EmptyState>
-        </Card>
-      )}
+      {active && !workspaces.isPending ? (
+        <p className="m-0 mb-6 text-text-2">{t('home.subtitle', { workspace: active.name })}</p>
+      ) : null}
+      <div className={active && !workspaces.isPending ? undefined : 'mt-3'}>
+        <WorkspaceBody
+          workspaces={workspaces}
+          noWorkspace={t('home.noWorkspace.detail')}
+          loading={
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Skeleton className="h-28 lg:col-span-2" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-24 lg:col-span-2" />
+            </div>
+          }
+        >
+          {(workspaceId) => <WorkspaceHome key={workspaceId} workspaceId={workspaceId} />}
+        </WorkspaceBody>
+      </div>
     </>
   );
 }
