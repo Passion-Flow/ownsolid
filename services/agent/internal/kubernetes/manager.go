@@ -208,6 +208,14 @@ func (m *Manager) join(ctx context.Context, command wire.KubernetesCommand, down
 	if e = m.writeConfig(command, resolver); e != nil {
 		return e
 	}
+	heldCanal := false
+	if command.Role == wire.KubernetesServerRole {
+		heldCanal, e = m.holdCanal(!found || !recorded.Installed)
+		if e != nil {
+			progress.Error(ctx, "Could not prepare the offline Canal configuration on this server.")
+			return e
+		}
+	}
 	wanted.Installed = true
 	if e = writeJSON(m.journal, wanted); e != nil {
 		return e
@@ -235,7 +243,14 @@ func (m *Manager) join(ctx context.Context, command wire.KubernetesCommand, down
 		}
 	}
 	progress.Step(ctx, wire.ProgressStepVerify)
-	if e = m.waitReady(ctx, command, observation); e != nil {
+	deadline := m.now().Add(m.config.readyTimeout())
+	if heldCanal {
+		observation.State = wire.KubernetesNotReady
+		if e = m.finishCanalBootstrap(ctx, command.NodeName, deadline); e != nil {
+			return e
+		}
+	}
+	if e = m.waitReady(ctx, command, observation, deadline); e != nil {
 		return e
 	}
 	return m.serverCA(command, observation)
@@ -340,9 +355,8 @@ func (m *Manager) ready(ctx context.Context, name string) bool {
 	return e == nil && strings.TrimSpace(string(output)) == "True"
 }
 
-func (m *Manager) waitReady(ctx context.Context, command wire.KubernetesCommand, observation *wire.KubernetesObservation) error {
+func (m *Manager) waitReady(ctx context.Context, command wire.KubernetesCommand, observation *wire.KubernetesObservation, deadline time.Time) error {
 	observation.State = wire.KubernetesNotReady
-	deadline := m.now().Add(m.config.readyTimeout())
 	for {
 		if m.ready(ctx, command.NodeName) {
 			observation.State = wire.KubernetesReady
