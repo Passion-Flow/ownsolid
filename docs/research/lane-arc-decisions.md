@@ -23,3 +23,16 @@ that module's integration fixtures and the component, inference, preparation and
 Registry owners. ARC-109 can reduce duplicate checks for node-owned claims here.
 Its delegated event and upload paths need work in training and preparation.
 [The research](agent-claim-authority.md) records the transaction boundary.
+
+## Remaining P1 dependencies
+
+ARC-110 and ARC-111 need control listener, gateway startup and deployment
+configuration changes. ARC-112 depends on [FLT-101 inventory](fleet-inventory.md).
+ARC-113 needs installer changes. ARC-114 needs console and alerting. ARC-115,
+ARC-116 and FLT-111 need the installed and managed cluster from ARC-104.
+
+FLT-102 and FLT-104 through FLT-108 need persisted operator controls and console
+flows. FLT-103 needs REL device collectors. FLT-109 needs the component owner.
+FLT-110 needs a signed artifact path and host service update and rollback, which
+cross delivery ownership. FLT-112 and FLT-115 need console and public API work.
+The current lane can supply node changes as these dependencies become available.
