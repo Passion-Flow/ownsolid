@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	release "github.com/Passion-Flow/ownsolid/api/release/v1"
 )
 
 func TestMVPReferenceEnvelopePreservesHistoricalJSON(t *testing.T) {
@@ -98,8 +100,8 @@ func TestMVPReferenceMetadataNeverSubstitutesForOriginalVerification(t *testing.
 	m.Format = "projectone.postgres.matched-backup.v1"
 	m.Request.BackupRoot = root
 	m.RequestSHA256 = requestDigest(m.Request)
-	m.Database.SchemaVersion = 52
-	m.Database.Tables = 115
+	m.Database.SchemaVersion = release.MVPPostgreSQLCPUV1SchemaVersion
+	m.Database.Tables = release.MVPPostgreSQLCPUV1TableCount
 	m.Archive.SHA256 = strings.Repeat("d", 64)
 	m.Sources = []TreeReadback{}
 	m.Stores = []StoreReadback{}

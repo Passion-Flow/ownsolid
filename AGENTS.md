@@ -193,6 +193,7 @@ ownsolid/
 │   ├── e2e/               Cross-service end-to-end tests only
 │   └── fixtures/          Test data shared by more than one component
 ├── tools/                 codegen/, dev/, lint/, release/
+│   └── audit-verify/      Standalone offline audit-chain verification
 └── web/                   apps/{console,portal}/, packages/{ui,api,i18n,config}/
 ```
 
