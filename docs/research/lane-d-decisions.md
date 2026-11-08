@@ -96,3 +96,10 @@ retry assigned that volume to the Agent training test process through Go's
 volume. This preserved the test inventory, timing, and disk space checks.
 Running on the shared default ports or lowering the production disk space
 threshold would risk interfering with another lane or bypassing a guard.
+
+The DEV-102 write slice through `edfd7c8` also passed the full Make test
+target on its own loopback ports and APFS volume. Agent model preparation
+and training both used the separate memory-backed volume. The run included
+1,401 passing browser cases, 27 default browser skips, all Go modules,
+62 gateway unit tests, and the Web unit suites. The disconnected Admin
+workflow ran separately through the committed CLI fixture.
