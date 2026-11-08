@@ -1,5 +1,9 @@
 # Scientific computing
 
+Module reviewed on 2026-11-09 against Nextflow and Kubernetes Jobs, with current
+upstream terms for AlphaFold 3, ESM3 and Rosetta. See
+[scientific computing research](../../research/scientific-computing.md).
+
 Models and tools that run as jobs on input files and write result files, such as protein
 structure prediction, protein design, sequence optimization and metabolic modelling.
 A general task-type model contract comes first; domain packs, life sciences first, build
@@ -9,6 +13,13 @@ on it. Research: [scientific computing](../../research/scientific-computing.md).
   `catalog/apps` task templates, web console and portal task pages.
 - Depends on: scheduling-and-quota (unified job model), models-and-registry (licence
   register), network-and-storage (object storage), audit-and-compliance.
+
+AlphaFold 3 weights, ESM3 and Rosetta are customer-supplied integrations.
+The customer obtains and maintains the applicable rights for the exact artifacts
+and intended use. An ownsolid platform license conveys no third-party rights.
+The planned SCI-101 admission path must refuse jobs with missing, expired or
+incompatible authorization under MOD-110. This applies to single runs, batch
+items, retries and re-runs. Restricted artifacts are excluded from product bundles.
 
 ## P1 Enterprise release
 
