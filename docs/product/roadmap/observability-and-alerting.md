@@ -1,6 +1,6 @@
 # Observability and alerting
 
-Module reviewed: 2026-11-04.
+Module reviewed: 2026-11-09. See [the module review](../../research/observability-module-review.md).
 
 Metrics, logs, traces and alerts for the platform and the fleet, in their own stores,
 fully offline.
@@ -36,6 +36,7 @@ fully offline.
 - [ ] OBS-203 Capacity planning reports and forecasts (P2)
 - [ ] OBS-204 Platform fault drills and a support status board (P2) - Catalog: F652
 - [ ] OBS-205 Authenticated, encrypted traffic between telemetry store nodes in a cell, because mTLS between cluster components is Enterprise-only in the selected store (P2)
+- [ ] OBS-206 Telemetry pipeline self-monitoring and independent notification-path heartbeat with missing-signal detection (P2)
 
 ## P3 Multi-site
 
