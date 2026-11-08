@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -532,6 +533,41 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 			t.Log("support archive reports the selected configuration and two redacted installer events")
 		}
 	})
+	if !signed {
+		t.Run("scheduled backups verify before expiring older copies", func(t *testing.T) {
+			c.BackupSchedule = &BackupScheduleConfig{Directory: t.TempDir(), Retain: 1}
+			if err := os.Chmod(c.BackupSchedule.Directory, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			command(t, "scheduled-backup", "INSTALL_SCHEDULED_BACKUP_COMPLETE expired=0", false)
+			original := scheduledArchives(t, c.BackupSchedule.Directory)
+			if len(original) != 1 {
+				t.Fatalf("expected one scheduled backup, got %v", original)
+			}
+			foreign := filepath.Join(c.BackupSchedule.Directory, backupPrefix+"20261108T000000Z")
+			if err := os.Mkdir(foreign, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := ScheduledBackup(t.Context(), c, failScheduledDump{}, io.Discard); err == nil ||
+				!strings.Contains(err.Error(), "INSTALL_BACKUP_DUMP_FAILED") {
+				t.Fatalf("expected an injected dump failure: %v", err)
+			}
+			if after := scheduledArchives(t, c.BackupSchedule.Directory); !slices.Equal(after, original) {
+				t.Fatal("failed backup changed the retained recovery point")
+			}
+			command(t, "scheduled-backup", "INSTALL_SCHEDULED_BACKUP_COMPLETE expired=1", false)
+			after := scheduledArchives(t, c.BackupSchedule.Directory)
+			if len(after) != 1 || after[0] == original[0] {
+				t.Fatalf("expected the second verified backup to replace the first: %v", after)
+			}
+			if _, err := readBackup(filepath.Join(c.BackupSchedule.Directory, after[0])); err != nil {
+				t.Fatalf("retained backup cannot be read: %v", err)
+			}
+			if _, err := os.Stat(foreign); err != nil {
+				t.Fatal("the scheduled job removed an ordinary backup directory")
+			}
+		})
+	}
 }
 
 type failCandidateStart struct{ ExecRunner }
