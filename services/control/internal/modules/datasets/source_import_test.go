@@ -296,9 +296,15 @@ func TestSourceImportMemory(t *testing.T) {
 			t.Fatal(err)
 		}
 		importer := testImporter(t, testImportLimits(), nil)
-		report, err := importer.ImportUpload(t.Context(), file, path+".jsonl", SourceImportOptions{Format: SourceJSONL})
-		if err != nil || report.SourceBytes != info.Size() || report.Rows != info.Size()/4096 || report.OutputBytes != info.Size() {
-			t.Fatalf("report %+v, error %v", report, err)
+		opts := SourceImportOptions{Format: SourceJSONL, Cleaning: &SourceCleaningPolicy{
+			TrimFields: []string{"text"}, KeepNonBlankFields: []string{"text"}, PreviewRows: 8, PreviewBytes: 64 << 10,
+		}}
+		report, err := importer.ImportUpload(t.Context(), file, path+".jsonl", opts)
+		rows := info.Size() / 4096
+		if err != nil || report.SourceBytes != info.Size() || report.Rows != rows || report.OutputBytes != info.Size()-2*rows ||
+			report.Cleaning == nil || report.Cleaning.ChangedRows != rows || report.Cleaning.FilteredRows != 0 ||
+			!report.Cleaning.SamplesTruncated || len(report.Cleaning.Samples) != 8 {
+			t.Fatalf("report %+v, cleaning %+v, error %v", report, report.Cleaning, err)
 		}
 		return
 	}
@@ -306,7 +312,7 @@ func TestSourceImportMemory(t *testing.T) {
 		t.Skip("writes and imports 144 MiB of synthetic files")
 	}
 	dir := privateImportDir(t)
-	record := []byte("{\"text\":\"" + strings.Repeat("x", 4084) + "\"}\n")
+	record := []byte("{\"text\":\" " + strings.Repeat("x", 4082) + " \"}\n")
 	chunk := bytes.Repeat(record, 256)
 	var peak [2]int64
 	for index, size := range []int64{16 << 20, 128 << 20} {
@@ -339,7 +345,7 @@ func TestSourceImportMemory(t *testing.T) {
 		if peak[index] <= 0 {
 			t.Fatal("peak RSS unavailable")
 		}
-		t.Logf("input=%d bytes, accepted=%d rows, peak RSS=%d bytes (%.2f MiB)", size, size/4096, peak[index], float64(peak[index])/(1<<20))
+		t.Logf("input=%d bytes, cleaned=%d rows, peak RSS=%d bytes (%.2f MiB)", size, size/4096, peak[index], float64(peak[index])/(1<<20))
 	}
 	if peak[1] > peak[0]+(24<<20) || peak[1] > 64<<20 {
 		t.Fatalf("peak RSS grew with input: %d -> %d bytes", peak[0], peak[1])

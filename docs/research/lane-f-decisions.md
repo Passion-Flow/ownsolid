@@ -93,3 +93,27 @@ delivery contract. The release owner must add the wheelhouse build input.
 A generic durable import also needs the release lineage and backup contract
 to move with the database migration. Those shared contracts are outside the
 lane's allowed additions.
+
+## DAT-101 authority and DAT-103 independent work
+
+**Decision.** Keep registration in the dataset domain with the existing
+workspace and store authorities. Add the generic import reference only
+alongside the shared release and restore updates. In the meantime, enable
+explicit cleaning and filtering with a bounded preview in the current
+private intake path.
+
+**Why.** The current draft and version references require legacy training
+semantics. An artifact ingestion receipt requires a draft on submission.
+A separate file registry would also bypass the database and snapshot
+inventories that determine which dataset artifacts are recoverable.
+
+**Alternatives.** Storing the report in an existing audit event would mix
+audit with resource authority. Using a private sidecar as the authoritative
+record would lose the atomic scope, report and audit commit. Raising legacy
+draft ceilings would change existing client and worker contracts.
+
+**Impact.** Import and cleaning produce a private candidate and verifiable
+statistics. Product registration and authorized preview still require the
+existing runtime and UI owners to adopt the candidate. The exact integration
+points and verification commands are in the
+[registration handoff](dataset-import.md#registration-and-product-handoff).
