@@ -1,6 +1,10 @@
 package http
 
-import "strings"
+import (
+	"strings"
+
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+)
 
 // DiscoveryHumanOwns is the closed M03 subset of the cumulative node API.
 func DiscoveryHumanOwns(path string) bool {
@@ -19,6 +23,7 @@ func DiscoveryHumanOwns(path string) bool {
 	}
 	return p[0] == "workspaces" && len(p) >= 3 && p[2] == "nodes" && (len(p) == 3 || len(p) == 4 || len(p) == 5 && p[4] == "tasks")
 }
+
 // ClaimRoute reports the claims path, which may long-poll for up to MaxClaimWaitSeconds.
 func ClaimRoute(path, method string) bool {
 	p := strings.Split(strings.TrimPrefix(path, "/agent/v1/nodes/"), "/")
@@ -70,7 +75,8 @@ func MaintenanceHumanOwns(path string) bool {
 	return len(p) == 6 && p[0] == "admin" && p[1] == "nodes" && p[3] == "components" && p[4] == "node-exporter" && p[5] == "logs"
 }
 
-// ModelsMachineOwns adds only immutable approved-model transfer to existing tasks.
+// ModelsMachineOwns adds only immutable approved-model transfer and the activation of a
+// serving node's gateway (GW-114) to existing tasks.
 func ModelsMachineOwns(path string) bool {
 	if ComponentsMachineOwns(path) {
 		return true
@@ -79,7 +85,7 @@ func ModelsMachineOwns(path string) bool {
 		return false
 	}
 	p := strings.Split(strings.TrimPrefix(path, "/agent/v1/nodes/"), "/")
-	return len(p) == 4 && p[1] == "tasks" && (p[3] == "model-manifest" || p[3] == "model-files")
+	return len(p) == 4 && p[1] == "tasks" && (p[3] == "model-manifest" || p[3] == "model-files" || p[3] == wire.GatewayActivationPath)
 }
 
 // TrainingMachineOwns adds only current M09 transfers and positive physical stop.

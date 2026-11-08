@@ -11,6 +11,7 @@ import (
 // execution profile runs that kind of task.
 type executors struct {
 	components   componentLifecycle
+	gateway      *inference.GatewayManager
 	inference    *inference.Manager
 	training     *training.Manager
 	preparations *modelpreparations.Manager

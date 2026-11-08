@@ -33,6 +33,9 @@ type Service struct {
 	// Kubernetes owns cell clusters (ADR 0051); nil where none are configured, and then
 	// Kubernetes tasks fail closed.
 	Kubernetes KubernetesAuthority
+	// Gateways records what agents do with the model gateways of their nodes (GW-114).
+	// Without it, gateway tasks are refused.
+	Gateways GatewayOwnerWithin
 	// wake lets claims held open for new work (ClaimWaiting) see tasks as they are written.
 	wake wakeHub
 	// delivering says the outbox reader runs, so wakes arrive after commit (ADR 0028).

@@ -2,6 +2,7 @@
 // retries that never make a second gateway, a key issued from the card, and stopping confirmed by
 // typing (docs/research/gateway-publishing.md).
 import {
+  agentGatewayOrigin,
   deploymentAlias,
   deploymentKey,
   mockControlPlane,
@@ -264,4 +265,74 @@ test('a name changed meanwhile is explained, and the card reads it again', async
   await dialog.getByRole('button', { name: 'Stop publishing' }).click();
   await expect(dialog.getByText('This was changed by someone else')).toBeVisible();
   expect(control.aliases[0]?.disabled_at).toBeNull();
+});
+
+/** A serving node whose agent runs its gateway (ADR 0052). */
+const agentNode = {
+  ...node,
+  execution_profile: 'docker_inference' as const,
+  protocol_version: '1.6',
+  capabilities: [
+    'collect_facts.v1',
+    'inference.deploy.v1',
+    'inference.stop.v1',
+    'inference.remove.v1',
+    'inference.observe.v1',
+    'inference.verify.v1',
+    'gateway.start.v1',
+    'gateway.stop.v1',
+  ] as typeof node.capabilities,
+};
+
+test("the node's agent starts the gateway: no address, no credential, then the model is published", async ({
+  page,
+}) => {
+  control.nodes = [agentNode];
+  control.agentNodes = [node.id];
+  const dialog = await openPublish(page);
+  await expect(dialog).toContainText(`${node.name}'s agent will start a gateway`);
+  await expect(dialog.getByLabel('Gateway address')).toHaveCount(0);
+  await dialog.getByLabel('Reason').fill('Serve the support team');
+  await dialog.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(dialog).toContainText(`Starting the gateway on ${node.name}`);
+  await expect(page.getByText('Published as qwen3-0.6b')).toBeVisible({ timeout: 20_000 });
+  await expect(dialog).toHaveCount(0);
+  expect(control.publishWrites.map((write) => write.kind)).toEqual(['provision', 'publish']);
+  expect(control.publishWrites[0]?.body).toEqual({
+    node_id: node.id,
+    name: node.name,
+    reason: 'Serve the support team',
+  });
+  expect(control.publishWrites[1]?.body.gateway_id).toBe(control.gateways[0]?.id);
+  await expect(page.getByText(/gw1\./)).toHaveCount(0);
+  await expect(card(page)).toContainText(`${agentGatewayOrigin}/v1`);
+});
+
+test('a gateway the agent could not start says why, and is replaced before publishing', async ({
+  page,
+}) => {
+  control.nodes = [agentNode];
+  control.agentNodes = [node.id];
+  control.agentStarts = ['GATEWAY_IMAGE_MISSING'];
+  const dialog = await openPublish(page);
+  await dialog.getByLabel('Reason').fill('Serve the support team');
+  await dialog.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(dialog).toContainText(`The gateway did not start on ${node.name}`, {
+    timeout: 20_000,
+  });
+  await expect(dialog).toContainText('The gateway image is not on this node');
+  // Nothing is published to a gateway that is not running.
+  await dialog.getByRole('button', { name: 'Publish', exact: true }).click();
+  expect(control.publishWrites.map((write) => write.kind)).toEqual(['provision']);
+  await dialog.getByRole('button', { name: 'Replace the gateway' }).click();
+  await expect(dialog).toContainText(`${node.name}'s agent will start a gateway`);
+  await dialog.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(page.getByText('Published as qwen3-0.6b')).toBeVisible({ timeout: 20_000 });
+  expect(control.publishWrites.map((write) => write.kind)).toEqual([
+    'provision',
+    'revokeGateway',
+    'provision',
+    'publish',
+  ]);
+  expect(control.gateways.map((gateway) => gateway.state)).toEqual(['active', 'revoked']);
 });

@@ -32,6 +32,9 @@ func Capabilities(profile string) []string {
 			result = append(result, InferenceOperation(action))
 		}
 	}
+	if profile == DockerInferenceProfile {
+		result = append(result, GatewayOperation("start"), GatewayOperation("stop"))
+	}
 	if IsTrainingProfile(profile) {
 		result = append(result, TrainingRunOperation)
 	}

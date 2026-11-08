@@ -3,6 +3,7 @@
 // and names the keys that stop (docs/research/gateway-publishing.md).
 import {
   disableModelAlias,
+  getNode,
   isProblem,
   listGatewayInstances,
   listGatewayKeys,
@@ -11,6 +12,7 @@ import {
   publishModelAlias,
   revokeGatewayInstance,
   type Deployment,
+  type GatewayInstance,
   type ModelAlias,
   type ProvisionedGateway,
 } from '@ownsolid/api';
@@ -22,6 +24,7 @@ import {
   IssueKeyDialog,
   pageSize,
   ReasonField,
+  runtimeConfigQuery,
   sampleCall,
   useIntentKeys,
 } from '@ownsolid/shell';
@@ -43,13 +46,16 @@ import {
 } from '@ownsolid/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, Send, Unplug } from 'lucide-react';
-import { useId, useState, type SubmitEvent } from 'react';
+import { useEffect, useId, useState, type SubmitEvent } from 'react';
+import { ReportedFailure } from './deployment-details.tsx';
 import { deploymentKeys } from './deployment-state.ts';
 import { PublishModelHint } from './publish-model-hint.tsx';
 import {
+  agentRunsGateway,
   aliasMaximumLength,
   aliasNameProblem,
   gatewayOrigin,
+  gatewayReadiness,
   gatewayPublishKeys,
   nodeGateway,
   publishedNames,
@@ -68,15 +74,72 @@ function useAliases(workspace: string) {
   });
 }
 
-/** The workspace's gateway instances, one per node at most is active. */
-function useGateways(workspace: string) {
+/**
+ * The workspace's gateway instances, one per node at most is active. While the node's agent starts
+ * one, the list is read again at the installation's poll interval.
+ */
+function useGateways(workspace: string, node?: string) {
+  const poll = useQuery(runtimeConfigQuery()).data?.ui.pollMilliseconds ?? false;
   return useQuery({
     queryKey: gatewayPublishKeys.gateways(workspace),
     queryFn: ({ signal }) =>
       everyPage((cursor) =>
         listGatewayInstances(workspace, { limit: pageSize, cursor }, { signal }),
       ),
+    refetchInterval: (query) => {
+      const starting = (query.state.data?.items ?? []).some(
+        (gateway) =>
+          gateway.node_id === node &&
+          gateway.state === 'active' &&
+          gateway.delivery === 'agent' &&
+          gateway.delivery_state === 'starting',
+      );
+      return starting ? poll : false;
+    },
   });
+}
+
+/** How far the node's agent got with the gateway it runs, with what to do when it failed. */
+function AgentGatewayState({
+  gateway,
+  node,
+  replace,
+}: {
+  gateway: GatewayInstance;
+  node: string;
+  replace: { disabled: boolean; run: () => void };
+}) {
+  const { t } = useI18n();
+  const readiness = gatewayReadiness(gateway);
+  if (readiness === 'starting') {
+    return (
+      <Notice className="m-0" title={t('services.gateway.agent.starting', { node })}>
+        {t('services.gateway.agent.startingDetail')}
+      </Notice>
+    );
+  }
+  if (readiness === 'failed') {
+    return (
+      <div className="flex flex-col gap-2">
+        <Notice
+          tone="critical"
+          className="m-0"
+          title={t('services.gateway.agent.failed', { node })}
+          actions={
+            <Button disabled={replace.disabled} onClick={replace.run}>
+              {t('services.gateway.agent.replace')}
+            </Button>
+          }
+        >
+          {t('services.gateway.agent.failedDetail')}
+        </Notice>
+        {gateway.delivery_error_code ? (
+          <ReportedFailure code={gateway.delivery_error_code} />
+        ) : null}
+      </div>
+    );
+  }
+  return null;
 }
 
 /** Re-reads everything a change on the gateway can alter for this deployment. */
@@ -115,7 +178,7 @@ function GatewayIdentity({ made, node }: { made: ProvisionedGateway; node: strin
         </Detail>
       </DetailList>
       <p className="m-0 text-[13px] text-text-2">
-        {t('services.gateway.credential.use', { node, origin: made.gateway.client_origin })}
+        {t('services.gateway.credential.use', { node, origin: made.gateway.client_origin ?? '' })}
       </p>
     </section>
   );
@@ -141,8 +204,17 @@ function PublishDialog({
   const toast = useToast();
   const refresh = useRefresh(deployment);
   const workspace = deployment.workspace_id;
-  const gateways = useGateways(workspace);
+  const gateways = useGateways(workspace, deployment.node_id);
   const intents = useIntentKeys();
+  const agentGateways = useQuery(runtimeConfigQuery()).data?.agentGateways ?? false;
+  const nodeRecord = useQuery({
+    queryKey: ['nodes', 'detail', deployment.node_id],
+    queryFn: ({ signal }) => getNode(deployment.node_id, { signal }),
+  });
+  // The node's agent runs the gateway, so nothing about it is typed or handed over here.
+  const delivered = agentRunsGateway(agentGateways, nodeRecord.data);
+  // Publishing waits for the agent to start the node's gateway, then names the model.
+  const [awaiting, setAwaiting] = useState(false);
   const [name, setName] = useState(() => suggestedAliasName(model));
   const [typedOrigin, setTypedOrigin] = useState('');
   const [gatewayName, setGatewayName] = useState(node);
@@ -151,20 +223,18 @@ function PublishDialog({
   const [nameTouched, setNameTouched] = useState(false);
   const [originTouched, setOriginTouched] = useState(false);
   // A gateway made here whose credential was lost is never published to: nobody can configure it.
-  const lost = made !== null && !made.secret_available;
+  const lost = made !== null && made.gateway.delivery === 'manual' && !made.secret_available;
   const existing = nodeGateway(gateways.data?.items ?? [], deployment.node_id);
-  const gateway =
-    existing && !(lost && existing.id === made.gateway.id)
-      ? existing
-      : made?.secret_available
-        ? made.gateway
-        : undefined;
+  const madeGateway =
+    made && (made.secret_available || made.gateway.delivery === 'agent') ? made.gateway : undefined;
+  const gateway = existing && !(lost && existing.id === made.gateway.id) ? existing : madeGateway;
+  const readiness = gateway ? gatewayReadiness(gateway) : undefined;
   const origin = gatewayOrigin(typedOrigin);
   const nameProblem = aliasNameProblem(name);
   const provisionBody = {
     nodeId: deployment.node_id,
     name: gatewayName.trim(),
-    clientOrigin: origin ?? '',
+    clientOrigin: delivered ? null : (origin ?? ''),
     reason: reason.trim(),
   };
   const provision = useMutation({
@@ -173,7 +243,10 @@ function PublishDialog({
         intents.done(provisionBody);
         return answer;
       }),
-    onSuccess: setMade,
+    onSuccess: (answer) => {
+      setMade(answer);
+      if (answer.gateway.delivery === 'agent') void gateways.refetch();
+    },
     onError: (error) => {
       // Someone made this node's gateway meanwhile: read it, and the form publishes to it.
       if (isProblem(error) && error.code === 'GATEWAY_INSTANCE_EXISTS') {
@@ -209,27 +282,45 @@ function PublishDialog({
     mutationFn: (gatewayId: string) => revokeGatewayInstance(workspace, gatewayId, reason.trim()),
     onSuccess: () => {
       setMade(null);
+      setAwaiting(false);
       provision.reset();
     },
     onSettled: refresh,
   });
+  // Name the model once the agent has started the gateway. A start that failed waits for the
+  // gateway to be replaced, and a failed publish for its retry.
+  const publishWhenStarted = awaiting && gateway !== undefined && readiness === 'ready';
+  useEffect(() => {
+    if (publishWhenStarted && publish.isIdle) {
+      publish.mutate({ gatewayId: gateway.id, handover: false });
+    }
+  }, [publishWhenStarted, publish, gateway]);
   const needsGateway = gateway === undefined;
+  const deciding = needsGateway && (nodeRecord.isPending || gateways.isPending);
   const ready =
     nameProblem === null &&
     reason.trim() !== '' &&
     !lost &&
-    (!needsGateway || (origin !== null && gatewayName.trim() !== ''));
-  const busy = provision.isPending || publish.isPending || replace.isPending;
+    readiness !== 'failed' &&
+    !deciding &&
+    (!needsGateway || ((delivered || origin !== null) && gatewayName.trim() !== ''));
+  const busy =
+    provision.isPending ||
+    publish.isPending ||
+    replace.isPending ||
+    (awaiting && readiness === 'starting');
   const run = async () => {
     setNameTouched(true);
     setOriginTouched(true);
     if (!ready || busy) return;
     if (gateway) {
-      publish.mutate({ gatewayId: gateway.id, handover: made !== null });
+      if (readiness === 'starting') setAwaiting(true);
+      else publish.mutate({ gatewayId: gateway.id, handover: made?.secret_available === true });
       return;
     }
     const answer = await provision.mutateAsync().catch(() => null);
     if (answer?.secret_available) publish.mutate({ gatewayId: answer.gateway.id, handover: true });
+    else if (answer?.gateway.delivery === 'agent') setAwaiting(true);
   };
   const published = publish.data;
   const nameError =
@@ -298,6 +389,14 @@ function PublishDialog({
               </Notice>
             ) : null}
             {isProblem(replace.error) ? <ProblemNotice problem={replace.error} /> : null}
+            {isProblem(nodeRecord.error) && needsGateway ? (
+              <ProblemNotice
+                problem={nodeRecord.error}
+                onRetry={() => {
+                  void nodeRecord.refetch();
+                }}
+              />
+            ) : null}
             {isProblem(gateways.error) ? (
               <ProblemNotice
                 problem={gateways.error}
@@ -320,7 +419,10 @@ function PublishDialog({
                 onRetry={
                   gateway
                     ? () => {
-                        publish.mutate({ gatewayId: gateway.id, handover: made !== null });
+                        publish.mutate({
+                          gatewayId: gateway.id,
+                          handover: made?.secret_available === true,
+                        });
                       }
                     : undefined
                 }
@@ -343,18 +445,54 @@ function PublishDialog({
                 setNameTouched(true);
               }}
             />
-            {gateways.isPending ? <Skeleton className="h-11 w-full" /> : null}
-            {gateway ? (
+            {deciding ? <Skeleton className="h-11 w-full" /> : null}
+            {gateway?.delivery === 'agent' ? (
+              <AgentGatewayState
+                gateway={gateway}
+                node={node}
+                replace={{
+                  disabled: replace.isPending || reason.trim() === '',
+                  run: () => {
+                    replace.mutate(gateway.id);
+                  },
+                }}
+              />
+            ) : null}
+            {gateway && readiness === 'ready' ? (
               <DetailList>
                 <Detail label={t('services.gateway.served')}>
                   {t('services.gateway.served.value', {
                     name: gateway.name,
-                    origin: gateway.client_origin,
+                    origin: gateway.client_origin ?? '',
                   })}
                 </Detail>
               </DetailList>
             ) : null}
-            {gateways.data && needsGateway ? (
+            {gateways.data && needsGateway && !deciding && delivered ? (
+              <>
+                <Notice className="m-0" title={t('services.gateway.agent.title', { node })}>
+                  {t('services.gateway.agent.detail')}
+                </Notice>
+                <TextField
+                  label={t('services.gateway.new.name')}
+                  hint={t('services.gateway.new.name.hint')}
+                  name="gateway-name"
+                  autoComplete="off"
+                  maxLength={100}
+                  required
+                  value={gatewayName}
+                  error={
+                    originTouched && gatewayName.trim() === ''
+                      ? t('services.gateway.new.name.required')
+                      : undefined
+                  }
+                  onChange={(event) => {
+                    setGatewayName(event.target.value);
+                  }}
+                />
+              </>
+            ) : null}
+            {gateways.data && needsGateway && !deciding && !delivered ? (
               <>
                 <Notice className="m-0" title={t('services.gateway.new.title', { node })}>
                   {t('services.gateway.new.detail')}

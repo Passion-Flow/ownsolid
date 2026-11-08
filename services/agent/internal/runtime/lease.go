@@ -27,6 +27,9 @@ func validateExecutionLease(profile string, lease wire.Lease) error {
 	if lease.Kubernetes != nil {
 		variants++
 	}
+	if lease.Gateway != nil {
+		variants++
+	}
 	if lease.Operation == wire.CollectFacts {
 		if variants != 0 {
 			return bad
@@ -51,6 +54,10 @@ func validateExecutionLease(profile string, lease wire.Lease) error {
 		}
 	case wire.IsKubernetesOperation(lease.Operation):
 		if profile != wire.KubernetesNodeProfile || lease.Kubernetes == nil || lease.Kubernetes.Validate(lease.Operation) != nil {
+			return bad
+		}
+	case wire.IsGatewayOperation(lease.Operation):
+		if profile != wire.DockerInferenceProfile || lease.Gateway == nil || lease.Gateway.Validate(lease.Operation) != nil {
 			return bad
 		}
 	case wire.IsComponentOperation(lease.Operation):

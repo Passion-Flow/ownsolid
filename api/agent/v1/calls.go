@@ -161,6 +161,7 @@ var taskCalls = map[string]Call{
 	"model-preparation-input-files": CallDownload,
 	"image-registry":                CallDownload,
 	KubernetesArtifactsPath:         CallDownload,
+	GatewayActivationPath:           CallCertificate,
 	"training-uploads":              CallUpload,
 	"model-preparation-uploads":     CallUpload,
 }

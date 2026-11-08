@@ -48,6 +48,8 @@ type Config struct {
 	Preparation      modelpreparations.Config `json:"model_preparation,omitempty"`
 	// Kubernetes bounds how a node of the Kubernetes profile installs RKE2 (ADR 0051).
 	Kubernetes kubernetes.Config `json:"kubernetes,omitempty"`
+	// Gateway is the model gateway this serving node runs beside its model (ADR 0052).
+	Gateway *inference.GatewayConfig `json:"gateway,omitempty"`
 }
 
 func LoadConfig(path string) (Config, error) { return loadConfig(path) }
@@ -122,6 +124,11 @@ func validateConfig(c Config) (Config, error) {
 		}
 	} else if c.Kubernetes != (kubernetes.Config{}) {
 		return c, errors.New("AGENT_CONFIG_INVALID")
+	}
+	if c.Gateway != nil {
+		if c.ExecutionProfile != wire.DockerInferenceProfile || c.Gateway.Validate() != nil || c.CAFile == "" || overlap(c.Gateway.RootDirectory, c.StateDirectory) || overlap(c.Gateway.RootDirectory, c.Inference.RootDirectory) {
+			return c, errors.New("AGENT_CONFIG_INVALID")
+		}
 	}
 	if wire.ValidateSessionAddresses(c.SessionAddresses) != nil {
 		return c, errors.New("AGENT_CONFIG_INVALID")
@@ -464,6 +471,15 @@ func claimAndRun(ctx context.Context, c Config, connection *client.Client, sessi
 	if lease.Kubernetes != nil {
 		return errors.New("AGENT_TASK_UNSUPPORTED")
 	}
+	if wire.IsGatewayOperation(lease.Operation) {
+		if x.gateway == nil || profile(c) != wire.DockerInferenceProfile || lease.Component != nil || lease.Gateway == nil || lease.Gateway.Validate(lease.Operation) != nil {
+			return errors.New("AGENT_TASK_UNSUPPORTED")
+		}
+		return executeGateway(ctx, connection, base, identity, *lease, x.gateway)
+	}
+	if lease.Gateway != nil {
+		return errors.New("AGENT_TASK_UNSUPPORTED")
+	}
 	if wire.IsComponentOperation(lease.Operation) {
 		if m == nil || lease.Component == nil || lease.Component.ValidateForProfile(profile(c), lease.Operation) != nil {
 			return errors.New("AGENT_TASK_UNSUPPORTED")
@@ -543,6 +559,14 @@ func Run(ctx context.Context, c Config) error {
 		}
 		defer im.Close()
 	}
+	var gm *inference.GatewayManager
+	if profile(c) == wire.DockerInferenceProfile {
+		gm, e = inference.NewGatewayManager(c.Gateway, c.CAFile, c.Inference.DockerSocket, c.Policy())
+		if e != nil {
+			return e
+		}
+		defer gm.Close()
+	}
 	rm, closeRegistry, e := registryLoader(c, connection)
 	if e != nil {
 		return e
@@ -588,7 +612,7 @@ func Run(ctx context.Context, c Config) error {
 	transport := ""
 	for {
 		started := time.Now()
-		e = sessionCycle(ctx, c, connection, session, identity, executors{components: m, inference: im, training: tm, preparations: pm, registry: rm, kubernetes: km})
+		e = sessionCycle(ctx, c, connection, session, identity, executors{components: m, inference: im, gateway: gm, training: tm, preparations: pm, registry: rm, kubernetes: km})
 		if ctx.Err() != nil {
 			return nil
 		}

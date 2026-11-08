@@ -1,7 +1,7 @@
 // What publishing a deployment to the gateway asks of it and of the person: whether the deployment
 // can be published now, the name callers use, and the address of a new gateway
 // (docs/research/gateway-publishing.md).
-import type { Deployment, GatewayInstance, ModelAlias } from '@ownsolid/api';
+import type { Deployment, GatewayInstance, ModelAlias, Node } from '@ownsolid/api';
 
 /** Where the card's reads live, beside the key reads, so a write refreshes what it changed. */
 export const gatewayPublishKeys = {
@@ -100,4 +100,25 @@ export function nodeGateway(
   node: string,
 ): GatewayInstance | undefined {
   return gateways.find((gateway) => gateway.node_id === node && gateway.state === 'active');
+}
+
+/** The task an agent that runs gateways enrolled with (api/agent/v1 `GatewayOperation`). */
+const gatewayStart = 'gateway.start.v1';
+
+/**
+ * Whether the node's agent runs its gateway (ADR 0052): the installation lets agents run them and
+ * the node enrolled with gateway tasks. Then the credential stays on the node and the node declares
+ * where callers reach it; otherwise an administrator places the gateway and its credential.
+ */
+export function agentRunsGateway(agentGateways: boolean, node: Node | undefined): boolean {
+  return agentGateways && (node?.capabilities.includes(gatewayStart) ?? false);
+}
+
+/**
+ * Where a node's gateway stands for publishing: `ready` to name a model, `starting` while the
+ * agent starts it, `failed` when the agent could not. A gateway an administrator runs is ready.
+ */
+export function gatewayReadiness(gateway: GatewayInstance): 'ready' | 'starting' | 'failed' {
+  if (gateway.delivery === 'manual' || gateway.delivery_state === 'running') return 'ready';
+  return gateway.delivery_state === 'starting' ? 'starting' : 'failed';
 }

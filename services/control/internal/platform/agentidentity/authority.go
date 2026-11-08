@@ -1,5 +1,7 @@
-// Package agentidentity issues and reads the client certificates that identify agents
-// (ARC-103, ADR 0050).
+// Package agentidentity issues and reads the certificates of what runs on nodes: the client
+// certificates that identify agents (ARC-103, ADR 0050) and the serving certificates of the
+// model gateways agents run (GW-114, ADR 0052). Each kind comes from its own CA, loaded into
+// its own Authority.
 package agentidentity
 
 import (
@@ -11,6 +13,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"math/big"
+	"net"
 	"net/url"
 	"time"
 
@@ -23,11 +26,12 @@ const backdate = time.Hour
 // serialBits is the entropy of a certificate's serial number.
 const serialBits = 128
 
-// Authority signs node certificates with the agent CA.
+// Authority signs certificates with one CA.
 type Authority struct {
 	certificate *x509.Certificate
 	key         crypto.Signer
 	lifetime    time.Duration
+	bundle      []byte
 }
 
 // NewAuthority builds an authority from a CA bundle and the private key of its first
@@ -46,7 +50,7 @@ func NewAuthority(bundlePEM, keyPEM []byte, lifetime time.Duration) (*Authority,
 	if !ok {
 		return nil, bad
 	}
-	return &Authority{certificate: issuer, key: key, lifetime: lifetime}, nil
+	return &Authority{certificate: issuer, key: key, lifetime: lifetime, bundle: bundlePEM}, nil
 }
 
 // Issue signs a certificate naming node for the key of a checked certificate request. Only
@@ -61,6 +65,45 @@ func (a *Authority) Issue(request *x509.CertificateRequest, scope wire.Scope, no
 	if e != nil {
 		return "", time.Time{}, e
 	}
+	return a.sign(&x509.Certificate{
+		Subject:     pkix.Name{CommonName: node},
+		KeyUsage:    x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		URIs:        []*url.URL{identity},
+	}, request.PublicKey)
+}
+
+// IssueServing signs a serving certificate for a model gateway's key, naming only the host of
+// the origin its node declares. Only the request's public key is used, and the certificate
+// can only authenticate a server.
+func (a *Authority) IssueServing(request *x509.CertificateRequest, gateway string, origin wire.GatewayOrigin) (string, time.Time, error) {
+	if a == nil || request == nil || (origin.Host == "") == (origin.IP == nil) {
+		return "", time.Time{}, errors.New("GATEWAY_AUTHORITY_UNAVAILABLE")
+	}
+	template := &x509.Certificate{
+		Subject:     pkix.Name{CommonName: gateway},
+		KeyUsage:    x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	}
+	if origin.IP != nil {
+		template.IPAddresses = []net.IP{origin.IP}
+	} else {
+		template.DNSNames = []string{origin.Host}
+	}
+	certificate, notAfter, e := a.sign(template, request.PublicKey)
+	if e != nil {
+		return "", time.Time{}, errors.New("GATEWAY_AUTHORITY_UNAVAILABLE")
+	}
+	return certificate, notAfter, nil
+}
+
+// Bundle is the CA bundle that verifies what this authority signs, issuer first.
+func (a *Authority) Bundle() string { return string(a.bundle) }
+
+// sign completes template with a random serial and a validity that never outlives the issuer,
+// and signs it for publicKey.
+func (a *Authority) sign(template *x509.Certificate, publicKey any) (string, time.Time, error) {
+	bad := errors.New("AGENT_IDENTITY_UNAVAILABLE")
 	serial, e := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), serialBits))
 	if e != nil {
 		return "", time.Time{}, bad
@@ -73,16 +116,8 @@ func (a *Authority) Issue(request *x509.CertificateRequest, scope wire.Scope, no
 	if !now.Before(notAfter) {
 		return "", time.Time{}, bad
 	}
-	template := &x509.Certificate{
-		SerialNumber: serial,
-		Subject:      pkix.Name{CommonName: node},
-		NotBefore:    now.Add(-backdate),
-		NotAfter:     notAfter,
-		KeyUsage:     x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-		URIs:         []*url.URL{identity},
-	}
-	der, e := x509.CreateCertificate(rand.Reader, template, a.certificate, request.PublicKey, a.key)
+	template.SerialNumber, template.NotBefore, template.NotAfter = serial, now.Add(-backdate), notAfter
+	der, e := x509.CreateCertificate(rand.Reader, template, a.certificate, publicKey, a.key)
 	if e != nil {
 		return "", time.Time{}, bad
 	}

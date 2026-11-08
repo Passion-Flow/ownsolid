@@ -567,11 +567,8 @@ export interface components {
             /** Format: uuid */
             node_id: string;
             name: string;
-            /**
-             * Format: uri
-             * @description Canonical HTTPS origin only; advertised metadata, never an outbound control destination.
-             */
-            client_origin: string;
+            /** @description Where callers reach the gateway: a canonical HTTPS origin. Null for a gateway the node's agent runs until it activates the gateway with the origin its node declares. */
+            client_origin: string | null;
             /** Format: uuid */
             created_by: string;
             /** @enum {string} */
@@ -579,6 +576,17 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             revoked_at: string | null;
+            /**
+             * @description agent: the node's agent runs the gateway, with a credential it generated on the node (ADR 0052). manual: an administrator placed the credential shown once at registration.
+             * @enum {string}
+             */
+            delivery: "manual" | "agent";
+            /** @description How far the agent got with the gateway. Null for a manual gateway. */
+            delivery_state: ("starting" | "running" | "failed" | "stopping" | "stopped") | null;
+            /** @description Why the agent's last start or stop failed; GATEWAY_TASK_EXPIRED when its task ended without a result. */
+            delivery_error_code: string | null;
+            /** @description When the serving certificate issued at activation expires. */
+            certificate_not_after: string | null;
         };
         ProvisionGateway: {
             /** Format: uuid */
@@ -586,9 +594,9 @@ export interface components {
             name: string;
             /**
              * Format: uri
-             * @description Canonical HTTPS origin only; advertised metadata, never an outbound control destination.
+             * @description Where callers reach a gateway an administrator runs; required then. Omitted when the node's agent runs the gateway: the node declares its origin.
              */
-            client_origin: string;
+            client_origin?: string;
             reason: string;
         };
         ProvisionedGateway: {

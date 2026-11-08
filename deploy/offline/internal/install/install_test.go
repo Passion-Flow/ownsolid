@@ -209,6 +209,7 @@ func TestMaterializeWritesPrivateFilesAndKeepsSecrets(t *testing.T) {
 		filepath.Join(l.Config, "certificate.pem"), filepath.Join(l.Config, "runtime-dsn"), filepath.Join(l.Operator, "operator-dsn"),
 		filepath.Join(l.Secrets, "postgres-password"), filepath.Join(l.Secrets, "runtime-password"), filepath.Join(l.Secrets, "ca-key.pem"),
 		filepath.Join(l.Config, agentCAFile), filepath.Join(l.Config, agentCAKeyFile),
+		filepath.Join(l.Config, gatewayCAFile), filepath.Join(l.Config, gatewayCAKeyFile),
 	}
 	before := map[string][]byte{}
 	for _, path := range generated {
@@ -857,6 +858,44 @@ func TestDatabaseRoleConnectionsReachControlsConfiguration(t *testing.T) {
 		if e := c.Validate(); e == nil {
 			t.Fatalf("%d accepted", invalid)
 		}
+	}
+}
+
+func TestModelGatewayCAIsItsOwnAndOnlyServingMaySignWithIt(t *testing.T) {
+	c := validConfig(t)
+	if e := Materialize(c); e != nil {
+		t.Fatal(e)
+	}
+	l := c.Layout()
+	first, e := os.ReadFile(filepath.Join(l.Config, gatewayCAFile))
+	if e != nil {
+		t.Fatal(e)
+	}
+	block, _ := pem.Decode(first)
+	if block == nil {
+		t.Fatal("no certificate")
+	}
+	authority, e := x509.ParseCertificate(block.Bytes)
+	if e != nil || !authority.IsCA || authority.Subject.CommonName != "ownsolid model gateway CA" {
+		t.Fatal(authority, e)
+	}
+	agents, _ := os.ReadFile(filepath.Join(l.Config, agentCAFile))
+	if bytes.Equal(first, agents) {
+		t.Fatal("gateways and agents share a CA")
+	}
+	if e := Materialize(c); e != nil {
+		t.Fatal(e)
+	}
+	if again, _ := os.ReadFile(filepath.Join(l.Config, gatewayCAFile)); !bytes.Equal(first, again) {
+		t.Fatal("applying again replaced the model gateway CA")
+	}
+	serving, e := c.renderControl("/run/dsn", true)
+	if e != nil || !bytes.Contains(serving, []byte("model_gateway_identity")) || !bytes.Contains(serving, []byte(gatewayCAKeyFile)) {
+		t.Fatalf("serving configuration: %v\n%s", e, serving)
+	}
+	operator, e := c.renderControl("/run/dsn", false)
+	if e != nil || bytes.Contains(operator, []byte("model_gateway_identity")) {
+		t.Fatalf("operator configuration: %v\n%s", e, operator)
 	}
 }
 

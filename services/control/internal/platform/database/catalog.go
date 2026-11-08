@@ -34,8 +34,8 @@ SELECT jsonb_build_object('table_count',(SELECT count(*) FROM owned WHERE relkin
    FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid WHERE t.tgrelid=o.oid AND NOT t.tgisinternal)) ORDER BY o.relname) FROM owned o))::text`
 
 // Exact native fresh and logical dump/reparse forms from pinned PostgreSQL18.6.
-const catalogFreshSHA256 = "e3bd8254a8b20e5ba215c339d47c8de68d16a8cd5670ee1edc9f0b86f0c6a06d"
-const catalogRestoredSHA256 = "03806e275671b8b956c9796b0919844db2756d741c79eecd206be12c4b31a7bb"
+const catalogFreshSHA256 = "8454a9e3039dfb669a532aaabd26419661c404d683cd9abfa45eb4ee2b25b4a4"
+const catalogRestoredSHA256 = "c160dfad296f6a93ec88aa88cc63bd232cbfd5dca0518c22d390961b0593e7be"
 
 func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
 	var raw string

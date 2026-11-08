@@ -90,5 +90,11 @@
   "`newest` (the default) or `oldest` first, by creation time. A cursor belongs to the order it was made with.": "按创建时间排序，`newest`（默认）或 `oldest` 在前。游标只适用于创建它时的排序。",
   "`system` leaves the choice to the operating system of each browser.": "`system` 表示由各浏览器所在的操作系统决定。",
   "passed: credentials and every callback were accepted. not_configured: the origin is no longer approved, and nothing was sent. unreachable: no answer over the configured addresses. certificate_untrusted: the provider's certificate is not trusted by the configured CA. credentials_rejected: the client ID or secret was refused. callback_not_registered: the provider refused callback_url. unexpected_answer: an answer the check does not know.": "passed：凭据和所有回调地址都被接受。not_configured：来源不再被批准，未发送任何内容。unreachable：配置的地址没有响应。certificate_untrusted：配置的 CA 不信任身份提供方的证书。credentials_rejected：客户端 ID 或密钥被拒绝。callback_not_registered：身份提供方拒绝了 callback_url。unexpected_answer：检查无法识别的响应。",
-  "ready can be chosen now; planned has an open roadmap item; licensed works under a licence or account the customer holds; unsupported is a decision not to support it.": "ready 表示现在可选；planned 表示有未完成的路线图条目；licensed 表示需要客户自己持有的许可或账号；unsupported 表示决定不支持。"
+  "ready can be chosen now; planned has an open roadmap item; licensed works under a licence or account the customer holds; unsupported is a decision not to support it.": "ready 表示现在可选；planned 表示有未完成的路线图条目；licensed 表示需要客户自己持有的许可或账号；unsupported 表示决定不支持。",
+  "Where callers reach the gateway: a canonical HTTPS origin. Null for a gateway the node's agent runs until it activates the gateway with the origin its node declares.": "调用方访问网关的地址：规范的 HTTPS 源。由节点 agent 运行的网关在 agent 用节点声明的源激活它之前为 null。",
+  "agent: the node's agent runs the gateway, with a credential it generated on the node (ADR 0052). manual: an administrator placed the credential shown once at registration.": "agent：由节点的 agent 运行网关，凭据在节点上生成（ADR 0052）。manual：由管理员放置注册时只显示一次的凭据。",
+  "How far the agent got with the gateway. Null for a manual gateway.": "agent 对该网关的处理进度。手动网关为 null。",
+  "Why the agent's last start or stop failed; GATEWAY_TASK_EXPIRED when its task ended without a result.": "agent 上次启动或停止失败的原因；任务未返回结果就结束时为 GATEWAY_TASK_EXPIRED。",
+  "When the serving certificate issued at activation expires.": "激活时签发的服务证书的到期时间。",
+  "Where callers reach a gateway an administrator runs; required then. Omitted when the node's agent runs the gateway: the node declares its origin.": "由管理员运行的网关供调用方访问的地址，此时必填。由节点 agent 运行网关时省略：节点会声明自己的源。"
 }
