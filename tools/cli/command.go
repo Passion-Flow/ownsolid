@@ -138,8 +138,11 @@ func (opts *options) readResource(cmd *cobra.Command, r resource, workspace, nam
 	client.restoreSession(value)
 	path, ctx := cfg.adminPath(r), cmd.Context()
 	id := lookupID(name)
-	if name != "" && id != "" {
-		return opts.renderDetail(cmd.OutOrStdout(), ctx, client, r, path, id)
+	if id != "" {
+		if r.key == deployments.key && workspace == "" {
+			workspace = cfg.WorkspaceID
+		}
+		return opts.renderDetail(cmd.OutOrStdout(), ctx, client, r, path, id, workspace)
 	}
 
 	query := make(url.Values)
@@ -165,17 +168,23 @@ func (opts *options) readResource(cmd *cobra.Command, r resource, workspace, nam
 	if err != nil {
 		return err
 	}
-	return opts.renderDetail(cmd.OutOrStdout(), ctx, client, r, path, id)
+	return opts.renderDetail(cmd.OutOrStdout(), ctx, client, r, path, id, workspace)
 }
 
-func (opts *options) renderDetail(w io.Writer, ctx context.Context, client *apiClient, r resource, path, id string) error {
+func (opts *options) renderDetail(w io.Writer, ctx context.Context, client *apiClient, r resource, path, id, workspace string) error {
 	var item json.RawMessage
 	if err := client.get(ctx, path+"/"+id, nil, &item); err != nil {
 		return err
 	}
-	actual, err := readResourceID(item)
-	if err != nil || actual != id {
+	var actual struct {
+		ID          string `json:"id"`
+		WorkspaceID string `json:"workspace_id"`
+	}
+	if err := json.Unmarshal(item, &actual); err != nil || actual.ID != id {
 		return errors.New("the server returned a different or invalid resource ID")
+	}
+	if workspace != "" && actual.WorkspaceID != workspace {
+		return fmt.Errorf("the resource is outside the selected workspace %s; check --workspace or workspace_id in config.json", workspace)
 	}
 	return render(w, opts.output, r.columns, item, []json.RawMessage{item})
 }

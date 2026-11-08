@@ -149,7 +149,7 @@ func TestOperatorFlow(t *testing.T) {
 	node := map[string]any{"id": nodeID, "name": "gpu-01", "status": "active", "connectivity": "online", "workspace_id": workspaceID}
 	second := map[string]any{"id": secondNodeID, "name": "gpu-012-long", "status": "active", "connectivity": "offline"}
 	model := map[string]any{"id": modelID, "name": "true", "kind": "base", "state": "ready"}
-	deployment := map[string]any{"id": deployID, "node_id": nodeID, "model_id": modelID, "desired_state": "running", "observed_state": "ready"}
+	deployment := map[string]any{"id": deployID, "workspace_id": workspaceID, "node_id": nodeID, "model_id": modelID, "desired_state": "running", "observed_state": "ready"}
 	var active, rejectLogout, ambiguous, rejectRead, capped atomic.Bool
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method + " " + r.URL.Path {
@@ -313,6 +313,10 @@ func TestOperatorFlow(t *testing.T) {
 		if out := success("deployment", "get", selector); !strings.Contains(out, deployID) {
 			t.Fatal("deployment missing from detail")
 		}
+	}
+
+	if out, _, err := run(t, "deployment", "get", deployID, "--workspace", secondNodeID); out != "" || err == nil || !strings.Contains(err.Error(), "outside the selected workspace") {
+		t.Fatalf("deployment lookup escaped the selected workspace: stdout %q, error %v", out, err)
 	}
 
 	ambiguous.Store(true)

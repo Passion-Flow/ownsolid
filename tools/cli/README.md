@@ -68,7 +68,8 @@ ownsolid version
 Model and deployment lists use the workspace chosen by `--workspace`, then
 `workspace_id` in `config.json`, then the session's current workspace. Node lists
 follow every cursor. Model and deployment lists have the bounds of the Admin
-API. A deployment detail can be retrieved by UUID across authorized workspaces.
+API. A deployment UUID selects its detail directly. An explicit workspace from
+the flag or config file also scopes that lookup.
 To look up a deployment by name, use the exact model name in the selected
 workspace, for example `ownsolid deployment get qwen3`. The name must select
 one model and one retained deployment. If the result is ambiguous or the model list
