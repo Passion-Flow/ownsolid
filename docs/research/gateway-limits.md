@@ -110,7 +110,7 @@ the durable budget path.
 
 Apple M4 Max, 8 worker threads and 128 tenants, all three request and
 concurrency scopes enabled, 800,000 admitted checks. The quiet rerun
-measured 5.58 million checks/s and p50/p95/p99 of 0.125/0.583/9.125 µs
+measured 5.58 million checks/s and p50/p95/p99 of 0.125/0.583/9.125 microseconds
 for key lookup, validation and acquisition. The durable path, measured
 separately against the local filesystem with 1,000 sequential reserve/refund
 pairs, took 9.904/14.671/21.820 ms for reservation and
