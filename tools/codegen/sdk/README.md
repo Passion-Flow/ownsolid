@@ -93,9 +93,31 @@ with httpx.Client(
     print(response.status_code)
 ```
 
+## Stream and download responses
+
+For model gateway chat with `stream=True`, use the raw response adapter. It
+preserves the request fields and gateway credential from the generated
+operation and client. Check the status and media type before reading events.
+
+```python
+from ownsolid_sdk.model_gateway.api.default import create_scoped_chat_completion
+from ownsolid_sdk.streaming import open_response
+
+with open_response(create_scoped_chat_completion, client=gateway, body=chat) as response:
+    response.raise_for_status()
+    for line in response.iter_lines():
+        print(line)
+```
+
+Use `open_async_response` with `async with` and `aiter_lines()` for an async
+client. For downloads, read `iter_bytes()` after checking the status and
+media type. In Go, use the generated method without the `WithResponse`
+suffix to read or close the HTTP response body directly.
+
 Run the projection checks with
 `python3 -m unittest discover -s tools/codegen/sdk/tests`. With the SDK runtime
 environment installed, run
 `python tools/codegen/sdk/tests/wire_smoke.py "$SDK_DIR"` for the Go and Python
 loopback checks. They exercise login, cookie reuse, typed node lists and a
-binary dataset request with its declared media type.
+binary dataset request with its declared media type. The same test verifies
+Python streaming response ownership and error bodies.

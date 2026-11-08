@@ -142,6 +142,7 @@ def generate(destination, go_tool, python_tool):
             raise ValueError("no public OpenAPI contracts found")
         for filename in ("go.mod", "go.sum"):
             shutil.copyfile(TEMPLATES / f"{filename}.template", go_root / filename)
+        shutil.copyfile(TEMPLATES / "streaming.py.template", python_root / "streaming.py")
         shutil.copyfile(TEMPLATES / "requirements.txt", python_root.parent / "requirements.txt")
         staging.rename(destination)
     return count
