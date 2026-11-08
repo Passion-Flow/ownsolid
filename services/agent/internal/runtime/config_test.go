@@ -2,10 +2,10 @@ package runtime
 
 import (
 	"encoding/json"
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"os"
 	"path/filepath"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
-	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"testing"
 )
 
@@ -34,11 +34,19 @@ func TestProtectedConfigurationDefaultsAndOverrides(t *testing.T) {
 		t.Fatal("legacy defaults changed", err)
 	}
 	input["runtime"] = map[string]any{"control_connections": 3, "backoff_max_seconds": 45}
+	input["gateway_rebalance_seconds"] = 60
 	write()
 	c, err = LoadConfig(path)
-	if err != nil || c.Policy().ControlConnections != 3 || c.Policy().BackoffMaxSeconds != 45 || c.Policy().ControlRequestSeconds != 15 {
+	if err != nil || c.Policy().ControlConnections != 3 || c.Policy().BackoffMaxSeconds != 45 || c.Policy().ControlRequestSeconds != 15 || c.GatewayRebalanceSeconds != 60 {
 		t.Fatal("partial override failed", err)
 	}
+	delete(input, "runtime")
+	input["gateway_rebalance_seconds"] = 1
+	write()
+	if _, err = LoadConfig(path); err == nil {
+		t.Fatal("unsafe gateway rebalance interval accepted")
+	}
+	delete(input, "gateway_rebalance_seconds")
 	for _, invalid := range []map[string]any{{"control_connections": 0}, {"unknown_secret": "synthetic"}, {"docker_stop_seconds": 30}} {
 		input["runtime"] = invalid
 		write()

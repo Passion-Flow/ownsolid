@@ -29,8 +29,11 @@ type Client struct {
 	// SessionAddresses are the agent gateways the session stream may use, host:port each,
 	// verified for the origin's host name (ADR 0048). None means the control origin.
 	SessionAddresses []string
-	runtime          *settings.Policy
-	preparationHTTP  *http.Client
+	// GatewayRebalanceSeconds is the minimum wait between preference checks.
+	// Zero uses the default.
+	GatewayRebalanceSeconds int
+	runtime                 *settings.Policy
+	preparationHTTP         *http.Client
 	// tls verifies control for the session stream with the same roots as HTTP.
 	tls *tls.Config
 	// certificate is presented on new connections (ADR 0050).

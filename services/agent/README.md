@@ -40,3 +40,15 @@ Focused native example after toolchain/resource admission:
     go -C services/agent test ./internal/runtime ./internal/state ./internal/training ./internal/modelpreparations
 
 Actual daemon, Linux ownership/cgroups, NVIDIA execution and target images require their declared harnesses. Native or emulated tests do not establish target qualification. See [backend audit](../../docs/architecture/current-product/backend-audit.md).
+
+## Agent gateway preference
+
+With multiple `session_addresses`, a node on a fallback gateway periodically tries
+an authenticated heartbeat on a higher-ranked gateway. It moves future claims
+only after that heartbeat succeeds. With a single address or no explicit gateway
+list, there is no preference check.
+
+Set `gateway_rebalance_seconds` in the agent JSON configuration to change the
+minimum wait between checks. It defaults to 60 seconds and accepts 5 through
+3,600 seconds. Each wait adds up to one more interval of jitter. Restart the
+agent to apply a change.

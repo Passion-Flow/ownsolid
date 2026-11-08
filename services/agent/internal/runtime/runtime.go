@@ -36,16 +36,19 @@ type Config struct {
 	ControlOrigin string                `json:"control_origin"`
 	// SessionAddresses are the agent gateways, host:port, that carry the session stream
 	// when the cell runs them (ADR 0048). HTTPS calls stay on ControlOrigin.
-	SessionAddresses []string                 `json:"session_addresses,omitempty"`
-	CAFile           string                   `json:"ca_file"`
-	StateDirectory   string                   `json:"state_directory"`
-	DiskPath         string                   `json:"disk_path"`
-	JoinTokenFile    string                   `json:"join_token_file"`
-	ExecutionProfile string                   `json:"execution_profile,omitempty"`
-	Components       components.Config        `json:"components,omitempty"`
-	Inference        inference.Config         `json:"inference,omitempty"`
-	Training         training.Config          `json:"training,omitempty"`
-	Preparation      modelpreparations.Config `json:"model_preparation,omitempty"`
+	SessionAddresses []string `json:"session_addresses,omitempty"`
+	// GatewayRebalanceSeconds is the minimum wait between checks of preferred gateways.
+	// Zero uses the default.
+	GatewayRebalanceSeconds int                      `json:"gateway_rebalance_seconds,omitempty"`
+	CAFile                  string                   `json:"ca_file"`
+	StateDirectory          string                   `json:"state_directory"`
+	DiskPath                string                   `json:"disk_path"`
+	JoinTokenFile           string                   `json:"join_token_file"`
+	ExecutionProfile        string                   `json:"execution_profile,omitempty"`
+	Components              components.Config        `json:"components,omitempty"`
+	Inference               inference.Config         `json:"inference,omitempty"`
+	Training                training.Config          `json:"training,omitempty"`
+	Preparation             modelpreparations.Config `json:"model_preparation,omitempty"`
 	// Kubernetes bounds how a node of the Kubernetes profile installs RKE2 (ADR 0051).
 	Kubernetes kubernetes.Config `json:"kubernetes,omitempty"`
 	// Gateway is the model gateway this serving node runs beside its model (ADR 0052).
@@ -129,6 +132,9 @@ func validateConfig(c Config) (Config, error) {
 		if c.ExecutionProfile != wire.DockerInferenceProfile || c.Gateway.Validate() != nil || c.CAFile == "" || overlap(c.Gateway.RootDirectory, c.StateDirectory) || overlap(c.Gateway.RootDirectory, c.Inference.RootDirectory) {
 			return c, errors.New("AGENT_CONFIG_INVALID")
 		}
+	}
+	if c.GatewayRebalanceSeconds != 0 && (c.GatewayRebalanceSeconds < wire.MinGatewayRebalanceSeconds || c.GatewayRebalanceSeconds > wire.MaxGatewayRebalanceSeconds) {
+		return c, errors.New("AGENT_CONFIG_INVALID")
 	}
 	if wire.ValidateSessionAddresses(c.SessionAddresses) != nil {
 		return c, errors.New("AGENT_CONFIG_INVALID")
@@ -532,6 +538,7 @@ func Run(ctx context.Context, c Config) error {
 	connection.Credential = identity.Credential
 	connection.Scope = identity.Scope()
 	connection.SessionAddresses = c.SessionAddresses
+	connection.GatewayRebalanceSeconds = c.GatewayRebalanceSeconds
 	certificate, found, e := state.LoadCertificate(c.StateDirectory)
 	if e != nil {
 		return e
