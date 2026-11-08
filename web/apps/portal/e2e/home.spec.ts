@@ -14,6 +14,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 let control: ControlPlane;
 
+// These notices appear only after the query's two automatic backoff attempts.
+const retryNoticeTimeout = 15_000;
+
 test.beforeEach(async ({ page }) => {
   control = await mockControlPlane(page, 'portal');
   control.signedIn = true;
@@ -85,7 +88,9 @@ test('a section that cannot read fails alone and recovers on retry', async ({ pa
   control.applicationsProblem = { status: 503, code: 'WORKFLOW_UNAVAILABLE' };
   await page.goto('/');
   const published = section(page, 'Published to you');
-  await expect(published.getByText('Applications are not available')).toBeVisible();
+  await expect(published.getByText('Applications are not available')).toBeVisible({
+    timeout: retryNoticeTimeout,
+  });
   // It never claims to be empty, and the other sections still read.
   await expect(published.getByText('Nothing published yet')).toBeHidden();
   await expect(
@@ -102,7 +107,9 @@ test('notifications that cannot be read leave the lists standing', async ({ page
   control.notificationsProblem = { status: 503, code: 'NOTIFICATION_UNAVAILABLE' };
   await page.goto('/');
   const needs = section(page, 'Needs you');
-  await expect(needs.getByText('Notifications are not available')).toBeVisible();
+  await expect(needs.getByText('Notifications are not available')).toBeVisible({
+    timeout: retryNoticeTimeout,
+  });
   await expect(needs.getByText('Nothing needs you')).toBeHidden();
   await expect(
     section(page, 'Pick up where you left off').getByText('Contract reviewer'),
@@ -180,7 +187,9 @@ test('a failed workspace read offers a retry before saying there is no workspace
   control.workspacesProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
   await page.goto('/');
   const main = page.getByRole('main');
-  await expect(main.getByText('The database is unavailable')).toBeVisible();
+  await expect(main.getByText('The database is unavailable')).toBeVisible({
+    timeout: retryNoticeTimeout,
+  });
   await expect(main.getByRole('heading', { name: 'No workspace yet' })).toBeHidden();
   expect(control.applicationReads).toEqual([]);
   control.workspacesProblem = null;
