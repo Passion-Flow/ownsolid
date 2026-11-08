@@ -21,6 +21,7 @@ import {
   memberUser,
   missingLicense,
   node,
+  nodeGatewayInstance,
   offlineNode,
   pendingInvitation,
   readyModel,
@@ -148,7 +149,70 @@ export const consolePages: readonly PageState[] = [
       control.gatewayKeys = [deploymentKey];
       await page.goto(`/services/${runningDeployment.id}`);
       await page.getByRole('button', { name: 'Stop', exact: true }).click();
-      await page.getByText(deploymentAlias.name).waitFor();
+      await page.getByRole('dialog').getByText(deploymentAlias.name).waitFor();
+    },
+  },
+  {
+    name: 'a deployment published to the gateway',
+    path: '/services/$deploymentId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      control.models = [readyModel];
+      control.deployments = [runningDeployment];
+      control.gateways = [nodeGatewayInstance];
+      control.aliases = [deploymentAlias];
+      await page.goto(`/services/${runningDeployment.id}`);
+      await page
+        .getByRole('region', { name: 'On the gateway' })
+        .getByText('Answering calls')
+        .waitFor();
+    },
+  },
+  {
+    name: 'publishing a deployment, with a new gateway for its node',
+    path: '/services/$deploymentId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      control.models = [readyModel];
+      control.deployments = [runningDeployment];
+      await page.goto(`/services/${runningDeployment.id}`);
+      await page.getByRole('button', { name: 'Publish to the gateway' }).click();
+      await page.getByRole('dialog').getByLabel('Gateway address').waitFor();
+    },
+  },
+  {
+    name: "a new gateway's credential, shown once",
+    path: '/services/$deploymentId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      control.models = [readyModel];
+      control.deployments = [runningDeployment];
+      await page.goto(`/services/${runningDeployment.id}`);
+      await page.getByRole('button', { name: 'Publish to the gateway' }).click();
+      const dialog = page.getByRole('dialog');
+      await dialog.getByLabel('Gateway address').fill('https://gateway.example.test');
+      await dialog.getByLabel('Reason').fill('Serve the support team');
+      await dialog.getByRole('button', { name: 'Publish', exact: true }).click();
+      await dialog.getByRole('button', { name: 'Done' }).waitFor();
+    },
+  },
+  {
+    name: 'stopping publishing a name',
+    path: '/services/$deploymentId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.nodes = [node];
+      control.models = [readyModel];
+      control.deployments = [runningDeployment];
+      control.gateways = [nodeGatewayInstance];
+      control.aliases = [deploymentAlias];
+      control.gatewayKeys = [deploymentKey];
+      await page.goto(`/services/${runningDeployment.id}`);
+      await page.getByRole('button', { name: 'Stop publishing' }).click();
+      await page.getByRole('dialog').getByText(deploymentKey.prefix).waitFor();
     },
   },
   {

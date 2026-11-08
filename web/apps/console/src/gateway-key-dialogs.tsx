@@ -34,7 +34,7 @@ import { gatewayKeys, lifetimes, overlaps, type Overlap } from './gateway-key-st
  * One idempotency key per request body until it is answered, so a retry after a lost answer
  * returns the same key instead of making a second, and a changed form is a new request.
  */
-function useIntentKeys() {
+export function useIntentKeys() {
   const keys = useRef(new Map<string, string>());
   return {
     take(intent: unknown): string {
@@ -49,7 +49,14 @@ function useIntentKeys() {
   };
 }
 
-function ReasonField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+/** The reason every gateway change asks for; it is kept in the audit trail. */
+export function ReasonField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
   const { t } = useI18n();
   return (
     <TextField
@@ -112,8 +119,16 @@ function lifetimeLabel(t: Translator) {
   };
 }
 
-/** Issues a key for one model of the workspace. Open it fresh each time. */
-export function IssueKeyDialog({ workspace, onClose }: { workspace: string; onClose: () => void }) {
+/** Issues a key for one model of the workspace, `alias` chosen first. Open it fresh each time. */
+export function IssueKeyDialog({
+  workspace,
+  alias: initialAlias,
+  onClose,
+}: {
+  workspace: string;
+  alias?: string | undefined;
+  onClose: () => void;
+}) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const policy = useQuery(runtimeConfigQuery()).data?.gatewayKeys;
@@ -127,8 +142,11 @@ export function IssueKeyDialog({ workspace, onClose }: { workspace: string; onCl
     (item) => item.available && item.disabled_at === null,
   );
   const [label, setLabel] = useState('');
-  const [chosen, setChosen] = useState<string | null>(null);
-  const alias = chosen ?? choices[0]?.id ?? '';
+  const [chosen, setChosen] = useState<string | null>(initialAlias ?? null);
+  // A chosen model that cannot take a key now falls back to the first that can.
+  const alias = choices.some((item) => item.id === chosen)
+    ? (chosen ?? '')
+    : (choices[0]?.id ?? '');
   const [lifetime, setLifetime] = useState<number | null>(null);
   const [reason, setReason] = useState('');
   const intents = useIntentKeys();

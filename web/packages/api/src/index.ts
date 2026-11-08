@@ -127,17 +127,24 @@ export {
   type PlacementNode,
 } from './deployments.ts';
 export {
+  disableModelAlias,
   issueGatewayKey,
+  listGatewayInstances,
   listGatewayKeyCalls,
   listGatewayKeys,
   listModelAliases,
   maximumRotationOverlapSeconds,
+  provisionGateway,
+  publishModelAlias,
+  revokeGatewayInstance,
   revokeGatewayKey,
   rotateGatewayKey,
   type GatewayCall,
+  type GatewayInstance,
   type GatewayKey,
   type MintedGatewayKey,
   type ModelAlias,
+  type ProvisionedGateway,
 } from './distribution.ts';
 export {
   cancelModelImport,
