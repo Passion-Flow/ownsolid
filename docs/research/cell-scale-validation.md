@@ -121,8 +121,113 @@ load without counting simulated Pod status as real container execution.
 Use the existing database counter deltas and dispatch measurement from
 the ARC-015 fixture, separating ramp-up, steady load, and failure windows.
 
-The checked host had 16 logical CPUs and 31 GiB RAM, with about 20 GiB
-available at inventory time. It was shared, and no KWOK image or pinned
-stage manifests were present in its Docker cache or test staging
-directories. The repository had no staged KWOK assets either. The 1,000
-node coupled run was not started. ARC-105 and ARC-106 remain open.
+At the time of the original gateway smoke, the shared test host had 16
+logical CPUs and 31 GiB RAM, with about 20 GiB available. Its Docker cache
+and test staging directories held no KWOK image or pinned stages. The
+subsequent fixture below stages these inputs separately from the product.
+
+## KWOK offline fixture
+
+Select [KWOK v0.8.0](https://github.com/kubernetes-sigs/kwok/releases/tag/v0.8.0).
+The release publishes a Kubernetes 1.36.1 cluster image and its
+[Go module](https://github.com/kubernetes-sigs/kwok/blob/v0.8.0/go.mod)
+uses Kubernetes 1.36.1 clients. Use the controller in the existing pinned
+RKE2 v1.36.6+rke2r1 cluster. The published minor version matches and the
+patch-version compatibility needs a real run. KWOK's
+[Apache-2.0 licence](https://github.com/kubernetes-sigs/kwok/blob/v0.8.0/LICENSE)
+permits commercial use, redistribution with applicable notices, and
+offline use. No new product dependency or data set is introduced.
+
+Verify the upstream release asset digests for `kwok.yaml` and
+`stage-fast.yaml`. Resolve the OCI index from the upstream Kubernetes
+registry, verify its SHA-256 against the registry's digest, and select
+its single Linux amd64 descriptor. Fetch and verify that manifest and
+every referenced blob on the connected host. Transfer the local OCI
+archive into the disconnected RKE2 fixture and import it into
+containerd's `k8s.io` namespace. A fixture copy of the deployment uses
+the exact manifest digest and `imagePullPolicy: Never` while the verified
+upstream manifests stay intact. This exercises the packaged controller
+without an image pull or a registry lookup.
+
+Keep the two packet recorders and the site DNS log from ARC-104. Run a
+bounded gateway fixture with the RKE2/KWOK fixture alive. After real
+gateway sessions and scoped heartbeats are visible, correlate each
+enrolled identity with a KWOK Node of the same UUID, restrict KWOK to
+annotated nodes, and check real scheduler placement and simulated Pod
+readiness. Require another complete gateway heartbeat observation after
+that proof. Report the scratch coordination separately from a managed
+cell provisioned through the signed installation and console path.
+
+### Verified inventory
+
+The release's asset digests matched the downloaded bytes. The registry
+index digest matched its `Docker-Content-Digest`. The amd64 manifest,
+config and each layer matched both the upstream descriptor digest and size.
+The verified bytes remain in lane-specific test storage.
+
+| Input | SHA-256 |
+| --- | --- |
+| `kwok.yaml` | `a4c16e6431e382dcb5c1903139344b7a68652f16a6460337fe17a678a426f405` |
+| `stage-fast.yaml` | `2f28d95564ec43056c0873f7a25ac7d2a5bba4c8496c72f8b3ee73fd4f54ee24` |
+| Official multi-platform image index | `6d25aa8fbdfe78845423160bf125b5513f9522e2770981f0945c2a250c2b26f0` |
+| Official Linux amd64 manifest | `28ee38abba19bd0b89600b1b367c32480da45f1d954c80d14db5fc74feee83f2` |
+| Official Linux amd64 image config | `8b980198bbeeb7351c22f0a8ea4d4acd615911d101793c10355b8aafeaa29a13` |
+| Local amd64 OCI archive | `410b11561f663afaeb170010ff505c9dc8fed999bc6f9d6ca8620d6bab5c5bbf` |
+| KWOK licence | `b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1` |
+| Local disconnected deployment | `42da4c523b8332e7594a57296b14c834792813307c5e1b0be07752f4798aa83d` |
+
+The disconnected Linux amd64 RKE2 server reported Kubernetes
+`v1.36.6+rke2r1`. The stages CRD established and the controller
+deployment rolled out from the local archive. The CRI used a local
+archive index alias for the running container's reference. Its sole
+manifest matched the pinned amd64 digest, and the running image config
+matched the official config digest. The original release assets stay
+byte-for-byte intact. The pinned RKE2 binary and two image archives also
+passed their release SHA-256 checks before server startup.
+
+The verified archives and original manifests are kept on `ownsolid-cpu`
+in `/root/lane-arc-kwok.0DKaGD`. Run `sha256sum -c SHA256SUMS` from each
+of its `kwok/` and `rke2/` directories, and
+`sha256sum -c fixture-SHA256SUMS` from `kwok/` for the derived
+deployment. The assets and the local deployment stay outside Git and
+are used only by the test fixture.
+
+### Eight-node coupled run
+
+The disconnected RKE2/KWOK server and the developer gateway installation
+ran in separate isolated network namespaces. The latter used the
+control binary from `451319f7` and the same pinned base image as the
+24-agent smoke. A scratch harness shared the site, cell and eight
+enrolled UUIDs between the fixtures. The two gateway processes handled
+real TLS sessions. Independently wrong site and cell metadata were
+refused with gRPC NotFound.
+
+- All eight annotated KWOK Nodes reached Ready. The real Kubernetes
+  scheduler bound one Pod per enrolled UUID and KWOK made all eight Pods
+  Ready. The real RKE2 node stayed Ready and outside KWOK's selection.
+  Applying the fixtures and observing placement and readiness took
+  5 seconds.
+- Steady gateway sessions split 3/5. Two fresh PostgreSQL heartbeat
+  observations reached all eight agents in 12.3 and 12.4 seconds.
+  A third observation after KWOK readiness reached all eight in
+  11.1 seconds.
+- After killing one gateway, the survivor held all eight sessions in
+  8.436 seconds. After the restored gateway became ready, the split
+  converged to 3/5 in 13.631 seconds. Four facts tasks completed and the
+  control listener recorded zero direct Agent session opens.
+- Both external packet recorders saw zero product packets, with the
+  deliberate probe traffic counted separately. The site resolver
+  recorded a CoreDNS HINFO question and two public questions (A and
+  AAAA) for `usage.projectcalico.org`. Felix reported the failed lookup
+  during its first usage report attempt. The combined egress gate
+  failed. The site resolver never forwarded the questions.
+
+The fixture demonstrates compatibility with the tested Kubernetes
+patch version and the scratch identity correlation. Signed delivery and
+the managed console cell flow are still required for the acceptance run.
+The shared Linux host had 16 logical CPUs and 31 GiB RAM. While both
+fixtures were live, free memory dropped below the briefing's 2 GiB
+threshold twice (about 1.6 GiB and 1,947 MiB), with 18–19 GiB available
+and no free swap. The 1,000-node run at twice the load did not start.
+These observations do not establish dispatch p99, reconnect time or
+database write throughput at the target scale.
