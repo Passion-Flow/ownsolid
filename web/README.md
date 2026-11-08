@@ -33,6 +33,9 @@ Browser tests need Chromium once per machine:
 `cd apps/console && pnpm exec playwright install chromium`. They run against a scripted
 control plane (`packages/shell/testing`) and `vite preview` with the control plane's
 Content-Security-Policy, so anything production would block fails the test.
+When worktrees run browser tests concurrently, set `OWNSOLID_PLAYWRIGHT_PORT_OFFSET`
+to a different integer for each worktree. It shifts both preview ports (4310 and 4311)
+by that amount and works with `make test`.
 
 To run an application against a real control plane:
 

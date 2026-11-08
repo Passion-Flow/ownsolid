@@ -36,6 +36,10 @@ export function helpFlows(audience: ControlPlane['audience']): void {
       await expect(page.getByRole('heading', { name: 'Your account', level: 1 })).toBeVisible();
       // Each section is an anchor a link can point at.
       await expect(page.locator('#what-you-can-change')).toBeVisible();
+      const entrance = audience === 'portal' ? 'portal' : 'console';
+      const summary = article(entrance, 'en', 'account')?.summary;
+      expect(summary).toBeTruthy();
+      await expect(page.getByText(summary ?? '', { exact: true })).toHaveCount(1);
     });
 
     test('search narrows the articles, says when nothing matches and clears', async ({ page }) => {
