@@ -446,6 +446,20 @@ task_events:
 #   ca_private_key_file: /run/secrets/agent-ca-key.pem
 #   certificate_lifetime_hours: 720
 #
+# kubernetes_cells lets control install one Kubernetes cluster (RKE2) per cell on nodes of the
+# kubernetes_node profile (ADR 0051). Without it, creating a cell cluster is refused.
+# artifact_directory holds the approved RKE2 files the offline bundle placed; agents download
+# them from control. join_token_key_file holds at least 32 random bytes (mode 0600) that seal
+# join tokens at rest; control and every agent gateway read it. A token must outlive a join:
+# token_ttl_seconds is above join_seconds. join_batch is at most 50 workers joining at once.
+# kubernetes_cells:
+#   artifact_directory: /var/lib/ownsolid/kubernetes/rke2
+#   join_token_key_file: /run/secrets/cell-join-token.key
+#   join_seconds: 1800
+#   token_ttl_seconds: 3600
+#   join_batch: 50
+#   reconcile_seconds: 10
+#
 # Optional. Read only by `serve-agent-gateway`, which serves agent session streams beside
 # control (ADR 0048); control ignores it. The certificate must name the agent entrance's host
 # (machine_server.origin, else server.admin_origin), because agents verify that name. Agents

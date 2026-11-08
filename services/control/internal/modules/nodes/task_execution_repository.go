@@ -46,7 +46,7 @@ func (s *Service) createTaskSelected(ctx context.Context, a identity.Auth, id, o
 		if e = s.taskIdleWithin(ctx, q, n, request); e != nil {
 			return e
 		}
-		out, e = s.insertTaskWithin(ctx, q, a, n, operation, key, nil, nil, s.Identity.Config.Policy().Nodes.TaskSeconds, nil)
+		out, e = s.insertTaskWithin(ctx, q, a.Me.User.ID, n, operation, key, nil, nil, s.Identity.Config.Policy().Nodes.TaskSeconds, nil)
 		if e != nil {
 			return e
 		}
@@ -141,6 +141,13 @@ func (s *Service) claimSelected(ctx context.Context, id, credential, request str
 			}
 			lease.Component = &command
 		}
+		if wire.IsKubernetesOperation(operation) {
+			command, e := s.kubernetesLeaseWithin(ctx, q, n, task)
+			if e != nil {
+				return e
+			}
+			lease.Kubernetes = &command
+		}
 		changed, e := q.Exec(ctx, nodeSQL(q, `UPDATE node_tasks SET state='running',attempt=attempt+1,lease_token_hash=$1,lease_expires_at=LEAST(clock_timestamp()+make_interval(secs=>$2),deadline_at),updated_at=clock_timestamp() WHERE tenant_id=$3 AND workspace_id=$4 AND node_id=$5 AND id=$6 AND deadline_at>clock_timestamp() AND attempt=$7`, `UPDATE node_tasks SET state='running',attempt=attempt+1,lease_token_hash=?,lease_expires_at=LEAST(TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),deadline_at),updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND deadline_at>UTC_TIMESTAMP(6) AND attempt=?`, `UPDATE node_tasks SET state='running',attempt=attempt+1,lease_token_hash=?,lease_expires_at=LEAST(DATEADD(SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))),deadline_at),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND deadline_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND attempt=?`, digest("node-lease", raw), s.Identity.Config.Policy().Nodes.TaskLeaseSeconds, n.TenantID, n.WorkspaceID, n.ID, task.ID, attempt))
 		if e != nil {
 			return e
@@ -175,6 +182,16 @@ func (s *Service) validateTaskResultWithin(ctx context.Context, q transaction.Ex
 	}
 	if !nodeOperationAllowed(n, t.Operation) {
 		return fail("AGENT_PROFILE_REJECTED")
+	}
+	if wire.IsKubernetesOperation(t.Operation) {
+		command, e := s.ReadKubernetesCommandWithin(ctx, q, n, t)
+		if e != nil {
+			return e
+		}
+		return input.ValidateKubernetes(command, t.Operation)
+	}
+	if input.Kubernetes != nil {
+		return fail("VALIDATION_FAILED")
 	}
 	if wire.IsInferenceOperation(t.Operation) {
 		command, e := s.ReadInferenceCommandWithin(ctx, q, n, t)
@@ -264,6 +281,15 @@ func (s *Service) completeSelected(ctx context.Context, id, credential, taskID s
 				return fail("AGENT_PROFILE_REJECTED")
 			}
 			if e = owner.RecordInferenceResultWithin(ctx, q, n, task, input); e != nil {
+				return e
+			}
+		}
+		if input.Kubernetes != nil {
+			command, e := s.ReadKubernetesCommandWithin(ctx, q, n, task)
+			if e != nil {
+				return e
+			}
+			if e = s.Kubernetes.RecordKubernetesResultWithin(ctx, q, n, task, command, input, request); e != nil {
 				return e
 			}
 		}

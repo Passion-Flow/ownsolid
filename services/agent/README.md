@@ -16,6 +16,7 @@ The [internal owner index](internal/README.md) links each execution manager and 
 | [inference](internal/inference) | Approved inference image, workload/network/GPU ownership and recovery |
 | [training](internal/training) | Approved training container, input/output transfer and journal |
 | [modelpreparations](internal/modelpreparations) | Approved preparation container, input/output binding and journal |
+| [kubernetes](internal/kubernetes) | RKE2 install, join, bootstrap tokens and readiness for the kubernetes_node profile (ADR 0051) |
 | [imageregistry](internal/imageregistry) | Verified offline Registry import/loading |
 | [progress](internal/progress) | What a running task reports: its steps and its log, bounded, and never deciding the task |
 | [runtime](internal/runtime) | Profile dispatch, lifecycle and fenced-removal entrypoints |

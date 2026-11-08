@@ -33,6 +33,7 @@ Modules own business state and authorization. HTTP subpackages adapt bounded tra
 | [taskdeliveries](taskdeliveries) | SQL outbox/receipt/dead-letter state for existing node-task events |
 | [middleware](middleware) | Admitted maintenance instance/operation state, backup/isolated-restore/reconciliation |
 | [monitoring](monitoring) | Scoped Admin observations over existing owners and the HTTP recorder; no new telemetry authority |
+| [cellclusters](cellclusters/README.md) | One RKE2 cluster per cell on kubernetes_node nodes: members, join orchestration, sealed join tokens, RKE2 file ranges (ADR 0051) |
 | [privateclusters](privateclusters/README.md) | Newly imported M28 scoped Kubernetes proof-Job source; connection/run identity, exact remote reconciliation and cleanup |
 
 The table covers the 26 owners inspected at the initial architecture checkpoint plus the subsequently imported M28 privateclusters source. All 27 source module roots now have a guide. M28 composition and acceptance must be reconciled against the [handoff](../../../../docs/milestones/m28-private-cluster/mainline-handoff.md). M29 Xinchuang combination and secure licensed connector obligations are separate. A retained source package or a directory guide does not by itself establish a composed and accepted capability.

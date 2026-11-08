@@ -109,7 +109,7 @@ func (s *Service) CreateInferenceTaskBoundWithin(ctx context.Context, q transact
 		value := a.Epoch
 		epoch = &value
 	}
-	out, e := s.insertTaskWithin(ctx, q, a, n, operation, key, payload, fingerprint, seconds, epoch)
+	out, e := s.insertTaskWithin(ctx, q, a.Me.User.ID, n, operation, key, payload, fingerprint, seconds, epoch)
 	if e != nil {
 		return Task{}, e
 	}

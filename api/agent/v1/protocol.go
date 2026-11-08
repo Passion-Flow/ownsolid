@@ -70,19 +70,21 @@ type Lease struct {
 	Component      *ComponentCommand  `json:"component,omitempty"`
 	Inference      *InferenceCommand  `json:"inference,omitempty"`
 	Training       *training.Command  `json:"training,omitempty"`
+	Kubernetes     *KubernetesCommand `json:"kubernetes,omitempty"`
 }
 type Claim struct {
 	Lease  *Lease  `json:"lease"`
 	Resync *Resync `json:"resync,omitempty"`
 }
 type Result struct {
-	LeaseToken string                `json:"lease_token"`
-	Outcome    string                `json:"outcome"`
-	ErrorCode  string                `json:"error_code"`
-	Facts      *Facts                `json:"facts,omitempty"`
-	Component  *ComponentObservation `json:"component,omitempty"`
-	Logs       *ComponentLogs        `json:"logs,omitempty"`
-	Inference  *InferenceObservation `json:"inference,omitempty"`
+	LeaseToken string                 `json:"lease_token"`
+	Outcome    string                 `json:"outcome"`
+	ErrorCode  string                 `json:"error_code"`
+	Facts      *Facts                 `json:"facts,omitempty"`
+	Component  *ComponentObservation  `json:"component,omitempty"`
+	Logs       *ComponentLogs         `json:"logs,omitempty"`
+	Inference  *InferenceObservation  `json:"inference,omitempty"`
+	Kubernetes *KubernetesObservation `json:"kubernetes,omitempty"`
 }
 
 var osPattern = regexp.MustCompile(`^[a-z0-9_-]{1,32}$`)
