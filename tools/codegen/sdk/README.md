@@ -121,3 +121,13 @@ environment installed, run
 loopback checks. They exercise login, cookie reuse, typed node lists and a
 binary dataset request with its declared media type. The same test verifies
 Python streaming response ownership and error bodies.
+
+## Audit the public operation inventory
+
+Run `python3 tools/codegen/sdk/audit.py` from the repository root. The JSON
+report lists public operations and flags missing operation IDs, duplicate
+IDs within a document, and duplicate method and path declarations in the
+same audience. Exit 1 reports findings and exit 2 indicates unreadable or
+invalid input. The audit runs from local files and uses the same audience
+rules as SDK generation. It measures the published contracts. Verification
+against running handlers remains the responsibility of each API owner.
