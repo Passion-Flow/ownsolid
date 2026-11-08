@@ -222,3 +222,29 @@ These existing commands verify components and the inherited workflow. The
 new route still needs an offline installation test that imports from upload
 and S3, reloads the report after restart, rejects another workspace,
 reconciles retries, and restores the registered artifact and report together.
+
+## Interrupted transfers
+
+The [Go Reader contract](https://pkg.go.dev/io#Reader) permits data and a
+non-EOF error in the same read. Buffered parsers can consume the bytes before
+surfacing the error and use different syntax errors for the same interrupted
+body. A conditional [GetObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html)
+matches the selected object at request time. A successful response still
+requires reading the entire body and checking its receipt.
+
+Record a non-EOF source error at the input boundary. Preserve the timeout and
+resource limit classifications. Otherwise surface the stable source-read code,
+keep any existing exact line diagnostic, and discard the private candidate.
+Keep parser errors for complete inputs so users can distinguish correcting
+the file from retrying the transfer. Do not automatically retry an arbitrary
+reader or stage a second copy of a large text source. The change uses the Go
+standard library and synthetic local fixtures only.
+
+Exercise interruptions before and after a valid prefix with skip mode enabled.
+Assert that the importer withholds previews and output, then accepts a fresh
+complete transfer to the same destination.
+
+The Linux amd64 text and S3 intake tests passed in a network namespace with
+loopback only. The 16 MiB and 128 MiB cleaning runs both peaked at 28,000,256
+resident bytes. The fixtures and their normalized outputs were removed when
+the tests exited.
