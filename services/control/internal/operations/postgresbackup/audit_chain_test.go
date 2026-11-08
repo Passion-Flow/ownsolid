@@ -56,7 +56,6 @@ func TestAuditChainRestoreReadbackExcludesOnlyReceipt(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback(context.WithoutCancel(ctx))
-	receiptID := uuid.NewString()
 	insert := func(id string) {
 		t.Helper()
 		_, err := tx.Exec(ctx, `INSERT INTO audit_events(id,occurred_at,audience,action,outcome,request_id)
@@ -65,15 +64,18 @@ func TestAuditChainRestoreReadbackExcludesOnlyReceipt(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	insert(uuid.NewString())
-	before, err := readDatabaseContents(ctx, tx, policyFixture(), receiptID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	insert(receiptID)
-	after, err := readDatabaseContents(ctx, tx, policyFixture(), receiptID)
-	if err != nil || after != before {
-		t.Fatalf("restore receipt exclusion changed the backup comparison: %v", err)
+	var receiptID string
+	for range 2 {
+		receiptID = uuid.NewString()
+		before, err := readDatabaseContents(ctx, tx, policyFixture(), receiptID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		insert(receiptID)
+		after, err := readDatabaseContents(ctx, tx, policyFixture(), receiptID)
+		if err != nil || after != before {
+			t.Fatalf("restore receipt exclusion changed the backup comparison: %v", err)
+		}
 	}
 	insert(uuid.NewString())
 	if _, err := readDatabaseContents(ctx, tx, policyFixture(), receiptID); err == nil || err.Error() != "POSTGRES_RESTORE_AUDIT_HEAD_MISMATCH" {
