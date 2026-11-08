@@ -1,0 +1,100 @@
+# Public API SDK generation (DEV-103)
+
+## Contract and approach
+
+The Go and Python SDKs target the versioned, externally callable Admin, Portal
+and model gateway operations in `api/openapi/v1`. [OpenAPI 3.1][spec] describes paths,
+parameter locations, media types and response status codes for code generation.
+Keep a package per domain so duplicate schema names across domains stay
+independent. Project each contract from its declared `x-audiences` and retain
+all referenced components. The [existing reference generator][reference] also
+excludes the inherited knowledge contract. The SDK uses the same boundary and
+omits agent and internal gateway operations.
+
+Generate Go with [oapi-codegen 2.8.2][go-generator] and Python with
+[openapi-python-client 0.29.1][python-generator], from files with local
+references only. Generation is a development or packaging step. Both clients
+receive the configured installation origin and HTTP transport from the caller.
+Use one cookie jar per Admin or Portal origin, the documented CSRF handshake
+for writes, and the existing gateway authorization header for inference. Use
+local trust roots and disable environment proxies and redirects in the examples.
+
+OpenAPI Generator 7.27.0 was also exercised on the datasets contract in a
+container with no network. It adds a Java toolchain and lists [3.1 support as
+beta][alternative]. The Go and Python tools use the repository's existing
+toolchains. A handwritten endpoint map would create a second contract to update
+when paths or schemas change.
+
+## Compatibility and acceptance
+
+The unmodified 28 contracts generated 24 Go packages and 22 Python packages
+with warnings treated as failures. Some inherited machine-only schemas use
+OpenAPI 3.1 boolean subschemas that the generators do not parse. The public
+projection removes only unreachable schema components. A public model files
+tuple has `items: false` with a fixed `prefixItems` length. In the generator
+input, replace that boolean with the equivalent `{"not": {}}` and keep the
+original prefix schemas and bounds. Go represents the array values as generic
+JSON and the Python client generates a union of the item types. The server
+remains the validation authority for the catalog contract.
+
+Set a separate Go HTTP response suffix to avoid colliding with names such as
+the identity `LoginResponse` schema. Use Python's documented
+[content-type overrides][content-types] for NDJSON uploads and font downloads.
+The generated dataset request retained `application/x-ndjson` on the wire.
+These adjustments left the source contracts unchanged. With them, the prototype
+generated all 28 contract packages, compiled the Go packages with `GOPROXY=off`
+and imported 1,604 Python modules. The deliverable excludes the inherited
+knowledge package in accordance with the product boundary.
+
+Verification must check that generation completes without warnings, all
+projected operations remain represented, output is reproducible, Go compiles
+and Python imports offline. Exercise typed reads and a binary request through
+each client, and check that authentication uses the exact origin, cookie and
+CSRF header. The SDKs can cover the current contracts while DEV-101 remains
+open for complete public API coverage across the product.
+
+## Licenses
+
+The generator binaries and wheels are build tools and stay out of the SDK
+output. Their pinned upstream packages permit commercial and offline use.
+Preserve upstream license notices if redistributing the tools themselves.
+
+| Build tooling | License |
+| --- | --- |
+| oapi-codegen 2.8.2, go-openapi/jsonpointer 0.23.1, go-openapi/swag/jsonname 0.26.0, santhosh-tekuri/jsonschema/v6 6.0.2, speakeasy-api/jsonpath 0.6.3, vmware-labs/yaml-jsonpath 0.3.2 | Apache-2.0 |
+| dprotaso/go-yit 9ba8df137936, getkin/kin-openapi 0.142.0, oasdiff/yaml 0.1.1, speakeasy-api/openapi 1.24.0 | MIT |
+| go.yaml.in/yaml/v3 3.0.4, gopkg.in/yaml.v3 3.0.1, oasdiff/yaml3 0.0.14 | Apache-2.0 and MIT for libyaml-derived files |
+| golang.org/x/mod 0.38.0, golang.org/x/sync 0.22.0, golang.org/x/text 0.40.0, golang.org/x/tools 0.48.0 | BSD-3-Clause |
+| openapi-python-client 0.29.1, annotated-doc 0.0.5, annotated-types 0.8.0, markdown-it-py 4.2.0, mdurl 0.1.2, pydantic 2.14.3, pydantic-core 2.50.4, rich 15.0.0, ruamel.yaml 0.19.1, ruff 0.17.4, typer 0.27.3, typing-inspection 0.4.5 | MIT |
+| Jinja2 3.1.6, MarkupSafe 3.0.4 | BSD-3-Clause |
+| Pygments 2.21.0 | BSD-2-Clause |
+| shellingham 1.5.4 | ISC |
+
+The runtime dependencies were checked against the license files in the pinned
+Go modules and Python distributions. The generated Go package uses
+oapi-codegen/runtime 1.8.0 (Apache-2.0), go-jsonmerge/v2 2.0.0 (MIT), and
+google/uuid 1.6.0 (BSD-3-Clause). The Python packages use attrs 25.4.0 and
+httpx 0.28.1. Their complete runtime lock also includes anyio and h11 (MIT),
+httpcore and idna (BSD-3-Clause), typing-extensions (PSF-2.0), and certifi
+(MPL-2.0). HTTPX is BSD-3-Clause and attrs is MIT. Each license permits
+commercial offline use and redistribution with its required notices. Retain
+certifi's MPL notices and corresponding source when redistributing the CA
+bundle. No model weights or datasets ship in either SDK.
+
+[spec]: https://spec.openapis.org/oas/v3.1.1.html
+[reference]: ../../tools/codegen/web-help.mjs
+[go-generator]: https://github.com/oapi-codegen/oapi-codegen/releases/tag/v2.8.2
+[python-generator]: https://github.com/openapi-generators/openapi-python-client/releases
+[content-types]: https://github.com/openapi-generators/openapi-python-client#content_type_overrides
+[alternative]: https://github.com/OpenAPITools/openapi-generator
+
+## Integration evidence
+
+The generator produced 27 public domain packages for each language. Two
+generations compared byte for byte, the Go module compiled with `GOPROXY=off`,
+and the wire smoke test checked both clients' CSRF headers, session cookies,
+node list responses and NDJSON requests over loopback. The Go and Python SDKs
+also logged into the real Admin TLS dispatcher, listed an enrolled synthetic
+node and logged out with PostgreSQL 18 and pgvector 0.8.7. Both ran in a Docker
+network namespace without an external route. Python installed its locked
+runtime wheels with `--no-index`. PostgreSQL held the logout audit events.

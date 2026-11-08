@@ -25,6 +25,7 @@ check-roadmap: ## Verify roadmap item IDs and the progress table
 
 test-tools: ## Run tests for repository tooling
 	@$(PYTHON) -m unittest discover -s tools/lint/layout/tests -p 'test_*.py'
+	@$(PYTHON) -m unittest discover -s tools/codegen/sdk/tests -p 'test_*.py'
 
 web-install: ## Install the web workspace's locked dependencies; install scripts never run
 	@cd web && pnpm install --frozen-lockfile --ignore-scripts
