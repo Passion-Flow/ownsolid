@@ -11,10 +11,10 @@ evidence packs for security assessments.
 ## P1 Enterprise release
 
 - [ ] AUD-101 Unified audit log for people, services and the product agent (P1) - Catalog: F007
-- [ ] AUD-102 Hash-chained audit records with an offline verifier (P1)
+- [x] AUD-102 Hash-chained audit records with an offline verifier (P1) - Evidence: [verification record](../../research/lane-e-decisions.md#repository-verification-on-a-shared-workstation) at c4f3a69. PostgreSQL 18.6 wrote 1,000 concurrent events and the disconnected verifier checked 1,003 exported events across two months.
 - [ ] AUD-103 One trace from user through app, gateway, model version and GPU, exportable (P1) - Catalog: F082
 - [ ] AUD-104 Retention settings with a six-month minimum for network logs (P1)
-- [ ] AUD-105 Admins cannot delete or alter operation logs (P1)
+- [x] AUD-105 Admins cannot delete or alter operation logs (P1) - Evidence: [PostgreSQL authority and acceptance](../../research/audit-immutability.md) at 2410daa. The serving role could append but was refused updates, deletes and truncation.
 - [ ] AUD-106 Read-only auditor role and audit search (P1) - Catalog: F442
 - [ ] AUD-107 Controlled data export with approval and record (P1) - Catalog: F488
 - [ ] AUD-108 Diagnostic read access audited and redacted (P1)
