@@ -16,7 +16,7 @@ in the owning paths. Leave the boxes open while those boundaries apply.
 | OPS-112 | The installer and backup owner provide the existing local backup and restore. S3 and SFTP targets, app data and a product flow require their own integration. | Preserve the current local path while the owning code gains the missing targets. |
 | CAT-101, CAT-102 | Catalog service, publisher and installer, console form and dependency selection. | Build and exercise the manifest and typed binding contracts in the catalog lane. |
 | CAT-103, CAT-104, CAT-105, CAT-106, CAT-108, CAT-109 | Scoped gateway and OIDC issuers, approved local deployers, quota and workload policy, operational streams and console. | Keep key issuance, identity and install authority behind their owning services. |
-| CAT-107 | Approved app signing trust and installer integration with local image import. | Verify the signed inventory and fixed local payloads. The owning importer still needs to verify the OCI closure and connect this gate to installation. |
+| CAT-107 | Approved app signing trust and installer integration with local image import. | Verify the signed inventory and complete Linux amd64 OCI closure with `catalog/apps.VerifyInstallBundle`. The importer must preserve the same immutable archive, check expanded layers and DiffIDs, register and confirm local image digests, and connect the gate to installation. |
 
 The current screen plan has a node drawer and an app-catalog placeholder. The
 full operator flows also need their screen specifications. Keep 1Panel strictly
@@ -43,3 +43,30 @@ password admission deadlines, backup restore roots and TLS file mode checks.
 Those paths are outside OPS ownership. Gateway tests and the isolated i18n
 rerun passed. The fixed-port and independent runs are distinct from the
 PostgreSQL and VictoriaLogs component integration run.
+
+### Same-baseline macOS reproduction
+
+The comparison ran from an archive of main at `609d5198` and from OPS rebased
+onto that commit. Both used a resolved `TMPDIR`, `GOMAXPROCS=2` and serial Go
+package scheduling. Run these commands in each tree with that same environment.
+
+```sh
+export TMPDIR="$(cd "${TMPDIR:-/tmp}" && pwd -P)/" GOMAXPROCS=2
+go -C services/agent test -p 1 -count=3 -json ./internal/modelpreparations ./internal/training \
+  -run '^Test(ShutdownLeavesTheContainerAndTheNextProcessAdoptsIt|ARevokedAttemptStopsItsContainer)$'
+go -C services/control test -p 1 -count=1 -json ./internal/modules/datasets \
+  ./internal/modules/identity/security ./internal/operations/postgresbackup ./internal/platform/config \
+  -run '^Test(SourceImportMemory|M01ActualHashAdmissionDeadline|PostgresRestoreMeasuredRoots(BindBeforeConfigurationOrSQL|RefuseReplacementBeforeImport)|TLSMaterialPinnedPublicAndPrivateSnapshots)$'
+```
+
+| Owner and test path | Comparison |
+| --- | --- |
+| `services/agent/internal/{modelpreparations,training}/static_stability_test.go` | Shutdown/adoption failed in 2 of 6 attempts on main and 1 of 6 on OPS. The errors included `context canceled` and `TRAINING_OUTPUT_CHANGED`. Revocation passed in all six attempts per tree. |
+| `services/control/internal/operations/postgresbackup/restore_roots_binding_test.go` | Both measured-root tests failed on both trees with `POSTGRES_RESTORE_EXPECTED_ROOT_CHANGED`. The backup owner must validate the pinned filesystem root through the restore path. |
+| `services/control/internal/platform/config/tls_material_test.go` | Both setgid subcases failed on both trees. The TLS material owner must preserve rejection and redaction for unsafe file modes on supported test filesystems. |
+| Dataset source-import memory and password admission deadline | Both tests passed in both trees in this controlled comparison. |
+
+OPS has no diff in these packages. The browser gate can use the repository's
+Chromium specs and built apps with two workers, private loopback preview
+ports, and an external Playwright config. Keep its result separate from the
+fixed-port run and the non-browser Go, Rust and web tests.
