@@ -77,10 +77,13 @@ impl StreamWork {
         // Dropping the response stream before reporting prevents an incomplete backend connection lingering.
         drop(stream);
         let terminal = match result {
-            Ok(usage) => match execution.success(usage) {
-                Ok(()) => DONE_EVENT.to_vec(),
-                Err(code) => error_event(code, request_id),
-            },
+            Ok(usage) => {
+                execution.settle_tokens(&usage).await;
+                match execution.success(usage) {
+                    Ok(()) => DONE_EVENT.to_vec(),
+                    Err(code) => error_event(code, request_id),
+                }
+            }
             Err(code) => {
                 let code = execution.failure(code, None).err().unwrap_or(code);
                 error_event(code, request_id)
