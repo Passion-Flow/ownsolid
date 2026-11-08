@@ -44,3 +44,8 @@ The subsequent `make check && make build && make test` run passed at
 1,039 Chromium cases and Portal passed 387. Twenty-eight live cases that
 require separately configured installations were skipped by the suites.
 The actual IAM live results are recorded in the two feature notes above.
+
+Closing IAM-101 and IAM-112 also requires the synchronized capability
+status update in `docs/product/status.md`, outside this lane's shared-file
+allowlist. The evidence above is ready for that status update and the
+corresponding roadmap ticks.
