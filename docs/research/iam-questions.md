@@ -7,7 +7,7 @@
 | IAM-105 | TOTP enrollment, recovery and step-up need browser challenges, additive wire operations and integration with the SSO callback and sensitive actions in other owners. | Keep both entrances' existing password and CSRF checks. Design one challenge gate for local and federated session issuance before enrolling real factors. |
 | IAM-106 | Catalog app client registration, redirect authorization and key custody need coordination with the app catalog owner and new OAuth/OIDC operations. | Keep client registration and the issuer protocol together so an app can exercise discovery through a valid tenant-bound token. |
 | IAM-107, IAM-108 | The workspace membership authority and protected resources live in other modules. Identity-only role definitions would leave those access checks unchanged. | Integrate the authorization evaluator and its explain output with one actual resource family first. |
-| IAM-109 | Existing API keys are owned by the gateway path. Service accounts need that credential lifecycle, API and UI to share one tenant-scoped authority. | Reuse gateway key admission when adding service-account principals. |
+| IAM-109 and AUD-101 | Distribution keys require a human user, current authentication epoch and Workspace membership authority. There is no service principal in the existing tenant identity model. | Keep the real key lifecycle as the integration point. The [service account design](service-account-keys.md) records the required Distribution, Workspace and audit connections. |
 | IAM-111 | Existing idle and absolute timeouts work through the session endpoint. Device management and forced logout need new management operations and a browser device list. | Keep server-side revocation authoritative. Add device operations together with the caller-visible management flow. |
 | IAM-113, IAM-114 | Installation configuration lives in `deploy/`. Shared-hostname policy also needs control configuration validation and sign-in notices in `web/`. | Keep current configured audience checks and treat same-hostname validation as its own item. |
 | IAM-118, IAM-119 | Real connector testing and keyring loss recovery live in the SSO callback, connector and startup owners outside the lane. Both need connector UI states. | Preserve fail-closed credential checks. Design a separate test callback outcome and explicit unavailable credential state with the SSO owner. |
@@ -15,11 +15,10 @@
 
 ## Repository acceptance gate
 
-The agent training shutdown test
-`TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt` can fail with
-`TRAINING_OUTPUT_CHANGED` under shared workstation load. The same failure
-was reproduced from an unmodified `origin/main` archive. The agent code
-belongs to a different lane. The IAM account and entrance evidence is
+The previous training shutdown failure was reproduced from an unmodified
+`origin/main` archive. ARC fixed cancellation propagation in `aa5e712f`.
+After syncing the fix, the targeted training and model-preparation tests
+passed ten repetitions on the workstation. The IAM account and entrance evidence is
 recorded in [local accounts](local-accounts.md) and
 [browser entrance sessions](browser-entrance-sessions.md).
 
