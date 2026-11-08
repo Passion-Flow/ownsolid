@@ -237,3 +237,20 @@ concurrency check. Chat makes a separate durable reserve call and a
 terminal finish call. The test excludes the Go authorization and model
 latency. The two-peer integration uses independent gateway applications
 and connections, with synthetic control and backend fixtures.
+
+A native-process smoke also passed with two serving gateway processes and
+one independent quota authority, all on verified TLS. The scratch overlay
+reused the actual Go distribution handler, PostgreSQL 18.6 with pgvector
+0.8.7, and the CPU vLLM container with its network disabled. The two peers
+used separate state directories and the same real Go gateway identity in
+this fixture. The Rust TLS suite separately checks peers with distinct
+credentials and workspace scopes.
+
+With the application cap set to 71 tokens, the first peer reserved 39.
+The second peer got HTTP 429 before reaching the model. The first stream
+used 32 tokens, which made enough capacity for the second peer's
+39-token reservation. That stream used 32 tokens as well, and the first
+peer was refused on its next attempt. PostgreSQL acknowledged four
+outcomes, recorded 64 actual tokens and released every admission hold.
+The product installer and control policy manager were outside this
+standalone run.
