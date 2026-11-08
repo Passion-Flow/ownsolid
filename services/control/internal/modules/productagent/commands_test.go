@@ -10,7 +10,7 @@ import (
 )
 
 func TestLocalizedCommandDestinations(t *testing.T) {
-	aliases, err := loadAliases(locales)
+	catalog, err := loadCommands(locales)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +27,7 @@ func TestLocalizedCommandDestinations(t *testing.T) {
 		{"show conversations", "portal", listConversations, ""},
 	} {
 		t.Run(test.command+"/"+test.audience, func(t *testing.T) {
-			cmd := aliases[normalize(test.input)]
+			cmd := catalog.aliases[normalize(test.input)]
 			if cmd.id != test.command || cmd.destination(test.audience) != test.path {
 				t.Fatalf("expected %s at %q, got %#v", test.command, test.path, cmd)
 			}

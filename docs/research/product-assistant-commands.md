@@ -37,6 +37,18 @@ owning service. A generic method-and-URL proxy would bypass those controls. A
 model-based classifier would lose the offline fallback. Substring matching would
 admit compound or negated text as an instruction. Keep these out of the dispatcher.
 
+Following the [VS Code command palette](https://code.visualstudio.com/docs/editing/getting-started/userinterface),
+provide a command directory so an authenticated caller can discover exact
+localized phrases before executing them. Use the same bundled phrase files and
+read admission data that the dispatcher uses. Derive an ordered list for the
+authenticated entrance. Include a workspace read only when the server context
+has a workspace. Each execution still rechecks current membership and
+ownership because permission can change after discovery. Use the platform
+locale tags `en` and `zh-CN` and reject unsupported tags with a stable code.
+Do not return destination URLs, credentials or internal tool policy from
+discovery. A separate hand-maintained help list would drift from accepted
+commands.
+
 No new module dependency, model, dataset or shipped service is needed. The Go
 standard library is [BSD-licensed](https://go.dev/LICENSE), permits commercial use,
 offline operation and redistribution with notices. Application reads use the
@@ -54,6 +66,9 @@ and redistribution with their notices. The comparable products are references on
 - Ordinary reads follow existing session and membership rechecks. An expired or
   revoked user sees an error without a partial projection. Conversation metadata
   stays caller-private. Pagination must use the existing bounded API policy.
+- Discovery shows the accepted phrases for each locale and entrance, omits
+  workspace reads without a workspace, rejects revoked sessions and keeps the
+  compiled phrase table immutable if a caller changes a returned list.
 - The core works with no model client and no external network. The final release
   must also pass the authenticated browser flow on both entrances with the model
   gateway disabled. A package test alone cannot close AGT-102.
