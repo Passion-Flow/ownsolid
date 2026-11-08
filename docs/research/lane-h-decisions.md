@@ -2,10 +2,10 @@
 
 ## DEL-101 production bundle boundary
 
-Keep DEL-101 open. The current production factory requires the old milestone
-inventory, the installer lacks a verified bundle entry point, and the release
-has no Helm chart or release-qualified plug-in to package. Reuse the existing
-factory when a current production profile and those assets are available.
+Keep DEL-101 open. The inherited shared profile requires the old milestone
+inventory, and the release has no Helm chart or release-qualified plug-in to
+package. Reuse the existing factory for the independently scoped current
+single-node path below.
 See [offline delivery research](offline-bundle.md).
 
 Rejected labeling a fixture profile as a release, changing the shared release
@@ -13,6 +13,17 @@ contract from this lane, and creating a parallel signing format. Any of those
 could create an installable-looking file that violates the existing verifier or
 omits a required capability. If the inherited profile can be populated with the
 actual current inputs, it can be evaluated without waiting for a replacement.
+
+## DEL-101 additive current release path
+
+Keep the inherited manifest envelope and cryptographic domain. The current
+single-node factory path selects a new inventory policy explicitly. This avoids
+changing the API module's legacy policy or letting legacy consumers accept new
+inventories by accident. A separate archive and signing implementation was
+rejected because it would duplicate trust and verification code. A bug in the
+new inventory policy could admit an incomplete product, so the profile has a
+fixed required set, explicit asset kinds, and checksummed SPDX coverage. Full
+DEL-101 remains open until the real chart, plug-in and model inputs are qualified.
 
 ## DEL-102 preflight policy
 

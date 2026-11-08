@@ -99,12 +99,12 @@ func Validate(ctx context.Context, c Config) (Validation, error) {
 	v.Manifest = m
 	v.Profile = m.Profile
 	v.ReleaseID = m.ReleaseID
-	if e = m.Validate(c.MaximumAssets, c.MaximumAssetBytes, c.MaximumTotalBytes, c.AllowTestFixture); e != nil {
+	if e = c.validateManifest(m); e != nil {
 		present := map[string]string{}
 		for _, a := range m.Assets {
 			present[a.ID] = a.Kind
 		}
-		required := m.RequiredAssets()
+		required := c.requiredAssets(m)
 		ids := []string{}
 		for id := range required {
 			ids = append(ids, id)
@@ -129,7 +129,7 @@ func Validate(ctx context.Context, c Config) (Validation, error) {
 			continue
 		}
 		before, _ := f.Stat()
-		digest, e := checkAsset(ctx, f, nil, a, c)
+		digest, e := checkManifestAsset(ctx, f, nil, a, m, c)
 		after, se := f.Stat()
 		closed := f.Close()
 		pathAfter, pe := os.Lstat(name)
@@ -259,7 +259,7 @@ func Inspect(ctx context.Context, c Config, name string) (Result, error) {
 		return result, e
 	}
 	var m wire.Manifest
-	if wire.StrictJSON(raw, &m) != nil || m.Validate(c.MaximumAssets, c.MaximumAssetBytes, c.MaximumTotalBytes, c.AllowTestFixture) != nil || len(m.Assets)+2 > c.MaximumArchiveEntries {
+	if wire.StrictJSON(raw, &m) != nil || c.validateManifest(m) != nil || len(m.Assets)+2 > c.MaximumArchiveEntries {
 		return result, fail("RELEASE_ARCHIVE_MANIFEST_INVALID")
 	}
 	for _, a := range m.Assets {
@@ -267,7 +267,7 @@ func Inspect(ctx context.Context, c Config, name string) (Result, error) {
 		if e != nil || !safeAssetHeader(h, a) {
 			return result, fail("RELEASE_ARCHIVE_ASSET_INVALID")
 		}
-		digest, e := checkAsset(ctx, t, nil, a, c)
+		digest, e := checkManifestAsset(ctx, t, nil, a, m, c)
 		if e != nil {
 			return result, e
 		}
@@ -419,7 +419,7 @@ func build(ctx context.Context, c Config, operations durableIO) (result Result, 
 			file.Close()
 			return result, fail("RELEASE_ARCHIVE_WRITE_FAILED")
 		}
-		hash, e := checkAsset(ctx, file, t, a, c)
+		hash, e := checkManifestAsset(ctx, file, t, a, v.Manifest, c)
 		after, se := file.Stat()
 		file.Close()
 		if e != nil {

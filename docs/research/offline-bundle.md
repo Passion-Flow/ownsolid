@@ -26,13 +26,11 @@ runtime dependency is selected here. Verify redistribution rights for each pinne
 image, model, plug-in, and font before admitting its bytes. A model registry entry
 alone cannot establish redistribution rights.
 
-The only production profile in the shared contract requires the inherited M01–M30
-inventory, including assets absent in the current release. The installer consumes a
-Compose file and Docker archive without a signed-bundle entry point. DEL-107's
-chart and a release-qualified plug-in are also absent. Keep DEL-101 open while
-these inputs and a compatible production profile are unavailable. Fixture profiles,
-unverified tar files, and metadata-only SBOMs would not exercise the required
-production path.
+The production profile in the shared contract requires the inherited M01–M30
+inventory. The current signed path below is independent of that policy.
+DEL-107's chart and a release-qualified plug-in are still needed for full
+DEL-101 acceptance. A fixture release cannot qualify production payloads or
+substitute for the component SBOMs and notices.
 
 Acceptance requires a newly built release for the supported architecture. Refuse
 an unknown signer, modified bytes, undeclared paths, missing required assets and
@@ -40,6 +38,47 @@ the wrong architecture before installation. In a clean Docker host with no netwo
 uplink, start from the transferred file, run both entrances and exercise any
 included model from its local assets. A working egress recorder must record zero
 product attempts. Release signing and entitlement signing remain separate.
+
+### Current Compose release profile
+
+The existing Ed25519 envelope, tar/gzip archive, OCI descriptor closure, and
+protected publish and preparation routines can also carry the current Compose
+release. Add an explicit profile to the factory and installer tools under lane
+H. Existing consumers keep their original profile policy. The current profile
+requires the installer, Compose input, four local platform images, release
+documentation and an SPDX SBOM. It carries pinned optional chart, model, plug-in
+and font files as named assets. This implements the single-node delivery path
+while DEL-107 and the catalog owners complete the inputs for full DEL-101
+qualification.
+
+Use Docker's architecture-filtered image save on a connected build host.
+Validate the OCI descriptor closure before packaging. Docker Engine with the
+containerd store can add attestation referrers to the archive index. Admit
+locally closed in-toto metadata only when its export subject matches the exact
+signed image. Keep those bytes outside the runtime transport. At installation use the
+existing tagless writer, match the loaded image by its signed OCI manifest digest, and
+keep the current Compose pull policy. A separate connected release process
+supplies SPDX package metadata. Check that the signed SPDX document binds the
+SHA-256 of each payload, including signed licence texts. This check binds the
+SBOM to the distributed files. It cannot infer transitive dependencies that a
+component SBOM failed to report.
+
+- [Docker image save and platform filtering](https://docs.docker.com/reference/cli/docker/image/save/)
+- [Docker Engine containerd inspect identity](https://github.com/moby/moby/blob/master/daemon/containerd/image_inspect.go)
+- [Docker image load and platform filtering](https://docs.docker.com/reference/cli/docker/image/load/)
+- [SPDX package checksums](https://spdx.github.io/spdx-spec/v2.3.1/package-information/)
+- [Docker attestation storage](https://docs.docker.com/build/metadata/attestations/attestation-storage/)
+- [containerd archive exporter](https://github.com/containerd/containerd/blob/main/core/images/archive/exporter.go)
+- [OCI image layout](https://github.com/opencontainers/image-spec/blob/v1.1.1/image-layout.md)
+
+No new library, image, model or dataset is required by this implementation.
+The installed images, fonts, and model files remain release inputs and must
+carry their applicable redistribution terms. Reject a second signature format,
+archive paths outside the signed inventory, any non-amd64 image, and repackaging
+a fixture as production. Test the current and legacy profile boundaries, absent
+payloads, duplicate paths, checksum and signature mismatch, and an isolated
+install from a signed archive. Record the exact assets and image versions used
+by the isolated test.
 
 ## DEL-102 host preflight
 
