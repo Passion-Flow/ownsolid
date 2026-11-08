@@ -50,6 +50,21 @@ export async function listDeployments(
   return page.items;
 }
 
+/** Lists the deployments of a workspace the person belongs to, for the portal. */
+export async function listWorkspaceDeployments(
+  workspaceId: string,
+  options?: RequestOptions,
+): Promise<Deployment[]> {
+  const page = await client.get(
+    '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/deployments',
+    {
+      ...options,
+      path: { ...localCell, workspace_id: workspaceId },
+    },
+  );
+  return page.items;
+}
+
 /** Reads one deployment. */
 export function getDeployment(id: string, options?: RequestOptions): Promise<Deployment> {
   return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/deployments/{deployment_id}', {

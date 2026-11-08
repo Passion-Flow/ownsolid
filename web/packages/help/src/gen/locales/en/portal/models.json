@@ -1,0 +1,200 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/models",
+     "children": [
+      {
+       "type": "text",
+       "value": "Models"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " lists what you can call in the workspace chosen in the switcher. Each row is a name an\nadministrator published to that workspace. It is the name you put in the "
+    },
+    {
+     "type": "inlineCode",
+     "value": "model"
+    },
+    {
+     "type": "text",
+     "value": " field of a call."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Reading the list"
+    }
+   ],
+   "data": {
+    "id": "reading-the-list"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Can be called"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " means a call would be taken now. "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Not available"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " means the model is published but nothing is\nserving it at the moment, so calls fail until an administrator starts it again. Press a tile to see only those\nmodels, and search by the name or by the model behind it. The address keeps your filters, so you can share the list\nas you see it."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "What a model offers"
+    }
+   ],
+   "data": {
+    "id": "what-a-model-offers"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Open a model to see the name to call, the base URL, the model behind it, what it comes from, what it is good for,\nhow much context it takes, and its license."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Fine-tuned here"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " means the model was trained further on this installation from the one named under "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Comes\nfrom"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ". "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Published model"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " means it arrived as its authors released it."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Prices are not ready in this release, and neither is trying a model on the page. To call one now, choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Issue a\nkey"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " and follow "
+    },
+    {
+     "type": "link",
+     "url": "/keys",
+     "children": [
+      {
+       "type": "text",
+       "value": "My API keys"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "If you see no models"
+    }
+   ],
+   "data": {
+    "id": "if-you-see-no-models"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "No model is published to this workspace yet, so ask an administrator. If you expected one, check that the workspace\nin the switcher is the right one. A model that was withdrawn no longer appears here at all."
+    }
+   ]
+  }
+ ]
+}

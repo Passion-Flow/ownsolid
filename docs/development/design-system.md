@@ -147,6 +147,8 @@ this browser. The server checks access to the workspace on every request.
     (UX-114); `CopyLinkButton` copies it. Columns are not part of a link. Sort on the server,
     with `aria-sort` on the sorted column and its header as a button.
   - A toast sits behind a modal, so an action in a drawer that offers undo closes the drawer first.
+  - A column joined from a second read shows a placeholder while that read runs and "Not known" only once it
+    failed, with one notice and a retry above the list; the rows from the first read stay on screen.
     `useTypedFilter` keeps a search field in step with its filter, and `BulkAction` draws an action
     on the `BulkBar`. A poll reads with `background: true` and a failed one keeps the rows on screen.
   - A secret shown once stays out of any command on the page: it reaches its file by paste, so it

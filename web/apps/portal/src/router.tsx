@@ -25,6 +25,12 @@ const keysRoute = createRoute({
   component: lazyRouteComponent(() => import('./keys-page.tsx'), 'KeysPage'),
 });
 
+const modelsRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/models',
+  component: lazyRouteComponent(() => import('./models-page.tsx'), 'ModelsPage'),
+});
+
 const accountRoute = createAccountRoute(frameRoute);
 
 const supportRoute = createSupportRoute(frameRoute);
@@ -34,7 +40,14 @@ const helpRoutes = createHelpRoutes(frameRoute);
 const routeTree = rootRoute.addChildren([
   ...publicRoutes,
   authenticatedRoute.addChildren([
-    frameRoute.addChildren([homeRoute, keysRoute, accountRoute, supportRoute, ...helpRoutes]),
+    frameRoute.addChildren([
+      homeRoute,
+      modelsRoute,
+      keysRoute,
+      accountRoute,
+      supportRoute,
+      ...helpRoutes,
+    ]),
   ]),
 ]);
 

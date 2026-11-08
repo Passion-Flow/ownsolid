@@ -51,6 +51,21 @@ export async function listModels(
   return page.items;
 }
 
+/** Lists the models of a workspace the person belongs to, for the portal. */
+export async function listWorkspaceModels(
+  workspaceId: string,
+  options?: RequestOptions,
+): Promise<ModelVersion[]> {
+  const page = await client.get(
+    '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models',
+    {
+      ...options,
+      path: { ...localCell, workspace_id: workspaceId },
+    },
+  );
+  return page.items;
+}
+
 /** Reads one model. */
 export function getModel(id: string, options?: RequestOptions): Promise<ModelVersion> {
   return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}', {

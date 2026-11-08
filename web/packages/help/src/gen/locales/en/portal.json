@@ -17,6 +17,24 @@
    }
   ]
  },
+ "models": {
+  "title": "Models",
+  "summary": "Models lists what you can call in the workspace chosen in the switcher. Each row is a name an\nadministrator published to that workspace. It is the name you put in the model field of a call.",
+  "sections": [
+   {
+    "title": "Reading the list",
+    "anchor": "reading-the-list"
+   },
+   {
+    "title": "What a model offers",
+    "anchor": "what-a-model-offers"
+   },
+   {
+    "title": "If you see no models",
+    "anchor": "if-you-see-no-models"
+   }
+  ]
+ },
  "api-keys": {
   "title": "My API keys",
   "summary": "My API keys lists the keys you issued in the workspace chosen in the switcher. A key lets an\napplication or a script call one model. It stops working when it expires, when you revoke it, or if you\nleave the workspace. Nobody else's keys appear here, and yours do not appear in anyone else's portal.",

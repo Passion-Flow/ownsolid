@@ -179,6 +179,11 @@ export async function routeDeployments(
   problem: Refuse,
 ): Promise<void> {
   const base = '**/api/v1/sites/*/cells/*/admin';
+  await page.route(/\/workspaces\/[0-9a-f-]{36}\/deployments$/, (route) =>
+    state.deploymentsProblem
+      ? problem(route, state.deploymentsProblem)
+      : data(route, { items: state.deployments }),
+  );
   await page.route(`${base}/deployments?*`, (route) => {
     if (state.deploymentsProblem) return problem(route, state.deploymentsProblem);
     const model = new URL(route.request().url()).searchParams.get('model_id');

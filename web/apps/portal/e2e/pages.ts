@@ -3,7 +3,10 @@ import {
   deploymentKey,
   failedRun,
   publishedApplication,
+  readyModel,
   recentConversation,
+  runningDeployment,
+  unavailableAlias,
   type ControlPlane,
 } from '@ownsolid/shell/testing';
 import { shellPages, type PageState } from '@ownsolid/shell/testing/pages';
@@ -19,6 +22,18 @@ async function openKeys(page: Page, control: ControlPlane): Promise<void> {
   control.signedIn = true;
   await page.goto('/keys');
   await page.getByRole('heading', { name: 'My API keys', level: 1 }).waitFor();
+}
+
+async function openModels(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  await page.goto('/models');
+  await page.getByRole('heading', { name: 'Models', level: 1 }).waitFor();
+}
+
+function publishModels(control: ControlPlane): void {
+  control.aliases = [deploymentAlias, unavailableAlias];
+  control.deployments = [runningDeployment];
+  control.models = [readyModel];
 }
 
 /**
@@ -55,6 +70,54 @@ export const portalPages: readonly PageState[] = [
       control.workspaceList = [];
       control.sessionWorkspace = null;
       await openHome(page, control);
+      await page.getByRole('heading', { name: 'No workspace yet' }).waitFor();
+    },
+  },
+  {
+    name: 'models with one that cannot be called',
+    path: '/models',
+    open: async (page, control) => {
+      publishModels(control);
+      await openModels(page, control);
+      await page.getByRole('row', { name: /support-chat/ }).waitFor();
+      await page.getByText('Qwen3-0.6B').first().waitFor();
+    },
+  },
+  {
+    name: "a model's drawer",
+    path: '/models',
+    open: async (page, control) => {
+      publishModels(control);
+      await openModels(page, control);
+      await page.getByRole('button', { name: 'Show archive-search' }).click();
+      await page.getByRole('dialog').getByText('This model cannot be called now').waitFor();
+    },
+  },
+  {
+    name: 'models whose facts could not be read',
+    path: '/models',
+    open: async (page, control) => {
+      publishModels(control);
+      control.modelsProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+      await openModels(page, control);
+      await page.getByRole('button', { name: 'Try again' }).waitFor();
+    },
+  },
+  {
+    name: 'models, none yet',
+    path: '/models',
+    open: async (page, control) => {
+      await openModels(page, control);
+      await page.getByRole('heading', { name: 'No models yet' }).waitFor();
+    },
+  },
+  {
+    name: 'models without a workspace',
+    path: '/models',
+    open: async (page, control) => {
+      control.workspaceList = [];
+      control.sessionWorkspace = null;
+      await openModels(page, control);
       await page.getByRole('heading', { name: 'No workspace yet' }).waitFor();
     },
   },

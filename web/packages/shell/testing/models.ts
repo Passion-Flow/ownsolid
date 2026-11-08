@@ -182,6 +182,11 @@ export async function routeModels(
       ? problem(route, state.modelsProblem)
       : data(route, { items: state.models }),
   );
+  await page.route(/\/workspaces\/[0-9a-f-]{36}\/models$/, (route) =>
+    state.modelsProblem
+      ? problem(route, state.modelsProblem)
+      : data(route, { items: state.models }),
+  );
   await page.route(/\/admin\/models\/[0-9a-f-]{36}$/, (route) => {
     const found = state.models.find((model) => model.id === idOf(route));
     return found ? data(route, found) : problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });

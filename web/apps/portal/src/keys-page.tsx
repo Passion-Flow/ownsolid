@@ -3,9 +3,7 @@
 // returns only the session's own keys on these paths.
 import { useI18n } from '@ownsolid/i18n';
 import { GatewayKeys, IssueKeyButton, useHashDialog, useWorkspaces } from '@ownsolid/shell';
-import { Card, EmptyState, ProblemNotice, Skeleton } from '@ownsolid/ui';
-import { isProblem } from '@ownsolid/api';
-import { UsersRound } from 'lucide-react';
+import { WorkspaceBody } from './workspace-body.tsx';
 
 /** `/keys`: the person's keys. `#issue` opens the issue dialog. */
 export function KeysPage() {
@@ -13,31 +11,6 @@ export function KeysPage() {
   const workspaces = useWorkspaces();
   const active = workspaces.active;
   const [issuing, setIssuing] = useHashDialog('issue');
-  let body;
-  if (workspaces.isPending) {
-    // A workspace chosen earlier is known only once the list has loaded.
-    body = <Skeleton aria-busy className="h-[320px] w-full" />;
-  } else if (active) {
-    body = (
-      <GatewayKeys
-        key={active.id}
-        workspace={active.id}
-        issuing={issuing}
-        onIssue={setIssuing}
-        noModel={t('keys.noModel.detail')}
-      />
-    );
-  } else if (isProblem(workspaces.error)) {
-    body = <ProblemNotice problem={workspaces.error} onRetry={workspaces.retry} />;
-  } else {
-    body = (
-      <Card>
-        <EmptyState icon={UsersRound} title={t('home.noWorkspace')}>
-          {t('keys.noWorkspace.detail')}
-        </EmptyState>
-      </Card>
-    );
-  }
   return (
     <>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -57,7 +30,17 @@ export function KeysPage() {
           />
         ) : null}
       </div>
-      {body}
+      <WorkspaceBody workspaces={workspaces} noWorkspace={t('keys.noWorkspace.detail')}>
+        {(workspace) => (
+          <GatewayKeys
+            key={workspace}
+            workspace={workspace}
+            issuing={issuing}
+            onIssue={setIssuing}
+            noModel={t('keys.noModel.detail')}
+          />
+        )}
+      </WorkspaceBody>
     </>
   );
 }
