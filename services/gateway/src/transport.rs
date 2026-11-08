@@ -33,8 +33,8 @@ async fn send(
     tokio::select! {
         biased;
         _=stopped(shutdown)=>Err("gateway_shutdown"),
-        result=tokio::time::timeout_at(deadline.min(Instant::now()+idle),sender.send(bytes))=>
-            result.map_err(|_|"client_cancelled")?.map_err(|_|"client_cancelled"),
+        _=tokio::time::sleep_until(deadline.min(Instant::now()+idle))=>Err("client_cancelled"),
+        result=sender.send(bytes)=>result.map_err(|_|"client_cancelled"),
     }
 }
 
@@ -55,11 +55,15 @@ impl StreamWork {
         let mut stream = response.bytes_stream();
         let result:Result<Usage>=async {
             loop {
+                if deadline <= Instant::now() {
+                    return Err("upstream_timeout");
+                }
                 let next=tokio::select! {
                     biased;
                     _=stopped(shutdown.clone())=>return Err("gateway_shutdown"),
                     _=sender.closed()=>return Err("client_cancelled"),
-                    result=tokio::time::timeout_at(deadline.min(Instant::now()+idle),stream.next())=>result.map_err(|_|"upstream_timeout")?,
+                    _=tokio::time::sleep_until(deadline.min(Instant::now()+idle))=>return Err("upstream_timeout"),
+                    result=stream.next()=>result,
                 };
                 let Some(chunk)=next else{break;};
                 let chunk=chunk.map_err(transport_error)?;

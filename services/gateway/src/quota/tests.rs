@@ -2,7 +2,7 @@ use super::*;
 use serde_json::json;
 use std::hint::black_box;
 
-fn accounts(limits: [Ceiling; 3]) -> [Account; 2] {
+fn accounts(limits: [Ceiling; 3]) -> [Arc<Account>; 2] {
     let tenant = Arc::new(Tenant {
         traffic: Mutex::new((0..4).map(|_| Traffic::default()).collect()),
         budget: None,
@@ -15,10 +15,12 @@ fn accounts(limits: [Ceiling; 3]) -> [Account; 2] {
     };
     let root = profile(0, 0);
     let app = profile(1, 1);
-    [2, 3].map(|slot| Account {
-        workspace,
-        tenant: tenant.clone(),
-        hierarchy: [root, app, profile(slot, 2)],
+    [2, 3].map(|slot| {
+        Arc::new(Account {
+            workspace,
+            tenant: tenant.clone(),
+            hierarchy: [root, app, profile(slot, 2)],
+        })
     })
 }
 

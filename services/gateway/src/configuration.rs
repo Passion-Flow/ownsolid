@@ -38,6 +38,8 @@ pub struct Configuration {
     pub limits: Limits,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) quota_policy: Option<crate::quota::Policy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) shared_quota: Option<crate::quota::shared::Settings>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -269,7 +271,7 @@ impl Configuration {
                 value
                     .get_mut("limits")
                     .and_then(|limits| limits.get_mut(name))
-            } else if matches!(name.as_str(), "limits" | "quota_policy") {
+            } else if matches!(name.as_str(), "limits" | "quota_policy" | "shared_quota") {
                 None
             } else {
                 value.get_mut(&name)
@@ -305,6 +307,9 @@ impl Configuration {
         self.limits.validate()?;
         if let Some(policy) = &self.quota_policy {
             policy.validate()?;
+        }
+        if let Some(settings) = &self.shared_quota {
+            settings.validate(self)?;
         }
         if self.gateway_id.is_nil()
             || self.node_id.is_nil()

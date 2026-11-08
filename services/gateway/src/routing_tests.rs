@@ -397,6 +397,7 @@ impl Fixture {
         };
         let scoped = quota_limits.is_some();
         let configuration = Configuration {
+            shared_quota: None,
             quota_policy: quota_limits.map(|limits| {
                 serde_json::from_value(json!({
                     "tenants": [{"id": Uuid::new_v4(), "workspaces": [state.workspace],
@@ -491,7 +492,11 @@ impl Fixture {
         self.app.as_ref().expect("in-process fixture")
     }
     fn chat(&self, stream: bool) -> reqwest::RequestBuilder {
-        self.client.post(format!("{}/v1/chat/completions",self.origin)).bearer_auth(&self.state.client_key)
+        self.chat_at(&self.origin, stream)
+    }
+
+    fn chat_at(&self, origin: &str, stream: bool) -> reqwest::RequestBuilder {
+        self.client.post(format!("{origin}/v1/chat/completions")).bearer_auth(&self.state.client_key)
             .json(&json!({"model":"public-alias","messages":[{"role":"user","content":"Synthetic request \u{4e2d}\u{6587}"}],"max_tokens":16,"stream":stream}))
     }
 }
@@ -1223,4 +1228,241 @@ async fn actual_binary_fence_refuses_suspended_owner_blocks_restart_and_delivers
     let output = std::env::var_os("PROJECT_ONE_GATEWAY_FENCE_EVIDENCE")
         .expect("explicit fence evidence location required");
     fs::write(output,serde_json::to_vec_pretty(&json!({"status":"passed_real_native_operator_fence","scope":"Actual private filesystem/owned suspended process/CLI/TLS; synthetic control/model replies, no hardware attestation or NVIDIA qualification.","assertions":["SIGSTOP retains exclusive state lock; fence refuses","SIGTERM permits scope-bound durable fencing","fenced serve refuses before inference","receipt overwrite refused","delivery-only retries existing metadata after control repair","metadata acknowledgment leaves permanent fence intact"],"generations":1})).unwrap()).unwrap();
+}
+
+struct QuotaGateway {
+    app: Arc<Application>,
+    origin: String,
+    handle: axum_server::Handle<SocketAddr>,
+    server: tokio::task::JoinHandle<()>,
+}
+
+impl QuotaGateway {
+    async fn start(
+        mut configuration: Configuration,
+        root: PathBuf,
+        http: &reqwest::Client,
+    ) -> Self {
+        use std::os::unix::fs::DirBuilderExt;
+        fs::DirBuilder::new().mode(0o700).create(&root).unwrap();
+        configuration.state_directory = root;
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let SocketAddr::V4(address) = listener.local_addr().unwrap() else {
+            panic!("IPv4 fixture")
+        };
+        configuration.listen_address = address;
+        let app = Application::with_quota_clock(configuration.clone(), || QUOTA_TEST_NOW).unwrap();
+        let handle = axum_server::Handle::new();
+        let server_app = app.clone();
+        let server_handle = handle.clone();
+        let server = tokio::spawn(async move {
+            crate::listener::serve(&configuration, server_app, listener, server_handle)
+                .await
+                .unwrap();
+        });
+        let origin = format!("https://{address}");
+        tokio::time::timeout(Duration::from_secs(3), async {
+            while http
+                .get(format!("{origin}/health/live"))
+                .send()
+                .await
+                .is_err()
+            {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await
+        .unwrap();
+        Self {
+            app,
+            origin,
+            handle,
+            server,
+        }
+    }
+
+    async fn stop(&mut self) {
+        self.app.shutdown();
+        self.handle.shutdown();
+        tokio::time::timeout(Duration::from_secs(3), &mut self.server)
+            .await
+            .unwrap()
+            .unwrap();
+    }
+}
+
+impl Drop for QuotaGateway {
+    fn drop(&mut self) {
+        self.app.shutdown();
+        self.handle.shutdown();
+        self.server.abort();
+    }
+}
+
+struct QuotaFleet {
+    authority: QuotaGateway,
+    peers: [QuotaGateway; 2],
+    fixtures: [Fixture; 2],
+}
+
+impl QuotaFleet {
+    async fn start(limits: Value) -> Self {
+        let fixtures = [
+            Fixture::with_quota(Some(json!({}))).await,
+            Fixture::with_quota(Some(json!({}))).await,
+        ];
+        let root = &fixtures[0].root;
+        let workspaces = fixtures.each_ref().map(|fixture| fixture.state.workspace);
+        let keys = fixtures.each_ref().map(|fixture| {
+            Uuid::parse_str(fixture.state.client_key.split('.').nth(1).unwrap()).unwrap()
+        });
+        let credentials = std::array::from_fn::<_, 2, _>(|index| {
+            let path = root.join(format!("quota-peer-{index}"));
+            let value = format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple());
+            fs::write(&path, value).unwrap();
+            fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
+            path
+        });
+        let mut config = fixtures[0].app().configuration.clone();
+        config.gateway_id = Uuid::new_v4();
+        config.quota_policy = Some(
+            serde_json::from_value(json!({
+                "tenants": [{"id": Uuid::new_v4(), "workspaces": workspaces,
+                    "applications": [{"id": Uuid::new_v4(), "limits": limits, "keys": [
+                        {"id": keys[0], "workspace_id": workspaces[0]},
+                        {"id": keys[1], "workspace_id": workspaces[1]}
+                    ]}]}]
+            }))
+            .unwrap(),
+        );
+        config.shared_quota = Some(serde_json::from_value(json!({
+            "mode": "authority", "lease_seconds": 15, "maximum_leases": 16,
+            "peers": [
+                {"gateway_id": fixtures[0].state.gateway, "workspace_id": workspaces[0], "credential_file": credentials[0]},
+                {"gateway_id": fixtures[1].state.gateway, "workspace_id": workspaces[1], "credential_file": credentials[1]}
+            ]
+        })).unwrap());
+        let authority =
+            QuotaGateway::start(config, root.join("authority"), &fixtures[0].client).await;
+        let mut peers = Vec::new();
+        for (index, fixture) in fixtures.iter().enumerate() {
+            let mut config = fixture.app().configuration.clone();
+            config.quota_policy = None;
+            config.shared_quota = Some(
+                serde_json::from_value(json!({
+                    "mode": "client", "origin": authority.origin, "ca_file": root.join("ca.pem"),
+                    "credential_file": credentials[index], "timeout_seconds": 2
+                }))
+                .unwrap(),
+            );
+            peers.push(
+                QuotaGateway::start(config, fixture.root.join("peer"), &fixture.client).await,
+            );
+        }
+        Self {
+            authority,
+            peers: peers.try_into().ok().unwrap(),
+            fixtures,
+        }
+    }
+
+    fn chat(&self, peer: usize, stream: bool) -> reqwest::RequestBuilder {
+        self.fixtures[peer].chat_at(&self.peers[peer].origin, stream)
+    }
+}
+
+#[tokio::test]
+async fn two_tls_gateways_share_a_daily_budget_and_fail_closed_without_authority() {
+    let mut fleet = QuotaFleet::start(json!({"tokens":{"daily":32}})).await;
+    let caller = &fleet.fixtures[0];
+    let unauthorized = caller.client
+        .post(format!("{}/internal/v1/quota", fleet.authority.origin))
+        .bearer_auth(&caller.state.client_key)
+        .json(&json!({"operation":"acquire", "workspace_id":caller.state.workspace, "key_id":Uuid::new_v4()}))
+        .send().await.unwrap();
+    assert_eq!(unauthorized.status(), StatusCode::UNAUTHORIZED);
+    caller.state.backend_mode.store(4, Ordering::SeqCst);
+    let pending = fleet.chat(0, true).send().await.unwrap();
+    assert_eq!(pending.status(), StatusCode::OK);
+    let rejected = fleet.chat(1, false).send().await.unwrap();
+    assert_eq!(rejected.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        rejected.headers()[header::RETRY_AFTER],
+        (86_400 - QUOTA_TEST_NOW.rem_euclid(86_400)).to_string()
+    );
+    let error: Value = rejected.json().await.unwrap();
+    assert_eq!(error["error"]["code"], "daily_token_budget_exceeded");
+    assert_eq!(
+        fleet.fixtures[1].state.generations.load(Ordering::SeqCst),
+        0
+    );
+    caller.state.complete_stream.notify_one();
+    assert!(pending.text().await.unwrap().ends_with("data: [DONE]\n\n"));
+    let admitted = fleet.chat(1, false).send().await.unwrap();
+    assert_eq!(admitted.status(), StatusCode::OK);
+    assert_eq!(
+        admitted.json::<Value>().await.unwrap()["usage"]["total_tokens"],
+        9
+    );
+
+    fleet.authority.stop().await;
+    let unavailable = fleet.chat(1, false).send().await.unwrap();
+    assert_eq!(unavailable.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(
+        unavailable.json::<Value>().await.unwrap()["error"]["code"],
+        "quota_state_unavailable"
+    );
+    assert_eq!(
+        fleet.fixtures[1].state.generations.load(Ordering::SeqCst),
+        1
+    );
+}
+
+#[tokio::test]
+#[ignore = "run in release mode for loopback TLS latency measurements"]
+async fn shared_quota_round_trip_benchmark() {
+    let fleet = QuotaFleet::start(json!({})).await;
+    let peer = &fleet.fixtures[0];
+    let secret = fs::read_to_string(peer.root.join("quota-peer-0")).unwrap();
+    let token = format!("q1.{}.{secret}", peer.state.gateway);
+    let url = format!("{}/internal/v1/quota", fleet.authority.origin);
+    let key = peer.state.client_key.split('.').nth(1).unwrap();
+    let acquire = json!({"operation":"acquire","workspace_id":peer.state.workspace,"key_id":key});
+    let mut samples = Vec::with_capacity(250);
+    for index in 0..260 {
+        let before = Instant::now();
+        let grant: Value = peer
+            .client
+            .post(&url)
+            .bearer_auth(&token)
+            .json(&acquire)
+            .send()
+            .await
+            .unwrap()
+            .error_for_status()
+            .unwrap()
+            .json()
+            .await
+            .unwrap();
+        if index >= 10 {
+            samples.push(before.elapsed());
+        }
+        peer.client
+            .post(&url)
+            .bearer_auth(&token)
+            .json(&json!({"operation":"finish","lease_id":grant["lease_id"],"actual":null}))
+            .send()
+            .await
+            .unwrap()
+            .error_for_status()
+            .unwrap();
+    }
+    samples.sort_unstable();
+    println!(
+        "{} TLS quota acquires; p50={} us; p95={} us; p99={} us",
+        samples.len(),
+        samples[125].as_micros(),
+        samples[237].as_micros(),
+        samples[247].as_micros()
+    );
 }

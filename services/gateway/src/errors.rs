@@ -74,7 +74,7 @@ pub(crate) fn respond(failure: Failure, request_id: Uuid) -> Response {
             Some(format!("The {scope} {period} token budget cannot cover this request. Use a shorter prompt or lower output limit, or retry when budget becomes available."))
         }
         ("quota_scope_unconfigured", _) => Some("This API key has no quota assignment for its workspace. Ask the gateway operator to register it.".into()),
-        ("quota_state_unavailable", _) => Some("The gateway quota state is unavailable. Ask the gateway operator to check state storage and the system clock.".into()),
+        ("quota_state_unavailable", _) => Some("The gateway quota state is unavailable. Ask the gateway operator to check quota connectivity, state storage and the system clock.".into()),
         _ => None,
     };
     if let Some(message) = message {

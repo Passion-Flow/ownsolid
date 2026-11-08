@@ -122,6 +122,7 @@ impl Fixture {
                 .unwrap()
         });
         let configuration = Configuration {
+            shared_quota: None,
             quota_policy: None,
             gateway_id: gateway,
             node_id: node,
