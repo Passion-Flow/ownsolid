@@ -42,7 +42,7 @@ works in its own worktree (AGENTS.md section 10).
 
 DEL-003 changes agent container networking: coordinate with lane A by keeping the change
 inside the runtime's network setup. P0 closed with REL-001: lane A continues in the work order,
-lane B follows [ADR 0044](../../decisions/0044-web-lane-follows-the-build-plan.md), and lane C is finished.
+lane B followed [ADR 0044](../../decisions/0044-web-lane-follows-the-build-plan.md) and now follows [ADR 0049](../../decisions/0049-web-lane-publishes-models-and-hands-out-keys.md), and lane C is finished.
 
 ## Definition of done (the tick rule)
 
