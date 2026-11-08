@@ -9,7 +9,7 @@ import unittest
 
 SDK = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SDK))
-from audit import inventory
+from audit import compare_operations, inventory
 
 
 def write_contract(root, domain, paths):
@@ -71,6 +71,42 @@ class InventoryTests(unittest.TestCase):
                 },
             })
             self.assertEqual(inventory(root)["findings"], [])
+
+
+    def test_version_comparison_checks_sdk_identity_and_audience(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            baseline, candidate = root / "baseline", root / "candidate"
+            baseline.mkdir()
+            candidate.mkdir()
+            write_contract(baseline, "nodes", {
+                "/nodes": {"get": {"operationId": "list", "x-audiences": ["admin", "portal"]}},
+                "/legacy": {"get": {"operationId": "legacy", "x-audiences": ["admin"],
+                                    "deprecated": True}},
+            })
+            write_contract(candidate, "nodes", {
+                "/nodes": {"get": {"operationId": "listNodes", "x-audiences": ["admin"]}},
+                "/new": {"get": {"operationId": "new", "x-audiences": ["admin"]}},
+            })
+            write_contract(candidate, "other", {
+                "/legacy": {"get": {"operationId": "legacy", "x-audiences": ["admin"]}},
+            })
+            previous, current = inventory(baseline), inventory(candidate)
+            self.assertEqual(current["findings"], [])
+            self.assertEqual(compare_operations(previous, previous), [])
+            self.assertTrue(previous["operations"][0]["deprecated"])
+            findings = compare_operations(previous, current)
+            self.assertEqual([(f["code"], f["path"], f["audience"]) for f in findings], [
+                ("PUBLIC_OPERATION_REMOVED", "/legacy", "admin"),
+                ("PUBLIC_OPERATION_ID_CHANGED", "/nodes", "admin"),
+                ("PUBLIC_OPERATION_REMOVED", "/nodes", "portal"),
+            ])
+            result = subprocess.run(
+                [sys.executable, str(SDK / "audit.py"), "--contracts", str(candidate), "--baseline", str(baseline)],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(json.loads(result.stdout)["compatibility_findings"], findings)
 
     def test_no_public_api_is_an_error(self):
         with tempfile.TemporaryDirectory() as scratch:
