@@ -23,5 +23,5 @@ path itself. A dashboard or alert evaluated by the same failed path cannot
 report its own outage. OBS-206 covers tracking ingest drops, stale sources,
 evaluation failures and failed deliveries, with a periodic heartbeat checked
 by an independent in-site receiver that reports missed deliveries. Grafana
-documents an analogous [alert delivery heartbeat](https://grafana.com/docs/grafana-cloud/alerting-and-irm/alerting/monitor-status/metamonitoring/).
+documents an analogous [alert delivery heartbeat](https://grafana.com/docs/grafana/latest/alerting/configure-notifications/manage-contact-points/integrations/configure-irm/).
 The heartbeat can run against an offline receiver and adds no cloud dependency.
