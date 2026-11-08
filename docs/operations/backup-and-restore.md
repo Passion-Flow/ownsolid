@@ -130,42 +130,6 @@ If an observed failure requires rollback, the installer puts the original
 database back and restarts serving. It keeps the candidate as
 `ownsolid_failed_restore_<id>` so any writes it accepted can still be inspected.
 
-### Restore a signed release onto an empty site
-
-Use a trusted installer that supports `restore-bundle`, the exact signed
-release that produced the backup, and its independently provisioned public
-verification policy. Put the release on a mounted volume with space for
-verification and extraction. Keep the backup on private storage outside the
-installation. Use an absolute, root-owned mode 0700 directory for a plaintext
-backup. For an encrypted archive, supply the protected age identity as
-described above. Prepare the site's TLS, license trust and other local files.
-Choose a fresh install root and a Compose project unused by other installations.
-Omit `compose_file` and `images` from the site YAML.
-
-```sh
-ownsolid-install restore-bundle --config /private/site.yaml \
-  --bundle /mnt/release/ownsolid.tar.gz --verification /private/release-verification.json \
-  --from /srv/ownsolid-backups/ownsolid-backup-20261104T080000Z
-ownsolid-install status --config /private/site.yaml
-```
-
-For an encrypted backup, use the archive as `--from` and add
-`--identity-file /mnt/recovery/ownsolid-identity.txt`. Begin with the restore
-command so the site inherits the source keys. The installer verifies the release
-and checks the backup before loading images or preparing PostgreSQL. An invalid
-encrypted input can leave an operation lock file and a private staging marker.
-New signed backups record the manifest digest. Older backups require matching
-control and PostgreSQL image IDs and schema, and the command reports this
-compatibility path. Use the backup-producing release's recovery installer for
-new signed backups.
-
-If the writer fails to start during a cold restore, the original
-unbootstrapped database is restored and the writer stays stopped. Fix the
-reported issue and rerun `restore-bundle` with the same inputs. If a restore
-record remains, use the interrupted restore procedure below. After recovery,
-trust the configured site CA, confirm both entrances, sign in with your
-current administrator credentials and verify the data you recovered.
-
 ### Recover an interrupted restore
 
 If the installer is killed, the host restarts, or a command reports

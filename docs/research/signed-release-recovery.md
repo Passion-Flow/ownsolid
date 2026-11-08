@@ -55,3 +55,14 @@ licence evidence before it can be used in the drill.
   hash and remove only the fixture's services and data. Keep the
   production, every-release gate open until the exact production
   payload and release pipeline are qualified.
+
+An optional model drill uses the repository's pinned
+[Qwen3-0.6B catalogue](../../api/agent/v1/model-catalog.json) and
+[upstream Apache-2.0 licence](https://huggingface.co/Qwen/Qwen3-0.6B/blob/c1899de289a04d12100db370d81485cdf75e47ca/LICENSE).
+The licence allows commercial use, redistribution and offline use under
+its terms. Before staging, compare all nine files with the pinned sizes
+and SHA-256 hashes. Import the USTAR archive through the same API as
+Admin. After recovery, sign in, retrieve the ready model through that
+API and hash every restored file on the target. This verifies model
+readability from the recovered store. Inference is a separate runtime
+flow.

@@ -17,10 +17,11 @@ import (
 	"time"
 
 	"filippo.io/age"
+	license "github.com/Passion-Flow/ownsolid/pkg/license/v1"
 	"go.yaml.in/yaml/v3"
 )
 
-func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive, verification string, run func(string, ...string) (string, error)) {
+func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive, verification string, licenseKey license.PrivateKey, run func(string, ...string) (string, error)) {
 	t.Helper()
 	source, err := LoadOperational(config)
 	if err != nil {
@@ -85,6 +86,13 @@ func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive,
 	query(t, source, "UPDATE tenants SET name='"+marker+"' WHERE id=(SELECT tenant_id FROM installation_state WHERE id=1)")
 	admin := installedAdministrator(t, newOperation(source, ExecRunner{}, io.Discard))
 	credential := read(source.CredentialPath())
+	var modelID string
+	if model := filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar"); exists(model) {
+		workspace := query(t, source, "SELECT default_workspace_id FROM installation_state WHERE id=1")
+		modelID = publishColdRestoreModel(t, coldRestoreLogin(t, source, source.Origins.Admin, credential), licenseKey, workspace, model)
+	} else {
+		t.Log("no approved model archive was staged for this recovery drill")
+	}
 	plainDir, archiveDir, keyDir := privateDir(), privateDir(), privateDir()
 	old := filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "legacy-ownsolid-install")
 	command(t, old, "BACKUP_COMPLETE", false, "backup", "--config", config, "--output", plainDir)
@@ -194,7 +202,11 @@ func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive,
 		if !strings.Contains(out, site.Origins.Admin+": ready") {
 			t.Fatal("Admin did not become ready")
 		}
-		assertColdRestoreLogin(t, site, credential)
+		admin := coldRestoreLogin(t, site, site.Origins.Admin, credential)
+		coldRestoreLogin(t, site, site.Origins.Portal, credential)
+		if modelID != "" {
+			assertColdRestoreModel(t, admin, site, modelID)
+		}
 		t.Log("both entrances served the UI and authenticated the restored administrator; tenant and workspace match")
 		down(t, site)
 		clearImages(t)
@@ -228,10 +240,25 @@ func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive,
 
 		restore(t, path, archive, encrypted, "INSTALL_ENCRYPTED_BACKUP_WRONG_IDENTITY", true, "--identity-file", wrong)
 		assertEmpty(t, site)
-		damaged := read(encrypted)
-		damaged[len(damaged)-1] ^= 1
 		tampered := filepath.Join(archiveDir, "tampered.tar.age")
-		write(tampered, damaged)
+		if _, err := copyPrivateFile(encrypted, tampered); err != nil {
+			t.Fatal(err)
+		}
+		f, err := os.OpenFile(tampered, os.O_RDWR, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		const position = 4096
+		var value [1]byte
+		if _, err := f.ReadAt(value[:], position); err != nil {
+			f.Close()
+			t.Fatal(err)
+		}
+		value[0] ^= 1
+		_, err = f.WriteAt(value[:], position)
+		if err := errors.Join(err, f.Close()); err != nil {
+			t.Fatal(err)
+		}
 		restore(t, path, archive, tampered, "INSTALL_ENCRYPTED_BACKUP_INVALID", true, "--identity-file", key)
 		assertEmpty(t, site)
 	})
@@ -269,7 +296,80 @@ func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive,
 	})
 }
 
-func assertColdRestoreLogin(t *testing.T, site Config, credential []byte) {
+type coldRestoreBrowser struct {
+	origin string
+	client *http.Client
+}
+
+func (b coldRestoreBrowser) request(t *testing.T, method, path string, body io.Reader, headers map[string]string, want int) []byte {
+	t.Helper()
+	req, err := http.NewRequestWithContext(t.Context(), method, b.origin+path, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if method == http.MethodPost {
+		req.Header.Set("Origin", b.origin)
+		req.Header.Set("Content-Type", "application/json")
+	}
+	for name, value := range headers {
+		req.Header.Set(name, value)
+	}
+	resp, err := b.client.Do(req)
+	if err != nil {
+		t.Fatalf("%s %s: %v", method, path, err)
+	}
+	defer resp.Body.Close()
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != want {
+		var problem struct {
+			Code string `json:"code"`
+		}
+		_ = json.Unmarshal(raw, &problem)
+		t.Fatalf("%s %s returned HTTP %d at %s (%s), want %d", method, path, resp.StatusCode, b.origin, problem.Code, want)
+	}
+	return raw
+}
+
+func (b coldRestoreBrowser) csrf(t *testing.T) string {
+	t.Helper()
+	var csrf struct {
+		Token string `json:"token"`
+	}
+	b.get(t, "/api/v1/auth/csrf", &csrf)
+	if csrf.Token == "" {
+		t.Fatalf("%s did not issue a CSRF token", b.origin)
+	}
+	return csrf.Token
+}
+
+func (b coldRestoreBrowser) get(t *testing.T, path string, target any) {
+	t.Helper()
+	decodeColdRestoreResponse(t, b.request(t, http.MethodGet, path, nil, nil, http.StatusOK), target)
+}
+
+func decodeColdRestoreResponse(t *testing.T, raw []byte, target any) {
+	t.Helper()
+	var envelope struct {
+		Data json.RawMessage `json:"data"`
+	}
+	if json.Unmarshal(raw, &envelope) != nil || json.Unmarshal(envelope.Data, target) != nil {
+		t.Fatal("response did not contain the expected data")
+	}
+}
+
+func coldRestoreJSON(t *testing.T, value any) io.Reader {
+	t.Helper()
+	raw, err := json.Marshal(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return bytes.NewReader(raw)
+}
+
+func coldRestoreLogin(t *testing.T, site Config, origin string, credential []byte) coldRestoreBrowser {
 	t.Helper()
 	var intent struct {
 		Password string `json:"password"`
@@ -277,60 +377,23 @@ func assertColdRestoreLogin(t *testing.T, site Config, credential []byte) {
 	if json.Unmarshal(credential, &intent) != nil || intent.Password == "" {
 		t.Fatal("restored administrator credential is invalid")
 	}
-	payload, err := json.Marshal(map[string]string{"email": site.Administrator.Email, "password": intent.Password})
-	if err != nil {
-		t.Fatal(err)
-	}
 	authority, err := os.ReadFile(filepath.Join(site.Layout().Config, "ca.pem"))
 	roots := x509.NewCertPool()
 	if err != nil || !roots.AppendCertsFromPEM(authority) {
 		t.Fatal("restored CA is unavailable")
 	}
-	for _, origin := range []string{site.Origins.Admin, site.Origins.Portal} {
-		jar, err := cookiejar.New(nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		transport := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}}
-		defer transport.CloseIdleConnections()
-		client := &http.Client{Jar: jar, Transport: transport, Timeout: 10 * time.Second}
-		request := func(method, path, token string, body io.Reader) []byte {
-			t.Helper()
-			req, err := http.NewRequestWithContext(t.Context(), method, origin+path, body)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if method == http.MethodPost {
-				req.Header.Set("Origin", origin)
-				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("X-CSRF-Token", token)
-			}
-			resp, err := client.Do(req)
-			if err != nil {
-				t.Fatalf("%s %s: %v", method, path, err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusOK {
-				t.Fatalf("%s %s returned HTTP %d at %s", method, path, resp.StatusCode, origin)
-			}
-			raw, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatal(err)
-			}
-			return raw
-		}
-		if page := request(http.MethodGet, "/", "", nil); !bytes.Contains(page, []byte("<html")) {
-			t.Fatalf("%s did not serve the UI", origin)
-		}
-		var csrf struct {
-			Data struct {
-				Token string `json:"token"`
-			} `json:"data"`
-		}
-		if json.Unmarshal(request(http.MethodGet, "/api/v1/auth/csrf", "", nil), &csrf) != nil || csrf.Data.Token == "" {
-			t.Fatalf("%s did not issue a CSRF token", origin)
-		}
-		request(http.MethodPost, "/api/v1/auth/login", csrf.Data.Token, bytes.NewReader(payload))
-		request(http.MethodGet, "/api/v1/me", "", nil)
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
 	}
+	transport := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}}
+	t.Cleanup(transport.CloseIdleConnections)
+	b := coldRestoreBrowser{origin: origin, client: &http.Client{Jar: jar, Transport: transport, Timeout: 45 * time.Second}}
+	if page := b.request(t, http.MethodGet, "/", nil, nil, http.StatusOK); !bytes.Contains(page, []byte("<html")) {
+		t.Fatalf("%s did not serve the UI", origin)
+	}
+	payload := coldRestoreJSON(t, map[string]string{"email": site.Administrator.Email, "password": intent.Password})
+	b.request(t, http.MethodPost, "/api/v1/auth/login", payload, map[string]string{"X-CSRF-Token": b.csrf(t)}, http.StatusOK)
+	b.request(t, http.MethodGet, "/api/v1/me", nil, nil, http.StatusOK)
+	return b
 }

@@ -264,7 +264,7 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	}
 	dir := t.TempDir()
 	c.License.TrustFile = filepath.Join(dir, "license-trust.json")
-	_, trust, err := license.GenerateKey("lane-h-test")
+	licenseKey, trust, err := license.GenerateKey("lane-h-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -295,6 +295,9 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 		c.Resources.MetricsMemory, c.Resources.LogsMemory = "256m", "256m"
 		c.Resources.ControlCPUs, c.Resources.PostgresCPUs = "1", "1"
 		c.Resources.MetricsCPUs, c.Resources.LogsCPUs = "1", "1"
+		if recovery && exists(filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar")) {
+			c.Resources.ControlMemory = "512m"
+		}
 	}
 	config := filepath.Join(dir, "install.yaml")
 	var signedArchive, verification string
@@ -430,7 +433,7 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	}
 	if recovery {
 		if !t.Failed() {
-			assertSignedRestoreIsolatedDocker(t, installer, config, signedArchive, verification, run)
+			assertSignedRestoreIsolatedDocker(t, installer, config, signedArchive, verification, licenseKey, run)
 		}
 		return
 	}
@@ -597,7 +600,7 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	})
 	if recovery {
 		if !t.Failed() {
-			assertSignedRestoreIsolatedDocker(t, installer, config, signedArchive, verification, run)
+			assertSignedRestoreIsolatedDocker(t, installer, config, signedArchive, verification, licenseKey, run)
 		}
 		return
 	}

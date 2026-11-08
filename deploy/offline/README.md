@@ -114,6 +114,43 @@ restore, rejects an unrelated identity and changed or truncated ciphertext,
 interrupts backup and restore, and checks the unencrypted commands.
 See the [operator procedure](../../docs/operations/backup-and-restore.md#encrypt-an-operator-run-backup).
 
+## Restore a signed release onto an empty site
+
+Use a trusted installer that supports `restore-bundle`, the exact signed
+release that produced the backup, and its independently provisioned public
+verification policy. Put the release on a mounted volume with space for
+verification and extraction. Keep the backup on private storage outside the
+installation. Use an absolute, root-owned mode 0700 directory for a plaintext
+backup. For an encrypted archive, supply the protected age identity as
+described above. Prepare the site's TLS, license trust and other local files.
+Choose a fresh install root on a filesystem that supports hard links and a
+Compose project unused by other installations.
+Omit `compose_file` and `images` from the site YAML.
+
+```sh
+ownsolid-install restore-bundle --config /private/site.yaml \
+  --bundle /mnt/release/ownsolid.tar.gz --verification /private/release-verification.json \
+  --from /srv/ownsolid-backups/ownsolid-backup-20261104T080000Z
+ownsolid-install status --config /private/site.yaml
+```
+
+For an encrypted backup, use the archive as `--from` and add
+`--identity-file /mnt/recovery/ownsolid-identity.txt`. Begin with the restore
+command so the site inherits the source keys. The installer verifies the release
+and checks the backup before loading images or preparing PostgreSQL. An invalid
+encrypted input can leave an operation lock file and a private staging marker.
+New signed backups record the manifest digest. Older backups require matching
+control and PostgreSQL image IDs and schema, and the command reports this
+compatibility path. Use the backup-producing release's recovery installer for
+new signed backups.
+
+If the writer fails to start during a cold restore, the original
+unbootstrapped database is restored and the writer stays stopped. Fix the
+reported issue and rerun `restore-bundle` with the same inputs. If a restore
+record remains, follow the [interrupted restore procedure](../../docs/operations/backup-and-restore.md#recover-an-interrupted-restore). After recovery,
+trust the configured site CA, confirm both entrances, sign in with your
+current administrator credentials and verify the data you recovered.
+
 ## Verify a cold restore of a signed release
 
 Stage one single-node Linux amd64 archive with its independently provisioned
@@ -137,7 +174,11 @@ workload probes must reach the egress recorder. Any unexpected destination
 fails the test. A native namespace runner can optionally provide an empty
 disk-backed mount with `OWNSOLID_E2E_RELEASE_MOUNT` in place of the test's tmpfs.
 
-See [Restore a signed release onto an empty site](../../docs/operations/backup-and-restore.md#restore-a-signed-release-onto-an-empty-site).
+To include a model, stage `model.tar` beside the release archive. Use a USTAR
+archive of the exact files in the [approved model catalogue](../../api/agent/v1/model-catalog.json).
+The drill uses a temporary test entitlement to publish the model through Admin
+before backing up. It verifies the restored model is ready through Admin and
+checks every restored file's size and SHA-256 on both targets.
 
 ## Schedule verified backups
 
