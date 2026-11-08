@@ -96,7 +96,7 @@ type operation struct {
 }
 
 func newOperation(c Config, runner StreamRunner, out io.Writer) *operation {
-	return &operation{installer: &installer{c, runner, ProbeOrigin, out}, stream: runner, now: time.Now}
+	return &operation{installer: &installer{config: c, runner: runner, probe: ProbeOrigin, out: out}, stream: runner, now: time.Now}
 }
 
 // lockOperation excludes a second apply, backup or restore on this installation. The

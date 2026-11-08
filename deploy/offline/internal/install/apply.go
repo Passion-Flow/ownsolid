@@ -84,10 +84,11 @@ func retryWith(e error, command string) error {
 type Probe func(ctx context.Context, c Config, origin string) error
 
 type installer struct {
-	config Config
-	runner Runner
-	probe  Probe
-	out    io.Writer
+	config       Config
+	runner       Runner
+	probe        Probe
+	out          io.Writer
+	verifySchema func(context.Context) error
 }
 
 // Apply brings the installation to the configured state. It is safe to repeat: each
@@ -107,7 +108,14 @@ func Apply(ctx context.Context, c Config, runner Runner, out io.Writer) error {
 		return e
 	}
 	defer unlock()
-	return (&installer{c, runner, ProbeOrigin, out}).apply(ctx)
+	binding, e := readBundleBinding(c)
+	if e != nil {
+		return e
+	}
+	if binding != nil {
+		return errors.New("INSTALL_BUNDLE_REQUIRED: resume this installation with apply-bundle and its signed release")
+	}
+	return (&installer{config: c, runner: runner, probe: ProbeOrigin, out: out}).apply(ctx)
 }
 
 func (i *installer) apply(ctx context.Context) error {
@@ -273,6 +281,9 @@ const grantsPending = "SCHEMA_COMMITTED_GRANTS_PENDING"
 
 func (i *installer) checkSchema(ctx context.Context) error {
 	_, e := i.operator(ctx, "SCHEMA_CURRENT", "check-schema", "--config", i.operatorConfig())
+	if e == nil && i.verifySchema != nil {
+		return i.verifySchema(ctx)
+	}
 	return e
 }
 
