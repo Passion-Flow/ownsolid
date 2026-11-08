@@ -66,16 +66,16 @@ These paths do not satisfy AGT-107.
    [audit chain v2](../../services/control/migrations/postgresql/000054_audit_chain_scope.up.sql)
    and update the [offline verifier](../../tools/audit-verify/verify.go).
    Preserve historical records and checkpoints.
-3. The authenticated HTTP owner threads its server-generated request ID and
-   current identity into
-   [productagent Run](../../services/control/internal/modules/productagent/service.go).
-   Scoped navigation appends the event in the existing session recheck
-   transaction before returning the route. Application and conversation reads
-   append it
-   in the [application owner transaction](../../services/control/internal/modules/applications/repository.go)
-   after authorization and projection, using the resolved workspace. Expose
-   a narrow internal read-completion seam when the real writer is ready.
-   The ordinary application routes keep their current read behavior.
+3. The [identity HTTP owner](../../services/control/internal/modules/identity/http/handler.go)
+   passes the authenticated identity and the request ID generated in
+   `serveHTTP` to
+   [RunForRequest](../../services/control/internal/modules/productagent/service.go)
+   when adding the assistant route. This correlates the event with the
+   response's `X-Request-ID`. Navigation already appends in its session and
+   scope transaction. Application and conversation reads use
+   [the application owner transaction](../../services/control/internal/modules/applications/repository.go)
+   after authorization and projection. The ordinary application routes
+   continue to use the existing projection methods.
 4. Each later confirmed write appends the event inside the owning mutation
    transaction with the exact action and idempotency record. A failed append
    cannot return a successful action or disclose a read result. After rollback,
@@ -87,6 +87,35 @@ Record only stable identifiers and outcomes. Keep prompts, aliases as typed,
 cookies, tokens, confirmation data, cursors and result bodies out of audit.
 An audited navigation result records the server's response to the command.
 Whether the browser opened the page is a separate event.
+
+## Scoped command integration
+
+Keep the in-process command call compatible and generate its request ID on the
+server. Add a correlated command entry for the HTTP owner to pass the ID it
+already assigns before dispatch. Both entries use the same audit path. An
+invalid supplied request ID fails before dispatch. The authenticated workspace
+is a selector and the transaction resolves its tenant and membership again.
+
+Borrow the real command transaction. Navigation uses the identity and
+workspace fences before appending. The application owner uses dedicated
+assistant reads that share the existing query, paging and membership path.
+Append only after the page has been read and its rows closed. Ordinary
+application and conversation reads keep their existing contract.
+
+The available writer requires an authorized workspace. Workspace-free command
+execution returns a scope error instead of a route or data, and its command
+directory is empty. A future shared global-scope contract can restore that
+navigation case. Rejecting scoped output on failed audit is preferable to a
+separate post-response transaction, an optional write or default-workspace
+attribution.
+
+[PostgreSQL transaction semantics](https://www.postgresql.org/docs/18/tutorial-transactions.html)
+support returning the result only after the shared commit. Use a
+[deferred constraint trigger](https://www.postgresql.org/docs/18/sql-createtrigger.html)
+in the disposable fixture to force a commit failure after the real audit
+append and chain update. Verify that the event and chain head both roll back.
+Use an immediate refusal as well to exercise the append error itself.
+This adds no new dependency or schema migration.
 
 ## Acceptance
 
@@ -100,5 +129,8 @@ uncertain commit. Add a confirmed mutation case when a production write
 adapter exists and verify the effect and audit event commit together. Verify
 new and historical events with the offline verifier.
 
-The writer can record scoped attribution. AGT-107 stays open until the
-production command path and audit projection meet this acceptance contract.
+The disconnected command fixture verifies the stored actor metadata and
+distinct subject, request ID, non-default workspace, cross-tenant denial,
+rollback and the original portal reads. AGT-107 stays open for authenticated
+HTTP wiring, workspace-free navigation, confirmed writes and the shared
+audit projection and export acceptance.

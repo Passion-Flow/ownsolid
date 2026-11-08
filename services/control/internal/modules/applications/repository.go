@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	strict "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
@@ -66,7 +67,13 @@ func applicationError(e error) error {
 	}
 	return failure("STORAGE_UNAVAILABLE")
 }
-func (s *Service) transaction(ctx context.Context, a identity.Auth, workspace string, fn func(context.Context, transaction.Executor, workspaces.Workspace) error) error {
+
+type assistantRead struct {
+	requestID string
+	toolID    string
+}
+
+func (s *Service) transaction(ctx context.Context, a identity.Auth, workspace string, assistant *assistantRead, fn func(context.Context, transaction.Executor, workspaces.Workspace) error) error {
 	if ctx == nil || a.Me.Audience != "portal" || !strict.ValidID(workspace) {
 		return failure("ACCESS_DENIED")
 	}
@@ -87,6 +94,17 @@ func (s *Service) transaction(ctx context.Context, a identity.Auth, workspace st
 		if w.Status != "active" || w.Role == nil {
 			return failure("ACCESS_DENIED")
 		}
-		return fn(ctx, q, w)
+		if e := fn(ctx, q, w); e != nil || assistant == nil {
+			return e
+		}
+		return audit.WriteProductAssistantWithin(ctx, q, audit.ProductAssistantEvent{
+			SubjectUserID: a.Me.User.ID,
+			TenantID:      w.TenantID,
+			WorkspaceID:   w.ID,
+			Audience:      a.Me.Audience,
+			RequestID:     assistant.requestID,
+			ToolID:        assistant.toolID,
+			Outcome:       "success",
+		})
 	}))
 }

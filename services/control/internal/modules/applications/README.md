@@ -26,6 +26,12 @@ workspace, so it cannot be replayed by another user or against another workspace
 availability and the question limit come from the workflow owner's configuration in the same
 transaction.
 
+`ListForAssistant` and `ConversationsForAssistant` share those projections.
+They append the scoped assistant event after closing the query rows and before
+commit. The authenticated workspace supplies the selector and the owner
+transaction resolves the scope. The ordinary portal routes call `List` and
+`Conversations`.
+
 ## Tests
 
 - `go -C services/control test ./internal/modules/applications/...` runs the unit tests.

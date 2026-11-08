@@ -40,6 +40,12 @@ func TestCommandRejection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	actor := identity.Auth{Me: identity.Me{Audience: "portal"}}
+	for _, requestID := range []string{"", "00000000-0000-0000-0000-000000000000", "client-text"} {
+		if result, err := service.RunForRequest(t.Context(), actor, "open home", "", requestID); result != (Result{}) || !errors.Is(err, ErrInvalidRequestID) {
+			t.Errorf("invalid request ID returned %#v, %v", result, err)
+		}
+	}
 	for _, test := range []struct {
 		input, audience, cursor string
 		err                     error

@@ -7,7 +7,11 @@ import (
 	"net/url"
 	"slices"
 
+	"github.com/google/uuid"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
@@ -20,8 +24,10 @@ var (
 	ErrUnknownCommand = errors.New("PRODUCT_AGENT_COMMAND_UNKNOWN")
 	// ErrCommandDenied means the caller's entrance does not admit the command.
 	ErrCommandDenied = errors.New("ACCESS_DENIED")
-	// ErrWorkspaceRequired means the authenticated portal has no active workspace.
+	// ErrWorkspaceRequired means the command has no authenticated workspace.
 	ErrWorkspaceRequired = errors.New("PRODUCT_AGENT_WORKSPACE_REQUIRED")
+	// ErrInvalidRequestID means the supplied server correlation ID is invalid.
+	ErrInvalidRequestID = errors.New("PRODUCT_AGENT_REQUEST_ID_INVALID")
 	// ErrUnsupportedCommandLocale means no command phrases are bundled for that locale.
 	ErrUnsupportedCommandLocale = errors.New("PRODUCT_AGENT_COMMAND_LOCALE_UNSUPPORTED")
 )
@@ -75,13 +81,16 @@ func (s *Service) Commands(ctx context.Context, actor identity.Auth, locale stri
 	if !ok {
 		return nil, ErrUnsupportedCommandLocale
 	}
-	if err := s.recheck(ctx, actor); err != nil {
+	if err := s.withSession(ctx, actor, nil); err != nil {
 		return nil, err
 	}
 	result := make([]CommandHelp, 0, len(phrases))
+	if actor.Me.Workspace == nil {
+		return result, nil
+	}
 	for _, id := range slices.Sorted(maps.Keys(phrases)) {
 		canNavigate := commands[id].destination(audience) != ""
-		canRead := actor.Me.Workspace != nil && s.tools[id].allowsRead(audience)
+		canRead := s.tools[id].allowsRead(audience)
 		if canNavigate || canRead {
 			result = append(result, CommandHelp{ID: id, Aliases: slices.Clone(phrases[id])})
 		}
@@ -89,11 +98,20 @@ func (s *Service) Commands(ctx context.Context, actor identity.Auth, locale stri
 	return result, nil
 }
 
-// Run accepts the authenticated server context. A cursor belongs to a preceding
-// page of the same read command and is checked by the owner of that projection.
+// Run executes a command from authenticated server context with a new
+// server-generated correlation ID.
 func (s *Service) Run(ctx context.Context, actor identity.Auth, input, cursor string) (Result, error) {
+	return s.RunForRequest(ctx, actor, input, cursor, uuid.NewString())
+}
+
+// RunForRequest uses the correlation ID assigned by the trusted request handler.
+// A cursor belongs to a preceding page and is checked by the projection owner.
+func (s *Service) RunForRequest(ctx context.Context, actor identity.Auth, input, cursor, requestID string) (Result, error) {
 	if ctx == nil || actor.Me.Audience != "admin" && actor.Me.Audience != "portal" {
 		return Result{}, ErrCommandDenied
+	}
+	if !wire.ValidID(requestID) {
+		return Result{}, ErrInvalidRequestID
 	}
 	normalized := normalize(input)
 	if normalized == "" {
@@ -106,7 +124,7 @@ func (s *Service) Run(ctx context.Context, actor identity.Auth, input, cursor st
 
 	switch cmd.id {
 	case listApplications, listConversations:
-		return s.readApplications(ctx, actor, cmd.id, cursor)
+		return s.readApplications(ctx, actor, cmd.id, cursor, requestID)
 	default:
 		path := cmd.destination(actor.Me.Audience)
 		if path == "" {
@@ -115,14 +133,14 @@ func (s *Service) Run(ctx context.Context, actor identity.Auth, input, cursor st
 		if cursor != "" {
 			return Result{}, ErrInvalidCommand
 		}
-		if err := s.recheck(ctx, actor); err != nil {
+		if err := s.auditNavigation(ctx, actor, cmd.id, requestID); err != nil {
 			return Result{}, err
 		}
 		return Result{Command: cmd.id, Path: path}, nil
 	}
 }
 
-func (s *Service) recheck(ctx context.Context, actor identity.Auth) error {
+func (s *Service) withSession(ctx context.Context, actor identity.Auth, operation func(context.Context, transaction.Executor) error) error {
 	store, err := s.identity.Repository()
 	if err != nil {
 		return err
@@ -130,11 +148,35 @@ func (s *Service) recheck(ctx context.Context, actor identity.Auth) error {
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(s.identity.Config.Policy().HTTP.RequestSeconds))
 	defer cancel()
 	return store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
-		return s.identity.RecheckOrderedWithin(ctx, tx, actor)
+		if err := s.identity.RecheckOrderedWithin(ctx, tx, actor); err != nil || operation == nil {
+			return err
+		}
+		return operation(ctx, tx)
 	})
 }
 
-func (s *Service) readApplications(ctx context.Context, actor identity.Auth, id, cursor string) (Result, error) {
+func (s *Service) auditNavigation(ctx context.Context, actor identity.Auth, id, requestID string) error {
+	if actor.Me.Workspace == nil {
+		return ErrWorkspaceRequired
+	}
+	return s.withSession(ctx, actor, func(ctx context.Context, tx transaction.Executor) error {
+		w, err := s.applications.Workspaces.ReadScopeWithin(ctx, tx, actor, actor.Me.Workspace.ID)
+		if err != nil {
+			return err
+		}
+		return audit.WriteProductAssistantWithin(ctx, tx, audit.ProductAssistantEvent{
+			SubjectUserID: actor.Me.User.ID,
+			TenantID:      w.TenantID,
+			WorkspaceID:   w.ID,
+			Audience:      actor.Me.Audience,
+			RequestID:     requestID,
+			ToolID:        id,
+			Outcome:       "success",
+		})
+	})
+}
+
+func (s *Service) readApplications(ctx context.Context, actor identity.Auth, id, cursor, requestID string) (Result, error) {
 	if !s.tools[id].allowsRead(actor.Me.Audience) {
 		return Result{}, ErrCommandDenied
 	}
@@ -145,15 +187,14 @@ func (s *Service) readApplications(ctx context.Context, actor identity.Auth, id,
 	if cursor != "" {
 		query.Set("cursor", cursor)
 	}
-	workspace := actor.Me.Workspace.ID
 	if id == listApplications {
-		page, err := s.applications.List(ctx, actor, workspace, query)
+		page, err := s.applications.ListForAssistant(ctx, actor, query, requestID)
 		if err != nil {
 			return Result{}, err
 		}
 		return Result{Command: id, Applications: &page}, nil
 	}
-	page, err := s.applications.Conversations(ctx, actor, workspace, query)
+	page, err := s.applications.ConversationsForAssistant(ctx, actor, query, requestID)
 	if err != nil {
 		return Result{}, err
 	}
