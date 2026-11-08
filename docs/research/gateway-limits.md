@@ -162,3 +162,23 @@ the snapshot lock. The batched run used eight Tokio workers submitting to
 the FIFO writer. These are single runs on the local filesystem, excluding
 transport, control and model work. Reproduce the current path with
 `cargo test --release --locked --offline contended_budget_benchmark -- --ignored --nocapture --test-threads=1`.
+
+## Go, PostgreSQL and offline engine in one request path
+
+The native Rust gateway passed a local quota smoke against the real Go
+distribution handler and a disposable PostgreSQL database. A scratch Go
+test overlay reused the existing TLS and authorized-key fixture without
+changing the Go source. It supplied the protected quota JSON and routed
+inference over loopback to the pinned vLLM CPU engine running with
+`--network none` on `ownsolid-cpu`. The node and deployment observation
+came from the existing synthetic machine fixture.
+
+With a daily application budget of 71 tokens, the fixture paused the first
+generation after its 39-token reservation. An overlapping request was
+refused with HTTP 429 and Retry-After, before reaching model generation.
+The first stream returned 23 prompt and 9 completion tokens, freeing seven
+tokens. A second stream then fit exactly at reservation time and returned
+the same usage. A final request was refused. PostgreSQL acknowledged all
+four outcomes, released all admission holds and retained 64 used tokens
+across the two successful streams. The deterministic Rust suite exercises
+exact reset delays, interrupted streams and each configured scope.
