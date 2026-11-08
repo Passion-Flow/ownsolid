@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
 	release "github.com/Passion-Flow/ownsolid/api/release/v1"
+	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
 )
 
 const ownedTag = "retained"
@@ -237,11 +237,10 @@ func (c *distributionClient) PutBlob(ctx context.Context, repo string, d Descrip
 	if r.StatusCode != http.StatusAccepted {
 		return failure("REGISTRY_REMOTE_INVALID")
 	}
-	location, e := url.Parse(r.Header.Get("Location"))
+	location, e := r.Location()
 	if e != nil {
 		return failure("REGISTRY_UPLOAD_LOCATION_REJECTED")
 	}
-	location = c.origin.ResolveReference(location)
 	prefix := "/v2/" + repo + "/blobs/uploads/"
 	opaque := strings.TrimPrefix(location.Path, prefix)
 	if location.Scheme != c.origin.Scheme || !strings.EqualFold(location.Host, c.origin.Host) || location.User != nil || location.Fragment != "" || !strings.HasPrefix(location.Path, prefix) || opaque == "" || strings.ContainsAny(opaque, "/\\%") || strings.Contains(location.RawPath, "%") {
