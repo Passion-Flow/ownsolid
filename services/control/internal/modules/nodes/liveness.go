@@ -170,7 +170,7 @@ func (s *Service) loadNodeView(ctx context.Context, id string, credential []byte
 	var capabilities []byte
 	var active bool
 	var at time.Time
-	e = store.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT n.status,w.status='active' AND t.status='active',n.protocol_version,n.execution_profile,n.capabilities,clock_timestamp() FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id JOIN workspaces w ON w.tenant_id=n.tenant_id AND w.id=n.workspace_id JOIN tenants t ON t.id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND n.id=$1 AND n.credential_hash=$2`, id, credential)).Scan(&view.status, &active, &view.protocol, &view.profile, &capabilities, &at)
+	e = store.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT n.status,w.status='active' AND t.status='active',n.protocol_version,n.execution_profile,n.capabilities,clock_timestamp(),n.certificate_key_sha256,n.previous_certificate_key_sha256 FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id JOIN workspaces w ON w.tenant_id=n.tenant_id AND w.id=n.workspace_id JOIN tenants t ON t.id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND n.id=$1 AND n.credential_hash=$2`, id, credential)).Scan(&view.status, &active, &view.protocol, &view.profile, &capabilities, &at, &view.pins.current, &view.pins.previous)
 	if e != nil || view.status != "active" || !active || json.Unmarshal(capabilities, &view.capabilities) != nil {
 		return nodeView{}, time.Time{}, false
 	}

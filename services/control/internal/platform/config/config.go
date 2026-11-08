@@ -29,6 +29,7 @@ type Config struct {
 	Telemetry                 *TelemetryConfiguration       `yaml:"telemetry,omitempty"`
 	LivenessReplica           *LivenessReplicaConfiguration `yaml:"liveness_replica,omitempty"`
 	AgentGateway              *AgentGatewayConfiguration    `yaml:"agent_gateway,omitempty" json:"-"`
+	AgentIdentity             *AgentIdentityConfiguration   `yaml:"agent_identity,omitempty" json:"-"`
 	Topology                  TopologyConfiguration         `yaml:"topology,omitempty" json:"topology"`
 	ReleaseViewConfigFile     string                        `yaml:"release_view_config_file,omitempty" json:"-"`
 	MachineServer             *MachineServerConfiguration   `yaml:"machine_server,omitempty" json:"machine_server,omitempty"`
@@ -257,6 +258,9 @@ func (c Config) Validate() error {
 	if e := c.LivenessReplica.Validate(); e != nil {
 		return e
 	}
+	if e := c.AgentIdentity.Validate(); e != nil {
+		return e
+	}
 	if e := c.validateAgentGateway(); e != nil {
 		return e
 	}
@@ -390,7 +394,11 @@ func (c Config) TLSConfig() (*tls.Config, error) {
 	if c.Server.EffectiveTransportMode() != TransportDirectHTTPS {
 		return nil, nil
 	}
-	return tlsConfigForOrigins(c.Server.TLSCertificateFile, c.Server.TLSPrivateKeyFile, []string{c.Server.PortalOrigin, c.Server.AdminOrigin})
+	t, e := tlsConfigForOrigins(c.Server.TLSCertificateFile, c.Server.TLSPrivateKeyFile, []string{c.Server.PortalOrigin, c.Server.AdminOrigin})
+	if e != nil || c.MachineServer != nil {
+		return t, e
+	}
+	return c.requestAgentCertificates(t)
 }
 
 // Both listeners use the same pinned material reader and actual pair, validity,

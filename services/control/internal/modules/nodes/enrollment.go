@@ -2,9 +2,11 @@ package nodes
 
 import (
 	"context"
+	"crypto/x509"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -18,7 +20,7 @@ func enrollmentError(e error) error {
 		return nil
 	}
 	switch e.Error() {
-	case "TOKEN_UNUSABLE", "AGENT_PROFILE_REJECTED", "RESOURCE_LIMIT_REACHED", "NODE_NAME_EXISTS":
+	case "TOKEN_UNUSABLE", "AGENT_PROFILE_REJECTED", "RESOURCE_LIMIT_REACHED", "NODE_NAME_EXISTS", "AGENT_CERTIFICATE_REQUEST_INVALID", "AGENT_IDENTITY_UNAVAILABLE":
 		return fail(e.Error())
 	default:
 		return nodeRepositoryError(e)
@@ -98,6 +100,12 @@ func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request str
 	if e != nil {
 		return wire.Enrolled{}, e
 	}
+	var certificateRequest *x509.CertificateRequest
+	if s.Certificates != nil {
+		if certificateRequest, e = wire.ParseCertificateRequest(input.CertificateRequest); e != nil {
+			return wire.Enrolled{}, fail(e.Error())
+		}
+	}
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(s.Identity.Config.Policy().HTTP.RequestSeconds))
 	defer cancel()
 	var out wire.Enrolled
@@ -129,10 +137,25 @@ func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request str
 			return fail("RESOURCE_LIMIT_REACHED")
 		}
 		id, credential := uuid.NewString(), security.Token()
-		_, e = q.Exec(ctx, nodeSQL(q,
+		insert := nodeSQL(q,
 			`INSERT INTO managed_nodes(id,tenant_id,workspace_id,name,status,credential_hash,protocol_version,facts,last_heartbeat_at,execution_profile,capabilities) VALUES($1,$2,$3,$4,'active',$5,$6,$7,clock_timestamp(),$8,$9)`,
 			`INSERT INTO managed_nodes(id,tenant_id,workspace_id,name,status,credential_hash,protocol_version,facts,last_heartbeat_at,execution_profile,capabilities) VALUES(?,?,?,?,'active',?,?,?,UTC_TIMESTAMP(6),?,?)`, `INSERT INTO managed_nodes(id,tenant_id,workspace_id,name,status,credential_hash,protocol_version,facts,last_heartbeat_at,execution_profile,capabilities) VALUES(?,?,?,?,'active',?,?,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),?,?)`,
-			id, tenant, workspace, name, digest("node-credential", credential), input.ProtocolVersion, nodeJSON(q, facts), profile, nodeJSON(q, capabilities)))
+			id, tenant, workspace, name, digest("node-credential", credential), input.ProtocolVersion, nodeJSON(q, facts), profile, nodeJSON(q, capabilities))
+		var certificate string
+		if certificateRequest != nil {
+			pin, e := wire.KeyDigest(certificateRequest.PublicKey)
+			if e != nil {
+				return fail(e.Error())
+			}
+			var notAfter time.Time
+			if certificate, notAfter, e = s.Certificates.Issue(certificateRequest, wire.LocalScope(), id); e != nil {
+				return fail(e.Error())
+			}
+			insert = transaction.SQL(transaction.PostgreSQL,
+				`INSERT INTO managed_nodes(id,tenant_id,workspace_id,name,status,credential_hash,protocol_version,facts,last_heartbeat_at,execution_profile,capabilities,certificate_key_sha256,certificate_not_after) VALUES($1,$2,$3,$4,'active',$5,$6,$7,clock_timestamp(),$8,$9,$10,$11)`,
+				id, tenant, workspace, name, digest("node-credential", credential), input.ProtocolVersion, nodeJSON(q, facts), profile, nodeJSON(q, capabilities), pin, notAfter)
+		}
+		_, e = q.Exec(ctx, insert)
 		var safe *transaction.Error
 		if errors.As(e, &safe) && safe.Kind == transaction.UniqueConflict {
 			return fail("NODE_NAME_EXISTS")
@@ -162,7 +185,7 @@ func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request str
 		if e != nil {
 			return e
 		}
-		out = wire.Enrolled{NodeID: id, SiteID: wire.DefaultSiteID, CellID: wire.DefaultCellID, Credential: credential, ProtocolVersion: input.ProtocolVersion, HeartbeatSeconds: s.effectivePacing(pacing.Pacing).HeartbeatSeconds}
+		out = wire.Enrolled{NodeID: id, SiteID: wire.DefaultSiteID, CellID: wire.DefaultCellID, Credential: credential, ProtocolVersion: input.ProtocolVersion, HeartbeatSeconds: s.effectivePacing(pacing.Pacing).HeartbeatSeconds, Certificate: certificate}
 		return nil
 	})
 	if e != nil {

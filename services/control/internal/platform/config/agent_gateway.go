@@ -56,12 +56,18 @@ func (c Config) AgentGatewayServing() (string, *tls.Config, error) {
 	if c.DatabaseEngine() != PostgreSQLDatabaseEngine {
 		return "", nil, errors.New("AGENT_GATEWAY_POSTGRESQL_REQUIRED")
 	}
+	if e := c.CheckAgentIdentity(); e != nil {
+		return "", nil, e
+	}
 	origin, e := c.MachineOrigin()
 	if e != nil {
 		return "", nil, e
 	}
 	tlsConfig, e := tlsConfigForOrigins(c.AgentGateway.TLSCertificateFile, c.AgentGateway.TLSPrivateKeyFile, []string{origin})
 	if e != nil {
+		return "", nil, e
+	}
+	if tlsConfig, e = c.requestAgentCertificates(tlsConfig); e != nil {
 		return "", nil, e
 	}
 	return origin, tlsConfig, nil

@@ -125,6 +125,38 @@ func TestOnlyAChangeOfTheViewReachesTheOutbox(t *testing.T) {
 	}
 }
 
+func TestACertificateChangeReachesTheOutbox(t *testing.T) {
+	s, node := liveHeartbeats(t)
+	ctx := context.Background()
+	count := func() int {
+		var n int
+		if e := s.DB.QueryRow(ctx, `SELECT count(*) FROM control_outbox WHERE topic='node.view_changed' AND key=$1`, node.NodeID).Scan(&n); e != nil {
+			t.Fatal(e)
+		}
+		return n
+	}
+	before := count()
+	for _, change := range []string{
+		`UPDATE managed_nodes SET certificate_key_sha256=sha256('first') WHERE id=$1`,
+		`UPDATE managed_nodes SET previous_certificate_key_sha256=sha256('second') WHERE id=$1`,
+		`UPDATE managed_nodes SET previous_certificate_key_sha256=NULL WHERE id=$1`,
+	} {
+		if _, e := s.DB.Exec(ctx, change, node.NodeID); e != nil {
+			t.Fatal(change, e)
+		}
+		if got := count(); got != before+1 {
+			t.Fatalf("%s: %d events", change, got-before)
+		}
+		before = count()
+	}
+	if _, e := s.DB.Exec(ctx, `UPDATE managed_nodes SET certificate_not_after=clock_timestamp() WHERE id=$1`, node.NodeID); e != nil {
+		t.Fatal(e)
+	}
+	if got := count(); got != before {
+		t.Fatalf("a column gateways do not hold announced %d events", got-before)
+	}
+}
+
 func TestARollbackAnnouncesNothing(t *testing.T) {
 	s, node := viewedHeartbeats(t)
 	ctx := context.Background()

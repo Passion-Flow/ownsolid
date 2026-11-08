@@ -20,11 +20,34 @@ const (
 	generatedCAValidity     = 10 * 365 * 24 * time.Hour
 	generatedServerValidity = 2 * 365 * 24 * time.Hour
 	serverReissueWindow     = 30 * 24 * time.Hour
+	agentCAFile             = "agent-ca.pem"
+	agentCAKeyFile          = "agent-ca-key.pem"
 )
 
 var errTLSGeneration = errors.New("INSTALL_TLS_GENERATION_FAILED")
 
+// materializeAgentCA creates the CA that signs node certificates (ADR 0050). It is separate
+// from the serving CA, which a site that brings its own certificate does not give us. An
+// existing one is left alone, so applying a configuration again never replaces it.
+func (c Config) materializeAgentCA(l Layout) error {
+	certificate, key := filepath.Join(l.Config, agentCAFile), filepath.Join(l.Config, agentCAKeyFile)
+	if exists(certificate) && exists(key) {
+		return nil
+	}
+	caCertificate, caKey, e := generateCA("ownsolid agent CA")
+	if e != nil {
+		return e
+	}
+	if e = writeFile(key, caKey, c, true); e != nil {
+		return e
+	}
+	return writeFile(certificate, caCertificate, c, true)
+}
+
 func (c Config) materializeTLS(l Layout) error {
+	if e := c.materializeAgentCA(l); e != nil {
+		return e
+	}
 	certificate := filepath.Join(l.Config, "certificate.pem")
 	privateKey := filepath.Join(l.Config, "private-key.pem")
 	authority := filepath.Join(l.Config, "ca.pem")
@@ -46,7 +69,7 @@ func (c Config) materializeTLS(l Layout) error {
 	}
 	caKeyPath := filepath.Join(l.Secrets, "ca-key.pem")
 	if !exists(authority) || !exists(caKeyPath) {
-		caCertificate, caKey, e := generateCA()
+		caCertificate, caKey, e := generateCA("ownsolid installation CA")
 		if e != nil {
 			return e
 		}
@@ -90,7 +113,7 @@ func (c Config) originHosts() ([]string, error) {
 	return hosts, nil
 }
 
-func generateCA() (certificate, key []byte, err error) {
+func generateCA(commonName string) (certificate, key []byte, err error) {
 	privateKey, e := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if e != nil {
 		return nil, nil, errTLSGeneration
@@ -101,7 +124,7 @@ func generateCA() (certificate, key []byte, err error) {
 	}
 	now := time.Now()
 	template := &x509.Certificate{
-		SerialNumber: serial, Subject: pkix.Name{CommonName: "ownsolid installation CA"},
+		SerialNumber: serial, Subject: pkix.Name{CommonName: commonName},
 		NotBefore: now.Add(-time.Hour), NotAfter: now.Add(generatedCAValidity),
 		IsCA: true, BasicConstraintsValid: true, MaxPathLenZero: true, KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 	}

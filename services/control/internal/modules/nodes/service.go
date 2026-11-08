@@ -19,6 +19,9 @@ import (
 )
 
 type Service struct {
+	// Certificates signs node certificates (ADR 0050). Serving agents on PostgreSQL always
+	// composes it on control; other engines and test compositions leave it nil and issue none.
+	Certificates CertificateAuthority
 	TaskEvents   TaskEventRecorder
 	Preparations PreparationAuthority
 	DB           *pgxpool.Pool

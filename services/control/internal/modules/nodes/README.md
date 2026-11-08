@@ -82,3 +82,5 @@ see [current integration](../../../../../docs/execution/mvp/m06-cumulative-integ
 
 
 The cumulative M10 `lifecycle` graph admits explicit docker_model_lifecycle/protocol1.5 enrollment and only its exact preparation transfer/event/output/stop leaves. Existing docker_ai1.4 nodes retain their original capability set. Earlier minimal profiles do not acquire preparation or derived inference authority.
+
+[certificates.go](certificates.go) checks a connection's client certificate against the keys pinned to the node and issues, rotates and recovers node certificates ([ADR 0050](../../../../../docs/decisions/0050-agent-certificates.md)).

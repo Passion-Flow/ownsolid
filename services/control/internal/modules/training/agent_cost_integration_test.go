@@ -13,9 +13,11 @@ import (
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/outbox"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/agentca"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/agentcost"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
@@ -45,6 +47,8 @@ type costRun struct {
 	client   *httpfixture.Client
 	post     func(path string, headers map[string]string, body []byte, status int) []byte
 	measured map[string]exchangeCost
+	// certificates is the node service that issues, given a CA for the certificate exchange.
+	certificates *nodes.Service
 	// flush writes what the heartbeats of this run left in memory (ADR 0022).
 	flush func() error
 	// sweep looks for expired tasks across the fleet, and read is one read of the outbox by a
@@ -174,7 +178,7 @@ func measureFleet(t *testing.T, nodes int) map[string]exchangeCost {
 	client := httpfixture.New(t, server, "admin", httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json"))
 	client.Headers = map[string]string{"Authorization": "Bearer " + f.credential}
 	base := "/agent/v1/sites/default/cells/default/nodes/" + f.input.NodeID
-	r := &costRun{t: t, f: f, recorder: &recorder, client: client, measured: map[string]exchangeCost{}, flush: func() error { return handler.Nodes.Service.FlushLiveness(context.Background()) }}
+	r := &costRun{t: t, f: f, recorder: &recorder, client: client, measured: map[string]exchangeCost{}, certificates: handler.Nodes.Service, flush: func() error { return handler.Nodes.Service.FlushLiveness(context.Background()) }}
 	r.sweep = func() error { return handler.Nodes.Service.Sweep(context.Background()) }
 	reader, e := outbox.NewReader(store(t, f), 1000)
 	if e != nil {
@@ -361,6 +365,18 @@ func (r *costRun) exchanges(base string) {
 	stop.Proof, stop.ContainerID = "owned_container_removed", &container
 	r.measure("training stop", agentwire.CallStop, func() {
 		r.client.Call("POST", path+"/training-stops", wire.StopSubmission{LeaseToken: l.LeaseToken, Receipt: stop, Outcome: json.RawMessage("null")}, 200, "")
+	})
+	nodeKey, e := agentwire.NewCertificateKey()
+	if e != nil {
+		t.Fatal(e)
+	}
+	renewal, e := agentwire.NewCertificateRequest(nodeKey)
+	if e != nil {
+		t.Fatal(e)
+	}
+	r.certificates.Certificates = agentca.Authority(t)
+	r.measure("certificate", agentwire.CallCertificate, func() {
+		r.client.Call("POST", base+"/certificates", agentwire.CertificateRenewal{CertificateRequest: renewal}, 200, "")
 	})
 }
 

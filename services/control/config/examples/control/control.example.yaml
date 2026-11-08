@@ -319,6 +319,12 @@ runtime:
     # agent_admission admits the call.
     agent_enroll_ip_count: 20
     agent_enroll_ip_window_seconds: 60
+    # A rack is the source network of an enrollment: one subnet per rack on a leaf-spine
+    # fabric. Nodes over the limit wait for the retry hint and enroll later.
+    agent_enroll_rack_count: 120
+    agent_enroll_rack_window_seconds: 60
+    agent_enroll_rack_ipv4_prefix: 24
+    agent_enroll_rack_ipv6_prefix: 64
     reset_cooldown_seconds: 60
   # Agent calls are admitted in memory before any database work (ADR 0018). Every value
   # applies per control process. Under load control refuses bulk first, then telemetry,
@@ -362,6 +368,7 @@ runtime:
       claim: {per_minute: 60, burst: 20}
       acknowledge: {per_minute: 60, burst: 20}
       renew: {per_minute: 120, burst: 30}
+      certificate: {per_minute: 12, burst: 4}
       result: {per_minute: 60, burst: 20}
       stop: {per_minute: 60, burst: 20}
       events: {per_minute: 120, burst: 30}
@@ -431,6 +438,14 @@ task_events:
 #   bucket: ownsolid-liveness
 #   replicas: 3
 
+# agent_identity names the agent CA (ADR 0050). Serving agents on PostgreSQL requires it.
+# ca_certificate_file is a PEM bundle: the issuer first, then any CA still being retired.
+# A host that runs only agent gateways omits ca_private_key_file, so it cannot sign.
+# agent_identity:
+#   ca_certificate_file: /etc/ownsolid/agent-ca.pem
+#   ca_private_key_file: /run/secrets/agent-ca-key.pem
+#   certificate_lifetime_hours: 720
+#
 # Optional. Read only by `serve-agent-gateway`, which serves agent session streams beside
 # control (ADR 0048); control ignores it. The certificate must name the agent entrance's host
 # (machine_server.origin, else server.admin_origin), because agents verify that name. Agents

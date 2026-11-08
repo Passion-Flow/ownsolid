@@ -9,6 +9,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"io"
 	"log/slog"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -239,17 +240,59 @@ func Enroll(ctx context.Context, c Config) error {
 		return e
 	}
 	defer connection.Close()
+	// The key is saved before it is asked about, so a certificate never arrives for a key
+	// that a crash has lost.
+	key, e := wire.NewCertificateKey()
+	if e != nil {
+		return e
+	}
+	if e = state.SaveCertificate(c.StateDirectory, state.Certificate{PrivateKey: key}); e != nil {
+		return e
+	}
+	request, e := wire.NewCertificateRequest(key)
+	if e != nil {
+		return e
+	}
 	var response wire.Enrolled
-	if e = connection.Post(ctx, "/agent/v1/enroll", wire.Enrollment{JoinToken: join, Handshake: handshake(f, c)}, &response); e != nil {
+	if e = enrollPaced(ctx, connection, wire.Enrollment{JoinToken: join, CertificateRequest: request, Handshake: handshake(f, c)}, &response); e != nil {
 		return e
 	}
 	if !idPattern.MatchString(response.NodeID) || !token(response.Credential) || response.ProtocolVersion != wire.ProfileVersion(profile(c)) || response.HeartbeatSeconds < wire.MinHeartbeatSeconds || response.HeartbeatSeconds > wire.MaxHeartbeatSeconds || !(wire.Scope{SiteID: response.SiteID, CellID: response.CellID}).Valid() {
 		return errors.New("ENROLLMENT_RESPONSE_INVALID")
 	}
+	if response.Certificate != "" {
+		leaf, e := wire.CheckIssuedCertificate(response.Certificate, key, response.NodeID)
+		if e != nil {
+			return errors.New("ENROLLMENT_RESPONSE_INVALID")
+		}
+		if e = state.SaveCertificate(c.StateDirectory, state.Certificate{PrivateKey: key, Certificate: response.Certificate, Confirmed: true, RenewAt: renewAt(leaf)}); e != nil {
+			return errors.New("ENROLLMENT_COMMITTED_LOCAL_STATE_FAILED")
+		}
+	}
 	if e = state.SaveNew(c.StateDirectory, state.Identity{NodeID: response.NodeID, SiteID: response.SiteID, CellID: response.CellID, Credential: response.Credential, ControlOrigin: c.ControlOrigin, ProtocolVersion: wire.ProfileVersion(profile(c)), ExecutionProfile: profile(c)}); e != nil {
 		return errors.New("ENROLLMENT_COMMITTED_LOCAL_STATE_FAILED")
 	}
 	return nil
+}
+
+// enrollPaced enrolls, waiting when control says the node's rack has to wait its turn (ADR
+// 0050). The join token is not spent by a refusal, which comes before any enrollment work.
+func enrollPaced(ctx context.Context, connection *client.Client, enrollment wire.Enrollment, response *wire.Enrolled) error {
+	for {
+		e := connection.Post(ctx, "/agent/v1/enroll", enrollment, response)
+		var p *client.Problem
+		if !errors.As(e, &p) || p.Status != http.StatusTooManyRequests || p.RetryAfter <= 0 {
+			return e
+		}
+		slog.Info("agent_enrollment_waiting", "seconds", int(p.RetryAfter/time.Second))
+		timer := time.NewTimer(client.AfterHint(p.RetryAfter))
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return e
+		case <-timer.C:
+		}
+	}
 }
 
 // cycle runs one cycle on a session of its own, for callers outside the run loop.
@@ -448,6 +491,18 @@ func Run(ctx context.Context, c Config) error {
 	connection.Credential = identity.Credential
 	connection.Scope = identity.Scope()
 	connection.SessionAddresses = c.SessionAddresses
+	certificate, found, e := state.LoadCertificate(c.StateDirectory)
+	if e != nil {
+		return e
+	}
+	if found && certificate.Certificate != "" {
+		if e = connection.UseCertificate(certificate.Certificate, certificate.PrivateKey); e != nil {
+			return e
+		}
+	}
+	rotation, stopRotation := context.WithCancel(ctx)
+	defer stopRotation()
+	go certificateAgent{directory: c.StateDirectory, node: identity.NodeID, connection: connection, now: time.Now}.run(rotation)
 	m, e := manager(c)
 	if e != nil {
 		return e
@@ -513,7 +568,7 @@ func Run(ctx context.Context, c Config) error {
 		var delay time.Duration
 		if e != nil {
 			var p *client.Problem
-			if errors.As(e, &p) && p.Status == 401 {
+			if errors.As(e, &p) && p.Status == 401 && !client.CertificateRefused(e) {
 				return errors.New("AGENT_CREDENTIAL_REVOKED")
 			}
 			slog.Warn("agent_cycle_failed", "code", e.Error())

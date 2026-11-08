@@ -474,6 +474,10 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048
               }
             },
             "required": [
@@ -533,6 +537,10 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048
               }
             },
             "required": [
@@ -613,6 +621,10 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048
               }
             },
             "required": [
@@ -673,6 +685,10 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048
               }
             },
             "required": [
@@ -737,6 +753,10 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048
               }
             },
             "required": [
@@ -809,6 +829,10 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048
               }
             },
             "required": [
@@ -855,6 +879,10 @@
           "heartbeat_seconds": {
             "type": "integer",
             "const": 10
+          },
+          "certificate": {
+            "type": "string",
+            "maxLength": 8192
           }
         },
         "required": [
@@ -7185,6 +7213,44 @@
           "jitter_percent",
           "reconnect_base_seconds",
           "reconnect_max_seconds"
+        ]
+      },
+      "CertificateRenewal": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "certificate_request": {
+            "type": "string",
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "certificate_request"
+        ]
+      },
+      "IssuedCertificate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "certificate": {
+            "type": "string",
+            "maxLength": 8192
+          }
+        },
+        "required": [
+          "certificate"
+        ]
+      },
+      "CertificateConfirmed": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "confirmed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "confirmed"
         ]
       }
     }

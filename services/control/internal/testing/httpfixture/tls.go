@@ -49,6 +49,18 @@ func fixtureOrigin(audience string) (string, error) {
 // for ownership inventory; clients use the separately declared DNS origins.
 func NewTLSServer(t *testing.T, handler http.Handler) *httptest.Server {
 	t.Helper()
+	return newTLSServer(t, handler, nil)
+}
+
+// NewTLSServerAskingClients is NewTLSServer on a listener that asks for and verifies client
+// certificates of clientCAs, as an agent entrance does.
+func NewTLSServerAskingClients(t *testing.T, handler http.Handler, clientCAs *x509.CertPool) *httptest.Server {
+	t.Helper()
+	return newTLSServer(t, handler, clientCAs)
+}
+
+func newTLSServer(t *testing.T, handler http.Handler, clientCAs *x509.CertPool) *httptest.Server {
+	t.Helper()
 	if handler == nil {
 		t.Fatal("HTTP_FIXTURE_HANDLER_REQUIRED")
 	}
@@ -70,6 +82,9 @@ func NewTLSServer(t *testing.T, handler http.Handler) *httptest.Server {
 	server := httptest.NewUnstartedServer(handler)
 	t.Cleanup(server.Close)
 	server.TLS = &tls.Config{MinVersion: tls.VersionTLS12, Certificates: []tls.Certificate{{Certificate: [][]byte{der}, PrivateKey: key}}}
+	if clientCAs != nil {
+		server.TLS.ClientAuth, server.TLS.ClientCAs = tls.VerifyClientCertIfGiven, clientCAs
+	}
 	server.StartTLS()
 	client, e := fixtureTLSClient(server, []string{PortalOrigin, AdminOrigin})
 	if e != nil {

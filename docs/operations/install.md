@@ -155,6 +155,28 @@ gateway's open sessions, under `service="agent-gateway"`.
 `ownsolid-install` does not place gateways on hosts yet: that comes with the topologies of more
 than one host (REL-101).
 
+### Agent certificates
+
+Every node proves its identity with a client certificate
+([ADR 0050](../decisions/0050-agent-certificates.md)). The installer creates a private agent CA at
+`<install_root>/config/agent-ca.pem`, with its key beside it, and keeps it when you apply again.
+
+A node makes its own key when it joins, and it never leaves the node. It replaces its certificate by
+itself, 70% to 90% of the way through the lifetime, without restarting. Certificates last 30 days;
+set `tls.agent_certificate_lifetime_hours` to change it (24 to 8760). If a node is offline for longer
+than that, it gets a new certificate by itself when it returns.
+
+Nodes joining at once from one network are limited by `runtime.rates.agent_enroll_rack_count` per
+`agent_enroll_rack_window_seconds` in `control_settings`, 120 per minute by default, and the network of
+one rack is a /24 or /64 unless `agent_enroll_rack_ipv4_prefix` and `agent_enroll_rack_ipv6_prefix` say
+otherwise. A node
+over the limit waits its turn and keeps its join token.
+
+A node from before certificates keeps working and takes its first certificate when its agent is
+upgraded; from then on it needs one. To replace the agent CA by hand, put the new CA before the old one
+in `agent-ca.pem`, replace `agent-ca-key.pem` with the new key and restart control. Nodes pick up
+certificates from the new CA as they renew. Remove the old CA once every node has renewed.
+
 ### Pacing the agents
 
 Control tells every agent how often to report and how to back off, in each heartbeat

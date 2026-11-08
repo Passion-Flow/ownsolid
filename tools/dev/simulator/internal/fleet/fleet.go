@@ -4,6 +4,7 @@ package fleet
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"log/slog"
 	"math/rand/v2"
@@ -34,17 +35,33 @@ func Run(ctx context.Context, c config.Config) (report.Report, error) {
 	defer dialer.Close()
 	started := time.Now()
 	recorder := report.New(c.Agents, started)
+	// An agent with a certificate has its own TLS identity, so its own connections.
+	dialers := make([]*link.Dialer, c.Agents)
+	for i := range dialers {
+		if dialers[i] = dialer; all[i].Certificate == "" {
+			continue
+		}
+		if c.AgentsPerConnection != 1 {
+			return report.Report{}, errors.New("SIMULATOR_CERTIFICATES_NEED_OWN_CONNECTION")
+		}
+		pair, e := tls.X509KeyPair([]byte(all[i].Certificate), []byte(all[i].PrivateKey))
+		if e != nil {
+			return report.Report{}, errors.New("SIMULATOR_IDENTITIES_INVALID")
+		}
+		dialers[i] = dialer.ForAgent(pair)
+	}
 	connections := make([]*link.Connection, (c.Agents+c.AgentsPerConnection-1)/c.AgentsPerConnection)
 	for i := range connections {
+		first := dialers[i*c.AgentsPerConnection]
 		if len(c.SessionAddresses) > 0 {
-			connections[i] = dialer.GatewayConnection(all[i*c.AgentsPerConnection].NodeID, c.SessionAddresses)
+			connections[i] = first.GatewayConnection(all[i*c.AgentsPerConnection].NodeID, c.SessionAddresses)
 		} else {
-			connections[i] = dialer.Connection()
+			connections[i] = first.Connection()
 		}
 	}
 	agents := make([]*agent, c.Agents)
 	for i := range agents {
-		agents[i] = newAgent(all[i], dialer, connections[i/c.AgentsPerConnection], recorder, time.Duration(c.LongTaskSeconds)*time.Second)
+		agents[i] = newAgent(all[i], dialers[i], connections[i/c.AgentsPerConnection], recorder, time.Duration(c.LongTaskSeconds)*time.Second)
 	}
 	running, stop := context.WithTimeout(ctx, time.Duration(c.DurationSeconds)*time.Second)
 	defer stop()

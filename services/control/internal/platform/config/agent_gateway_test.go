@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/tls"
 	"testing"
 )
 
@@ -9,6 +10,7 @@ func agentGatewayTestConfiguration(t *testing.T, names []string) Config {
 	c := machineTestConfiguration(TransportHTTP)
 	certificate, key := transportTLSFixture(t, names, nil, false)
 	c.AgentGateway = &AgentGatewayConfiguration{ListenAddress: "127.0.0.1:39443", TLSCertificateFile: certificate, TLSPrivateKeyFile: key}
+	c.AgentIdentity = &AgentIdentityConfiguration{CACertificateFile: certificate}
 	return c
 }
 
@@ -41,6 +43,15 @@ func TestAgentGatewayServesTheAgentOriginWithItsCertificate(t *testing.T) {
 	origin, tlsConfig, e := c.AgentGatewayServing()
 	if e != nil || origin != c.MachineServer.Origin || tlsConfig == nil || len(tlsConfig.Certificates) != 1 || tlsConfig.NextProtos[0] != "h2" {
 		t.Fatalf("origin %q tls %v: %v", origin, tlsConfig, e)
+	}
+	// A gateway verifies agents' certificates with the CA alone, and enrollment never comes here.
+	if tlsConfig.ClientAuth != tls.VerifyClientCertIfGiven || tlsConfig.ClientCAs == nil {
+		t.Fatalf("client auth %v", tlsConfig.ClientAuth)
+	}
+	unidentified := agentGatewayTestConfiguration(t, []string{"machine.example.invalid"})
+	unidentified.AgentIdentity = nil
+	if _, _, e := unidentified.AgentGatewayServing(); e == nil || e.Error() != "CONFIG_AGENT_IDENTITY_REQUIRED" {
+		t.Fatalf("no agent CA: %v", e)
 	}
 	// Agents verify the origin's host name, so a gateway certificate without it is refused.
 	other := agentGatewayTestConfiguration(t, []string{"gateway-1.example.invalid"})

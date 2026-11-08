@@ -121,7 +121,7 @@ Found while reading the limits a fleet meets, all per control process:
 - `agent_admission.address` (default 1,200 calls a minute) limits one client address. All
   simulated agents share the simulator's address, so a run raises it; real nodes each have
   their own.
-- `rates.agent_enroll_ip_count` (default 20 a minute) and `nodes.maximum_live_join_tokens`
+- `rates.agent_enroll_ip_count` (default 20 a minute), `rates.agent_enroll_rack_count` (default 120 a minute) and `nodes.maximum_live_join_tokens`
   pace enrollment from one address; the simulator obeys the retry hint.
 
 ## Failure modes and how the tests cover them
@@ -186,3 +186,5 @@ These are fault runs at the default interval, not the P0 load test, which is ARC
   decides whether the P0 load needs them.
 - Real nodes come from distinct addresses. A run from one host shares one; per-address
   limits are raised for the run rather than spoofed.
+
+Since ARC-103 each simulated agent has its own certificate and TLS connections, because a connection is bound to the node its certificate names. `agents_per_connection` above one is refused for agents holding certificates.

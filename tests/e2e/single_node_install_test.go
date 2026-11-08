@@ -392,6 +392,10 @@ func TestSingleNodeInstall(t *testing.T) {
 			t.Fatalf("last seen did not reach the database: %q then %q", before, after)
 		}
 	})
+	t.Run("the agent proves itself with a certificate and rotates it without restarting", func(t *testing.T) {
+		agent.rotateCertificate(t, e)
+	})
+
 	t.Run("serving holds no privileged database identity", func(t *testing.T) {
 		output, err := e.compose(t, "exec", "--no-TTY", "control", "python3", "-c", "import os,sys;sys.exit(os.path.exists('/run/projectone-operator'))")
 		if err != nil {
@@ -436,7 +440,7 @@ func TestSingleNodeInstall(t *testing.T) {
 		if !agent.running() {
 			t.Fatalf("agent exited:\n%s", agent.output())
 		}
-		if cursor := agent.cursor(t); cursor != 2 {
+		if cursor := agent.cursor(t); cursor != 3 {
 			t.Fatalf("agent cursor %d after its second task", cursor)
 		}
 		agent.stop(t)
@@ -468,12 +472,12 @@ func TestSingleNodeInstall(t *testing.T) {
 			t.Fatal(err)
 		}
 		agent.start(t)
-		agent.waitFor(t, "agent_task_resync acknowledged_sequence=3", 60*time.Second)
+		agent.waitFor(t, "agent_task_resync acknowledged_sequence=4", 60*time.Second)
 		agent.runTask(t, 30*time.Second)
-		if cursor := agent.cursor(t); cursor != 4 {
+		if cursor := agent.cursor(t); cursor != 5 {
 			t.Fatalf("agent cursor %d after a resync and one task", cursor)
 		}
-		e.assertTasksAcknowledged(t, agent.nodeID, 4)
+		e.assertTasksAcknowledged(t, agent.nodeID, 5)
 		agent.stop(t)
 	})
 

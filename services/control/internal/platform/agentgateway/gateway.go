@@ -21,6 +21,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 )
 
@@ -30,6 +31,8 @@ type Backend interface {
 	// as the HTTPS machine paths are admitted. It runs for every exchange, and release
 	// runs when the exchange ends.
 	Admit(ctx context.Context, address, node, credential string, call wire.Call) (release func(), err error)
+	// CheckPeer decides whether the connection's certificate may act for the node (ADR 0050).
+	CheckPeer(ctx context.Context, node string, peer agentidentity.Peer) error
 	Heartbeat(ctx context.Context, node, credential string, h wire.Handshake) (wire.Disposition, error)
 	// Claim leases the next task, holding the claim open for up to input's wait.
 	Claim(ctx context.Context, node, credential, request string, input wire.ClaimRequest) (wire.Claim, error)
@@ -68,6 +71,9 @@ type Gateway struct {
 type session struct{ cancel context.CancelCauseFunc }
 
 type addressKey struct{}
+
+// peerKey holds the connection's client certificate (ADR 0050).
+type peerKey struct{}
 
 var errReplaced = errors.New("AGENT_SESSION_REPLACED")
 
@@ -125,7 +131,8 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request, address stri
 		http.Error(w, "", http.StatusServiceUnavailable)
 		return
 	}
-	g.server.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), addressKey{}, address)))
+	ctx := context.WithValue(r.Context(), addressKey{}, address)
+	g.server.ServeHTTP(w, r.WithContext(context.WithValue(ctx, peerKey{}, agentidentity.PeerOf(r.TLS))))
 }
 
 // Drain ends every session and refuses new ones, so that agents move to another gateway
@@ -181,6 +188,10 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 		return status.Error(codes.NotFound, "RESOURCE_NOT_FOUND")
 	}
 	address, _ := stream.Context().Value(addressKey{}).(string)
+	peer, _ := stream.Context().Value(peerKey{}).(agentidentity.Peer)
+	if e := g.backend.CheckPeer(stream.Context(), node, peer); e != nil {
+		return status.Error(codes.Unauthenticated, e.Error())
+	}
 	ctx, cancel := context.WithCancelCause(stream.Context())
 	defer cancel(nil)
 	defer context.AfterFunc(g.draining, func() { cancel(errDraining) })()
@@ -237,6 +248,11 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 			return status.Error(codes.InvalidArgument, "AGENT_SESSION_MESSAGE_INVALID")
 		}
 		last = m.ID
+		// A rotation or an expiry reaches a stream that is already open. A refused stream is
+		// left to redial, and the next connection presents the certificate the agent has now.
+		if e := g.backend.CheckPeer(ctx, node, peer); e != nil {
+			return status.Error(codes.Unauthenticated, e.Error())
+		}
 		reply := g.exchange(ctx, address, node, credential, m)
 		if reply.Problem == nil && !registered {
 			// A node has one session; a newer one replaces an older one that was not closed.

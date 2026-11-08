@@ -17,6 +17,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -32,6 +33,8 @@ type Client struct {
 	preparationHTTP  *http.Client
 	// tls verifies control for the session stream with the same roots as HTTP.
 	tls *tls.Config
+	// certificate is presented on new connections (ADR 0050).
+	certificate atomic.Pointer[tls.Certificate]
 }
 
 // Artifact uses the fixed control path and current lease; redirects/proxies remain disabled.
@@ -107,7 +110,7 @@ func Interrupted(e error) bool {
 	}
 	var p *Problem
 	if errors.As(e, &p) {
-		return p.RetryAfter > 0 || p.Status >= 500 || p.Status == http.StatusRequestTimeout || p.Status == http.StatusTooManyRequests || retriableCodes[p.Code]
+		return p.RetryAfter > 0 || p.Status >= 500 || p.Status == http.StatusRequestTimeout || p.Status == http.StatusTooManyRequests || retriableCodes[p.Code] || certificateCodes[p.Code]
 	}
 	switch e.Error() {
 	case "CONTROL_CONNECTION_FAILED", "CONTROL_RESPONSE_INVALID", "CONTROL_RESPONSE_REJECTED":
@@ -153,9 +156,11 @@ func New(origin, caFile string, policies ...settings.Policy) (*Client, error) {
 			return nil, errors.New("CONTROL_CA_INVALID")
 		}
 	}
-	verify := &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}
-	transport := &http.Transport{TLSClientConfig: verify.Clone(), MaxIdleConns: 1, MaxIdleConnsPerHost: 1, MaxConnsPerHost: policy.ControlConnections, IdleConnTimeout: settings.Seconds(policy.IdleConnectionSeconds), TLSHandshakeTimeout: settings.Seconds(policy.TLSHandshakeSeconds), ResponseHeaderTimeout: settings.Seconds(policy.ControlHeaderSeconds)}
-	return &Client{tls: verify, runtime: &policy, Scope: wire.LocalScope(), Origin: origin, HTTP: &http.Client{Transport: transport, Timeout: settings.Seconds(policy.ControlRequestSeconds), CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("CONTROL_REDIRECT_REJECTED") }}}, nil
+	c := &Client{runtime: &policy, Scope: wire.LocalScope(), Origin: origin}
+	c.tls = &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12, GetClientCertificate: c.presented}
+	transport := &http.Transport{TLSClientConfig: c.tls.Clone(), MaxIdleConns: 1, MaxIdleConnsPerHost: 1, MaxConnsPerHost: policy.ControlConnections, IdleConnTimeout: settings.Seconds(policy.IdleConnectionSeconds), TLSHandshakeTimeout: settings.Seconds(policy.TLSHandshakeSeconds), ResponseHeaderTimeout: settings.Seconds(policy.ControlHeaderSeconds)}
+	c.HTTP = &http.Client{Transport: transport, Timeout: settings.Seconds(policy.ControlRequestSeconds), CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("CONTROL_REDIRECT_REJECTED") }}
+	return c, nil
 }
 
 // target addresses a cell-relative path in this node's cell. Paths stay cell-relative in
@@ -166,12 +171,7 @@ func (c *Client) target(path string) string {
 	}
 	return c.Origin + path
 }
-func (c *Client) Close() {
-	c.HTTP.CloseIdleConnections()
-	if c.preparationHTTP != nil {
-		c.preparationHTTP.CloseIdleConnections()
-	}
-}
+func (c *Client) Close() { c.closeIdle() }
 func (c *Client) Post(ctx context.Context, path string, value, out any) error {
 	return c.post(ctx, c.HTTP, path, value, out)
 }
@@ -224,6 +224,10 @@ func (c *Client) post(ctx context.Context, client *http.Client, path string, val
 		}
 		if json.Unmarshal(b, &p) != nil {
 			return errors.New("CONTROL_RESPONSE_REJECTED")
+		}
+		if certificateCodes[p.Code] {
+			// The connection presented what was refused, and it goes back to the pool.
+			defer c.closeIdle()
 		}
 		return remoteProblem(p.Code, response.StatusCode, retryAfter(response.Header))
 	}

@@ -205,6 +205,11 @@ func (c Config) renderControl(dsnFile string, serving bool) ([]byte, error) {
 		document["models"] = map[string]any{"artifact_root": containerModelStore}
 		// Only the serving container mounts the socket directory.
 		document["server"].(map[string]any)["operator_socket"] = containerSocketDir + "/" + socketName
+		agents := map[string]any{"ca_certificate_file": containerConfigDir + "/" + agentCAFile, "ca_private_key_file": containerConfigDir + "/" + agentCAKeyFile}
+		if c.TLS.AgentCertificateLifetimeHours != 0 {
+			agents["certificate_lifetime_hours"] = c.TLS.AgentCertificateLifetimeHours
+		}
+		document["agent_identity"] = agents
 	}
 	document["telemetry"] = map[string]any{
 		"logs_address":            "http://" + net.JoinHostPort(c.Network.stateAddresses().Logs.String(), logsPort),

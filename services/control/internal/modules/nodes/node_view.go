@@ -29,6 +29,8 @@ type nodeView struct {
 	profile          string
 	capabilities     []string
 	expires          time.Time
+	// pins are the keys of the node's certificates (ADR 0050).
+	pins certificatePins
 }
 
 // answers reports that a heartbeat with this credential repeats what the view holds.

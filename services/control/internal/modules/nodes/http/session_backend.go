@@ -7,6 +7,7 @@ import (
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentadmission"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
 )
 
 // SessionBackend serves agent session exchanges with the same admission, authentication
@@ -20,6 +21,11 @@ func (b SessionBackend) Admit(ctx context.Context, address, node, credential str
 		return nil, errors.New("AGENT_UNAUTHORIZED")
 	}
 	return b.Handler.Admission.Admit(ctx, agentadmission.Request{Call: call, Address: address, Node: node, Credential: credential})
+}
+
+// CheckPeer applies the certificate rule of the HTTPS paths to the session.
+func (b SessionBackend) CheckPeer(ctx context.Context, node string, peer agentidentity.Peer) error {
+	return b.Handler.Service.CheckPeer(ctx, node, peer)
 }
 
 func (b SessionBackend) Heartbeat(ctx context.Context, node, credential string, h wire.Handshake) (wire.Disposition, error) {

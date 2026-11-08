@@ -3,8 +3,10 @@ package install
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"net/netip"
 	"os"
@@ -206,6 +208,7 @@ func TestMaterializeWritesPrivateFilesAndKeepsSecrets(t *testing.T) {
 		filepath.Join(l.Config, "auth-hmac"), filepath.Join(l.Config, "mail-keyring.json"), filepath.Join(l.Config, "private-key.pem"),
 		filepath.Join(l.Config, "certificate.pem"), filepath.Join(l.Config, "runtime-dsn"), filepath.Join(l.Operator, "operator-dsn"),
 		filepath.Join(l.Secrets, "postgres-password"), filepath.Join(l.Secrets, "runtime-password"), filepath.Join(l.Secrets, "ca-key.pem"),
+		filepath.Join(l.Config, agentCAFile), filepath.Join(l.Config, agentCAKeyFile),
 	}
 	before := map[string][]byte{}
 	for _, path := range generated {
@@ -854,5 +857,40 @@ func TestDatabaseRoleConnectionsReachControlsConfiguration(t *testing.T) {
 		if e := c.Validate(); e == nil {
 			t.Fatalf("%d accepted", invalid)
 		}
+	}
+}
+
+func TestAgentCAIsCreatedOnceAndOnlyServingMayUseIt(t *testing.T) {
+	c := validConfig(t)
+	if e := Materialize(c); e != nil {
+		t.Fatal(e)
+	}
+	l := c.Layout()
+	first, e := os.ReadFile(filepath.Join(l.Config, agentCAFile))
+	if e != nil {
+		t.Fatal(e)
+	}
+	block, _ := pem.Decode(first)
+	if block == nil {
+		t.Fatal("no certificate")
+	}
+	authority, e := x509.ParseCertificate(block.Bytes)
+	if e != nil || !authority.IsCA || authority.Subject.CommonName != "ownsolid agent CA" {
+		t.Fatal(authority, e)
+	}
+	if e := Materialize(c); e != nil {
+		t.Fatal(e)
+	}
+	again, _ := os.ReadFile(filepath.Join(l.Config, agentCAFile))
+	if !bytes.Equal(first, again) {
+		t.Fatal("applying again replaced the agent CA")
+	}
+	serving, e := c.renderControl("/run/dsn", true)
+	if e != nil || !bytes.Contains(serving, []byte("agent_identity")) || !bytes.Contains(serving, []byte(agentCAKeyFile)) {
+		t.Fatalf("serving configuration: %v\n%s", e, serving)
+	}
+	operator, e := c.renderControl("/run/dsn", false)
+	if e != nil || bytes.Contains(operator, []byte("agent_identity")) {
+		t.Fatalf("operator configuration: %v\n%s", e, operator)
 	}
 }

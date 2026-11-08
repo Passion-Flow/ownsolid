@@ -4476,6 +4476,183 @@
           ]
         }
       }
+    },
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/certificates": {
+      "post": {
+        "operationId": "renewAgentCertificate",
+        "x-audiences": [
+          "agent"
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committed response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedCertificateResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateRenewal"
+              }
+            }
+          }
+        },
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ],
+        "x-agent-call": "certificate"
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/certificates/confirmations": {
+      "post": {
+        "operationId": "confirmAgentCertificate",
+        "x-audiences": [
+          "agent"
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committed response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateConfirmedResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Structured failure; no fake success",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/AgentRetryAfter"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "agentBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-application-profiles": [
+          "nodes",
+          "components",
+          "maintenance",
+          "platform"
+        ],
+        "x-agent-call": "certificate"
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {
@@ -5705,6 +5882,11 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "PEM certificate request from a key generated on the node; required where control issues certificates."
               }
             },
             "required": [
@@ -5764,6 +5946,11 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "PEM certificate request from a key generated on the node; required where control issues certificates."
               }
             },
             "required": [
@@ -5844,6 +6031,11 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "PEM certificate request from a key generated on the node; required where control issues certificates."
               }
             },
             "required": [
@@ -5904,6 +6096,11 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "PEM certificate request from a key generated on the node; required where control issues certificates."
               }
             },
             "required": [
@@ -5968,6 +6165,11 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "PEM certificate request from a key generated on the node; required where control issues certificates."
               }
             },
             "required": [
@@ -6040,6 +6242,11 @@
               "join_token": {
                 "type": "string",
                 "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "PEM certificate request from a key generated on the node; required where control issues certificates."
               }
             },
             "required": [
@@ -6086,6 +6293,11 @@
           "heartbeat_seconds": {
             "type": "integer",
             "const": 10
+          },
+          "certificate": {
+            "type": "string",
+            "maxLength": 8192,
+            "description": "The node certificate, leaf first, in PEM."
           }
         },
         "required": [
@@ -14037,6 +14249,69 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/NodeCounts"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "CertificateRenewal": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "certificate_request": {
+            "type": "string",
+            "maxLength": 2048,
+            "description": "PEM certificate request from a key generated on the node; required where control issues certificates."
+          }
+        },
+        "required": [
+          "certificate_request"
+        ]
+      },
+      "IssuedCertificate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "certificate": {
+            "type": "string",
+            "maxLength": 8192
+          }
+        },
+        "required": [
+          "certificate"
+        ]
+      },
+      "IssuedCertificateResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/IssuedCertificate"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "CertificateConfirmed": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "confirmed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "confirmed"
+        ]
+      },
+      "CertificateConfirmedResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CertificateConfirmed"
           }
         },
         "required": [

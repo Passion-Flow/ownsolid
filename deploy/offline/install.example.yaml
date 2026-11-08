@@ -61,6 +61,9 @@ tls:
   # Use files to supply your own; certificate_file, private_key_file and ca_file are then
   # required, and ca_file must be the CA that issued the certificate.
   source: generate
+  # Optional, default 720 (30 days), 24 to 8760: how long a node's client certificate lasts.
+  # Nodes replace theirs without restarting. Use this for a site with long offline periods.
+  # agent_certificate_lifetime_hours: 720
 
 license:
   # Required. Public trust file from the license issuer. Never a signing key.
