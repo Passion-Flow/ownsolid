@@ -1,0 +1,12 @@
+groups:
+  - name: fleet-health-rollups
+    interval: 1m
+    rules:
+      - record: ownsolid:cell_nodes_observed:count
+        expr: |
+          count by (site_id, cell_id)
+            (last_over_time(up{job="ownsolid-node",site_id!="",cell_id!="",node_id!=""}[45s]))
+      - record: ownsolid:cell_nodes_reachable:count
+        expr: |
+          sum by (site_id, cell_id)
+            (last_over_time(up{job="ownsolid-node",site_id!="",cell_id!="",node_id!=""}[45s]) == bool 1)
