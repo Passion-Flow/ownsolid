@@ -118,3 +118,47 @@ pairs, took 9.904/14.671/21.820 ms for reservation and
 reached a 76.959 ms reservation p99. Durable I/O remains sensitive to the
 state volume and serializes within one tenant. These numbers exclude TLS,
 control RPCs, and upstream inference.
+
+## Coalesce durable updates under contention
+
+The single-update snapshot path serializes full filesystem publication for
+every debit and every nonzero refund. This is measurable even with a small
+ledger on a fast volume. [PostgreSQL group commit](https://www.postgresql.org/docs/current/runtime-config-wal.html#GUC-COMMIT-DELAY)
+amortizes a durable flush across ready transactions. Adopt the same
+publication rule while retaining the existing atomic snapshot format.
+Snapshot writers can apply independent budget operations in FIFO order,
+publish one snapshot for the ready batch, and acknowledge only after the
+file and directory are synced. Start a batch as soon as work is available
+with no intentional batching delay. A bounded Tokio channel per tenant
+uses the configured gateway active-request limit as its capacity.
+
+The queue and the blocking writer serve one tenant. Request-rate and
+concurrency checks continue to use their separate in-memory lock. Each
+request within a batch sees the cumulative debits and refunds ahead of it.
+A failed publication returns unavailable to the batch and closes the
+ledger to further mutations. A canceled request that is still queued can
+be discarded before debit. Once the writer has started a reservation, its
+debit may remain even if the response is lost. A queued refund is already
+based on validated usage and can commit after the waiting client is gone.
+Every admitted debit is durable before upstream generation, including
+debits that used capacity released by a refund in the same snapshot.
+
+A deferred checkpoint would lower latency by exposing uncommitted
+balances and would need new restart semantics. A custom append-only log
+would need record validation, replay and compaction, and an embedded
+database would add a storage dependency. Retain the existing compatible
+snapshot and existing Tokio (MIT) dependency. Verify mixed batches,
+cancellation, flush failure and reopening with the existing format. Compare
+single-tenant concurrent throughput and latency with the one-update
+baseline. Batching helps overlapping operations and does not eliminate the
+cost of a lone durable write.
+
+In the single-tenant contention benchmark on Apple M4 Max, eight workers
+each completed 25 reserve/refund pairs. The per-operation writer completed
+20.1 pairs/s with pair p50/p95/p99 of 33.537/711.518/7916.743 ms. The batched
+writer completed 100.0 pairs/s with pair p50/p95/p99 of
+50.541/97.947/164.564 ms. The baseline used eight threads contending for
+the snapshot lock. The batched run used eight Tokio workers submitting to
+the FIFO writer. These are single runs on the local filesystem, excluding
+transport, control and model work. Reproduce the current path with
+`cargo test --release --locked --offline contended_budget_benchmark -- --ignored --nocapture --test-threads=1`.

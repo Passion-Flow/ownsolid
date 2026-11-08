@@ -173,7 +173,7 @@ struct Traffic {
 
 struct Tenant {
     traffic: Mutex<Vec<Traffic>>,
-    budget: Option<Arc<Budget>>,
+    budget: Option<Budget>,
 }
 
 #[derive(Clone)]
@@ -234,8 +234,8 @@ impl Quotas {
                         tenant.id,
                         clock,
                         spool.state_lock(),
+                        configuration.limits.active_requests as usize,
                     )
-                    .map(Arc::new)
                 })
                 .transpose()?;
             let tenant = Arc::new(Tenant {
@@ -327,7 +327,7 @@ pub(crate) struct Permit {
 
 impl Permit {
     pub(crate) async fn reserve(&mut self, estimate: u32) -> Result<(), Failure> {
-        let Some(budget) = self.account.tenant.budget.clone() else {
+        let Some(budget) = &self.account.tenant.budget else {
             return Ok(());
         };
         let hierarchy = self.account.hierarchy;
@@ -337,11 +337,7 @@ impl Permit {
         {
             return Ok(());
         }
-        self.hold = Some(
-            tokio::task::spawn_blocking(move || budget.reserve(hierarchy, u64::from(estimate)))
-                .await
-                .map_err(|_| "quota_state_unavailable")??,
-        );
+        self.hold = Some(budget.reserve(hierarchy, u64::from(estimate)).await?);
         Ok(())
     }
 
@@ -349,9 +345,7 @@ impl Permit {
         let Some(hold) = self.hold.take() else {
             return Ok(());
         };
-        tokio::task::spawn_blocking(move || hold.settle(u64::from(actual)))
-            .await
-            .map_err(|_| "quota_state_unavailable")?
+        hold.settle(u64::from(actual)).await
     }
 }
 

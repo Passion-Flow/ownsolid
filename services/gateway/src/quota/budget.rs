@@ -9,8 +9,9 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::os::unix::fs::DirBuilderExt;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use time::OffsetDateTime;
+use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
 const UNAVAILABLE: &str = "quota_state_unavailable";
@@ -59,22 +60,88 @@ struct Ledger {
     charged: BTreeMap<Uuid, u64>,
 }
 
-struct State {
-    healthy: bool,
-    windows: [Ledger; 3],
+#[derive(Clone)]
+pub(super) struct Budget {
+    changes: mpsc::Sender<Pending>,
 }
 
-pub(super) struct Budget {
-    directory: PathBuf,
-    snapshot: PathBuf,
-    stage: PathBuf,
-    state: Mutex<State>,
-    clock: fn() -> i64,
-    _lock: Arc<Flock<File>>,
+struct Debit {
+    ids: [Uuid; 3],
+    starts: [Option<i64>; 3],
+    estimate: u64,
+}
+
+enum Change {
+    Reserve {
+        hierarchy: [Profile; 3],
+        estimate: u64,
+    },
+    Refund {
+        debit: Debit,
+        amount: u64,
+    },
+}
+
+struct Pending {
+    change: Change,
+    reply: oneshot::Sender<Result<Option<Debit>, Failure>>,
 }
 
 impl Budget {
     pub(super) fn open(
+        root: &Path,
+        tenant: Uuid,
+        clock: fn() -> i64,
+        lock: Arc<Flock<File>>,
+        capacity: usize,
+    ) -> ConfigResult<Self> {
+        let runtime = tokio::runtime::Handle::try_current().map_err(|_| UNAVAILABLE)?;
+        let writer = Writer::open(root, tenant, clock, lock)?;
+        let (changes, incoming) = mpsc::channel(capacity);
+        runtime.spawn(writer.run(incoming, capacity));
+        Ok(Self { changes })
+    }
+
+    async fn submit(&self, change: Change) -> Result<Option<Debit>, Failure> {
+        let (reply, result) = oneshot::channel();
+        self.changes
+            .send(Pending { change, reply })
+            .await
+            .map_err(|_| UNAVAILABLE)?;
+        result.await.map_err(|_| UNAVAILABLE)?
+    }
+
+    pub(super) async fn reserve(
+        &self,
+        hierarchy: [Profile; 3],
+        estimate: u64,
+    ) -> Result<Hold, Failure> {
+        let debit = self
+            .submit(Change::Reserve {
+                hierarchy,
+                estimate,
+            })
+            .await?
+            .ok_or(UNAVAILABLE)?;
+        Ok(Hold {
+            budget: self.clone(),
+            debit,
+        })
+    }
+}
+
+struct Writer {
+    directory: PathBuf,
+    snapshot: PathBuf,
+    stage: PathBuf,
+    windows: [Ledger; 3],
+    healthy: bool,
+    clock: fn() -> i64,
+    _lock: Arc<Flock<File>>,
+}
+
+impl Writer {
+    fn open(
         root: &Path,
         tenant: Uuid,
         clock: fn() -> i64,
@@ -110,59 +177,102 @@ impl Budget {
             stage,
             clock,
             _lock: lock,
-            state: Mutex::new(State {
-                healthy: true,
-                windows,
-            }),
+            healthy: true,
+            windows,
         })
     }
 
-    fn publish(&self, state: &mut State) -> ConfigResult<()> {
-        let result = (|| {
-            let bytes = serde_json::to_vec(&state.windows).map_err(|_| UNAVAILABLE)?;
-            if bytes.len() as u64 > MAX_SNAPSHOT_BYTES {
-                return Err(UNAVAILABLE);
+    async fn run(mut self, mut incoming: mpsc::Receiver<Pending>, capacity: usize) {
+        let mut batch = Vec::with_capacity(capacity);
+        while incoming.recv_many(&mut batch, capacity).await != 0 {
+            // One blocking job per ready batch lets other tenants use the pool
+            // between writes. The writer retains the state lock during I/O.
+            let Ok((writer, reusable)) = tokio::task::spawn_blocking(move || {
+                self.commit(batch.drain(..));
+                (self, batch)
+            })
+            .await
+            else {
+                return;
+            };
+            if !writer.healthy {
+                return;
             }
-            private_directory(&self.directory).map_err(|_| UNAVAILABLE)?;
-            let mut staged = new_private_file(&self.stage).map_err(|_| UNAVAILABLE)?;
-            staged
-                .write_all(&bytes)
-                .and_then(|_| staged.sync_all())
-                .map_err(|_| UNAVAILABLE)?;
-            fs::rename(&self.stage, &self.snapshot).map_err(|_| UNAVAILABLE)?;
-            sync_directory(&self.directory).map_err(|_| UNAVAILABLE)
-        })();
-        if result.is_err() {
-            state.healthy = false;
+            self = writer;
+            batch = reusable;
         }
-        result
     }
 
-    pub(super) fn reserve(
-        self: Arc<Self>,
-        hierarchy: [Profile; 3],
-        estimate: u64,
-    ) -> Result<Hold, Failure> {
-        let clock = self.clock;
-        self.reserve_at(hierarchy, estimate, clock)
+    fn commit(&mut self, batch: impl Iterator<Item = Pending>) {
+        let mut changed = false;
+        let mut replies = Vec::with_capacity(batch.size_hint().0);
+        for Pending { change, reply } in batch {
+            if matches!(&change, Change::Reserve { .. }) && reply.is_closed() {
+                continue;
+            }
+            let result = if !self.healthy {
+                Err(UNAVAILABLE.into())
+            } else {
+                match change {
+                    Change::Reserve {
+                        hierarchy,
+                        estimate,
+                    } => self
+                        .reserve(hierarchy, estimate, (self.clock)())
+                        .map(|debit| {
+                            changed = true;
+                            Some(debit)
+                        }),
+                    Change::Refund { debit, amount } => self
+                        .refund(debit, amount)
+                        .map(|refunded| {
+                            changed |= refunded;
+                            None
+                        })
+                        .inspect_err(|_| self.healthy = false),
+                }
+            };
+            replies.push((reply, result));
+        }
+        if self.healthy && changed {
+            self.healthy = self.publish().is_ok();
+        }
+        for (reply, result) in replies {
+            let result = if self.healthy {
+                result
+            } else {
+                Err(UNAVAILABLE.into())
+            };
+            let _ = reply.send(result);
+        }
     }
 
-    fn reserve_at(
-        self: Arc<Self>,
+    fn publish(&self) -> ConfigResult<()> {
+        let bytes = serde_json::to_vec(&self.windows).map_err(|_| UNAVAILABLE)?;
+        if bytes.len() as u64 > MAX_SNAPSHOT_BYTES {
+            return Err(UNAVAILABLE);
+        }
+        private_directory(&self.directory).map_err(|_| UNAVAILABLE)?;
+        let mut staged = new_private_file(&self.stage).map_err(|_| UNAVAILABLE)?;
+        staged
+            .write_all(&bytes)
+            .and_then(|_| staged.sync_all())
+            .map_err(|_| UNAVAILABLE)?;
+        fs::rename(&self.stage, &self.snapshot).map_err(|_| UNAVAILABLE)?;
+        sync_directory(&self.directory).map_err(|_| UNAVAILABLE)
+    }
+
+    fn reserve(
+        &mut self,
         hierarchy: [Profile; 3],
         estimate: u64,
-        clock: impl FnOnce() -> i64,
-    ) -> Result<Hold, Failure> {
-        let mut state = self.state.lock().map_err(|_| UNAVAILABLE)?;
-        if !state.healthy {
-            return Err(UNAVAILABLE.into());
-        }
-        let now = clock();
+        now: i64,
+    ) -> Result<Debit, Failure> {
         let periods = periods(now)?;
         let mut starts = [None; 3];
         let mut denial = None;
         for (index, period) in periods.iter().enumerate() {
-            let ledger = &state.windows[index];
+            let ledger = &self.windows[index];
             if ledger.start > period.start {
                 return Err(UNAVAILABLE.into());
             }
@@ -191,7 +301,7 @@ impl Budget {
             return Err(denial);
         }
         let ids = hierarchy.map(|profile| profile.id);
-        for (ledger, start) in state.windows.iter_mut().zip(starts) {
+        for (ledger, start) in self.windows.iter_mut().zip(starts) {
             let Some(start) = start else { continue };
             if ledger.start != start {
                 *ledger = Ledger {
@@ -202,56 +312,55 @@ impl Budget {
             for id in ids {
                 let charged = ledger.charged.entry(id).or_default();
                 let Some(updated) = charged.checked_add(estimate) else {
-                    state.healthy = false;
+                    self.healthy = false;
                     return Err(UNAVAILABLE.into());
                 };
                 *charged = updated;
             }
         }
-        self.publish(&mut state)?;
-        drop(state);
-        Ok(Hold {
-            budget: self,
+        Ok(Debit {
             ids,
             starts,
             estimate,
         })
     }
+
+    fn refund(&mut self, debit: Debit, amount: u64) -> Result<bool, Failure> {
+        let mut changed = false;
+        for (ledger, start) in self.windows.iter_mut().zip(debit.starts) {
+            if start != Some(ledger.start) {
+                continue;
+            }
+            for id in debit.ids {
+                let charged = ledger.charged.get_mut(&id).ok_or(UNAVAILABLE)?;
+                *charged = charged.checked_sub(amount).ok_or(UNAVAILABLE)?;
+            }
+            changed = true;
+        }
+        Ok(changed)
+    }
 }
 
 // Dropping a hold keeps the debit when upstream usage could not be verified.
 pub(super) struct Hold {
-    budget: Arc<Budget>,
-    ids: [Uuid; 3],
-    starts: [Option<i64>; 3],
-    estimate: u64,
+    budget: Budget,
+    debit: Debit,
 }
 
 impl Hold {
-    pub(super) fn settle(self, actual: u64) -> ConfigResult<()> {
-        let refund = self.estimate.checked_sub(actual).ok_or(UNAVAILABLE)?;
-        if refund == 0 {
+    pub(super) async fn settle(self, actual: u64) -> ConfigResult<()> {
+        let amount = self.debit.estimate.checked_sub(actual).ok_or(UNAVAILABLE)?;
+        if amount == 0 {
             return Ok(());
         }
-        let mut state = self.budget.state.lock().map_err(|_| UNAVAILABLE)?;
-        if !state.healthy {
-            return Err(UNAVAILABLE);
-        }
-        let mut changed = false;
-        for (ledger, start) in state.windows.iter_mut().zip(self.starts) {
-            if start != Some(ledger.start) {
-                continue;
-            }
-            for id in self.ids {
-                let charged = ledger.charged.get_mut(&id).ok_or(UNAVAILABLE)?;
-                *charged = charged.checked_sub(refund).ok_or(UNAVAILABLE)?;
-            }
-            changed = true;
-        }
-        if changed {
-            self.budget.publish(&mut state)?;
-        }
-        Ok(())
+        self.budget
+            .submit(Change::Refund {
+                debit: self.debit,
+                amount,
+            })
+            .await
+            .map(|_| ())
+            .map_err(|error| error.code)
     }
 }
 
