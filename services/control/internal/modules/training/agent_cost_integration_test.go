@@ -159,9 +159,19 @@ func seedFleet(t *testing.T, f scenario, nodes int) {
 // measureFleet measures every exchange on a fleet of the given size, in its own schema.
 func measureFleet(t *testing.T, nodes int) map[string]exchangeCost {
 	t.Helper()
+	run, base := newCostRun(t, nodes, nil)
+	run.exchanges(base)
+	return run.measured
+}
+
+func newCostRun(t *testing.T, nodes int, configure func(*scenario)) (*costRun, string) {
+	t.Helper()
 	var recorder agentcost.Recorder
 	f := setupOn(t, fixture.NewConfigured(t, recorder.Configure))
 	attachStore(t, f)
+	if configure != nil {
+		configure(&f)
+	}
 	policy := config.DefaultRuntimePolicy()
 	policy.Nodes.MaximumLiveNodes = costLargeFleet * 2
 	f.s.Identity.Config.Runtime = &policy
@@ -216,8 +226,7 @@ func measureFleet(t *testing.T, nodes int) map[string]exchangeCost {
 		}
 		return out.Bytes()
 	}
-	r.exchanges(base)
-	return r.measured
+	return r, base
 }
 
 // claim asks for work and decodes the lease.
@@ -383,20 +392,29 @@ func (r *costRun) exchanges(base string) {
 // TestAgentCallCostDoesNotGrowWithTheFleet is the cost rule of ADR 0020: every agent call
 // stays within its declared cost, and a fleet many times larger costs it nothing more.
 func TestAgentCallCostDoesNotGrowWithTheFleet(t *testing.T) {
-	small := measureFleet(t, costSmallFleet)
-	large := measureFleet(t, costLargeFleet)
-	names := make([]string, 0, len(large))
+	var small, large map[string]exchangeCost
+	var names []string
 	covered := map[agentwire.Call]bool{}
-	for name, exchange := range large {
-		names = append(names, name)
-		covered[exchange.call] = true
-	}
-	sort.Strings(names)
-	for _, name := range names {
-		exchange := large[name]
-		t.Logf("%-22s statements %3d/%-3d  blocks %4d/%-4d  rows %4d/%-4d", name, len(small[name].cost.Statements), len(exchange.cost.Statements), small[name].cost.Blocks(), exchange.cost.Blocks(), small[name].cost.Rows(), exchange.cost.Rows())
+	measureExisting := func(t *testing.T) {
+		t.Helper()
+		if small != nil {
+			return
+		}
+		measuredSmall := measureFleet(t, costSmallFleet)
+		measuredLarge := measureFleet(t, costLargeFleet)
+		small, large = measuredSmall, measuredLarge
+		for name, exchange := range large {
+			names = append(names, name)
+			covered[exchange.call] = true
+		}
+		sort.Strings(names)
+		for _, name := range names {
+			a, b := small[name].cost, large[name].cost
+			t.Logf("%-22s statements %3d/%-3d  blocks %4d/%-4d  rows %4d/%-4d", name, len(a.Statements), len(b.Statements), a.Blocks(), b.Blocks(), a.Rows(), b.Rows())
+		}
 	}
 	t.Run("training_authority", func(t *testing.T) {
+		measureExisting(t)
 		for _, exchange := range []struct {
 			name            string
 			authorityPasses int
@@ -431,6 +449,7 @@ func TestAgentCallCostDoesNotGrowWithTheFleet(t *testing.T) {
 		}
 	})
 	t.Run("declared_cost", func(t *testing.T) {
+		measureExisting(t)
 		for _, name := range names {
 			exchange := large[name]
 			for _, violation := range agentcost.Violations(exchange.call.Cost(), small[name].cost, exchange.cost) {
@@ -443,6 +462,7 @@ func TestAgentCallCostDoesNotGrowWithTheFleet(t *testing.T) {
 			}
 		}
 	})
+	t.Run("training_publication", testTrainingPublicationCost)
 }
 
 func countCostStatements(cost agentcost.Cost, prefix string) int {
@@ -453,4 +473,59 @@ func countCostStatements(cost agentcost.Cost, prefix string) int {
 		}
 	}
 	return n
+}
+
+// testTrainingPublicationCost can run without measuring the unchanged exchanges.
+func testTrainingPublicationCost(t *testing.T) {
+	small := measurePublicationFleet(t, costSmallFleet)
+	large := measurePublicationFleet(t, costLargeFleet)
+	names := []string{"artifact finish", "artifact finish replay", "artifact stop", "artifact upload begin", "checkpoint finish", "checkpoint finish replay"}
+	for _, name := range names {
+		before, smallMeasured := small[name]
+		after, largeMeasured := large[name]
+		if !smallMeasured || !largeMeasured {
+			t.Fatalf("missing publication exchange %q on one or both fleets", name)
+		}
+		a, b := before.cost, after.cost
+		t.Logf("%-24s statements %3d/%-3d  blocks %4d/%-4d  rows %4d/%-4d", name, len(a.Statements), len(b.Statements), a.Blocks(), b.Blocks(), a.Rows(), b.Rows())
+	}
+	t.Run("publication_authority", func(t *testing.T) {
+		for _, name := range names {
+			passes := 3
+			if name == "artifact stop" {
+				passes = 2
+			}
+			type queryCount struct {
+				prefix string
+				want   int
+			}
+			checks := []queryCount{
+				{"SELECT auth_epoch,status,is_platform_admin FROM users", passes},
+				{"SELECT credential_hash FROM managed_nodes WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3", passes},
+				{"SELECT requested_by::text,requested_audience FROM training_attempts", 0},
+				{"UPDATE training_uploads SET active_chunk_id=NULL,active_asset=NULL,active_offset=NULL,active_expires_at=NULL WHERE id=", 0},
+			}
+			if name != "artifact stop" {
+				checks = append(checks,
+					queryCount{"SELECT lease_token_hash,COALESCE(deadline_at>clock_timestamp(),false) FROM node_tasks", passes},
+					queryCount{"SELECT a.requested_by::text,a.requested_audience FROM training_attempts a JOIN gpu_leases", passes},
+				)
+			}
+			for _, check := range checks {
+				a := countCostStatements(small[name].cost, check.prefix)
+				b := countCostStatements(large[name].cost, check.prefix)
+				if a != check.want || b != check.want {
+					t.Errorf("%s %q ran %d/%d times, want %d on both fleets", name, check.prefix, a, b, check.want)
+				}
+			}
+		}
+	})
+	t.Run("declared_cost", func(t *testing.T) {
+		for _, name := range names {
+			exchange := large[name]
+			for _, violation := range agentcost.Violations(exchange.call.Cost(), small[name].cost, exchange.cost) {
+				t.Errorf("%s (%s) %s", name, exchange.call, violation)
+			}
+		}
+	})
 }
