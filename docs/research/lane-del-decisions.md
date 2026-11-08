@@ -40,3 +40,18 @@ exact release payloads. REL-106 and REL-107 require component owners to
 cover worker restarts and in-product alert delivery. REL-111 needs the
 console and a backup history API. Leave these items open while progressing
 the independent installer and protected operations paths.
+
+## Recovery and release qualification boundaries
+
+The schema 57 run validates restore and reapply at that schema. It does not
+resolve REL-113, where a restored predecessor reaches migration 000056 with
+a differently deparsed constraint. That work needs catalog comparison or
+migration admission changes in the shared database owner. Keep the published
+migration files immutable. REL-114 still needs durable recovery across an
+interruption between swapping the database and completing restore adoption.
+
+The single-node backup verified the database dump, keys and configured model
+store. REL-103 also needs the actual selected object store and a consistency
+point spanning its writers. A dump plus a copy of a live PostgreSQL data
+directory is not a recovery path. REL-104 needs a clean target qualified from
+the exact signed release and backup as part of the release gate.
