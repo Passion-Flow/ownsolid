@@ -57,6 +57,10 @@ func (s *Service) invitationStore(delivery bool) (transaction.Store, error) {
 	return store, nil
 }
 
+// invitationTenantSQL selects the tenant eligible for local invitation operations.
+const invitationTenantSQL = `(SELECT t.id FROM installation_state i JOIN tenants t ON t.id=i.tenant_id
+	WHERE i.id=1 AND i.bootstrapped_at IS NOT NULL AND t.status='active')`
+
 // invitationScope fences the exact Workspace against concurrent archival. Use
 // fresh eligibility after waiting;never lock every row of a joined scope query.
 func (s *Service) invitationScope(ctx context.Context, tx transaction.Executor, tenant, workspace string, active bool, unusable string) error {
