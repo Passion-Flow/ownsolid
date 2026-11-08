@@ -42,3 +42,36 @@ run. Do not replay a captured customer payload or use an unmaintained external
 generator. A many-hour soak and a measured production-retention window need
 representative label churn and value distributions, which this fixture does
 not provide.
+
+## Linux amd64 qualification
+
+On 2026-11-09, TestVictoriaMetricsFleetScale passed on ownsolid-cpu against
+VictoriaMetrics v1.155.0, with loopback as the only interface and no default
+route. The store and generator each used GOMAXPROCS=6 on the shared 16-core
+host. The store used an 8 GB cache allowance.
+
+| Measurement | Result |
+| --- | --- |
+| Nodes, cells and new series | 10,000 nodes, five cells, 17,000,000 series |
+| Exact persisted samples | 153,000,000 over nine rounds, zero invalid rows |
+| Initial series creation | 189.920 s, 89,512 samples/s |
+| Steady ingest | Eight rounds at 1.48 to 2.42 million samples/s, zero 15-second overruns |
+| First node, cell and fleet queries | 4.510 s, 16.888 s, 1.758 s |
+| Node query during a write round | 2.566 to 10.307 s for 1,700 series |
+| Cell and fleet query batches started alongside writes | 7.463 to 25.466 ms for one metric across 2,000 nodes and 22.071 ms to 2.612 s for one metric across 10,000 nodes |
+| Storage after graceful shutdown | 4,483,944,448 allocated bytes, including index and cache |
+| Peak store RSS | 10,165,673,984 bytes |
+
+The query batch starts with the node query and evaluates the cell and fleet
+queries afterward. Some later requests can finish after the write round.
+Rollup result caching was disabled for these queries. The test also passed
+the five-node smoke profile.
+
+At a 15-second interval, this fleet shape produces 1.133 million samples/s
+and 97.92 billion samples per day. The measured disk size reflects nine
+samples per series plus indexing and caches. It does not establish a
+production retention budget. A retention estimate needs the data-file growth
+rate from a longer run with representative value changes and label churn,
+plus separate index, cache and merge headroom. The observed cold cell and
+node latencies support using bounded queries and recording rules for
+interactive summaries rather than fleet-wide raw scans.
