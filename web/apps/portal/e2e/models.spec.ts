@@ -89,9 +89,12 @@ test('shows how to call a model, that its price is not ready, and leads to a key
   await expect(drawer.getByText('Apache-2.0')).toBeVisible();
   await expect(drawer.getByText('Chat and text generation', { exact: false })).toBeVisible();
   await expect(drawer.getByText('Not ready in this release', { exact: false })).toBeVisible();
-  await drawer.getByRole('link', { name: 'Issue a key' }).click();
-  await expect(page).toHaveURL(/\/keys#issue$/);
+  const issue = drawer.getByRole('link', { name: 'Issue a key' });
+  await expect(issue).toHaveAttribute('href', /\/keys#issue$/);
+  await issue.click();
+  // The keys page opens the dialog and then drops the hash, so the address ends without it.
   await expect(page.getByRole('dialog', { name: 'Issue a key' })).toBeVisible();
+  await expect(page).toHaveURL(/\/keys$/);
 });
 
 test('says what to expect from a model that cannot be called now', async ({ page }) => {
