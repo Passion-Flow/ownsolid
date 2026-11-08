@@ -18,9 +18,8 @@ export function supportFlows(audience: ControlPlane['audience']): void {
 
     test('reaches the page from the navigation', async ({ page }) => {
       await page.goto('/');
-      if (audience === 'admin') {
-        await page.getByRole('button', { name: 'System', exact: true }).click();
-      }
+      const group = audience === 'admin' ? 'System' : 'Workspace';
+      await page.getByRole('button', { name: group, exact: true }).click();
       await page.getByRole('navigation').getByRole('link', { name: 'What is supported' }).click();
       await expect(
         page.getByRole('heading', { name: 'What is supported', level: 1 }),

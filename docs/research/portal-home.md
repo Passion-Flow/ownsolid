@@ -1,6 +1,6 @@
 # Portal home
 
-What UX-102 and the screen S-301 are built on: the first page a person who *uses* the platform
+Research for UX-102, POR-101 and screen S-301: the first page a person who *uses* the platform
 sees, scoped to their own workspace ([ADR 0035](../decisions/0035-what-belongs-in-each-entrance.md)).
 
 ## How others do it
@@ -13,6 +13,10 @@ sees, scoped to their own workspace ([ADR 0035](../decisions/0035-what-belongs-i
   and what it cost, for the whole installation. The portal answers the same questions for one person.
 - **The demo** (S-301) draws three blocks: what needs you, usage tiles, and pick up where you left off,
   with a primary action of a new conversation.
+
+- **GitLab** keeps a contextual sidebar, pinnable destinations and a global Search or go to
+  entry ([navigation guide](https://docs.gitlab.com/tutorials/left_sidebar/)). ownsolid already
+  has these in its shared frame, so the portal can reuse the same navigation behavior.
 
 ## What the server has today
 
@@ -41,7 +45,11 @@ which owns runs.
 
 ## The approach
 
-- An overview, in the order the design asks for: needs you, then the two lists, then usage.
+- An overview, in the order S-301 specifies: needs you, then the two lists, then usage.
+- Keep Home directly reachable. Group applications, conversations and models under AI tools,
+  with keys, resources and the support reference under Workspace. Reuse the shared frame
+  for disclosure, filtering, pinning and command search. Navigation does not set workspace
+  scope and requires no new dependency.
 - Each section reads on its own and fails on its own with a retry; a section that could not read
   never says it is empty.
 - A row links once its page ships, as navigation items do. Until POR-102 and POR-103 ship, rows
@@ -69,6 +77,16 @@ which owns runs.
 
 - One source fails: the others render, the failed one offers Try again (browser flow per source).
 - Nothing published, no conversations, nothing failed: each section says what will appear and how.
+  There is no filtered empty state on this overview because it has no result filter.
+- A workspace list request that fails for a session without a default workspace shows the cause
+  and a retry. It cannot conclude the user has no workspace until the request succeeds.
+- After navigation, the current group opens and groups opened on the previous page close.
+  Pending destinations keep the shared unavailable state and remain discoverable in the navigation
+  filter. Unavailable destinations explain what is missing in text. The command menu can still
+  open a live destination without expanding its group.
+- Workspace-scoped pages delay placeholders for 300 ms, so a fast read does not flash a skeleton.
+  Each home section renders and retries independently. The unavailable usage card keeps its
+  working support link reachable.
 - Another workspace's rows: the server scopes them; a flow checks the request carries no workspace
   the session does not have.
 - Both languages, axe in both themes, keyboard order.
@@ -78,3 +96,7 @@ which owns runs.
 The portal's `/` shows needs you, recent conversations and published applications from the server,
 usage as not ready, every state above, in both languages, run once against lane B's installation
 with a published workflow.
+
+The full POR-101 flow remains dependent on the conversation and application destinations
+(POR-102 and POR-103) and on real usage (POR-111). Those omissions do not prevent testing
+the shell, the workspace choice and each independently loaded section.

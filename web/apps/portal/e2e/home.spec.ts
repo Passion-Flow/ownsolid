@@ -146,8 +146,12 @@ test('a workspace the person lost is not found, and says so', async ({ page }) =
   // Membership ends while the page is open: the server answers as if the workspace did not exist.
   control.workspaceList = [{ ...defaultWorkspace, role: null }];
   await page.reload();
-  await expect(section(page, 'Published to you').getByText('Not found')).toBeVisible();
-  await expect(section(page, 'Published to you').getByText('Contract reviewer')).toBeHidden();
+  const published = section(page, 'Published to you');
+  await expect(published.getByText('Not found')).toBeVisible();
+  await expect(
+    published.getByText('ask an administrator to check your access', { exact: false }),
+  ).toBeVisible();
+  await expect(published.getByText('Contract reviewer')).toBeHidden();
 });
 
 test('tells a person in no workspace who can add them', async ({ page }) => {
@@ -166,4 +170,20 @@ test('reads in Chinese', async ({ page }) => {
   await expect(page.getByRole('heading', { name: chinese['home.conversations'] })).toBeVisible();
   await expect(page.getByRole('heading', { name: chinese['home.apps'] })).toBeVisible();
   await expect(page.getByText(chinese['home.needs.clear'])).toBeVisible();
+});
+
+test('a failed workspace read offers a retry before saying there is no workspace', async ({
+  page,
+}) => {
+  control.workspaceList = [];
+  control.sessionWorkspace = null;
+  control.workspacesProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+  await page.goto('/');
+  const main = page.getByRole('main');
+  await expect(main.getByText('The database is unavailable')).toBeVisible();
+  await expect(main.getByRole('heading', { name: 'No workspace yet' })).toBeHidden();
+  expect(control.applicationReads).toEqual([]);
+  control.workspacesProblem = null;
+  await main.getByRole('button', { name: 'Try again' }).click();
+  await expect(main.getByRole('heading', { name: 'No workspace yet' })).toBeVisible();
 });

@@ -7,6 +7,8 @@ export interface NavItem {
   label: TranslationKey;
   icon: LucideIcon;
   to?: string;
+  /** Explains why a destination without a route is unavailable. */
+  unavailableReason?: TranslationKey;
 }
 
 /** Items under a heading; the first group usually has none. */
