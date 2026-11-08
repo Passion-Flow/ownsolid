@@ -9,14 +9,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"github.com/google/uuid"
 	"net/url"
 	"os"
 	"path/filepath"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
-	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"syscall"
 	"testing"
 	"time"
@@ -601,15 +601,28 @@ func TestActualExpiredAttemptCannotCommitFailureAfterLeaseLoss(t *testing.T) {
 func TestCloneRetainsPreDedupSourceConnectivityAndNewVersionLineage(t *testing.T) {
 	s, _, a := workerScenario(t)
 	ctx := context.Background()
+	code := func(value *string) string {
+		if value == nil {
+			return ""
+		}
+		return *value
+	}
 	data, d := importFixture(t, s, a, row("A", "duplicate", "answer")+row("B", "duplicate", "answer")+row("B", "linked", "other")+row("C", "independent", "third"))
 	process(t, s)
-	d, _ = s.GetDraft(ctx, a, a.Me.Workspace.ID, data.ID, d.ID)
+	d, e := s.GetDraft(ctx, a, a.Me.Workspace.ID, data.ID, d.ID)
+	if e != nil || d.State != "editing" {
+		t.Fatalf("initial inspection: state=%s code=%s error=%v", d.State, code(d.ErrorCode), e)
+	}
 	input := PublicationRequest{ExpectedRevision: d.Revision, Seed: "00112233445566778899aabbccddeeff", ValidationBasisPoints: 2000, Reason: "Preserve source bridge on clone"}
 	j, e := s.Publish(ctx, a, a.Me.Workspace.ID, data.ID, d.ID, input, uuid.NewString(), uuid.NewString())
 	if e != nil {
 		t.Fatal(e)
 	}
 	process(t, s)
+	j, e = s.GetJob(ctx, a, a.Me.Workspace.ID, data.ID, j.ID)
+	if e != nil || j.State != "succeeded" || j.VersionID == nil {
+		t.Fatalf("initial publication: state=%s code=%s error=%v", j.State, code(j.ErrorCode), e)
+	}
 	original, e := s.GetVersion(ctx, a, a.Me.Workspace.ID, data.ID, *j.VersionID)
 	if e != nil {
 		t.Fatal(e)
@@ -621,7 +634,7 @@ func TestCloneRetainsPreDedupSourceConnectivityAndNewVersionLineage(t *testing.T
 	process(t, s)
 	clone, e = s.GetDraft(ctx, a, a.Me.Workspace.ID, data.ID, clone.ID)
 	if e != nil || clone.TotalRows == nil || *clone.TotalRows != 4 || clone.SourceSHA256 != original.EffectiveSourceSHA256 {
-		t.Fatalf("clone lost pre-dedup bridge %+v %v", clone, e)
+		t.Fatalf("clone inspection did not retain pre-dedup rows: state=%s code=%s error=%v", clone.State, code(clone.ErrorCode), e)
 	}
 	input.ExpectedRevision = clone.Revision
 	j, e = s.Publish(ctx, a, a.Me.Workspace.ID, data.ID, clone.ID, input, uuid.NewString(), uuid.NewString())
@@ -629,6 +642,10 @@ func TestCloneRetainsPreDedupSourceConnectivityAndNewVersionLineage(t *testing.T
 		t.Fatal(e)
 	}
 	process(t, s)
+	j, e = s.GetJob(ctx, a, a.Me.Workspace.ID, data.ID, j.ID)
+	if e != nil || j.State != "succeeded" || j.VersionID == nil {
+		t.Fatalf("clone publication: state=%s code=%s error=%v", j.State, code(j.ErrorCode), e)
+	}
 	next, e := s.GetVersion(ctx, a, a.Me.Workspace.ID, data.ID, *j.VersionID)
 	if e != nil || next.ParentVersionID == nil || *next.ParentVersionID != original.ID || next.Ordinal != 2 || next.Manifest.SourceGroups != original.Manifest.SourceGroups || next.Manifest.DuplicateRows != original.Manifest.DuplicateRows || next.Manifest.ManifestFile.SHA256 != original.Manifest.ManifestFile.SHA256 {
 		t.Fatalf("clone changed deterministic source grouping %+v %v", next, e)
