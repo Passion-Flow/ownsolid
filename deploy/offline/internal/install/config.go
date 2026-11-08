@@ -67,6 +67,8 @@ type Config struct {
 	ControlSettings map[string]any `yaml:"control_settings"`
 
 	Preflight *PreflightPolicy `yaml:"preflight"`
+
+	BackupSchedule *BackupScheduleConfig `yaml:"backup_schedule"`
 }
 type TopologyConfig struct {
 	Size string `yaml:"size"`
@@ -384,6 +386,11 @@ func (c Config) validate(fromBundle bool) error {
 	}
 	if c.BackupSeconds < 60 || c.BackupSeconds > 86400 {
 		return invalid("backup_seconds", "must be 60 to 86400")
+	}
+	if c.BackupSchedule != nil {
+		if err := c.BackupSchedule.validate(); err != nil {
+			return err
+		}
 	}
 	if c.Preflight != nil {
 		if e := c.Preflight.validate(); e != nil {

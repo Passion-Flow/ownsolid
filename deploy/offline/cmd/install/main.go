@@ -24,6 +24,7 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install upgrade-patch --baseline <previous.tar.gz> --bundle <patch.tar.gz> --verification <policy.json> --config <site.yaml> --backup-output <directory>\n" +
 	"       ownsolid-install rollback-bundle --bundle <previous.tar.gz> --verification <policy.json> --config <site.yaml>\n" +
 	"       ownsolid-install support-bundle --config <install.yaml> --output <new archive.tar.gz>\n" +
+	"       ownsolid-install scheduled-backup --config <install.yaml>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
 	"       ownsolid-install agents status --config <install.yaml>\n" +
@@ -100,6 +101,8 @@ func run(args []string, out io.Writer) error {
 		return install.SupportBundle(ctx, c, install.ExecRunner{}, *output, out)
 	case "backup":
 		return install.Backup(ctx, c, install.ExecRunner{}, *output, out)
+	case "scheduled-backup":
+		return install.ScheduledBackup(ctx, c, install.ExecRunner{}, out)
 	case "restore":
 		return install.Restore(ctx, c, install.ExecRunner{}, *from, out)
 	case "agents status":

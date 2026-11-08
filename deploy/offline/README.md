@@ -92,6 +92,12 @@ IPv4, IPv6 and DNS probes and fails if the runtime adds any packet. The
 standalone CPU test pins the container's own name to loopback so startup never
 needs to query the site resolver for itself.
 
+## Schedule verified backups
+
+Configure a dedicated backup directory and keep count. The
+[systemd timer instructions](../systemd/README.md) show how to enable it and
+how to run the same job on demand.
+
 ## Collect support information
 
 Run this on the installation host with access to the local Docker socket. Use an
