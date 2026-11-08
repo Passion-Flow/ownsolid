@@ -6,7 +6,7 @@ coding tools and the product agent.
 - Owns: `services/gateway`, `services/control/internal/modules/distribution`.
 - Depends on: serving, identity-and-access, tenancy-metering-commerce.
 
-Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API keys and Bifrost documentation ([research](../../research/gateway-keys.md)). The review added GW-114, GW-115 and GW-116, and GW-113's live run added GW-117: the installer starts no model gateway at all, keys cannot rotate on a schedule or warn their owner before they expire, and a key cannot be narrowed to some endpoints or made read-only, and no page publishes a model to the gateway.
+Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API keys and Bifrost documentation ([research](../../research/gateway-keys.md)). The review added GW-114, GW-115 and GW-116, and GW-113's live run added GW-117: the installer starts no model gateway at all, keys cannot rotate on a schedule or warn their owner before they expire, and a key cannot be narrowed to some endpoints or made read-only, and no page publishes a model to the gateway. GW-117's research added GW-118: a gateway instance's credential cannot be replaced, so a lost one retires every alias on that node.
 
 ## P1 Enterprise release
 
@@ -25,6 +25,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [x] GW-113 Gateway and keys page: issue, rotate and revoke keys, with each key's call log (S-206) (P1) - Evidence: 4c1eb36, b9e6728; live run on an installation, 2026-11-08, twice: keys issued, rotated with an overlap and revoked from the browser against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; no model ran, and aliases are published through the API until GW-117
 - [ ] GW-114 The installer delivers and starts the model gateway on its entrance, with its identity provisioned and no network needed (P1)
 - [ ] GW-117 Publish a deployment to the gateway from the console: provision a gateway instance and name the alias a key calls (P1)
+- [ ] GW-118 Gateway instances on the Gateway page: list each node's gateway, revoke one, and replace a lost credential without retiring its aliases (P1)
 
 ## P2 Fleet operations
 

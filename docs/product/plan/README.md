@@ -247,11 +247,19 @@ dialog, typed confirmation, names the keys and apps that will start failing.
 ### S-205  Deployment detail                          `#/deployment/<id>`
 **For** platform administrators · **Archetype** detail · **Primary** scale.
 
-**Content** tabs: Overview (replicas, placement, health), Traffic (requests, latency,
-errors, token throughput), Logs, Configuration, Activity.
-**Click** a replica → its node. An error → the log line that produced it.
-**Dialogs** *Roll back* → dialog showing the difference between versions.
-**Done when** Traffic and Logs line up on the same clock.
+**Content** tabs: Overview (replicas, placement, health, and *On the gateway*: the name
+callers use, the base URL and a sample call, or how to publish it), Traffic (requests,
+latency, errors, token throughput), Logs, Configuration, Activity.
+**Click** a replica → its node. An error → the log line that produced it. *Issue a key* →
+S-206's issue dialog with this model chosen.
+**Dialogs** *Roll back* → dialog showing the difference between versions. *Publish to the
+gateway* → dialog: the name, the node's gateway or the address of a new one, a reason; a
+new gateway's credential is shown **once**. *Stop publishing* → typed confirmation naming
+the keys that stop.
+**Empty** not published: what publishing gives, offered only while the deployment is
+running and verified, and otherwise what has to happen first.
+**Done when** Traffic and Logs line up on the same clock, and a published deployment can be
+called with a key issued from this page (GW-117).
 
 ### S-206  Gateway keys                               `#/gateway`
 **For** platform administrators · **Archetype** list · **Primary** issue a key.
