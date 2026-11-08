@@ -75,6 +75,7 @@ type Manifest struct {
 	Artifact      Artifact      `json:"artifact"`
 	Images        []string      `json:"images"`
 	Form          []Field       `json:"form"`
+	Dependencies  []Dependency  `json:"dependencies,omitempty"`
 }
 
 // Release holds a validated manifest and its two local message catalogs.
@@ -162,6 +163,18 @@ func (m Manifest) validate() error {
 		if !field.valid() {
 			return fmt.Errorf("%w: specify a field type, required flag and any permitted choices for %s", ErrManifest, field.ID)
 		}
+	}
+	if len(m.Dependencies) > maxDependencies {
+		return fmt.Errorf("%w: declare at most %d dependency slots", ErrManifest, maxDependencies)
+	}
+	for _, slot := range m.Dependencies {
+		if !validID(slot.ID) || seen[slot.ID] {
+			return fmt.Errorf("%w: use distinct form and dependency identifiers", ErrManifest)
+		}
+		if !slot.valid() {
+			return fmt.Errorf("%w: select a supported dependency kind and protocol for %s", ErrManifest, slot.ID)
+		}
+		seen[slot.ID] = true
 	}
 	return nil
 }
