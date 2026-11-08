@@ -24,6 +24,8 @@ export const operations: Record<TaskOperation, TranslationKey> = {
   'inference.derived.v1': 'tasks.operation.inference_derived',
   'training.run.v1': 'tasks.operation.training_run',
   'model.prepare.v1': 'tasks.operation.model_prepare',
+  'gateway.start.v1': 'tasks.operation.gateway_start',
+  'gateway.stop.v1': 'tasks.operation.gateway_stop',
 };
 
 /** The tone and name of each state. */

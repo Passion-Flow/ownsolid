@@ -799,6 +799,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/agent/v1/sites/{site_id}/cells/{cell_id}/nodes/{node_id}/tasks/{task_id}/gateway-activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate the gateway a gateway.start task starts (GW-114, ADR 0052)
+         * @description The agent sends the credential and key request it generated on the node for the gateway it starts, under the task's lease, with the HTTPS origin the node declares. Control keeps only the credential's digest and the origin, and returns a serving certificate naming that origin's host, signed by the model gateway CA, with the CA bundle.
+         */
+        post: operations["activateLeasedGateway"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -881,7 +904,7 @@ export interface components {
             component?: components["schemas"]["MaintenanceObservation"];
         } | {
             /** @constant */
-            protocol_version: "1.3";
+            protocol_version: "1.6";
             /** @constant */
             execution_profile: "docker_inference";
             capabilities: [
@@ -890,7 +913,9 @@ export interface components {
                 "inference.stop.v1",
                 "inference.remove.v1",
                 "inference.observe.v1",
-                "inference.verify.v1"
+                "inference.verify.v1",
+                "gateway.start.v1",
+                "gateway.stop.v1"
             ];
             facts: components["schemas"]["Facts"];
             inference?: components["schemas"]["InferenceObservation"];
@@ -980,7 +1005,7 @@ export interface components {
             certificate_request?: string;
         } | {
             /** @constant */
-            protocol_version: "1.3";
+            protocol_version: "1.6";
             /** @constant */
             execution_profile: "docker_inference";
             capabilities: [
@@ -989,7 +1014,9 @@ export interface components {
                 "inference.stop.v1",
                 "inference.remove.v1",
                 "inference.observe.v1",
-                "inference.verify.v1"
+                "inference.verify.v1",
+                "gateway.start.v1",
+                "gateway.stop.v1"
             ];
             facts: components["schemas"]["Facts"];
             join_token: string;
@@ -1041,7 +1068,7 @@ export interface components {
             cell_id: string;
             credential: string;
             /** @enum {string} */
-            protocol_version: "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5";
+            protocol_version: "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5" | "1.6";
             /** @constant */
             heartbeat_seconds: 10;
             /** @description The node certificate, leaf first, in PEM. */
@@ -1060,7 +1087,7 @@ export interface components {
             /** @description Per-node task sequence; grows by one per task of the node (ADR 0011). */
             sequence: number;
             /** @enum {string} */
-            operation: "collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1";
+            operation: "collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1" | "gateway.start.v1" | "gateway.stop.v1";
             lease_token: string;
             /** Format: date-time */
             lease_expires_at: string;
@@ -1069,7 +1096,8 @@ export interface components {
             inference?: components["schemas"]["InferenceCommand"];
             training?: components["schemas"]["TrainingCommand"];
             model_preparation?: components["schemas"]["ModelPreparationCommand"];
-        } & (unknown & unknown & unknown & unknown & unknown);
+            gateway?: components["schemas"]["GatewayCommand"];
+        } & (unknown & unknown & unknown & unknown & unknown & unknown);
         Claim: {
             lease: components["schemas"]["Lease"] | null;
             resync?: components["schemas"]["Resync"];
@@ -1136,6 +1164,20 @@ export interface components {
             /** @enum {string} */
             error_code: "INFERENCE_CANCELLED" | "INFERENCE_CONFIGURATION_INVALID" | "INFERENCE_CONTAINER_CONFLICT" | "INFERENCE_DISK_SPACE_LOW" | "INFERENCE_DOCKER_NOT_FOUND" | "INFERENCE_DOCKER_REJECTED" | "INFERENCE_DOCKER_SOCKET_INVALID" | "INFERENCE_DOCKER_UNAVAILABLE" | "INFERENCE_DRIVER_UNSUPPORTED" | "INFERENCE_EGRESS_GUARD_UNAVAILABLE" | "INFERENCE_GPU_BUSY" | "INFERENCE_GPU_MEMORY_LOW" | "INFERENCE_GPU_OOM" | "INFERENCE_GPU_PROBE_INVALID" | "INFERENCE_GPU_UNAVAILABLE" | "INFERENCE_GPU_UNSUPPORTED" | "INFERENCE_HOST_MEMORY_LOW" | "INFERENCE_IMAGE_INVALID" | "INFERENCE_IMAGE_MISSING" | "INFERENCE_IMAGE_UNAVAILABLE" | "INFERENCE_IO_FAILED" | "INFERENCE_LOAD_TIMEOUT" | "INFERENCE_MIG_UNSUPPORTED" | "INFERENCE_MODEL_INVALID" | "INFERENCE_NETWORK_CONFLICT" | "INFERENCE_NOT_READY" | "INFERENCE_NVIDIA_UNAVAILABLE" | "INFERENCE_OOM" | "INFERENCE_OPERATION_FAILED" | "INFERENCE_OWNERSHIP_CONFLICT" | "INFERENCE_PLATFORM_UNSUPPORTED" | "INFERENCE_PORT_CONFLICT" | "INFERENCE_RECOVERY_REQUIRED" | "INFERENCE_RESOURCE_LIMITS_UNAVAILABLE" | "INFERENCE_RESPONSE_INVALID" | "INFERENCE_REVISION_CONFLICT" | "INFERENCE_STATE_INVALID" | "INFERENCE_TOOLKIT_UNAVAILABLE";
             inference: components["schemas"]["InferenceObservation"];
+        } | {
+            lease_token: string;
+            /** @constant */
+            outcome: "success";
+            /** @constant */
+            error_code: "";
+            gateway: components["schemas"]["GatewayObservation"];
+        } | {
+            lease_token: string;
+            /** @constant */
+            outcome: "failure";
+            /** @enum {string} */
+            error_code: "GATEWAY_ACTIVATION_REFUSED" | "GATEWAY_CANCELLED" | "GATEWAY_CONFIGURATION_INVALID" | "GATEWAY_CONTAINER_CONFLICT" | "GATEWAY_DOCKER_REJECTED" | "GATEWAY_DOCKER_UNAVAILABLE" | "GATEWAY_IMAGE_INVALID" | "GATEWAY_IMAGE_MISSING" | "GATEWAY_IO_FAILED" | "GATEWAY_NOT_CONFIGURED" | "GATEWAY_NOT_READY" | "GATEWAY_START_FAILED" | "GATEWAY_STOP_FAILED";
+            gateway: components["schemas"]["GatewayObservation"];
         };
         Completed: {
             /** @enum {string} */
@@ -1171,7 +1213,7 @@ export interface components {
             updated_at: string;
             /** @enum {string} */
             execution_profile: "read_only" | "systemd_components" | "systemd_maintenance" | "docker_inference" | "docker_ai" | "docker_model_lifecycle";
-            capabilities: ("collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1")[];
+            capabilities: ("collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1" | "gateway.start.v1" | "gateway.stop.v1")[];
         };
         JoinToken: {
             /** Format: uuid */
@@ -1224,7 +1266,7 @@ export interface components {
             /** Format: uuid */
             node_id: string;
             /** @enum {string} */
-            operation: "collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1";
+            operation: "collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1" | "gateway.start.v1" | "gateway.stop.v1";
             /** @enum {string} */
             state: "pending" | "running" | "succeeded" | "failed" | "cancelled";
             attempt: number;
@@ -2690,7 +2732,7 @@ export interface components {
             node_id: string;
             node_name: string;
             /** @enum {string} */
-            operation: "collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1";
+            operation: "collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1" | "gateway.start.v1" | "gateway.stop.v1";
             /** @enum {string} */
             state: "pending" | "running" | "succeeded" | "failed" | "cancelled";
             attempt: number;
@@ -2766,6 +2808,46 @@ export interface components {
         };
         CertificateConfirmedResponse: {
             data: components["schemas"]["CertificateConfirmed"];
+        };
+        /** @description What control asks of a node's model gateway (GW-114, ADR 0052). Only a start carries the control origin. */
+        GatewayCommand: {
+            /** @constant */
+            action: "start";
+            /** Format: uuid */
+            gateway_id: string;
+            /** Format: uri */
+            control_origin: string;
+        } | {
+            /** @constant */
+            action: "stop";
+            /** Format: uuid */
+            gateway_id: string;
+        };
+        GatewayObservation: {
+            /** Format: uuid */
+            gateway_id: string;
+            /** @enum {string} */
+            state: "running" | "stopped";
+            container_id?: string;
+            /** @enum {string} */
+            error_code?: "GATEWAY_ACTIVATION_REFUSED" | "GATEWAY_CANCELLED" | "GATEWAY_CONFIGURATION_INVALID" | "GATEWAY_CONTAINER_CONFLICT" | "GATEWAY_DOCKER_REJECTED" | "GATEWAY_DOCKER_UNAVAILABLE" | "GATEWAY_IMAGE_INVALID" | "GATEWAY_IMAGE_MISSING" | "GATEWAY_IO_FAILED" | "GATEWAY_NOT_CONFIGURED" | "GATEWAY_NOT_READY" | "GATEWAY_START_FAILED" | "GATEWAY_STOP_FAILED";
+        };
+        /** @description POST .../tasks/{task}/gateway-activation: the credential and key request the agent generated for the gateway it starts, and the origin the node declares. */
+        GatewayActivation: {
+            lease_token: string;
+            credential: string;
+            certificate_request: string;
+            /** Format: uri */
+            origin: string;
+        };
+        GatewayActivated: {
+            certificate: string;
+            /** Format: date-time */
+            not_after: string;
+            certificate_authority: string;
+        };
+        GatewayActivatedResponse: {
+            data: components["schemas"]["GatewayActivated"];
         };
     };
     responses: never;
@@ -4556,6 +4638,45 @@ export interface operations {
                 };
             };
             /** @description Structured failure; no fake success */
+            default: {
+                headers: {
+                    "Retry-After": components["headers"]["AgentRetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    activateLeasedGateway: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                node_id: string;
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GatewayActivation"];
+            };
+        };
+        responses: {
+            /** @description The gateway's serving certificate and the bundle that verifies it */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayActivatedResponse"];
+                };
+            };
+            /** @description Fenced error */
             default: {
                 headers: {
                     "Retry-After": components["headers"]["AgentRetryAfter"];

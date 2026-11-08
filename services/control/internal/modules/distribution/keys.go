@@ -9,12 +9,15 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"strings"
 )
 
 const apiKeyPrefix = "pk1"
-const gatewayCredentialPrefix = "gw1"
+// gatewayCredentialPrefix starts a gateway's credential, whether control or the node's agent
+// generated it.
+const gatewayCredentialPrefix = agentwire.GatewayCredentialPrefix
 const ordinaryKeyPurpose = "api-key"
 const operationKeyPurpose = "accepted-operation-key"
 const maximumKeyTTLSeconds = 90 * 24 * 60 * 60

@@ -52,6 +52,13 @@ type HostConfig struct {
 		Config map[string]string
 	}
 	AutoRemove bool
+	// RestartPolicy is set only for the model gateway, which must outlive a Docker restart.
+	RestartPolicy *RestartPolicy `json:",omitempty"`
+}
+
+// RestartPolicy is Docker's restart policy for a container.
+type RestartPolicy struct {
+	Name string
 }
 type ContainerConfig struct {
 	Image        string

@@ -70,6 +70,7 @@ type Lease struct {
 	Component      *ComponentCommand  `json:"component,omitempty"`
 	Inference      *InferenceCommand  `json:"inference,omitempty"`
 	Training       *training.Command  `json:"training,omitempty"`
+	Gateway        *GatewayCommand    `json:"gateway,omitempty"`
 }
 type Claim struct {
 	Lease  *Lease  `json:"lease"`
@@ -83,6 +84,7 @@ type Result struct {
 	Component  *ComponentObservation `json:"component,omitempty"`
 	Logs       *ComponentLogs        `json:"logs,omitempty"`
 	Inference  *InferenceObservation `json:"inference,omitempty"`
+	Gateway    *GatewayObservation   `json:"gateway,omitempty"`
 }
 
 var osPattern = regexp.MustCompile(`^[a-z0-9_-]{1,32}$`)

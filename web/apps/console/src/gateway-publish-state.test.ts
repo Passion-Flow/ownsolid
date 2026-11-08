@@ -1,7 +1,9 @@
-import type { Deployment, GatewayInstance, ModelAlias } from '@ownsolid/api';
+import type { Deployment, GatewayInstance, ModelAlias, Node } from '@ownsolid/api';
 import { describe, expect, it } from 'vitest';
 import {
+  agentRunsGateway,
   aliasNameProblem,
+  gatewayReadiness,
   gatewayOrigin,
   nodeGateway,
   publishedNames,
@@ -131,5 +133,40 @@ describe('how a published deployment is called', () => {
     ] as unknown as GatewayInstance[];
     expect(nodeGateway(gateways, 'n1')?.id).toBe('now');
     expect(nodeGateway(gateways, 'n3')).toBeUndefined();
+  });
+});
+
+describe("who runs a node's gateway", () => {
+  const node = (capabilities: string[]) => ({ capabilities }) as unknown as Node;
+  const current = node([
+    'collect_facts.v1',
+    'inference.deploy.v1',
+    'gateway.start.v1',
+    'gateway.stop.v1',
+  ]);
+  it('is the agent when the installation allows it and the node enrolled with gateway tasks', () => {
+    expect(agentRunsGateway(true, current)).toBe(true);
+  });
+  it('is the administrator otherwise', () => {
+    expect(agentRunsGateway(false, current)).toBe(false);
+    expect(agentRunsGateway(true, node(['collect_facts.v1', 'inference.deploy.v1']))).toBe(false);
+    expect(agentRunsGateway(true, undefined)).toBe(false);
+  });
+});
+
+describe('whether a gateway can take a name', () => {
+  const gateway = (change: Partial<GatewayInstance>) =>
+    ({ delivery: 'agent', delivery_state: 'starting', ...change }) as GatewayInstance;
+  it('is ready when an administrator runs it or the agent has started it', () => {
+    expect(gatewayReadiness(gateway({ delivery: 'manual', delivery_state: null }))).toBe('ready');
+    expect(gatewayReadiness(gateway({ delivery_state: 'running' }))).toBe('ready');
+  });
+  it('waits while the agent starts it', () => {
+    expect(gatewayReadiness(gateway({}))).toBe('starting');
+  });
+  it('has failed when the agent could not start it or it was stopped', () => {
+    for (const state of ['failed', 'stopping', 'stopped'] as const) {
+      expect(gatewayReadiness(gateway({ delivery_state: state }))).toBe('failed');
+    }
   });
 });

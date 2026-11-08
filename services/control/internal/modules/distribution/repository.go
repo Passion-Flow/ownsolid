@@ -42,7 +42,7 @@ func distributionError(e error) error {
 		}
 	}
 	switch c {
-	case "ACCESS_DENIED", "VALIDATION_FAILED", "IDEMPOTENCY_CONFLICT", "RESOURCE_NOT_FOUND", "RESOURCE_LIMIT_REACHED", "FORBIDDEN", "VERSION_CONFLICT", "INVALID_CURSOR", "CONFIG_MACHINE_TRANSPORT_REQUIRED":
+	case "ACCESS_DENIED", "VALIDATION_FAILED", "IDEMPOTENCY_CONFLICT", "RESOURCE_NOT_FOUND", "RESOURCE_LIMIT_REACHED", "FORBIDDEN", "VERSION_CONFLICT", "INVALID_CURSOR", "CONFIG_MACHINE_TRANSPORT_REQUIRED", "NODE_BUSY":
 		return fail(c)
 	}
 	return fail("STORAGE_UNAVAILABLE")
@@ -143,7 +143,7 @@ func (s *Service) gatewayComponents() error {
 	return nil
 }
 
-const mysqlGatewayFields = `id,workspace_id,node_id,name,client_origin,created_by,CASE WHEN authority_invalidated_at IS NOT NULL THEN 'invalidated' WHEN revoked_at IS NOT NULL THEN 'revoked' ELSE 'active' END,created_at,revoked_at`
+const mysqlGatewayFields = `id,workspace_id,node_id,name,client_origin,created_by,CASE WHEN authority_invalidated_at IS NOT NULL THEN 'invalidated' WHEN revoked_at IS NOT NULL THEN 'revoked' ELSE 'active' END,created_at,revoked_at,'manual',NULL,NULL,NULL`
 
 const mysqlAliasFields = `id,workspace_id,gateway_id,node_id,name,deployment_id,deployment_revision,revision,disabled_at,created_at`
 

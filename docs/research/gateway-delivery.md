@@ -102,13 +102,43 @@ Rejected:
 - **A forwarder on the node in front of a loopback listener.** It adds a process and a TLS hop and protects
   nothing the gateway's own TLS listener and key check do not.
 
+## How it is built
+
+- **Protocol** (`api/agent/v1/gateway.go`): tasks `gateway.start.v1` and `gateway.stop.v1` for the
+  `docker_inference` profile at protocol 1.6; a start carries the gateway ID and the control origin
+  its instance is bound to. The managed-node capability check accepts the new list beside the old
+  one, so enrolled nodes keep working (migration 000056).
+- **Agent** (`services/agent/internal/inference/gateway*.go`): the node's `gateway` configuration
+  names the listen address, the declared origin, the image ID and a private root. A start checks
+  the image, removes any older gateway container, generates the credential and a P-256 key,
+  activates them, checks the certificate (its key, the declared host, server use, the returned CA),
+  writes the files to `<root>/<gateway>/config` (read-only in the container) beside a kept
+  `state` directory, runs the container locked down and waits for a verified TLS handshake that
+  presents the issued certificate. A stop removes the container and the secrets and keeps the spool.
+- **Control**: registering a gateway on such a node queues the start and stores no credential and no
+  origin (`delivery='agent'`). The activation, under the task's lease, stores the credential's
+  digest and the origin, issues the certificate (`agentidentity.Authority.IssueServing`) and is
+  audited as `gateway.instance_activated`. Results record `delivery_state`; revoking queues the stop.
+  Names cannot be published until the gateway runs (`GATEWAY_NOT_STARTED`).
+- **Installer**: a separate model gateway CA, `config/model-gateway-ca.pem`, named in control's
+  `model_gateway_identity`; `runtime-config.json` says `agent_gateways`.
+- **Console**: the publish dialog asks no address and shows no credential for such a node, waits
+  while the agent starts the gateway, names the model when it runs, and explains a failed start
+  with a way to replace the gateway.
+
+Known limits, each a roadmap item: other profiles (GW-123), certificate renewal (GW-124), handing
+callers the CA (GW-125), one address for every model (GW-121), a site's own PKI (GW-122), and the
+signed bundle that carries the image (DEL-101).
+
 ## What GW-114 must do
 
 - The offline bundle carries a pinned gateway image, and an installation needs no network to run it. The
   image exists (`deploy/images/gateway`); the bundle (DEL-101) and the agent's delivery of it do not yet.
 - Publishing a deployment on a node starts that node's gateway without anything copied by hand: the agent
   generates the credential, writes the configuration and private files, and runs the gateway with one state
-  directory per gateway instance; revoking the gateway or stopping the node's deployment stops it.
+  directory per gateway instance; revoking the gateway stops it. Stopping the deployment leaves it
+  answering that the model is unavailable, because the gateway belongs to its instance, not to one
+  deployment (ADR 0052, amendment).
 - The gateway serves on the address the node declares, with a certificate callers can verify against the
   installation's CA, and the alias's base URL is that address.
 - A call with an issued key reaches the model and appears in the key's call log, run once on an

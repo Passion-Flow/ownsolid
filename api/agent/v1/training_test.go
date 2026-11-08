@@ -20,9 +20,11 @@ func TestActualPythonModelCatalogDigestMatchesFrozenM06GoIdentity(t *testing.T) 
 }
 
 func TestCombinedAIProfilePreservesLegacyCapabilitiesAndExplicitAuthority(t *testing.T) {
-	legacy := Capabilities(DockerInferenceProfile)
+	// The AI profile keeps the inference profile's model tasks in order. Gateway tasks are
+	// the inference profile's alone until the AI profile serves gateways too (GW-123).
+	legacy := Capabilities(DockerInferenceProfile)[:6]
 	combined := Capabilities(DockerAIProfile)
-	if len(legacy) != 6 || len(combined) != 7 || ProfileVersion(DockerAIProfile) != AIVersion {
+	if len(combined) != 7 || ProfileVersion(DockerAIProfile) != AIVersion || OperationAllowed(DockerAIProfile, GatewayOperation("start")) {
 		t.Fatal("profile contract")
 	}
 	for index, capability := range legacy {

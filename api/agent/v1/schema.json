@@ -259,7 +259,7 @@
             "properties": {
               "protocol_version": {
                 "type": "string",
-                "const": "1.3"
+                "const": "1.6"
               },
               "execution_profile": {
                 "type": "string",
@@ -267,8 +267,8 @@
               },
               "capabilities": {
                 "type": "array",
-                "minItems": 6,
-                "maxItems": 6,
+                "minItems": 8,
+                "maxItems": 8,
                 "prefixItems": [
                   {
                     "type": "string",
@@ -293,6 +293,14 @@
                   {
                     "type": "string",
                     "const": "inference.verify.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "gateway.start.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "gateway.stop.v1"
                   }
                 ],
                 "items": false
@@ -641,7 +649,7 @@
             "properties": {
               "protocol_version": {
                 "type": "string",
-                "const": "1.3"
+                "const": "1.6"
               },
               "execution_profile": {
                 "type": "string",
@@ -649,8 +657,8 @@
               },
               "capabilities": {
                 "type": "array",
-                "minItems": 6,
-                "maxItems": 6,
+                "minItems": 8,
+                "maxItems": 8,
                 "prefixItems": [
                   {
                     "type": "string",
@@ -675,6 +683,14 @@
                   {
                     "type": "string",
                     "const": "inference.verify.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "gateway.start.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "gateway.stop.v1"
                   }
                 ],
                 "items": false
@@ -873,7 +889,8 @@
               "1.2",
               "1.3",
               "1.4",
-              "1.5"
+              "1.5",
+              "1.6"
             ]
           },
           "heartbeat_seconds": {
@@ -969,7 +986,9 @@
               "model.prepare.v1",
               "inference.derived.v1",
               "inference.derived.v1",
-              "inference.derived.v1"
+              "inference.derived.v1",
+              "gateway.start.v1",
+              "gateway.stop.v1"
             ]
           },
           "lease_token": {
@@ -1003,6 +1022,9 @@
           },
           "model_preparation": {
             "$ref": "#/components/schemas/ModelPreparationCommand"
+          },
+          "gateway": {
+            "$ref": "#/components/schemas/GatewayCommand"
           }
         },
         "required": [
@@ -1166,6 +1188,55 @@
                     ]
                   }
                 }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "gateway.start.v1",
+                    "gateway.stop.v1"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "gateway"
+              ],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "component"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "inference"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "training"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "model_preparation"
+                    ]
+                  }
+                ]
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "gateway"
+                ]
               }
             }
           }
@@ -1495,6 +1566,74 @@
               "outcome",
               "error_code",
               "inference"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "lease_token": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "outcome": {
+                "type": "string",
+                "const": "success"
+              },
+              "error_code": {
+                "type": "string",
+                "const": ""
+              },
+              "gateway": {
+                "$ref": "#/components/schemas/GatewayObservation"
+              }
+            },
+            "required": [
+              "lease_token",
+              "outcome",
+              "error_code",
+              "gateway"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "lease_token": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "outcome": {
+                "type": "string",
+                "const": "failure"
+              },
+              "error_code": {
+                "type": "string",
+                "enum": [
+                  "GATEWAY_ACTIVATION_REFUSED",
+                  "GATEWAY_CANCELLED",
+                  "GATEWAY_CONFIGURATION_INVALID",
+                  "GATEWAY_CONTAINER_CONFLICT",
+                  "GATEWAY_DOCKER_REJECTED",
+                  "GATEWAY_DOCKER_UNAVAILABLE",
+                  "GATEWAY_IMAGE_INVALID",
+                  "GATEWAY_IMAGE_MISSING",
+                  "GATEWAY_IO_FAILED",
+                  "GATEWAY_NOT_CONFIGURED",
+                  "GATEWAY_NOT_READY",
+                  "GATEWAY_START_FAILED",
+                  "GATEWAY_STOP_FAILED"
+                ]
+              },
+              "gateway": {
+                "$ref": "#/components/schemas/GatewayObservation"
+              }
+            },
+            "required": [
+              "lease_token",
+              "outcome",
+              "error_code",
+              "gateway"
             ]
           }
         ]
@@ -7251,6 +7390,154 @@
         },
         "required": [
           "confirmed"
+        ]
+      },
+      "GatewayCommand": {
+        "description": "What control asks of a node's model gateway (GW-114, ADR 0052). Only a start carries the control origin.",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "start"
+              },
+              "gateway_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+              },
+              "control_origin": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://",
+                "maxLength": 2048
+              }
+            },
+            "required": [
+              "action",
+              "gateway_id",
+              "control_origin"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "stop"
+              },
+              "gateway_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+              }
+            },
+            "required": [
+              "action",
+              "gateway_id"
+            ]
+          }
+        ]
+      },
+      "GatewayObservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "gateway_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "running",
+              "stopped"
+            ]
+          },
+          "container_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "error_code": {
+            "type": "string",
+            "enum": [
+              "GATEWAY_ACTIVATION_REFUSED",
+              "GATEWAY_CANCELLED",
+              "GATEWAY_CONFIGURATION_INVALID",
+              "GATEWAY_CONTAINER_CONFLICT",
+              "GATEWAY_DOCKER_REJECTED",
+              "GATEWAY_DOCKER_UNAVAILABLE",
+              "GATEWAY_IMAGE_INVALID",
+              "GATEWAY_IMAGE_MISSING",
+              "GATEWAY_IO_FAILED",
+              "GATEWAY_NOT_CONFIGURED",
+              "GATEWAY_NOT_READY",
+              "GATEWAY_START_FAILED",
+              "GATEWAY_STOP_FAILED"
+            ]
+          }
+        },
+        "required": [
+          "gateway_id",
+          "state"
+        ]
+      },
+      "GatewayActivation": {
+        "description": "POST .../tasks/{task}/gateway-activation: the credential and key request the agent generated for the gateway it starts, and the origin the node declares.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "lease_token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "credential": {
+            "type": "string",
+            "pattern": "^gw1\\.[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\.[A-Za-z0-9_-]{43}$"
+          },
+          "certificate_request": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "origin": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://",
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "lease_token",
+          "credential",
+          "certificate_request",
+          "origin"
+        ]
+      },
+      "GatewayActivated": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "certificate": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "not_after": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "certificate_authority": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "required": [
+          "certificate",
+          "certificate_authority",
+          "not_after"
         ]
       }
     }

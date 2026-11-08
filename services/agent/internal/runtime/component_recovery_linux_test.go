@@ -79,10 +79,10 @@ func TestComponentCycleRecoversBeforeHeartbeatAndDisabledClaimGate(t *testing.T)
 		t.Fatal(e)
 	}
 	c := Config{DiskPath: t.TempDir(), StateDirectory: stateDirectory, ExecutionProfile: wire.SystemdMaintenanceProfile}
-	if e := cycle(t.Context(), c, connection, identity, m, nil, nil, nil, nil); !errors.Is(e, failure) {
+	if e := cycle(t.Context(), c, connection, identity, workers{components: m}); !errors.Is(e, failure) {
 		t.Fatal("failed recovery reached heartbeat", e)
 	}
-	if e := cycle(t.Context(), c, connection, identity, m, nil, nil, nil, nil); e != nil {
+	if e := cycle(t.Context(), c, connection, identity, workers{components: m}); e != nil {
 		t.Fatal("same-process recovery did not resume disabled heartbeat", e)
 	}
 	mu.Lock()
@@ -92,7 +92,7 @@ func TestComponentCycleRecoversBeforeHeartbeatAndDisabledClaimGate(t *testing.T)
 	if !reflect.DeepEqual(first, []string{"recover", "recover", "observe", "heartbeat"}) {
 		t.Fatal("disabled cycle claimed work or observed before recovery", first)
 	}
-	if e := cycle(t.Context(), c, connection, identity, m, nil, nil, nil, nil); e != nil {
+	if e := cycle(t.Context(), c, connection, identity, workers{components: m}); e != nil {
 		t.Fatal("active recovered cycle failed", e)
 	}
 	mu.Lock()

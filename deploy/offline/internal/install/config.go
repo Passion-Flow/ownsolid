@@ -42,7 +42,7 @@ var (
 )
 
 // controlOwnedKeys are written by the installer and cannot be set through control_settings.
-var controlOwnedKeys = []string{"topology", "server", "database", "security", "licensing", "smtp", "telemetry", "models", "agent_identity"}
+var controlOwnedKeys = []string{"topology", "server", "database", "security", "licensing", "smtp", "telemetry", "models", "agent_identity", "model_gateway_identity"}
 
 type Config struct {
 	FormatVersion int             `yaml:"format_version"`

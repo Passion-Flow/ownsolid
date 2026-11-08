@@ -56,3 +56,30 @@ certificate code as ARC-103 leaves it.
   GW-108.
 - The engine's CPU build is a test vehicle only. The product recipe stays the CUDA build until a CPU engine is
   a roadmap item of its own.
+
+## Amendment, 2026-11-09
+
+Building it settled what the decision left open:
+
+- **A node that cannot run gateway tasks keeps the administrator's credential.** Agent delivery needs
+  PostgreSQL, the model gateway CA in control's configuration, and a node enrolled with the gateway
+  tasks. Otherwise registering a gateway works as before and shows its credential once; the console
+  shows that path only for such nodes. Sites that place their own gateway get a better path in GW-122.
+- **Only the `docker_inference` profile runs gateways for now**, at protocol 1.6. The AI and model
+  lifecycle profiles keep their task lists and versions until GW-123, so their nodes need no new
+  enrollment. As with every protocol change before FLT-110, an inference node re-enrolls to gain the
+  tasks; until then it keeps the administrator's path.
+- **The credential and key are activated by one call bound to the start task's lease**
+  (`.../tasks/{task}/gateway-activation`). A start that lost its lease, a revoked gateway and another
+  node's credential activate nothing, and a retry replaces both secrets.
+- **Revoking stops the gateway; stopping the deployment does not.** The gateway's lifecycle is its
+  instance's: with no model behind it, it answers that the model is unavailable. A revoke on a node
+  that is busy cannot queue the stop; the gateway refuses every call because control refuses its
+  credential, the next start on the node removes it, and revoking again asks again. A start or stop
+  whose task ends without a result reads as failed with `GATEWAY_TASK_EXPIRED`.
+- **Readiness is checked against the issued certificate.** The agent completes a verified TLS
+  handshake with the listener for the declared origin and accepts only the certificate this start
+  was given.
+- **The image is pinned by its ID in the agent's configuration** and loaded with `docker load`; the
+  signed bundle that carries it is DEL-101. Certificates last a year and are renewed by publishing
+  again until GW-124; callers get the CA bundle from the installation root until GW-125 serves it.

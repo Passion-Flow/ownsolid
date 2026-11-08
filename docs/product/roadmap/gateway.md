@@ -6,7 +6,7 @@ coding tools and the product agent.
 - Owns: `services/gateway`, `services/control/internal/modules/distribution`.
 - Depends on: serving, identity-and-access, tenancy-metering-commerce.
 
-Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API keys and Bifrost documentation ([research](../../research/gateway-keys.md)). The review added GW-114, GW-115 and GW-116, and GW-113's live run added GW-117: the installer starts no model gateway at all, keys cannot rotate on a schedule or warn their owner before they expire, and a key cannot be narrowed to some endpoints or made read-only, and no page publishes a model to the gateway. GW-117's research added GW-118: a gateway instance's credential cannot be replaced, so a lost one retires every alias on that node. GW-114's prototype added GW-121 and GW-122: each node's gateway is its own base URL until one entrance routes to them, and control can only issue certificates from its own CA ([research](../../research/gateway-delivery.md)).
+Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API keys and Bifrost documentation ([research](../../research/gateway-keys.md)). The review added GW-114, GW-115 and GW-116, and GW-113's live run added GW-117: the installer starts no model gateway at all, keys cannot rotate on a schedule or warn their owner before they expire, and a key cannot be narrowed to some endpoints or made read-only, and no page publishes a model to the gateway. GW-117's research added GW-118: a gateway instance's credential cannot be replaced, so a lost one retires every alias on that node. GW-114's prototype added GW-121 and GW-122: each node's gateway is its own base URL until one entrance routes to them, and control can only issue certificates from its own CA ([research](../../research/gateway-delivery.md)). Building GW-114 added GW-123, GW-124 and GW-125: only the inference profile runs gateways, their certificates are not yet renewed, and callers have no page that hands them the CA.
 
 ## P1 Enterprise release
 
@@ -29,6 +29,9 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [ ] GW-120 Say what a published model is for: an administrator's description, written when publishing and changeable later, shown in the portal's catalogue (P1)
 - [ ] GW-121 One address for every model: the model gateway entrance on the installation's TLS port routes each call by its name to the node gateway that serves it ([ADR 0027](../../decisions/0027-entrance-addresses.md), [ADR 0052](../../decisions/0052-the-model-gateway-runs-beside-the-model.md)) (P1)
 - [ ] GW-122 Node gateways under a site's own PKI: place the serving certificate and key on the node instead of control issuing them (P1)
+- [ ] GW-123 The AI and model lifecycle profiles run node gateways too, as the inference profile does since GW-114 (P1)
+- [ ] GW-124 Node gateways renew their serving certificates before they expire, without dropping calls (P1)
+- [ ] GW-125 Callers get the model gateway CA from the console and the portal, beside each endpoint and code sample (P1)
 
 ## P2 Fleet operations
 

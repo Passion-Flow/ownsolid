@@ -22,19 +22,20 @@ const (
 	serverReissueWindow     = 30 * 24 * time.Hour
 	agentCAFile             = "agent-ca.pem"
 	agentCAKeyFile          = "agent-ca-key.pem"
+	gatewayCAFile           = "model-gateway-ca.pem"
+	gatewayCAKeyFile        = "model-gateway-ca-key.pem"
 )
 
 var errTLSGeneration = errors.New("INSTALL_TLS_GENERATION_FAILED")
 
-// materializeAgentCA creates the CA that signs node certificates (ADR 0050). It is separate
-// from the serving CA, which a site that brings its own certificate does not give us. An
-// existing one is left alone, so applying a configuration again never replaces it.
-func (c Config) materializeAgentCA(l Layout) error {
-	certificate, key := filepath.Join(l.Config, agentCAFile), filepath.Join(l.Config, agentCAKeyFile)
+// materializeCA creates a CA of the installation's own once. An existing one is left alone,
+// so applying a configuration again never replaces it.
+func (c Config) materializeCA(l Layout, certificateFile, keyFile, commonName string) error {
+	certificate, key := filepath.Join(l.Config, certificateFile), filepath.Join(l.Config, keyFile)
 	if exists(certificate) && exists(key) {
 		return nil
 	}
-	caCertificate, caKey, e := generateCA("ownsolid agent CA")
+	caCertificate, caKey, e := generateCA(commonName)
 	if e != nil {
 		return e
 	}
@@ -45,7 +46,13 @@ func (c Config) materializeAgentCA(l Layout) error {
 }
 
 func (c Config) materializeTLS(l Layout) error {
-	if e := c.materializeAgentCA(l); e != nil {
+	// The agent CA signs node certificates (ADR 0050) and the model gateway CA signs the
+	// serving certificates of the gateways agents run (ADR 0052). Both are separate from the
+	// serving CA, which a site that brings its own certificate does not give us.
+	if e := c.materializeCA(l, agentCAFile, agentCAKeyFile, "ownsolid agent CA"); e != nil {
+		return e
+	}
+	if e := c.materializeCA(l, gatewayCAFile, gatewayCAKeyFile, "ownsolid model gateway CA"); e != nil {
 		return e
 	}
 	certificate := filepath.Join(l.Config, "certificate.pem")

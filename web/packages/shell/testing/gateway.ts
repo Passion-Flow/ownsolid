@@ -26,7 +26,14 @@ export const nodeGatewayInstance: GatewayInstance = {
   state: 'active',
   created_at: issued,
   revoked_at: null,
+  delivery: 'manual',
+  delivery_state: null,
+  delivery_error_code: null,
+  certificate_not_after: null,
 };
+
+/** Where callers reach a gateway a scripted node's agent runs: the origin the node declares. */
+export const agentGatewayOrigin = 'https://gw.rack7.example:18443';
 
 /** A model the gateway serves, which a new key can call. */
 export const deploymentAlias: ModelAlias = {
@@ -162,6 +169,13 @@ export interface GatewayScript {
     key: string;
     body: Record<string, unknown>;
   }[];
+  /** Nodes whose agent runs their gateway (ADR 0052); other nodes take an administrator's. */
+  agentNodes: string[];
+  /**
+   * How the agent's next starts end, in order: `running`, or the error code the start failed with.
+   * A start is seen starting by one read of the list and ends at the next; unscripted ones run.
+   */
+  agentStarts: string[];
 }
 
 /** A script with no key. */
@@ -177,6 +191,8 @@ export function emptyGatewayScript(): GatewayScript {
     keyWrites: [],
     publishFailures: [],
     publishWrites: [],
+    agentNodes: [],
+    agentStarts: [],
   };
 }
 
@@ -213,13 +229,38 @@ async function routePublishing(page: Page, state: GatewayScript, data: Reply, pr
     const reason = typeof body.reason === 'string' && body.reason !== '';
     return { intent, body, reason, failure: state.publishFailures.shift() };
   };
-  await page.route(new RegExp(`${base.source}/gateways\\?`), (route) =>
-    data(route, { items: state.gateways, next_cursor: null }),
-  );
+  const seenStarting = new Set<string>();
+  await page.route(new RegExp(`${base.source}/gateways\\?`), (route) => {
+    state.gateways = state.gateways.map((gateway) => {
+      if (gateway.delivery !== 'agent' || gateway.delivery_state !== 'starting') return gateway;
+      if (!seenStarting.has(gateway.id)) {
+        seenStarting.add(gateway.id);
+        return gateway;
+      }
+      const outcome = state.agentStarts.shift() ?? 'running';
+      return outcome === 'running'
+        ? {
+            ...gateway,
+            delivery_state: 'running',
+            client_origin: agentGatewayOrigin,
+            certificate_not_after: later(365),
+          }
+        : { ...gateway, delivery_state: 'failed', delivery_error_code: outcome };
+    });
+    return data(route, { items: state.gateways, next_cursor: null });
+  });
   await page.route(new RegExp(`${base.source}/gateways$`), (route) => {
     const { intent, body, reason, failure } = written(route, 'provision');
     if (failure && failure !== 'lost') return problem(route, failure);
-    if (!intent || !reason || !/^https:\/\/[^/]+$/.test(String(body.client_origin))) {
+    const delivered = state.agentNodes.includes(String(body.node_id));
+    if (delivered && 'client_origin' in body) {
+      return problem(route, { status: 400, code: 'GATEWAY_ORIGIN_DECLARED_BY_NODE' });
+    }
+    if (
+      !intent ||
+      !reason ||
+      (!delivered && !/^https:\/\/[^/]+$/.test(String(body.client_origin)))
+    ) {
       return problem(route, { status: 400, code: 'VALIDATION_FAILED' });
     }
     const replayed = state.gateways.find((item) => madeBy.get(item.id) === intent);
@@ -232,17 +273,16 @@ async function routePublishing(page: Page, state: GatewayScript, data: Reply, pr
       id: `6f1c7a1e-0000-4000-8004-${intent.replaceAll('-', '').slice(0, 12)}`,
       node_id: String(body.node_id),
       name: String(body.name),
-      client_origin: String(body.client_origin),
+      client_origin: delivered ? null : String(body.client_origin),
       created_at: new Date().toISOString(),
+      ...(delivered ? { delivery: 'agent', delivery_state: 'starting' } : {}),
     };
     state.gateways.unshift(gateway);
     madeBy.set(gateway.id, intent);
     if (failure === 'lost') return route.abort('connectionreset');
-    return data(
-      route,
-      { gateway, secret: credentialOf(gateway, intent), secret_available: true },
-      201,
-    );
+    // The agent generates a delivered gateway's credential on the node; nobody receives it.
+    const secret = delivered ? null : credentialOf(gateway, intent);
+    return data(route, { gateway, secret, secret_available: secret !== null }, 201);
   });
   await page.route(new RegExp(`${base.source}/gateways/[0-9a-f-]{36}/revoke$`), (route) => {
     const { reason, failure } = written(route, 'revokeGateway');
@@ -251,10 +291,15 @@ async function routePublishing(page: Page, state: GatewayScript, data: Reply, pr
     const found = state.gateways[index];
     if (!found) return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
     if (!reason) return problem(route, { status: 400, code: 'VALIDATION_FAILED' });
-    const revoked: GatewayInstance =
-      found.state === 'active'
+    const stops =
+      found.delivery === 'agent' &&
+      (found.delivery_state === 'running' || found.delivery_state === 'failed');
+    const revoked: GatewayInstance = {
+      ...(found.state === 'active'
         ? { ...found, state: 'revoked', revoked_at: new Date().toISOString() }
-        : found;
+        : found),
+      ...(stops ? { delivery_state: 'stopping', delivery_error_code: null } : {}),
+    };
     state.gateways[index] = revoked;
     if (failure === 'lost') return route.abort('connectionreset');
     return data(route, revoked);
@@ -272,6 +317,9 @@ async function routePublishing(page: Page, state: GatewayScript, data: Reply, pr
     if (gateway.state !== 'active') {
       return problem(route, { status: 409, code: 'GATEWAY_INSTANCE_REVOKED' });
     }
+    if (gateway.delivery === 'agent' && gateway.delivery_state !== 'running') {
+      return problem(route, { status: 409, code: 'GATEWAY_NOT_STARTED' });
+    }
     if (state.aliases.some((item) => item.name === body.name)) {
       return problem(route, { status: 409, code: 'MODEL_ALIAS_EXISTS' });
     }
@@ -280,7 +328,7 @@ async function routePublishing(page: Page, state: GatewayScript, data: Reply, pr
       id: `6f1c7a1e-0000-4000-8005-${intent.replaceAll('-', '').slice(0, 12)}`,
       gateway_id: gateway.id,
       node_id: gateway.node_id,
-      client_origin: gateway.client_origin,
+      client_origin: gateway.client_origin ?? '',
       name: String(body.name),
       deployment_id: String(body.deployment_id),
       deployment_revision: Number(body.deployment_revision),

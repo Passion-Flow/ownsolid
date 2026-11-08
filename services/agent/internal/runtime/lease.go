@@ -24,6 +24,9 @@ func validateExecutionLease(profile string, lease wire.Lease) error {
 	if lease.Component != nil {
 		variants++
 	}
+	if lease.Gateway != nil {
+		variants++
+	}
 	if lease.Operation == wire.CollectFacts {
 		if variants != 0 {
 			return bad
@@ -44,6 +47,10 @@ func validateExecutionLease(profile string, lease wire.Lease) error {
 		}
 	case wire.IsInferenceOperation(lease.Operation):
 		if lease.Inference == nil || lease.Inference.Validate(lease.Operation) != nil {
+			return bad
+		}
+	case wire.IsGatewayOperation(lease.Operation):
+		if profile != wire.DockerInferenceProfile || lease.Gateway == nil || lease.Gateway.Validate(lease.Operation) != nil {
 			return bad
 		}
 	case wire.IsComponentOperation(lease.Operation):

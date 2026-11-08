@@ -9,6 +9,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
@@ -63,6 +64,26 @@ func composeCertificates(n *nodes.Service, s *identity.Service, service string) 
 	return nil
 }
 
+// composeGateways lets nodes run the model gateways of their deployments (ADR 0052). Control
+// signs their serving certificates; an agent gateway process only carries their tasks, so it
+// never holds the gateway CA's key.
+func composeGateways(n *nodes.Service, s *identity.Service, w *workspaces.Service, service string) error {
+	if !s.Config.AgentsRunGateways() {
+		return nil
+	}
+	owner := &distribution.Service{DB: s.DB, Identity: s, Workspaces: w, Nodes: n}
+	n.Gateways = owner
+	if service != telemetrystore.ServiceControl {
+		return nil
+	}
+	bundle, key, e := s.Config.ModelGatewayAuthorityMaterial()
+	if e != nil {
+		return e
+	}
+	owner.Certificates, e = agentidentity.NewAuthority(bundle, key, s.Config.ModelGatewayIdentity.Lifetime())
+	return e
+}
+
 // newAgentPath builds the agent path on s for the process that service names in its
 // metrics. ready, when set, fences every session exchange (agentgateway.Policy.Ready).
 func newAgentPath(s *identity.Service, service string, ready func() error) agentPath {
@@ -97,6 +118,7 @@ func newAgentPath(s *identity.Service, service string, ready func() error) agent
 		trainingService.Holdouts = preparationService
 	}
 	n.Training = trainingService
+	gatewayError := composeGateways(n, s, w, service)
 	databaseSeats, admissionError := s.Config.AgentDatabaseSeats()
 	var admission *agentadmission.Controller
 	if admissionError == nil {
@@ -150,7 +172,7 @@ func newAgentPath(s *identity.Service, service string, ready func() error) agent
 		}
 		return m.OpenTransferWithin(ctx, q, node.TenantID, node.WorkspaceID, command.ModelID, input)
 	}
-	return agentPath{workspaces: w, nodes: n, components: c, models: m, deployments: d, datasets: datasetService, training: trainingService, preparations: preparationService, machine: machine, sessions: sessions, logs: telemetryLogs, metrics: telemetryMetrics, err: errors.Join(authorityError, preparationError, admissionError, sessionError, n.CheckRecoveryOwners())}
+	return agentPath{workspaces: w, nodes: n, components: c, models: m, deployments: d, datasets: datasetService, training: trainingService, preparations: preparationService, machine: machine, sessions: sessions, logs: telemetryLogs, metrics: telemetryMetrics, err: errors.Join(authorityError, gatewayError, preparationError, admissionError, sessionError, n.CheckRecoveryOwners())}
 }
 
 // AgentGateway is the agent path of an agent gateway process: the session stream and the

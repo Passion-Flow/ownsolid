@@ -2384,7 +2384,9 @@
        "model.prepare.v1",
        "inference.derived.v1",
        "inference.derived.v1",
-       "inference.derived.v1"
+       "inference.derived.v1",
+       "gateway.start.v1",
+       "gateway.stop.v1"
       ]
      }
     }
@@ -2594,7 +2596,9 @@
       "model.prepare.v1",
       "inference.derived.v1",
       "inference.derived.v1",
-      "inference.derived.v1"
+      "inference.derived.v1",
+      "gateway.start.v1",
+      "gateway.stop.v1"
      ]
     },
     "state": {
@@ -2917,7 +2921,9 @@
       "model.prepare.v1",
       "inference.derived.v1",
       "inference.derived.v1",
-      "inference.derived.v1"
+      "inference.derived.v1",
+      "gateway.start.v1",
+      "gateway.stop.v1"
      ]
     },
     "state": {

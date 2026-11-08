@@ -177,6 +177,50 @@ upgraded; from then on it needs one. To replace the agent CA by hand, put the ne
 in `agent-ca.pem`, replace `agent-ca-key.pem` with the new key and restart control. Nodes pick up
 certificates from the new CA as they renew. Remove the old CA once every node has renewed.
 
+### Model gateways on serving nodes
+
+A key reaches a model through the model gateway on the node that serves it
+([ADR 0052](../decisions/0052-the-model-gateway-runs-beside-the-model.md)). The node's agent runs
+that gateway: publishing a deployment from its page starts it, and revoking the gateway stops it.
+The agent generates the gateway's credential and TLS key on the node; control keeps only a digest of
+the credential and signs a serving certificate with the model gateway CA, which the installer
+creates at `<install_root>/config/model-gateway-ca.pem` and keeps when you apply again. Callers of a
+node's gateway trust that file. A certificate lasts a year; publishing again after revoking the
+gateway issues a new one.
+
+This needs PostgreSQL and a `docker_inference` node enrolled with agent protocol 1.6. A node enrolled
+earlier keeps the earlier way, in which publishing shows the gateway's credential once, until it is
+enrolled again. On each serving node:
+
+1. Load the gateway image, built by `make image-gateway` and saved with `docker save`, with
+   `docker load < ownsolid-gateway.tar`, and note its ID from `docker image inspect --format '{{.Id}}'`.
+   The agent never pulls an image.
+2. Add a `gateway` section to the agent's configuration and restart the agent:
+
+   ```json
+   "gateway": {
+     "listen_address": "0.0.0.0:18443",
+     "origin": "https://gw.rack7.example:18443",
+     "image": "sha256:<image ID>",
+     "root_directory": "/var/lib/ownsolid-gateway",
+     "memory_bytes": 536870912
+   }
+   ```
+
+   `listen_address` is the IPv4 address and port the gateway binds; `origin` is the HTTPS address
+   callers use, and the certificate names its host. They are separate because a name or a forwarded
+   port may stand in front of the listener. `root_directory` must exist, belong to root and allow no
+   access to others; the agent keeps one directory per gateway in it, owned by the gateway's account
+   (uid 10001). The agent's `ca_file` must be set, because the gateway checks keys with control.
+
+The gateway runs in a container on the host's network, with a read-only root, no capabilities, its
+own account and Docker's `unless-stopped` restart policy, and calls the model on the node's loopback.
+When it cannot start, the deployment's page says why: a missing image (`GATEWAY_IMAGE_MISSING`), no
+`gateway` section (`GATEWAY_NOT_CONFIGURED`) or a listener it could not bind (`GATEWAY_START_FAILED`,
+read the container's log with `docker logs ownsolid-gateway-<gateway id>`). Fix it and choose Replace
+the gateway. Stopping the deployment leaves the gateway running; it answers that the model is
+unavailable until the deployment runs again.
+
 ### Pacing the agents
 
 Control tells every agent how often to report and how to back off, in each heartbeat

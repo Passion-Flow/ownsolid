@@ -35,6 +35,11 @@ export interface RuntimeConfig {
   defaultLocale: string;
   ui: UiPolicy;
   gatewayKeys: GatewayKeyPolicy;
+  /**
+   * True when the agents of serving nodes run their model gateways, with credentials no person
+   * sees (ADR 0052); false when an administrator places a gateway's credential.
+   */
+  agentGateways: boolean;
 }
 
 function integer(value: unknown, minimum: number, maximum: number): number {
@@ -81,6 +86,7 @@ export function parseRuntimeConfig(document: unknown): RuntimeConfig {
     throw new ApiProblem('RESPONSE_INVALID');
   if (typeof transport.plaintext !== 'boolean') throw new ApiProblem('RESPONSE_INVALID');
   if (typeof data.default_locale !== 'string') throw new ApiProblem('RESPONSE_INVALID');
+  if (typeof data.agent_gateways !== 'boolean') throw new ApiProblem('RESPONSE_INVALID');
   return {
     topologySize: topology.size,
     plaintext: transport.plaintext,
@@ -93,6 +99,7 @@ export function parseRuntimeConfig(document: unknown): RuntimeConfig {
       lookupPageSize: integer(ui.lookup_page_size, 1, 100),
     },
     gatewayKeys: gatewayKeyPolicy(keys),
+    agentGateways: data.agent_gateways,
   };
 }
 

@@ -131,6 +131,13 @@ func (s *Service) claimSelected(ctx context.Context, id, credential, request str
 			}
 			lease.Inference = &command
 		}
+		if wire.IsGatewayOperation(operation) {
+			command, e := s.ReadGatewayCommandWithin(ctx, q, n, task)
+			if e != nil {
+				return e
+			}
+			lease.Gateway = &command
+		}
 		if wire.IsComponentOperation(operation) {
 			if _, ok := s.Components.(ComponentObserverWithin); !ok && legacy == nil {
 				return fail("COMPONENT_PROFILE_UNAVAILABLE")
@@ -184,6 +191,16 @@ func (s *Service) validateTaskResultWithin(ctx context.Context, q transaction.Ex
 		return input.ValidateInference(command)
 	}
 	if input.Inference != nil {
+		return fail("VALIDATION_FAILED")
+	}
+	if wire.IsGatewayOperation(t.Operation) {
+		command, e := s.ReadGatewayCommandWithin(ctx, q, n, t)
+		if e != nil {
+			return e
+		}
+		return input.ValidateGateway(command)
+	}
+	if input.Gateway != nil {
 		return fail("VALIDATION_FAILED")
 	}
 	return s.ValidateComponentResultWithin(ctx, q, n, t, input)
@@ -264,6 +281,18 @@ func (s *Service) completeSelected(ctx context.Context, id, credential, taskID s
 				return fail("AGENT_PROFILE_REJECTED")
 			}
 			if e = owner.RecordInferenceResultWithin(ctx, q, n, task, input); e != nil {
+				return e
+			}
+		}
+		if input.Gateway != nil {
+			if s.Gateways == nil {
+				return fail("AGENT_PROFILE_REJECTED")
+			}
+			command, e := s.ReadGatewayCommandWithin(ctx, q, n, task)
+			if e != nil {
+				return e
+			}
+			if e = s.Gateways.RecordGatewayResultWithin(ctx, q, n, task, command, input); e != nil {
 				return e
 			}
 		}
