@@ -80,6 +80,39 @@ payloads, duplicate paths, checksum and signature mismatch, and an isolated
 install from a signed archive. Record the exact assets and image versions used
 by the isolated test.
 
+### Model payload cold start
+
+Use the pinned Qwen3-0.6B revision from the model catalogue and verify all nine
+files before signing. The [upstream model licence](https://huggingface.co/Qwen/Qwen3-0.6B/blob/c1899de289a04d12100db370d81485cdf75e47ca/LICENSE)
+is Apache-2.0. Ship the unchanged licence and model card with the weights and
+tokenizer. For the CPU validation, use the cached
+[vLLM 0.29.0 CPU build](https://docs.vllm.ai/en/v0.29.0/getting_started/installation/cpu/).
+The [vLLM source licence](https://github.com/vllm-project/vllm/blob/v0.29.0/LICENSE)
+is Apache-2.0. The runtime used in this check is a test dependency on the CPU
+host. Its redistributed image dependencies need their own release inventory
+if that image is selected for distribution.
+
+Run vLLM with both the model and tokenizer set to the extracted local directory
+and an empty writable cache. Put the existing egress recorder into the isolated
+runtime's network namespace before starting the Python process. Demonstrate
+that the recorder can see IPv4, IPv6 and DNS packets before starting vLLM, and
+verify that cold start and a real generation add no packets. An offline flag
+or a successful HTTP response alone would miss attempted network fallbacks.
+
+The first run generated eight tokens and failed the egress check because
+startup queried the site resolver for the container's own name. The name
+resolution check still applies with offline model flags. A fixed hostname
+and a loopback hosts entry solved it for this single-container profile.
+The repeat cold start generated eight tokens with exactly the three recorder
+probes and zero runtime attempts. The fixture was a 1,770,134,760-byte signed
+archive with manifest SHA-256
+`2439cbf95303b405eb6b7c101c4f4526df4f372862be66b40fa67a8fa68a2f55`.
+All nine extracted files matched the catalogue. The signed notices linked
+the unchanged Apache-2.0 licence to all eight model payloads. This test
+qualifies the local CPU launch, without exercising agent-managed GPU serving.
+
+- [Docker container hostname and hosts entries](https://docs.docker.com/reference/cli/docker/container/run/#add-host)
+
 ## DEL-102 host preflight
 
 K3s documents platform, disk, memory and network requirements. Docker exposes
@@ -93,6 +126,7 @@ network access. NVIDIA's driver check runs locally with `nvidia-smi`.
 - [Docker bridge and port bindings](https://docs.docker.com/engine/network/drivers/bridge/)
 - [Linux filesystem capacity](https://man7.org/linux/man-pages/man3/statvfs.3.html)
 - [Linux clock state](https://man7.org/linux/man-pages/man2/adjtimex.2.html)
+- [DNS message format and UDP transport](https://www.rfc-editor.org/rfc/rfc1035.html#section-4)
 - [Static host mappings](https://man7.org/linux/man-pages/man5/hosts.5.html)
 - [NVIDIA Container Toolkit sample workload](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/sample-workload.html)
 

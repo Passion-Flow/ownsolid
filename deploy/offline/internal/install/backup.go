@@ -252,6 +252,9 @@ func Backup(ctx context.Context, c Config, runner StreamRunner, output string, o
 		return e
 	}
 	defer unlock()
+	if e := checkBoundOperation(c); e != nil {
+		return e
+	}
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.BackupSeconds)*time.Second)
 	defer cancel()
 	o := newOperation(c, runner, out)

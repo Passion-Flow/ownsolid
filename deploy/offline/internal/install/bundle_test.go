@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/release/v1"
 	"go.yaml.in/yaml/v3"
@@ -52,6 +53,28 @@ func TestSignedBundleBindingDoesNotAdoptAnotherRelease(t *testing.T) {
 	operational, err := LoadOperational(config)
 	if err != nil || operational.ComposeFile != c.Layout().ComposeFile || operational.Images != binding.images() {
 		t.Fatalf("could not resolve the bound payload: %+v, %v", operational.Images, err)
+	}
+	if err := checkBoundOperation(operational); err != nil {
+		t.Fatal(err)
+	}
+	changed.ImageIDs[0] = "sha256:" + wire.Digest([]byte("new-control"))
+	if err := writeReleaseRecord(c, bundleBindingName, changed); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkBoundOperation(operational); err == nil || !strings.Contains(err.Error(), "INSTALL_BUNDLE_ACTIVE_RELEASE_CHANGED") {
+		t.Fatalf("operation accepted a stale active release: %v", err)
+	}
+	operational.Images = changed.images()
+	intent := upgradeIntent{
+		FormatVersion: 1, Source: changed, Target: binding,
+		SourceSchema: 1, TargetSchema: 1, SiteSHA256: wire.Digest([]byte("site")),
+		BackupRoot: filepath.Join(c.InstallRoot, "fixture-backup"), BackupTime: time.Now(),
+	}
+	if err := writeReleaseRecord(c, upgradeIntentName, intent); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkBoundOperation(operational); err == nil || !strings.Contains(err.Error(), "INSTALL_UPGRADE_PENDING") {
+		t.Fatalf("operation accepted a pending upgrade: %v", err)
 	}
 }
 

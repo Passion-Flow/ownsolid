@@ -3,6 +3,7 @@ package install
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -325,6 +326,16 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 		defer listener.Close()
 		command(t, "preflight", "INSTALL_PREFLIGHT_PORT", true)
 	})
+	t.Run("uses an explicitly configured DNS server on the isolated site", func(t *testing.T) {
+		original := c.Origins.Admin
+		t.Cleanup(func() {
+			c.Origins.Admin, policy.DNSServer = original, ""
+		})
+		c.Origins.Admin = "https://resolver-only.lane-h.test:8443"
+		command(t, "preflight", "INSTALL_PREFLIGHT_DNS", true)
+		policy.DNSServer = servePreflightDNS(t)
+		command(t, "preflight", "INSTALL_PREFLIGHT_PASSED", false)
+	})
 	t.Run("installs and safely repeats with its own HTTPS port in use", func(t *testing.T) {
 		command(t, "preflight", "INSTALL_PREFLIGHT_PASSED", false)
 		command(t, "apply", "INSTALL_COMPLETE", false)
@@ -405,6 +416,46 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 			if err != nil || prior == nil {
 				t.Fatalf("missing verified upgrade binding: %v", err)
 			}
+			t.Run("recovers a same-schema candidate startup failure", func(t *testing.T) {
+				completeCandidate := filepath.Join(filepath.Dir(signedArchive), "patch.tar.gz")
+				policy, err := LoadBundleVerification(verification)
+				if err != nil {
+					t.Fatal(err)
+				}
+				var output bytes.Buffer
+				err = UpgradeBundle(t.Context(), config, completeCandidate, backupRoot, policy, failCandidateStart{}, &output)
+				t.Logf("failed candidate:\n%s\n%v", output.String(), err)
+				if err == nil || !strings.Contains(err.Error(), "INSTALL_CONTROL_START_FAILED") ||
+					!strings.Contains(output.String(), "UPGRADE_BACKUP_VERIFIED") {
+					t.Fatalf("expected a verified recovery point before the candidate start failure: %v", err)
+				}
+				intent, err := readUpgradeIntent(c)
+				if err != nil || intent == nil || intent.Source != *prior || intent.Target == *prior {
+					t.Fatalf("expected a pending upgrade that retains the prior release: %v", err)
+				}
+				layout := c.Layout()
+				runPostgres := func() string {
+					t.Helper()
+					id, err := run("docker", "compose", "--env-file", layout.ComposeEnv, "-f", layout.ComposeFile, "ps", "-q", "postgres")
+					if err != nil || strings.TrimSpace(id) == "" {
+						t.Fatalf("PostgreSQL did not stay running: %v: %s", err, id)
+					}
+					return strings.TrimSpace(id)
+				}
+				before := runPostgres()
+				out, err := runBundle("rollback-bundle", newArchive)
+				t.Logf("recover pending candidate:\n%s", out)
+				if err != nil || !strings.Contains(out, "ROLLBACK_COMPLETE") {
+					t.Fatalf("rollback of the failed candidate: %v: %s", err, out)
+				}
+				if after := runPostgres(); before != after {
+					t.Fatal("application rollback replaced the database container")
+				}
+				if intent, err := readUpgradeIntent(c); err != nil || intent != nil {
+					t.Fatalf("rollback did not resolve the pending upgrade: %v", err)
+				}
+				command(t, "status", c.Origins.Portal+": ready", false)
+			})
 			patchArchive := filepath.Join(filepath.Dir(signedArchive), "delta.tar.gz")
 			if out, err := runBundle("upgrade-patch", patchArchive, "--baseline", signedArchive, "--backup-output", backupRoot); err == nil || !strings.Contains(out, "RELEASE_PATCH_BASELINE_MISMATCH") {
 				t.Fatalf("wrong patch baseline was accepted: %v: %s", err, out)
@@ -462,6 +513,16 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 	})
 }
 
+type failCandidateStart struct{ ExecRunner }
+
+func (r failCandidateStart) Run(ctx context.Context, name string, args ...string) (string, error) {
+	const start = "up --detach --wait --no-build control"
+	if name == "docker" && strings.HasSuffix(strings.Join(args, " "), " "+start) {
+		return "injected candidate startup failure", errors.New("candidate failed to start")
+	}
+	return r.ExecRunner.Run(ctx, name, args...)
+}
+
 // stageSignedFixture copies the archive and the independently passed trust file
 // into a disposable real mount in the isolated host.
 func stageSignedFixture(t *testing.T, run func(string, ...string) (string, error), upgrade bool) (string, string) {
@@ -481,7 +542,7 @@ func stageSignedFixture(t *testing.T, run func(string, ...string) (string, error
 	})
 	files := []string{"ownsolid.tar.gz", "release-trust.json"}
 	if upgrade {
-		files = append(files, "upgrade.tar.gz", "delta.tar.gz")
+		files = append(files, "upgrade.tar.gz", "patch.tar.gz", "delta.tar.gz")
 	}
 	for _, name := range files {
 		input, err := os.Open(filepath.Join(delivery, name))

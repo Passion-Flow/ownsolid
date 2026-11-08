@@ -23,7 +23,18 @@ inventories by accident. A separate archive and signing implementation was
 rejected because it would duplicate trust and verification code. A bug in the
 new inventory policy could admit an incomplete product, so the profile has a
 fixed required set, explicit asset kinds, and checksummed SPDX coverage. Full
-DEL-101 remains open until the real chart, plug-in and model inputs are qualified.
+DEL-101 remains open until the production chart, plug-in, font and model runtime
+inputs are qualified.
+
+## DEL-101 model runtime boundary
+
+Keep the existing no-egress admission rule for runtime tests. The first CPU run
+generated tokens and still attempted to look up its own container hostname
+through the site resolver. Pin the standalone test hostname to loopback and
+repeat the same packet assertions with the resolver present. Discarding DNS
+packets or accepting generation alone would miss similar problems. The local
+hostname applies to one CPU container. Agent-managed GPU and multi-node
+launches require their own address and resolver checks.
 
 ## DEL-102 preflight policy
 
@@ -41,8 +52,12 @@ with its original Docker and Compose checks until an operator enables the policy
 DEL-103 requires the setup endpoint and its authentication lifecycle. DEL-104
 through DEL-106 require an admitted current release and a persisted baseline.
 DEL-107 owns chart sources outside this lane, and DEL-108 depends on the bundle
-to provide the OCI inputs. DEL-109 explicitly requires an issuer format freeze
-and an issuer-signed test artifact. DEL-110 needs the actual release inventory
+to provide the OCI inputs and on the RKE2 registry path agreed in ADR 0051 and
+ARC-116. A second Compose registry would leave the cell's worker path
+unverified. DEL-109 explicitly requires an issuer format freeze and an
+issuer-signed test artifact. The local issuer checkout at `1812e94` contains
+foundation and working rules, with no implementation for that artifact.
+DEL-110 needs the actual release inventory
 to establish which notices it must carry. Leave these open and move to DEL-111,
 which can collect locally from the already supported single-node installation.
 
@@ -59,9 +74,12 @@ collector records its own fixed status without obscuring the other results.
 
 DEL-112 needs DEL-101's current installable release format and verification entry
 point before rotating its trust root. DEL-113 requires console and API changes.
-DEL-114 needs the address matrix to run end to end, including the Compose
-healthcheck and listener configuration outside this lane. DEL-115 depends on
-that matrix and on session and SSO callback ownership. Keep these lines open.
+DEL-114 needs ARC-110 listeners and IAM-114 shared-hostname opt-in from
+ADR 0027, plus Compose health checks and trusted proxy enforcement. Current
+certificate generation can encode an IP name. Enabling IP-only access or
+HTTP through installer settings alone would bypass the missing listener or
+cookie policy. DEL-115 depends on that matrix and on session and SSO callback
+ownership. Keep these lines open.
 
 ## Roadmap evidence boundary
 
@@ -99,3 +117,14 @@ giving the release signer authority to replace the root. A shared unversioned
 key list cannot express expiry or detect skipped versions, so retain it only
 as a compatibility input and use the versioned file for rotation. The scope is
 local trust rotation for the signed delivery path.
+
+## DEL-104 and DEL-105 recovery scope
+
+Exercise a stopped writer and verified recovery point in the isolated Docker
+test, with a controlled failure at the candidate's start command. The
+same-schema rollback must restore the previous signed image while keeping
+PostgreSQL and its schema in place. Reject a forced migration downgrade or
+restoring data as a side effect of the application rollback. An advanced schema
+still requires separate data recovery. The ordinary restore command runs the
+active release's migrations. An in-place downgrade of both data and
+application remains outside this qualification.
