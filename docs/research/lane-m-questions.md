@@ -20,7 +20,6 @@ responsible owners can extend their respective boundaries.
 | MOD-114 | Offline search depends on MOD-113. The browser's current local filter covers imported inventory. |
 | MOD-115 | The exact pinned fetch manifest depends on MOD-113. The connected-side command belongs in tools/cli, outside this lane. |
 | MOD-116 | Multi-model publication and tokenizer staging depend on MOD-101 and MOD-113. The Agent must verify the same pinned files and serve exclusively from the staged path. |
-| MOD-120 | The worker can reclaim committed staging with the existing contracts. The console translations and the product status row still describe indefinite retention. Their owners need to update the wording before the box can close. |
 | MOD-121 | A configured expiry needs an installer/control policy field and a user-facing terminal expiry reason. The existing cancellation intent is tied to a live administrator action and cannot be reused as though a user requested expiry. |
 | MOD-101 / MOD-119 archive instructions | The console's BSD tar command on macOS emits USTAR headers that Go classifies as unknown, even when every pinned payload hash matches. The existing importer accepts canonical USTAR. Use GNU tar or Python's `tarfile.USTAR_FORMAT` for the verified fixture. Updating the published console instructions or widening the shared archive verifier belongs to their owners. |
 
