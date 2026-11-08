@@ -50,7 +50,7 @@ Supporting it avoids rebuilding pipelines that customers own.
 
 | Model or tool | Terms found | Consequence |
 | --- | --- | --- |
-| AlphaFold 3 weights | Code Apache 2.0; weights for non-commercial organizations only, no commercial use, weights not redistributable, obtained from Google directly ([weights terms copy](https://code.rc.uab.edu/rc-data-science/community-containers/Alphafold3/-/blob/65328c9cfbbb5b7f41a83e27c20891cb578ea3a9/WEIGHTS_TERMS_OF_USE.md)) | Never bundled. Runs only with weights the customer obtains under its own terms, gated by the licence register |
+| AlphaFold 3 weights | Code Apache 2.0; weights for non-commercial organizations only, no commercial use, weights not redistributable, obtained from Google directly ([official weight terms](https://github.com/google-deepmind/alphafold3/blob/main/WEIGHTS_TERMS_OF_USE.md)) | Never bundled. Runs only with weights the customer obtains under its own terms, gated by the licence register |
 | Boltz-2 | MIT for code and weights, commercial use allowed ([MIT Jameel Clinic](https://jclinic.mit.edu/boltz-2)) | First candidate for bundled structure prediction |
 | Protenix | Code and parameters Apache 2.0 per its package page ([PyPI](https://pypi.org/project/protenix/1.0.8/)) | Candidate; verify upstream repository |
 | OpenFold3 | Apache 2.0 per a secondary source ([aggregator](https://freeapihub.com/ai-models/openfold3)) | Candidate; verify upstream repository |
@@ -58,7 +58,7 @@ Supporting it avoids rebuilding pipelines that customers own.
 | Rosetta | Free for non-commercial users; commercial users need a paid licence ([RosettaCommons downloads](https://rosettacommons.org/download/)) | Customer licence only |
 | ProteinMPNN | Not confirmed in this pass | Verify before bundling |
 | ESM2 | MIT, commercial use ([NVIDIA catalog](https://docs.api.nvidia.com/nim/reference/meta-esm2-650m)) | Can be bundled |
-| ESM3 open small | Non-commercial licence ([model card](https://huggingface.co/EvolutionaryScale/esm3-sm-open-v1/blob/main/README.md)) | Customer licence only |
+| ESM3 open small | The [historical Cambrian terms](https://www.evolutionaryscale.ai/policies/cambrian-non-commercial-license-agreement) limit the covered artifacts to non-commercial use. Biohub's [current model card](https://huggingface.co/biohub/esm3-sm-open-v1/blob/main/README.md) identifies the current release as MIT | Customer-supplied only. Verify the applicable terms for the exact imported artifact and revision |
 | Evo 2 | Apache 2.0 and NVIDIA Open Model License both cited ([BioNeMo docs](https://docs.nvidia.com/bionemo-framework/latest/models/evo2/)) | Verify the Arc Institute upstream terms |
 | LinearDesign | Patented by Baidu Research; commercial use has been licensed separately ([Sanofi agreement](https://prnewswire.com/news-releases/baidu-enters-into-license-agreement-with-sanofi-to-enable-next-generation-mrna-therapeutics-and-vaccines-301429737.html)) | Customer licence only until the licence file is verified |
 | cobrapy | GPL or LGPL at the user's choice; binaries with GLPK follow GLPK's terms ([README](https://github.com/opencobra/cobrapy/blob/0.5.6/README.rst)) | Ship as a separate runtime image with its notices |
@@ -66,6 +66,50 @@ Supporting it avoids rebuilding pipelines that customers own.
 
 The register (MOD-110) records these facts per model version and refuses uses the
 installation has not declared as permitted, with the reason.
+
+### SCI-101 job admission and customer authorization
+
+[Nextflow processes](https://docs.seqera.io/nextflow/reference/process/) declare
+inputs, outputs and execution resources separately from the workflow that invokes
+them. [Kubernetes Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/)
+provide bounded retries and distinguish completed and failed work. SCI-101 through
+SCI-109 cover those patterns at the platform level. The manifest describes typed
+inputs, parameters, the resource estimate, artifact identities and result files.
+Use SCH-101 for scheduling, retry and cancellation and MOD-110 as the policy
+authority. Do not introduce a scientific scheduler or a separate license registry.
+No additional dependency is selected for this contract. Nextflow and Kubernetes
+are references for this item. No model, dataset or reference database is admitted
+or distributed by this review.
+
+Record the exact release and digest for each artifact, including model weights,
+code or binaries, and reference data, because these can have separate terms.
+Record the source and terms revision, the installation's authorized use and the
+scope and validity of any separate grant. [AlphaFold 3 output terms](https://github.com/google-deepmind/alphafold3/blob/main/OUTPUT_TERMS_OF_USE.md)
+also govern downstream use of some results. The
+[Rosetta license](https://github.com/RosettaCommons/rosetta/blob/main/LICENSE.md)
+separates internal non-commercial use from a commercial agreement and points to
+separate PyRosetta terms. A public repository, open source code, a paid ownsolid
+license or access to a copy of the weights cannot stand in for the applicable
+artifact rights. In particular, the current ESM3 card does not determine the
+terms of an older import under the Cambrian agreement.
+
+AlphaFold 3 weights, ESM3 and Rosetta follow customer-supplied distribution policy.
+The customer obtains the artifacts and the rights applicable to its exact
+use and keeps its authorization current. ownsolid records and enforces the
+customer's declared permissions. The product does not acquire, issue or
+interpret third-party grants on the customer's behalf. Customer-supplied packages
+are excluded from platform bundles and automatic redistribution.
+
+Check authorization server-side before queueing and recheck before execution so
+expiry or revocation while queued cannot permit a launch. Use the same check for
+single runs, batch items, retry and provenance-based re-run. Bind the decision to
+tenant and artifact digests. Fail closed on missing or incompatible records and
+audit the reason without exposing license documents or credentials. Test these
+paths with synthetic grants and artifacts. Exercise commercial use denied
+under a non-commercial grant, a scope mismatch between tenants, a matching
+customer grant, expiration while queued, revocation and a model digest mismatch.
+Confirm the accepted path actually runs offline through the scheduler before
+ticking SCI-101. SCH-101 and MOD-110 are prerequisites for that path.
 
 ### Reference data is large
 
