@@ -5,6 +5,8 @@ Fully offline training jobs, from small LoRA fine-tunes to large distributed run
 - Owns: `services/control/internal/modules/training`, `services/agent/internal/training`, `runtimes/training`.
 - Depends on: data, models-and-registry, scheduling-and-quota.
 
+Reviewed 2026-11-09 against [Kubeflow TrainJob lifecycle](https://trainer.kubeflow.org/en/latest/user-guides/trainjob-lifecycle.html), [Transformers checkpoint recovery](https://huggingface.co/docs/transformers/trainer_recipes), [PyTorch distributed checkpointing](https://docs.pytorch.org/docs/stable/distributed.checkpoint.html), and [MLflow tracking](https://mlflow.org/docs/latest/tracking/). Single-node Trainer and PEFT remain the P1 path. Distributed restart and topology changes remain P2 work.
+
 ## P1 Enterprise release
 
 - [ ] TRN-101 One training job contract for UI, CLI and API with logs, cancel, resume and artifacts (P1) - Catalog: F105, F119
@@ -26,6 +28,7 @@ Fully offline training jobs, from small LoRA fine-tunes to large distributed run
 - [ ] TRN-203 Budgeted hyperparameter search (P2) - Catalog: F591
 - [ ] TRN-204 Distributed topology preflight before launch (P2) - Catalog: F588
 - [ ] TRN-205 Training to quantized deployment consistency check (P2) - Catalog: F592
+- [ ] TRN-206 Planned suspension and preemption: seal and persist a checkpoint within the drain grace period, release resources, and resume the same job without treating it as user cancellation (P2)
 
 ## P4 Breadth
 
