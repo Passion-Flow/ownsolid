@@ -201,7 +201,20 @@ func (m *Manager) join(ctx context.Context, command wire.KubernetesCommand, down
 	os.RemoveAll(m.staging)
 	progress.Step(ctx, wire.ProgressStepStart)
 	unit := m.unit(command.Role)
-	for _, args := range [][]string{{"daemon-reload"}, {"enable", unit}, {"start", "--no-block", unit}} {
+	start := "start"
+	if found && recorded.Installed {
+		state, e := m.host.Run(ctx, "systemctl", "show", "--property=ActiveState", "--value", unit)
+		if e != nil {
+			progress.Error(ctx, "systemd could not read the state of %s.", unit)
+			return errors.New("KUBERNETES_SERVICE_FAILED")
+		}
+		// An activating process keeps the original config in memory. Replace it
+		// on retry so a worker refused by the server reads the new join token.
+		if strings.TrimSpace(string(state)) == "activating" {
+			start = "restart"
+		}
+	}
+	for _, args := range [][]string{{"daemon-reload"}, {"enable", unit}, {start, "--no-block", unit}} {
 		if _, e = m.host.Run(ctx, "systemctl", args...); e != nil {
 			progress.Error(ctx, "systemd could not start %s.", unit)
 			return errors.New("KUBERNETES_SERVICE_FAILED")
