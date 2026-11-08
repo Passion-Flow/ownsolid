@@ -1,6 +1,10 @@
 package install
 
-import "context"
+import (
+	"context"
+	"errors"
+	"fmt"
+)
 
 const restoreAdoptionSetting = "ownsolid.restore_adoption"
 const restoreAdoptionBinding = `format('v1/%s/%s/%s', system_identifier,
@@ -11,10 +15,17 @@ WHERE d.datname = current_database()`
 
 // The adoption record belongs to the restored database. Renaming a failed
 // candidate aside cannot grant its authority to the database put back in place.
-func (o *operation) recordRestoreAdoption(ctx context.Context) error {
+func (o *operation) recordRestoreAdoption(ctx context.Context, activation string) error {
 	// The host may persist writer admission immediately after this command.
 	// Flush this marker and all preceding database changes before it can.
-	const statement = `BEGIN;
+	var pitrStatement string
+	if activation != "" {
+		if !validPITRActivation(activation) {
+			return errors.New("INSTALL_PITR_ACTIVATION_INVALID: check the recovery artifact")
+		}
+		pitrStatement = fmt.Sprintf(`EXECUTE format('ALTER DATABASE %%I SET `+pitrActivationSetting+` TO %%L', current_database(), '%s');`, activation)
+	}
+	statement := `BEGIN;
 SET LOCAL synchronous_commit = on;
 DO $adopt$
 BEGIN
@@ -23,6 +34,7 @@ BEGIN
     END IF;
     EXECUTE format('ALTER DATABASE %I SET ` + restoreAdoptionSetting + ` TO %L',
         current_database(), (SELECT ` + restoreAdoptionBinding + `));
+    ` + pitrStatement + `
 END;
 $adopt$;
 COMMIT;`

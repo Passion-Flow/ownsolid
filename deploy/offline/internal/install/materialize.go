@@ -78,6 +78,11 @@ func Materialize(c Config) error {
 			return e
 		}
 	}
+	if c.PITR != nil {
+		if err := materializePITR(c); err != nil {
+			return err
+		}
+	}
 	postgresPassword, e := secretValue(filepath.Join(l.Secrets, "postgres-password"))
 	if e != nil {
 		return e

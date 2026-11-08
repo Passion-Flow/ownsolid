@@ -95,6 +95,16 @@ IPv4, IPv6 and DNS probes and fails if the runtime adds any packet. The
 standalone CPU test pins the container's own name to loopback so startup never
 needs to query the site resolver for itself.
 
+## Verify PostgreSQL point-in-time recovery
+
+Use the same Linux amd64 images and installer test binary as the preflight
+run. Select `OWNSOLID_E2E_RUN='^TestPITRIsolatedDocker$'` when invoking
+`tests/e2e/run-single-node.sh`. The test runs one Compose installation,
+archives real WAL, verifies full and incremental bases, and replays to an
+earlier UTC time. It withholds a required segment, kills an installer during
+activation, and checks retained dependencies, later writes and foreign files.
+See the [operator procedure](../../docs/operations/backup-and-restore.md#postgresql-point-in-time-recovery).
+
 ## Schedule verified backups
 
 Configure a dedicated backup directory and keep count. The

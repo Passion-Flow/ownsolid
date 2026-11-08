@@ -31,14 +31,15 @@ const (
 var restoreSuffix = regexp.MustCompile(`^[a-f0-9]{24}$`)
 
 type restoreIntent struct {
-	Version  int    `json:"version"`
-	Site     string `json:"site_sha256"`
-	Phase    string `json:"phase"`
-	Suffix   string `json:"suffix"`
-	Cluster  int64  `json:"cluster"`
-	Original uint32 `json:"original_oid"`
-	Incoming uint32 `json:"incoming_oid"`
-	Fresh    bool   `json:"fresh"`
+	Version        int    `json:"version"`
+	Site           string `json:"site_sha256"`
+	Phase          string `json:"phase"`
+	Suffix         string `json:"suffix"`
+	Cluster        int64  `json:"cluster"`
+	Original       uint32 `json:"original_oid"`
+	Incoming       uint32 `json:"incoming_oid"`
+	Fresh          bool   `json:"fresh"`
+	PITRActivation string `json:"pitr_activation,omitempty"`
 }
 
 func (i restoreIntent) incomingName() string { return "ownsolid_restore_" + i.Suffix }
@@ -65,6 +66,7 @@ func readRestoreIntent(c Config) (*restoreIntent, error) {
 	if err != nil || wire.StrictJSON(raw, &i) != nil ||
 		i.Version != 1 || !restoreSuffix.MatchString(i.Suffix) ||
 		i.Cluster == 0 || i.Original == 0 || i.Incoming == 0 || i.Original == i.Incoming ||
+		(i.PITRActivation != "" && !validPITRActivation(i.PITRActivation)) ||
 		(i.Phase != restorePending && i.Phase != restoreServing && i.Phase != restoreRollback) {
 		return nil, errors.New("INSTALL_RESTORE_INTENT_INVALID: preserve the recovery record and the databases for inspection")
 	}
@@ -152,7 +154,7 @@ func (o *operation) recoverRestore(ctx context.Context, i restoreIntent, rollbac
 func (o *operation) finishRestored(ctx context.Context, i restoreIntent) error {
 	resumeServing := i.Phase == restoreServing
 	if !resumeServing {
-		if err := o.prepareRestored(ctx); err != nil {
+		if err := o.prepareRestored(ctx, i.PITRActivation); err != nil {
 			return o.failRestore(ctx, i, err)
 		}
 		i.Phase = restoreServing

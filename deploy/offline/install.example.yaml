@@ -151,6 +151,14 @@ backup_seconds: 3600
 
 # Optional systemd scheduled backup policy. Use an empty private directory on the
 # backup filesystem. deploy/systemd/README.md describes the timer.
+# Optional PostgreSQL point-in-time recovery. Create a new root-owned directory
+# with mode 0700 outside install_root before applying. Enable the configuration
+# during a maintenance window because PostgreSQL restarts.
+# pitr:
+#   directory: /srv/ownsolid-pitr
+#   archive_seconds: 60
+#   summary_keep_hours: 240
+
 # backup_schedule:
 #   directory: /private/ownsolid-backups
 #   retain: 7
