@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
+	"github.com/google/uuid"
 	"strings"
 	"time"
 )
@@ -181,31 +181,39 @@ func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, nodeID st
 func componentStale(s *Service, n nodes.Node, received time.Time) bool {
 	return n.Connectivity != "online" || n.Status != "active" || time.Since(received) > config.Seconds(s.Nodes.Identity.Config.Policy().Nodes.OnlineSeconds)
 }
+
 // recentLogRecords is how far back Logs looks past records of rolled-back settlements.
 const recentLogRecords = 16
 
-// settledRecord returns the newest record whose task succeeded. PostgreSQL decides: the
-// store also holds records from settlements that rolled back.
+// settledRecord returns the newest record authorized by a succeeded task for that
+// operation. The log store also holds records from settlements that rolled back.
 func (s *Service) settledRecord(ctx context.Context, a identity.Auth, nodeID string, records []telemetrystore.Record) (*telemetrystore.Record, error) {
 	if len(records) == 0 {
 		return nil, nil
 	}
 	var settled *telemetrystore.Record
 	e := s.within(ctx, a, "", nodeID, func(ctx context.Context, q transaction.Executor, n nodes.Node) error {
+		scope := logScope(n)
 		for i := range records {
-			if uuid.Validate(records[i].TaskID) != nil {
+			record := &records[i]
+			if record.Scope != scope || uuid.Validate(record.TaskID) != nil {
 				continue
 			}
-			var state string
-			e := q.QueryRow(ctx, componentSQL(q, "SELECT state FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4", "SELECT state FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?", "SELECT state FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?", n.TenantID, n.WorkspaceID, n.ID, records[i].TaskID)).Scan(&state)
+			var operation string
+			e := q.QueryRow(ctx, componentSQL(q,
+				"SELECT operation FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4 AND state='succeeded'",
+				"SELECT operation FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND state='succeeded'",
+				"SELECT operation FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND state='succeeded'",
+				n.TenantID, n.WorkspaceID, n.ID, record.TaskID)).Scan(&operation)
 			if errors.Is(e, sql.ErrNoRows) {
 				continue
 			}
 			if e != nil {
 				return e
 			}
-			if state == "succeeded" {
-				settled = &records[i]
+			if (record.Removed && operation == wire.ComponentOperation("remove")) ||
+				(!record.Removed && operation == wire.ComponentOperation("logs")) {
+				settled = record
 				return nil
 			}
 		}
