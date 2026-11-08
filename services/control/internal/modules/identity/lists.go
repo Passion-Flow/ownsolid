@@ -423,6 +423,20 @@ func (s *Service) ListForActor(ctx context.Context, a Auth, kind string, q url.V
 	if e != nil {
 		return empty, e
 	}
+	// Apply tenant scope before ordering and pagination so neither rows nor cursors
+	// reveal invitations outside the tenant this installation can manage.
+	var scope string
+	switch kind {
+	case "invitations":
+		scope = "i.tenant_id=" + invitationTenantSQL
+	case "mail-deliveries":
+		scope = "(d.invitation_id IS NULL OR v.tenant_id=" + invitationTenantSQL + ")"
+	}
+	if scope != "" {
+		p.pgWhere = append(p.pgWhere, scope)
+		p.myWhere = append(p.myWhere, scope)
+		p.dmWhere = append(p.dmWhere, scope)
+	}
 	store, e := s.Repository()
 	if e != nil {
 		return empty, e
