@@ -6,7 +6,7 @@ coding tools and the product agent.
 - Owns: `services/gateway`, `services/control/internal/modules/distribution`.
 - Depends on: serving, identity-and-access, tenancy-metering-commerce.
 
-Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API keys and Bifrost documentation ([research](../../research/gateway-keys.md)). The review added GW-114, GW-115 and GW-116, and GW-113's live run added GW-117: the installer starts no model gateway at all, keys cannot rotate on a schedule or warn their owner before they expire, and a key cannot be narrowed to some endpoints or made read-only, and no page publishes a model to the gateway. GW-117's research added GW-118: a gateway instance's credential cannot be replaced, so a lost one retires every alias on that node.
+Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API keys and Bifrost documentation ([research](../../research/gateway-keys.md)). The review added GW-114, GW-115 and GW-116, and GW-113's live run added GW-117: the installer starts no model gateway at all, keys cannot rotate on a schedule or warn their owner before they expire, and a key cannot be narrowed to some endpoints or made read-only, and no page publishes a model to the gateway. GW-117's research added GW-118: a gateway instance's credential cannot be replaced, so a lost one retires every alias on that node. GW-114's prototype added GW-121 and GW-122: each node's gateway is its own base URL until one entrance routes to them, and control can only issue certificates from its own CA ([research](../../research/gateway-delivery.md)).
 
 ## P1 Enterprise release
 
@@ -27,6 +27,8 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [x] GW-117 Publish a deployment to the gateway from the console: provision a gateway instance and name the alias a key calls (P1) - Evidence: c6936b9, b45b879; live run on an installation, 2026-11-08: a verified deployment on a scripted node was published from its page, which registered the node's gateway and showed its credential once; a key issued from the same card made two calls admitted over the real gateway protocol with that credential by a stand-in for the gateway process (GW-114), and after Stop publishing the name was refused; no model ran
 - [ ] GW-118 Gateway instances on the Gateway page: list each node's gateway, revoke one, and replace a lost credential without retiring its aliases (P1)
 - [ ] GW-120 Say what a published model is for: an administrator's description, written when publishing and changeable later, shown in the portal's catalogue (P1)
+- [ ] GW-121 One address for every model: the model gateway entrance on the installation's TLS port routes each call by its name to the node gateway that serves it ([ADR 0027](../../decisions/0027-entrance-addresses.md), [ADR 0051](../../decisions/0051-the-model-gateway-runs-beside-the-model.md)) (P1)
+- [ ] GW-122 Node gateways under a site's own PKI: place the serving certificate and key on the node instead of control issuing them (P1)
 
 ## P2 Fleet operations
 

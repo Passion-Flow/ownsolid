@@ -85,7 +85,10 @@ async fn upstream(State(state): State<Synthetic>, request: Request) -> Response 
     let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
     assert_eq!(body["model"], "synthetic-internal");
     assert_eq!(body["chat_template_kwargs"]["enable_thinking"], false);
-    assert_eq!(body["messages"][0]["content"], "Synthetic request \u{4e2d}\u{6587}");
+    assert_eq!(
+        body["messages"][0]["content"],
+        "Synthetic request \u{4e2d}\u{6587}"
+    );
     assert!(body.get("api_key").is_none());
     match path.as_str() {
         "/tokenize" => {
