@@ -519,6 +519,18 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 			t.Fatalf("unexpected report: %+v", report)
 		}
 		t.Logf("support archive reports control %s and PostgreSQL schema %d", report.Services[0].State, *report.SchemaVersion)
+		if !report.Configuration.PreflightEnabled || report.Configuration.TLSSource != c.TLS.Source ||
+			report.Configuration.PostgresMaxConnections != c.Resources.PostgresMaxConnections {
+			t.Fatalf("support archive does not describe the configured installation: %+v", report.Configuration)
+		}
+		if !signed {
+			if len(report.Operations) != 2 || report.Operations[0].Action != "backup" ||
+				report.Operations[0].Outcome != "complete" || report.Operations[1].Action != "restore" ||
+				report.Operations[1].Outcome != "complete" {
+				t.Fatalf("support archive lacks the completed backup and restore events: %+v", report.Operations)
+			}
+			t.Log("support archive reports the selected configuration and two redacted installer events")
+		}
 	})
 }
 

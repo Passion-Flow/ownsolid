@@ -42,6 +42,8 @@ const (
 	credentialFile                 = "admin-credential"
 )
 
+const operatorDirectoryName = "operator"
+
 // Layout is every path the installer owns under install_root.
 type Layout struct {
 	Root, ComposeFile, ComposeEnv, Config, Operator, Socket, Secrets, Postgres, Metrics, Logs, Models string
@@ -51,7 +53,7 @@ func (c Config) Layout() Layout {
 	r := c.InstallRoot
 	return Layout{
 		Root: r, ComposeFile: filepath.Join(r, "compose.yaml"), ComposeEnv: filepath.Join(r, "compose.env"),
-		Config: filepath.Join(r, "config"), Operator: filepath.Join(r, "operator"), Socket: filepath.Join(r, "socket"),
+		Config: filepath.Join(r, "config"), Operator: filepath.Join(r, operatorDirectoryName), Socket: filepath.Join(r, "socket"),
 		Secrets: filepath.Join(r, "secrets"), Postgres: filepath.Join(r, "data", "postgres"),
 		Metrics: filepath.Join(r, "data", "metrics"), Logs: filepath.Join(r, "data", "logs"),
 		Models: filepath.Join(r, "data", "models"),

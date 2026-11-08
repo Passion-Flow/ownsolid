@@ -104,10 +104,16 @@ tar -xOzf /private/diagnostics/ownsolid-support.tar.gz support.json
 ```
 
 The private archive contains one JSON snapshot of the host, available space,
-Docker, Compose service states, and the database schema version when available.
-It works while the console is stopped. Unavailable collectors report fixed codes.
-The archive contains no configuration files, environment values, logs, credentials
-or database records. The installer writes it locally and never uploads it.
+Docker, Compose service states and the database schema version when available.
+It also includes selected configuration such as TLS modes, resource limits,
+timeouts and retention, and up to 100 recent backup and restore events.
+Events contain a UTC timestamp, operation and outcome. The installer excludes
+operation details, container output, raw configuration files, environment values,
+addresses, credentials and database records.
+
+The collector works while the console is stopped. An installation with no
+operation history has an empty event list. Unavailable collectors report fixed
+codes. Review the archive locally before sharing it.
 
 ## Verify and install a signed single-node release
 
