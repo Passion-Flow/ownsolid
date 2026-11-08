@@ -26,6 +26,58 @@ place of reason text, identifier digests and metadata. V2 events additionally
 bind site and cell identifiers. The verifier accepts existing V1 exports and
 continuous exports that cross the upgrade boundary.
 
+## Coverage and custody
+
+Hash-chain coverage starts when the migration activates, at position 1.
+Audit events already stored at upgrade remain readable and subject to normal
+retention. The verifier cannot establish their integrity, and they never
+appear in the chain export. An earlier event's occurrence time does not make
+it a legacy row if the event was inserted after activation.
+
+The database owner or a PostgreSQL superuser can replace the stored events and
+recompute the chain and head. A passing verification without an independently
+held checkpoint shows only that the exported range is internally consistent.
+To detect a rewrite through a given position, preserve the checkpoint before
+a suspected compromise in storage controlled by the auditor, with separate
+credentials and write authority from the database operators. Record the
+installation identity, position, hash and capture time in the auditor's
+records. If the first checkpoint is taken after a compromise, it cannot
+establish the earlier state. Events that were never recorded cannot be
+verified.
+
+### Capture an export and its checkpoint together
+
+Run from the repository root. The transaction uses one snapshot for both
+reads, even if events are appended concurrently. Each capture writes to a
+new private directory.
+
+```sh
+umask 077
+audit_query="$(pwd)/tools/audit-verify/export.sql"
+capture=$(mktemp -d)
+(
+  cd "$capture" || exit
+  psql 'service=ownsolid-audit' --no-psqlrc --quiet --tuples-only --no-align \
+    --set ON_ERROR_STOP=1 --set audit_query="$audit_query" <<'SQL'
+BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;
+\o exported-audit.jsonl
+\i :audit_query
+\o audit-checkpoint.txt
+SELECT chain_position, encode(hash, 'hex')
+FROM audit_chain_head WHERE singleton AND chain_position > 0;
+\o
+COMMIT;
+SQL
+)
+```
+
+The checkpoint file has one line in `position|hash` format once an event
+has been chained. An empty file means there is no checkpoint to retain.
+Use the files only after `psql` succeeds and verification passes. Transfer the
+checkpoint to the auditor's separate custody. Archive the export according to
+the installation's retention policy so it remains available for independent
+verification after PostgreSQL expires its partitions.
+
 ## Verify on an offline machine
 
 ```sh
@@ -34,11 +86,10 @@ audit-verify --file exported-audit.jsonl --output json
 audit-verify --file exported-audit.jsonl --expected-last-hash "$trusted_checkpoint"
 ```
 
-The trusted checkpoint is the final hash for the exported range, stored
-separately under the auditor's control before the suspected change. To capture
-a new checkpoint, read the position and hash from `audit_chain_head` as a
-database operator and preserve them independently. A checkpoint copied from
-the same potentially modified export provides no independent evidence.
+Set `trusted_checkpoint` to the hash retrieved from the auditor's copy,
+and verify an export ending at its recorded position. A newer export must be
+limited to that position for this comparison. Events after it require a later
+independent checkpoint to check for a rewrite or truncation of that later range.
 
 For a retained range, set `--previous-hash` to the trusted hash of the event
 immediately before the first exported record. For separately exported
