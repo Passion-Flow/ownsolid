@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"unicode/utf8"
 )
 
 var (
@@ -59,9 +58,9 @@ func (j JobIntent) Normalize() (JobIntent, Resources, error) {
 		return JobIntent{}, nil, fmt.Errorf("%w: unknown workload kind", ErrInvalidJob)
 	}
 	if j.Version != IntentVersion || j.SourceID == "" || len(j.SourceID) > 128 ||
-		!utf8.ValidString(j.SourceID) || strings.IndexFunc(j.SourceID, func(r rune) bool {
-		return r < 33 || r > 126
-	}) != -1 || len(j.Groups) == 0 || len(j.Groups) > 64 {
+		strings.IndexFunc(j.SourceID, func(r rune) bool {
+			return r < 33 || r > 126
+		}) != -1 || len(j.Groups) == 0 || len(j.Groups) > 64 {
 		return JobIntent{}, nil, fmt.Errorf("%w: check version, source identity and group count", ErrInvalidJob)
 	}
 	out := j
