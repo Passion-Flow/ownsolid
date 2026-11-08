@@ -207,6 +207,56 @@ and `OWNSOLID_CURRENT_FACTORY_SCHEMA`. Put the resulting `ownsolid.tar.gz` and
 `OWNSOLID_E2E_RUN='^TestSignedBundleIsolatedDocker$'`. The test starts with an
 empty Docker daemon and checks that a truncated bundle cannot load an image.
 
+## Prepare RKE2 artifacts for Agent delivery
+
+Use a protected verification policy with the independently supplied release
+trust file and the RKE2 requirement:
+
+```json
+{
+  "mount_root": "/mnt/release",
+  "trust_file": "/etc/ownsolid-release/public-trust.json",
+  "require_rke2": true
+}
+```
+
+Prepare to a new directory on that mount, under a root-owned mode 0700
+parent. The command verifies the signature, approved RKE2 inventory and
+all asset bytes before writing the prepared files.
+
+```sh
+ownsolid-install prepare-bundle --bundle /mnt/release/ownsolid.tar.gz \
+  --verification /etc/ownsolid-release/rke2-verification.json \
+  --output /mnt/release/private/prepared
+```
+
+From `prepared/rke2`, install the binary, core archive and Canal archive
+into a new directory for this release. Give only the control and Agent
+gateway runtime identities read access. Keep the directory and its files
+protected from writes by those identities. Recheck the copied files using
+the three exact rows of the prepared `sha256sum-amd64.txt` before exposing
+the new directory to the services. The full upstream checksum file also
+lists other release variants that are outside this group.
+
+Mount the completed artifact directory read-only for the control and Agent
+gateway services and set these two fields in their existing control
+configuration. Use paths as seen by each process:
+
+```yaml
+kubernetes_cells:
+  artifact_directory: /var/lib/ownsolid/kubernetes/rke2/v1.36.6+rke2r1
+  join_token_key_file: /run/secrets/cell-join-token.key
+```
+
+Provision the same independently generated key file, at least 32 random
+bytes and readable only by the service identity, on each process that
+seals or opens join tokens. Keep the key outside the release archive.
+Restart those services after updating their configuration. Kubernetes-profile
+Agents receive the three approved files over the existing authenticated
+artifact transport and install them locally when assigned a cluster join.
+The signed single-node Compose apply continues to install the control
+plane. This preparation hands the RKE2 inputs to the cell services.
+
 ## Upgrade or roll back the signed application release
 
 Keep the previous archive and use a separate private backup directory. The

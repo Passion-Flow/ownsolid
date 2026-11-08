@@ -29,6 +29,7 @@ type Config struct {
 	TimeoutSeconds        int    `json:"timeout_seconds"`
 	CompressionLevel      int    `json:"compression_level"`
 	AllowTestFixture      bool   `json:"allow_test_fixture"`
+	RequireRKE2           bool   `json:"require_rke2,omitempty"`
 	MinimumFreeBytes      int64  `json:"minimum_free_bytes,omitempty"`
 }
 

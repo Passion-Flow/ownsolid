@@ -38,6 +38,9 @@ func (c Config) requiredAssets(m wire.Manifest) map[string]string {
 
 func (c Config) validateManifest(m wire.Manifest) error {
 	if !c.current {
+		if c.RequireRKE2 {
+			return fail("RELEASE_RKE2_CURRENT_PROFILE_REQUIRED")
+		}
 		return m.Validate(c.MaximumAssets, c.MaximumAssetBytes, c.MaximumTotalBytes, c.AllowTestFixture)
 	}
 	if m.Profile != CurrentProfile {
@@ -75,11 +78,11 @@ func (c Config) validateManifest(m wire.Manifest) error {
 			if asset.ID != currentSBOM || asset.Size > c.MaximumMetadataBytes {
 				return fail("RELEASE_SBOM_INVALID")
 			}
-		case "compose", "operator", "runbook", "license", "chart", "model", "plugin", "font", "dependency_lock":
+		case "compose", "operator", "runbook", "license", "chart", "model", "plugin", "font", "dependency_lock", rke2BinaryKind, rke2ImageSetKind:
 		default:
 			return fail("RELEASE_ASSET_KIND_UNSUPPORTED")
 		}
-		if asset.Kind != "image_archive" && (asset.Architecture != "" || asset.ImageID != "" || asset.ImageConfigDigest != "") {
+		if asset.Kind != "image_archive" && asset.Kind != rke2BinaryKind && asset.Kind != rke2ImageSetKind && (asset.Architecture != "" || asset.ImageID != "" || asset.ImageConfigDigest != "") {
 			return fail("RELEASE_ASSET_IMAGE_FIELDS_INVALID")
 		}
 		total += asset.Size
@@ -113,7 +116,7 @@ func (c Config) validateManifest(m wire.Manifest) error {
 			return fail("RELEASE_REQUIRED_ASSET_MISSING")
 		}
 	}
-	return nil
+	return validateRKE2Inventory(m, c.RequireRKE2)
 }
 
 func imageDigest(value string) bool {
