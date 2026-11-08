@@ -18,7 +18,7 @@ Shutdown stops admission, joins stream workers and the reporter and retains reco
 
 ## Configuration and changes
 
-Start from [gateway examples](../../config/examples/gateway/README.md) and [configuration contract](../../contracts/configuration/v1/gateway). Limits include connection/queue/thread/body/event/spool/time/disk bounds. Current socket address types are IPv4 and the current TLS/control-origin contracts are specific; do not claim the broader requested transport/IPv6 matrix from these settings.
+The TLS listener binds the IPv4 address the operator chooses and offers only HTTP/1.1 over ALPN; the backend address must stay on loopback, because the engine has no authentication of its own ([ADR 0052](../../docs/decisions/0052-the-model-gateway-runs-beside-the-model.md)). Start from [gateway examples](../../config/examples/gateway/README.md) and [configuration contract](../../contracts/configuration/v1/gateway). Limits include connection/queue/thread/body/event/spool/time/disk bounds. Current socket address types are IPv4 and the current TLS/control-origin contracts are specific; do not claim the broader requested transport/IPv6 matrix from these settings.
 
 Update control/distribution, gateway/public contracts, config/schema/env projection, systemd/container recipes and failure/recovery tests together when changing protocol, admission or outcome semantics. Never add a permissive backend fallback after authorization or TLS failure.
 
@@ -27,6 +27,8 @@ Update control/distribution, gateway/public contracts, config/schema/env project
 With pinned Rust and external cargo/build/temp roots:
 
     cargo test --locked --offline --manifest-path services/gateway/Cargo.toml --all-targets
+
+`make image-gateway` builds the image the agent runs on a serving node from tracked files only ([Dockerfile](../../deploy/images/gateway/Dockerfile)); set `GATEWAY_IMAGE`, and `DOCKER='env DOCKER_DEFAULT_PLATFORM=linux/amd64 docker'` on an arm64 machine. The image holds the binary and no CA bundle, and runs as 10001:10001.
 
 The bounded [quality harness](../../tools/quality/gateway/run.py) adds formatting/build/lint and explicit process/tokenizer profiles. It requires state-root, volume-root and preflight-script inputs. Actual target backend/GPU and full control authorization are distinct gates; synthetic upstreams do not qualify them.
 

@@ -4,10 +4,12 @@ GO_MODULES := api pkg/capabilities pkg/license pkg/operatorsocket tools/release/
 GO_MODULES += tools/audit-verify
 DOCKER ?= docker
 CONTROL_IMAGE ?= ownsolid/control:dev
+GATEWAY_IMAGE ?= ownsolid/gateway:dev
 E2E_BIN ?= bin/e2e
+GATEWAY_IMAGE_PATHS := deploy/images/gateway services/gateway/Cargo.toml services/gateway/Cargo.lock services/gateway/src
 IMAGE_PATHS := api pkg/capabilities pkg/license pkg/operatorsocket deploy/images/control tools/release/offline services/control runtimes/data-processing web
 
-.PHONY: help check check-layout check-roadmap check-web test-tools web-install generate build test test-web-browser test-agent-cost image-control e2e-binaries test-offline
+.PHONY: help check check-layout check-roadmap check-web test-tools web-install generate build test test-web-browser test-agent-cost image-control image-gateway e2e-binaries test-offline
 
 help: ## Show available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -60,6 +62,11 @@ image-control: ## Build the control plane image from source (CONTROL_IMAGE, DOCK
 	@git ls-files -z --cached --others --exclude-standard -- $(IMAGE_PATHS) \
 		| COPYFILE_DISABLE=1 tar --format=ustar --no-xattrs --null -T - -cf - \
 		| $(DOCKER) build -t $(CONTROL_IMAGE) -f deploy/images/control/Dockerfile -
+
+image-gateway: ## Build the model gateway image from source (GATEWAY_IMAGE, DOCKER)
+	@git ls-files -z --cached --others --exclude-standard -- $(GATEWAY_IMAGE_PATHS) \
+		| COPYFILE_DISABLE=1 tar --format=ustar --no-xattrs --null -T - -cf - \
+		| $(DOCKER) build -t $(GATEWAY_IMAGE) -f deploy/images/gateway/Dockerfile -
 
 e2e-binaries: ## Build the Linux amd64 installer, agent, agent egress guard test, egress recorder, agent simulator and end-to-end test for tests/e2e/run-single-node.sh
 	@mkdir -p $(E2E_BIN)
