@@ -1,0 +1,21 @@
+# Replace addresses and the CA path with values from the operator network.
+# Copy email_configs to a receiver in the fleet policy to use rack inhibition.
+route:
+  receiver: site-mail
+  group_by: [site_id, cell_id, rack_id, alertname]
+  group_wait: 15s
+  group_interval: 1m
+  repeat_interval: 4h
+receivers:
+  - name: site-mail
+    email_configs:
+      - to: oncall@site.example
+        from: ownsolid@site.example
+        smarthost: smtp.site.example:465
+        require_tls: true
+        force_implicit_tls: true
+        tls_config:
+          ca_file: /etc/ownsolid/alertmanager/smtp-ca.pem
+        send_resolved: true
+        # For an authenticated relay, also set auth_username and
+        # auth_password_file. Keep the password in the protected file.
