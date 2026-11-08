@@ -66,3 +66,47 @@ Admin. After recovery, sign in, retrieve the ready model through that
 API and hash every restored file on the target. This verifies model
 readability from the recovered store. Inference is a separate runtime
 flow.
+
+## Linux amd64 acceptance
+
+`TestSignedRestoreIsolatedDocker` passed in 875.53 seconds on Ubuntu 24.04
+amd64 on `ownsolid-cpu` with Docker 29.1.3, Compose 2.40.3 and PostgreSQL
+18.6 at schema 57. The temporary-signed single-node fixture
+`lane-del-rel104-test` used archive SHA-256
+`9692284eab0ea4f4ef3f67003a6f7fbfa514dbfd4b7b7ccabb6254278dc8fd37`
+and manifest SHA-256
+`8668b3d5e96199eac01584d1d691702a2219bedde414904b190a7ddf43720186`.
+The source and both recovery sites used those same release bytes.
+
+The private Docker daemon ran in an isolated Linux mount, network and
+PID namespace. IPv4 and IPv6 default routes terminated at the recorder's
+`egress0` interface. The recorder's two JSON lines were TCP to
+`192.0.2.1:9` from the test host and TCP to `192.0.2.2:9` from control.
+No other packet was recorded during installation, model import, backup,
+the rejection cases, rollback or restore.
+
+The source published the pinned Qwen3-0.6B archive and took both verified
+logical backups. The legacy installer was built from `756269b3`. The
+current encrypted backup carried the exact signed manifest digest. Each
+backup's scratch restore verified 118 tables, 19 installation files
+and nine model files. Between sites, the test stopped the preceding
+Compose project and removed all four images from the private daemon.
+
+The empty target rejected a truncated release, a corrupt database dump,
+a different release digest, an unrelated age identity and modified
+ciphertext. It had no bound release, Compose files, keys, PostgreSQL data,
+containers or images after these checks. When control start was refused
+after the PostgreSQL exchange, the original unbootstrapped database was
+put back and the writer stayed stopped. The subsequent retry reported
+`RESTORE_COMPLETE`, as did the encrypted restore on a separate empty
+target.
+
+Both targets served Admin and Portal over HTTPS and accepted the
+recovered administrator's login. The test compared tenant, workspace
+and administrator identity and the credential bytes. The Admin model
+detail returned the ready model, and all nine files at revision
+`c1899de289a04d12100db370d81485cdf75e47ca` matched their hashes on both
+targets (1,519,207,673 bytes). This qualification covers one test release
+and the model store read path. The production release gate stays open
+until the exact production payload runs through the drill for every
+release.
