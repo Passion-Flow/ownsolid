@@ -118,6 +118,62 @@ pinned artifacts copied in:
   refused every other node.
 - Each node used about 3 to 4 GB of memory including the unpacked images (in tmpfs there).
 
+## First-start sandbox pull in the pinned release
+
+In the disconnected Linux amd64 fixture, RKE2 v1.36.6+rke2r1 imported its
+core archive, then containerd logged a failed Docker Hub lookup during
+early etcd and kube-proxy sandbox creation. The archive registers
+`docker.io/rancher/mirrored-pause:3.10.2`, while the
+[RKE2 executor](https://github.com/rancher/rke2/blob/v1.36.6%2Brke2r1/pkg/executor/staticpod/staticpod.go)
+passes the image name with the `index.docker.io` registry spelling.
+Retagging the live image was followed by successful sandbox creation.
+In a new fixture a containerd drop-in made the configured sandbox reference
+match the archive, but containerd still tried Docker Hub and then created
+the sandbox locally. That experiment rules out relying on image spelling
+alone and the drop-in is not part of the agent configuration.
+
+This leaves an offline acceptance gap. The install must finish with the
+network disconnected and the trace must show whether it tries any upstream
+image endpoints. The
+[RKE2 registry configuration](https://docs.rke2.io/install/private_registry)
+only disables the default endpoint for explicitly configured mirrors.
+Any future offline registry policy must preserve access to customer-approved
+registries and be verified on a fresh node with the pinned archive.
+
+## Reloading a failed join
+
+With a deliberately wrong CA hash, the RKE2 worker refused the token and
+continued retrying inside its systemd start job. The next agent join wrote
+the correct token to disk but left the same activating PID in place. Its
+journal recorded further CA refusals after the new file was written. Queuing
+a restart replaced the PID and the worker registered with the same cluster.
+
+[RKE2 reads changed configuration at restart](https://docs.rke2.io/install/configuration).
+[systemctl](https://manpages.ubuntu.com/manpages/noble/man1/systemctl.1.html)
+can report the active state and restart an existing job. On an installed
+node, restart an activating unit when retrying a join. Start an inactive
+unit normally and leave an active unit running. Always restarting would
+interrupt a healthy worker after a lost result. Leaving an activating unit
+alone keeps the old token in memory. This uses the already required
+systemd (LGPL-2.1-or-later, commercial and offline use permitted, with
+licence terms applying on redistribution). The agent v1 commands, token
+validation, journal format and membership constraints remain compatible.
+
+On `ownsolid-cpu`, two isolated systemd nodes shared a Docker internal
+network with a dummy default route. The test used the pinned RKE2 Linux
+amd64 artifacts, checked their SHA-256, and invoked the agent's Kubernetes
+manager directly. A fresh worker with the wrong CA returned
+`KUBERNETES_NOT_READY` in 154 seconds including staging and a 60-second
+readiness window. A new join with a valid token replaced the systemd PID
+and reached Ready in 132 seconds. A replay completed in under one second
+and kept the same PID. Kubernetes scheduled a locally available test
+image on the worker with image pulling disabled. The worker's kubelet
+credential was refused when it tried to read the server node.
+
+This verifies node join and retry. The control-plane artifact transfer
+from an installed bundle and the console create, observe and retry flow
+still need an end-to-end run.
+
 ## Failure modes and how tests cover them
 
 | Failure | Found | Handling | Test |
@@ -126,7 +182,8 @@ pinned artifacts copied in:
 | Default route on another interface: RKE2 advertises the wrong address | Prototype: InternalIP was the dummy interface | Control always sends `node-ip`, the address the node enrolled from | Unit test on the written config; e2e checks InternalIP |
 | `node-ip` changed after the server first started: etcd membership no longer matches and the server never comes up | Prototype: `this server is not a member of the etcd cluster` | The address is fixed when the cluster is created and never changed; a server whose config differs is refused, not rewritten | Unit test: a second join with another address fails `KUBERNETES_CONFIG_CONFLICT` |
 | Loopback resolver in `/etc/resolv.conf`: kubelet falls back to 8.8.8.8 | Prototype warning | Agent sets `resolv-conf` to `/run/systemd/resolve/resolv.conf` when systemd-resolved is in use, otherwise to `/etc/resolv.conf`, and refuses when the chosen file has only loopback servers | Unit test on resolver selection |
-| Wrong CA hash, unreachable server, expired token: RKE2 retries forever | Prototype | Join waits a bounded time for the node's `Ready` condition, then fails with the journal tail as the task's logs | e2e with a wrong server address |
+| Wrong CA hash, unreachable server, expired token: RKE2 retries forever | Disconnected Linux run | Join reports a bounded readiness failure with a safe diagnosis. A later join restarts a still-activating unit so it loads the new token | Unit test for retry and active replay; Linux worker join with a wrong CA, then a valid token |
+| First sandbox creation tries a public registry despite the local archive | Disconnected Linux run | Open; the exact archive tag in containerd did not prevent the lookup | Fresh-node packet or resolver trace during offline acceptance |
 | Artifact corrupted or short | Download | Size and SHA-256 checked before anything is unpacked | Unit tests |
 | A node already runs RKE2 that ownsolid did not install | Operator mistake | Refused with `KUBERNETES_CONFLICT`; nothing is overwritten | Unit test |
 | Repeated join after a crash or a lost result | Agent restart | Join is idempotent: same config means "observe and report" | Unit test |

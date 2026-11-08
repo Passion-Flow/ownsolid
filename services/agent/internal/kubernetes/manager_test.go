@@ -38,6 +38,7 @@ type fakeHost struct {
 	local       bool
 	free        int64
 	ready       bool
+	activeState string
 	journal     string
 	tokenOutput string
 	tokenError  error
@@ -59,6 +60,10 @@ func (h *fakeHost) Run(_ context.Context, name string, args ...string) ([]byte, 
 			return []byte("True"), nil
 		}
 		return []byte("False"), nil
+	case "systemctl":
+		if args[0] == "show" {
+			return []byte(h.activeState + "\n"), nil
+		}
 	case "journalctl":
 		return []byte(h.journal), nil
 	case "rke2":
@@ -418,11 +423,22 @@ func TestWorkerRetryTakesAFreshToken(t *testing.T) {
 	retry := worker()
 	retry.JoinToken = "K10" + caHash() + "::bcdefg.fedcba9876543210"
 	f.host.ready = true
+	f.host.activeState = "activating"
 	if _, e = f.execute(wire.KubernetesJoinOperation, retry); e != nil {
 		t.Fatal(e)
 	}
 	if !strings.Contains(f.read(configFile), retry.JoinToken) || f.downloads["rke2.linux-amd64.tar.gz"] != 1 {
 		t.Fatalf("config not updated or downloaded again: %v", f.downloads)
+	}
+	if f.host.called("systemctl restart --no-block rke2-agent.service") != 1 {
+		t.Fatalf("retry did not reload the token: %v", f.host.calls)
+	}
+	f.host.activeState = "active"
+	if _, e = f.execute(wire.KubernetesJoinOperation, retry); e != nil {
+		t.Fatal(e)
+	}
+	if f.host.called("systemctl restart --no-block rke2-agent.service") != 1 {
+		t.Fatalf("replay restarted an active worker: %v", f.host.calls)
 	}
 }
 
