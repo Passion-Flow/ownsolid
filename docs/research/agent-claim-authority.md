@@ -92,3 +92,22 @@ The real database tests passed the ARC-006 sequence, resync, redelivery and
 acknowledgement cases, a foreign credential against an unacknowledged lease,
 cross-gateway task wake and release of held-claim connections. The training
 dispatch interleaving test also passed.
+
+## Shared audit lock
+
+Migration `000054_audit_chain_scope.up.sql` locks the singleton
+`audit_chain_head` row for each audit append. A successful node claim appends in
+its lease transaction, so the current chain can make agent writes wait on the
+same row. The HTTPS cost fixture locks several shared rows while measuring
+exchanges, but its list does not yet include the audit head.
+
+A separate PostgreSQL 18.6 probe took a shared lock on that row after creating a
+pending facts task. The node's claim reached its one-second deadline after
+1.002 seconds and returned `STORAGE_TIMEOUT` with no lease. After the lock was
+released, the same task was leased on attempt one. This reproduces a shared lock
+and confirms the failed issuance rolled back. It does not measure fleet
+throughput or account for each excess statement in the cost suite.
+
+ARC-108 needs the audit owner to measure append cost and agree how to preserve
+the offline-verifiable chain without putting its lock on the fleet path. An
+updated cost fixture should hold the audit head along with the other shared rows.
