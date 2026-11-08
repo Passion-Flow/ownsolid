@@ -467,7 +467,7 @@ func (s *Session) tryRebalance(ctx context.Context, h wire.Handshake) *wire.Disp
 	st, e := s.openStream(probe, conn)
 	if e == nil {
 		reply, exchangeErr := s.exchangeOn(probe, st, wire.AgentMessage{Heartbeat: &h})
-		if exchangeErr == nil && reply.Disposition != nil && probe.Err() == nil {
+		if exchangeErr == nil && reply.Disposition.AcceptsSessionRebalance() && probe.Err() == nil {
 			from := s.gateways[s.gateway]
 			s.dropStream()
 			s.conn.Close()

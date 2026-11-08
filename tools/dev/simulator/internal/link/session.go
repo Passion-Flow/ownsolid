@@ -149,6 +149,9 @@ func (c *Connection) Rebalance(ctx context.Context, interval time.Duration, node
 	if e == nil {
 		var reply wire.ControlMessage
 		reply, e = stream.Exchange(ctx, wire.AgentMessage{Heartbeat: &h})
+		if e == nil && !reply.Disposition.AcceptsSessionRebalance() {
+			e = ErrInvalid
+		}
 		if e == nil && c.adoptCandidate(ctx, current, conn, rank) {
 			return stream, reply.Disposition, nil
 		}
