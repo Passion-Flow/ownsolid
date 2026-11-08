@@ -95,10 +95,46 @@ the store did not exist and an import could not start.
   background failure from `model_import_cleanup_failed` and the import ID in the service logs.
   The console and bundled help use the same distinction. No new dependency is needed.
 
+## Making an import bundle (MOD-101, MOD-119)
+
+The [GNU tar manual](https://www.gnu.org/software/tar/manual/tar.html#ustar) specifies
+`--format=ustar` for POSIX USTAR. [Python's tarfile documentation](https://docs.python.org/3/library/tarfile.html)
+provides the explicit `USTAR_FORMAT` writer. The [Go tar reader](https://go.dev/src/archive/tar/reader.go)
+also checks header encoding when deciding which format it read. The
+[model verifier](../../api/agent/modelartifact/archive.go) requires Go to classify each
+header as USTAR and accepts only the regular files in the approved manifest.
+
+On the Mac, all nine files and 1,519,207,673 payload bytes in the existing Qwen3-0.6B
+archive matched the pinned sizes and SHA-256 values. With networking denied, the old
+`COPYFILE_DISABLE=1 tar --format=ustar` command using macOS bsdtar 3.5.3 produced
+headers Go classified as unknown and the model verifier returned
+`MODEL_ARCHIVE_INVALID`. Python 3.12 with `tarfile.USTAR_FORMAT` and GNU tar 1.34
+in a local Linux container both produced nine USTAR entries and passed the shared
+verifier. The GNU binary produced identical archives when invoked as `tar` and as
+`gtar`. An unlisted file beside the model was excluded by both explicit file lists.
+A canonical USTAR that explicitly included that file was refused with
+`MODEL_ARCHIVE_INVALID` before the file entered the stage.
+
+Generate the commands from the current catalogue's file list and quote each filename
+for a POSIX shell. Show separate copy controls for Python 3, GNU `gtar` on macOS,
+and GNU `tar` where that name resolves to GNU tar. The bundled help points to the
+revision-specific commands, so it stays accurate when the approved list changes.
+Archiving the directory or using a wildcard can add directories, download caches or
+other unlisted entries. BSD tar and permissive server parsing would leave a mismatch
+with the verified format. The current single-entry catalogue remains the authority.
+
+GNU tar is [GPL-3.0-or-later](https://www.gnu.org/software/tar/). CPython's standard library
+uses the [PSF License Version 2](https://docs.python.org/3/license.html). Both allow
+commercial and offline use and redistribution under their respective terms. These
+commands use tools already installed on the preparation machine. ownsolid does not
+bundle either tool for this feature and adds no runtime dependency or data set.
+The approved Qwen fixture retains its Apache-2.0 licence.
+
 ## Failure modes and how the tests cover them
 
 | Failure | Coverage |
 | --- | --- |
+| A model bundle uses the wrong tar implementation or contains an extra file | Real pinned files: compare the archive headers and run the shared model verifier with the network blocked. Browser: copy the exact commands in both languages |
 | A chunk's answer is lost | unit: the same chunk is sent again and accepted |
 | A published import still has upload records | Browser flow: the model opens after reload, with a background cleanup explanation and no fourth timeline step |
 | The catalogue read is unavailable | Browser flow: a published record opens without a catalogue request. A paused upload keeps its progress, explains why it cannot resume, and recovers after a retry |

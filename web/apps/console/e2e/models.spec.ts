@@ -45,6 +45,66 @@ test('is reached from the navigation, and says what it is for when empty', async
   await expect(page.getByRole('heading', { name: 'Import a bundle', level: 1 })).toBeVisible();
 });
 
+for (const locale of ['en', 'zh-CN'] as const) {
+  test(`copies the tool-specific bundle commands from offline help (${locale})`, async ({
+    page,
+    context,
+  }) => {
+    const zh = locale === 'zh-CN';
+    control.preferences.locale = locale;
+    const tools = [
+      { label: 'Python 3', prefix: 'python3 - ' },
+      {
+        label: zh ? chinese['models.import.howTo.gnuMac'] : 'GNU tar on macOS (gtar)',
+        prefix: 'gtar --format=ustar --no-recursion -cf bundle.tar -- ',
+      },
+      {
+        label: zh ? chinese['models.import.howTo.gnu'] : 'GNU tar (tar)',
+        prefix: 'tar --format=ustar --no-recursion -cf bundle.tar -- ',
+      },
+    ];
+    const files = modelCatalog.catalog.files.map(({ path }) => `'${path}'`).join(' ');
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto('/help/model-library');
+    const main = page.getByRole('main');
+    await expect(main.getByText('tarfile.USTAR_FORMAT', { exact: true })).toBeVisible();
+    await main
+      .getByRole('link', { name: zh ? chinese['models.import.title'] : 'Import a bundle' })
+      .click();
+    await main
+      .getByText(zh ? chinese['models.import.howTo'] : 'How to make a bundle', { exact: true })
+      .click();
+    await expect(main.getByText(/tar --version/)).toBeVisible();
+    for (const { label, prefix } of tools) {
+      await expect(main.getByRole('heading', { name: label, exact: true })).toBeVisible();
+      await main
+        .getByRole('button', {
+          name: (zh ? chinese['action.copyNamed'] : 'Copy: {name}').replace('{name}', label),
+        })
+        .click();
+      const copied = await page.evaluate(() => navigator.clipboard.readText());
+      expect(copied.split('\n')[0]).toBe(
+        `${prefix}${files}${prefix.startsWith('python3') ? " <<'PY'" : ''}`,
+      );
+      expect(copied).not.toContain('COPYFILE_DISABLE');
+      if (prefix.startsWith('python3')) expect(copied).toContain('format=tarfile.USTAR_FORMAT');
+    }
+  });
+}
+
+test('keeps bundle commands selectable when the clipboard is unavailable', async ({ page }) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(window, 'isSecureContext', { value: false }),
+  );
+  await page.goto('/library/import');
+  await page.getByText('How to make a bundle', { exact: true }).click();
+  const copy = page.getByRole('button', {
+    name: 'Clipboard unavailable. Select and copy the Python 3 command.',
+  });
+  await expect(copy).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('pre code').filter({ hasText: 'tarfile.USTAR_FORMAT' })).toBeVisible();
+});
+
 test('filters from the address, and says which filter hid everything', async ({ page }) => {
   control.models = [readyModel, derivedModel];
   await page.goto('/library?name=support');

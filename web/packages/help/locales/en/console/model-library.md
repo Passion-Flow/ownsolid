@@ -6,9 +6,9 @@ how they arrive. A model arrives as a bundle, so importing one needs no network.
 ## Importing a model
 
 1. On a connected machine, fetch the model's files at the revision shown under **Catalogue**.
-2. In the folder that holds them, make the bundle. The page shows the exact command under **How to
-   make a bundle**.
-3. Bring the file to a computer that can reach the console, choose **Import a bundle** and pick it.
+2. Open [Import a bundle](/library/import) and expand **How to make a bundle**. Copy the command
+   for your tool and run it in the folder with the files for that revision.
+3. Bring the resulting `bundle.tar` to a computer that can reach the console and choose the file.
 4. Give a reason, accept the model's licence and choose **Start import**.
 
 The upload continues while you use the rest of the console. Closing the tab stops it: open the
@@ -17,6 +17,19 @@ different file is refused before any of it is stored.
 
 The server checks every file against its published hash before publishing the model. When the import
 is ready, choose **Open the model** to see the published record.
+
+## Making a bundle
+
+Use an installed tool on the machine that holds the model files. The commands on the import page
+list the exact filenames for the approved revision.
+
+- **Python 3** writes an uncompressed archive using `tarfile.USTAR_FORMAT`.
+- **GNU tar on macOS** uses the `gtar` command if GNU tar is installed there.
+- **GNU tar as `tar`** applies only when `tar --version` reports GNU tar.
+
+The built-in macOS tar writes headers the importer rejects, even with `--format=ustar`. Each
+command packs only the listed files. Upload `bundle.tar` as written, with no compression or extra
+entries.
 
 ## If an import fails
 

@@ -63,7 +63,21 @@
        "children": [
         {
          "type": "text",
-         "value": "在这些文件所在的目录中制作模型包。页面的“如何制作模型包”给出了准确的命令。"
+         "value": "打开"
+        },
+        {
+         "type": "link",
+         "url": "/library/import",
+         "children": [
+          {
+           "type": "text",
+           "value": "导入模型包"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "，展开“如何制作模型包”。复制适合所用工具的命令，在该修订版本的文件所在目录中运行。"
         }
        ]
       }
@@ -78,7 +92,15 @@
        "children": [
         {
          "type": "text",
-         "value": "把文件带到能访问控制台的电脑上，选择“导入模型包”并选中它。"
+         "value": "把生成的 "
+        },
+        {
+         "type": "inlineCode",
+         "value": "bundle.tar"
+        },
+        {
+         "type": "text",
+         "value": " 带到能访问控制台的电脑上，选择这个文件。"
         }
        ]
       }
@@ -116,6 +138,164 @@
     {
      "type": "text",
      "value": "发布模型前，服务器会将每个文件与其公布的哈希值核对。导入就绪后，选择“打开模型”可以查看已发布的模型记录。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "制作模型包"
+    }
+   ],
+   "data": {
+    "id": "制作模型包"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "在保存模型文件的机器上使用已安装的工具。导入页上的命令列出了已批准修订版本的准确文件名。"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Python 3"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 使用 "
+        },
+        {
+         "type": "inlineCode",
+         "value": "tarfile.USTAR_FORMAT"
+        },
+        {
+         "type": "text",
+         "value": " 创建未压缩的归档。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "macOS 上的 GNU tar"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 使用已安装的 "
+        },
+        {
+         "type": "inlineCode",
+         "value": "gtar"
+        },
+        {
+         "type": "text",
+         "value": " 命令。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "以 "
+          },
+          {
+           "type": "inlineCode",
+           "value": "tar"
+          },
+          {
+           "type": "text",
+           "value": " 运行的 GNU tar"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 仅适用于 "
+        },
+        {
+         "type": "inlineCode",
+         "value": "tar --version"
+        },
+        {
+         "type": "text",
+         "value": " 显示 GNU tar 的环境。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "macOS 自带的 tar 即使指定 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "--format=ustar"
+    },
+    {
+     "type": "text",
+     "value": "，生成的归档头也无法通过导入校验。每条命令只打包列出的文件。请直接上传生成的 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "bundle.tar"
+    },
+    {
+     "type": "text",
+     "value": "，无需压缩，也不要加入其他文件。"
     }
    ]
   },

@@ -27,7 +27,8 @@ export function CodeBlock({ code, label, className }: CodeBlockProps) {
       clearTimeout(timer);
     };
   }, [copied]);
-  const action = copied ? t('action.copied') : t('action.copy');
+  const copyAvailable = window.isSecureContext;
+  const fallback = copyAvailable ? undefined : t('action.copyCommandBySelection', { name: label });
   return (
     <div className={cn('relative', className)}>
       {/* Long lines wrap, so a keyboard needs no way to scroll them. The button copies as written. */}
@@ -36,10 +37,14 @@ export function CodeBlock({ code, label, className }: CodeBlockProps) {
       </pre>
       <button
         type="button"
-        aria-label={t(copied ? 'action.copiedNamed' : 'action.copyNamed', { name: label })}
-        title={action}
+        aria-disabled={!copyAvailable || undefined}
+        aria-label={
+          fallback ?? t(copied ? 'action.copiedNamed' : 'action.copyNamed', { name: label })
+        }
+        title={fallback ?? t(copied ? 'action.copied' : 'action.copy')}
         onClick={() => {
           // Clipboard access needs a secure context; a refusal leaves the text selectable.
+          if (!copyAvailable) return;
           navigator.clipboard.writeText(code).then(
             () => {
               setCopied(true);
@@ -47,7 +52,7 @@ export function CodeBlock({ code, label, className }: CodeBlockProps) {
             () => undefined,
           );
         }}
-        className="absolute top-2 right-2 grid cursor-pointer rounded-[6px] border-0 bg-transparent p-1.5 text-log-text hover:bg-[color-mix(in_srgb,var(--log-text)_16%,transparent)]"
+        className="absolute top-2 right-2 grid cursor-pointer rounded-[6px] border-0 bg-transparent p-1.5 text-log-text hover:bg-[color-mix(in_srgb,var(--log-text)_16%,transparent)] aria-disabled:cursor-not-allowed aria-disabled:opacity-55"
       >
         {copied ? (
           <Check aria-hidden className="size-4" />
