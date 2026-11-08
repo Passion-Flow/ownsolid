@@ -9,7 +9,7 @@ import uuid
 from .configuration import Configuration, runtime_contract
 from .configuration_generated import CONTRACT
 from .data import CompletionCollator, TrainingError, tokenize_file
-from .checkpoints import file_digest, inventory, seal_checkpoint, verify_checkpoint
+from .checkpoints import file_digest, inventory, seal_checkpoint, sync_directory, verify_checkpoint
 from .catalog import catalog_digest
 from .processor_generated import PROCESSOR_CONTRACT
 
@@ -145,6 +145,7 @@ def train(model_directory: Path, catalog: dict, train_file: Path, train_sha256: 
 
     checkpoint_directory = output / 'checkpoints'
     checkpoint_directory.mkdir(mode=0o700)
+    sync_directory(output)
     arguments = TrainingArguments(output_dir=str(checkpoint_directory), max_steps=configuration.maximum_steps,
                 per_device_train_batch_size=configuration.batch_size, per_device_eval_batch_size=configuration.batch_size,
                 gradient_accumulation_steps=configuration.gradient_accumulation_steps,

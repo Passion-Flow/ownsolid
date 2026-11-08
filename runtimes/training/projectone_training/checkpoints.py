@@ -12,11 +12,23 @@ from .configuration_generated import CONTRACT
 from .data import TrainingError
 from .processor_generated import PROCESSOR_CONTRACT
 
-def file_digest(path):
+
+_RECEIPT_NAME = 'projectone-checkpoint.json'
+_REQUIRED_FILES = frozenset({
+    'adapter_model.safetensors', 'adapter_config.json', 'optimizer.pt',
+    'scheduler.pt', 'trainer_state.json', 'rng_state.pth',
+})
+_ALLOWED_FILES = _REQUIRED_FILES | {'README.md', 'training_args.bin'}
+_WIRE_LIMITS = CONTRACT['wire_limits']
+
+
+def file_digest(path, *, durable=False):
     digest = hashlib.sha256()
     with path.open('rb') as stream:
         for block in iter(lambda: stream.read(1048576), b''):
             digest.update(block)
+        if durable:
+            os.fsync(stream.fileno())
     return digest.hexdigest()
 
 
@@ -36,42 +48,78 @@ def inventory(directory, maximum_bytes, maximum_files):
     return result
 
 
-def publish_private_json(directory, name, value, maximum):
-    raw = json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
-    if len(raw) > maximum:
-        raise TrainingError('TRAINING_RESULT_LIMIT')
-    temporary = directory / ('.pending-' + uuid.uuid4().hex + '.json')
-    with temporary.open('xb') as stream:
-        os.chmod(stream.fileno(), 0o600)
-        stream.write(raw)
-        stream.flush()
-        os.fsync(stream.fileno())
-    os.link(temporary, directory / name)
-    temporary.unlink()
-    descriptor = os.open(directory, os.O_RDONLY)
+def sync_directory(directory):
+    descriptor = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
     try:
         os.fsync(descriptor)
     finally:
         os.close(descriptor)
 
 
+def publish_private_json(directory, name, value, maximum):
+    raw = json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
+    if len(raw) > maximum:
+        raise TrainingError('TRAINING_RESULT_LIMIT')
+    temporary = directory / ('.pending-' + uuid.uuid4().hex + '.json')
+    with temporary.open('xb') as stream:
+        try:
+            os.fchmod(stream.fileno(), 0o600)
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+            os.link(temporary, directory / name)
+        finally:
+            temporary.unlink()
+    sync_directory(directory)
+
+
+def checkpoint_members(directory, maximum_bytes, maximum_files, *, sealed=False):
+    maximum_bytes = min(maximum_bytes, _WIRE_LIMITS['maximum_checkpoint_bytes'])
+    maximum_files = min(maximum_files, _WIRE_LIMITS['maximum_checkpoint_files'])
+    members = {}
+    total = 0
+    with os.scandir(directory) as entries:
+        for entry in entries:
+            if sealed and entry.name == _RECEIPT_NAME:
+                continue
+            if entry.name not in _ALLOWED_FILES:
+                raise TrainingError('TRAINING_CHECKPOINT_CHANGED' if sealed else 'TRAINING_CHECKPOINT_INVALID')
+            info = entry.stat(follow_symlinks=False)
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                raise TrainingError('TRAINING_CHECKPOINT_INVALID')
+            if info.st_size < 1:
+                raise TrainingError('TRAINING_CHECKPOINT_CHANGED' if sealed else 'TRAINING_CHECKPOINT_INCOMPLETE')
+            total += info.st_size
+            if total > maximum_bytes or len(members) >= maximum_files:
+                raise TrainingError('TRAINING_OUTPUT_LIMIT')
+            members[entry.name] = info.st_size
+    return members
+
+
 def seal_checkpoint(directory, bindings, step, maximum_bytes, maximum_files):
     directory.chmod(0o700)
-    receipt = directory / 'projectone-checkpoint.json'
-    if receipt.exists():
+    receipt = directory / _RECEIPT_NAME
+    if os.path.lexists(receipt):
         raise TrainingError('TRAINING_CHECKPOINT_CONFLICT')
-    files = inventory(directory, maximum_bytes, maximum_files)
-    names = {item['path'] for item in files}
-    if not {'adapter_model.safetensors', 'adapter_config.json', 'optimizer.pt', 'scheduler.pt', 'trainer_state.json', 'rng_state.pth'}.issubset(names):
+    members = checkpoint_members(directory, maximum_bytes, maximum_files)
+    if not _REQUIRED_FILES.issubset(members):
         raise TrainingError('TRAINING_CHECKPOINT_INCOMPLETE')
-    trainer_state = json.loads((directory / 'trainer_state.json').read_text())
-    if trainer_state['global_step'] != step:
+    trainer_state = metadata(directory / 'trainer_state.json')
+    if (not isinstance(trainer_state, dict) or type(trainer_state.get('global_step')) is not int
+            or trainer_state['global_step'] != step):
         raise TrainingError('TRAINING_CHECKPOINT_INCOMPLETE')
-    for asset in files:
-        with (directory / asset['path']).open('rb') as stream:
-            os.fsync(stream.fileno())
+    files = []
+    for name, size in sorted(members.items()):
+        path = directory / name
+        files.append({'path': name, 'size_bytes': size, 'sha256': file_digest(path, durable=True)})
+    # Trainer created the checkpoint directory. Its parent entry must survive
+    # a crash before the receipt is reported to the Agent.
+    sync_directory(directory.parent)
     value = {'schema_version': 1, 'bindings': bindings, 'global_step': step, 'files': files}
-    publish_private_json(directory, receipt.name, value, CONTRACT['wire_limits']['maximum_checkpoint_metadata_bytes'])
+    try:
+        publish_private_json(directory, receipt.name, value, _WIRE_LIMITS['maximum_checkpoint_metadata_bytes'])
+    except FileExistsError:
+        raise TrainingError('TRAINING_CHECKPOINT_CONFLICT') from None
     return {'global_step': step, 'receipt_sha256': file_digest(receipt), 'path': directory.name}
 
 
@@ -82,7 +130,7 @@ class CheckpointReference:
 
 
 def metadata(path):
-    ceiling = CONTRACT['wire_limits']['maximum_checkpoint_metadata_bytes']
+    ceiling = _WIRE_LIMITS['maximum_checkpoint_metadata_bytes']
     if not path.is_file() or path.is_symlink() or path.stat().st_size > ceiling:
         raise TrainingError('TRAINING_CHECKPOINT_INVALID')
     try:
@@ -105,9 +153,9 @@ def verified_checkpoint(reference, bindings, configuration, maximum_bytes, maxim
     info = directory.lstat()
     if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid() or info.st_mode & 0o077:
         raise TrainingError('TRAINING_CHECKPOINT_INVALID')
-    receipt = directory / 'projectone-checkpoint.json'
+    receipt = directory / _RECEIPT_NAME
     info = receipt.lstat()
-    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.geteuid() or info.st_mode & 0o077 or info.st_size > CONTRACT['wire_limits']['maximum_checkpoint_metadata_bytes']:
+    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.geteuid() or info.st_mode & 0o077 or info.st_size > _WIRE_LIMITS['maximum_checkpoint_metadata_bytes']:
         raise TrainingError('TRAINING_CHECKPOINT_INVALID')
     if file_digest(receipt) != reference.receipt_sha256:
         raise TrainingError('TRAINING_CHECKPOINT_CHANGED')
@@ -122,10 +170,8 @@ def verified_checkpoint(reference, bindings, configuration, maximum_bytes, maxim
     step = value['global_step']
     if type(step) is not int or not 1 <= step <= configuration.maximum_steps:
         raise TrainingError('TRAINING_CHECKPOINT_INVALID')
-    required = {'adapter_model.safetensors', 'adapter_config.json', 'optimizer.pt', 'scheduler.pt', 'trainer_state.json', 'rng_state.pth'}
-    allowed = required | {'README.md', 'training_args.bin'}
     files = value['files']
-    if not isinstance(files, list) or not 1 <= len(files) <= min(maximum_files, CONTRACT['wire_limits']['maximum_checkpoint_files']):
+    if not isinstance(files, list) or not 1 <= len(files) <= min(maximum_files, _WIRE_LIMITS['maximum_checkpoint_files']):
         raise TrainingError('TRAINING_CHECKPOINT_INVALID')
     names = set()
     total = 0
@@ -133,26 +179,20 @@ def verified_checkpoint(reference, bindings, configuration, maximum_bytes, maxim
         if not isinstance(asset, dict) or set(asset) != {'path', 'size_bytes', 'sha256'}:
             raise TrainingError('TRAINING_CHECKPOINT_INVALID')
         name = asset['path']
-        if not isinstance(name, str) or name not in allowed or name in names or type(asset['size_bytes']) is not int or asset['size_bytes'] < 0 or not isinstance(asset['sha256'], str) or not re.fullmatch('[a-f0-9]{64}', asset['sha256']):
+        if not isinstance(name, str) or name not in _ALLOWED_FILES or name in names or type(asset['size_bytes']) is not int or asset['size_bytes'] < 1 or not isinstance(asset['sha256'], str) or not re.fullmatch('[a-f0-9]{64}', asset['sha256']):
             raise TrainingError('TRAINING_CHECKPOINT_INVALID')
         names.add(name)
         total += asset['size_bytes']
-        if total > min(maximum_bytes, CONTRACT['wire_limits']['maximum_checkpoint_bytes']):
+        if total > min(maximum_bytes, _WIRE_LIMITS['maximum_checkpoint_bytes']):
             raise TrainingError('TRAINING_CHECKPOINT_INVALID')
-    if not required.issubset(names):
+    if not _REQUIRED_FILES.issubset(names):
         raise TrainingError('TRAINING_CHECKPOINT_INCOMPLETE')
-    observed_names = set()
-    with os.scandir(directory) as entries:
-        for entry in entries:
-            if len(observed_names) >= maximum_files + 1 or not entry.is_file(follow_symlinks=False):
-                raise TrainingError('TRAINING_CHECKPOINT_INVALID')
-            observed_names.add(entry.name)
-    if observed_names != names | {receipt.name}:
+    members = checkpoint_members(directory, maximum_bytes, maximum_files, sealed=True)
+    if members != {asset['path']: asset['size_bytes'] for asset in files}:
         raise TrainingError('TRAINING_CHECKPOINT_CHANGED')
-    actual = inventory(directory, maximum_bytes + receipt.stat().st_size, maximum_files + 1)
-    actual = [item for item in actual if item['path'] != receipt.name]
-    if canonical(sorted(files, key=lambda item: item['path'])) != canonical(actual):
-        raise TrainingError('TRAINING_CHECKPOINT_CHANGED')
+    for asset in files:
+        if file_digest(directory / asset['path']) != asset['sha256']:
+            raise TrainingError('TRAINING_CHECKPOINT_CHANGED')
     if 'README.md' in names and (directory / 'README.md').read_bytes() != PROCESSOR_CONTRACT['adapter_readme_template'].replace('{repository}', bindings['model_repository']).encode('utf-8'):
         raise TrainingError('TRAINING_CHECKPOINT_INVALID')
     trainer = metadata(directory / 'trainer_state.json')
