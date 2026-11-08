@@ -54,11 +54,13 @@ type pitrRecovery struct {
 // clone and publishes a logical backup. The live writer stays on its database.
 func PITRRecover(ctx context.Context, c Config, runner StreamRunner, id, base, target string, out io.Writer) error {
 	when, err := time.Parse(time.RFC3339Nano, target)
-	if !pitrID.MatchString(id) || !pitrID.MatchString(base) || err != nil || !strings.HasSuffix(target, "Z") {
-		return errors.New("INSTALL_PITR_TARGET_INVALID: specify valid IDs and a UTC RFC3339 time ending in Z")
+	if !pitrID.MatchString(id) || !pitrID.MatchString(base) || err != nil || !strings.HasSuffix(target, "Z") || when.Nanosecond()%1000 != 0 {
+		return errors.New("INSTALL_PITR_TARGET_INVALID: specify valid IDs and a UTC RFC3339 time ending in Z with at most microsecond precision")
 	}
 	return withPITR(ctx, c, runner, out, func(ctx context.Context, j *pitrJob) error {
-		request := pitrRecovery{id, base, when.UTC().Format(time.RFC3339Nano), j.repo.owner.Token, j.source.cluster}
+		// PostgreSQL's recovery GUC requires an explicit numeric UTC offset.
+		const postgresTime = "2006-01-02 15:04:05.999999-07:00"
+		request := pitrRecovery{id, base, when.UTC().Format(postgresTime), j.repo.owner.Token, j.source.cluster}
 		if err := j.recoverTo(ctx, request); err != nil {
 			j.record("pitr-replay", "failed", err.Error())
 			return err
