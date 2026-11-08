@@ -91,10 +91,10 @@ token budgets. A refund may free capacity before reset.
 Keep the private state directory, including `quotas/`, with this gateway
 instance across restarts. The directory holds durable token counters. RPS
 history and active permits are process-local. Budget I/O errors prevent new
-token reservations for the affected tenant. This configuration governs
-one instance. The control plane continues to enforce its own admission
-policy. Shared counters, automatic scope assignment and configuration
-schema or installer support require integration with the control plane.
+token reservations for the affected tenant. Standalone configuration governs one instance. The control plane continues
+to enforce its own admission policy. Shared mode below uses the same
+policy across authenticated peers. Automatic scope assignment and installer
+support require integration with the control plane.
 
 Run the loopback TLS and quota tests and the separate release benchmarks:
 
@@ -104,3 +104,68 @@ cargo test --locked --offline
 cargo clippy --locked --offline -- -D warnings
 cargo test --release --locked --offline benchmark -- --ignored --nocapture --test-threads=1
 ```
+
+## Share quotas across gateway instances
+
+Keep one authoritative gateway for the group. Configure its existing
+`quota_policy` with the tenant, application, workspace and key assignments,
+and add this object to the same private JSON. Use its loopback or concrete
+private IPv4 listener, with a certificate valid for the selected origin.
+Every peer needs a distinct protected file containing a random 32-byte
+secret encoded as 64 lowercase hexadecimal characters. Copy each file
+securely to its authority and corresponding peer. Use separate secrets
+for the Go gateway credential and the quota peer credential.
+
+```json
+{
+  "shared_quota": {
+    "mode": "authority",
+    "lease_seconds": 150,
+    "maximum_leases": 256,
+    "peers": [
+      {
+        "gateway_id": "55555555-5555-4555-8555-555555555555",
+        "workspace_id": "22222222-2222-4222-8222-222222222222",
+        "credential_file": "/run/ownsolid/gateway/quota-peer.hex"
+      }
+    ]
+  }
+}
+```
+
+On each peer, use the gateway ID registered in that list. Configure
+`shared_quota` as shown here, and define the shared policy on the authority
+only. `ca_file` holds the CA that signed the authority's serving
+certificate.
+
+```json
+{
+  "shared_quota": {
+    "mode": "client",
+    "origin": "https://quota.internal.example:19443",
+    "ca_file": "/run/ownsolid/gateway/quota-ca.pem",
+    "credential_file": "/run/ownsolid/gateway/quota-peer.hex",
+    "timeout_seconds": 2
+  }
+}
+```
+
+The peers still authenticate and admit requests with Go control. The quota
+authority receives gateway and scope UUIDs, estimates and final usage. It
+holds shared concurrency through model execution and writes reservations
+before inference. The peer ends model work before its lease expires, so
+choose a lease duration covering the configured request, queue and control
+deadlines. Serving nodes must keep bounded clock drift and remain awake
+during inference. Unknown usage retains the reserved amount.
+
+Keep the authority's private state directory across restarts. Restart
+pauses new quota leases for up to 360 seconds to let old leases expire.
+Each group uses one authority and state directory. When that endpoint is
+unavailable, peers return HTTP 503 and stop new inference. The shared path
+uses private operator JSON, TLS and the existing local durable ledger.
+Automatic policy assignment, credential provisioning and authority
+failover require installation integration.
+
+Run the two-peer TLS integration and the loopback lease benchmark with
+`cargo test --locked --offline two_tls_gateways` and
+`cargo test --release --locked --offline shared_quota_round_trip_benchmark -- --ignored --nocapture`.

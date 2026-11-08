@@ -2,7 +2,7 @@ use crate::configuration::{Limits, Result};
 use crate::errors::Failure;
 use crate::outcome::{ErrorCode, Outcome, Status};
 use crate::protocol::Usage;
-use crate::quota::Permit;
+use crate::quota::RequestPermit;
 use crate::storage::Reservation;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -68,7 +68,7 @@ pub struct Execution {
     request_id: Uuid,
     started: Instant,
     output_started: bool,
-    quota: Option<Permit>,
+    quota: Option<RequestPermit>,
 }
 
 impl Execution {
@@ -85,7 +85,7 @@ impl Execution {
         self.output_started = true;
     }
 
-    pub(crate) fn attach_quota(&mut self, quota: Option<Permit>) {
+    pub(crate) fn attach_quota(&mut self, quota: Option<RequestPermit>) {
         self.quota = quota;
     }
 
