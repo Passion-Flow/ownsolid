@@ -51,6 +51,7 @@ const (
 // The empty CSV encoding selects UTF-8 and detects a leading UTF-8 BOM.
 type SourceImportOptions struct {
 	Format         SourceFormat
+	TrainingFormat SourceTrainingFormat
 	CSVEncoding    string
 	SkipInvalid    bool
 	ExpectedBytes  int64
@@ -60,19 +61,23 @@ type SourceImportOptions struct {
 // SourceIssue locates a problem without including any values from the input.
 // Line is a physical text line. Row is a one-based array or Parquet row.
 type SourceIssue struct {
-	Code string `json:"code"`
-	Line int64  `json:"line,omitempty"`
-	Row  int64  `json:"row,omitempty"`
+	Code  string `json:"code"`
+	Field string `json:"field,omitempty"`
+	Line  int64  `json:"line,omitempty"`
+	Row   int64  `json:"row,omitempty"`
 }
 
 func (e SourceIssue) Error() string {
+	message := e.Code
 	if e.Line > 0 {
-		return fmt.Sprintf("%s at line %d", e.Code, e.Line)
+		message += fmt.Sprintf(" at line %d", e.Line)
+	} else if e.Row > 0 {
+		message += fmt.Sprintf(" at row %d", e.Row)
 	}
-	if e.Row > 0 {
-		return fmt.Sprintf("%s at row %d", e.Code, e.Row)
+	if e.Field != "" {
+		message += " in field " + e.Field
 	}
-	return e.Code
+	return message
 }
 
 // SourceField describes a top-level field. Nulls include missing keys.
@@ -83,15 +88,16 @@ type SourceField struct {
 
 // SourceImportReport describes the original source and the accepted rows.
 type SourceImportReport struct {
-	SourceBytes  int64                  `json:"source_bytes"`
-	SourceSHA256 string                 `json:"source_sha256"`
-	OutputBytes  int64                  `json:"output_bytes"`
-	Rows         int64                  `json:"rows"`
-	RejectedRows int64                  `json:"rejected_rows"`
-	FieldCount   int                    `json:"field_count"`
-	Fields       map[string]SourceField `json:"fields"`
-	Issues       []SourceIssue          `json:"issues,omitempty"`
-	Truncated    bool                   `json:"issues_truncated"`
+	TrainingFormat SourceTrainingFormat   `json:"training_format,omitempty"`
+	SourceBytes    int64                  `json:"source_bytes"`
+	SourceSHA256   string                 `json:"source_sha256"`
+	OutputBytes    int64                  `json:"output_bytes"`
+	Rows           int64                  `json:"rows"`
+	RejectedRows   int64                  `json:"rejected_rows"`
+	FieldCount     int                    `json:"field_count"`
+	Fields         map[string]SourceField `json:"fields"`
+	Issues         []SourceIssue          `json:"issues,omitempty"`
+	Truncated      bool                   `json:"issues_truncated"`
 }
 
 // SourceObjectReader is the read side of the configured private object transport.
@@ -184,6 +190,9 @@ func (i *SourceImporter) validateOptions(opts SourceImportOptions) error {
 	}
 	if opts.CSVEncoding != "" && (opts.Format != SourceCSV || opts.CSVEncoding != "utf-8" && opts.CSVEncoding != "gbk") {
 		return failure("DATASET_IMPORT_ENCODING_UNSUPPORTED")
+	}
+	if !opts.TrainingFormat.valid() {
+		return failure("DATASET_TRAINING_FORMAT_INVALID")
 	}
 	if opts.ExpectedBytes < 0 || opts.ExpectedSHA256 != "" && !wire.ValidDigest(opts.ExpectedSHA256) {
 		return failure("DATASET_IMPORT_SOURCE_INVALID")
@@ -322,7 +331,7 @@ func (s *sourceImportState) report() SourceImportReport {
 		fields[name] = SourceField{Types: types, Nulls: s.rows - count.nonNull}
 	}
 	return SourceImportReport{
-		Rows: s.rows, RejectedRows: s.rejected, OutputBytes: s.bytes,
+		TrainingFormat: s.opts.TrainingFormat, Rows: s.rows, RejectedRows: s.rejected, OutputBytes: s.bytes,
 		FieldCount: len(fields), Fields: fields,
 		Issues: s.issues, Truncated: s.rejected > int64(len(s.issues)),
 	}
@@ -331,6 +340,11 @@ func (s *sourceImportState) report() SourceImportReport {
 func (s *sourceImportState) accept(row map[string]jsontext.Value, position SourceIssue) error {
 	if err := s.ctx.Err(); err != nil {
 		return err
+	}
+	if field := s.opts.TrainingFormat.invalidField(row); field != "" {
+		position.Code = "DATASET_TRAINING_ROW_INVALID"
+		position.Field = field
+		return s.reject(position)
 	}
 	newFields := 0
 	for name := range row {
