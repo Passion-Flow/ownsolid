@@ -19,3 +19,18 @@ by their respective lanes. Moving those responsibilities into this lane would
 require changing the explicit path boundary. Replacing them with an application
 projection side channel would risk competing ownership of the same rows and
 would still leave the release without a usable browser path.
+
+## Repository test gate
+
+The standard browser target binds ports 4310 and 4311. Concurrent lanes can
+occupy these ports. A temporary Playwright configuration with unused ports can
+exercise the existing browser tests without changing the browser owner or
+attaching to another lane's server. Keep the standard target's result distinct.
+
+The control-plane assistant slice does not enter the agent build. The agent's
+`TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt` and
+`TestARevokedAttemptStopsItsContainer` failed in the full agent package and in
+focused local reruns. The assertions concern cancellation timing and container
+ownership before a training attempt starts. This is a separate agent-owned
+verification boundary. The APP lane cannot change those tests or the agent
+runtime, and the repository-wide test gate remains open.
