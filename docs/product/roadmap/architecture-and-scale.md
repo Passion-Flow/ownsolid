@@ -51,7 +51,8 @@ agents is not.
   - Scope of the evidence: PostgreSQL only; MySQL and Dameng keep reading the database until CMP-201 and CMP-202. Repeated heartbeats only: claims, results and transfers authenticate in their own transactions, and ARC-109 cuts their cost. One gateway, one load run, hit rate at load not recorded. The maximum-age bound rests on unit tests.
 - [x] ARC-102 Gateway tier scales horizontally; agents connect to one or two gateways (P1) - Evidence: commit 8c832c1 (ADR 0048); `TestAgentGateways` passed twice in a row on `ownsolid-cpu`, 2026-11-08
   - Scope of the evidence: PostgreSQL only. Two gateway containers on the control host with 500 simulated agents, offline; gateways on hosts of their own, placed by the installer, are REL-101. Gateways share control's serving role (ARC-111) and keep the agents they gained when another returns (ARC-107). Load across gateways is ARC-105.
-- [ ] ARC-103 mTLS agent identity, certificate rotation, enrollment throttled per rack (P1) - Catalog: F575
+- [x] ARC-103 mTLS agent identity, certificate rotation, enrollment throttled per rack (P1) - Catalog: F575 - Evidence: commit 1c8f02a (ADR 0050)
+  - Scope of the evidence: PostgreSQL only; MySQL and Dameng keep the credential alone until CMP-201 and CMP-202. `TestSingleNodeInstall` on `ownsolid-cpu`, offline, with one real agent that enrolled with a certificate, rotated it without restarting and had the old one refused; `TestAgentGateways` with 500 simulated agents, each with its own certificate. A rack is the source network until FLT-101 names racks (ARC-112). Rotation at fleet scale is ARC-105.
 - [ ] ARC-104 One Kubernetes cluster per cell installed and managed by ownsolid, with the agent on every node (P1)
 - [ ] ARC-105 Load tested with 1,000 simulated nodes per cell at twice the load, including a Kubernetes cell simulated with KWOK (P1)
 - [ ] ARC-106 Published fleet KPIs: dispatch p99, reconnect time, database writes per second at measured scale (P1)
@@ -60,6 +61,9 @@ agents is not.
 - [ ] ARC-109 Cut the declared cost of claims, event batches and upload chunks, which repeat the same authority checks: one check per call, one per batch (P1)
 - [ ] ARC-110 A listener per entrance: the admin console, the portal, the model gateway and the agent endpoint can each bind their own address and port, so a site can firewall and scale them apart; four hostnames on one TLS port stays the default ([ADR 0027](../../decisions/0027-entrance-addresses.md)) (P1)
 - [ ] ARC-111 Agent gateways connect with a database role of their own, with its own connection limit and only the grants the agent path needs, instead of sharing control's serving role ([ADR 0048](../../decisions/0048-agent-gateways-beside-control.md)) (P1)
+- [ ] ARC-112 Throttle enrollment by the inventory's rack once FLT-101 names racks, instead of by source network ([ADR 0050](../../decisions/0050-agent-certificates.md)) (P1)
+- [ ] ARC-113 Replace the agent CA from the installer: add the new CA to the bundle, sign with it, retire the old one, without a node losing its session (P1)
+- [ ] ARC-114 Show each node's certificate expiry in the console and raise an alert before it runs out (P1)
 
 ## P2 Fleet operations
 
