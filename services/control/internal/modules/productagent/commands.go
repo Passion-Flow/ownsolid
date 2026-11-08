@@ -3,7 +3,7 @@ package productagent
 
 import (
 	"embed"
-	"encoding/json"
+	json "encoding/json/v2"
 	"fmt"
 	"io/fs"
 	"strings"
@@ -42,35 +42,44 @@ var commands = map[string]command{
 //go:embed locales/*/commands.json
 var locales embed.FS
 
-func loadAliases(source fs.FS) (map[string]command, error) {
-	aliases := make(map[string]command)
-	for _, path := range []string{"locales/en/commands.json", "locales/zh-cn/commands.json"} {
-		body, err := fs.ReadFile(source, path)
+type commandCatalog struct {
+	aliases map[string]command
+	locales map[string]map[string][]string
+}
+
+func loadCommands(source fs.FS) (commandCatalog, error) {
+	catalog := commandCatalog{aliases: make(map[string]command), locales: make(map[string]map[string][]string)}
+	for _, locale := range []struct{ tag, path string }{
+		{"en", "locales/en/commands.json"},
+		{"zh-CN", "locales/zh-cn/commands.json"},
+	} {
+		body, err := fs.ReadFile(source, locale.path)
 		if err != nil {
-			return nil, err
+			return commandCatalog{}, err
 		}
 		var local map[string][]string
 		if err := json.Unmarshal(body, &local); err != nil {
-			return nil, fmt.Errorf("decode %s: %w", path, err)
+			return commandCatalog{}, fmt.Errorf("decode %s: %w", locale.path, err)
 		}
 		for id, definition := range commands {
 			if len(local[id]) == 0 {
-				return nil, fmt.Errorf("missing command %q in %s", id, path)
+				return commandCatalog{}, fmt.Errorf("missing command %q in %s", id, locale.path)
 			}
 			definition.id = id
 			for _, phrase := range local[id] {
 				normalized := normalize(phrase)
-				if _, exists := aliases[normalized]; normalized == "" || exists {
-					return nil, fmt.Errorf("invalid or duplicate alias for %q in %s", id, path)
+				if _, exists := catalog.aliases[normalized]; normalized == "" || exists {
+					return commandCatalog{}, fmt.Errorf("invalid or duplicate alias for %q in %s", id, locale.path)
 				}
-				aliases[normalized] = definition
+				catalog.aliases[normalized] = definition
 			}
 		}
 		if len(local) != len(commands) {
-			return nil, fmt.Errorf("unknown command in %s", path)
+			return commandCatalog{}, fmt.Errorf("unknown command in %s", locale.path)
 		}
+		catalog.locales[locale.tag] = local
 	}
-	return aliases, nil
+	return catalog, nil
 }
 
 func normalize(input string) string {

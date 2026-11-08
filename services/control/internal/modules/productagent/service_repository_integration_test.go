@@ -4,6 +4,8 @@ package productagent
 
 import (
 	"context"
+	"errors"
+	"slices"
 	"testing"
 	"time"
 
@@ -58,6 +60,40 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	}
 	admin := authenticate("admin")
 	portal := authenticate("portal")
+	assertCommands := func(actor identity.Auth, locale string, want ...string) []CommandHelp {
+		t.Helper()
+		help, err := service.Commands(ctx, actor, locale)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ids := make([]string, 0, len(help))
+		for _, command := range help {
+			ids = append(ids, command.ID)
+			for _, alias := range command.Aliases {
+				if result, err := service.Run(ctx, actor, alias, ""); err != nil || result.Command != command.ID {
+					t.Fatalf("discovered %q for %q, dispatch returned %q, %v", alias, command.ID, result.Command, err)
+				}
+			}
+		}
+		if !slices.Equal(ids, want) {
+			t.Fatalf("discovered commands %v, want %v", ids, want)
+		}
+		return help
+	}
+	assertCommands(admin, "en", "open_audit", "open_gateway", "open_home", "open_model_library", "open_model_services", "open_nodes", "open_support")
+	portalCommands := []string{listApplications, listConversations, "open_home", "open_keys", "open_models", "open_support"}
+	help := assertCommands(portal, "zh-CN", portalCommands...)
+	if !slices.Contains(help[3].Aliases, "\u6253\u5f00\u5bc6\u94a5") {
+		t.Fatal("localized directory omitted the portal keys phrase")
+	}
+	help[0].Aliases[0] = "client edit"
+	assertCommands(portal, "zh-CN", portalCommands...)
+	noWorkspace := portal
+	noWorkspace.Me.Workspace = nil
+	assertCommands(noWorkspace, "en", "open_home", "open_keys", "open_models", "open_support")
+	if help, err := service.Commands(ctx, portal, "fr"); help != nil || !errors.Is(err, ErrUnsupportedCommandLocale) {
+		t.Fatalf("unsupported locale: %v, %v", help, err)
+	}
 	if result, err := service.Run(ctx, admin, "open nodes", ""); err != nil || result.Path != "/nodes" {
 		t.Fatalf("console navigation: %#v, %v", result, err)
 	}
@@ -123,6 +159,9 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	}
 
 	exec(`UPDATE sessions SET revoked_at=clock_timestamp(),revoke_reason='logout' WHERE id=$1`, `UPDATE sessions SET revoked_at=UTC_TIMESTAMP(6),revoke_reason='logout' WHERE id=?`, portal.SessionID)
+	if help, err := service.Commands(ctx, portal, "en"); help != nil || err == nil || err.Error() != "AUTH_SESSION_EXPIRED" {
+		t.Fatalf("directory with revoked session: %v, %v", help, err)
+	}
 	for _, cmd := range []string{"open home", "show applications", "show conversations"} {
 		if result, err := service.Run(ctx, portal, cmd, ""); err == nil || err.Error() != "AUTH_SESSION_EXPIRED" || result != (Result{}) {
 			t.Errorf("%s with revoked session: %#v, %v", cmd, result, err)
