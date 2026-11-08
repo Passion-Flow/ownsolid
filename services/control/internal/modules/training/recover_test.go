@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
+	"github.com/google/uuid"
 )
 
 func stoppedJob(t *testing.T, f scenario) training.Job {
@@ -198,5 +198,36 @@ func TestActualTrainingRecoveryRequiresStoppedOwnerRevisionCheckpointAndOneConcu
 	}
 	if success != 1 || count(t, f, "SELECT count(*) FROM training_recoveries") != 1 || count(t, f, "SELECT count(*) FROM audit_events WHERE action='training.recovery_requested'") != 1 {
 		t.Fatal("concurrent recovery accepted more than one revision")
+	}
+}
+
+// A terminal failure before the recovered attempt starts must preserve its
+// historical intent without leaving it pending.
+func TestActualTrainingFailedDispatchClearsPendingRecovery(t *testing.T) {
+	f := setup(t)
+	j := stoppedJob(t, f)
+	ctx := context.Background()
+	input := training.RecoveryRequest{
+		ExpectedRevision: j.Revision, Reason: "Queue retry before authority loss",
+		NodeID: f.input.NodeID, Mode: "restart",
+	}
+	recovery, err := f.s.Recover(ctx, f.portal, f.input.WorkspaceID, j.ID, input, uuid.NewString(), uuid.NewString())
+	if err != nil || recovery.PendingRecoveryID == nil {
+		t.Fatal("queue retry", err)
+	}
+	if _, err = f.s.DB.Exec(ctx, "UPDATE workspace_memberships SET role='viewer' WHERE workspace_id=$1 AND user_id=$2", f.input.WorkspaceID, f.portal.Me.User.ID); err != nil {
+		t.Fatal(err)
+	}
+	if worked, err := f.s.DispatchNext(ctx); err != nil || !worked {
+		t.Fatal("settle revoked retry", worked, err)
+	}
+	job, err := f.s.Get(ctx, f.admin, f.input.WorkspaceID, j.ID)
+	if err != nil || job.State != "failed" || job.ErrorCode == nil || *job.ErrorCode != "TRAINING_ACTOR_UNAVAILABLE" ||
+		job.PendingRecoveryID != nil || count(t, f, "SELECT count(*) FROM training_jobs WHERE id=$1 AND pending_recovery_id IS NULL", j.ID) != 1 {
+		t.Fatalf("terminal retry still pending: %+v, %v", job, err)
+	}
+	if count(t, f, "SELECT count(*) FROM training_recoveries WHERE id=$1 AND next_attempt_id IS NULL", *recovery.PendingRecoveryID) != 1 ||
+		count(t, f, "SELECT count(*) FROM training_attempts WHERE job_id=$1", j.ID) != 1 {
+		t.Fatal("rejected retry altered attempt history")
 	}
 }
