@@ -252,6 +252,8 @@ func TestLaneDAdminTLS(t *testing.T) {
 	stopKey := uuid.NewString()
 	refused("pass --confirm", action("stop", deployment.Revision, stopKey, false)...)
 	stop := action("stop", deployment.Revision, stopKey, true)
+	refused("outside the selected workspace", append(append([]string{}, stop...), "--workspace", uuid.NewString())...)
+	count(0, "SELECT count(*) FROM node_tasks WHERE idempotency_key=$1", stopKey)
 	loseResponse.Store(true)
 	refused("retry with the same --idempotency-key "+stopKey, stop...)
 	if !committed.Load() {

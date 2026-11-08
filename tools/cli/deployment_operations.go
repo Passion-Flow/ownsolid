@@ -136,14 +136,14 @@ func (opts *options) actOnDeployment(cmd *cobra.Command, workspace, id, key stri
 		return err
 	}
 	defer client.http.CloseIdleConnections()
-	if workspace == "" {
-		workspace = cfg.WorkspaceID
+	ctx := cmd.Context()
+	workspace, err = client.workspace(ctx, cfg, workspace)
+	if err != nil {
+		return err
 	}
 	path := cfg.adminPath(deployments)
-	if workspace != "" {
-		if _, err := client.detail(cmd.Context(), path, id, workspace); err != nil {
-			return err
-		}
+	if _, err := client.detail(ctx, path, id, workspace); err != nil {
+		return err
 	}
 	req := request{method: http.MethodPost, path: path + "/" + id + "/actions", status: http.StatusAccepted, key: key}
 	return opts.deploymentMutation(cmd, client, req, input, id, workspace)

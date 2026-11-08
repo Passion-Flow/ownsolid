@@ -135,6 +135,10 @@ ownsolid deployment stop "$DEPLOYMENT_ID" --revision "$REVISION" \
   --idempotency-key "$STOP_KEY" --reason 'Maintenance window' --confirm
 ```
 
+Deployment writes and placement use the selected workspace. Use
+`--workspace` for a workspace other than the session's current one, or set
+`workspace_id` in the config file.
+
 `deployment start`, `observe`, `verify` and `remove` accept the same revision,
 idempotency key and reason. Removal also requires `--confirm`. Deployment
 writes return the accepted intent and last observed state. Read the
@@ -143,7 +147,8 @@ removing a deployment can interrupt callers.
 
 Use a new lowercase request UUID for each new operation. If a deployment
 or node task response is lost, rerun with the original key, resource UUIDs,
-revision and reason. Explicit target IDs keep a replay on the original node.
+revision, workspace and reason. Explicit target IDs keep a replay on the
+original node.
 After a version conflict, review the current state and use a new key for a
 new operation.
 

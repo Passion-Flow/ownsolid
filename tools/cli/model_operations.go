@@ -23,11 +23,12 @@ func (opts *options) modelGetCommand(workspace *string) *cobra.Command {
 				return err
 			}
 			defer client.http.CloseIdleConnections()
-			scope := *workspace
-			if scope == "" {
-				scope = cfg.WorkspaceID
+			ctx := cmd.Context()
+			scope, err := client.workspace(ctx, cfg, *workspace)
+			if err != nil {
+				return err
 			}
-			return opts.renderDetail(cmd.OutOrStdout(), cmd.Context(), client, models, cfg.adminPath(models), args[0], scope)
+			return opts.renderDetail(cmd.OutOrStdout(), ctx, client, models, cfg.adminPath(models), args[0], scope)
 		},
 	}
 }
