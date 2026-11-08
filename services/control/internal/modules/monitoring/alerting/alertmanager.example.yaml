@@ -1,0 +1,34 @@
+# Run this configuration on an operator-only network. The receiver file contains
+# the local relay URL. The operating system or network policy restricts egress.
+route:
+  receiver: site-webhook
+  group_by: [site_id, cell_id, rack_id, alertname]
+  group_wait: 15s
+  group_interval: 1m
+  repeat_interval: 4h
+  routes:
+    # Without a rack assignment, different nodes cannot share a rack incident.
+    - receiver: site-webhook
+      matchers:
+        - rack_id=""
+      group_by: [site_id, cell_id, node_id, alertname]
+receivers:
+  - name: site-webhook
+    webhook_configs:
+      - url_file: /etc/ownsolid/alertmanager/webhook-url
+        send_resolved: true
+        timeout: 10s
+        http_config:
+          follow_redirects: false
+inhibit_rules:
+  - source_matchers:
+      - alertname="OwnsolidRackUnreachable"
+      - site_id!=""
+      - cell_id!=""
+      - rack_id!=""
+    target_matchers:
+      - alertname="OwnsolidNodeUnreachable"
+      - site_id!=""
+      - cell_id!=""
+      - rack_id!=""
+    equal: [site_id, cell_id, rack_id]
