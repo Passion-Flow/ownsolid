@@ -24,6 +24,7 @@ import {
   nodeGatewayInstance,
   offlineNode,
   pendingInvitation,
+  publishedImport,
   readyModel,
   retiredConnector,
   revokedKey,
@@ -375,6 +376,16 @@ export const consolePages: readonly PageState[] = [
       control.modelImports = [{ ...stalledImport }];
       await page.goto(`/library/imports/${stalledImport.id}`);
       await page.getByText('The upload is not running').waitFor();
+    },
+  },
+  {
+    name: 'an import that published a model',
+    path: '/library/imports/$importId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.modelImports = [publishedImport];
+      await page.goto(`/library/imports/${publishedImport.id}`);
+      await page.getByRole('link', { name: 'Open the model' }).waitFor();
     },
   },
   {

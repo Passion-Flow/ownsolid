@@ -95,6 +95,16 @@ export const stalledImport: ModelImport = {
   updated_at: stamp,
 };
 
+/** An import whose model has been published. The import response has no cleanup state. */
+export const publishedImport: ModelImport = {
+  ...stalledImport,
+  id: '6f1c7a1e-0000-4000-8000-000000000077',
+  uploaded_bytes: stalledImport.expected_bytes,
+  model_id: readyModel.id,
+  state: 'ready',
+  attempts: 1,
+};
+
 /** An import whose bundle failed verification. */
 export const failedImport: ModelImport = {
   ...stalledImport,

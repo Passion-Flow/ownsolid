@@ -38,6 +38,7 @@ export {
   derivedModel,
   failedImport,
   modelCatalog,
+  publishedImport,
   readyModel,
   stalledImport,
   type ModelScript,
