@@ -234,6 +234,23 @@ release binding, reconstructs the complete candidate from the two local
 files, and verifies every candidate payload before starting the upgrade.
 The staging volume must hold the retained archives and reconstructed payloads.
 
+### Reapply after a database restore
+
+After a verified restore, run `apply` with the same site configuration. For
+a signed installation, use `apply-bundle` with its active signed release.
+Restore records the adopted PostgreSQL database after checking its schema,
+runtime grants and restored authority. A later apply verifies that record and
+preserves the restored administrator. A failed restore keeps its record with
+the failed database when the previous database is put back.
+
+Restores performed by older installers lack this record. To preserve changes
+made after such a restore, first take a verified backup of the database
+currently serving, then restore that backup with the updated installer.
+
+The isolated `TestPreflightIsolatedDocker` run takes a database-aware backup,
+restores it into a new PostgreSQL database, applies twice and checks that both
+entrances and the original administrator still work.
+
 ### Read the notice inventory
 
 ```sh
