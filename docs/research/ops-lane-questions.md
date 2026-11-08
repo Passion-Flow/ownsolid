@@ -16,7 +16,7 @@ in the owning paths. Leave the boxes open while those boundaries apply.
 | OPS-112 | The installer and backup owner provide the existing local backup and restore. S3 and SFTP targets, app data and a product flow require their own integration. | Preserve the current local path while the owning code gains the missing targets. |
 | CAT-101, CAT-102 | Catalog service, publisher and installer, console form and dependency selection. | Build and exercise the manifest and typed binding contracts in the catalog lane. |
 | CAT-103, CAT-104, CAT-105, CAT-106, CAT-108, CAT-109 | Scoped gateway and OIDC issuers, approved local deployers, quota and workload policy, operational streams and console. | Keep key issuance, identity and install authority behind their owning services. |
-| CAT-107 | Approved app signing trust and installer integration with local image import. | Preserve digest-pinned manifests and require signed bundle verification before workloads may be rendered or admitted. |
+| CAT-107 | Approved app signing trust and installer integration with local image import. | Verify the signed inventory and fixed local payloads. The owning importer still needs to verify the OCI closure and connect this gate to installation. |
 
 The current screen plan has a node drawer and an app-catalog placeholder. The
 full operator flows also need their screen specifications. Keep 1Panel strictly
