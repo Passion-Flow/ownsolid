@@ -160,6 +160,7 @@ var taskCalls = map[string]Call{
 	"training-input-files":          CallDownload,
 	"model-preparation-input-files": CallDownload,
 	"image-registry":                CallDownload,
+	GatewayActivationPath:           CallCertificate,
 	"training-uploads":              CallUpload,
 	"model-preparation-uploads":     CallUpload,
 }

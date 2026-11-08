@@ -14,6 +14,7 @@ const valid = {
       lookup_page_size: 100,
     },
     gateway_keys: { default_ttl_seconds: 86_400, maximum_ttl_seconds: 7_776_000 },
+    agent_gateways: true,
     workspaces: { maximum_count: 10 },
   },
 };
@@ -36,7 +37,17 @@ describe('parseRuntimeConfig', () => {
         lookupPageSize: 100,
       },
       gatewayKeys: { defaultTtlSeconds: 86_400, maximumTtlSeconds: 7_776_000 },
+      agentGateways: true,
     });
+  });
+
+  it('refuses a document that does not say who runs gateways', () => {
+    const rest: Record<string, unknown> = { ...valid.data };
+    delete rest.agent_gateways;
+    expect(() => parseRuntimeConfig({ data: rest })).toThrow('RESPONSE_INVALID');
+    expect(() => parseRuntimeConfig({ data: { ...valid.data, agent_gateways: 'yes' } })).toThrow(
+      'RESPONSE_INVALID',
+    );
   });
 
   it.each([

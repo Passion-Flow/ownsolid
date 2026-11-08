@@ -210,6 +210,7 @@ func (c Config) renderControl(dsnFile string, serving bool) ([]byte, error) {
 			agents["certificate_lifetime_hours"] = c.TLS.AgentCertificateLifetimeHours
 		}
 		document["agent_identity"] = agents
+		document["model_gateway_identity"] = map[string]any{"ca_certificate_file": containerConfigDir + "/" + gatewayCAFile, "ca_private_key_file": containerConfigDir + "/" + gatewayCAKeyFile}
 	}
 	document["telemetry"] = map[string]any{
 		"logs_address":            "http://" + net.JoinHostPort(c.Network.stateAddresses().Logs.String(), logsPort),

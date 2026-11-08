@@ -45,6 +45,8 @@ type Config struct {
 	Inference        inference.Config         `json:"inference,omitempty"`
 	Training         training.Config          `json:"training,omitempty"`
 	Preparation      modelpreparations.Config `json:"model_preparation,omitempty"`
+	// Gateway is the model gateway this serving node runs beside its model (ADR 0052).
+	Gateway *inference.GatewayConfig `json:"gateway,omitempty"`
 }
 
 func LoadConfig(path string) (Config, error) { return loadConfig(path) }
@@ -112,6 +114,11 @@ func validateConfig(c Config) (Config, error) {
 		}
 	} else if c.Preparation.RootDirectory != "" || c.Preparation.DockerSocket != "" || c.Preparation.ImageID != "" || c.Preparation.ImageReference != "" || c.Preparation.WorkerSourceSHA256 != "" || c.Preparation.Runtime != nil || c.Preparation.OutputSeconds != 0 {
 		return c, errors.New("AGENT_CONFIG_INVALID")
+	}
+	if c.Gateway != nil {
+		if c.ExecutionProfile != wire.DockerInferenceProfile || c.Gateway.Validate() != nil || c.CAFile == "" || overlap(c.Gateway.RootDirectory, c.StateDirectory) || overlap(c.Gateway.RootDirectory, c.Inference.RootDirectory) {
+			return c, errors.New("AGENT_CONFIG_INVALID")
+		}
 	}
 	if wire.ValidateSessionAddresses(c.SessionAddresses) != nil {
 		return c, errors.New("AGENT_CONFIG_INVALID")
@@ -295,28 +302,39 @@ func enrollPaced(ctx context.Context, connection *client.Client, enrollment wire
 	}
 }
 
+// workers are the managers that execute this node's tasks. A profile leaves the ones it
+// does not run nil.
+type workers struct {
+	components  componentLifecycle
+	inference   *inference.Manager
+	gateway     *inference.GatewayManager
+	training    *training.Manager
+	preparation *modelpreparations.Manager
+	registry    taskImageLoader
+}
+
 // cycle runs one cycle on a session of its own, for callers outside the run loop.
-func cycle(ctx context.Context, c Config, connection *client.Client, identity state.Identity, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
+func cycle(ctx context.Context, c Config, connection *client.Client, identity state.Identity, w workers) error {
 	var session *client.Session
 	if connection != nil {
 		session = connection.Session(identity.NodeID)
 		defer session.Close()
 	}
-	return sessionCycle(ctx, c, connection, session, identity, m, im, tm, pm, rm)
+	return sessionCycle(ctx, c, connection, session, identity, w)
 }
 
 // sessionCycle recovers interrupted work, reports the node, then claims and runs at most
 // one task. Heartbeats, claims and acknowledgements use the session; task traffic uses
 // HTTPS.
-func sessionCycle(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
-	if e := recoverLocalWork(ctx, c, connection, identity, m, tm, pm); e != nil {
+func sessionCycle(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, w workers) error {
+	if e := recoverLocalWork(ctx, c, connection, identity, w.components, w.training, w.preparation); e != nil {
 		return e
 	}
 	f, e := discovery.Collect(c.DiskPath)
 	if e != nil {
 		return e
 	}
-	return claimAndRun(ctx, c, connection, session, identity, f, m, im, tm, pm, rm)
+	return claimAndRun(ctx, c, connection, session, identity, f, w)
 }
 
 // recoverLocalWork reconciles interrupted work from the local journals: an attempt an
@@ -354,7 +372,8 @@ func recoverLocalWork(ctx context.Context, c Config, connection *client.Client, 
 	return nil
 }
 
-func claimAndRun(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, f wire.Facts, m componentLifecycle, im *inference.Manager, tm *training.Manager, pm *modelpreparations.Manager, rm taskImageLoader) error {
+func claimAndRun(ctx context.Context, c Config, connection *client.Client, session *client.Session, identity state.Identity, f wire.Facts, w workers) error {
+	m, im, tm, pm, rm := w.components, w.inference, w.training, w.preparation, w.registry
 	base := "/agent/v1/nodes/" + url.PathEscape(identity.NodeID)
 	h := handshake(f, c)
 	if m != nil {
@@ -439,6 +458,15 @@ func claimAndRun(ctx context.Context, c Config, connection *client.Client, sessi
 	if lease.Inference != nil {
 		return errors.New("AGENT_TASK_UNSUPPORTED")
 	}
+	if wire.IsGatewayOperation(lease.Operation) {
+		if w.gateway == nil || profile(c) != wire.DockerInferenceProfile || lease.Component != nil || lease.Gateway == nil || lease.Gateway.Validate(lease.Operation) != nil {
+			return errors.New("AGENT_TASK_UNSUPPORTED")
+		}
+		return executeGateway(ctx, connection, base, identity, *lease, w.gateway)
+	}
+	if lease.Gateway != nil {
+		return errors.New("AGENT_TASK_UNSUPPORTED")
+	}
 	if wire.IsComponentOperation(lease.Operation) {
 		if m == nil || lease.Component == nil || lease.Component.ValidateForProfile(profile(c), lease.Operation) != nil {
 			return errors.New("AGENT_TASK_UNSUPPORTED")
@@ -518,6 +546,14 @@ func Run(ctx context.Context, c Config) error {
 		}
 		defer im.Close()
 	}
+	var gm *inference.GatewayManager
+	if profile(c) == wire.DockerInferenceProfile {
+		gm, e = inference.NewGatewayManager(c.Gateway, c.CAFile, c.Inference.DockerSocket, c.Policy())
+		if e != nil {
+			return e
+		}
+		defer gm.Close()
+	}
 	rm, closeRegistry, e := registryLoader(c, connection)
 	if e != nil {
 		return e
@@ -557,7 +593,7 @@ func Run(ctx context.Context, c Config) error {
 	transport := ""
 	for {
 		started := time.Now()
-		e = sessionCycle(ctx, c, connection, session, identity, m, im, tm, pm, rm)
+		e = sessionCycle(ctx, c, connection, session, identity, workers{components: m, inference: im, gateway: gm, training: tm, preparation: pm, registry: rm})
 		if ctx.Err() != nil {
 			return nil
 		}

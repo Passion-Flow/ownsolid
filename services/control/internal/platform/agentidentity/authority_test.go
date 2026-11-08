@@ -170,3 +170,50 @@ func TestPeerReadsTheVerifiedCertificate(t *testing.T) {
 		t.Fatalf("%+v", p)
 	}
 }
+
+func TestIssueServingNamesOnlyTheDeclaredOriginAndCannotIdentifyANode(t *testing.T) {
+	bundle, key := testCA(t, time.Now().Add(24*365*time.Hour), true)
+	authority, e := NewAuthority(bundle, key, 720*time.Hour)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if authority.Bundle() != string(bundle) {
+		t.Fatal("the bundle callers trust is not the issuer's")
+	}
+	roots := x509.NewCertPool()
+	roots.AppendCertsFromPEM(bundle)
+	for _, origin := range []string{"https://gw.rack7.example:18443", "https://192.0.2.10:18443", "https://[2001:db8::7]"} {
+		parsed, e := wire.ParseGatewayOrigin(origin)
+		if e != nil {
+			t.Fatal(e)
+		}
+		text, _, e := authority.IssueServing(request(t), testNode, parsed)
+		if e != nil {
+			t.Fatal(e)
+		}
+		leaf := parse(t, text)
+		host := parsed.Host
+		if parsed.IP != nil {
+			host = parsed.IP.String()
+		}
+		if _, e = leaf.Verify(x509.VerifyOptions{DNSName: host, Roots: roots, KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}); e != nil {
+			t.Fatal(origin, e)
+		}
+		if len(leaf.DNSNames)+len(leaf.IPAddresses) != 1 || len(leaf.URIs) != 0 || leaf.IsCA || len(leaf.ExtKeyUsage) != 1 {
+			t.Fatalf("%s names more than its origin: %v %v %v", origin, leaf.DNSNames, leaf.IPAddresses, leaf.URIs)
+		}
+		if _, e = leaf.Verify(x509.VerifyOptions{DNSName: "other.example", Roots: roots, KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}}); e == nil {
+			t.Fatal("a gateway certificate served another name")
+		}
+		if _, _, e = wire.CertificateNode(leaf); e == nil {
+			t.Fatal("a gateway certificate identified a node")
+		}
+	}
+	if _, _, e = authority.IssueServing(request(t), testNode, wire.GatewayOrigin{Port: 443}); e == nil {
+		t.Fatal("a certificate naming nothing was issued")
+	}
+	var missing *Authority
+	if _, _, e = missing.IssueServing(request(t), testNode, wire.GatewayOrigin{Host: "gw.example", Port: 443}); e == nil || e.Error() != "GATEWAY_AUTHORITY_UNAVAILABLE" {
+		t.Fatal(e)
+	}
+}

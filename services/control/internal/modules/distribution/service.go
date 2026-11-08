@@ -8,14 +8,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"github.com/google/uuid"
-	"net/url"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/google/uuid"
+	"net/url"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -50,11 +50,17 @@ func (s *Service) digest(purpose, id, token string) []byte {
 	return security.MAC(s.Identity.HMACKey, "m07-"+purpose, "v1", id, token)
 }
 
-const gatewayFields = `id::text,workspace_id::text,node_id::text,name,client_origin,created_by::text,CASE WHEN authority_invalidated_at IS NOT NULL THEN 'invalidated' WHEN revoked_at IS NOT NULL THEN 'revoked' ELSE 'active' END,created_at,revoked_at`
+// gatewayFields reads a gateway. A start or stop whose task ended without a result, by its
+// deadline or its attempts, has failed: the agent never reported it.
+const gatewayFields = `id::text,workspace_id::text,node_id::text,name,client_origin,created_by::text,CASE WHEN authority_invalidated_at IS NOT NULL THEN 'invalidated' WHEN revoked_at IS NOT NULL THEN 'revoked' ELSE 'active' END,created_at,revoked_at,delivery,` +
+	`CASE WHEN ` + gatewayTaskLost + ` THEN 'failed' ELSE delivery_state END,CASE WHEN ` + gatewayTaskLost + ` THEN 'GATEWAY_TASK_EXPIRED' ELSE delivery_error_code END,certificate_not_after`
+
+// gatewayTaskLost is true while a gateway waits for a task that can no longer report.
+const gatewayTaskLost = `delivery_state IN ('starting','stopping') AND NOT EXISTS(SELECT 1 FROM node_tasks t WHERE t.id=delivery_task_id AND t.state IN ('pending','running'))`
 
 func scanGateway(row transaction.Row) (Gateway, error) {
 	var g Gateway
-	e := row.Scan(&g.ID, &g.WorkspaceID, &g.NodeID, &g.Name, &g.ClientOrigin, &g.CreatedBy, &g.State, &g.CreatedAt, &g.RevokedAt)
+	e := row.Scan(&g.ID, &g.WorkspaceID, &g.NodeID, &g.Name, &g.ClientOrigin, &g.CreatedBy, &g.State, &g.CreatedAt, &g.RevokedAt, &g.Delivery, &g.DeliveryState, &g.DeliveryErrorCode, &g.CertificateNotAfter)
 	if errors.Is(e, sql.ErrNoRows) {
 		return Gateway{}, fail("RESOURCE_NOT_FOUND")
 	}
@@ -63,6 +69,7 @@ func scanGateway(row transaction.Row) (Gateway, error) {
 	}
 	g.CreatedAt = g.CreatedAt.UTC()
 	g.RevokedAt = distributionUTCPointer(g.RevokedAt)
+	g.CertificateNotAfter = distributionUTCPointer(g.CertificateNotAfter)
 	return g, nil
 }
 
@@ -70,7 +77,7 @@ func (s *Service) Provision(ctx context.Context, a identity.Auth, input Provisio
 	if !admin(a) {
 		return Provisioned{}, fail("ACCESS_DENIED")
 	}
-	if !wire.ValidID(input.NodeID) || !wire.ValidID(key) || !reason(input.Reason) || !validClientOrigin(input.ClientOrigin) {
+	if !wire.ValidID(input.NodeID) || !wire.ValidID(key) || !reason(input.Reason) || (input.ClientOrigin != "" && !validClientOrigin(input.ClientOrigin)) {
 		return Provisioned{}, fail("VALIDATION_FAILED")
 	}
 	name, e := security.Name(input.Name)
@@ -112,10 +119,27 @@ func (s *Service) Provision(ctx context.Context, a identity.Auth, input Provisio
 		if exists {
 			return fail("GATEWAY_INSTANCE_EXISTS")
 		}
+		delivered, e := s.agentDelivers(ctx, tx, w, input.NodeID)
+		if e != nil {
+			return e
+		}
+		// The node declares where callers reach a gateway its agent runs; otherwise the
+		// administrator says where they placed it.
+		if delivered && input.ClientOrigin != "" {
+			return fail("GATEWAY_ORIGIN_DECLARED_BY_NODE")
+		}
+		if !delivered && input.ClientOrigin == "" {
+			return fail("VALIDATION_FAILED")
+		}
 		// Existing idempotency replays above retain their historical binding.
 		// Select transport only for a new identity, before generating its secret.
 		machineOrigin, e := s.Identity.Config.MachineOrigin()
 		if e != nil {
+			return e
+		}
+		if delivered {
+			out.Gateway, e = s.provisionDelivered(ctx, tx, a, w, input, key, expected, machineOrigin, request)
+			out.Created = e == nil
 			return e
 		}
 		controlOriginHash := originDigest(machineOrigin)
@@ -184,13 +208,22 @@ func (s *Service) RevokeGateway(ctx context.Context, a identity.Auth, workspace,
 			return e
 		}
 		if current.State != "active" {
-			out = current
-			return nil
+			// A gateway the agent still runs may be stopped again.
+			if current.State == "revoked" {
+				if e = s.stopDelivered(ctx, tx, a, current, explanation, request); e != nil {
+					return e
+				}
+			}
+			out, e = scanGateway(tx.QueryRow(ctx, distributionNativeStatement(tx, "SELECT "+nativeGatewayFields+" FROM GATEWAY_INSTANCES WHERE ID=?", []any{id}, "SELECT "+gatewayFields+" FROM gateway_instances WHERE id=$1", `SELECT `+mysqlGatewayFields+` FROM gateway_instances WHERE id=?`, []any{id}, []any{id})))
+			return e
 		}
 		if _, e = distributionExecOne(ctx, tx, distributionNativeStatement(tx, `UPDATE GATEWAY_INSTANCES SET REVOKED_AT=CURRENT_TIMESTAMP(6),REVOKE_REASON=? WHERE ID=?`, []any{explanation, id}, "UPDATE gateway_instances SET revoked_at=clock_timestamp(),revoke_reason=$2 WHERE id=$1", `UPDATE gateway_instances SET revoked_at=UTC_TIMESTAMP(6),revoke_reason=? WHERE id=?`, []any{id, explanation}, []any{explanation, id})); e != nil {
 			return e
 		}
 		if e = s.audit(ctx, tx, a, w, "gateway.instance_revoked", "gateway_instance", id, explanation, request); e != nil {
+			return e
+		}
+		if e = s.stopDelivered(ctx, tx, a, current, explanation, request); e != nil {
 			return e
 		}
 		out, e = scanGateway(tx.QueryRow(ctx, distributionNativeStatement(tx, "SELECT "+nativeGatewayFields+" FROM GATEWAY_INSTANCES WHERE ID=?", []any{id}, "SELECT "+gatewayFields+" FROM gateway_instances WHERE id=$1", `SELECT `+mysqlGatewayFields+` FROM gateway_instances WHERE id=?`, []any{id}, []any{id})))

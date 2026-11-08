@@ -112,7 +112,7 @@ func TestProvisionRejectsUnsafeAdvertisedOriginsAndBindsIntent(t *testing.T) {
 	input.ClientOrigin = "https://nondefault.example.invalid:22443"
 	intent := uuid.NewString()
 	v, e := c.s.Provision(ctx, c.a, input, intent, uuid.NewString())
-	if e != nil || v.Gateway.ClientOrigin != input.ClientOrigin {
+	if e != nil || v.Gateway.ClientOrigin == nil || *v.Gateway.ClientOrigin != input.ClientOrigin {
 		t.Fatal("nondefault origin", e)
 	}
 	input.ClientOrigin = "https://another.example.invalid"
