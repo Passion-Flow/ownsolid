@@ -83,7 +83,10 @@ func (s *Service) ResendMail(ctx context.Context, a Auth, id, key, request strin
 func (s *Service) resendWithin(ctx context.Context, tx transaction.Executor, a Auth, id, request string) (string, error) {
 	var purpose, state string
 	var invitation, resetToken, user *string
-	e := tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT purpose,state,invitation_id::text,reset_token_id::text,user_id::text FROM mail_deliveries WHERE id=$1 FOR UPDATE`, id)).Scan(&purpose, &state, &invitation, &resetToken, &user)
+	e := tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT d.purpose,d.state,d.invitation_id::text,d.reset_token_id::text,d.user_id::text
+		FROM mail_deliveries d LEFT JOIN invitations v ON v.id=d.invitation_id
+		WHERE d.id=$1 AND (d.invitation_id IS NULL OR v.tenant_id=`+invitationTenantSQL+`)
+		FOR UPDATE OF d`, id)).Scan(&purpose, &state, &invitation, &resetToken, &user)
 	if errors.Is(e, sql.ErrNoRows) {
 		return "", failure("RESOURCE_NOT_FOUND")
 	}
