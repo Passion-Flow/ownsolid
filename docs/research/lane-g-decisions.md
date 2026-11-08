@@ -41,9 +41,9 @@ fixture only. [Test design and evidence](gateway-chat-streaming.md).
 
 ### Remaining P1 boundaries
 
-- GW-101 still needs a shipped gateway entrance and a real control plane in
-  the same end-to-end run. GW-114 owns the installer and node delivery
-  boundary, which is outside the Rust-only lane.
+- GW-101 passed a combined runtime run with the real Go handler, PostgreSQL
+  and offline vLLM. Its shipped entrance and node delivery depend on GW-114,
+  which is outside the Rust-only lane.
 - GW-102 needs a deployed backend that supports embeddings and reranking
   with endpoint-specific admission and outcome contracts. The current
   approved generation recipe and wire cover text chat.

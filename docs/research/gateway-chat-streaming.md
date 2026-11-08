@@ -65,3 +65,11 @@ preserved aliases, acknowledged completed usage, enforced revocation and
 retained pending outcomes during control outage. The same profile passed
 license expiry and the accepted-operation case. This profile uses the real
 Go service and PostgreSQL with synthetic model responses.
+
+The combined quota smoke used the native Rust binary, the actual Go TLS
+handler, PostgreSQL and the same network-disconnected vLLM CPU image in
+one request path. Both admitted streams returned 23 prompt and 9
+completion tokens and terminated with DONE. PostgreSQL acknowledged the
+two outcomes with identical usage. The [quota note](gateway-limits.md)
+records the admission and two rejected calls. Installer and production
+backend qualification remain separate.
