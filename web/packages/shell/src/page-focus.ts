@@ -1,7 +1,7 @@
 // What a screen-reader or keyboard user needs when the page changes without a document
 // load: the tab names the page, and focus moves to the new page's heading.
-import { useRouter } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { useRouter, useRouterState } from '@tanstack/react-router';
+import { useEffect, useRef } from 'react';
 
 const product = 'ownsolid';
 
@@ -20,16 +20,15 @@ export function useDocumentTitle(title: string | undefined): void {
  */
 export function usePageFocus(): void {
   const router = useRouter();
-  useEffect(
-    () =>
-      router.subscribe('onRendered', ({ fromLocation, pathChanged }) => {
-        if (!fromLocation || !pathChanged) return;
-        const target =
-          document.querySelector<HTMLElement>('main h1') ?? document.querySelector('main');
-        if (!target) return;
-        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
-        target.focus();
-      }),
-    [router],
-  );
+  const previousPath = useRef(router.state.location.pathname);
+  const pathname = useRouterState({ select: (state) => state.resolvedLocation?.pathname });
+  useEffect(() => {
+    // A navigation can finish before the first location has been resolved.
+    if (!pathname || pathname === previousPath.current) return;
+    previousPath.current = pathname;
+    const target = document.querySelector<HTMLElement>('main h1') ?? document.querySelector('main');
+    if (!target) return;
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus();
+  }, [pathname]);
 }
