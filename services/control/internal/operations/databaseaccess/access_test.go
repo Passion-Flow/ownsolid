@@ -54,7 +54,10 @@ func TestCatalogMatchesImmutableMigrations(t *testing.T) {
 		found = append(found, name)
 	}
 	sort.Strings(found)
-	if strings.Join(found, "\n") != strings.Join(postgreSQLTables(), "\n") {
+	// The audit head is written through the owner trigger and has no runtime grants.
+	wanted := append(postgreSQLTables(), "audit_chain_head")
+	sort.Strings(wanted)
+	if strings.Join(found, "\n") != strings.Join(wanted, "\n") {
 		t.Fatal("runtime table grant catalog differs from migrations")
 	}
 }

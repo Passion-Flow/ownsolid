@@ -1,6 +1,7 @@
 # Single entry point for development tasks. Run `make help` for the list.
 PYTHON ?= python3
 GO_MODULES := api pkg/capabilities pkg/license pkg/operatorsocket tools/release/offline tools/dev/simulator deploy/offline services/agent services/control tests/e2e
+GO_MODULES += tools/audit-verify
 DOCKER ?= docker
 CONTROL_IMAGE ?= ownsolid/control:dev
 E2E_BIN ?= bin/e2e

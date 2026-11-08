@@ -157,11 +157,31 @@ func readProfileDatabaseContents(ctx context.Context, tx pgx.Tx, p release.Postg
 		// and original byte count. No complete customer row is allocated in Go.
 		where := ""
 		args := []any{}
+		source := pgx.Identifier{"public", name}.Sanitize()
 		if name == "audit_events" && excludedRestoreAudit != "" {
 			where = " WHERE t.id<>$1::uuid"
 			args = append(args, excludedRestoreAudit)
 		}
-		query := `SELECT measured.row_sha256,measured.row_bytes FROM (SELECT pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(pg_catalog.to_jsonb(t)::text,'UTF8')),'hex') AS row_sha256,pg_catalog.octet_length(pg_catalog.to_jsonb(t)::text)::bigint AS row_bytes FROM ` + pgx.Identifier{"public", name}.Sanitize() + ` t` + where + `) AS measured ORDER BY measured.row_sha256 COLLATE "C"`
+		if name == "audit_chain_head" && excludedRestoreAudit != "" {
+			// The restore receipt itself is excluded from this comparison. Its
+			// predecessor is the corresponding snapshot of the durable head.
+			var position int64
+			var predecessor []byte
+			var isHead bool
+			err := tx.QueryRow(ctx, `SELECT e.chain_position-1,e.prev_hash,e.chain_position=h.chain_position AND e.hash=h.hash
+				FROM public.audit_events e CROSS JOIN public.audit_chain_head h WHERE e.id=$1::uuid AND h.singleton`, excludedRestoreAudit).
+				Scan(&position, &predecessor, &isHead)
+			switch {
+			case errors.Is(err, pgx.ErrNoRows):
+				// The pre-commit comparison runs before the receipt exists.
+			case err != nil || !isHead:
+				return out, errors.New("POSTGRES_RESTORE_AUDIT_HEAD_MISMATCH")
+			default:
+				source = `(SELECT singleton,$1::bigint AS chain_position,$2::bytea AS hash FROM public.audit_chain_head)`
+				args = append(args, position, predecessor)
+			}
+		}
+		query := `SELECT measured.row_sha256,measured.row_bytes FROM (SELECT pg_catalog.encode(pg_catalog.sha256(pg_catalog.convert_to(pg_catalog.to_jsonb(t)::text,'UTF8')),'hex') AS row_sha256,pg_catalog.octet_length(pg_catalog.to_jsonb(t)::text)::bigint AS row_bytes FROM ` + source + ` t` + where + `) AS measured ORDER BY measured.row_sha256 COLLATE "C"`
 		rows, e := tx.Query(ctx, query, args...)
 		if e != nil {
 			return out, errors.New("POSTGRES_BACKUP_DATABASE_READ_FAILED")

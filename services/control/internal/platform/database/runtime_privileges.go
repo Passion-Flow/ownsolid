@@ -27,10 +27,13 @@ SELECT CASE WHEN r.rolsuper THEN $1::boolean ELSE
  AND has_schema_privilege(r.oid,current_schema(),'USAGE') AND NOT has_schema_privilege(r.oid,current_schema(),'CREATE,USAGE WITH GRANT OPTION')
  AND (SELECT count(*) FROM objects WHERE nspname=current_schema())=$4
  AND NOT EXISTS(SELECT 1 FROM objects o WHERE CASE WHEN o.nspname=current_schema() THEN
-  o.relowner=r.oid OR NOT has_table_privilege(r.oid,o.oid,'SELECT')
+  o.relowner=r.oid OR CASE WHEN o.relname='audit_chain_head' THEN
+   has_table_privilege(r.oid,o.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+   OR has_any_column_privilege(r.oid,o.oid,'SELECT,INSERT,UPDATE,REFERENCES')
+  ELSE NOT has_table_privilege(r.oid,o.oid,'SELECT')
   OR has_table_privilege(r.oid,o.oid,'TRUNCATE,REFERENCES,TRIGGER,SELECT WITH GRANT OPTION,INSERT WITH GRANT OPTION,UPDATE WITH GRANT OPTION,DELETE WITH GRANT OPTION')
   OR CASE WHEN o.relname='schema_migrations' THEN has_table_privilege(r.oid,o.oid,'INSERT,UPDATE,DELETE')
-    ELSE NOT has_table_privilege(r.oid,o.oid,'INSERT') OR NOT has_table_privilege(r.oid,o.oid,'UPDATE') OR NOT has_table_privilege(r.oid,o.oid,'DELETE') END
+    ELSE NOT has_table_privilege(r.oid,o.oid,'INSERT') OR NOT has_table_privilege(r.oid,o.oid,'UPDATE') OR NOT has_table_privilege(r.oid,o.oid,'DELETE') END END
  ELSE has_table_privilege(r.oid,o.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') END)
  END FROM r`
 
