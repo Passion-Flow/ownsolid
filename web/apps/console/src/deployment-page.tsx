@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
 import { Scaling, Undo2 } from 'lucide-react';
 import { DeploymentActions } from './deployment-actions.tsx';
+import { DeploymentGateway } from './deployment-gateway.tsx';
 import {
   DeploymentStatePill,
   recipeEngine,
@@ -59,6 +60,7 @@ function Overview({ deployment, name }: { deployment: Deployment; name: Deployme
           <p className="m-0 text-[13px] text-text-2">{t('services.verification.none')}</p>
         )}
       </Card>
+      <DeploymentGateway deployment={deployment} model={name.model} node={name.node} />
     </div>
   );
 }

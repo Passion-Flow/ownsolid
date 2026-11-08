@@ -1,7 +1,7 @@
 // Scripted gateway keys for browser flows. Writes follow the server's rules: a secret comes back
 // once per idempotency key, a key has one successor, and a key's calls page by cursor, so a flow
 // proves what the page really sends (docs/research/gateway-keys.md).
-import type { GatewayCall, GatewayKey, ModelAlias } from '@ownsolid/api';
+import type { GatewayCall, GatewayInstance, GatewayKey, ModelAlias } from '@ownsolid/api';
 import type { Page, Route } from '@playwright/test';
 import { readyModel } from './models.ts';
 import { node } from './nodes.ts';
@@ -15,11 +15,24 @@ function later(days: number): string {
   return new Date(Date.now() + days * day).toISOString();
 }
 
+/** The gateway that serves {@link node} in the workspace. */
+export const nodeGatewayInstance: GatewayInstance = {
+  id: '6f1c7a1e-0000-4000-8000-0000000000a0',
+  workspace_id: workspace,
+  node_id: node.id,
+  name: 'rack7 gateway',
+  client_origin: 'https://gateway.example.test',
+  created_by: adminUser.id,
+  state: 'active',
+  created_at: issued,
+  revoked_at: null,
+};
+
 /** A model the gateway serves, which a new key can call. */
 export const deploymentAlias: ModelAlias = {
   id: '6f1c7a1e-0000-4000-8000-000000000096',
   workspace_id: workspace,
-  gateway_id: '6f1c7a1e-0000-4000-8000-0000000000a0',
+  gateway_id: nodeGatewayInstance.id,
   node_id: node.id,
   name: 'support-chat',
   client_origin: 'https://gateway.example.test',
@@ -131,6 +144,7 @@ interface ScriptedFailure {
 
 /** The keys and calls a flow starts from, and what it makes go wrong. */
 export interface GatewayScript {
+  gateways: GatewayInstance[];
   aliases: ModelAlias[];
   gatewayKeys: GatewayKey[];
   keyCalls: GatewayCall[];
@@ -140,11 +154,20 @@ export interface GatewayScript {
   keyWriteFailures: (ScriptedFailure | 'lost')[];
   /** Every write the page sent: its path's last part, its idempotency key and its body. */
   keyWrites: { kind: 'issue' | 'rotate' | 'revoke'; key: string; body: Record<string, unknown> }[];
+  /** Failures of the next gateway or name writes, in order; `lost` writes and drops the answer. */
+  publishFailures: (ScriptedFailure | 'lost')[];
+  /** Every gateway or name write the page sent, with its idempotency key and body. */
+  publishWrites: {
+    kind: 'provision' | 'publish' | 'disable' | 'revokeGateway';
+    key: string;
+    body: Record<string, unknown>;
+  }[];
 }
 
 /** A script with no key. */
 export function emptyGatewayScript(): GatewayScript {
   return {
+    gateways: [],
     aliases: [],
     gatewayKeys: [],
     keyCalls: [],
@@ -152,6 +175,8 @@ export function emptyGatewayScript(): GatewayScript {
     callsProblem: null,
     keyWriteFailures: [],
     keyWrites: [],
+    publishFailures: [],
+    publishWrites: [],
   };
 }
 
@@ -167,7 +192,129 @@ function secretOf(key: GatewayKey, intent: string): string {
   return `${key.prefix}.${intent.replaceAll('-', '')}`;
 }
 
-/** Routes the distribution contract's aliases, keys and calls onto `state`. */
+/** The credential a scripted gateway gets, derived from the request's key. */
+function credentialOf(gateway: GatewayInstance, intent: string): string {
+  return `gw1.${gateway.id}.${intent.replaceAll('-', '')}`;
+}
+
+/**
+ * Routes gateway instances and publishing names: one active gateway per node, a credential once
+ * per idempotency key, a name used once in a workspace, and a disable that names the revision it
+ * saw (docs/research/gateway-publishing.md).
+ */
+async function routePublishing(page: Page, state: GatewayScript, data: Reply, problem: Refuse) {
+  const base = /\/admin\/distribution\/workspaces\/[0-9a-f-]{36}/;
+  const madeBy = new Map<string, string>();
+  const written = (route: Route, kind: GatewayScript['publishWrites'][number]['kind']) => {
+    const request = route.request();
+    const intent = request.headers()['idempotency-key'] ?? '';
+    const body = request.postDataJSON() as Record<string, unknown>;
+    state.publishWrites.push({ kind, key: intent, body });
+    const reason = typeof body.reason === 'string' && body.reason !== '';
+    return { intent, body, reason, failure: state.publishFailures.shift() };
+  };
+  await page.route(new RegExp(`${base.source}/gateways\\?`), (route) =>
+    data(route, { items: state.gateways, next_cursor: null }),
+  );
+  await page.route(new RegExp(`${base.source}/gateways$`), (route) => {
+    const { intent, body, reason, failure } = written(route, 'provision');
+    if (failure && failure !== 'lost') return problem(route, failure);
+    if (!intent || !reason || !/^https:\/\/[^/]+$/.test(String(body.client_origin))) {
+      return problem(route, { status: 400, code: 'VALIDATION_FAILED' });
+    }
+    const replayed = state.gateways.find((item) => madeBy.get(item.id) === intent);
+    if (replayed) return data(route, { gateway: replayed, secret: null, secret_available: false });
+    if (state.gateways.some((item) => item.node_id === body.node_id && item.state === 'active')) {
+      return problem(route, { status: 409, code: 'GATEWAY_INSTANCE_EXISTS' });
+    }
+    const gateway: GatewayInstance = {
+      ...nodeGatewayInstance,
+      id: `6f1c7a1e-0000-4000-8004-${intent.replaceAll('-', '').slice(0, 12)}`,
+      node_id: String(body.node_id),
+      name: String(body.name),
+      client_origin: String(body.client_origin),
+      created_at: new Date().toISOString(),
+    };
+    state.gateways.unshift(gateway);
+    madeBy.set(gateway.id, intent);
+    if (failure === 'lost') return route.abort('connectionreset');
+    return data(
+      route,
+      { gateway, secret: credentialOf(gateway, intent), secret_available: true },
+      201,
+    );
+  });
+  await page.route(new RegExp(`${base.source}/gateways/[0-9a-f-]{36}/revoke$`), (route) => {
+    const { reason, failure } = written(route, 'revokeGateway');
+    if (failure && failure !== 'lost') return problem(route, failure);
+    const index = state.gateways.findIndex((item) => item.id === pathPart(route, 2));
+    const found = state.gateways[index];
+    if (!found) return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+    if (!reason) return problem(route, { status: 400, code: 'VALIDATION_FAILED' });
+    const revoked: GatewayInstance =
+      found.state === 'active'
+        ? { ...found, state: 'revoked', revoked_at: new Date().toISOString() }
+        : found;
+    state.gateways[index] = revoked;
+    if (failure === 'lost') return route.abort('connectionreset');
+    return data(route, revoked);
+  });
+  await page.route(new RegExp(`${base.source}/aliases$`), (route) => {
+    const { intent, body, reason, failure } = written(route, 'publish');
+    if (failure && failure !== 'lost') return problem(route, failure);
+    if (!intent || !reason || !/^[a-z][a-z0-9.-]{0,63}$/.test(String(body.name))) {
+      return problem(route, { status: 400, code: 'VALIDATION_FAILED' });
+    }
+    const replayed = state.aliases.find((item) => madeBy.get(item.id) === intent);
+    if (replayed) return data(route, replayed);
+    const gateway = state.gateways.find((item) => item.id === body.gateway_id);
+    if (!gateway) return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+    if (gateway.state !== 'active') {
+      return problem(route, { status: 409, code: 'GATEWAY_INSTANCE_REVOKED' });
+    }
+    if (state.aliases.some((item) => item.name === body.name)) {
+      return problem(route, { status: 409, code: 'MODEL_ALIAS_EXISTS' });
+    }
+    const alias: ModelAlias = {
+      ...deploymentAlias,
+      id: `6f1c7a1e-0000-4000-8005-${intent.replaceAll('-', '').slice(0, 12)}`,
+      gateway_id: gateway.id,
+      node_id: gateway.node_id,
+      client_origin: gateway.client_origin,
+      name: String(body.name),
+      deployment_id: String(body.deployment_id),
+      deployment_revision: Number(body.deployment_revision),
+      created_at: new Date().toISOString(),
+    };
+    state.aliases.unshift(alias);
+    madeBy.set(alias.id, intent);
+    if (failure === 'lost') return route.abort('connectionreset');
+    return data(route, alias);
+  });
+  await page.route(new RegExp(`${base.source}/aliases/[0-9a-f-]{36}/disable$`), (route) => {
+    const { body, reason, failure } = written(route, 'disable');
+    if (failure && failure !== 'lost') return problem(route, failure);
+    const index = state.aliases.findIndex((item) => item.id === pathPart(route, 2));
+    const found = state.aliases[index];
+    if (!found) return problem(route, { status: 404, code: 'MODEL_ALIAS_NOT_FOUND' });
+    if (!reason) return problem(route, { status: 400, code: 'VALIDATION_FAILED' });
+    if (body.expected_revision !== found.revision) {
+      return problem(route, { status: 409, code: 'VERSION_CONFLICT' });
+    }
+    const disabled: ModelAlias = {
+      ...found,
+      revision: found.revision + 1,
+      disabled_at: new Date().toISOString(),
+      available: false,
+      unavailable_code: 'MODEL_ALIAS_UNAVAILABLE',
+    };
+    state.aliases[index] = disabled;
+    if (failure === 'lost') return route.abort('connectionreset');
+    return data(route, disabled);
+  });
+}
+
+/** Routes the distribution contract's gateways, aliases, keys and calls onto `state`. */
 export async function routeGateway(
   page: Page,
   state: GatewayScript,
@@ -303,4 +450,5 @@ export async function routeGateway(
     const next = start + limit < mine.length ? String(start + limit) : null;
     return data(route, { items, next_cursor: next });
   });
+  await routePublishing(page, state, data, problem);
 }

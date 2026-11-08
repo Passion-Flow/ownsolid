@@ -131,3 +131,111 @@ export function listGatewayKeyCalls(
     },
   );
 }
+
+/** The gateway process registered for one node of a workspace. */
+export type GatewayInstance = Schemas['GatewayInstance'];
+
+/** A gateway instance just registered, with its credential when this answer is the first. */
+export type ProvisionedGateway = Schemas['ProvisionedGateway'];
+
+/** One page of a workspace's gateway instances, newest first. */
+export function listGatewayInstances(
+  workspaceId: string,
+  query: { limit: number; cursor?: string | undefined },
+  options?: RequestOptions,
+): Promise<Schemas['GatewayInstancePage']> {
+  return client.get(
+    '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways',
+    {
+      ...options,
+      path: { ...localCell, workspace_id: workspaceId },
+      query: { limit: query.limit, ...(query.cursor ? { cursor: query.cursor } : {}) },
+    },
+  );
+}
+
+/**
+ * Registers the gateway that serves one node, reached by callers at `clientOrigin`. The credential
+ * the gateway signs in with comes back once; the same `idempotencyKey` returns the instance
+ * without it.
+ */
+export function provisionGateway(
+  workspaceId: string,
+  input: { nodeId: string; name: string; clientOrigin: string; reason: string },
+  idempotencyKey: string,
+): Promise<ProvisionedGateway> {
+  return client.post(
+    '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways',
+    {
+      path: { ...localCell, workspace_id: workspaceId },
+      idempotencyKey,
+      body: {
+        node_id: input.nodeId,
+        name: input.name,
+        client_origin: input.clientOrigin,
+        reason: input.reason,
+      },
+    },
+  );
+}
+
+/** Stops a gateway instance at once: its credential and every name it serves stop working. */
+export function revokeGatewayInstance(
+  workspaceId: string,
+  gatewayId: string,
+  reason: string,
+): Promise<GatewayInstance> {
+  return client.post(
+    '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}/revoke',
+    { path: { ...localCell, workspace_id: workspaceId, resource_id: gatewayId }, body: { reason } },
+  );
+}
+
+/**
+ * Publishes one revision of a deployment under `name` on the gateway of its node, so keys can call
+ * it. The same `idempotencyKey` returns the same name instead of a second one.
+ */
+export function publishModelAlias(
+  workspaceId: string,
+  input: {
+    gatewayId: string;
+    name: string;
+    deploymentId: string;
+    deploymentRevision: number;
+    reason: string;
+  },
+  idempotencyKey: string,
+): Promise<ModelAlias> {
+  return client.post(
+    '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases',
+    {
+      path: { ...localCell, workspace_id: workspaceId },
+      idempotencyKey,
+      body: {
+        gateway_id: input.gatewayId,
+        name: input.name,
+        deployment_id: input.deploymentId,
+        deployment_revision: input.deploymentRevision,
+        reason: input.reason,
+      },
+    },
+  );
+}
+
+/**
+ * Stops publishing a name: every key that calls it stops working. `expectedRevision` is the
+ * revision the person saw, so a change made meanwhile is refused instead of overwritten.
+ */
+export function disableModelAlias(
+  workspaceId: string,
+  aliasId: string,
+  input: { expectedRevision: number; reason: string },
+): Promise<ModelAlias> {
+  return client.post(
+    '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/disable',
+    {
+      path: { ...localCell, workspace_id: workspaceId, resource_id: aliasId },
+      body: { expected_revision: input.expectedRevision, reason: input.reason },
+    },
+  );
+}
