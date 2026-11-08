@@ -104,3 +104,47 @@ installed from a local wheel. The JSONL regression imported actual files of
 processes peaked at 25,411,584 and 27,693,056 resident bytes. The regression
 fixes Go CPU parallelism and uses the default GC pacing with no heap cap so
 host-wide concurrency does not obscure the size comparison.
+
+## Offline decoder package for Linux amd64
+
+The control image uses CPython 3.12 on Debian Bookworm. The
+[PyArrow 26.0.1 release inventory](https://pypi.org/project/pyarrow/26.0.1/#files)
+lists a CPython 3.12 x86-64 wheel with a glibc 2.28 minimum and no required
+Python packages. The [manylinux platform contract](https://peps.python.org/pep-0600/)
+defines the glibc compatibility rule. The runtime lock admits one exact
+wheel by SHA-256. The connected release builder stages it and the offline
+image build installs from that directory with the index disabled.
+[pip download](https://pip.pypa.io/en/stable/cli/pip_download/) can select
+the release target from a different build host, and
+[pip hash-checking mode](https://pip.pypa.io/en/stable/topics/secure-installs/)
+checks the artifact during staging and installation. Keep wheel licence and
+notice files in the installed package.
+
+Use the binary wheel so the offline build needs no C++ toolchain, source
+resolver, or external Arrow libraries. The previous Alpine arm64 fixture
+proves the decoder on that development target. Its musl wheel is incompatible
+with the Debian amd64 release base. Qualification for the release wheel
+requires an index-disabled install from the lock, a rejected modified wheel,
+and the bounded decoder test under the control image's non-root UID.
+
+## Bind the normalized artifact
+
+The source digest identifies the original bytes. A durable registration must
+also identify the normalized JSONL bytes so integrity checks and backup can
+verify the stored artifact. Use Go's [MultiWriter](https://pkg.go.dev/io#MultiWriter)
+to compute the normalized SHA-256 as the existing file buffer flushes. The
+report gives the output digest after the exclusive destination link exists.
+On an uncertain directory sync, the caller can reconcile the linked file
+against that digest. A second pass would add a full read of a potentially
+50 GB output, while returning a digest before the exclusive link could
+describe a file the caller has no authority to adopt. Tests compare the
+reported digest with the published bytes and require empty output digests on
+parse failure and destination conflict.
+
+The Linux amd64 control base image passed the import suite on the native CPU
+test host with networking disabled and UID 10001. The lock installed
+PyArrow 26.0.1, `pip check` reported no dependency problems, and the wheel's
+LICENSE and NOTICE were present. A one-byte modification to the staged wheel
+was refused by the offline hash check. For the 16 MiB and 128 MiB JSONL files,
+both import processes peaked at 26,738,688 resident bytes. The release
+control image still needs to consume the lock and staged wheelhouse.

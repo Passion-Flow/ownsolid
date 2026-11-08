@@ -69,3 +69,27 @@ handoff. Keep the item unticked until those paths run.
 The lane can resume at the earliest P1 item when its listed dependency is
 available. Existing draft, publication and training readers remain usable
 under their current contracts.
+
+## DAT-101 offline decoder wheel
+
+**Decision.** Admit the CPython 3.12 manylinux x86-64 PyArrow wheel with an
+architecture-specific requirements lock. Stage it during connected release
+preparation and install it in a disconnected build with the package hash
+checked.
+
+**Why.** The control image already copies the data runtime into Debian Bookworm.
+A lock and tested install path give the image owner an exact offline dependency.
+
+**Alternatives.** The Alpine arm64 fixture uses a different libc and architecture.
+Building Arrow from source would introduce a separate toolchain and a larger
+dependency closure.
+
+**Impact.** An incompatible or altered wheel fails the image build. An upgrade
+changes the version, the verified wheel hash and the runtime test together.
+
+**Boundary.** The production image recipe and its release inputs are owned
+outside Lane F. The lock and install test establish the decoder component's
+delivery contract. The release owner must add the wheelhouse build input.
+A generic durable import also needs the release lineage and backup contract
+to move with the database migration. Those shared contracts are outside the
+lane's allowed additions.

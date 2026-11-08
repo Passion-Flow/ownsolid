@@ -116,7 +116,8 @@ new image/fresh-target execution has separate evidence.
 [SourceImporter](source_import.go) accepts an upload body or an object receipt
 already authorized by the configured object store's owner. It converts JSONL,
 JSON arrays, CSV, and Parquet to private JSONL and returns byte and row counts,
-field types, null counts, and bounded diagnostics. Callers choose the format
+field types, null counts, and bounded diagnostics. Its output SHA-256 binds
+the published JSONL bytes without a second disk pass. Callers choose the format
 and may opt into skipping recoverable records. CSV accepts UTF-8 with an
 optional BOM or explicitly declared GBK. Use a new destination in a private
 directory, and configure budgets for the source, output, record, fields,
