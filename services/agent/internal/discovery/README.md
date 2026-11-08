@@ -15,7 +15,7 @@ address supplied by the caller. Use the physical GPU device selector and
 disable workload label enrichment. Start with the pinned default metrics
 and enable the two volatile ECC totals and the NVLink recovery counters
 from the collector list where available. The snapshot carries physical GPU
-UUIDs and canonical DCGM field names. A missing sample means the exporter
+UUIDs, available PCI addresses and canonical DCGM field names. A missing sample means the exporter
 did not provide a usable reading. See [GPU telemetry research](../../../../docs/research/gpu-telemetry.md)
 for source versions, units and deployment gates.
 

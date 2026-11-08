@@ -68,9 +68,11 @@ var dcgmFields = map[string]dcgmField{
 
 // DCGMDevice contains readings for one physical GPU. Samples are keyed by
 // canonical DCGM field name, using the units documented for that field.
+// PCIAddress is empty when the exporter did not supply the physical address.
 type DCGMDevice struct {
-	UUID    string
-	Samples map[string]float64
+	UUID       string
+	PCIAddress string
+	Samples    map[string]float64
 }
 
 // DCGMSnapshot groups the physical GPU readings from one request.
@@ -138,7 +140,8 @@ func parseDCGM(body []byte) ([]DCGMDevice, error) {
 	if err != nil {
 		return nil, ErrDCGMInvalid
 	}
-	devices := map[string]map[string]float64{}
+	devices := map[string]*DCGMDevice{}
+	pciOwners := map[string]string{}
 	for name, field := range dcgmFields {
 		family := families[name]
 		if family == nil {
@@ -153,11 +156,11 @@ func parseDCGM(body []byte) ([]DCGMDevice, error) {
 		}
 		seen := map[string]bool{}
 		for _, metric := range family.Metric {
-			uuid, physical, err := dcgmPhysicalUUID(metric)
+			uuid, address, err := dcgmPhysicalIdentity(metric)
 			if err != nil {
 				return nil, err
 			}
-			if !physical {
+			if uuid == "" {
 				continue
 			}
 			if seen[uuid] || metric.TimestampMs != nil {
@@ -175,47 +178,66 @@ func parseDCGM(body []byte) ([]DCGMDevice, error) {
 			if math.IsNaN(value) || value < field.minimum || value > field.maximum || field.integer && math.Trunc(value) != value {
 				return nil, ErrDCGMInvalid
 			}
-			if devices[uuid] == nil {
-				devices[uuid] = map[string]float64{}
+			device := devices[uuid]
+			if device == nil {
+				device = &DCGMDevice{UUID: uuid, Samples: map[string]float64{}}
+				devices[uuid] = device
 			}
-			devices[uuid][name] = value
+			if address != "" {
+				if (device.PCIAddress != "" && device.PCIAddress != address) ||
+					(pciOwners[address] != "" && pciOwners[address] != uuid) {
+					return nil, ErrDCGMInvalid
+				}
+				device.PCIAddress = address
+				pciOwners[address] = uuid
+			}
+			device.Samples[name] = value
 		}
 	}
 	if len(devices) == 0 {
 		return nil, ErrDCGMNoSamples
 	}
 	result := make([]DCGMDevice, 0, len(devices))
-	for uuid, samples := range devices {
-		result = append(result, DCGMDevice{UUID: uuid, Samples: samples})
+	for _, device := range devices {
+		result = append(result, *device)
 	}
 	slices.SortFunc(result, func(a, b DCGMDevice) int { return strings.Compare(a.UUID, b.UUID) })
 	return result, nil
 }
 
-func dcgmPhysicalUUID(metric *dto.Metric) (string, bool, error) {
-	var uuid string
+func dcgmPhysicalIdentity(metric *dto.Metric) (string, string, error) {
+	var uuid, address string
 	var haveUUID bool
 	for _, label := range metric.Label {
 		key := label.GetName()
 		switch key {
-		case "pod", "container", "namespace", "vgpu", "nvlink", "nvswitch":
-			return "", false, nil
+		case "pod", "container", "namespace", "pod_name", "container_name", "pod_namespace", "pod_uid", "vgpu", "nvlink", "nvswitch":
+			return "", "", nil
 		}
-		if strings.HasPrefix(key, "GPU_I_") || strings.HasPrefix(key, "GPU_CI_") || strings.HasPrefix(key, "dra_") || strings.HasPrefix(key, "hpc_") {
-			return "", false, nil
+		if strings.HasPrefix(key, "GPU_I_") || strings.HasPrefix(key, "GPU_CI_") || strings.HasPrefix(key, "dra_") || strings.HasPrefix(key, "hpc_") || strings.HasPrefix(key, "pod_label_") {
+			return "", "", nil
 		}
 		if key == "UUID" || key == "uuid" {
 			if haveUUID {
-				return "", false, ErrDCGMInvalid
+				return "", "", ErrDCGMInvalid
 			}
 			uuid, haveUUID = label.GetValue(), true
 		}
+		if key == "pci_bus_id" {
+			address = label.GetValue()
+		}
 	}
 	if strings.HasPrefix(uuid, "MIG-") {
-		return "", false, nil
+		return "", "", nil
 	}
 	if !physicalGPUUUID.MatchString(uuid) {
-		return "", false, ErrDCGMInvalid
+		return "", "", ErrDCGMInvalid
 	}
-	return "GPU-" + strings.ToLower(uuid[4:]), true, nil
+	if address != "" {
+		address = canonicalPCIAddress(address)
+		if !strings.Contains(address, ".") {
+			return "", "", ErrDCGMInvalid
+		}
+	}
+	return "GPU-" + strings.ToLower(uuid[4:]), address, nil
 }
