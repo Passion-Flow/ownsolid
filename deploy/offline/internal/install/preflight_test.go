@@ -535,6 +535,8 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 	})
 	if !signed {
 		t.Run("scheduled backups verify before expiring older copies", func(t *testing.T) {
+			schedule := c.BackupSchedule
+			t.Cleanup(func() { c.BackupSchedule = schedule })
 			c.BackupSchedule = &BackupScheduleConfig{Directory: t.TempDir(), Retain: 1}
 			if err := os.Chmod(c.BackupSchedule.Directory, 0o700); err != nil {
 				t.Fatal(err)
@@ -566,6 +568,10 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 			if _, err := os.Stat(foreign); err != nil {
 				t.Fatal("the scheduled job removed an ordinary backup directory")
 			}
+		})
+		t.Run("recovers interrupted database swaps", func(t *testing.T) {
+			command(t, "apply", "INSTALL_COMPLETE", false)
+			assertInterruptedRestores(t, installer, config, run)
 		})
 	}
 }

@@ -20,6 +20,7 @@ type fakeDatabase struct {
 	fakeRunner
 	streamed []string
 	loaded   string
+	catalog  string
 	override func(line string) (string, error, bool)
 }
 
@@ -53,6 +54,15 @@ func (d *fakeDatabase) Stream(_ context.Context, stdin io.Reader, stdout io.Writ
 		io.WriteString(stdout, "32\n")
 	case strings.Contains(line, "pg_roles"):
 		io.WriteString(stdout, "1\n")
+	case strings.Contains(line, renameBack):
+		d.catalog = "80|10|0|0|20"
+	case strings.Contains(line, renameIn):
+		d.catalog = "80|20|0|10|0"
+	case strings.Contains(line, "pg_control_system()"):
+		if d.catalog == "" {
+			d.catalog = "80|10|20|0|0"
+		}
+		io.WriteString(stdout, d.catalog)
 	}
 	return "", nil
 }
@@ -224,8 +234,8 @@ func TestRestorePutsBackAMissingModelBeforeTheDatabaseChanges(t *testing.T) {
 	if !strings.Contains(out.String(), "step restore-models: ok restored=1") {
 		t.Fatal(out.String())
 	}
-	if strings.Index(out.String(), "step restore-models") > strings.Index(out.String(), "step load") {
-		t.Fatal("the models must be back before the database changes")
+	if strings.Index(out.String(), "step restore-models") > strings.Index(out.String(), "step schema: ok") {
+		t.Fatal("the models must be back before adopting the restored database")
 	}
 }
 
@@ -276,8 +286,8 @@ func TestRestoreLeavesTheDatabaseAloneWhenAModelCannotBePutBack(t *testing.T) {
 	if e == nil || !strings.Contains(e.Error(), "INSTALL_RESTORE_MODELS_FAILED") {
 		t.Fatal(e)
 	}
-	if d.ran("pg_restore") {
-		t.Fatal("the database must not change when the models cannot be put back")
+	if d.ran(renameIn) {
+		t.Fatal("the live database must not change when the models cannot be put back")
 	}
 }
 
@@ -430,8 +440,8 @@ func restoreFrom(t *testing.T, c Config, d *fakeDatabase, path string, out *byte
 }
 
 const (
-	renameIn   = `RENAME TO "ownsolid_before_restore_20261104t080000z"; ALTER DATABASE "ownsolid_restore_20261104t080000z" RENAME TO "ownsolid"`
-	renameBack = `"ownsolid" RENAME TO "ownsolid_restore_20261104t080000z"; ALTER DATABASE "ownsolid_before_restore_20261104t080000z" RENAME TO "ownsolid"`
+	renameIn   = `ALTER DATABASE "ownsolid" RENAME TO "ownsolid_before_restore_`
+	renameBack = `ALTER DATABASE "ownsolid" RENAME TO "ownsolid_failed_restore_`
 )
 
 func TestRestoreChecksSwapsThenRevokesAndServes(t *testing.T) {
@@ -445,7 +455,7 @@ func TestRestoreChecksSwapsThenRevokesAndServes(t *testing.T) {
 	if d.loaded != "DUMP BYTES" {
 		t.Fatalf("restored %q", d.loaded)
 	}
-	order := []string{"stop control", "pg_restore", "UNION ALL", renameIn, " migrate ", "prepare-runtime-access", "check-schema", "invalidate-restored-auth", "ownsolid.restore_adoption", "up --detach --wait --no-build control"}
+	order := []string{"pg_restore", "UNION ALL", "stop control", renameIn, " migrate ", "prepare-runtime-access", "check-schema", "invalidate-restored-auth", "ownsolid.restore_adoption", "up --detach --wait --no-build control"}
 	for i := 1; i < len(order); i++ {
 		if d.position(t, order[i-1]) > d.position(t, order[i]) {
 			t.Fatalf("%q ran after %q:\n%s", order[i-1], order[i], strings.Join(d.commands, "\n"))
@@ -454,7 +464,7 @@ func TestRestoreChecksSwapsThenRevokesAndServes(t *testing.T) {
 	if d.ran("DROP DATABASE") {
 		t.Fatal("the database from before the restore must be kept")
 	}
-	if !strings.Contains(out.String(), "RESTORE_COMPLETE previous_database=ownsolid_before_restore_20261104t080000z") {
+	if !strings.Contains(out.String(), "RESTORE_COMPLETE previous_database=ownsolid_before_restore_") {
 		t.Fatal(out.String())
 	}
 }
@@ -479,11 +489,11 @@ func TestRestoreLeavesTheCurrentDatabaseAloneWhenTheBackupFailsToLoad(t *testing
 			if d.ran("RENAME TO") {
 				t.Fatal("the current database was touched")
 			}
-			if !d.ran(`DROP DATABASE IF EXISTS "ownsolid_restore_20261104t080000z"`) {
+			if !d.ran(`DROP DATABASE IF EXISTS "ownsolid_restore_`) {
 				t.Fatal("the incoming database was left behind")
 			}
-			if d.position(t, "stop control") > d.position(t, "up --detach --wait --no-build control") {
-				t.Fatal("control was not started again")
+			if d.ran("stop control") {
+				t.Fatal("control was stopped before the dump was verified")
 			}
 		})
 	}
@@ -512,10 +522,10 @@ func TestRestoreRollsBackWhenTheRestoredDatabaseFailsItsChecks(t *testing.T) {
 	if d.position(t, renameIn) > d.position(t, renameBack) {
 		t.Fatalf("order:\n%s", strings.Join(d.commands, "\n"))
 	}
-	if !d.ran(`DROP DATABASE IF EXISTS "ownsolid_restore_20261104t080000z"`) {
-		t.Fatal("the failed database was left behind")
+	if d.ran("DROP DATABASE") {
+		t.Fatal("the failed candidate must be kept for diagnosis")
 	}
-	if strings.Contains(out.String(), "RESTORE_COMPLETE") || !strings.Contains(out.String(), "step roll-back") {
+	if strings.Contains(out.String(), "RESTORE_COMPLETE") || !strings.Contains(out.String(), "RESTORE_ROLLED_BACK") {
 		t.Fatal(out.String())
 	}
 	if d.position(t, renameBack) > lastPosition(d, "up --detach --wait --no-build control") {
@@ -553,7 +563,7 @@ func TestRestoreReportsAFailedRollBackWithTheDatabaseName(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	e = o.restore(ctx, path, manifest)
-	if e == nil || !strings.Contains(e.Error(), "still named ownsolid_before_restore_20261104t080000z") {
+	if e == nil || !strings.Contains(e.Error(), "possible name ownsolid_before_restore_") {
 		t.Fatalf("%v", e)
 	}
 }
@@ -633,7 +643,7 @@ func TestSwapRetriesWhileASessionHoldsTheDatabase(t *testing.T) {
 		return "", nil, true
 	}}
 	o := testOperation(t, validConfig(t), d, &bytes.Buffer{})
-	if e := o.swap(context.Background(), "a", "b", "c"); e != nil || attempts != 3 {
+	if e := o.renameForRestore(context.Background(), restoreIntent{Cluster: 80, Original: 10, Incoming: 20, Suffix: "0123456789abcdef01234567"}, false); e != nil || attempts != 3 {
 		t.Fatalf("%d %v", attempts, e)
 	}
 }
