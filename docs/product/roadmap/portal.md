@@ -10,6 +10,8 @@ work was happening rather than where their audience could reach them. These item
 move the self-service half of each capability to the entrance its audience uses. The
 administrative half stays in its own module and is not duplicated here.
 
+Reviewed 2026-11-08 against OpenAI's [API key guidance](https://help.openai.com/en/articles/5112595), LiteLLM's [internal user self-serve](https://docs.litellm.ai/docs/proxy/self_serve) and Open WebUI's [API keys](https://docs.openwebui.com/features/authentication-access/api-keys/). The item list holds: each of them scopes a person to their own keys, shows the secret once and favours expiry and rotation, which POR-106 covers. One gap is not the portal's to close: LiteLLM and Open WebUI let an administrator decide who may issue personal keys at all, and ownsolid lets every workspace member. That is a server policy, so it is GW-119 in the gateway module.
+
 - Owns: `web/apps/portal`.
 - Depends on: identity-and-access for the session and the workspace scope; each
   capability's own module for the API it calls. No item here adds a new backend

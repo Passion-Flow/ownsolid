@@ -35,6 +35,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [ ] GW-204 Client setup templates for SDKs, CLIs and coding tools (P2) - Catalog: F084, F087
 - [ ] GW-115 Scheduled key rotation, and a notice to a key's owner before the key expires (P2)
 - [ ] GW-116 Restricted keys: allow a key only some endpoints, or only reads (P2)
+- [ ] GW-119 Decide who may issue keys: a workspace policy that lets an administrator allow or stop members issuing their own keys, enforced on the server and explained in the portal (P2)
 
 ## P3 Multi-site
 
