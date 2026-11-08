@@ -23,3 +23,9 @@ same transaction as its insert. A shared database tail orders commits across
 connections and time partitions. Existing events remain readable and precede
 the integrity coverage boundary. See the [operator export and offline verifier](../../../../../tools/audit-verify/README.md)
 and the [serialization and threat model](../../../../../docs/research/audit-chain.md).
+
+The PostgreSQL serving role can append and read audit events. The audit parent
+rejects its UPDATE, DELETE and TRUNCATE operations, including row mutations
+against attached partitions. The database owner retains authority to operate
+the database and expire partitions through retention.
+[Audit mutation authority](../../../../../docs/research/audit-immutability.md)

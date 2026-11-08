@@ -1,0 +1,3 @@
+DROP TRIGGER audit_events_require_owner_for_truncate ON audit_events;
+DROP TRIGGER audit_events_require_owner_for_mutation ON audit_events;
+DROP FUNCTION audit_events_require_owner();

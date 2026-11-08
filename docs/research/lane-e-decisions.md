@@ -63,3 +63,22 @@ migration and existing V1 records intact, and append V2 records with both
 identifiers under a new hash domain. Rehashing old records would invalidate
 independent checkpoints. Treat old exports as V1 coverage and clearly record
 their narrower field scope.
+
+## Remaining P1 boundaries
+
+- AUD-106 needs an auditor role with a distinct read permission in identity.
+  The current audit list is in the admin identity router. Its public access
+  contract and the console behavior are outside the audit backend lane.
+- AUD-107 needs an authenticated approval workflow and a recorded export
+  decision. The AUD-102 operator query provides integrity evidence, while
+  approval belongs to the identity and console owners.
+- AUD-108 spans diagnostic readers. The support command is owned by delivery
+  and can collect while control is down. Audit coverage needs integration
+  with the diagnostic owners, including an offline path for that command.
+- AUD-109 requires an external key-management integration across database,
+  object storage and backups. Those owners and an approved test KMS are
+  outside this lane's current scope.
+- AUD-111 needs a configured destination, a persistent delivery worker
+  registered with control and an approved SIEM fixture on the test network.
+  A writer with no startup path or verified sink would leave the feature
+  incomplete. Keep the item open.
