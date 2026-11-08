@@ -16,7 +16,7 @@ in the owning paths. Leave the boxes open while those boundaries apply.
 | OPS-112 | The installer and backup owner provide the existing local backup and restore. S3 and SFTP targets, app data and a product flow require their own integration. | Preserve the current local path while the owning code gains the missing targets. |
 | CAT-101, CAT-102 | Catalog service, publisher and installer, console form and dependency selection. | Build and exercise the manifest and typed binding contracts in the catalog lane. |
 | CAT-103, CAT-104, CAT-105, CAT-106, CAT-108, CAT-109 | Scoped gateway and OIDC issuers, approved local deployers, quota and workload policy, operational streams and console. | Keep key issuance, identity and install authority behind their owning services. |
-| CAT-107 | Approved app signing trust and installer integration with local image import. | Verify the signed inventory and complete Linux amd64 OCI closure with `catalog/apps.VerifyInstallBundle`. The importer must preserve the same immutable archive, check expanded layers and DiffIDs, register and confirm local image digests, and connect the gate to installation. |
+| CAT-107 | Approved app signing trust and installer integration with local image import. | The catalog verifies the signed OCI closure with `catalog/apps.VerifyInstallBundle`. `ImportInstallImage` checks expanded layers and DiffIDs, registers a single image via the local Docker Unix socket and confirms its exact digest. The installer owns authorization, audit and workload admission, including multi-image registration. |
 
 The current screen plan has a node drawer and an app-catalog placeholder. The
 full operator flows also need their screen specifications. Keep 1Panel strictly
@@ -84,3 +84,13 @@ and run in a disconnected Linux amd64 container as UID/GID 65534. Use a private
 tmpfs for the test's temporary directory. The restore-root contract rejects
 root-owned fixture identities, so the non-root UID and GID are required for
 this comparison. The native macOS non-browser gate remains red.
+
+
+### Targeted recheck after the agent fix
+
+With `aa5e712f` present, the shutdown/adoption and revocation tests in both
+agent packages each passed 10 repetitions with the resolved `TMPDIR` and
+`GOMAXPROCS=2` above. The two restore-root tests and the two TLS setgid
+subcases still failed on macOS. The same restore and TLS tests passed in
+a disconnected Linux amd64 container as UID/GID 65534. This run used the
+targeted tests, catalog checks and an isolated Docker import fixture.
