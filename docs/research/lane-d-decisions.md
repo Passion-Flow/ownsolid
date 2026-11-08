@@ -67,3 +67,24 @@ coordinator's index and status updates in the same revision.
 These boundaries rule out marking a partial CLI command, raw transport or
 schema as the finished feature. Each capability needs its owning product
 path and verification before the roadmap tick.
+
+## Full repository test on a shared workstation
+
+The lane snapshot based on `e1dba7e` (`6a16b43` before rebase) passed
+`make check`, `make build`, and the full `make test` target. The browser
+recipe used the repository's Playwright configuration on private loopback
+ports, with both applications' complete suites. Console passed 1,029 cases
+and Portal passed 372, with 27 browser cases skipped by default. The Make
+target continued through every Go module, the Rust gateway and web unit
+tests.
+
+On the first run, a file-backed APFS scratch volume gave the control
+object store adequate free space, but three Agent training tests missed
+their 150 or 300 millisecond cancellation timing and reported
+`TRAINING_OUTPUT_CHANGED`. Native-disk repetition was intermittent. A
+10 GiB memory-backed volume passed five repetitions of each test. The full
+retry assigned that volume to the Agent training test process through Go's
+`-exec` option and left the other test processes on the APFS scratch
+volume. This preserved the test inventory, timing, and disk space checks.
+Running on the shared default ports or lowering the production disk space
+threshold would risk interfering with another lane or bypassing a guard.
