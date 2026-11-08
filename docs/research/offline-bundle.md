@@ -295,3 +295,22 @@ path and checksum for each declared notice. Reject inferring licence
 permissions from filenames or supplying a transitive inventory from only
 image tags. A production release still needs the exact notices from its
 selected dependency, model, and plug-in inputs.
+
+### Prepared directory membership on Linux
+
+The Linux factory suite can add an entry while the directory still has the
+same inode, size and timestamps. The
+[Linux inode interface](https://man7.org/linux/man-pages/man7/inode.7.html)
+reports metadata, while
+[directory enumeration](https://man7.org/linux/man-pages/man2/getdents.2.html)
+reports the names that are present. Keep the existing inode, ownership and
+payload checks. Re-enumerate each directory from its pinned
+[Go root](https://pkg.go.dev/os#Root.OpenFile) and compare the exact names and
+entry types. At the end, compare membership with the complete signed
+inventory already observed. Continue streaming in bounded batches.
+
+Waiting for a timestamp to advance in the test would hide a real Linux
+case. Replacing the pinned root with a fresh pathname walk would introduce
+a separate path substitution risk. No dependency or license changes are
+needed. Run the existing added-entry, changed-directory, unchanged inventory,
+cancellation, and special-file tests repeatedly on Linux as a non-root user.
