@@ -22,7 +22,9 @@ psql 'service=ownsolid-audit' --no-psqlrc --tuples-only --no-align \
 The query reads one database snapshot and orders records by chain position
 across partitions. Records that predate the migration are outside the chain.
 The export includes event identifiers and action metadata. It uses digests in
-place of reason text, identifier digests and metadata.
+place of reason text, identifier digests and metadata. V2 events additionally
+bind site and cell identifiers. The verifier accepts existing V1 exports and
+continuous exports that cross the upgrade boundary.
 
 ## Verify on an offline machine
 
