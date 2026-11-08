@@ -1,6 +1,6 @@
 # Architecture and scale
 
-Module reviewed: 2026-11-04.
+Module reviewed: 2026-11-04. ARC-104 research on 2026-11-08 ([Kubernetes cells](../../research/kubernetes-cells.md)) added ARC-115 and ARC-116.
 
 The invariants that let one control plane run 10,000+ GPU servers, and the simulator
 that proves them. Getting these right early is cheap; retrofitting them across installed
@@ -64,6 +64,8 @@ agents is not.
 - [ ] ARC-112 Throttle enrollment by the inventory's rack once FLT-101 names racks, instead of by source network ([ADR 0050](../../decisions/0050-agent-certificates.md)) (P1)
 - [ ] ARC-113 Replace the agent CA from the installer: add the new CA to the bundle, sign with it, retire the old one, without a node losing its session (P1)
 - [ ] ARC-114 Show each node's certificate expiry in the console and raise an alert before it runs out (P1)
+- [ ] ARC-115 Three control-plane servers per cell cluster with embedded etcd, joined and replaced from ownsolid, so a server failure leaves the cell schedulable ([ADR 0051](../../decisions/0051-kubernetes-cells-with-rke2.md)) (P1)
+- [ ] ARC-116 Workers of a cell cluster pull Kubernetes images from the cluster's embedded registry mirror instead of each downloading the image archives from control ([ADR 0051](../../decisions/0051-kubernetes-cells-with-rke2.md)) (P1)
 
 ## P2 Fleet operations
 
