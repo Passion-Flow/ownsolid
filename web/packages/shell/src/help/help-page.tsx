@@ -68,7 +68,7 @@ export function HelpPage() {
         />
       </div>
       {found.length === 0 ? (
-        <Card>
+        <Card className="max-w-[860px]">
           <EmptyState
             icon={SearchX}
             title={t('help.empty.title')}
