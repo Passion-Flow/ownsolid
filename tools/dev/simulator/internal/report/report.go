@@ -13,14 +13,15 @@ import (
 // The calls a simulated agent makes, named as in api/agent/v1 where the contract names
 // them. StreamOpen is opening the session stream, which carries the first heartbeat.
 const (
-	CallEnroll      = "enroll"
-	CallHeartbeat   = "heartbeat"
-	CallClaim       = "claim"
-	CallAcknowledge = "acknowledge"
-	CallEvents      = "events"
-	CallRenew       = "renew"
-	CallResult      = "result"
-	CallStreamOpen  = "stream_open"
+	CallEnroll           = "enroll"
+	CallHeartbeat        = "heartbeat"
+	CallClaim            = "claim"
+	CallAcknowledge      = "acknowledge"
+	CallEvents           = "events"
+	CallRenew            = "renew"
+	CallResult           = "result"
+	CallStreamOpen       = "stream_open"
+	CallGatewayRebalance = "gateway_rebalance"
 )
 
 // Histogram buckets: each bound is growth times the one before, from the first bound to

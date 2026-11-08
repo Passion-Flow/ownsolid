@@ -36,9 +36,9 @@ func init() { encoding.RegisterCodec(wire.SessionCodec{}) }
 // and falls back to HTTPS with long-polled claims when the stream cannot be opened, then
 // tries the stream again after SessionFallbackRetrySeconds. Calls are sequential.
 //
-// A heartbeat or claim makes exactly one request and does not retry: the caller's run
-// loop is the one retry layer, and it spaces attempts with full jitter (ADR 0013). The
-// acknowledgement is the exception, because the run loop never repeats it.
+// The caller's run loop retries failed cycles with full jitter (ADR 0013). A healthy
+// fallback session occasionally checks a higher-ranked gateway between claims. An
+// acknowledgement can be repeated over HTTPS because the run loop never repeats it.
 type Session struct {
 	client        *Client
 	node          string
@@ -61,6 +61,7 @@ type Session struct {
 	gateways   []string
 	gateway    int
 	unanswered int
+	rebalance  wire.SessionRebalance
 }
 
 type sessionStream struct {
@@ -110,6 +111,7 @@ func (s *Session) nextGateway() bool {
 		s.conn.Close()
 		s.conn = nil
 	}
+	s.rebalance = wire.SessionRebalance{}
 	s.gateway = (s.gateway + 1) % len(s.gateways)
 	if s.unanswered++; s.unanswered < len(s.gateways) {
 		return true
@@ -167,6 +169,9 @@ func (s *Session) heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 		s.dropStream()
 	}
 	if s.stream != nil {
+		if disposition := s.tryRebalance(ctx, h); disposition != nil {
+			return *disposition, nil
+		}
 		reply, e := s.exchange(ctx, wire.AgentMessage{Heartbeat: &h})
 		if e != nil {
 			s.dropStream()
@@ -371,6 +376,16 @@ func (s *Session) connection() (*grpc.ClientConn, error) {
 	if s.conn != nil {
 		return s.conn, nil
 	}
+	address := ""
+	if len(s.gateways) > 0 {
+		address = s.gateways[s.gateway]
+	}
+	conn, e := s.dial(address)
+	s.conn = conn
+	return conn, e
+}
+
+func (s *Session) dial(address string) (*grpc.ClientConn, error) {
 	origin, e := url.Parse(s.client.Origin)
 	if e != nil || s.client.tls == nil {
 		return nil, errStreamUnavailable
@@ -379,16 +394,15 @@ func (s *Session) connection() (*grpc.ClientConn, error) {
 	if port == "" {
 		port = "443"
 	}
-	address := net.JoinHostPort(origin.Hostname(), port)
-	if len(s.gateways) > 0 {
-		address = s.gateways[s.gateway]
+	if address == "" {
+		address = net.JoinHostPort(origin.Hostname(), port)
 	}
 	// The certificate is verified for the authority's host name, which is the origin's on a
 	// gateway as on control, so every gateway presents the agent entrance's certificate.
 	verify := s.client.tls.Clone()
 	// passthrough dials the address exactly as the HTTPS client does, without a proxy.
 	// The authority is the origin's, which control checks as it checks the Host header.
-	s.conn, e = grpc.NewClient("passthrough:///"+address,
+	conn, e := grpc.NewClient("passthrough:///"+address,
 		grpc.WithTransportCredentials(credentials.NewTLS(verify)),
 		grpc.WithAuthority(origin.Host),
 		grpc.WithNoProxy(),
@@ -396,7 +410,7 @@ func (s *Session) connection() (*grpc.ClientConn, error) {
 	if e != nil {
 		return nil, errStreamUnavailable
 	}
-	return s.conn, nil
+	return conn, nil
 }
 
 // openWithHeartbeat opens a stream whose first message is the heartbeat h.
@@ -405,62 +419,101 @@ func (s *Session) openWithHeartbeat(ctx context.Context, h wire.Handshake) (wire
 	if e != nil {
 		return wire.ControlMessage{}, e
 	}
-	scope := s.client.Scope
-	md := metadata.Pairs("authorization", "Bearer "+s.client.Credential, wire.SessionNodeHeader, s.node, wire.SessionSiteHeader, scope.SiteID, wire.SessionCellHeader, scope.CellID)
-	streamContext, cancel := context.WithCancel(metadata.NewOutgoingContext(context.Background(), md))
-	opened := make(chan struct{})
-	var stream grpc.ClientStream
-	go func() {
-		defer close(opened)
-		stream, e = conn.NewStream(streamContext, &grpc.StreamDesc{StreamName: wire.SessionMethod, ServerStreams: true, ClientStreams: true}, wire.SessionPath)
-	}()
-	timer := time.NewTimer(settings.Seconds(s.policy().ControlRequestSeconds))
-	select {
-	case <-opened:
-		timer.Stop()
-	case <-timer.C:
-		cancel()
-		<-opened
-	case <-ctx.Done():
-		cancel()
-		<-opened
+	s.stream, e = s.openStream(ctx, conn)
+	if e != nil {
+		return wire.ControlMessage{}, e
 	}
-	if e != nil || stream == nil {
-		cancel()
-		return wire.ControlMessage{}, errors.New("CONTROL_CONNECTION_FAILED")
-	}
-	s.stream = &sessionStream{stream: stream, cancel: cancel}
 	reply, e := s.exchange(ctx, wire.AgentMessage{Heartbeat: &h})
 	if e != nil {
 		s.dropStream()
-		return reply, e
 	}
-	return reply, nil
+	return reply, e
+}
+
+func (s *Session) openStream(ctx context.Context, conn *grpc.ClientConn) (*sessionStream, error) {
+	scope := s.client.Scope
+	md := metadata.Pairs("authorization", "Bearer "+s.client.Credential, wire.SessionNodeHeader, s.node, wire.SessionSiteHeader, scope.SiteID, wire.SessionCellHeader, scope.CellID)
+	streamContext, cancel := context.WithCancel(metadata.NewOutgoingContext(context.Background(), md))
+	timer := time.AfterFunc(settings.Seconds(s.policy().ControlRequestSeconds), cancel)
+	stop := context.AfterFunc(ctx, cancel)
+	stream, e := conn.NewStream(streamContext, &grpc.StreamDesc{StreamName: wire.SessionMethod, ServerStreams: true, ClientStreams: true}, wire.SessionPath)
+	timely, live := timer.Stop(), stop()
+	if e != nil || !timely || !live {
+		cancel()
+		return nil, errors.New("CONTROL_CONNECTION_FAILED")
+	}
+	return &sessionStream{stream: stream, cancel: cancel}, nil
+}
+
+// tryRebalance leaves the fallback in place until the candidate authenticates and
+// answers. Neither stream has an outstanding claim during the check.
+func (s *Session) tryRebalance(ctx context.Context, h wire.Handshake) *wire.Disposition {
+	now := s.now()
+	interval := s.client.GatewayRebalanceSeconds
+	if interval == 0 {
+		interval = wire.DefaultGatewayRebalanceSeconds
+	}
+	rank := s.rebalance.Candidate(now, settings.Seconds(interval), s.gateway)
+	if rank < 0 {
+		return nil
+	}
+	idleRemaining := s.lastExchange.Add(settings.Seconds(s.pacing.IdleSeconds() - sessionIdleMarginSeconds)).Sub(now)
+	probe, cancel := context.WithTimeout(ctx, min(idleRemaining, settings.Seconds(s.policy().ControlRequestSeconds)))
+	defer cancel()
+	conn, e := s.dial(s.gateways[rank])
+	if e != nil {
+		return nil
+	}
+	st, e := s.openStream(probe, conn)
+	if e == nil {
+		reply, exchangeErr := s.exchangeOn(probe, st, wire.AgentMessage{Heartbeat: &h})
+		if exchangeErr == nil && reply.Disposition != nil && probe.Err() == nil {
+			from := s.gateways[s.gateway]
+			s.dropStream()
+			s.conn.Close()
+			s.conn, s.stream, s.gateway = conn, st, rank
+			s.lastExchange = s.now()
+			s.rebalance = wire.SessionRebalance{}
+			slog.Info("agent_gateway_rebalanced", "from", from, "to", s.gateways[rank])
+			return reply.Disposition
+		}
+		st.cancel()
+	}
+	conn.Close()
+	return nil
 }
 
 // exchange sends one message and reads its reply within the request budget plus any
 // claim wait. A broken or late stream is closed; the caller drops it.
 func (s *Session) exchange(ctx context.Context, m wire.AgentMessage) (wire.ControlMessage, error) {
-	st := s.stream
+	reply, e := s.exchangeOn(ctx, s.stream, m)
+	if e == nil {
+		s.lastExchange = s.now()
+	}
+	return reply, e
+}
+
+func (s *Session) exchangeOn(ctx context.Context, st *sessionStream, m wire.AgentMessage) (wire.ControlMessage, error) {
 	m.ID = st.last + 1
 	budget := settings.Seconds(s.policy().ControlRequestSeconds)
 	if m.Claim != nil {
 		budget += time.Duration(m.Claim.WaitSeconds) * time.Second
 	}
 	timer := time.AfterFunc(budget, st.cancel)
-	defer timer.Stop()
 	stop := context.AfterFunc(ctx, st.cancel)
-	defer stop()
 	var reply wire.ControlMessage
 	e := st.stream.SendMsg(&m)
 	if e == nil {
 		e = st.stream.RecvMsg(&reply)
 	}
+	timely, live := timer.Stop(), stop()
 	if e != nil {
 		return reply, streamError(e)
 	}
+	if !timely || !live {
+		return reply, errors.New("CONTROL_CONNECTION_FAILED")
+	}
 	st.last = m.ID
-	s.lastExchange = s.now()
 	if reply.Validate(m) != nil {
 		return reply, errors.New("CONTROL_RESPONSE_INVALID")
 	}

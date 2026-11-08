@@ -38,6 +38,7 @@ type Connection struct {
 	gateways   []string
 	gateway    int
 	unanswered int
+	rebalance  wire.SessionRebalance
 }
 
 // Connection returns a new, unconnected session connection to the dialer's address.
@@ -72,6 +73,7 @@ func (c *Connection) Next() bool {
 		c.conn.Close()
 		c.conn = nil
 	}
+	c.rebalance = wire.SessionRebalance{}
 	c.gateway = (c.gateway + 1) % len(c.gateways)
 	if c.unanswered++; c.unanswered < len(c.gateways) {
 		return true
@@ -93,10 +95,16 @@ func (c *Connection) get() (*grpc.ClientConn, error) {
 	if c.conn != nil {
 		return c.conn, nil
 	}
+	conn, e := c.dial(c.gateway)
+	c.conn = conn
+	return conn, e
+}
+
+func (c *Connection) dial(rank int) (*grpc.ClientConn, error) {
 	d := c.dialer
 	address := d.address
 	if len(c.gateways) > 0 {
-		address = c.gateways[c.gateway]
+		address = c.gateways[rank]
 	}
 	conn, e := grpc.NewClient("passthrough:///"+address,
 		grpc.WithTransportCredentials(credentials.NewTLS(d.tls.Clone())),
@@ -106,7 +114,6 @@ func (c *Connection) get() (*grpc.ClientConn, error) {
 	if e != nil {
 		return nil, ErrUnreachable
 	}
-	c.conn = conn
 	return conn, nil
 }
 
@@ -114,10 +121,57 @@ func (c *Connection) get() (*grpc.ClientConn, error) {
 func (c *Connection) Reset() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.rebalance = wire.SessionRebalance{}
 	if c.conn != nil {
 		c.conn.Close()
 		c.conn = nil
 	}
+}
+
+// Rebalance checks a higher-ranked gateway using a heartbeat. It returns a live
+// replacement only after that gateway answers and the original connection is still
+// current. A nil stream and nil error mean no check was due.
+func (c *Connection) Rebalance(ctx context.Context, interval time.Duration, node Node, h wire.Handshake) (*Stream, *wire.Disposition, error) {
+	c.mu.Lock()
+	current := c.conn
+	rank := c.rebalance.Candidate(time.Now(), interval, c.gateway)
+	c.mu.Unlock()
+	if current == nil || rank < 0 {
+		return nil, nil, nil
+	}
+	ctx, cancel := context.WithTimeout(ctx, c.dialer.request)
+	defer cancel()
+	conn, e := c.dial(rank)
+	if e != nil {
+		return nil, nil, e
+	}
+	stream, e := c.open(ctx, conn, node)
+	if e == nil {
+		var reply wire.ControlMessage
+		reply, e = stream.Exchange(ctx, wire.AgentMessage{Heartbeat: &h})
+		if e == nil && c.adoptCandidate(ctx, current, conn, rank) {
+			return stream, reply.Disposition, nil
+		}
+		stream.Close()
+	}
+	conn.Close()
+	if e == nil {
+		e = ErrUnreachable
+	}
+	return nil, nil, e
+}
+
+func (c *Connection) adoptCandidate(ctx context.Context, current, candidate *grpc.ClientConn, rank int) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	// A simulated fault may have reset the original connection while the check ran.
+	if c.conn != current || ctx.Err() != nil {
+		return false
+	}
+	c.conn, c.gateway, c.unanswered = candidate, rank, 0
+	c.rebalance = wire.SessionRebalance{}
+	current.Close()
+	return true
 }
 
 // Stream is one open session. Its exchanges are sequential.
@@ -134,6 +188,10 @@ func (c *Connection) Open(ctx context.Context, node Node) (*Stream, error) {
 	if e != nil {
 		return nil, e
 	}
+	return c.open(ctx, conn, node)
+}
+
+func (c *Connection) open(ctx context.Context, conn *grpc.ClientConn, node Node) (*Stream, error) {
 	md := metadata.Pairs("authorization", "Bearer "+node.Credential, wire.SessionNodeHeader, node.ID, wire.SessionSiteHeader, node.Scope.SiteID, wire.SessionCellHeader, node.Scope.CellID)
 	streamContext, cancel := context.WithCancel(metadata.NewOutgoingContext(context.Background(), md))
 	budget := c.dialer.request
@@ -160,16 +218,18 @@ func (s *Stream) Exchange(ctx context.Context, m wire.AgentMessage) (wire.Contro
 		budget += time.Duration(m.Claim.WaitSeconds) * time.Second
 	}
 	timer := time.AfterFunc(budget, s.cancel)
-	defer timer.Stop()
 	stop := context.AfterFunc(ctx, s.cancel)
-	defer stop()
 	var reply wire.ControlMessage
 	e := s.stream.SendMsg(&m)
 	if e == nil {
 		e = s.stream.RecvMsg(&reply)
 	}
+	timely, live := timer.Stop(), stop()
 	if e != nil {
 		return reply, streamError(e)
+	}
+	if !timely || !live {
+		return reply, ErrUnreachable
 	}
 	s.last = m.ID
 	if reply.Validate(m) != nil {
