@@ -55,3 +55,13 @@ process had loopback-only outbound network permission. The public alias
 returned streamed text, 23 prompt tokens, 9 completion tokens, one DONE
 marker and an equal durable outcome. The gateway served real TLS, while
 control responses came from the existing fixture.
+
+## Native gateway and real control-plane fixture
+
+The existing `gateway_integration` Go profile also passed with the native
+gateway binary and a disposable PostgreSQL 18.6 database with pgvector 0.8.7
+installed in `public`. Both shared and dedicated machine HTTPS routes
+preserved aliases, acknowledged completed usage, enforced revocation and
+retained pending outcomes during control outage. The same profile passed
+license expiry and the accepted-operation case. This profile uses the real
+Go service and PostgreSQL with synthetic model responses.

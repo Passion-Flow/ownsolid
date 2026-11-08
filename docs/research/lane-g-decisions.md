@@ -68,3 +68,14 @@ fixture only. [Test design and evidence](gateway-chat-streaming.md).
   setup. The GW-106 measurements cover the local limiter only.
 - GW-118 and GW-120 need changes to the Go provisioning/alias authority and
   Console or Portal. Those paths belong to other lanes.
+
+## GW-106: Publish queued budget updates together
+
+Use a FIFO writer per tenant and share the existing durable snapshot across
+ready debits and refunds. The per-update writer serialized filesystem
+publication under a mutex and showed a long contention tail. Delayed
+checkpoints could admit calls using balances that might be lost on restart,
+so the gateway continues waiting for a durable debit. The snapshot format
+stays compatible and the existing active-request limit bounds the queue.
+An error in a shared write fails all tentative changes in that batch and
+closes the tenant's writer. See [the benchmark and failure model](gateway-limits.md).
