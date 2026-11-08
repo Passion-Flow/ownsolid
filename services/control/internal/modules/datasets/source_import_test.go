@@ -75,7 +75,8 @@ func TestSourceImportFormats(t *testing.T) {
 			}
 			if report.Rows != 2 || report.FieldCount != 2 || report.RejectedRows != 0 ||
 				report.SourceBytes != int64(len(tc.input)) || report.SourceSHA256 != fmt.Sprintf("%x", sha256.Sum256([]byte(tc.input))) ||
-				report.OutputBytes != int64(len(tc.expected)) || report.Fields["text"].Nulls != 1 ||
+				report.OutputBytes != int64(len(tc.expected)) || report.OutputSHA256 != fmt.Sprintf("%x", sha256.Sum256([]byte(tc.expected))) ||
+				report.Fields["text"].Nulls != 1 ||
 				report.Fields["id"].Nulls != 0 || strings.Join(report.Fields["id"].Types, ",") != tc.types {
 				t.Fatalf("unexpected report: %+v", report)
 			}
@@ -93,7 +94,7 @@ func TestSourceImportRecovery(t *testing.T) {
 	path := filepath.Join(dir, "rows.jsonl")
 	opts := SourceImportOptions{Format: SourceJSONL}
 	report, err := importer.ImportUpload(t.Context(), strings.NewReader(input), path, opts)
-	if err != (SourceIssue{Code: "DATASET_JSON_INVALID", Line: 2}) || report.RejectedRows != 1 {
+	if err != (SourceIssue{Code: "DATASET_JSON_INVALID", Line: 2}) || report.RejectedRows != 1 || report.OutputSHA256 != "" {
 		t.Fatalf("report %+v, error %v", report, err)
 	}
 	assertNoImports(t, dir)
@@ -107,8 +108,8 @@ func TestSourceImportRecovery(t *testing.T) {
 		t.Fatalf("report %+v, error %v", report, err)
 	}
 	before := readImported(t, path)
-	_, err = importer.ImportUpload(t.Context(), strings.NewReader("{\"id\":4}\n"), path, opts)
-	if err == nil || err.Error() != "DATASET_OUTPUT_CONFLICT" || readImported(t, path) != before {
+	report, err = importer.ImportUpload(t.Context(), strings.NewReader("{\"id\":4}\n"), path, opts)
+	if err == nil || err.Error() != "DATASET_OUTPUT_CONFLICT" || report.OutputSHA256 != "" || readImported(t, path) != before {
 		t.Fatalf("existing import changed: %v", err)
 	}
 }
