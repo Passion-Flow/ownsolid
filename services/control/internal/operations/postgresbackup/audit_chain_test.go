@@ -34,9 +34,9 @@ func TestAuditChainRestoreReadbackExcludesOnlyReceipt(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() {
-		cleanup, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		cleanup, cancel := context.WithTimeout(context.Background(), time.Minute)
 		defer cancel()
-		if _, err := operator.Exec(cleanup, "DROP DATABASE "+databaseName); err != nil {
+		if _, err := operator.Exec(cleanup, "DROP DATABASE "+databaseName+" WITH (FORCE)"); err != nil {
 			t.Error(err)
 		}
 	}()
