@@ -118,3 +118,30 @@ removal for a node that never returns.
   restart is not adopted; control delivers it again.
 - Operators may want an optional per-job limit on unsupervised time, as Nomad offers. Off
   by default if it is ever added.
+
+## Shutdown during input verification
+
+The shutdown and revocation tests must signal after the fake engine starts the
+container. A wall-clock timer can instead fire during private input preparation
+or while the agent is saving the journal. That is a different branch of ADR 0032:
+a pre-start shutdown closes the attempt with a never-created receipt. A later
+process can only adopt a journal that records a running container.
+
+[Go context cancellation](https://pkg.go.dev/context#WithCancelCause) distinguishes
+the error returned by an interrupted operation from the cause used by the
+manager to decide whether to preserve or remove running work. In both attempt
+managers, the context-aware reader returns a cancellation or deadline while
+hashing an input or output. The caller should propagate that error before
+classifying short reads and digest mismatches as changed content.
+
+Use the fake engine's start hook for tests of running work and interrupt the
+next manager's event transfer only after it has reopened the journal. Inject
+cancellation just after a valid input download for the pre-start regression.
+This preserves the existing ownership, integrity, cleanup and deadline checks.
+Increasing the timer would still race startup. Treating all hash failures as
+retryable would allow corrupted input to be mistaken for a transient failure.
+
+This change uses only the existing [Go standard library](https://go.dev/LICENSE),
+whose BSD-3-Clause license permits commercial use, redistribution with notice and
+offline use. The tests generate private synthetic files, with no new package,
+model or data set.

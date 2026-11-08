@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -302,6 +303,9 @@ func verifiedAsset(ctx context.Context, path string, asset datawire.Asset, uid i
 	n, e := io.Copy(hash, contextReader{ctx, io.LimitReader(f, asset.SizeBytes+1)})
 	if e != nil || n != asset.SizeBytes || hex.EncodeToString(hash.Sum(nil)) != asset.SHA256 {
 		f.Close()
+		if errors.Is(e, context.Canceled) || errors.Is(e, context.DeadlineExceeded) {
+			return nil, e
+		}
 		return nil, fail("TRAINING_OUTPUT_CHANGED")
 	}
 	if _, e = f.Seek(0, io.SeekStart); e != nil {
