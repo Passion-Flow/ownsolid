@@ -20,17 +20,125 @@ require changing the explicit path boundary. Replacing them with an application
 projection side channel would risk competing ownership of the same rows and
 would still leave the release without a usable browser path.
 
+## Workflow editor handoff for APP-101
+
+The Web lane owns the editor entry in `web/apps/console/src/router.tsx` and
+`navigation.ts`, plus the portal entry if the screen plan enables it. It can
+start from the generated `web/packages/api/src/gen/workflows.ts` contract.
+The existing workflow resource has an admin and a workspace-scoped portal
+route in [the workflow OpenAPI](../../api/openapi/v1/workflows/openapi.json).
+
+- Read the editable graph and revision with `adminGetWorkflow` or
+  `portalGetWorkflow`. Save through the matching `PATCH` with `UpdateWorkflow`
+  containing `graph`, `expected_revision`, `name`, `enabled` and `reason`.
+- Use the scoped `/validations` and `/publications` operations against the same
+  saved revision. Map node and edge issues onto the graph and preserve the
+  local draft when the server refuses a stale revision. Publication keeps the
+  existing CSRF and idempotency headers.
+- The workflow owner must extend
+  [graph.go](../../services/control/internal/modules/workflows/graph.go) and
+  [publications.go](../../services/control/internal/modules/workflows/publications.go)
+  alongside the versioned contract before the editor can ship free connections.
+  Current schemas 1 and 2 admit bounded linear pipelines. Keep old published
+  graphs executable and specify directed edge endpoints, valid port bindings
+  and executable topology for the new schema. Use the same validation on save,
+  validation and publish within their respective draft and executable limits.
+
+Acceptance needs an editable graph that persists on reload, backend validation
+of invalid connections, a visible revision conflict that preserves unsaved
+changes, and publication and execution of the saved graph without egress.
+
+## Approval handoff for APP-103
+
+The workflow runtime owner starts at
+[executor.go](../../services/control/internal/modules/workflows/executor.go),
+[execution_lease.go](../../services/control/internal/modules/workflows/execution_lease.go),
+[lifecycle.go](../../services/control/internal/modules/workflows/lifecycle.go)
+and [run_history.go](../../services/control/internal/modules/workflows/run_history.go).
+The existing run contract has no waiting state or approval decision. Propose a
+versioned graph node and an additive contract in
+[workflow OpenAPI](../../api/openapi/v1/workflows/openapi.json). The run read
+exposes a pending approval summary and the caller's decision eligibility. An
+authenticated `POST /runs/{run_id}/approvals/{approval_id}/decisions` under
+the same admin or workspace workflow prefix takes a decision, expected
+approval revision and reason with the existing CSRF and idempotency headers.
+A retry with the same key returns the recorded decision. A conflicting
+decision returns a revision conflict.
+
+A new migration must add a nonterminal waiting state, its bounded checkpoint
+and approval record. The one-active-turn constraint must still cover a waiting
+conversation. A paused run relinquishes its worker lease, retains its pinned
+graph version and authorizing principal, and resumes through durable work
+claiming with a fresh lease. The worker must recheck the retained run authority
+and current scope after restart without persisting browser credentials. The
+approver authorizes the decision, and the executor preserves the initiating
+principal's authority on downstream actions. Recovery, explicit cancellation
+and offline restore must settle pending approvals within their existing
+transaction boundaries. The Web lane wires the decision controls to the
+versioned API and shows waiting, denied, cancelled and resumed states.
+See [restart and retry acceptance](workflow-human-approval.md).
+
+## Assistant catalog handoff for AGT-103
+
+The [applications OpenAPI](../../api/openapi/v1/applications/openapi.json)
+references `portalCookie` on `ListApplications` and
+`ListApplicationConversations` but declares `PortalSession`. The API owner
+can align both operation references with `PortalSession` and regenerate the
+SDK. The assistant's in-process generator verifies that scheme's cookie type,
+location and name before accepting the legacy reference. The generated tool
+metadata carries no cookie and does not perform HTTP calls.
+
 ## Repository test gate
 
-The standard browser target binds ports 4310 and 4311. Concurrent lanes can
-occupy these ports. A temporary Playwright configuration with unused ports can
-exercise the existing browser tests without changing the browser owner or
-attaching to another lane's server. Keep the standard target's result distinct.
+The previous console run on isolated ports had 18 failures, 1013 passes and 23
+skips. The failure locations, relative to `web/apps/console`, were as follows.
 
-The control-plane assistant slice does not enter the agent build. The agent's
-`TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt` and
-`TestARevokedAttemptStopsItsContainer` failed in the full agent package and in
-focused local reruns. The assertions concern cancellation timing and container
-ownership before a training attempt starts. This is a separate agent-owned
-verification boundary. The APP lane cannot change those tests or the agent
-runtime, and the repository-wide test gate remains open.
+| Test | Failed cases |
+| --- | --- |
+| `e2e/account.spec.ts` | Shared account menu and command menu test at `web/packages/shell/testing/account-flows.ts:31` |
+| `e2e/models.spec.ts` | Line 82, failed model read and retry |
+| `e2e/node-page.spec.ts` | Lines 67, 106 and 140, tasks, activity and missing node retry |
+| `e2e/nodes.spec.ts` | Lines 47 and 94, server-side list filters and unavailable figures |
+| `e2e/overview.spec.ts` | Lines 156, 181, 215, 228, 240 and 259, setup, quick actions, partial failures and idle session |
+| `e2e/resource-pages.spec.ts` | Lines 74 and 128, missing person and connector retry |
+| `e2e/services.spec.ts` | Lines 78 and 233, failed service read and concurrent revision |
+| `e2e/users.spec.ts` | Line 107, failed user list retry |
+
+Run representative browser cases after the console build from
+`web/apps/console`.
+
+```sh
+pnpm exec vite build
+pnpm exec playwright test e2e/account.spec.ts e2e/models.spec.ts \
+  e2e/node-page.spec.ts e2e/overview.spec.ts e2e/services.spec.ts \
+  --workers=1 --grep 'reaches the page from the account menu|shows a failed read and retries it|Tasks says when there are none|a new installation is walked through setup|two people acting at once'
+```
+
+If the default preview port 4310 is occupied, use a temporary Playwright
+configuration via `--config`. Retain the checked-in test settings and set
+`testDir` and `webServer.cwd` to the console checkout's paths, use an unused
+loopback port for `use.baseURL` and `webServer.url`, and add `--port <port>
+--strictPort` to the preview command. Run the same selection serially on the
+baseline and lane. Do not reuse another lane's server.
+
+All 18 previously failing cases passed on both `609d5198` and `356b241b`
+with one worker and the same isolated port. A gateway case shared one failure
+title and also passed in each 19-case selection. The Web, API and package trees
+were identical. The previous failures did not reproduce under that comparison.
+This does not establish the cause of the original run or a green full suite.
+
+Run the two Agent training cases from the repository root on macOS.
+
+```sh
+export TMPDIR="$(cd "${TMPDIR:-/tmp}" && pwd -P)/"
+GOPROXY=off GOSUMDB=off go -C services/agent test ./internal/training \
+  -run '^(TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt|TestARevokedAttemptStopsItsContainer)$' \
+  -count=3 -parallel=1 -v
+```
+
+The shutdown case failed twice on `609d5198` and passed three times on the
+lane. The revocation case failed once on the baseline and twice on the lane.
+The observed failure signatures included `TRAINING_OUTPUT_CHANGED` before
+container start and cancellation returning a receipt. Both cases failed
+without the APP commits. The Agent, API and Go workspace trees were
+identical. They remain Agent-owned blockers for the full test gate.
