@@ -23,9 +23,9 @@ and PostgreSQL uses the [PostgreSQL License](https://www.postgresql.org/about/li
 Both permit commercial use, redistribution with notices and offline operation.
 The proposed connection needs no new package, external service, model or dataset.
 
-## Current boundary
+## Available writer and remaining boundary
 
-The [audit writer](../../services/control/internal/modules/audit/repository.go)
+The legacy [audit writer](../../services/control/internal/modules/audit/repository.go)
 accepts an actor user and a subject user. In the
 [identity schema](../../services/control/migrations/postgresql/000001_identity.up.sql)
 both fields reference real users. A null actor cannot distinguish the assistant
@@ -36,6 +36,14 @@ typed actor metadata parameter. The
 and [OpenAPI audit event](../../api/openapi/v1/identity/openapi.json) expose
 human actor fields. They cannot project or filter an assistant actor.
 
+SCI added [WriteProductAssistantWithin](../../services/control/internal/modules/audit/product_assistant.go)
+for PostgreSQL. It borrows the operation transaction, stores the assistant
+actor in fixed metadata, and keeps the authenticated user in the subject
+field. It checks the supplied installation tenant, workspace and subject.
+The chain binds the metadata digest. The safe list and export still lack
+readable assistant actor attribution. See the
+[writer contract](product-assistant-audit-writer.md).
+
 Using the signed-in user's ID as both actor and subject would erase delegation.
 Creating an assistant user would confuse an executor with an authorized person.
 Encoding actor identity in an action prefix or free-text reason would leave
@@ -45,12 +53,11 @@ These paths do not satisfy AGT-107.
 
 ## Smallest handoff
 
-1. The audit owner provides a transaction-borrowing append operation with a
-   server-assigned actor kind and stable actor identifier, the verified user
-   subject, authorized tenant and workspace, audience, request ID, fixed action
-   or tool ID and bounded outcome. Preserve the existing human write callers.
-   The assistant actor comes from the server dispatch binding. No request,
-   model output or tool argument supplies it.
+1. Use the scoped append for authorized operations that already resolve a
+   workspace. Pass the verified user subject, resolved tenant and workspace,
+   audience, server request ID, registered tool ID and bounded outcome. The
+   writer supplies the actor. It requires a workspace, so workspace-free
+   navigation needs a shared global-scope policy before it can use this path.
 2. The audit and identity owners expose that actor in the safe audit list and
    export. The existing export carries a metadata digest. An actor displayed
    beside that digest needs an independently verifiable binding. Prefer
@@ -62,8 +69,9 @@ These paths do not satisfy AGT-107.
 3. The authenticated HTTP owner threads its server-generated request ID and
    current identity into
    [productagent Run](../../services/control/internal/modules/productagent/service.go).
-   Navigation appends the event in the existing session recheck transaction
-   before returning the route. Application and conversation reads append it
+   Scoped navigation appends the event in the existing session recheck
+   transaction before returning the route. Application and conversation reads
+   append it
    in the [application owner transaction](../../services/control/internal/modules/applications/repository.go)
    after authorization and projection, using the resolved workspace. Expose
    a narrow internal read-completion seam when the real writer is ready.
@@ -92,5 +100,5 @@ uncertain commit. Add a confirmed mutation case when a production write
 adapter exists and verify the effect and audit event commit together. Verify
 new and historical events with the offline verifier.
 
-The existing writer and projection cannot establish these claims. AGT-107
-stays open and no event is emitted under a substitute human actor.
+The writer can record scoped attribution. AGT-107 stays open until the
+production command path and audit projection meet this acceptance contract.

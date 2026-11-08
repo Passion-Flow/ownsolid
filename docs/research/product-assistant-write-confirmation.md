@@ -33,9 +33,9 @@ cannot invoke confirmation, and disabled or revoked authority fails closed.
 A stateless signature check would permit replay. A process-local nonce cache would
 lose the same guarantee on restart or across replicas. A generic write proxy or
 separate audit transaction would bypass the owner's final permission or commit
-boundary. The current shared audit contract records a human actor and the
-applications owner has no write adapter. Keep writes unavailable until a real
-adapter and assistant actor attribution can participate in the resource transaction.
+boundary. The shared [scoped assistant writer](product-assistant-audit-writer.md)
+can record delegated attribution in PostgreSQL. A real confirmed mutation
+adapter must borrow it in the resource transaction before writes can be enabled.
 
 This design uses the [BSD-licensed Go standard library](https://go.dev/LICENSE)
 and the existing [PostgreSQL License](https://www.postgresql.org/about/licence/)

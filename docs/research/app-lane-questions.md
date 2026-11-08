@@ -90,13 +90,13 @@ metadata carries no cookie and does not perform HTTP calls.
 
 ## Audit handoff for AGT-107 and AUD-101
 
-The shared writer currently accepts a user actor and user subject and takes
-its scope from the installation default. The audit API has no assistant actor.
-A typed actor and resolved-scope writer, shared audit projection, and request
-correlation are the minimum shared changes. Once those exist, the current
-navigation and application read transactions can append events before returning
-results. See [product assistant audit attribution](product-assistant-audit.md)
-for the owning paths and acceptance cases.
+SCI provides a [scoped assistant writer](product-assistant-audit-writer.md)
+for PostgreSQL. Scoped navigation and application reads can borrow it when
+the authenticated command entry passes the server request ID and the owning
+transaction supplies the resolved workspace. Workspace-free navigation and
+the shared audit projection still need their contracts. See
+[product assistant audit attribution](product-assistant-audit.md) for the
+owning paths and acceptance cases.
 
 ## Repository test gate
 
