@@ -55,10 +55,10 @@ func invalidOCI(reason string) error {
 	return fmt.Errorf("%w: images.tar %s", ErrBundle, reason)
 }
 
-func verifyOCIArchive(ctx context.Context, root *os.Root, expected string, maximum int64, images []string) error {
+func verifyOCIArchive(ctx context.Context, root *os.Root, expected string, maximum int64, images []string) (OCIArchive, error) {
 	file, size, err := openLocalFile(root, ImageArchiveName, maximum)
 	if err != nil {
-		return invalidOCI("must be a regular OCI archive within the payload limit")
+		return OCIArchive{}, invalidOCI("must be a regular OCI archive within the payload limit")
 	}
 	defer file.Close()
 	source := payloadReader{ctx: ctx, file: file}
@@ -66,20 +66,24 @@ func verifyOCIArchive(ctx context.Context, root *os.Root, expected string, maxim
 	input := &ociCounter{reader: io.TeeReader(io.LimitReader(source, size), hash)}
 	files, err := scanOCIArchive(input)
 	if ctx.Err() != nil {
-		return ctx.Err()
+		return OCIArchive{}, ctx.Err()
 	}
 	if err != nil {
-		return err
+		return OCIArchive{}, err
 	}
 	var extra [1]byte
 	n, err := source.Read(extra[:])
 	if ctx.Err() != nil {
-		return ctx.Err()
+		return OCIArchive{}, ctx.Err()
 	}
 	if n != 0 || err != io.EOF || input.offset != size || encodeDigest(hash.Sum(nil)) != expected {
-		return invalidOCI("does not match the signed archive")
+		return OCIArchive{}, invalidOCI("does not match the signed archive")
 	}
-	return verifyOCIClosure(ctx, file, files, images)
+	inventory, err := verifyOCIClosure(ctx, file, files, images)
+	if err != nil {
+		return OCIArchive{}, err
+	}
+	return OCIArchive{Digest: expected, Bytes: size, Images: inventory}, nil
 }
 
 type ociCounter struct {
@@ -165,7 +169,7 @@ func scanOCIArchive(input *ociCounter) (map[string]ociSection, error) {
 	return files, nil
 }
 
-func verifyOCIClosure(ctx context.Context, file *os.File, files map[string]ociSection, images []string) error {
+func verifyOCIClosure(ctx context.Context, file *os.File, files map[string]ociSection, images []string) ([]OCIImage, error) {
 	var layout struct {
 		Version string `json:"imageLayoutVersion"`
 	}
@@ -177,33 +181,36 @@ func verifyOCIClosure(ctx context.Context, file *os.File, files map[string]ociSe
 	if !readOCIMetadata(file, files["oci-layout"], "", &layout) || layout.Version != "1.0.0" ||
 		!readOCIMetadata(file, files["index.json"], "", &index) || index.SchemaVersion != 2 ||
 		(index.MediaType != "" && index.MediaType != ociIndexType) || len(index.Manifests) != len(images) {
-		return invalidOCI("must contain a version 1.0.0 OCI layout with the declared image inventory")
+		return nil, invalidOCI("must contain a version 1.0.0 OCI layout with the declared image inventory")
 	}
 	wanted := make(map[string]bool, len(images))
 	for _, image := range images {
 		wanted[image] = true
 	}
 	used := make(map[string]bool)
+	inventory := make([]OCIImage, 0, len(index.Manifests))
 	for _, image := range index.Manifests {
 		if err := ctx.Err(); err != nil {
-			return err
+			return nil, err
 		}
 		if !wanted[image.Digest] || image.MediaType != ociManifestType ||
 			(image.Platform != nil && !image.Platform.amd64()) {
-			return invalidOCI("contains an undeclared, repeated or unsupported image manifest")
+			return nil, invalidOCI("contains an undeclared, repeated or unsupported image manifest")
 		}
 		delete(wanted, image.Digest)
-		if err := verifyOCIImage(file, files, used, image); err != nil {
-			return err
+		verified, err := verifyOCIImage(file, files, used, image)
+		if err != nil {
+			return nil, err
 		}
+		inventory = append(inventory, verified)
 	}
 	if len(used)+2 != len(files) {
-		return invalidOCI("contains an unreferenced blob")
+		return nil, invalidOCI("contains an unreferenced blob")
 	}
-	return nil
+	return inventory, nil
 }
 
-func verifyOCIImage(file *os.File, files map[string]ociSection, used map[string]bool, image ociDescriptor) error {
+func verifyOCIImage(file *os.File, files map[string]ociSection, used map[string]bool, image ociDescriptor) (OCIImage, error) {
 	var manifest struct {
 		SchemaVersion int             `json:"schemaVersion"`
 		MediaType     string          `json:"mediaType"`
@@ -226,15 +233,15 @@ func verifyOCIImage(file *os.File, files map[string]ociSection, used map[string]
 		!readOCIMetadata(file, manifest.Config.section(files, used), manifest.Config.Digest, &config) ||
 		!config.amd64() || config.RootFS.Type != "layers" || config.RootFS.DiffIDs == nil ||
 		len(config.RootFS.DiffIDs) != len(manifest.Layers) {
-		return invalidOCI("must contain complete Linux amd64 image manifests and configurations")
+		return OCIImage{}, invalidOCI("must contain complete Linux amd64 image manifests and configurations")
 	}
 	for i, layer := range manifest.Layers {
 		if (layer.MediaType != ociLayerType && layer.MediaType != ociLayerType+"+gzip") ||
 			!digest.MatchString(config.RootFS.DiffIDs[i]) || layer.section(files, used).size == 0 {
-			return invalidOCI("contains a missing, remote or unsupported layer")
+			return OCIImage{}, invalidOCI("contains a missing, remote or unsupported layer")
 		}
 	}
-	return nil
+	return OCIImage{ManifestDigest: image.Digest, ConfigDigest: manifest.Config.Digest}, nil
 }
 
 func (d ociDescriptor) section(files map[string]ociSection, used map[string]bool) ociSection {
