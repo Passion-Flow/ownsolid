@@ -126,6 +126,36 @@ test('stops on a long outage, says so, and continues on request', async ({ page 
   await expect(page.getByRole('link', { name: 'Open the model' })).toBeVisible();
 });
 
+test('discards an import before its first chunk is accepted', async ({ page }) => {
+  const chunkPath = /\/admin\/model-imports\/[0-9a-f-]{36}\/chunks$/;
+  await page.route(chunkPath, () => {
+    // Hold the first request without forwarding it to the scripted server.
+  });
+  await fillForm(page);
+  const firstChunk = page.waitForRequest(chunkPath);
+  await start(page);
+  const request = await firstChunk;
+
+  await page.getByRole('button', { name: 'Discard' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Discard the import of Qwen3-0.6B' });
+  await dialog.getByLabel('Reason').fill('The source bundle was replaced');
+  const discard = dialog.getByRole('button', { name: 'Discard' });
+  await expect(discard).toBeDisabled();
+  await dialog.getByLabel(/^Type /).fill('Qwen3-0.6B');
+
+  const aborted = page.waitForEvent('requestfailed', (failed) => failed === request);
+  await discard.click();
+  await aborted;
+  await expect(page.getByText('Discarded', { exact: true }).first()).toBeVisible();
+  expect(control.modelImports[0]).toMatchObject({
+    state: 'cancelled',
+    uploaded_bytes: 0,
+    attempts: 0,
+  });
+  expect(control.modelChunks).toEqual({});
+  expect(control.models).toEqual([]);
+});
+
 test('keeps uploading while the person moves around the console', async ({ page }) => {
   control.chunkDelayMilliseconds = 400;
   await fillForm(page);
