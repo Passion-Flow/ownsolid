@@ -277,3 +277,35 @@ publish, retry and disable against a provisioned gateway record. Agent
 systemd execution and gateway process delivery have their own qualification.
 
 [vlogs]: https://github.com/VictoriaMetrics/VictoriaLogs/blob/v1.53.0/LICENSE
+
+## Agent-managed gateway registration
+
+GW-114 added the agent-managed branch to the existing
+[Admin distribution contract](../../api/openapi/v1/distribution/openapi.json).
+Register a node's managed gateway with the same node UUID, name, audit reason
+and idempotency key used in the console. Omit the origin to let control check
+eligibility and let the node declare it. Accept the contract's HTTP 201
+creation and HTTP 200 replay responses. Render the workspace-scoped gateway
+record with its delivery state and error so an operator can inspect progress
+before publishing the alias. The registration and publication commands stay
+separate because startup settles asynchronously and has its own retry path.
+
+Do not infer an origin, issue a legacy placement credential, or chain alias
+publication into a request that only queues a gateway task. The local
+command uses the existing session, CSRF and mutation machinery. It adds no
+dependency, model or dataset. The current CLI dependencies and offline use
+are covered by the licence review above.
+
+Exercise the command on the real Admin TLS handler with PostgreSQL and an
+eligible enrolled fixture node. Verify that creation queues one task, a
+lost response is retried with the same key, replay keeps the same gateway,
+foreign workspaces are refused, and the response carries no credential.
+The node execution and TLS gateway qualification are recorded by GW-114.
+
+The Linux amd64 Admin TLS fixture passed with real PostgreSQL in a Docker
+network namespace with no external route. It observed the committed 201
+creation before losing the response, replayed the same key over Admin TLS,
+read the queued gateway, and found one gateway task and one audit event.
+The fixture refused a different workspace and verified the CLI output
+contained neither credential field. Model import and exporter fixtures
+were skipped in this run because their optional assets were not supplied.

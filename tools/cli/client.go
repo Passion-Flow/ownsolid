@@ -126,6 +126,7 @@ type request struct {
 	csrf, key    string
 	body         []byte
 	status       int
+	otherStatus  int
 }
 
 func (c *apiClient) request(ctx context.Context, input request, out any) error {
@@ -155,7 +156,7 @@ func (c *apiClient) request(ctx context.Context, input request, out any) error {
 		return connectionError(c.origin.String(), err)
 	}
 	defer res.Body.Close()
-	if res.StatusCode != input.status {
+	if res.StatusCode != input.status && res.StatusCode != input.otherStatus {
 		return newAPIError(c.origin.String(), res)
 	}
 	if out == nil {
