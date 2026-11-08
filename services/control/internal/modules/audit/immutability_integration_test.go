@@ -15,12 +15,11 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 )
 
 func TestAuditServingRoleCannotMutateEvents(t *testing.T) {
 	const scopedAuditSchema = 54
-	db := identityfixture.NewAtVersion(t, scopedAuditSchema).DB
+	db := newAuditFixture(t, scopedAuditSchema)
 	ctx := t.Context()
 	now := time.Now().UTC().Truncate(time.Microsecond)
 	if _, err := db.Exec(ctx, chainInsert, uuid.NewString(), now); err != nil {
@@ -100,7 +99,7 @@ func TestAuditServingRoleCannotMutateEvents(t *testing.T) {
 }
 
 func TestAuditOwnerCanExpirePartitionWithoutBreakingRetainedChain(t *testing.T) {
-	db := identityfixture.New(t).DB
+	db := newAuditFixture(t, 0)
 	ctx := t.Context()
 	now := time.Now().UTC()
 	old := time.Date(now.Year(), now.Month()-8, 1, 0, 0, 0, 0, time.UTC)
