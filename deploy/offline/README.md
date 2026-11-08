@@ -69,3 +69,20 @@ default route. The test checks the refusal before file preparation, a busy port,
 installation from the image archive, repeat apply with the original credential,
 and readiness. Host and workload probes must both be observed and blocked. Any
 other recorded destination fails the test.
+
+## Collect support information
+
+Run this on the installation host with access to the local Docker socket. Use an
+unused archive path in a directory writable only by its owner.
+
+```sh
+ownsolid-install support-bundle --config /path/to/install.yaml \
+  --output /private/diagnostics/ownsolid-support.tar.gz
+tar -xOzf /private/diagnostics/ownsolid-support.tar.gz support.json
+```
+
+The private archive contains one JSON snapshot of the host, available space,
+Docker, Compose service states, and the database schema version when available.
+It works while the console is stopped. Unavailable collectors report fixed codes.
+The archive contains no configuration files, environment values, logs, credentials
+or database records. The installer writes it locally and never uploads it.

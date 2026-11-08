@@ -83,3 +83,32 @@ clock state, unresolved names and a missing driver. Exercise refusal before
 materialization, repair, install, and repeat apply on the zero-egress harness.
 The OS or daemon can change after checks complete. Docker remains the authority
 at the point it binds ports and starts containers.
+
+## DEL-111 diagnostic support bundle
+
+Replicated Troubleshoot separates host, cluster and application collectors, records
+collection failures, and provides local archive inspection and redaction. For the
+currently supported single-node installation, the local installer can observe the
+same layers through the host and Docker socket even when control is stopped.
+
+- [Replicated support bundle architecture](https://docs.replicated.com/vendor/preflight-support-bundle-about)
+- [Troubleshoot host OS collector](https://troubleshoot.sh/docs/host-collect-analyze/hostos/)
+- [Troubleshoot redactors](https://docs.replicated.com/reference/custom-resource-redactor)
+- [Docker Compose ps](https://docs.docker.com/reference/cli/docker/compose/ps/)
+
+Collect a fixed set of typed, bounded values. Include host platform and available
+storage, local Docker availability, Compose service states, and the schema version
+when PostgreSQL answers. Report unavailable collectors with fixed codes. The
+application state comes from Compose, so collection does not require an API
+session or running control plane. Use a private archive published only after it
+has been closed successfully. Preserve an existing file. Use the Go standard
+library for JSON and tar/gzip. There is no new dependency or dataset and no
+Troubleshoot runtime to redistribute.
+
+Reject copying configuration, logs, full inspect output, command diagnostics, and
+database dumps. Pattern-based redaction cannot cover arbitrary application text or
+encoded credentials. Keep the raw data out of the archive by construction. Verify
+that secrets in command output do not appear, that a stopped control service is
+represented correctly, that Docker failures still yield a readable host report,
+and that an occupied destination is preserved. Exercise the collector with no
+external route and a stopped control service.

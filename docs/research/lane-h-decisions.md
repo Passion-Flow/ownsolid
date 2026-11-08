@@ -24,3 +24,38 @@ Docker for host preflight. Requiring these new policy inputs on every existing
 apply would block upgrades or labs that resolve browser origins on clients.
 The cost of opt-in is that an installation using an old configuration continues
 with its original Docker and Compose checks until an operator enables the policy.
+
+## P1 dependencies after preflight
+
+DEL-103 requires the setup endpoint and its authentication lifecycle. DEL-104
+through DEL-106 require an admitted current release and a persisted baseline.
+DEL-107 owns chart sources outside this lane, and DEL-108 depends on the bundle
+to provide the OCI inputs. DEL-109 explicitly requires an issuer format freeze
+and an issuer-signed test artifact. DEL-110 needs the actual release inventory
+to establish which notices it must carry. Leave these open and move to DEL-111,
+which can collect locally from the already supported single-node installation.
+
+## DEL-111 data collection boundary
+
+Collect a fixed set of host, Docker and application facts on the installation
+host. Use a typed allowlist at collection and archive time. Reject collecting
+arbitrary log text and configuration followed by regex filtering, because inputs
+can carry secrets in unexpected fields or encodings. The tradeoff is that a
+bundle gives state and failure location without customer logs. An unavailable
+collector records its own fixed status without obscuring the other results.
+
+## Remaining P1 dependencies
+
+DEL-112 needs DEL-101's current installable release format and verification entry
+point before rotating its trust root. DEL-113 requires console and API changes.
+DEL-114 needs the address matrix to run end to end, including the Compose
+healthcheck and listener configuration outside this lane. DEL-115 depends on
+that matrix and on session and SSO callback ownership. Keep these lines open.
+
+## Roadmap evidence boundary
+
+Do not tick a line while the repository-wide verification gate fails. The
+isolated installation can substantiate this lane's Linux amd64 results while
+browser and agent failures remain open in their owning lanes. The coordinator
+also owns roadmap index and product status updates. Ticking here in isolation
+would make the repository's progress check stale.
