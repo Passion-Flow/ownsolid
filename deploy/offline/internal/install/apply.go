@@ -296,6 +296,14 @@ func (i *installer) checkSchema(ctx context.Context) error {
 // administrator creates the first administrator once. A run that stopped after the
 // credential file was written reconciles against it and never issues a second one.
 func (i *installer) administrator(ctx context.Context) error {
+	adopted, err := i.hasRestoreAdoption(ctx)
+	if err != nil {
+		return err
+	}
+	if adopted {
+		fmt.Fprintln(i.out, "BOOTSTRAP_RESTORED_VERIFIED")
+		return nil
+	}
 	const verified = "BOOTSTRAP_FILE_VERIFIED"
 	arguments := func(command string) []string {
 		return []string{command, "--config", i.operatorConfig(), "--bootstrap-input", containerOperatorDir + "/bootstrap.json", "--credential-output", containerOperatorDir + "/" + credentialFile}

@@ -445,7 +445,7 @@ func TestRestoreChecksSwapsThenRevokesAndServes(t *testing.T) {
 	if d.loaded != "DUMP BYTES" {
 		t.Fatalf("restored %q", d.loaded)
 	}
-	order := []string{"stop control", "pg_restore", "UNION ALL", renameIn, " migrate ", "prepare-runtime-access", "check-schema", "invalidate-restored-auth", "up --detach --wait --no-build control"}
+	order := []string{"stop control", "pg_restore", "UNION ALL", renameIn, " migrate ", "prepare-runtime-access", "check-schema", "invalidate-restored-auth", "ownsolid.restore_adoption", "up --detach --wait --no-build control"}
 	for i := 1; i < len(order); i++ {
 		if d.position(t, order[i-1]) > d.position(t, order[i]) {
 			t.Fatalf("%q ran after %q:\n%s", order[i-1], order[i], strings.Join(d.commands, "\n"))
