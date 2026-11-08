@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// pg_ctl can report a standby as started. Export only after SQL confirms promotion.
 const pitrReplay = `umask 077
 target=$1
 wait=$2
@@ -34,9 +35,22 @@ CONFIG
 printf "recovery_target_time = '%s'\n" "$target" >>/work/replay.conf
 touch /work/data/recovery.signal
 trap 'if [ -f /work/data/postmaster.pid ]; then pg_ctl -D /work/data -m immediate -w stop; fi' EXIT
-pg_ctl -D /work/data -o '-c config_file=/work/replay.conf' -l /work/postgres.log -t "$wait" -w start ||
-    { tail -n 12 /work/postgres.log >&2; exit 1; }
-test "$(psql -X -At -v ON_ERROR_STOP=1 -h /work -U ownsolid_migrator -d ownsolid -c 'SELECT pg_is_in_recovery()')" = f
+failed() {
+    tail -n 12 /work/postgres.log >&2
+    grep -E 'FATAL:|PANIC:' /work/postgres.log | tail -n 1 >&2
+    exit 1
+}
+pg_ctl -D /work/data -o '-c config_file=/work/replay.conf' -l /work/postgres.log -t "$wait" -w start || failed
+while :; do
+    pg_ctl -D /work/data status >/dev/null 2>&1 || failed
+    if state=$(PGCONNECT_TIMEOUT=2 psql -X -At -v ON_ERROR_STOP=1 -h /work -U ownsolid_migrator -d ownsolid -c 'SELECT pg_is_in_recovery()' 2>/dev/null) &&
+        [ "$state" = f ]; then
+        break
+    fi
+    [ "$wait" -gt 0 ] || failed
+    sleep 1
+    wait=$((wait-1))
+done
 pg_dump -h /work -U ownsolid_migrator -d ownsolid -Fc --file=/work/database.dump
 `
 
