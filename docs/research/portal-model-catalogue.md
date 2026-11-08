@@ -53,12 +53,15 @@ sets out. It sits in the model's drawer and not as a column, because a column of
 Inventing a price field on the alias was rejected: rate cards belong to TEN-107 and would replace it.
 
 **Try is shown as not ready**, because S-304's primary action needs the playground (POR-105), which needs a running
-gateway (GW-114). Issue a key, which works today, is offered beside it.
+gateway reachable through a portal-safe contract (POR-105). Issue a key is the available action
+beside it, leading to the existing scoped issuance flow rather than opening a dialog on the model
+page. Without a workspace the action is visible with the same access instructions as the keys page.
+If nothing is published, the issuance form explains that an administrator must publish a model.
 
 **An administrator's description waits.** Open WebUI and LiteLLM both let an administrator say what a model is for,
 and ownsolid should. It needs a column on `model_aliases`, a field on publishing and a way to change it (GW-120).
-Lane A has migration 000052 unpushed, so another schema change now would collide. Until then the page says only
-what is true of the model: text and chat, its base, its context length.
+Until that contract exists the page shows the model's known facts: text and chat, its base, and
+its context length.
 
 **POR-104 stays open** until prices and the description exist: its text names both.
 
