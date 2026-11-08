@@ -2,6 +2,7 @@ import { useI18n, supportedLocales } from '@ownsolid/i18n';
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '@ownsolid/ui';
 import { useRouter } from '@tanstack/react-router';
 import { Check, CircleHelp, LogOut, UserRound } from 'lucide-react';
+import { useHelpArticle } from './help/entrance.ts';
 import { accountPath } from './redirect.ts';
 import { useSession } from './session.ts';
 
@@ -15,6 +16,7 @@ export function UserMenu({ onSignOut }: UserMenuProps) {
   const { t, locale, setLocale } = useI18n();
   const router = useRouter();
   const me = useSession();
+  const helpArticle = useHelpArticle();
   if (!me) return null;
   const name = me.user.display_name || me.user.email;
   return (
@@ -46,11 +48,15 @@ export function UserMenu({ onSignOut }: UserMenuProps) {
       </MenuItem>
       <MenuItem
         onSelect={() => {
-          void router.navigate({ to: '/help' });
+          if (helpArticle) {
+            void router.navigate({ to: '/help/$slug', params: { slug: helpArticle } });
+          } else {
+            void router.navigate({ to: '/help' });
+          }
         }}
       >
         <CircleHelp aria-hidden className="size-4" />
-        {t('help.title')}
+        {t(helpArticle ? 'help.forPage' : 'help.title')}
       </MenuItem>
       <MenuSeparator />
       <MenuLabel>{t('locale.label')}</MenuLabel>
