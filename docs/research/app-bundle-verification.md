@@ -105,3 +105,13 @@ repacked its complete closure as USTAR. The verifier ran in a Linux amd64
 container with `--network none` and `--pull never`. This exercised the exact
 archive accepted by the preflight. The deployment owner still needs the
 import and registered-digest checks for this archive.
+
+
+The same verified single-image archive also passed the release factory's
+`OpenCurrentImageSource` and `WriteTagless` on a private tmpfs inside the
+disconnected Linux amd64 container. The factory verified 14 layer DiffIDs
+and measured 28,251,648 expanded bytes. It emitted 14,006,784 bytes of
+tagless transport to a test sink. An importer can use this boundary for a
+verified single-image archive and needs an explicit per-image selection
+path for multi-image catalogs. Engine registration and digest readback
+remain the next integration gate.
