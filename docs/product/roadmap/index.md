@@ -123,7 +123,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
 | 15 | Applications and agents | [applications-and-agents.md](applications-and-agents.md) | - | 0/11 | 0/5 | - | 0/3 |
 | 16 | Product agent | [product-agent.md](product-agent.md) | - | 0/12 | 0/3 | - | 0/2 |
 | 17 | App catalog | [app-catalog.md](app-catalog.md) | - | 0/8 | 0/7 | - | - |
-| 18 | Tenancy, metering and commerce | [tenancy-metering-commerce.md](tenancy-metering-commerce.md) | - | 0/9 | 0/8 | 0/2 | - |
+| 18 | Tenancy, metering and commerce | [tenancy-metering-commerce.md](tenancy-metering-commerce.md) | - | 0/9 | 0/9 | 0/2 | - |
 | 19 | Audit and compliance | [audit-and-compliance.md](audit-and-compliance.md) | - | 3/11 | 0/7 | - | - |
 | 20 | Observability and alerting | [observability-and-alerting.md](observability-and-alerting.md) | 2/2 | 0/13 | 0/5 | 0/1 | - |
 | 21 | Platform reliability | [platform-reliability.md](platform-reliability.md) | 2/2 | 0/13 | 0/4 | 0/2 | - |
