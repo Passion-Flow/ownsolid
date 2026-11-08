@@ -3,6 +3,16 @@
 Accounts, enterprise sign-in, sessions, roles and permissions for people, services and
 agents. Every check happens on the server.
 
+Reviewed 2026-11-09 against the [Keycloak administration guide](https://www.keycloak.org/docs/latest/server_admin/index.html),
+[GitLab self-managed authentication](https://docs.gitlab.com/user/profile/account/two_factor_authentication/),
+[NIST SP 800-63B-4](https://pages.nist.gov/800-63-4/sp800-63b.html),
+[Kubernetes RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/),
+[OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html), and
+[SCIM RFC 7644](https://www.rfc-editor.org/rfc/rfc7644.html). The standards-based
+federation, provisioning, and scoped access items still fit the deployment model.
+Add phishing-resistant local authentication as IAM-206 so operators can use
+security keys without depending on an upstream identity provider.
+
 - Owns: `services/control/internal/modules/identity`, `sso`, `workspaces`.
 - Depends on: architecture-and-scale.
 
@@ -35,6 +45,7 @@ agents. Every check happens on the server.
 - [ ] IAM-203 Approval workflows and two-person review for high-risk actions (P2) - Catalog: F430, F440
 - [ ] IAM-204 Just-in-time access and break-glass accounts with automatic expiry (P2) - Catalog: F441, F455
 - [ ] IAM-205 Agent identity: on-behalf-of tokens with the user as subject and the agent as actor (P2) - Catalog: F572, F485
+- [ ] IAM-206 Phishing-resistant WebAuthn security keys for local sign-in and step-up, with offline enrollment, revocation and recovery and separate Admin and Portal origin validation (P2)
 
 ## P3 Multi-site
 
