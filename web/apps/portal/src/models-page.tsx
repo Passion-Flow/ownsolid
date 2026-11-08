@@ -174,6 +174,16 @@ function Rows({
   );
 }
 
+function IssueKeyLink() {
+  const { t } = useI18n();
+  return (
+    <Link to="/keys" hash="issue" className={buttonVariants({ variant: 'primary' })}>
+      <KeyRound aria-hidden />
+      {t('portalModels.issue')}
+    </Link>
+  );
+}
+
 function EntryDrawer({
   entry,
   pending,
@@ -189,10 +199,7 @@ function EntryDrawer({
       {entry ? (
         <div className="flex flex-col gap-5">
           <div className="flex flex-wrap gap-2">
-            <Link to="/keys" hash="issue" className={buttonVariants({ variant: 'primary' })}>
-              <KeyRound aria-hidden />
-              {t('portalModels.issue')}
-            </Link>
+            <IssueKeyLink />
           </div>
           {entry.alias.available ? null : (
             <Notice className="m-0" title={t('portalModels.unavailable.title')}>
@@ -394,6 +401,11 @@ export function ModelsPage() {
   const { t } = useI18n();
   const workspaces = useWorkspaces();
   const active = workspaces.active;
+  const issueUnavailable = workspaces.isPending
+    ? t('status.loading')
+    : workspaces.error
+      ? t('workspace.loadFailed')
+      : t('keys.noWorkspace.detail');
   return (
     <>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -407,14 +419,33 @@ export function ModelsPage() {
               : t('portalModels.subtitle.none')}
           </p>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <Button variant="primary" aria-disabled aria-describedby="portal-models-try-not-ready">
-            <FlaskConical aria-hidden />
-            {t('portalModels.try')}
-          </Button>
-          <span id="portal-models-try-not-ready" className="text-[12.5px] text-text-3">
+        <div className="flex flex-col items-start gap-1 sm:items-end">
+          <div className="flex flex-wrap gap-2">
+            <Button aria-disabled aria-describedby="portal-models-try-not-ready">
+              <FlaskConical aria-hidden />
+              {t('portalModels.try')}
+            </Button>
+            {active ? (
+              <IssueKeyLink />
+            ) : (
+              <Button
+                variant="primary"
+                aria-disabled
+                aria-describedby="portal-models-issue-unavailable"
+              >
+                <KeyRound aria-hidden />
+                {t('portalModels.issue')}
+              </Button>
+            )}
+          </div>
+          <p id="portal-models-try-not-ready" className="m-0 text-[12.5px] text-text-3">
             {t('portalModels.try.notReady')}
-          </span>
+          </p>
+          {!active ? (
+            <p id="portal-models-issue-unavailable" className="m-0 text-[12.5px] text-text-3">
+              {issueUnavailable}
+            </p>
+          ) : null}
         </div>
       </div>
       <WorkspaceBody workspaces={workspaces} noWorkspace={t('portalModels.noWorkspace.detail')}>
