@@ -85,6 +85,8 @@ type Config struct {
 	// SessionAddresses are agent gateways, host:port, for the session streams, as on a real
 	// node (ADR 0048). Each agent tries them in its own order; HTTPS stays on DialAddress.
 	SessionAddresses []string `json:"session_addresses,omitempty"`
+	// GatewayRebalanceSeconds is the minimum wait between preference checks.
+	GatewayRebalanceSeconds int `json:"gateway_rebalance_seconds,omitempty"`
 	// IdentitiesFile holds the enrolled agents. enroll writes it; run reads it and writes
 	// the task cursors back.
 	IdentitiesFile string `json:"identities_file"`
@@ -140,6 +142,14 @@ func Load(path string) (Config, error) {
 	return c, c.Validate()
 }
 
+// GatewayRebalanceIntervalSeconds returns the explicit interval or the agent default.
+func (c Config) GatewayRebalanceIntervalSeconds() int {
+	if c.GatewayRebalanceSeconds == 0 {
+		return wire.DefaultGatewayRebalanceSeconds
+	}
+	return c.GatewayRebalanceSeconds
+}
+
 func (c *Config) defaults() {
 	if c.AgentsPerConnection == 0 {
 		c.AgentsPerConnection = DefaultAgentsPerConnection
@@ -181,7 +191,8 @@ func (c Config) Validate() error {
 			return invalid
 		}
 	}
-	if wire.ValidateSessionAddresses(c.SessionAddresses) != nil {
+	interval := c.GatewayRebalanceIntervalSeconds()
+	if wire.ValidateSessionAddresses(c.SessionAddresses) != nil || interval < wire.MinGatewayRebalanceSeconds || interval > wire.MaxGatewayRebalanceSeconds {
 		return invalid
 	}
 	for _, path := range []string{c.CAFile, c.JoinTokensFile, c.ReportFile} {

@@ -30,13 +30,14 @@ type agent struct {
 	conn     *link.Connection
 	recorder *report.Recorder
 
-	pacing        wire.Pacing
-	failures      int
-	stream        *link.Stream
-	lastExchange  time.Time
-	fallbackUntil time.Time
-	probeHTTPS    bool
-	probes        int
+	rebalanceInterval time.Duration
+	pacing            wire.Pacing
+	failures          int
+	stream            *link.Stream
+	lastExchange      time.Time
+	fallbackUntil     time.Time
+	probeHTTPS        bool
+	probes            int
 
 	// wake ends the wait between cycles early, for a restart.
 	wake chan struct{}
@@ -204,7 +205,8 @@ func (a *agent) dropStream() {
 // heartbeat reports the node on the stream, opening one when there is none, or over HTTPS
 // while the agent has fallen back (ADR 0007). It mirrors the agent's Session.Heartbeat.
 func (a *agent) heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposition, error) {
-	if a.stream != nil && time.Since(a.lastExchange) >= time.Duration(a.pacing.IdleSeconds()-sessionIdleMarginSeconds)*time.Second {
+	idleDeadline := a.lastExchange.Add(time.Duration(a.pacing.IdleSeconds()-sessionIdleMarginSeconds) * time.Second)
+	if a.stream != nil && time.Until(idleDeadline) <= 0 {
 		a.dropStream()
 	}
 	if a.stream == nil {
@@ -228,11 +230,34 @@ func (a *agent) heartbeat(ctx context.Context, h wire.Handshake) (wire.Dispositi
 		}
 		return a.openWithHeartbeat(ctx, h)
 	}
+	if a.rebalanceInterval > 0 && !a.partitioned() && !a.active(&a.httpsOnlyUntil) {
+		if disposition := a.tryRebalance(ctx, h, idleDeadline); disposition != nil {
+			return *disposition, nil
+		}
+	}
 	reply, e := a.exchange(ctx, report.CallHeartbeat, wire.AgentMessage{Heartbeat: &h})
 	if e != nil {
 		return wire.Disposition{}, e
 	}
 	return *reply.Disposition, nil
+}
+
+func (a *agent) tryRebalance(ctx context.Context, h wire.Handshake, idleDeadline time.Time) *wire.Disposition {
+	started := time.Now()
+	probe, cancel := context.WithDeadline(ctx, idleDeadline)
+	defer cancel()
+	stream, disposition, e := a.conn.Rebalance(probe, a.rebalanceInterval, a.node, h)
+	if e != nil || stream != nil {
+		a.record(ctx, report.CallGatewayRebalance, started, e)
+	}
+	if stream == nil {
+		return nil
+	}
+	a.dropStream()
+	a.stream = stream
+	a.lastExchange = time.Now()
+	a.recorder.Succeeded(report.CallHeartbeat, time.Since(started))
+	return disposition
 }
 
 // openWithHeartbeat opens a stream whose first message is the heartbeat h. Control answers
