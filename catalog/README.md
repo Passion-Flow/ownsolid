@@ -45,3 +45,25 @@ Run the catalog's local checks from the repository root.
 GOPROXY=off GOSUMDB=off go -C catalog test -race ./...
 go -C catalog vet ./...
 ```
+
+## Dependency bindings
+
+The optional `dependencies` array declares up to 32 required slots. Each
+object has a distinct `id`, a `kind` and a `protocol`. The same name cannot
+also be used as a form field.
+
+| Kind | Protocols |
+| --- | --- |
+| `model` | `chat`, `embeddings`, `rerank` |
+| `database` | `postgresql`, `mysql`, `redis` |
+| `storage` | `s3` |
+
+The installer resolves the resources through their owners in the authenticated
+tenant and workspace. The secret owner issues a reference tied to the resource,
+dependency slot and installation. `Manifest.Bind` checks those records and
+returns a plan in manifest order. It requires a different secret reference for
+each slot. The owner rechecks grants and revocations before the installer mounts
+the resolved files read-only under a slot-specific directory. The installer
+controls the parent directory and selected containers. Manifest authors supply
+neither credentials nor endpoints, and ordinary configuration values cannot
+override a binding.
