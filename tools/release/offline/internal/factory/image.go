@@ -142,7 +142,8 @@ func validateImageInventory(ctx context.Context, reader io.Reader, a wire.Asset,
 	var visit func(descriptor, int) error
 	visit = func(d descriptor, depth int) error {
 		attestation := d.Annotations[attestationReferenceType] != ""
-		if !attestation && d.Platform != nil && (d.Platform.Architecture != a.Architecture || d.Platform.OS != "linux" || d.Platform.Variant != "") {
+		referrer := c.current && depth == 0 && d.Annotations[containerdSubject] != ""
+		if !attestation && !referrer && d.Platform != nil && (d.Platform.Architecture != a.Architecture || d.Platform.OS != "linux" || d.Platform.Variant != "") {
 			return fail("RELEASE_OCI_DESCRIPTOR_PLATFORM_INVALID")
 		}
 		blob, ok := blobs[d.Digest]
@@ -152,6 +153,9 @@ func validateImageInventory(ctx context.Context, reader io.Reader, a wire.Asset,
 		var doc imageDocument
 		if imageJSON(blob.data, &doc) != nil || doc.SchemaVersion != 2 {
 			return fail("RELEASE_OCI_MANIFEST_INVALID")
+		}
+		if referrer {
+			return checkCurrentReferrer(d, doc, blobs, a)
 		}
 		if attestation {
 			return validateAttestation(d, doc, blobs, a)
@@ -195,7 +199,7 @@ func validateImageInventory(ctx context.Context, reader io.Reader, a wire.Asset,
 			for i, layer := range doc.Layers {
 				b, ok := blobs[layer.Digest]
 				media := layer.MediaType
-				allowed := media == "application/vnd.oci.image.layer.v1.tar" || media == "application/vnd.oci.image.layer.v1.tar+gzip" || media == "application/vnd.oci.image.layer.v1.tar+zstd" || media == "application/vnd.docker.image.rootfs.diff.tar.gzip"
+				allowed := media == "application/vnd.oci.image.layer.v1.tar" || media == "application/vnd.oci.image.layer.v1.tar+gzip" || (!c.current && media == "application/vnd.oci.image.layer.v1.tar+zstd") || media == "application/vnd.docker.image.rootfs.diff.tar.gzip"
 				if !ok || b.size != layer.Size || layer.Size < 1 || len(layer.URLs) > 0 || !allowed || !strings.HasPrefix(identity.RootFS.DiffIDs[i], "sha256:") || !wire.ValidSHA256(strings.TrimPrefix(identity.RootFS.DiffIDs[i], "sha256:")) {
 					return fail("RELEASE_OCI_LAYER_INVALID")
 				}

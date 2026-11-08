@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -49,11 +50,17 @@ func run(args []string) error {
 	if e != nil {
 		return e
 	}
+	command := args[0]
+	switch command {
+	case "validate-current", "build-current", "inspect-current":
+		c = factory.WithCurrentProfile(c)
+		command = strings.TrimSuffix(command, "-current")
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.TimeoutSeconds)*time.Second)
 	defer cancel()
-	switch args[0] {
+	switch command {
 	case "validate":
 		v, e := factory.Validate(ctx, c)
 		json.NewEncoder(os.Stdout).Encode(v)
