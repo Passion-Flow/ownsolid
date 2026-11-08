@@ -120,25 +120,74 @@ pinned artifacts copied in:
 
 ## First-start sandbox pull in the pinned release
 
-In the disconnected Linux amd64 fixture, RKE2 v1.36.6+rke2r1 imported its
-core archive, then containerd logged a failed Docker Hub lookup during
-early etcd and kube-proxy sandbox creation. The archive registers
-`docker.io/rancher/mirrored-pause:3.10.2`, while the
+The Linux amd64 baseline used the repository's [TUN recorder](../decisions/0008-zero-egress-harness.md)
+as the only IPv4 and IPv6 default route and tested both routes before starting
+RKE2. It recorded six UDP packets to the test site resolver, three pairs of
+A and AAAA queries for `registry-1.docker.io`. A syscall trace of containerd
+matched the times and the resolver address. The first failed manifest HEAD
+for `rancher/mirrored-pause:3.10.2` was about 11 seconds before the core archive
+import logged that image. The failed requests came from creating the etcd
+and kube-proxy sandboxes. containerd started the sandbox from the local
+image after import. The image is shipped as
+`docker.io/rancher/mirrored-pause:3.10.2`; the
 [RKE2 executor](https://github.com/rancher/rke2/blob/v1.36.6%2Brke2r1/pkg/executor/staticpod/staticpod.go)
-passes the image name with the `index.docker.io` registry spelling.
-Retagging the live image was followed by successful sandbox creation.
-In a new fixture a containerd drop-in made the configured sandbox reference
-match the archive, but containerd still tried Docker Hub and then created
-the sandbox locally. That experiment rules out relying on image spelling
-alone and the drop-in is not part of the agent configuration.
+uses `index.docker.io`. The earlier experiment with matching spellings
+still made a public request. Changing the alias or retagging the store
+cannot close the window before the image is imported.
 
-This leaves an offline acceptance gap. The install must finish with the
-network disconnected and the trace must show whether it tries any upstream
-image endpoints. The
-[RKE2 registry configuration](https://docs.rke2.io/install/private_registry)
-only disables the default endpoint for explicitly configured mirrors.
-Any future offline registry policy must preserve access to customer-approved
-registries and be verified on a fresh node with the pinned archive.
+Use [RKE2's default endpoint control](https://docs.rke2.io/install/private_registry)
+with an explicit `docker.io` mirror in an Agent-owned registry file. The
+[pinned K3s renderer](https://github.com/k3s-io/k3s/blob/c2fdd7c56c2c/pkg/agent/containerd/config.go)
+omits an empty mirror, so the offline entry names HTTPS on IPv4 loopback
+port zero. The address needs no DNS. On Linux,
+[binding port zero selects an ephemeral port](https://man7.org/linux/man-pages/man7/ip.7.html),
+so no listener can be assigned to TCP port zero. The built-in Docker Hub endpoint is disabled, and
+containerd uses the imported image when it becomes available. A fresh
+prototype server using those two RKE2 options reached Ready in 140 seconds
+with zero packets in the TUN capture. Its generated `hosts.toml` had only
+the loopback mirror. The alternative of blocking traffic at the host
+firewall would affect workloads and would still permit DNS attempts inside
+the product. Repacking the archive would invalidate its pinned digest.
+
+A node with a site-supplied native `registries.yaml` keeps that explicit
+policy. The Agent owns the default fallback configuration and does not
+rewrite the site's mirrors or their credentials. A site's custom policy
+needs its own offline validation when it is integrated with the installer.
+The generated files are written before starting either RKE2 unit. Existing
+managed nodes without a native policy pick it up at their next RKE2 start.
+A healthy unit is left running on join replay. No artifact, dependency,
+model, data set, or agent protocol field changes. The pinned RKE2, K3s
+and containerd code use Apache-2.0 with commercial use, redistribution
+with notices, and offline use permitted.
+
+The disconnected intranet still needs a site resolver. A longer run with
+the resolver address deliberately beyond the TUN recorded CoreDNS's
+random HINFO probes and root NS health checks after the server became
+Ready. It recorded no Docker Hub lookups. These are the documented
+[CoreDNS loop checks](https://coredns.io/plugins/loop/) and
+[forwarder health checks](https://coredns.io/plugins/forward/). Keep both
+DNS protections and test with a non-forwarding resolver on the isolated
+site network. The site resolver logs all questions and returns NXDOMAIN.
+A deliberate Docker Hub lookup proves that the resolver log can still
+detect a public-name lookup. The external TUN logs remain unfiltered.
+
+The regression checks both roles for the Agent-owned policy and preserves
+an explicit native configuration. On real Linux, the recorder must see
+zero attempts from a fresh server and worker through wrong-CA refusal,
+valid-token retry, and replay. A locally cached test workload must run on
+the worker.
+
+With the generated policy on fresh Linux amd64 server and worker nodes,
+the server reached Ready in 142 seconds. The worker refused the wrong CA
+with `KUBERNETES_NOT_READY`, then used a distinct bootstrap token minted
+after the refusal and reached Ready in 86 seconds. A replay kept the
+worker PID. The Kubernetes scheduler placed a workload using the locally
+cached pause image on the worker. Both IPv4 and IPv6 recorders were
+verified with deliberate packets before the run. Each node recorded zero
+external packets through the full sequence. After its deliberate Docker
+Hub positive control, the isolated site resolver received one CoreDNS
+HINFO probe and no other question. Both nodes had only the loopback
+endpoint in containerd's Docker Hub host file.
 
 ## Reloading a failed join
 
@@ -183,7 +232,7 @@ still need an end-to-end run.
 | `node-ip` changed after the server first started: etcd membership no longer matches and the server never comes up | Prototype: `this server is not a member of the etcd cluster` | The address is fixed when the cluster is created and never changed; a server whose config differs is refused, not rewritten | Unit test: a second join with another address fails `KUBERNETES_CONFIG_CONFLICT` |
 | Loopback resolver in `/etc/resolv.conf`: kubelet falls back to 8.8.8.8 | Prototype warning | Agent sets `resolv-conf` to `/run/systemd/resolve/resolv.conf` when systemd-resolved is in use, otherwise to `/etc/resolv.conf`, and refuses when the chosen file has only loopback servers | Unit test on resolver selection |
 | Wrong CA hash, unreachable server, expired token: RKE2 retries forever | Disconnected Linux run | Join reports a bounded readiness failure with a safe diagnosis. A later join restarts a still-activating unit so it loads the new token | Unit test for retry and active replay; Linux worker join with a wrong CA, then a valid token |
-| First sandbox creation tries a public registry despite the local archive | Disconnected Linux run | Open; the exact archive tag in containerd did not prevent the lookup | Fresh-node packet or resolver trace during offline acceptance |
+| First sandbox creation can precede the archive import | Disconnected Linux run | The Agent's default registry policy suppresses Docker Hub fallback; containerd uses the cached image after import | Fresh server and worker with dual-stack external packet capture and a separately logged site resolver |
 | Artifact corrupted or short | Download | Size and SHA-256 checked before anything is unpacked | Unit tests |
 | A node already runs RKE2 that ownsolid did not install | Operator mistake | Refused with `KUBERNETES_CONFLICT`; nothing is overwritten | Unit test |
 | Repeated join after a crash or a lost result | Agent restart | Join is idempotent: same config means "observe and report" | Unit test |

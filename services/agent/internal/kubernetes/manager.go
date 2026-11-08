@@ -33,6 +33,20 @@ const (
 	serverCA          = "/var/lib/rancher/rke2/server/tls/server-ca.crt"
 )
 
+// An explicit site registry file takes precedence over the Agent's default.
+const (
+	nativeRegistryFile  = "/etc/rancher/rke2/registries.yaml"
+	offlineRegistryFile = "/etc/rancher/rke2/ownsolid-registries.yaml"
+)
+
+// RKE2 omits an empty mirror. Loopback port zero cannot name a listening
+// service and fails locally while containerd waits for the bundled image.
+const offlineRegistry = `mirrors:
+  docker.io:
+    endpoint:
+      - "https://127.0.0.1:0"
+`
+
 // journalName is the agent's record of the cluster membership it installed.
 const journalName = "kubernetes.json"
 
@@ -297,6 +311,16 @@ func (m *Manager) existingAncestor(path string) string {
 // none needs escaping; they are quoted anyway so YAML never reads one as another type.
 func (m *Manager) writeConfig(command wire.KubernetesCommand, resolver string) error {
 	var b strings.Builder
+	siteRegistry, e := os.Stat(m.path(nativeRegistryFile))
+	switch {
+	case errors.Is(e, os.ErrNotExist):
+		if e = writeBytes(m.path(offlineRegistryFile), []byte(offlineRegistry)); e != nil {
+			return e
+		}
+		fmt.Fprintf(&b, "private-registry: %q\ndisable-default-registry-endpoint: true\n", offlineRegistryFile)
+	case e != nil || !siteRegistry.Mode().IsRegular():
+		return errors.New("KUBERNETES_IO_FAILED")
+	}
 	if command.Role == wire.KubernetesWorkerRole {
 		fmt.Fprintf(&b, "server: %q\n", "https://"+netip.AddrPortFrom(netip.MustParseAddr(command.ServerAddress), 9345).String())
 		fmt.Fprintf(&b, "token: %q\n", command.JoinToken)
