@@ -186,8 +186,9 @@ and `--confirm` to withdraw the import and discard the uploaded bytes.
 ## Maintain the node exporter
 
 Use a node with an approved systemd management profile and the pinned
-archives in the installation's component catalog. The maintenance profile
-also supports configuration, upgrades, rollback and journal collection.
+archives in the installation's component catalog. The
+`systemd_maintenance` enrollment profile also supports configuration,
+upgrades, rollback and journal collection.
 
 ```sh
 ownsolid node exporter status "$NODE_ID" --output json

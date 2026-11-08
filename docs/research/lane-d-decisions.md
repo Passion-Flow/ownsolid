@@ -103,3 +103,12 @@ and training both used the separate memory-backed volume. The run included
 1,401 passing browser cases, 27 default browser skips, all Go modules,
 62 gateway unit tests, and the Web unit suites. The disconnected Admin
 workflow ran separately through the committed CLI fixture.
+
+The priority 2 implementation at `7fe9507` passed the full Make test
+target with the same isolation. It included 1,401 browser passes, 27
+default browser skips, all Go modules, the gateway and Web unit suites.
+The separate Admin TLS run passed the original CLI workflow, real model
+import and verifier retry, exporter maintenance with VictoriaLogs, and
+alias publication and disable. The remaining DEV-102 gates are the
+installed gateway delivery in GW-114 and an installed systemd component
+run with the archive delivery in FLT-109.
