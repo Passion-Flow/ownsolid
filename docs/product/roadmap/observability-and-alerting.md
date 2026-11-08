@@ -22,7 +22,7 @@ fully offline.
 - [ ] OBS-105 Offline notification channels: email, webhook, WeCom, DingTalk and Feishu over internal relays (P1) - Catalog: F002, F567
 - [ ] OBS-106 Dashboards for platform health, fleet, GPU and model usage (P1)
 - [ ] OBS-107 Export to customer Prometheus, Grafana and log systems (P1) - Catalog: F235
-- [ ] OBS-108 Load tested at about 17 million active series (P1)
+- [x] OBS-108 Load tested at about 17 million active series (P1) - Evidence: [Linux amd64 scale qualification](../../research/telemetry-scale.md#linux-amd64-qualification)
 - [ ] OBS-109 Retention tiers and long-range rollups built on recording rules, because downsampling and multiple retentions are Enterprise-only in the selected store (P1)
 - [ ] OBS-110 Series cardinality explorer with per-tenant and per-agent limits (P1)
 - [ ] OBS-111 Log-based alert rules and SLO burn-rate alerts (P1)
