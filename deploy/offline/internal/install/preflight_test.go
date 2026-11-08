@@ -141,21 +141,26 @@ func TestPreflightRequiresAnInstalledNVIDIADriverAndRuntime(t *testing.T) {
 // It needs an isolated Docker-in-Docker daemon, the existing egress recorder and
 // the production Compose images, all mounted by that runner.
 func TestPreflightIsolatedDocker(t *testing.T) {
-	testIsolatedDocker(t, false, false)
+	testIsolatedDocker(t, false, false, false)
 }
 
 // TestSignedBundleIsolatedDocker uses the same real zero-egress runner with a
 // signed fixture manufactured from real Linux amd64 image archives.
 func TestSignedBundleIsolatedDocker(t *testing.T) {
-	testIsolatedDocker(t, true, false)
+	testIsolatedDocker(t, true, false, false)
 }
 
 // TestSignedUpgradeIsolatedDocker uses real signed releases and PostgreSQL.
 func TestSignedUpgradeIsolatedDocker(t *testing.T) {
-	testIsolatedDocker(t, true, true)
+	testIsolatedDocker(t, true, true, false)
 }
 
-func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
+// TestPITRIsolatedDocker runs the installer against real PostgreSQL and the egress recorder.
+func TestPITRIsolatedDocker(t *testing.T) {
+	testIsolatedDocker(t, false, false, true)
+}
+
+func testIsolatedDocker(t *testing.T, signed, upgrade, pitr bool) {
 	t.Helper()
 	installer := os.Getenv("OWNSOLID_E2E_INSTALLER")
 	logPath := os.Getenv("OWNSOLID_E2E_EGRESS_LOG")
@@ -254,6 +259,16 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 	}
 	policy.ContainerdRoot = filepath.Join(strings.TrimSpace(storage), "containerd", "daemon")
 	c.Preflight = &policy
+	if pitr {
+		c.PITR = &PITRConfig{Directory: t.TempDir(), ArchiveSeconds: 1}
+		if err := os.Chmod(c.PITR.Directory, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		c.Resources.ControlMemory, c.Resources.PostgresMemory = "256m", "512m"
+		c.Resources.MetricsMemory, c.Resources.LogsMemory = "256m", "256m"
+		c.Resources.ControlCPUs, c.Resources.PostgresCPUs = "1", "1"
+		c.Resources.MetricsCPUs, c.Resources.LogsCPUs = "1", "1"
+	}
 	config := filepath.Join(dir, "install.yaml")
 	var signedArchive, verification string
 	if signed {
@@ -339,8 +354,11 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 	})
 	t.Run("installs and safely repeats with its own HTTPS port in use", func(t *testing.T) {
 		command(t, "preflight", "INSTALL_PREFLIGHT_PASSED", false)
-		if signed {
+		if signed || pitr {
 			command(t, "apply", "INSTALL_COMPLETE", false)
+			if pitr {
+				c.Images.ArchiveFile = ""
+			}
 		} else {
 			assertInterruptedApplyResumes(t, c, installer, config, run)
 		}
@@ -367,11 +385,16 @@ func testIsolatedDocker(t *testing.T, signed, upgrade bool) {
 		}
 		// Prove a packet from a running application container also reaches the recorder.
 		probe := "import socket,sys; s=socket.socket(); s.settimeout(3); sys.exit(0 if s.connect_ex(('192.0.2.2',9)) else 1)"
-		layout := c.Layout()
-		if out, err := run("docker", "compose", "--env-file", layout.ComposeEnv, "-f", layout.ComposeFile, "exec", "--no-TTY", "control", "python3", "-c", probe); err != nil {
+		if out, err := run("docker", composeArguments(c, "exec", "--no-TTY", "control", "python3", "-c", probe)...); err != nil {
 			t.Fatalf("workload isolation probe: %v: %s", err, out)
 		}
 	})
+	if pitr {
+		if !t.Failed() {
+			assertPITRIsolatedDocker(t, installer, config, run)
+		}
+		return
+	}
 	if !signed {
 		t.Run("applies again after a verified database restore", func(t *testing.T) {
 			assertApplyAfterRestore(t, c, installer, config, run)

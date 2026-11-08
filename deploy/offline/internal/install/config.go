@@ -69,6 +69,7 @@ type Config struct {
 	Preflight *PreflightPolicy `yaml:"preflight"`
 
 	BackupSchedule *BackupScheduleConfig `yaml:"backup_schedule"`
+	PITR           *PITRConfig           `yaml:"pitr" json:",omitempty"`
 }
 type TopologyConfig struct {
 	Size string `yaml:"size"`
@@ -389,6 +390,11 @@ func (c Config) validate(fromBundle bool) error {
 	}
 	if c.BackupSchedule != nil {
 		if err := c.BackupSchedule.validate(); err != nil {
+			return err
+		}
+	}
+	if c.PITR != nil {
+		if err := c.PITR.validate(); err != nil {
 			return err
 		}
 	}

@@ -52,6 +52,16 @@ func Restore(ctx context.Context, c Config, runner StreamRunner, from string, ou
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.BackupSeconds)*time.Second)
 	defer cancel()
 	o := newOperation(c, runner, out)
+	if manifest.Recovery != nil {
+		active, err := o.admitPITRRestore(ctx, manifest)
+		if err != nil {
+			return err
+		}
+		if active {
+			fmt.Fprintln(out, "PITR_ACTIVATION_ALREADY_COMPLETE")
+			return nil
+		}
+	}
 	if e = o.restore(ctx, from, manifest); e != nil {
 		command := "restore"
 		if restorePendingError(c) != nil {
@@ -141,7 +151,7 @@ func (o *operation) restore(ctx context.Context, from string, manifest backupMan
 	if e != nil {
 		return e
 	}
-	i := restoreIntent{Version: 1, Site: site, Phase: restorePending, Suffix: hex.EncodeToString(suffix), Fresh: fresh}
+	i := restoreIntent{Version: 1, Site: site, Phase: restorePending, Suffix: hex.EncodeToString(suffix), Fresh: fresh, PITRActivation: manifest.pitrActivation()}
 	incoming := i.incomingName()
 	if e = o.createDatabase(ctx, incoming); e != nil {
 		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
@@ -338,7 +348,7 @@ func (o *operation) runSteps(ctx context.Context, steps []struct {
 }
 
 // prepareRestored adopts the candidate before the writer may connect to it.
-func (o *operation) prepareRestored(ctx context.Context) error {
+func (o *operation) prepareRestored(ctx context.Context, activation string) error {
 	return o.runSteps(ctx, []struct {
 		name string
 		run  func(context.Context) error
@@ -347,7 +357,7 @@ func (o *operation) prepareRestored(ctx context.Context) error {
 		{"runtime-access", o.runtimeAccess},
 		{"check-schema", o.checkSchema},
 		{"invalidate-restored-authority", o.invalidateRestored},
-		{"record-restore-adoption", o.recordRestoreAdoption},
+		{"record-restore-adoption", func(ctx context.Context) error { return o.recordRestoreAdoption(ctx, activation) }},
 	})
 }
 

@@ -192,8 +192,7 @@ func (i *installer) images(ctx context.Context) error {
 }
 
 func (i *installer) compose(ctx context.Context, args ...string) (string, error) {
-	l := i.config.Layout()
-	return i.runner.Run(ctx, "docker", append([]string{"compose", "--env-file", l.ComposeEnv, "-f", l.ComposeFile}, args...)...)
+	return i.runner.Run(ctx, "docker", composeArguments(i.config, args...)...)
 }
 
 // The installation lock excludes the serving process from operator tasks.
@@ -232,9 +231,8 @@ func (i *installer) telemetry(ctx context.Context) error {
 
 // logsReady asks the logs store for its health from inside the state network.
 func logsReady(ctx context.Context, c Config, runner Runner) (string, error) {
-	l := c.Layout()
 	address := net.JoinHostPort(c.Network.stateAddresses().Logs.String(), logsPort)
-	return runner.Run(ctx, "docker", "compose", "--env-file", l.ComposeEnv, "-f", l.ComposeFile, "exec", "--no-TTY", "metrics", "wget", "-q", "-T", "3", "-O", "/dev/null", "http://"+address+"/health")
+	return runner.Run(ctx, "docker", composeArguments(c, "exec", "--no-TTY", "metrics", "wget", "-q", "-T", "3", "-O", "/dev/null", "http://"+address+"/health")...)
 }
 
 // The migrations verify the vector extension but leave installing it to the operator.
@@ -404,7 +402,7 @@ func status(ctx context.Context, c Config, runner Runner, probe Probe, out io.Wr
 	if !exists(l.ComposeEnv) {
 		return errors.New("INSTALL_NOT_FOUND: nothing is installed at " + l.Root)
 	}
-	output, e := runner.Run(ctx, "docker", "compose", "--env-file", l.ComposeEnv, "-f", l.ComposeFile, "ps", "--all", "--format", "json")
+	output, e := runner.Run(ctx, "docker", composeArguments(c, "ps", "--all", "--format", "json")...)
 	if e != nil {
 		return errors.New("INSTALL_COMPOSE_FAILED: " + lastLines(output))
 	}

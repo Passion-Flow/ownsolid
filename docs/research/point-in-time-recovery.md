@@ -75,3 +75,42 @@ needs a protected archive location, dependency-aware retention, recovery
 target selection and a safe promotion path with the application writer
 stopped. Test the installer against the actual archived chain and prove it
 does not start control on an unreached target.
+
+## Installer boundary
+
+Opt in at the single-node site configuration. Compose mounts only the
+PostgreSQL-writable spool. An installation-specific random owner record
+binds the private repository to its install root and Compose project.
+Archive WAL into separate system-identifier directories. Publish with
+a durable no-replace operation and acknowledge a repeated segment only
+when its bytes match. This prevents collisions if a site replaces its
+cluster or retries archiving a segment.
+
+Use plain bases with streamed WAL and SHA-256 manifests. Incrementals
+reference a named, verified parent from the same cluster, timeline and
+PostgreSQL image. Refuse user tablespaces in this path, since plain
+pg_basebackup can otherwise use absolute source tablespace paths.
+A repeated backup ID must match the original parent and pass verification.
+Verify all members before combine. The current server's WAL summaries
+are a creation prerequisite, independent of the WAL archive used for
+recovery. If the required summaries have expired, take a new full base.
+
+Read a UTC recovery target in a disconnected clone with its own Unix
+socket, PostgreSQL configuration and no upstream or archive write access.
+Publish a checked logical backup only when PostgreSQL reaches and promotes
+at that target. The installer restores that artifact through the existing
+database exchange, including schema and authority checks. Bind this artifact
+to the source cluster and site and require matching session and mail keys.
+The active model store must still contain the recovered database's ready
+models. Reject a different live schema. This path restores PostgreSQL data
+on its existing installation and leaves cross-store recovery to REL-103.
+
+Use an explicit full-base retention cutoff. Keep newer bases and their
+transitive dependencies, including an older full ancestor if needed. Compute
+the WAL floor across the retained set on its timeline. Prune only ordinary
+closed segments strictly below that floor in the current cluster partition.
+Keep history files and refuse WAL expiry when another timeline is present.
+The archive is shared by multiple restore targets, so an individual clone's
+restart position must never drive expiry. See
+[recovery target settings](https://www.postgresql.org/docs/18/runtime-config-wal.html#RUNTIME-CONFIG-WAL-RECOVERY-TARGET)
+and [pg_archivecleanup usage](https://www.postgresql.org/docs/18/pgarchivecleanup.html).
