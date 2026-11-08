@@ -25,12 +25,17 @@ system roots or the same explicit CA file.
 
 ## DEV-102 roadmap completion boundary
 
-Land the verified CLI separately from the roadmap tick. The lane briefing
-reserves the roadmap index to the coordinator. A checkbox change alone makes
-the progress-table check fail. The coordinator needs to record the CLI
-evidence, update the status table and refresh the index in the same change as
-the tick. Bypassing the check would leave repository CI failing. The CLI and its
-verification remain available while roadmap reconciliation is pending.
+The first release covers the eight assigned commands and their offline Admin
+flow. Keep the broader roadmap item open. The Admin already exposes common
+write operations including node enrollment and disablement, deployment
+creation, and deployment stop. These are outside the first release's CLI
+command set. A full tick needs a defined inventory of common operations and
+evidence for the additional commands. Equating the first release with the
+whole roadmap item would overstate what operators can do from SSH.
+
+The lane briefing reserves the roadmap index to the coordinator. A checkbox
+change alone makes the progress-table check fail. Record the evidence, update
+the status table and refresh the index in the same change as any tick.
 
 ## SDK delivery and roadmap completion
 
@@ -43,9 +48,10 @@ generator-only compatibility settings preserve the public operations and
 wire media types. A future contract that cannot be projected safely fails
 generation rather than silently losing an operation.
 
-The DEV-103 implementation has its own [SDK evidence](sdk.md). Its tick and
-the DEV-102 tick both need the coordinator's index and status updates to
-land in the same revision.
+The DEV-103 implementation has its own [SDK evidence](sdk.md). Its scope is
+generation from the currently published API. DEV-101 tracks whether the
+published API covers the whole product. The DEV-103 tick needs the
+coordinator's index and status updates in the same revision.
 
 ## Remaining P1 dependency boundaries
 
