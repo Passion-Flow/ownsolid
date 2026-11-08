@@ -62,7 +62,8 @@ age-keygen -y /mnt/recovery/ownsolid-identity.txt > /path/to/ownsolid-recipient.
 On the backup host, install the recipient as a root-owned mode 0600 file.
 Make the archive directory root-owned mode 0700 and keep it outside
 `install_root`. Use absolute paths without symlinks and a filesystem
-that supports hard links. Back up to a new filename each time.
+that supports hard links and directory synchronization. Back up to a new
+filename each time.
 
 ```sh
 ownsolid-install backup --config install.yaml \
