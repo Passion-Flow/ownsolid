@@ -53,10 +53,15 @@ disclaimer in accompanying materials. Source redistribution must retain them.
 The Linux amd64 workspace build resolves the versions above. The
 standalone installer module resolves x/crypto v0.55.0, under the same
 [BSD-3-Clause license](https://github.com/golang/crypto/blob/v0.55.0/LICENSE).
-Include the compiled versions in the installer binary notices. Upstream
-age command dependencies, test fixtures and development tools are outside the
-installer payload. The feature introduces no model or dataset and needs no
-runtime packages or network access.
+Include the compiled versions in the installer binary notices. The installer does not ship the upstream age commands or tests.
+The test vectors retained in the Go module graph are published under
+[0BSD, CC0-1.0 or Unlicense](https://github.com/C2SP/CCTV/blob/4448f2097b2d/age/README.md#license).
+The accompanying upstream vector generator has a
+[BSD-3-Clause license](https://github.com/C2SP/CCTV/blob/4448f2097b2d/age/internal/LICENSE).
+The upstream command dependency x/term v0.45.0 is
+[BSD-3-Clause](https://github.com/golang/term/blob/v0.45.0/LICENSE).
+The installer introduces no model or dataset and needs no runtime packages or
+network access.
 
 ## Acceptance and failures
 
