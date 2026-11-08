@@ -2,7 +2,8 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	json "encoding/json/v2"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,13 +12,16 @@ import (
 )
 
 const (
-	contractPath = "../../../../../api/openapi/v1/applications/openapi.json"
-	overlayPath  = "tool_catalog_overlay.json"
-	catalogPath  = "gen/tools.json"
+	contractPath       = "../../../../../api/openapi/v1/applications/openapi.json"
+	overlayPath        = "tool_catalog_overlay.json"
+	catalogPath        = "gen/tools.json"
+	portalScheme       = "PortalSession"
+	legacyPortalScheme = "portalCookie"
 )
 
 type review struct {
 	OperationID string `json:"operation_id"`
+	Path        string `json:"path"`
 	Risk        string `json:"risk"`
 	Permission  string `json:"permission"`
 }
@@ -30,23 +34,32 @@ type operation struct {
 	Path      string                `json:"-"`
 }
 
+type securityScheme struct {
+	Ref  string `json:"$ref"`
+	Type string `json:"type"`
+	In   string `json:"in"`
+	Name string `json:"name"`
+}
+
 type entry struct {
-	review
+	review    `json:",inline"`
 	Method    string   `json:"method"`
-	Path      string   `json:"path"`
 	Audiences []string `json:"audiences"`
 }
 
 func generate(contract, overlay []byte) ([]byte, error) {
 	var reviews map[string]review
-	if err := json.Unmarshal(overlay, &reviews); err != nil {
+	if err := json.Unmarshal(overlay, &reviews, json.RejectUnknownMembers(true)); err != nil {
 		return nil, err
 	}
 	if len(reviews) == 0 {
 		return nil, fmt.Errorf("reviewed tool overlay is empty")
 	}
 	var spec struct {
-		Paths map[string]map[string]json.RawMessage `json:"paths"`
+		Paths      map[string]map[string]jsontext.Value `json:"paths"`
+		Components struct {
+			SecuritySchemes map[string]securityScheme `json:"securitySchemes"`
+		} `json:"components"`
 	}
 	if err := json.Unmarshal(contract, &spec); err != nil {
 		return nil, err
@@ -54,9 +67,8 @@ func generate(contract, overlay []byte) ([]byte, error) {
 	operations := make(map[string]operation)
 	for path, item := range spec.Paths {
 		for verb, raw := range item {
-			method := strings.ToUpper(verb)
-			switch method {
-			case http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions, http.MethodTrace:
+			switch verb {
+			case "get", "head", "post", "put", "patch", "delete", "options", "trace":
 			default:
 				continue
 			}
@@ -70,7 +82,7 @@ func generate(contract, overlay []byte) ([]byte, error) {
 			if _, exists := operations[op.ID]; exists {
 				return nil, fmt.Errorf("duplicate operation %q", op.ID)
 			}
-			op.Method, op.Path = method, path
+			op.Method, op.Path = strings.ToUpper(verb), path
 			operations[op.ID] = op
 		}
 	}
@@ -81,28 +93,39 @@ func generate(contract, overlay []byte) ([]byte, error) {
 		if id == "" || !ok || seen[op.ID] {
 			return nil, fmt.Errorf("invalid or duplicate reviewed operation for %q", id)
 		}
-		if !admittedPortalRead(op, policy) {
+		if !admittedPortalRead(op, policy, spec.Components.SecuritySchemes) {
 			return nil, fmt.Errorf("reviewed portal read %q no longer matches its policy", op.ID)
 		}
 		seen[op.ID] = true
-		catalog[id] = entry{review: policy, Method: op.Method, Path: op.Path, Audiences: op.Audiences}
+		catalog[id] = entry{review: policy, Method: op.Method, Audiences: op.Audiences}
 	}
 	output := struct {
 		Notice string           `json:"generated"`
 		Tools  map[string]entry `json:"tools"`
 	}{"Code generated from OpenAPI and the tool overlay. DO NOT EDIT.", catalog}
-	body, err := json.MarshalIndent(output, "", "  ")
+	body, err := json.Marshal(output, json.Deterministic(true), jsontext.WithIndent("  "))
 	return append(body, '\n'), err
 }
 
-func admittedPortalRead(op operation, policy review) bool {
+func admittedPortalRead(op operation, policy review, schemes map[string]securityScheme) bool {
 	if policy.Risk != "read" || policy.Permission != "workspace_member" || op.Method != http.MethodGet ||
-		!strings.HasPrefix(op.Path, "/api/v1/") || len(op.Audiences) != 1 || op.Audiences[0] != "portal" ||
+		op.Path != policy.Path || !strings.HasPrefix(op.Path, "/api/v1/") || len(op.Audiences) != 1 || op.Audiences[0] != "portal" ||
 		len(op.Security) != 1 || len(op.Security[0]) != 1 {
 		return false
 	}
-	scopes, ok := op.Security[0]["portalCookie"]
-	return ok && scopes != nil && len(scopes) == 0
+	if schemes[portalScheme] != (securityScheme{Type: "apiKey", In: "cookie", Name: "__Host-portal_session"}) {
+		return false
+	}
+	scopes, canonical := op.Security[0][portalScheme]
+	if !canonical {
+		// The application contract still uses an undeclared legacy reference.
+		// A declared legacy scheme must go through an explicit review.
+		if _, declared := schemes[legacyPortalScheme]; declared {
+			return false
+		}
+		scopes = op.Security[0][legacyPortalScheme]
+	}
+	return scopes != nil && len(scopes) == 0
 }
 
 func generateFromPackage(dir string) ([]byte, error) {
