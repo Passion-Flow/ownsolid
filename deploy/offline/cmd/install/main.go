@@ -29,6 +29,7 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install backup --config <install.yaml> --output <new archive.tar.age> --recipient-file <public key file>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <archive.tar.age> --identity-file <private key file>\n" +
+	"       ownsolid-install restore-bundle --bundle <archive.tar.gz> --verification <policy.json> --config <site.yaml> --from <backup directory or archive.tar.age> [--identity-file <private key file>]\n" +
 	"       ownsolid-install recover-restore --config <install.yaml> [--rollback]\n" +
 	"       ownsolid-install agents status --config <install.yaml>\n" +
 	"       ownsolid-install agents shed --config <install.yaml> --level none|bulk|telemetry|heartbeats --reason <text>\n" +
@@ -46,7 +47,7 @@ func run(args []string, out io.Writer) error {
 	if len(args) < 1 {
 		return errors.New(usage)
 	}
-	if args[0] == "verify-bundle" || args[0] == "bundle-notices" || args[0] == "prepare-bundle" || args[0] == "apply-bundle" || args[0] == "upgrade-plan" || args[0] == "upgrade-bundle" || args[0] == "upgrade-patch" || args[0] == "rollback-bundle" {
+	if args[0] == "verify-bundle" || args[0] == "bundle-notices" || args[0] == "prepare-bundle" || args[0] == "apply-bundle" || args[0] == "upgrade-plan" || args[0] == "upgrade-bundle" || args[0] == "upgrade-patch" || args[0] == "rollback-bundle" || args[0] == "restore-bundle" {
 		return runBundle(args[0], args[1:], out)
 	}
 	if args[0] == "pitr" {

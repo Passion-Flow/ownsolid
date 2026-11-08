@@ -78,22 +78,24 @@ type tableFingerprint struct {
 
 // backupManifest records what a backup holds and what its database must contain.
 type backupManifest struct {
-	FormatVersion int                `json:"format_version"`
-	CreatedAt     time.Time          `json:"created_at"`
-	ControlImage  string             `json:"control_image"`
-	PostgresImage string             `json:"postgres_image"`
-	SchemaVersion int                `json:"schema_version"`
-	Database      backupFile         `json:"database"`
-	Tables        []tableFingerprint `json:"tables"`
-	Files         []backupFile       `json:"files"`
-	Recovery      *pitrRecovery      `json:"pitr_recovery,omitempty"`
+	FormatVersion         int                `json:"format_version"`
+	CreatedAt             time.Time          `json:"created_at"`
+	ControlImage          string             `json:"control_image"`
+	PostgresImage         string             `json:"postgres_image"`
+	SchemaVersion         int                `json:"schema_version"`
+	Database              backupFile         `json:"database"`
+	Tables                []tableFingerprint `json:"tables"`
+	Files                 []backupFile       `json:"files"`
+	ReleaseManifestSHA256 string             `json:"release_manifest_sha256,omitempty"`
+	Recovery              *pitrRecovery      `json:"pitr_recovery,omitempty"`
 }
 
 // operation is a backup or a restore: an install step sequence that also streams.
 type operation struct {
 	*installer
-	stream StreamRunner
-	now    func() time.Time
+	stream        StreamRunner
+	now           func() time.Time
+	signedRestore bool
 }
 
 func newOperation(c Config, runner StreamRunner, out io.Writer) *operation {
@@ -312,7 +314,13 @@ func (o *operation) backupWithPrefix(ctx context.Context, output, prefix string,
 		}
 	}()
 	manifest := backupManifest{FormatVersion: backupFormatVersion, CreatedAt: o.now().UTC(), ControlImage: o.config.Images.Control, PostgresImage: o.config.Images.Postgres}
-	var e error
+	binding, e := readBundleBinding(o.config)
+	if e != nil {
+		return "", e
+	}
+	if binding != nil && o.config.Images == binding.images() {
+		manifest.ReleaseManifestSHA256 = binding.ManifestSHA256
+	}
 	if manifest.Database, e = o.dump(ctx, filepath.Join(partial, backupDatabaseName)); e != nil {
 		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_DUMP_FAILED", Detail: e.Error()}
 	}
