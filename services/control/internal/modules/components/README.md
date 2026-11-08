@@ -4,7 +4,13 @@ This owner requests admitted node component changes, records their observations/
 
 [service.go](service.go) connects to the nodes owner; [requests.go](requests.go) constructs admitted requests; [repository.go](repository.go) and [observation_repository.go](observation_repository.go) persist current state; [artifacts.go](artifacts.go) bounds installed artifact access. [monitoring.go](monitoring.go) supplies observations to the monitoring projection.
 
-Migrations 000004–000005 retain managed component state. Log snapshots live in the log store, and a reader confirms each against its task ([ADR 0012](../../../../../docs/decisions/0012-telemetry-store-boundary.md)). Desired configuration/version is distinct from observed/applied state. Failure, stale observation, rollback and task result must remain tied to the exact node task; do not mark desired state as actual installation.
+Migrations 000004–000005 retain managed component state. Log snapshots live in the log store, and a reader confirms each against its task ([ADR 0012](../../../../../docs/decisions/0012-telemetry-store-boundary.md)).
+
+A log snapshot requires a succeeded logs task in the same tenant, workspace,
+node and component scope. A removal marker requires a succeeded remove task.
+Unrelated records are skipped so they cannot replace a valid snapshot or hide it.
+
+Desired configuration/version is distinct from observed/applied state. Failure, stale observation, rollback and task result must remain tied to the exact node task; do not mark desired state as actual installation.
 
 The current stored node status gates observations: an active node may report
 component state, and a disabled node may report passive heartbeat observations
