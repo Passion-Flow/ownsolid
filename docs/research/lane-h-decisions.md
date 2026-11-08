@@ -106,6 +106,54 @@ paths owned by this lane. The roadmap index, product status and
 capability declaration are coordinated outside this lane. Ticking a line on
 its own would leave the repository's progress checks out of sync.
 
+## Isolated full repository test
+
+The full `test` target at `908ec3d` exited 0. The browser launcher reused
+both tracked Playwright configurations with private loopback ports and three
+workers per application, running the applications in sequence. Console
+passed 1,029 and Portal 372, with 27 cases skipped by their existing
+conditions. All Go modules passed, the Gateway passed 62 Rust tests, and
+the Web unit stage passed 311 tests.
+
+The general temporary directory was a short-path 32 GiB APFS volume. Go's
+test execution wrapper routed only the Agent training executable to a
+10 GiB memory-backed volume. This reduced storage latency while preserving
+test timeouts and disk-space guards. The first harness run inherited a
+restrictive umask and failed the backup fixture's permission assertion.
+The same fixture passed with the workstation's normal umask, which the
+successful full rerun preserved. Both runs retained their actual exit code.
+
+## Single-node delivery acceptance
+
+DEL-102 and DEL-111 work on the current Linux amd64 Compose installation
+independently of a production release archive. `TestPreflightIsolatedDocker`
+proved DEL-102 can resume after a killed installer has committed the
+administrator and before control starts. The check compared the committed
+administrator, tenant, workspace, and credential, then verified both
+entrances. The same isolated run collected the allowlisted DEL-111
+diagnostics after stopping control. NVIDIA hardware and Kubernetes
+diagnostics are outside those test results.
+
+DEL-104, DEL-105, and DEL-106 use the current signed manifest format.
+`TestSignedUpgradeIsolatedDocker` exercised the verified recovery point
+and migration, same-schema rollback after a candidate startup failure, and
+incremental transfer against the exact installed baseline. These operations
+were qualified on real Compose services and PostgreSQL using signed test
+releases. Shipping a customer upgrade still requires its signed production
+baseline and candidate. Restoring both an older schema and the application
+in place remains outside this qualification.
+
+DEL-112 verified a signed release with the rotated, pinned public trust.
+The factory CLI also ran in an isolated Linux network namespace with only
+loopback. Both threshold signatures were required to rotate, replay was
+refused, and failed transitions preserved the pinned file. This does not
+require the missing production payload inventory.
+
+DEL-110 needs the actual DEL-101 production inputs. The current factory
+requires notice references and signed checksums and the CPU fixture shipped
+the real Qwen licence. A production inventory still needs the applicable
+notices and component SBOMs for every delivered asset.
+
 ## DEL-104 initial planning boundary
 
 Use the installed signed release binding and the database's observed schema for
