@@ -228,7 +228,10 @@ func checkPublishedPort(ctx context.Context, c Config, runner Runner) error {
 					if binding.HostPort != port || !addressesOverlap(host, address) {
 						continue
 					}
-					if owner.Project != c.Project || owner.Service != "control" || owner.ConfigFile != c.Layout().ComposeFile || host != address {
+					base := c.Layout().ComposeFile
+					overlay := base + "," + filepath.Join(c.InstallRoot, pitrComposeName)
+					if owner.Project != c.Project || owner.Service != "control" ||
+						(owner.ConfigFile != base && owner.ConfigFile != overlay) || host != address {
 						return fmt.Errorf("INSTALL_PREFLIGHT_PORT: another Docker service publishes %s; choose an available network.https_port", netip.AddrPortFrom(address, uint16(c.Network.HTTPSPort)))
 					}
 					owned = true

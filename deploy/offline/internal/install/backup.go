@@ -86,6 +86,7 @@ type backupManifest struct {
 	Database      backupFile         `json:"database"`
 	Tables        []tableFingerprint `json:"tables"`
 	Files         []backupFile       `json:"files"`
+	Recovery      *pitrRecovery      `json:"pitr_recovery,omitempty"`
 }
 
 // operation is a backup or a restore: an install step sequence that also streams.
@@ -146,16 +147,20 @@ func (o *operation) record(action, outcome, detail string) {
 	}
 }
 
-func (o *operation) composeArguments(args ...string) []string {
-	l := o.config.Layout()
-	return append([]string{"compose", "--env-file", l.ComposeEnv, "-f", l.ComposeFile}, args...)
+func composeArguments(c Config, args ...string) []string {
+	l := c.Layout()
+	prefix := []string{"compose", "--env-file", l.ComposeEnv, "-f", l.ComposeFile}
+	if c.PITR != nil {
+		prefix = append(prefix, "-f", filepath.Join(c.InstallRoot, pitrComposeName))
+	}
+	return append(prefix, args...)
 }
 
 // query runs SQL and returns only what the server answered, so a client warning on
 // stderr cannot be parsed as data.
 func (o *operation) query(ctx context.Context, database, sql string) (string, error) {
 	var answer bytes.Buffer
-	diagnostics, e := o.stream.Stream(ctx, nil, &answer, "docker", o.composeArguments("exec", "--no-TTY", "postgres", "psql", "-X", "-At", "-v", "ON_ERROR_STOP=1", "-U", migratorRole, "-d", database, "-c", sql)...)
+	diagnostics, e := o.stream.Stream(ctx, nil, &answer, "docker", composeArguments(o.config, "exec", "--no-TTY", "postgres", "psql", "-X", "-At", "-v", "ON_ERROR_STOP=1", "-U", migratorRole, "-d", database, "-c", sql)...)
 	if e != nil {
 		return "", fmt.Errorf("%s", lastLines(diagnostics+answer.String()))
 	}
@@ -184,7 +189,7 @@ func (o *operation) loadDump(ctx context.Context, database, path string) error {
 		return e
 	}
 	defer f.Close()
-	diagnostics, e := o.stream.Stream(ctx, f, io.Discard, "docker", o.composeArguments("exec", "--no-TTY", "postgres", "pg_restore", "-U", migratorRole, "-d", database, "--exit-on-error")...)
+	diagnostics, e := o.stream.Stream(ctx, f, io.Discard, "docker", composeArguments(o.config, "exec", "--no-TTY", "postgres", "pg_restore", "-U", migratorRole, "-d", database, "--exit-on-error")...)
 	if e != nil {
 		return fmt.Errorf("%s", lastLines(diagnostics))
 	}
@@ -314,17 +319,7 @@ func (o *operation) backupWithPrefix(ctx context.Context, output, prefix string,
 	fmt.Fprintln(o.out, "step dump: ok")
 	// A backup counts only if it restores, so the fingerprint comes from a restored copy.
 	scratch := "ownsolid_verify_" + strings.ToLower(stamp)
-	if e = o.createDatabase(ctx, scratch); e != nil {
-		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_VERIFY_FAILED", Detail: e.Error()}
-	}
-	defer o.dropDatabase(ctx, scratch)
-	if e = o.loadDump(ctx, scratch, filepath.Join(partial, backupDatabaseName)); e != nil {
-		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_VERIFY_FAILED", Detail: e.Error()}
-	}
-	if manifest.SchemaVersion, e = o.schemaVersion(ctx, scratch); e != nil {
-		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_VERIFY_FAILED", Detail: e.Error()}
-	}
-	if manifest.Tables, e = o.fingerprint(ctx, scratch); e != nil {
+	if manifest.SchemaVersion, manifest.Tables, e = o.verifyDump(ctx, filepath.Join(partial, backupDatabaseName), scratch); e != nil {
 		return "", &StepError{Step: "backup", Code: "INSTALL_BACKUP_VERIFY_FAILED", Detail: e.Error()}
 	}
 	fmt.Fprintf(o.out, "step verify: ok tables=%d schema=%d\n", len(manifest.Tables), manifest.SchemaVersion)
@@ -354,6 +349,23 @@ func (o *operation) backupWithPrefix(ctx context.Context, output, prefix string,
 	return final, syncDirectory(output)
 }
 
+// verifyDump round-trips a logical backup before the installer publishes it.
+func (o *operation) verifyDump(ctx context.Context, path, scratch string) (int, []tableFingerprint, error) {
+	if err := o.createDatabase(ctx, scratch); err != nil {
+		return 0, nil, err
+	}
+	defer o.dropDatabase(ctx, scratch)
+	if err := o.loadDump(ctx, scratch, path); err != nil {
+		return 0, nil, err
+	}
+	schema, err := o.schemaVersion(ctx, scratch)
+	if err != nil {
+		return 0, nil, err
+	}
+	tables, err := o.fingerprint(ctx, scratch)
+	return schema, tables, err
+}
+
 // dump streams pg_dump to path, hashing as it writes.
 func (o *operation) dump(ctx context.Context, path string) (backupFile, error) {
 	f, e := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
@@ -363,7 +375,7 @@ func (o *operation) dump(ctx context.Context, path string) (backupFile, error) {
 	defer f.Close()
 	hash := sha256.New()
 	counter := &countingWriter{}
-	diagnostics, e := o.stream.Stream(ctx, nil, io.MultiWriter(f, hash, counter), "docker", o.composeArguments("exec", "--no-TTY", "postgres", "pg_dump", "-U", migratorRole, "-d", databaseName, "-Fc")...)
+	diagnostics, e := o.stream.Stream(ctx, nil, io.MultiWriter(f, hash, counter), "docker", composeArguments(o.config, "exec", "--no-TTY", "postgres", "pg_dump", "-U", migratorRole, "-d", databaseName, "-Fc")...)
 	if e != nil {
 		return backupFile{}, fmt.Errorf("%s", lastLines(diagnostics))
 	}

@@ -158,3 +158,64 @@ docker compose --env-file <install_root>/compose.env -f <install_root>/compose.y
 | `INSTALL_BUSY` | Another apply, backup or restore is running on this installation |
 
 Each backup and restore, and its outcome, is appended to `<install_root>/operator/operations.log`.
+
+## PostgreSQL point-in-time recovery
+
+Enable `pitr` in the single-node [installer configuration](../../deploy/offline/install.example.yaml).
+Use a new, empty, root-owned directory with mode 0700 outside `install_root`.
+Run `apply` or the equivalent signed apply during a maintenance window to
+restart PostgreSQL with WAL archiving and summaries enabled. The installer
+binds this repository to the installation. Put it on storage sized for full
+and incremental backups and continuous WAL. Monitor free space and
+`pg_stat_archiver`. An archive that cannot accept writes can eventually fill
+the primary's WAL storage.
+
+Create the first full base, then incremental bases that refer to a verified
+parent. A parent must use the same PostgreSQL 18 image, cluster and timeline.
+A parent whose WAL summaries have expired requires a new full base.
+
+```sh
+ownsolid-install pitr backup --config install.yaml --id full-01
+ownsolid-install pitr backup --config install.yaml --id incremental-01 --parent full-01
+```
+
+The same ID and parent can be retried. The installer verifies the complete
+chain and refuses a different parent under an existing ID. The archive
+timeout defaults to 60 seconds and the summary retention defaults to 240
+hours. Archived WAL stays until an explicit prune. Incremental creation
+uses the server's WAL summaries, independently of archived WAL retention.
+
+Choose a UTC time after the selected base finished and within the retained
+archive. Replay runs in a separate PostgreSQL container with no network.
+A missing segment or an unreached target leaves the live database serving.
+The command publishes a checked logical recovery point under
+`<pitr.directory>/recovered/<id>` and prints its path.
+
+```sh
+ownsolid-install pitr recover --config install.yaml --id incident-01 \
+  --base incremental-01 --target 2026-11-08T12:34:56Z
+ownsolid-install restore --config install.yaml \
+  --from /srv/ownsolid-pitr/recovered/incident-01
+```
+
+Repeating the same recovery ID, base and time returns the existing export.
+Use the separate `restore` command when ready to switch the live database.
+It checks the source installation, cluster, schema and encryption keys,
+then performs the normal checked exchange and revokes restored credentials.
+Retrying the same artifact while it is active preserves later writes.
+The current model store must still contain the recovered database's ready
+models. This procedure restores the database on its existing installation.
+Coordinated recovery of external files and objects is REL-103.
+
+Expire older bases and WAL by selecting a newer verified **full** base.
+
+```sh
+ownsolid-install pitr prune --config install.yaml --keep-from full-02
+```
+
+Prune retains newer bases and every predecessor they need. A newer
+incremental that still depends on an older full base keeps that full base
+and its WAL. Prune checks the retained WAL range for gaps and refuses
+mixed timelines. It removes only eligible backups and ordinary WAL segments
+in this repository's current cluster partition. Recovery exports and
+unmanaged entries remain available after pruning.
