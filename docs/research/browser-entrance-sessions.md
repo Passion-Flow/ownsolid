@@ -32,3 +32,14 @@ wrong-audience logout must leave the source session usable. An unprivileged
 Portal account must be refused Admin login. Test bad Origin and cross-audience
 CSRF with valid credentials, and validate that a foreign tenant membership
 cannot replace the installation tenant in the login or profile response.
+
+## Verification
+
+`TestBrowserEntranceSessionIsolation` runs through a real TLS listener and
+PostgreSQL 18.6. A user with memberships in two tenants receives the
+installation's tenant on both entrances. Renaming each session cookie to the
+other entrance's name fails on the current-account and session-status reads.
+Logging out with either renamed value leaves both original sessions valid.
+This regression passed in a Docker fixture with no network interfaces beyond
+loopback. The earlier live browser checks are recorded in
+[capability status](../product/status.md).
