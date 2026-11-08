@@ -309,6 +309,22 @@ publishes applications; a conversation starts from an application.
 **Done when** every section reads real data, fails on its own with a retry, and never shows a
 figure the server does not have ([research](../../research/portal-home.md)).
 
+### S-304  Models for users                           `/models` in the portal
+**For** a person who uses the platform · **Archetype** list · **Primary** try a model; not ready until the
+playground ships (POR-105), so *Issue a key* stands beside it.
+
+**Does** "which models can I call here, and which should I pick?"
+**Content** one row for each name the gateway serves in the workspace: name, model, where it came from, context
+length, state. Disabled names are left out. Tiles filter by can be called now / not available.
+**Click** row → drawer: the name to call and the base URL, the model, its base, what it is good for, context length,
+licence and price (not ready, TEN-107), then *Issue a key*.
+**Dialogs** none. Issuing happens on `/keys`.
+**Empty** "No models yet", and that an administrator publishes them. Filtered: which filter, and clear it. No
+workspace: an administrator adds you to one.
+**Done when** a person sees only what their workspace may call, a model's facts failing to load never hides its
+name, and price and an administrator's description are shown (TEN-107, GW-120;
+[research](../../research/portal-model-catalogue.md)).
+
 ### S-306  My API keys                                `/keys` in the portal
 **For** a person who uses the platform · **Archetype** list · **Primary** issue a key.
 

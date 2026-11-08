@@ -29,6 +29,12 @@ Lane B continues, in order, with:
 
 UX-131 keeps closing page by page, as ADR 0044 set out.
 
+## Amendment, 2026-11-08
+
+POR-104 goes before GW-114. [The research on GW-114](../research/gateway-delivery.md) showed that the gateway has to
+run beside the model on the serving node, so the item reaches the agent paths this decision kept lane B out of, and
+lane A has uncommitted work in exactly those files. GW-114 stays next once its prototype and decision are done.
+
 ## Consequences
 
 - After GW-114, the live runs of GW-113 and POR-106 can replace the fixture that stands in for the gateway with the

@@ -26,6 +26,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [ ] GW-114 The installer delivers and starts the model gateway on its entrance, with its identity provisioned and no network needed (P1)
 - [x] GW-117 Publish a deployment to the gateway from the console: provision a gateway instance and name the alias a key calls (P1) - Evidence: c6936b9, b45b879; live run on an installation, 2026-11-08: a verified deployment on a scripted node was published from its page, which registered the node's gateway and showed its credential once; a key issued from the same card made two calls admitted over the real gateway protocol with that credential by a stand-in for the gateway process (GW-114), and after Stop publishing the name was refused; no model ran
 - [ ] GW-118 Gateway instances on the Gateway page: list each node's gateway, revoke one, and replace a lost credential without retiring its aliases (P1)
+- [ ] GW-120 Say what a published model is for: an administrator's description, written when publishing and changeable later, shown in the portal's catalogue (P1)
 
 ## P2 Fleet operations
 
