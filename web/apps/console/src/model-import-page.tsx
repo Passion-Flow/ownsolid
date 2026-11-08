@@ -263,14 +263,18 @@ function ImportForm({ catalog }: { catalog: ModelCatalogAvailability }) {
           <span>{t('models.import.license', { license: entry.license })}</span>
         </label>
       </Card>
-      <p className="m-0 text-text-2">
-        {file
-          ? t('models.import.cost', {
-              workspace: workspace?.name ?? '',
-              during: format.bytes(file.size + finalBytes),
-            })
-          : t('models.import.cost.none', { size: format.bytes(2 * finalBytes) })}
-      </p>
+      <Card className="p-[18px]">
+        <h2 className="m-0 mb-1 text-[15px] font-semibold">{t('models.import.storage.title')}</h2>
+        <p className="m-0 text-text-2" aria-live="polite">
+          {file
+            ? t('models.import.cost', {
+                during: format.bytes(file.size + finalBytes),
+                size: format.bytes(finalBytes),
+              })
+            : t('models.import.cost.none', { size: format.bytes(finalBytes) })}
+        </p>
+        <p className="m-0 mt-1 text-text-2">{t('models.import.storage.cleanup')}</p>
+      </Card>
       <div>
         <Button type="submit" variant="primary" disabled={!usable}>
           {start.isPending ? <Spinner label={t('models.import.submit')} /> : <Upload aria-hidden />}
@@ -454,7 +458,8 @@ function Loaded({
   const stuck =
     transfer?.state === 'failed' && !(isProblem(transfer.problem) && transfer.problem.retryable);
   const state = importStates[item.state];
-  const [upload, verification, ready] = stepStates(item);
+  const [upload, verification, publication] = stepStates(item);
+  const publishedModelId = item.state === 'ready' ? item.model_id : null;
   const failure = item.state === 'failed' && item.error_code ? item.error_code : null;
   const resume = (file: File) => {
     setWrongSize(file.size !== item.expected_bytes);
@@ -473,7 +478,16 @@ function Loaded({
         title={item.name}
         status={<StatusPill tone={state.tone}>{t(state.label)}</StatusPill>}
         actions={
-          finished.includes(item.state) ? null : (
+          publishedModelId ? (
+            <Link
+              to="/library/$modelId"
+              params={{ modelId: publishedModelId }}
+              className={buttonVariants({ variant: 'primary' })}
+            >
+              {t('models.import.openModel')}
+              <ArrowRight aria-hidden />
+            </Link>
+          ) : finished.includes(item.state) ? null : (
             <Button
               variant="danger"
               onClick={() => {
@@ -524,17 +538,10 @@ function Loaded({
             <Notice title={t('models.import.outOfAttempts')} />
           )
         ) : null}
-        {item.state === 'ready' && item.model_id ? (
-          <div>
-            <Link
-              to="/library/$modelId"
-              params={{ modelId: item.model_id }}
-              className={buttonVariants({ variant: 'primary' })}
-            >
-              {t('models.import.openModel')}
-              <ArrowRight aria-hidden />
-            </Link>
-          </div>
+        {publishedModelId ? (
+          <Notice title={t('models.import.published.title')}>
+            {t('models.import.published.detail')}
+          </Notice>
         ) : null}
         <Card className="p-[18px]">
           <StepTimeline
@@ -547,7 +554,7 @@ function Loaded({
                 detail: t('models.import.step.verify.detail'),
                 state: verification,
               },
-              { id: 'ready', title: t('models.import.step.ready'), state: ready },
+              { id: 'publish', title: t('models.import.step.publish'), state: publication },
             ]}
           />
         </Card>
