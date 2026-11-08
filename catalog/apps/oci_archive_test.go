@@ -11,8 +11,8 @@ import (
 )
 
 type imageFixture struct {
-	files        map[string][]byte
-	image, layer string
+	files                map[string][]byte
+	image, config, layer string
 }
 
 func newImageFixture(t *testing.T, architecture string, remoteLayer bool) imageFixture {
@@ -45,7 +45,7 @@ func newImageFixture(t *testing.T, architecture string, remoteLayer bool) imageF
 			ociBlobPrefix + strings.TrimPrefix(digestBytes(config), "sha256:"): config,
 			layerPath: layer,
 		},
-		image: image, layer: layerPath,
+		image: image, config: digestBytes(config), layer: layerPath,
 	}
 }
 
@@ -118,6 +118,10 @@ func TestVerifyInstallBundleOCIClosure(t *testing.T) {
 	release, err := VerifyInstallBundle(t.Context(), fixture.root, fixture.key, fixture.limit)
 	if err != nil || !slices.Equal(release.Manifest.Images, []string{image.image}) {
 		t.Fatalf("verified image inventory = %v, %v", release.Manifest.Images, err)
+	}
+	if release.Archive.Digest != digestBytes(archive) || release.Archive.Bytes != int64(len(archive)) ||
+		!slices.Equal(release.Archive.Images, []OCIImage{{ManifestDigest: image.image, ConfigDigest: image.config}}) {
+		t.Fatalf("import facts do not match the verified archive: %+v", release.Archive)
 	}
 	if _, err := VerifyInstallBundle(t.Context(), fixture.root, fixture.key, fixture.limit-1); !errors.Is(err, ErrBundle) {
 		t.Fatalf("oversized archive was admitted: %v", err)

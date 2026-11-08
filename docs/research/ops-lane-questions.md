@@ -71,3 +71,16 @@ OPS has no diff in these packages. The browser gate can use the repository's
 Chromium specs and built apps with two workers, private loopback preview
 ports, and an external Playwright config. Keep its result separate from the
 fixed-port run and the non-browser Go, Rust and web tests.
+
+
+Both isolated browser runs completed. Console passed 1,031 tests and skipped
+23 live-installation tests. Portal passed 372 and skipped five live-installation
+tests. The gateway suite, serial web unit suites, E2E helper modules, CLI and
+audit verifier also passed in separate runs.
+
+The two measured-root tests and the TLS material suite passed on both trees
+when cross-compiled with `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c`
+and run in a disconnected Linux amd64 container as UID/GID 65534. Use a private
+tmpfs for the test's temporary directory. The restore-root contract rejects
+root-owned fixture identities, so the non-root UID and GID are required for
+this comparison. The native macOS non-browser gate remains red.
