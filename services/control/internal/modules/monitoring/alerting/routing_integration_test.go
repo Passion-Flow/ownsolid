@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -273,4 +274,88 @@ func writeFixture(t *testing.T, path string, content []byte) {
 	if err := os.WriteFile(path, content, 0o600); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestFleetRollupsWriteOnlyAggregatesToTheLongTier(t *testing.T) {
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Minute)
+	defer cancel()
+	work := t.TempDir()
+	client := &http.Client{Transport: &http.Transport{}, Timeout: 15 * time.Second}
+	t.Cleanup(client.CloseIdleConnections)
+	short := runAlertService(t, ctx, client, "OWNSOLID_TEST_VICTORIA_METRICS", "/health",
+		"-storageDataPath="+filepath.Join(work, "short"), "-search.latencyOffset=0s", "-memory.allowedBytes=256MB", "-retentionPeriod=2d")
+	long := runAlertService(t, ctx, client, "OWNSOLID_TEST_VICTORIA_METRICS", "/health",
+		"-storageDataPath="+filepath.Join(work, "long"), "-search.latencyOffset=0s", "-memory.allowedBytes=256MB", "-retentionPeriod=90d")
+	runAlertService(t, ctx, client, "OWNSOLID_TEST_VMALERT", "/health",
+		"-rule=fleet-rollup-rules.yaml", "-rule.evalDelay=0s", "-datasource.queryStep=15s",
+		"-datasource.url="+short, "-remoteWrite.url="+long)
+
+	payload := []byte(strings.Join([]string{
+		"up{job=\"ownsolid-node\",site_id=\"site-a\",cell_id=\"cell-a\",node_id=\"up\"} 1",
+		"up{job=\"ownsolid-node\",site_id=\"site-a\",cell_id=\"cell-a\",node_id=\"down\"} 0",
+		"up{job=\"ownsolid-node\",site_id=\"site-a\",cell_id=\"cell-b\",node_id=\"down\"} 0",
+		"up{job=\"ownsolid-node\",site_id=\"site-a\",node_id=\"unknown-cell\"} 1",
+	}, "\n") + "\n")
+	for {
+		if err := alertRequest(ctx, client, http.MethodPost, short+"/api/v1/import/prometheus", "text/plain", payload, nil); err != nil {
+			t.Fatal(err)
+		}
+		observed := rollupQuery(t, ctx, client, long, "ownsolid:cell_nodes_observed:count")
+		reachable := rollupQuery(t, ctx, client, long, "ownsolid:cell_nodes_reachable:count")
+		if len(observed) != 0 && len(reachable) != 0 {
+			if len(observed) != 2 || observed["cell-a"] != "2" || observed["cell-b"] != "1" ||
+				len(reachable) != 2 || reachable["cell-a"] != "1" || reachable["cell-b"] != "0" {
+				t.Fatalf("incorrect cell rollups: observed=%v reachable=%v", observed, reachable)
+			}
+			if raw := rollupQuery(t, ctx, client, long, "up"); len(raw) != 0 {
+				t.Fatalf("raw data leaked to the long tier: %v", raw)
+			}
+			if misplaced := rollupQuery(t, ctx, client, short, "ownsolid:cell_nodes_observed:count"); len(misplaced) != 0 {
+				t.Fatalf("rollup written to the raw tier: %v", misplaced)
+			}
+			t.Log("long tier stores two scoped counts per cell, including a measured zero, and no raw up series")
+			return
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatalf("rollups did not arrive: %v", ctx.Err())
+		case <-time.After(3 * time.Second):
+		}
+	}
+}
+
+func rollupQuery(t *testing.T, ctx context.Context, client *http.Client, origin, expr string) map[string]string {
+	t.Helper()
+	var reply struct {
+		Status string
+		Data   struct {
+			Result []struct {
+				Metric map[string]string
+				Value  []json.RawMessage
+			}
+		}
+	}
+	path := origin + "/api/v1/query?nocache=1&query=" + url.QueryEscape(expr)
+	if err := alertRequest(ctx, client, http.MethodGet, path, "", nil, &reply); err != nil {
+		t.Fatal(err)
+	}
+	if reply.Status != "success" {
+		t.Fatalf("query %q failed", expr)
+	}
+	result := make(map[string]string, len(reply.Data.Result))
+	for _, row := range reply.Data.Result {
+		cell := row.Metric["cell_id"]
+		if len(row.Value) != 2 || cell == "" || row.Metric["site_id"] != "site-a" {
+			t.Fatalf("invalid cell rollup for %q: %+v", expr, row)
+		}
+		if _, duplicate := result[cell]; duplicate {
+			t.Fatalf("duplicate series in cell %s for %q", cell, expr)
+		}
+		var value string
+		if err := json.Unmarshal(row.Value[1], &value); err != nil {
+			t.Fatal(err)
+		}
+		result[cell] = value
+	}
+	return result
 }
