@@ -25,3 +25,19 @@ go -C services/control test ./internal/platform/monitoringmetrics
 ```
 
 [Recorder tests](recorder_test.go) cover interface transparency, SSE, actual local HTTP/2, panic/cancellation, log redaction and overflow. [Process tests](process_test.go) exercise partial-stream failure and a fresh restart epoch. These checks do not establish host capacity or workload performance. When adding an observation, synchronize policy validation, the monitoring API/client and bounded-label tests; do not add hidden background sampling or unbounded per-user metrics here.
+
+## VictoriaMetrics fleet scale fixture
+
+The standalone scale test uses a fresh, loopback-only VictoriaMetrics
+instance. It verifies stored sample and series counts, measures ingest
+intervals and measures selected queries with and without competing writes.
+The Linux runner requires a local Go toolchain and permission to create a
+network namespace. Verify the upstream v1.155.0 Linux amd64 archive checksum
+before extracting the binary. Then run from this directory:
+
+    bash testdata/run-scale.sh /absolute/path/to/victoria-metrics-prod 10000 9
+
+Use 5 nodes and 2 rounds for a short smoke test. The runner creates its own
+storage directory and stops the process after the test. Its port is 58428
+inside the isolated namespace only. See the [scale qualification](../../../../../docs/research/telemetry-scale.md)
+for measured size, throughput and query times.
