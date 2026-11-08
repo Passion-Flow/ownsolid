@@ -189,3 +189,15 @@ The installer compares the signed baseline digest with the installation's
 release binding, reconstructs the complete candidate from the two local
 files, and verifies every candidate payload before starting the upgrade.
 The staging volume must hold the retained archives and reconstructed payloads.
+
+### Read the notice inventory
+
+```sh
+ownsolid-install bundle-notices --bundle /mnt/release/ownsolid.tar.gz \
+  --verification /private/release-verification.json
+```
+
+The command verifies the entire archive before printing its release digest,
+notice paths and checksums, and the payload IDs referring to each notice.
+Use `prepare-bundle` to read the actual signed files. The inventory reflects
+the notice files selected and signed by the release manufacturer.
