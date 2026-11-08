@@ -82,3 +82,24 @@ their narrower field scope.
   registered with control and an approved SIEM fixture on the test network.
   A writer with no startup path or verified sink would leave the feature
   incomplete. Keep the item open.
+
+## Repository verification on a shared workstation
+
+Use separate loopback ports for the browser suites when the default ports are
+occupied. The full Chromium suites on the audit status snapshot passed 1,029
+Console and 372 Portal tests, with 27 live-environment cases skipped. The
+updated Portal models spec on the rebased snapshot passed all 15 cases.
+
+Use a private sparse test volume for the control plane's object-store capacity
+check. For the agent, use a short path on a 6 GiB memory-backed volume to leave
+room for the 5.41 GiB model-preparation reservation. The native-disk Agent
+revocation fixture races a 150 ms timer against container startup. Its five
+repetitions passed on the memory-backed volume, and the full Agent suite passed
+with the larger volume. Separating those fixtures leaves the production limits
+in force and exercises the same tests.
+
+At `8fccc4c`, `make check` and `make build` passed. The non-browser Make pass
+ran every Go module other than Agent, the gateway Rust tests and the web unit
+tests. The separate Agent and browser passes covered the remaining suites.
+Real HTTPS tests on PostgreSQL 18.6 covered audit writes, filtering and the
+absence of credential and request-body markers in audited output.
