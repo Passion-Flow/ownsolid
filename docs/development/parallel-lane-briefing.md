@@ -169,32 +169,32 @@ A report that says the item is done, and nothing else, is not a report.
 
 ## 8. Database migration numbers
 
-`services/control/migrations/postgresql/` is numbered in sequence, and two lanes
-choosing the next free number will collide. Each lane therefore owns a block. Take
-the lowest free number inside your block, in order, and never ask: the blocks exist
-so that nobody has to coordinate.
+`services/control/migrations/postgresql/` is **one contiguous lineage starting at
+1**. This is enforced in `services/control/internal/platform/database/database.go`:
+a file whose number is not exactly one more than the previous one fails with
+`MIGRATION_SEQUENCE_INVALID`. Reserved blocks and gaps are therefore impossible.
 
-| Lane | Block |
-| --- | --- |
-| A fleet core, B web console | from `000053`, in sequence |
-| D command line | none needed |
-| E audit | `000100`–`000119` |
-| F datasets | `000120`–`000139` |
-| G gateway | `000140`–`000159` |
-| H offline delivery | none needed |
-| M models and serving | `000160`–`000179` |
+Two constants in that same file move with every migration, and you update both:
 
-Write both files, matching the existing names:
+- `SchemaVersion` — the number of migrations. Add one.
+- `TableCount` — the number of public tables. Add however many your migration
+  creates.
 
-```
-000100_audit_hash_chain.up.sql
-000100_audit_hash_chain.down.sql
-```
+Because the numbering is a single line, two lanes will sometimes want the same
+number. Resolve it at push time, not by asking:
 
-Gaps between blocks are fine. The runner sorts by number and applies in order; it
-does not require the numbers to be contiguous.
+1. While you work, use the next number after the highest on `origin/main`.
+2. Before pushing: `git fetch origin && git rebase origin/main`.
+3. If another lane took your number while you were working, rename your two files
+   to the next free number, correct `SchemaVersion` and `TableCount`, and rerun the
+   tests.
+4. Push. If the push is rejected, go back to step 2.
 
-If your block runs out, ask for another. Do not spill into the next lane's block.
+Git serialises pushes, so whoever lands first keeps the number and the other
+renames. No coordination is needed and nobody has to be asked.
+
+**Never renumber or edit a migration that already exists** to close a gap or make
+room. One that has run on a customer's installation cannot change.
 
 ## 9. Shared files you may add to, without asking
 
@@ -207,7 +207,8 @@ nothing else.**
 | --- | --- |
 | `go.work` | Add one `use` line for a module you created |
 | A test that enumerates schema objects, such as the backup or restore reference test | Add the tables your migration adds |
-| `services/control/migrations/postgresql/` | Create files inside your block (section 8) |
+| `services/control/migrations/postgresql/` | Create the next contiguous migration (section 8) |
+| `SchemaVersion` and `TableCount` in `platform/database/database.go` | Move both to match your migration |
 | Your own module's roadmap file | Tick your line and add its evidence |
 | `docs/research/` | Your own notes |
 
@@ -228,3 +229,30 @@ stop:
   interface that other modules compile against
 - Anything that would make another lane's tests fail
 - Adding a third-party dependency whose licence you could not verify
+
+## 10. Never block. Write the question down and keep going
+
+The owner is not always at the keyboard, and a lane that stops to ask has stopped
+for the night. **A question must never halt your lane.**
+
+When you reach something section 9 says to ask about:
+
+1. Append it to `docs/research/<your-lane>-questions.md`: what you need decided,
+   which options you see, which one you would pick, and what it blocks.
+2. **Take the safest option that does not need the answer**, and say in the file
+   that you did.
+3. If nothing safe exists, leave the item unticked, record it as a boundary, and
+   **move to the next item in your module.**
+4. Keep working.
+
+The safest option is almost always the one that changes the least of other
+people's work: add rather than modify, keep the existing behaviour and put yours
+behind a new path, leave the old code in place.
+
+What this does not license: it is not permission to guess at a design, to write a
+stub that pretends to work, or to change a shared contract because waiting was
+inconvenient. Those three still stop, and stopping means moving to the next item,
+never inventing an answer.
+
+Put every question in that one file so the owner can read them all at once, rather
+than finding them scattered through a transcript.
