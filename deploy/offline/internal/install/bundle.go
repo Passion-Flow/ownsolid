@@ -194,6 +194,28 @@ func checkInstalledProject(c Config) error {
 	return errors.New("INSTALL_BUNDLE_PROJECT_CHANGED: keep the installed Compose project in the site configuration")
 }
 
+// checkBoundOperation revalidates ordinary data operations while holding the installation lock.
+func checkBoundOperation(c Config) error {
+	active, err := readBundleBinding(c)
+	if err != nil || active == nil {
+		return err
+	}
+	if c.ComposeFile != c.Layout().ComposeFile || c.Images != active.images() {
+		return errors.New("INSTALL_BUNDLE_ACTIVE_RELEASE_CHANGED: reload the site configuration for the active signed release and retry")
+	}
+	if err := checkInstalledProject(c); err != nil {
+		return err
+	}
+	pending, err := readUpgradeIntent(c)
+	if err != nil {
+		return err
+	}
+	if pending != nil {
+		return errors.New("INSTALL_UPGRADE_PENDING: resolve the pending signed upgrade before running backup or restore")
+	}
+	return nil
+}
+
 func checkBundleHost(ctx context.Context, c Config, runner Runner, out io.Writer) error {
 	if c.Preflight != nil {
 		if err := Preflight(ctx, c, runner, out); err != nil {

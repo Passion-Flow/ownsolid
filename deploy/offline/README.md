@@ -65,10 +65,27 @@ OWNSOLID_E2E_RUN='^TestPreflightIsolatedDocker$' bash run-single-node.sh "$PWD" 
 ```
 
 The runner starts Docker with `--network none` and makes the recorder its only
-default route. The test checks the refusal before file preparation, a busy port,
-installation from the image archive, repeat apply with the original credential,
-and readiness. Host and workload probes must both be observed and blocked. Any
-other recorded destination fails the test.
+default route. The test checks refusal before file preparation, a busy port,
+an explicit local DNS resolver, installation from the image archive, repeat
+apply with the original credential, and readiness. Host and workload probes
+must both be observed and blocked. Any other recorded destination fails the test.
+
+### Check a bundled model with a cold runtime cache
+
+Prepare the signed bundle with `prepare-bundle`. On a disposable Linux amd64
+Docker host with the vLLM CPU image already cached, run as root with the
+repository egress recorder and the pinned model catalogue:
+
+```sh
+bash deploy/offline/test-model-egress.sh "$PREPARED_MODEL_DIR" "$MODEL_CATALOG" \
+  "$EGRESS_RECORDER" "$VLLM_CPU_IMAGE_BY_DIGEST" "$CPU_LIMIT" "$MEMORY_LIMIT"
+```
+
+This test verifies the catalogue file closure and runs one completion in a fresh
+container with the model and tokenizer mounted read-only. It requires working
+IPv4, IPv6 and DNS probes and fails if the runtime adds any packet. The
+standalone CPU test pins the container's own name to loopback so startup never
+needs to query the site resolver for itself.
 
 ## Collect support information
 
@@ -151,6 +168,7 @@ and target schema. Applying the candidate loads its signed images first, stops
 the application writer, and produces a recovery point verified by restoring it
 into a scratch database. It then migrates and starts the candidate. Keep the
 backup location and archive unchanged when retrying a pending upgrade.
+Ordinary backup and restore require the signed upgrade to be resolved first.
 
 ```sh
 ownsolid-install rollback-bundle --bundle /mnt/release/previous.tar.gz \
@@ -160,15 +178,17 @@ ownsolid-install rollback-bundle --bundle /mnt/release/previous.tar.gz \
 The rollback accepts the exact previous signed release and checks that the live
 database is at the schema that release expects. It changes the application
 configuration and image, leaving the database and telemetry stores running.
-When the schema has advanced, keep the recovery point and use a separate
-database recovery procedure with the prior release. The rollback command never
-runs a reverse migration or swaps the database.
+When the schema has advanced, retain the recovery point. The ordinary
+`restore` command adopts data on the active application's schema, which may
+apply migrations again. In-place recovery of both the prior database schema
+and application after a schema-changing upgrade is outside this procedure.
 
 The isolated upgrade test uses the same runner with
-`OWNSOLID_E2E_RUN='^TestSignedUpgradeIsolatedDocker$'`. Pass two extra signed
-files, `upgrade.tar.gz` with a newer control schema and `delta.tar.gz` with an
-incremental transfer to a different control image at the same schema. Both
-must use the fixture's independent release trust. In the factory fixture, set
+`OWNSOLID_E2E_RUN='^TestSignedUpgradeIsolatedDocker$'`. Pass three extra signed
+files, `upgrade.tar.gz` with a newer control schema, `patch.tar.gz` with a different
+control image at the same schema, and `delta.tar.gz` for the incremental transfer
+between them. They must use the fixture's independent release trust. In the
+factory fixture, set
 `OWNSOLID_CURRENT_FACTORY_RELEASE` and
 `OWNSOLID_CURRENT_FACTORY_PREDECESSOR` for each candidate. For the incremental
 candidate, pass the newer complete archive in `OWNSOLID_CURRENT_PATCH_BASELINE`.
