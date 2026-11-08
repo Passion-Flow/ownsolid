@@ -8,10 +8,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/google/uuid"
 	"io"
 	"os"
 	"path/filepath"
+	"testing"
+	"time"
+
 	"github.com/Passion-Flow/ownsolid/api/agent/modelartifact"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
@@ -19,11 +21,11 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
-	"testing"
+	"github.com/google/uuid"
 )
 
 func TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery(t *testing.T) {
-	s := fixture.New(t)
+	s := fixture.NewWithSetup(t, fixture.SetupOptions{TimeoutSeconds: 180, StatementTimeoutSeconds: 30})
 	password := fixture.Bootstrap(t, s)
 	admin := fixture.Login(t, s, "admin@example.invalid", password, "admin")
 	ctx := context.Background()
@@ -64,14 +66,26 @@ func TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery(t *test
 	if _, e = s.DB.Exec(ctx, `CREATE FUNCTION reject_model_ready() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN IF NEW.action='model.import_ready' THEN RAISE EXCEPTION 'synthetic publication audit failure';END IF;RETURN NEW;END$$;CREATE TRIGGER reject_model_ready BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_model_ready()`); e != nil {
 		t.Fatal(e)
 	}
-	if _, e = service.ProcessNext(ctx); e == nil {
+	_, publicationError := service.ProcessNext(ctx)
+	if publicationError == nil {
 		t.Fatal("publication audit rollback was ignored")
 	}
 	if models, e := service.List(ctx, admin, input.WorkspaceID); e != nil || len(models) != 0 {
 		t.Fatal("model metadata survived audit rollback", e)
 	}
 	if _, e = os.Stat(filepath.Join(root, "objects", value.ID, "model.safetensors")); e != nil {
-		t.Fatal("recoverable verified filesystem publication was lost", e)
+		t.Fatalf("recoverable verified filesystem publication was lost: %v (worker: %v)", e, publicationError)
+	}
+	upload := filepath.Join(root, "imports", value.ID)
+	if _, e = os.Stat(filepath.Join(upload, "chunk-000000000000")); e != nil {
+		t.Fatal("failed publication lost resumable upload", e)
+	}
+	oldStage := filepath.Join(upload, "stage-1")
+	if e = os.Mkdir(oldStage, 0700); e != nil {
+		t.Fatal(e)
+	}
+	if e = os.WriteFile(filepath.Join(oldStage, "config.json"), []byte("unfinished stage"), 0600); e != nil {
+		t.Fatal(e)
 	}
 	if _, e = s.DB.Exec(ctx, "DROP TRIGGER reject_model_ready ON audit_events"); e != nil {
 		t.Fatal(e)
@@ -94,6 +108,38 @@ func TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery(t *test
 	var catalog wire.ModelCatalog
 	if e = json.Unmarshal(list[0].Manifest, &catalog); e != nil || catalog.Revision != wire.ApprovedModel().Revision {
 		t.Fatal("exact approved base catalog revision absent from typed model manifest", e)
+	}
+	// Lose the SQL cleanup after filesystem removal. A second worker must
+	// discover the retained work from SQL even though the directory is gone.
+	if _, e = s.DB.Exec(ctx, `CREATE SEQUENCE chunk_cleanup_attempt;CREATE FUNCTION reject_chunk_cleanup() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN PERFORM nextval('chunk_cleanup_attempt');RAISE EXCEPTION 'synthetic cleanup acknowledgement failure';END$$;CREATE TRIGGER reject_chunk_cleanup BEFORE DELETE ON model_import_chunks FOR EACH ROW EXECUTE FUNCTION reject_chunk_cleanup()`); e != nil {
+		t.Fatal(e)
+	}
+	waitForModelWorker(t, &fresh, func() bool {
+		var attempted bool
+		if e := s.DB.QueryRow(ctx, "SELECT is_called FROM chunk_cleanup_attempt").Scan(&attempted); e != nil {
+			t.Fatal(e)
+		}
+		_, e := os.Lstat(upload)
+		return attempted && os.IsNotExist(e)
+	})
+	chunksRemain := func() bool {
+		t.Helper()
+		var exists bool
+		if e := s.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM model_import_chunks WHERE import_id=$1)`, value.ID).Scan(&exists); e != nil {
+			t.Fatal(e)
+		}
+		return exists
+	}
+	if !chunksRemain() {
+		t.Fatal("failed SQL cleanup lost the retry marker")
+	}
+	if _, e = s.DB.Exec(ctx, "DROP TRIGGER reject_chunk_cleanup ON model_import_chunks"); e != nil {
+		t.Fatal(e)
+	}
+	waitForModelWorker(t, &fresh, func() bool { return !chunksRemain() })
+	reconciled, e := fresh.GetImport(ctx, admin, value.ID)
+	if e != nil || reconciled.State != "ready" || reconciled.UploadedBytes != value.ExpectedBytes {
+		t.Fatal("staging cleanup changed published import history", e)
 	}
 	backupParent := t.TempDir()
 	os.Chmod(backupParent, 0700)
@@ -123,4 +169,28 @@ func TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery(t *test
 		t.Fatal("retired model still admitted", e)
 	}
 	t.Log("Actual official 1.52 GB model uploaded in bounded resumable chunks, verified, published, audit-rolled-back and reconciled by a fresh worker; no GPU inference claim.")
+}
+
+// waitForModelWorker runs a fresh instance of the installed background worker.
+func waitForModelWorker(t *testing.T, service *models.Service, complete func() bool) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		service.Run(ctx)
+	}()
+	defer func() {
+		cancel()
+		<-done
+	}()
+	ticker := time.NewTicker(50 * time.Millisecond)
+	defer ticker.Stop()
+	for !complete() {
+		select {
+		case <-ctx.Done():
+			t.Fatal("model cleanup did not reach the expected durable state")
+		case <-ticker.C:
+		}
+	}
 }

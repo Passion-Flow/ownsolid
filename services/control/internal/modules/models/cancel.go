@@ -104,9 +104,21 @@ func discardUpload(root *os.Root, id string, expectedBytes int64) error {
 	if !validID(id) {
 		return fail("MODEL_PATH_INVALID")
 	}
-	scope := "imports/" + id
-	if _, e := root.Lstat(scope); os.IsNotExist(e) {
+	const parent = "imports"
+	if _, e := root.Lstat(parent); os.IsNotExist(e) {
 		return nil
+	} else if e != nil {
+		return fail("MODEL_IO_FAILED")
+	}
+	if e := directory(root, parent); e != nil {
+		return e
+	}
+	scope := filepath.Join(parent, id)
+	if _, e := root.Lstat(scope); os.IsNotExist(e) {
+		// The preceding attempt may have stopped after unlinking the directory.
+		return syncDirectory(root, parent)
+	} else if e != nil {
+		return fail("MODEL_IO_FAILED")
 	}
 	if e := directory(root, scope); e != nil {
 		return e
@@ -164,5 +176,5 @@ func discardUpload(root *os.Root, id string, expectedBytes int64) error {
 	if root.Remove(scope) != nil {
 		return fail("MODEL_IO_FAILED")
 	}
-	return syncDirectory(root, "imports")
+	return syncDirectory(root, parent)
 }
