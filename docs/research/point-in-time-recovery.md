@@ -114,3 +114,9 @@ The archive is shared by multiple restore targets, so an individual clone's
 restart position must never drive expiry. See
 [recovery target settings](https://www.postgresql.org/docs/18/runtime-config-wal.html#RUNTIME-CONFIG-WAL-RECOVERY-TARGET)
 and [pg_archivecleanup usage](https://www.postgresql.org/docs/18/pgarchivecleanup.html).
+
+
+[PostgreSQL 18.6 pg_ctl startup](https://github.com/postgres/postgres/blob/REL_18_6/src/bin/pg_ctl/pg_ctl.c)
+accepts a standby status as started. Check the clone's actual promotion over
+its private Unix socket before export. If the postmaster exits during replay,
+report the native recovery failure.

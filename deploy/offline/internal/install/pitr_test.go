@@ -176,7 +176,10 @@ func assertPITRIsolatedDocker(t *testing.T, installer, config string, run func(s
 	if err := os.Rename(wal, wal+".withheld"); err != nil {
 		t.Fatal(err)
 	}
-	checked("INSTALL_PITR_REPLAY_FAILED", true, recoverArgs...)
+	missing := checked("INSTALL_PITR_REPLAY_FAILED", true, recoverArgs...)
+	if !strings.Contains(missing, "recovery ended before configured recovery target was reached") {
+		t.Fatal("the installer did not report why PostgreSQL refused the recovery")
+	}
 	assertTenant("After target")
 	if query(databaseName, oid) != original {
 		t.Fatal("failed replay changed the active database")
