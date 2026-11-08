@@ -107,7 +107,7 @@ Rejected:
 - **Protocol** (`api/agent/v1/gateway.go`): tasks `gateway.start.v1` and `gateway.stop.v1` for the
   `docker_inference` profile at protocol 1.6; a start carries the gateway ID and the control origin
   its instance is bound to. The managed-node capability check accepts the new list beside the old
-  one, so enrolled nodes keep working (migration 000056).
+  one, so enrolled nodes keep working (migration 000057).
 - **Agent** (`services/agent/internal/inference/gateway*.go`): the node's `gateway` configuration
   names the listen address, the declared origin, the image ID and a private root. A start checks
   the image, removes any older gateway container, generates the credential and a P-256 key,
