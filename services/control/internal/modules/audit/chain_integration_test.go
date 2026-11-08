@@ -16,7 +16,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
@@ -137,6 +136,70 @@ func TestAuditChainExportAcrossPartitions(t *testing.T) {
 	run("middle_changed_in_database", auditExport(t, db), `"line":2,"field":"hash"`)
 }
 
+func TestAuditChainCheckpointDetectsOwnerRewrite(t *testing.T) {
+	db := newAuditFixture(t, 0)
+	ctx := t.Context()
+	appendEvent := func() {
+		t.Helper()
+		if _, err := db.Exec(ctx, chainInsert, uuid.NewString(), time.Now().UTC()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	appendEvent()
+
+	snapshot, err := db.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer snapshot.Rollback(ctx)
+	original := auditExport(t, snapshot)
+	appendEvent()
+
+	var position int64
+	var checkpoint string
+	if err := snapshot.QueryRow(ctx, `SELECT chain_position, encode(hash, 'hex')
+		FROM audit_chain_head WHERE singleton`).Scan(&position, &checkpoint); err != nil {
+		t.Fatal(err)
+	}
+	if len(original) != 1 || position != 1 || checkpoint != field(t, original[0], "hash") {
+		t.Fatal("the checkpoint moved past the export inside a read-only snapshot")
+	}
+	if err := snapshot.Commit(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	binary := os.Getenv("OWNSOLID_TEST_AUDIT_VERIFY")
+	if binary == "" {
+		t.Log("set OWNSOLID_TEST_AUDIT_VERIFY to test the built standalone executable")
+		return
+	}
+	verify := func(lines [][]byte, flags ...string) ([]byte, error) {
+		cmd := exec.CommandContext(ctx, binary, append([]string{"--file", "-"}, flags...)...)
+		cmd.Stdin = bytes.NewReader(bytes.Join(lines, []byte("\n")))
+		return cmd.CombinedOutput()
+	}
+	if out, err := verify(original, "--expected-last-hash", checkpoint); err != nil {
+		t.Fatalf("original export rejected: %v: %s", err, out)
+	}
+	if _, err := db.Exec(ctx, `TRUNCATE audit_events;
+		UPDATE audit_chain_head
+		SET chain_position = 0, hash = decode(repeat('00', 32), 'hex'), scoped_from = NULL
+		WHERE singleton`); err != nil {
+		t.Fatal(err)
+	}
+	appendEvent()
+	replacement := auditExport(t, db)
+	if len(replacement) != 1 || field(t, replacement[0], "position") != "1" {
+		t.Fatal("expected a replacement chain at the original position")
+	}
+	if out, err := verify(replacement); err != nil {
+		t.Fatalf("replacement chain is not internally consistent: %v: %s", err, out)
+	}
+	if out, err := verify(replacement, "--expected-last-hash", checkpoint); err == nil || !strings.Contains(string(out), "trusted checkpoint") {
+		t.Fatalf("original checkpoint did not detect the replacement: %v: %s", err, out)
+	}
+}
+
 func TestAuditChainPreservesEarlierRowsOnUpgrade(t *testing.T) {
 	db := newAuditFixture(t, auditChainFirstSchema-1)
 	ctx := t.Context()
@@ -213,7 +276,9 @@ func TestAuditChainCanonicalMetadata(t *testing.T) {
 	}
 }
 
-func auditExport(t *testing.T, db *pgxpool.Pool) [][]byte {
+func auditExport(t *testing.T, db interface {
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+}) [][]byte {
 	t.Helper()
 	query, err := os.ReadFile("../../../../../tools/audit-verify/export.sql")
 	if err != nil {
