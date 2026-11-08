@@ -31,3 +31,12 @@ authoritative targets and usage, cache and safety hooks depend on reliable
 tenant and key authority, and key lifecycle changes need their operator or
 portal flows. The existing client examples can be validated against the
 delivered entrance after GW-121 and GW-125.
+
+## Repository verification boundary
+
+On `ownsolid-cpu`, `make check`, `make build`, the gateway tests and Clippy
+passed. The browser-free repository test stopped in the offline factory at
+`TestPreparedDirectoryReadDetectsMutationAndCancellation/mutation` and
+`TestPreparedSnapshotRejectsPostreadChanges/entry_added`. The first failure
+reproduced in a focused rerun against unchanged factory source. The release
+tool is outside the gateway lane.
