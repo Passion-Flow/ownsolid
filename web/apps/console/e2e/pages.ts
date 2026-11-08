@@ -6,6 +6,7 @@ import {
   checksStoppingAt,
   deploymentAlias,
   deploymentKey,
+  expiringKey,
   failedDeployment,
   failedImport,
   failedMail,
@@ -15,6 +16,7 @@ import {
   finishedTask,
   importableInspection,
   joinToken,
+  keyCall,
   licenseEvent,
   memberUser,
   missingLicense,
@@ -23,6 +25,7 @@ import {
   pendingInvitation,
   readyModel,
   retiredConnector,
+  revokedKey,
   runningDeployment,
   runningTask,
   secondFailedMail,
@@ -34,6 +37,7 @@ import {
   teamWorkspace,
   type ControlPlane,
   type ScriptedView,
+  unusedKey,
 } from '@ownsolid/shell/testing';
 import { shellPages, type PageState } from '@ownsolid/shell/testing/pages';
 import type { Page } from '@playwright/test';
@@ -145,6 +149,73 @@ export const consolePages: readonly PageState[] = [
       await page.goto(`/services/${runningDeployment.id}`);
       await page.getByRole('button', { name: 'Stop', exact: true }).click();
       await page.getByText(deploymentAlias.name).waitFor();
+    },
+  },
+  {
+    name: 'gateway and keys with no key',
+    path: '/gateway',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/gateway');
+      await page.getByRole('heading', { name: 'No keys yet' }).waitFor();
+    },
+  },
+  {
+    name: "gateway and keys, with a key's calls in its drawer",
+    path: '/gateway',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.users = [{ ...adminUser }, { ...memberUser }];
+      control.gatewayKeys = [deploymentKey, expiringKey, unusedKey, revokedKey];
+      control.keyCalls = [keyCall(0), keyCall(4)];
+      await page.goto(`/gateway?open=${deploymentKey.id}`);
+      await page.getByRole('dialog').getByText('Model timed out').waitFor();
+    },
+  },
+  {
+    name: 'issuing a gateway key',
+    path: '/gateway',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.aliases = [deploymentAlias];
+      await page.goto('/gateway#issue');
+      await page.getByRole('dialog').getByText('Rate and token limit').waitFor();
+    },
+  },
+  {
+    name: "a gateway key's secret, shown once",
+    path: '/gateway',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.aliases = [deploymentAlias];
+      await page.goto('/gateway#issue');
+      const dialog = page.getByRole('dialog');
+      await dialog.getByLabel('Name').fill('Support bot');
+      await dialog.getByLabel('Reason').fill('Access');
+      await dialog.getByRole('button', { name: 'Issue', exact: true }).click();
+      await page.getByRole('button', { name: 'Done' }).waitFor();
+    },
+  },
+  {
+    name: 'rotating a gateway key',
+    path: '/gateway',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.gatewayKeys = [deploymentKey];
+      await page.goto(`/gateway?open=${deploymentKey.id}`);
+      await page.getByRole('dialog').getByRole('button', { name: 'Rotate' }).click();
+      await page.getByText(/Both secrets work until/).waitFor();
+    },
+  },
+  {
+    name: 'revoking a gateway key',
+    path: '/gateway',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.gatewayKeys = [deploymentKey];
+      await page.goto(`/gateway?open=${deploymentKey.id}`);
+      await page.getByRole('dialog').getByRole('button', { name: 'Revoke' }).click();
+      await page.getByText('It was last used', { exact: false }).waitFor();
     },
   },
   {

@@ -8,6 +8,8 @@ export interface FilterTile<T extends string> {
   count?: number | undefined;
   /** A count above zero is something to look at. */
   attention?: boolean;
+  /** Why the tile cannot be chosen yet; it is shown in place of the count (ADR 0036). */
+  unavailable?: string | undefined;
 }
 
 /** Props for {@link FilterTiles}. */
@@ -38,11 +40,12 @@ export function FilterTiles<T extends string>({
             key={tile.value}
             type="button"
             aria-pressed={chosen}
+            disabled={tile.unavailable !== undefined}
             onClick={() => {
               onChange(tile.value);
             }}
             className={cn(
-              'block cursor-pointer rounded-card border bg-surface px-[18px] py-3 text-left shadow-1 transition-colors duration-150 hover:border-accent',
+              'block cursor-pointer rounded-card border bg-surface px-[18px] py-3 text-left shadow-1 transition-colors duration-150 hover:border-accent disabled:cursor-default disabled:hover:border-border',
               chosen
                 ? 'border-accent bg-accent-soft shadow-[inset_0_0_0_1px_var(--accent)]'
                 : 'border-border',
@@ -56,14 +59,20 @@ export function FilterTiles<T extends string>({
             >
               {tile.label}
             </span>
-            <span
-              className={cn(
-                'mt-1 block min-h-[31px] text-[24px] leading-[1.25] font-bold tracking-[-0.03em] tabular-nums',
-                tile.attention && tile.count ? 'text-critical' : 'text-text',
-              )}
-            >
-              {tile.count}
-            </span>
+            {tile.unavailable === undefined ? (
+              <span
+                className={cn(
+                  'mt-1 block min-h-[31px] text-[24px] leading-[1.25] font-bold tracking-[-0.03em] tabular-nums',
+                  tile.attention && tile.count ? 'text-critical' : 'text-text',
+                )}
+              >
+                {tile.count}
+              </span>
+            ) : (
+              <span className="mt-1 block min-h-[31px] text-[12.5px] leading-[1.35] text-text-3">
+                {tile.unavailable}
+              </span>
+            )}
           </button>
         );
       })}

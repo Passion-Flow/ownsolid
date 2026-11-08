@@ -11,8 +11,6 @@ export {
   type ApplicationScript,
 } from './applications.ts';
 export {
-  deploymentAlias,
-  deploymentKey,
   failedDeployment,
   freeGpu,
   openPlacement,
@@ -24,6 +22,16 @@ export {
   stoppedDeployment,
   type DeploymentScript,
 } from './deployments.ts';
+export {
+  deploymentAlias,
+  deploymentKey,
+  expiringKey,
+  keyCall,
+  revokedKey,
+  unavailableAlias,
+  unusedKey,
+  type GatewayScript,
+} from './gateway.ts';
 export {
   derivedModel,
   failedImport,

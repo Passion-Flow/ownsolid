@@ -43,11 +43,18 @@ func TestPublicConfigurationIsAllowlistedAndConfiguredRateApplies(t *testing.T) 
 	}
 	var envelope struct {
 		Data struct {
-			UI config.UIPolicy `json:"ui"`
+			UI          config.UIPolicy `json:"ui"`
+			GatewayKeys struct {
+				Default int `json:"default_ttl_seconds"`
+				Maximum int `json:"maximum_ttl_seconds"`
+			} `json:"gateway_keys"`
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(body, &envelope); err != nil || envelope.Data.UI.PollMilliseconds != 7000 {
 		t.Fatal("nondefault public setting not returned", err)
+	}
+	if keys := config.DefaultRuntimePolicy().Distribution; envelope.Data.GatewayKeys.Default != keys.KeyTTLSeconds || envelope.Data.GatewayKeys.Maximum != keys.KeyMaxTTLSeconds {
+		t.Fatal("gateway key lifetimes not published", envelope.Data.GatewayKeys)
 	}
 	for index, want := range []int{200, 429} {
 		response = get("/api/v1/auth/csrf")

@@ -26,6 +26,11 @@
       "pages": ["/services"]
     },
     {
+      "slug": "gateway-keys",
+      "topic": "models",
+      "pages": ["/gateway"]
+    },
+    {
       "slug": "people-and-workspaces",
       "topic": "people",
       "pages": ["/users"]

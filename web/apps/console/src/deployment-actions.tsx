@@ -24,24 +24,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Activity, BadgeCheck, Play, Square, Trash2 } from 'lucide-react';
 import { useRef, useState, type ReactNode } from 'react';
 import { canStart, canStop, deploymentKeys, deploymentsKey } from './deployment-state.ts';
-
-// A workspace's aliases and keys come a page at a time; this bounds how many the dialog reads.
-const callerPages = 10;
-const callerPageSize = 100;
-
-async function everyPage<T>(
-  read: (cursor: string | undefined) => Promise<{ items: T[]; next_cursor: string | null }>,
-): Promise<{ items: T[]; complete: boolean }> {
-  const items: T[] = [];
-  let cursor: string | undefined;
-  for (let page = 0; page < callerPages; page += 1) {
-    const answer = await read(cursor);
-    items.push(...answer.items);
-    if (!answer.next_cursor) return { items, complete: true };
-    cursor = answer.next_cursor;
-  }
-  return { items, complete: false };
-}
+import { everyPage, pageSize } from './every-page.ts';
 
 /** The gateway names that send traffic to a deployment, and the keys that call them. */
 async function readCallers(
@@ -50,14 +33,14 @@ async function readCallers(
   signal: AbortSignal,
 ): Promise<{ aliases: ModelAlias[]; keys: GatewayKey[]; complete: boolean }> {
   const aliases = await everyPage((cursor) =>
-    listModelAliases(workspace, { limit: callerPageSize, cursor }, { signal }),
+    listModelAliases(workspace, { limit: pageSize, cursor }, { signal }),
   );
   const mine = aliases.items.filter(
     (alias) => alias.deployment_id === deployment && alias.disabled_at === null,
   );
   if (mine.length === 0) return { aliases: [], keys: [], complete: aliases.complete };
   const keys = await everyPage((cursor) =>
-    listGatewayKeys(workspace, { limit: callerPageSize, cursor }, { signal }),
+    listGatewayKeys(workspace, { limit: pageSize, cursor }, { signal }),
   );
   const named = new Set(mine.map((alias) => alias.id));
   return {

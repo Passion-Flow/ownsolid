@@ -15,6 +15,14 @@ export interface UiPolicy {
   lookupPageSize: number;
 }
 
+/** How long gateway keys live, chosen by the installation. */
+export interface GatewayKeyPolicy {
+  /** The lifetime of a key issued without one. */
+  defaultTtlSeconds: number;
+  /** The longest lifetime a key may ask for. */
+  maximumTtlSeconds: number;
+}
+
 /** The validated subset of the runtime configuration the web interface uses. */
 export interface RuntimeConfig {
   /** Installed topology size, for example `single-node`. */
@@ -26,6 +34,7 @@ export interface RuntimeConfig {
   /** The language of people who have not chosen one; `auto` leaves it to the browser. */
   defaultLocale: string;
   ui: UiPolicy;
+  gatewayKeys: GatewayKeyPolicy;
 }
 
 function integer(value: unknown, minimum: number, maximum: number): number {
@@ -42,6 +51,22 @@ function record(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+// The server's bounds for key lifetimes (services/control/internal/platform/config/policy.go).
+const minimumKeyTtlSeconds = 300;
+const maximumKeyTtlSeconds = 90 * 24 * 60 * 60;
+
+function gatewayKeyPolicy(keys: Record<string, unknown>): GatewayKeyPolicy {
+  const maximumTtlSeconds = integer(
+    keys.maximum_ttl_seconds,
+    minimumKeyTtlSeconds,
+    maximumKeyTtlSeconds,
+  );
+  return {
+    defaultTtlSeconds: integer(keys.default_ttl_seconds, minimumKeyTtlSeconds, maximumTtlSeconds),
+    maximumTtlSeconds,
+  };
+}
+
 /**
  * Validates a runtime configuration document. Bounds match the control plane's
  * configuration validation, so a value outside them means a broken or foreign server.
@@ -51,6 +76,7 @@ export function parseRuntimeConfig(document: unknown): RuntimeConfig {
   const topology = record(data.topology);
   const transport = record(data.transport);
   const ui = record(data.ui);
+  const keys = record(data.gateway_keys);
   if (typeof topology.size !== 'string' || topology.size === '')
     throw new ApiProblem('RESPONSE_INVALID');
   if (typeof transport.plaintext !== 'boolean') throw new ApiProblem('RESPONSE_INVALID');
@@ -66,6 +92,7 @@ export function parseRuntimeConfig(document: unknown): RuntimeConfig {
       pageSize: integer(ui.page_size, 1, 100),
       lookupPageSize: integer(ui.lookup_page_size, 1, 100),
     },
+    gatewayKeys: gatewayKeyPolicy(keys),
   };
 }
 

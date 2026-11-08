@@ -1,6 +1,6 @@
 // Scripted deployments for browser flows. Actions follow the server's rules: a stale revision is
 // refused, and the same key names the same deployment, so a flow proves what the page really sends.
-import type { Deployment, GatewayKey, ModelAlias, Placement, PlacementNode } from '@ownsolid/api';
+import type { Deployment, Placement, PlacementNode } from '@ownsolid/api';
 import type { Page, Route } from '@playwright/test';
 import { readyModel } from './models.ts';
 import { node } from './nodes.ts';
@@ -120,26 +120,6 @@ export const stoppedDeployment: Deployment = {
   resource_state: 'released',
 };
 
-/** A name the gateway serves {@link runningDeployment} under. */
-export const deploymentAlias = {
-  id: '6f1c7a1e-0000-4000-8000-000000000096',
-  workspace_id: readyModel.workspace_id,
-  name: 'support-chat',
-  deployment_id: runningDeployment.id,
-  disabled_at: null,
-} as unknown as ModelAlias;
-
-/** A key that calls {@link deploymentAlias}. */
-export const deploymentKey = {
-  id: '6f1c7a1e-0000-4000-8000-000000000097',
-  workspace_id: readyModel.workspace_id,
-  alias_id: deploymentAlias.id,
-  alias_name: deploymentAlias.name,
-  label: 'Support bot',
-  prefix: 'os_abc123',
-  state: 'active',
-} as unknown as GatewayKey;
-
 interface ScriptedFailure {
   status: number;
   code: string;
@@ -151,8 +131,6 @@ export interface DeploymentScript {
   placement: Placement;
   /** What the placement becomes once a node has read its GPUs. */
   placementAfterRead: Placement | null;
-  aliases: ModelAlias[];
-  gatewayKeys: GatewayKey[];
   deploymentsProblem: ScriptedFailure | null;
   /** Failures of the next creations, in order; `lost` creates and drops the answer. */
   createFailures: (ScriptedFailure | 'lost')[];
@@ -168,8 +146,6 @@ export function emptyDeploymentScript(): DeploymentScript {
     deployments: [],
     placement: { ...openPlacement },
     placementAfterRead: null,
-    aliases: [],
-    gatewayKeys: [],
     deploymentsProblem: null,
     createFailures: [],
     nextAction: null,
@@ -195,7 +171,7 @@ function apply(found: Deployment, action: string): Deployment {
   return next;
 }
 
-/** Routes the deployments contract, and the alias and key lists, onto `state`. */
+/** Routes the deployments contract onto `state`. */
 export async function routeDeployments(
   page: Page,
   state: DeploymentScript,
@@ -280,10 +256,4 @@ export async function routeDeployments(
     if (state.placementAfterRead) state.placement = state.placementAfterRead;
     return data(route, { id: '6f1c7a1e-0000-4000-8000-000000000098' }, 202);
   });
-  await page.route(/\/admin\/distribution\/workspaces\/[0-9a-f-]{36}\/aliases\?/, (route) =>
-    data(route, { items: state.aliases, next_cursor: null }),
-  );
-  await page.route(/\/admin\/distribution\/workspaces\/[0-9a-f-]{36}\/keys\?/, (route) =>
-    data(route, { items: state.gatewayKeys, next_cursor: null }),
-  );
 }

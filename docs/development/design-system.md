@@ -133,8 +133,10 @@ this browser. The server checks access to the workspace on every request.
   as a `ListDefinition` and keep its state with `useListView`; the toolbar holds a
   `SearchField`, `Segmented` or `FilterSelect` choices, then `SavedViewsMenu` and
   `ColumnChooser` at the right. A list with figures from the server puts them in `FilterTiles` above the
-  toolbar, where each figure is also its filter. Saved views follow the account; the screen is remembered in
-  this browser. Filter on the server, so paging stays correct.
+  toolbar, where each figure is also its filter. A tile whose figure the server cannot give yet takes
+  `unavailable` with the reason, which shows in place of the figure and cannot be chosen (ADR 0036). Saved
+  views follow the account; the screen is remembered in this browser. Filter on the server, so paging stays
+  correct; a list the server cannot filter is read whole with `everyPage` and says when it is not all.
   - The column that names a row is `locked` and opens the row's `Drawer`.
   - Rows an action applies to get a checkbox, and the header checkbox has three states.
     `useRowSelection` keeps only rows on screen; `BulkBar` appears at the foot of the page

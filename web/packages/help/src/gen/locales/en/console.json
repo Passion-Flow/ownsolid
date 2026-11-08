@@ -101,6 +101,28 @@
    }
   ]
  },
+ "gateway-keys": {
+  "title": "Gateway and keys",
+  "summary": "Gateway and keys lists the keys that call the models of the workspace in the switcher.\nA key calls exactly one model, the name the gateway serves it under, and nothing else. It belongs\nto the person who issued it: it stops working when it expires, when it is revoked, or when that\nperson loses access to the workspace.",
+  "sections": [
+   {
+    "title": "Issuing a key",
+    "anchor": "issuing-a-key"
+   },
+   {
+    "title": "Rotating a key",
+    "anchor": "rotating-a-key"
+   },
+   {
+    "title": "Revoking a key",
+    "anchor": "revoking-a-key"
+   },
+   {
+    "title": "What is not ready",
+    "anchor": "what-is-not-ready"
+   }
+  ]
+ },
  "people-and-workspaces": {
   "title": "People and workspaces",
   "summary": "People sign in to the console or the portal with their own accounts. Workspaces group people and\nthe work they share.",

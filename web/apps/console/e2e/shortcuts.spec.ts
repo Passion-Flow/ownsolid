@@ -165,8 +165,8 @@ test.describe('moving through a list', () => {
 
   test('Shift+K keeps the action named K in reach', async ({ page }) => {
     await page.keyboard.press('Shift+K');
-    await expect(page.getByRole('status').filter({ hasText: 'not available yet' })).toBeVisible();
-    await expect(page.locator('main table :focus')).toHaveCount(0);
+    await expect(page.getByRole('dialog', { name: 'Issue a key' })).toBeVisible();
+    await expect(page).toHaveURL(/\/gateway$/);
   });
 
   test('the list of shortcuts names them', async ({ page }) => {
@@ -178,7 +178,7 @@ test.describe('moving through a list', () => {
 test('on a page with no list, K is still the action named K', async ({ page }) => {
   await overview(page);
   await page.keyboard.press('k');
-  await expect(page.getByRole('status').filter({ hasText: 'not available yet' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Issue a key' })).toBeVisible();
 });
 
 test('the choice follows the account into another browser', async ({ page }) => {

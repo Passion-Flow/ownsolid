@@ -505,7 +505,7 @@ func (h *Handler) serveHTTP(w http.ResponseWriter, r *http.Request, machineIngre
 			h.problem(w, requestID, errors.New("RESOURCE_NOT_FOUND"))
 			return
 		}
-		success(w, http.StatusOK, map[string]any{"topology": map[string]any{"size": c.Topology.EffectiveSize()}, "default_locale": h.defaultLocale(r), "sso_callback_origins": ssoCallbackOrigins(c), "transport": map[string]any{"mode": c.Server.EffectiveTransportMode(), "plaintext": c.Server.EffectiveTransportMode() == config.TransportHTTP}, "private_clusters": h.privateClusterPublicPolicy(), "monitoring": h.monitoringPublicPolicy(audience), "middleware": h.middlewarePublicPolicy(), "task_events": taskDeliveryPublicPolicy(c), "image_registry": registryPublicPolicy(c), "artifact_storage": artifactPublicPolicy(c), "workspaces": c.Policy().Workspaces, "ui": c.Policy().UI, "request_timeout_milliseconds": c.Policy().HTTP.RequestSeconds * 1000, "component_default_version": wire.NodeExporterVersion, "component_max_scrapes": wire.MaxComponentScrapeRequests, "component_default_config": wire.DefaultComponentConfig()})
+		success(w, http.StatusOK, map[string]any{"topology": map[string]any{"size": c.Topology.EffectiveSize()}, "default_locale": h.defaultLocale(r), "sso_callback_origins": ssoCallbackOrigins(c), "transport": map[string]any{"mode": c.Server.EffectiveTransportMode(), "plaintext": c.Server.EffectiveTransportMode() == config.TransportHTTP}, "private_clusters": h.privateClusterPublicPolicy(), "monitoring": h.monitoringPublicPolicy(audience), "middleware": h.middlewarePublicPolicy(), "task_events": taskDeliveryPublicPolicy(c), "image_registry": registryPublicPolicy(c), "artifact_storage": artifactPublicPolicy(c), "workspaces": c.Policy().Workspaces, "ui": c.Policy().UI, "gateway_keys": gatewayKeyPublicPolicy(c), "request_timeout_milliseconds": c.Policy().HTTP.RequestSeconds * 1000, "component_default_version": wire.NodeExporterVersion, "component_max_scrapes": wire.MaxComponentScrapeRequests, "component_default_config": wire.DefaultComponentConfig()})
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/api/v1/localization/") {
@@ -1067,4 +1067,11 @@ func wireToken(v string) bool {
 		}
 	}
 	return true
+}
+
+// gatewayKeyPublicPolicy is the lifetime a new gateway key gets and the longest it may ask for, so
+// the console offers only lifetimes the server accepts.
+func gatewayKeyPublicPolicy(c config.Config) map[string]int {
+	p := c.Policy().Distribution
+	return map[string]int{"default_ttl_seconds": p.KeyTTLSeconds, "maximum_ttl_seconds": p.KeyMaxTTLSeconds}
 }

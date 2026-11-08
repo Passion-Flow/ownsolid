@@ -4,6 +4,7 @@ import type { CapabilityDeclaration } from '@ownsolid/api';
 import { readFileSync } from 'node:fs';
 import type { Page, Route } from '@playwright/test';
 import { emptyDeploymentScript, routeDeployments, type DeploymentScript } from './deployments.ts';
+import { emptyGatewayScript, routeGateway, type GatewayScript } from './gateway.ts';
 import { emptyModelScript, routeModels, type ModelScript } from './models.ts';
 import { emptyNodeScript, routeNodes, type NodeScript } from './nodes.ts';
 import { emptyTaskScript, routeTasks, type TaskScript } from './tasks.ts';
@@ -51,6 +52,7 @@ const runtimeConfig = {
     page_size: 20,
     lookup_page_size: 100,
   },
+  gateway_keys: { default_ttl_seconds: 86_400, maximum_ttl_seconds: 7_776_000 },
 };
 
 /** A provider connector the account page offers to link. */
@@ -180,6 +182,7 @@ export interface ControlPlane
     NodeScript,
     ModelScript,
     DeploymentScript,
+    GatewayScript,
     UserScript,
     LicenseScript,
     AuditScript,
@@ -316,6 +319,7 @@ export async function mockControlPlane(
     ...emptyNodeScript(),
     ...emptyModelScript(),
     ...emptyDeploymentScript(),
+    ...emptyGatewayScript(),
     ...emptyUserScript(),
     ...emptyLicenseScript(),
     ...emptyAuditScript(),
@@ -701,6 +705,7 @@ export async function mockControlPlane(
   await routeNodes(page, state, data, problem);
   await routeModels(page, state, data, problem);
   await routeDeployments(page, state, data, problem);
+  await routeGateway(page, state, data, problem);
   await routeUsers(page, state, data, problem);
   await routeLicense(page, state, data, problem);
   await routeAudit(page, state, data, problem);

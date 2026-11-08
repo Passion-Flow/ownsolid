@@ -18,6 +18,7 @@ export {
 export {
   loadRuntimeConfig,
   parseRuntimeConfig,
+  type GatewayKeyPolicy,
   type RuntimeConfig,
   type UiPolicy,
 } from './runtime-config.ts';
@@ -126,9 +127,16 @@ export {
   type PlacementNode,
 } from './deployments.ts';
 export {
+  issueGatewayKey,
+  listGatewayKeyCalls,
   listGatewayKeys,
   listModelAliases,
+  maximumRotationOverlapSeconds,
+  revokeGatewayKey,
+  rotateGatewayKey,
+  type GatewayCall,
   type GatewayKey,
+  type MintedGatewayKey,
   type ModelAlias,
 } from './distribution.ts';
 export {

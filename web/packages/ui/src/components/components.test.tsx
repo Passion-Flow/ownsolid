@@ -11,6 +11,7 @@ import { CodeBlock } from './code-block.tsx';
 import { CopyText } from './copy-text.tsx';
 import { Dialog, Drawer } from './dialog.tsx';
 import { EmptyState } from './empty-state.tsx';
+import { FilterTiles } from './filter-tiles.tsx';
 import { Meter } from './meter.tsx';
 import { Notice } from './notice.tsx';
 import { ProblemNotice } from './problem-notice.tsx';
@@ -51,6 +52,30 @@ describe('Button', () => {
       </Button>,
     );
     expect(screen.getByRole('link', { name: 'Nodes' })).toHaveClass('inline-flex');
+  });
+});
+
+describe('FilterTiles', () => {
+  it('shows a tile that is not ready with its reason, and does not let it be chosen', async () => {
+    const onChange = vi.fn();
+    inEnglish(
+      <FilterTiles
+        label="Filter"
+        value="all"
+        tiles={[
+          { value: 'all', label: 'All', count: 3 },
+          { value: 'later', label: 'Over limit', unavailable: 'Not ready: no limits yet' },
+        ]}
+        onChange={onChange}
+      />,
+    );
+    const later = screen.getByRole('button', { name: /Over limit/ });
+    expect(later).toBeDisabled();
+    expect(later).toHaveTextContent('Not ready: no limits yet');
+    await userEvent.click(later);
+    expect(onChange).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: /All/ }));
+    expect(onChange).toHaveBeenCalledWith('all');
   });
 });
 

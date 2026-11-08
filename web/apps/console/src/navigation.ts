@@ -32,7 +32,7 @@ export const shortcuts: readonly SingleKeyShortcut[] = [
   { key: 'd', label: 'shortcuts.deploy', to: '/services/new' },
   { key: 'i', label: 'shortcuts.install' },
   { key: 'n', label: 'shortcuts.addNode', to: '/nodes', hash: 'add' },
-  { key: 'k', label: 'shortcuts.apiKey' },
+  { key: 'k', label: 'shortcuts.apiKey', to: '/gateway', hash: 'issue' },
 ];
 
 /** The console's navigation. An item gets a `to` when its page ships. */
@@ -59,7 +59,7 @@ export const navigation: readonly NavGroup[] = [
     items: [
       { label: 'nav.models', icon: Boxes, to: '/services' },
       { label: 'nav.library', icon: Library, to: '/library' },
-      { label: 'nav.gateway', icon: Route },
+      { label: 'nav.gateway', icon: Route, to: '/gateway' },
     ],
   },
   {

@@ -13,6 +13,7 @@ const valid = {
       page_size: 20,
       lookup_page_size: 100,
     },
+    gateway_keys: { default_ttl_seconds: 86_400, maximum_ttl_seconds: 7_776_000 },
     workspaces: { maximum_count: 10 },
   },
 };
@@ -34,6 +35,7 @@ describe('parseRuntimeConfig', () => {
         pageSize: 20,
         lookupPageSize: 100,
       },
+      gatewayKeys: { defaultTtlSeconds: 86_400, maximumTtlSeconds: 7_776_000 },
     });
   });
 
@@ -49,6 +51,16 @@ describe('parseRuntimeConfig', () => {
     [
       'a page size above the maximum',
       { data: { ...valid.data, ui: { ...valid.data.ui, page_size: 500 } } },
+    ],
+    ['no gateway key policy', { data: { ...valid.data, gateway_keys: undefined } }],
+    [
+      'a default key lifetime above the maximum',
+      {
+        data: {
+          ...valid.data,
+          gateway_keys: { default_ttl_seconds: 86_401, maximum_ttl_seconds: 86_400 },
+        },
+      },
     ],
   ])('rejects %s', (_name, document) => {
     expect(() => parseRuntimeConfig(document)).toThrow('RESPONSE_INVALID');

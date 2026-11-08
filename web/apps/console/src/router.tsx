@@ -87,6 +87,12 @@ const deploymentRoute = createRoute({
   component: lazyRouteComponent(() => import('./deployment-page.tsx'), 'DeploymentPage'),
 });
 
+const gatewayRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/gateway',
+  component: lazyRouteComponent(() => import('./gateway-page.tsx'), 'GatewayPage'),
+});
+
 const userRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/users/$userId',
@@ -183,6 +189,7 @@ const routeTree = rootRoute.addChildren([
       servicesRoute,
       deployRoute,
       deploymentRoute,
+      gatewayRoute,
       userRoute,
       connectorRoute,
       usersRoute,
