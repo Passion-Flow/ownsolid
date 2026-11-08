@@ -114,6 +114,8 @@ test('keeps trying a model visible but not usable, with the reason', async ({ pa
   const trying = page.getByRole('button', { name: 'Try a model' });
   await expect(trying).toHaveAttribute('aria-disabled', 'true');
   await expect(trying).toHaveAccessibleDescription('The playground is not ready in this release.');
+  await page.getByRole('link', { name: 'Issue a key' }).click();
+  await expect(page.getByRole('dialog', { name: 'Issue a key' })).toBeVisible();
 });
 
 test('filters by tile and search, in the address', async ({ page }) => {
@@ -196,6 +198,9 @@ test('says what to do without a workspace', async ({ page }) => {
   control.sessionWorkspace = null;
   await open(page);
   await expect(page.getByRole('heading', { name: 'No workspace yet' })).toBeVisible();
+  const issue = page.getByRole('button', { name: 'Issue a key' });
+  await expect(issue).toHaveAttribute('aria-disabled', 'true');
+  await expect(issue).toHaveAccessibleDescription(/administrator adds you to a workspace/);
 });
 
 test.describe('with a browser that prefers Chinese', () => {
