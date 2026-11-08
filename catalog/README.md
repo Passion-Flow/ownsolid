@@ -90,7 +90,9 @@ to the signature and payload checks it requires a complete OCI image layout in
 manifest, configuration and layer blobs. Use USTAR headers or PAX headers with
 only a size extension. Include regular files and the optional `blobs/` and
 `blobs/sha256/` directories. Pack only the runtime closure for that platform.
-Layer compression may be gzip or uncompressed.
+Layer compression may be gzip or uncompressed. The returned `Archive` carries
+the signed digest and byte size, and the manifest and config digests for
+each image in OCI index order.
 
 Keep staging immutable through import. The installer checks expanded layer
 limits and DiffIDs, registers the approved local images, checks their registered
