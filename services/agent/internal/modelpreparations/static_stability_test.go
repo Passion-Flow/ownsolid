@@ -11,6 +11,7 @@ import (
 	"time"
 
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/client"
 )
@@ -95,9 +96,10 @@ func TestARefusedTransferEndsTheAttempt(t *testing.T) {
 
 func TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt(t *testing.T) {
 	m, lease, d, transport := preparedManager(t)
-	d.afterStart = func(*Container) {}
 	ctx, shutdown := context.WithCancel(t.Context())
-	time.AfterFunc(150*time.Millisecond, shutdown)
+	defer shutdown()
+	// The test needs a started container even when the host is slow to prepare it.
+	d.afterStart = func(*Container) { shutdown() }
 	receipt, _, e := m.Execute(ctx, fixtureID, lease, transport)
 	if !errors.Is(e, context.Canceled) || receipt.ReceiptID != "" {
 		t.Fatalf("shutdown returned %v with receipt %q", e, receipt.ReceiptID)
@@ -121,6 +123,22 @@ func TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt(t *testing.T) {
 	}
 	if !reflect.DeepEqual(transport.events, []int64{1}) || d.container != nil {
 		t.Fatalf("events %v, container left: %v", transport.events, d.container != nil)
+	}
+}
+
+func TestShutdownDuringInputVerificationReturnsCancellation(t *testing.T) {
+	m, lease, d, transport := preparedManager(t)
+	ctx, shutdown := context.WithCancel(t.Context())
+	defer shutdown()
+	transport.downloaded = func(asset datawire.Asset) {
+		if asset.Path == lease.Preparation.Inputs.Heldout.Path {
+			shutdown()
+		}
+	}
+	receipt, _, e := m.Execute(ctx, fixtureID, lease, transport)
+	if !errors.Is(e, context.Canceled) || receipt.Proof != "never_created" ||
+		receipt.AgentErrorCode != "MODEL_PREPARATION_AGENT_INTERRUPTED" || d.container != nil {
+		t.Fatalf("pre-start shutdown returned %v with proof %q and code %q", e, receipt.Proof, receipt.AgentErrorCode)
 	}
 }
 
