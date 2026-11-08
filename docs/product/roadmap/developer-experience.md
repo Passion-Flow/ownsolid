@@ -9,7 +9,7 @@ How engineers and integrators use ownsolid programmatically.
 
 - [ ] DEV-101 Complete public REST API documented by OpenAPI (P1) - Catalog: F236
 - [ ] DEV-102 Command-line tool for every common operation (P1) - Catalog: F236
-- [ ] DEV-103 Python and Go SDKs generated from the API (P1)
+- [x] DEV-103 Python and Go SDKs generated from the API (P1) - Evidence: [offline SDK verification](../../research/sdk.md#integration-evidence) at 5876679. Reproduced Go and Python clients for 412 operations across 27 domains and exercised both clients against offline Admin TLS and PostgreSQL.
 - [ ] DEV-104 Webhooks for job, deployment, node and alert events (P1)
 - [ ] DEV-105 Notebooks with GPU access inside workspaces (P1) - Catalog: F593
 - [ ] DEV-106 SSH and IDE access to development containers (P1)
