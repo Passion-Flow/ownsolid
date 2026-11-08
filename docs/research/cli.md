@@ -132,6 +132,8 @@ again, inspect where an approved model can run, submit a deployment, check
 its state, and stop it. The same screens expose rename, removal, fact
 collection and task detail for nodes, and start, observe, verify and removal
 for deployments. Pending node invitations can be issued, listed and revoked.
+Task logs use the [node contract][nodes] cursor. Return one bounded page and
+its cursor so an operator or script can continue from the last line.
 The Models screen also reads the approved manifest and retires unreferenced
 versions. Model import, gateway publication and node monitoring components
 each have their own workflows and are tracked separately in the lane decisions.

@@ -122,7 +122,7 @@ func TestCommandHelp(t *testing.T) {
 		{"model"}, {"model", "list"}, {"deployment"}, {"deployment", "list"},
 		{"deployment", "get"}, {"version"}, {"help"},
 		{"node", "disable"}, {"node", "enable"}, {"node", "rename"}, {"node", "remove"},
-		{"node", "collect-facts"}, {"node", "tasks"}, {"node", "task"}, {"node", "inference"}, {"node", "probe-inference"},
+		{"node", "collect-facts"}, {"node", "tasks"}, {"node", "task"}, {"node", "task-log"}, {"node", "inference"}, {"node", "probe-inference"},
 		{"node", "join-token"}, {"node", "join-token", "list"}, {"node", "join-token", "create"}, {"node", "join-token", "revoke"},
 		{"model", "get"}, {"model", "retire"},
 		{"deployment", "placement"}, {"deployment", "create"}, {"deployment", "start"}, {"deployment", "stop"},

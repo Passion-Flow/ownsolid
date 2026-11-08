@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +20,7 @@ type nodeUpdate struct {
 }
 
 func (opts *options) addNodeOperations(group *cobra.Command) {
-	group.AddCommand(opts.nodeTasksCommand(), opts.nodeTaskCommand(), opts.collectFactsCommand(),
+	group.AddCommand(opts.nodeTasksCommand(), opts.nodeTaskCommand(), opts.nodeTaskLogCommand(), opts.collectFactsCommand(),
 		opts.joinTokensCommand(), opts.nodeInferenceCommand(), opts.probeInferenceCommand())
 	for _, change := range []struct {
 		command, status, description string
@@ -182,6 +183,51 @@ func (opts *options) nodeTaskCommand() *cobra.Command {
 			return render(cmd.OutOrStdout(), opts.output, nodeTasks.columns, result, []json.RawMessage{detail.Task})
 		},
 	}
+}
+
+func (opts *options) nodeTaskLogCommand() *cobra.Command {
+	const maxPage = 500
+	var after string
+	var limit int
+	cmd := &cobra.Command{
+		Use:     "task-log <task-id>",
+		Short:   "Read a bounded page of progress logs for a node task.",
+		Example: "  ownsolid node task-log \"$TASK_ID\" --output json\n  ownsolid node task-log \"$TASK_ID\" --after \"$CURSOR\"",
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := requireID(args[0], "task ID"); err != nil {
+				return err
+			}
+			if limit < 1 || limit > maxPage {
+				return errors.New("--limit must be between 1 and 500")
+			}
+			cfg, client, err := opts.operator(cmd, "")
+			if err != nil {
+				return err
+			}
+			defer client.http.CloseIdleConnections()
+			query := url.Values{"limit": {strconv.Itoa(limit)}}
+			if after != "" {
+				query.Set("after", after)
+			}
+			var result json.RawMessage
+			if err := client.get(cmd.Context(), cfg.adminPath(nodeTasks)+"/"+args[0]+"/log", query, &result); err != nil {
+				return err
+			}
+			var page struct {
+				Items  []json.RawMessage `json:"items"`
+				Cursor string            `json:"cursor"`
+			}
+			if err := json.Unmarshal(result, &page); err != nil || page.Items == nil || page.Cursor == "" {
+				return errors.New("the server returned an invalid task log page")
+			}
+			columns := []column{{"AT", "at"}, {"ATTEMPT", "attempt"}, {"SEQUENCE", "sequence"}, {"LEVEL", "level"}, {"MESSAGE", "message"}}
+			return render(cmd.OutOrStdout(), opts.output, columns, result, page.Items)
+		},
+	}
+	cmd.Flags().StringVar(&after, "after", "", "Continue after the cursor from the previous page")
+	cmd.Flags().IntVar(&limit, "limit", maxPage, "Maximum number of log lines to read")
+	return cmd
 }
 
 func (opts *options) collectFactsCommand() *cobra.Command {

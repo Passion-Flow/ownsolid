@@ -286,6 +286,23 @@ func TestLaneDAdminTLS(t *testing.T) {
 	task := row("node", "collect-facts", node.NodeID, "--idempotency-key", uuid.NewString())
 	ok(task.ID, "node", "tasks", node.NodeID)
 	ok(task.ID, "node", "task", task.ID, "-o", "yaml")
+	factsLease := claimTask(t, nodeService, node, task.ID)
+	now := time.Now().UTC()
+	report := wire.TaskProgress{LeaseToken: factsLease.LeaseToken, Entries: []wire.ProgressEntry{
+		{Sequence: 1, Kind: wire.ProgressKindLog, At: now, Level: wire.ProgressLevelInfo, Message: "Read host identity"},
+		{Sequence: 2, Kind: wire.ProgressKindLog, At: now, Level: wire.ProgressLevelInfo, Message: "Read host memory"},
+	}}
+	if accepted, err := nodeService.RecordTaskProgress(ctx, node.NodeID, node.Credential, task.ID, report); err != nil || accepted.Accepted != 2 {
+		t.Fatalf("record actual task progress: %v %v", accepted, err)
+	}
+	first := ok("\"cursor\": \"1.1\"", "node", "task-log", task.ID, "--limit", "1", "-o", "json")
+	second := ok("Read host memory", "node", "task-log", task.ID, "--after", "1.1")
+	if !strings.Contains(first, "Read host identity") || strings.Contains(first, "Read host memory") || strings.Contains(second, "Read host identity") {
+		t.Fatal("task log pagination returned the wrong lines")
+	}
+	if outcome, err := nodeService.Complete(ctx, node.NodeID, node.Credential, task.ID, wire.Result{LeaseToken: factsLease.LeaseToken, Outcome: "success", Facts: &handshake.Facts}, uuid.NewString()); err != nil || outcome != "succeeded" {
+		t.Fatalf("settle fact collection: %s %v", outcome, err)
+	}
 	refused("pass --confirm", nodeChange("remove", renamed.Version)...)
 	if result := row(nodeChange("remove", renamed.Version, "--confirm")...); result.Status != "removed" {
 		t.Fatalf("node removal result %#v", result)

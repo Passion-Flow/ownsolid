@@ -95,11 +95,14 @@ ownsolid node remove "$NODE_ID" --version "$VERSION" --reason 'Host decommission
 ownsolid node collect-facts "$NODE_ID" --idempotency-key "$REQUEST_KEY"
 ownsolid node tasks "$NODE_ID"
 ownsolid node task "$TASK_ID" --output json
+ownsolid node task-log "$TASK_ID" --output json
 ```
 
 Removal revokes the agent credential. Node changes use the server's
 version precondition. If the result of a write is uncertain, read the node
 and inspect its current version and state before issuing another update.
+Use the log response's `cursor` with `node task-log --after` to continue
+reading subsequent lines.
 
 Issue enrollment invitations in a private directory you own with mode 0700.
 The credential is written once to a new mode 0600 file. Output contains the

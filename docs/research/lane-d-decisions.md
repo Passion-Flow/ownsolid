@@ -31,7 +31,7 @@ when SSH is the only interface.
 
 | Priority | Admin workflow | CLI scope or boundary |
 | --- | --- | --- |
-| 1 | Prepare, pause and resume a worker | Issue, list and revoke enrollment invitations. Read and update node status and name. Remove a node, collect facts and inspect its tasks. |
+| 1 | Prepare, pause and resume a worker | Issue, list and revoke enrollment invitations. Read and update node status and name. Remove a node, collect facts and inspect its tasks and logs. |
 | 1 | Run and maintain an approved model | Inspect GPU facts and placement, refresh GPU observations, create a deployment, and start, observe, verify, stop or remove it. Inspect the model manifest and retire an unreferenced version. |
 | 2 | Bring a new approved model into the installation | Complete the resumable bundle upload and verification path with the exact approved artifact. The TLS fixture seeds metadata and cannot verify import or file integrity. This lane has no prepared approved bundle for that run. |
 | 2 | Publish a deployment to callers | Exercise gateway provisioning, alias publication and protected credentials with the gateway delivery path. The current installation fixture stops at control-plane admission and the installer does not start the agent-managed gateway. |
