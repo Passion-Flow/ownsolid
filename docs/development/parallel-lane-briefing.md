@@ -303,3 +303,54 @@ These have no "ask the owner" path either. They are simply not done:
 - `--force`, rebasing away someone's commits, rewriting history
 - A credential in the repository
 - Anything that reaches the network at runtime
+
+## 12. The two machines
+
+Work runs on two machines at once. Your task says which one is yours.
+
+| | MacBook Pro (local) | `ownsolid-cpu` (Linux) |
+| --- | --- | --- |
+| Reach it | You are already on it | `ssh ownsolid-cpu` |
+| Address | — | Tailscale `100.100.110.24`, user `root` |
+| CPU | 14 cores | 16 cores |
+| Memory | shared with the owner's desktop | 31 GB |
+| Disk | 926 GB | 1005 GB (extended from 118 GB on 2026-11-08) |
+| Browser tests | Yes | **No.** No graphical environment |
+| Target architecture | arm64, not the product target | **amd64, the real target** |
+
+`ssh ownsolid-cpu` needs no password; the key and the Tailscale proxy are already
+in `~/.ssh/config`. A Linux lane runs its commands through that, or logs in and
+works there.
+
+Anything that has to be proven on the product's real target — an offline install,
+a Compose deployment, a release archive — belongs on the Linux machine. The Mac is
+arm64 and cannot stand in for it.
+
+## 13. Check the resources before heavy work, on whichever machine you are on
+
+Several lanes share each machine. Before a build, a test suite, an image build or
+anything that writes gigabytes:
+
+```bash
+df -h /          # or df -h / on the server
+free -m          # Linux only
+```
+
+- **Under 15 GB free: stop and clean your own first.** `cargo clean` in your
+  worktree, `go clean -cache`, delete your own test output. Never touch another
+  lane's worktree, and never run `docker volume prune` — the volumes hold
+  PostgreSQL data.
+- **Under 2 GB of free memory on the Linux machine**: wait, or run the smaller
+  part of your work first. Do not start a second heavy build beside someone else's.
+- Record in your report what you started, what you stopped, and what you left
+  running.
+
+On the Linux machine, check ports before starting a service:
+
+```bash
+ss -lntp
+```
+
+Take a port nobody is using, say which one in your report, and stop the service
+when you are done. There is a long-running set of containers named `lane-b-*`
+belonging to an earlier verification environment: **leave them alone.**
