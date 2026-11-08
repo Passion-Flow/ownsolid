@@ -52,6 +52,7 @@ const (
 type SourceImportOptions struct {
 	Format         SourceFormat
 	TrainingFormat SourceTrainingFormat
+	Cleaning       *SourceCleaningPolicy
 	CSVEncoding    string
 	SkipInvalid    bool
 	ExpectedBytes  int64
@@ -91,6 +92,7 @@ type SourceField struct {
 // link is created. A directory sync error can still leave that link visible.
 type SourceImportReport struct {
 	TrainingFormat SourceTrainingFormat   `json:"training_format,omitempty"`
+	Cleaning       *SourceCleaningReport  `json:"cleaning,omitempty"`
 	SourceBytes    int64                  `json:"source_bytes"`
 	SourceSHA256   string                 `json:"source_sha256"`
 	OutputBytes    int64                  `json:"output_bytes"`
@@ -194,6 +196,9 @@ func (i *SourceImporter) validateOptions(opts SourceImportOptions) error {
 	if opts.CSVEncoding != "" && (opts.Format != SourceCSV || opts.CSVEncoding != "utf-8" && opts.CSVEncoding != "gbk") {
 		return failure("DATASET_IMPORT_ENCODING_UNSUPPORTED")
 	}
+	if !opts.Cleaning.valid(i.limits.Fields) {
+		return failure("DATASET_CLEANING_POLICY_INVALID")
+	}
 	if !opts.TrainingFormat.valid() {
 		return failure("DATASET_TRAINING_FORMAT_INVALID")
 	}
@@ -234,7 +239,7 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 	source := io.TeeReader(limited, sourceHash)
 	state := sourceImportState{
 		ctx: ctx, limits: i.limits, opts: opts, output: bufio.NewWriter(io.MultiWriter(output, outputHash)),
-		fields: make(map[string]*sourceFieldCount),
+		fields: make(map[string]*sourceFieldCount), cleaning: newSourceCleaning(opts.Cleaning),
 	}
 	switch opts.Format {
 	case SourceJSONL:
@@ -293,6 +298,9 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 	if dir.Sync() != nil {
 		return report, failure("DATASET_IMPORT_COMMIT_UNCERTAIN")
 	}
+	if state.cleaning != nil {
+		report.Cleaning.Samples = state.cleaning.report.Samples
+	}
 	return report, nil
 }
 
@@ -307,6 +315,7 @@ type sourceImportState struct {
 	opts     SourceImportOptions
 	output   *bufio.Writer
 	fields   map[string]*sourceFieldCount
+	cleaning *sourceCleaningState
 	schema   bool
 	rows     int64
 	rejected int64
@@ -335,8 +344,14 @@ func (s *sourceImportState) report() SourceImportReport {
 		slices.Sort(types)
 		fields[name] = SourceField{Types: types, Nulls: s.rows - count.nonNull}
 	}
+	var cleaning *SourceCleaningReport
+	if s.cleaning != nil {
+		report := s.cleaning.report
+		report.Samples = nil
+		cleaning = &report
+	}
 	return SourceImportReport{
-		TrainingFormat: s.opts.TrainingFormat, Rows: s.rows, RejectedRows: s.rejected, OutputBytes: s.bytes,
+		Cleaning: cleaning, TrainingFormat: s.opts.TrainingFormat, Rows: s.rows, RejectedRows: s.rejected, OutputBytes: s.bytes,
 		FieldCount: len(fields), Fields: fields,
 		Issues: s.issues, Truncated: s.rejected > int64(len(s.issues)),
 	}
@@ -345,6 +360,27 @@ func (s *sourceImportState) report() SourceImportReport {
 func (s *sourceImportState) accept(row map[string]jsontext.Value, position SourceIssue) error {
 	if err := s.ctx.Err(); err != nil {
 		return err
+	}
+	var before map[string]jsontext.Value
+	if s.cleaning != nil {
+		keep, err := s.cleaning.keep(row)
+		if err != nil {
+			position.Code = "DATASET_IMPORT_ROW_INVALID"
+			return s.reject(position)
+		}
+		if !keep {
+			s.cleaning.report.FilteredRows++
+			s.cleaning.sample(position, row, nil)
+			return nil
+		}
+		cleaned, err := s.cleaning.trim(row)
+		if err != nil {
+			position.Code = "DATASET_IMPORT_ROW_INVALID"
+			return s.reject(position)
+		}
+		if cleaned != nil {
+			before, row = row, cleaned
+		}
 	}
 	if field := s.opts.TrainingFormat.invalidField(row); field != "" {
 		position.Code = "DATASET_TRAINING_ROW_INVALID"
@@ -399,6 +435,10 @@ func (s *sourceImportState) accept(row map[string]jsontext.Value, position Sourc
 	}
 	s.rows++
 	s.bytes += needed
+	if before != nil {
+		s.cleaning.report.ChangedRows++
+		s.cleaning.sample(position, before, raw)
+	}
 	return nil
 }
 

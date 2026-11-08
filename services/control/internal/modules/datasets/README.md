@@ -141,3 +141,10 @@ messages, instruction or preference schema before writing the artifact. The
 report retains the selected schema and adds a field path to applicable issues.
 See [training format research](../../../../../docs/research/dataset-training-formats.md)
 for the accepted shapes and the separate training handoff requirements.
+
+An optional [cleaning policy](../../../../../docs/research/dataset-cleaning.md)
+trims selected string fields and filters rows with blank fields before training
+validation. Filtered, changed and rejected counts are distinct. Private
+before/after samples are bounded, excluded from JSON statistics, and available
+to the Go caller after a successful artifact commit. The candidate can be
+staged for an authorized preview before workspace registration.

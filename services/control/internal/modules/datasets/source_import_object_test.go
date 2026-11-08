@@ -20,7 +20,7 @@ import (
 )
 
 func TestSourceImportS3(t *testing.T) {
-	const body = "{\"id\":1}\n{\"id\":2}\n"
+	const body = "{\"id\":1,\"text\":\" one \"}\n{\"id\":2,\"text\":null}\n"
 	const etag = `"import-fixture"`
 	const bucket = "dataset-import-fixture"
 	ref := objectstore.Ref{Tenant: uuid.NewString(), Workspace: uuid.NewString(), Object: uuid.NewString()}
@@ -84,31 +84,41 @@ func TestSourceImportS3(t *testing.T) {
 	defer client.Close()
 	importer := testImporter(t, testImportLimits(), nil)
 	receipt := SourceObject{Ref: ref, ETag: etag, Bytes: int64(len(body)), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(body)))}
-	opts := SourceImportOptions{Format: SourceJSONL, SkipInvalid: true}
-	for index, name := range []string{"valid", "changed-etag", "truncated", "wrong-digest"} {
+	for index, name := range []string{"valid", "changed-etag", "truncated", "wrong-digest", "cleaning"} {
 		t.Run(name, func(t *testing.T) {
 			mode.Store(int32(index))
 			dir := privateImportDir(t)
 			path := filepath.Join(dir, "rows.jsonl")
 			selected := receipt
+			opts := SourceImportOptions{Format: SourceJSONL, SkipInvalid: true}
+			if index >= 3 {
+				opts.Cleaning = &SourceCleaningPolicy{TrimFields: []string{"text"}, KeepNonBlankFields: []string{"text"}, PreviewRows: 2, PreviewBytes: 1024}
+			}
 			if index == 3 {
 				selected.SHA256 = strings.Repeat("a", 64)
 			}
 			report, err := importer.ImportObject(t.Context(), client, selected, path, opts)
-			if index == 0 {
-				if err != nil || report.Rows != 2 || report.FieldCount != 1 ||
+			switch index {
+			case 0:
+				if err != nil || report.Rows != 2 || report.FieldCount != 2 ||
 					report.SourceSHA256 != receipt.SHA256 || readImported(t, path) != body {
 					t.Fatalf("report %+v, error %v", report, err)
 				}
-			} else {
-				if err == nil {
-					t.Fatalf("accepted an unbound object: %+v", report)
+			case 4:
+				if err != nil || report.Rows != 1 || report.Cleaning == nil || report.Cleaning.ChangedRows != 1 ||
+					report.Cleaning.FilteredRows != 1 || len(report.Cleaning.Samples) != 2 ||
+					readImported(t, path) != "{\"id\":1,\"text\":\"one\"}\n" {
+					t.Fatalf("report %+v, error %v", report, err)
+				}
+			default:
+				if err == nil || report.Cleaning != nil && len(report.Cleaning.Samples) != 0 {
+					t.Fatalf("accepted or disclosed an unbound object: %+v, %v", report, err)
 				}
 				assertNoImports(t, dir)
 			}
 		})
 	}
-	if got := calls.Load(); got != 4 {
+	if got := calls.Load(); got != 5 {
 		t.Fatalf("unexpected request count %d", got)
 	}
 }

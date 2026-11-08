@@ -148,3 +148,77 @@ LICENSE and NOTICE were present. A one-byte modification to the staged wheel
 was refused by the offline hash check. For the 16 MiB and 128 MiB JSONL files,
 both import processes peaked at 26,738,688 resident bytes. The release
 control image still needs to consume the lock and staged wheelhouse.
+
+## Registration and product handoff
+
+The existing dataset row can remain the workspace authority. Reuse the
+[dataset service transaction](../../services/control/internal/modules/datasets/service.go)
+to resolve and recheck the workspace and actor. Use a separately named import
+resource for the generic artifact. Existing drafts cap inputs at 64 MiB and
+their worker interprets a fixed prompt/completion schema. Existing versions
+require a draft, a publication job and attempt, and a legacy split manifest.
+An S3 ingestion receipt requires a draft foreign key on submission and limits
+its JSON receipt to 16 KiB. None of these authorities can hold the generic
+report and artifact without changing their current contracts.
+
+1. **Registry and backup.** Add a scoped import reference with a composite
+   tenant, workspace, and dataset foreign key, a scoped idempotency key and
+   fingerprint, exact source and output byte counts and SHA-256, a bounded
+   report and the existing store identity. Reserve an attempt, run
+   `SourceImporter` outside the SQL transaction, then recheck the actor,
+   membership lifetime, dataset status and attempt before committing the
+   report and audit event together. Read the report using the same workspace
+   authority and reject references outside that scope. Reconcile unknown
+   commit outcomes by key and digest. Keep the existing
+   [store and integrity checks](../../services/control/internal/modules/datasets/integrity.go)
+   and [snapshot inventory](../../services/control/internal/modules/datasets/snapshot_inventory.go)
+   as the owners of file verification. Extend them with the new reference
+   and test snapshot/restore with an artifact over 64 MiB. The
+   [PostgreSQL constraints](https://www.postgresql.org/docs/current/ddl-constraints.html)
+   and [transaction contract](https://www.postgresql.org/docs/current/tutorial-transactions.html)
+   support the scoped foreign key and atomic report/audit commit. Assign
+   the next contiguous migration from current main at integration time.
+   The [release lineage descriptor](../../api/release/v1/mvp-postgresql-cpu-v1-lineage.json),
+   [release schema constants](../../api/release/v1/postgres_application.go)
+   and backup/restore inventory must advance with that migration.
+2. **API and S3 authority.** Add an import/upload and report resource under
+   the existing dataset scopes in the [dataset handler](../../services/control/internal/modules/datasets/http/handler.go)
+   and [OpenAPI contract](../../api/openapi/v1/datasets/openapi.json).
+   Update the upload deadline and error mapping used by the authenticated
+   [control HTTP dispatcher](../../services/control/internal/modules/identity/http/handler.go).
+   For S3, use the current grant and exact ETag, byte count and SHA-256 from
+   the [artifact owner](../../services/control/internal/modules/artifactstores/ingestion.go).
+   This preserves the current legacy ingestion path. Configure the importer
+   and its independent source and output budgets through the
+   [control startup owner](../../services/control/cmd/server/runtime_lifecycle.go)
+   and [typed dataset configuration](../../services/control/internal/platform/config/datasets.go).
+3. **Offline image and UI.** Pass the [locked wheelhouse](../../runtimes/data-processing/README.md#parquet-source-intake)
+   to the [control image build](../../deploy/images/control/Dockerfile) as
+   a staged build input, install before switching to UID 10001, and retain
+   licence files. Wire the S-503 screen in the
+   [product plan](../product/plan/README.md#stage-5--run-it) to the authorized
+   report and import lifecycle. Send no data to the browser before scope
+   admission. Regenerate the client after the OpenAPI change with `make generate`.
+
+From the workspace root, rerun the component tests with the locked wheel
+installed into a protected Python 3.12 runtime:
+
+```sh
+TMPDIR="$(cd "${TMPDIR:-/tmp}" && pwd -P)/" \
+  OWNSOLID_TEST_PARQUET_PYTHON="$dataset_python" \
+  go test ./services/control/internal/modules/datasets/... -count=1 -v
+```
+
+With the local PostgreSQL and Python settings in
+[development environment](../development/environment.md), also rerun:
+
+```sh
+go test -p 1 -tags dataset_processor_integration \
+  ./services/control/internal/modules/datasets/... -count=1
+make check
+```
+
+These existing commands verify components and the inherited workflow. The
+new route still needs an offline installation test that imports from upload
+and S3, reloads the report after restart, rejects another workspace,
+reconciles retries, and restores the registered artifact and report together.
