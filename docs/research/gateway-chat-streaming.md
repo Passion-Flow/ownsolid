@@ -115,3 +115,10 @@ Placing the gateway test executable and its private state on tmpfs
 avoided timeouts on the shared development server's disk. The real
 installed CPU model and console key workflow are recorded under
 [GW-114](../product/roadmap/gateway.md#p1-enterprise-release).
+
+The fresh real-engine rerun remained at startup. One isolated CPU vLLM
+attempt loaded the weights and stalled during warm-up. A second with
+bounded CPU threads did not reach readiness during the run. The server
+showed sustained disk I/O waits. The earlier live evidence still
+applies to the installed path it exercised. Acceptance of the changed
+stream tail and engine request identifier against real vLLM remains open.
