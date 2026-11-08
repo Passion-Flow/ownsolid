@@ -67,7 +67,7 @@ func (opts *options) settings(cmd *cobra.Command) (settings, error) {
 func (opts *options) resourceCommand(r resource) *cobra.Command {
 	group := &cobra.Command{
 		Use:     r.singular,
-		Short:   "Read " + r.key + " from the Admin control plane.",
+		Short:   "Manage " + r.key + " from the Admin control plane.",
 		Example: "  ownsolid " + r.singular + " list",
 	}
 	var workspace string
@@ -86,8 +86,12 @@ func (opts *options) resourceCommand(r resource) *cobra.Command {
 	switch r.key {
 	case nodes.key:
 		group.AddCommand(opts.getCommand(r, &workspace, "Show a node by exact name or UUID.", "gpu-worker-01"))
+		opts.addNodeOperations(group)
 	case deployments.key:
 		group.AddCommand(opts.getCommand(r, &workspace, "Show a deployment by UUID or by its model name when unique.", "qwen3"))
+		opts.addDeploymentOperations(group, &workspace)
+	case models.key:
+		group.AddCommand(opts.modelGetCommand(&workspace), opts.retireModelCommand(&workspace))
 	}
 	return group
 }
@@ -108,34 +112,11 @@ func (opts *options) getCommand(r resource, workspace *string, description, exam
 }
 
 func (opts *options) readResource(cmd *cobra.Command, r resource, workspace, name string) error {
-	if cmd.Flags().Changed("workspace") && !resourceID.MatchString(workspace) {
-		return errors.New("--workspace must be a UUID")
-	}
-	cfg, err := opts.settings(cmd)
-	if err != nil {
-		return err
-	}
-	store, err := openSessionStore(cfg, false)
-	if errors.Is(err, os.ErrNotExist) {
-		return noSession(cfg)
-	}
-	if err != nil {
-		return err
-	}
-	value, err := store.read()
-	store.root.Close()
-	if err != nil {
-		return err
-	}
-	if value == "" {
-		return noSession(cfg)
-	}
-	client, err := newClient(cfg)
+	cfg, client, err := opts.operator(cmd, workspace)
 	if err != nil {
 		return err
 	}
 	defer client.http.CloseIdleConnections()
-	client.restoreSession(value)
 	path, ctx := cfg.adminPath(r), cmd.Context()
 	id := lookupID(name)
 	if id != "" {
@@ -171,22 +152,65 @@ func (opts *options) readResource(cmd *cobra.Command, r resource, workspace, nam
 	return opts.renderDetail(cmd.OutOrStdout(), ctx, client, r, path, id, workspace)
 }
 
+func (opts *options) operator(cmd *cobra.Command, workspace string) (settings, *apiClient, error) {
+	if cmd.Flags().Changed("workspace") && !resourceID.MatchString(workspace) {
+		return settings{}, nil, errors.New("--workspace must be a UUID")
+	}
+	cfg, err := opts.settings(cmd)
+	if err != nil {
+		return settings{}, nil, err
+	}
+	store, err := openSessionStore(cfg, false)
+	if errors.Is(err, os.ErrNotExist) {
+		return settings{}, nil, noSession(cfg)
+	}
+	if err != nil {
+		return settings{}, nil, err
+	}
+	value, err := store.read()
+	store.root.Close()
+	if err != nil {
+		return settings{}, nil, err
+	}
+	if value == "" {
+		return settings{}, nil, noSession(cfg)
+	}
+	client, err := newClient(cfg)
+	if err != nil {
+		return settings{}, nil, err
+	}
+	client.restoreSession(value)
+	return cfg, client, nil
+}
+
 func (opts *options) renderDetail(w io.Writer, ctx context.Context, client *apiClient, r resource, path, id, workspace string) error {
-	var item json.RawMessage
-	if err := client.get(ctx, path+"/"+id, nil, &item); err != nil {
+	item, err := client.detail(ctx, path, id, workspace)
+	if err != nil {
 		return err
 	}
+	return render(w, opts.output, r.columns, item, []json.RawMessage{item})
+}
+
+func (c *apiClient) detail(ctx context.Context, path, id, workspace string) (json.RawMessage, error) {
+	var item json.RawMessage
+	if err := c.get(ctx, path+"/"+id, nil, &item); err != nil {
+		return nil, err
+	}
+	return item, validateScope(item, id, workspace)
+}
+
+func validateScope(item json.RawMessage, id, workspace string) error {
 	var actual struct {
 		ID          string `json:"id"`
 		WorkspaceID string `json:"workspace_id"`
 	}
-	if err := json.Unmarshal(item, &actual); err != nil || actual.ID != id {
+	if err := json.Unmarshal(item, &actual); err != nil || !resourceID.MatchString(actual.ID) || id != "" && actual.ID != id {
 		return errors.New("the server returned a different or invalid resource ID")
 	}
 	if workspace != "" && actual.WorkspaceID != workspace {
 		return fmt.Errorf("the resource is outside the selected workspace %s; check --workspace or workspace_id in config.json", workspace)
 	}
-	return render(w, opts.output, r.columns, item, []json.RawMessage{item})
+	return nil
 }
 
 func noSession(cfg settings) error {

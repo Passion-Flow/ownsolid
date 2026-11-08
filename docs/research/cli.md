@@ -123,3 +123,60 @@ help pages, local version, login, both node operations, model list, both
 deployment operations by name and UUID, and logout. A read after logout failed
 and PostgreSQL held the logout audit event. The test covers the control-plane
 workflow with synthetic inventory and deployment records.
+
+## Common Admin operations
+
+Follow the actual Nodes and Model Services flows in the Console. The first
+terminal workflow is to find a node, disable it for maintenance, enable it
+again, inspect where an approved model can run, submit a deployment, check
+its state, and stop it. The same screens expose rename, removal, fact
+collection and task detail for nodes, and start, observe, verify and removal
+for deployments. Pending node invitations can be issued, listed and revoked.
+The Models screen also reads the approved manifest and retires unreferenced
+versions. Model import, gateway publication and node monitoring components
+each have their own workflows and are tracked separately in the lane decisions.
+
+Kubernetes provides distinct [cordon and uncordon commands][kube-node] and
+[version preconditions][kube-scale] for deployment changes. The [EC2
+idempotency guide][ec2-retry] shows why an uncertain response must be retried
+with the original key and payload. Use the existing Admin node PATCH version
+and deployment action revision, CSRF and per-origin session, and the
+server's idempotency key on task and deployment writes. Do not infer that a
+write succeeded from a read, or retry a version conflict using a newer
+version without operator review. Keep site, cell, and workspace checks on
+the same paths as the read commands.
+
+Use the placement endpoint to discover GPUs and require explicit model, node
+and GPU identifiers on creation so a retry retains the same placement.
+Keep desired and observed state in the output, because HTTP 202 records
+acceptance and the agent may not have acted yet. Require explicit
+confirmation for removal and stopping a deployment. An issued enrollment
+credential belongs in a private file and must never appear in normal
+command output. Since issuance has no idempotency key, inspect and revoke
+pending invitations after an ambiguous failure before issuing another.
+These additions use existing dependencies and Go standard-library code.
+
+Exercise both the server response and subsequent reads for mutations. Verify
+that a caller without permission cannot change data, a stale version cannot
+overwrite a newer update, and replay after a lost response retains the
+original deployment and task. Run the CLI as separate processes against the
+real Admin TLS dispatcher and PostgreSQL with only loopback networking.
+
+`tools/cli/testdata/run-admin-tls.sh` exercised the node, model and deployment
+commands as Linux processes with verified Admin TLS and PostgreSQL 18. The
+fixture checked persisted state, removal of an agent credential, audit rows,
+permission and version refusals, and workspace mismatch. It forced the reply
+to both creation and stop to fail after the real handler accepted the
+operation, then replayed each original key and checked that only one task
+existed. Synthetic agent reports drove the observed deployment states. The
+run verifies the control path and does not qualify physical inference.
+The pinned fixture uses [PostgreSQL][postgres-license] and
+[pgvector 0.8.7][pgvector-license]. Both use the PostgreSQL License, which
+allows commercial use and offline redistribution with its notices.
+Neither is included in the standalone CLI.
+
+[kube-node]: https://kubernetes.io/docs/reference/kubectl/
+[kube-scale]: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#scale
+[ec2-retry]: https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html
+[postgres-license]: https://www.postgresql.org/about/licence/
+[pgvector-license]: https://github.com/pgvector/pgvector/blob/v0.8.7/LICENSE

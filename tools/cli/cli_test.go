@@ -121,6 +121,12 @@ func TestCommandHelp(t *testing.T) {
 		{}, {"login"}, {"logout"}, {"node"}, {"node", "list"}, {"node", "get"},
 		{"model"}, {"model", "list"}, {"deployment"}, {"deployment", "list"},
 		{"deployment", "get"}, {"version"}, {"help"},
+		{"node", "disable"}, {"node", "enable"}, {"node", "rename"}, {"node", "remove"},
+		{"node", "collect-facts"}, {"node", "tasks"}, {"node", "task"}, {"node", "inference"}, {"node", "probe-inference"},
+		{"node", "join-token"}, {"node", "join-token", "list"}, {"node", "join-token", "create"}, {"node", "join-token", "revoke"},
+		{"model", "get"}, {"model", "retire"},
+		{"deployment", "placement"}, {"deployment", "create"}, {"deployment", "start"}, {"deployment", "stop"},
+		{"deployment", "observe"}, {"deployment", "verify"}, {"deployment", "remove"},
 	} {
 		out, _, err := run(t, append(slices.Clone(args), "--help")...)
 		if err != nil || !strings.Contains(out, "Examples:") || !strings.Contains(out, "ownsolid ") {

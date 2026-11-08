@@ -90,10 +90,22 @@ func (c *apiClient) cookie(purpose string) string {
 }
 
 func (c *apiClient) get(ctx context.Context, path string, query url.Values, out any) error {
-	return c.request(ctx, http.MethodGet, path, query, "", nil, out)
+	return c.request(ctx, request{method: http.MethodGet, path: path, query: query, status: http.StatusOK}, out)
 }
 
 func (c *apiClient) authPost(ctx context.Context, operation string, body []byte, out any) error {
+	status := http.StatusOK
+	if out == nil {
+		status = http.StatusNoContent
+	}
+	input := request{method: http.MethodPost, path: authPath + "/" + operation, body: body, status: status}
+	if err := c.prepareWrite(ctx, &input); err != nil {
+		return err
+	}
+	return c.request(ctx, input, out)
+}
+
+func (c *apiClient) prepareWrite(ctx context.Context, input *request) error {
 	var csrf struct {
 		Token string `json:"token"`
 	}
@@ -103,23 +115,35 @@ func (c *apiClient) authPost(ctx context.Context, operation string, body []byte,
 	if csrf.Token == "" || len(csrf.Token) > 256 || c.cookie("csrf_context") == "" {
 		return fmt.Errorf("server %s did not issue an Admin CSRF token and context cookie; check that --server points to the Admin entrance", c.origin.String())
 	}
-	return c.request(ctx, http.MethodPost, authPath+"/"+operation, nil, csrf.Token, body, out)
+	input.csrf = csrf.Token
+	return nil
 }
 
-func (c *apiClient) request(ctx context.Context, method, path string, query url.Values, csrf string, body []byte, out any) error {
+type request struct {
+	method, path string
+	query        url.Values
+	csrf, key    string
+	body         []byte
+	status       int
+}
+
+func (c *apiClient) request(ctx context.Context, input request, out any) error {
 	target := c.origin
-	target.Path, target.RawQuery = path, query.Encode()
-	req, err := http.NewRequestWithContext(ctx, method, target.String(), bytes.NewReader(body))
+	target.Path, target.RawQuery = input.path, input.query.Encode()
+	req, err := http.NewRequestWithContext(ctx, input.method, target.String(), bytes.NewReader(input.body))
 	if err != nil {
 		return fmt.Errorf("cannot construct the request to %s", c.origin.String())
 	}
 	req.Header.Set("Accept", "application/json")
-	if len(body) > 0 {
+	if len(input.body) > 0 {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	if csrf != "" {
+	if input.csrf != "" {
 		req.Header.Set("Origin", c.origin.String())
-		req.Header.Set("X-CSRF-Token", csrf)
+		req.Header.Set("X-CSRF-Token", input.csrf)
+	}
+	if input.key != "" {
+		req.Header.Set("Idempotency-Key", input.key)
 	}
 
 	res, err := c.http.Do(req)
@@ -127,11 +151,7 @@ func (c *apiClient) request(ctx context.Context, method, path string, query url.
 		return connectionError(c.origin.String(), err)
 	}
 	defer res.Body.Close()
-	expected := http.StatusOK
-	if out == nil {
-		expected = http.StatusNoContent
-	}
-	if res.StatusCode != expected {
+	if res.StatusCode != input.status {
 		return newAPIError(c.origin.String(), res)
 	}
 	if out == nil {
@@ -209,6 +229,18 @@ func (e *apiError) Error() string {
 		detail = "use the exact advertised Admin origin in --server"
 	case e.code == "CSRF_INVALID":
 		detail = "the server rejected the CSRF check; retry the command and check the Admin origin if it persists"
+	case e.code == "VERSION_CONFLICT":
+		detail = "read the current resource, review the changes, and use its current version for a new request"
+	case e.code == "IDEMPOTENCY_CONFLICT":
+		detail = "use the original target and arguments to retry, or use a fresh key for a new operation"
+	case e.code == "STORAGE_COMMIT_OUTCOME_UNKNOWN":
+		detail = "the server could not determine whether the write committed"
+	case e.code == "NODE_BUSY":
+		detail = "inspect ownsolid node tasks and wait for the active task to finish before retrying"
+	case e.code == "INFERENCE_PREFLIGHT_REQUIRED":
+		detail = "refresh the node with ownsolid node probe-inference, then check placement again"
+	case e.code == "MODEL_VERSION_REFERENCED":
+		detail = "inspect deployments and other workloads using the model before retiring it"
 	case e.status == http.StatusUnauthorized:
 		detail = "the Admin session is invalid or expired; run ownsolid login"
 	case e.status == http.StatusForbidden:
