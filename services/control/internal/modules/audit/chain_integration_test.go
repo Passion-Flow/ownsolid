@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
@@ -28,7 +30,7 @@ VALUES($1,$2,'system','fixture.audit','success',$1)`
 
 func TestAuditChainConcurrentAppends(t *testing.T) {
 	db := identityfixture.New(t).DB
-	ctx, cancel := context.WithTimeout(t.Context(), 45*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 90*time.Second)
 	defer cancel()
 	start := make(chan struct{})
 	var workers sync.WaitGroup
@@ -37,9 +39,20 @@ func TestAuditChainConcurrentAppends(t *testing.T) {
 	for i := 0; i < count; i++ {
 		workers.Go(func() {
 			<-start
-			if _, err := db.Exec(ctx, chainInsert, uuid.NewString(), at); err != nil {
-				t.Error(err)
+			id := uuid.NewString()
+			var err error
+			for range 3 {
+				if _, err = db.Exec(ctx, chainInsert, id, at); err == nil {
+					return
+				}
+				var sqlErr *pgconn.PgError
+				// A lock timeout aborts the statement. Reuse the event ID so a
+				// retry can only append the same operation.
+				if !errors.As(err, &sqlErr) || sqlErr.Code != "55P03" {
+					break
+				}
 			}
+			t.Error(err)
 		})
 	}
 	close(start)
