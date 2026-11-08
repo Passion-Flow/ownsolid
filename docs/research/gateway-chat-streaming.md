@@ -104,3 +104,14 @@ exercises the same successful path against a real engine.
 The change uses the existing Rust runtime and JSON stack. It introduces no
 dependency, model or dataset. The existing offline engine and model licences
 are listed above.
+
+The Linux amd64 rerun on 2026-11-09 exercised the malformed tail and
+forced atomic-spool failure over gateway TLS. In a network namespace
+with no external interface or route, the native Rust gateway and Go
+control handlers also passed the PostgreSQL 18.6 and pgvector 0.8.7
+integration profile for shared and dedicated machine HTTPS, outage
+recovery and licence expiry. That profile uses a synthetic model.
+Placing the gateway test executable and its private state on tmpfs
+avoided timeouts on the shared development server's disk. The real
+installed CPU model and console key workflow are recorded under
+[GW-114](../product/roadmap/gateway.md#p1-enterprise-release).
