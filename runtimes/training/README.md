@@ -15,7 +15,7 @@ The [package guide](projectone_training/README.md) details request, dataset, com
 | [engine.py](projectone_training/engine.py) | Pinned offline Transformers/PEFT execution and bounded artifacts |
 | [checkpoints.py](projectone_training/checkpoints.py) | Sealed checkpoint inventory and exact resume identity |
 
-Generated configuration/processor files come from [contracts/training](../../contracts/training). [runtime.json](runtime.json), [pyproject.toml](pyproject.toml) and [requirements](requirements) pin the execution/manufacturing profiles. Model-lifecycle inherits this runtime; dependency changes require its build and source binding to be reconsidered.
+Generated configuration/processor files come from [api/training/v1](../../api/training/v1). [runtime.json](runtime.json), [pyproject.toml](pyproject.toml) and [requirements](requirements) pin the execution/manufacturing profiles. Model-lifecycle inherits this runtime; dependency changes require its build and source binding to be reconsidered.
 
 The existing release selector/builder supports explicit healthy-Linux
 manufacturing inputs and an early CPU runtime-ready receipt. It preserves the
@@ -27,14 +27,27 @@ the [manufacturing procedure](../../docs/runbooks/model-lifecycle-manufacturing.
 
 The worker claims an exclusive attempt, refuses pre-existing output and uses private creation permissions. Event sequence/bytes and result/artifact limits are bounded. SIGTERM/SIGINT request cancellation; checkpoint resume must match sealed source/execution/tenant/Workspace/job identity, not merely find a checkpoint directory.
 
+Each checkpoint receipt covers the adapter, optimizer, scheduler, trainer step,
+and RNG files. The worker publishes the receipt only after validating the file
+layout and syncing the checkpoint data and directories. Resume requires the
+receipt digest supplied by the orchestrator. The last checkpoint accepted by
+control is the recovery point if the node is lost.
+
 Offline model loading disables remote model code. Explicit CPU verification flags do not qualify the production CUDA path, which checks real device capabilities. The agent inspects actual installed image identity and workload boundaries; control independently accepts or reconciles results.
 
 ## Changes and verification
 
-Update contracts/training and generated files, control/training request/result/state code, agent/training image/container/journal, deployment training recipes, locks and retained source manifests together.
+Keep the [training API](../../api/training/v1), control and Agent validators,
+and runtime image in sync when changing the request or output format.
 
-Existing native CPU harness after explicit memory/toolchain/model admission:
+Run the checkpoint seal and verification tests from the repository root. They
+use synthetic checkpoint files and the Python standard library:
 
-    python3 -B tools/quality/training/core.py --profile process
+    PYTHONPATH=runtimes/training:runtimes/data-processing python3 -B -m unittest discover -s runtimes/training/tests
 
-Other named profiles are tiny, approved, resume and approved-cli. Run serially under their declared budgets. GPU, native Linux/cgroup and target-image execution have separate [validation harnesses](../../tests/validation/training); never promote CPU/emulated results to those qualifications.
+A product recovery run requires a training installation and an accepted
+checkpoint. Cancel or interrupt a running job after control has accepted a
+checkpoint, then request recovery for that checkpoint. Verify that the new
+attempt advances from the recorded optimizer step and that control accepts its
+final artifacts. Run with external network access disabled. CPU fixture tests
+cover the receipt path independently of the production NVIDIA execution.
