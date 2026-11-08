@@ -10,7 +10,6 @@ import (
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/google/uuid"
@@ -57,56 +56,35 @@ func resyncDecision(cursor, assigned, acknowledged, inflight uint64) bool {
 	return cursor > assigned || cursor < acknowledged || inflight != 0 && inflight < cursor
 }
 
-// claimPreflight runs before every claim path. It releases a lease the agent never
-// acknowledged: the agent claims only when it holds no task, so such a lease was lost on
-// the way. With a cursor, it also decides whether the agent must resync first.
-func (s *Service) claimPreflight(ctx context.Context, id, credential, request string, cursor *uint64) (*wire.Resync, error) {
-	var out *wire.Resync
-	deferred := false
-	e := s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, _ pgx.Tx) error {
-		if !active || n.Status != "active" {
-			return fail("ACCESS_DENIED")
-		}
-		if q.Dialect() != transaction.PostgreSQL {
-			return nil
-		}
-		if e := s.releaseUnacknowledgedWithin(ctx, q, n, request, false); e != nil {
-			return e
-		}
-		if cursor == nil {
-			return nil
-		}
-		var assigned, acknowledged int64
-		var inflight sql.NullInt64
-		var recent bool
-		policy := s.Identity.Config.Policy().Nodes
-		if e := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT n.task_sequence,n.task_acknowledged_sequence,COALESCE(n.resync_granted_at>clock_timestamp()-make_interval(secs=>$4),false),(SELECT t.sequence FROM node_tasks t WHERE t.tenant_id=n.tenant_id AND t.workspace_id=n.workspace_id AND t.node_id=n.id AND t.state IN ('pending','running')) FROM managed_nodes n WHERE n.tenant_id=$1 AND n.workspace_id=$2 AND n.id=$3 FOR UPDATE`, n.TenantID, n.WorkspaceID, n.ID, policy.ResyncIntervalSeconds)).Scan(&assigned, &acknowledged, &recent, &inflight); e != nil {
-			return e
-		}
-		if !resyncDecision(*cursor, uint64(assigned), uint64(acknowledged), uint64(inflight.Int64)) {
-			return nil
-		}
-		if recent || !s.resync.take(policy.ResyncPerSecond, time.Now()) {
-			deferred = true
-			return nil
-		}
-		if _, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `UPDATE managed_nodes SET resync_granted_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3`, n.TenantID, n.WorkspaceID, n.ID)); e != nil {
-			return e
-		}
-		if _, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `INSERT INTO audit_events(id,occurred_at,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,request_id) VALUES($1,clock_timestamp(),$2,$3,'system','node.resync_granted','success','node',$4,$5)`, uuid.NewString(), n.TenantID, n.WorkspaceID, n.ID, request)); e != nil {
-			return e
-		}
-		out = &wire.Resync{AcknowledgedSequence: uint64(acknowledged)}
-		return nil
-	})
-	if e != nil {
-		return nil, e
+// claimPreflightWithin releases work that was never acknowledged before it judges
+// the cursor. A throttled resync still commits the release.
+func (s *Service) claimPreflightWithin(ctx context.Context, q transaction.Executor, n Node, request string, cursor *uint64) (*wire.Resync, bool, error) {
+	if q.Dialect() != transaction.PostgreSQL {
+		return nil, false, nil
 	}
-	if deferred {
-		// The release above committed; the agent retries the resync after the hint.
-		return nil, &identity.RateError{RetryAfter: wire.HeartbeatSeconds}
+	if e := s.releaseUnacknowledgedWithin(ctx, q, n, request, false); e != nil || cursor == nil {
+		return nil, false, e
 	}
-	return out, nil
+	var assigned, acknowledged int64
+	var inflight sql.NullInt64
+	var recent bool
+	policy := s.Identity.Config.Policy().Nodes
+	if e := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT n.task_sequence,n.task_acknowledged_sequence,COALESCE(n.resync_granted_at>clock_timestamp()-make_interval(secs=>$4),false),(SELECT t.sequence FROM node_tasks t WHERE t.tenant_id=n.tenant_id AND t.workspace_id=n.workspace_id AND t.node_id=n.id AND t.state IN ('pending','running')) FROM managed_nodes n WHERE n.tenant_id=$1 AND n.workspace_id=$2 AND n.id=$3 FOR UPDATE`, n.TenantID, n.WorkspaceID, n.ID, policy.ResyncIntervalSeconds)).Scan(&assigned, &acknowledged, &recent, &inflight); e != nil {
+		return nil, false, e
+	}
+	if !resyncDecision(*cursor, uint64(assigned), uint64(acknowledged), uint64(inflight.Int64)) {
+		return nil, false, nil
+	}
+	if recent || !s.resync.take(policy.ResyncPerSecond, time.Now()) {
+		return nil, true, nil
+	}
+	if _, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `UPDATE managed_nodes SET resync_granted_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3`, n.TenantID, n.WorkspaceID, n.ID)); e != nil {
+		return nil, false, e
+	}
+	if _, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `INSERT INTO audit_events(id,occurred_at,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,request_id) VALUES($1,clock_timestamp(),$2,$3,'system','node.resync_granted','success','node',$4,$5)`, uuid.NewString(), n.TenantID, n.WorkspaceID, n.ID, request)); e != nil {
+		return nil, false, e
+	}
+	return &wire.Resync{AcknowledgedSequence: uint64(acknowledged)}, false, nil
 }
 
 // releaseUnacknowledgedWithin returns a running lease that was never acknowledged to

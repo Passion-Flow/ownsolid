@@ -7,13 +7,13 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 func (s *Service) createTaskSelected(ctx context.Context, a identity.Auth, id, operation, key, request string) (Task, error) {
@@ -65,121 +65,160 @@ func (s *Service) claimSelected(ctx context.Context, id, credential, request str
 	if !nodeID(request) {
 		return wire.Claim{}, fail("VALIDATION_FAILED")
 	}
-	resync, e := s.claimPreflight(ctx, id, credential, request, cursor)
+	var out wire.Claim
+	var rateLimited, delegate, separate bool
+	e := s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
+		if !active || n.Status != "active" {
+			return fail("ACCESS_DENIED")
+		}
+		preflight := transaction.Watch(q)
+		var err error
+		out.Resync, rateLimited, err = s.claimPreflightWithin(ctx, preflight, n, request, cursor)
+		if err != nil || out.Resync != nil || rateLimited {
+			return err
+		}
+		postgres := q.Dialect() == transaction.PostgreSQL
+		delegate = !postgres ||
+			s.Preparations != nil && wire.OperationAllowed(n.ExecutionProfile, wire.ModelPreparationRunOperation) ||
+			s.Training != nil && wire.OperationAllowed(n.ExecutionProfile, wire.TrainingRunOperation)
+		// A release must stay committed even if the next claim is refused. Delegated
+		// owners also open their own transactions under their own lock order.
+		separate = delegate || preflight.Changed()
+		if separate {
+			return nil
+		}
+		return s.claimNodeWithin(ctx, q, n, request, legacy, &out)
+	})
 	if e != nil {
 		return wire.Claim{}, e
 	}
-	if resync != nil {
-		return wire.Claim{Resync: resync}, nil
+	if rateLimited {
+		return wire.Claim{}, &identity.RateError{RetryAfter: wire.HeartbeatSeconds}
 	}
-	if s.Preparations != nil {
-		if out, handled, e := s.Preparations.ClaimPreparation(ctx, id, credential, request); handled || e != nil {
-			if e != nil {
-				return wire.Claim{}, e
-			}
-			return out, nil
+	if !separate {
+		return out, nil
+	}
+	if delegate {
+		if claim, handled, e := s.claimDelegated(ctx, id, credential, request); handled || e != nil {
+			return claim, e
 		}
 	}
-	if s.Training != nil {
-		if out, handled, e := s.Training.ClaimTraining(ctx, id, credential, request); handled || e != nil {
-			if e != nil {
-				return wire.Claim{}, e
-			}
-			return out, nil
-		}
-	}
-	var out wire.Claim
 	e = s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
 		if !active || n.Status != "active" {
 			return fail("ACCESS_DENIED")
 		}
-		if e := s.expireTasksWithin(ctx, q, n, request); e != nil {
-			return e
-		}
-		var taskID, operation, state string
-		var unexpired bool
-		var attempt int
-		e := q.QueryRow(ctx, nodeSQL(q, `SELECT id::text,operation,state,attempt,COALESCE(lease_expires_at>clock_timestamp(),false) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND state IN ('pending','running') ORDER BY created_at,id LIMIT 1 FOR UPDATE`, `SELECT id,operation,state,attempt,COALESCE(lease_expires_at>UTC_TIMESTAMP(6),false) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND state IN ('pending','running') ORDER BY created_at,id LIMIT 1 FOR UPDATE`, `SELECT id,operation,state,attempt,CASE WHEN lease_expires_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) THEN 1 ELSE 0 END FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND state IN ('pending','running') ORDER BY created_at,id LIMIT 1 FOR UPDATE`, n.TenantID, n.WorkspaceID, n.ID)).Scan(&taskID, &operation, &state, &attempt, &unexpired)
-		if errors.Is(e, sql.ErrNoRows) {
-			return nil
-		}
-		if e != nil {
-			return e
-		}
-		if state == "running" && unexpired {
-			return nil
-		}
-		if operation == wire.TrainingRunOperation {
-			return fail("TRAINING_AUTHORITY_REQUIRED")
-		}
-		if operation == wire.ModelPreparationRunOperation {
-			return fail("MODEL_PREPARATION_AUTHORITY_REQUIRED")
-		}
-		if !nodeOperationAllowed(n, operation) {
-			return fail("AGENT_PROFILE_REJECTED")
-		}
-		if attempt >= s.Identity.Config.Policy().Nodes.MaximumTaskAttempts {
-			return fail("AGENT_LEASE_STALE")
-		}
-		task := Task{ID: taskID, TenantID: n.TenantID, WorkspaceID: n.WorkspaceID, NodeID: n.ID, Operation: operation}
-		raw := security.Token()
-		lease := wire.Lease{TaskID: taskID, Operation: operation, LeaseToken: raw, Attempt: attempt + 1}
-		if wire.IsInferenceOperation(operation) {
-			command, e := s.ReadInferenceCommandWithin(ctx, q, n, task)
-			if e != nil {
-				return e
-			}
-			lease.Inference = &command
-		}
-		if wire.IsGatewayOperation(operation) {
-			command, e := s.ReadGatewayCommandWithin(ctx, q, n, task)
-			if e != nil {
-				return e
-			}
-			lease.Gateway = &command
-		}
-		if wire.IsComponentOperation(operation) {
-			if _, ok := s.Components.(ComponentObserverWithin); !ok && legacy == nil {
-				return fail("COMPONENT_PROFILE_UNAVAILABLE")
-			}
-			command, e := s.componentCommandWithin(ctx, q, n, task)
-			if e != nil {
-				return e
-			}
-			lease.Component = &command
-		}
-		if wire.IsKubernetesOperation(operation) {
-			command, e := s.kubernetesLeaseWithin(ctx, q, n, task)
-			if e != nil {
-				return e
-			}
-			lease.Kubernetes = &command
-		}
-		changed, e := q.Exec(ctx, nodeSQL(q, `UPDATE node_tasks SET state='running',attempt=attempt+1,lease_token_hash=$1,lease_expires_at=LEAST(clock_timestamp()+make_interval(secs=>$2),deadline_at),updated_at=clock_timestamp() WHERE tenant_id=$3 AND workspace_id=$4 AND node_id=$5 AND id=$6 AND deadline_at>clock_timestamp() AND attempt=$7`, `UPDATE node_tasks SET state='running',attempt=attempt+1,lease_token_hash=?,lease_expires_at=LEAST(TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),deadline_at),updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND deadline_at>UTC_TIMESTAMP(6) AND attempt=?`, `UPDATE node_tasks SET state='running',attempt=attempt+1,lease_token_hash=?,lease_expires_at=LEAST(DATEADD(SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))),deadline_at),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND deadline_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND attempt=?`, digest("node-lease", raw), s.Identity.Config.Policy().Nodes.TaskLeaseSeconds, n.TenantID, n.WorkspaceID, n.ID, task.ID, attempt))
-		if e != nil {
-			return e
-		}
-		if changed != 1 {
-			return fail("AGENT_LEASE_STALE")
-		}
-		if e = deliveredLeaseWithin(ctx, q, n, task.ID, &lease); e != nil {
-			return e
-		}
-		if e = s.taskAuditWithin(ctx, q, "", "system", n, "node.task_claimed", task.ID, "", request); e != nil {
-			return e
-		}
-		if e = s.checkDerivedTaskAuthorityWithin(ctx, q, n, task); e != nil {
-			return e
-		}
-		lease.LeaseExpiresAt = lease.LeaseExpiresAt.UTC()
-		out.Lease = &lease
-		return nil
+		return s.claimNodeWithin(ctx, q, n, request, legacy, &out)
 	})
 	if e != nil {
 		return wire.Claim{}, e
 	}
 	return out, nil
 }
+
+func (s *Service) claimDelegated(ctx context.Context, id, credential, request string) (wire.Claim, bool, error) {
+	if s.Preparations != nil {
+		if out, handled, e := s.Preparations.ClaimPreparation(ctx, id, credential, request); handled || e != nil {
+			if e != nil {
+				return wire.Claim{}, true, e
+			}
+			return out, true, nil
+		}
+	}
+	if s.Training != nil {
+		if out, handled, e := s.Training.ClaimTraining(ctx, id, credential, request); handled || e != nil {
+			if e != nil {
+				return wire.Claim{}, true, e
+			}
+			return out, true, nil
+		}
+	}
+	return wire.Claim{}, false, nil
+}
+
+func (s *Service) claimNodeWithin(ctx context.Context, q transaction.Executor, n Node, request string, legacy pgx.Tx, out *wire.Claim) error {
+	if e := s.expireTasksWithin(ctx, q, n, request); e != nil {
+		return e
+	}
+	var taskID, operation, state string
+	var unexpired bool
+	var attempt int
+	e := q.QueryRow(ctx, nodeSQL(q, `SELECT id::text,operation,state,attempt,COALESCE(lease_expires_at>clock_timestamp(),false) FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND state IN ('pending','running') ORDER BY created_at,id LIMIT 1 FOR UPDATE`, `SELECT id,operation,state,attempt,COALESCE(lease_expires_at>UTC_TIMESTAMP(6),false) FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND state IN ('pending','running') ORDER BY created_at,id LIMIT 1 FOR UPDATE`, `SELECT id,operation,state,attempt,CASE WHEN lease_expires_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) THEN 1 ELSE 0 END FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND state IN ('pending','running') ORDER BY created_at,id LIMIT 1 FOR UPDATE`, n.TenantID, n.WorkspaceID, n.ID)).Scan(&taskID, &operation, &state, &attempt, &unexpired)
+	if errors.Is(e, sql.ErrNoRows) {
+		return nil
+	}
+	if e != nil {
+		return e
+	}
+	if state == "running" && unexpired {
+		return nil
+	}
+	if operation == wire.TrainingRunOperation {
+		return fail("TRAINING_AUTHORITY_REQUIRED")
+	}
+	if operation == wire.ModelPreparationRunOperation {
+		return fail("MODEL_PREPARATION_AUTHORITY_REQUIRED")
+	}
+	if !nodeOperationAllowed(n, operation) {
+		return fail("AGENT_PROFILE_REJECTED")
+	}
+	if attempt >= s.Identity.Config.Policy().Nodes.MaximumTaskAttempts {
+		return fail("AGENT_LEASE_STALE")
+	}
+	task := Task{ID: taskID, TenantID: n.TenantID, WorkspaceID: n.WorkspaceID, NodeID: n.ID, Operation: operation}
+	raw := security.Token()
+	lease := wire.Lease{TaskID: taskID, Operation: operation, LeaseToken: raw, Attempt: attempt + 1}
+	if wire.IsInferenceOperation(operation) {
+		command, e := s.ReadInferenceCommandWithin(ctx, q, n, task)
+		if e != nil {
+			return e
+		}
+		lease.Inference = &command
+	}
+	if wire.IsGatewayOperation(operation) {
+		command, e := s.ReadGatewayCommandWithin(ctx, q, n, task)
+		if e != nil {
+			return e
+		}
+		lease.Gateway = &command
+	}
+	if wire.IsComponentOperation(operation) {
+		if _, ok := s.Components.(ComponentObserverWithin); !ok && legacy == nil {
+			return fail("COMPONENT_PROFILE_UNAVAILABLE")
+		}
+		command, e := s.componentCommandWithin(ctx, q, n, task)
+		if e != nil {
+			return e
+		}
+		lease.Component = &command
+	}
+	if wire.IsKubernetesOperation(operation) {
+		command, e := s.kubernetesLeaseWithin(ctx, q, n, task)
+		if e != nil {
+			return e
+		}
+		lease.Kubernetes = &command
+	}
+	changed, e := q.Exec(ctx, nodeSQL(q, `UPDATE node_tasks SET state='running',attempt=attempt+1,lease_token_hash=$1,lease_expires_at=LEAST(clock_timestamp()+make_interval(secs=>$2),deadline_at),updated_at=clock_timestamp() WHERE tenant_id=$3 AND workspace_id=$4 AND node_id=$5 AND id=$6 AND deadline_at>clock_timestamp() AND attempt=$7`, `UPDATE node_tasks SET state='running',attempt=attempt+1,lease_token_hash=?,lease_expires_at=LEAST(TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),deadline_at),updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND deadline_at>UTC_TIMESTAMP(6) AND attempt=?`, `UPDATE node_tasks SET state='running',attempt=attempt+1,lease_token_hash=?,lease_expires_at=LEAST(DATEADD(SECOND,?,SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6))),deadline_at),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND deadline_at>SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) AND attempt=?`, digest("node-lease", raw), s.Identity.Config.Policy().Nodes.TaskLeaseSeconds, n.TenantID, n.WorkspaceID, n.ID, task.ID, attempt))
+	if e != nil {
+		return e
+	}
+	if changed != 1 {
+		return fail("AGENT_LEASE_STALE")
+	}
+	if e = deliveredLeaseWithin(ctx, q, n, task.ID, &lease); e != nil {
+		return e
+	}
+	if e = s.taskAuditWithin(ctx, q, "", "system", n, "node.task_claimed", task.ID, "", request); e != nil {
+		return e
+	}
+	if e = s.checkDerivedTaskAuthorityWithin(ctx, q, n, task); e != nil {
+		return e
+	}
+	lease.LeaseExpiresAt = lease.LeaseExpiresAt.UTC()
+	out.Lease = &lease
+	return nil
+}
+
 func (s *Service) validateTaskResultWithin(ctx context.Context, q transaction.Executor, n Node, t Task, input wire.Result) error {
 	if t.Operation == wire.TrainingRunOperation {
 		return fail("TRAINING_AUTHORITY_REQUIRED")

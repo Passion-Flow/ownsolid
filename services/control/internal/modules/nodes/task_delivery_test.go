@@ -330,3 +330,25 @@ func asRate(e error, target **identity.RateError) bool {
 	}
 	return ok
 }
+
+func TestForeignClaimCannotReleaseAnUnacknowledgedLease(t *testing.T) {
+	s, a := setup(t)
+	ctx := t.Context()
+	node := enroll(t, s, a, "Lease owner")
+	other := enroll(t, s, a, "Foreign credential")
+	task, e := s.CreateTask(ctx, a, node.NodeID, wire.CollectFacts, uuid.NewString(), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	claim, e := s.ClaimFrom(ctx, node.NodeID, node.Credential, uuid.NewString(), wire.ClaimRequest{})
+	if e != nil || claim.Lease == nil || claim.Lease.TaskID != task.ID {
+		t.Fatalf("owner did not receive the expected task: %v", e)
+	}
+
+	foreign, e := s.ClaimFrom(ctx, node.NodeID, other.Credential, uuid.NewString(), wire.ClaimRequest{})
+	expected(t, e, "AGENT_UNAUTHORIZED")
+	if foreign.Lease != nil || foreign.Resync != nil {
+		t.Fatal("foreign claim disclosed the node's task or cursor")
+	}
+	acknowledge(t, s, node, claim)
+}
