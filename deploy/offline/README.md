@@ -86,3 +86,48 @@ Docker, Compose service states, and the database schema version when available.
 It works while the console is stopped. Unavailable collectors report fixed codes.
 The archive contains no configuration files, environment values, logs, credentials
 or database records. The installer writes it locally and never uploads it.
+
+## Verify and install a signed single-node release
+
+Use a trusted copy of `ownsolid-install` on the Linux amd64 Docker host with
+Docker's containerd image store enabled. Copy the release archive to a mounted staging volume with room to hold the archive and
+the expanded inventory. Keep the archive, policy file and independently
+obtained release trust file private and owned by the operator. The verification
+JSON needs the absolute `mount_root` and `trust_file` paths. See the
+[factory instructions](../../tools/release/offline/README.md#current-single-node-release).
+
+```sh
+ownsolid-install verify-bundle --bundle /mnt/release/ownsolid.tar.gz \
+  --verification /private/release-verification.json
+ownsolid-install apply-bundle --bundle /mnt/release/ownsolid.tar.gz \
+  --verification /private/release-verification.json --config /private/site.yaml
+ownsolid-install status --config /private/site.yaml
+```
+
+Use [install.example.yaml](install.example.yaml) as the site configuration,
+omitting `compose_file` and the entire `images` block. The release supplies
+those inputs. The installer's signed path checks the local Compose input,
+imports only tagless verified images by content ID, and confirms the database
+schema against the signed manifest. It binds the install root to that manifest
+before it prepares services. Re-run `apply-bundle` with the same archive to
+resume. A different release and an existing legacy installation require an
+upgrade procedure. The TLS, entitlement trust and operator credentials are
+site-owned.
+
+Use `prepare-bundle` with the same verification inputs and `--output` pointing
+to a new directory under a private parent on the staging volume to make the
+signed model, chart, plug-in, font or documentation files available for their
+own import procedures. This command verifies the entire archive first and
+writes the preparation journal beside the output directory.
+
+For the signed zero-egress test, stage a bundle with
+`TestManufactureCurrentRelease` on the test host and use the installer test
+binary from the preflight instructions. The factory test expects Docker saves
+named for the four image IDs and files named `compose`, `installer`,
+`operator-docs` and `test-notice` under the private staging `assets` directory.
+It reads `OWNSOLID_CURRENT_FACTORY_STAGE`, `OWNSOLID_CURRENT_FACTORY_KEY_DIR`
+and `OWNSOLID_CURRENT_FACTORY_SCHEMA`. Put the resulting `ownsolid.tar.gz` and
+`release-trust.json` in a staging directory and pass that directory as
+`OWNSOLID_E2E_MODEL_ARCHIVE` to the existing isolated runner. Set
+`OWNSOLID_E2E_RUN='^TestSignedBundleIsolatedDocker$'`. The test starts with an
+empty Docker daemon and checks that a truncated bundle cannot load an image.
