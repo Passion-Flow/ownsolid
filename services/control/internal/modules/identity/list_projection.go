@@ -22,7 +22,7 @@ func optionalListString(value *string) any {
 
 // scanListRow projects only explicitly public fields;no encrypted/token/credential
 // column is converted into a map or returned through the generic list envelope.
-func scanListRow(kind string, row transaction.Row) (map[string]any, time.Time, string, error) {
+func scanListRow(kind string, row transaction.Row, assistant *bool) (map[string]any, time.Time, string, error) {
 	switch kind {
 	case "users":
 		u, e := scanUser(row)
@@ -69,8 +69,11 @@ func scanListRow(kind string, row transaction.Row) (map[string]any, time.Time, s
 		var id, audience, action, outcome, request string
 		var occurred time.Time
 		var actor, actorEmail, subject, subjectEmail, targetType, target, reason *string
-		e := row.Scan(&id, &occurred, &actor, &actorEmail, &subject, &subjectEmail, &audience, &action, &outcome, &targetType, &target, &reason, &request)
-		if e != nil {
+		dest := []any{&id, &occurred, &actor, &actorEmail, &subject, &subjectEmail, &audience, &action, &outcome, &targetType, &target, &reason, &request}
+		if assistant != nil {
+			dest = append(dest, assistant)
+		}
+		if e := row.Scan(dest...); e != nil {
 			return nil, time.Time{}, "", e
 		}
 		return map[string]any{"id": id, "occurred_at": listStamp(occurred), "actor_user_id": optionalListString(actor), "actor_email": optionalListString(actorEmail), "subject_user_id": optionalListString(subject), "subject_email": optionalListString(subjectEmail), "audience": audience, "action": action, "outcome": outcome, "target_type": optionalListString(targetType), "target_id": optionalListString(target), "reason": optionalListString(reason), "request_id": request}, occurred, id, nil
