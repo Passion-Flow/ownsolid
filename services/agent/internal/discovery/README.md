@@ -18,3 +18,14 @@ from the collector list where available. The snapshot carries physical GPU
 UUIDs and canonical DCGM field names. A missing sample means the exporter
 did not provide a usable reading. See [GPU telemetry research](../../../../docs/research/gpu-telemetry.md)
 for source versions, units and deployment gates.
+
+## NVIDIA driver faults
+
+`ReadNVIDIAJournal` reads a bounded page of local `journalctl --kernel
+--output=json` output for a caller-supplied current boot ID. It checks kernel
+provenance and returns PCI addresses, Xid numbers and replay cursors.
+Persist the cursor only after accepted delivery. A PCI address must resolve
+uniquely to the physical GPU in same-boot inventory before an action can
+target it. `AdviceForNVIDIAXID` and `AdviceForDCGMIncident` return operator
+guidance. See [NVIDIA driver fault research](../../../../docs/research/nvidia-driver-faults.md)
+for the rules and verification boundaries.
