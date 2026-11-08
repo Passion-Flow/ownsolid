@@ -369,6 +369,16 @@ export const consolePages: readonly PageState[] = [
     },
   },
   {
+    name: 'model bundle commands are open',
+    path: '/library/import',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/library/import');
+      await page.getByText('How to make a bundle', { exact: true }).click();
+      await page.getByRole('heading', { name: 'Python 3', exact: true }).waitFor();
+    },
+  },
+  {
     name: 'an upload to continue',
     path: '/library/imports/$importId',
     open: async (page, control) => {
