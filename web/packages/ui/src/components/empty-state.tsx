@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { cn } from '../cn.ts';
 
 /** Props for {@link EmptyState}. */
 export interface EmptyStateProps {
@@ -9,12 +10,13 @@ export interface EmptyStateProps {
   children: ReactNode;
   /** The action that fills it. */
   action?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 /** Shown where a list or page has nothing yet; it always names the next action. */
-export function EmptyState({ icon: Icon, title, children, action }: EmptyStateProps) {
+export function EmptyState({ icon: Icon, title, children, action, className }: EmptyStateProps) {
   return (
-    <div className="px-6 py-14 text-center">
+    <div className={cn('px-6 py-14 text-center', className)}>
       <div className="mx-auto mb-3.5 grid size-12 place-items-center rounded-card bg-accent-soft text-accent-ink">
         <Icon aria-hidden />
       </div>

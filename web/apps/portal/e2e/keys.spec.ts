@@ -47,7 +47,9 @@ async function openDrawer(page: Page, name: string) {
 
 test('is reached from the navigation, and says what a key is for when empty', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('navigation').getByRole('link', { name: 'My API keys' }).click();
+  const navigation = page.getByRole('navigation');
+  await navigation.getByRole('button', { name: 'Workspace' }).click();
+  await navigation.getByRole('link', { name: 'My API keys' }).click();
   await expect(page.getByRole('heading', { name: 'My API keys', level: 1 })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'No keys yet' })).toBeVisible();
 });

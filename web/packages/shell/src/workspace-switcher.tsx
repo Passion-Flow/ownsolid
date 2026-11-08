@@ -8,19 +8,20 @@ export function WorkspaceSwitcher() {
   const { t } = useI18n();
   const toast = useToast();
   const { active, items, truncated, isPending, error, retry, select } = useWorkspaces();
+  const name = active?.name ?? t(error ? 'workspace.unavailable' : 'workspace.none');
   return (
     <Menu
       trigger={
         <button
           type="button"
-          aria-label={t('workspace.switch', { name: active?.name ?? t('workspace.none') })}
+          aria-label={t('workspace.switch', { name })}
           className="flex h-9 max-w-[200px] cursor-pointer items-center gap-2 rounded-field border border-border bg-surface px-2.5 font-[550]"
         >
           <span
             aria-hidden
             className="size-[18px] shrink-0 rounded-[5px] bg-linear-135 from-[#2bb3a3] to-[#0b6e64]"
           />
-          <span className="truncate">{active?.name ?? t('workspace.none')}</span>
+          <span className="truncate">{name}</span>
           <ChevronDown aria-hidden className="size-3.5 text-text-3" />
         </button>
       }
