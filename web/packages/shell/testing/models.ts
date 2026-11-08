@@ -95,6 +95,16 @@ export const stalledImport: ModelImport = {
   updated_at: stamp,
 };
 
+/** An import whose model has been published. The import response has no cleanup state. */
+export const publishedImport: ModelImport = {
+  ...stalledImport,
+  id: '6f1c7a1e-0000-4000-8000-000000000077',
+  uploaded_bytes: stalledImport.expected_bytes,
+  model_id: readyModel.id,
+  state: 'ready',
+  attempts: 1,
+};
+
 /** An import whose bundle failed verification. */
 export const failedImport: ModelImport = {
   ...stalledImport,
@@ -114,6 +124,7 @@ export interface ModelScript {
   models: ModelVersion[];
   modelImports: ModelImport[];
   modelCatalog: ModelCatalogAvailability;
+  catalogProblem: ScriptedFailure | null;
   /** Stored chunks of each import: offset to hash. */
   modelChunks: Record<string, Record<number, string>>;
   modelsProblem: ScriptedFailure | null;
@@ -133,6 +144,7 @@ export function emptyModelScript(): ModelScript {
     models: [],
     modelImports: [],
     modelCatalog,
+    catalogProblem: null,
     modelChunks: {},
     modelsProblem: null,
     nextModelImport: null,
@@ -176,7 +188,9 @@ export async function routeModels(
 ): Promise<void> {
   const base = '**/api/v1/sites/*/cells/*/admin';
   const imports = (route: Route) => state.modelImports.find((item) => item.id === idOf(route, 2));
-  await page.route(`${base}/models/catalog`, (route) => data(route, state.modelCatalog));
+  await page.route(`${base}/models/catalog`, (route) =>
+    state.catalogProblem ? problem(route, state.catalogProblem) : data(route, state.modelCatalog),
+  );
   await page.route(`${base}/models?*`, (route) =>
     state.modelsProblem
       ? problem(route, state.modelsProblem)

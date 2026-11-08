@@ -184,7 +184,20 @@
    "children": [
     {
      "type": "text",
-     "value": "Then every file is checked against its published hash. Nothing is kept unless all of them match."
+     "value": "The server checks every file against its published hash before publishing the model. When the import\nis ready, choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Open the model"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " to see the published record."
     }
    ]
   },
@@ -325,7 +338,24 @@
     },
     {
      "type": "text",
-     "value": " under the installation's root. The store keeps each uploaded bundle\nbeside the model unpacked from it, so a model takes twice its size there. "
+     "value": " under the installation's root. During import, allow space for both the\nuploaded bundle and the unpacked model. The form estimates the total from the selected bundle\nand the model's published file sizes."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "After publication, the server removes the bundle and temporary verification files in the\nbackground and retries if needed. The import history and published model files remain available.\nThe import page shows publication status. If storage stays in use, an administrator can look for\n"
+    },
+    {
+     "type": "inlineCode",
+     "value": "model_import_cleanup_failed"
+    },
+    {
+     "type": "text",
+     "value": " and the import ID in the control service logs.\n"
     },
     {
      "type": "link",
@@ -339,7 +369,7 @@
     },
     {
      "type": "text",
-     "value": "\ncarry published models."
+     "value": " carry published models."
     }
    ]
   }
