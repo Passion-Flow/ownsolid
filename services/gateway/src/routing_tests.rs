@@ -11,7 +11,7 @@ use futures_util::StreamExt;
 use serde_json::{Value, json};
 use std::collections::HashSet;
 use std::fs;
-use std::net::{SocketAddr, TcpListener};
+use std::net::{SocketAddr, SocketAddrV4, TcpListener};
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -29,6 +29,8 @@ struct Synthetic {
     workspace: Uuid,
     client_key: String,
     complete_stream: Arc<tokio::sync::Notify>,
+    backend_model: &'static str,
+    request_seconds: u64,
     alias: Uuid,
     deployment: Uuid,
     control_mode: Arc<AtomicUsize>,
@@ -41,7 +43,7 @@ struct Synthetic {
 }
 impl Synthetic {
     fn binding(&self) -> Value {
-        json!({"id":self.alias,"name":"public-alias","created":1,"deployment_id":self.deployment,"deployment_revision":1,"backend_model":"synthetic-internal"})
+        json!({"id":self.alias,"name":"public-alias","created":1,"deployment_id":self.deployment,"deployment_revision":1,"backend_model":self.backend_model})
     }
 }
 
@@ -132,7 +134,7 @@ async fn control(
     assert_eq!(body["model"], "public-alias");
     let id = serde_json::from_value(body["request_id"].clone()).unwrap();
     state.admissions.lock().unwrap().insert(id);
-    Json(json!({"data":{"request_id":id,"gateway_id":gateway,"node_id":state.node,"workspace_id":state.workspace,"binding":state.binding(),"maximum_context_tokens":2048,"maximum_request_seconds":5}})).into_response()
+    Json(json!({"data":{"request_id":id,"gateway_id":gateway,"node_id":state.node,"workspace_id":state.workspace,"binding":state.binding(),"maximum_context_tokens":2048,"maximum_request_seconds":state.request_seconds}})).into_response()
 }
 
 struct GenerationDrop(Arc<AtomicUsize>);
@@ -301,6 +303,10 @@ impl Fixture {
         Self::with_quota(None).await
     }
     async fn with_quota(quota_limits: Option<Value>) -> Self {
+        Self::start(quota_limits, None).await
+    }
+
+    async fn start(quota_limits: Option<Value>, vllm: Option<SocketAddrV4>) -> Self {
         crate::control::initialize_tls_provider();
         let root = std::env::temp_dir().join(format!("gateway-routing-{}", Uuid::new_v4()));
         fs::create_dir(&root).unwrap();
@@ -327,12 +333,19 @@ impl Fixture {
         } else {
             "synthetic-client-secret".to_owned()
         };
+        let (backend_model, request_seconds) = if vllm.is_some() {
+            ("projectone-qwen3-0.6b", 60)
+        } else {
+            ("synthetic-internal", 5)
+        };
         let state = Synthetic {
             gateway: Uuid::new_v4(),
             node: Uuid::new_v4(),
             workspace: Uuid::new_v4(),
             client_key,
             complete_stream: Arc::default(),
+            backend_model,
+            request_seconds,
             alias: Uuid::new_v4(),
             deployment: Uuid::new_v4(),
             control_mode: Arc::default(),
@@ -365,14 +378,19 @@ impl Fixture {
                 .await
                 .unwrap();
         });
-        let backend_listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-        let SocketAddr::V4(backend_address) = backend_listener.local_addr().unwrap() else {
-            panic!("IPv4 fixture")
+        let (backend_address, backend_server) = if let Some(address) = vllm {
+            (address, None)
+        } else {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let SocketAddr::V4(address) = listener.local_addr().unwrap() else {
+                panic!("IPv4 fixture")
+            };
+            let router = Router::new().fallback(backend).with_state(state.clone());
+            let server = tokio::spawn(async move {
+                axum::serve(listener, router).await.unwrap();
+            });
+            (address, Some(server))
         };
-        let backend_router = Router::new().fallback(backend).with_state(state.clone());
-        let backend_server = tokio::spawn(async move {
-            axum::serve(backend_listener, backend_router).await.unwrap();
-        });
         let gateway_listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let SocketAddr::V4(listen_address) = gateway_listener.local_addr().unwrap() else {
             panic!("IPv4 fixture")
@@ -406,8 +424,14 @@ impl Fixture {
                 queue_milliseconds: 500,
                 connect_seconds: 1,
                 control_seconds: 1,
-                request_seconds: 5,
-                idle_seconds: if scoped { 3 } else { 1 },
+                request_seconds,
+                idle_seconds: if vllm.is_some() {
+                    15
+                } else if scoped {
+                    3
+                } else {
+                    1
+                },
                 header_seconds: 1,
                 ..Limits::default()
             },
@@ -427,7 +451,7 @@ impl Fixture {
             .no_proxy()
             .redirect(reqwest::redirect::Policy::none())
             .retry(reqwest::retry::never())
-            .timeout(Duration::from_secs(8))
+            .timeout(Duration::from_secs(request_seconds + 3))
             .build()
             .unwrap();
         let origin = format!("https://{listen_address}");
@@ -440,7 +464,10 @@ impl Fixture {
             origin,
             gateway_handle,
             control_handle,
-            servers: vec![control_server, backend_server, gateway_server],
+            servers: std::iter::once(control_server)
+                .chain(backend_server)
+                .chain(std::iter::once(gateway_server))
+                .collect(),
         };
         tokio::time::timeout(Duration::from_secs(3), async {
             loop {
@@ -783,6 +810,59 @@ async fn real_upstream_with_unread_bounded_publisher_times_out_and_releases_perm
     let outcome = fixture.app().spool.next_pending().unwrap().unwrap();
     assert_eq!(outcome.status, Status::ClientCancelled);
     assert!(outcome.usage.is_none());
+}
+
+#[tokio::test]
+#[ignore = "requires an offline vLLM engine with the approved model and served name"]
+async fn offline_vllm_stream_reports_real_tokens_and_durable_usage() {
+    let backend = std::env::var("OWNSOLID_TEST_VLLM_ADDRESS")
+        .expect("set OWNSOLID_TEST_VLLM_ADDRESS to the offline loopback backend")
+        .parse::<SocketAddrV4>()
+        .unwrap();
+    assert!(backend.ip().is_loopback() && backend.port() != 0);
+    let fixture = Fixture::start(None, Some(backend)).await;
+    let response = fixture.chat(true).json(&json!({
+        "model": "public-alias", "stream": true,
+        "messages": [{"role": "user", "content": "What color is the daytime sky? Give one word."}],
+        "temperature": 0, "max_tokens": 16, "stream_options": {"include_usage": true}
+    })).send().await.unwrap();
+    let status = response.status();
+    let body = response.text().await.unwrap();
+    assert_eq!(status, StatusCode::OK, "{body}");
+    let events = body.strip_suffix("data: [DONE]\n\n").expect(&body);
+    let mut output_bytes = 0;
+    let mut usage = None;
+    for event in events.split("\n\n").filter(|event| !event.is_empty()) {
+        let chunk: Value = serde_json::from_str(event.strip_prefix("data: ").unwrap()).unwrap();
+        assert_eq!(chunk["model"], "public-alias");
+        if let Some(text) = chunk
+            .pointer("/choices/0/delta/content")
+            .and_then(Value::as_str)
+        {
+            output_bytes += text.len();
+        }
+        if !chunk["usage"].is_null() {
+            assert!(usage.is_none());
+            usage = Some(
+                serde_json::from_value::<crate::protocol::Usage>(chunk["usage"].clone()).unwrap(),
+            );
+        }
+    }
+    assert!(output_bytes > 0);
+    let usage = usage.expect("validated final usage chunk");
+    assert!(usage.prompt_tokens > 0);
+    assert!((1..=16).contains(&usage.completion_tokens));
+    assert_eq!(
+        usage.total_tokens,
+        usage.prompt_tokens + usage.completion_tokens
+    );
+    let outcome = fixture.app().spool.next_pending().unwrap().unwrap();
+    assert_eq!(outcome.status, Status::Succeeded);
+    assert_eq!(outcome.usage, Some(usage.clone()));
+    println!(
+        "offline vLLM: {} prompt tokens, {} completion tokens, durable outcome",
+        usage.prompt_tokens, usage.completion_tokens
+    );
 }
 
 #[tokio::test]
