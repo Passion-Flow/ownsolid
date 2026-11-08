@@ -14,6 +14,9 @@ import (
 
 const (
 	documentBytes = 64 << 10
+	manifestName  = "manifest.json"
+	englishName   = "locales/en.json"
+	chineseName   = "locales/zh-cn.json"
 	maxImages     = 128
 	maxFields     = 32
 	maxChoices    = 32
@@ -89,11 +92,15 @@ type Release struct {
 // verify the bundle's provenance and confine their root to that release directory.
 // The workload artifact and images are verified and admitted separately.
 func Load(root *os.Root) (Release, error) {
+	return load(root, nil)
+}
+
+func load(root *os.Root, digests map[string]string) (Release, error) {
 	if root == nil {
 		return Release{}, fmt.Errorf("%w: open a release directory", ErrManifest)
 	}
 	var release Release
-	if err := readDocument(root, "manifest.json", &release.Manifest, ErrManifest); err != nil {
+	if err := readDocument(root, manifestName, &release.Manifest, ErrManifest, digests[manifestName]); err != nil {
 		return Release{}, err
 	}
 	if err := release.Manifest.validate(); err != nil {
@@ -103,10 +110,10 @@ func Load(root *os.Root) (Release, error) {
 		file     string
 		messages *Messages
 	}{
-		{"locales/en.json", &release.English},
-		{"locales/zh-cn.json", &release.SimplifiedChinese},
+		{englishName, &release.English},
+		{chineseName, &release.SimplifiedChinese},
 	} {
-		if err := readDocument(root, locale.file, locale.messages, ErrLocale); err != nil {
+		if err := readDocument(root, locale.file, locale.messages, ErrLocale, digests[locale.file]); err != nil {
 			return Release{}, err
 		}
 		if !locale.messages.valid(release.Manifest.Form) {
@@ -116,21 +123,48 @@ func Load(root *os.Root) (Release, error) {
 	return release, nil
 }
 
-func readDocument(root *os.Root, name string, dest any, invalid error) error {
-	info, err := root.Lstat(name)
-	if err != nil || !info.Mode().IsRegular() || info.Size() > documentBytes {
+func readDocument(root *os.Root, name string, dest any, invalid error, expected string) error {
+	raw, err := readLocalFile(root, name, documentBytes)
+	if err != nil {
 		return fmt.Errorf("%w: provide a regular JSON file of at most %d bytes at %s", invalid, documentBytes, name)
 	}
-	file, err := root.Open(name)
-	if err != nil {
-		return fmt.Errorf("%w: cannot open %s", invalid, name)
+	if expected != "" && digestBytes(raw) != expected {
+		return fmt.Errorf("%w: the digest of %s does not match the signed inventory", invalid, name)
 	}
-	defer file.Close()
-	raw, err := io.ReadAll(io.LimitReader(file, documentBytes+1))
-	if err != nil || len(raw) > documentBytes || json.Unmarshal(raw, dest, json.RejectUnknownMembers(true)) != nil {
+	if json.Unmarshal(raw, dest, json.RejectUnknownMembers(true)) != nil {
 		return fmt.Errorf("%w: provide one valid JSON object at %s", invalid, name)
 	}
 	return nil
+}
+
+func readLocalFile(root *os.Root, name string, maximum int64) ([]byte, error) {
+	file, size, err := openLocalFile(root, name, maximum)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	raw, err := io.ReadAll(io.LimitReader(file, maximum+1))
+	if err != nil || int64(len(raw)) != size {
+		return nil, errors.New("local file changed or could not be read")
+	}
+	return raw, nil
+}
+
+func openLocalFile(root *os.Root, name string, maximum int64) (*os.File, int64, error) {
+	info, err := root.Lstat(name)
+	if err != nil || !info.Mode().IsRegular() || info.Size() < 1 || info.Size() > maximum {
+		return nil, 0, errors.New("local file is missing, irregular or outside the size limit")
+	}
+	file, err := root.Open(name)
+	if err != nil {
+		return nil, 0, err
+	}
+	opened, err := file.Stat()
+	if err != nil || !os.SameFile(info, opened) || opened.Size() != info.Size() {
+		_ = file.Close()
+		return nil, 0, errors.New("local file changed before it could be opened")
+	}
+	return file, opened.Size(), nil
 }
 
 func validID(s string) bool { return len(s) <= 63 && identifier.MatchString(s) }
