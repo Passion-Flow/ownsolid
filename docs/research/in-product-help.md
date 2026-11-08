@@ -1,7 +1,7 @@
 # In-product help and API reference
 
-What UX-111 is built on: help and API documentation that every installation serves itself, in an
-air-gapped network, matching its own version.
+Research for UX-111 and POR-113: help and API documentation that every installation serves itself,
+matching its own version on an air-gapped network.
 
 ## How others do it
 
@@ -83,6 +83,8 @@ Nothing is downloaded at runtime; the installation serves the built files. `mdas
 - An operation without `x-audiences`, or an audience leaking into the other entrance: a unit test
   over the generated reference.
 - A code with no explanation: already enforced by the error catalog's coverage test.
+- A narrow portal screen can reach its own article from the account menu, including on the Models
+  and API keys pages. Both header layouts fall back to the help index on a route without an article.
 - Search with no match says so and offers to clear it; both languages; axe in both themes;
   keyboard; the bundle budget.
 - Offline: the live run checks that no request leaves the installation.
@@ -93,3 +95,24 @@ Both entrances have `/help` with articles for their reader, searchable from the 
 menu, a help link on each page that has an article, and `/help/api` listing every operation that
 entrance serves with its fields and explained errors, in both languages, with nothing fetched from
 outside the installation.
+
+### Portal visual acceptance (POR-113, S-107)
+
+The help index is a reference list: title, search, then topic groups and links. The primary action
+is to find an answer using search. Its articles ship with the build, so a newly installed portal
+already has help. The filtered empty state names the query and offers Clear search. There are no
+workspace permissions or partially loaded topics on the index. Sign-in gates the signed-in frame.
+
+An article is a reference detail: the link back to all help, the title, and the article's sections.
+The primary action is to read the answer, with links to the pages where it applies. The article
+keeps the authored introduction and its links, and the index uses the plain-text summary. The route
+can load before the article chunk has arrived, so the summary gives context while the body is
+loading or when it cannot be loaded. An unknown slug shows a missing-article notice
+with a way back. Activity and resource actions do not apply to these versioned help articles.
+No feature on either screen is selectable while unavailable. There are no new dependencies.
+
+The Playwright preview ports can be offset together when local worktrees test concurrently.
+Playwright requires an available web server URL and the preview command must bind that same
+port ([web server configuration](https://playwright.dev/docs/test-webserver)). The default ports
+are unchanged. A worktree must run its own preview, since reusing another lane's process can
+test the wrong build.
