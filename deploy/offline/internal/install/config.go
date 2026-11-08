@@ -65,6 +65,8 @@ type Config struct {
 	// ControlSettings are further control plane settings, which the control process
 	// validates when it first reads them. Keys the installer owns are refused here.
 	ControlSettings map[string]any `yaml:"control_settings"`
+
+	Preflight *PreflightPolicy `yaml:"preflight"`
 }
 type TopologyConfig struct {
 	Size string `yaml:"size"`
@@ -356,6 +358,11 @@ func (c Config) Validate() error {
 	}
 	if c.BackupSeconds < 60 || c.BackupSeconds > 86400 {
 		return invalid("backup_seconds", "must be 60 to 86400")
+	}
+	if c.Preflight != nil {
+		if e := c.Preflight.validate(); e != nil {
+			return e
+		}
 	}
 	for _, key := range controlOwnedKeys {
 		if _, present := c.ControlSettings[key]; present {

@@ -129,3 +129,22 @@ backup_seconds: 3600
 #   runtime:
 #     workspaces:
 #       maximum_count: 100
+
+# Optional. Set the host requirements for this site. With this block present,
+# both `preflight` and `apply` check the Linux amd64 host before preparing files.
+# Budget separately for persisted application data and expanded Docker images.
+# preflight:
+#   minimum_kernel: "5.15.0"
+#   minimum_data_free_bytes: 10737418240
+#   minimum_docker_free_bytes: 4294967296
+#   minimum_memory_bytes: 8589934592
+#   # Required UTC lower bound from a trusted offline reference.
+#   minimum_utc: "2026-01-01T00:00:00Z"
+#   # Optional. Require Linux to report synchronization with a site time source.
+#   require_clock_sync: false
+#   # Required only when the local Docker uses the containerd image store.
+#   # containerd_root: /var/lib/containerd
+#   # Optional. Use only this in-site resolver if /etc/hosts has no entry.
+#   # dns_server: 192.168.100.53:53
+#   # Optional. Enable only on a host that must already have NVIDIA GPUs.
+#   require_nvidia: false

@@ -14,7 +14,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/deploy/offline/internal/install"
 )
 
-const usage = "usage: ownsolid-install validate|apply|status --config <install.yaml>\n" +
+const usage = "usage: ownsolid-install validate|preflight|apply|status --config <install.yaml>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
 	"       ownsolid-install agents status --config <install.yaml>\n" +
@@ -71,6 +71,8 @@ func run(args []string, out io.Writer) error {
 	case "validate":
 		_, e = fmt.Fprintln(out, "INSTALL_CONFIG_VALID")
 		return e
+	case "preflight":
+		return install.Preflight(ctx, c, install.ExecRunner{}, out)
 	case "apply":
 		return install.Apply(ctx, c, install.ExecRunner{}, out)
 	case "status":
