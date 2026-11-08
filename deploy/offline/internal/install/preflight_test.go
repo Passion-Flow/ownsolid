@@ -289,4 +289,21 @@ func TestPreflightIsolatedDocker(t *testing.T) {
 			t.Fatalf("workload isolation probe: %v: %s", err, out)
 		}
 	})
+	t.Run("collects support with control stopped", func(t *testing.T) {
+		layout := c.Layout()
+		if out, err := run("docker", "compose", "--env-file", layout.ComposeEnv, "-f", layout.ComposeFile, "stop", "control"); err != nil {
+			t.Fatalf("stop control: %v: %s", err, out)
+		}
+		path := filepath.Join(dir, "support.tar.gz")
+		out, err := run(installer, "support-bundle", "--config", config, "--output", path)
+		t.Logf("support-bundle: %s", out)
+		if err != nil || !strings.Contains(out, "INSTALL_SUPPORT_COMPLETE collection_issues=0") {
+			t.Fatalf("support while control is stopped: %v: %s", err, out)
+		}
+		report, _ := readSupportArchive(t, path)
+		if !report.Host.Docker || report.SchemaVersion == nil || report.Services[0].State != "exited" {
+			t.Fatalf("unexpected report: %+v", report)
+		}
+		t.Logf("support archive reports control %s and PostgreSQL schema %d", report.Services[0].State, *report.SchemaVersion)
+	})
 }

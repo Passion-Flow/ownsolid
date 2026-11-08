@@ -15,6 +15,7 @@ import (
 )
 
 const usage = "usage: ownsolid-install validate|preflight|apply|status --config <install.yaml>\n" +
+	"       ownsolid-install support-bundle --config <install.yaml> --output <new archive.tar.gz>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
 	"       ownsolid-install agents status --config <install.yaml>\n" +
@@ -50,7 +51,7 @@ func run(args []string, out io.Writer) error {
 	flags := flag.NewFlagSet("ownsolid-install", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	path := flags.String("config", "", "typed install configuration")
-	output := flags.String("output", "", "existing directory that receives the backup")
+	output := flags.String("output", "", "backup directory or new support archive path")
 	from := flags.String("from", "", "backup directory to restore")
 	level := flags.String("level", "", "agent traffic to refuse, lowest priority first")
 	reason := flags.String("reason", "", "why, kept in the audit record")
@@ -58,7 +59,7 @@ func run(args []string, out io.Writer) error {
 		return errors.New(usage)
 	}
 	shed := command == "agents shed"
-	if (command == "backup") != (*output != "") || (command == "restore") != (*from != "") || shed != (*level != "") || shed != (*reason != "") {
+	if (command == "backup" || command == "support-bundle") != (*output != "") || (command == "restore") != (*from != "") || shed != (*level != "") || shed != (*reason != "") {
 		return errors.New(usage)
 	}
 	c, e := install.Load(*path)
@@ -77,6 +78,8 @@ func run(args []string, out io.Writer) error {
 		return install.Apply(ctx, c, install.ExecRunner{}, out)
 	case "status":
 		return install.Status(ctx, c, install.ExecRunner{}, out)
+	case "support-bundle":
+		return install.SupportBundle(ctx, c, install.ExecRunner{}, *output, out)
 	case "backup":
 		return install.Backup(ctx, c, install.ExecRunner{}, *output, out)
 	case "restore":
