@@ -46,8 +46,9 @@ In this order. Do not skip any of them.
 
 ## 4. Never do these
 
-- **Never touch a path outside your lane.** Your task gives you an explicit list.
-  If you see a problem elsewhere, write it in your report; do not fix it.
+- **Never touch a path outside your lane**, except the shared files listed in
+  section 9, which every lane is pre-authorised to add to. If you see a problem
+  elsewhere, write it in your report; do not fix it.
 - **Never `git add .` or `git add -A`.** Other sessions are editing other files in
   the same checkout. Stage the exact paths you changed, listed one by one.
 - **Never put a password, key or token in code, comments, tests or commit messages.**
@@ -194,3 +195,36 @@ Gaps between blocks are fine. The runner sorts by number and applies in order; i
 does not require the numbers to be contiguous.
 
 If your block runs out, ask for another. Do not spill into the next lane's block.
+
+## 9. Shared files you may add to, without asking
+
+Some work cannot land without touching a file every lane shares. Asking each time
+makes the owner a bottleneck for a decision that is the same every time, so these
+are pre-authorised. **One rule covers all of them: add your own entry, change
+nothing else.**
+
+| File | What you may do |
+| --- | --- |
+| `go.work` | Add one `use` line for a module you created |
+| A test that enumerates schema objects, such as the backup or restore reference test | Add the tables your migration adds |
+| `services/control/migrations/postgresql/` | Create files inside your block (section 8) |
+| Your own module's roadmap file | Tick your line and add its evidence |
+| `docs/research/` | Your own notes |
+
+**Never reorder, reformat, or delete anyone else's entry in these files**, and never
+edit a migration that already exists.
+
+When a rebase conflicts in one of them, the resolution is always the same: keep
+everything that is already there, then re-apply your own line. If you find yourself
+wanting to remove someone else's line to make a conflict go away, stop and ask.
+
+### When to stop and ask anyway
+
+Pre-authorisation covers adding. It does not cover these, and for them you still
+stop:
+
+- Changing or deleting something another lane wrote
+- Changing a shared contract: an API schema, a protocol version, a published
+  interface that other modules compile against
+- Anything that would make another lane's tests fail
+- Adding a third-party dependency whose licence you could not verify
