@@ -6,6 +6,8 @@ not ownsolid's.
 - Owns: `services/control/internal/modules/datasets`, `mongodatasets`, `runtimes/data-processing`.
 - Depends on: network-and-storage, identity-and-access.
 
+Reviewed 2026-11-09 against [Datasets streaming](https://huggingface.co/docs/datasets/main/stream), [DataTrove](https://github.com/huggingface/datatrove), [OpenLineage version facets](https://openlineage.io/docs/spec/facets/dataset-facets/version_facet/), and [dataset cards](https://huggingface.co/docs/hub/datasets-cards). The intake and transformation path remains streaming, and lineage binds published versions. Dataset cards identified a gap in version-scoped usage rights.
+
 ## P1 Enterprise release
 
 - [ ] DAT-101 Dataset import from files and object storage: JSONL, JSON, CSV, Parquet (P1) - Catalog: F090
@@ -22,6 +24,7 @@ not ownsolid's.
 - [ ] DAT-202 Labeling with AI suggestions, review and dispute resolution (P2) - Catalog: F096, F582
 - [ ] DAT-203 Data quality gates and drift reports (P2) - Catalog: F581
 - [ ] DAT-204 Database sources: read-only export from MongoDB and relational databases into dataset versions (P2) - Catalog: F264, F280
+- [ ] DAT-205 Dataset cards for immutable versions: source attribution, declared licence and usage rights, and audited access to the governing metadata from training and evaluation (P2)
 
 ## P4 Breadth
 
