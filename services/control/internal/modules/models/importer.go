@@ -8,9 +8,10 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"syscall"
 	"time"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 )
 
 type chunk struct {
@@ -96,18 +97,26 @@ func (r *chunkReader) Read(p []byte) (int, error) {
 // A process crash releases the lock; a fresh process verifies existing immutable publication.
 func (s *Service) ProcessNext(ctx context.Context) (bool, error) { return s.processNext(ctx) }
 func safeImportError(e error) string {
-	known := map[string]bool{"MODEL_RECOVERY_REQUIRED": true, "MODEL_IMPORT_STATE_CONFLICT": true, "MODEL_PATH_INVALID": true, "MODEL_FILE_SET_INVALID": true, "MODEL_FILE_INVALID": true, "MODEL_FILE_CHANGED": true, "MODEL_DIGEST_MISMATCH": true, "MODEL_CANCELLED": true, "MODEL_CONFIGURATION_INVALID": true, "MODEL_TOKENIZER_INVALID": true, "MODEL_SAFETENSORS_INVALID": true, "MODEL_STAGE_INVALID": true, "MODEL_ARCHIVE_INVALID": true, "MODEL_IO_FAILED": true, "MODEL_CHUNK_INVALID": true, "MODEL_STORAGE_UNAVAILABLE": true, "MODEL_PUBLICATION_CONFLICT": true, "MODEL_ACTOR_UNAVAILABLE": true, "MODEL_IMPORT_INCOMPLETE": true}
+	known := map[string]bool{"MODEL_RECOVERY_REQUIRED": true, "MODEL_IMPORT_STATE_CONFLICT": true, "MODEL_PATH_INVALID": true, "MODEL_FILE_SET_INVALID": true, "MODEL_FILE_INVALID": true, "MODEL_FILE_CHANGED": true, "MODEL_DIGEST_MISMATCH": true, "MODEL_CANCELLED": true, "MODEL_CONFIGURATION_INVALID": true, "MODEL_TOKENIZER_INVALID": true, "MODEL_SAFETENSORS_INVALID": true, "MODEL_STAGE_INVALID": true, "MODEL_ARCHIVE_INVALID": true, "MODEL_IO_FAILED": true, "MODEL_CLEANUP_CONFLICT": true, "MODEL_CHUNK_INVALID": true, "MODEL_STORAGE_UNAVAILABLE": true, "MODEL_PUBLICATION_CONFLICT": true, "MODEL_ACTOR_UNAVAILABLE": true, "MODEL_IMPORT_INCOMPLETE": true}
 	if known[e.Error()] {
 		return e.Error()
 	}
 	return "MODEL_IMPORT_FAILED"
 }
+
+// Run processes imports and reclaims staging from committed publications.
 func (s *Service) Run(ctx context.Context) {
+	var cleanupCursor string
 	for ctx.Err() == nil {
 		progress, e := s.ProcessNext(ctx)
 		if e != nil && ctx.Err() == nil {
 			slog.ErrorContext(ctx, "model_import_worker_failed", "error_code", e.Error())
 		}
+		cleanedThrough, cleanupError := s.cleanupNextImport(ctx, cleanupCursor)
+		if cleanupError != nil && ctx.Err() == nil {
+			slog.WarnContext(ctx, "model_import_cleanup_failed", "import_id", cleanedThrough, "error_code", cleanupError.Error())
+		}
+		cleanupCursor = cleanedThrough
 		if progress && e == nil {
 			continue
 		}
