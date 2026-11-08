@@ -52,3 +52,17 @@ observations. A durable source must supply a stable identity and measured delta
 and atomically record the delta or retain an outbox entry until acknowledged.
 Wall-clock differences must not be used to derive duration. Installing a ledger
 without these producer hooks would silently omit usage.
+
+## Tenancy and commerce
+
+TEN-101 through TEN-105 need the workspace and identity owners to define
+organization scope and enforce it across stores. The existing installed-tenant
+workspace API remains the authority. A private parallel hierarchy would let
+membership and resource access diverge.
+
+TEN-107 through TEN-109 need the real usage producers, effective-dated rate
+policy and an authorized transaction to enforce budget or credit admission.
+[FinOps allocation](https://www.finops.org/framework/capabilities/allocation/)
+and [OpenMeter entitlement grants](https://openmeter.io/docs/billing/entitlements/grant)
+provide the reporting and balance references. Offline top-up is a tenant
+accounting action. The whole-platform license verifier has separate authority.
