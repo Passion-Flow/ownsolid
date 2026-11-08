@@ -1,5 +1,14 @@
 # App catalog
 
+Upstream review: 2026-11-09. Retain packaged
+[Helm charts](https://helm.sh/docs/topics/charts/) and
+[Compose projects](https://docs.docker.com/reference/cli/docker/compose/up/)
+with local image inventories, following the air-gapped source model of
+[OpenShift](https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/disconnected_environments/olm-restricted-networks).
+Add a rendered workload admission gate to make privileges reviewable before an
+install or upgrade, following the distinction between preview and enforcement in
+[Kubernetes Pod Security Admission](https://kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/).
+
 One-click applications that run on ownsolid infrastructure and automatically use its
 models, sign-in, monitoring and logs. DeepParser is the first partner app and the only
 knowledge product.
@@ -17,6 +26,7 @@ knowledge product.
 - [ ] CAT-106 App status, health checks, logs and terminal inside the console (P1)
 - [ ] CAT-107 Signed offline bundle per app with images and charts (P1)
 - [ ] CAT-108 Quota and GPU reservation check before install; per-tenant visibility; license notes per app (P1)
+- [ ] CAT-109 Preview rendered workload privileges and intranet access before install or upgrade; enforce the approved plan and reject changes outside it (P1)
 
 ## P2 Fleet operations
 
