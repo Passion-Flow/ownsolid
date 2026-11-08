@@ -442,6 +442,53 @@
               "capabilities",
               "facts"
             ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "protocol_version": {
+                "type": "string",
+                "const": "1.0"
+              },
+              "execution_profile": {
+                "type": "string",
+                "const": "kubernetes_node"
+              },
+              "capabilities": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "prefixItems": [
+                  {
+                    "type": "string",
+                    "const": "collect_facts.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "kubernetes.join.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "kubernetes.token.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "kubernetes.observe.v1"
+                  }
+                ],
+                "items": false
+              },
+              "facts": {
+                "$ref": "#/components/schemas/Facts"
+              }
+            },
+            "required": [
+              "protocol_version",
+              "capabilities",
+              "facts",
+              "execution_profile"
+            ]
           }
         ]
       },
@@ -969,7 +1016,10 @@
               "model.prepare.v1",
               "inference.derived.v1",
               "inference.derived.v1",
-              "inference.derived.v1"
+              "inference.derived.v1",
+              "kubernetes.join.v1",
+              "kubernetes.token.v1",
+              "kubernetes.observe.v1"
             ]
           },
           "lease_token": {
@@ -1003,6 +1053,9 @@
           },
           "model_preparation": {
             "$ref": "#/components/schemas/ModelPreparationCommand"
+          },
+          "kubernetes": {
+            "$ref": "#/components/schemas/KubernetesCommand"
           }
         },
         "required": [
@@ -1166,6 +1219,56 @@
                     ]
                   }
                 }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "kubernetes.join.v1",
+                    "kubernetes.token.v1",
+                    "kubernetes.observe.v1"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "kubernetes"
+              ],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "component"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "inference"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "training"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "model_preparation"
+                    ]
+                  }
+                ]
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "kubernetes"
+                ]
               }
             }
           }
@@ -1495,6 +1598,79 @@
               "outcome",
               "error_code",
               "inference"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "lease_token": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "outcome": {
+                "type": "string",
+                "const": "success"
+              },
+              "error_code": {
+                "type": "string",
+                "const": ""
+              },
+              "kubernetes": {
+                "$ref": "#/components/schemas/KubernetesObservation"
+              }
+            },
+            "required": [
+              "lease_token",
+              "outcome",
+              "error_code",
+              "kubernetes"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "error_code equals kubernetes.error_code.",
+            "properties": {
+              "lease_token": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "outcome": {
+                "type": "string",
+                "const": "failure"
+              },
+              "error_code": {
+                "type": "string",
+                "enum": [
+                  "KUBERNETES_PRIVILEGE_REQUIRED",
+                  "KUBERNETES_SYSTEMD_UNAVAILABLE",
+                  "KUBERNETES_DEFAULT_ROUTE_MISSING",
+                  "KUBERNETES_ADDRESS_NOT_LOCAL",
+                  "KUBERNETES_RESOLVER_INVALID",
+                  "KUBERNETES_DISK_SPACE_LOW",
+                  "KUBERNETES_CONFLICT",
+                  "KUBERNETES_CONFIG_CONFLICT",
+                  "KUBERNETES_ASSET_UNAVAILABLE",
+                  "KUBERNETES_ASSET_INVALID",
+                  "KUBERNETES_ARCHIVE_INVALID",
+                  "KUBERNETES_IO_FAILED",
+                  "KUBERNETES_SERVICE_FAILED",
+                  "KUBERNETES_NOT_READY",
+                  "KUBERNETES_TOKEN_FAILED",
+                  "KUBERNETES_NOT_INSTALLED",
+                  "KUBERNETES_CANCELLED"
+                ]
+              },
+              "kubernetes": {
+                "$ref": "#/components/schemas/KubernetesObservation"
+              }
+            },
+            "required": [
+              "lease_token",
+              "outcome",
+              "error_code",
+              "kubernetes"
             ]
           }
         ]
@@ -7251,6 +7427,171 @@
         },
         "required": [
           "confirmed"
+        ]
+      },
+      "KubernetesCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "What control asks a Kubernetes node to do (ADR 0051).",
+        "properties": {
+          "cluster_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string",
+            "const": "v1.36.6+rke2r1"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "server",
+              "worker"
+            ]
+          },
+          "node_name": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "node_address": {
+            "type": "string",
+            "description": "A unicast IP literal."
+          },
+          "server_address": {
+            "type": "string",
+            "description": "A unicast IP literal."
+          },
+          "join_token": {
+            "type": "string",
+            "pattern": "^K10[0-9a-f]{64}::[a-z0-9]{6}\\.[a-z0-9]{16}$",
+            "description": "Worker joins only. A secret."
+          },
+          "token_ttl_seconds": {
+            "type": "integer",
+            "minimum": 300,
+            "maximum": 86400,
+            "description": "Token operations only."
+          }
+        },
+        "required": [
+          "cluster_id",
+          "version",
+          "role",
+          "node_name",
+          "node_address"
+        ]
+      },
+      "KubernetesObservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "cluster_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string",
+            "const": "v1.36.6+rke2r1"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "server",
+              "worker"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "not_ready",
+              "not_installed"
+            ]
+          },
+          "error_code": {
+            "type": "string",
+            "enum": [
+              "",
+              "KUBERNETES_PRIVILEGE_REQUIRED",
+              "KUBERNETES_SYSTEMD_UNAVAILABLE",
+              "KUBERNETES_DEFAULT_ROUTE_MISSING",
+              "KUBERNETES_ADDRESS_NOT_LOCAL",
+              "KUBERNETES_RESOLVER_INVALID",
+              "KUBERNETES_DISK_SPACE_LOW",
+              "KUBERNETES_CONFLICT",
+              "KUBERNETES_CONFIG_CONFLICT",
+              "KUBERNETES_ASSET_UNAVAILABLE",
+              "KUBERNETES_ASSET_INVALID",
+              "KUBERNETES_ARCHIVE_INVALID",
+              "KUBERNETES_IO_FAILED",
+              "KUBERNETES_SERVICE_FAILED",
+              "KUBERNETES_NOT_READY",
+              "KUBERNETES_TOKEN_FAILED",
+              "KUBERNETES_NOT_INSTALLED",
+              "KUBERNETES_CANCELLED"
+            ]
+          },
+          "ca_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Servers only."
+          },
+          "join_token": {
+            "type": "string",
+            "pattern": "^K10[0-9a-f]{64}::[a-z0-9]{6}\\.[a-z0-9]{16}$",
+            "description": "Token operations only. A secret."
+          },
+          "join_token_expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "cluster_id",
+          "version",
+          "role",
+          "state",
+          "error_code",
+          "observed_at"
+        ]
+      },
+      "KubernetesArtifactRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "POST /agent/v1/nodes/{node}/tasks/{task}/kubernetes-artifacts: one 8 MiB range of an approved RKE2 file.",
+        "properties": {
+          "lease_token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "rke2.linux-amd64.tar.gz",
+              "rke2-images-core.linux-amd64.tar.zst",
+              "rke2-images-canal.linux-amd64.tar.zst"
+            ]
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "multipleOf": 8388608
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8388608
+          }
+        },
+        "required": [
+          "lease_token",
+          "name",
+          "offset",
+          "length"
         ]
       }
     }

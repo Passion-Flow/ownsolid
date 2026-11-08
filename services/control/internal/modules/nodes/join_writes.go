@@ -110,6 +110,10 @@ func (s *Service) MintForProfile(ctx context.Context, a identity.Auth, workspace
 		if w.Status != "active" {
 			return fail("ACCESS_DENIED")
 		}
+		// Kubernetes cells are stored only on PostgreSQL (ADR 0051).
+		if profile == wire.KubernetesNodeProfile && q.Dialect() != transaction.PostgreSQL {
+			return fail("AGENT_PROFILE_REJECTED")
+		}
 		tenant, e := lockedJoinTenant(ctx, q)
 		if e != nil {
 			return e

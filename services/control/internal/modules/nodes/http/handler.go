@@ -4,17 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"io"
 	"net/http"
 	"net/netip"
 	"os"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"strings"
 	"unicode/utf8"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	lifecyclewire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	trainingwire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
@@ -23,34 +23,36 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
-	lifecyclewire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
-	trainingwire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type Handler struct {
-	ModelFileWithin         func(context.Context, transaction.Executor, nodes.Node, nodes.Task, wire.ModelFileRequest) (httpserver.Download, error)
-	ModelManifestWithin     func(context.Context, transaction.Executor, nodes.Node, nodes.Task) (wire.ModelCatalog, error)
-	BeginPreparationUpload  func(context.Context, string, string, string, string, []byte) (lifecyclewire.Upload, error)
-	PreparationChunk        func(context.Context, string, string, string, string, string, lifecyclewire.ChunkRequest, io.Reader) (lifecyclewire.ChunkAcceptance, error)
-	FinishPreparationUpload func(context.Context, string, string, string, string, string) (lifecyclewire.OutputAcceptance, error)
-	PreparationStop         func(context.Context, string, string, string, string, lifecyclewire.StopReceipt, []byte) (lifecyclewire.StopAcceptance, error)
-	PreparationInputFile    func(context.Context, string, string, string, lifecyclewire.InputFileRequest) (httpserver.Download, error)
-	PreparationEvents       func(context.Context, string, string, string, string, [][]byte) ([]lifecyclewire.EventAcceptance, error)
-	Service                 *nodes.Service
+	ModelFileWithin     func(context.Context, transaction.Executor, nodes.Node, nodes.Task, wire.ModelFileRequest) (httpserver.Download, error)
+	ModelManifestWithin func(context.Context, transaction.Executor, nodes.Node, nodes.Task) (wire.ModelCatalog, error)
+	// KubernetesArtifactWithin serves RKE2 files to joining nodes; nil without Kubernetes cells.
+	KubernetesArtifactWithin func(context.Context, transaction.Executor, nodes.Node, nodes.Task, wire.KubernetesArtifactRequest) (httpserver.Download, error)
+	BeginPreparationUpload   func(context.Context, string, string, string, string, []byte) (lifecyclewire.Upload, error)
+	PreparationChunk         func(context.Context, string, string, string, string, string, lifecyclewire.ChunkRequest, io.Reader) (lifecyclewire.ChunkAcceptance, error)
+	FinishPreparationUpload  func(context.Context, string, string, string, string, string) (lifecyclewire.OutputAcceptance, error)
+	PreparationStop          func(context.Context, string, string, string, string, lifecyclewire.StopReceipt, []byte) (lifecyclewire.StopAcceptance, error)
+	PreparationInputFile     func(context.Context, string, string, string, lifecyclewire.InputFileRequest) (httpserver.Download, error)
+	PreparationEvents        func(context.Context, string, string, string, string, [][]byte) ([]lifecyclewire.EventAcceptance, error)
+	Service                  *nodes.Service
 	// Admission admits every agent call before it reaches the service (ADR 0018). The
 	// caller of Machine admits HTTPS calls; the handler uses it for claim seats.
-	Admission *agentadmission.Controller
-	ComponentArtifact       func(context.Context, string, string, string, string) (httpserver.Download, error)
-	OpenArtifact            func() (*os.File, error)
-	Artifact                func(context.Context, pgx.Tx, nodes.Node, nodes.Task) (httpserver.Download, error)
-	ModelFile               func(context.Context, pgx.Tx, nodes.Node, nodes.Task, wire.ModelFileRequest) (httpserver.Download, error)
-	ModelManifest           func(context.Context, pgx.Tx, nodes.Node, nodes.Task) (wire.ModelCatalog, error)
-	TrainingInputFile       func(context.Context, string, string, string, trainingwire.InputFileRequest) (httpserver.Download, error)
-	TrainingEvents          func(context.Context, string, string, string, string, [][]byte) ([]trainingwire.EventAcceptance, error)
-	BeginTrainingUpload     func(context.Context, string, string, string, string, string, []byte) (trainingwire.Upload, error)
-	TrainingChunk           func(context.Context, string, string, string, string, string, trainingwire.ChunkRequest, io.Reader) (trainingwire.ChunkAcceptance, error)
-	FinishTrainingUpload    func(context.Context, string, string, string, string, string) (trainingwire.OutputAcceptance, error)
-	TrainingStop            func(context.Context, string, string, string, string, trainingwire.StopReceipt, []byte) (trainingwire.StopAcceptance, error)
+	Admission            *agentadmission.Controller
+	ComponentArtifact    func(context.Context, string, string, string, string) (httpserver.Download, error)
+	OpenArtifact         func() (*os.File, error)
+	Artifact             func(context.Context, pgx.Tx, nodes.Node, nodes.Task) (httpserver.Download, error)
+	ModelFile            func(context.Context, pgx.Tx, nodes.Node, nodes.Task, wire.ModelFileRequest) (httpserver.Download, error)
+	ModelManifest        func(context.Context, pgx.Tx, nodes.Node, nodes.Task) (wire.ModelCatalog, error)
+	TrainingInputFile    func(context.Context, string, string, string, trainingwire.InputFileRequest) (httpserver.Download, error)
+	TrainingEvents       func(context.Context, string, string, string, string, [][]byte) ([]trainingwire.EventAcceptance, error)
+	BeginTrainingUpload  func(context.Context, string, string, string, string, string, []byte) (trainingwire.Upload, error)
+	TrainingChunk        func(context.Context, string, string, string, string, string, trainingwire.ChunkRequest, io.Reader) (trainingwire.ChunkAcceptance, error)
+	FinishTrainingUpload func(context.Context, string, string, string, string, string) (trainingwire.OutputAcceptance, error)
+	TrainingStop         func(context.Context, string, string, string, string, trainingwire.StopReceipt, []byte) (trainingwire.StopAcceptance, error)
 }
 
 // pacingPath is the pacing of this cell's agents (ADR 0013).
@@ -134,6 +136,7 @@ func Owns(path string) bool {
 	}
 	return false
 }
+
 // rackNetwork names the rack an address enrolls from: its source network, because each rack of a
 // leaf-spine fabric has a subnet of its own. An address that does not parse keys no limit.
 func rackNetwork(host string, policy config.RatesPolicy) (string, bool) {
@@ -200,7 +203,7 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 		if e := httpserver.DecodeJSON(r, &input); e != nil {
 			return nil, 0, e
 		}
-		out, e := h.Service.Enroll(r.Context(), input, request)
+		out, e := h.Service.EnrollFrom(r.Context(), input, request, host)
 		return out, 201, e
 	}
 	parts := strings.Split(strings.TrimPrefix(path, "/agent/v1/"), "/")
@@ -278,6 +281,31 @@ func (h *Handler) Machine(r *http.Request, request string) (any, int, error) {
 		}
 		out, e := h.TrainingEvents(r.Context(), parts[1], credential, parts[3], input.LeaseToken, values)
 		return map[string]any{"items": out}, 200, e
+	}
+	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && parts[4] == wire.KubernetesArtifactsPath {
+		var input wire.KubernetesArtifactRequest
+		if e := httpserver.DecodeJSON(r, &input); e != nil {
+			return nil, 0, e
+		}
+		if e := input.Validate(); e != nil {
+			return nil, 0, e
+		}
+		if h.KubernetesArtifactWithin == nil {
+			return nil, 0, errors.New("AGENT_OPERATION_UNSUPPORTED")
+		}
+		var download httpserver.Download
+		e := h.Service.WithLeaseExecutor(r.Context(), parts[1], credential, parts[3], input.LeaseToken, func(ctx context.Context, q transaction.Executor, n nodes.Node, t nodes.Task) error {
+			var e error
+			download, e = h.KubernetesArtifactWithin(ctx, q, n, t, input)
+			return e
+		})
+		if e != nil {
+			if download.File != nil {
+				download.File.Close()
+			}
+			return nil, 0, e
+		}
+		return download, 200, nil
 	}
 	if len(parts) == 5 && parts[2] == "tasks" && id(parts[3]) && parts[4] == "model-files" {
 		var input wire.ModelFileRequest

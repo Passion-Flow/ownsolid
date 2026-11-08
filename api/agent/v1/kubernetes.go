@@ -146,7 +146,7 @@ func KubernetesTokenCAHash(token string) (string, bool) {
 // advertise in the cluster.
 func ValidKubernetesNodeAddress(address string) bool {
 	parsed, e := netip.ParseAddr(address)
-	return e == nil && parsed.String() == address && parsed.Zone() == "" && parsed.IsGlobalUnicast()
+	return e == nil && parsed.String() == address && parsed.Zone() == "" && !parsed.Is4In6() && parsed.IsGlobalUnicast()
 }
 
 // Validate checks the command against the operation it travels with.
@@ -274,4 +274,14 @@ func (r KubernetesArtifactRequest) Validate() error {
 		return errors.New("VALIDATION_FAILED")
 	}
 	return nil
+}
+
+// ValidateKubernetes checks a task result against the Kubernetes command it answers: the
+// result carries only its observation, and the observation's error code is the result's.
+func (r Result) ValidateKubernetes(c KubernetesCommand, operation string) error {
+	invalid := errors.New("VALIDATION_FAILED")
+	if !IsKubernetesOperation(operation) || r.Kubernetes == nil || r.Facts != nil || r.Component != nil || r.Logs != nil || r.Inference != nil || r.ErrorCode != r.Kubernetes.ErrorCode {
+		return invalid
+	}
+	return r.Kubernetes.ValidateFor(c, operation, r.Outcome)
 }

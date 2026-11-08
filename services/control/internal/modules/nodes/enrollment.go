@@ -79,6 +79,16 @@ func enrollmentScope(ctx context.Context, q transaction.Executor, hash []byte) (
 }
 
 func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request string) (wire.Enrolled, error) {
+	return s.EnrollFrom(ctx, input, request, "")
+}
+
+// EnrollFrom enrolls a node and records the address its agent connected from. A Kubernetes
+// node advertises that address in its cell's cluster (ADR 0051), so it cannot enroll
+// without one.
+func (s *Service) EnrollFrom(ctx context.Context, input wire.Enrollment, request, address string) (wire.Enrolled, error) {
+	if input.Profile() == wire.KubernetesNodeProfile && !wire.ValidKubernetesNodeAddress(address) {
+		return wire.Enrolled{}, fail("KUBERNETES_NODE_ADDRESS_INVALID")
+	}
 	if ctx == nil || !nodeID(request) || input.Component != nil || input.Inference != nil {
 		return wire.Enrolled{}, fail("VALIDATION_FAILED")
 	}
@@ -162,6 +172,14 @@ func (s *Service) Enroll(ctx context.Context, input wire.Enrollment, request str
 		}
 		if e != nil {
 			return e
+		}
+		if profile == wire.KubernetesNodeProfile {
+			if q.Dialect() != transaction.PostgreSQL {
+				return fail("AGENT_PROFILE_REJECTED")
+			}
+			if _, e = q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `UPDATE managed_nodes SET enrolled_address=$1::inet WHERE tenant_id=$2 AND workspace_id=$3 AND id=$4`, address, tenant, workspace, id)); e != nil {
+				return e
+			}
 		}
 		changed, e := q.Exec(ctx, nodeSQL(q,
 			`UPDATE node_join_tokens SET consumed_at=clock_timestamp(),node_id=$1 WHERE tenant_id=$2 AND workspace_id=$3 AND id=$4 AND token_hash=$5 AND consumed_at IS NULL AND revoked_at IS NULL AND expires_at>clock_timestamp()`,

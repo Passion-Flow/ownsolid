@@ -58,6 +58,8 @@ type Config struct {
 	Models                    struct {
 		ArtifactRoot string `yaml:"artifact_root"`
 	} `yaml:"models"`
+	// KubernetesCells, when present, lets control install a cluster per cell (ADR 0051).
+	KubernetesCells *KubernetesCellsConfiguration `yaml:"kubernetes_cells,omitempty"`
 	Components struct {
 		NodeExporterArchiveFile      string `yaml:"node_exporter_archive_file"`
 		NodeExporterCatalogDirectory string `yaml:"node_exporter_catalog_directory"`
@@ -300,6 +302,11 @@ func (c Config) Validate() error {
 		return errors.New("CONFIG_AWS_HTTP_BUDGET_INVALID")
 	}
 
+	if c.KubernetesCells != nil {
+		if e := c.KubernetesCells.WithDefaults().Validate(); e != nil {
+			return e
+		}
+	}
 	if c.ModelCache != (ModelCacheConfiguration{}) {
 		if e := c.ModelCache.Validate(); e != nil {
 			return e

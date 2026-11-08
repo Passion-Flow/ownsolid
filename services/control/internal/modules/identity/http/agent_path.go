@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/cellclusters"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
@@ -37,6 +38,8 @@ type agentPath struct {
 	datasets     *datasets.Service
 	training     *training.Service
 	preparations *modelpreparations.Service
+	// cellClusters is nil without a kubernetes_cells configuration.
+	cellClusters *cellclusters.Service
 	machine      *nodehttp.Handler
 	sessions     *agentgateway.Gateway
 	logs         *telemetrystore.Logs
@@ -97,6 +100,10 @@ func newAgentPath(s *identity.Service, service string, ready func() error) agent
 		trainingService.Holdouts = preparationService
 	}
 	n.Training = trainingService
+	cellClusters, cellClusterError := cellclusters.New(s, w, n)
+	if cellClusters != nil {
+		n.Kubernetes = cellClusters
+	}
 	databaseSeats, admissionError := s.Config.AgentDatabaseSeats()
 	var admission *agentadmission.Controller
 	if admissionError == nil {
@@ -109,6 +116,9 @@ func newAgentPath(s *identity.Service, service string, ready func() error) agent
 		n.Shed = admission
 	}
 	machine := &nodehttp.Handler{Service: n, Admission: admission, OpenArtifact: c.OpenArtifact, Artifact: c.TaskArtifact, ComponentArtifact: c.DownloadArtifact}
+	if cellClusters != nil {
+		machine.KubernetesArtifactWithin = cellClusters.ArtifactWithin
+	}
 	sessions, sessionError := agentgateway.New(nodehttp.SessionBackend{Handler: machine}, agentgateway.Policy{MaxSessions: s.Config.Policy().Nodes.MaximumLiveNodes, ExchangeSeconds: s.Config.Policy().HTTP.RequestSeconds, Ready: ready}, httpserver.PublicProblem)
 	if preparationService != nil {
 		machine.PreparationInputFile = preparationService.InputFile
@@ -150,7 +160,7 @@ func newAgentPath(s *identity.Service, service string, ready func() error) agent
 		}
 		return m.OpenTransferWithin(ctx, q, node.TenantID, node.WorkspaceID, command.ModelID, input)
 	}
-	return agentPath{workspaces: w, nodes: n, components: c, models: m, deployments: d, datasets: datasetService, training: trainingService, preparations: preparationService, machine: machine, sessions: sessions, logs: telemetryLogs, metrics: telemetryMetrics, err: errors.Join(authorityError, preparationError, admissionError, sessionError, n.CheckRecoveryOwners())}
+	return agentPath{workspaces: w, nodes: n, components: c, models: m, deployments: d, datasets: datasetService, training: trainingService, preparations: preparationService, cellClusters: cellClusters, machine: machine, sessions: sessions, logs: telemetryLogs, metrics: telemetryMetrics, err: errors.Join(authorityError, preparationError, admissionError, sessionError, cellClusterError, n.CheckRecoveryOwners())}
 }
 
 // AgentGateway is the agent path of an agent gateway process: the session stream and the

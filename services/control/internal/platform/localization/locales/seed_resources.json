@@ -2276,7 +2276,18 @@
         "CONFIG_RELEASE_VIEW_INVALID": "Installation information configuration is invalid. Contact the operator.",
         "RELEASE_VIEW_CHANGED": "Installation records changed. Refresh to review the latest information before continuing.",
         "RELEASE_VIEW_RESPONSE_INVALID": "Installation information could not be verified. Refresh, or ask the operator to check the service.",
-        "sso_callback_uri_other": "Exact callback for the other entrance"
+        "sso_callback_uri_other": "Exact callback for the other entrance",
+        "KUBERNETES_CELLS_UNCONFIGURED": "Kubernetes cells are not configured on this control plane. Add the kubernetes_cells section to its configuration.",
+        "KUBERNETES_CELL_CLUSTER_EXISTS": "This cell already has a Kubernetes cluster. Add nodes to it instead.",
+        "KUBERNETES_NODE_IN_CLUSTER": "A chosen node already belongs to a Kubernetes cluster.",
+        "KUBERNETES_NODE_ADDRESS_INVALID": "The node has no usable address for Kubernetes. Enroll it again from the address it should use in the cluster.",
+        "KUBERNETES_NODE_ADDRESS_CONFLICT": "Two nodes of the cluster would share one address. Each node needs its own.",
+        "KUBERNETES_MEMBER_STATE_CONFLICT": "Only a failed node can be retried.",
+        "KUBERNETES_MEMBER_CONFLICT": "This task is no longer the one its cluster is waiting for.",
+        "KUBERNETES_JOIN_TOKEN_UNAVAILABLE": "The cluster has no usable join token yet. Control asks the server for a new one; the join is retried.",
+        "KUBERNETES_ARTIFACT_UNAVAILABLE": "The Kubernetes installation files are missing from control. Install the offline bundle again.",
+        "KUBERNETES_ARTIFACT_INVALID": "A Kubernetes installation file on control is damaged. Install the offline bundle again.",
+        "KUBERNETES_CLUSTER_STORAGE_UNSUPPORTED": "Kubernetes cells need the PostgreSQL database."
       },
       "plurals": {
         "notification_count": {
@@ -4596,7 +4607,18 @@
         "CONFIG_RELEASE_VIEW_INVALID": "安装信息配置无效。请联系运维人员。",
         "RELEASE_VIEW_CHANGED": "安装记录已变化。请刷新并查看最新信息后再继续。",
         "RELEASE_VIEW_RESPONSE_INVALID": "无法验证安装信息。请刷新，或联系运维人员检查服务。",
-        "sso_callback_uri_other": "另一入口的精确回调地址"
+        "sso_callback_uri_other": "另一入口的精确回调地址",
+        "KUBERNETES_CELLS_UNCONFIGURED": "此控制面未配置 Kubernetes 单元。请在其配置中添加 kubernetes_cells 部分。",
+        "KUBERNETES_CELL_CLUSTER_EXISTS": "此单元已有 Kubernetes 集群。请改为向其添加节点。",
+        "KUBERNETES_NODE_IN_CLUSTER": "所选节点中有节点已属于某个 Kubernetes 集群。",
+        "KUBERNETES_NODE_ADDRESS_INVALID": "该节点没有可用于 Kubernetes 的地址。请从它在集群中应使用的地址重新接入。",
+        "KUBERNETES_NODE_ADDRESS_CONFLICT": "集群中将有两个节点使用同一地址。每个节点都需要独立地址。",
+        "KUBERNETES_MEMBER_STATE_CONFLICT": "只能重试失败的节点。",
+        "KUBERNETES_MEMBER_CONFLICT": "此任务已不是其集群正在等待的任务。",
+        "KUBERNETES_JOIN_TOKEN_UNAVAILABLE": "集群暂无可用的加入令牌。控制面会向服务器申请新令牌，并重试加入。",
+        "KUBERNETES_ARTIFACT_UNAVAILABLE": "控制面缺少 Kubernetes 安装文件。请重新安装离线包。",
+        "KUBERNETES_ARTIFACT_INVALID": "控制面上的 Kubernetes 安装文件已损坏。请重新安装离线包。",
+        "KUBERNETES_CLUSTER_STORAGE_UNSUPPORTED": "Kubernetes 单元需要 PostgreSQL 数据库。"
       },
       "plurals": {
         "notification_count": {
