@@ -57,8 +57,10 @@ agents is not.
 - [ ] ARC-105 Load tested with 1,000 simulated nodes per cell at twice the load, including a Kubernetes cell simulated with KWOK (P1)
 - [ ] ARC-106 Published fleet KPIs: dispatch p99, reconnect time, database writes per second at measured scale (P1)
 - [ ] ARC-107 Gateway connection lifecycle: maximum connection age with jitter, GOAWAY drain, and rebalancing after a gateway roll so long-lived streams do not pile onto old gateways (P1)
+  - Client-side rebalancing is implemented with the existing v1 wire contract. [Simulator and listener evidence](../../research/agent-gateway-rebalance.md).
 - [ ] ARC-108 Measure the component, inference, model preparation and image registry operations in the agent cost test, so every operation of every call has an exchange (P1)
 - [ ] ARC-109 Cut the declared cost of claims, event batches and upload chunks, which repeat the same authority checks: one check per call, one per batch (P1)
+  - Node-owned PostgreSQL claims share one authority check when preflight is read-only. [Statement counts and delegated paths](../../research/agent-claim-authority.md).
 - [ ] ARC-110 A listener per entrance: the admin console, the portal, the model gateway and the agent endpoint can each bind their own address and port, so a site can firewall and scale them apart; four hostnames on one TLS port stays the default ([ADR 0027](../../decisions/0027-entrance-addresses.md)) (P1)
 - [ ] ARC-111 Agent gateways connect with a database role of their own, with its own connection limit and only the grants the agent path needs, instead of sharing control's serving role ([ADR 0048](../../decisions/0048-agent-gateways-beside-control.md)) (P1)
 - [ ] ARC-112 Throttle enrollment by the inventory's rack once FLT-101 names racks, instead of by source network ([ADR 0050](../../decisions/0050-agent-certificates.md)) (P1)
