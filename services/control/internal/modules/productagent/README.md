@@ -7,14 +7,18 @@ navigation results contain fixed local paths scoped to the current entrance.
 Application and conversation reads take the workspace from the authenticated
 context and reuse the projection owner's current session and membership checks.
 
-The English and Simplified Chinese aliases are compiled into the binary. A
-command must match one complete alias after case and space normalization. A
+The English and Simplified Chinese aliases are compiled into the binary.
+`Commands` returns exact phrases from those same tables for `en` and `zh-CN`
+after checking the current session. It filters by entrance and omits workspace
+reads when there is no workspace in the authenticated context. `Run` still
+checks current resource permissions before reading. A command must match one complete alias after case and space normalization. A
 model, an external client, a shell, and write adapters are absent from this
 service. The browser and HTTP entry points are integration work tracked in the
 [APP lane boundaries](../../../../../docs/research/app-lane-questions.md).
 
 The reviewed tool overlay selects only the typed read adapters. The generated
-catalog derives HTTP metadata from the applications OpenAPI contract. Regenerate
+catalog derives HTTP metadata from the applications OpenAPI contract and checks
+the exact reviewed paths and portal cookie scheme. Regenerate
 it with `go -C services/control/internal/modules/productagent generate` and run
 the tests to detect contract drift. Tool admission never builds an HTTP request.
 
