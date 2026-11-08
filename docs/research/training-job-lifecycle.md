@@ -21,8 +21,10 @@ then records a new queued intent for the same job. Checkpoint recovery also
 verifies the accepted checkpoint identity and bytes.
 
 Cancelling queued work ends its active intent without creating another
-attempt. A queued recovery pointer must disappear on cancellation or
-terminal dispatch failure. Keep its immutable recovery record with its
+attempt. A queued recovery pointer must disappear on cancellation,
+terminal dispatch failure or restore invalidation. A restored job waiting
+to retry cannot retain its pending intent after operator invalidation.
+Keep its immutable recovery record with its
 previous attempt and empty next attempt. Existing databases can contain a
 terminal job with an old pointer. Read that job with no pending recovery
 and keep the historical record available. An active cancellation retains
@@ -66,8 +68,11 @@ and its error code, scoped recovery, stale-revision refusal, cancellation of
 a queued recovery, retained history and rollback when the cancellation audit
 fails. Check active cancellation and exact stop using synthetic node
 observations and receipts. Exercise terminal dispatch failure and old rows
-with a stale recovery pointer. CLI, UI and actual GPU execution are separate
-acceptance gates.
+with a stale recovery pointer. Drive the operator restore invalidation and verify it withdraws
+the queued recovery while preserving history and the prior release. Exercise
+node disable with the production recovery owner graph and verify that an
+uncertain physical lease remains fenced. CLI, UI and actual GPU execution
+are separate acceptance gates.
 
 The change adds no dependency, model or dataset. The existing Go, pgx and
 PostgreSQL licensing and offline requirements are recorded in the

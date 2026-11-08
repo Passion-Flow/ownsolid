@@ -14,9 +14,10 @@ This owner authorizes training jobs from verified model/dataset versions, manage
 Migration 000009 stores jobs, attempts, checkpoints, artifacts, recoveries and uploads. Input dataset/model hashes, node/profile, GPU lease and attempt identity remain part of acceptance. A sealed checkpoint can be resumed only through the exact recovery contract; a cancelled/disconnected worker cannot be promoted to success from partial logs.
 
 The [training lifecycle contract](../../../../../docs/research/training-job-lifecycle.md)
-covers idempotent creation, failure recovery and cancellation. Cancelling a queued
-recovery clears the pending reference and preserves its history. Active
-cancellation holds the physical lease until the exact attempt stop is accepted.
+covers idempotent creation, failure recovery and cancellation. Cancellation,
+terminal dispatch failure and restore invalidation clear the pending reference
+and preserve its history. Active cancellation holds the physical lease until
+the exact attempt stop is accepted.
 The scheduling creation boundary shares the final job and audit transaction.
 
 This owner has separate admission, execution, transfer and accepted-artifact areas. Any future extraction must retain current creator/Workspace/license checks and lock ordering, without inventing a second scheduler or artifact acceptance path.
