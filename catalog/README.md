@@ -94,9 +94,20 @@ Layer compression may be gzip or uncompressed. The returned `Archive` carries
 the signed digest and byte size, and the manifest and config digests for
 each image in OCI index order.
 
-Keep staging immutable through import. The installer checks expanded layer
-limits and DiffIDs, registers the approved local images, checks their registered
-digests and admits the rendered workload before execution.
+## Local image import
+
+`apps.ImportInstallImage` verifies a signed single-image Linux amd64 release
+on the factory's private staging mount and streams its tagless image into
+a configured Docker Unix socket. The current factory transport takes a USTAR
+archive with a direct platform manifest. Configure Docker Engine API v1.49
+with its containerd image store and provide the compressed and expanded byte
+budgets and an operation timeout.
+
+The import checks expanded layers and DiffIDs, then reads back the image ID,
+manifest descriptor and platform. A retry can reuse the exact registered
+image. Keep staging immutable throughout. The caller authorizes and audits
+the operation. The installer still owns release state, workload admission
+and startup.
 
 ## Verification
 
@@ -105,4 +116,16 @@ Run the catalog's local checks from the repository root.
 ```sh
 GOPROXY=off GOSUMDB=off go -C catalog test -race ./...
 go -C catalog vet ./...
+```
+
+
+For the real Docker integration test, configure the socket of a disposable
+empty engine and a separate private mounted staging directory. The test
+checks that the store is empty, imports a fixture, retries it and confirms
+the exact signed digest. Dispose of the test engine after the run.
+
+```sh
+export OWNSOLID_CATALOG_DOCKER_TEST_SOCKET=/path/to/private/docker.sock
+export OWNSOLID_CATALOG_DOCKER_TEST_MOUNT=/path/to/private/staging-mount
+go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportInstallImageIntoEmptyDockerStore$'
 ```

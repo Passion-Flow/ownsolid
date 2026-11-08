@@ -127,3 +127,54 @@ signature-only API unchanged. Exercise the returned facts against the
 tagless writer in the disconnected fixture. The factory accepted these facts
 from the returned catalog value and reproduced the same layer and transport
 measurements without a second caller-side tar parse.
+
+## Local Docker registration and readback
+
+The platform installer already uses `OpenCurrentImageSource` and
+`WriteTagless` before Docker image load. Use the same factory boundary for
+the catalog's first single-image Compose path. The
+[Docker Engine API v1.49](https://docs.docker.com/reference/api/engine/version/v1.49/)
+provides image load and platform-specific image inspect. Require the
+[containerd image store](https://docs.docker.com/engine/storage/containerd/)
+because it retains the OCI manifest identity.
+
+A Docker Engine 29.1.3 prototype began with an empty private tmpfs store,
+no network and a Unix socket only. Its image load accepted the tagless
+VictoriaLogs archive. API v1.49 inspection by the signed digest returned
+the same image ID and descriptor digest, Linux amd64 and an empty tag
+list. Use that exact local readback before returning success. A matching
+image on retry can be reused after the signature and expanded bytes are
+checked again. A partial upload or lost response requires retry and
+readback. Never retag or remove shared engine data.
+
+Call only an explicitly configured Unix socket, with no proxy, redirects
+or context discovery. Bound the operation and responses. Reject
+multi-image bundles before contacting the engine and let the existing
+factory reject archive forms it cannot transport. Directly loading the
+publisher's archive would let source names or tags reach the engine and
+would skip expanded layer and DiffID checks. Registry pulls, daemon
+discovery and starting the workload are outside the import boundary.
+
+The implementation uses the existing ownsolid factory and Go standard
+library. The Docker Engine fixture and API implementation are
+[Apache-2.0](https://github.com/moby/moby/blob/master/LICENSE), permitting
+commercial and offline use and redistribution under their notice terms.
+The official image recipe is also
+[Apache-2.0](https://github.com/docker-library/docker/blob/master/LICENSE).
+The test engine and existing VictoriaLogs image stay in the isolated
+development fixture. The catalog module ships neither engine nor image.
+
+
+The catalog's `ImportInstallImage` entry point passed both the opt-in
+integration fixture and the real signed VictoriaLogs archive on Docker
+Engine 29.1.3 with fresh tmpfs stores and no networking. An expansion
+limit of one byte and a different publisher key were refused. Two calls
+with the trusted bundle left one untagged image with manifest and Docker
+image ID
+`sha256:45dc9bef07c0c404255790e41f2c22c62ff55a690a1d556e0f9cb6f6e2556f1b`.
+The development engine was pinned to the Linux amd64 Docker Official
+Image manifest
+`sha256:64d6ee47ea821c986467199baa162f5ac8cde3f57b719f18e23f3ed7a7444131`.
+The installer must supply the authenticated publisher key and host policy,
+invoke the import as an authorized operation, and carry the verified digest
+into workload admission. Multi-image registration also remains open.
