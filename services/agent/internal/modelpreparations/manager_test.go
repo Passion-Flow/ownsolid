@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 )
 
 // transferFixture supplies synthetic bytes/reports only; real TLS is tested by the client package.
@@ -25,6 +25,8 @@ type transferFixture struct {
 	upload       wire.Upload
 	stopOutcomes [][]byte
 	foreignAck   bool
+
+	downloaded func(datawire.Asset)
 	// interrupt, when set, can fail a call by name, as a broken connection or control would.
 	interrupt func(string) error
 }
@@ -41,7 +43,13 @@ func (d *transferFixture) PreparationFile(_ context.Context, _, _, kind string, 
 	if !ok {
 		return fail("MODEL_PREPARATION_INPUT_INVALID")
 	}
-	return os.WriteFile(destination, body, 0600)
+	if e := os.WriteFile(destination, body, 0600); e != nil {
+		return e
+	}
+	if d.downloaded != nil {
+		d.downloaded(asset)
+	}
+	return nil
 }
 func (d *transferFixture) PreparationEvents(_ context.Context, _, _ string, _ wire.Command, _ int64, events [][]byte) ([]wire.EventAcceptance, error) {
 	if e := d.interrupted("events"); e != nil {

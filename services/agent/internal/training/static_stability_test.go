@@ -103,9 +103,10 @@ func TestARefusedTransferEndsTheAttempt(t *testing.T) {
 
 func TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt(t *testing.T) {
 	m, lease, d, transport := preparedManager(t)
-	d.afterStart = func(*Container) {}
 	ctx, shutdown := context.WithCancel(t.Context())
-	time.AfterFunc(150*time.Millisecond, shutdown)
+	defer shutdown()
+	// The test needs a started container even when the host is slow to prepare it.
+	d.afterStart = func(*Container) { shutdown() }
 	receipt, _, e := m.Execute(ctx, fixtureID, lease, transport)
 	if !errors.Is(e, context.Canceled) || receipt.ReceiptID != "" {
 		t.Fatalf("shutdown returned %v with receipt %q", e, receipt.ReceiptID)
@@ -122,14 +123,23 @@ func TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt(t *testing.T) {
 		t.Fatalf("adopted %+v, wall %v", adopted, wall)
 	}
 
-	// A second restart while it still runs changes nothing.
-	ctx, shutdown = context.WithCancel(t.Context())
-	time.AfterFunc(150*time.Millisecond, shutdown)
-	if receipt, _, e = m.Resume(ctx, transport); !errors.Is(e, context.Canceled) || receipt.ReceiptID != "" || stopCalled(d) {
+	// Interrupt the adopted process as it sends an event. The next process must
+	// still be able to deliver that event and collect the result.
+	writeEvents(t, m, lease, 1)
+	resumeContext, interrupt := context.WithCancel(t.Context())
+	defer interrupt()
+	transport.interrupt = func(call string) error {
+		if call == "events" {
+			interrupt()
+			return resumeContext.Err()
+		}
+		return nil
+	}
+	if receipt, _, e = m.Resume(resumeContext, transport); !errors.Is(e, context.Canceled) || receipt.ReceiptID != "" || stopCalled(d) {
 		t.Fatalf("restart ended the attempt: %v, %v", e, d.calls)
 	}
+	transport.interrupt = nil
 
-	writeEvents(t, m, lease, 1)
 	writeFailedResult(t, m, lease)
 	exited(d.container)
 	receipt, outcome, e := m.Resume(t.Context(), transport)
@@ -138,6 +148,22 @@ func TestShutdownLeavesTheContainerAndTheNextProcessAdoptsIt(t *testing.T) {
 	}
 	if !reflect.DeepEqual(transport.events, []int64{1}) || d.container != nil {
 		t.Fatalf("events %v, container left: %v", transport.events, d.container != nil)
+	}
+}
+
+func TestShutdownDuringInputVerificationReturnsCancellation(t *testing.T) {
+	m, lease, d, transport := preparedManager(t)
+	ctx, shutdown := context.WithCancel(t.Context())
+	defer shutdown()
+	transport.downloaded = func(asset datawire.Asset) {
+		if asset.Path == lease.Training.Inputs.Validation.Path {
+			shutdown()
+		}
+	}
+	receipt, _, e := m.Execute(ctx, fixtureID, lease, transport)
+	if !errors.Is(e, context.Canceled) || receipt.Proof != "never_created" ||
+		receipt.AgentErrorCode != "TRAINING_AGENT_INTERRUPTED" || d.container != nil {
+		t.Fatalf("pre-start shutdown returned %v with proof %q and code %q", e, receipt.Proof, receipt.AgentErrorCode)
 	}
 }
 
@@ -181,9 +207,8 @@ func TestTheWallLimitEndsAnAttemptDuringAnOutage(t *testing.T) {
 
 func TestARevokedAttemptStopsItsContainer(t *testing.T) {
 	m, lease, d, transport := preparedManager(t)
-	d.afterStart = func(*Container) {}
 	ctx, revoke := context.WithCancelCause(t.Context())
-	time.AfterFunc(150*time.Millisecond, func() { revoke(errors.New("AGENT_LEASE_STALE")) })
+	d.afterStart = func(*Container) { revoke(errors.New("AGENT_LEASE_STALE")) }
 	receipt, _, e := m.Execute(ctx, fixtureID, lease, transport)
 	if !errors.Is(e, context.Canceled) || receipt.Proof != "owned_container_removed" || receipt.AgentErrorCode != "TRAINING_AGENT_INTERRUPTED" || d.container != nil {
 		t.Fatalf("revocation: %v, %+v", e, receipt)
