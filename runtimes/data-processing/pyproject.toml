@@ -3,3 +3,6 @@ name = "projectone-data-processing"
 version = "0.8.0"
 requires-python = ">=3.12,<3.13"
 dependencies = []
+
+[project.optional-dependencies]
+parquet = ["pyarrow==26.0.1"]
