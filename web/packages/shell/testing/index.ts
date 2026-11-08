@@ -27,6 +27,7 @@ export {
   deploymentKey,
   expiringKey,
   keyCall,
+  nodeGatewayInstance,
   revokedKey,
   unavailableAlias,
   unusedKey,

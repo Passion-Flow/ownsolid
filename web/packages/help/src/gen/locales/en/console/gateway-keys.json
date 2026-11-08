@@ -35,6 +35,187 @@
    "children": [
     {
      "type": "text",
+     "value": "Publishing a model to the gateway"
+    }
+   ],
+   "data": {
+    "id": "publishing-a-model-to-the-gateway"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "A key calls a model by the name it is published under. Publish a deployment from its page in\n"
+    },
+    {
+     "type": "link",
+     "url": "/services",
+     "children": [
+      {
+       "type": "text",
+       "value": "Model services"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ": the "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "On the gateway"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " card offers "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Publish to the gateway"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " once the\ndeployment is running and a test generation has verified its answer."
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Choose the name callers send as the model. It is made from the model's name; it uses lower-case\nletters, digits, dots and hyphens, and a name is used only once in a workspace."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "If no gateway serves the deployment's node yet, give the HTTPS address callers reach it at and a\nname for it. Publishing registers that gateway and shows its credential, gateway ID and node ID\nonce: configure the gateway on that node with them."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Give a reason, then choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Publish"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The card then shows the base URL, a sample call and "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Issue a key"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " for that name. If publishing\nfails after the gateway was registered, its credential stays on screen and "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Try again"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " publishes\nonly. If the answer that carried the credential was lost, revoke that gateway from the dialog and\nregister another."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Stop publishing"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " refuses calls to the name from then on and lists the keys that stop working;\nyou type the name to confirm. The name cannot be published again, and the deployment keeps running."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
      "value": "Issuing a key"
     }
    ],
@@ -311,7 +492,7 @@
        "children": [
         {
          "type": "text",
-         "value": "A model is published to the gateway through the API until the console offers it."
+         "value": "A gateway's lost credential cannot be replaced yet: revoking the gateway retires every name it\nserves."
         }
        ]
       }
@@ -324,7 +505,7 @@
    "children": [
     {
      "type": "text",
-     "value": "Every issue, rotation and revocation is in the "
+     "value": "Every publication, issue, rotation and revocation is in the "
     },
     {
      "type": "link",
