@@ -8,12 +8,12 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/jackc/pgx/v5"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/jackc/pgx/v5"
 )
 
 type trainingReference struct{ DatasetID, VersionID, ManifestSHA256 string }
@@ -135,7 +135,7 @@ func (s *Service) scanSource(ctx context.Context, a identity.Auth, workspace, da
 				return sourceSnapshot{}, fail("MODEL_HOLDOUT_LABELS_INVALID")
 			}
 			rawPrompts[raw] = true
-			result.labels.increment(row.Completion)
+			result.labels.Increment(row.Completion)
 		}
 		result.groups[hash([]byte(row.SourceID))] = true
 		result.prompts[raw] = true
@@ -144,7 +144,7 @@ func (s *Service) scanSource(ctx context.Context, a identity.Auth, workspace, da
 	if scanner.Err() != nil {
 		return sourceSnapshot{}, fail("MODEL_HOLDOUT_SOURCE_INVALID")
 	}
-	if result.rowCount < 1 || holdout && (result.rowCount < wire.MinimumRows || !result.labels.valid(result.rowCount)) {
+	if result.rowCount < 1 || holdout && (result.rowCount < wire.MinimumRows || !result.labels.ValidForRows(result.rowCount)) {
 		return sourceSnapshot{}, fail("MODEL_HOLDOUT_LABELS_INVALID")
 	}
 	return result, nil

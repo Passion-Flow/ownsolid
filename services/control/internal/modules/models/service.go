@@ -11,12 +11,13 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/snapshot"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
 type Service struct {
@@ -59,6 +60,8 @@ type Version struct {
 	Manifest      json.RawMessage `json:"manifest"`
 	State         string          `json:"state"`
 	CreatedAt     time.Time       `json:"created_at"`
+	// DatasetLineage is available to internal consumers of the scoped derived detail.
+	DatasetLineage *snapshot.DatasetLineage `json:"-"`
 }
 
 const importFields = "id::text,workspace_id::text,name,catalog_digest,expected_bytes,uploaded_bytes,state,error_code,model_id::text,attempts,created_at,updated_at"

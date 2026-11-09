@@ -1,13 +1,10 @@
 package modelpreparations
 
 import (
-	"encoding/json"
 	"time"
 
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
-	trainingwire "github.com/Passion-Flow/ownsolid/api/training/v1"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/snapshot"
 )
 
 type CreateRequest struct {
@@ -31,39 +28,17 @@ type ActionRequest struct {
 	Reason           string `json:"reason"`
 }
 
-type preparationInputs struct {
-	SchemaVersion          int                       `json:"schema_version"`
-	TrainingCommand        trainingwire.Command      `json:"training_command"`
-	Adapter                training.UploadDescriptor `json:"adapter"`
-	TrainingIdentitySHA256 string                    `json:"training_identity_sha256"`
-	Heldout                Holdout                   `json:"heldout"`
-	DatasetAttemptID       string                    `json:"dataset_attempt_id"`
-}
+type preparationInputs snapshot.Inputs
 
-func (i preparationInputs) digest() string { raw, _ := json.Marshal(i); return hash(raw) }
-func (i preparationInputs) validate() error {
-	c, d, h := i.TrainingCommand, i.Adapter, i.Heldout
-	if i.SchemaVersion != 1 || c.Validate() != nil || c.ModelCatalogSHA256 != wire.ApprovedModelCatalogSHA256 || d.Validate(c.Recipe.Resources.MaximumOutputBytes, c.Recipe.Resources.MaximumOutputFiles) != nil || d.Kind != "artifact" || len(d.Files) != 3 || d.Scope != c.Scope || d.AttemptID != c.AttemptID || (training.AcceptedAdapter{Command: c, Descriptor: d}).IdentitySHA256() != i.TrainingIdentitySHA256 || !datawire.ValidID(i.DatasetAttemptID) || !datawire.ValidID(h.ID) || h.WorkspaceID != c.Scope.WorkspaceID || !datawire.ValidID(h.DatasetID) || !datawire.ValidID(h.DatasetVersionID) || !datawire.ValidDigest(h.ManifestSHA256) || !datawire.ValidDigest(h.EffectiveSourceSHA256) || !datawire.ValidDigest(h.RowMappingSHA256) || h.SourceBytes < 1 || h.SourceBytes > datawire.MaximumBytesCeiling || h.RowCount < wire.MinimumRows || h.RowCount > wire.MaximumRows || !h.Labels.valid(h.RowCount) || h.RecipeID != wire.RecipeID || h.RecipeSHA256 != wire.RecipeDigest() || h.InstructionSHA256 != wire.InstructionDigest() || h.FingerprintAlgorithm != wire.PromptFingerprintAlgorithm {
-		return fail("MODEL_PREPARATION_DATA_INVALID")
-	}
-	return nil
-}
-func (i preparationInputs) inventory() wire.InputInventory {
-	return wire.InputInventory{AdapterFiles: append([]datawire.Asset{}, i.Adapter.Files...), Heldout: datawire.Asset{Path: "heldout.jsonl", SizeBytes: i.Heldout.SourceBytes, SHA256: i.Heldout.EffectiveSourceSHA256}}
-}
+func (i preparationInputs) digest() string                 { return snapshot.Inputs(i).Digest() }
+func (i preparationInputs) validate() error                { return snapshot.Inputs(i).Validate() }
+func (i preparationInputs) inventory() wire.InputInventory { return snapshot.Inputs(i).Inventory() }
 
 // DatasetVersionLineage identifies a frozen dataset version and its manifest.
-type DatasetVersionLineage struct {
-	DatasetID        string
-	DatasetVersionID string
-	ManifestSHA256   string
-}
+type DatasetVersionLineage = snapshot.DatasetVersionLineage
 
-// PreparationDatasetLineage keeps the original training source distinct from the preparation holdout.
-type PreparationDatasetLineage struct {
-	Training DatasetVersionLineage
-	Holdout  DatasetVersionLineage
-}
+// PreparationDatasetLineage separates training from preparation evaluation.
+type PreparationDatasetLineage = snapshot.DatasetLineage
 
 type Preparation struct {
 	ReviewID              *string              `json:"review_id"`

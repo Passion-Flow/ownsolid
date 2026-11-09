@@ -11,7 +11,7 @@ import (
 )
 
 func trainingSource(input preparationInputs) training.AcceptedAdapter {
-	return training.AcceptedAdapter{Command: input.TrainingCommand, Descriptor: input.Adapter}
+	return training.AcceptedAdapter{Command: input.TrainingCommand, Descriptor: training.UploadDescriptor(input.Adapter)}
 }
 
 func (s *Service) Cancel(ctx context.Context, a identity.Auth, workspace, id string, input ActionRequest, request string) (Preparation, error) {
