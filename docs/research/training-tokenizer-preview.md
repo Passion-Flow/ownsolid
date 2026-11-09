@@ -178,3 +178,9 @@ the revoked request returned no preview, and the existing authorized
 Portal session succeeded after release. The HTTP route also refused the
 training-reserved token and recovered after restoring the correct model
 file.
+
+The integration fixture now loads the exact installed tokenizer locally
+before making the first HTTPS preview request. This separates cold package
+and asset I/O on the shared test host from the fixed 30-second fixture
+client deadline. The route and the timed child still run with their
+existing deadlines and resource limits.
