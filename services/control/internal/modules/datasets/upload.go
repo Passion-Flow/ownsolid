@@ -147,27 +147,34 @@ func (s *Service) UploadWithSourceRowFormat(ctx context.Context, a identity.Auth
 		if (uploadAuthority == nil) != (authority == nil) || uploadAuthority != nil && *uploadAuthority != *authority {
 			return failure("DATASET_ATTEMPT_STALE")
 		}
-		job := uuid.NewString()
-		intent := fingerprint(struct {
-			Draft, Upload   string
-			SourceRowFormat wire.SourceRowFormat `json:"source_row_format,omitempty"`
-		}{draft, upload, format}, a.Me.User.ID)
-		policy := s.jobPolicyBytes(PublicationOptions{}, format)
-		_, e = tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,input_sha256,input_policy,creation_key,creation_fingerprint) VALUES($1,$2,$3,$4,$5,'import',$6,$7,$8,$9,'Validate uploaded source',$10,'pending',$11,$12,$13,$14)`, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,input_sha256,input_policy,creation_key,creation_fingerprint) VALUES(?,?,?,?,?,'import',?,?,?,?,'Validate uploaded source',?,'pending',?,CAST(? AS JSON),?,?)`, []any{job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, policy, uuid.NewString(), intent}, []any{job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, policy, uuid.NewString(), intent}, transaction.SQL(transaction.Dameng, dmUploadQueueInspection, job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, string(policy), uuid.NewString(), intent)))
-		if e != nil {
-			return e
-		}
-		_, e = tx.Exec(ctx, datasetSQL(tx, "UPDATE dataset_drafts SET source_received_at=clock_timestamp(),upload_attempt_id=NULL,upload_expires_at=NULL,state='validating',current_job_id=$2,error_code=NULL,error_line_number=NULL,updated_at=clock_timestamp() WHERE id=$1", `UPDATE dataset_drafts SET source_received_at=CURRENT_TIMESTAMP(6),upload_attempt_id=NULL,upload_expires_at=NULL,state='validating',current_job_id=?,error_code=NULL,error_line_number=NULL,updated_at=CURRENT_TIMESTAMP(6) WHERE id=?`, []any{draft, job}, []any{job, draft}, transaction.SQL(transaction.Dameng, dmUploadComplete, job, draft)))
-		if e != nil {
-			return e
-		}
-		if e = auditEvent(ctx, tx, a, w, "dataset.source_received", "dataset_draft", draft, "Validate uploaded source", requestID); e != nil {
-			return e
-		}
-		out, e = lockedDraft(ctx, tx, w, dataset, draft)
+		out, e = s.completeSourceUpload(ctx, tx, a, w, d, upload, format, authority, requestID)
 		return e
 	})
 	return committed(out, e)
+}
+
+// completeSourceUpload records the immutable source and inspection in the
+// caller's transaction after custody and current authority have been verified.
+func (s *Service) completeSourceUpload(ctx context.Context, tx transaction.Executor, a identity.Auth, w workspaces.Workspace, d Draft, upload string, format wire.SourceRowFormat, authority *string, requestID string) (Draft, error) {
+	dataset, draft, digest := d.DatasetID, d.ID, d.SourceSHA256
+	job := uuid.NewString()
+	intent := fingerprint(struct {
+		Draft, Upload   string
+		SourceRowFormat wire.SourceRowFormat `json:"source_row_format,omitempty"`
+	}{draft, upload, format}, a.Me.User.ID)
+	policy := s.jobPolicyBytes(PublicationOptions{}, format)
+	_, e := tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,input_sha256,input_policy,creation_key,creation_fingerprint) VALUES($1,$2,$3,$4,$5,'import',$6,$7,$8,$9,'Validate uploaded source',$10,'pending',$11,$12,$13,$14)`, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,input_sha256,input_policy,creation_key,creation_fingerprint) VALUES(?,?,?,?,?,'import',?,?,?,?,'Validate uploaded source',?,'pending',?,CAST(? AS JSON),?,?)`, []any{job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, policy, uuid.NewString(), intent}, []any{job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, policy, uuid.NewString(), intent}, transaction.SQL(transaction.Dameng, dmUploadQueueInspection, job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, string(policy), uuid.NewString(), intent)))
+	if e != nil {
+		return Draft{}, e
+	}
+	_, e = tx.Exec(ctx, datasetSQL(tx, "UPDATE dataset_drafts SET source_received_at=clock_timestamp(),upload_attempt_id=NULL,upload_expires_at=NULL,state='validating',current_job_id=$2,error_code=NULL,error_line_number=NULL,updated_at=clock_timestamp() WHERE id=$1", `UPDATE dataset_drafts SET source_received_at=CURRENT_TIMESTAMP(6),upload_attempt_id=NULL,upload_expires_at=NULL,state='validating',current_job_id=?,error_code=NULL,error_line_number=NULL,updated_at=CURRENT_TIMESTAMP(6) WHERE id=?`, []any{draft, job}, []any{job, draft}, transaction.SQL(transaction.Dameng, dmUploadComplete, job, draft)))
+	if e != nil {
+		return Draft{}, e
+	}
+	if e = auditEvent(ctx, tx, a, w, "dataset.source_received", "dataset_draft", draft, "Validate uploaded source", requestID); e != nil {
+		return Draft{}, e
+	}
+	return lockedDraft(ctx, tx, w, dataset, draft)
 }
 
 // The locked draft has exactly one original inspection for its immutable source.
