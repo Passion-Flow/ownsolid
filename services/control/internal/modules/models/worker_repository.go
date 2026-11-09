@@ -293,8 +293,11 @@ func (s *Service) verifyImportFiles(ctx context.Context, session transaction.Sto
 		if offset != current.ExpectedBytes {
 			return fail("MODEL_IMPORT_INCOMPLETE")
 		}
-		source := &chunkReader{root: root, id: current.ID, chunks: chunks}
+		source := &chunkReader{ctx: ctx, root: root, id: current.ID, chunks: chunks}
 		defer source.Close()
+		if e = manifest.reviewArchive(source, current.ExpectedBytes); e != nil {
+			return e
+		}
 		if e = manifest.extractArchive(ctx, source, filepath.Join(s.RootDirectory, stage)); e != nil {
 			return e
 		}
