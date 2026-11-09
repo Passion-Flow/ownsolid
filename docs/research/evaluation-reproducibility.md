@@ -92,7 +92,10 @@ preparation holdout and the frozen dataset validation version are independent
 provenance. Require the same workspace and byte-identical validation and
 captured holdout digests before using the published version for replay. Keep
 both identities in the report. Never substitute the training partition or
-equate the holdout ID with the published version ID. The captured model catalog
+equate the holdout ID with the published version ID. Identical validation
+partitions can belong to different published versions. The independently
+retained version digest pins the selected version. The legacy capture records
+the digest of the validation bytes it scored. The captured model catalog
 digest and recipe identity must match the supplied catalog and scorer recipe.
 
 Match every observation in frozen order by source ID and exact prompt SHA-256.
@@ -114,6 +117,10 @@ existing ownsolid runtime modules are used offline. Verify byte-identical
 output in fresh processes, comparison with a retained report, and rejection
 of dataset, model, scorer, workspace and case mismatches. Use a real
 processor-published validation asset and the checked-in pinned catalog in the
-fixture. Record the origin of capture evidence separately from actual engine
-qualification. EVL-101 stays open for an authorized control-plane and UI
-workflow and real inference repeatability.
+fixture. A disconnected PostgreSQL integration probe published six synthetic
+rows through the dataset processor and read the frozen version and three
+validation rows through the authorized control-plane readers. Two offline
+replays of those inputs and synthetic predictions matched byte for byte at
+two correct out of three. The probe rejected an incorrect version digest.
+EVL-101 stays open for an authorized control-plane and UI workflow and real
+inference repeatability.
