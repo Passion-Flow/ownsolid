@@ -348,3 +348,36 @@ HTTPS and PostgreSQL fixture against the actual handler, processor and
 contract. Check malformed and repeated headers, an identical replay, a
 changed-format conflict, a retryable processor failure, physical line
 errors, and canonical publication with the raw source digest preserved.
+
+## APP-109 Portal conversation search
+
+The [search handoff](application-conversation-search.md#acceptance-and-handoff)
+and registered Portal handler already accept q. Open WebUI's
+[history search](https://docs.openwebui.com/features/chat-conversations/chat-features/history-search/)
+matches content within the caller's history. The ownsolid query matches the
+application name and completed-turn question or plain-text answer as a
+literal substring. It returns the existing caller-private metadata.
+[OpenAPI parameters](https://spec.openapis.org/oas/v3.1.1.html#parameter-object)
+describe the bounded optional string. [AIP-158](https://google.aip.dev/158)
+keeps page tokens opaque and binds continuation to the same query.
+
+Document one optional q with a 120-character maximum and preserve the
+existing operation, authorization, metadata response and unfiltered cursor.
+Search cursors bind the exact term, workspace, owner and login session.
+The service rejects invalid or repeated terms and keeps the existing
+availability refusal for search outside PostgreSQL. A separate search route
+would duplicate current permission and pagination behavior. The existing
+[SDK licenses](sdk.md#licenses) and [service dependencies](application-conversation-search.md#continuation)
+apply. No dependency, model or dataset is added.
+
+Exercise the existing disconnected Portal TLS and PostgreSQL fixture for
+literal wildcard and Unicode matching, private scope, invalid input,
+cursor substitution and legacy pagination. Verify both Go and Python
+request builders omit q by default and encode an explicit term unchanged.
+
+The disconnected Linux fixture exercised the real Portal dispatcher and
+PostgreSQL 18.6. Success and refusal bodies validated against the OpenAPI.
+The fixture covered wildcard and Unicode matches, caller and workspace
+privacy, search cursor replay across sessions, invalid terms and unchanged
+legacy pagination. The pinned Go and Python generators preserved existing
+request construction and encoded an explicit Unicode and wildcard term.
