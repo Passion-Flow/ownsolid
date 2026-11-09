@@ -102,3 +102,13 @@ func RankQueue(entries []QueueEntry, queues map[string]QueueShare) ([]QueueEntry
 	})
 	return ranked, nil
 }
+
+// QueueTurnReason explains an exact entry deferred by the dispatcher using
+// this authorized RankQueue result. Call it only when rank was the reason
+// for deferral. A head, absent or changed entry has no queue waiting reason.
+func QueueTurnReason(ranked []QueueEntry, deferred QueueEntry) (WaitReason, bool) {
+	if slices.Index(ranked, deferred) <= 0 {
+		return WaitReason{}, false
+	}
+	return WaitReason{Code: "SCHEDULING_QUEUE_TURN_PENDING", Action: WaitForQueueTurn}, true
+}
