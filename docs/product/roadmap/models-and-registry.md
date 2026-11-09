@@ -15,7 +15,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
 - [ ] MOD-104 Per-model serving defaults such as chat-template options (for example disabling thinking mode) (P1)
 - [ ] MOD-105 LoRA merge and format conversion with recorded inputs and outputs (P1) - Catalog: F065
 - [ ] MOD-106 Quantization jobs producing serving variants (P1) - Catalog: F066, F175
-- [ ] MOD-107 Model retirement with dependency check across deployments, apps and keys (P1) - Catalog: F585
+- [ ] MOD-107 Model retirement with dependency check across deployments, apps and keys (P1) - Catalog: F585, [Deployment transaction acceptance](../../research/model-retirement-dependencies.md#disconnected-postgresql-acceptance)
 - [ ] MOD-108 Model file and code review: scan for executable code and unsafe formats before import (P1) - Catalog: F583
 - [ ] MOD-109 Model distribution to nodes through the in-site registry with pre-warm (P1) - Catalog: F642
 - [ ] MOD-110 Model licence register: licence, commercial use, redistribution, attribution and use restrictions per model and version; deployments and task runs are refused with the reason when the installation's declared use is not permitted (P1) - [Deployment admission and consumer handoff](../../research/model-license-admission.md)
