@@ -131,9 +131,10 @@ qualify installed gateways or fleet load.
 
 The two-listener regression passed under the Go race detector and
 in an isolated Linux arm64 container with no network. It held a
-claim across age, read the complete reply and the legacy drain
+claim across age, received the next lease and the legacy drain
 status, then confirmed that the same listener accepted a new
-connection and the second listener received the previous cursor.
+connection and the second listener received the previous acknowledged
+cursor.
 The transport test decoded a real HTTP/2 GOAWAY on an aged request
 and proved the socket deadline closed a silent connection. The
 legacy configuration default, bounds and process-wide drain passed
