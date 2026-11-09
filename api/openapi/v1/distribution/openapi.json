@@ -1122,6 +1122,133 @@
         }
       ]
     },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/export": {
+      "get": {
+        "operationId": "adminExportGatewayUsageCSV",
+        "summary": "Download one page of gateway usage as CSV",
+        "description": "Download one authorized page of gateway request usage. Platform administrators read the workspace history. Continue with the next_cursor from the corresponding JSON request history page and reuse its scope and API key filter. Both reads use live history.",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "api_key_id",
+            "in": "query",
+            "required": false,
+            "description": "Only the calls made with this key: the key's call log.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/GatewayUsageCSVDownload"
+          },
+          "400": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "401": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "403": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "404": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "503": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "default": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED",
+            "INVALID_CURSOR"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
+        }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{resource_id}": {
       "get": {
         "operationId": "adminGetGatewayRequest",
@@ -3116,6 +3243,133 @@
                 }
               }
             }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED",
+            "INVALID_CURSOR"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
+        }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests/export": {
+      "get": {
+        "operationId": "portalExportGatewayUsageCSV",
+        "summary": "Download one page of gateway usage as CSV",
+        "description": "Download one authorized page of gateway request usage. Portal callers read only their own requests in the workspace. Continue with the next_cursor from the corresponding JSON request history page and reuse its scope and API key filter. Both reads use live history.",
+        "x-audiences": [
+          "portal"
+        ],
+        "security": [
+          {
+            "portalSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "api_key_id",
+            "in": "query",
+            "required": false,
+            "description": "Only the calls made with this key: the key's call log.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/GatewayUsageCSVDownload"
+          },
+          "400": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "401": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "403": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "404": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "503": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
+          },
+          "default": {
+            "$ref": "#/components/responses/GatewayUsageCSVProblem"
           }
         },
         "x-error-codes": {
@@ -6423,6 +6677,71 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "gw1.UUID.secret"
+      }
+    },
+    "responses": {
+      "GatewayUsageCSVDownload": {
+        "description": "A complete UTF-8 CSV attachment with a header row and CRLF records. An empty page contains the header row.",
+        "headers": {
+          "Content-Disposition": {
+            "description": "Attachment with the fixed name gateway-usage.csv.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "attachment; filename=gateway-usage.csv"
+            }
+          },
+          "Content-Length": {
+            "description": "Exact byte length of the complete attachment.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          "X-Artifact-SHA256": {
+            "description": "Lowercase hexadecimal SHA-256 of the attachment bytes.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          "Cache-Control": {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "no-store"
+            }
+          },
+          "X-Request-ID": {
+            "description": "Server-generated request correlation UUID.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "text/csv": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "GatewayUsageCSVProblem": {
+        "description": "Stable safe error.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
       }
     }
   }
