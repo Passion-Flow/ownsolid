@@ -156,6 +156,21 @@ ownsolid node join-token list
 ownsolid node join-token revoke "$TOKEN_ID" --reason 'Installation postponed'
 ```
 
+## Manage cell agent pacing
+
+```sh
+ownsolid node pacing get --output json
+ownsolid node pacing set --heartbeat-seconds 15 --jitter-percent 10 \\
+  --reconnect-base-seconds 2 --reconnect-max-seconds 120 \\
+  --version "$VERSION" --reason 'Reduce maintenance load' --confirm
+```
+
+Use the site and cell configured for the Admin origin. Read the current
+`version` and `online_window_seconds` before replacing the settings. A
+write supplies all four values, the version, and an audit reason. After
+a conflict or uncertain response, read the retained settings and version
+before issuing another write.
+
 ## Deploy an approved model
 
 Read placement for the model, then specify the chosen node and GPU. Placement
