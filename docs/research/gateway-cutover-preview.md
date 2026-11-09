@@ -82,3 +82,50 @@ missing CSRF, missing and duplicate JSON fields, foreign tenant and
 Portal callers, an old revision and a held request. Existing apply
 replay, audit rollback and pause/admission lock ordering passed.
 The HTTP test uses synthetic deployment observations.
+
+## Public contract and client acceptance
+
+Publish `adminPreviewAliasCutover` on the registered cell-scoped Admin path.
+The [OpenAPI Operation Object](https://spec.openapis.org/oas/v3.1.0.html#operation-object)
+lets this operation reuse the apply request schema while declaring separate
+headers and responses. Keep the explicit nullable request fields for pause,
+resume, retarget and rollback. The live validator checks which fields must
+be null for each action and compares the rollback source with the expected
+revision. Preview requires the Admin session, exact Origin and CSRF token.
+It does not require an idempotency key. The response contains the current
+and proposed states in the standard `data` envelope. It does not reserve
+an apply or promise that the target will still be ready when apply runs.
+
+Use the existing generated Go and Python clients with the installed origin
+and local CA. Their dependencies and offline redistribution terms are listed
+in the [SDK review](sdk.md). No dependency, model or dataset is added. A
+second request model or a caller-computed preview could diverge from apply.
+
+Validate the success schema and safe problems against the registered TLS
+dispatcher on PostgreSQL with the network disconnected. Cover missing and
+duplicate fields, unsupported media, oversized payloads, missing CSRF,
+unauthenticated sessions, foreign workspace, stale revisions and undrained
+requests. Compare the four projected states to committed results and confirm
+preview leaves the stored state and audit counts intact. Exercise both
+SDKs with explicit null fields, the scoped path, CSRF, the typed success
+and a revision conflict. The Console preview and confirmation are owned by WEB.
+
+The published contract passed the Linux loopback TLS/PostgreSQL fixture.
+The dispatcher returned the typed preview for all four actions, rejected an
+anonymous request without CSRF with 403, and rejected an anonymous caller
+with a valid CSRF context with 401. It rejected malformed, oversized and
+non-JSON bodies and returned safe 404 and 409 problems for foreign scope
+and live conflicts. The generated Go and Python clients serialized all four
+actions, preserved explicit nulls, and decoded the preview and revision
+conflict in local wire probes.
+
+### Console handoff
+
+Use the generated `adminPreviewAliasCutover` operation with the selected
+site, cell, workspace and alias. Fetch CSRF as for apply, send the same
+request fields and display `data.before` and `data.after` with both
+deployment revisions and pause state. On confirmation, apply using the
+same expected revision and the apply operation's idempotency key. A
+`VERSION_CONFLICT` requires a fresh preview after reading the current alias.
+An `ALIAS_REQUESTS_UNDRAINED` response leaves the alias paused. The UI owns
+the preview display, confirmation and retry flow.
