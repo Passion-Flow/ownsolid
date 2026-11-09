@@ -52,8 +52,10 @@ catalogue-bound digest, and cancellation. A same-size change to the
 derived file produced no download descriptor, and restoring it allowed
 the same command and range again.
 
-Run with the private loopback DSN and approved file directory described
-in the [development environment](../development/environment.md#database-integration-tests).
+Use the private loopback DSN described in the
+[development environment](../development/environment.md#database-integration-tests).
+Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the directory
+containing the pinned Qwen files for the tagged case.
 
 ```sh
 go -C services/control test ./internal/modules/deployments \
