@@ -17,7 +17,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
 - [ ] MOD-106 Quantization jobs producing serving variants (P1) - Catalog: F066, F175
 - [ ] MOD-107 Model retirement with dependency check across deployments, apps and keys (P1) - Catalog: F585, [Deployment transaction acceptance](../../research/model-retirement-dependencies.md#disconnected-postgresql-acceptance)
 - [ ] MOD-108 Model file and code review: scan for executable code and unsafe formats before import (P1) - Catalog: F583, [Approved-bundle file safety evidence](../../research/model-import-file-safety.md#disconnected-postgresql-acceptance)
-- [ ] MOD-109 Model distribution to nodes through the in-site registry with pre-warm (P1) - Catalog: F642
+- [ ] MOD-109 Model distribution to nodes through the in-site registry with pre-warm (P1) - Catalog: F642, [Leased transfer integrity](../../research/model-transfer-integrity.md#disconnected-tls-and-postgresql-acceptance)
 - [ ] MOD-110 Model licence register: licence, commercial use, redistribution, attribution and use restrictions per model and version; deployments and task runs are refused with the reason when the installation's declared use is not permitted (P1) - [Deployment admission and consumer handoff](../../research/model-license-admission.md)
 
 - [ ] MOD-113 Catalogue index: names, publishers, parameter counts, context lengths, licences, tags and hashes for both registries, shipped with the product and refreshed from a signed bundle ([ADR 0036](../../decisions/0036-show-every-option-and-fetch-models-offline.md)) (P1)
