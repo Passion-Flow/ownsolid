@@ -2,11 +2,11 @@ package distribution_test
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"net/url"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
+	"github.com/google/uuid"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -78,6 +78,42 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	ctx := context.Background()
 	workspace := a.alias.WorkspaceID
 	id := a.alias.ID
+	type durableCutover struct {
+		state                     distribution.CutoverState
+		intents, versions, audits int
+	}
+	read := func() durableCutover {
+		t.Helper()
+		var out durableCutover
+		err := c.s.DB.QueryRow(ctx, `SELECT revision,deployment_id::text,deployment_revision,disabled_at IS NOT NULL,
+			(SELECT count(*) FROM model_alias_cutover_intents WHERE alias_id=$1),
+			(SELECT count(*) FROM model_alias_target_versions WHERE alias_id=$1),
+			(SELECT count(*) FROM audit_events WHERE target_id=$1)
+			FROM model_aliases WHERE id=$1`, id).Scan(
+			&out.state.Revision, &out.state.DeploymentID, &out.state.DeploymentRevision, &out.state.Paused,
+			&out.intents, &out.versions, &out.audits,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out
+	}
+	applyPreview := func(in distribution.CutoverRequest, key string) (distribution.CutoverResult, error) {
+		t.Helper()
+		before := read()
+		preview, err := c.s.PreviewCutover(ctx, c.a, workspace, id, in)
+		if err != nil {
+			t.Fatal("preview", in.Action, err)
+		}
+		if before != read() || preview.Before != before.state || preview.After.Revision != before.state.Revision+1 {
+			t.Fatal("preview changed durable state or projected the wrong revision", in.Action)
+		}
+		applied, err := c.s.Cutover(ctx, c.a, workspace, id, in, key, uuid.NewString())
+		if err == nil && preview.After != read().state {
+			t.Fatal("preview and committed cutover disagree", in.Action)
+		}
+		return applied, err
+	}
 	input := a.input()
 	admitted, e := c.s.Admit(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, input, uuid.NewString())
 	if e != nil {
@@ -85,10 +121,20 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	}
 	pause := distribution.CutoverRequest{Action: "pause", ExpectedRevision: a.alias.Revision, Reason: "Pause new admissions while retaining actual admitted request"}
 	key := uuid.NewString()
-	paused, e := c.s.Cutover(ctx, c.a, workspace, id, pause, key, uuid.NewString())
+	_, e = c.s.PreviewCutover(ctx, a.owner, workspace, id, pause)
+	check(t, e, "ACCESS_DENIED")
+	foreign := setup(t)
+	if foreign.a.Me.Workspace.TenantID == c.a.Me.Workspace.TenantID {
+		t.Fatal("expected a separate tenant")
+	}
+	_, e = foreign.s.PreviewCutover(ctx, foreign.a, workspace, id, pause)
+	check(t, e, "RESOURCE_NOT_FOUND")
+	paused, e := applyPreview(pause, key)
 	if e != nil || paused.Alias.DisabledAt == nil || paused.Alias.HeldRequests != 1 || paused.AppliedRevision != 2 {
 		t.Fatal("pause did not preserve owner", e)
 	}
+	_, e = c.s.PreviewCutover(ctx, c.a, workspace, id, pause)
+	check(t, e, "VERSION_CONFLICT")
 	replay, e := c.s.Cutover(ctx, c.a, workspace, id, pause, key, uuid.NewString())
 	if e != nil || !replay.Replayed || replay.AppliedRevision != 2 {
 		t.Fatal("pause replay", e)
@@ -96,6 +142,8 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	_, e = c.s.Admit(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, a.input(), uuid.NewString())
 	check(t, e, "MODEL_ALIAS_UNAVAILABLE")
 	resume := distribution.CutoverRequest{Action: "resume", ExpectedRevision: 2, Reason: "Do not clear an unknown physical request by waiting"}
+	_, e = c.s.PreviewCutover(ctx, c.a, workspace, id, resume)
+	check(t, e, "ALIAS_REQUESTS_UNDRAINED")
 	_, e = c.s.Cutover(ctx, c.a, workspace, id, resume, uuid.NewString(), uuid.NewString())
 	check(t, e, "ALIAS_REQUESTS_UNDRAINED")
 	if _, e = c.s.DB.Exec(ctx, "UPDATE gateway_requests SET deadline_at=admitted_at+interval '1 millisecond' WHERE id=$1", input.RequestID); e != nil {
@@ -108,14 +156,14 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	}
 	next := c.replaceBaseDeployment(t, a.alias.DeploymentID)
 	retarget := distribution.CutoverRequest{Action: "retarget", ExpectedRevision: 2, DeploymentID: &next.ID, DeploymentRevision: &next.Revision, Reason: "Same key explicit verified fresh target"}
-	changed, e := c.s.Cutover(ctx, c.a, workspace, id, retarget, uuid.NewString(), uuid.NewString())
+	changed, e := applyPreview(retarget, uuid.NewString())
 	if e != nil || changed.Alias.ID != id || changed.Alias.DisabledAt == nil || changed.Alias.DeploymentID != next.ID || changed.Alias.HeldRequests != 0 {
 		t.Fatal("retarget", e)
 	}
 	_, e = c.s.AuthorizeModels(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, *a.key.Secret)
 	check(t, e, "MODEL_ALIAS_UNAVAILABLE")
 	resume.ExpectedRevision = 3
-	resumed, e := c.s.Cutover(ctx, c.a, workspace, id, resume, uuid.NewString(), uuid.NewString())
+	resumed, e := applyPreview(resume, uuid.NewString())
 	if e != nil || !resumed.Alias.Available {
 		t.Fatal("resume", e)
 	}
@@ -135,7 +183,7 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	restored := c.replaceBaseDeployment(t, next.ID)
 	source := int64(1)
 	rollback := distribution.CutoverRequest{Action: "rollback", ExpectedRevision: paused.Alias.Revision, DeploymentID: &restored.ID, DeploymentRevision: &restored.Revision, SourceRevision: &source, Reason: "Selected recorded model redeployed and verified before rollback"}
-	rolled, e := c.s.Cutover(ctx, c.a, workspace, id, rollback, uuid.NewString(), uuid.NewString())
+	rolled, e := applyPreview(rollback, uuid.NewString())
 	if e != nil || rolled.Alias.DisabledAt == nil {
 		t.Fatal("recorded model rollback", e)
 	}

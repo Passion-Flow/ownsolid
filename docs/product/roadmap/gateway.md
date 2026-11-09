@@ -24,6 +24,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [ ] GW-109 Request tracing from caller to deployment and GPU (P1) - Catalog: F082
 - [ ] GW-110 Optional external OpenAI-compatible upstreams for connected sites (P1) - Catalog: F071
 - [ ] GW-111 Configuration publishing with diff preview and rollback (P1) - Catalog: F083
+  - The control service previews pause, resume, retarget and rollback with the same current-state checks as apply. [PostgreSQL acceptance](../../research/gateway-cutover-preview.md) records preview/apply parity, no writes, stale and foreign refusal, and existing cutover coverage. The versioned Admin preview contract and Console flow remain open.
 - [ ] GW-112 Load tested: requests per second and added latency at measured scale, published (P1) - Catalog: F086
   - The [component baseline and PostgreSQL query acceptance](../../research/gateway-throughput.md) record throughput for a synthetic backend and two unnecessary aggregates removed from a native generation path. Sustained installation-scale throughput and added latency remain open.
 - [x] GW-113 Gateway and keys page: issue, rotate and revoke keys, with each key's call log (S-206) (P1) - Evidence: 4c1eb36, b9e6728; live run on an installation, 2026-11-08, twice: keys issued, rotated with an overlap and revoked from the browser against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; no model ran, and aliases are published through the API until GW-117
