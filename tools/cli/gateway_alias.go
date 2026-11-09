@@ -49,6 +49,7 @@ func (opts *options) aliasCommand(workspace *string) *cobra.Command {
 			},
 		},
 		opts.provisionManagedGatewayCommand(workspace), opts.publishAliasCommand(workspace), opts.disableAliasCommand(workspace),
+		opts.aliasCutoverCommand(workspace),
 	)
 	return group
 }
