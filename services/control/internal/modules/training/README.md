@@ -22,8 +22,12 @@ See the [training dataset lineage contract](../../../../../docs/research/trainin
 `ReadAcceptedExperiment` projects the accepted stopped attempt's command,
 dataset partition inventory and protected result, stop and adapter digests.
 It shares the adapter export's file verification and final authority check.
-The selected node and GPU identify placement. The runtime lock and historical
-device observations require separate trusted bindings. See the
+A successful stop and the scoped read both reconcile the protected result
+bytes with the attempt outcome. The execution record distinguishes the
+frozen distribution image reference from the local image ID bound to the
+stop. The selected node and GPU identify placement. The lock and hardware
+observation are absent until their owners supply verified attempt bindings.
+See the
 [experiment record contract](../../../../../docs/research/training-experiment-records.md)
 for the offline CPU and PostgreSQL replay.
 
