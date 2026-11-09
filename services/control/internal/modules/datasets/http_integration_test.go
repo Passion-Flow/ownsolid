@@ -100,7 +100,8 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 			t.Fatal(e)
 		}
 	}
-	handler.Datasets.CSVImportCandidate, e = datasets.NewCSVImportCandidate(handler.Datasets.Service)
+	parquet := parquetDraftFixtureConfig(t, filepath.Dir(script))
+	handler.Datasets.DraftSourceCandidate, e = datasets.NewDraftSourceCandidate(handler.Datasets.Service, parquet)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -207,7 +208,7 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	if handler.Datasets.TokenizerPreview != nil {
 		verifyTokenizerPreviewHTTPS(t, handler.Datasets.Service, auth, portal, admin, path, adminPath, previewFixture)
 	}
-	verifyCSVImportHTTPS(t, handler.Datasets, portal, admin, root, workspace, dataset, password)
+	verifyDraftSourceHTTPS(t, handler.Datasets, portal, admin, root, workspace, dataset, password, parquet)
 }
 
 func createHTTPSDatasetDraft(t *testing.T, client *httpfixture.Client, path string, raw []byte) map[string]any {
