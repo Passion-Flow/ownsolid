@@ -3,8 +3,12 @@
 package artifactstores
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"io"
 	"net/http"
@@ -314,6 +318,27 @@ func TestActualObjectBackupFence(t *testing.T) {
 		backupEntry(t, initial, tombstone.ID).State != "aborted" {
 		t.Fatalf("incorrect ready object or tombstone: %+v", initial.Objects)
 	}
+	budgetFile := backupCopyFixture(t)
+	beforeRequests := proxy.requests.Load()
+	if out, e := current.CopyInventory(g.ctx, budgetFile, 8, int64(len(source)-1)); !reflect.DeepEqual(out, BackupCopy{}) || e == nil || e.Error() != "OBJECT_BACKUP_COPY_LIMIT" {
+		t.Fatalf("wrong copy budget refusal: %+v %v", out, e)
+	}
+	if i, e := budgetFile.Stat(); e != nil || i.Size() != 0 || proxy.requests.Load() != beforeRequests {
+		t.Fatal("over-budget copy reached destination or provider", e)
+	}
+	public := backupCopyFixture(t)
+	if e := public.Chmod(0644); e != nil {
+		t.Fatal(e)
+	}
+	if out, e := current.CopyInventory(g.ctx, public, 8, 4096); !reflect.DeepEqual(out, BackupCopy{}) || e == nil || e.Error() != "OBJECT_BACKUP_COPY_DESTINATION_INVALID" {
+		t.Fatalf("nonprivate destination was accepted: %+v %v", out, e)
+	}
+	if _, e := budgetFile.Write([]byte("previous fixture output")); e != nil {
+		t.Fatal(e)
+	}
+	if out, e := current.CopyInventory(g.ctx, budgetFile, 8, 4096); !reflect.DeepEqual(out, BackupCopy{}) || e == nil || e.Error() != "OBJECT_BACKUP_COPY_DESTINATION_INVALID" {
+		t.Fatalf("nonempty destination was accepted: %+v %v", out, e)
+	}
 	ref := objectstore.Ref{Tenant: g.f.Tenant, Workspace: g.f.Workspace, Object: pending.ID}
 	abandoned, err := g.s.Transport.Create(g.ctx, ref, metadata(storedObject{Object: pending}))
 	if err != nil {
@@ -333,21 +358,22 @@ func TestActualObjectBackupFence(t *testing.T) {
 	checkBackupRefusal(t, current, g.ctx, "OBJECT_BACKUP_UNSETTLED")
 	g.exec(t, "UPDATE artifact_object_ingestions SET state='failed' WHERE id=$1", "", "", ingestion)
 
-	type resultInventory struct {
-		inventory BackupInventory
-		err       error
+	type resultCopy struct {
+		copy BackupCopy
+		err  error
 	}
-	verify := func(f *BackupFence) <-chan resultInventory {
-		result := make(chan resultInventory, 1)
+	copyAsync := func(f *BackupFence) <-chan resultCopy {
+		file := backupCopyFixture(t)
+		result := make(chan resultCopy, 1)
 		go func() {
-			inventory, err := f.VerifyInventory(g.ctx, 8)
-			result <- resultInventory{inventory, err}
+			copy, err := f.CopyInventory(g.ctx, file, 8, 4096)
+			result <- resultCopy{copy, err}
 		}()
 		return result
 	}
 	h := newBackupReadHold()
 	proxy.hold.Store(h)
-	changed := verify(current)
+	changed := copyAsync(current)
 	awaitBackupValue(t, h.started)
 	checkBackupRefusal(t, current, g.ctx, "OBJECT_BACKUP_BUSY")
 	if err := current.Release(); err == nil || err.Error() != "OBJECT_BACKUP_BUSY" {
@@ -356,14 +382,16 @@ func TestActualObjectBackupFence(t *testing.T) {
 	g.exec(t, "UPDATE artifact_objects SET revision=revision+1 WHERE id=$1", "", "", pending.ID)
 	proxy.hold.Store(nil)
 	close(h.resume)
-	if got := awaitBackupValue(t, changed); got.err == nil || got.err.Error() != "OBJECT_BACKUP_INVENTORY_CHANGED" || !reflect.DeepEqual(got.inventory, BackupInventory{}) {
+	if got := awaitBackupValue(t, changed); got.err == nil || got.err.Error() != "OBJECT_BACKUP_INVENTORY_CHANGED" || !reflect.DeepEqual(got.copy, BackupCopy{}) {
 		t.Fatalf("changed SQL inventory: %+v", got)
 	}
-	retry, err := current.VerifyInventory(g.ctx, 8)
-	if err != nil || len(retry.Objects) != 2 || backupEntry(t, retry, pending.ID).Revision != initialReady.Revision+1 ||
-		retry.InventorySHA256 == initial.InventorySHA256 {
+	dst := backupCopyFixture(t)
+	retry, err := current.CopyInventory(g.ctx, dst, 8, 4096)
+	if err != nil || len(retry.Inventory.Objects) != 2 || backupEntry(t, retry.Inventory, pending.ID).Revision != initialReady.Revision+1 ||
+		retry.Inventory.InventorySHA256 == initial.InventorySHA256 {
 		t.Fatalf("retry did not bind revised SQL inventory: %+v %v", retry, err)
 	}
+	checkBackupCopy(t, dst, retry, pending.ID, source)
 
 	foreignTenant, foreignWorkspace, foreignObject := uuid.NewString(), uuid.NewString(), uuid.NewString()
 	g.exec(t, "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign fixture tenant','active')", "", "", foreignTenant)
@@ -383,12 +411,12 @@ func TestActualObjectBackupFence(t *testing.T) {
 
 	h = newBackupReadHold()
 	proxy.hold.Store(h)
-	terminated := verify(current)
+	terminated := copyAsync(current)
 	awaitBackupValue(t, h.started)
 	if err := g.s.Close(g.ctx); err != nil {
 		t.Fatal(err)
 	}
-	if got := awaitBackupValue(t, terminated); !transaction.IsCancellationOnly(got.err) || !reflect.DeepEqual(got.inventory, BackupInventory{}) {
+	if got := awaitBackupValue(t, terminated); !transaction.IsCancellationOnly(got.err) || !reflect.DeepEqual(got.copy, BackupCopy{}) {
 		t.Fatalf("shutdown readback result: %+v", got)
 	}
 	if err := current.Release(); err != nil {
@@ -397,7 +425,7 @@ func TestActualObjectBackupFence(t *testing.T) {
 	if _, err := g.s.AcquireBackupFence(g.ctx); err == nil || err.Error() != "OBJECT_NOT_ADMITTED" {
 		t.Fatalf("stopped service admitted a fence: %v", err)
 	}
-	t.Log("SeaweedFS multipart drain, ingestion refusal, tombstone verification, scope refusal, changed inventory retry and cancellation passed")
+	t.Log("SeaweedFS multipart drain, ingestion refusal, tombstone verification, scope refusal, staged archive readback, changed inventory retry and cancellation passed")
 }
 
 func backupEntry(t *testing.T, inventory BackupInventory, object string) BackupObjectVersion {
@@ -421,5 +449,47 @@ func checkBackupRefusalWithLimit(t *testing.T, f *BackupFence, ctx context.Conte
 	out, err := f.VerifyInventory(ctx, limit)
 	if err == nil || err.Error() != code || !reflect.DeepEqual(out, BackupInventory{}) {
 		t.Fatalf("expected %s and no receipt: %+v %v", code, out, err)
+	}
+}
+
+func backupCopyFixture(t *testing.T) *os.File {
+	t.Helper()
+	file, e := os.CreateTemp(t.TempDir(), "staged-copy-")
+	if e != nil {
+		t.Fatal(e)
+	}
+	t.Cleanup(func() { file.Close() })
+	return file
+}
+
+func checkBackupCopy(t *testing.T, file *os.File, copy BackupCopy, object string, source []byte) {
+	t.Helper()
+	raw, e := io.ReadAll(io.NewSectionReader(file, 0, copy.SizeBytes+1))
+	sum := sha256.Sum256(raw)
+	if e != nil || int64(len(raw)) != copy.SizeBytes || hex.EncodeToString(sum[:]) != copy.SHA256 {
+		t.Fatal("copy identity did not match the full file", e)
+	}
+	archive := tar.NewReader(bytes.NewReader(raw))
+	ready := backupEntry(t, copy.Inventory, object)
+	header, e := archive.Next()
+	if e != nil || header.Name != "objects/"+ready.WorkspaceID+"/"+object || header.Mode != 0600 || header.Size != ready.SizeBytes {
+		t.Fatal("wrong ready object entry", header, e)
+	}
+	body, e := io.ReadAll(archive)
+	digest := sha256.Sum256(body)
+	if e != nil || !bytes.Equal(body, source) || hex.EncodeToString(digest[:]) != ready.SHA256 {
+		t.Fatal("copied object did not match exact SQL bytes", e)
+	}
+	header, e = archive.Next()
+	if e != nil || header.Name != "inventory.json" || header.Mode != 0600 {
+		t.Fatal("wrong inventory entry", header, e)
+	}
+	actual, e := io.ReadAll(archive)
+	expected, _ := json.Marshal(copy.Inventory)
+	if e != nil || !bytes.Equal(actual, expected) {
+		t.Fatal("archive inventory did not match the verified inventory", e)
+	}
+	if _, e := archive.Next(); e != io.EOF {
+		t.Fatal("unexpected content entry for a tombstone or malformed tail", e)
 	}
 }

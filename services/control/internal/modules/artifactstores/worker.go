@@ -7,11 +7,11 @@ import (
 	"io"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/objectstore"
+	"github.com/google/uuid"
 )
 
 // ProcessNext performs one durable prepared effect. Sent/unknown operations are
@@ -223,13 +223,20 @@ func (s *Service) reduceFailureBounded(o storedObject, cause error) error {
 	defer cancel()
 	return s.reduceFailure(ctx, o, cause)
 }
-func (s *Service) verifyWhole(ctx context.Context, o storedObject) (info objectstore.Info, err error) {
+func (s *Service) verifyWhole(ctx context.Context, o storedObject) (objectstore.Info, error) {
+	return s.verifyWholeTo(ctx, o, "", io.Discard)
+}
+
+func (s *Service) verifyWholeTo(ctx context.Context, o storedObject, expectedETag string, destination io.Writer) (info objectstore.Info, err error) {
 	i, e := s.Transport.Head(ctx, o.ref())
 	if e != nil {
 		return info, safe(e)
 	}
 	if !infoMatches(o, i) {
 		return info, fail("OBJECT_DIGEST_MISMATCH")
+	}
+	if expectedETag != "" && i.ETag != expectedETag {
+		return info, fail("OBJECT_CHANGED")
 	}
 	d, e := s.Transport.Open(ctx, o.ref(), i.ETag)
 	if e != nil {
@@ -241,11 +248,11 @@ func (s *Service) verifyWhole(ctx context.Context, o storedObject) (info objects
 			d.Body.Close()
 		}
 	}()
-	if !infoMatches(o, d.Info) {
+	if !infoMatches(o, d.Info) || d.Info.ETag != i.ETag {
 		return info, fail("OBJECT_CHANGED")
 	}
 	h := sha256.New()
-	count, e := io.Copy(h, io.LimitReader(d.Body, o.ExpectedBytes+1))
+	count, e := io.Copy(io.MultiWriter(h, destination), io.LimitReader(d.Body, o.ExpectedBytes+1))
 	if e != nil {
 		return info, safe(e)
 	}
