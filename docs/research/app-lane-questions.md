@@ -164,13 +164,21 @@ umask and restored a model at mode `0400` instead of `0444`. Under the normal
 `022` umask, the installer case passed three times and the remaining Go suites
 passed. The Web unit suites also passed.
 
-The current macOS gate is blocked by
+The earlier macOS gate was blocked by
 `backend_tests::actual_connection_refusal_opens_only_its_backend_circuit`,
 introduced by `1b293a01`. On the unchanged gateway tree from `origin/main`,
 both the full suite and a serial focused run returned `upstream_timeout`
 instead of `upstream_unavailable`. A separate local socket probe on the same
 machine timed out when connecting to a loopback socket held by `bind()` without
 `listen()`. Releasing the socket gave immediate `ECONNREFUSED`. The remaining
-66 Rust tests passed, with six ignored. This points to the refusal fixture's
-port reservation on macOS. The Gateway lane owns that fixture and the APP
-commit stays local until the full gate passes.
+66 Rust tests passed, with six ignored. The Gateway lane fixed the fixture in
+`6f4e45b0`. It closes a reserved listener before testing refusal and checks
+recovery on the same address. The assistant HTTPS and PostgreSQL fixture
+passed again after syncing that fix.
+
+The macOS rerun passed `make check`, `make build` and the full `make test`
+with the normal `022` umask, isolated browser ports and three browser workers.
+Chromium passed 1,046 Console and 387 Portal tests, with 28 skipped. The
+gateway suite passed all 67 enabled tests. After syncing the concurrent
+model-preparation and Nodes changes, the affected builds, HTTPS fixture,
+Web checks and 84 Nodes-related browser cases passed.
