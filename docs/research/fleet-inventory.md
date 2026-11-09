@@ -126,3 +126,30 @@ of observation timestamps and unknown categories. The physical placement API and
 console need the schema and operator permissions described above. Do not close
 FLT-101 until real enrollment, authorized placement and reads complete offline
 through the console and the isolation and concurrency checks pass.
+
+## Rack occupancy prototype
+
+[NetBox device placement](https://netbox.readthedocs.io/en/stable/models/dcim/device/)
+records rack, position and face separately from the device's tenant. Use the
+operator-owned rack identity to scope placement, and store the occupied units
+and faces independently of Agent observations. A full-depth node reserves both
+faces. Each occupancy row references its exact scoped assignment.
+
+A PostgreSQL [unique key](https://www.postgresql.org/docs/18/ddl-constraints.html#DDL-CONSTRAINTS-UNIQUE-CONSTRAINTS)
+over the rack's scope, rack ID, unit and face can refuse overlap during a
+concurrent insert. A move removes the previous units and reserves the next
+units in the same transaction. Lock rack and node records in a consistent order
+and check capacity within that transaction. A
+[range exclusion](https://www.postgresql.org/docs/18/rangetypes.html#RANGETYPES-CONSTRAINT)
+can express overlap directly, but combining it with rack equality adds an
+operator-class dependency. Unit occupancy uses the existing PostgreSQL image,
+license and synthetic data. It adds no software or data dependency.
+
+A disconnected PostgreSQL 18.6 Linux arm64 prototype occupied both faces of
+one unit in a destination rack. A concurrent move waited on the unique key
+and was refused after the holder committed. Rollback preserved both source
+units and left no partial destination reservation. Independent scoped racks
+and opposite faces of a free unit accepted placements. The fixture's tenant
+and rack keys represent separate rack identities. Production placement still
+needs trusted parent and node relations, bounded capacity, authorization,
+idempotency, audit and console acceptance.
