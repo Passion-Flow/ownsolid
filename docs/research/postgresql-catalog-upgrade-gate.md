@@ -53,7 +53,7 @@ structural differences between these fixture paths.
 
 Separately, the clean main branch fails `TestEveryCellOwnedTableCarriesScope`
 because `audit_chain_head` introduced by 53 lacks the two cell-owned columns
-required by [ADR 0006](../decisions/0006-cell-scope.md). Fresh and restored
+required by [ADR 0006](../decisions/0006-cell-and-site-scope.md). Fresh and restored
 databases both have this shape. Resolving that scope contract requires an
 Audit-owned forward migration and retained-checkpoint verification.
 
