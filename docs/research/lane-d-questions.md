@@ -12,13 +12,11 @@ tested across the real allocation paths.
 
 ## Duplicate and unnamed public operations
 
-The contract audit found four node-exporter operations in both the nodes
-and components documents. Removing one declaration can remove an existing
-SDK symbol. Adding explicit IDs to six cloud inventory operations can
-rename generated client methods and the UI's reference entries. Resolve
-the source of truth with the relevant API and UI owners, preserving or
-migrating any released client symbols. Retain the current declarations
-and report the findings until that coordinated change is available.
+The [compatibility projection](public-api-inventory.md#node-exporter-operation-aliases)
+gives the four node-exporter operations one canonical Components source.
+Nodes retains its SDK methods, local response schemas and help bookmarks.
+The [cloud inventory identities](public-api-inventory.md#cloud-inventory-operation-identities)
+are explicit and preserve the existing clients and reference links.
 
 ## ARC-104 generated Web consumer
 
