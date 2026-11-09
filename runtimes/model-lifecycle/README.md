@@ -72,3 +72,37 @@ version. It records the captured execution profile and marks fresh inference
 as unverified. It can reproduce the score from the captured labels, while
 tokenization, generation and label normalization require separate inference
 evidence. See the [replay design and acceptance](../../docs/research/evaluation-reproducibility.md#evl-101-offline-report-replay).
+
+## Compare two captured evaluations
+
+Keep the two canonical reports created by the replay command and the original
+captures, independent capture SHA-256 pins, and corresponding model catalogs.
+Both reports must use the same pinned frozen dataset version, validation file
+and scorer. This supports published two-way and three-way manifests through
+their validation asset. Each side can use its own model version and execution
+profile.
+
+```sh
+PYTHONPATH=runtimes/model-lifecycle:runtimes/data-processing:runtimes/training \
+  python3 -B -m projectone_model_lifecycle.evaluation_comparison \
+  --dataset-version version.json --dataset-version-sha256 "$version_sha256" \
+  --validation validation.jsonl --recipe api/model-lifecycle/v1/recipe.json \
+  --baseline-report baseline.json --baseline-capture baseline-result.json \
+  --baseline-capture-sha256 "$baseline_capture_sha256" --baseline-model-catalog baseline-model.json \
+  --candidate-report candidate.json --candidate-capture candidate-result.json \
+  --candidate-capture-sha256 "$candidate_capture_sha256" --candidate-model-catalog candidate-model.json \
+  > comparison.json
+```
+
+The digest variables above refer to the accepted original captures. The command
+re-scores each capture and checks the resulting bytes against its retained
+report. Both reports must cover every frozen case with the same expected
+label. A rejected input exits nonzero and emits no comparison.
+
+The comparison records both model versions, profiles, scores and retained
+report digests. Its integer `delta.correct` is candidate correct minus
+baseline correct, with the shared case count in `delta.row_count`. The
+per-case outcomes distinguish cases only one side got right, even when the
+totals tie. Repeat the command with the same inputs to reproduce the bytes.
+Fresh inference repeatability requires separate evidence from the actual
+engine. Differences across execution profiles describe the captured runs.

@@ -67,6 +67,11 @@ def read_object(path, error, pinned_sha256=None):
     raw = read_bytes(path, error)
     if pinned_sha256 is not None and sha256(raw) != pinned_sha256:
         raise ReplayError(error)
+    return decode_object(raw, error)
+
+
+def decode_object(raw, error):
+    """Decode an offline report object and reject ambiguous JSON."""
     try:
         value = json.loads(raw.decode('utf-8'), object_pairs_hook=unique, parse_constant=invalid_constant)
     except (ValueError, DataError, RecursionError):
@@ -84,7 +89,7 @@ def frozen_cases(version, validation, capture):
         raise ReplayError('EVALUATION_WORKSPACE_MISMATCH')
     manifest = version.get('manifest')
     if (not isinstance(manifest, dict) or type(manifest.get('schema_version')) is not int
-            or manifest['schema_version'] != 1 or manifest.get('row_schema') != SCHEMA):
+            or manifest['schema_version'] not in (1, 2) or manifest.get('row_schema') != SCHEMA):
         raise ReplayError(error)
     assets = manifest.get('files')
     reference = manifest.get('manifest_file')

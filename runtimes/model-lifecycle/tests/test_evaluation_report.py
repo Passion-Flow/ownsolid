@@ -12,6 +12,8 @@ from uuid import uuid4
 
 from projectone_data.publication import materialize
 from projectone_data.validation import Row
+from projectone_model_lifecycle.evaluation import classification_score
+from projectone_model_lifecycle.evaluation_comparison import _paired_cases
 from projectone_model_lifecycle.evaluation_report import compact, sha256
 from projectone_training.catalog import catalog_digest
 
@@ -26,14 +28,24 @@ class EvaluationReplayTest(unittest.TestCase):
         self.temp = TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        partition = self.root / 'partition'
+        self.prepare_frozen_capture()
+
+    def prepare_frozen_capture(self, *, three_way=False):
+        partition = self.root / ('three-way-partition' if three_way else 'partition')
         partition.mkdir()
         rows = [
             Row(i * 3 + j + 1, f'fixture-group-{i}', f'Fixture case {i}-{j}', label)
-            for i in range(2) for j, label in enumerate(('account', 'billing', 'technical'))
+            for i in range(3 if three_way else 2)
+            for j, label in enumerate(('account', 'billing', 'technical'))
         ]
         raw = b''.join(compact(row.value()) + b'\n' for row in rows)
-        manifest = materialize(rows, partition, '00112233445566778899aabbccddeeff', 5000, sha256(raw))
+        split_options = {}
+        if three_way:
+            split_options = {
+                'near_plan': [{'group': row.line_number, 'match': 0} for row in rows],
+                'test_basis_points': 2500,
+            }
+        manifest = materialize(rows, partition, '00112233445566778899aabbccddeeff', 5000, sha256(raw), **split_options)
         self.validation = partition / 'validation.jsonl'
         self.version = {
             'id': str(uuid4()), 'dataset_id': str(uuid4()), 'workspace_id': str(uuid4()),
@@ -157,6 +169,149 @@ class EvaluationReplayTest(unittest.TestCase):
         changed = copy.deepcopy(self.capture)
         changed['base']['correct'] = 3
         self.assert_refused(self.replay(capture=changed), 'EVALUATION_CAPTURE_SCORE_MISMATCH')
+
+
+    def comparison_inputs(self, predictions):
+        version_file = self.root / 'frozen-version.json'
+        version_file.write_bytes(compact(self.version))
+        candidate_catalog = self.root / 'synthetic-candidate-catalog.json'
+        model = json.loads(CATALOG.read_bytes())
+        model['revision'] = 'synthetic-candidate-revision'
+        candidate_catalog.write_bytes(compact(model))
+
+        candidate = copy.deepcopy(self.capture)
+        candidate['attempt_id'] = str(uuid4())
+        candidate['configuration']['seed'] += 1
+        candidate['configuration_sha256'] = sha256(compact(candidate['configuration']))
+        candidate['model_catalog_sha256'] = catalog_digest(model)
+        expected = [case['expected_label'] for case in candidate['cases']]
+        for index, (case, predicted) in enumerate(zip(candidate['cases'], predictions, strict=True)):
+            case['base']['predicted_label'] = predicted
+            case['base']['output_sha256'] = sha256(f'synthetic candidate observation {index}'.encode())
+        candidate['base'] = classification_score(expected, predictions, ('account', 'billing', 'technical'))
+
+        inputs = {
+            'dataset-version': version_file,
+            'dataset-version-sha256': sha256(version_file.read_bytes()),
+            'validation': self.validation,
+            'recipe': RECIPE,
+        }
+        for side, capture, catalog in (
+            ('baseline', self.capture, CATALOG), ('candidate', candidate, candidate_catalog),
+        ):
+            captured = self.root / f'{side}-capture.json'
+            retained = self.root / f'{side}-report.json'
+            captured.write_bytes(compact(capture))
+            result = self.replay(capture=capture, catalog=catalog)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            retained.write_bytes(result.stdout)
+            inputs.update({
+                f'{side}-capture': captured,
+                f'{side}-capture-sha256': sha256(captured.read_bytes()),
+                f'{side}-report': retained,
+                f'{side}-model-catalog': catalog,
+            })
+        return inputs
+
+    def compare(self, inputs, seed='0'):
+        flags = [part for key, value in inputs.items() for part in ('--' + key, str(value))]
+        return subprocess.run(
+            [sys.executable, '-B', '-m', 'projectone_model_lifecycle.evaluation_comparison', *flags],
+            capture_output=True, env={**os.environ, 'PYTHONHASHSEED': seed}, timeout=10,
+        )
+
+    def test_comparison_replays_two_reports_and_reverses_the_delta(self):
+        self.prepare_frozen_capture(three_way=True)
+        self.assertEqual(self.version['manifest']['schema_version'], 2)
+        inputs = self.comparison_inputs(('account', 'billing', 'technical'))
+        first = self.compare(inputs, seed='41')
+        second = self.compare(inputs, seed='97')
+        self.assertEqual((first.returncode, second.returncode), (0, 0), (first.stderr, second.stderr))
+        self.assertEqual(first.stdout, second.stdout)
+        result = json.loads(first.stdout)
+        self.assertEqual(result['delta'], {'correct': 1, 'row_count': 3})
+        self.assertEqual(result['pair_counts'], {
+            'both_correct': 2, 'baseline_only': 0, 'candidate_only': 1, 'both_incorrect': 0,
+        })
+        self.assertEqual(result['dataset']['version_id'], self.version['id'])
+        for side in ('baseline', 'candidate'):
+            retained = inputs[f'{side}-report'].read_bytes()
+            self.assertEqual(result[side]['report_sha256'], sha256(retained))
+            for field in ('model', 'execution_profile', 'score'):
+                self.assertEqual(result[side][field], json.loads(retained)[field])
+            self.assertEqual(result[side]['execution_profile']['fresh_inference'], 'unverified')
+        self.assertNotEqual(result['baseline']['model']['revision'], result['candidate']['model']['revision'])
+        self.assertNotEqual(result['baseline']['execution_profile']['seed'], result['candidate']['execution_profile']['seed'])
+        self.assertNotIn(b'Fixture case', first.stdout)
+
+        swapped = dict(inputs)
+        for field in ('report', 'capture', 'capture-sha256', 'model-catalog'):
+            swapped[f'baseline-{field}'], swapped[f'candidate-{field}'] = (
+                inputs[f'candidate-{field}'], inputs[f'baseline-{field}'],
+            )
+        reverse = self.compare(swapped)
+        self.assertEqual(reverse.returncode, 0, reverse.stderr)
+        self.assertEqual(json.loads(reverse.stdout)['delta'], {'correct': -1, 'row_count': 3})
+        self.assert_refused(
+            self.compare({**inputs, 'validation': self.validation.with_name('test.jsonl')}),
+            'EVALUATION_DATASET_MISMATCH [baseline]',
+        )
+
+    def test_comparison_retains_discordant_cases_when_totals_tie(self):
+        inputs = self.comparison_inputs((None, 'billing', 'technical'))
+        result = self.compare(inputs)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report['delta'], {'correct': 0, 'row_count': 3})
+        self.assertEqual(report['pair_counts'], {
+            'both_correct': 1, 'baseline_only': 1, 'candidate_only': 1, 'both_incorrect': 0,
+        })
+        baseline = json.loads(inputs['baseline-report'].read_bytes())['cases']
+        candidate = json.loads(inputs['candidate-report'].read_bytes())['cases']
+        self.assertEqual(len({case['source_id'] for case in baseline}), 1)
+        pairs, counts = _paired_cases(baseline, candidate[::-1])
+        self.assertEqual((pairs, counts), (report['cases'], report['pair_counts']))
+        self.assertEqual([case['outcome'] for case in pairs], ['baseline_only', 'candidate_only', 'both_correct'])
+
+    def test_comparison_rejects_invalid_bindings_without_output(self):
+        inputs = self.comparison_inputs(('account', 'billing', 'technical'))
+        self.assert_refused(
+            self.compare({**inputs, 'candidate-model-catalog': inputs['baseline-model-catalog']}),
+            'EVALUATION_MODEL_MISMATCH [candidate]',
+        )
+        capture_file = inputs['candidate-capture']
+        capture_raw = capture_file.read_bytes()
+        capture = json.loads(capture_raw)
+        for field, replacement, code in (
+            ('cases', capture['cases'][:-1], 'CASE'),
+            ('cases', [capture['cases'][0]] * 3, 'CASE'),
+            ('recipe_sha256', 'a' * 64, 'SCORER'),
+            ('base', {'correct': 0, 'row_count': 3, 'confusion': []}, 'CAPTURE_SCORE'),
+        ):
+            with self.subTest(field=field, code=code):
+                capture_file.write_bytes(compact({**capture, field: replacement}))
+                self.assert_refused(
+                    self.compare({**inputs, 'candidate-capture-sha256': sha256(capture_file.read_bytes())}),
+                    f'EVALUATION_{code}_MISMATCH [candidate]',
+                )
+        capture_file.write_bytes(capture_raw)
+
+        other_version = {**self.version, 'id': str(uuid4())}
+        candidate_report = inputs['candidate-report']
+        retained = candidate_report.read_bytes()
+        other = self.replay(version=other_version, capture=capture, catalog=inputs['candidate-model-catalog'])
+        self.assertEqual(other.returncode, 0, other.stderr)
+        candidate_report.write_bytes(other.stdout)
+        self.assert_refused(self.compare(inputs), 'EVALUATION_DATASET_MISMATCH [candidate]')
+
+        report = json.loads(retained)
+        scorer = {**report['scorer'], 'implementation_sha256': 'a' * 64}
+        candidate_report.write_bytes(compact({**report, 'scorer': scorer}) + b'\n')
+        self.assert_refused(self.compare(inputs), 'EVALUATION_SCORER_MISMATCH [candidate]')
+        candidate_report.write_bytes(compact({**report, 'cases': report['cases'][:-1]}) + b'\n')
+        self.assert_refused(self.compare(inputs), 'EVALUATION_CASE_MISMATCH [candidate]')
+        candidate_report.write_bytes(retained + b'\n')
+        self.assert_refused(self.compare(inputs), 'EVALUATION_REPORT_MISMATCH [candidate]')
 
 
 if __name__ == '__main__':

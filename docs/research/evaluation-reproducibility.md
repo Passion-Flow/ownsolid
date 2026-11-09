@@ -124,3 +124,46 @@ replays of those inputs and synthetic predictions matched byte for byte at
 two correct out of three. The probe rejected an incorrect version digest.
 EVL-101 stays open for an authorized control-plane and UI workflow and real
 inference repeatability.
+
+## EVL-102 paired offline comparison
+
+[MLflow compares runs](https://www.mlflow.org/docs/latest/genai/eval-monitor/comparing-evaluation-runs/)
+on one dataset and scorer set. It matches rows by a stable request identity
+or input hash and reports unpaired rows. The
+[harness evaluator](https://github.com/EleutherAI/lm-evaluation-harness/blob/main/lm_eval/evaluator.py)
+preserves document identity and prompt and target digests for per-case analysis.
+
+Replay both retained EVL-101 reports against one independently pinned frozen
+version and exact validation partition. Each side supplies its accepted capture
+digest and its own model catalog. The catalog and capture must agree within
+each side, so models can differ between sides. Verify the canonical report
+bytes against the retained report after invoking the scorer. Match the frozen
+version and scorer identity, including the implementation digest. Pair cases
+by source ID and exact prompt SHA-256, with the same expected label on each
+side. Emit the pairs in frozen order.
+
+[DAT-105's published manifest](../../api/datasets/v1/processor.go) adds schema
+version 2 and a separate sealed test partition. Both supported manifest
+versions still bind the validation asset by name, digest and row count.
+Accept either version when replaying the recorded validation digest.
+Verify a three-way publication with the actual data processor and reject
+the test partition when supplied in place of validation.
+
+Reject incomplete or duplicate pairs, changed ground truth, a different
+dataset version even when validation bytes coincide, and model or scorer
+binding mismatches. A positional join risks attributing a prediction to the
+wrong case. Comparing two totals or dropping unpaired cases would hide those
+failures. Use integer counts and candidate-minus-baseline differences with
+the shared denominator. Preserve both execution profiles and the digests of
+both canonical reports. The result describes the retained predictions and
+does not estimate statistical significance or attribute differences to the
+model when other profile settings differ.
+
+No new dependency, model weights or dataset are distributed. The comparison
+uses CPython and existing ownsolid code, with synthetic captures for offline
+verification. MLflow and the harness are references. Verify two independent
+CLI runs with different Python hash seeds, both directions of the score
+difference, and a zero difference with equal scores and changed predictions.
+Reject missing, duplicate and altered cases, swapped catalogs, a changed
+scorer and modified report bytes without emitting a comparison. Keep real
+inference repeatability, authorized report delivery and UI integration open.
