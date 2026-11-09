@@ -46,15 +46,15 @@ type matrixMessage struct {
 	Body    string `json:"body"`
 }
 
-func mapWebhook(tenant string, route tenantRoute, batch relayWebhook) (matrixMessage, string, deliveryOutcome) {
+func mapWebhook(tenant string, route tenantRoute, batch relayWebhook) (string, string, deliveryOutcome) {
 	if batch.Receiver != route.receiver || batch.GroupLabels["tenant_id"] != tenant ||
 		batch.CommonLabels["tenant_id"] != tenant {
-		return matrixMessage{}, "", scopeRejected
+		return "", "", scopeRejected
 	}
 	if batch.Version != "4" || len(batch.GroupKey) == 0 || len(batch.GroupKey) > 4096 ||
 		strings.ContainsFunc(batch.GroupKey, unicode.IsControl) || batch.TruncatedAlerts != 0 ||
 		len(batch.Alerts) == 0 || len(batch.Alerts) > maxWebhookAlerts {
-		return matrixMessage{}, "", invalidWebhook
+		return "", "", invalidWebhook
 	}
 
 	alerts := append([]relayAlert(nil), batch.Alerts...)
@@ -63,18 +63,18 @@ func mapWebhook(tenant string, route tenantRoute, batch relayWebhook) (matrixMes
 	firing := 0
 	for i, alert := range alerts {
 		if alert.Labels["tenant_id"] != tenant {
-			return matrixMessage{}, "", scopeRejected
+			return "", "", scopeRejected
 		}
 		if !alertFingerprint.MatchString(alert.Fingerprint) || i > 0 && alerts[i-1].Fingerprint == alert.Fingerprint ||
 			alert.StartsAt.IsZero() || !relayLabel.MatchString(alert.Labels["alertname"]) {
-			return matrixMessage{}, "", invalidWebhook
+			return "", "", invalidWebhook
 		}
 		switch alert.Status {
 		case "firing":
 			firing++
 		case "resolved":
 		default:
-			return matrixMessage{}, "", invalidWebhook
+			return "", "", invalidWebhook
 		}
 		identities = append(identities, alertIdentity{alert.Fingerprint, alert.StartsAt.UTC(), alert.Status})
 	}
@@ -83,7 +83,7 @@ func mapWebhook(tenant string, route tenantRoute, batch relayWebhook) (matrixMes
 		status = "firing"
 	}
 	if batch.Status != status {
-		return matrixMessage{}, "", invalidWebhook
+		return "", "", invalidWebhook
 	}
 	// Alertmanager refreshes firing deadlines and may change annotations on a
 	// retry. Neither is part of the occurrence identity or the outbound text.
@@ -92,7 +92,7 @@ func mapWebhook(tenant string, route tenantRoute, batch relayWebhook) (matrixMes
 		Alerts                          []alertIdentity
 	}{tenant, route.receiver, batch.GroupKey, status, identities})
 	if err != nil {
-		return matrixMessage{}, "", invalidWebhook
+		return "", "", invalidWebhook
 	}
 	digest := sha256.Sum256(canonical)
 	transaction := "ownsolid-am-v1-" + hex.EncodeToString(digest[:])
@@ -110,5 +110,5 @@ func mapWebhook(tenant string, route tenantRoute, batch relayWebhook) (matrixMes
 	if remaining := len(alerts) - maxMessageDetails; remaining > 0 {
 		fmt.Fprintf(&body, "\n+ %d more alerts", remaining)
 	}
-	return matrixMessage{"m.text", body.String()}, transaction, delivered
+	return body.String(), transaction, delivered
 }

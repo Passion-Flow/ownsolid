@@ -141,6 +141,40 @@ checking real room history and Alertmanager silence state. The [research
 note](../../../../../docs/research/offline-alert-notifications.md)
 records installation and Console handoff requirements.
 
+### Site-local Feishu delivery
+
+Use the [Feishu relay settings](alerting/feishu-relay.example.json) with the
+[Alertmanager receiver example](alerting/alertmanager-matrix.example.yaml).
+Rename each example receiver and its route references from `-matrix` to
+`-feishu`. Point each Alertmanager URL file to the relay's private
+`/v1/alertmanager/<tenant-id>` endpoint. Keep the inbound bearer token,
+outbound hook identifier and signing secret in separate protected files
+for each tenant. Configure the private HTTPS origin and CA for your
+receiver. Its certificate must cover the configured private IP address.
+
+    go -C services/control build -o /absolute/path/to/feishu-relay ./internal/modules/monitoring/alerting/cmd/feishu-relay
+    /absolute/path/to/feishu-relay -config /etc/ownsolid/relay/feishu-relay.json
+
+The receiver must implement the site contract on
+`/open-apis/bot/v2/hook/<hook>`. For `OPTIONS`, return HTTP 204 with
+`X-Ownsolid-Idempotency: durable-v1`. For a signed `POST`, persist the
+quoted `Idempotency-Key` and the message atomically before returning HTTP
+200, JSON `{"code":0}` and the same key in the response header. An equal
+key with equal semantic content returns the same receipt after a retry,
+including a restart. Authenticate each retry with its fresh timestamp and
+signature. Conflicting content under the same key is a permanent error.
+Keep keys for at least the site's replay horizon. A receiver that also
+forwards to a downstream system must reconcile an ambiguous downstream
+response before repeating delivery there.
+
+For the isolated Linux test, set `OWNSOLID_TEST_ALERTMANAGER` to the
+checksum-verified Alertmanager 0.34.2 binary and run with permission to
+create a network namespace.
+
+    bash services/control/internal/modules/monitoring/alerting/testdata/check-local-feishu.sh
+
+The test qualifies the [controlled HTTPS receiver contract](../../../../../docs/research/offline-alert-notifications.md#verified-feishu-relay-contract).
+
 ### Long retention for fleet health aggregates
 
 Run the [fleet recording rules](alerting/fleet-rollup-rules.yaml) in a separate

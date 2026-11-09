@@ -114,3 +114,53 @@ to its tenant; the other tenant still received its maintenance probe.
 A mismatched credential, mixed-tenant batch and cross-room history read
 were refused. The Alertmanager, relay and homeserver processes stopped
 and their temporary namespace was removed.
+
+## Site-local Feishu custom-bot relay
+
+The [Feishu custom-bot guide](https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot)
+defines the v2 hook path, text payload, signed Unix timestamp, HMAC-SHA256
+over an empty message using timestamp and secret as the key, Base64 encoding,
+and the modern response code. Use that wire format and the documented
+20 KB body bound. The signature authenticates the time and secret.
+Private TLS protects the message and both credential files.
+
+The custom-bot contract provides no durable idempotency receipt. The
+customer relay must explicitly advertise the ownsolid v1 capability on
+OPTIONS to the same private hook, then deduplicate POST by its
+Idempotency-Key and return the matching key only after durable acceptance.
+The [HTTPAPI working draft](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/)
+describes the key and receiver-side retention pattern. This is a private
+relay extension. A plain HTTP 200 or Feishu code zero without the matching
+receipt remains retryable. The endpoint must retain delivery state across
+restarts and reject a changed message under the same key. A relay that
+forwards to a non-idempotent vendor API owns any ambiguous downstream
+outcome and must reconcile it before acknowledging durable delivery.
+Do not use a local in-memory deduplication cache or redirect a request
+to a vendor URL.
+
+Use a protected hook ID and signing secret per tenant, one private literal
+HTTPS origin and a configured CA. Reuse Alertmanager authentication,
+grouping, silences and occurrence identity. Every retry sends the same
+semantic key and recomputes its signature with the current timestamp.
+Retry network failures, HTTP 408, 429, server errors, and documented
+Feishu code 11232. Treat permanent refusals as failed deliveries. Check
+the real Alertmanager path against a controlled HTTPS endpoint with a
+durable receipt fixture, including a lost receipt, resolution, wrong
+tenant, bad capability and no public route. No vendor endpoint is part
+of the qualification. The implementation uses only the existing Go
+standard library and internal packages. No vendor SDK, model or data
+asset is added.
+
+### Verified Feishu relay contract
+
+On Linux amd64 with only loopback and no default route, Alertmanager 0.34.2
+delivered firing and resolved groups through the compiled relay to a
+controlled HTTPS receiver. The receiver independently verified the signature
+and persisted a tenant-scoped idempotency key and message before simulating
+a lost receipt. The next delivery used the same key and left one stored
+firing message. The test also exercised a tenant silence, delivery for a
+different tenant, and denial of a cross-tenant webhook credential. Unit
+tests cover missing capability, missing or mismatched receipts, rate
+limits, signature rejection and redirects. The controlled endpoint
+qualifies the site relay contract. A vendor-side connection and packaged
+installer and Console flows remain unqualified.

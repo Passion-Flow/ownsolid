@@ -49,9 +49,9 @@ func TestMatrixRelayRequiresAnAcknowledgedEventAndRefusesRedirects(t *testing.T)
 			roots := x509.NewCertPool()
 			roots.AddCert(server.Certificate())
 			roots.AddCert(destination.Certificate())
-			relay := newMatrixRelay(relaySettings{matrix: origin, roots: roots, concurrent: 1, timeout: time.Second}, slog.Default())
+			relay := newWebhookRelay(relaySettings{origin: origin, roots: roots, concurrent: 1, timeout: time.Second}, slog.Default())
 			defer relay.client.CloseIdleConnections()
-			if result := relay.send(t.Context(), tenantRoute{room: "!fixture"}, matrixMessage{"m.text", "fixture"}, "transaction"); result != scenario.want {
+			if result := relay.send(t.Context(), tenantRoute{target: "!fixture"}, "fixture", "transaction"); result != scenario.want {
 				t.Errorf("delivery result %s, expected %s", result, scenario.want)
 			}
 		})
