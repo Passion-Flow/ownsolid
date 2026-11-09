@@ -26,7 +26,7 @@ Module reviewed again on 2026-11-09 for [admission and rollout](../../research/s
 - [ ] SRV-113 Deployment revision history with the difference between revisions and rollback to one (P1)
 - [ ] SRV-114 Finish S-204 and S-205 once their server exists: requests and p95 in the list, Traffic and Logs tabs on one clock, the Scale and Roll back dialogs, and a rolling update shown replica by replica (P1)
 
-- [ ] SRV-115 Explain the conservative serving memory budget before deployment with verified weight bytes, KV cache, runtime reserve, observation freshness and remaining capacity. Refuse an unqualified fit (P1)
+- [ ] SRV-115 Explain the conservative serving memory budget before deployment with verified weight bytes, KV cache, runtime reserve, observation freshness and remaining capacity. Refuse an unqualified fit (P1) - [Control admission evidence](../../research/serving-admission-and-rollout.md#srv-115-measurement-freshness-and-integer-headroom)
 
 ## P2 Fleet operations
 
