@@ -78,10 +78,13 @@ Wall-clock differences must not be used to derive duration. The gateway
 intake verifies the canonical receipt against the exact scoped reported
 row in the owner's transaction. The distribution owner must call it after
 canonical persistence or replay verification, before acknowledging Report.
-The database owner must number and admit the candidate ledger with its local
-site and cell, verify its runtime grants and accept the fresh and restored
-catalogs. Requests without a report and historical reconciliation remain
-coverage boundaries. See [gateway receipt intake](usage-ledger.md#gateway-receipt-intake).
+The isolated serving-role test verifies the current business-table grant
+and the narrower ledger privileges. The database owner must number and
+admit the candidate, reconcile install and upgrade grants with runtime
+readiness and accept the fresh and restored catalogs. The shared Control
+role remains trusted for source state. Requests without a report and
+historical reconciliation remain coverage boundaries. See
+[serving-role grants and rollback prerequisites](usage-ledger.md#serving-principal-and-ledger-grants).
 
 ## Tenancy and commerce
 
