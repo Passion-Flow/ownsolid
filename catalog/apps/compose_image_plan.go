@@ -35,9 +35,20 @@ type ComposeServiceImage struct {
 // ComposeImagePlan identifies the checked rendered bytes and their image bindings.
 // The installer admits the workload and checks the same bytes before execution.
 type ComposeImagePlan struct {
-	Pin         ReleasePin
-	ModelSHA256 string
-	Services    []ComposeServiceImage
+	Pin            ReleasePin
+	ArtifactSHA256 string
+	ModelSHA256    string
+	Services       []ComposeServiceImage
+}
+
+// VerifyRendered checks the source identity and exact bytes against a trusted
+// admitted plan. The installer passes those same bytes to the launcher.
+func (p ComposeImagePlan) VerifyRendered(rendered RenderedCompose) error {
+	if !digest.MatchString(p.ArtifactSHA256) || rendered.ArtifactSHA256 != p.ArtifactSHA256 ||
+		len(rendered.JSON) == 0 || len(rendered.JSON) > maxComposeModelBytes || digestBytes(rendered.JSON) != p.ModelSHA256 {
+		return fmt.Errorf("%w: use the exact admitted Compose model and source digest", ErrComposeImagePlan)
+	}
+	return nil
 }
 
 type composeImageModel struct {
@@ -89,7 +100,10 @@ func (b InstallBundle) VerifyComposeImagePlan(rendered RenderedCompose) (Compose
 		names = append(names, name)
 	}
 	slices.Sort(names)
-	plan := ComposeImagePlan{Pin: b.Pin, ModelSHA256: digestBytes(rendered.JSON), Services: make([]ComposeServiceImage, 0, len(names))}
+	plan := ComposeImagePlan{
+		Pin: b.Pin, ArtifactSHA256: b.Manifest.Artifact.SHA256, ModelSHA256: digestBytes(rendered.JSON),
+		Services: make([]ComposeServiceImage, 0, len(names)),
+	}
 	for _, name := range names {
 		service := model.Services[name]
 		if !digest.MatchString(service.Image) || !approved[service.Image] || service.PullPolicy != "never" ||
