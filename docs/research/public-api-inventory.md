@@ -247,3 +247,16 @@ verify the completed three-way manifest and sealed test download. An
 insufficient group count must be reported on the queued job without a
 published version. Confirm that pinned client generators omit the option
 for existing callers and encode it as an integer when set.
+
+The joint Linux run used the [dataset TLS integration fixture](../../services/control/internal/modules/datasets/http_integration_test.go),
+loopback-only PostgreSQL 18.6 and the installed CPython processor. Both
+accepted request bodies validated against the updated schema. Omission
+published schema 1. Invalid values returned HTTP 400, the 9,000-basis-point
+boundary was accepted, and replay with a different valid ratio returned
+HTTP 409. A recoverable processor failure and the HTTP retry preserved
+the selected ratio and produced three sealed nonempty files. The existing
+processor tests also verified retry, snapshot restore and insufficient
+groups. With a second workspace created over TLS, publication and retry
+requests carrying the original dataset ID both returned HTTP 404. The
+pinned Go and Python generators kept the legacy request body when the
+option was absent and encoded the opt-in value as an integer.
