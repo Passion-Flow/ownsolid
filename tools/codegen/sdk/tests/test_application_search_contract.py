@@ -27,3 +27,16 @@ class ApplicationSearchContractTests(unittest.TestCase):
         self.assertEqual(operation["responses"]["200"]["content"]["application/json"]["schema"], {
             "$ref": "#/components/schemas/ApplicationConversationPageResponse",
         })
+
+    def test_portal_application_reads_use_the_declared_session_cookie(self):
+        source = CONTRACTS / "applications" / "openapi.json"
+        contract = project_contract(json.loads(source.read_text(encoding="utf-8")))
+        paths = {
+            item["get"]["operationId"]: item["get"] for item in contract["paths"].values() if "get" in item
+        }
+        for name in ("ListApplications", "ListApplicationConversations"):
+            with self.subTest(operation=name):
+                self.assertEqual(paths[name]["security"], [{"PortalSession": []}])
+        self.assertEqual(contract["components"]["securitySchemes"]["PortalSession"], {
+            "type": "apiKey", "in": "cookie", "name": "__Host-portal_session",
+        })
