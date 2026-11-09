@@ -18,7 +18,7 @@ class AuditActorContractTests(unittest.TestCase):
                    if parameter.get("name") == "X-Ownsolid-Audit-Actor")
         self.assertEqual(header["in"], "header")
         self.assertFalse(header.get("required", False))
-        self.assertEqual(header["schema"], {"type": "string", "const": "true"})
+        self.assertEqual(header["schema"], {"type": "string", "enum": ["true"]})
         self.assertIn("Vary", operation["responses"]["200"]["headers"])
         event = document["components"]["schemas"]["AuditEvent"]
         self.assertFalse(event["additionalProperties"])
