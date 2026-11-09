@@ -86,3 +86,24 @@ A person chooses a workspace and sees every model they may call there, with whet
 and reads the name to call, the base URL, the model behind it, its base, context length, licence, price and what it
 is good for; and goes from there to issuing a key. Filters are in the address, and every state works in English and
 Simplified Chinese, by keyboard and by screen reader, with the network disconnected.
+
+## Partial read notice
+
+A connection reset on the model facts request can happen while the aliases
+and deployments answer normally. The installed browser run retained the
+callable names, but the generic connectivity title described the whole
+control plane as unreachable. The [partial-state rule](../product/design/README.md#4-states-every-screen-must-define)
+requires the page to identify the missing part.
+
+Use the existing `ProblemNotice` operation-specific title and detail.
+Name the unavailable model details. On retryable failures, say which
+fields are missing and leave the retry action and server backoff in the
+shared notice. For a permanent refusal, keep its specific explanation.
+The alias-list error still describes a failed catalogue read. Test that
+the partial notice and callable name appear together, and that both the
+notice and unknown values disappear when the real facts return. Check
+the message in English and Simplified Chinese. This adds no dependency.
+
+The English installation rerun interrupted only the model facts read
+and recovered it through the visible retry. The catalogue browser suite
+also checked the Simplified Chinese notice and retry at 390 px.
