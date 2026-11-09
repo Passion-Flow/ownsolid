@@ -82,19 +82,20 @@ workspace API remains the authority. A private parallel hierarchy would let
 membership and resource access diverge.
 
 TEN-107 rates the isolated ledger by occurrence against installation-owned
-versions. The integration owner must retain historical versions, bind report
-scope to read authorization and reconcile real producer coverage before
-presenting production showback. See [showback](metering-showback.md).
+versions. The metering read now reuses current Workspace and session
+authorization. The integration owner must bind the public dispatcher to that
+read, retain historical rates and reconcile production ledger and producer
+coverage before exposing showback. See [showback](metering-showback.md).
 TEN-108 compares workspace showback against operator thresholds. Durable
 notification identity, complete producer coverage and an authorized
 transaction for current and pending usage are required before admission
 enforcement. See [budget status](metering-budget-status.md).
 
-TEN-109 needs an authorized balance and top-up transaction, durable
-grant identity and replay protection, and reconciliation with verified
-producer usage and reserved work. An estimate is only an input to that
-design. The production balance policy and offline top-up authority remain
-separate integration requirements.
+TEN-109 requires the commerce owner's verifiable grant authority, the
+database owner's durable credit records and the workload owner's exact
+charge identity and pending usage policy. The current catalog supplies none
+of those credit write boundaries. See [prepaid balance authority](metering-prepaid-credits.md)
+for the exact inputs and replay and concurrency acceptance conditions.
 [FinOps allocation](https://www.finops.org/framework/capabilities/allocation/)
 and [OpenMeter entitlement grants](https://openmeter.io/docs/billing/entitlements/grant)
 provide the reporting and balance references. Offline top-up is a tenant
