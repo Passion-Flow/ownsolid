@@ -1683,6 +1683,19 @@
                   "type": "string",
                   "format": "uuid"
                 }
+              },
+              "Vary": {
+                "description": "Includes X-Ownsolid-Audit-Actor because that request header selects the response representation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "description": "The audit response is not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
               }
             },
             "content": {
@@ -1831,6 +1844,16 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "X-Ownsolid-Audit-Actor",
+            "in": "header",
+            "required": false,
+            "description": "Send exactly one header with the value `true` to include the optional actor_kind and actor_id pair on verified PostgreSQL audit events. The user subject fields stay separate. Omitted, unrecognized or repeated values return the legacy representation. The header leaves authorization, filters and pagination unchanged.",
+            "schema": {
+              "type": "string",
+              "const": "true"
             }
           }
         ]
@@ -3036,6 +3059,14 @@
             "maxLength": 254,
             "description": "The email of the actor, null for the system."
           },
+          "actor_kind": {
+            "type": "string",
+            "const": "product_assistant"
+          },
+          "actor_id": {
+            "type": "string",
+            "const": "ownsolid.product-assistant"
+          },
           "subject_user_id": {
             "type": [
               "string",
@@ -3112,7 +3143,15 @@
           "target_id",
           "reason",
           "request_id"
-        ]
+        ],
+        "dependentRequired": {
+          "actor_kind": [
+            "actor_id"
+          ],
+          "actor_id": [
+            "actor_kind"
+          ]
+        }
       },
       "MailDelivery": {
         "type": "object",
