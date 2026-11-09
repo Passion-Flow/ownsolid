@@ -77,6 +77,14 @@ offline enrollment UI. Do not enable production until those exist. The
 candidate uses existing account problem codes and success envelopes.
 Reuse the existing Go, pgx and keyring implementations and their licenses.
 
+Mount the candidate's new Admin browser operations only after its
+dedicated keyring has been initialized in process. Keep the existing
+password-change request strict on other entrances and on deployments
+without the keyring. Session issuance still checks authoritative factor
+rows on a keyless replica so an enabled factor cannot be bypassed.
+Verify that unconfigured routes are absent, tenant overposting is
+rejected, and existing account and Portal requests retain their contract.
+
 ### Separate candidate checks
 
 Enrollment confirmation returns ten recovery values once, in the same
@@ -100,9 +108,8 @@ The candidate tests run the real identity HTTP handler on TLS against
 PostgreSQL 18.6 with pgvector 0.8.7. The Linux arm64 container runs with
 `--network none`. The embedded fixture creates only the factor, challenge
 and recovery tables after applying the repository migrations.
-The three candidate cases and the existing HTTPS session-management,
-entrance isolation, identity response schema and invitation tenant isolation
-regressions passed three consecutive runs on that fixture.
+The five candidate cases passed three consecutive runs after replaying
+the candidate onto the mainline containing the bilingual audit catalogs.
 
 - `TestAdminTOTPCandidateHTTPS` covers enrollment, encrypted storage,
   refusal of permissive or absent key files, session revocation,
@@ -114,7 +121,14 @@ regressions passed three consecutive runs on that fixture.
   both session issuance and code consumption and the same request can retry.
 - `TestAdminTOTPCandidatePasswordStepUpHTTPS` exercises the real
   password change, rejects absent, replayed and recovery proofs, then
-  verifies retirement of the old password, session and pending challenge.
+  injects an audit write failure. The old session remains live and the same
+  TOTP can retry. A successful retry retires the old password, session
+  and pending challenge.
+- `TestAdminTOTPCandidatePasswordResetKeepsFactorHTTPS` verifies that an
+  actual password reset invalidates the old password and pending challenge
+  while the enrolled factor still gates the new password.
+- `TestAdminTOTPCandidateUnmountedHTTPS` verifies the existing login
+  representation and strict password change input on a keyless deployment.
 
 With `PROJECT_ONE_TEST_DSN` pointing at a disposable PostgreSQL fixture,
 run `go -C services/control test ./internal/modules/identity/http -run '^TestAdminTOTPCandidate' -count=3`.
@@ -126,16 +140,24 @@ The candidate management routes live under `/api/v1/me/totp/`.
 recovery values and `revocation` removes the active factor.
 `POST /api/v1/auth/login/totp` completes the pending login and
 `POST /api/v1/me/password-changes` accepts inline TOTP proof.
-Before enabling enrollment, add a production migration and startup checks
-for schema and key custody, define backup, rotation and record retention,
-publish the API contract and ship localized UI. Federated sign-in needs
-to enter the same factor gate. The candidate blocks alternate Admin session
-issuance for enrolled accounts until the caller can provide the verified proof.
+Before enabling enrollment, integrate these owner boundaries:
 
-The repository-wide test reaches the frontend audit coverage check after
-passing the Go, gateway and Chromium suites. That check requires
-`audit.action.auth.totp_enabled` and `audit.action.auth.totp_revoked` in
-both the English and Simplified Chinese catalogs. The candidate keeps the
-two precise server audit actions. The frontend owner needs to add both
-labels with the account security UI. The focused reproduction is
+- The database owner must add the three relations as the next PostgreSQL
+  migration and update `SchemaVersion` and `TableCount` in the database
+  owner, schema inventory, backup, restore and expiry cleanup. Startup
+  must validate the full schema and all active key versions before serving.
+- Control configuration and `cmd/server/selected_database.go` need a
+  dedicated protected key-file reference, installation provisioning,
+  startup loading, restore and rotation. Keep the factor gate authoritative
+  for every serving replica. Federated Admin issuance in the SSO owner must
+  join that gate before issuing a full session.
+- The identity OpenAPI and generated clients must describe the pending
+  login response, completion, enrollment, recovery display, revocation
+  and the inline proof. Web needs an Admin challenge screen and account
+  security flow through those operations. Additional privileged actions
+  need explicit step-up admission in their respective owners.
+
+The English and Simplified Chinese audit catalogs contain
+`audit.action.auth.totp_enabled` and `audit.action.auth.totp_revoked`
+since `1be6b5cc`. The focused check is
 `cd web && pnpm --filter @ownsolid/i18n exec vitest run src/audit-coverage.test.ts`.
