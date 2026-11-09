@@ -54,9 +54,9 @@ type Config struct {
 
 // Client reads only the scheduler resources allowed by its service account.
 type Client struct {
-	origin *url.URL
-	http   *http.Client
-	token  string
+	origin    *url.URL
+	http      *http.Client
+	tokenFile string
 }
 
 // New constructs a cell client with certificate verification and no HTTP proxy.
@@ -75,10 +75,8 @@ func New(cfg Config) (*Client, error) {
 	if err != nil || !roots.AppendCertsFromPEM(authority) {
 		return nil, ErrConfiguration
 	}
-	token, err := bundle.ReadProtectedConfiguration(cfg.TokenFile)
-	token = bytes.TrimSpace(token)
-	if err != nil || len(token) == 0 || len(token) > 8192 || !bearerPattern.Match(token) {
-		return nil, ErrConfiguration
+	if _, err := readToken(cfg.TokenFile); err != nil {
+		return nil, err
 	}
 	port := origin.Port()
 	if port == "" {
@@ -97,12 +95,21 @@ func New(cfg Config) (*Client, error) {
 		IdleConnTimeout:     cfg.Timeout,
 	}
 	return &Client{
-		origin: origin, token: string(token),
+		origin: origin, tokenFile: cfg.TokenFile,
 		http: &http.Client{
 			Transport: transport, Timeout: cfg.Timeout,
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
 	}, nil
+}
+
+func readToken(path string) (string, error) {
+	token, err := bundle.ReadProtectedConfiguration(path)
+	token = bytes.TrimSpace(token)
+	if err != nil || len(token) == 0 || len(token) > 8192 || !bearerPattern.Match(token) {
+		return "", ErrConfiguration
+	}
+	return string(token), nil
 }
 
 // CloseIdleConnections releases pooled connections for this cell.
@@ -161,7 +168,11 @@ func (c *Client) Observe(ctx context.Context, r Reference) (Observation, error) 
 	if err != nil {
 		return Observation{}, ErrReference
 	}
-	req.Header.Set("Authorization", "Bearer "+c.token)
+	token, err := readToken(c.tokenFile)
+	if err != nil {
+		return Observation{}, err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Accept", "application/json")
 	res, err := c.http.Do(req)
 	if err != nil {
