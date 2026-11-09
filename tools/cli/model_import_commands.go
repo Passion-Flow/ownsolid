@@ -135,7 +135,7 @@ func (opts *options) importUploadCommand(workspace *string, start bool) *cobra.C
 					return err
 				}
 			}
-			file, size, err := openModelBundle(args[len(args)-1])
+			file, size, err := openRegularInput(args[len(args)-1], "model bundle")
 			if err != nil {
 				return err
 			}

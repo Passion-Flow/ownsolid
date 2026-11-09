@@ -222,6 +222,57 @@ ownsolid deployment alias disable "$ALIAS_ID" --revision "$ALIAS_REVISION" \
   --reason 'Withdraw published model' --confirm
 ```
 
+## Create and manage a training job
+
+Use an approved model, an immutable published dataset version, and an
+eligible training node and GPU in the selected workspace. Put the training
+configuration in a local JSON file. The file holds only the
+[training configuration](../../api/openapi/v1/training/openapi.json),
+for example:
+
+```json
+{
+  "device": "nvidia_bfloat16",
+  "maximum_steps": 100,
+  "maximum_tokens": 256,
+  "batch_size": 1,
+  "gradient_accumulation_steps": 1,
+  "learning_rate": "0.0002",
+  "rank": 8,
+  "alpha": 16,
+  "dropout": "0",
+  "checkpoint_steps": 10,
+  "seed": 42,
+  "threads": 2
+}
+```
+
+```sh
+ownsolid training create --node "$NODE_ID" --gpu "$GPU_UUID" --model "$MODEL_ID" \
+  --dataset "$DATASET_ID" --dataset-version "$VERSION_ID" \
+  --configuration training.json --idempotency-key "$REQUEST_KEY" \
+  --reason 'Train an approved adapter' --output json
+ownsolid training get "$JOB_ID" --output json
+ownsolid training cancel "$JOB_ID" --revision "$REVISION" --reason 'Withdraw this job'
+```
+
+Reuse the request UUID and original arguments if a create result is uncertain.
+The workspace comes from `--workspace`, then `workspace_id` in `config.json`,
+then the current Admin session. Read the current revision before cancellation.
+If the server reports a revision conflict or an uncertain cancellation,
+read the job again before retrying. A queued job becomes `cancelled` when
+the request commits. A running job stays `cancelling` until its worker stops.
+
+To run the focused Admin TLS fixture, set `PROJECT_ONE_TEST_DSN` for a
+disposable PostgreSQL database with pgvector and `PROJECT_ONE_DATA_PYTHON`
+to the canonical absolute path of an installed Python 3.12 executable.
+Run the fixture in an isolated
+network namespace with the database available through loopback.
+
+```sh
+tools/cli/testdata/run-training-tls.sh
+```
+
 ## Test the Admin workflow offline
 
 With the Go module cache and pinned PostgreSQL image already prepared, run
