@@ -25,7 +25,7 @@ real installation.
 | `TestM20WorkspaceReconciliationBrowser`                         | A page catches up with a change made elsewhere                   | `workspaces.spec.ts`: someone else changed it first                                                   |
 | `TestM15PriorActorThemeMutationResponseCannotOverrideNextActor` | One person's late save never reaches the next                    | `sessionFlows`: a save still on its way                                                               |
 | `TestM20ModelRecoveryTailBrowser` | An immutable object recovers without upload chunks, its model opens and retires, and an empty import can be discarded | [Live model recovery](../../web/apps/console/e2e/live-model-recovery.spec.ts) against HTTPS and PostgreSQL |
-| `TestM20ModelImportRecoveryBrowser` | An interrupted real upload resumes from the committed offset, rejects a different file, publishes once and retires with retained files | [Live model upload](../../web/apps/console/e2e/live-models.spec.ts) with scoped PostgreSQL and file proof. First-chunk discard is covered by the scripted Model library flow. |
+| `TestM20ModelImportRecoveryBrowser` | An interrupted real upload resumes from the committed offset, rejects a different file, publishes once and retires with retained files | [Live model upload](../../web/apps/console/e2e/live-models.spec.ts) with scoped PostgreSQL and file proof, including an empty first-chunk discard. |
 
 The last flow was checked by removing what it protects: without the account in the preference's
 cache key it fails with the next person on the dark theme.
@@ -203,3 +203,29 @@ nine retained files matched their approved digests after retirement.
 The verified upload ledger had already been cleaned up. The browser
 sent no external requests. UX-117 still tracks the browser scenarios
 that depend on other pages.
+
+### Discard before the first accepted chunk
+
+The Model library already has a scripted first-chunk discard flow.
+Replace its installation evidence with a live browser check. Open a
+fresh import after the recovered version is retired, then hold the
+first chunk in the browser with [Playwright routing](https://playwright.dev/docs/network#handle-requests).
+Use the existing typed Discard action. Observe the browser abort the
+held request and wait for the authenticated import record to say
+`cancelled`. Let the cancellation request reach the real server.
+An HTTP response fixture could show Discarded while an upload continued
+or the server accepted a chunk. The independent PostgreSQL check must
+find zero uploaded bytes, zero attempts, no chunk or version for that
+import, and the three scoped start, cancellation-requested and
+cancelled audits. The previously retired version and its files stay
+in the fixture for the earlier readback. No new dependency or source
+archive is needed.
+
+In the combined run, Chromium reported `net::ERR_ABORTED` for the
+held request at byte zero after typed confirmation. The import
+readback reported `cancelled` with zero bytes and zero attempts.
+PostgreSQL confirmed no chunk rows, no version and three scoped
+audits for the discarded import. The resumed import still produced
+a single version and five scoped audits, and its nine retired files
+still matched. The original interruption and wrong-file evidence
+is retained alongside the combined discard proof.
