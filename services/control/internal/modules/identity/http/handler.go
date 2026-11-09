@@ -896,6 +896,9 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 			}
 			parts := strings.Split(strings.TrimPrefix(path, "/api/v1/admin/"), "/")
 			if r.Method == "GET" && len(parts) == 1 {
+				if parts[0] == "audit-events" {
+					return h.listAuditEvents(w, r, a)
+				}
 				data, e := s.ListForActor(ctx, a, parts[0], r.URL.Query())
 				return data, 200, e
 			}

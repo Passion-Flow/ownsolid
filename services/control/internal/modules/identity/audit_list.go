@@ -19,15 +19,18 @@ type AuditEventKey struct {
 	OccurredAt string
 }
 
-// WorkspaceAuditList pairs the existing audit items with assistant attribution by event key.
-// The attribution is repository-only until the public contract defines it.
-type WorkspaceAuditList struct {
+// AuditEventList pairs the existing audit items with verified assistant attribution.
+// Callers choose whether to disclose the attribution in their representation.
+type AuditEventList struct {
 	List
 	AssistantActors map[AuditEventKey]AuditAssistantActor `json:"-"`
 }
 
-type workspaceAuditProjection struct {
-	workspaceID string
+// WorkspaceAuditList is the result of the workspace-scoped audit list.
+type WorkspaceAuditList = AuditEventList
+
+type auditListProjection struct {
+	workspaceID *string
 	actors      map[AuditEventKey]AuditAssistantActor
 }
 
@@ -41,21 +44,31 @@ const (
 // ListWorkspaceAuditForActor reads audit events in one workspace of the installed
 // tenant. Only a current platform Admin session can select a workspace.
 func (s *Service) ListWorkspaceAuditForActor(ctx context.Context, a Auth, workspaceID string, q url.Values) (WorkspaceAuditList, error) {
-	projection := workspaceAuditProjection{workspaceID: workspaceID, actors: make(map[AuditEventKey]AuditAssistantActor)}
-	list, err := s.listForActor(ctx, a, "audit-events", q, &projection)
-	if err != nil {
-		return WorkspaceAuditList{List: list}, err
-	}
-	return WorkspaceAuditList{List: list, AssistantActors: projection.actors}, nil
+	return s.listAuditEventsForActor(ctx, a, q, &workspaceID)
 }
 
-func (p *workspaceAuditProjection) authorize(ctx context.Context, q transaction.Executor) error {
+// ListAuditEventsForActor uses the platform Admin audit view and verifies
+// assistant attribution for events in workspaces of the installed tenant.
+func (s *Service) ListAuditEventsForActor(ctx context.Context, a Auth, q url.Values) (AuditEventList, error) {
+	return s.listAuditEventsForActor(ctx, a, q, nil)
+}
+
+func (s *Service) listAuditEventsForActor(ctx context.Context, a Auth, q url.Values, workspaceID *string) (AuditEventList, error) {
+	projection := auditListProjection{workspaceID: workspaceID, actors: make(map[AuditEventKey]AuditAssistantActor)}
+	list, err := s.listForActor(ctx, a, "audit-events", q, &projection)
+	if err != nil {
+		return AuditEventList{List: list}, err
+	}
+	return AuditEventList{List: list, AssistantActors: projection.actors}, nil
+}
+
+func (p *auditListProjection) authorizeWorkspace(ctx context.Context, q transaction.Executor) error {
 	if q.Dialect() != transaction.PostgreSQL {
 		return failure("AUDIT_DIALECT_UNSUPPORTED")
 	}
 	const scope = "SELECT EXISTS(SELECT 1 FROM workspaces w WHERE w.id=$1 AND w.tenant_id=(" + installedAuditTenant + "))"
 	var found bool
-	if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, scope, p.workspaceID)).Scan(&found); err != nil {
+	if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, scope, *p.workspaceID)).Scan(&found); err != nil {
 		return err
 	}
 	if !found {
@@ -72,6 +85,10 @@ const auditAssistantProjectionSQL = `
 		AND a.audience IN ('admin', 'portal')
 		AND a.action COLLATE "C" ~ '^product_assistant\.[a-z][a-z0-9_]*$'
 		AND a.metadata = '{"actor_kind":"` + auditAssistantKind + `","actor_id":"` + auditAssistantID + `"}'::jsonb
+		AND EXISTS (
+			SELECT 1 FROM workspaces w WHERE w.id=a.workspace_id AND w.tenant_id=a.tenant_id
+				AND w.tenant_id=(` + installedAuditTenant + `)
+		)
 	THEN a.hash = (
 		SELECT sha256(convert_to('ownsolid.audit.v2', 'UTF8') || decode('00', 'hex') || a.prev_hash
 			|| string_agg(audit_chain_frame(projection ->> field), ''::bytea ORDER BY ordinal))
