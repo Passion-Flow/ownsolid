@@ -18,15 +18,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 type acceptedAdapterJSON string
@@ -41,6 +41,7 @@ type acceptedAdapterStory struct {
 	descriptor                                    training.UploadDescriptor
 	stop                                          wire.StopReceipt
 	raw                                           []byte
+	root, token                                   string
 }
 
 func acceptedAdapterDigest(raw []byte) string {
@@ -155,6 +156,7 @@ func acceptedAdapterSetup(t *testing.T) acceptedAdapterStory {
 	}); e != nil {
 		t.Fatal(e)
 	}
+	g.root, g.token = root, issued.Token
 	g.a, e = owner.Authenticate(ctx, issued.Token, "admin")
 	if e != nil {
 		t.Fatal(e)
@@ -177,14 +179,13 @@ func acceptedAdapterGraph(t *testing.T, g acceptedAdapterStory, variant string) 
 		t.Fatal(e)
 	}
 	var original wire.Result
-	if e = json.Unmarshal(source, &original); e != nil || original.Status != "trained" || original.DeviceProfile != wire.VerificationProfile {
+	if e = json.Unmarshal(source, &original); e != nil || original.Status != "trained" || original.DeviceProfile != wire.VerificationProfile || original.Bindings == nil {
 		t.Fatal("original CPU training report required", e)
 	}
 	hash := strings.Repeat("a", 64)
 	image := "sha256:" + strings.Repeat("b", 64)
-	cfg := wire.DefaultConfiguration()
-	cfg.MaximumSteps = original.GlobalStep
-	cfg.CheckpointSteps = min(cfg.CheckpointSteps, cfg.MaximumSteps)
+	cfg := original.Bindings.Configuration
+	cfg.Device = wire.ProductionProfile
 	cfgSHA, e := cfg.Digest()
 	if e != nil {
 		t.Fatal(e)
@@ -249,6 +250,7 @@ func acceptedAdapterGraph(t *testing.T, g acceptedAdapterStory, variant string) 
 	storedCommand, storedDescriptor, storedStop := c, d, stop
 	storedDescriptor.Files = append([]datawire.Asset{}, d.Files...)
 	storedReport := raw
+	storedAttemptInputs := c.Inputs
 	attemptOutcome := g.reportSHA
 	storage := "artifacts/" + g.job + "/" + g.attempt + "/" + g.artifact
 	currentNode := g.node
@@ -282,6 +284,8 @@ func acceptedAdapterGraph(t *testing.T, g acceptedAdapterStory, variant string) 
 		storage = "artifacts/" + uuid.NewString() + "/" + g.attempt + "/" + g.artifact
 	case "report":
 		storedReport = []byte(`{}`)
+	case "attempt_inputs":
+		storedAttemptInputs.Train.SHA256 = wrong
 	case "stop_receipt_outcome":
 		storedStop.OutcomeSHA256 = &wrong
 	case "stop_attempt_outcome":
@@ -317,7 +321,7 @@ func acceptedAdapterGraph(t *testing.T, g acceptedAdapterStory, variant string) 
 	g.seed(t, "managed_nodes", map[string]any{"id": g.node, "name": "Synthetic retained training node", "status": "removed", "credential_hash": nil, "last_heartbeat_at": now, "protocol_version": agent.AIVersion, "execution_profile": agent.DockerAIProfile, "capabilities": acceptedAdapterJSON(acceptedAdapterRaw(t, agent.Capabilities(agent.DockerAIProfile))), "facts": acceptedAdapterJSON(acceptedAdapterRaw(t, facts))})
 	g.seed(t, "training_jobs", map[string]any{"id": g.job, "node_id": g.node, "current_node_id": currentNode, "model_id": model, "dataset_id": dataset, "dataset_version_id": version, "gpu_uuid": c.GPUUUID, "configuration": acceptedAdapterJSON(acceptedAdapterRaw(t, cfg)), "configuration_sha256": cfgSHA, "execution_recipe": acceptedAdapterJSON(acceptedAdapterRaw(t, c.Recipe)), "dataset_manifest_sha256": hash, "model_catalog_sha256": agent.ModelCatalogDigest(), "created_by": f.User, "requested_by": f.User, "requested_audience": "admin", "requested_epoch": 1, "reason": "Synthetic accepted source", "creation_key": uuid.NewString(), "creation_fingerprint": fp, "state": "queued"})
 	g.seed(t, "node_tasks", map[string]any{"id": g.task, "node_id": g.node, "operation": "training.run.v1", "state": "succeeded", "attempt": 1, "idempotency_key": uuid.NewString(), "requested_by": f.User, "deadline_at": now.Add(time.Minute), "completed_at": now, "payload": acceptedAdapterJSON(acceptedAdapterRaw(t, storedCommand))})
-	g.seed(t, "training_attempts", map[string]any{"id": g.attempt, "job_id": g.job, "node_id": g.node, "task_id": g.task, "attempt_number": 1, "state": "succeeded", "requested_by": f.User, "requested_audience": "admin", "requested_epoch": 1, "input_inventory": acceptedAdapterJSON(acceptedAdapterRaw(t, c.Inputs)), "outcome_sha256": attemptOutcome, "outcome": acceptedAdapterJSON(raw), "physical_stop_receipt": acceptedAdapterJSON(stopRaw), "physical_stop_sha256": stopDigest, "physical_stopped_at": now, "finished_at": now})
+	g.seed(t, "training_attempts", map[string]any{"id": g.attempt, "job_id": g.job, "node_id": g.node, "task_id": g.task, "attempt_number": 1, "state": "succeeded", "requested_by": f.User, "requested_audience": "admin", "requested_epoch": 1, "input_inventory": acceptedAdapterJSON(acceptedAdapterRaw(t, storedAttemptInputs)), "outcome_sha256": attemptOutcome, "outcome": acceptedAdapterJSON(raw), "physical_stop_receipt": acceptedAdapterJSON(stopRaw), "physical_stop_sha256": stopDigest, "physical_stopped_at": now, "finished_at": now})
 	g.seed(t, "training_uploads", map[string]any{"id": g.artifact, "job_id": g.job, "attempt_id": g.attempt, "kind": "artifact", "global_step": result.GlobalStep, "manifest_sha256": g.reportSHA, "manifest": acceptedAdapterJSON(raw), "state": uploadState, "manifest_bytes": storedReport})
 	g.seed(t, "training_artifacts", map[string]any{"id": g.artifact, "job_id": g.job, "attempt_id": g.attempt, "manifest_sha256": g.reportSHA, "manifest": acceptedAdapterJSON(raw), "file_inventory": acceptedAdapterJSON(acceptedAdapterRaw(t, storedDescriptor)), "storage_key": storage})
 	g.exec(t, "UPDATE training_jobs SET state=$1,attempt_number=1,current_attempt_id=$2,accepted_artifact_id=$3,finished_at=$4 WHERE id=$5", "UPDATE training_jobs SET state=?,attempt_number=1,current_attempt_id=?,accepted_artifact_id=?,finished_at=? WHERE id=?", finalState, currentAttempt, acceptedArtifact, now, g.job)
@@ -404,7 +408,7 @@ func TestActualBorrowedAcceptedAdapter(t *testing.T) {
 	})
 	t.Run("descriptor_report_storage_and_file_set_corruption", func(t *testing.T) {
 		base := acceptedAdapterSetup(t)
-		for _, variant := range []string{"descriptor", "storage", "report"} {
+		for _, variant := range []string{"descriptor", "storage", "report", "attempt_inputs"} {
 			g := acceptedAdapterGraph(t, base, variant)
 			if e := g.within(func(ctx context.Context, q transaction.Executor) error {
 				out, e := g.read(ctx, q)
@@ -541,4 +545,99 @@ func TestActualBorrowedAcceptedAdapter(t *testing.T) {
 			t.Fatal("actual source query failure lost", e)
 		}
 	})
+}
+
+func TestActualAcceptedExperimentRead(t *testing.T) {
+	g := acceptedAdapterSetup(t)
+	read := func(s *training.Service, workspace string) (training.AcceptedExperiment, error) {
+		return s.ReadAcceptedExperiment(g.ctx, g.a, workspace, g.job, uuid.NewString())
+	}
+	refuse := func(out training.AcceptedExperiment, e error) {
+		t.Helper()
+		if e == nil || !reflect.DeepEqual(out, training.AcceptedExperiment{}) {
+			t.Fatalf("unverified experiment escaped: %v", e)
+		}
+	}
+	refuse(read(g.s, g.f.Workspace))
+
+	// Put real retained adapter bytes in the production file layout. The
+	// fixture's command and stop envelope remain synthetic.
+	if e := g.s.Store.PrepareUpload(g.descriptor); e != nil {
+		t.Fatal(e)
+	}
+	for _, asset := range g.descriptor.Files {
+		path := filepath.Join(os.Getenv("PROJECT_ONE_ACTUAL_TRAINING_OUTPUT"), "adapter", asset.Path)
+		raw, e := os.ReadFile(path)
+		if e != nil || int64(len(raw)) != asset.SizeBytes {
+			t.Fatal("retained adapter", e)
+		}
+		for offset := int64(0); offset < asset.SizeBytes; offset += wire.TransferChunkBytes {
+			chunk := raw[offset:min(offset+wire.TransferChunkBytes, asset.SizeBytes)]
+			if _, e := g.s.Store.WriteChunk(g.ctx, g.descriptor, asset.Path, offset, int64(len(chunk)), acceptedAdapterDigest(chunk), bytes.NewReader(chunk)); e != nil {
+				t.Fatal(e)
+			}
+		}
+	}
+	published, e := g.s.Store.PreparePublishedFiles(g.ctx, g.descriptor)
+	if e != nil {
+		t.Fatal(e)
+	}
+	out, e := read(g.s, g.f.Workspace)
+	if e != nil || !reflect.DeepEqual(out.Command, g.c) || out.ArtifactID != g.artifact ||
+		out.NodeID != g.node || out.ResultSHA256 != g.reportSHA || out.CommandSHA256 != g.stop.CommandSHA256 ||
+		out.StopSHA256 != acceptedAdapterDigest(acceptedAdapterRaw(t, g.stop)) ||
+		out.ModelRepository != agent.ApprovedModel().Repository || out.ModelRevision != agent.ApprovedModel().Revision ||
+		out.GlobalStep != g.descriptor.GlobalStep || out.Packages != wire.PinnedPackages() ||
+		!reflect.DeepEqual(out.Files, g.descriptor.Files) {
+		t.Fatal("accepted experiment did not retain exact bindings", e)
+	}
+	other, e := g.s.Workspaces.Create(g.ctx, g.a, "Second experiment workspace", g.f.User, uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	refuse(read(g.s, other.ID))
+	legacy, e := g.s.Export(g.ctx, g.a, g.f.Workspace, g.job, "manifest.json", uuid.NewString())
+	if e != nil || legacy.Manifest == nil || !bytes.Contains(legacy.Manifest.Bytes, []byte("not_established_by_training_output")) {
+		t.Fatal("existing adapter export changed", e)
+	}
+
+	asset := filepath.Join(g.root, published, "adapter_config.json")
+	original, e := os.ReadFile(asset)
+	if e != nil {
+		t.Fatal(e)
+	}
+	changed := bytes.Clone(original)
+	changed[0] ^= 1
+	if e := os.WriteFile(asset, changed, 0600); e != nil {
+		t.Fatal(e)
+	}
+	refuse(read(g.s, g.f.Workspace))
+	if e := os.WriteFile(asset, original, 0600); e != nil {
+		t.Fatal(e)
+	}
+	if retried, e := read(g.s, g.f.Workspace); e != nil || !reflect.DeepEqual(out, retried) {
+		t.Fatal("repaired original did not yield the same experiment", e)
+	}
+
+	wrapped := func(store transaction.Store) *training.Service {
+		account := *g.owner
+		account.DB, account.Storage = nil, store
+		s := *g.s
+		s.DB, s.Identity, s.Workspaces = nil, &account, &workspaces.Service{Identity: &account}
+		return &s
+	}
+	uncertain, e := read(wrapped(&trainingCreatorStore{Store: g.f.Store, at: 2, unknown: true}), g.f.Workspace)
+	refuse(uncertain, e)
+	if e.Error() != string(transaction.CommitUnknown) {
+		t.Fatal("expected unknown commit", e)
+	}
+	revoked, e := read(wrapped(&trainingCreatorStore{Store: g.f.Store, at: 2, before: func() {
+		if e := g.owner.Logout(g.ctx, g.token, "admin", uuid.NewString()); e != nil {
+			t.Fatal(e)
+		}
+	}}), g.f.Workspace)
+	refuse(revoked, e)
+	if !strings.HasPrefix(e.Error(), "AUTH_") {
+		t.Fatal("expected final session refusal", e)
+	}
 }
