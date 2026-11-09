@@ -85,3 +85,28 @@ addresses for one UUID or one address claimed by two UUIDs make the scrape
 ambiguous and unusable for attribution. Exclude both the current and legacy
 workload labels. Tests cover collisions, function preservation and legacy
 workload labels. Boot and time correlation still belong to the event consumer.
+
+## Identity when a field is unavailable
+
+The DCGM exporter documents PCI and UUID as physical entity labels. The
+DCGM header defines the blank values as field status sentinels. Validate
+the entity labels on recognized physical series before omitting an
+unavailable reading. A second UUID claiming the same PCI function, or a
+second PCI function for one UUID, makes attribution ambiguous even if
+one series has no usable value. Ignoring the conflicting series would
+allow the remaining observation to be joined to the wrong Xid. Treating
+the sentinel as a reading would introduce false telemetry.
+
+Keep a consistent PCI address when it is supplied only on an unavailable
+field and the same UUID has a valid reading elsewhere. Omit devices with
+no usable measurements. Retain the existing Apache-2.0 exporter and
+Prometheus dependency boundary. No new dependency, dataset or model is
+used. Test both directions of the conflicting identity, a consistent
+address with a measured zero, and a device with only sentinels.
+
+The Linux loopback-only discovery and inference tests passed. The new
+fixtures first reproduced both ambiguous identity cases and the dropped
+address. The collector now refuses the conflicts without reporting any
+partial snapshot. A measured zero retains its address from the consistent
+series. An unavailable-only device remains absent. Real NVIDIA hardware
+and fleet reporting still require their own acceptance.

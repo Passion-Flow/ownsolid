@@ -167,6 +167,19 @@ func parseDCGM(body []byte) ([]DCGMDevice, error) {
 				return nil, ErrDCGMInvalid
 			}
 			seen[uuid] = true
+			device := devices[uuid]
+			if device == nil {
+				device = &DCGMDevice{UUID: uuid}
+				devices[uuid] = device
+			}
+			if address != "" {
+				if (device.PCIAddress != "" && device.PCIAddress != address) ||
+					(pciOwners[address] != "" && pciOwners[address] != uuid) {
+					return nil, ErrDCGMInvalid
+				}
+				device.PCIAddress = address
+				pciOwners[address] = uuid
+			}
 			value := metric.GetGauge().GetValue()
 			if field.counter {
 				value = metric.GetCounter().GetValue()
@@ -178,28 +191,20 @@ func parseDCGM(body []byte) ([]DCGMDevice, error) {
 			if math.IsNaN(value) || value < field.minimum || value > field.maximum || field.integer && math.Trunc(value) != value {
 				return nil, ErrDCGMInvalid
 			}
-			device := devices[uuid]
-			if device == nil {
-				device = &DCGMDevice{UUID: uuid, Samples: map[string]float64{}}
-				devices[uuid] = device
-			}
-			if address != "" {
-				if (device.PCIAddress != "" && device.PCIAddress != address) ||
-					(pciOwners[address] != "" && pciOwners[address] != uuid) {
-					return nil, ErrDCGMInvalid
-				}
-				device.PCIAddress = address
-				pciOwners[address] = uuid
+			if device.Samples == nil {
+				device.Samples = make(map[string]float64)
 			}
 			device.Samples[name] = value
 		}
 	}
-	if len(devices) == 0 {
-		return nil, ErrDCGMNoSamples
-	}
 	result := make([]DCGMDevice, 0, len(devices))
 	for _, device := range devices {
-		result = append(result, *device)
+		if len(device.Samples) > 0 {
+			result = append(result, *device)
+		}
+	}
+	if len(result) == 0 {
+		return nil, ErrDCGMNoSamples
 	}
 	slices.SortFunc(result, func(a, b DCGMDevice) int { return strings.Compare(a.UUID, b.UUID) })
 	return result, nil
