@@ -7,15 +7,15 @@ import (
 	"errors"
 
 	"database/sql"
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 // RecordStop accepts only restricted exact-owner absence evidence. It grants no execution/output authority.
@@ -134,7 +134,7 @@ func (s *Service) RecordStop(ctx context.Context, node, credential, task, token 
 				}
 				return e
 			}
-			if existingOutcome == nil || digest != *existingOutcome || verifiedArtifact == nil || *verifiedArtifact != digest {
+			if existingOutcome == nil || digest != *existingOutcome || verifiedArtifact == nil || verifiedArtifact.UploadID != id || verifiedArtifact.ManifestSHA256 != digest {
 				return fail("TRAINING_RESULT_CONFLICT")
 			}
 			state = "succeeded"
@@ -173,12 +173,12 @@ func (s *Service) RecordStop(ctx context.Context, node, credential, task, token 
 }
 
 // Successful stop checks already accepted immutable bytes outside business locks, then RecordStop repeats authority/fence checks.
-func (s *Service) verifyStopArtifact(ctx context.Context, c candidate, node, credential, task, token string, receipt wire.StopReceipt) (*string, error) {
+func (s *Service) verifyStopArtifact(ctx context.Context, c candidate, node, credential, task, token string, receipt wire.StopReceipt) (*UploadDescriptor, error) {
 	if receipt.OutcomeSHA256 == nil {
 		return nil, nil
 	}
 	var descriptor UploadDescriptor
-	var accepted *string
+	var accepted bool
 	e := s.delegatedRepositoryTransaction(ctx, c, func(ctx context.Context, tx transaction.Executor, a identity.Auth, w workspaces.Workspace, n nodes.Node, j Job, valid bool) error {
 		current, e := s.Nodes.CredentialWithin(ctx, tx, c.tenant, c.workspace, node, credential)
 		if e != nil {
@@ -205,8 +205,16 @@ func (s *Service) verifyStopArtifact(ctx context.Context, c candidate, node, cre
 			return nil
 		}
 		var id, sha string
-		var raw []byte
-		e = tx.QueryRow(ctx, transferStatement(tx, "SELECT r.id::text,r.manifest_sha256,r.file_inventory FROM training_artifacts r JOIN training_attempts a ON a.id=r.attempt_id WHERE r.tenant_id=$1 AND r.workspace_id=$2 AND r.job_id=$3 AND r.attempt_id=$4 AND a.physical_stopped_at IS NULL", "SELECT r.id,r.manifest_sha256,r.file_inventory FROM training_artifacts r JOIN training_attempts a ON a.id=r.attempt_id WHERE r.tenant_id=? AND r.workspace_id=? AND r.job_id=? AND r.attempt_id=? AND a.physical_stopped_at IS NULL", []any{w.TenantID, w.ID, j.ID, command.AttemptID}, []any{w.TenantID, w.ID, j.ID, command.AttemptID})).Scan(&id, &sha, &raw)
+		var raw, metadata, attemptResult []byte
+		e = tx.QueryRow(ctx, acceptedAdapterSQL(tx, `SELECT r.id::text,r.manifest_sha256,r.file_inventory,u.manifest_bytes,a.outcome
+ FROM training_artifacts r
+ JOIN training_uploads u ON u.id=r.id AND u.tenant_id=r.tenant_id AND u.workspace_id=r.workspace_id AND u.job_id=r.job_id AND u.attempt_id=r.attempt_id AND u.state='accepted' AND u.kind='artifact' AND u.manifest_sha256=r.manifest_sha256
+ JOIN training_attempts a ON a.id=r.attempt_id AND a.tenant_id=r.tenant_id AND a.workspace_id=r.workspace_id AND a.job_id=r.job_id
+ WHERE r.tenant_id=$1 AND r.workspace_id=$2 AND r.job_id=$3 AND r.attempt_id=$4 AND a.physical_stopped_at IS NULL`, `SELECT r.id,r.manifest_sha256,r.file_inventory,u.manifest_bytes,a.outcome
+ FROM training_artifacts r
+ JOIN training_uploads u ON u.id=r.id AND u.tenant_id=r.tenant_id AND u.workspace_id=r.workspace_id AND u.job_id=r.job_id AND u.attempt_id=r.attempt_id AND u.state='accepted' AND u.kind='artifact' AND u.manifest_sha256=r.manifest_sha256
+ JOIN training_attempts a ON a.id=r.attempt_id AND a.tenant_id=r.tenant_id AND a.workspace_id=r.workspace_id AND a.job_id=r.job_id
+ WHERE r.tenant_id=? AND r.workspace_id=? AND r.job_id=? AND r.attempt_id=? AND a.physical_stopped_at IS NULL`, w.TenantID, w.ID, j.ID, command.AttemptID)).Scan(&id, &sha, &raw, &metadata, &attemptResult)
 		if errors.Is(e, sql.ErrNoRows) {
 			return nil
 		}
@@ -216,13 +224,16 @@ func (s *Service) verifyStopArtifact(ctx context.Context, c candidate, node, cre
 		if sha != *receipt.OutcomeSHA256 || wire.DecodeStrict(raw, &descriptor) != nil || descriptor.UploadID != id || descriptor.Scope != command.Scope || descriptor.AttemptID != command.AttemptID || descriptor.Kind != "artifact" || descriptor.ManifestSHA256 != sha {
 			return fail("TRAINING_RESULT_CONFLICT")
 		}
-		accepted = &sha
+		if _, e := decodeAcceptedArtifactResult(command, descriptor, metadata, attemptResult); e != nil {
+			return fail("TRAINING_RESULT_CONFLICT")
+		}
+		accepted = true
 		return nil
 	})
 	if e != nil {
 		return nil, e
 	}
-	if accepted == nil {
+	if !accepted {
 		return nil, nil
 	}
 	if s.Store == nil {
@@ -233,5 +244,5 @@ func (s *Service) verifyStopArtifact(ctx context.Context, c candidate, node, cre
 	if e = s.Store.VerifyPublished(verification, descriptor); e != nil {
 		return nil, e
 	}
-	return accepted, nil
+	return &descriptor, nil
 }
