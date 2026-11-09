@@ -81,12 +81,7 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 	}
 	credential := read(t, c.CredentialPath())
 	admin := installedAdministrator(t, o)
-	workspace := query(t, databaseName, "SELECT default_workspace_id FROM installation_state WHERE id=1")
-	modelFile := filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar")
-	if _, err := os.Stat(modelFile); err != nil {
-		t.Fatal("the coordinated drill needs the pinned model.tar")
-	}
-	model := publishColdRestoreModel(t, coldRestoreLogin(t, c, c.Origins.Admin, credential), licenseKey, workspace, modelFile)
+
 	const marker = "Coordinated backup point"
 	query(t, databaseName, "UPDATE tenants SET name='"+marker+"' WHERE id=(SELECT tenant_id FROM installation_state WHERE id=1)")
 	query(t, maintenanceDatabase, "ALTER DATABASE ownsolid CONNECTION LIMIT 23")
@@ -188,6 +183,12 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 	if t.Failed() {
 		return
 	}
+	workspace := query(t, databaseName, "SELECT default_workspace_id FROM installation_state WHERE id=1")
+	modelFile := filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar")
+	if _, err := os.Stat(modelFile); err != nil {
+		t.Fatal("the coordinated drill needs the pinned model.tar")
+	}
+	model := publishColdRestoreModel(t, coldRestoreLogin(t, c, c.Origins.Admin, credential), licenseKey, workspace, modelFile)
 	t.Run("retries and reads the verified database, keys and model back on an empty site", func(t *testing.T) {
 		output := privateDir(t)
 		check(t, config, "BACKUP_COMPLETE", false, "backup-coordinated", "--output", output)

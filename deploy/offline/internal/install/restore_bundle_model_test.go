@@ -90,11 +90,7 @@ func publishColdRestoreModel(t *testing.T, browser coldRestoreBrowser, key licen
 		if _, err := io.ReadFull(f, chunk); err != nil {
 			t.Fatal(err)
 		}
-		sum := sha256.Sum256(chunk)
-		browser.request(t, http.MethodPost, route+"/chunks", bytes.NewReader(chunk), map[string]string{
-			"Content-Type": "application/octet-stream", "X-CSRF-Token": csrf,
-			"X-Chunk-Offset": strconv.FormatInt(offset, 10), "X-Chunk-SHA256": hex.EncodeToString(sum[:]),
-		}, http.StatusOK)
+		uploadColdRestoreChunk(t, browser, route, csrf, offset, chunk)
 		offset += int64(len(chunk))
 	}
 	delete(headers, "Idempotency-Key")
@@ -117,6 +113,40 @@ func publishColdRestoreModel(t *testing.T, browser coldRestoreBrowser, key licen
 	}
 	t.Fatal("model verification timed out")
 	return ""
+}
+
+// An ambiguous transport failure is safe to retry only after reading the
+// server's committed offset. HTTP refusals still fail the test immediately.
+func uploadColdRestoreChunk(t *testing.T, browser coldRestoreBrowser, route, csrf string, offset int64, chunk []byte) {
+	t.Helper()
+	sum := sha256.Sum256(chunk)
+	headers := map[string]string{
+		"Content-Type": "application/octet-stream", "X-CSRF-Token": csrf,
+		"X-Chunk-Offset": strconv.FormatInt(offset, 10), "X-Chunk-SHA256": hex.EncodeToString(sum[:]),
+	}
+	for attempt := 0; attempt < 3; attempt++ {
+		status, _, err := browser.send(t.Context(), http.MethodPost, route+"/chunks", bytes.NewReader(chunk), headers)
+		if err == nil {
+			if status != http.StatusOK {
+				t.Fatalf("model upload at offset %d returned HTTP %d", offset, status)
+			}
+			return
+		}
+		t.Logf("model upload transport failed at offset %d: %v", offset, err)
+		var current struct {
+			Uploaded int64 `json:"uploaded_bytes"`
+		}
+		browser.get(t, route, &current)
+		switch current.Uploaded {
+		case offset + int64(len(chunk)):
+			return
+		case offset:
+			// The server has not committed this chunk.
+		default:
+			t.Fatalf("server offset %d does not match the attempted chunk at %d", current.Uploaded, offset)
+		}
+	}
+	t.Fatalf("model upload at offset %d exhausted its transport retries", offset)
 }
 
 func assertColdRestoreModel(t *testing.T, browser coldRestoreBrowser, site Config, id string) {
