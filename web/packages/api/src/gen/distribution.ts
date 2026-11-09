@@ -296,6 +296,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/cutovers/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview a model alias cutover
+         * @description Resolve the current and proposed alias state in the selected cell and workspace. Send all cutover fields, using null for inapplicable targets. Pause and resume require all three target fields to be null. Retarget requires a deployment ID and revision with a null source revision. Rollback also requires the earlier alias source revision. Preview changes no alias, reserves no cutover, and needs no idempotency key. Applying rechecks the current revision and target.
+         */
+        post: operations["adminPreviewAliasCutover"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/targets": {
         parameters: {
             query?: never;
@@ -731,6 +754,19 @@ export interface components {
             source_revision: number | null;
             reason: string;
         };
+        AliasCutoverState: {
+            /** Format: int64 */
+            revision: number;
+            /** Format: uuid */
+            deployment_id: string;
+            /** Format: int64 */
+            deployment_revision: number;
+            paused: boolean;
+        };
+        AliasCutoverPreview: {
+            before: components["schemas"]["AliasCutoverState"];
+            after: components["schemas"]["AliasCutoverState"];
+        };
         AliasCutoverResult: {
             alias: components["schemas"]["ModelAlias"];
             applied_revision: number;
@@ -1014,6 +1050,9 @@ export interface components {
         };
         ProvisionedGatewayResponse: {
             data: components["schemas"]["ProvisionedGateway"];
+        };
+        AliasCutoverPreviewResponse: {
+            data: components["schemas"]["AliasCutoverPreview"];
         };
         AliasCutoverResultResponse: {
             data: components["schemas"]["AliasCutoverResult"];
@@ -1778,6 +1817,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AliasCutoverResultResponse"];
+                };
+            };
+            /** @description Stable safe error. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminPreviewAliasCutover: {
+        parameters: {
+            query?: never;
+            header: {
+                Origin: string;
+                "X-CSRF-Token": string;
+            };
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AliasCutover"];
+            };
+        };
+        responses: {
+            /** @description Current and proposed alias state for this request. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AliasCutoverPreviewResponse"];
+                };
+            };
+            /** @description Invalid path or cutover request. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An authenticated Admin session is required. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The caller lacks access or failed the browser safety checks. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The cell, workspace or alias is unavailable within the authorized scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The alias revision, pause state, drain state or proposed target prevents the cutover. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The request body exceeds the allowed size. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Use application/json with optional UTF-8 charset. */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The service or its storage is temporarily unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Stable safe error. */
