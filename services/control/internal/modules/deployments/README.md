@@ -8,7 +8,10 @@ Nodes and models remain the authority for node/profile and artifact identity.
 Placement and new launch intents check the verified model catalogue against
 the installation's on-site use. Existing deployments remain readable and
 stoppable and an original idempotency key replays the committed intent. See
-[model license admission](../../../../../docs/research/model-license-admission.md). Migration 000006 includes deployments and GPU leases. Creating a deployment or accepting desired state does not mean a container is ready; current observations, stale attempts, unknown results and removal/fencing must preserve existing reconciliation.
+[model license admission](../../../../../docs/research/model-license-admission.md).
+A new load requires a recent hardware receipt and recent agent and GPU
+observations. Free capacity must meet the existing recipe share rounded up to
+whole MiB and, for derived loads, the existing absolute free-memory floor. Migration 000006 includes deployments and GPU leases. Creating a deployment or accepting desired state does not mean a container is ready; current observations, stale attempts, unknown results and removal/fencing must preserve existing reconciliation.
 
 Synchronize [nodes](../nodes/README.md), [models](../models/README.md), [distribution](../distribution/README.md), agent/inference, contracts/agent deployment recipe and HTTP interfaces, deploy/inference and [deployments frontend](../../../../../web/README.md).
 

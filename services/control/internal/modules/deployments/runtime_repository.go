@@ -263,7 +263,7 @@ func (s *Service) preflightCommandWithin(ctx context.Context, q transaction.Exec
 	if e := admitObservation(o, command); e != nil {
 		return e
 	}
-	return admitGPU(o, command.GPUUUID, false, false)
+	return admitGPU(o, command.GPUUUID, false, false, gpuObservationWindow{})
 }
 
 // hardwareRefusal names why a node's GPU observation cannot be used.
@@ -305,12 +305,18 @@ func admitObservation(o wire.InferenceObservation, command wire.InferenceCommand
 
 // admitGPU holds one observed GPU to the approved recipe, and a derived model's GPU to the
 // derived recipe as well. A new load also needs the memory the agent will demand free now.
-func admitGPU(o wire.InferenceObservation, gpu string, derived, newLoad bool) error {
+func admitGPU(o wire.InferenceObservation, gpu string, derived, newLoad bool, window gpuObservationWindow) error {
+	if newLoad && !window.contains(o.ObservedAt) {
+		return fail("INFERENCE_PREFLIGHT_REQUIRED")
+	}
 	recipe := wire.ApprovedInferenceRecipe()
 	serving := wire.ApprovedDerivedServingRecipe()
 	for _, g := range o.GPUs {
 		if g.UUID != gpu {
 			continue
+		}
+		if newLoad && !window.contains(g.ObservedAt) {
+			return fail("INFERENCE_PREFLIGHT_REQUIRED")
 		}
 		major, e := strconv.Atoi(strings.Split(g.DriverVersion, ".")[0])
 		if e != nil || major < recipe.MinimumDriverMajor {
@@ -325,7 +331,7 @@ func admitGPU(o wire.InferenceObservation, gpu string, derived, newLoad bool) er
 		if g.MemoryTotalMiB < recipe.MinimumGPUMemoryMiB {
 			return fail("INFERENCE_GPU_MEMORY_LOW")
 		}
-		if newLoad && (g.MemoryFreeMiB < g.MemoryTotalMiB*wire.InferenceFreeMemoryPercent/100 || derived && g.MemoryFreeMiB < serving.MinimumGPUMemoryMiB) {
+		if newLoad && g.MemoryFreeMiB < requiredServingFreeMiB(g.MemoryTotalMiB, derived, serving.MinimumGPUMemoryMiB) {
 			return fail("INFERENCE_GPU_MEMORY_LOW")
 		}
 		return nil
