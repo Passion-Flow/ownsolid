@@ -231,6 +231,7 @@ export {
   type TaskSummary,
 } from './tasks.ts';
 export {
+  checkKubernetesEnrollment,
   createJoinToken,
   getAgentPacing,
   getAgentShed,

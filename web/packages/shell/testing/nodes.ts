@@ -151,6 +151,9 @@ export async function routeNodes(
   problem: Refuse,
 ): Promise<void> {
   const base = '**/api/v1/sites/*/cells/*/admin';
+  await page.route(`${base}/cell-clusters`, (route) =>
+    problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' }),
+  );
   await page.route(`${base}/nodes?*`, (route) => {
     const request = route.request();
     state.nodePolls.push(request.headers()['x-ownsolid-background'] === 'true');

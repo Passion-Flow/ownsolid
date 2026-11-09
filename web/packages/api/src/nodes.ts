@@ -1,7 +1,8 @@
 // Nodes and the tokens that join them, for platform administrators (api/openapi/v1/nodes).
 import { localCell } from './cell.ts';
 import { createClient } from './client.ts';
-import type { nodesContract } from './gen/index.ts';
+import type { cellClustersContract, nodesContract } from './gen/index.ts';
+import { ApiProblem } from './problem.ts';
 import type { RequestOptions } from './transport.ts';
 
 type Schemas = nodesContract.components['schemas'];
@@ -46,6 +47,20 @@ export type PacingValues = Pick<
 export type NodeTask = Schemas['Task'];
 
 const client = createClient<nodesContract.paths>();
+const cellClusters = createClient<cellClustersContract.paths>();
+
+/** Checks that this cell can use managed Kubernetes, including before its first cluster exists. */
+export async function checkKubernetesEnrollment(options?: RequestOptions): Promise<true> {
+  const page = await cellClusters.get(
+    '/api/v1/sites/{site_id}/cells/{cell_id}/admin/cell-clusters',
+    {
+      ...options,
+      path: localCell,
+    },
+  );
+  if (!Array.isArray(page.items)) throw new ApiProblem('RESPONSE_INVALID');
+  return true;
+}
 
 /** Lists joined nodes, newest first. Removed nodes appear only when asked for by status. */
 export function listNodes(

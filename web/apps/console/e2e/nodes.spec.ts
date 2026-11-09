@@ -1,4 +1,5 @@
 // The Nodes page: an administrator sees the fleet, finds a node, changes it and adds another.
+import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import {
   disabledNode,
@@ -24,34 +25,28 @@ const row = (page: Page, name: string) => page.getByRole('row', { name: new RegE
 const open = (page: Page, name: string) =>
   page.getByRole('button', { name: `Open details of ${name}` }).click();
 
+const kubernetesNode = {
+  ...node,
+  execution_profile: 'kubernetes_node',
+  capabilities: [
+    'collect_facts.v1',
+    'kubernetes.join.v1',
+    'kubernetes.token.v1',
+    'kubernetes.observe.v1',
+  ],
+} satisfies typeof node;
+
 for (const locale of ['en', 'zh-CN'] as const) {
   test(`shows Kubernetes profiles on node and registration reads (${locale})`, async ({ page }) => {
     const zh = locale === 'zh-CN';
     control.preferences.locale = locale;
     const profile = zh ? chinese['nodes.profile.kubernetes_node'] : 'Kubernetes node';
-    // Exercise the newer HTTP response while this checkout can still use the old generated types.
-    const joined = {
-      ...node,
+    const waiting = {
+      ...joinToken,
       execution_profile: 'kubernetes_node',
-      capabilities: [
-        'collect_facts.v1',
-        'kubernetes.join.v1',
-        'kubernetes.token.v1',
-        'kubernetes.observe.v1',
-      ],
-    };
-    const waiting = { ...joinToken, execution_profile: 'kubernetes_node' };
-    await page.route('**/admin/nodes?*', (route) =>
-      route.fulfill({
-        json: { data: { items: [joined, offlineNode, disabledNode], next_cursor: null } },
-      }),
-    );
-    await page.route(`**/admin/nodes/${node.id}`, (route) =>
-      route.fulfill({ json: { data: joined } }),
-    );
-    await page.route('**/admin/node-join-tokens?*', (route) =>
-      route.fulfill({ json: { data: { items: [waiting], next_cursor: null } } }),
-    );
+    } satisfies typeof joinToken;
+    control.nodes = [kubernetesNode, offlineNode, disabledNode];
+    control.joinTokens = [waiting];
 
     await page.goto('/nodes');
     await expect(row(page, node.name)).toContainText(profile);
@@ -436,6 +431,170 @@ test.describe('adding a node', () => {
     const dialog = page.getByRole('dialog', { name: 'Add a node' });
     await dialog.getByRole('button', { name: 'Try again' }).click();
     await expect(page.getByRole('dialog', { name: 'Join edge-e02' })).toBeVisible();
+  });
+
+  for (const locale of ['en', 'zh-CN'] as const) {
+    test(`registers a Kubernetes node with its own Agent address (${locale})`, async ({
+      page,
+      context,
+    }, testInfo) => {
+      control.preferences.locale = locale;
+      control.pollMilliseconds = 1_000;
+      const copy = locale === 'en' ? english : chinese;
+      const name = 'kube-edge-01';
+      const agent = 'https://agents.example.internal:8443';
+      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+      await page.route('**/admin/cell-clusters', (route) =>
+        route.fulfill({ json: { data: { items: [] } } }),
+      );
+      await page.goto('/nodes#add');
+      const form = page.getByRole('dialog', { name: copy['nodes.add.title'] });
+      const role = form.getByLabel(copy['nodes.add.role']);
+      const option = role.getByRole('option', { name: copy['nodes.add.role.kubernetes_node'] });
+      await expect(option).toBeEnabled();
+      await role.selectOption('kubernetes_node');
+      await form.getByLabel(copy['nodes.add.name']).fill(name);
+      const address = form.getByLabel(copy['nodes.add.kubernetes.origin']);
+      const proceed = form.getByRole('button', { name: copy['nodes.add.kubernetes.submit'] });
+      await expect(proceed).toBeDisabled();
+      for (const invalid of [
+        'http://agent.internal',
+        `${agent}/api`,
+        `${agent}?`,
+        'https://user@agent.internal',
+      ]) {
+        await address.fill(invalid);
+        await expect(address).toHaveAttribute('aria-invalid', 'true');
+        await expect(proceed).toBeDisabled();
+      }
+      await address.fill(`${agent}/`);
+      await expect(form).toContainText(copy['nodes.add.kubernetes.originHint']);
+      await expectAccessible(page);
+      await testInfo.attach('registration-form', {
+        body: await page.screenshot({ animations: 'disabled' }),
+        contentType: 'image/png',
+      });
+      const posted = page.waitForRequest(
+        (request) => request.method() === 'POST' && request.url().endsWith('/node-join-tokens'),
+      );
+      await proceed.click();
+      expect((await posted).postDataJSON()).toEqual({
+        workspace_id: node.workspace_id,
+        node_name: name,
+        execution_profile: 'kubernetes_node',
+      });
+      const steps = page.getByRole('dialog', {
+        name: copy['nodes.add.stepsTitle'].replace('{name}', name),
+      });
+      const commands = steps.locator('pre');
+      await expect(commands).toHaveCount(3);
+      await expect(steps).toContainText(copy['nodes.add.kubernetes.enrolled']);
+      await expect(
+        steps.locator('span[aria-hidden="true"]').filter({ hasText: copy['nodes.add.waiting'] }),
+      ).toBeInViewport();
+      const join = commands.nth(2);
+      const script = await join.innerText();
+      expect(JSON.parse(script.split('\n')[1] ?? '')).toEqual({
+        control_origin: agent,
+        ca_file: '/etc/ownsolid-agent/ca.pem',
+        state_directory: '/var/lib/ownsolid-agent',
+        disk_path: '/',
+        join_token_file: '/etc/ownsolid-agent/join-token',
+        execution_profile: 'kubernetes_node',
+      });
+      expect(script).toContain('sudo agent enroll --config /etc/ownsolid-agent/agent.json');
+      expect(script).toContain('sudo agent run --config /etc/ownsolid-agent/agent.json');
+      for (const command of await commands.all()) {
+        await expect(command).not.toContainText('scripted-join-token');
+        await expect(command).not.toContainText('docker');
+      }
+      await steps
+        .getByRole('button', {
+          name: copy['action.copyNamed'].replace('{name}', copy['nodes.add.step.joinLabel']),
+        })
+        .click();
+      await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(script);
+      await expectAccessible(page);
+      await join.scrollIntoViewIfNeeded();
+      await testInfo.attach('registration-commands', {
+        body: await page.screenshot({ animations: 'disabled' }),
+        contentType: 'image/png',
+      });
+
+      control.nodes.unshift({
+        ...kubernetesNode,
+        id: '6f1c7a1e-0000-4000-8000-000000000034',
+        name,
+        created_at: '2026-11-06T08:00:01Z',
+      });
+      await expect(steps).toContainText(copy['nodes.add.joined'].replace('{name}', name));
+      await steps.getByRole('button', { name: copy['nodes.add.openNode'] }).click();
+      await expect(page.getByRole('dialog', { name })).toContainText(
+        copy['nodes.profile.kubernetes_node'],
+      );
+    });
+  }
+
+  for (const { status, code, reason } of [
+    { status: 404, code: 'RESOURCE_NOT_FOUND', reason: 'nodes.add.kubernetes.olderControl' },
+    {
+      status: 503,
+      code: 'KUBERNETES_CELLS_UNCONFIGURED',
+      reason: 'nodes.add.kubernetes.unconfigured',
+    },
+    {
+      status: 409,
+      code: 'KUBERNETES_CLUSTER_STORAGE_UNSUPPORTED',
+      reason: 'nodes.add.kubernetes.storage',
+    },
+    { status: 403, code: 'ACCESS_DENIED', reason: 'nodes.add.kubernetes.permission' },
+  ] as const) {
+    test(`keeps Kubernetes visible with its reason for ${code}`, async ({ page }, testInfo) => {
+      await page.route('**/admin/cell-clusters', (route) =>
+        route.fulfill({ status, json: { code } }),
+      );
+      await page.goto('/nodes#add');
+      const dialog = page.getByRole('dialog', { name: 'Add a node' });
+      const role = dialog.getByLabel('What it will do');
+      const kube = role.getByRole('option', { name: 'Run Kubernetes workloads' });
+      await expect(kube).toBeDisabled();
+      await expect(kube).toHaveAttribute('aria-disabled', 'true');
+      await expect(role).toHaveAccessibleDescription(new RegExp(english[reason]));
+      await expect(role.getByRole('option', { name: 'Report its facts' })).toBeEnabled();
+      await expect(role.getByRole('option', { name: 'Serve models' })).toBeEnabled();
+      if (status === 404) {
+        await testInfo.attach('registration-unavailable', {
+          body: await page.screenshot({ animations: 'disabled' }),
+          contentType: 'image/png',
+        });
+      }
+    });
+  }
+
+  test('can retry a failed Kubernetes check and explains a later token refusal', async ({
+    page,
+  }) => {
+    let checks = 0;
+    await page.route('**/admin/cell-clusters', (route) => {
+      checks += 1;
+      return checks === 1
+        ? route.fulfill({ status: 503, json: { code: 'STORAGE_UNAVAILABLE' } })
+        : route.fulfill({ json: { data: { items: [] } } });
+    });
+    control.nextMint = { status: 409, code: 'AGENT_PROFILE_REJECTED' };
+    await page.goto('/nodes#add');
+    const dialog = page.getByRole('dialog', { name: 'Add a node' });
+    await expect(dialog).toContainText(english['nodes.add.kubernetes.checkFailed']);
+    await dialog.getByRole('button', { name: 'Try again' }).click();
+    const role = dialog.getByLabel('What it will do');
+    await expect(role.getByRole('option', { name: 'Run Kubernetes workloads' })).toBeEnabled();
+    await role.selectOption('kubernetes_node');
+    await dialog.getByLabel('Node name').fill('kube-edge-01');
+    await dialog.getByLabel('Agent HTTPS address').fill('https://agents.example.internal');
+    await dialog.getByRole('button', { name: 'Issue join token' }).click();
+    await expect(dialog.getByRole('alert')).toContainText('Kubernetes token refused');
+    await expect(dialog.getByRole('alert')).toContainText('PostgreSQL');
+    expect(control.joinTokens).toHaveLength(0);
   });
 
   test('a token not used is listed and can be revoked', async ({ page }) => {

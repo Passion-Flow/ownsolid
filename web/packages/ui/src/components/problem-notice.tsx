@@ -19,6 +19,8 @@ export interface ProblemNoticeProps {
   onRetry?: (() => void) | undefined;
   /** The title's element: a heading when the notice is all the page shows. */
   titleAs?: 'p' | 'h1' | 'h2' | undefined;
+  /** A title that names the failed operation when the code is shared across operations. */
+  title?: string | undefined;
   /** A next step that depends on where the failure happened. */
   detail?: string | undefined;
   className?: string | undefined;
@@ -69,13 +71,13 @@ export function ProblemNotice(props: ProblemNoticeProps) {
   return <Explained key={`${code}:${requestId}:${String(retryAfterSeconds)}`} {...props} />;
 }
 
-function Explained({ problem, onRetry, titleAs, detail, className }: ProblemNoticeProps) {
+function Explained({ problem, onRetry, titleAs, title, detail, className }: ProblemNoticeProps) {
   const { t, format, knows } = useI18n();
   const wait = useWait(problem.retryAfterSeconds);
   const base = `problem.${problem.code}`;
-  const title = `${base}.title`;
+  const titleKey = `${base}.title`;
   const detailKey = `${base}.detail`;
-  const known = knows(title) && knows(detailKey);
+  const known = knows(titleKey) && knows(detailKey);
   const reload = fixedByReload.has(problem.code);
   let action = null;
   if (reload) {
@@ -101,7 +103,7 @@ function Explained({ problem, onRetry, titleAs, detail, className }: ProblemNoti
       tone="critical"
       titleAs={titleAs}
       className={className}
-      title={known ? t(title) : t('problem.UNKNOWN.title')}
+      title={title ?? (known ? t(titleKey) : t('problem.UNKNOWN.title'))}
       actions={action ?? undefined}
     >
       <p>
