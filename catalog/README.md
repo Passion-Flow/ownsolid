@@ -89,6 +89,13 @@ separately from the bundle. `apps.VerifyBundle` accepts that key, an
 limit for the engine input and image archive. It checks signature, manifest,
 both locales and both payloads before returning release metadata.
 
+For catalog browsing, call `apps.ListReleaseMetadata` with the authorized app
+ID, its immutable directory and its trusted publisher key. It returns each
+signed manifest, both locales and its exact release pin in descending
+version order. A missing or invalid metadata entry fails the read. The list
+does not open engine artifacts or image archives. Verify the selected pin
+and payloads at installation time.
+
 Use `apps.VerifyInstallBundle` for the Linux amd64 installation path. In addition
 to the signature and payload checks it requires a complete OCI image layout in
 `images.tar`, with direct amd64 manifest digests exactly matching
