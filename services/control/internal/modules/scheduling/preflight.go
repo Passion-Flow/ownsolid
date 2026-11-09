@@ -41,6 +41,12 @@ type PreflightResult struct {
 	Limits []Limit
 }
 
+// WaitReasons projects this estimate into actionable guidance. A fit has no
+// waiting reason. Shared ancestor and cell quantities stay in the estimate.
+func (r PreflightResult) WaitReasons() []WaitReason {
+	return explainLimits(r.Limits)
+}
+
 // Preflight evaluates a workspace's whole demand without mutating allocations.
 // Callers must supply aggregate reserved usage for every node in the path,
 // using an empty vector for an unused node. A fit is not a reservation and does
@@ -82,13 +88,18 @@ func (t *QuotaTree) Preflight(tenantID, workspaceID string, intent JobIntent, re
 
 func (r *PreflightResult) check(resources []Resource, total, used Resources, level QuotaLevel, tooSmall, inUse LimitReason) {
 	for _, resource := range resources {
-		request := r.Demand[resource]
-		free := max(0, total[resource]-used[resource])
-		switch {
-		case request > total[resource]:
-			r.Limits = append(r.Limits, Limit{tooSmall, level, resource, request, total[resource]})
-		case request > free:
-			r.Limits = append(r.Limits, Limit{inUse, level, resource, request, free})
+		if limit, blocked := capacityLimit(resource, r.Demand[resource], total[resource], used[resource], level, tooSmall, inUse); blocked {
+			r.Limits = append(r.Limits, limit)
 		}
 	}
+}
+
+func capacityLimit(resource Resource, requested, total, used int64, level QuotaLevel, tooSmall, inUse LimitReason) (Limit, bool) {
+	if requested > total {
+		return Limit{tooSmall, level, resource, requested, total}, true
+	}
+	if available := max(0, total-used); requested > available {
+		return Limit{inUse, level, resource, requested, available}, true
+	}
+	return Limit{}, false
 }
