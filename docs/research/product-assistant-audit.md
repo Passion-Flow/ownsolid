@@ -32,17 +32,17 @@ both fields reference real users. A null actor cannot distinguish the assistant
 from other system activity. The writer also uses the installation's default
 workspace instead of the authorized operation's actual workspace and has no
 typed actor metadata parameter. The
-[audit list projection](../../services/control/internal/modules/identity/lists.go)
-and [OpenAPI audit event](../../api/openapi/v1/identity/openapi.json) expose
-human actor fields. They cannot project or filter an assistant actor.
+[legacy audit list representation](../../services/control/internal/modules/identity/lists.go)
+exposes human actor fields. The identity owner added a verified opt-in
+representation in the [Admin audit contract](../../api/openapi/v1/identity/openapi.json).
 
 SCI added [WriteProductAssistantWithin](../../services/control/internal/modules/audit/product_assistant.go)
 for PostgreSQL. It borrows the operation transaction, stores the assistant
 actor in fixed metadata, and keeps the authenticated user in the subject
 field. It checks the supplied installation tenant, workspace and subject.
-The chain binds the metadata digest. The safe workspace list verifies that
-commitment. The public list and export still need readable assistant actor
-attribution. See the
+The chain binds the metadata digest. The safe workspace list and opt-in
+Admin list verify that commitment. Export disclosure needs a separately
+verifiable binding. See the
 [writer contract](product-assistant-audit-writer.md).
 
 Using the signed-in user's ID as both actor and subject would erase delegation.
@@ -59,8 +59,9 @@ These paths do not satisfy AGT-107.
    audience, server request ID, registered tool ID and bounded outcome. The
    writer supplies the actor. It requires a workspace, so workspace-free
    navigation needs a shared global-scope policy before it can use this path.
-2. The audit and identity owners expose that actor in the safe audit list and
-   export. The existing export carries a metadata digest. An actor displayed
+2. The Admin list exposes the actor with `X-Ownsolid-Audit-Actor: true`.
+   Keep the default representation compatible. The existing export carries
+   a metadata digest. An actor displayed
    beside that digest needs an independently verifiable binding. Prefer
    including the typed actor fields in the next hash projection so the export
    can keep other metadata redacted. Introduce a format boundary as in
@@ -137,10 +138,12 @@ Do not add a second login or CSRF path. Use Go's build overlay for the test
 until the HTTP owner registers the route. Exercise the real dispatcher with
 the shared private-CA TLS fixture, synthetic license fixture and PostgreSQL.
 Verify that a forged request ID cannot change audit correlation, both
-entrances enforce session audience,
-scope selectors are refused, a cursor from another workspace is unusable,
-and an audit append error releases no result. Read actor attribution through
-`ListWorkspaceAuditForActor` and inspect the stored metadata for submitted text.
+entrances enforce session audience, scope selectors are refused, a cursor
+from another workspace is unusable, and an audit append error releases no
+result. Read actor attribution through `ListWorkspaceAuditForActor` and the
+opt-in Admin audit HTTP list. Check that the legacy HTTP representation omits
+the actor fields, refused requests leave no event and the stored metadata
+contains no submitted text.
 This route exposes no write command or plan confirmation. No runtime or test
 dependency is added. The overlay generator uses the repository's existing
 [Python toolchain](https://docs.python.org/3/license.html) under the PSF License,
@@ -174,6 +177,8 @@ rollback and the original portal reads.
 container with PostgreSQL 18.6 and pgvector 0.8.7. A build-only overlay mounted
 the adapter in the real dispatcher. The fixture verified both entrances,
 server correlation, the scoped audit reader, fixed metadata, cross-workspace
-cursor denial and retry after an audit append refusal. AGT-107 stays open for
+cursor denial and retry after an audit append refusal. Its Admin HTTP checks
+also passed for the default and opt-in audit representations, with no event
+visible through the same reader for refused requests. AGT-107 stays open for
 production HTTP registration, workspace-free navigation, confirmed writes
-and the public audit response and export.
+and export acceptance.
