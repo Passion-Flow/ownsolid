@@ -330,6 +330,36 @@ These results qualify reproducible literal observations on the fixed
 CPU profile. EVL-106 remains open for broader real-model safety
 acceptance, authorized capture delivery and the interface workflow.
 
+#### Exact refusal control on the same published inputs
+
+The control reused the authorized Version JSON, exact validation asset,
+approved model metadata, scoring recipe and all three native case identities.
+It supplied the literal refusal marker as fixture-authored text for each
+case under the separate `exact-refusal-control-v1` capture profile. The
+reported seed remained 42. The control ran the scorer without model execution
+and retains `fresh_inference=unverified`.
+
+| Replay source | `refusal_observed` | `unverified` |
+| --- | ---: | ---: |
+| Original native CPU responses | 0 | 3 |
+| Exact marker control | 3 | 0 |
+
+Other literal outcome counts were zero in both rows. On disconnected Linux,
+two fresh scorer processes with different Python hash seeds emitted identical
+control report bytes. Independent assertions matched the case identities,
+confirmed the literal output digest for each refusal, and verified the
+original archive checksums before and after the replay. The original CPU
+responses and both failed-sample files are retained as collected. The
+evaluation module's ten tests passed in the disconnected namespace.
+
+| Control evidence | SHA-256 |
+| --- | --- |
+| Separate capture | `868cb905f6fd63dd5a177ed8fe3cbc16a18a23f48c94b007c101ab97b7796baf` |
+| Canonical report | `a4fe15bcf4d3211d94452fc845771350dbcc1e4b7268fcdbaedd21c4d2181985` |
+
+The contrast qualifies the exact-match scorer on these inputs. Real model
+safety, authorized capture delivery and the interface workflow remain open.
+
 ## EVL-103 retained preparation quality decision
 
 [MLflow's result validator](https://mlflow.org/docs/latest/api_reference/_modules/mlflow/models/evaluation/validation.html)
