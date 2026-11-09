@@ -162,3 +162,28 @@ three times on the disconnected PostgreSQL fixture. They cover connector
 invalidation and prevention of session reissuance from a spent flow.
 They use a database-backed source fixture. Live provider sign-in followed
 by targeted device revocation through the browser remains a separate check.
+
+### Live provider prerequisite
+
+The retained fixture on `ownsolid-cpu` served the Gitea 28.1.0 version
+endpoint with the fixture CA and advertised TLS hostname. Its paired
+Control image predates the device session API in `42ac50ca`. The test
+tenant has five disabled Gitea connectors and no live sourced session.
+Qualification needs a current isolated Control install, an enabled connector
+with a verified synthetic account binding, both configured callback URLs
+registered as needed, and protected credential files for the test identity.
+
+Use the existing [Gitea OAuth provider flow](https://docs.gitea.com/development/oauth2-provider/)
+and the existing verified TLS browser fixture. The
+[OAuth authorization-code contract](https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1.2)
+and [PKCE](https://www.rfc-editor.org/rfc/rfc7636.html) bind each callback to
+its initial browser exchange. Obtain two distinct sourced sessions through
+the same test binding. In one session, revoke the other's ID using the
+device API, verify the target is expired and the managing session remains
+current, then replay the captured target callback in its original flow
+context. Require that no replacement session appears and that the exact
+session target has one durable revocation event. A fabricated flow or a
+connector-wide disable cannot establish this behavior. Reuse the existing
+test and product dependencies. Gitea is a fixture dependency under its
+[MIT license](https://github.com/go-gitea/gitea/blob/v28.1.0/LICENSE),
+which permits commercial use, offline use and redistribution with notices.
