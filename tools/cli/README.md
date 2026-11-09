@@ -276,6 +276,35 @@ ownsolid deployment alias disable "$ALIAS_ID" --revision "$ALIAS_REVISION" \
   --reason 'Withdraw published model' --confirm
 ```
 
+## Preview and apply an alias cutover
+
+Read the current alias revision with `deployment alias get --output json`.
+Preview the action before applying it. The table shows both revisions,
+deployment targets and pause states.
+
+```sh
+ownsolid deployment alias cutover history "$ALIAS_ID" --limit 10
+ownsolid deployment alias cutover preview "$ALIAS_ID" pause \\
+  --revision "$ALIAS_REVISION" --reason 'Pause new calls for maintenance'
+ownsolid deployment alias cutover apply "$ALIAS_ID" pause \\
+  --revision "$ALIAS_REVISION" --reason 'Pause new calls for maintenance' \\
+  --idempotency-key "$REQUEST_KEY" --confirm
+```
+
+Use `retarget` with `--deployment` and `--deployment-revision` for a
+ready replacement. Use `rollback` with those flags and `--source-revision`
+from the alias target history. The target must serve the model recorded at
+that source revision. Both actions leave the alias paused. Use `resume`
+to open it to new calls once it is ready. Pause and resume use the current
+target. If the server reports undrained requests, wait for those requests
+to finish or follow the gateway recovery procedure before proceeding.
+
+If the revision has changed, read it again and preview the new change.
+If an apply response is lost, retry with the same UUID and arguments.
+A replay prints the originally applied revision and the current alias
+state in JSON or YAML. To read earlier history, reuse the same workspace
+and alias with the returned `--cursor`.
+
 ## Create and manage a training job
 
 Use an approved model, an immutable published dataset version, and an
