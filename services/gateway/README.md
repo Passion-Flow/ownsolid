@@ -10,6 +10,19 @@ The [source guide](src/README.md) maps request admission, backend streaming, dur
 
 [backend.rs](src/backend.rs), [transport.rs](src/transport.rs) and [streaming.rs](src/streaming.rs) bound backend requests, response/event bytes, deadlines and stream completion. [admission.rs](src/admission.rs) owns queue/active permits and terminal execution accounting. [control.rs](src/control.rs) validates control responses and outcome acknowledgements.
 
+## Backend connection recovery
+
+A connection failure during model discovery or tokenization temporarily
+opens a circuit for this gateway's local backend. Preflight calls return
+`upstream_unavailable` for the configured `connect_seconds` interval, then
+one caller can probe recovery. The log records circuit opens and recovery.
+An HTTP response closes a recovery probe, and the gateway still checks the
+response status, content and model identity.
+
+Each completion is sent once. An upstream HTTP refusal, a timeout or a
+stream interruption returns the outcome for that attempt. The gateway
+keeps the control-authorized destination throughout the request.
+
 ## Persistence and shutdown
 
 [storage.rs](src/storage.rs) owns the private locked spool, exact owner/digest binding, reserved capacity and restart recovery. [reporting.rs](src/reporting.rs) sends retained outcomes separately from the client response. Unacknowledged outcomes must remain durable; a client receiving bytes does not prove control received usage.
