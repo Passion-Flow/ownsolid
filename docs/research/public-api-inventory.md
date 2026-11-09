@@ -422,3 +422,23 @@ The fixture covered wildcard and Unicode matches, caller and workspace
 privacy, search cursor replay across sessions, invalid terms and unchanged
 legacy pagination. The pinned Go and Python generators preserved existing
 request construction and encoded an explicit Unicode and wildcard term.
+
+## Portal application session references
+
+The [APP handoff](app-lane-questions.md#assistant-catalog-handoff-for-agt-103)
+identifies two application reads that reference an undeclared portalCookie
+scheme. The [OpenAPI Security Requirement Object](https://spec.openapis.org/oas/v3.1.1.html#security-requirement-object)
+requires a declared scheme name. Both real routes use the existing Portal
+session cookie. Point their requirements to the declared PortalSession
+scheme. Keeping the undefined name or adding a second scheme would leave
+two names for one security boundary. No runtime authentication or operation
+identity changes. The existing [SDK licenses](sdk.md#licenses) apply.
+
+A pinned generation prototype produced byte-identical Go and Python source.
+Verify both real Portal routes reject a request without the cookie and
+return their existing response with a valid session. The existing
+assistant tool catalog should stay byte-identical.
+
+The disconnected TLS and PostgreSQL fixture returned HTTP 401 without
+the cookie and schema-valid HTTP 200 responses with the cookie on both
+routes. The assistant catalog generator matched its committed output.

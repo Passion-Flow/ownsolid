@@ -47,7 +47,7 @@
         ],
         "security": [
           {
-            "portalCookie": []
+            "PortalSession": []
           }
         ],
         "parameters": [
@@ -160,7 +160,7 @@
         ],
         "security": [
           {
-            "portalCookie": []
+            "PortalSession": []
           }
         ],
         "parameters": [
