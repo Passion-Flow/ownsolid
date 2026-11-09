@@ -51,13 +51,21 @@ and forces append and commit refusals. It verifies event and chain rollback,
 ordinary portal route compatibility, and cross-tenant denial. The test runs
 with seeded publications and no inference gateway.
 
+With the repository fixture variables set, run its exact entry point:
+
+```sh
+GOPROXY=off GOSUMDB=off go -C services/control test -p=1 -tags repository_integration \
+  -run '^TestOfflineCommandsWithCurrentSessionAndWorkspace$' ./internal/modules/productagent
+```
+
 The [authenticated HTTP adapter](http/handler.go) is ready for the identity
 dispatcher to mount. The staged route accepts only navigation and reads. See
 the [registration handoff](../../../../../docs/research/product-assistant-audit.md#authenticated-http-handoff)
 for the constructor, authentication and request ID wiring.
 
 Set `PROJECT_ONE_TEST_DSN_FILE` to the protected DSN of a disposable loopback
-PostgreSQL fixture with pgvector. Exercise the real dispatcher with a temporary
+PostgreSQL fixture with pgvector. The file needs mode `0600` in a private
+directory with mode `0700`. Exercise the real dispatcher with a temporary
 registration in a Go build overlay:
 
 ```sh
@@ -72,5 +80,7 @@ GOPROXY=off GOSUMDB=off go -C services/control test -p=1 \
 The fixture uses a synthetic whole-platform license, real TLS, separate
 entrance cookies and the standard CSRF route. It checks that an application
 cursor cannot cross workspace boundaries and a failed audit append suppresses
-the response data. Once the shared dispatcher mounts the adapter, run the same
-test without the overlay.
+the response data. It correlates real command requests with the Admin audit
+list in its legacy and opt-in forms, and checks that denied commands leave no
+audit event. Once the shared dispatcher mounts the adapter, run the same test
+without the overlay.

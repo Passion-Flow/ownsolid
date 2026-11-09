@@ -112,8 +112,8 @@ application read transactions. The [assistant HTTP adapter](../../services/contr
 accepts the authenticated identity and the same server request ID returned in
 `X-Request-ID`. The identity HTTP owner registers the route after the shared
 CSRF and license admission. The API owner publishes the operation after that
-registration. The safe workspace audit reader already verifies the assistant
-actor, which the public audit response and offline export still need to expose.
+registration. The opt-in Admin audit response exposes the verified assistant
+actor. The offline export needs separate attribution acceptance.
 Workspace-free navigation requires a shared global-scope decision. See the
 [registration handoff and acceptance cases](product-assistant-audit.md#authenticated-http-handoff).
 
