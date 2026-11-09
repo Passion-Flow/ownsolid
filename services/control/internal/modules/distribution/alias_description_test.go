@@ -77,6 +77,7 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
 		t.Fatal("unauthenticated edit did not return the standard problem")
 	}
+	problem(anonymous, predecessorEditPath, edit, 401, "AUTH_REQUIRED")
 	predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
 	predecessorResponse, err := server.Client().Do(predecessorRequest)
 	if err != nil {
@@ -251,7 +252,7 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 			winner = value["description"].(string)
 			assertDescription(value, winner, 3)
 		case 409:
-			if got.data["code"] != "VERSION_CONFLICT" {
+			if got.data["code"] != "VERSION_CONFLICT" || schemas["Problem"].Validate(got.data) != nil {
 				t.Fatal("wrong concurrent refusal", got.data["code"])
 			}
 			conflicts++
