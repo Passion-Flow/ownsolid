@@ -5,13 +5,29 @@ import (
 	"errors"
 	"maps"
 	"slices"
+	"time"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/jackc/pgx/v5"
 )
 
-// ErrPreflightSnapshotRequired requires a read-only PostgreSQL REPEATABLE READ transaction.
-var ErrPreflightSnapshotRequired = errors.New("SCHEDULING_PREFLIGHT_SNAPSHOT_REQUIRED")
+var (
+	// ErrPreflightSnapshotRequired requires a read-only PostgreSQL REPEATABLE READ transaction.
+	ErrPreflightSnapshotRequired = errors.New("SCHEDULING_PREFLIGHT_SNAPSHOT_REQUIRED")
+	// ErrCellCapacityUnavailable asks the caller to retry with a fresh, complete local sample.
+	ErrCellCapacityUnavailable = errors.New("SCHEDULING_CELL_CAPACITY_UNAVAILABLE")
+)
+
+// CellCapacitySample carries an observation from the selected cell's owner.
+// ObservedAt is the measurement time and ValidUntil is its exclusive expiry
+// under the owner's freshness policy. Both vectors explicitly cover every
+// requested resource, including measured zero. The owner verifies the source
+// and retains the same cell identity across measurement and estimation.
+type CellCapacitySample struct {
+	SiteID, CellID         string
+	ObservedAt, ValidUntil time.Time
+	Capacity               CellCapacity
+}
 
 // SubmissionEstimate is the whole demand and guidance from one policy and
 // reservation snapshot. The workload owner still performs transactional admission.
@@ -23,9 +39,9 @@ type SubmissionEstimate struct {
 
 // EstimateSubmissionWithin evaluates a new submission from the workload
 // owner's read-only REPEATABLE READ transaction. The owner authorizes the
-// workspace and supplies capacity from its trusted cell observation. The
-// estimate is advisory and carries no reservation or placement guarantee.
-func EstimateSubmissionWithin(ctx context.Context, tx pgx.Tx, tenant, workspaceID string, intent JobIntent, cell CellCapacity) (SubmissionEstimate, error) {
+// workspace and supplies a trusted sample for the cell bound to this database.
+// The estimate is advisory and carries no reservation or placement guarantee.
+func EstimateSubmissionWithin(ctx context.Context, tx pgx.Tx, tenant, workspaceID string, intent JobIntent, sample CellCapacitySample) (SubmissionEstimate, error) {
 	if err := requireSchedulingSnapshot(ctx, tx, ErrPreflightSnapshotRequired); err != nil {
 		return SubmissionEstimate{}, err
 	}
@@ -58,8 +74,12 @@ func EstimateSubmissionWithin(ctx context.Context, tx pgx.Tx, tenant, workspaceI
 	// of those ceilings. A new workspace fit preserves those same hard limits.
 	limits := workspaceCapacityLimits(demand, workspace.Limits.Burst, used)
 	preview := PreflightResult{Demand: demand, Limits: limits}
-	if err := preview.checkCell(slices.Sorted(maps.Keys(demand)), cell); err != nil {
+	resources := slices.Sorted(maps.Keys(demand))
+	if err := checkCellCapacitySample(ctx, tx, sample, resources); err != nil {
 		return SubmissionEstimate{}, err
+	}
+	if err := preview.checkCell(resources, sample.Capacity); err != nil {
+		return SubmissionEstimate{}, ErrCellCapacityUnavailable
 	}
 	result := SubmissionEstimate{PolicyRevision: revision, Demand: demand, Reasons: preview.WaitReasons()}
 	members := tree.borrowingMembers(workspace.ParentID)
@@ -78,6 +98,27 @@ func EstimateSubmissionWithin(ctx context.Context, tx pgx.Tx, tenant, workspaceI
 	}
 	result.Reasons = append(result.Reasons, reasons...)
 	return result, nil
+}
+
+func checkCellCapacitySample(ctx context.Context, tx pgx.Tx, sample CellCapacitySample, resources []Resource) error {
+	var siteID, cellID string
+	var now time.Time
+	if err := tx.QueryRow(ctx, `SELECT COALESCE(local_site_id(),''),COALESCE(local_cell_id(),''),clock_timestamp()`).
+		Scan(&siteID, &cellID, &now); err != nil {
+		return err
+	}
+	if siteID == "" || cellID == "" || sample.SiteID != siteID || sample.CellID != cellID ||
+		sample.ObservedAt.IsZero() || sample.ObservedAt.After(now) || !now.Before(sample.ValidUntil) {
+		return ErrCellCapacityUnavailable
+	}
+	for _, resource := range resources {
+		_, totalKnown := sample.Capacity.Total[resource]
+		_, reservedKnown := sample.Capacity.Reserved[resource]
+		if !totalKnown || !reservedKnown {
+			return ErrCellCapacityUnavailable
+		}
+	}
+	return nil
 }
 
 func requireSchedulingSnapshot(ctx context.Context, tx pgx.Tx, unsupported error) error {

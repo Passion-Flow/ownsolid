@@ -42,9 +42,23 @@ an inadmissible queue and admitted pods that are not ready. The projection
 uses fixed codes and actions without controller messages or capacity figures.
 
 The submission owner can call `EstimateSubmissionWithin` with a read-only
-PostgreSQL REPEATABLE READ transaction, its authorized workspace and verified
-cell capacity. The result includes the policy revision, whole demand and
-wait reasons. The owner submits through the existing reservation transaction.
+PostgreSQL REPEATABLE READ transaction, its authorized workspace and a trusted
+`CellCapacitySample` for the database's site and cell. The sample must be
+current and cover the total and reserved quantity of every requested resource.
+An unavailable sample returns `SCHEDULING_CELL_CAPACITY_UNAVAILABLE`. The
+estimate returns the policy revision, whole demand and fixed wait reasons.
+The owner submits through the existing reservation transaction.
+
+Set `PROJECT_ONE_TEST_DSN_FILE` to the protected loopback fixture DSN for a
+disposable PostgreSQL 18.6 database with pgvector 0.8.7, then run:
+
+```sh
+go -C services/control test -race ./internal/modules/scheduling -run '^TestPostgresPreflightUsesAuthorizedWorkspaceAndCurrentCell$' -count=1
+```
+
+The test uses the installed Workspace authority and fixture cell samples.
+See the [owner handoff](../../../../../docs/research/scheduling-admission.md#authorized-scope-and-cell-capacity-handoff)
+for the real capacity source and transaction requirements.
 
 For distributed work, `ReserveWithin` stores the entire replica-group demand
 on one attempt. `ReleaseGangWithin` checks that the owner has supplied verified
