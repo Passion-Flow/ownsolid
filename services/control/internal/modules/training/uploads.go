@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"strings"
 
 	"database/sql"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -67,12 +66,7 @@ func (s *Service) outputDescriptor(ctx context.Context, tx transaction.Executor,
 			return out, fail("TRAINING_RESULT_INVALID")
 		}
 		out.GlobalStep = result.GlobalStep
-		for _, asset := range result.Files {
-			if strings.HasPrefix(asset.Path, "adapter/") {
-				asset.Path = strings.TrimPrefix(asset.Path, "adapter/")
-				out.Files = append(out.Files, asset)
-			}
-		}
+		out.Files = adapterResultFiles(result)
 	default:
 		return out, fail("TRAINING_UPLOAD_INVALID")
 	}
