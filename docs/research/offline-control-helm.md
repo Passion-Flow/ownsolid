@@ -86,3 +86,69 @@ The production inventory remains DEL-110.
   resource wiring with the exact Helm CLI in an isolated network.
   Rendering, cold Registry pulls from DEL-108 and actual Helm installation
   are separate evidence.
+
+## Combined DEL-107 and DEL-108 preflight
+
+Use one temporary-signed current release for the cold worker and Helm drills.
+Reuse the original ARC release image archives and pinned RKE2 bytes, the
+reviewed RKE2 component SPDX and notices, the existing Distribution archive,
+and the existing ownsolid Chart. Recalculate the outer inventory and link its
+SPDX to the exact RKE2 component document before fixture signing. Keep the
+fixture signer and site TLS keys outside the archive.
+
+Preparation must require the strict RKE2 component policy and agree with
+the independently recorded archive and manifest SHA-256. Check the prepared
+Chart and generate `helm-images` from that same archive. Verify a private
+CA against the Registry IP and both browser DNS names, and check the render
+for the exact control manifest reference in both containers, the two SNI
+rules and the existing PVC claim. Reuse the existing binaries and run this
+without a cluster in a recorder-only Linux network namespace. A render does
+not prove ingress, Registry authentication on a node, or storage persistence.
+
+Run the cold ARC diagnostic before scheduling Helm. RKE2 supports local image
+preloads and per-node private Registry trust. A cold app pull must use the
+explicit signed site reference. Helm renders the pinned local chart, and
+Kubernetes binds a PVC independently of Pod lifetime. The installed drill
+compares the claim identity and actual data bytes across a controlled
+replacement of the disposable application Pod. Use separate private
+credentials and keep the default Registry endpoint disabled where the node
+configures a mirror. [RKE2 air-gap install](https://docs.rke2.io/install/airgap),
+[RKE2 Registry configuration](https://docs.rke2.io/install/private_registry),
+[Helm template](https://helm.sh/docs/helm/helm_template/),
+[Kubernetes persistent volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/).
+
+This fixture adds no shipped dependency, model or dataset. The existing
+[Distribution licence inventory](signed-registry-bootstrap.md) and
+[reviewed RKE2 components and notices](rke2-component-inventory.md) apply.
+The public verification files and fixture test certificates grant no
+production authority.
+
+### Joint fixture acceptance
+
+On Linux amd64, the factory authenticated the cached ARC manifest
+`b4127041ce56f7517aa8492306387c87f10a9eecaf5e617418d1f3d64a29823f`
+and reused its signed images and RKE2 artifacts from a read-only mount.
+The existing Distribution archive and reviewed RKE2 component evidence
+were bound into the same test inventory. The Chart package came from the
+existing chart sources using the cached Helm 4.3.1 tool.
+
+| Verified item | Identity |
+| --- | --- |
+| Archive | `30d3fa0568c1f6db286c4337268c8492d4f615865273cb422b4863c23492e026` |
+| Manifest | `cb47c30bded1577ec348e030de9dae2b33eb6708a99e503836883f7d790e02e6` |
+| Chart | `1afb7a560e8a952dea71a35d6839feaa5804e99478cc1005ccd68bf8dd04e254` |
+| Control OCI manifest | `sha256:004f08978ffa69229d4f8a25393adc37bd2d963940c42c669533a018cccc981d` |
+
+The real installer prepared all 19 signed assets under the strict RKE2
+component policy. Its Registry configuration verified the private IP
+certificate and matching key. The private browser CA verified
+`admin.site.test` and `portal.site.test`. Both containers used the same
+signed OCI manifest from `10.77.107.1:5443`. The render retained exact SNI
+passthrough, the scoped pull Secret, the `Recreate` strategy, and both
+mounts from the existing `models` PVC. The recorder saw only the three
+IPv4, IPv6 and DNS probes. The archive and protected site inputs remain
+available for the read-only preflight replay.
+
+The cold managed worker, actual Registry pull, Helm deployment, both
+live entrances and Pod replacement remain installed acceptance checks.
+Follow the [joint runbook](../../deploy/offline/README.md#preflight-the-joint-rke2-registry-and-helm-release).
