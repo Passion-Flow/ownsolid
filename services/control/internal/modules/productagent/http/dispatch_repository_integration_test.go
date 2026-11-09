@@ -13,10 +13,12 @@ import (
 
 	"github.com/google/uuid"
 
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/productagent"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
@@ -113,11 +115,29 @@ SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_
 	admin := client("admin", httpfixture.AdminOrigin, adminToken)
 	portal := client("portal", httpfixture.PortalOrigin, portalToken)
 
+	readAudit := func(t *testing.T, id string, includeActor bool) []map[string]any {
+		t.Helper()
+		path := cellroute.Public("/api/v1/admin/audit-events", wire.LocalScope())
+		path += "?" + (url.Values{"request_id": {id}}).Encode()
+		response := admin.call(t, http.MethodGet, path, "", func(r *http.Request) {
+			if includeActor {
+				r.Header.Set("X-Ownsolid-Audit-Actor", "true")
+			}
+		})
+		var page identity.List
+		if response.status != http.StatusOK || response.code != "" || json.Unmarshal(response.data, &page) != nil || page.Items == nil {
+			t.Fatalf("could not read request through the Admin audit list: HTTP %d %s", response.status, response.code)
+		}
+		return page.Items
+	}
 	assertNoAudit := func(t *testing.T, id string) {
 		t.Helper()
 		var count int
 		if err := owner.DB.QueryRow(t.Context(), `SELECT count(*) FROM audit_events WHERE request_id=$1`, id).Scan(&count); err != nil || count != 0 {
 			t.Fatalf("expected no audit event for denied request, got %d: %v", count, err)
+		}
+		if items := readAudit(t, id, true); len(items) != 0 {
+			t.Fatal("the Admin audit list reported an assistant action for a denied request")
 		}
 	}
 	assertAudit := func(t *testing.T, id, audience, command string) {
@@ -143,6 +163,22 @@ SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_
 FROM audit_events WHERE request_id=$1`, id, tenant, workspace).Scan(&metadataOnly)
 		if err != nil || !metadataOnly {
 			t.Fatalf("assistant audit event contains more than fixed metadata or has the wrong scope: %v", err)
+		}
+		for _, includeActor := range []bool{false, true} {
+			items := readAudit(t, id, includeActor)
+			if len(items) != 1 {
+				t.Fatal("Admin audit list did not find exactly one event by the command's request ID")
+			}
+			event := items[0]
+			if event["id"] != eventID || event["request_id"] != id || event["subject_user_id"] != user ||
+				event["actor_user_id"] != nil || event["audience"] != audience || event["action"] != "product_assistant."+command || event["outcome"] != "success" {
+				t.Fatal("Admin audit list lost the correlation, authorized subject or outcome")
+			}
+			kind, hasKind := event["actor_kind"]
+			actorID, hasID := event["actor_id"]
+			if hasKind != includeActor || hasID != includeActor || includeActor && (kind != wantActor.Kind || actorID != wantActor.ID) {
+				t.Fatal("Admin audit list did not honor the assistant actor opt-in")
+			}
 		}
 	}
 
