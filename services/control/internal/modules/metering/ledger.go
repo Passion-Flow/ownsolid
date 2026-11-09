@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"time"
 
+	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 
 	"github.com/google/uuid"
@@ -80,10 +81,10 @@ func AppendWithin(ctx context.Context, tx pgx.Tx, scope Scope, event Event) (boo
 	if event.Producer == gatewayReceiptProducer {
 		return false, ErrInvalidEvent
 	}
-	return appendWithin(ctx, transaction.PostgreSQLTransaction(tx), scope, event)
+	return appendWithin(ctx, transaction.PostgreSQLTransaction(tx), scope, event, agentwire.Scope{})
 }
 
-func appendWithin(ctx context.Context, tx transaction.Executor, scope Scope, event Event) (bool, error) {
+func appendWithin(ctx context.Context, tx transaction.Executor, scope Scope, event Event, source agentwire.Scope) (bool, error) {
 	event, err := event.normalized(scope)
 	if err != nil {
 		return false, err
@@ -96,10 +97,11 @@ func appendWithin(ctx context.Context, tx transaction.Executor, scope Scope, eve
 	}
 	u := event.Usage
 	args := []any{event.Producer, event.ID, scope.TenantID, scope.WorkspaceID, event.OccurredAt,
-		u.GPUMicroseconds, u.Tokens, u.StorageByteSeconds, u.Requests, u.UnmeasuredTokenRequests}
+		u.GPUMicroseconds, u.Tokens, u.StorageByteSeconds, u.Requests, u.UnmeasuredTokenRequests, source.SiteID, source.CellID}
 	inserted, err := tx.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `INSERT INTO usage_ledger
  (producer, event_id, tenant_id, workspace_id, occurred_at, gpu_microseconds, tokens, storage_byte_seconds, requests, unmeasured_token_requests)
- VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+ SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10
+ WHERE ($11::varchar='' AND $12::varchar='') OR ($11=local_site_id() AND $12=local_cell_id())
  ON CONFLICT (producer,event_id) DO NOTHING`, args...))
 	if err != nil {
 		return false, operationError(ctx)
@@ -112,6 +114,8 @@ func appendWithin(ctx context.Context, tx transaction.Executor, scope Scope, eve
 	var matches bool
 	err = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT tenant_id=$3 AND workspace_id=$4 AND occurred_at=$5
   AND gpu_microseconds=$6 AND tokens=$7 AND storage_byte_seconds=$8 AND requests=$9 AND unmeasured_token_requests=$10
+  AND site_id=local_site_id() AND cell_id=local_cell_id()
+  AND (($11::varchar='' AND $12::varchar='') OR (site_id=$11 AND cell_id=$12))
  FROM usage_ledger WHERE producer=$1 AND event_id=$2`, args...)).Scan(&matches)
 	if err != nil {
 		return false, operationError(ctx)
@@ -147,7 +151,8 @@ func TotalsWithin(ctx context.Context, tx pgx.Tx, scope Scope, from, to time.Tim
 	}
 	var out Totals
 	err = tx.QueryRow(ctx, `SELECT `+usageTotalsProjection+`
- FROM usage_ledger WHERE tenant_id=$1 AND workspace_id=$2 AND occurred_at >= $3 AND occurred_at < $4`,
+ FROM usage_ledger WHERE site_id=local_site_id() AND cell_id=local_cell_id()
+  AND tenant_id=$1 AND workspace_id=$2 AND occurred_at >= $3 AND occurred_at < $4`,
 		scope.TenantID, scope.WorkspaceID, from, to).Scan(&out.GPUMicroseconds, &out.Tokens, &out.StorageByteSeconds, &out.Requests, &out.UnmeasuredTokenRequests)
 	if err != nil {
 		return Totals{}, operationError(ctx)

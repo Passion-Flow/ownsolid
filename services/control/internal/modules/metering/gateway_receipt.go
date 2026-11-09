@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/google/uuid"
@@ -36,22 +37,24 @@ func AppendGatewayReceiptWithin(ctx context.Context, tx transaction.Executor, sc
 		return false, ErrGatewayReceiptInvalid
 	}
 
+	var source agentwire.Scope
 	var admittedAt time.Time
 	var raw []byte
 	var storedDigest string
 	var maxOutput, maxContext int64
 	err := tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT admitted_at, outcome, outcome_sha256, maximum_output_tokens, maximum_context_tokens
+		`SELECT admitted_at, outcome, outcome_sha256, maximum_output_tokens, maximum_context_tokens, site_id, cell_id
  FROM gateway_requests WHERE tenant_id=$1 AND workspace_id=$2 AND gateway_id=$3 AND id=$4 AND state='reported'
+  AND site_id=local_site_id() AND cell_id=local_cell_id()
  FOR SHARE`, scope.TenantID, scope.WorkspaceID, gatewayID, receipt.RequestID)).
-		Scan(&admittedAt, &raw, &storedDigest, &maxOutput, &maxContext)
+		Scan(&admittedAt, &raw, &storedDigest, &maxOutput, &maxContext, &source.SiteID, &source.CellID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return false, ErrGatewayReceiptNotFound
 	}
 	if err != nil {
 		return false, operationError(ctx)
 	}
-	if subtle.ConstantTimeCompare([]byte(receipt.CanonicalSHA256), []byte(storedDigest)) != 1 {
+	if !source.Valid() || subtle.ConstantTimeCompare([]byte(receipt.CanonicalSHA256), []byte(storedDigest)) != 1 {
 		return false, ErrGatewayReceiptInvalid
 	}
 	outcome, err := wire.DecodeOutcome(raw)
@@ -73,5 +76,5 @@ func AppendGatewayReceiptWithin(ctx context.Context, tx transaction.Executor, sc
 	}
 	return appendWithin(ctx, tx, scope, Event{
 		Producer: gatewayReceiptProducer, ID: receipt.RequestID, OccurredAt: admittedAt, Usage: usage,
-	})
+	}, source)
 }

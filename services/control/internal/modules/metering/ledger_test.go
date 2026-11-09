@@ -23,7 +23,16 @@ import (
 //go:embed testdata/ledger.sql
 var testSchemaSQL string
 
-const testWorkspaceSQL = `CREATE TABLE workspaces (
+const testWorkspaceSQL = `CREATE TABLE cells (
+  id varchar(32) PRIMARY KEY,
+  site_id varchar(32) NOT NULL,
+  is_local boolean NOT NULL
+);
+CREATE UNIQUE INDEX cells_one_local ON cells(is_local) WHERE is_local;
+INSERT INTO cells VALUES ('fixture-cell','fixture-site',true), ('sibling-cell','fixture-site',false);
+CREATE FUNCTION local_site_id() RETURNS varchar LANGUAGE sql STABLE AS $$ SELECT site_id FROM cells WHERE is_local $$;
+CREATE FUNCTION local_cell_id() RETURNS varchar LANGUAGE sql STABLE AS $$ SELECT id FROM cells WHERE is_local $$;
+CREATE TABLE workspaces (
   tenant_id uuid NOT NULL,
   id uuid NOT NULL,
   PRIMARY KEY (tenant_id, id)
