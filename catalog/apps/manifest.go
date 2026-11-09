@@ -121,6 +121,12 @@ func load(root *os.Root, digests map[string]string) (Release, error) {
 		if !locale.messages.valid(release.Manifest.Form) {
 			return Release{}, fmt.Errorf("%w: fill the title, description and exact form keys in %s", ErrLocale, locale.file)
 		}
+		if note := locale.messages.LicenseNote; note != nil && !validText(*note, licenseNoteRunes) {
+			return Release{}, fmt.Errorf("%w: provide a plain-text license note of at most %d characters in %s", ErrLocale, licenseNoteRunes, locale.file)
+		}
+	}
+	if (release.English.LicenseNote == nil) != (release.SimplifiedChinese.LicenseNote == nil) {
+		return Release{}, fmt.Errorf("%w: provide the license note in both locales", ErrLocale)
 	}
 	return release, nil
 }
