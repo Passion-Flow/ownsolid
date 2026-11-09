@@ -12,6 +12,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 
 - [ ] GW-101 OpenAI Chat Completions with streaming (P1) - Catalog: F073
 - [ ] GW-102 OpenAI Embeddings and rerank endpoints (P1) - Catalog: F073
+  - [Pooling prerequisites](../../research/gateway-pooling.md) identify the offline serving recipes and task-aware admission required before gateway implementation.
 - [ ] GW-103 OpenAI Responses API and Anthropic Messages API for coding tools (P1) - Catalog: F073
   - Foreground string-to-text Responses creation, with JSON and SSE, uses the same authorization and token accounting as Chat Completions ([protocol and acceptance](../../research/gateway-responses.md)). Anthropic foreground text Messages uses the same pipeline ([protocol and acceptance](../../research/gateway-messages.md)). The [tool round-trip research](../../research/gateway-tool-roundtrip.md) records why the pinned serving recipe keeps tool calls disabled. Stateful requests, tool calls, generated public contracts, coding-tool interoperability, and real engine acceptance for these adapters remain open.
 - [ ] GW-104 Model aliases mapped to deployments, with capability metadata (P1) - Catalog: F072
