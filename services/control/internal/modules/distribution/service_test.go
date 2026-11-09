@@ -3,7 +3,11 @@ package distribution_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/google/uuid"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
@@ -12,10 +16,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
-	"strings"
-	"sync"
-	"testing"
-	"time"
+	"github.com/google/uuid"
 )
 
 type scenario struct {
@@ -28,7 +29,11 @@ type scenario struct {
 
 func setup(t *testing.T) scenario {
 	t.Helper()
-	account := fixture.New(t)
+	return setupAccount(t, fixture.New(t))
+}
+
+func setupAccount(t *testing.T, account *identity.Service) scenario {
+	t.Helper()
 	password := fixture.Bootstrap(t, account)
 	a := fixture.Login(t, account, "admin@example.invalid", password, "admin")
 	p := fixture.Login(t, account, "admin@example.invalid", password, "portal")
