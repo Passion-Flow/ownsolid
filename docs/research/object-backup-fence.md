@@ -73,7 +73,9 @@ more multipart-list requests and up to four read or privacy checks per
 ready object and reads the sum of ready object bytes. Terminal tombstones
 require multipart and absence checks. The row cap includes tombstones.
 A deadline, scope mismatch, unresolved effect, wrong bytes or changed SQL
-inventory returns no inventory. No byte copy or off-box backup is created.
+inventory returns no inventory. VerifyInventory discards the bytes.
+CopyInventory can stage a verified archive, while publication remains
+with the installer.
 
 ## Validation
 
@@ -95,3 +97,67 @@ bytes and an aborted object's absence, refused a foreign tenant before
 provider I/O, rejected an SQL revision change during readback, and
 verified that a stopped instance canceled its read and a stale release
 left the successor fence held.
+
+## Verified copy under the artifactstores fence
+
+The existing verification reads every object but discards the body. Use the
+same conditional S3 read and privacy checks to write a portable
+[Go archive/tar](https://pkg.go.dev/archive/tar) stream into a new private
+regular file opened exclusively by the trusted backup coordinator. Use PAX
+for objects larger than the legacy tar size field. Store each ready object's
+bytes under its canonical workspace and object UUIDs. Record the verified
+inventory, including tombstones, as inventory.json. A tombstone has no byte
+entry. Keep the existing read-only inventory operation for callers that
+need verification without a copy.
+
+Use bounded sequential streaming and the same selected SQL inventory before
+and after copying. Preflight the caller's object and content-byte limits
+before provider I/O. Each ready object's body must match its recorded length
+and full SHA-256, with an unchanged ETag and private access. Close the
+provider body before subsequent provider checks on the one-slot S3 profile.
+[Go File.Sync](https://pkg.go.dev/os#File.Sync) and the
+[Linux fsync contract](https://man7.org/linux/man-pages/man2/fsync.2.html)
+describe the file writeback boundary. After closing the tar stream, sync and
+hash a complete readback of the file descriptor and compare the length and
+SHA-256 with the bytes produced. Return the inventory and exact copy identity
+only after both readback and the final SQL comparison succeed.
+
+Keep the file private and staged on any failure. The coordinator owns
+exclusive creation, disposal, directory sync, publication, separate backup
+storage, and the durable record binding the copy to the SQL dump and
+provider exclusion. Returning the copy identity alone cannot fence direct
+provider writers or authorize restore. An S3-side copy would still require
+provider-specific admission and verified readback. Copying the running
+provider's data directories would bind the backup to its filesystem layout
+and recovery internals. Neither is required to produce this portable copy.
+
+No new product dependency, model or data set is needed. The Go archive and
+file APIs use the existing [BSD-3-Clause Go license](https://go.dev/LICENSE),
+which permits commercial use, offline operation and redistribution with
+notices. The provider and fixture licenses are recorded above.
+
+Extend the real SeaweedFS and PostgreSQL loopback fixture. It must extract
+the ready object from a copied archive, check its SHA-256 and bytes against
+SQL, confirm that the tombstone has no content entry, and validate the full
+archive identity. Cover budget refusal before provider I/O, nonempty or
+nonprivate destinations, a changed SQL revision, retry with a fresh file,
+and provider-side abort or shutdown with no publishable copy result.
+
+### Verified staged archive
+
+On Linux amd64, TestActualObjectBackupFence passed with SeaweedFS 4.53,
+PostgreSQL 18.6 and pgvector 0.8.7. The isolated namespace used only
+loopback. The signed S3 read used the existing single-transfer TLS fixture.
+The test independently parsed the PAX archive, compared the ready object's
+exact bytes and SHA-256 to SQL, verified the complete archive digest and
+checked that the aborted object's tombstone appeared only in the inventory.
+The byte-budget refusal performed no S3 request and wrote zero bytes.
+Nonprivate and nonempty destinations were refused. A changed SQL revision
+invalidated an in-progress copy, a fresh-file retry bound the new revision,
+and service shutdown canceled a held S3 read without returning a copy
+identity. The fixture stopped SeaweedFS and PostgreSQL.
+
+Run the [isolated runner](../../services/control/internal/modules/artifactstores/testdata/run-backup-fence.sh)
+with the verified local SeaweedFS executable and the preloaded PostgreSQL
+image ID. The installer and provider owners still own exclusion,
+separate backup storage, publication with the SQL dump, and restore.
