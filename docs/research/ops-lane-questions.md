@@ -147,3 +147,30 @@ make check && make build
 (cd web && pnpm --filter ./apps/portal run test:browser --workers=2)
 make -o test-web-browser -o web-install test
 ```
+
+### Native gateway gate after GW-108
+
+After rebasing past `1b293a01`, the macOS gateway suite failed
+`backend_tests::actual_connection_refusal_opens_only_its_backend_circuit`.
+The same test failed when run serially from a separate archive of
+`1b293a01`: it returned `upstream_timeout` where the assertion expected
+`upstream_unavailable`. The gateway sources are identical in the two
+checkouts. The fixture keeps its loopback port bound without listening
+until the first request completes. An independent socket probe of that
+state timed out on macOS and got immediate `ECONNREFUSED` in a
+disconnected non-root Linux container. Closing the socket before the
+probe got immediate refusal on both platforms. The exact Rust test also
+passed from the same main archive in a disconnected Linux amd64
+container as UID/GID 65534, with vendored locked dependencies and no
+test changes. The [GW-108 research](gateway-replica-resilience.md)
+records its full Rust suite on loopback-only Linux amd64.
+
+```sh
+cd services/gateway
+RUST_TEST_THREADS=1 cargo test --locked --offline --lib \
+  backend_tests::actual_connection_refusal_opens_only_its_backend_circuit -- --exact
+```
+
+The unchanged native assertion still blocks the required acceptance gate.
+The gateway fixture belongs to the gateway lane. Keep the tested catalog
+implementation local until the full gate can pass.
