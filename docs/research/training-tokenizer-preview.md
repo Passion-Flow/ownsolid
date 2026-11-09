@@ -146,3 +146,35 @@ The S-503 dataset preview entry point must show the original counts, the
 token budget and the section where an overlength sample first exceeds it.
 Render the three sections as escaped text. Explain that training rejects
 overlength rows and preserve loading, permission and retry states.
+
+### Authorization after tokenization
+
+A preview reads protected draft text, then spends time running the
+tokenizer outside PostgreSQL. The session, workspace grant, draft access,
+or ready model may change during that work. Apply
+[OWASP's request authorization guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html#validate-the-permissions-on-every-request)
+at the response boundary using the existing ordered authorization
+transaction and the ready-model reference check. Retain the prepared
+sample digests. Refuse the complete result if the final authority check
+fails. Holding a database transaction across Python would block unrelated
+scope writes. Relying on the initial authorization would allow a revoked
+session to receive private sample text.
+
+The existing child wall, memory and single-slot limits remain in force.
+Use the pinned Qwen tokenizer and verify a training-reserved token maps to
+the dataset validation error. In the fixture, hold the real interpreter
+after it has written a valid response and before it exits. A concurrent
+request must receive the rate-limit error. Log out the original actor,
+release the interpreter, and require a refusal with zero sample data.
+A later authorized request must still succeed. The fixture uses only the
+standard library, the existing hash-locked runtime and approved
+Apache-2.0 Qwen files. It adds no shipped dependency or model.
+
+The Linux loopback-only PostgreSQL and HTTPS run passed with all five
+digest-verified Qwen assets and the 30 hash-locked preview wheels. The
+real interpreter produced a prepared response before the original
+session was revoked. The concurrent request returned `RATE_LIMITED`,
+the revoked request returned no preview, and the existing authorized
+Portal session succeeded after release. The HTTP route also refused the
+training-reserved token and recovered after restoring the correct model
+file.
