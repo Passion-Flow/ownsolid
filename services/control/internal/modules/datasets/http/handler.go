@@ -233,11 +233,12 @@ func (h *Handler) drafts(r *http.Request, a identity.Auth, workspace, dataset st
 			return nil, 0, e
 		}
 		var body struct {
-			ExpectedRevision      int64  `json:"expected_revision"`
-			Seed                  string `json:"seed"`
-			ValidationBasisPoints int    `json:"validation_basis_points"`
-			Reason                string `json:"reason"`
-			TestBasisPoints       *int   `json:"test_basis_points,omitempty"`
+			ExpectedRevision      int64   `json:"expected_revision"`
+			Seed                  string  `json:"seed"`
+			ValidationBasisPoints int     `json:"validation_basis_points"`
+			Reason                string  `json:"reason"`
+			TestBasisPoints       *int    `json:"test_basis_points,omitempty"`
+			Deduplication         *string `json:"deduplication,omitempty"`
 		}
 		if e = decode(r, &body, httpserver.MaxJSONBytes); e != nil {
 			return nil, 0, e
@@ -248,6 +249,12 @@ func (h *Handler) drafts(r *http.Request, a identity.Auth, workspace, dataset st
 				return nil, 0, errors.New("VALIDATION_FAILED")
 			}
 			options.TestBasisPoints = *body.TestBasisPoints
+		}
+		if body.Deduplication != nil {
+			if *body.Deduplication == "" {
+				return nil, 0, errors.New("VALIDATION_FAILED")
+			}
+			options.Deduplication = *body.Deduplication
 		}
 		input := datasets.PublicationRequest{
 			ExpectedRevision: body.ExpectedRevision, Seed: body.Seed,
