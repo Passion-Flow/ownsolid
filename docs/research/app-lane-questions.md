@@ -199,3 +199,25 @@ Chromium passed 1,046 Console and 387 Portal tests, with 28 skipped. The
 gateway suite passed all 67 enabled tests. After syncing the concurrent
 model-preparation and Nodes changes, the affected builds, HTTPS fixture,
 Web checks and 84 Nodes-related browser cases passed.
+
+## AGT-112 per-user budget ownership
+
+The verified session supplies the user and workspace to the command service.
+The [control-plane runtime policy](../../services/control/internal/platform/config/policy.go)
+has no assistant allowance or window. Its existing HTTP rate settings belong
+to other operations. The [workspace budget report](../../services/control/internal/modules/metering/budget.go)
+classifies historical costs in a read transaction. It does not reserve capacity
+for concurrent commands. Reusing either policy would change its purpose and
+would leave command admission without a shared allowance.
+
+[Kubernetes admission quotas](https://kubernetes.io/docs/concepts/policy/resource-quotas/)
+enforce aggregate limits at admission. The assistant needs a trusted, validated
+user allowance and a shared atomic reservation with explicit retry and
+settlement semantics before it can make the same guarantee. The configuration
+owner supplies the allowance and window. The persistence owner defines how the
+reservation survives replicas, process restart, and a lost commit reply. Attach
+the reservation to the existing assistant execution gate, using authenticated
+identity. Keep the budget open until concurrent requests through both
+authenticated entrances prove that the allowance cannot be exceeded and a
+refused request produces no tool effect or success audit. Process-local
+counters and retrospective audit counts cannot enforce that guarantee.

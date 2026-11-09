@@ -182,3 +182,60 @@ also passed for the default and opt-in audit representations, with no event
 visible through the same reader for refused requests. AGT-107 stays open for
 production HTTP registration, workspace-free navigation, confirmed writes
 and export acceptance.
+
+## AGT-112 audit fixture handoff
+
+The installation policy candidate changes the internal constructor to
+`productagent.New(apps *applications.Service, policy productagent.ExecutionPolicy)`.
+The policy reads the current local decision from `context.Context`. It returns
+`true, nil` only for an explicitly enabled installation. A nil reader or a read
+error rejects execution with `SERVICE_NOT_READY`. Explicit `false, nil` rejects
+with `ACCESS_DENIED`.
+
+SCI owns the constructor call in
+[`runProductAssistantAuditCommands`](../../services/control/internal/modules/audit/assistant_disclosure_integration_test.go#L29).
+When integrating the candidate, pass
+`func(context.Context) (bool, error) { return true, nil }` as the second argument
+in that synthetic fixture. The test already imports `context`. Keep the
+fixture and constructor updates in the same integration change. The identity
+dispatcher binds the real trusted configuration when it mounts the route.
+
+The [Go build overlay](https://pkg.go.dev/cmd/go#hdr-Compile_packages_and_dependencies)
+replaces only the fixture's legacy constructor line in a temporary file. It
+checks that the original line occurs exactly once. No dispatcher, production
+source or audit writer changes in this rehearsal. Build the real audit test
+and standalone verifier with dependency downloads disabled. Run both with
+PostgreSQL 18.6 and pgvector 0.8.7 on a disposable
+[Docker none network](https://docs.docker.com/engine/network/drivers/none/).
+The container has loopback only and exposes no ports. The verified fixture
+exports the mixed V1/V2 chain, discloses the assistant subject and actor,
+and rejects tampered records using the standalone verifier and held checkpoint.
+
+The runner adds no product dependency, model or dataset. It uses the existing
+[Python standard library](https://docs.python.org/3.12/license.html) under the
+PSF license, the [Go toolchain](https://go.dev/LICENSE) under BSD-style terms,
+and the existing [Docker Engine](https://github.com/moby/moby/blob/master/LICENSE)
+under Apache 2.0. The pinned fixture uses
+[PostgreSQL](https://www.postgresql.org/about/licence/) and
+[pgvector](https://github.com/pgvector/pgvector/blob/v0.8.7/LICENSE) under the
+PostgreSQL License. These terms allow commercial use, offline use and
+redistribution with the applicable notices. The test uses synthetic rows.
+
+Run the replay with the AGT-112 candidate checked out. The script may be
+copied from the APP checkout if the candidate does not yet contain it. Use
+the local image and the warmed Go module cache described in the development
+environment guide.
+
+```sh
+python3 /path/to/replay_audit_fixture.py /path/to/agt-112-candidate-checkout
+```
+
+The [replay script](../../services/control/internal/modules/productagent/testdata/replay_audit_fixture.py)
+creates and removes its own container and scratch directory. After SCI has
+updated the tracked fixture, the regular `TestProductAssistantAuditWithin`
+test with the same protected DSN and verifier inputs proves the integrated
+tree directly.
+
+The replay passed on the installation policy candidate with PostgreSQL 18.6,
+pgvector 0.8.7 and the Linux arm64 verifier. It exercised both real assistant
+commands and all ten scope and export tamper subtests with no external route.
