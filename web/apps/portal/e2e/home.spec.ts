@@ -85,7 +85,7 @@ test('says what will appear in each section when there is nothing yet', async ({
 test('a section that cannot read fails alone and recovers on retry', async ({ page }) => {
   control.applications = [publishedApplication];
   control.conversations = [recentConversation];
-  control.applicationsProblem = { status: 503, code: 'WORKFLOW_UNAVAILABLE' };
+  control.applicationsProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
   await page.goto('/');
   const published = section(page, 'Published to you');
   await expect(published.getByText('Applications are not available')).toBeVisible({
@@ -104,7 +104,7 @@ test('a section that cannot read fails alone and recovers on retry', async ({ pa
 
 test('notifications that cannot be read leave the lists standing', async ({ page }) => {
   control.conversations = [recentConversation];
-  control.notificationsProblem = { status: 503, code: 'NOTIFICATION_UNAVAILABLE' };
+  control.notificationsProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
   await page.goto('/');
   const needs = section(page, 'Needs you');
   await expect(needs.getByText('Notifications are not available')).toBeVisible({
