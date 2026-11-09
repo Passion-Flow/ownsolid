@@ -96,3 +96,70 @@ digest, a missing optional signed group and a tampered release.
 Check repeat install leaves the serving container identity and verified
 digests intact. Assert the serving endpoint refuses mutation. Use the
 egress recorder for external routes and record probes separately.
+
+## Prepared release and image proofs
+
+The DEL-108 installer prepares `ownsolid-single-node-linux-amd64` using the
+current inventory validator. The consumer originally rechecked the same
+prepared tree with the legacy validator, which rejects that profile. A cached
+image proof also used the legacy validator directly. Both consumers need
+the same signed profile rules and trust as the installer, including the
+pinned Distribution prerequisite and the current versioned release root.
+
+Use the bounded manifest bytes to choose the existing validator and trust
+loader. A prepared read first matches the caller's independent manifest
+digest. The signature must authenticate those same bytes, and the protected
+tree, completion journal and all signed assets must pass the existing full
+readback before any image proof is issued. Return the verified profile for
+the caller's OCI archive reader. Keep the proof transport unchanged so cached
+legacy proofs continue to verify. The standalone verifier checks the exact
+signed subset for cache readback under independently configured public trust.
+
+Changing the profile in a manifest or trusting a Registry digest alone would
+discard signed release authority. Trying multiple trust policies after a
+refusal would make errors ambiguous and could bypass current-profile rules.
+OCI descriptors bind content type, byte count and digest. TUF also separates
+trusted root metadata from content metadata. This change reuses ownsolid's
+versioned trust and does not introduce TUF metadata or a new signer.
+[OCI descriptor specification](https://github.com/opencontainers/image-spec/blob/v1.1.1/descriptor.md),
+[TUF specification](https://theupdateframework.github.io/specification/latest/).
+
+The focused fixture uses the same signed archive for preparation and proof.
+Cover the previous fixture profile, the current profile with the DEL-108
+Registry group, exact manifest bytes and independent digests, unavailable or
+expired trust, and missing or tampered files outside the selected image.
+Use the signed asset metadata to open the selected OCI content. This proof
+slice adds no dependency, model or dataset. It reuses the existing Distribution
+license inventory and Go's [BSD-3-Clause](https://go.dev/LICENSE) standard library.
+
+### Linux amd64 proof acceptance and NET-102 handoff
+
+On `ownsolid-cpu`, the actual installer prepared two signed current-profile
+fixtures, one with the pinned Distribution 3.1.2 OCI archive and one without
+the optional group. For the site group, the archive SHA-256 was
+`0c9e8a710a6f4c43df178d3ddcf1c12193048ea3b1cbc1c8ab4238fcfbc6081e`
+and the manifest SHA-256 was
+`90e58acd73e8432af8bda0b9cff579e7f640f73591f925bafc569677c8d39d7c`.
+On each exact prepared directory the previous factory CLI returned
+`RELEASE_PREPARED_INVENTORY_INVALID`. The corrected CLI exported the
+original manifest with both the existing key list and the current versioned
+root. Library verification recovered the same asset and opened its OCI
+manifest and config at the signed digests.
+
+The [focused fixture](../../tools/release/offline/internal/factory/image_proof_test.go)
+also passed the legacy profile and refused an incomplete signed site group,
+a missing or modified unrelated file, a changed manifest or signature,
+an expired root, an unprotected directory and either wrong expected digest.
+All testing used a small tmpfs staging area. In the isolated Linux network
+namespace both default routes pointed to the recorder, which captured only
+the IPv4, IPv6 and DNS probes. The real Registry payload was staged before
+the network namespace started. The signed control image in the focused
+fixture uses synthetic OCI content.
+
+The [factory consumer interface](../../tools/release/offline/README.md#offline-release-factory-and-shared-bundle-verification)
+is ready for NET-102. Use the verified profile to select the OCI reader
+and use full prepared verification for catalog and recovery. The OBS
+[site admission fixture](../../services/control/internal/modules/imageregistry/site_admission_integration_test.go)
+previously expected current-profile refusal. Its consumer acceptance needs
+to assert the successful current-profile import and site digest readback.
+DEL-108 retains its installed managed-node and production release requirements.

@@ -58,6 +58,20 @@ does not establish original archive availability, running image identity, model
 readiness, GPU execution or whole-release qualification. Existing consumers still
 verify the proof under their independently selected public trust.
 
+The prepared verification and image proof APIs select the current or legacy
+inventory policy from the exact signed manifest. A current single-node release
+uses the same trust and manifest rules as `prepare-bundle`, including the
+signed site Registry group. The image proof format remains version 1.
+
+For a Registry consumer, call `bundle.PreparedImageProof` with the private
+prepared root, independent archive and manifest digests, and the exact signed
+asset ID. Use the verified `ImageProofResult.Profile` to select
+`bundle.OpenCurrentImageSource` for `bundle.CurrentProfile` and
+`bundle.OpenImageSource` for legacy assets. Cache readback can call
+`bundle.VerifyImageProof` under the site's public trust and compare the
+returned manifest digest and asset to its recorded identity. Catalog listing
+and recovery can use `bundle.VerifyPrepared` for the full prepared tree.
+
 `files.go` owns canonical file admission, the pinned nonblocking descriptor-open
 boundary and bounded immutable reads. Existing public/private file permission
 semantics and specifically admitted archive hardlinks are preserved; they differ

@@ -32,8 +32,17 @@ type preparationEvent struct {
 
 // VerifyPrepared rereads every exact file without trusting the ready marker alone.
 func VerifyPrepared(ctx context.Context, c Config, directory, archiveSHA, manifestSHA string) (Result, error) {
+	return verifyPrepared(ctx, c, directory, archiveSHA, manifestSHA, nil)
+}
+
+type preparedAuthority struct {
+	manifest  []byte
+	signature []byte
+}
+
+func verifyPrepared(ctx context.Context, c Config, directory, archiveSHA, manifestSHA string, authority *preparedAuthority) (Result, error) {
 	result := Result{}
-	if ctx.Err() != nil {
+	if ctx == nil || ctx.Err() != nil {
 		return result, fail("RELEASE_PREPARED_VERIFICATION_INTERRUPTED")
 	}
 	if !wire.ValidSHA256(archiveSHA) || !wire.ValidSHA256(manifestSHA) {
@@ -91,6 +100,11 @@ func VerifyPrepared(ctx context.Context, c Config, directory, archiveSHA, manife
 	if e != nil || wire.Digest(raw) != manifestSHA {
 		return result, fail("RELEASE_PREPARED_MANIFEST_INVALID")
 	}
+	var m wire.Manifest
+	if wire.StrictJSON(raw, &m) != nil {
+		return result, fail("RELEASE_PREPARED_INVENTORY_INVALID")
+	}
+	c = verificationConfigForManifest(c, m)
 	signature, e := readRegular(filepath.Join(directory, "signature.json"), c.MaximumMetadataBytes, true)
 	if e != nil {
 		return result, e
@@ -102,8 +116,7 @@ func VerifyPrepared(ctx context.Context, c Config, directory, archiveSHA, manife
 	if e = verifySignature(raw, signature, trust); e != nil {
 		return result, e
 	}
-	var m wire.Manifest
-	if wire.StrictJSON(raw, &m) != nil || c.validateManifest(m) != nil || marker.Profile != m.Profile || marker.ReleaseID != m.ReleaseID {
+	if c.validateManifest(m) != nil || marker.Profile != m.Profile || marker.ReleaseID != m.ReleaseID {
 		return result, fail("RELEASE_PREPARED_INVENTORY_INVALID")
 	}
 	type expectedFile struct {
@@ -181,6 +194,9 @@ func VerifyPrepared(ctx context.Context, c Config, directory, archiveSHA, manife
 	}
 	if e = verifyPreparedSnapshot(ctx, root, fileSnapshots, directorySnapshots); e != nil {
 		return result, e
+	}
+	if authority != nil {
+		*authority = preparedAuthority{manifest: raw, signature: signature}
 	}
 	qualification := "verified_prepared_inventory_only_not_application_installation_or_target"
 	if m.Profile == wire.FixtureProfile {
