@@ -394,6 +394,35 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         } & (unknown & unknown);
+        ModelDatasetVersionReference: {
+            /** Format: uuid */
+            dataset_id: string;
+            /** Format: uuid */
+            dataset_version_id: string;
+            manifest_sha256: string;
+        };
+        ModelDatasetLineage: {
+            training: components["schemas"]["ModelDatasetVersionReference"];
+            holdout: components["schemas"]["ModelDatasetVersionReference"];
+        };
+        AdminModelDetail: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspace_id: string;
+            name: string;
+            /** @constant */
+            model_key: "qwen3-0.6b";
+            catalog_digest: string;
+            /** @enum {string} */
+            kind: "approved_base" | "merged_lora";
+            manifest: components["schemas"]["ModelCatalog"] | components["schemas"]["DerivedModelCatalog"];
+            /** @constant */
+            state: "ready";
+            /** Format: date-time */
+            created_at: string;
+            dataset_lineage?: components["schemas"]["ModelDatasetLineage"];
+        } & (unknown & unknown);
         ModelImport: {
             /** Format: uuid */
             id: string;
@@ -481,6 +510,9 @@ export interface components {
         };
         ModelVersionResponse: {
             data: components["schemas"]["ModelVersion"];
+        };
+        AdminModelDetailResponse: {
+            data: components["schemas"]["AdminModelDetail"];
         };
         ModelRetirementResponse: {
             data: components["schemas"]["ModelRetirement"];
@@ -582,13 +614,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Scoped result */
+            /** @description Scoped model detail with retained dataset lineage when available. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ModelVersionResponse"];
+                    "application/json": components["schemas"]["AdminModelDetailResponse"];
                 };
             };
             /** @description Stable error; no host paths, raw diagnostics or credentials */
