@@ -180,6 +180,11 @@ func RunDameng(ctx context.Context, s *identity.Service, operator *databaseacces
 	if e = unchanged(); e != nil {
 		return "", e
 	}
+	if command == "resume-bootstrap-file" {
+		if e = syncRetainedIntent(output, intentRaw); e != nil {
+			return "", e
+		}
+	}
 	r := i.Request
 	if e = s.Bootstrap(ctx, r.AdministratorEmail, r.DisplayName, i.Password, r.InstallationName, r.WorkspaceName); e != nil {
 		return "", errors.New("BOOTSTRAP_MUTATION_UNCERTAIN_RECONCILE_REQUIRED")

@@ -11,10 +11,10 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func request() Request {
@@ -164,6 +164,38 @@ func TestBootstrapRequestNormalization(t *testing.T) {
 		if _, e := normalize(r); e == nil {
 			t.Fatal("invalid request accepted")
 		}
+	}
+}
+
+func TestBootstrapIntentConcurrentPublication(t *testing.T) {
+	_, output := paths(t)
+	start := make(chan struct{})
+	type publication struct {
+		document []byte
+		err      error
+	}
+	results := make(chan publication, 2)
+	for _, fill := range []byte{7, 8} {
+		intent := Intent{1, request(), strings.Repeat("a", 64), strings.Repeat("b", 64), base64.RawURLEncoding.EncodeToString(bytes.Repeat([]byte{fill}, passwordBytes))}
+		document, err := json.Marshal(intent)
+		if err != nil {
+			t.Fatal(err)
+		}
+		go func() {
+			<-start
+			results <- publication{document, writeIntent(output, document)}
+		}()
+	}
+	close(start)
+	winner, loser := <-results, <-results
+	if winner.err != nil {
+		winner, loser = loser, winner
+	}
+	if winner.err != nil || loser.err == nil || loser.err.Error() != "BOOTSTRAP_INTENT_CREATE_FAILED" {
+		t.Fatalf("expected exactly one publication, got %v and %v", winner.err, loser.err)
+	}
+	if err := syncRetainedIntent(output, winner.document); err != nil {
+		t.Fatal("retained document differs from the first successful publication", err)
 	}
 }
 

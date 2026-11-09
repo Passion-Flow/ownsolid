@@ -36,6 +36,13 @@ A prepared file is not evidence of a committed account. Legacy file bootstrap du
 3. Resume only through the corresponding command when its observed state permits it. `BOOTSTRAP_MUTATION_UNCERTAIN_RECONCILE_REQUIRED` is not a failure that authorizes blind replay.
 4. Treat missing, replaced, malformed, or conflicting protected files as a refusal requiring investigation. Do not repair a committed account by editing bootstrap records or overwriting a packet.
 
+The PostgreSQL and Dameng legacy writers stage the protected document beside
+its destination. A write failure before publication leaves no final path.
+An interrupted process can leave a private `.bootstrap-*` staging file. The
+installer uses only the final credential path, which is published without
+replacing any existing file. Resume syncs the retained file and its directory
+before it attempts an uncommitted database mutation.
+
 ## Maintenance and verification
 
 Keep PostgreSQL and MySQL entry points aligned with dispatcher selection while preserving their different preparation prerequisites. Packet format or binding changes require strict decoding, private-file, mismatch, repeated-apply, and process-loss coverage.
