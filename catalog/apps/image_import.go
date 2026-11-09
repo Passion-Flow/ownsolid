@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -31,6 +32,9 @@ type ImageImportOptions struct {
 	ExpectedPin *ReleasePin
 	// RenderedCompose optionally checks the selected Compose model before loading images.
 	RenderedCompose *RenderedCompose
+	// ExpectedComposePlan binds the import to the installer's admitted model.
+	// A supplied plan requires RenderedCompose.
+	ExpectedComposePlan *ComposeImagePlan
 }
 
 // ImportInstallImage verifies the signed release and confirms every exact
@@ -57,9 +61,18 @@ func ImportInstallImage(ctx context.Context, stagingDirectory string, key ed2551
 	if options.ExpectedPin != nil && verified.Pin != *options.ExpectedPin {
 		return InstallBundle{}, imageImportError("the signed bundle differs from the selected release pin")
 	}
+	expected := options.ExpectedComposePlan
+	if expected != nil && options.RenderedCompose == nil {
+		return InstallBundle{}, fmt.Errorf("%w: supply the rendered bytes of the admitted Compose model", ErrComposeImagePlan)
+	}
 	if options.RenderedCompose != nil {
-		if _, err := verified.VerifyComposeImagePlan(*options.RenderedCompose); err != nil {
+		plan, err := verified.VerifyComposeImagePlan(*options.RenderedCompose)
+		if err != nil {
 			return InstallBundle{}, err
+		}
+		if expected != nil && (plan.Pin != expected.Pin || plan.ArtifactSHA256 != expected.ArtifactSHA256 ||
+			plan.ModelSHA256 != expected.ModelSHA256 || !slices.Equal(plan.Services, expected.Services)) {
+			return InstallBundle{}, fmt.Errorf("%w: the rendered model differs from the admitted Compose image plan", ErrComposeImagePlan)
 		}
 	}
 
