@@ -5,11 +5,11 @@ import (
 	"crypto/subtle"
 	"slices"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	training "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	training "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 // CredentialWithin borrows the caller's current Workspace fence. It never grants
@@ -55,16 +55,31 @@ func (s *Service) trainingTaskWithin(ctx context.Context, q transaction.Executor
 	if active && current.Status != "active" || !wire.IsTrainingProfile(current.ExecutionProfile) || current.ProtocolVersion != wire.ProfileVersion(current.ExecutionProfile) || !slices.Contains(current.Capabilities, wire.TrainingRunOperation) {
 		return Task{}, zero, fail("AGENT_PROFILE_REJECTED")
 	}
-	t, e := scanTask(q.QueryRow(ctx, nodeSQL(q, "SELECT "+taskFields+" FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4 FOR UPDATE", "SELECT "+mysqlTaskFields+" FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? FOR UPDATE", `SELECT `+damengTaskFields+` FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? FOR UPDATE`, current.TenantID, current.WorkspaceID, current.ID, id)))
+	var raw []byte
+	var extra []any
+	postgres := q.Dialect() == transaction.PostgreSQL
+	if postgres {
+		extra = []any{&raw}
+	}
+	t, e := scanTask(q.QueryRow(ctx, nodeSQL(q,
+		"SELECT "+taskFields+",payload FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4 FOR UPDATE",
+		"SELECT "+mysqlTaskFields+" FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? FOR UPDATE",
+		"SELECT "+damengTaskFields+" FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? FOR UPDATE",
+		current.TenantID, current.WorkspaceID, current.ID, id)), extra...)
 	if e != nil {
 		return Task{}, zero, preparationSourceError(e)
 	}
 	if t.Operation != wire.TrainingRunOperation {
 		return Task{}, zero, fail("AGENT_PROFILE_REJECTED")
 	}
-	var raw []byte
-	if e = q.QueryRow(ctx, nodeSQL(q, "SELECT payload FROM node_tasks WHERE tenant_id=$1 AND workspace_id=$2 AND node_id=$3 AND id=$4", "SELECT payload FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?", `SELECT payload FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?`, current.TenantID, current.WorkspaceID, current.ID, id)).Scan(&raw); e != nil {
-		return Task{}, zero, preparationSourceError(e)
+	if !postgres {
+		e = q.QueryRow(ctx, nodeSQL(q, "",
+			"SELECT payload FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?",
+			"SELECT payload FROM node_tasks WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=?",
+			current.TenantID, current.WorkspaceID, current.ID, id)).Scan(&raw)
+		if e != nil {
+			return Task{}, zero, preparationSourceError(e)
+		}
 	}
 	command, e := training.DecodeCommand(raw)
 	if e != nil || command.Scope.TenantID != current.TenantID || command.Scope.WorkspaceID != current.WorkspaceID || command.ModelCatalogSHA256 != wire.ModelCatalogDigest() {
