@@ -311,7 +311,7 @@ func (i *installer) administrator(ctx context.Context) error {
 		return e
 	}
 	output, e := i.operator(ctx, verified, arguments("reconcile-bootstrap-file")...)
-	if e != nil && strings.Contains(output, "BOOTSTRAP_FILE_NOT_COMMITTED") {
+	if e != nil && containsLine(output, "BOOTSTRAP_FILE_NOT_COMMITTED") {
 		_, e = i.operator(ctx, verified, arguments("resume-bootstrap-file")...)
 	}
 	return e

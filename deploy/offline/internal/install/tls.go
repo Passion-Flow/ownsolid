@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -91,8 +92,12 @@ func (c Config) materializeTLS(l Layout) error {
 	if e != nil {
 		return errTLSGeneration
 	}
-	if current, e := os.ReadFile(certificate); e == nil && exists(privateKey) && serverCertificateCurrent(current, caCertificate, hosts) {
-		return nil
+	if current, e := os.ReadFile(certificate); e == nil && serverCertificateCurrent(current, caCertificate, hosts) {
+		if key, e := os.ReadFile(privateKey); e == nil {
+			if _, e = tls.X509KeyPair(current, key); e == nil {
+				return nil
+			}
+		}
 	}
 	caKey, e := os.ReadFile(caKeyPath)
 	if e != nil {

@@ -8,17 +8,18 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"syscall"
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // TestBootstrapChild is a test-only process harness, never a production fault hook.
@@ -220,5 +221,31 @@ func TestActualBootstrapProcessLossBeforeAndAfterCommit(t *testing.T) {
 		if e := os.WriteFile(path, append(b, '\n'), 0600); e != nil {
 			t.Fatal(e)
 		}
+	}
+}
+
+func TestBootstrapFailedWriteLeavesNoPublishedIntent(t *testing.T) {
+	if output := os.Getenv("OWNSOLID_TEST_BOOTSTRAP_WRITE_FAILURE"); output != "" {
+		signal.Ignore(syscall.SIGXFSZ)
+		if err := syscall.Setrlimit(syscall.RLIMIT_FSIZE, &syscall.Rlimit{}); err != nil {
+			t.Fatal(err)
+		}
+		if err := writeIntent(output, []byte("{}")); err == nil || err.Error() != "BOOTSTRAP_INTENT_WRITE_UNCERTAIN" {
+			t.Fatal("expected an actual file write failure", err)
+		}
+		return
+	}
+	_, output := paths(t)
+	child := exec.CommandContext(t.Context(), os.Args[0], "-test.run=^TestBootstrapFailedWriteLeavesNoPublishedIntent$")
+	child.Env = append(os.Environ(), "OWNSOLID_TEST_BOOTSTRAP_WRITE_FAILURE="+output)
+	if raw, err := child.CombinedOutput(); err != nil {
+		t.Fatalf("write failure process: %v %s", err, raw)
+	}
+	if _, err := os.Lstat(output); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("failed write published a final credential path", err)
+	}
+	entries, err := os.ReadDir(filepath.Dir(output))
+	if err != nil || len(entries) != 1 {
+		t.Fatal("failed write did not clean up its staging file", err)
 	}
 }
