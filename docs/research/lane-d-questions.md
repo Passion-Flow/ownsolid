@@ -63,10 +63,7 @@ declared PortalSession scheme. See the [contract verification](public-api-invent
 
 ## Gateway usage CSV attachment
 
-Distribution can create a complete bounded CSV page from verified receipts.
-The current production dispatcher serves only the JSON page and detail.
-The CLI uses those registered reads. Add the public attachment operation
-after the HTTP owner registers the route and verifies its media type,
-continuation, authorization, and problem responses in the real dispatcher.
-See the [CSV service evidence](gateway-usage-history.md#bounded-csv-artifact)
-and the [CLI verification](gateway-usage-cli.md).
+The production dispatcher serves both CSV downloads. The published
+operations and SDKs follow the JSON history cursor and the existing
+attachment semantics. See the [Web handoff and verification](gateway-usage-csv-contract.md#web-handoff).
+The direct continuation header needs the shared HTTP response writer.

@@ -135,6 +135,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Download one page of gateway usage as CSV
+         * @description Download one authorized page of gateway request usage. Platform administrators read the workspace history. Continue with the next_cursor from the corresponding JSON request history page and reuse its scope and API key filter. Both reads use live history.
+         */
+        get: operations["adminExportGatewayUsageCSV"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{resource_id}": {
         parameters: {
             query?: never;
@@ -432,6 +455,29 @@ export interface paths {
             cookie?: never;
         };
         get: operations["portalListGatewayRequest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * Download one page of gateway usage as CSV
+         * @description Download one authorized page of gateway request usage. Portal callers read only their own requests in the workspace. Continue with the next_cursor from the corresponding JSON request history page and reuse its scope and API key filter. Both reads use live history.
+         */
+        get: operations["portalExportGatewayUsageCSV"];
         put?: never;
         post?: never;
         delete?: never;
@@ -947,7 +993,35 @@ export interface components {
             reason: string;
         };
     };
-    responses: never;
+    responses: {
+        /** @description A complete UTF-8 CSV attachment with a header row and CRLF records. An empty page contains the header row. */
+        GatewayUsageCSVDownload: {
+            headers: {
+                /** @description Attachment with the fixed name gateway-usage.csv. */
+                "Content-Disposition": "attachment; filename=gateway-usage.csv";
+                /** @description Exact byte length of the complete attachment. */
+                "Content-Length": number;
+                /** @description Lowercase hexadecimal SHA-256 of the attachment bytes. */
+                "X-Artifact-SHA256": string;
+                "Cache-Control": "no-store";
+                /** @description Server-generated request correlation UUID. */
+                "X-Request-ID": string;
+                [name: string]: unknown;
+            };
+            content: {
+                "text/csv": string;
+            };
+        };
+        /** @description Stable safe error. */
+        GatewayUsageCSVProblem: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -1342,6 +1416,33 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+        };
+    };
+    adminExportGatewayUsageCSV: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+                /** @description Only the calls made with this key: the key's call log. */
+                api_key_id?: string;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["GatewayUsageCSVDownload"];
+            400: components["responses"]["GatewayUsageCSVProblem"];
+            401: components["responses"]["GatewayUsageCSVProblem"];
+            403: components["responses"]["GatewayUsageCSVProblem"];
+            404: components["responses"]["GatewayUsageCSVProblem"];
+            503: components["responses"]["GatewayUsageCSVProblem"];
+            default: components["responses"]["GatewayUsageCSVProblem"];
         };
     };
     adminGetGatewayRequest: {
@@ -2018,6 +2119,33 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+        };
+    };
+    portalExportGatewayUsageCSV: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+                /** @description Only the calls made with this key: the key's call log. */
+                api_key_id?: string;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["GatewayUsageCSVDownload"];
+            400: components["responses"]["GatewayUsageCSVProblem"];
+            401: components["responses"]["GatewayUsageCSVProblem"];
+            403: components["responses"]["GatewayUsageCSVProblem"];
+            404: components["responses"]["GatewayUsageCSVProblem"];
+            503: components["responses"]["GatewayUsageCSVProblem"];
+            default: components["responses"]["GatewayUsageCSVProblem"];
         };
     };
     portalGetGatewayRequest: {
