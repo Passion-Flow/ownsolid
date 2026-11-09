@@ -14,6 +14,36 @@
 | IAM-118, IAM-119 | Real connector testing and keyring loss recovery live in the SSO callback, connector and startup owners outside the lane. Both need connector UI states. | Preserve fail-closed credential checks. Design a separate test callback outcome and explicit unavailable credential state with the SSO owner. |
 | IAM-201 to IAM-206 | P2 follows the P1 completion gate. Its provisioning, policy, approval, emergency access, delegation and WebAuthn flows need public interfaces and operator or user screens. | Preserve the P2 order and keep the items open until their dependencies and delivery paths are available. |
 
+## AGT-107 identity dispatcher
+
+Reuse the existing [assistant HTTP adapter and build overlay](product-assistant-audit.md#authenticated-http-handoff).
+The regular identity dispatcher still needs an approved public command
+contract and an explicit composition decision for the audited PostgreSQL
+route. The provisional path is global at the router, while command
+execution still requires current Workspace authority and an in-transaction
+audit append. Keep production routing unregistered until the API and
+composition owners complete those boundaries.
+
+Use the same HTTPS identity fixtures and the existing Go and PostgreSQL
+dependencies to test the edge of the proposed mount. An invalid Origin
+or CSRF proof must stop before license admission, a valid session on an
+unlicensed installation must not invoke the adapter, and a revoked
+session must produce neither output nor an assistant audit event.
+For a valid command, correlate the committed user subject and assistant
+actor to the server's `X-Request-ID` while ignoring a caller-supplied
+request ID. The overlay reuses the production dispatcher with only the
+provisional adapter registration supplied for the test.
+
+`TestProductAssistantIdentityAdmissionHTTPS` passed three consecutive
+runs on PostgreSQL 18.6 with verified TLS in a Linux arm64 container
+with no network. A real Admin logout invalidated a captured session.
+Origin, CSRF and license refusals produced no command result or audit
+event. The valid request stored one chained event for the server ID
+and no event for the supplied ID. Generate the existing
+`dispatch_overlay.py` into a disposable directory and run the identity
+HTTP package with `-tags 'repository_integration assistant_http_dispatch'`
+and its `-overlay` file against a disposable `PROJECT_ONE_TEST_DSN`.
+
 ## Repository acceptance gate
 
 The IAM-105 candidate and IAM-111 and IAM-114 regressions passed

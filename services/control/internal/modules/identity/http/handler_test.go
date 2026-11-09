@@ -36,13 +36,14 @@ import (
 )
 
 type client struct {
-	t        *testing.T
-	s        *httptest.Server
-	audience string
-	cookies  map[string]*http.Cookie
-	csrf     string
-	schemas  map[string]*jsonschema.Schema
-	http     *http.Client
+	t         *testing.T
+	s         *httptest.Server
+	audience  string
+	cookies   map[string]*http.Cookie
+	csrf      string
+	requestID string
+	schemas   map[string]*jsonschema.Schema
+	http      *http.Client
 }
 
 func newClient(t *testing.T, s *httptest.Server, a string, schemas map[string]*jsonschema.Schema) *client {
@@ -130,7 +131,8 @@ func (c *client) request(method, path string, body any, status int, schema strin
 		json.Unmarshal(b, &p)
 		c.t.Fatalf("%s %s expected %d observed %d (%s)", method, path, status, response.StatusCode, p.Code)
 	}
-	if response.Header.Get("Cache-Control") != "no-store" || response.Header.Get("X-Request-ID") == "" {
+	c.requestID = response.Header.Get("X-Request-ID")
+	if response.Header.Get("Cache-Control") != "no-store" || c.requestID == "" {
 		c.t.Fatal("security response headers missing")
 	}
 	for _, cookie := range response.Cookies() {
