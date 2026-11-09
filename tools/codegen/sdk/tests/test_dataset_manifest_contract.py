@@ -84,10 +84,14 @@ class DatasetManifestContractTests(unittest.TestCase):
         legacy_fields = {"expected_revision", "seed", "validation_basis_points", "reason"}
         self.assertFalse(request["additionalProperties"])
         self.assertEqual(set(request["required"]), legacy_fields)
-        self.assertEqual(set(request["properties"]), legacy_fields | {"test_basis_points"})
+        self.assertEqual(set(request["properties"]), legacy_fields | {"test_basis_points", "deduplication"})
         self.assertEqual(
             request["properties"]["test_basis_points"],
             {"type": "integer", "minimum": 100, "maximum": 5000},
+        )
+        self.assertEqual(
+            request["properties"]["deduplication"],
+            {"type": "string", "enum": ["near_prompt_v1"]},
         )
         for audience in ("admin", "portal"):
             with self.subTest(audience=audience):
