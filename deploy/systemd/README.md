@@ -67,3 +67,15 @@ The output excludes private paths and diagnostic text. A later consumer
 must match the last verified deployment ID to its own authenticated
 installation context before exposing the record. Console access and alerts
 have separate ownership. The local query covers scheduled attempts.
+
+## Run the read-only Agent
+
+The signed Agent inventory carries [ownsolid-agent.service](ownsolid-agent.service).
+Use the [offline host installer](../offline/README.md#install-a-read-only-agent-from-signed-media)
+to provision the account, verify and place the unit, enroll the Agent, and enable
+the service. To inspect service state and logs locally, run:
+
+```sh
+systemctl status ownsolid-agent.service
+journalctl -u ownsolid-agent.service
+```

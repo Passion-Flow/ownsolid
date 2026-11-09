@@ -20,13 +20,16 @@ var currentID = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,95}$`)
 // WithCurrentProfile selects the current inventory rules for an explicit current
 // release command. The legacy commands retain their existing profile admission.
 func WithCurrentProfile(c Config) Config {
-	c.current = true
+	c.current, c.agent = true, false
 	return c
 }
 
 func (c Config) requiredAssets(m wire.Manifest) map[string]string {
 	if !c.current {
 		return m.RequiredAssets()
+	}
+	if c.agent {
+		return map[string]string{AgentBinaryAsset: "operator", AgentUnitAsset: "operator", currentSBOM: "sbom"}
 	}
 	return map[string]string{
 		"control-image": "image_archive", "postgres-image": "image_archive",
@@ -43,7 +46,11 @@ func (c Config) validateManifest(m wire.Manifest) error {
 		}
 		return m.Validate(c.MaximumAssets, c.MaximumAssetBytes, c.MaximumTotalBytes, c.AllowTestFixture)
 	}
-	if m.Profile != CurrentProfile {
+	if c.agent {
+		if err := c.validateAgentProfile(m); err != nil {
+			return err
+		}
+	} else if m.Profile != CurrentProfile {
 		return fail("RELEASE_CURRENT_PROFILE_REQUIRED")
 	}
 	if m.FormatVersion != 1 || !currentID.MatchString(m.ReleaseID) || !wire.ValidSHA256(m.SourceSHA256) ||
@@ -69,21 +76,27 @@ func (c Config) validateManifest(m wire.Manifest) error {
 			!wire.ValidSHA256(asset.SHA256) || asset.Size < 1 || asset.Size > c.MaximumAssetBytes || asset.Size > c.MaximumTotalBytes-total {
 			return fail("RELEASE_ASSET_INVALID")
 		}
-		switch asset.Kind {
-		case "image_archive":
-			if asset.Architecture != "amd64" || !imageDigest(asset.ImageID) || !imageDigest(asset.ImageConfigDigest) {
-				return fail("RELEASE_IMAGE_IDENTITY_INVALID")
+		if c.agent {
+			if err := c.validateAgentAsset(asset); err != nil {
+				return err
 			}
-		case "sbom":
-			if (asset.ID != currentSBOM && asset.ID != rke2SPDXID) || asset.Size > c.MaximumMetadataBytes {
-				return fail("RELEASE_SBOM_INVALID")
+		} else {
+			switch asset.Kind {
+			case "image_archive":
+				if asset.Architecture != "amd64" || !imageDigest(asset.ImageID) || !imageDigest(asset.ImageConfigDigest) {
+					return fail("RELEASE_IMAGE_IDENTITY_INVALID")
+				}
+			case "sbom":
+				if (asset.ID != currentSBOM && asset.ID != rke2SPDXID) || asset.Size > c.MaximumMetadataBytes {
+					return fail("RELEASE_SBOM_INVALID")
+				}
+			case "compose", "operator", "runbook", "license", "chart", "model", "plugin", "font", "dependency_lock", rke2BinaryKind, rke2ImageSetKind:
+			default:
+				return fail("RELEASE_ASSET_KIND_UNSUPPORTED")
 			}
-		case "compose", "operator", "runbook", "license", "chart", "model", "plugin", "font", "dependency_lock", rke2BinaryKind, rke2ImageSetKind:
-		default:
-			return fail("RELEASE_ASSET_KIND_UNSUPPORTED")
-		}
-		if asset.Kind != "image_archive" && asset.Kind != rke2BinaryKind && asset.Kind != rke2ImageSetKind && (asset.Architecture != "" || asset.ImageID != "" || asset.ImageConfigDigest != "") {
-			return fail("RELEASE_ASSET_IMAGE_FIELDS_INVALID")
+			if asset.Kind != "image_archive" && asset.Kind != rke2BinaryKind && asset.Kind != rke2ImageSetKind && (asset.Architecture != "" || asset.ImageID != "" || asset.ImageConfigDigest != "") {
+				return fail("RELEASE_ASSET_IMAGE_FIELDS_INVALID")
+			}
 		}
 		total += asset.Size
 		ids[asset.ID], paths[asset.Path] = asset.Kind, true
@@ -116,6 +129,9 @@ func (c Config) validateManifest(m wire.Manifest) error {
 			return fail("RELEASE_REQUIRED_ASSET_MISSING")
 		}
 	}
+	if c.agent {
+		return nil
+	}
 	if err := validateCurrentRegistry(m); err != nil {
 		return err
 	}
@@ -130,14 +146,23 @@ func imageDigest(value string) bool {
 // checkManifestAsset retains all byte checks for both profiles and validates the
 // current release's SPDX package checksums before publishing or preparing it.
 func checkManifestAsset(ctx context.Context, r io.Reader, w io.Writer, a wire.Asset, m wire.Manifest, c Config) (string, error) {
-	if !c.current || a.ID != currentSBOM {
+	agentBinary := c.agent && a.ID == AgentBinaryAsset
+	if !agentBinary && (!c.current || a.ID != currentSBOM) {
 		return checkAsset(ctx, r, w, a, c)
 	}
 	raw, err := io.ReadAll(io.LimitReader(checkedReader{ctx, r}, a.Size+1))
 	if err != nil || int64(len(raw)) != a.Size {
 		return "", fail("RELEASE_ASSET_SIZE_INVALID")
 	}
-	if err := checkSBOM(raw, m.Assets); err != nil {
+	digest := wire.Digest(raw)
+	if agentBinary {
+		if digest != a.SHA256 {
+			return "", fail("RELEASE_ASSET_HASH_INVALID")
+		}
+		if err := checkAgentBinary(raw); err != nil {
+			return "", err
+		}
+	} else if err := checkSBOM(raw, m.Assets); err != nil {
 		return "", err
 	}
 	if w != nil {
@@ -145,7 +170,7 @@ func checkManifestAsset(ctx context.Context, r io.Reader, w io.Writer, a wire.As
 			return "", fail("RELEASE_ARCHIVE_WRITE_FAILED")
 		}
 	}
-	return wire.Digest(raw), nil
+	return digest, nil
 }
 
 func checkSBOM(raw []byte, assets []wire.Asset) error {

@@ -327,3 +327,30 @@ publishes only the final, unexpired root. Bundle verification refuses an
 expired active root and a signer that is absent from its delegated keys.
 The host clock must be correct. Legacy public key maps remain available for
 existing unversioned trust provisioning.
+
+## Manufacture signed read-only Agent media
+
+Use the same protected factory configuration and independently provisioned public
+trust as for other releases. Keep the private signer off the mounted volume.
+
+```sh
+offline-factory validate-agent --config /private/agent-factory.json
+offline-factory build-agent --config /private/agent-factory.json
+offline-factory inspect-agent --config /private/agent-factory.json
+```
+
+Set the manifest profile to `ownsolid-agent-linux-amd64`. Use format, schema
+and both predecessor versions of 1, an exact release source SHA-256, empty
+capabilities, and the Linux amd64 systemd prerequisite. Pin these asset IDs:
+
+| Asset ID | Kind | Source |
+| --- | --- | --- |
+| `agent-binary` | `operator` | `services/agent/cmd/agent`, built for Linux amd64 with `CGO_ENABLED=0` |
+| `agent-unit` | `operator` | `deploy/systemd/ownsolid-agent.service` |
+| `release-sbom` | `sbom` | SPDX 2.3 document with SHA-256 checksums for all other payloads |
+
+The executable declares architecture `amd64`. Each of these assets references
+the signed license notices that apply to it. Supply the approved first-party
+and third-party notices for the exact build as `license` assets. The
+[host installation procedure](../../../deploy/offline/README.md#install-a-read-only-agent-from-signed-media)
+requires only the verified Agent inventory and protected site inputs.
