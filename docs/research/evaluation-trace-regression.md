@@ -55,3 +55,68 @@ The product flow requires the OBS-103 trace source, a scoped
 content-capture authorization and the authorized EVL-101 dataset
 workflow. The existing receipt and offline replay are available
 separately. The trace-to-draft product flow remains open.
+
+## Retained native trace qualification
+
+The [native preparation replay](https://github.com/Passion-Flow/ownsolid/commit/0a722cff)
+used generated CC0 holdout inputs, an approved Apache-2.0 Qwen model
+revision and the existing offline worker. The retained result records
+per-case input digests, expected labels, output digests, execution
+profile and the original request digest. Qualify this trace shape as a
+bounded offline handoff. Keep the three original review expectations.
+Never derive expectations from the observed model outputs.
+
+Use the existing Go model-lifecycle result decoder to independently
+verify the pinned request and result, original holdout and tokenizer
+template. Reuse the datasets record encoding and publish API. Carry the
+exact result digest in the dataset origin and derive stable source IDs
+from that digest and the original case identity. The publication manifest
+then binds the derived bytes under the ordinary dataset authorization.
+
+Run the proof outside product code in a disconnected repository fixture.
+Recreate only the archived synthetic tenant and workspace identities
+in a disposable schema. Issue actual Portal sessions, recheck current
+scope and require an owner for the fixture review operation before
+returning converted rows. Use the normal dataset service for the draft
+and publication. Assert that a viewer and an owner of a different
+workspace receive no rows, a missing review or modified capture fails,
+and an exact replay keeps the same dataset and version. Read back the
+immutable rows and audit attribution with a real processor and
+PostgreSQL. The fixture uses the existing Go, PostgreSQL and CPython
+dependencies, the pinned tokenizer metadata, and no production trace
+content or new dependency.
+
+### Disconnected result
+
+On Linux amd64 at `1af64277`, a build-only overlay used actual
+PostgreSQL 18.6, pgvector 0.8.7 and the pinned CPython 3.12.15 data
+processor. The issued Portal owner session passed the current source
+workspace check. The same check refused a viewer and an owner of a
+sibling workspace. Missing review, altered review bytes and an altered
+report yielded no cases or database writes. The real publication service
+also refused the viewer and left the dataset version count and audit
+trail intact.
+
+The owner converted and published all three reviewed cases. Exact creation
+and publication retries returned the same dataset and job, with one
+immutable version and one scoped publication audit. The authorized
+published source read returned all three cases with the same expectations
+and provenance IDs. An independent disconnected Python calculation
+matched the Go conversion's corpus digest. A second disposable database
+produced the same corpus and manifest digests.
+
+| Retained or derived input | SHA-256 |
+| --- | --- |
+| Original report | `5b244e7c87060e0afab4c4dcd57387f46964d4e37506ad96827df82a0b5ecf47` |
+| Original request | `6d3cf80e42a8066b196f39d07fb9976f7971b0d4ebbfff734b1630d6f783155e` |
+| Reviewed holdout | `0fd36fecf2b79bfd5e23a09cf0c66d395304824d5ae18ca4be8d01a23f9b09af` |
+| Derived corpus | `7ab44ad04a76a76cd18d5c2fcd123b7b165e50da4e92f28b19ded914c24b5be4` |
+| First publication manifest | `f33528ef595cf6075265a44b9551be158070ce4cb744ab67c1bbc6f980607491` |
+| Qualification overlay source | `33c2f6c55efb24797fed6b9415ba6e7ff3cdf1debfa07cbeae82f8dc41aa96b6` |
+
+The overlay test `TestRetainedCPUTraceScopedRegressionPublication` and
+its runner use the original private archive inputs and the existing
+repository fixture. The prototype exercised retained native execution,
+synthetic actor provisioning and the existing dataset publication path.
+Production capture acquisition, expiry and the review interface remain
+open. The synthetic review fixture supplies the expectations for this run.

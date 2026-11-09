@@ -30,6 +30,9 @@ Measuring models and applications before release, and gating releases on the res
   - [Capture and publication boundary](../../research/evaluation-trace-regression.md)
     records which inputs an authorized trace needs to become an immutable
     regression case. The product capture and review flow remains open.
+  - [Retained trace qualification](../../research/evaluation-trace-regression.md#retained-native-trace-qualification)
+    verifies scoped conversion and immutable publication of three reviewed
+    cases from a real CPU preparation trace in a disconnected fixture.
 - [ ] EVL-105 Performance benchmark: latency, throughput and cost per model and hardware (P1) - Catalog: F150
   - [Transport baseline](../../research/evaluation-performance-benchmark.md)
     independently checks the retained gateway summary. Representative engine,
