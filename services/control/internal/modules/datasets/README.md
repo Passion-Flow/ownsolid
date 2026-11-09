@@ -159,9 +159,11 @@ staged for an authorized preview before workspace registration.
 
 ## Opt-in near-duplicate publication
 
-The existing publication path uses exact prompt/completion deduplication.
-Internal callers can use `PublishWithDeduplication` with `NearPromptV1` to
-group similar prompts before splitting and remove eligible near duplicates.
+Admin and Portal publication requests can set the optional
+`deduplication` field to `near_prompt_v1` to group similar prompts and
+remove eligible near duplicates. Omit the field to use exact
+prompt/completion deduplication. The optional test ratio works with
+either policy. Both policies group similar prompts for three-way splits.
 The rule keeps different completions, guarded text changes, and chain
 endpoints without a direct retained match. Approximate removals include
 `match_rule` in the duplicates asset. The version still retains the original
