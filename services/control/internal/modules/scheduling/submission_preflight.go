@@ -26,19 +26,11 @@ type SubmissionEstimate struct {
 // workspace and supplies capacity from its trusted cell observation. The
 // estimate is advisory and carries no reservation or placement guarantee.
 func EstimateSubmissionWithin(ctx context.Context, tx pgx.Tx, tenant, workspaceID string, intent JobIntent, cell CellCapacity) (SubmissionEstimate, error) {
-	if ctx == nil || tx == nil {
-		return SubmissionEstimate{}, ErrPreflightSnapshotRequired
+	if err := requireSchedulingSnapshot(ctx, tx, ErrPreflightSnapshotRequired); err != nil {
+		return SubmissionEstimate{}, err
 	}
 	if !canonicalReservationID(tenant) || !canonicalReservationID(workspaceID) {
 		return SubmissionEstimate{}, ErrQuotaScopeNotFound
-	}
-	var snapshot bool
-	if err := tx.QueryRow(ctx, `SELECT current_setting('transaction_read_only')='on'
- AND current_setting('transaction_isolation')='repeatable read'`).Scan(&snapshot); err != nil {
-		return SubmissionEstimate{}, err
-	}
-	if !snapshot {
-		return SubmissionEstimate{}, ErrPreflightSnapshotRequired
 	}
 
 	q := transaction.PostgreSQLTransaction(tx)
@@ -86,4 +78,19 @@ func EstimateSubmissionWithin(ctx context.Context, tx pgx.Tx, tenant, workspaceI
 	}
 	result.Reasons = append(result.Reasons, reasons...)
 	return result, nil
+}
+
+func requireSchedulingSnapshot(ctx context.Context, tx pgx.Tx, unsupported error) error {
+	if ctx == nil || tx == nil {
+		return unsupported
+	}
+	var snapshot bool
+	if err := tx.QueryRow(ctx, `SELECT current_setting('transaction_read_only')='on'
+ AND current_setting('transaction_isolation')='repeatable read'`).Scan(&snapshot); err != nil {
+		return err
+	}
+	if !snapshot {
+		return unsupported
+	}
+	return nil
 }

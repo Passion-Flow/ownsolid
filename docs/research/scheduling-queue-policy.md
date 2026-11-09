@@ -29,3 +29,45 @@ Exercise priority, dominant-resource switching, equal shares, near-integer-limit
 quantities, invalid dimensions, and FIFO ordering with stable ties. Full
 acceptance needs durable queue and priority configuration, authority, repeated
 reservation and offline workload submission from a product entrance.
+
+## Live workspace shares
+
+Kueue separates [admission fair sharing](https://kueue.sigs.k8s.io/docs/concepts/fair_sharing/)
+based on historical consumption from [preemption fair sharing](https://kueue.sigs.k8s.io/v0.20/docs/concepts/preemption/#fair-sharing)
+based on dominant shares. The original [DRF paper](https://people.eecs.berkeley.edu/~matei/papers/2011/nsdi_drf.pdf)
+defines the dominant share across all resource dimensions. This first ownsolid
+path retains its current dominant-share comparison and reads its inputs from
+the existing reservation and quota facts. Historical consumption and
+cross-tenant policy remain separate from this ranking.
+
+Rank authorized eligible entries for one tenant, with one queue per workspace.
+The owner supplies its authorized job identities, priority values and durable
+enqueue sequence. Read each distinct workspace's hard allocation from the
+quota tree and its held resources from the reservation repository. The hard
+allocation bounds actual held usage even for a workspace that borrows without
+a nominal guarantee. Reuse the existing rank operation, including its error
+for a queue without a capacity allocation. The owner filters eligibility and
+repeats ranking after a dispatch or release.
+
+Use the same read-only PostgreSQL REPEATABLE READ mode as submission
+preflight. [PostgreSQL snapshot semantics](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-REPEATABLE-READ)
+keep the policy and all queue usage in one committed snapshot. Validate the
+whole input scope before reading usage. Return the order without exposing
+other tenants' usage or any individual job's reserved resource quantities.
+A distinct queue is read once per snapshot, regardless of its number of
+pending entries. Dispatch still performs its own current admission transaction.
+
+Caller-maintained counters would diverge on owner rollback or uncertain
+commit. Reading independently under READ COMMITTED could mix policy revisions.
+Combining all tenants in this first path would require a distinct authority
+and policy. The same [Go](https://go.dev/LICENSE), [pgx](https://github.com/jackc/pgx/blob/master/LICENSE)
+and [PostgreSQL](https://www.postgresql.org/about/licence/) dependencies permit
+commercial redistribution with notices and offline operation. Kueue remains
+an Apache-2.0 design reference. This path adds no dependency, model or dataset.
+
+Verify with isolated PostgreSQL that a committed reservation changes the
+next rank, an existing read snapshot stays consistent, a release restores
+the FIFO tie, a higher priority remains first, and foreign and missing
+workspaces return the same error without partial results. Durable queue
+membership, priority management and the authenticated dispatch flow remain
+owner integrations for SCH-103.
