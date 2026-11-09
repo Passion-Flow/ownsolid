@@ -3,10 +3,12 @@ use crate::backend::{Backend, bounded_json};
 use crate::configuration::{Configuration, Limits, Result};
 use crate::control::{AdmissionRequest, Control};
 use crate::errors::{self, Failure};
+use crate::messages::{self, MessagesStream};
 use crate::protocol::{ChatRequest, normalize_completion};
 use crate::quota::{Quotas, RequestPermit, shared};
-use crate::responses::ResponseIdentity;
+use crate::responses::{ResponseIdentity, ResponsesStream};
 use crate::storage::Spool;
+use crate::streaming::{Decoder, Projection};
 use axum::body::Body;
 use axum::extract::{Request, State};
 use axum::http::{StatusCode, header};
@@ -127,6 +129,7 @@ pub fn router(application: Arc<Application>) -> Router {
         .route("/v1/models", get(models))
         .route("/v1/chat/completions", post(chat))
         .route("/v1/responses", post(responses))
+        .route("/v1/messages", post(create_message))
         .route(
             "/health/live",
             get(|| async { Json(json!({"status":"alive"})) }),
@@ -157,12 +160,14 @@ async fn ready(State(app): State<Arc<Application>>) -> Response {
     response
 }
 
-fn metadata(request: &Request, post: bool) -> Result<String> {
+fn metadata(request: &Request, post: bool, format: Format) -> Result<String> {
     let headers = request.headers();
+    let messages = matches!(format, Format::Messages);
     if request.uri().query().is_some()
         || headers.get_all(header::AUTHORIZATION).iter().count() > 1
+        || headers.get_all("x-api-key").iter().count() > usize::from(messages)
+        || (headers.contains_key("x-api-key") && headers.contains_key(header::AUTHORIZATION))
         || [
-            "x-api-key",
             "api-key",
             "proxy-authorization",
             "cookie",
@@ -176,11 +181,17 @@ fn metadata(request: &Request, post: bool) -> Result<String> {
     {
         return Err("invalid_request_error");
     }
-    let key = headers
-        .get(header::AUTHORIZATION)
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.strip_prefix("Bearer "))
-        .ok_or("invalid_api_key")?;
+    if messages {
+        messages::validate_headers(headers)?;
+    }
+    let key = match headers.get("x-api-key") {
+        Some(value) => value.to_str().ok(),
+        None => headers
+            .get(header::AUTHORIZATION)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.strip_prefix("Bearer ")),
+    }
+    .ok_or("invalid_api_key")?;
     if key.is_empty()
         || key.len() > MAX_API_KEY_BYTES
         || !key
@@ -236,7 +247,7 @@ async fn models(State(app): State<Arc<Application>>, request: Request) -> Respon
             return Err(Failure::from("gateway_shutdown"));
         }
         let _ingress = app.limiter.enter()?;
-        let key = metadata(&request, false)?;
+        let key = metadata(&request, false, Format::Chat)?;
         let authorization = app.control.models_with_retry(&key).await?;
         let quota = app.quota_permit(authorization.workspace_id, &key).await?;
         let Some(first) = authorization.models.first() else {
@@ -282,6 +293,23 @@ struct Accepted {
 enum Format {
     Chat,
     Responses,
+    Messages,
+}
+
+impl Format {
+    fn failure(self, failure: impl Into<Failure>, id: Uuid) -> Response {
+        match self {
+            Self::Chat | Self::Responses => errors::respond(failure.into(), id),
+            Self::Messages => errors::respond_messages(failure.into(), id),
+        }
+    }
+
+    fn protect(self, response: &mut Response, id: Uuid) {
+        errors::protect(response, id);
+        if matches!(self, Self::Messages) {
+            errors::protect_messages(response, id);
+        }
+    }
 }
 
 async fn accept(
@@ -297,7 +325,7 @@ async fn accept(
     if !app.spool.ready() {
         return Err("usage_storage_unavailable".into());
     }
-    let key = metadata(&request, true)?;
+    let key = metadata(&request, true, format)?;
     let body = tokio::time::timeout(
         Duration::from_secs(app.configuration.limits.idle_seconds),
         axum::body::to_bytes(
@@ -312,6 +340,7 @@ async fn accept(
     let request = match format {
         Format::Chat => ChatRequest::parse(&body, limits)?,
         Format::Responses => ChatRequest::parse_responses(&body, limits)?,
+        Format::Messages => messages::parse(&body, limits)?,
     };
     let authorization = app.control.models_with_retry(&key).await?;
     if !authorization
@@ -371,13 +400,17 @@ async fn responses(State(app): State<Arc<Application>>, request: Request) -> Res
     generate(app, request, Format::Responses).await
 }
 
+async fn create_message(State(app): State<Arc<Application>>, request: Request) -> Response {
+    generate(app, request, Format::Messages).await
+}
+
 async fn generate(app: Arc<Application>, request: Request, format: Format) -> Response {
     let id = Uuid::new_v4();
     let mut accepted = match accept(&app, request, id, format).await {
         Ok(value) => value,
-        Err(error) => return errors::respond(error, id),
+        Err(error) => return format.failure(error, id),
     };
-    let identity =
+    let responses_identity =
         matches!(format, Format::Responses).then(|| ResponseIdentity::new(id, &accepted.request));
     let prompt = match bounded(
         app.receiver(),
@@ -390,7 +423,7 @@ async fn generate(app: Arc<Application>, request: Request, format: Format) -> Re
         Ok(prompt) => prompt,
         Err(code) => {
             let code = accepted.execution.failure(code, None).err().unwrap_or(code);
-            return errors::response(code, id);
+            return format.failure(code, id);
         }
     };
     let reserved = bounded(
@@ -403,8 +436,8 @@ async fn generate(app: Arc<Application>, request: Request, format: Format) -> Re
     .await;
     if let Err(error) = reserved {
         return match accepted.execution.refused_before_generation() {
-            Ok(()) => errors::respond(error, id),
-            Err(code) => errors::response(code, id),
+            Ok(()) => format.failure(error, id),
+            Err(code) => format.failure(code, id),
         };
     }
     let response = match bounded(
@@ -418,56 +451,66 @@ async fn generate(app: Arc<Application>, request: Request, format: Format) -> Re
         Ok(response) => response,
         Err(code) => {
             let code = accepted.execution.failure(code, None).err().unwrap_or(code);
-            return errors::response(code, id);
+            return format.failure(code, id);
         }
     };
     if !accepted.request.stream {
         let result = bounded(app.receiver(), accepted.deadline, async {
             let bytes = bounded_json(response, accepted.limits.response_bytes).await?;
-            normalize_completion(
+            let completion = normalize_completion(
                 &bytes,
                 &accepted.request,
                 &accepted.backend_model,
                 prompt,
                 &accepted.limits,
-            )
+            )?;
+            let value = match (&responses_identity, format) {
+                (Some(identity), _) => identity.complete(&completion),
+                (None, Format::Messages) => {
+                    messages::complete(id, &accepted.request.alias, &completion)?
+                }
+                (None, _) => completion.chat(&accepted.request.alias),
+            };
+            Ok((value, completion.usage))
         })
         .await;
         return match result {
-            Ok(completion) => {
-                let value = identity.as_ref().map_or_else(
-                    || completion.chat(&accepted.request.alias),
-                    |identity| identity.complete(&completion),
-                );
-                accepted.execution.settle_tokens(&completion.usage).await;
-                match accepted.execution.success(completion.usage) {
+            Ok((value, usage)) => {
+                accepted.execution.settle_tokens(&usage).await;
+                match accepted.execution.success(usage) {
                     Ok(()) => {
                         let mut response = Json(value).into_response();
-                        errors::protect(&mut response, id);
+                        format.protect(&mut response, id);
                         response
                     }
-                    Err(code) => errors::response(code, id),
+                    Err(code) => format.failure(code, id),
                 }
             }
             Err(code) => {
                 let code = accepted.execution.failure(code, None).err().unwrap_or(code);
-                errors::response(code, id)
+                format.failure(code, id)
             }
         };
     }
     // One bounded event in transit; the worker has independent idle/total deadlines even for an unread body.
     let (sender, mut receiver) = mpsc::channel::<Vec<u8>>(1);
-    let decoder = crate::streaming::Decoder::new(
+    let projection = match (responses_identity, format) {
+        (Some(identity), _) => Projection::Responses(ResponsesStream::new(
+            identity,
+            accepted.limits.response_bytes as usize,
+        )),
+        (None, Format::Messages) => {
+            Projection::Messages(MessagesStream::new(id, &accepted.request.alias, prompt))
+        }
+        (None, _) => Projection::Chat,
+    };
+    let decoder = Decoder::new(
         &accepted.request,
         &accepted.backend_model,
         prompt,
         &accepted.limits,
-    );
-    let decoder = if let Some(identity) = identity {
-        decoder.with_responses(identity, &accepted.limits)
-    } else {
-        decoder
-    };
+    )
+    .with_projection(projection);
     let work = crate::transport::StreamWork {
         response,
         decoder,
@@ -493,7 +536,7 @@ async fn generate(app: Arc<Application>, request: Request, format: Format) -> Re
         body,
     )
         .into_response();
-    errors::protect(&mut response, id);
+    format.protect(&mut response, id);
     response
 }
 
@@ -518,19 +561,28 @@ mod tests {
                 .header(name, "synthetic")
                 .body(Body::empty())
                 .unwrap();
-            assert_eq!(metadata(&request, true), Err("invalid_request_error"));
+            assert_eq!(
+                metadata(&request, true, Format::Chat),
+                Err("invalid_request_error")
+            );
         }
         let request = axum::http::Request::builder()
             .header(header::AUTHORIZATION, "Bearer synthetic-key")
             .header(header::AUTHORIZATION, "Bearer another-key")
             .body(Body::empty())
             .unwrap();
-        assert_eq!(metadata(&request, false), Err("invalid_request_error"));
+        assert_eq!(
+            metadata(&request, false, Format::Chat),
+            Err("invalid_request_error")
+        );
         let request = axum::http::Request::builder()
             .uri("/v1/models?api_key=synthetic")
             .header(header::AUTHORIZATION, "Bearer synthetic-key")
             .body(Body::empty())
             .unwrap();
-        assert_eq!(metadata(&request, false), Err("invalid_request_error"));
+        assert_eq!(
+            metadata(&request, false, Format::Chat),
+            Err("invalid_request_error")
+        );
     }
 }

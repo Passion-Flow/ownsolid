@@ -44,6 +44,7 @@ const (
 	dedicatedHTTPS
 	licenseExpiry
 	foregroundResponses
+	foregroundMessages
 )
 
 // Actual Go/Rust/PostgreSQL transport and persistence; backend replies are explicitly synthetic.
@@ -71,6 +72,10 @@ func TestM19RealGoRustLicenseExpiryAndAcceptedOperation(t *testing.T) {
 
 func TestRealGoRustPostgresForegroundResponses(t *testing.T) {
 	realGatewayChain(t, foregroundResponses)
+}
+
+func TestRealGoRustPostgresForegroundMessages(t *testing.T) {
+	realGatewayChain(t, foregroundMessages)
 }
 
 func realGatewayChain(t *testing.T, mode gatewayChainMode) {
@@ -320,7 +325,12 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 		if e != nil {
 			t.Fatal(e)
 		}
-		r.Header.Set("Authorization", "Bearer "+key)
+		if path == "/v1/messages" {
+			r.Header.Set("Anthropic-Version", "2026-10-21")
+			r.Header.Set("X-Api-Key", key)
+		} else {
+			r.Header.Set("Authorization", "Bearer "+key)
+		}
 		if body != nil {
 			r.Header.Set("Content-Type", "application/json")
 		}
@@ -330,8 +340,8 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 		}
 		return response
 	}
-	if mode == foregroundResponses {
-		verifyForegroundResponses(t, c, access, request, &paused, &backendCalls, &generations)
+	if mode == foregroundResponses || mode == foregroundMessages {
+		verifyForegroundText(t, mode, c, access, request, &paused, &backendCalls, &generations)
 		return
 	}
 	chat := func(stream bool) map[string]any {
@@ -519,8 +529,9 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 	}
 }
 
-func verifyForegroundResponses(
+func verifyForegroundText(
 	t *testing.T,
+	mode gatewayChainMode,
 	c scenario,
 	access access,
 	request func(string, string, any) *http.Response,
@@ -528,11 +539,19 @@ func verifyForegroundResponses(
 	backendCalls, generations *atomic.Int32,
 ) {
 	t.Helper()
-	const path = "/v1/responses"
-	key := *access.key.Secret
-	responses := func(stream bool) map[string]any {
+	path, prefix, delta, terminal := "/v1/responses", "resp_", "response.output_text.delta", "response.completed"
+	body := func(stream bool) map[string]any {
 		return map[string]any{"model": access.alias.Name, "input": "Synthetic foreground input", "max_output_tokens": 16, "stream": stream, "store": false}
 	}
+	if mode == foregroundMessages {
+		path, prefix, delta, terminal = "/v1/messages", "msg_", "content_block_delta", "message_stop"
+		body = func(stream bool) map[string]any {
+			return map[string]any{"model": access.alias.Name, "max_tokens": 16, "stream": stream,
+				"system":   "Synthetic system instructions",
+				"messages": []any{map[string]any{"role": "user", "content": "Synthetic foreground input"}}}
+		}
+	}
+	key := *access.key.Secret
 	assertReported := func(id, status string, stream bool, usage *gatewaywire.Usage) {
 		t.Helper()
 		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
@@ -551,23 +570,24 @@ func verifyForegroundResponses(
 					workspace != access.alias.WorkspaceID || keyID != access.key.Key.ID ||
 					(usage == nil && receipt.Usage != nil) ||
 					(usage != nil && (receipt.Usage == nil || *receipt.Usage != *usage)) {
-					t.Fatal("foreground Responses receipt mismatch", receipt, err)
+					t.Fatal("foreground text receipt mismatch", receipt, err)
 				}
 				return
 			}
 			select {
 			case <-ctx.Done():
-				t.Fatal("foreground Responses outcome was not reported")
+				t.Fatal("foreground text outcome was not reported")
 			case <-time.After(10 * time.Millisecond):
 			}
 		}
 	}
 	usage := &gatewaywire.Usage{PromptTokens: 7, CompletionTokens: 2, TotalTokens: 9}
-	answer := request(path, key, responses(false))
+	answer := request(path, key, body(false))
 	id := answer.Header.Get("X-Request-Id")
 	var value struct {
-		ID, Model, Status string
-		Usage             struct {
+		ID, Model, Status, Type, Role string
+		StopReason                    string `json:"stop_reason"`
+		Usage                         struct {
 			Input  int `json:"input_tokens"`
 			Output int `json:"output_tokens"`
 			Total  int `json:"total_tokens"`
@@ -575,44 +595,51 @@ func verifyForegroundResponses(
 	}
 	err := json.NewDecoder(answer.Body).Decode(&value)
 	answer.Body.Close()
-	if err != nil || answer.StatusCode != 200 || !gatewaywire.ValidID(id) || value.ID != "resp_"+id ||
-		value.Model != access.alias.Name || value.Status != "completed" ||
-		value.Usage.Input != 7 || value.Usage.Output != 2 || value.Usage.Total != 9 {
-		t.Fatal("foreground Responses JSON failed", answer.StatusCode, err)
+	if err != nil || answer.StatusCode != 200 || !gatewaywire.ValidID(id) || value.ID != prefix+id ||
+		value.Model != access.alias.Name || value.Usage.Input != 7 || value.Usage.Output != 2 {
+		t.Fatal("foreground text JSON failed", answer.StatusCode, err)
+	}
+	if mode == foregroundMessages {
+		if value.Type != "message" || value.Role != "assistant" || value.StopReason != "end_turn" ||
+			answer.Header.Get("Request-Id") != "req_"+id {
+			t.Fatal("Messages JSON shape did not match the local protocol")
+		}
+	} else if value.Status != "completed" || value.Usage.Total != 9 {
+		t.Fatal("Responses JSON terminal or usage did not match")
 	}
 	assertReported(id, "succeeded", false, usage)
-	stream := request(path, key, responses(true))
-	body, err := io.ReadAll(stream.Body)
+	stream := request(path, key, body(true))
+	events, err := io.ReadAll(stream.Body)
 	stream.Body.Close()
 	if err != nil || stream.StatusCode != 200 ||
-		!bytes.Contains(body, []byte("event: response.output_text.delta\n")) ||
-		!bytes.Contains(body, []byte("event: response.completed\n")) {
-		t.Fatal("foreground Responses SSE failed", stream.StatusCode, err)
+		!bytes.Contains(events, []byte("event: "+delta+"\n")) ||
+		!bytes.Contains(events, []byte("event: "+terminal+"\n")) {
+		t.Fatal("foreground text SSE failed", stream.StatusCode, err)
 	}
 	assertReported(stream.Header.Get("X-Request-Id"), "succeeded", true, usage)
 
 	paused.Store(true)
-	cancelled := request(path, key, responses(true))
+	cancelled := request(path, key, body(true))
 	defer cancelled.Body.Close()
 	reader := bufio.NewReader(cancelled.Body)
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			t.Fatal("foreground Responses delta missing", err)
+			t.Fatal("foreground text delta missing", err)
 		}
-		if line == "event: response.output_text.delta\n" {
+		if line == "event: "+delta+"\n" {
 			break
 		}
 	}
 	cancelled.Body.Close()
 	assertReported(cancelled.Header.Get("X-Request-Id"), "client_cancelled", true, nil)
-	if _, err := c.s.RevokeKey(context.Background(), access.owner, access.alias.WorkspaceID, access.key.Key.ID, "Synthetic Responses revocation", uuid.NewString()); err != nil {
+	if _, err := c.s.RevokeKey(context.Background(), access.owner, access.alias.WorkspaceID, access.key.Key.ID, "Synthetic foreground text revocation", uuid.NewString()); err != nil {
 		t.Fatal(err)
 	}
 	before := backendCalls.Load()
-	denied := request(path, key, responses(false))
+	denied := request(path, key, body(false))
 	denied.Body.Close()
 	if denied.StatusCode != 401 || backendCalls.Load() != before || generations.Load() != 3 {
-		t.Fatal("revoked key reached the Responses backend", denied.StatusCode)
+		t.Fatal("revoked key reached the text backend", denied.StatusCode)
 	}
 }
