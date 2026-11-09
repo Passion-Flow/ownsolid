@@ -558,3 +558,55 @@ apply. This preparation adds no dependency, model or data set.
 GW-111 and DAT-107 retain their exact released error codes. The Help
 error index can add the remaining entries after the Web owner lands
 both English and Simplified Chinese title and detail text.
+
+## MOD-121 abandoned import API contract preparation
+
+Main at e97a4fb4 introduced an opt-in PostgreSQL expiry worker for one
+workspace. The model owner's HTTPS candidate 0cd30e89 exercises it
+with the workspace policy set by the fixture. Installation startup
+does not yet configure this policy. See the
+[worker design and recovery coverage](model-import-cleanup.md#mod-121-abandoned-upload-retention).
+The [tus expiration extension](https://tus.io/protocols/resumable-upload#expiration)
+treats expired uploads as requiring a fresh upload. The
+[HTTP 409 definition](https://www.rfc-editor.org/rfc/rfc9110.html#name-409-conflict)
+covers writes that conflict with the current resource state. Use the
+existing ownsolid upload operations and request keys. Adding a discovery
+endpoint would duplicate authorization and lookup, and copying another
+protocol's refusal would break this API's established conflict contract.
+
+The canonical base path is
+`/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports`. Keep the
+platform Admin session and the existing workspace, tenant and cell
+checks. The API already has a nullable `ModelImport.error_code` string.
+
+| Operation | Verified result after terminal expiry |
+| --- | --- |
+| listModelImports, getModelImport, resolveModelImportIntent | HTTP 200. The authorized record is `cancelled` with `error_code: MODEL_IMPORT_EXPIRED`. Its ID and accepted byte count persist, `model_id` is null, and staging has been removed. |
+| startModelImport | An exact replay with the original key returns HTTP 201 and the original terminal record. A new key starts a new upload. |
+| cancelModelImport | A repeat cancellation returns HTTP 200 and the same terminal record. An ordinary user cancellation retains a null error code across replays. |
+| uploadModelImportChunk, queueModelImport | Valid requests against the terminal import return HTTP 409 and the existing Problem code `MODEL_IMPORT_STATE_CONFLICT`. |
+| resolveModelImportIntent outside the key's workspace | An authorized lookup in another workspace returns HTTP 200 with `status: absent` and a null import. A foreign-tenant lookup or detail request returns HTTP 404 without import metadata. Portal list, detail and resolve also return HTTP 404. |
+
+The candidate HTTPS fixture passed on Linux amd64 with a real
+PostgreSQL 18.6 database and loopback-only networking. It ran unchanged
+as a Go test overlay against 836c8048. It covered exact start and
+cancel replays, the two schema-valid 409 responses, audit counts and
+the cross-scope reads above. The fixture used synthetic upload bytes
+and explicitly enabled the worker. The [SDK licences](sdk.md#licenses)
+apply. This preparation adds no dependency, model or data set.
+
+Keep the released OpenAPI, SDKs and Help on the current contract. The
+terminal reason is data on a successful import response. The shared
+HTTP Problem registry has no entry for that terminal reason. Publish
+a dedicated terminal expiry
+conflict only after both actual authorized write paths produce it
+and the shared registry maps it to HTTP 409. Recheck that the
+in-progress `MODEL_IMPORT_EXPIRY_PENDING` marker and ordinary
+cancellation do not produce the terminal expiry Problem. Require
+schema-valid `application/problem+json` from both operations with
+otherwise valid requests. Preserve the successful replays, refusal
+for missing CSRF, workspace and tenant isolation, and Portal's
+absence of import metadata. Verify the new error against its two
+operation declarations and the generated projections. The installed
+operator flow also depends on startup policy wiring and the Console
+expiry state.
