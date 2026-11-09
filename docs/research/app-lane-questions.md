@@ -80,9 +80,10 @@ See [restart and retry acceptance](workflow-human-approval.md).
 
 ## Portal conversation and playground handoff
 
-APP-109 search has a registered backend path on PostgreSQL. The API owner
-publishes `q` on `ListApplicationConversations`, and Portal adds the search
-field with cursor reset on term, session and workspace changes. Rename and
+APP-109 search has a registered backend path on PostgreSQL. DEV added `q`
+to `ListApplicationConversations` and its generated client in `9cb3d16a`.
+Portal still needs the search field with cursor reset on term, session and
+workspace changes. Rename and
 export still need workflow-owned title storage, revision and permission
 checks, and versioned operations. See [conversation search](application-conversation-search.md).
 
