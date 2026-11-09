@@ -152,3 +152,38 @@ the retained receipts on shutdown after control recovered. Native
 shared and dedicated TLS outage tests and the scoped CSV regression
 also passed. This measures receipt-driven capacity release on two
 synthetic calls. Installed-system throughput and latency remain open.
+
+## Single-node native path comparison
+
+On 2026-11-09, the Linux release gateway from commit 9628bb33 used
+real Go HTTPS control and PostgreSQL 18.6 with pgvector 0.8.7 in a
+loopback-only network namespace. PostgreSQL and the gateway spool used
+tmpfs. The shared server had 16 logical CPUs and the PostgreSQL
+container had one CPU. The same synthetic HTTP backend returned nine
+tokens for nonstreaming requests in both cases. The gateway route also
+called the synthetic tokenizer. Both clients opened one connection
+per call. Each path ran 12 warm-up calls and 96 measured calls at each
+concurrency. The fixture raised only the per-key request window limit
+to 1,000 calls per 60 seconds. Control retained the default four
+deployment slots.
+
+| Concurrent callers | Direct HTTP req/s | Gateway TLS req/s | Gateway p50 / p95 / p99 (ms) | Added p50 / p95 / p99 (ms) |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 2,346.0 | 70.3 | 13.61 / 18.90 / 29.14 | 13.31 / 17.98 / 26.22 |
+| 2 | 4,520.0 | 80.3 | 23.83 / 32.18 / 38.65 | 23.54 / 31.16 / 36.47 |
+
+There were no refusals. PostgreSQL acknowledged all 216 gateway
+calls, including warm-up, and released every hold. Completion and
+token usage were checked for every response, and the receipt counts
+were checked after each batch. Latency deltas compare corresponding
+percentiles from the two distributions. This result uses one synthetic
+deployment, local transport and volatile storage. It leaves the shipped
+installation entrance, production storage, representative engine and
+sustained load to installation qualification.
+
+The isolated test overlay and full output are retained under
+`/root/lane-gw-acceptance/gw112-reporter.0hfX9Eeu/profile` on the Linux
+test host. Build the optimized gateway with
+`cargo build --release --locked --offline --bin projectone-gateway`,
+then run the profile's `run-profile.sh` with its own directory, a unique
+container name stem, and `^TestRealGoRustPostgresCapacityProfile$`.
