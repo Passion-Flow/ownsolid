@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/scheduling/celladapter"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
@@ -138,5 +139,27 @@ func TestPostgresWaitReasonsKeepForeignScopeAndVictimsPrivate(t *testing.T) {
 			len(plan.Victims) != 0 || !errors.Is(err, ErrQuotaScopeNotFound) || !reflect.DeepEqual(WaitReasons(err), want) {
 			t.Fatalf("reclaim leaked a denied scope: %+v, %v", plan, err)
 		}
+	}
+}
+
+func TestCellWaitReasonsExposeOnlyFixedGuidance(t *testing.T) {
+	for _, tc := range []struct {
+		blocker celladapter.Blocker
+		action  WaitAction
+	}{
+		{celladapter.WaitingForQuota, WaitForCellQuota},
+		{celladapter.ExceedsMaxQuota, ChangeRequestOrQuota},
+		{celladapter.TopologyPlacementFailed, ReviewCellTopology},
+		{celladapter.QueueInadmissible, ReviewCellQueue},
+		{celladapter.PodsNotReady, WaitForCellPods},
+	} {
+		got := CellWaitReasons(celladapter.Observation{Blocker: tc.blocker, ResourceVersion: "private-version"})
+		want := WaitReason{Code: string(tc.blocker), Action: tc.action}
+		if len(got) != 1 || got[0] != want {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	}
+	if got := CellWaitReasons(celladapter.Observation{Blocker: "unrecognized-cell-text"}); got != nil {
+		t.Fatalf("unknown blocker leaked: %+v", got)
 	}
 }
