@@ -482,6 +482,8 @@ task_events:
 #   listen_address: 0.0.0.0:9443
 #   tls_certificate_file: /run/projectone/agent-gateway-certificate.pem
 #   tls_private_key_file: /run/projectone/agent-gateway-private-key.pem
+#   # Drain begins in the final tenth of this age. The range is 60-86400 seconds.
+#   connection_max_age_seconds: 1800
 
 # M30 owner: optional canonical absolute protected JSON file, no default.
 # Omit to disable diagnostics; present empty/null/false/relative values fail.
