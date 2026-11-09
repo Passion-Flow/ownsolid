@@ -106,6 +106,9 @@ func writeQuotaWithin(ctx context.Context, q transaction.Executor, expected int6
 		err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
 			`INSERT INTO scheduling_quota_policy (singleton, revision, allocation)
  VALUES (true, 1, $1::jsonb) ON CONFLICT (singleton) DO NOTHING RETURNING revision`, data)).Scan(&revision)
+		if err == nil {
+			err = checkBorrowingPolicyWithin(ctx, q, nil, tree)
+		}
 		return revision, quotaWriteError(ctx, err)
 	}
 	// Do not read active usage until earlier shared policy readers have finished.
@@ -113,10 +116,17 @@ func writeQuotaWithin(ctx context.Context, q transaction.Executor, expected int6
 		"SELECT revision FROM scheduling_quota_policy WHERE singleton AND revision=$1 FOR UPDATE", expected)).Scan(&revision); err != nil {
 		return 0, quotaWriteError(ctx, err)
 	}
+	_, previous, err := readQuotaPolicyWithin(ctx, q)
+	if err != nil {
+		return 0, err
+	}
+	if err := checkBorrowingPolicyWithin(ctx, q, previous, tree); err != nil {
+		return 0, err
+	}
 	if err := checkActivePolicyWithin(ctx, q, tree); err != nil {
 		return 0, err
 	}
-	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
 		`UPDATE scheduling_quota_policy SET revision=revision+1, allocation=$1::jsonb
  WHERE singleton AND revision=$2 RETURNING revision`, data, expected)).Scan(&revision)
 	return revision, quotaWriteError(ctx, err)
