@@ -78,6 +78,10 @@ func verifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, max
 	if err != nil {
 		return InstallBundle{}, err
 	}
+	return verifyReleasePayloads(ctx, root, release, index, maximumPayloadBytes, install)
+}
+
+func verifyReleasePayloads(ctx context.Context, root *os.Root, release Release, index bundleIndex, maximumPayloadBytes int64, install bool) (InstallBundle, error) {
 	artifact := release.Manifest.Artifact
 	artifactBytes, err := verifyPayload(ctx, root, artifact.Filename(), artifact.SHA256, maximumPayloadBytes)
 	if err != nil {
