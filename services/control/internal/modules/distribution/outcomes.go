@@ -8,7 +8,9 @@ import (
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/metering"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 // storedRequestOutcome checks the canonical receipt for both history and report replay.
@@ -43,6 +45,7 @@ func (s *Service) Report(ctx context.Context, gateway, credential string, outcom
 	if e != nil {
 		return wire.Acknowledgment{}, e
 	}
+	receipt := wire.Acknowledgment{RequestID: outcome.RequestID, CanonicalSHA256: digest}
 	var scope machineScope
 	e = s.storageTransaction(ctx, func(ctx context.Context, q transaction.Executor) error {
 		var e error
@@ -102,10 +105,24 @@ func (s *Service) Report(ctx context.Context, gateway, credential string, outcom
 				return e
 			}
 		}
+		if s.ProjectGatewayReceipts {
+			return projectGatewayReceipt(ctx, tx, scope, receipt)
+		}
 		return nil
 	})
 	if e != nil {
 		return wire.Acknowledgment{}, e
 	}
-	return wire.Acknowledgment{RequestID: outcome.RequestID, CanonicalSHA256: digest}, nil
+	return receipt, nil
+}
+
+func projectGatewayReceipt(ctx context.Context, tx transaction.Executor, scope machineScope, receipt wire.Acknowledgment) error {
+	tenant, tenantErr := uuid.Parse(scope.tenant)
+	workspace, workspaceErr := uuid.Parse(scope.workspace)
+	gateway, gatewayErr := uuid.Parse(scope.gateway)
+	if tenantErr != nil || workspaceErr != nil || gatewayErr != nil {
+		return fail("STORAGE_UNAVAILABLE")
+	}
+	_, err := metering.AppendGatewayReceiptWithin(ctx, tx, metering.Scope{TenantID: tenant, WorkspaceID: workspace}, gateway, receipt)
+	return err
 }
