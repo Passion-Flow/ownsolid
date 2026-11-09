@@ -168,3 +168,77 @@ The previously measured 10,000-node raw and rollup sizes and latency
 remain the query-scale evidence. The TLS fixture exercises deployment
 trust with a small sample. DEL still owns installed ACLs, certificate
 lifecycle and isolated volumes.
+
+## Bounded Admin HTTP candidate
+
+The existing [monitoring adapter](../../services/control/internal/modules/monitoring/http/handler.go)
+receives a cell-relative path and an already authenticated, Origin-checked
+Admin actor from the identity dispatcher. Keep that registration and its
+current snapshot contract intact. Stage a separate history method on the
+same adapter so DEV can review it before adding any route, generated
+contract, capability or localization. The method must retain both of the
+history service's current authorization fences and its diagnostic audit.
+The browser must never submit a tenant, tier, selector, store URL, or step.
+
+Use a GET with exactly one Workspace ID and the two canonical
+[RFC 3339 UTC timestamps](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6)
+`from` and `to` at second precision. Bound the encoded query to 512 bytes.
+The [Prometheus range API](https://prometheus.io/docs/prometheus/latest/querying/api/#range-queries)
+allows user-selected queries and steps. Keep those server-owned here.
+Return the selected tier, the evaluated grid and sparse cell points.
+A zero reachable count with a positive observed count stays present.
+Keep the existing 4 MiB upstream limit and add a 1 MiB successful JSON
+body limit to the candidate. Encode and measure the exact
+[JSON message](https://pkg.go.dev/encoding/json#RawMessage) before the
+second authority fence and audit. Hold the encoded value until commit.
+A transport-side length check after the service returns would record a
+successful audit for a response rejected by the adapter. Streaming
+partial success would disclose data before that decision.
+
+Use a candidate-local status mapping until the public registry is
+extended. Reuse the canonical registry for existing codes. Keep range
+errors at 400, an oversized projection at 422, and unconfigured or
+unavailable tiers at 503 with distinct codes. These are the response
+semantics in [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html);
+DEV owns publication through the existing
+[problem details](https://www.rfc-editor.org/rfc/rfc9457.html) writer.
+Never send store response text as a public error. Narrowing the time
+range is the recovery path for a response over budget.
+
+Exercise the candidate with the real Admin and Portal identities,
+PostgreSQL, native raw and rollup stores and vmalert. Test malformed
+and ambiguous HTTP requests before repository access. Recheck workspace
+authority during an in-flight query and preserve the no-fallback case.
+Use a controlled Prometheus-compatible response to hit the byte limit
+without claiming a fleet scale result. Require no success body or
+successful audit on denial. The same run measures the existing
+10,000-node fixture and retains the recorded storage evidence. Encoding
+does not change what is ingested or retained. No dependencies, models
+or data sets are added.
+
+### Verified bounded HTTP candidate
+
+`TestScopedFleetHistoryOffline` exercised the unregistered handler
+with actual Admin and Portal sessions, PostgreSQL 18.6, pgvector 0.8.7,
+two VictoriaMetrics 1.155.0 stores and native vmalert in the
+loopback-only namespace. Both tiers produced bounded JSON with the
+selected grid, scoped cells and measured zero. The matching request
+audit was committed for each successful body. A foreign workspace,
+a Portal session and a mid-query workspace revocation produced no
+successful body. The 24-cell over-budget response returned
+`MONITORING_HISTORY_RESPONSE_LIMIT` with status 422 and no successful
+audit. Failed, absent and over-budget long-tier reads made no
+raw-store requests. Unit tests verified malformed inputs, a closed
+public route and the candidate code/status pairs.
+
+The 10,000-node two-minute fixture read took 70.6 ms raw and
+6.9 ms rollup, including authority, encoding and test audit readback.
+The stopped stores allocated 7,192,576 and 409,600 bytes respectively.
+These are local fixture numbers for two snapshots of one input family
+plus scope distractors. They do not establish production retention
+size or long-range latency. Both stores and PostgreSQL stopped.
+
+DEV owns dispatch through the existing Admin entrance, the public
+problem registry, scoped OpenAPI and generated clients. DEL owns the
+private store, CA and retention inputs. The candidate can be rerun
+using the default `history` selector.

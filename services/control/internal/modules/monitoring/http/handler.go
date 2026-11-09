@@ -3,10 +3,10 @@ package http
 
 import (
 	"errors"
-	"net/http"
-	"net/url"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
+	"net/http"
+	"net/url"
 )
 
 const Path = "/api/v1/admin/monitoring"
@@ -15,19 +15,10 @@ type Handler struct{ Service *monitoring.Service }
 
 func Owns(path string) bool { return path == Path }
 func (h *Handler) Handle(r *http.Request, a identity.Auth, requestID string) (any, int, error) {
+	if err := h.checkRead(r, a, Path); err != nil {
+		return nil, 0, err
+	}
 	bad := errors.New("VALIDATION_FAILED")
-	if h == nil || h.Service == nil {
-		return nil, 0, errors.New("MONITORING_OWNER_REQUIRED")
-	}
-	if r.Method != http.MethodGet || r.URL.Path != Path {
-		return nil, 0, errors.New("RESOURCE_NOT_FOUND")
-	}
-	if a.Me.Audience != "admin" || !a.Me.User.IsPlatformAdmin {
-		return nil, 0, errors.New("ACCESS_DENIED")
-	}
-	if r.URL.RawPath != "" || r.ContentLength != 0 || len(r.TransferEncoding) > 0 {
-		return nil, 0, bad
-	}
 	q, e := url.ParseQuery(r.URL.RawQuery)
 	if e != nil || len(q["workspace_id"]) != 1 {
 		return nil, 0, bad
@@ -42,4 +33,20 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, requestID string) (an
 		return nil, 0, e
 	}
 	return out, http.StatusOK, nil
+}
+
+func (h *Handler) checkRead(r *http.Request, a identity.Auth, path string) error {
+	if h == nil || h.Service == nil {
+		return errors.New("MONITORING_OWNER_REQUIRED")
+	}
+	if r == nil || r.URL == nil || r.Method != http.MethodGet || r.URL.Path != path {
+		return errors.New("RESOURCE_NOT_FOUND")
+	}
+	if a.Me.Audience != "admin" || !a.Me.User.IsPlatformAdmin {
+		return errors.New("ACCESS_DENIED")
+	}
+	if r.URL.RawPath != "" || r.ContentLength != 0 || len(r.TransferEncoding) > 0 {
+		return errors.New("VALIDATION_FAILED")
+	}
+	return nil
 }

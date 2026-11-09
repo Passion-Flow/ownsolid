@@ -5,6 +5,7 @@ package monitoring_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -15,6 +16,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -25,6 +28,7 @@ import (
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
+	monitoringhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring/http"
 )
 
 func TestScopedFleetHistoryOffline(t *testing.T) {
@@ -87,7 +91,25 @@ func TestScopedFleetHistoryOffline(t *testing.T) {
 	}
 	fixtureRequest(t, g.ctx, http.MethodGet, long+"/internal/force_flush", nil)
 	get := func(a identity.Auth, workspace string, from, to time.Time) (monitoring.FleetHistory, error) {
-		return g.s.GetFleetHistory(g.ctx, a, workspace, from, to, uuid.NewString())
+		query := url.Values{"workspace_id": {workspace}, "from": {from.Format(time.RFC3339)}, "to": {to.Format(time.RFC3339)}}
+		request := httptest.NewRequestWithContext(g.ctx, http.MethodGet, monitoringhttp.FleetHistoryPath+"?"+query.Encode(), nil)
+		handler := monitoringhttp.Handler{Service: g.s}
+		requestID := uuid.NewString()
+		body, status, err := handler.HandleFleetHistory(request, a, requestID)
+		if err != nil {
+			if body != nil || status != 0 {
+				t.Fatal("failed history candidate returned a successful response")
+			}
+			return monitoring.FleetHistory{}, err
+		}
+		var out monitoring.FleetHistory
+		if status != http.StatusOK || len(body) > 1<<20 || json.Unmarshal(body, &out) != nil {
+			t.Fatalf("invalid candidate history response: status %d, bytes %d", status, len(body))
+		}
+		if g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot' AND request_id=$1", requestID) != 1 {
+			t.Fatal("successful candidate response lacked its committed audit")
+		}
+		return out, nil
 	}
 	reject := func(a identity.Auth, workspace string, from, to time.Time, codes ...string) {
 		t.Helper()
@@ -149,9 +171,10 @@ func TestScopedFleetHistoryOffline(t *testing.T) {
 				t.Fatalf("wrong 2,000-node cell result: %+v", cell)
 			}
 		}
-		t.Logf("10,000-node %s Service read including SQL and audit: %s", out.Tier, time.Since(started))
+		t.Logf("10,000-node %s HTTP candidate read including SQL and audit: %s", out.Tier, time.Since(started))
 	}
 	reads := rawReads.Load()
+	checkHistoryResponseLimit(t, g, get, recent)
 	stopLong()
 	reject(g.admin, g.f.Workspace, old, old.Add(2*time.Minute), "MONITORING_LONG_TIER_UNAVAILABLE")
 	g.config.FleetHistory.LongOrigin = ""
@@ -179,6 +202,58 @@ func TestScopedFleetHistoryOffline(t *testing.T) {
 		t.Fatal("denied diagnostics emitted a successful audit")
 	}
 	t.Logf("fixture disks after graceful stop: raw=%d long=%d allocated bytes", rawDir(), longDir())
+}
+
+func checkHistoryResponseLimit(t *testing.T, g *story, get func(identity.Auth, string, time.Time, time.Time) (monitoring.FleetHistory, error), end time.Time) {
+	t.Helper()
+	const cells = 24
+	oversized := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		start, errStart := strconv.ParseInt(q.Get("start"), 10, 64)
+		end, errEnd := strconv.ParseInt(q.Get("end"), 10, 64)
+		step, errStep := strconv.ParseInt(q.Get("step"), 10, 64)
+		if errStart != nil || errEnd != nil || errStep != nil || step <= 0 || end < start || (end-start)/step > 1440 {
+			t.Error("fixture received an invalid evaluation grid")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		var values strings.Builder
+		for at := start; at <= end; at += step {
+			if at > start {
+				values.WriteByte(',')
+			}
+			fmt.Fprintf(&values, "[%d,\"1\"]", at)
+		}
+		var response strings.Builder
+		response.WriteString(`{"status":"success","data":{"resultType":"matrix","result":[`)
+		for cell := range cells {
+			for _, measure := range []string{"observed", "reachable"} {
+				if cell > 0 || measure == "reachable" {
+					response.WriteByte(',')
+				}
+				fmt.Fprintf(&response, `{"metric":{"tenant_id":%q,"workspace_id":%q,"site_id":"site-1","cell_id":"large-%d","measure":%q},"values":[%s]}`,
+					g.f.Tenant, g.f.Workspace, cell, measure, values.String())
+			}
+		}
+		response.WriteString(`]}}`)
+		_, _ = io.WriteString(w, response.String())
+	}))
+	t.Cleanup(oversized.Close)
+	before := g.config.FleetHistory.LongOrigin
+	g.config.FleetHistory.LongOrigin = oversized.URL
+	g.rebuild()
+	defer func() {
+		g.config.FleetHistory.LongOrigin = before
+		g.rebuild()
+	}()
+	audits := g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'")
+	out, err := get(g.admin, g.f.Workspace, end.Add(-5*24*time.Hour), end)
+	code, status := monitoringhttp.FleetHistoryProblem(err)
+	if out.Tier != "" || out.Cells != nil || code != "MONITORING_HISTORY_RESPONSE_LIMIT" || status != http.StatusUnprocessableEntity ||
+		g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'") != audits {
+		t.Fatalf("oversized projection or audit escaped the bound: %s %d %+v", code, status, out)
+	}
+	t.Log("candidate refused an over-budget history body before successful audit")
 }
 
 func startHistoryVM(t *testing.T, ctx context.Context, retention string, flags ...string) (string, func() int64, func()) {
