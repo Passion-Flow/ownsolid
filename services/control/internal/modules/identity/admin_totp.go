@@ -18,7 +18,6 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/mail"
 )
 
 const (
@@ -29,18 +28,6 @@ const (
 	adminTOTPRecoveryCount     = 10
 	adminTOTPRecoveryDays      = 90
 )
-
-// LoadAdminTOTPCandidateKeys loads the dedicated versioned key file before
-// serving the isolated candidate. Existing enrolled rows remain authoritative
-// when the keyring is absent.
-func (s *Service) LoadAdminTOTPCandidateKeys(path string) error {
-	keys, err := mail.LoadKeyring(path)
-	if err != nil {
-		return err
-	}
-	s.adminTOTP = keys
-	return nil
-}
 
 // AdminTOTPCandidateReady reports whether the new browser operations can be
 // mounted. Session issuance checks stored factors independently.
@@ -182,7 +169,8 @@ func (s *Service) StartAdminTOTPEnrollment(ctx context.Context, a Auth, password
 			return err
 		}
 		out.ID = uuid.NewString()
-		key, nonce, encrypted, err := s.adminTOTP.Encrypt(adminTOTPAAD(tenant, a.Me.User.ID, out.ID), "admin-totp", seed)
+		defer clear(seed)
+		key, nonce, encrypted, err := s.adminTOTP.encrypt(adminTOTPAAD(tenant, a.Me.User.ID, out.ID), seed)
 		if err != nil {
 			return failure("STORAGE_UNAVAILABLE")
 		}
@@ -320,10 +308,11 @@ func (s *Service) verifyAdminTOTPWithin(ctx context.Context, tx transaction.Exec
 	if err := s.admitAdminTOTPWithin(ctx, tx, user); err != nil {
 		return 0, false, err
 	}
-	seed, err := s.adminTOTP.Decrypt(f.key, adminTOTPAAD(f.tenant, user, f.id), "admin-totp", f.nonce, f.seed)
-	if err != nil || len(seed) != adminTOTPSeedBytes {
+	seed, err := s.adminTOTP.decrypt(f.key, adminTOTPAAD(f.tenant, user, f.id), f.nonce, f.seed)
+	if err != nil {
 		return 0, false, failure("STORAGE_UNAVAILABLE")
 	}
+	defer clear(seed)
 	step, ok := adminTOTPStep(seed, otp, now, f.lastStep)
 	return step, ok, nil
 }
