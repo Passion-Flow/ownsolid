@@ -164,13 +164,13 @@ func TestPostgresLedgerAtomicConcurrentReplayAndClockRollback(t *testing.T) {
 	if ok, err := writeEvent(t.Context(), pool, scope, event); ok || err != nil {
 		t.Fatalf("replay after lost acknowledgement: %v, %v", ok, err)
 	}
-	if got := readTotals(t, pool, scope, eventTime.Add(-time.Hour), eventTime.Add(time.Hour)); got != (Totals{"18446744073709551614", "20", "100", "2"}) {
+	if got := readTotals(t, pool, scope, eventTime.Add(-time.Hour), eventTime.Add(time.Hour)); got != (Totals{"18446744073709551614", "20", "100", "2", "0"}) {
 		t.Fatalf("incorrect total: %+v", got)
 	}
 	if got := readTotals(t, pool, scope, eventTime.Add(-time.Hour), eventTime); got.Requests != "1" {
 		t.Fatalf("incorrect half-open window: %+v", got)
 	}
-	if got := readTotals(t, pool, foreign, eventTime.Add(-time.Hour), eventTime.Add(time.Hour)); got != (Totals{"0", "0", "0", "0"}) {
+	if got := readTotals(t, pool, foreign, eventTime.Add(-time.Hour), eventTime.Add(time.Hour)); got != (Totals{"0", "0", "0", "0", "0"}) {
 		t.Fatalf("another workspace can read usage: %+v", got)
 	}
 	for _, stmt := range []string{"UPDATE usage_ledger SET requests = 9", "DELETE FROM usage_ledger", "TRUNCATE usage_ledger"} {

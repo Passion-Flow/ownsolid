@@ -40,7 +40,7 @@ func TestPostgresBudgetEvaluatesExactThresholdsAndUnratedUsage(t *testing.T) {
 		t.Helper()
 		got, err := read(p)
 		want := BudgetStatus{Currency: p.Currency, From: at, To: end, LimitMicros: p.LimitMicros,
-			KnownAmountMicros: known, FullyRated: fullyRated, State: state}
+			KnownAmountMicros: known, FullyRated: fullyRated, UnmeasuredTokenRequests: "0", State: state}
 		if err != nil || got != want {
 			t.Fatalf("budget status: %+v, %v, want %+v", got, err, want)
 		}

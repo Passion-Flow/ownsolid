@@ -28,14 +28,15 @@ type ShowbackLine struct {
 
 // ShowbackReport describes one authorized workspace and half-open period.
 // KnownAmountMicros is the sum of rated line amounts. FullyRated indicates
-// whether that subtotal covers all reported usage.
+// whether that subtotal covers all reported usage, including token measurements.
 type ShowbackReport struct {
-	Currency          string
-	From              time.Time
-	To                time.Time
-	Lines             []ShowbackLine
-	KnownAmountMicros string
-	FullyRated        bool
+	Currency                string
+	From                    time.Time
+	To                      time.Time
+	Lines                   []ShowbackLine
+	KnownAmountMicros       string
+	UnmeasuredTokenRequests string
+	FullyRated              bool
 }
 
 // ShowbackWithin rates original occurrence times in one read-only REPEATABLE
@@ -78,11 +79,11 @@ func readRatedReport(ctx context.Context, q transaction.Executor, scope Scope, f
 	defer rows.Close()
 
 	report := ShowbackReport{Currency: card.currency, From: from, To: to, FullyRated: true}
-	var known big.Int
+	var known, unmeasured big.Int
 	for rows.Next() {
 		var bucket int
 		var totals Totals
-		if err := rows.Scan(&bucket, &totals.GPUMicroseconds, &totals.Tokens, &totals.StorageByteSeconds, &totals.Requests); err != nil {
+		if err := rows.Scan(&bucket, &totals.GPUMicroseconds, &totals.Tokens, &totals.StorageByteSeconds, &totals.Requests, &totals.UnmeasuredTokenRequests); err != nil {
 			return ShowbackReport{}, operationError(ctx)
 		}
 		if bucket < 1 || bucket > len(starts) {
@@ -92,6 +93,11 @@ func readRatedReport(ctx context.Context, q transaction.Executor, scope Scope, f
 		if i := first + bucket - 1; i >= 0 {
 			version = card.versions[i]
 		}
+		unknown, ok := new(big.Int).SetString(totals.UnmeasuredTokenRequests, 10)
+		if !ok || unknown.Sign() < 0 {
+			return ShowbackReport{}, ErrUnavailable
+		}
+		unmeasured.Add(&unmeasured, unknown)
 		if err := report.addRatedTotals(version, totals, &known); err != nil {
 			return ShowbackReport{}, err
 		}
@@ -100,6 +106,8 @@ func readRatedReport(ctx context.Context, q transaction.Executor, scope Scope, f
 		return ShowbackReport{}, operationError(ctx)
 	}
 	report.KnownAmountMicros = known.String()
+	report.UnmeasuredTokenRequests = unmeasured.String()
+	report.FullyRated = report.FullyRated && unmeasured.Sign() == 0
 	return report, nil
 }
 
