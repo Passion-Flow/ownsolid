@@ -186,7 +186,9 @@ buffer that the installer will pass to its launcher. It applies the same
 service input rules to retained plans. Keep the approved project directory,
 profiles and interpolation inputs fixed through launch. Disable implicit
 project `.env` loading and launch-time environment file overrides.
-Deliver credentials through admitted file references. Compose
+The initial installer profile requires literal values in the signed
+source and uses a closed workload without external file inputs.
+Compose
 accepts the buffer as the sole configuration via `-f -` and supports
 `up --pull never --no-build`. The installer is responsible for preserving
 the admitted model through Compose evaluation and recording the outcome
