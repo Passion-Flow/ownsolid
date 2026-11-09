@@ -78,3 +78,11 @@ comparison. All 19 Help tests then passed on clean main and in the
 full gate on `d4095c34`. The MOD-121 and MOD-107 slices also passed
 disconnected PostgreSQL after rebasing onto the updated catalogue
 admission and node code. They reached main at `e97a4fb4` and `33bbf870`.
+
+## Shared full-test order
+
+Run the models candidate gate after ARC's migration gate and the OPS
+catalogue gate finish, with no other shared heavy test active. Keep
+the disconnected MOD-108 approved-bundle evidence when the rebased
+model implementation is byte-identical. Re-run the scoped archive
+and transfer cases against affected inputs before the full gate.

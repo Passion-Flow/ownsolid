@@ -61,7 +61,7 @@ func (s *Service) OpenDerivedTransferWithin(ctx context.Context, q transaction.E
 		}
 	}()
 	before, e := file.Stat()
-	if e != nil {
+	if e != nil || !transferFileMatches(before, asset.SizeBytes) {
 		return out, derivedFailure()
 	}
 	sum := sha256.New()
@@ -70,7 +70,7 @@ func (s *Service) OpenDerivedTransferWithin(ctx context.Context, q transaction.E
 	if e != nil {
 		return out, e
 	}
-	if statError != nil || n != input.Length || !os.SameFile(before, after) || before.Size() != after.Size() || !before.ModTime().Equal(after.ModTime()) {
+	if statError != nil || n != input.Length || !transferFileMatches(after, asset.SizeBytes) || !os.SameFile(before, after) || !before.ModTime().Equal(after.ModTime()) {
 		return out, fail("MODEL_FILE_CHANGED")
 	}
 	digest, e = modelTransferDigest(input, asset, sum.Sum(nil))
