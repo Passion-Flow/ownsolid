@@ -398,3 +398,75 @@ or provider write exclusion. ARC owns migration numbering, SQL grants
 and durable write admission at startup. The provider and installer
 owners still own the exclusions and independent target release checks
 described above. The PostgreSQL and SeaweedFS fixtures stopped.
+
+## Cell-owned migration handoff
+
+[ADR 0006](../decisions/0006-cell-and-site-scope.md) places artifact
+objects, their operations and audit on the cell side of the catalog.
+[Migration 000030](../../services/control/migrations/postgresql/000030_cell_scope.up.sql)
+applies the local scope columns to artifact metadata. The hold guards
+this database and this cell's S3 namespace, so it and its store binding
+are cell-owned. Keep both outside the global table allowlist.
+
+The only existing store UUID comes from the admitted staging namespace.
+Artifact object rows reference that value but provide no unique store
+parent, and a valid store may be empty. Add an explicitly provisioned
+binding row for that namespace, installed tenant, site and cell,
+site digest and backend digest. Reference the complete binding with a
+composite PostgreSQL foreign key. Do not fabricate a binding from
+arbitrary object rows, and do not repoint existing object foreign keys
+as part of this candidate. The store UUID is unique within the cell
+database. Follow ADR 0006's local scope defaults rather than add a hot
+foreign key to the topology table. Runtime checks join the one local
+registry row and lock it for the hold decision. Scope comes from the
+catalog and admitted stage. The token records the database identity and
+store binding as well as the operation, owner and generation. Check
+both on a takeover retry and again before confirmation and release.
+
+Use [PostgreSQL foreign keys](https://www.postgresql.org/docs/18/ddl-constraints.html#DDL-CONSTRAINTS-FK)
+for continuous cross-table binding instead of a CHECK that queries
+another row. Apply both directions inside the migration transaction.
+An empty upgrade creates neither binding nor permission to open the
+gate. Allow downgrade only before any hold has been used. Acquire an
+[exclusive table lock](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-TABLES)
+before checking that invariant. Dropping a released generation after
+use would lose the history required to refuse replay after reinstall.
+Neither direction mutates the predecessor's object tables. No new
+dependencies, models or datasets are required.
+
+Keep the installer-consumed inventory JSON and digest format at v1.
+Read the local site and cell and check each object row while building
+the inventory. Compare that private scope before and after provider
+readback, then bind it again in the durable confirmation transaction.
+Qualification must exercise real PostgreSQL upgrade and rollback on
+an existing object catalog, wrong-cell foreign keys, a replay with
+matching operation/owner/generation, a changed local cell and stale
+confirmation and release. Reuse the real SeaweedFS archive fixture
+without qualifying provider write exclusion.
+
+### Verified cell migration and replay refusal
+
+`TestActualObjectBackupFence/durable_hold` ran on loopback-only
+Linux amd64 with PostgreSQL 18.6 and SeaweedFS 4.53. The database
+already held a ready multipart object before the unnumbered upgrade.
+The upgrade alone left the gate closed. Provisioning a hold using
+another registered cell failed its store foreign key. The unused
+downgrade removed both candidate tables, and reapplying the upgrade
+preserved the ready object. After the first acquisition, PostgreSQL
+refused downgrade both while held and after explicit release.
+
+Changing the database's local cell made the original scope
+unavailable. Changing only the cell in a token with matching
+operation, owner and generation failed takeover, takeover retry,
+confirmation and release. An artifact row carrying the other cell
+was refused before any S3 readback. The fixture also reran
+coordinator kill and restart, concurrent takeover, stale in-flight
+confirmation, exact archive release and real local staging cleanup.
+The installer-facing archive format remains v1. Both services stopped.
+
+ARC owns numbering the two SQL files, increasing TableCount by two,
+qualifying grants for the PostgreSQL topology read and row lock, and
+running the shared catalog, dump/restore and startup gates. The
+coordinator must provision from the admitted stage and installed
+tenant under the installation lock. The writer permit, provider
+exclusion and independent restore release gates remain open.

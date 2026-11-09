@@ -32,10 +32,11 @@ reconciliation can proceed. See the
 for the provider and installer boundary and the Linux reproduction.
 
 The [PostgreSQL hold candidate](backup_hold_candidate.go) and
-[unnumbered SQL](testdata/backup-hold.sql) qualify coordinator takeover
+[unnumbered up](testdata/backup-hold.up.sql) and [down](testdata/backup-hold.down.sql) scripts qualify cell scope and coordinator takeover
 in the isolated backup fence fixture. Run the existing
 `testdata/run-backup-fence.sh` with the verified SeaweedFS binary and
-PostgreSQL image ID. The candidate is private to this module. Production
-activation requires a numbered migration, least-privilege database
+PostgreSQL image ID. The candidate is private to this module. Both tables are cell-owned. Bind the admitted staging UUID before
+serving the candidate. Downgrade refuses any used hold generation.
+Production activation requires a numbered migration, least-privilege database
 composition, durable writer permits and qualified provider exclusion.
 See [the restart boundary](../../../../../docs/research/object-backup-fence.md#postgresql-hold-candidate).
