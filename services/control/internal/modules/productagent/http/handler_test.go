@@ -14,7 +14,7 @@ import (
 )
 
 func TestCommandRequestBoundary(t *testing.T) {
-	service, err := productagent.New(&applications.Service{Identity: &identity.Service{}})
+	service, err := productagent.New(&applications.Service{Identity: &identity.Service{}}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestCommandRequestBoundary(t *testing.T) {
 }
 
 func TestCommandRequiresDispatcherContext(t *testing.T) {
-	service, err := productagent.New(&applications.Service{Identity: &identity.Service{}})
+	service, err := productagent.New(&applications.Service{Identity: &identity.Service{}}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

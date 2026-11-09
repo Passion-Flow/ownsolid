@@ -26,7 +26,7 @@ func runProductAssistantAuditCommands(t *testing.T, ctx context.Context, store t
 	owner.Config.Workflows.Enabled = true
 	spaces := &workspaces.Service{Identity: owner}
 	flow := &workflows.Service{Identity: owner, Workspaces: spaces}
-	assistant, err := productagent.New(&applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow})
+	assistant, err := productagent.New(&applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow}, func(context.Context) (bool, error) { return true, nil })
 	if err != nil {
 		t.Fatal(err)
 	}
