@@ -13,6 +13,9 @@ func main() {
 }
 
 func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
+	if len(args) > 0 && args[0] == "forward-syslog" {
+		return runSIEM(args[1:], stdout, stderr)
+	}
 	flags := flag.NewFlagSet("audit-verify", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	path := flags.String("file", "", "audit JSONL file, or - for standard input")

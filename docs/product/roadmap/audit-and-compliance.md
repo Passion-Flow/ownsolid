@@ -31,6 +31,10 @@ under the auditor's separate control. See the
 - [ ] AUD-109 Encryption at rest for the platform database, object storage and backups with keys from an external KMS (KMIP, Vault-compatible transit, cloud KMS), envelope encryption, key rotation, and a TLS 1.3-only policy option (P1)
 - [x] AUD-110 Audit trail page: events with filters by action, outcome, time and request, event details, shareable links (P1) - Evidence: 2c51002; real Chromium on an offline install on `ownsolid-cpu` read a real sign-in event with the person's address, filtered by family, followed it to its request and opened it from its own link, three runs in a row, 2026-11-07
 - [ ] AUD-111 Stream audit events to an external SIEM over syslog or a webhook, with counters for events sent and dropped (P1)
+  - [Operator TLS delivery](../../../tools/audit-verify/README.md#forward-a-verified-window-to-site-local-syslog)
+    forwards verified windows with tenant scope, redaction and a durable
+    cursor. Trusted service startup and approved site SIEM acceptance
+    remain open.
 
 ## P2 Fleet operations
 
