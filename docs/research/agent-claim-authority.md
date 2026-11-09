@@ -332,3 +332,56 @@ result exceeded its declaration of 16. The result still needs a current
 lease and deadline check after the owning callback. Any statement reduction
 must preserve rollback when that check fails. The audit append remains
 under the separate Audit authority.
+
+## ARC-109 training task projection
+
+Training claim, event, and output paths read the exact task under
+`FOR UPDATE` and then select its command payload by the same tenant,
+workspace, node and task IDs. PostgreSQL's
+[locking SELECT](https://www.postgresql.org/docs/18/sql-select.html#SQL-FOR-UPDATE-SHARE)
+returns the row version it has locked, so the command can be projected from
+that row. Keep scope, operation, profile, catalogue digest and exact lease
+validation in place. Keep the separate clock and lease-token check at its
+existing point after command decoding. The credential and lease SQL checks
+still run once per authority pass, with separate transactions for an upload
+before and after streaming.
+
+Limit the change to PostgreSQL. The MySQL and Dameng paths retain their
+existing queries. In particular, the [Dameng locking-read documentation](https://eco.dameng.com/document/dm/zh-cn/pm/check-phrases#48-for-update-%E5%AD%90%E5%8F%A5)
+describes additional locks when the projection contains a LOB. Caching the
+decoded command across transactions was rejected because it can bypass current
+authority and database validation. No Agent wire, schema or dependency changes
+are needed. The existing PostgreSQL, Go and pgx licences above apply. The
+training cost fixture uses synthetic data with the dependencies and terms
+listed in [training Agent cost](training-agent-cost.md).
+
+On the existing real HTTPS and PostgreSQL cost fixture, require the same
+authority-pass assertions, one fewer statement per task projection, and
+unchanged state and result semantics. Exercise training claim with a tampered
+command, atomic events and exact replay, and rejection after authority
+changes during a chunk stream. Measure the two seeded fleet sizes separately
+from simulator throughput and leave the declared budgets in place.
+
+The comparison used PostgreSQL 18.6 with pgvector 0.8.7 and CPython
+3.12.15 on Linux arm64 with networking disabled. The baseline was
+`10e50c8b`. Both 50- and 3,000-peer fixtures gave the same statement
+counts. The existing `training_authority` subtest passed before and
+after. No authority-pass assertion or declaration changed.
+
+| Training Agent exchange | Statements before | Statements after |
+| --- | ---: | ---: |
+| Claim | 69 | 68 |
+| Three events | 136 | 135 |
+| Input | 33 | 31 |
+| Renew | 19 | 18 |
+| Stop | 49 | 48 |
+| Begin checkpoint upload | 65 | 63 |
+| Accept checkpoint chunk | 74 | 72 |
+
+The focused PostgreSQL tests also passed tampered-command rollback,
+ordered event replay and revocation, the normal TLS claim and renew
+exchange, and refusal after authority changed during a chunk stream.
+Claim, event and stop still exceed their declared statement ceilings.
+The earlier [training owner measurements](training-agent-cost.md)
+used a different baseline. ARC-109 remains open for the shared audit
+cost and remaining training and preparation authority changes.

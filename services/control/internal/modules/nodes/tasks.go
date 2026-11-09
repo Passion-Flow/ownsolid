@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/jackc/pgx/v5"
 )
 
 const taskFields = `id::text,tenant_id::text,workspace_id::text,node_id::text,operation,state,attempt,error_code,created_at,updated_at,deadline_at,completed_at`
@@ -18,9 +18,10 @@ const taskFields = `id::text,tenant_id::text,workspace_id::text,node_id::text,op
 // taskHistoryColumns are the columns node_tasks and node_task_history share.
 const taskHistoryColumns = `id,tenant_id,workspace_id,node_id,operation,state,attempt,error_code,created_at,updated_at,deadline_at,completed_at`
 
-func scanTask(row pgx.Row) (Task, error) {
+func scanTask(row pgx.Row, extra ...any) (Task, error) {
 	var v Task
-	e := row.Scan(&v.ID, &v.TenantID, &v.WorkspaceID, &v.NodeID, &v.Operation, &v.State, &v.Attempt, &v.ErrorCode, &v.CreatedAt, &v.UpdatedAt, &v.DeadlineAt, &v.CompletedAt)
+	fields := []any{&v.ID, &v.TenantID, &v.WorkspaceID, &v.NodeID, &v.Operation, &v.State, &v.Attempt, &v.ErrorCode, &v.CreatedAt, &v.UpdatedAt, &v.DeadlineAt, &v.CompletedAt}
+	e := row.Scan(append(fields, extra...)...)
 	if errors.Is(e, pgx.ErrNoRows) {
 		return v, fail("RESOURCE_NOT_FOUND")
 	}
@@ -42,6 +43,7 @@ func (s *Service) expireTasks(ctx context.Context, tx pgx.Tx, n Node, request st
 func (s *Service) CreateTask(ctx context.Context, a identity.Auth, id, operation, key, request string) (Task, error) {
 	return s.createTaskSelected(ctx, a, id, operation, key, request)
 }
+
 // Claim leases the next task without a delivery cursor, so it never asks for a resync.
 func (s *Service) Claim(ctx context.Context, id, credential, request string) (wire.Claim, error) {
 	return s.claimSelected(ctx, id, credential, request, nil)
