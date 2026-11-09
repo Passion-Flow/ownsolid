@@ -1,0 +1,25 @@
+scrape_configs:
+  - job_name: ownsolid-node
+    scheme: https
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    max_scrape_size: 1MiB
+    sample_limit: 2500
+    series_limit: 2000
+    honor_labels: false
+    honor_timestamps: false
+    follow_redirects: false
+    tls_config:
+      ca_file: node-ca.pem
+    file_sd_configs:
+      - files: [nodes.json]
+    relabel_configs:
+      - action: keep
+        source_labels: [tenant_id, workspace_id, node_id, site_id, cell_id]
+        regex: '[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12};[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12};[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12};[^;]{1,128};[^;]{1,128}'
+    metric_relabel_configs:
+      - action: keep
+        source_labels: [__name__]
+        regex: 'node_cpu_seconds_total|node_memory_MemAvailable_bytes'
+      - action: labelkeep
+        regex: '__name__|tenant_id|workspace_id|node_id|site_id|cell_id|job|instance|cpu|mode'
