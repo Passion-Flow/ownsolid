@@ -27,6 +27,7 @@ type supportReport struct {
 	Operations    []supportOperation   `json:"recent_operations"`
 	Services      []supportService     `json:"services"`
 	SchemaVersion *int                 `json:"schema_version,omitempty"`
+	RestorePhase  string               `json:"pending_restore_phase,omitempty"`
 	Issues        []string             `json:"collection_issues"`
 }
 
@@ -123,6 +124,11 @@ func collectSupport(ctx context.Context, c Config, runner Runner) supportReport 
 	report.Operations = operations
 	if err != nil {
 		report.Issues = append(report.Issues, "OPERATION_LOG_UNAVAILABLE")
+	}
+	if intent, err := readRestoreIntent(c); err != nil {
+		report.Issues = append(report.Issues, "RESTORE_STATE_UNAVAILABLE")
+	} else if intent != nil {
+		report.RestorePhase = intent.Phase
 	}
 	if raw, err := os.ReadFile("/proc/sys/kernel/osrelease"); err == nil {
 		if version, ok := kernelRelease(strings.TrimSpace(string(raw))); ok {

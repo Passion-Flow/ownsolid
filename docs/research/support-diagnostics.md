@@ -39,3 +39,35 @@ configuration and real installer operations. Verify that arbitrary config
 values and log details are absent, truncated or malformed records are dropped,
 a symlink or special file cannot be read, and a failed Docker collector
 still yields a private local report.
+
+## Pending restore state
+
+A process killed during logical restore cannot append its normal operation
+event. The support bundle should still report which recovery phase is pending
+when both Control and Docker are unavailable. GitLab's
+[Self-Managed diagnostics](https://docs.gitlab.com/administration/troubleshooting/diagnostics_tools/)
+also separates diagnostic collection from application availability and
+sanitizes deployment configuration. Reuse the installer's existing protected
+restore reader and include only its validated phase in the JSON snapshot.
+The phase describes the installer record, independent of whether PostgreSQL
+currently agrees with it. The recovery command still checks actual database
+placement before taking action.
+
+An absent record omits the field. A malformed, unsafe, or foreign record
+omits the phase and adds a fixed collection issue. Do not copy the record
+or report its path, site digest, cluster identifier, OIDs, or random suffix.
+No dependencies, models, or datasets are introduced. Test all four phases,
+absence, wrong site, symlinks and invalid payloads. Run the collector on
+disconnected Linux with Docker unavailable and verify that it still emits a
+private archive and the validated phase with zero egress.
+
+### Disconnected diagnostic check
+
+On 2026-11-09, the Linux amd64 `ownsolid-install support-bundle` binary ran
+as a non-root user against a synthetic protected `loading` record on
+`ownsolid-cpu`. Docker's Unix socket was deliberately unavailable. The
+mode 0600 archive included `pending_restore_phase: loading` and the fixed
+`DOCKER_UNAVAILABLE` issue. It excluded the installation root, site digest,
+cluster identifier, database OIDs and candidate suffix. The network
+namespace had only recorder routes and the capture contained only its IPv4,
+IPv6 and DNS probes. The check used no containers.
