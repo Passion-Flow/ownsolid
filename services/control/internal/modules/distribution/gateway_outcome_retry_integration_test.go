@@ -24,6 +24,10 @@ func TestRealGoRustPostgresLostOutcomeReply(t *testing.T) {
 	realGatewayChain(t, lostOutcomeReply)
 }
 
+func TestRealGoRustPostgresRestartAfterLostOutcomeReply(t *testing.T) {
+	realGatewayChain(t, restartAfterLostOutcomeReply)
+}
+
 type outcomeReplyLoss struct {
 	path        string
 	attempts    atomic.Int32
@@ -90,7 +94,7 @@ func (loss *outcomeReplyLoss) wrap(t *testing.T, next http.Handler) http.Handler
 	})
 }
 
-func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, state string, response *http.Response, generations *atomic.Int32) {
+func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, state string, response *http.Response, generations *atomic.Int32, restart func(verifyStopped func())) {
 	t.Helper()
 	requestID := response.Header.Get("X-Request-ID")
 	var completion struct {
@@ -136,6 +140,18 @@ func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, st
 		if err != nil || auditCount != 1 {
 			t.Fatalf("expected one scoped, committed outcome and audit event: %v, count %d", err, auditCount)
 		}
+		if restart != nil {
+			var total, matching int
+			err = c.s.DB.QueryRow(t.Context(), `SELECT count(*), count(*) FILTER (
+				WHERE l.producer='gateway/receipt-v1' AND l.event_id=$1 AND l.tenant_id=r.tenant_id
+					AND l.workspace_id=r.workspace_id AND l.occurred_at=r.admitted_at
+					AND l.requests=1 AND l.tokens=$2 AND l.unmeasured_token_requests=0)
+				FROM usage_ledger l CROSS JOIN gateway_requests r WHERE r.id=$1::uuid`,
+				requestID, usage.TotalTokens).Scan(&total, &matching)
+			if err != nil || total != 1 || matching != 1 {
+				t.Fatalf("expected one scoped metering event: %v, total %d, matching %d", err, total, matching)
+			}
+		}
 		return body, reportedAt
 	}
 	initial, reportedAt := readReported()
@@ -164,6 +180,14 @@ func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, st
 		t.Fatal("native spool differs from the committed outcome", err)
 	}
 
+	if restart != nil {
+		restart(func() {
+			retained, err := os.ReadFile(pending)
+			if err != nil || !bytes.Equal(data, retained) || loss.attempts.Load() != 1 {
+				t.Fatal("the exited gateway changed the spool or attempted replay before restart", err)
+			}
+		})
+	}
 	close(loss.allowReplay)
 	if replay := await(loss.replay); replay != first {
 		t.Fatal("Control replay changed the canonical acknowledgment")
