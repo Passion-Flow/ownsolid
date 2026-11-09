@@ -208,10 +208,15 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 		}
 		return memoryAttachment(bundle, "model-gateway-ca.pem", "application/octet-stream"), http.StatusOK, nil
 	}
-	if len(parts) == 3 && parts[0] == "aliases" && parts[2] == "cutovers" && r.Method == http.MethodPost && isAdmin {
+	if (len(parts) == 3 || len(parts) == 4 && parts[3] == "preview") &&
+		parts[0] == "aliases" && parts[2] == "cutovers" && r.Method == http.MethodPost && isAdmin {
 		var input distribution.CutoverRequest
 		if e := decodeCutover(r, &input); e != nil {
 			return nil, 0, e
+		}
+		if len(parts) == 4 {
+			v, e := h.Service.PreviewCutover(r.Context(), a, workspace, id, input)
+			return v, http.StatusOK, e
 		}
 		v, e := h.Service.Cutover(r.Context(), a, workspace, id, input, intent, request)
 		return v, 200, e

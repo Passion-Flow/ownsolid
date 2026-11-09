@@ -2,14 +2,19 @@ package distribution_test
 
 import (
 	"context"
-	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
-	"github.com/google/uuid"
+	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
+	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+	"github.com/google/uuid"
 )
 
 // All physical/GPU/container/generation reports in this file are explicit test doubles.
@@ -78,6 +83,16 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	ctx := context.Background()
 	workspace := a.alias.WorkspaceID
 	id := a.alias.ID
+	previewPath := "/api/v1/admin/distribution/workspaces/" + workspace + "/aliases/" + id + "/cutovers/preview"
+	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
+	admin := httpfixture.New(t, server, "admin", nil)
+	admin.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": c.password}, http.StatusOK, "")
+	publicState := func(state distribution.CutoverState) map[string]any {
+		return map[string]any{
+			"revision": float64(state.Revision), "deployment_id": state.DeploymentID,
+			"deployment_revision": float64(state.DeploymentRevision), "paused": state.Paused,
+		}
+	}
 	type durableCutover struct {
 		state                     distribution.CutoverState
 		intents, versions, audits int
@@ -101,15 +116,14 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	applyPreview := func(in distribution.CutoverRequest, key string) (distribution.CutoverResult, error) {
 		t.Helper()
 		before := read()
-		preview, err := c.s.PreviewCutover(ctx, c.a, workspace, id, in)
-		if err != nil {
-			t.Fatal("preview", in.Action, err)
-		}
-		if before != read() || preview.Before != before.state || preview.After.Revision != before.state.Revision+1 {
+		preview := admin.Write(http.MethodPost, previewPath, in, http.StatusOK, "")
+		after, ok := preview["after"].(map[string]any)
+		if before != read() || len(preview) != 2 || !reflect.DeepEqual(preview["before"], publicState(before.state)) ||
+			!ok || after["revision"] != float64(before.state.Revision+1) {
 			t.Fatal("preview changed durable state or projected the wrong revision", in.Action)
 		}
 		applied, err := c.s.Cutover(ctx, c.a, workspace, id, in, key, uuid.NewString())
-		if err == nil && preview.After != read().state {
+		if err == nil && !reflect.DeepEqual(after, publicState(read().state)) {
 			t.Fatal("preview and committed cutover disagree", in.Action)
 		}
 		return applied, err
@@ -127,14 +141,19 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	if foreign.a.Me.Workspace.TenantID == c.a.Me.Workspace.TenantID {
 		t.Fatal("expected a separate tenant")
 	}
-	_, e = foreign.s.PreviewCutover(ctx, foreign.a, workspace, id, pause)
-	check(t, e, "RESOURCE_NOT_FOUND")
+	foreignServer := httpfixture.NewTLSServer(t, identityhttp.New(foreign.s.Identity))
+	foreignAdmin := httpfixture.New(t, foreignServer, "admin", nil)
+	foreignAdmin.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": foreign.password}, http.StatusOK, "")
+	if problem := foreignAdmin.Write(http.MethodPost, previewPath, pause, http.StatusNotFound, ""); problem["code"] != "RESOURCE_NOT_FOUND" {
+		t.Fatal("foreign tenant did not receive the scoped problem")
+	}
 	paused, e := applyPreview(pause, key)
 	if e != nil || paused.Alias.DisabledAt == nil || paused.Alias.HeldRequests != 1 || paused.AppliedRevision != 2 {
 		t.Fatal("pause did not preserve owner", e)
 	}
-	_, e = c.s.PreviewCutover(ctx, c.a, workspace, id, pause)
-	check(t, e, "VERSION_CONFLICT")
+	if problem := admin.Write(http.MethodPost, previewPath, pause, http.StatusConflict, ""); problem["code"] != "VERSION_CONFLICT" {
+		t.Fatal("stale preview did not return a revision conflict")
+	}
 	replay, e := c.s.Cutover(ctx, c.a, workspace, id, pause, key, uuid.NewString())
 	if e != nil || !replay.Replayed || replay.AppliedRevision != 2 {
 		t.Fatal("pause replay", e)
@@ -142,8 +161,9 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	_, e = c.s.Admit(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, a.input(), uuid.NewString())
 	check(t, e, "MODEL_ALIAS_UNAVAILABLE")
 	resume := distribution.CutoverRequest{Action: "resume", ExpectedRevision: 2, Reason: "Do not clear an unknown physical request by waiting"}
-	_, e = c.s.PreviewCutover(ctx, c.a, workspace, id, resume)
-	check(t, e, "ALIAS_REQUESTS_UNDRAINED")
+	if problem := admin.Write(http.MethodPost, previewPath, resume, http.StatusConflict, ""); problem["code"] != "ALIAS_REQUESTS_UNDRAINED" {
+		t.Fatal("preview accepted a target with a held request")
+	}
 	_, e = c.s.Cutover(ctx, c.a, workspace, id, resume, uuid.NewString(), uuid.NewString())
 	check(t, e, "ALIAS_REQUESTS_UNDRAINED")
 	if _, e = c.s.DB.Exec(ctx, "UPDATE gateway_requests SET deadline_at=admitted_at+interval '1 millisecond' WHERE id=$1", input.RequestID); e != nil {

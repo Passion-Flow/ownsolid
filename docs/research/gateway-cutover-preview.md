@@ -23,11 +23,9 @@ Computing the diff in a caller from existing GET responses would skip the
 live drain check and immutable rollback target validation. Running the
 normal mutation and rolling back would execute triggers and assume all
 its present and future side effects are transactional. Sharing a planner
-before the first write avoids both problems. It gives the DEV contract
-owner one service entry point for a future versioned Admin preview route.
-The Console then needs to show the before and after state and apply using
-the previewed expected revision. The existing cutover HTTP contract stays
-on its current shape.
+before the first write avoids both problems. The Console can show the before and after state and apply using the
+previewed expected revision. The existing cutover HTTP contract retains
+its current shape.
 
 No dependency, model or dataset is added. The PostgreSQL fixture uses
 [PostgreSQL](https://www.postgresql.org/about/licence/) and existing
@@ -51,3 +49,36 @@ audit changes during preview. Portal and a separately authenticated
 tenant were denied, a stale revision returned a conflict, and the held
 request blocked resume. The existing cutover TLS contract, replay, failed
 audit rollback and both pause/admission lock orders passed.
+
+## Admin HTTP preview
+
+Use `POST .../aliases/{alias_id}/cutovers/preview` under the existing
+cell-scoped Admin workspace distribution path. It accepts the same strict
+JSON union as apply. A POST body carries the full proposed action and
+expected revision while using the existing browser origin, session and
+CSRF checks. Preview requires no idempotency key because it records no
+mutation. Success contains only `before` and `after` with `revision`,
+`deployment_id`, `deployment_revision` and `paused`. Apply retains its
+existing request and response. Its transaction checks the same live state
+again even when preview succeeded. A separate GET would place the action
+and its reason in the URL and require a second input decoder.
+
+Run all four preview actions through the production dispatcher over TLS.
+Compare both states with PostgreSQL before and after the actual apply,
+including zero alias/history/intent/audit changes on preview. Check
+CSRF refusal, missing or duplicate fields, Portal and foreign tenant
+refusal, stale revision and outstanding requests. DEV owns the public
+OpenAPI and generated clients. WEB owns the preview and confirmation UI.
+The route uses the existing [Go standard library](https://go.dev/LICENSE)
+under BSD-3-Clause, with commercial and offline use and redistribution
+under its notice terms. No dependency, model or dataset is added.
+
+On 2026-11-09 the production dispatcher passed the disconnected
+PostgreSQL and TLS checks. Pause, retarget, resume and rollback each
+returned the exact before and after state. Preview left the alias,
+target versions, cutover intents and alias audit counts unchanged.
+The Admin preview succeeded without an idempotency key. It rejected
+missing CSRF, missing and duplicate JSON fields, foreign tenant and
+Portal callers, an old revision and a held request. Existing apply
+replay, audit rollback and pause/admission lock ordering passed.
+The HTTP test uses synthetic deployment observations.
