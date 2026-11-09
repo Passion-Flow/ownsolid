@@ -780,12 +780,34 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 		if _, e = s.Admit(ctx, identity.Limit{Purpose: "login.email", Identifier: email, Count: s.Config.Policy().Rates.LoginEmailCount, Window: config.Seconds(s.Config.Policy().Rates.LoginEmailWindowSeconds)}, identity.Limit{Purpose: "login.ip." + audience, Identifier: peer(r), Count: s.Config.Policy().Rates.LoginIPCount, Window: config.Seconds(s.Config.Policy().Rates.LoginIPWindowSeconds)}); e != nil {
 			return nil, 0, e
 		}
-		me, token, expiry, e := s.Login(ctx, email, v.Password, audience, session, requestID)
+		issued, challenge, e := s.LoginBrowser(ctx, email, v.Password, audience, session, contextCookie, requestID)
 		if e != nil {
 			return nil, 0, e
 		}
-		cookies.Set(w, audience, httpserver.SessionCookie, token, int(s.Absolute(audience)/time.Second))
-		return map[string]any{"user": me.User, "workspace": me.Workspace, "audience": audience, "session": map[string]any{"absolute_expires_at": expiry, "idle_timeout_seconds": int(s.Idle(audience) / time.Second)}}, 200, nil
+		if challenge != nil {
+			return challenge, http.StatusAccepted, nil
+		}
+		return h.browserLoginResponse(w, cookies, audience, issued)
+	case "POST " + adminTOTPLoginPath:
+		if audience != "admin" {
+			return nil, 0, errors.New("RESOURCE_NOT_FOUND")
+		}
+		var input struct {
+			Challenge string `json:"challenge"`
+			Code      string `json:"code"`
+		}
+		if e := decode(r, &input); e != nil {
+			return nil, 0, e
+		}
+		rates := s.Config.Policy().Rates
+		if _, e := s.Admit(ctx, identity.Limit{Purpose: "totp.ip", Identifier: peer(r), Count: rates.LoginIPCount, Window: config.Seconds(rates.LoginIPWindowSeconds)}); e != nil {
+			return nil, 0, e
+		}
+		issued, e := s.CompleteAdminTOTPLogin(ctx, input.Challenge, input.Code, session, contextCookie, requestID)
+		if e != nil {
+			return nil, 0, e
+		}
+		return h.browserLoginResponse(w, cookies, audience, issued)
 	case "POST /api/v1/auth/logout":
 		b, e := io.ReadAll(io.LimitReader(r.Body, 1))
 		if e != nil || len(b) != 0 {
@@ -858,7 +880,7 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 		return map[string]bool{"reset": true}, 200, nil
 	}
 	managesSessions := path == browserSessionsPath || strings.HasPrefix(path, browserSessionsPath+"/")
-	if path == "/api/v1/me" || path == passwordChangesPath || path == sessionPath || managesSessions || strings.HasPrefix(path, "/api/v1/admin/") {
+	if path == "/api/v1/me" || path == passwordChangesPath || path == sessionPath || managesSessions || adminTOTPManagementPath(path) || strings.HasPrefix(path, "/api/v1/admin/") {
 		a, e := s.Authenticate(ctx, session, audience)
 		if e != nil {
 			if e.Error() == "AUTH_SESSION_EXPIRED" {
@@ -889,6 +911,9 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 		}
 		if managesSessions {
 			return h.browserSessions(w, r, cookies, a, requestID)
+		}
+		if adminTOTPManagementPath(path) {
+			return h.adminTOTPManagement(w, r, cookies, a, requestID)
 		}
 		if route == "GET "+sessionPath {
 			data, e := s.SessionStatus(ctx, a)

@@ -8,12 +8,12 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 const maximumConfirmationPasswordBytes = 4096
@@ -148,6 +148,10 @@ func (s *Service) IssueSessionWithin(ctx context.Context, q transaction.Executor
 // issueSessionWithin issues the session and records action as its audit event. An empty
 // action leaves the audit to the caller, which records why the session was issued.
 func (s *Service) issueSessionWithin(ctx context.Context, q transaction.Executor, user string, epoch int64, audience, previous, request string, source *SessionSource, action string) (IssuedSession, error) {
+	return s.issueAuthorizedSessionWithin(ctx, q, user, epoch, audience, previous, request, source, action, false)
+}
+
+func (s *Service) issueAuthorizedSessionWithin(ctx context.Context, q transaction.Executor, user string, epoch int64, audience, previous, request string, source *SessionSource, action string, adminFactorChecked bool) (IssuedSession, error) {
 	var out IssuedSession
 	if epoch < 1 {
 		return out, failure("AUTH_INVALID_CREDENTIALS")
@@ -161,6 +165,15 @@ func (s *Service) issueSessionWithin(ctx context.Context, q transaction.Executor
 	}
 	if u.Status != "active" || u.Epoch != epoch || audience == "admin" && !u.IsPlatformAdmin {
 		return out, failure("AUTH_INVALID_CREDENTIALS")
+	}
+	if audience == "admin" && !adminFactorChecked {
+		factor, err := adminTOTPFactorWithin(ctx, q, user)
+		if err != nil {
+			return out, err
+		}
+		if factor.enabled {
+			return out, failure("ACCESS_DENIED")
+		}
 	}
 	if source != nil {
 		if !validSource(*source) || s.Sources == nil {
