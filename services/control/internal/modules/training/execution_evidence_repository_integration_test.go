@@ -198,3 +198,23 @@ func TestActualTrainingExecutionEvidenceAdmission(t *testing.T) {
 	}
 	changeOutcome(raw)
 }
+
+func TestActualAcceptedResultJSONBMayExceedRawBudget(t *testing.T) {
+	if os.Getenv("PROJECT_ONE_REPOSITORY_ENGINE") != "postgresql" {
+		t.Skip("this test checks PostgreSQL JSONB normalization")
+	}
+	g := acceptedAdapterGraph(t, acceptedAdapterSetup(t), "normalized_result_budget")
+	var projectionBytes int64
+	if e := g.f.Store.QueryRow(g.ctx, g.statement(
+		"SELECT octet_length(outcome::text) FROM training_attempts WHERE id=$1", "", g.attempt,
+	)).Scan(&projectionBytes); e != nil {
+		t.Fatal(e)
+	}
+	if projectionBytes <= g.c.Recipe.Resources.MaximumResultBytes {
+		t.Fatal("fixture must grow after JSONB normalization")
+	}
+	out, e := g.s.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job)
+	if e != nil || out.Descriptor.ManifestSHA256 != g.reportSHA {
+		t.Fatal("normalized outcome exceeded only the original byte budget", e)
+	}
+}

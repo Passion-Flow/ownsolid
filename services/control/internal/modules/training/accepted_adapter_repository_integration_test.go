@@ -219,6 +219,14 @@ func acceptedAdapterGraph(t *testing.T, g acceptedAdapterStory, variant string) 
 	set("memory_enforcement", "linux_cgroup_memory_cpu_fsize_wall")
 	set("device_profile", wire.ProductionProfile)
 	raw := acceptedAdapterRaw(t, envelope)
+	if variant == "normalized_result_budget" {
+		c.Recipe.Resources.MaximumResultBytes = int64(len(raw))
+		g.c = c
+		request, e = c.ContainerRequest()
+		if e != nil {
+			t.Fatal("exact raw result budget", e)
+		}
+	}
 	result, e := wire.DecodeResult(raw, request, agent.ApprovedModel().Repository)
 	if e != nil {
 		t.Fatal("synthetic envelope around unchanged CPU result", e)
@@ -259,7 +267,7 @@ func acceptedAdapterGraph(t *testing.T, g acceptedAdapterStory, variant string) 
 	var acceptedArtifact any = g.artifact
 	wrong := strings.Repeat("f", 64)
 	switch variant {
-	case "":
+	case "", "normalized_result_budget":
 	case "terminal_state":
 		finalState = "failed"
 	case "terminal_attempt":
