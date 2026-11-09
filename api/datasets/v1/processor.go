@@ -18,6 +18,9 @@ const PublishOperation = "publish"
 const MaxRequestBytes = 16384
 const MaximumDiagnosticBytes = 16384
 
+// NearDuplicatePlanFile is the protected publication plan in the attempt scope.
+const NearDuplicatePlanFile = "near-duplicates.json"
+
 var idPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 var hashPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)
 var seedPattern = regexp.MustCompile(`^[0-9a-f]{32}$`)
@@ -35,18 +38,19 @@ func ValidID(value string) bool {
 func ValidDigest(value string) bool { return hashPattern.MatchString(value) }
 
 type ProcessorRequest struct {
-	SchemaVersion         int       `json:"schema_version"`
-	Operation             string    `json:"operation"`
-	JobID                 string    `json:"job_id"`
-	AttemptID             string    `json:"attempt_id"`
-	ScopeDirectory        string    `json:"scope_directory"`
-	InputFile             string    `json:"input_file"`
-	InputSHA256           string    `json:"input_sha256"`
-	OutputDirectory       string    `json:"output_directory"`
-	Limits                Limits    `json:"limits"`
-	Resources             Resources `json:"resources"`
-	Seed                  *string   `json:"seed,omitempty"`
-	ValidationBasisPoints *int      `json:"validation_basis_points,omitempty"`
+	SchemaVersion           int       `json:"schema_version"`
+	Operation               string    `json:"operation"`
+	JobID                   string    `json:"job_id"`
+	AttemptID               string    `json:"attempt_id"`
+	ScopeDirectory          string    `json:"scope_directory"`
+	InputFile               string    `json:"input_file"`
+	InputSHA256             string    `json:"input_sha256"`
+	OutputDirectory         string    `json:"output_directory"`
+	Limits                  Limits    `json:"limits"`
+	Resources               Resources `json:"resources"`
+	Seed                    *string   `json:"seed,omitempty"`
+	ValidationBasisPoints   *int      `json:"validation_basis_points,omitempty"`
+	NearDuplicatePlanSHA256 string    `json:"near_duplicate_plan_sha256,omitempty"`
 }
 
 func (r ProcessorRequest) Validate() error {
@@ -64,10 +68,13 @@ func (r ProcessorRequest) Validate() error {
 	}
 	switch r.Operation {
 	case InspectOperation:
-		if r.Seed != nil || r.ValidationBasisPoints != nil {
+		if r.Seed != nil || r.ValidationBasisPoints != nil || r.NearDuplicatePlanSHA256 != "" {
 			return errors.New("DATASET_PROCESSOR_REQUEST_INVALID")
 		}
 	case PublishOperation:
+		if r.NearDuplicatePlanSHA256 != "" && !ValidDigest(r.NearDuplicatePlanSHA256) {
+			return errors.New("DATASET_PROCESSOR_REQUEST_INVALID")
+		}
 		if r.Seed == nil || r.ValidationBasisPoints == nil || ValidateSplit(*r.Seed, *r.ValidationBasisPoints) != nil {
 			return errors.New("DATASET_SPLIT_CONFIGURATION_INVALID")
 		}
@@ -366,7 +373,7 @@ func (m Manifest) Validate(request ProcessorRequest) error {
 }
 func KnownError(code string) bool {
 	switch code {
-	case "DATASET_JSON_INVALID", "DATASET_FIELDS_INVALID", "DATASET_TEXT_INVALID", "DATASET_SOURCE_INVALID", "DATASET_LINE_TOO_LARGE", "DATASET_ENCODING_INVALID", "DATASET_BOM_FORBIDDEN", "DATASET_EMPTY_LINE", "DATASET_ROW_LIMIT", "DATASET_EMPTY_SOURCE", "DATASET_FILE_TOO_LARGE", "DATASET_DUPLICATE_FIELD", "DATASET_SOURCE_CHANGED", "DATASET_SOURCE_DIGEST_INVALID", "DATASET_PROCESSOR_LIMITS_INVALID", "DATASET_PROCESSOR_RESOURCES_INVALID", "DATASET_PROCESSOR_REQUEST_INVALID", "DATASET_PROCESSOR_PATH_INVALID", "DATASET_PROCESSOR_TIMEOUT", "DATASET_PROCESSOR_FAILED", "DATASET_PROCESSOR_MEMORY_EXCEEDED", "DATASET_PROCESSOR_RESULT_TOO_LARGE", "DATASET_OUTPUT_CONFLICT", "DATASET_SPLIT_CONFIGURATION_INVALID", "DATASET_SPLIT_INSUFFICIENT_GROUPS", "DATASET_VALIDATION_FAILED":
+	case "DATASET_JSON_INVALID", "DATASET_FIELDS_INVALID", "DATASET_TEXT_INVALID", "DATASET_SOURCE_INVALID", "DATASET_LINE_TOO_LARGE", "DATASET_ENCODING_INVALID", "DATASET_BOM_FORBIDDEN", "DATASET_EMPTY_LINE", "DATASET_ROW_LIMIT", "DATASET_EMPTY_SOURCE", "DATASET_FILE_TOO_LARGE", "DATASET_DUPLICATE_FIELD", "DATASET_SOURCE_CHANGED", "DATASET_SOURCE_DIGEST_INVALID", "DATASET_PROCESSOR_LIMITS_INVALID", "DATASET_PROCESSOR_RESOURCES_INVALID", "DATASET_PROCESSOR_REQUEST_INVALID", "DATASET_PROCESSOR_PATH_INVALID", "DATASET_PROCESSOR_TIMEOUT", "DATASET_PROCESSOR_FAILED", "DATASET_PROCESSOR_MEMORY_EXCEEDED", "DATASET_PROCESSOR_RESULT_TOO_LARGE", "DATASET_OUTPUT_CONFLICT", "DATASET_SPLIT_CONFIGURATION_INVALID", "DATASET_SPLIT_INSUFFICIENT_GROUPS", "DATASET_VALIDATION_FAILED", "DATASET_NEAR_DUPLICATE_BUDGET_EXCEEDED":
 		return true
 	}
 	return false

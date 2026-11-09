@@ -9,7 +9,7 @@ import sys
 sys.dont_write_bytecode=True
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from projectone_data import VERSION
-from projectone_data.boundary import read_request,apply_limits,write_result
+from projectone_data.boundary import read_request,read_near_plan,apply_limits,write_result
 from projectone_data.validation import DataError,inspect_file
 from projectone_data.publication import materialize
 
@@ -26,8 +26,9 @@ def main():
    result.update(status='valid' if inspected.valid() else 'invalid',total_rows=inspected.total_rows,invalid_rows=inspected.invalid_rows,errors_truncated=inspected.errors_truncated,fatal_source_error=inspected.fatal_source_error,rows=[asdict(row) for row in inspected.rows],errors=[asdict(error) for error in inspected.errors],**({'fatal_source_line_number':inspected.fatal_source_line_number} if inspected.fatal_source_line_number is not None else {}))
   else:
    if not inspected.valid():raise DataError('DATASET_VALIDATION_FAILED')
+   near_plan=read_near_plan(request,limits.maximum_rows)
    artifacts=output/'artifacts';artifacts.mkdir(mode=0o700)
-   result.update(status='prepared',manifest=materialize(inspected.rows,artifacts,request['seed'],request['validation_basis_points'],inspected.source_sha256))
+   result.update(status='prepared',manifest=materialize(inspected.rows,artifacts,request['seed'],request['validation_basis_points'],inspected.source_sha256,near_plan))
   write_result(output,result,maximum);print(json.dumps({'status':'prepared' if request['operation']=='publish' else result['status'],'job_id':request['job_id'],'attempt_id':request['attempt_id']}));return 0
  except (DataError,OSError,ValueError,TypeError,MemoryError,RecursionError) as error:
   code=error.code if isinstance(error,DataError) else 'DATASET_PROCESSOR_MEMORY_EXCEEDED' if isinstance(error,MemoryError) else 'DATASET_PROCESSOR_FAILED'

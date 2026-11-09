@@ -233,6 +233,10 @@
         "operation": {
           "const": "publish"
         },
+        "near_duplicate_plan_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
         "seed": {
           "type": "string",
           "pattern": "^[a-f0-9]{32}$"
