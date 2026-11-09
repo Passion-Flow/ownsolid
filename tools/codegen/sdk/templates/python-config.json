@@ -1,7 +1,8 @@
 {
   "content_type_overrides": {
     "application/x-ndjson": "application/octet-stream",
-    "font/ttf": "application/octet-stream"
+    "font/ttf": "application/octet-stream",
+    "text/csv": "application/octet-stream"
   },
   "post_hooks": []
 }
