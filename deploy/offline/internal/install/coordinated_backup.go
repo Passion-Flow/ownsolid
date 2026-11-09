@@ -247,7 +247,7 @@ func (o *operation) coordinatedControl(ctx context.Context) (string, bool, error
 }
 
 func (o *operation) coordinatedDB(ctx context.Context) (coordinatedDB, error) {
-	const observe = `SELECT json_build_object('cluster', system_identifier, 'oid', d.oid, 'limit', datconnlimit)
+	const observe = `SELECT json_build_object('cluster', system_identifier, 'oid', d.oid::bigint, 'limit', datconnlimit)
 		FROM pg_database d CROSS JOIN pg_control_system()
 		WHERE datname='ownsolid' AND datallowconn AND NOT pg_is_in_recovery()`
 	var state coordinatedDB
