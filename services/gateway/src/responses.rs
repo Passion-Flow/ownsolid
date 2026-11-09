@@ -1,7 +1,7 @@
 use crate::configuration::Result;
 use crate::protocol::{ChatRequest, Completion, FinishReason, Usage};
+use crate::streaming::named_event;
 use serde_json::{Value, json};
-use std::io::Write;
 use uuid::Uuid;
 
 /// Metadata shared by JSON responses and all lifecycle events of one request.
@@ -256,5 +256,5 @@ fn event(output: &mut Vec<u8>, sequence: &mut u64, name: &str, mut data: Value) 
     data["type"] = json!(name);
     data["sequence_number"] = json!(*sequence);
     *sequence += 1;
-    write!(output, "event: {name}\ndata: {data}\n\n").expect("writing SSE to memory cannot fail");
+    named_event(output, name, data);
 }

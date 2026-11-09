@@ -1,6 +1,6 @@
 # Model traffic gateway
 
-The Rust gateway serves bounded model-list, chat and foreground text Responses traffic against the selected local backend. It is a separate data-plane process; the Go control service remains the authority for API keys, model aliases, scope, license and request admission.
+The Rust gateway serves bounded model-list, chat, foreground text Responses and Messages traffic against the selected local backend. It is a separate data-plane process; the Go control service remains the authority for API keys, model aliases, scope, license and request admission.
 
 ## Runtime path
 
@@ -47,6 +47,45 @@ in control's distribution package includes
 `TestRealGoRustPostgresForegroundResponses`. It needs the compiled gateway
 and an isolated PostgreSQL fixture. See the
 [development environment](../../docs/development/environment.md#database-integration-tests).
+
+## Anthropic Messages text
+
+Send `POST /v1/messages` over gateway HTTPS with `anthropic-version: 2026-10-21`
+and `Content-Type: application/json`. Supply one ownsolid workspace API key in
+`x-api-key` or `Authorization: Bearer <workspace API key>`. Use the public
+model alias for the key.
+
+```json
+{"model":"public-alias","system":"Use short sentences.","messages":[{"role":"user","content":"Summarize this procedure."}],"max_tokens":128,"stream":true}
+```
+
+The local text subset accepts alternating `user` and `assistant` turns,
+starting and ending with a user turn. A turn or top-level `system` is a
+nonempty string or an array with one plain `text` block. `max_tokens` is
+required and follows the gateway's configured bounds. Sampling uses the
+local gateway defaults. Unsupported versions, headers for client-selected
+workspaces or beta features, assistant prefill, tools, attachments, sampling
+overrides and custom stop sequences are rejected before generation.
+
+Omit `stream` or set it to false to receive a JSON message. A streaming caller
+receives `message_start`, indexed text block events, `message_delta` with
+verified output tokens and `message_stop`. The initial input count comes
+from the backend tokenizer. The gateway reports final usage only after
+storing its outcome. Supported stop reasons are `end_turn` and `max_tokens`.
+Unsupported backend stop semantics produce an error. If a stream fails after
+headers and the connection permits it, the gateway sends a named `error`
+event. Close the connection to cancel the request.
+
+JSON and SSE use the same workspace authorization, budget and outcome
+reporting as the other generation routes. Error envelopes include an ownsolid
+`error.code` alongside the protocol error type and both request ID forms.
+Full coding-tool interoperability remains tracked in
+[GW-103](../../docs/product/roadmap/gateway.md).
+
+Run `cargo test --locked --offline messages_` in this service to check the
+loopback protocol. The native control `gateway_integration` test
+`TestRealGoRustPostgresForegroundMessages` exercises the same endpoint against
+the real distribution owner and an isolated PostgreSQL fixture.
 
 ## Backend connection recovery
 
