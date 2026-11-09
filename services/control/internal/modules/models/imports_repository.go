@@ -166,7 +166,7 @@ func (s *Service) uploadChunk(ctx context.Context, a identity.Auth, id string, o
 	if e != nil {
 		return Import{}, e
 	}
-	if importCancellationPending(initial) {
+	if importUploadClosed(initial) {
 		return Import{}, fail("MODEL_IMPORT_STATE_CONFLICT")
 	}
 	if source == nil || offset < 0 || offset%ChunkBytes != 0 || size < 1 || size > ChunkBytes || offset > initial.ExpectedBytes-size || size != min(ChunkBytes, initial.ExpectedBytes-offset) {
@@ -185,7 +185,7 @@ func (s *Service) uploadChunk(ctx context.Context, a identity.Auth, id string, o
 			if e != nil {
 				return e
 			}
-			if current.State != "uploading" || importCancellationPending(current) {
+			if current.State != "uploading" || importUploadClosed(current) {
 				return fail("MODEL_IMPORT_STATE_CONFLICT")
 			}
 			if current.CatalogDigest != initial.CatalogDigest || current.ExpectedBytes != initial.ExpectedBytes || resolveImportManifest(current.CatalogDigest) == nil {
@@ -249,7 +249,7 @@ func (s *Service) queueImport(ctx context.Context, a identity.Auth, id, reason, 
 	if e != nil {
 		return Import{}, e
 	}
-	if importCancellationPending(initial) {
+	if importUploadClosed(initial) {
 		return Import{}, fail("MODEL_IMPORT_STATE_CONFLICT")
 	}
 	if !reasonValid(reason) {
@@ -267,7 +267,7 @@ func (s *Service) queueImport(ctx context.Context, a identity.Auth, id, reason, 
 		if e != nil {
 			return e
 		}
-		if importCancellationPending(current) {
+		if importUploadClosed(current) {
 			return fail("MODEL_IMPORT_STATE_CONFLICT")
 		}
 		if resolveImportManifest(current.CatalogDigest) == nil {
