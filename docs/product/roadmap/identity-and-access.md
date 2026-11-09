@@ -18,7 +18,7 @@ security keys without depending on an upstream identity provider.
 
 ## P1 Enterprise release
 
-- [ ] IAM-101 Local accounts: invitation, login, logout, password reset, lockout (P1) - Catalog: F001
+- [x] IAM-101 Local accounts: invitation, login, logout, password reset, lockout (P1) - Catalog: F001 - Evidence: dcac35a5 and [disconnected account acceptance](../../research/local-accounts.md#verification)
 - [ ] IAM-102 Generic OIDC sign-in (replaces the Gitea-only connector) (P1) - Catalog: F445
 - [ ] IAM-103 LDAP and Active Directory directory login and group sync (P1) - Catalog: F447
 - [ ] IAM-104 SAML 2.0 sign-in (P1) - Catalog: F446
@@ -29,7 +29,7 @@ security keys without depending on an upstream identity provider.
 - [ ] IAM-109 Service accounts and scoped API keys with expiry, rotation and revocation (P1) - Catalog: F464, F484
 - [ ] IAM-110 Group-to-role mapping from upstream identity with preview (P1) - Catalog: F453
 - [ ] IAM-111 Session management: idle and absolute timeout, device list, forced sign-out, revocation propagation (P1) - Catalog: F454, F571
-- [ ] IAM-112 Separate Admin and Portal entrances with audience-bound sessions (P1) - Catalog: F424, F432, F545
+- [x] IAM-112 Separate Admin and Portal entrances with audience-bound sessions (P1) - Catalog: F424, F432, F545 - Evidence: a2531e60 and [disconnected browser entrance acceptance](../../research/browser-entrance-sessions.md#verification)
 - [ ] IAM-113 Enable single sign-on from the typed install configuration: `ownsolid-install` has no input for providers, their CA or the keyring, so an installed product cannot turn it on (P1)
 - [ ] IAM-114 Refuse two browser entrances on one hostname unless the deployment opts in, because browsers do not isolate cookies by port; the opt-in, the sign-in page and the operator documentation state that the audience check is then the only separation ([ADR 0027](../../decisions/0027-entrance-addresses.md)) (P1)
 - [x] IAM-115 Users page: accounts with status and filters, invite and resend, disable and enable an account with a reason (P1) - Evidence: 24d6b00; real Chromium on an offline install on `ownsolid-cpu` with a TLS mail server accepted a real invitation, disabled the new account, which ended its session, and enabled it, three runs in a row, 2026-11-07
