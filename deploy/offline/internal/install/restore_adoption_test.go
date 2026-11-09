@@ -98,6 +98,13 @@ func assertApplyAfterRestore(t *testing.T, c Config, installer, config string, r
 		t.Fatal("restore did not switch to a new database OID")
 	}
 	adopted(true)
+	query("ALTER DATABASE " + databaseName + " SET " + restoreAdoptionSetting + " TO '" + binding + "'")
+	adopted(false)
+	if err := op.recordRestoreAdoption(t.Context(), ""); err != nil {
+		t.Fatal(err)
+	}
+	adopted(true)
+	t.Log("the previous physical identity could not impersonate the adopted database")
 
 	for range 2 {
 		out, err := run(installer, "apply", "--config", config)

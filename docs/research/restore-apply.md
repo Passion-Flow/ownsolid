@@ -47,3 +47,37 @@ mismatched physical identity cannot claim adoption. Verify failure to record
 adoption triggers rollback before starting the candidate. Run install,
 backup, restore and apply with the Linux amd64 egress recorder as the only
 default route and require zero product attempts.
+
+## Verify the database-level binding after scratch allocation
+
+After the REL-114 allocation change, exercise REL-112 through the ordinary
+logical backup, restore and Apply paths. A database-level setting can be
+present but refer to the previous database and table OIDs. PostgreSQL's
+[pg_db_role_setting catalog](https://www.postgresql.org/docs/18/catalog-pg-db-role-setting.html)
+stores role and database defaults separately. Reuse the exact current
+cluster, database and table comparison. A stale setting at the correct
+scope must fail admission, just as a matching role default does.
+
+Verify on disconnected PostgreSQL that restoring the old database's marker
+does not bypass reconciliation. Restore the authentic marker through the
+existing adoption writer, then run Apply twice. Compare the administrator,
+tenant, workspace, credential bytes and adopted database OID. Verify both
+HTTPS origins, and keep a later original write in the retained old
+database. This is verification of the existing mechanism and changes no
+dependencies or release requirements.
+
+### Disconnected reapply acceptance
+
+On 2026-11-09, the focused one-container fixture ran PostgreSQL 18.6 and
+native Control on `ownsolid-cpu`. Backup verified 118 tables. Restore
+selected a new OID and retained the original database and its later tenant
+write under the previous name. Installing the previous database's
+identity as a database-level default returned false from the actual
+adoption check. The existing adoption writer restored the current marker.
+
+Two subsequent Apply runs reported `BOOTSTRAP_RESTORED_VERIFIED` and
+`INSTALL_COMPLETE`. Both HTTPS origins were ready after each run. The
+adopted OID, administrator, tenant, workspace and credential bytes
+were stable, and the later write remained in the previous database.
+The recorder captured only its IPv4, IPv6 and DNS probes. The single
+container published no host ports and was removed after the drill.
