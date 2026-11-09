@@ -85,7 +85,8 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	id := a.alias.ID
 	previewPath := "/api/v1/admin/distribution/workspaces/" + workspace + "/aliases/" + id + "/cutovers/preview"
 	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
-	admin := httpfixture.New(t, server, "admin", nil)
+	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
+	admin := httpfixture.New(t, server, "admin", schemas)
 	admin.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": c.password}, http.StatusOK, "")
 	publicState := func(state distribution.CutoverState) map[string]any {
 		return map[string]any{
@@ -116,7 +117,7 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	applyPreview := func(in distribution.CutoverRequest, key string) (distribution.CutoverResult, error) {
 		t.Helper()
 		before := read()
-		preview := admin.Write(http.MethodPost, previewPath, in, http.StatusOK, "")
+		preview := admin.Write(http.MethodPost, previewPath, in, http.StatusOK, "AliasCutoverPreviewResponse")
 		after, ok := preview["after"].(map[string]any)
 		if before != read() || len(preview) != 2 || !reflect.DeepEqual(preview["before"], publicState(before.state)) ||
 			!ok || after["revision"] != float64(before.state.Revision+1) {
@@ -142,16 +143,16 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 		t.Fatal("expected a separate tenant")
 	}
 	foreignServer := httpfixture.NewTLSServer(t, identityhttp.New(foreign.s.Identity))
-	foreignAdmin := httpfixture.New(t, foreignServer, "admin", nil)
+	foreignAdmin := httpfixture.New(t, foreignServer, "admin", schemas)
 	foreignAdmin.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": foreign.password}, http.StatusOK, "")
-	if problem := foreignAdmin.Write(http.MethodPost, previewPath, pause, http.StatusNotFound, ""); problem["code"] != "RESOURCE_NOT_FOUND" {
+	if problem := foreignAdmin.Write(http.MethodPost, previewPath, pause, http.StatusNotFound, "Problem"); problem["code"] != "RESOURCE_NOT_FOUND" {
 		t.Fatal("foreign tenant did not receive the scoped problem")
 	}
 	paused, e := applyPreview(pause, key)
 	if e != nil || paused.Alias.DisabledAt == nil || paused.Alias.HeldRequests != 1 || paused.AppliedRevision != 2 {
 		t.Fatal("pause did not preserve owner", e)
 	}
-	if problem := admin.Write(http.MethodPost, previewPath, pause, http.StatusConflict, ""); problem["code"] != "VERSION_CONFLICT" {
+	if problem := admin.Write(http.MethodPost, previewPath, pause, http.StatusConflict, "Problem"); problem["code"] != "VERSION_CONFLICT" {
 		t.Fatal("stale preview did not return a revision conflict")
 	}
 	replay, e := c.s.Cutover(ctx, c.a, workspace, id, pause, key, uuid.NewString())
@@ -161,7 +162,7 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	_, e = c.s.Admit(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, a.input(), uuid.NewString())
 	check(t, e, "MODEL_ALIAS_UNAVAILABLE")
 	resume := distribution.CutoverRequest{Action: "resume", ExpectedRevision: 2, Reason: "Do not clear an unknown physical request by waiting"}
-	if problem := admin.Write(http.MethodPost, previewPath, resume, http.StatusConflict, ""); problem["code"] != "ALIAS_REQUESTS_UNDRAINED" {
+	if problem := admin.Write(http.MethodPost, previewPath, resume, http.StatusConflict, "Problem"); problem["code"] != "ALIAS_REQUESTS_UNDRAINED" {
 		t.Fatal("preview accepted a target with a held request")
 	}
 	_, e = c.s.Cutover(ctx, c.a, workspace, id, resume, uuid.NewString(), uuid.NewString())

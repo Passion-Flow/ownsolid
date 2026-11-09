@@ -81,7 +81,9 @@ The Admin preview succeeded without an idempotency key. It rejected
 missing CSRF, missing and duplicate JSON fields, foreign tenant and
 Portal callers, an old revision and a held request. Existing apply
 replay, audit rollback and pause/admission lock ordering passed.
-The HTTP test uses synthetic deployment observations.
+The HTTP test uses synthetic deployment observations. The regression validates
+the four previews against the published response schema and the foreign,
+stale and undrained replies against the shared Problem schema.
 
 ## Public contract and client acceptance
 
