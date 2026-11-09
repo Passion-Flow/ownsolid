@@ -165,6 +165,8 @@ func TestGatewayAuditFailureRollsBackAuthorityAndNeverReturnsSecret(t *testing.T
 	}
 }
 
+const syntheticGatewayGPU = "GPU-12345678-1234-1234-1234-123456789abc"
+
 func (c scenario) readyDeployment(t *testing.T) deployments.Deployment {
 	t.Helper()
 	ctx := context.Background()
@@ -173,7 +175,7 @@ func (c scenario) readyDeployment(t *testing.T) deployments.Deployment {
 	if _, e := c.s.DB.Exec(ctx, "INSERT INTO model_versions(id,tenant_id,workspace_id,name,model_key,catalog_digest,manifest,state,created_by) VALUES($1,$2,$3,'Synthetic catalog metadata',$4,$5,$6,'ready',$7)", model, c.a.Me.Workspace.TenantID, c.a.Me.Workspace.ID, agentwire.ApprovedModel().ModelKey, agentwire.ModelCatalogDigest(), manifest, c.a.Me.User.ID); e != nil {
 		t.Fatal(e)
 	}
-	const gpu = "GPU-12345678-1234-1234-1234-123456789abc"
+	const gpu = syntheticGatewayGPU
 	h := c.handshake
 	h.Inference = &agentwire.InferenceObservation{GPUs: []agentwire.NVIDIAGPU{{UUID: gpu, Name: "Synthetic GPU", DriverVersion: "580.1", MemoryTotalMiB: 16384, MemoryFreeMiB: 16384, ComputeCapability: 8, MIGMode: "Disabled", ObservedAt: time.Now().UTC()}}, ObservedAt: time.Now().UTC()}
 	if _, e := c.s.Nodes.Heartbeat(ctx, c.node.NodeID, c.node.Credential, h); e != nil {

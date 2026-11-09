@@ -23,6 +23,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
   - The existing authorized request history supports scoped JSON extraction by key. The [usage history research](../../research/gateway-usage-history.md) records the disconnected PostgreSQL and native gateway run, including canonical receipt verification, pagination, unknown usage, and rejection across tenants. An export artifact and its public contract and UI remain open.
 - [ ] GW-108 Load balancing, failover and circuit breaking across replicas (P1) - Catalog: F075, F076
 - [ ] GW-109 Request tracing from caller to deployment and GPU (P1) - Catalog: F082
+  - [Request correlation acceptance](../../research/gateway-request-tracing.md) followed native Responses and Messages UUIDs through engine dispatch, PostgreSQL history and authenticated Admin placement lookup. Real GPU execution and distributed spans remain open.
 - [ ] GW-110 Optional external OpenAI-compatible upstreams for connected sites (P1) - Catalog: F071
 - [ ] GW-111 Configuration publishing with diff preview and rollback (P1) - Catalog: F083
   - The control service previews pause, resume, retarget and rollback with the same current-state checks as apply. [PostgreSQL acceptance](../../research/gateway-cutover-preview.md) records preview/apply parity, no writes, stale and foreign refusal, and existing cutover coverage. The versioned Admin preview contract and Console flow remain open.

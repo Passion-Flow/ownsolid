@@ -21,6 +21,18 @@ digest, the same check used for report replay. If a stored receipt fails
 verification, the request returns `STORAGE_UNAVAILABLE` without a partial
 page. See the [usage history verification](../../../../../docs/research/gateway-usage-history.md).
 
+## Trace an admitted call
+
+Keep the gateway's X-Request-ID response header. In the matching site and
+cell, use the Admin request detail at
+/api/v1/sites/{site}/cells/{cell}/admin/distribution/workspaces/{workspace}/requests/{request_id}.
+Read the node, deployment ID and admitted revision. Use the Admin
+deployment detail at
+/api/v1/sites/{site}/cells/{cell}/admin/deployments/{deployment_id}
+to read the GPU assignment. Verify that the node and revision match the
+admitted request before attributing placement. The gateway uses the
+same UUID in the generation request to its local engine.
+
 ## Cutover preview
 
 The control service's `PreviewCutover` uses the same authorization, expected

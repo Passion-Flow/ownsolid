@@ -16,12 +16,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	gatewaywire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
-	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
-	"github.com/google/uuid"
 	"io"
 	"math/big"
 	"net"
@@ -32,10 +26,19 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
+
+	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	gatewaywire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+	"github.com/google/uuid"
 )
 
 type gatewayChainMode int
@@ -164,6 +167,9 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 	ownedSecrets := []string{*access.gateway.Secret, *access.key.Secret}
 	control.StartTLS()
 	defer control.Close()
+	foreground := mode == foregroundResponses || mode == foregroundMessages
+	var generationIDs sync.Map
+	callerID := uuid.NewString()
 	var generations, backendCalls atomic.Int32
 	var paused atomic.Bool
 	resume := make(chan struct{}, 1)
@@ -196,6 +202,13 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 			return
 		}
 		generations.Add(1)
+		if foreground {
+			id := r.Header.Get("X-Request-ID")
+			if !gatewaywire.ValidID(id) || id == callerID {
+				t.Error("backend did not receive a gateway-generated request ID")
+			}
+			generationIDs.Store(id, struct{}{})
+		}
 		usage := map[string]any{"prompt_tokens": 7, "completion_tokens": 2, "total_tokens": 9}
 		if body["stream"] == false {
 			json.NewEncoder(w).Encode(map[string]any{"id": "chatcmpl-synthetic", "object": "chat.completion", "created": 1, "model": agentwire.InferenceModelName, "choices": []any{map[string]any{"index": 0, "message": map[string]any{"role": "assistant", "content": "Synthetic local completion \u4e2d\u6587"}, "finish_reason": "stop"}}, "usage": usage, "private_diagnostic": "must not forward"})
@@ -326,6 +339,9 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 		if e != nil {
 			t.Fatal(e)
 		}
+		if foreground {
+			r.Header.Set("X-Request-ID", callerID)
+		}
 		if path == "/v1/messages" {
 			r.Header.Set("Anthropic-Version", "2026-10-21")
 			r.Header.Set("X-Api-Key", key)
@@ -365,8 +381,8 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 			t.Fatal("foreign credential reached backend or created a local admission", err)
 		}
 	}
-	if mode == foregroundResponses || mode == foregroundMessages {
-		verifyForegroundText(t, mode, c, access, request, &paused, &backendCalls, &generations)
+	if foreground {
+		verifyForegroundText(t, mode, c, access, request, &paused, &backendCalls, &generations, &generationIDs)
 		return
 	}
 	chat := func(stream bool) map[string]any {
@@ -580,6 +596,7 @@ func verifyForegroundText(
 	request func(string, string, any) *http.Response,
 	paused *atomic.Bool,
 	backendCalls, generations *atomic.Int32,
+	generationIDs *sync.Map,
 ) {
 	t.Helper()
 	path, prefix, delta, terminal := "/v1/responses", "resp_", "response.output_text.delta", "response.completed"
@@ -685,6 +702,11 @@ func verifyForegroundText(
 	}
 	for _, row := range history.Items {
 		expected, ok := reported[row.ID]
+		if _, dispatched := generationIDs.LoadAndDelete(row.ID); !dispatched ||
+			row.NodeID != access.alias.NodeID || row.DeploymentID != access.alias.DeploymentID ||
+			row.DeploymentRevision != access.alias.DeploymentRevision {
+			t.Fatal("gateway request ID did not match the engine dispatch and admitted placement")
+		}
 		if !ok || row.Outcome == nil {
 			t.Fatal("native gateway history missing a reported receipt")
 		}
@@ -694,6 +716,24 @@ func verifyForegroundText(
 			t.Fatal("native gateway history changed usage, latency or cancellation")
 		}
 		delete(reported, row.ID)
+	}
+	adminIdentity := *c.s.Identity
+	adminIdentity.Config.Server.AdminOrigin = httpfixture.AdminOrigin
+	adminServer := httpfixture.NewTLSServer(t, identityhttp.New(&adminIdentity))
+	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
+	deploymentSchemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/deployments/openapi.json")
+	schemas["DeploymentResponse"] = deploymentSchemas["DeploymentResponse"]
+	admin := httpfixture.New(t, adminServer, "admin", schemas)
+	admin.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": c.password}, 200, "")
+	trace := admin.Call("GET", "/api/v1/admin/distribution/workspaces/"+access.alias.WorkspaceID+"/requests/"+id, nil, 200, "GatewayRequestResponse")
+	if trace["id"] != id || trace["node_id"] != access.alias.NodeID || trace["deployment_id"] != access.alias.DeploymentID ||
+		trace["deployment_revision"] != float64(access.alias.DeploymentRevision) {
+		t.Fatal("authorized detail did not identify the admitted deployment revision")
+	}
+	deployment := admin.Call("GET", "/api/v1/admin/deployments/"+access.alias.DeploymentID, nil, 200, "DeploymentResponse")
+	if deployment["id"] != trace["deployment_id"] || deployment["node_id"] != trace["node_id"] ||
+		deployment["revision"] != trace["deployment_revision"] || deployment["gpu_uuid"] != syntheticGatewayGPU {
+		t.Fatal("authorized deployment detail did not resolve the same fixture placement")
 	}
 	if _, err := c.s.RevokeKey(context.Background(), access.owner, access.alias.WorkspaceID, access.key.Key.ID, "Synthetic foreground text revocation", uuid.NewString()); err != nil {
 		t.Fatal(err)
