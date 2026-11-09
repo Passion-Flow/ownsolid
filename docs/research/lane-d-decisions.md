@@ -185,3 +185,50 @@ against the real Admin dispatcher. It published input rows with the installed
 Python 3.12 processor, queued one job on replay, refused changed intent and
 a foreign tenant, and preserved exactly one cancellation audit after a
 stale-revision refusal and a successful retry at the new revision.
+
+## Shared Linux installer test identity
+
+The [factory test instructions](../development/environment.md#factory-tests-on-linux)
+and [factory runner](../../tools/dev/test-offline.sh) start the compiled
+installer test binary as a real non-root user and group using
+[setpriv](https://man7.org/linux/man-pages/man1/setpriv.1.html) on a
+writable tmpfs. The temporary installation and the files in its backup
+then have a representable owner and group. Keep Make and its build
+recipes outside a UID-only user namespace.
+
+On Linux amd64 with loopback only, a one-rule GNU Make 4.3 recipe
+reproduced the prior exit 2. The UID-only namespace exposed the
+[unmapped group as the overflow GID](https://man7.org/linux/man-pages/man7/user_namespaces.7.html).
+The child failed at setresgid(-1, 65534, -1) with EINVAL before
+executing /bin/sh. Mapping both IDs, or running the recipe as
+nobody:nogroup through setpriv, passed.
+
+The same compiled installer binary ran these exact cases against a
+read-only checkout mount and disposable tmpfs.
+
+- TestRestorePutsBackAMissingModelBeforeTheDatabaseChanges
+- TestRestoreLeavesAMatchingModelAndReplacesADamagedOne
+- TestRestoreOntoAnEmptyInstallationBringsBackItsFilesAndRoles
+
+Host root failed configuration validation with INSTALL_CONFIG_INVALID.
+With only the UID mapped, all three reached restore and failed at
+fchownat with UID 1000, GID 65534 and EINVAL. The model cases reported
+INSTALL_RESTORE_MODELS_FAILED. The empty-installation case reported
+INSTALL_RESTORE_FILES_FAILED. Both the complete UID/GID mapping and
+the documented nobody:nogroup run passed all three cases.
+
+For a narrow replay, build the Linux installer test binary, then run
+from its package directory with an accessible private tmpfs.
+
+~~~sh
+setpriv --reuid=nobody --regid=nogroup --clear-groups \
+  env TMPDIR="$fixture_tmpfs" HOME=/nonexistent \
+  "$installer_test_binary" -test.count=1 \
+  -test.run '^TestRestore(PutsBackAMissingModelBeforeTheDatabaseChanges|LeavesAMatchingModelAndReplacesADamagedOne|OntoAnEmptyInstallationBringsBackItsFilesAndRoles)$'
+~~~
+
+The installer handoff is the ownership publication in
+[restoreFile](../../deploy/offline/internal/install/restore.go).
+Preserve the backup UID/GID and its restore assertions. The verified
+correction is the test invocation's identity and scratch setup.
+The evidence covers the named restore cases and Make spawn probe.
