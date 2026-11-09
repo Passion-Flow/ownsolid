@@ -131,3 +131,11 @@ for schema and key custody, define backup, rotation and record retention,
 publish the API contract and ship localized UI. Federated sign-in needs
 to enter the same factor gate. The candidate blocks alternate Admin session
 issuance for enrolled accounts until the caller can provide the verified proof.
+
+The repository-wide test reaches the frontend audit coverage check after
+passing the Go, gateway and Chromium suites. That check requires
+`audit.action.auth.totp_enabled` and `audit.action.auth.totp_revoked` in
+both the English and Simplified Chinese catalogs. The candidate keeps the
+two precise server audit actions. The frontend owner needs to add both
+labels with the account security UI. The focused reproduction is
+`cd web && pnpm --filter @ownsolid/i18n exec vitest run src/audit-coverage.test.ts`.
