@@ -229,3 +229,55 @@ audits for the discarded import. The resumed import still produced
 a single version and five scoped audits, and its nine retired files
 still matched. The original interruption and wrong-file evidence
 is retained alongside the combined discard proof.
+
+## Portal model to personal key (UX-117, S-304 and S-306)
+
+[S-304 and S-306](../product/plan/README.md#s-304--models-for-users-models-in-the-portal)
+have separate live model and key cases. The catalogue case reaches the key
+form and cancels. The key case issues from its own page. Start the existing
+key lifecycle at the catalogue drawer so it proves that the model shown
+there is the model the issued key can call. Use the real key and gateway
+admission/outcome contracts, including the existing gateway process stand-in.
+Check that the owner can read the three persisted requests for the key and
+that a different session cannot read those calls. A working selector or a
+scripted call log alone cannot prove that ownership is enforced.
+
+During the catalogue read, interrupt only the workspace models request
+using [Playwright routing](https://playwright.dev/docs/network#handle-requests).
+Leave the aliases and deployments on real HTTPS. The callable name must stay
+in the table while the unavailable facts say they are unknown. Release the
+route, use the visible retry, and read the recovered facts. Returning a fake
+alias could hide a broken join, so the test does not substitute API responses.
+Switch to a second workspace where the same member has access and no model
+is published. Check the catalogue and key list there, then return to the
+original workspace. Separately verify that the server refuses direct reads
+for a third workspace where the member has no access. A 403-only check
+would miss a UI cache that retained the previous workspace's rows.
+
+The case uses the existing local PostgreSQL and HTTPS fixture profiles,
+approved catalogue metadata, and the gateway protocol fixture. There is no
+new dependency, model download or dataset. Keep API key secrets out of
+command arguments, traces and screenshots. Evidence from this flow covers
+publication metadata, key ownership and call history. Inference, a portal
+price source and an administrator description remain separate capabilities.
+
+Run the [Portal installation recipe](../development/environment.md#browser-test-against-an-installation)
+from `web/apps/portal` with its Portal origin, the gateway command and a
+member fixture that can switch workspaces.
+
+```sh
+pnpm exec playwright test e2e/live-models.spec.ts e2e/live-keys.spec.ts --workers=1
+```
+
+The local Mac run used Chromium, private TLS and PostgreSQL 18.6 in an
+internal container network. The server verified the previously approved
+Qwen files at startup. The scripted node supplied deployment freshness,
+and the admin publication, member sign-in, key writes and call reads used
+the real HTTP contracts. The browser saw three successes with the initial
+key, restored their history after switching away and back, and found no
+records for that key in the administrator's portal session. The replacement
+worked alongside the old key during the overlap and was refused after
+revocation. PostgreSQL found two published aliases and five reported
+calls, all owned by the member in the original workspace. The separate
+catalogue run recovered the real model facts with the visible retry after
+the forced read failure. No browser request went beyond the fixture origin.

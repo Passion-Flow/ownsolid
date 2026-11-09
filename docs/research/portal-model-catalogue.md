@@ -12,8 +12,9 @@ models their workspace may call, what each costs and what it is good for.
   gives its `model_id` and `GET .../workspaces/{workspace}/models` gives the model: name, whether it arrived or was
   fine-tuned here, its base, context length, architecture and licence. All three reads are open to a member of the
   workspace on the portal entrance and scoped on the server.
-- **What it costs: nothing to show.** No price exists anywhere in the server. Rate cards are TEN-107 and the usage
-  ledger TEN-106, both open.
+- **What it costs.** TEN-107 has an internal rate history for occurrence-rated workspace showback.
+  The [showback contract](metering-showback.md) still lacks an authorized read API. The portal model
+  catalogue cannot use that history as a per-model price.
 - **What it is good for: facts only.** The gateway serves `POST /v1/chat/completions` and `GET /v1/models`, and
   every model this release can import is a text model, so "chat and text generation" is true of all of them. No
   field holds a person's own words about a model.
@@ -70,12 +71,13 @@ its context length.
 | Failure | Behaviour | Covered by |
 | --- | --- | --- |
 | Alias read fails | Problem notice with Try again, nothing else claimed | `models.spec.ts` |
-| Deployments or models read fails | Names stay, notice and Try again, model facts read "Not known" | `models.spec.ts` |
+| Deployments or models read fails | Names stay, notice and Try again, model facts read "Not known" | `models.spec.ts`, `live-models.spec.ts` |
 | A deployment or model is gone | That row reads "Not known" | `model-catalogue.test.ts` |
 | A disabled alias | Not listed | `model-catalogue.test.ts`, `models.spec.ts` |
 | Deployment stopped | Listed as not available, with what to do | `models.spec.ts` |
 | No workspace, or nothing published | Says what to ask for | `models.spec.ts` |
 | Another workspace's models | The server scopes the reads to the workspace in the path and the caller's membership | Existing portal HTTP tests of each read |
+| Switch to a second permitted workspace | Models and keys from the first workspace disappear; returning restores its own key history | `live-keys.spec.ts` |
 | More than ten pages of aliases | Says the list is not complete | `everyPage`'s `complete` |
 
 ## What the finished item must do

@@ -11,7 +11,7 @@ const personCommand = process.env.OWNSOLID_LIVE_PERSON_COMMAND ?? '';
 const name = `cat-${String(Date.now())}`;
 
 test.skip(origin === '' || fixture === '' || personCommand === '', 'needs the gateway fixture');
-test.use(liveOptions);
+test.use({ ...liveOptions, trace: 'off' });
 
 /** Runs a fixture command with arguments and gives what it printed. */
 function run(command: string, ...args: string[]): string {
@@ -27,7 +27,7 @@ function statusOf(page: Page, path: string): Promise<number> {
 
 test('a person reads what their workspace may call, and nothing of another', async ({
   browser,
-}) => {
+}, testInfo) => {
   test.setTimeout(10 * 60_000);
   run(fixture, 'prepare', name);
   const person = JSON.parse(run(personCommand, name)) as {
@@ -47,14 +47,31 @@ test('a person reads what their workspace may call, and nothing of another', asy
     if (url.pathname.includes('/admin/')) administrative.push(url.pathname);
   });
 
+  const modelFacts = `/api/v1/sites/default/cells/default/workspaces/${person.workspace}/models`;
+  const factsRoute = (url: URL) => url.pathname === modelFacts;
+  await page.route(factsRoute, (route) => route.abort('connectionreset'));
   await page.goto('/models');
   await page.getByLabel('Email').fill(person.email);
   await page.getByLabel('Password').fill(person.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByRole('heading', { name: 'Models', level: 1 })).toBeVisible();
 
-  // The name, the model joined to it through its deployment, and whether it can be called.
+  // The server still answers for aliases and deployments while the model facts cannot be read.
   const row = page.getByRole('row', { name: new RegExp(name) });
+  const retry = page.getByRole('button', { name: 'Try again' });
+  await expect(retry).toBeVisible();
+  await expect(row.getByText('Not known').first()).toBeVisible();
+  await expect(row.getByText('Can be called')).toBeVisible();
+  await testInfo.attach('portal-model-facts-unavailable', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
+  await page.unroute(factsRoute);
+  const facts = page.waitForResponse(
+    (response) => factsRoute(new URL(response.url())) && response.ok(),
+  );
+  await retry.click();
+  await facts;
   await expect(row.getByText('Published model')).toBeVisible();
   await expect(row.getByText('2,048 tokens')).toBeVisible();
   await expect(row.getByText('Can be called')).toBeVisible();
@@ -68,12 +85,6 @@ test('a person reads what their workspace may call, and nothing of another', asy
   await expect(drawer.getByText('Apache-2.0')).toBeVisible();
   await expect(drawer.getByText('Not ready in this release', { exact: false })).toBeVisible();
   await expectAccessible(page);
-
-  // The way on from here works: the published model can take a key.
-  await drawer.getByRole('link', { name: 'Issue a key' }).click();
-  const issuing = page.getByRole('dialog', { name: 'Issue a key' });
-  await expect(issuing.getByLabel('Model').locator('option', { hasText: name })).toHaveCount(1);
-  await issuing.getByRole('button', { name: 'Cancel' }).click();
 
   // Each read answers for the person's own workspace and is refused for another.
   const base = '/api/v1/sites/default/cells/default/workspaces';
