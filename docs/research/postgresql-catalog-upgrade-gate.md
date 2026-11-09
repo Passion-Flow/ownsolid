@@ -126,19 +126,63 @@ then-current schema, including the exact down SQL and catalog replay.
 
 ## Dataset and metering successors
 
-DAT-101 follows the Gateway migration and needs the coordinated
-REL-103/NET-101 checkpoint to bind both dataset references. The isolated
-fixture at 8d7a6363 creates dataset_draft_import_candidates with a
-tenant, workspace, dataset and draft foreign key. It omits site and
-cell. The release handoff must bind the candidate to the draft's
-stored site and cell and verify those identities through the
-[dataset restore boundary](dataset-import.md).
+The DAT-101 owner candidate at `fa82645c` adds the six-column scope
+key on `dataset_drafts` and requires the exact draft's site and cell
+on `dataset_draft_import_candidates`. The up SHA-256 is
+`d7e8eb61bd8afa4c1a3a1363d092685d13c55ca35d6965257457247336066868`.
+The down SHA-256 is
+`8ed40d3afaafa83fb4d119e90a01323fa09967f839831e1fa2159b3f8a6c06fb`.
+This is a retained owner revision. The coordinated release restore
+also needs both dataset references in `snapshotReferences` and
+`referenceFiles`, with the REL-103/NET-101 checkpoint binding.
+The isolated owner replay restored the normalized file and supplied
+the original separately. See the [dataset restore boundary](dataset-import.md).
 
-The metering receipt tests at cc2f1c3a create usage_ledger with a
-tenant and workspace foreign key. That fixture also omits site and
-cell. Its release handoff needs both non-null scope columns with
-local defaults and a disconnected check of its least-privilege
-producer, cross-scope refusal and append-only behavior. See the
-[metering admission requirements](usage-ledger.md). Each owner
-hands off unnumbered up and down SQL. Assign a version from the
-actual committed main tail after the preceding gate passes.
+The metering handoff at `73a3382f` and `273929ee` adds both scope
+defaults to `usage_ledger` and includes site and cell in its reporting
+index. It preserves the unique producer and event key across scopes.
+The up SHA-256 is
+`230b2182ba3a953b6231b76b001f28972362e0a30e8869cf4209413fffdd21b3`.
+The down SHA-256 is
+`d8e296ead25bd9ba8ed890bde9b178890a102dadf4c9888a88a3c64e5c9d9eb3`.
+The down SQL requires its transaction and refuses an accrued ledger.
+The owner qualified the candidate from a logical schema-55 restore.
+The production Gateway Report call still needs the accepted schema
+and its verified projection hook. See [metering admission](usage-ledger.md).
+
+## Shared successor catalog and runtime role inputs
+
+The three unnumbered candidates each add one business table and no
+sequence. GW-120 and DAT-101 each add a named composite key to an
+existing parent. Register each new table in the PostgreSQL-only
+`postgreSQLTables` grant list when its migration is accepted. That
+list feeds fresh access preparation, existing-role upgrade and the
+grant inspector. The embedded SQL is checked against this list by
+`TestCatalogMatchesImmutableMigrations`. Keep the shared MySQL list
+at its existing scope. The catalog fingerprint covers table shape,
+constraints, indexes and functions. It omits ACLs, so verify those
+through the separate runtime admission. See the
+[grant catalog](../../services/control/internal/operations/databaseaccess/postgres_catalog.go)
+and [PostgreSQL GRANT](https://www.postgresql.org/docs/18/sql-grant.html).
+
+Use the same restricted runtime role throughout an upgrade. Each new
+table follows the PostgreSQL SELECT, INSERT, UPDATE and DELETE grant
+contract. GW-120's immutability trigger and the metering append-only
+trigger enforce mutation refusal within those grants. Verify them with
+the runtime role as well as catalog readback. Keep `schema_migrations`
+SELECT-only and `audit_chain_head` inaccessible. Verify that missing
+grants prevent readiness, the grant-only resume retains the same
+principal and ledger, and a replay leaves the accepted state intact.
+
+The production logical restore uses `--no-owner` and `--no-privileges`.
+Run the target runtime-access owner after restore and check its
+effective privileges separately from the structure. Reuse the SCI
+pinned PostgreSQL 18.6 and pgvector 0.8.7 fixture and its retained
+55 through 58 archives as predecessors. After each actual numbered
+migration, extend the same catalog matrix with the previous native
+tail and the current logical restore, including the schema-55
+reparse history. Compare the existing accepted data and ledger,
+exercise the applicable down SQL on disposable copies and verify
+the new table count, release checksum and exact fresh and restored
+catalogs. Keep the module-specific Gateway, dataset and metering
+acceptance alongside the shared matrix.
