@@ -82,3 +82,34 @@ license notice, and offline use. Verify the 16 MiB and 128 MiB cases both
 in isolation and after the database integration tests. Retain the 64 MiB
 absolute ceiling and the 24 MiB allowed growth. Remove each input and output
 once its measurement is complete.
+
+## Dry run against a sealed source
+
+An operator must be able to inspect a filter that removes every row before
+applying it. The publishing path still rejects an empty dataset. A separate
+dry run uses the same decoder, cleaning rules, schema checks, and limits
+to count retained and removed rows. Like
+[Hugging Face streaming transforms](https://huggingface.co/docs/datasets/stream#filter),
+the policy is evaluated per record. Use Go's
+[`io.Discard`](https://pkg.go.dev/io#Discard) for normalized rows during
+preview. The output byte count is an estimate of the would-be artifact and
+no output digest or persistent artifact is issued. Avoid writing a second
+normalized copy and keep Parquet's bounded private decoder scratch.
+
+Require a source length and digest, verify the entire transfer, and only
+then release complete samples within the existing budgets. An incomplete,
+oversized, altered, or invalid source yields no sample or output reference.
+Keep samples outside the serialized report. The caller must authorize the
+immutable source and the recipient before exposing a preview. This is the
+intake primitive for the authorized workspace policy flow in S-503.
+
+Verify identical counts and samples between a dry run and a successful
+application, preview an all-filtered result with no artifact, and reject
+both digest mismatches and a valid prefix followed by a transport error.
+The implementation adds only standard library code and synthetic fixtures,
+with the same offline and commercial-use license terms documented above.
+
+The Linux amd64 loopback-only run verified dry-run parity for JSONL and the
+filtered row in a real PyArrow 26.0.1 Parquet fixture. The pinned wheel was
+installed without an index and passed its lockfile digest check. The
+dry-run scratch directory was empty on success and failure.
