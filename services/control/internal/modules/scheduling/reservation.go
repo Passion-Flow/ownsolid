@@ -252,26 +252,35 @@ func checkWorkspaceCapacity(ctx context.Context, q transaction.Executor, a Attem
 }
 
 func readWorkspaceUsageWithin(ctx context.Context, q transaction.Executor, tenant, workspace string) (Resources, error) {
+	usage, err := readUsageByWorkspaceWithin(ctx, q, tenant, []string{workspace})
+	return usage[workspace], err
+}
+
+func readUsageByWorkspaceWithin(ctx context.Context, q transaction.Executor, tenant string, workspaces []string) (map[string]Resources, error) {
 	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT r.key,sum(r.value::numeric)::text
+		`SELECT s.workspace_id::text,r.key,sum(r.value::numeric)::text
  FROM scheduling_reservations s CROSS JOIN LATERAL jsonb_each_text(s.demand) r
- WHERE s.tenant_id=$1 AND s.workspace_id=$2 AND s.released_at IS NULL GROUP BY r.key`, tenant, workspace))
+ WHERE s.tenant_id=$1 AND s.workspace_id=ANY($2::uuid[]) AND s.released_at IS NULL
+ GROUP BY s.workspace_id,r.key`, tenant, workspaces))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	used := make(Resources)
+	used := make(map[string]Resources, len(workspaces))
 	for rows.Next() {
+		var workspace, raw string
 		var resource Resource
-		var raw string
-		if err := rows.Scan(&resource, &raw); err != nil {
+		if err := rows.Scan(&workspace, &resource, &raw); err != nil {
 			return nil, err
 		}
 		quantity, err := parseReservationUsage(resource, raw)
 		if err != nil {
 			return nil, err
 		}
-		used[resource] = quantity
+		if used[workspace] == nil {
+			used[workspace] = make(Resources)
+		}
+		used[workspace][resource] = quantity
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
