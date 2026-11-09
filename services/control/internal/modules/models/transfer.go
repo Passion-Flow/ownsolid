@@ -8,10 +8,10 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/jackc/pgx/v5"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+	"github.com/jackc/pgx/v5"
 )
 
 // ReadyInTransaction locks the scoped immutable version before creating a reference.
@@ -82,8 +82,22 @@ func (s *Service) OpenTransferWithin(ctx context.Context, q transaction.Executor
 	if e != nil || after.Size() != info.Size() || !after.ModTime().Equal(info.ModTime()) {
 		return out, fail("MODEL_FILE_CHANGED")
 	}
+	digest, e := modelTransferDigest(input, approved, hash.Sum(nil))
+	if e != nil {
+		return out, e
+	}
 	keep = true
-	return httpserver.Download{File: file, Offset: input.Offset, Size: input.Length, SHA256: hex.EncodeToString(hash.Sum(nil)), ContentType: "application/octet-stream"}, nil
+	return httpserver.Download{File: file, Offset: input.Offset, Size: input.Length, SHA256: digest, ContentType: "application/octet-stream"}, nil
+}
+
+func modelTransferDigest(input wire.ModelFileRequest, asset wire.ModelFile, sum []byte) (string, error) {
+	digest := hex.EncodeToString(sum)
+	// A complete range can be checked against the pinned catalogue using
+	// the existing response hash, without reopening or rereading the file.
+	if input.Offset == 0 && input.Length == asset.SizeBytes && digest != asset.SHA256 {
+		return "", fail("MODEL_FILE_CHANGED")
+	}
+	return digest, nil
 }
 
 // InvalidateAuthorities prevents restored background work from reusing an old administrator intent.
