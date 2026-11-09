@@ -77,15 +77,15 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
 	if input.Bytes > policy.Limits.MaximumBytes {
 		return DraftSourceResult{}, failure("DATASET_FILE_TOO_LARGE")
 	}
-	var original, kind string
+	var kind string
 	switch format {
 	case SourceCSV:
-		original, kind = "source.csv", "csv_utf8_draft_v1"
+		kind = "csv_utf8_draft_v1"
 	case SourceParquet:
 		if c.importer.parquet == nil {
 			return DraftSourceResult{}, failure("DATASET_STORAGE_UNAVAILABLE")
 		}
-		original, kind = "source.parquet", "parquet_draft_v1"
+		kind = "parquet_draft_v1"
 	default:
 		return DraftSourceResult{}, failure("VALIDATION_FAILED")
 	}
@@ -95,7 +95,7 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
 	}{kind, input}, a.Me.User.ID)
 	var authority *string
 	var result DraftSourceResult
-	err := s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, original, input, intent,
+	err := s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, input, intent,
 		func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, previous DraftSourceResult) error {
 			result = previous
 			if previous.Draft.ID != "" {
@@ -125,6 +125,7 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
 	if err != nil {
 		return DraftSourceResult{}, err
 	}
+	original := draftOriginalFile(format)
 	keepFiles := false
 	defer func() {
 		if !keepFiles {
@@ -136,7 +137,7 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
 		return DraftSourceResult{}, err
 	}
 	draftID := uuid.NewString()
-	err = s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, original, input, intent,
+	err = s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, input, intent,
 		func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, previous DraftSourceResult) error {
 			result = previous
 			if previous.Draft.ID != "" {
@@ -189,7 +190,74 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
 	return committed(result, err)
 }
 
-func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, workspace, dataset, key string, format SourceFormat, originalFile string, input DraftSourceRequest, intent []byte, apply func(context.Context, transaction.Executor, workspaces.Workspace, DraftSourceResult) error) error {
+// Read returns a scoped draft and its report only after verifying both
+// immutable artifacts. It does not need an upload body or an active decoder.
+func (c *DraftSourceCandidate) Read(ctx context.Context, a identity.Auth, workspace, dataset, id string) (DraftSourceResult, error) {
+	var result DraftSourceResult
+	s := c.service
+	err := s.transaction(ctx, a, workspace, false, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+		if w.TenantID != s.Store.namespace.TenantID {
+			return failure("DATASET_NOT_FOUND")
+		}
+		if _, err := lockedDataset(ctx, tx, w, dataset); err != nil {
+			return err
+		}
+		draft, err := lockedDraft(ctx, tx, w, dataset, id)
+		if err != nil {
+			return err
+		}
+		if err = draftAccess(a, w, draft, false); err != nil {
+			return err
+		}
+		var object, format string
+		var raw []byte
+		err = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `
+			SELECT d.source_object_id::text,c.source_format,c.report
+			FROM dataset_drafts d JOIN dataset_draft_import_candidates c
+			  ON (c.tenant_id,c.workspace_id,c.dataset_id,c.draft_id)=(d.tenant_id,d.workspace_id,d.dataset_id,d.id)
+			WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.dataset_id=$3 AND d.id=$4`,
+			w.TenantID, w.ID, dataset, id)).Scan(&object, &format, &raw)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return failure("DATASET_NOT_FOUND")
+		}
+		if err != nil {
+			return err
+		}
+		result, err = s.Store.verifyDraftSource(draft, object, SourceFormat(format), raw)
+		return err
+	})
+	return committed(result, err)
+}
+
+func draftOriginalFile(format SourceFormat) string {
+	switch format {
+	case SourceCSV:
+		return "source.csv"
+	case SourceParquet:
+		return "source.parquet"
+	default:
+		return ""
+	}
+}
+
+func (s *Store) verifyDraftSource(draft Draft, object string, format SourceFormat, raw []byte) (DraftSourceResult, error) {
+	original := draftOriginalFile(format)
+	var report SourceImportReport
+	if original == "" || json.Unmarshal(raw, &report) != nil || draft.SourceReceivedAt == nil ||
+		report.SourceBytes < 1 || report.SourceBytes > wire.MaximumBytesCeiling || !wire.ValidDigest(report.SourceSHA256) ||
+		report.OutputBytes != draft.ExpectedBytes || report.OutputSHA256 != draft.SourceSHA256 {
+		return DraftSourceResult{}, failure("DATASET_DATA_INVALID")
+	}
+	if _, err := s.Source(object, report.OutputSHA256, report.OutputBytes); err != nil {
+		return DraftSourceResult{}, err
+	}
+	if err := s.verifyDraftOriginal(object, original, report); err != nil {
+		return DraftSourceResult{}, err
+	}
+	return DraftSourceResult{Draft: draft, Report: report}, nil
+}
+
+func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, workspace, dataset, key string, format SourceFormat, input DraftSourceRequest, intent []byte, apply func(context.Context, transaction.Executor, workspaces.Workspace, DraftSourceResult) error) error {
 	return s.transaction(ctx, a, workspace, true, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
 		if w.TenantID != s.Store.namespace.TenantID {
 			return failure("DATASET_STORAGE_UNAVAILABLE")
@@ -228,19 +296,17 @@ func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, w
 		if err = draftAccess(a, w, draft, true); err != nil {
 			return err
 		}
-		var report SourceImportReport
-		if storedFormat != string(format) || json.Unmarshal(raw, &report) != nil || draft.SourceReceivedAt == nil ||
-			report.SourceBytes != input.Bytes || report.SourceSHA256 != input.SHA256 ||
-			report.OutputBytes != draft.ExpectedBytes || report.OutputSHA256 != draft.SourceSHA256 {
+		if storedFormat != string(format) {
 			return failure("DATASET_DATA_INVALID")
 		}
-		if _, err = s.Store.Source(object, report.OutputSHA256, report.OutputBytes); err != nil {
+		result, err := s.Store.verifyDraftSource(draft, object, format, raw)
+		if err != nil {
 			return err
 		}
-		if err = s.Store.verifyDraftOriginal(object, originalFile, report); err != nil {
-			return err
+		if result.Report.SourceBytes != input.Bytes || result.Report.SourceSHA256 != input.SHA256 {
+			return failure("DATASET_DATA_INVALID")
 		}
-		return apply(ctx, tx, w, DraftSourceResult{Draft: draft, Report: report})
+		return apply(ctx, tx, w, result)
 	})
 }
 
