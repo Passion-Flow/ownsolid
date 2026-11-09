@@ -1,0 +1,22 @@
+registry:
+  address: 10.77.107.1:5443
+  pullSecret: site-registry
+images:
+  control: sha256:1111111111111111111111111111111111111111111111111111111111111111
+release:
+  manifestSHA256: "2222222222222222222222222222222222222222222222222222222222222222"
+control:
+  runtimeSecret: control-runtime-v1
+  modelClaim: models
+  resources:
+    requests: {cpu: 200m, memory: 256Mi}
+    limits: {cpu: "1", memory: 1Gi}
+ingress:
+  className: traefik
+  entryPoint: websecure
+  adminHost: admin.site.test
+  portalHost: portal.site.test
+  tlsSecret: browser-tls-v1
+smtp:
+  host: smtp.site.test
+  fromAddress: operator@site.test

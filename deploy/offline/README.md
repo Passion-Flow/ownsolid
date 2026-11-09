@@ -363,6 +363,9 @@ retains the bound container. The Registry serves one signed release per root.
 The release reader can pull and has no upload rights. Its local operation
 records live in `operations.log` in the Registry root.
 
+For Kubernetes delivery, use the signed image values overlay and the
+[offline Helm chart](../helm/ownsolid/README.md).
+
 ### Exercise the isolated Registry path
 
 On a disposable Linux amd64 host with Docker, containerd, OpenSSL, curl, jq,

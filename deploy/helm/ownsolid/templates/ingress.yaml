@@ -1,0 +1,24 @@
+{{- $admin := .Values.ingress.adminHost | toString -}}
+{{- $portal := .Values.ingress.portalHost | toString -}}
+{{- $dns := "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?[.])+[a-z]([a-z0-9-]{0,61}[a-z0-9])?$" -}}
+{{- if or (not (regexMatch $dns $admin)) (not (regexMatch $dns $portal)) (eq $admin $portal) -}}
+{{- fail "HELM_INGRESS_HOSTS_INVALID: set two distinct fully qualified DNS names for Admin and Portal" -}}
+{{- end -}}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "ownsolid.controlName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ownsolid.controlSelector" . | nindent 4 }}
+spec:
+  ingressClassName: {{ required "HELM_INGRESS_CLASS_REQUIRED: set ingress.className" .Values.ingress.className | quote }}
+  entryPoints:
+    - {{ required "HELM_INGRESS_ENTRY_REQUIRED: set ingress.entryPoint" .Values.ingress.entryPoint | quote }}
+  routes:
+    - match: {{ printf "HostSNI(\x60%s\x60) || HostSNI(\x60%s\x60)" $admin $portal | quote }}
+      services:
+        - name: {{ include "ownsolid.controlName" . }}
+          port: https
+  tls:
+    passthrough: true

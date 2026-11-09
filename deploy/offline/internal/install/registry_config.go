@@ -65,8 +65,8 @@ func loadRegistrySite(path string) (registrySite, error) {
 	if d.Decode(c) != nil || d.Decode(&extra) != io.EOF {
 		return site, errors.New("INSTALL_REGISTRY_CONFIG_INVALID: use a single document with known settings")
 	}
-	addr, err := netip.ParseAddrPort(c.Listen)
-	if err != nil || addr.String() != c.Listen || !addr.Addr().Is4() || !addr.Addr().IsPrivate() || addr.Port() < 1024 ||
+	addr, ok := siteRegistryAddress(c.Listen)
+	if !ok ||
 		!canonicalPath(c.Root) || c.Root == "/" || strings.Contains(c.Root, ",") || strings.ContainsFunc(c.Root, unicode.IsControl) ||
 		!registryNamePattern.MatchString(c.Name) || c.UID < 1 || c.UID >= 1<<31 || c.GID < 1 || c.GID >= 1<<31 ||
 		c.RequestSeconds < 1 || c.RequestSeconds > 1800 {
@@ -113,6 +113,11 @@ func loadRegistrySite(path string) (registrySite, error) {
 	}{*c, wire.Digest(files[0]), wire.Digest(site.cert), site.auth.Username})
 	site.digest = wire.Digest(raw)
 	return site, nil
+}
+
+func siteRegistryAddress(value string) (netip.AddrPort, bool) {
+	address, err := netip.ParseAddrPort(value)
+	return address, err == nil && address.String() == value && address.Addr().Is4() && address.Addr().IsPrivate() && address.Port() >= 1024
 }
 
 func (s registrySite) installConfig() Config {

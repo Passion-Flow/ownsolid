@@ -20,6 +20,7 @@ func runBundle(command string, args []string, out io.Writer) error {
 	flags.SetOutput(io.Discard)
 	archive := flags.String("bundle", "", "signed offline release archive")
 	policy := flags.String("verification", "", "protected public verification configuration")
+	registry := flags.String("registry", "", "private site Registry IP and port")
 	config := flags.String("config", "", "typed site configuration without delivery inputs")
 	output := flags.String("output", "", "new directory for verified payloads on the configured mount")
 	baseline := flags.String("baseline", "", "previous independently verified signed archive")
@@ -29,7 +30,7 @@ func runBundle(command string, args []string, out io.Writer) error {
 	timeout := flags.Duration("timeout", 30*time.Minute, "time limit for verifying or applying the release")
 	restore := command == "restore-bundle"
 	if err := flags.Parse(args); err != nil || flags.NArg() != 0 || *archive == "" || *policy == "" ||
-		(restore || command == "apply-bundle" || command == "registry-bundle" || command == "upgrade-plan" || command == "upgrade-bundle" || command == "upgrade-patch" || command == "rollback-bundle") != (*config != "") || (command == "prepare-bundle") != (*output != "") || (command == "upgrade-bundle" || command == "upgrade-patch") != (*backup != "") || (command == "upgrade-patch") != (*baseline != "") || restore != (*from != "") || *timeout <= 0 {
+		(restore || command == "apply-bundle" || command == "registry-bundle" || command == "upgrade-plan" || command == "upgrade-bundle" || command == "upgrade-patch" || command == "rollback-bundle") != (*config != "") || (command == "prepare-bundle") != (*output != "") || (command == "upgrade-bundle" || command == "upgrade-patch") != (*backup != "") || (command == "upgrade-patch") != (*baseline != "") || restore != (*from != "") || (command == "helm-images") != (*registry != "") || *timeout <= 0 {
 		return errors.New(usage)
 	}
 	invalidIdentity := false
@@ -56,6 +57,8 @@ func runBundle(command string, args []string, out io.Writer) error {
 		return install.ApplyBundle(ctx, *config, *archive, verification, install.ExecRunner{}, out)
 	case "registry-bundle":
 		return install.ApplyRegistryBundle(ctx, *config, *archive, verification, install.ExecRunner{}, out)
+	case "helm-images":
+		return install.WriteHelmImageValues(ctx, *archive, *registry, verification, out)
 	case "upgrade-plan":
 		return install.PlanUpgrade(ctx, *config, *archive, verification, install.ExecRunner{}, out)
 	case "upgrade-bundle":
