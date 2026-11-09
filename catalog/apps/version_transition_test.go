@@ -21,6 +21,7 @@ type catalogReleaseFixture struct {
 	version, engine, before, variant string
 	composeFields                    string
 	predecessors                     []ReleasePin
+	dependencies                     []Dependency
 }
 
 func transitionCatalog(t *testing.T) (*os.Root, ed25519.PublicKey, ed25519.PrivateKey) {
@@ -65,6 +66,7 @@ func writeTransitionRelease(t *testing.T, catalog *os.Root, key ed25519.PrivateK
 	manifest.Artifact = Artifact{Engine: fixture.engine, SHA256: digestBytes(artifact)}
 	manifest.Images = []string{image.image}
 	manifest.UpgradeFrom = fixture.predecessors
+	manifest.Dependencies = fixture.dependencies
 	if fixture.before != "" {
 		manifest.Platform.Before = fixture.before
 	}
