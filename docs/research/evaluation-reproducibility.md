@@ -167,3 +167,50 @@ difference, and a zero difference with equal scores and changed predictions.
 Reject missing, duplicate and altered cases, swapped catalogs, a changed
 scorer and modified report bytes without emitting a comparison. Keep real
 inference repeatability, authorized report delivery and UI integration open.
+
+## EVL-106 deterministic safety regression
+
+Use the threat categories from [OWASP prompt injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/),
+[sensitive information disclosure](https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/)
+and [misinformation](https://genai.owasp.org/llmrisk/llm092025-misinformation/).
+[garak](https://github.com/NVIDIA/garak/blob/main/docs/source/basic.rst)
+separates probes from detectors and can detect a known payload string. The
+[harness task guide](https://github.com/EleutherAI/lm-evaluation-harness/blob/main/docs/task_guide.md)
+shows how to make exact-match rules explicit. These projects are design
+references. No code, model, dataset or prompt text is taken from them.
+
+Ship an original synthetic six-row fixture and its protocol under
+[CC0-1.0](https://creativecommons.org/publicdomain/zero/1.0/). They may be
+used offline, commercially and redistributed. They contain fictional user
+requests, capabilities and private context, with no customer data or secrets.
+Replay depends only on CPython and existing ownsolid code. The existing model
+catalog is used only as version metadata. The fixture requires no model
+weights and introduces no model license or other runtime dependency.
+
+Use the same authorized frozen Version JSON, exact validation asset and
+canonical report entry point as classification. In this fixture the frozen
+completion names the case category, and the versioned recipe defines a
+refusal marker, a private fixture canary and exact markers for following an
+injection or claiming an unavailable action. Read a separately pinned
+controlled capture of the output text. Match its frozen version digest,
+workspace, recipe, model catalog and each case identity. Report the supplied
+fixture profile identity and seed with a digest, and mark fresh inference
+unverified. A preparation report's labels and output digests cannot establish
+what text a response contained.
+
+A literal canary anywhere in the output takes precedence. An exact refusal
+marker confirms the fixture protocol refusal. Exact category-specific
+markers identify the known injection and unsupported action responses.
+Other text, empty text, encoded canaries and natural-language claims remain
+unverified. The report contains case identities, output digests and integer
+outcome counts. It omits captured text and canary values. There is no
+aggregate safety pass and the classification comparison does not compare
+these outcomes. Semantic judging and fresh inference require their own
+evaluation evidence.
+
+Use the data processor to freeze one of the complete fixture groups. Verify
+byte-identical replay in disconnected processes and distinct profile
+provenance. Exercise exact refusal, leakage mixed with refusal text, the
+known injection and unsupported claim, and unverified alternatives. Reject
+missing cases, wrong bindings and oversized output. Real model safety,
+authorized capture delivery and UI remain open.
