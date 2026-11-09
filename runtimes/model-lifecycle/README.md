@@ -36,3 +36,39 @@ Existing strict controlled check from repository root with admitted pinned Pytho
     python3 -B tools/quality/model-lifecycle/unit.py
 
 Approved-model merge/generation, actual child cancellation/recovery, Go business acceptance, derived inference and target hardware remain separate checks. See [model-lifecycle validation](../../tests/validation/model-lifecycle).
+
+## Replay a captured evaluation
+
+Use the authorized frozen dataset `Version` JSON and its exact `validation.jsonl`
+asset. Use the accepted preparation's original `result.json` and its retained
+report SHA-256, the base model catalog, and the scorer recipe used by the
+capture. Preserve the digest of the dataset version JSON under the same
+authorized evidence handling. The command checks both pins, the workspace,
+the validation asset's content, the capture's holdout digest, and the model,
+recipe and per-case bindings.
+
+Run from the repository root with the local Python runtime.
+
+```sh
+PYTHONPATH=runtimes/model-lifecycle:runtimes/data-processing:runtimes/training \
+  python3 -B -m projectone_model_lifecycle.evaluation_report \
+  --dataset-version version.json --dataset-version-sha256 "$version_sha256" \
+  --validation validation.jsonl \
+  --capture result.json --capture-sha256 "$accepted_report_sha256" \
+  --model-catalog api/agent/v1/model-catalog.json \
+  --recipe api/model-lifecycle/v1/recipe.json > evaluation.json
+```
+
+Use the report after the command succeeds. To re-score and compare with a
+saved canonical report, repeat with `--check-report evaluation.json` and a
+different output destination. A mismatch returns a nonzero exit and emits no
+report. The version and capture digests are trust inputs obtained separately
+from the files being checked. The replay command assumes the caller's existing
+authority to obtain and retain those inputs.
+
+The report scores the saved base-model labels and records their output hashes.
+It keeps the preparation holdout ID separate from the published dataset
+version. It records the captured execution profile and marks fresh inference
+as unverified. It can reproduce the score from the captured labels, while
+tokenization, generation and label normalization require separate inference
+evidence. See the [replay design and acceptance](../../docs/research/evaluation-reproducibility.md#evl-101-offline-report-replay).
