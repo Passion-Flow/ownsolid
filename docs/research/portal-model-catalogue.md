@@ -15,9 +15,10 @@ models their workspace may call, what each costs and what it is good for.
 - **What it costs.** TEN-107 has an internal rate history for occurrence-rated workspace showback.
   The [showback contract](metering-showback.md) still lacks an authorized read API. The portal model
   catalogue cannot use that history as a per-model price.
-- **What it is good for: facts only.** The gateway serves `POST /v1/chat/completions` and `GET /v1/models`, and
-  every model this release can import is a text model, so "chat and text generation" is true of all of them. No
-  field holds a person's own words about a model.
+- **What it is good for: facts only in the browser.** The gateway serves `POST /v1/chat/completions`
+  and `GET /v1/models`, and every model this release can import is a text model. GW-120 has scoped
+  description handling in the PostgreSQL candidate. The generated Portal alias contract still
+  exposes the predecessor fields. See the [GW-120 acceptance and rollout boundary](gateway-model-description.md).
 
 ## How others do it
 
@@ -59,10 +60,10 @@ beside it, leading to the existing scoped issuance flow rather than opening a di
 page. Without a workspace the action is visible with the same access instructions as the keys page.
 If nothing is published, the issuance form explains that an administrator must publish a model.
 
-**An administrator's description waits.** Open WebUI and LiteLLM both let an administrator say what a model is for,
-and ownsolid should. It needs a column on `model_aliases`, a field on publishing and a way to change it (GW-120).
-Until that contract exists the page shows the model's known facts: text and chat, its base, and
-its context length.
+**An administrator's description waits for the published contract.** Open WebUI and LiteLLM both
+let an administrator say what a model is for. GW-120 covers persistence, publication and editing.
+The Portal can display the description once the production migration and the formal alias read
+contract land. It currently shows known capabilities, base model and context length.
 
 **POR-104 stays open** until prices and the description exist: its text names both.
 
@@ -107,3 +108,57 @@ the message in English and Simplified Chinese. This adds no dependency.
 The English installation rerun interrupted only the model facts read
 and recovered it through the visible retry. The catalogue browser suite
 also checked the Simplified Chinese notice and retry at 390 px.
+
+## Downloading trust from an endpoint
+
+The [GW-125 contract](../../api/openapi/v1/distribution/openapi.json) has
+scoped Admin and Portal downloads for an alias. The
+[gateway trust research](gateway-delivery.md#downloading-caller-trust-gw-125)
+defines the certificate-only format, the issuer and the server checks.
+The model catalogue displays a gateway endpoint before a person issues a
+key, and the Console deployment shows the same endpoint and a cURL sample.
+Put the shared secondary download action beside those endpoints. It uses
+the alias and the current workspace from the surrounding page. An issuer
+refusal explains who can provide trust for that endpoint. Transient
+failures use the existing retry notice, and a change of alias or workspace
+discards the previous download state. A click fetches the file on demand
+so ordinary catalogue reads stay independent of gateway trust.
+
+Reuse the key drawer control and its official generated request types.
+A link to the key page would make users issue or select a key to obtain
+public trust material. Loading PEM with the catalogue would turn every
+row into a separate attachment request. The shared on-demand control adds
+no dependency, model or dataset. Exercise both endpoint placements in
+Chromium using the activated alias from the key download fixture and
+check that the saved file has the same digest and issuer and verifies the
+advertised HTTPS name. Exercise a refused download without leaving the
+drawer or losing the endpoint.
+
+## Playground transport boundary
+
+[LiteLLM's Playground](https://docs.litellm.ai/docs/proxy/ui/chat_ui)
+offers model selection and model responses in the browser.
+The [Fetch standard](https://fetch.spec.whatwg.org/#http-cors-protocol)
+requires explicit cross-origin permission for an authenticated JSON
+request to another origin. The current
+[Control page policy](../../services/control/internal/modules/identity/http/handler.go)
+allows connections to the Portal origin, and the
+[Rust gateway router](../../services/gateway/src/routing.rs) has the
+key-authenticated public model endpoints. Its browser preflight path
+and a same-origin Portal model-call contract are both absent.
+
+For POR-105, wait for a same-origin Portal contract that authorizes
+the current workspace member and alias and records quota and usage
+through gateway admission. That keeps the existing page policy and
+lets the gateway retain control over model traffic. Direct cross-origin
+calls would require separate browser policy, certificate deployment
+and origin configuration. A browser-only proxy would have no
+production authorization and metering boundary. This research
+introduces no dependency, model or dataset.
+
+Verify one run, two-model comparison and copying the exact request
+with placeholders for credentials. Include workspace refusal, a failed
+side of a comparison, cancellation with released capacity, retry after
+an upstream failure, and a disconnected run through the real gateway.
+The S-304 price and description still require their formal Portal
+read contracts before the catalogue can display them.
