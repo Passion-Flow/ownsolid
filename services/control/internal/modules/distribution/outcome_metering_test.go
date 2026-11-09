@@ -33,13 +33,7 @@ func TestPostgresGatewayOutcomeMeteringAtomicRetry(t *testing.T) {
 	if err != nil || prior.RequestID != legacy.RequestID {
 		t.Fatal("default report requires no ledger", err)
 	}
-	ledger, err := os.ReadFile("../metering/testdata/ledger.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := c.s.DB.Exec(ctx, string(ledger)); err != nil {
-		t.Fatal(err)
-	}
+	installTestUsageLedger(t, c)
 	outcome := admit()
 	if _, err := c.s.DB.Exec(ctx, `CREATE FUNCTION refuse_synthetic_gateway_charge() RETURNS trigger
 		LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic metering failure'; END $$;
@@ -144,5 +138,16 @@ func TestPostgresGatewayOutcomeMeteringAtomicRetry(t *testing.T) {
 	var ledgerRows int
 	if err := c.s.DB.QueryRow(ctx, "SELECT count(*) FROM usage_ledger").Scan(&ledgerRows); err != nil || ledgerRows != 2 {
 		t.Fatal("projection wrote an extra ledger event", err, ledgerRows)
+	}
+}
+
+func installTestUsageLedger(t *testing.T, c scenario) {
+	t.Helper()
+	ledger, err := os.ReadFile("../metering/testdata/ledger.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.s.DB.Exec(t.Context(), string(ledger)); err != nil {
+		t.Fatal(err)
 	}
 }
