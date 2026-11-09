@@ -20,6 +20,7 @@ recovery and support tooling.
   - The installer also deploys the NATS JetStream cluster that gateways share liveness through and writes the `liveness_replica` section ([ADR 0022](../../decisions/0022-liveness-outside-the-database.md)).
 - [ ] REL-102 Published reliability targets for the reference topology (availability, RPO, RTO) (P1) - Catalog: F528
 - [ ] REL-103 Coordinated backup of database, objects, models and keys with a consistency point (P1) - Catalog: F355, F507
+  - The shipped local Compose profile passed the disconnected database, model and key drill. External object fencing and restore remain open. See the [acceptance and provider handoff](../../research/coordinated-local-backup.md#acceptance-and-provider-handoff).
 - [ ] REL-104 Restore into an empty air-gapped environment, tested every release (P1) - Catalog: F507
   - The temporary-signed Linux amd64 Compose drill passed for legacy and encrypted backups, rollback, both entrances and restored model files. The every-release production gate remains open. See the [acceptance evidence](../../research/signed-release-recovery.md#linux-amd64-acceptance).
 - [ ] REL-105 Diagnostic bundle: redacted logs, configuration and state for support (P1) - Catalog: F647

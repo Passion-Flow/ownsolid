@@ -69,6 +69,10 @@ redistribution and offline operation subject to their terms.
 ## Acceptance and provider handoff
 
 On isolated Linux amd64, use real PostgreSQL and the existing pinned model.
+The [native recovery fixture](../../services/control/internal/testing/recovery/models_test.go)
+loads approved files and seeds their exact published catalogue identity in a
+disposable PostgreSQL database. The coordinated drill follows that pattern
+with the shared model archive verifier and checks the source through Admin.
 Inject a normal PostgreSQL connection attempt after the fence, modify a
 protected file during backup, terminate the installer during its dump, recover
 in a fresh process, retry, and restore the resulting dump and file bytes.
@@ -86,3 +90,42 @@ needs idempotent acquire, verify and release/recover semantics, with a token
 bound to the same database and artifact roots. Provider credentials remain
 file references under the storage owner's custody. The end-to-end item remains
 open until a real provider passes failure, interruption and restore tests.
+
+## Linux amd64 acceptance
+
+`TestCoordinatedBackupIsolatedDocker` passed in 364.78 seconds on
+`ownsolid-cpu` running Ubuntu 24.04 amd64, Docker 29.1.3, Compose 2.40.3
+and PostgreSQL 18.6 at schema 57. The stock local profile was installed in
+a private Docker daemon in an isolated mount, network and PID namespace.
+Both default routes went to the egress recorder. The capture contained
+exactly the host TCP probe to `192.0.2.1:9` and the control TCP probe to
+`192.0.2.2:9`. The HTTPS listener on 8443 was inside that namespace.
+
+An object-enabled site configuration and a valid retained `creating`
+object record each refused before stopping control. PostgreSQL retained
+the seeded record. A file rewritten during backup was rejected even
+after the fixture restored the original bytes and mtime. No backup was
+published, and both entrances and the original control container and
+database limit recovered.
+
+Killing the installer after the fence and before `pg_dump` kept the
+writer stopped. PostgreSQL rejected a direct login as the application
+role and the installer refused a conflicting backup. A fresh
+`recover-backup` process restored the exact original container and
+connection limit of 23. A second recovery reported no pending work.
+
+The successful retry compared the live database to the verified logical
+dump and published 118 tables, 19 installation files and nine model files.
+A separate empty site restored the original tenant and administrator.
+Both HTTPS origins accepted the recovered administrator. The restored
+HMAC key, mail keyring, PostgreSQL password file and administrator
+credential matched the backup manifest. Admin returned the same ready
+Qwen3-0.6B revision `c1899de289a04d12100db370d81485cdf75e47ca`.
+The nine model files matched the pinned hashes before and after
+recovery (1,519,207,673 bytes).
+
+The existing S3 conditional-read and multipart SDK fixtures passed
+separately in Linux network namespaces with loopback only. They cover
+protocol-level readback, changed ETag and truncated responses, exact
+multipart scope and refusal of embedded completion errors. They do
+not qualify a SeaweedFS provider or coordinate one with PostgreSQL.
