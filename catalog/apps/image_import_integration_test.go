@@ -3,6 +3,7 @@
 package apps
 
 import (
+	"bytes"
 	"encoding/json/v2"
 	"errors"
 	"io"
@@ -224,31 +225,50 @@ func TestImportVerifiedRenderedCompose(t *testing.T) {
 	root, key, private := transitionCatalog(t)
 	pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.0.0", engine: "compose"})
 	staging := filepath.Join(root.Name(), pin.Version)
-	artifact := filepath.Join(staging, "compose.yaml")
-	input, err := os.ReadFile(artifact)
+	release, err := root.OpenRoot(pin.Version)
 	if err != nil {
 		t.Fatal(err)
 	}
-	model, err := exec.CommandContext(t.Context(), "docker", "compose", "--project-name", "catalog-image-plan", "--profile", "*",
-		"-f", artifact, "config", "--format", "json", "--no-env-resolution").Output()
+	defer release.Close()
+	verified, err := VerifyInstallBundle(t.Context(), release, key, testTransitionBudget)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input, err := release.ReadFile("compose.yaml")
+	if err != nil || digestBytes(input) != verified.Manifest.Artifact.SHA256 {
+		t.Fatalf("read the verified Compose source: %v", err)
+	}
+	render := exec.CommandContext(t.Context(), "docker", "compose", "--project-name", "catalog-image-plan", "--profile", "*",
+		"--project-directory", staging, "-f", "-", "config", "--format", "json", "--no-env-resolution")
+	render.Stdin = bytes.NewReader(input)
+	model, err := render.Output()
 	if err != nil {
 		t.Fatalf("render the signed Compose fixture: %v", err)
 	}
 	policy := bundle.Defaults()
 	policy.MountRoot = mount
 	rendered := RenderedCompose{ArtifactSHA256: digestBytes(input), JSON: model}
+	plan, err := verified.VerifyComposeImagePlan(rendered)
+	if err != nil {
+		t.Fatal(err)
+	}
+	replaced := RenderedCompose{ArtifactSHA256: rendered.ArtifactSHA256, JSON: append(slices.Clone(model), '\n')}
 	options := ImageImportOptions{
 		DockerSocket: socket, Verification: policy, MaximumPayloadBytes: testTransitionBudget,
 		MaximumExpandedBytes: testTransitionBudget, Timeout: 30 * time.Second, ExpectedPin: &pin,
-		RenderedCompose: &rendered,
+		RenderedCompose: &replaced, ExpectedComposePlan: &plan,
 	}
+	if _, err := ImportInstallImage(t.Context(), staging, key, options); !errors.Is(err, ErrComposeImagePlan) || len(listDockerImages(t, store)) != 0 {
+		t.Fatalf("replacement changed the local image store: %v", err)
+	}
+	options.RenderedCompose = &rendered
 	result, err := ImportInstallImage(t.Context(), staging, key, options)
 	if err != nil || result.Pin != pin {
 		t.Fatalf("rendered signed image import failed: %v", err)
 	}
-	plan, err := result.VerifyComposeImagePlan(rendered)
 	want := []ComposeServiceImage{{Service: "fixture", ManifestDigest: result.Archive.Images[0].ManifestDigest}}
-	if err != nil || !slices.Equal(plan.Services, want) || !slices.Equal(listDockerImages(t, store), []string{want[0].ManifestDigest}) {
+	if err := plan.VerifyRendered(rendered); err != nil ||
+		!slices.Equal(plan.Services, want) || !slices.Equal(listDockerImages(t, store), []string{want[0].ManifestDigest}) {
 		t.Fatalf("engine does not contain the verified service image: %v", err)
 	}
 }
