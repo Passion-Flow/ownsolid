@@ -18,6 +18,7 @@ import (
 	"time"
 
 	license "github.com/Passion-Flow/ownsolid/pkg/license/v1"
+	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -171,6 +172,12 @@ func TestSignedRestoreIsolatedDocker(t *testing.T) {
 	testIsolatedDocker(t, isolatedSignedRestore)
 }
 
+// TestProductionSignedRestoreIsolatedDocker qualifies the selected signed release
+// with backups created by its own installer and two empty recovery targets.
+func TestProductionSignedRestoreIsolatedDocker(t *testing.T) {
+	testIsolatedDocker(t, isolatedProductionSignedRestore)
+}
+
 // TestCoordinatedBackupIsolatedDocker exercises the local maintenance barrier
 // against real PostgreSQL and the approved model without a network uplink.
 func TestCoordinatedBackupIsolatedDocker(t *testing.T) {
@@ -186,12 +193,14 @@ const (
 	isolatedPITR
 	isolatedEncryptedBackup
 	isolatedSignedRestore
+	isolatedProductionSignedRestore
 	isolatedCoordinatedBackup
 )
 
 func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	t.Helper()
-	recovery := scenario == isolatedSignedRestore
+	productionRecovery := scenario == isolatedProductionSignedRestore
+	recovery := scenario == isolatedSignedRestore || productionRecovery
 	coordinated := scenario == isolatedCoordinatedBackup
 	signed, upgrade := scenario == isolatedSigned || scenario == isolatedUpgrade || recovery, scenario == isolatedUpgrade
 	pitr, encrypted := scenario == isolatedPITR, scenario == isolatedEncryptedBackup
@@ -212,6 +221,22 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	run := func(name string, args ...string) (string, error) {
 		output, err := exec.CommandContext(t.Context(), name, args...).CombinedOutput()
 		return string(output), err
+	}
+	var signedArchive, verification string
+	var productionMedia *bundle.Result
+	if productionRecovery {
+		expected := readProductionRestorePin(t)
+		signedArchive, verification = stageSignedFixture(t, run, false)
+		policy, err := LoadBundleVerification(verification)
+		if err != nil {
+			t.Fatal(err)
+		}
+		result, err := qualifyProductionRestoreMedia(t.Context(), signedArchive, expected, policy, bundle.InspectCurrent)
+		if err != nil {
+			t.Fatal(err)
+		}
+		productionMedia = &result
+		t.Logf("production release admitted: release=%s archive_sha256=%s manifest_sha256=%s", result.ReleaseID, result.ArchiveSHA256, result.ManifestSHA256)
 	}
 	t.Cleanup(func() {
 		file, err := os.Open(logPath)
@@ -308,11 +333,12 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 		}
 	}
 	config := filepath.Join(dir, "install.yaml")
-	var signedArchive, verification string
 	if signed {
 		c.ComposeFile = ""
 		c.Images = ImagesConfig{}
-		signedArchive, verification = stageSignedFixture(t, run, upgrade)
+		if !productionRecovery {
+			signedArchive, verification = stageSignedFixture(t, run, upgrade)
+		}
 	}
 	command := func(t *testing.T, action, want string, fail bool) {
 		t.Helper()
@@ -447,7 +473,7 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	}
 	if recovery {
 		if !t.Failed() {
-			assertSignedRestoreIsolatedDocker(t, installer, config, signedArchive, verification, licenseKey, run)
+			assertSignedRestoreIsolatedDocker(t, installer, config, signedArchive, verification, productionMedia, licenseKey, run)
 		}
 		return
 	}

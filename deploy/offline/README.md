@@ -263,6 +263,23 @@ The drill uses a temporary test entitlement to publish the model through Admin
 before backing up. It verifies the restored model is ready through Admin and
 checks every restored file's size and SHA-256 on both targets.
 
+### Qualify the exact production release
+
+Use the same isolated runner and choose
+`OWNSOLID_E2E_RUN='^TestProductionSignedRestoreIsolatedDocker$'`. Supply the
+exact published archive as `ownsolid.tar.gz` and the independently trusted
+public root as `release-trust.json`. Put the independently approved lowercase
+archive SHA-256 in a root-owned mode 0600 `expected-archive.sha256` file
+alongside the staged inputs. The test compares that digest with the fully
+verified archive before accessing the Docker daemon. Use an isolated,
+capacity-checked disk-backed staging mount for large release media.
+
+Build the installer from the candidate release. This qualification uses it
+to create both plaintext and age backups, and verifies the candidate manifest
+binding on both. The legacy regression still uses the historical installer.
+The production gate passes only after restoring both backups onto empty sites
+and completing the failure, retry, readiness and egress checks.
+
 ## Schedule verified backups
 
 The host timer and the local `backup-history` JSON query are documented in

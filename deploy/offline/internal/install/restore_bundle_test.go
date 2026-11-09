@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -18,10 +19,11 @@ import (
 
 	"filippo.io/age"
 	license "github.com/Passion-Flow/ownsolid/pkg/license/v1"
+	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
 	"go.yaml.in/yaml/v3"
 )
 
-func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive, verification string, licenseKey license.PrivateKey, run func(string, ...string) (string, error)) {
+func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive, verification string, production *bundle.Result, licenseKey license.PrivateKey, run func(string, ...string) (string, error)) {
 	t.Helper()
 	source, err := LoadOperational(config)
 	if err != nil {
@@ -79,7 +81,12 @@ func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive,
 	if err := errors.Join(err, f.Close()); err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("one signed archive sha256=%x manifest_sha256=%s", digest.Sum(nil), active.ManifestSHA256)
+	archiveSHA256 := hex.EncodeToString(digest.Sum(nil))
+	if production != nil && (production.ArchiveSHA256 != archiveSHA256 ||
+		production.ManifestSHA256 != active.ManifestSHA256 || production.ReleaseID != active.ReleaseID) {
+		t.Fatal("source installation or staged archive differs from the verified production selection")
+	}
+	t.Logf("one signed archive sha256=%s manifest_sha256=%s", archiveSHA256, active.ManifestSHA256)
 
 	const tenant = "SELECT name FROM tenants WHERE id=(SELECT tenant_id FROM installation_state WHERE id=1)"
 	const marker = "Signed recovery point"
@@ -94,16 +101,21 @@ func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive,
 		t.Log("no approved model archive was staged for this recovery drill")
 	}
 	plainDir, archiveDir, keyDir := privateDir(), privateDir(), privateDir()
-	old := filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "legacy-ownsolid-install")
-	command(t, old, "BACKUP_COMPLETE", false, "backup", "--config", config, "--output", plainDir)
+	plainInstaller, plainReleaseDigest := installer, active.ManifestSHA256
+	if production == nil {
+		plainInstaller = filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "legacy-ownsolid-install")
+		plainReleaseDigest = ""
+	}
+	command(t, plainInstaller, "BACKUP_COMPLETE", false, "backup", "--config", config, "--output", plainDir)
 	backups, err := filepath.Glob(filepath.Join(plainDir, backupPrefix+"*"))
 	if err != nil || len(backups) != 1 {
 		t.Fatalf("expected one verified legacy backup, got %v: %v", backups, err)
 	}
 	plain := backups[0]
-	legacy, err := readBackup(plain)
-	if err != nil || legacy.ReleaseManifestSHA256 != "" || legacy.ControlImage != source.Images.Control || legacy.PostgresImage != source.Images.Postgres {
-		t.Fatalf("legacy manifest must have matching image IDs and no release digest: %v", err)
+	plainManifest, err := readBackup(plain)
+	if err != nil || plainManifest.ReleaseManifestSHA256 != plainReleaseDigest ||
+		plainManifest.ControlImage != source.Images.Control || plainManifest.PostgresImage != source.Images.Postgres {
+		t.Fatalf("plaintext backup must match the expected release binding and image IDs: %v", err)
 	}
 	identity, err := age.GenerateX25519Identity()
 	if err != nil {
@@ -227,7 +239,7 @@ func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive,
 
 		manifestPath := filepath.Join(plain, backupManifestName)
 		original := read(manifestPath)
-		mismatch := legacy
+		mismatch := plainManifest
 		mismatch.ReleaseManifestSHA256 = strings.Repeat("0", 64)
 		raw, err := json.Marshal(mismatch)
 		if err != nil {
@@ -265,7 +277,7 @@ func assertSignedRestoreIsolatedDocker(t *testing.T, installer, config, archive,
 	if t.Failed() {
 		return
 	}
-	t.Run("rolls back a cold writer failure then restores the legacy backup", func(t *testing.T) {
+	t.Run("rolls back a cold writer failure then restores the plaintext backup", func(t *testing.T) {
 		site, path := target(t, "old")
 		t.Run("writer start fails after database exchange", func(t *testing.T) {
 			interruptInstallerDocker(t, "fail-control")
