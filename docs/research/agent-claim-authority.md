@@ -111,3 +111,51 @@ throughput or account for each excess statement in the cost suite.
 ARC-108 needs the audit owner to measure append cost and agree how to preserve
 the offline-verifiable chain without putting its lock on the fleet path. An
 updated cost fixture should hold the audit head along with the other shared rows.
+
+## ARC-108 inference heartbeat probe
+
+Reuse [PostgreSQL 18 auto_explain](https://www.postgresql.org/docs/18/auto-explain.html)
+and the existing Agent cost recorder to isolate a synchronous heartbeat carrying
+an inference observation. Exercise first publication, an update of the same
+node's report, and a rejected foreign credential. Use the actual deployment
+owner and PostgreSQL with one node, and verify the committed snapshot. The
+recorder includes nested statements with per-plan timing disabled. There are no
+additional dependencies or models and the PostgreSQL and Go licensing above
+applies. Hardware inputs are synthetic.
+
+This probe is narrower than the shared HTTPS test. It excludes transport
+certificate reads, deployment-bound observations, buffered liveness, and any
+fleet size comparison. A trace-only probe is preferred to changing a statement
+budget without evidence. Check the declared ceiling without weakening it and
+record separately any nested statement that needs work by another owner.
+
+The first report ran 14 statements, the update 10, and the foreign credential
+one. The initial insert in the Deployments owner uses two cell-default lookups
+and its node foreign-key check. The cold pacing cache accounts for another two
+cell lookups inside its read. Use an explicit join to the one local cell for
+pacing and lock only its pacing row when an administrator writes. Return the
+stored `last_heartbeat_at` from the existing PostgreSQL `UPDATE ... RETURNING`
+([PostgreSQL 18](https://www.postgresql.org/docs/18/dml-returning.html)) and use
+that database timestamp in the reply and liveness acceptance. Keep the
+node, installation, workspace and credential fences and the non-PostgreSQL
+clock reads in place. The direct service probe must fit the existing ceiling
+and verify that the response time equals the persisted sample time. Keep the
+full transport gate and the deployment-owned insert costs separate.
+
+With PostgreSQL 18.6 and pgvector 0.8.7, `TestInferenceHeartbeatStatementCost`
+measured the following on a one-node loopback fixture. The focused pacing,
+liveness, and timestamp tests also passed against this database.
+
+| Synchronous service exchange | Statements before | Statements after | Blocks before | Blocks after |
+| --- | ---: | ---: | ---: | ---: |
+| First inference report, cold pacing | 14 | 11 | 98 | 92 |
+| Updated report, warm pacing | 10 | 9 | 38 | 38 |
+| Foreign credential | 1 | 1 | 1 | 1 |
+
+The PostgreSQL `CheckPeer` path can issue another query for certificate pins
+when the node view is cold. The existing deployment insert still evaluates
+both cell defaults and the scoped node foreign key. ARC-108 remains open until
+the deployment owner and shared cost suite exercise the full authenticated
+transport, first report and update, including deployment-bound observations,
+then measure the component, preparation and Registry operations on both fleet
+fixtures. No declaration or fleet acceptance result has changed.

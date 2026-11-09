@@ -112,7 +112,7 @@ func readPacingWithin(ctx context.Context, q transaction.Executor, suffix string
 		return AgentPacing{Pacing: wire.DefaultPacing(), Version: 1}, nil
 	}
 	var out AgentPacing
-	e := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT heartbeat_seconds,jitter_percent,reconnect_base_seconds,reconnect_max_seconds,version,updated_at FROM agent_pacing WHERE site_id=local_site_id() AND cell_id=local_cell_id()`+suffix)).
+	e := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT p.heartbeat_seconds,p.jitter_percent,p.reconnect_base_seconds,p.reconnect_max_seconds,p.version,p.updated_at FROM agent_pacing p JOIN cells c ON c.id=p.cell_id AND c.site_id=p.site_id WHERE c.is_local`+suffix)).
 		Scan(&out.HeartbeatSeconds, &out.JitterPercent, &out.ReconnectBaseSeconds, &out.ReconnectMaxSeconds, &out.Version, &out.UpdatedAt)
 	out.UpdatedAt = out.UpdatedAt.UTC()
 	return out, e
@@ -153,7 +153,7 @@ func (s *Service) UpdateAgentPacing(ctx context.Context, a identity.Auth, next w
 		if q.Dialect() != transaction.PostgreSQL {
 			return fail("AGENT_PACING_UNSUPPORTED")
 		}
-		current, e := readPacingWithin(ctx, q, " FOR UPDATE")
+		current, e := readPacingWithin(ctx, q, " FOR UPDATE OF p")
 		if e != nil {
 			return e
 		}
