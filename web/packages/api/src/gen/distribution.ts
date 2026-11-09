@@ -1896,7 +1896,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description The alias revision, pause state, drain state or proposed target prevents the cutover. */
+            /** @description The alias revision, pause state, drain state or proposed target prevents the cutover. ALIAS_PAUSE_REQUIRED means pause the alias before changing its target. ALIAS_ALREADY_PAUSED means the alias is already paused. ALIAS_NOT_PAUSED means the alias must be paused before resuming. ALIAS_REQUESTS_UNDRAINED means outstanding requests still hold capacity. ALIAS_ROLLBACK_TARGET_INVALID means the ready target does not match the recorded source. */
             409: {
                 headers: {
                     [name: string]: unknown;
