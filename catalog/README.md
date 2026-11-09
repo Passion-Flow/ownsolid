@@ -100,13 +100,17 @@ Layer compression may be gzip or uncompressed. The returned `Archive` carries
 the signed digest and byte size, and the manifest and config digests for
 each image in OCI index order.
 
-## Version transitions
+## Installation and version transitions
 
 The installer records `InstallBundle.Pin` with a successful installation.
 It contains the manifest version and the SHA-256 of the exact signed
-`bundle.json` bytes. Publish a new version when any signed content changes.
-An edge in the new manifest's `upgrade_from` names the retained pin of an
-approved predecessor.
+`bundle.json` bytes. For a fresh install, call `apps.VerifyInitialRelease`
+with the selected app and pin, a trusted publisher key and the running
+platform version. It verifies the selected version directory and checks the
+signed app identity and platform range. Reuse the same pin on retries.
+
+Publish a new version when any signed content changes. An edge in the
+new manifest's `upgrade_from` names the retained pin of an approved predecessor.
 
 Call `apps.VerifyReleaseTransition` with an immutable root containing one
 app's version directories, the trusted publisher key, the running platform
