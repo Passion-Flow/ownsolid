@@ -167,7 +167,8 @@ development fixture. The catalog module ships neither engine nor image.
 
 The catalog's `ImportInstallImage` entry point passed both the opt-in
 integration fixture and the real signed VictoriaLogs archive on Docker
-Engine 29.1.3 with fresh tmpfs stores and no networking. An expansion
+Engine 29.1.3 with fresh tmpfs stores and no networking. The real archive
+was first verified against `bcb614f5` and repeated after the rebase. An expansion
 limit of one byte and a different publisher key were refused. Two calls
 with the trusted bundle left one untagged image with manifest and Docker
 image ID
