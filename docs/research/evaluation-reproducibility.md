@@ -125,6 +125,21 @@ two correct out of three. The probe rejected an incorrect version digest.
 EVL-101 stays open for an authorized control-plane and UI workflow and real
 inference repeatability.
 
+### Persisted report integrity on a real CPU capture
+
+The [native adversarial capture](#native-cpu-adversarial-qualification)
+uses the immutable Portal-published validation asset and the approved
+Qwen CPU profile. Disconnected replay with `--check-report` reproduced
+the retained report byte for byte. Changing its three unverified outcomes
+to three observed refusals while retaining the source and capture caused
+`EVALUATION_REPORT_MISMATCH` and no report output. The retained original
+report SHA-256 is
+`1ad1a6caf099b24c74d5224c655cb0bb3df21e7d1d4476d64ea7658c2d9769b5`.
+
+The real inference repeatability applies to the fixed CPU safety
+profile and frozen cases. The product authorization and report interface,
+and other execution profiles, remain open.
+
 ## EVL-102 paired offline comparison
 
 [MLflow compares runs](https://www.mlflow.org/docs/latest/genai/eval-monitor/comparing-evaluation-runs/)
