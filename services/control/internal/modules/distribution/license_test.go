@@ -3,16 +3,16 @@ package distribution_test
 import (
 	"bytes"
 	"context"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
 )
 
 func TestM19ActualLicenseAdmissionSingleConnectionAndInflightOutcome(t *testing.T) {
@@ -101,6 +101,9 @@ func TestM19AcceptedOperationAcrossExpirySinglePoolAndConcurrentReplay(t *testin
 	t.Cleanup(one.Close)
 	c.s.DB = one
 	c.s.Identity.DB = one
+	c.s.Workspaces.DB = one
+	c.s.Nodes.DB = one
+	c.s.Deployments.Models.DB = one
 	expired := expiredLicense(t, c)
 	var rawKey, keyID string
 	e = c.s.WithTransientKey(ctx, access.owner, keyInput(access.alias), 2*time.Second, uuid.NewString(), func(raw string) error {
