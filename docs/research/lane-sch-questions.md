@@ -81,8 +81,12 @@ organization scope and enforce it across stores. The existing installed-tenant
 workspace API remains the authority. A private parallel hierarchy would let
 membership and resource access diverge.
 
-TEN-107 through TEN-109 need the real usage producers, effective-dated rate
-policy and an authorized transaction to enforce budget or credit admission.
+TEN-107 rates the isolated ledger by occurrence against installation-owned
+versions. The integration owner must retain historical versions, bind report
+scope to read authorization and reconcile real producer coverage before
+presenting production showback. See [showback](metering-showback.md).
+TEN-108 and TEN-109 need authorized enforcement and balance transactions
+in addition to the real usage producers.
 [FinOps allocation](https://www.finops.org/framework/capabilities/allocation/)
 and [OpenMeter entitlement grants](https://openmeter.io/docs/billing/entitlements/grant)
 provide the reporting and balance references. Offline top-up is a tenant
