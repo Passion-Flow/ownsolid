@@ -62,6 +62,9 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	if _, exists := legacy["description"]; exists {
 		t.Fatal("predecessor response gained a field")
 	}
+	if _, exists := legacy["description_revision"]; exists {
+		t.Fatal("predecessor response gained a description revision")
+	}
 	problem := func(client *httpfixture.Client, path string, body any, status int, code string) {
 		t.Helper()
 		got := client.Write("POST", path, body, status, "Problem")
@@ -106,19 +109,19 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 			t.Fatal("unexpected description or description revision")
 		}
 	}
-	assertDescription(portal.Call("GET", portalPath+"/"+legacyID, nil, 200, ""), "", 1)
+	assertDescription(portal.Call("GET", portalPath+"/"+legacyID, nil, 200, "ModelAliasResponse"), "", 1)
 	admin.Headers["Idempotency-Key"] = legacyKey
 	publish["name"], publish["description"] = "legacy-alias", " \t "
-	if value := admin.Write("POST", adminPath, publish, 200, ""); value["id"] != legacyID {
+	if value := admin.Write("POST", adminPath, publish, 200, "ModelAliasResponse"); value["id"] != legacyID {
 		t.Fatal("predecessor publication did not replay after migration")
 	}
 	admin.Headers["Idempotency-Key"] = describedKey
 	publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
-	described := admin.Write("POST", adminPath, publish, 200, "")
+	described := admin.Write("POST", adminPath, publish, 200, "ModelAliasResponse")
 	id := described["id"].(string)
 	assertDescription(described, "Use for comparisons.\nSecond line.", 1)
 	publish["description"] = "Use for comparisons.\nSecond line."
-	if replay := admin.Write("POST", adminPath, publish, 200, ""); replay["id"] != id {
+	if replay := admin.Write("POST", adminPath, publish, 200, "ModelAliasResponse"); replay["id"] != id {
 		t.Fatal("normalized publication did not replay")
 	}
 	publish["description"] = "Changed publication"
@@ -144,8 +147,8 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	_, memberPassword := register(memberEmail)
 	member := httpfixture.New(t, server, "portal", schemas)
 	login(member, memberEmail, memberPassword)
-	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, ""), "Use for comparisons.\nSecond line.", 1)
-	items := member.Call("GET", portalPath+"?limit=10", nil, 200, "")["items"].([]any)
+	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse"), "Use for comparisons.\nSecond line.", 1)
+	items := member.Call("GET", portalPath+"?limit=10", nil, 200, "ModelAliasPageResponse")["items"].([]any)
 	seen := false
 	for _, item := range items {
 		alias := item.(map[string]any)
@@ -200,7 +203,7 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	problem(admin, editPath, append(append([]byte(`{"description":"`), 0xff), []byte(`","expected_description_revision":1,"reason":"Synthetic reason"}`)...), 400, "VALIDATION_FAILED")
 
 	edit.Description = strings.Repeat("\u4e2d", 500)
-	updated := admin.Write("POST", editPath, edit, 200, "")
+	updated := admin.Write("POST", editPath, edit, 200, "AliasDescriptionResultResponse")
 	assertDescription(updated, edit.Description, 2)
 	if len(updated) != 4 || updated["applied_description_revision"] != float64(2) || updated["replayed"] != false {
 		t.Fatal("unexpected first edit receipt")
@@ -248,6 +251,9 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 		}
 		switch got.status {
 		case 200:
+			if err := schemas["AliasDescriptionResultResponse"].Validate(got.data); err != nil {
+				t.Fatal("concurrent edit returned an invalid receipt", err)
+			}
 			value := got.data["data"].(map[string]any)
 			winner = value["description"].(string)
 			assertDescription(value, winner, 3)
@@ -263,7 +269,7 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	if winner == "" || conflicts != 1 {
 		t.Fatal("expected one edit and one stale revision")
 	}
-	replayed := admin.Write("POST", editPath, edit, 200, "")
+	replayed := admin.Write("POST", editPath, edit, 200, "AliasDescriptionResultResponse")
 	assertDescription(replayed, winner, 3)
 	if replayed["applied_description_revision"] != float64(2) || replayed["replayed"] != true {
 		t.Fatal("historical replay lost its applied revision")
@@ -279,7 +285,7 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	rollbackKey := uuid.NewString()
 	admin.Headers["Idempotency-Key"] = rollbackKey
 	problem(admin, editPath, failedEdit, 503, "STORAGE_UNAVAILABLE")
-	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, ""), winner, 3)
+	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse"), winner, 3)
 	assertRoute := func(revision, versions int) {
 		t.Helper()
 		var actualRevision, actualVersions int
@@ -310,18 +316,18 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	authorize()
 	pause := distribution.CutoverRequest{Action: "pause", ExpectedRevision: 1, Reason: "Synthetic pause before editing"}
 	admin.Headers["Idempotency-Key"] = uuid.NewString()
-	cutover := admin.Write("POST", adminPath+"/"+id+"/cutovers", pause, 200, "")
+	cutover := admin.Write("POST", adminPath+"/"+id+"/cutovers", pause, 200, "AliasCutoverResultResponse")
 	assertDescription(cutover["alias"].(map[string]any), winner, 3)
 	member.Call("GET", portalPath+"/"+id, nil, 404, "")
 	clear := distribution.AliasDescriptionEdit{Description: " \t\n ", ExpectedDescriptionRevision: 3, Reason: "Clear synthetic description"}
 	admin.Headers["Idempotency-Key"] = rollbackKey
-	assertDescription(admin.Write("POST", editPath, clear, 200, ""), "", 4)
+	assertDescription(admin.Write("POST", editPath, clear, 200, "AliasDescriptionResultResponse"), "", 4)
 	assertRoute(2, 2)
 	resume := distribution.CutoverRequest{Action: "resume", ExpectedRevision: 2, Reason: "Synthetic resume after editing"}
 	admin.Headers["Idempotency-Key"] = uuid.NewString()
-	admin.Write("POST", adminPath+"/"+id+"/cutovers", resume, 200, "")
+	admin.Write("POST", adminPath+"/"+id+"/cutovers", resume, 200, "AliasCutoverResultResponse")
 	authorize()
-	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, ""), "", 4)
+	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse"), "", 4)
 	var intents, audits int
 	if err := c.s.DB.QueryRow(ctx, `SELECT
 		(SELECT count(*) FROM model_alias_description_intents WHERE alias_id=$1),
