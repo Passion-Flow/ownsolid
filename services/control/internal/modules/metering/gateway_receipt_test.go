@@ -16,7 +16,8 @@ import (
 const testGatewayRequestSQL = `CREATE TABLE gateway_requests (
   id uuid PRIMARY KEY, tenant_id uuid NOT NULL, workspace_id uuid NOT NULL, gateway_id uuid NOT NULL,
   admitted_at timestamptz NOT NULL, state text NOT NULL, outcome jsonb, outcome_sha256 text,
-  maximum_output_tokens integer NOT NULL, maximum_context_tokens integer NOT NULL
+  maximum_output_tokens integer NOT NULL, maximum_context_tokens integer NOT NULL,
+  site_id varchar(32) NOT NULL DEFAULT local_site_id(), cell_id varchar(32) NOT NULL DEFAULT local_cell_id()
 )`
 
 func TestPostgresGatewayReceiptProjectsVerifiedUsageAndBudget(t *testing.T) {
@@ -43,7 +44,9 @@ func TestPostgresGatewayReceiptProjectsVerifiedUsageAndBudget(t *testing.T) {
 			t.Fatal(err)
 		}
 		_, err = tx.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
-			`INSERT INTO gateway_requests VALUES($1,$2,$3,$4,$5,'reported',$6,$7,16,128)`,
+			`INSERT INTO gateway_requests
+ (id,tenant_id,workspace_id,gateway_id,admitted_at,state,outcome,outcome_sha256,maximum_output_tokens,maximum_context_tokens)
+ VALUES($1,$2,$3,$4,$5,'reported',$6,$7,16,128)`,
 			outcome.RequestID, scope.TenantID, scope.WorkspaceID, gateway, at, raw, digest))
 		if err != nil {
 			t.Fatal(err)
@@ -78,6 +81,18 @@ func TestPostgresGatewayReceiptProjectsVerifiedUsageAndBudget(t *testing.T) {
 	receive(foreign, gateway, late, false, ErrGatewayReceiptNotFound)
 	receive(Scope{TenantID: foreign.TenantID, WorkspaceID: scope.WorkspaceID}, gateway, late, false, ErrGatewayReceiptNotFound)
 	receive(scope, uuid.New(), late, false, ErrGatewayReceiptNotFound)
+	for _, foreignLocation := range []struct{ site, cell string }{
+		{"fixture-site", "sibling-cell"},
+		{"foreign-site", "fixture-cell"},
+	} {
+		otherCell := record(store, cutover, outcome(5, 0))
+		if _, err := pool.Exec(ctx, "UPDATE gateway_requests SET site_id=$2,cell_id=$3 WHERE id=$1",
+			otherCell.RequestID, foreignLocation.site, foreignLocation.cell); err != nil {
+			t.Fatal(err)
+		}
+		receive(scope, gateway, otherCell, false, ErrGatewayReceiptNotFound)
+	}
+
 	badAck := late
 	badAck.CanonicalSHA256 = recent.CanonicalSHA256
 	receive(scope, gateway, badAck, false, ErrGatewayReceiptInvalid)
@@ -114,6 +129,13 @@ func TestPostgresGatewayReceiptProjectsVerifiedUsageAndBudget(t *testing.T) {
 		t.Fatal("receipt transaction did not roll back", err)
 	}
 	receive(scope, gateway, undone, false, ErrGatewayReceiptNotFound)
+
+	var matchingRows, localRows int
+	if err := pool.QueryRow(ctx, `SELECT count(*), count(*) FILTER (WHERE site_id='fixture-site' AND cell_id='fixture-cell')
+ FROM usage_ledger WHERE producer=$1`, gatewayReceiptProducer).Scan(&matchingRows, &localRows); err != nil ||
+		matchingRows != 3 || localRows != matchingRows {
+		t.Fatalf("verified receipts did not keep their local scope: %d of %d, %v", localRows, matchingRows, err)
+	}
 
 	totals := readTotals(t, pool, scope, start, end)
 	if want := (Totals{GPUMicroseconds: "0", Tokens: "12", StorageByteSeconds: "0", Requests: "3", UnmeasuredTokenRequests: "1"}); totals != want {
@@ -156,4 +178,48 @@ func TestPostgresGatewayReceiptProjectsVerifiedUsageAndBudget(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	moved := record(store, cutover, outcome(8, 0))
+	changed := false
+	err = store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
+		fault := &beforeReceiptWrite{Executor: tx, run: func() error {
+			changed = true
+			return store.Within(ctx, false, func(ctx context.Context, other transaction.Executor) error {
+				if _, err := other.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
+					"UPDATE cells SET is_local=false WHERE is_local")); err != nil {
+					return err
+				}
+				_, err := other.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
+					"UPDATE cells SET is_local=true WHERE id='sibling-cell'"))
+				return err
+			})
+		}}
+		_, err := AppendGatewayReceiptWithin(ctx, fault, scope, gateway, moved)
+		return err
+	})
+	if !changed || !errors.Is(err, ErrUnavailable) {
+		t.Fatalf("local cell change did not fail closed: moved=%v, %v", changed, err)
+	}
+	var movedRows int
+	if err := pool.QueryRow(ctx, "SELECT count(*) FROM usage_ledger WHERE event_id=$1", moved.RequestID).Scan(&movedRows); err != nil || movedRows != 0 {
+		t.Fatalf("receipt was charged after its local cell changed: %d, %v", movedRows, err)
+	}
+}
+
+// beforeReceiptWrite runs the injected location change after receipt selection
+// and before the first ledger statement.
+type beforeReceiptWrite struct {
+	transaction.Executor
+	run func() error
+}
+
+func (tx *beforeReceiptWrite) Exec(ctx context.Context, statement transaction.Statement) (int64, error) {
+	if tx.run != nil {
+		run := tx.run
+		tx.run = nil
+		if err := run(); err != nil {
+			return 0, err
+		}
+	}
+	return tx.Executor.Exec(ctx, statement)
 }

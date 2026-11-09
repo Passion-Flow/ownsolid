@@ -76,8 +76,9 @@ Wall-clock differences must not be used to derive duration. The gateway
 intake verifies the canonical receipt against the exact scoped reported
 row in the owner's transaction. The distribution owner must call it after
 canonical persistence or replay verification, before acknowledging Report.
-The database owner must admit the candidate ledger with its unmeasured-token
-request count. Requests without a report and historical reconciliation remain
+The database owner must number and admit the candidate ledger with its local
+site and cell, verify its runtime grants and accept the fresh and restored
+catalogs. Requests without a report and historical reconciliation remain
 coverage boundaries. See [gateway receipt intake](usage-ledger.md#gateway-receipt-intake).
 
 ## Tenancy and commerce

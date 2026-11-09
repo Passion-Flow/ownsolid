@@ -104,3 +104,53 @@ ship the ledger, including the unmeasured-request count. Historical
 reconciliation and coverage of requests without a report remain prerequisites
 to budget enforcement. This path uses the existing gateway codec, pgx,
 UUID and PostgreSQL under the project and dependency licenses above.
+
+## Unnumbered PostgreSQL migration handoff
+
+[ADR 0006](../decisions/0006-cell-and-site-scope.md) and the installed
+[scope migration](../../services/control/migrations/postgresql/000030_cell_scope.up.sql)
+make the database's local site and cell the authority for cell-owned rows.
+Give the candidate ledger both non-null columns and the same database
+defaults. Put site, cell, tenant and workspace before time in the reporting
+index. Retain the unique producer and event key so an existing charge in a
+different scope conflicts instead of being counted again.
+
+Preserve the `testdata/ledger.sql` path and the four inputs to
+`AppendGatewayReceiptWithin` used by the optional Report transaction in
+`eeb0e9a6`. Report owns machine authorization. The metering reader requires
+a reported gateway row matching that gateway, workspace, tenant, local site
+and local cell. It keeps the source location with the verified receipt
+and checks it again in the insert statement. These checks use the
+database's location functions, with no request-supplied site or cell.
+[Read Committed statement snapshots](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED)
+explain why a separate read alone would leave a gap if the local registry
+changed before insertion. The write keeps the established receipt row lock
+and needs no additional privilege on the cell registry. Scoped totals and
+showback filter both coordinates, including when a restore contains rows
+from another cell.
+
+The unnumbered up file creates a ledger on the established predecessor.
+It leaves existing workspace and gateway history in place. Verified
+predecessor receipts can be projected through Report replay after the
+production owner enables the hook. The down file takes the ledger's
+exclusive lock and refuses a nonempty table, keeping accrued usage durable.
+Run the down file within a transaction. The
+[PostgreSQL locking contract](https://www.postgresql.org/docs/18/sql-lock.html)
+keeps the emptiness check and removal protected from concurrent writes.
+
+Qualify native schema 55 through the current canonical migration, then apply
+the candidate in a disposable schema. Prove predecessor data survives,
+the numbered lineage stays intact, local replay is a single event, and an
+occupied ledger cannot be removed by the down migration. Exercise a
+nondefault local site and cell, a valid foreign gateway receipt, and a
+foreign ledger row sharing the same tenant and workspace. Verify that
+foreign rows neither enter the ledger nor affect reports. Re-run the
+gateway owner's optional TLS Report regression against these same SQL bytes.
+
+ARC owns the formal number, table count, grant verification and accepted
+fresh and restored fingerprints. The published table and migration ledger
+stay at the existing lineage until ARC integrates the candidate. The
+gateway owner enables receipt projection only with the accepted schema.
+Budget enforcement remains separately gated on an authorized effective
+policy and complete and pending usage. This uses the existing Go, pgx and
+PostgreSQL stack under the licenses recorded above.
