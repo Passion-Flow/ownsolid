@@ -26,6 +26,7 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install upgrade-patch --baseline <previous.tar.gz> --bundle <patch.tar.gz> --verification <policy.json> --config <site.yaml> --backup-output <directory>\n" +
 	"       ownsolid-install rollback-bundle --bundle <previous.tar.gz> --verification <policy.json> --config <site.yaml>\n" +
 	"       ownsolid-install support-bundle --config <install.yaml> --output <new archive.tar.gz>\n" +
+	"       ownsolid-install support-bundle --cluster-config <diagnostics.json> --output <new archive.tar.gz>\n" +
 	"       ownsolid-install backup-coordinated --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install recover-backup --config <install.yaml>\n" +
 	"       ownsolid-install scheduled-backup --config <install.yaml>\n" +
@@ -76,6 +77,7 @@ func run(args []string, out io.Writer) error {
 	flags := flag.NewFlagSet("ownsolid-install", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	path := flags.String("config", "", "typed install configuration")
+	clusterPath := flags.String("cluster-config", "", "protected cluster diagnostics configuration")
 	output := flags.String("output", "", "backup directory or new archive path")
 	from := flags.String("from", "", "backup directory or encrypted archive to restore")
 	recipient := flags.String("recipient-file", "", "protected X25519 public recipient file")
@@ -83,7 +85,7 @@ func run(args []string, out io.Writer) error {
 	rollback := flags.Bool("rollback", false, "return to the original database and retain the candidate")
 	level := flags.String("level", "", "agent traffic to refuse, lowest priority first")
 	reason := flags.String("reason", "", "why, kept in the audit record")
-	if e := flags.Parse(args); e != nil || flags.NArg() != 0 || *path == "" {
+	if e := flags.Parse(args); e != nil || flags.NArg() != 0 {
 		return errors.New(usage)
 	}
 	shed := command == "agents shed"
@@ -93,8 +95,14 @@ func run(args []string, out io.Writer) error {
 	// Even an explicitly empty encryption option must never select plaintext.
 	encrypted := false
 	invalidKeyFlag := false
+	clusterFlag := false
+	configFlag := false
 	flags.Visit(func(f *flag.Flag) {
 		switch f.Name {
+		case "cluster-config":
+			clusterFlag = true
+		case "config":
+			configFlag = true
 		case "recipient-file":
 			encrypted = true
 			invalidKeyFlag = invalidKeyFlag || command != "backup" || *recipient == ""
@@ -103,8 +111,14 @@ func run(args []string, out io.Writer) error {
 			invalidKeyFlag = invalidKeyFlag || command != "restore" || *identity == ""
 		}
 	})
-	if invalidKeyFlag {
+	if invalidKeyFlag || (clusterFlag && (command != "support-bundle" || *clusterPath == "" || configFlag)) ||
+		(!clusterFlag && *path == "") {
 		return errors.New(usage)
+	}
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	if clusterFlag {
+		return install.ClusterSupportBundle(ctx, *clusterPath, *output, out)
 	}
 	load := install.LoadOperational
 	switch command {
@@ -117,8 +131,6 @@ func run(args []string, out io.Writer) error {
 	if e != nil {
 		return e
 	}
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer cancel()
 	switch command {
 	case "validate":
 		_, e = fmt.Fprintln(out, "INSTALL_CONFIG_VALID")

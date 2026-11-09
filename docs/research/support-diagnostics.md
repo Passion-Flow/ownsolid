@@ -71,3 +71,78 @@ mode 0600 archive included `pending_restore_phase: loading` and the fixed
 cluster identifier, database OIDs and candidate suffix. The network
 namespace had only recorder routes and the capture contained only its IPv4,
 IPv6 and DNS probes. The check used no containers.
+
+## Managed cluster and Helm diagnostics
+
+The existing [cell-clusters API](../../api/openapi/v1/cell-clusters/openapi.json)
+lists the selected site and cell's managed cluster using an Admin session.
+Its state and counts reflect the Control plane's records. A GET does not
+schedule fresh observations. The [Helm chart](../../deploy/helm/ownsolid/README.md)
+creates a Deployment and ClusterIP Service named from the selected release.
+Kubernetes 1.36 exposes a named
+[Deployment](https://v1-36.docs.kubernetes.io/docs/reference/kubernetes-api/apps/deployment-v1/)
+and [Service](https://v1-36.docs.kubernetes.io/docs/reference/kubernetes-api/core/service-v1/)
+through stable REST endpoints. Deployment generation and observed generation
+distinguish a pending rollout from the current controller view. Service spec
+only establishes HTTPS routing configuration. It does not establish ingress
+or endpoint health. Replicated Troubleshoot's scoped collectors are a
+comparison. This slice collects a smaller projection without invoking a
+general-purpose diagnostic collector.
+
+Keep both sources independent under one explicitly bounded collection budget.
+Use the existing support archive publisher, with a separate protected cluster
+input so Compose installation, recovery binding and diagnostics remain
+compatible. Accept an existing Admin session value and a short-lived Kubernetes
+service account token as separate protected file references. Kubernetes
+[RBAC](https://v1-36.docs.kubernetes.io/docs/reference/access-authn-authz/rbac/)
+can limit the token to GET on the two exact names. Both origins verify TLS
+against their explicitly selected site CAs. The client never follows redirects,
+uses ambient proxies, discovers other scopes or executes kubeconfig plugins.
+
+Project only recorded cluster and server state, member counts, fixed rollout
+states and replica counts, and whether the named Service matches the chart's
+HTTPS routing. Omit identifiers, URLs, UIDs, labels, selectors, raw errors,
+credentials, workload specifications and arbitrary status messages. Verify
+returned scopes and chart ownership labels before projection. Bound each
+response and retain successful results when a sibling read fails. Use fixed
+issues for denied access, missing objects, invalid responses, timeouts and
+unavailable services. A cluster or installation readiness claim requires
+separate live verification.
+
+Alternatives included querying Helm release Secrets and invoking kubectl
+with an ambient kubeconfig. The former requires reading broader sensitive
+data and reports Helm history rather than current readiness. The latter
+can invoke credential plugins and inherit a context or proxy. The selected
+named REST reads require no new runtime binaries, dependency, model or
+dataset. Go's standard library and the existing JSON and protected-file
+readers keep their current licence terms. Kubernetes and Helm are comparison
+and protocol targets, both [Apache 2.0 Kubernetes](https://github.com/kubernetes/kubernetes/blob/v1.36.0/LICENSE)
+and [Apache 2.0 Helm](https://github.com/helm/helm/blob/v4.3.1/LICENSE).
+These licences permit commercial use, offline use and redistribution under
+their notice terms.
+
+Exercise real HTTPS transport with local API responses in a disconnected
+Linux amd64 namespace. Check exactly the three named GET paths, per-source
+auth, permission denial, expired or untrusted credentials, timeout, offline
+Control, wrong object identity, oversized bodies, redirect refusal, partial
+success, and sentinel redaction in output. Re-run the existing Compose
+diagnostic suite. A fixture is protocol evidence. A managed RKE2 cluster and
+deployed Helm release still require their own installed qualification.
+
+### Disconnected managed API check
+
+On 2026-11-09, the native Linux amd64 installer ran as an unprivileged
+user in a disconnected namespace on `ownsolid-cpu`. Two loopback HTTPS
+fixtures served the existing Admin and Kubernetes API response shapes.
+The CLI sent only the expected named GETs and kept each credential with
+its source. Thirteen cases covered successful and partial reads, access
+denial, timeout, a stopped endpoint, rejected TLS, unsafe credential
+permissions, wrong scope and resource identity, oversized responses,
+redirect refusal, and pending or failed rollout. The mode 0600 archives
+contained the projected states and fixed issues. Sentinel identifiers,
+endpoints, credentials, and response details were absent. The existing
+Compose diagnostic tests passed in the same namespace.
+
+The recorder captured only its IPv4, IPv6 and DNS probes. The check used
+no containers or host ports. Live RBAC, RKE2, the installed chart and
+cluster workload logs remain outside this protocol fixture.
