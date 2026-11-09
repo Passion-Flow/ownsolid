@@ -339,6 +339,17 @@ ownsolid training get "$JOB_ID" --output json
 ownsolid training cancel "$JOB_ID" --revision "$REVISION" --reason 'Withdraw this job'
 ```
 
+Read an attempt ID from the retained job history and use it to select that
+attempt's metrics. Each command reads one page. Use the returned cursor with
+the same workspace, job and attempt. Metric records are ordered by event
+sequence and keep the reported optimizer step and values.
+
+```sh
+ownsolid training attempts "$JOB_ID" --limit 10 --output json
+ownsolid training metrics "$JOB_ID" --attempt "$ATTEMPT_ID" --limit 20
+ownsolid training metrics "$JOB_ID" --attempt "$ATTEMPT_ID" --cursor "$NEXT_CURSOR" --output json
+```
+
 Reuse the request UUID and original arguments if a create result is uncertain.
 The workspace comes from `--workspace`, then `workspace_id` in `config.json`,
 then the current Admin session. Read the current revision before cancellation.

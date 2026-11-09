@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/google/uuid"
 )
 
@@ -139,6 +140,12 @@ func TestLaneDTrainingTLS(t *testing.T) {
 		t.Fatal("CLI get did not read the queued job")
 	}
 
+	var queuedHistory training.Page[training.Attempt]
+	if err := json.Unmarshal([]byte(ok("training", "attempts", created.ID, "--output", "json")), &queuedHistory); err != nil ||
+		queuedHistory.Items == nil || len(queuedHistory.Items) != 0 || queuedHistory.NextCursor != nil {
+		t.Fatalf("queued attempt page was not empty: %v", err)
+	}
+
 	tenant, other := uuid.NewString(), uuid.NewString()
 	if _, err := f.s.DB.Exec(t.Context(), "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign training tenant','active')", tenant); err != nil {
 		t.Fatal(err)
@@ -163,5 +170,56 @@ func TestLaneDTrainingTLS(t *testing.T) {
 	if got := count(t, f, "SELECT count(*) FROM audit_events WHERE action='training.cancel_requested' AND target_id=$1", created.ID); got != 1 {
 		t.Fatalf("cancellation left %d audit events", got)
 	}
+	key = uuid.NewString()
+	running := job(create(configuration, "Synthetic attempt metrics")...)
+	ctx := t.Context()
+	if worked, err := handler.Training.DispatchNext(ctx); err != nil || !worked {
+		t.Fatal("dispatch the CLI-created training intent", worked, err)
+	}
+	lease := claimed(t, f)
+	events := prelude(*lease.Training)
+	events = append(events,
+		eventFixture(*lease.Training, 3, 1, "metric", map[string]any{"values": map[string]any{"loss": 1.0, "learning_rate": 0.0002}}),
+		eventFixture(*lease.Training, 4, 2, "metric", map[string]any{"values": map[string]any{"loss": 0.0}}),
+	)
+	if _, err := handler.Training.RecordEvents(ctx, f.input.NodeID, f.credential, lease.TaskID, lease.LeaseToken, events); err != nil {
+		t.Fatal(err)
+	}
+	var history training.Page[training.Attempt]
+	if err := json.Unmarshal([]byte(ok("training", "attempts", running.ID, "--output", "json")), &history); err != nil ||
+		len(history.Items) != 1 || history.Items[0].ID != lease.Training.AttemptID ||
+		history.Items[0].JobID != running.ID || history.NextCursor != nil {
+		t.Fatalf("attempt history lost its admitted scope: %v", err)
+	}
+	attempt := history.Items[0].ID
+	metrics := func(attempt, output string) []string {
+		return []string{"training", "metrics", running.ID, "--attempt", attempt, "--limit", "1", "--output", output}
+	}
+	firstArgs := metrics(attempt, "json")
+	first := ok(firstArgs...)
+	if first != ok(firstArgs...) {
+		t.Fatal("same retained metric page changed on retry")
+	}
+	var firstPage, nextPage training.Page[training.MetricRecord]
+	if err := json.Unmarshal([]byte(first), &firstPage); err != nil || len(firstPage.Items) != 1 || firstPage.NextCursor == nil ||
+		firstPage.Items[0].Sequence != 3 || firstPage.Items[0].GlobalStep != 1 || firstPage.Items[0].AttemptID != attempt {
+		t.Fatalf("first metric page lost its attempt, step or cursor: %v", err)
+	}
+	cursor := *firstPage.NextCursor
+	if table := ok(metrics(attempt, "table")...); !strings.Contains(table, "SEQUENCE") || !strings.Contains(table, cursor) {
+		t.Fatal("metric table omitted its sequence or continuation")
+	}
+	if err := json.Unmarshal([]byte(ok(append(firstArgs, "--cursor", cursor)...)), &nextPage); err != nil ||
+		len(nextPage.Items) != 1 || nextPage.Items[0].Sequence != 4 || nextPage.Items[0].GlobalStep != 2 ||
+		nextPage.Items[0].Values.Loss == nil || *nextPage.Items[0].Values.Loss != 0 || nextPage.NextCursor != nil {
+		t.Fatalf("next metric page lost the measured zero or its final boundary: %v", err)
+	}
+	unknown := uuid.NewString()
+	refused("INVALID_CURSOR", append(metrics(unknown, "json"), "--cursor", cursor)...)
+	refused("INVALID_CURSOR", "training", "attempts", running.ID, "--cursor", cursor)
+	refused("TRAINING_NOT_FOUND", metrics(unknown, "json")...)
+	refused("RESOURCE_NOT_FOUND", append(firstArgs, "--workspace", other)...)
+	refused("RESOURCE_NOT_FOUND", "training", "attempts", running.ID, "--workspace", other)
+	refused("--attempt must be a lowercase UUID", "training", "metrics", running.ID)
 	ok("logout")
 }
