@@ -149,3 +149,39 @@ run with the archive delivery in FLT-109.
 | GPU-204 to GPU-208 | Ascend requires an approved local driver and qualified hardware. Allocation and heterogeneous pools need the cell scheduler, and capacity planning needs retained fleet observations. |
 | GPU-209 | Intra-node topology and failure attribution require GPU-101 telemetry and real PCIe and NVLink/NVSwitch configurations to establish attribution. |
 | DEV-204 | The versioning guide and local comparison cover published operation identities. A release baseline, schema and behavioral compatibility checks, and runtime deprecation signaling need their owning release and API paths. |
+
+## Training intent CLI (DEV-102, TRN-101)
+
+[Kubectl create](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/)
+accepts a local declarative file. The
+[Kubeflow TrainJob lifecycle](https://trainer.kubeflow.org/en/latest/user-guides/trainjob-lifecycle.html)
+keeps training intent distinct from executor state. The
+[ownsolid training contract](../../api/openapi/v1/training/openapi.json)
+already supports Admin creation, detail and cancellation. Send the existing
+session, configured cell and selected workspace through the existing CLI
+transport. Use the operator's immutable dataset version and explicit request
+UUID for creation. Return the current revision and require that revision
+for cancellation. The control plane owns validation and state transitions.
+
+Pass the training configuration as a bounded local JSON object. Keep workspace
+selection in the existing CLI flags and settings. A file containing the entire
+request would create a second workspace selector. A flag for every tuning field
+would duplicate the versioned server schema. Use the current JSON or YAML
+output and display the durable state and revision in the default table.
+The existing Cobra (Apache-2.0), Go and x/sys (BSD-3-Clause), and
+[CLI test dependency licenses](sdk.md#licenses) cover this slice. These allow
+commercial and offline use and redistribution under their notice terms.
+No new dependency, model or dataset ships with the CLI change.
+
+Verify the actual Admin HTTPS workflow in disconnected PostgreSQL. Use a
+real processor-backed dataset publication and synthetic node, GPU and model
+metadata. Check a missing or malformed configuration, idempotent creation
+and refusal of a changed payload with the same key, scoped detail, stale-revision cancellation,
+a durable successful cancellation, and a replay with no additional audit
+event. The test exercises training intent and does not dispatch a worker.
+
+The Linux amd64 loopback HTTPS and PostgreSQL fixture ran the compiled CLI
+against the real Admin dispatcher. It published input rows with the installed
+Python 3.12 processor, queued one job on replay, refused changed intent and
+a foreign tenant, and preserved exactly one cancellation audit after a
+stale-revision refusal and a successful retry at the new revision.
