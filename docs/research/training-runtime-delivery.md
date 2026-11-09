@@ -171,9 +171,9 @@ control integration remain open.
 
 ### Retained inputs and the experiment record boundary
 
-The retained wheel inventory, Linux pip HTTP cache and earlier fixture
-directories supply the 30 dependency archives and the catalogued Qwen
-files. They supply no local copy of
+The initial inspection of the retained wheel inventory, Linux pip HTTP
+cache and earlier fixture directories found the 30 dependency archives
+and the catalogued Qwen files. It found no local copy of
 `pip-26.2.1-py3-none-any.whl` matching the runtime manifest's 1,816,632
 bytes and SHA-256
 `71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e`.
@@ -199,3 +199,31 @@ the exact full training lock verified during manufacture. The projected
 preview lock and the frozen reference in a worker request describe
 different inputs. Until the approved full image and its build evidence
 exist, the experiment's dependency lock field stays unavailable.
+
+### Pinned installer admission
+
+Stage the [pip 26.2.1 upstream wheel](https://pypi.org/project/pip/26.2.1/#files)
+from the exact URL in the runtime manifest. The downloaded file matched
+the manifest's 1,816,632 bytes and SHA-256
+`71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e`.
+The upstream release metadata supplied the same size and digest.
+
+The Linux amd64 disconnected release checker admitted all 30 projected
+dependencies and the exact installer. It returned
+`missing wheels: none; missing notices: tokenizers` and removed its
+incomplete staging directory. The exact pip artifact clears the installer
+input for this fixture. Release admission still requires approved notices
+for the selected Tokenizers binary, or an approved replacement pin with
+the required notices. The separate full training image and its verified
+manifest, config and full-lock mapping remain release inputs.
+
+A separate tokenizer test installed those same 30 pinned wheels with
+pip 26.2.1 in a fresh CPython 3.12.3 environment with external networking
+disabled. Installation used local binary wheels and required each hash.
+`pip check` passed and the installed inventory contained 31 packages,
+including pip. The projected lock had SHA-256
+`7873b0c15e07995060826373087b050437d10cee5af935e6c717b9e10622c19d`.
+All 19 training runtime tests passed with the approved local Qwen
+tokenizer assets. This install was a private runtime test. The strict
+release checker still requires the binary notice before emitting a
+fixture manifest.
