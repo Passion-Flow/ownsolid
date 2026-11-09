@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"path/filepath"
+	"strings"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	"strings"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 const draftFields = `error_line_number,id::text,dataset_id::text,workspace_id::text,created_by::text,parent_version_id::text,source_name,source_sha256,expected_bytes,source_received_at,state,revision,CASE WHEN validation_completed_at IS NOT NULL THEN total_rows END,CASE WHEN validation_completed_at IS NOT NULL THEN invalid_rows END,validation_completed_at,fatal_source_error,validation_errors,errors_truncated,error_code,current_job_id::text,published_version_id::text,created_at,updated_at`
@@ -65,7 +66,7 @@ func (s *Service) CreateDraft(ctx context.Context, a identity.Auth, workspace, d
 }
 func (s *Service) createDraft(ctx context.Context, a identity.Auth, workspace, dataset string, input DraftRequest, key, requestID, parentVersion string) (Draft, error) {
 	var out Draft
-	if !wire.ValidID(key) || !validText(input.SourceName, 255) || strings.ContainsAny(input.SourceName, "/\\") || filepath.Base(input.SourceName) != input.SourceName || input.SourceName == "." || input.SourceName == ".." || !wire.ValidDigest(input.SourceSHA256) || input.ExpectedBytes < 1 || input.ExpectedBytes > s.policy().Limits.MaximumBytes || !validReason(input.Reason) {
+	if !wire.ValidID(key) || !validDraftSourceName(input.SourceName) || !wire.ValidDigest(input.SourceSHA256) || input.ExpectedBytes < 1 || input.ExpectedBytes > s.policy().Limits.MaximumBytes || !validReason(input.Reason) {
 		return out, failure("VALIDATION_FAILED")
 	}
 	intent := fingerprint(struct {
@@ -120,19 +121,15 @@ func (s *Service) createDraft(ctx context.Context, a identity.Auth, workspace, d
 			parentID = &parentVersion
 		}
 
-		var count int
-		if e = tx.QueryRow(ctx, datasetSQL(tx, "SELECT count(*) FROM dataset_drafts WHERE tenant_id=$1 AND workspace_id=$2 AND state NOT IN ('published','cancelled')", `SELECT count(*) FROM dataset_drafts WHERE tenant_id=? AND workspace_id=? AND state NOT IN ('published','cancelled')`, []any{w.TenantID, w.ID}, []any{w.TenantID, w.ID}, transaction.SQL(transaction.Dameng, dmDraftActiveCount, w.TenantID, w.ID))).Scan(&count); e != nil {
+		if e = s.checkDraftCapacity(ctx, tx, w); e != nil {
 			return e
-		}
-		if count >= s.policy().MaxActiveDrafts {
-			return failure("DATASET_LIMIT_REACHED")
 		}
 		authority, e := delegatedAuthority(ctx, tx, a, w)
 		if e != nil {
 			return e
 		}
 		id = uuid.NewString()
-		_, e = tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_drafts(id,tenant_id,workspace_id,dataset_id,created_by,requested_audience,requested_epoch,membership_authority,source_object_id,source_name,source_sha256,expected_bytes,state,creation_key,creation_fingerprint,parent_version_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'uploading',$13,$14,$15)`, `INSERT INTO dataset_drafts(id,tenant_id,workspace_id,dataset_id,created_by,requested_audience,requested_epoch,membership_authority,source_object_id,source_name,source_sha256,expected_bytes,state,creation_key,creation_fingerprint,parent_version_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'uploading',?,?,?)`, []any{id, w.TenantID, w.ID, dataset, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, uuid.NewString(), input.SourceName, input.SourceSHA256, input.ExpectedBytes, key, intent, parentID}, []any{id, w.TenantID, w.ID, dataset, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, uuid.NewString(), input.SourceName, input.SourceSHA256, input.ExpectedBytes, key, intent, parentID}, transaction.SQL(transaction.Dameng, dmDraftInsert, id, w.TenantID, w.ID, dataset, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, uuid.NewString(), input.SourceName, input.SourceSHA256, input.ExpectedBytes, key, intent, parentID)))
+		e = insertDraft(ctx, tx, a, w, dataset, id, uuid.NewString(), input, key, intent, parentID, authority)
 		if e != nil {
 			return e
 		}
@@ -144,6 +141,26 @@ func (s *Service) createDraft(ctx context.Context, a identity.Auth, workspace, d
 	})
 	return committed(out, e)
 }
+func validDraftSourceName(name string) bool {
+	return validText(name, 255) && !strings.ContainsAny(name, "/\\") && filepath.Base(name) == name && name != "." && name != ".."
+}
+
+func (s *Service) checkDraftCapacity(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+	var count int
+	if e := tx.QueryRow(ctx, datasetSQL(tx, "SELECT count(*) FROM dataset_drafts WHERE tenant_id=$1 AND workspace_id=$2 AND state NOT IN ('published','cancelled')", `SELECT count(*) FROM dataset_drafts WHERE tenant_id=? AND workspace_id=? AND state NOT IN ('published','cancelled')`, []any{w.TenantID, w.ID}, []any{w.TenantID, w.ID}, transaction.SQL(transaction.Dameng, dmDraftActiveCount, w.TenantID, w.ID))).Scan(&count); e != nil {
+		return e
+	}
+	if count >= s.policy().MaxActiveDrafts {
+		return failure("DATASET_LIMIT_REACHED")
+	}
+	return nil
+}
+
+func insertDraft(ctx context.Context, tx transaction.Executor, a identity.Auth, w workspaces.Workspace, dataset, id, object string, input DraftRequest, key string, intent []byte, parentID, authority *string) error {
+	_, e := tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_drafts(id,tenant_id,workspace_id,dataset_id,created_by,requested_audience,requested_epoch,membership_authority,source_object_id,source_name,source_sha256,expected_bytes,state,creation_key,creation_fingerprint,parent_version_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'uploading',$13,$14,$15)`, `INSERT INTO dataset_drafts(id,tenant_id,workspace_id,dataset_id,created_by,requested_audience,requested_epoch,membership_authority,source_object_id,source_name,source_sha256,expected_bytes,state,creation_key,creation_fingerprint,parent_version_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'uploading',?,?,?)`, []any{id, w.TenantID, w.ID, dataset, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, object, input.SourceName, input.SourceSHA256, input.ExpectedBytes, key, intent, parentID}, []any{id, w.TenantID, w.ID, dataset, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, object, input.SourceName, input.SourceSHA256, input.ExpectedBytes, key, intent, parentID}, transaction.SQL(transaction.Dameng, dmDraftInsert, id, w.TenantID, w.ID, dataset, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, object, input.SourceName, input.SourceSHA256, input.ExpectedBytes, key, intent, parentID)))
+	return e
+}
+
 func (s *Service) GetDraft(ctx context.Context, a identity.Auth, workspace, dataset, id string) (Draft, error) {
 	var out Draft
 	e := s.transaction(ctx, a, workspace, false, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
