@@ -189,19 +189,75 @@ The candidate management routes live under `/api/v1/me/totp/`.
 recovery values and `revocation` removes the active factor.
 `POST /api/v1/auth/login/totp` completes the pending login and
 `POST /api/v1/me/password-changes` accepts inline TOTP proof.
+
+## PostgreSQL migration and serving handoff
+
+The factor, challenge and recovery relations belong to global identity under
+[ADR 0006](../decisions/0006-cell-and-site-scope.md), like `users`, `sessions`
+and `sso_flows`. They carry no site or cell columns. The factor belongs to
+the global user and the server-selected installation tenant. Composite
+[foreign keys](https://www.postgresql.org/docs/18/ddl-constraints.html#DDL-CONSTRAINTS-FK)
+bind both child relations to that exact tenant, user and factor. The cell
+scope on audit events still comes from the existing audit writer.
+
+Stage the forward and down SQL beside the identity HTTPS fixture, outside the
+embedded migration lineage. Use the exact
+[`up` file](../../services/control/internal/modules/identity/http/testdata/admin_totp_candidate.up.sql)
+and [`down` file](../../services/control/internal/modules/identity/http/testdata/admin_totp_candidate.down.sql).
+The forward change adds three tables without
+rewriting existing identities, sessions, credentials or tenants. Retain the
+candidate's factor IDs, AES-GCM associated data, secret format and recovery
+HMAC purpose. Expiry and factor indexes give a later retention owner a
+bounded removal path without changing the login contract. The down SQL
+permits an empty rollback and refuses rollback while any factor exists.
+Dropping enrolled factors would remove the authentication gate, and dropping
+pending factors would interrupt an enrollment. The migration owner already
+wraps DDL in a transaction. PostgreSQL's
+[index definitions](https://www.postgresql.org/docs/18/sql-createindex.html)
+and [backup utilities](https://www.postgresql.org/docs/18/app-pgdump.html)
+add no runtime dependency. The
+[PostgreSQL License](https://www.postgresql.org/about/licence/) permits
+commercial use, redistribution with the license notices and offline use.
+
+Verify the exact unnumbered SQL against a migrated, bootstrapped fixture with
+an existing Portal session. Prove empty rollback and reapply, unchanged old
+session authority, global relation shape, and refusal of cross-tenant child
+links. After enrolling through HTTPS, prove a rollback cannot remove the
+factor or its recovery values. Restart with a new active key plus the retained
+key, verify the original factor and consume an original recovery value once.
+Reject missing relations, missing columns, unsafe key files and absent or
+wrong retained key material. Keep key selection at startup read-only. An
+automatic rewrite during replica startup could make an older replica unable
+to verify a factor. A separate rewrap and retirement operation requires
+coordinated key distribution and recovery verification.
+
+The startup fixture passed those checks three times on disconnected Linux
+arm64 with PostgreSQL 18.6 and pgvector 0.8.7, using the schema 57 lineage at
+`f83a9fde` as the predecessor. The other TOTP HTTPS cases and the session
+rotation and shared-host regressions also passed three times with the
+forward SQL.
+
 Before enabling enrollment, integrate these owner boundaries:
 
-- The database owner must add the three relations as the next PostgreSQL
-  migration and update `SchemaVersion` and `TableCount` in the database
-  owner, schema inventory, backup, restore and expiry cleanup. Startup
-  must validate the full schema and all active key versions before serving.
-- Control configuration and `cmd/server/selected_database.go` must map
-  the dedicated policy to `identity.AdminTOTPConfiguration` and call
-  `Service.ConfigureAdminTOTP` after selecting the migrated database and
-  before constructing the handler. Treat any returned error as fatal to
-  that startup. Installation provisioning, restore and rotation must
-  supply all live key versions to each replica. Federated Admin issuance
-  in the SSO owner must join the factor gate before issuing a full session.
+- ARC owns numbering the reviewed migration and updating `SchemaVersion`,
+  `TableCount` (+3), the global list in `cell_scope_test.go`, the schema
+  inventory and runtime grants. Generate catalog fingerprints from the
+  selected fresh and restore histories. Verify backup/restore preserves the
+  three relations and keeps their protected keyring and the existing
+  authentication HMAC available. Keep expiry cleanup with the lifecycle owner.
+  Once the SQL joins the lineage, the identity upgrade test needs an explicit
+  predecessor fixture and the ordinary HTTPS cases can use the migrated schema.
+- The control configuration owner maps the dedicated typed policy to
+  `identity.AdminTOTPConfiguration`. In `cmd/server/runtime_lifecycle.go`,
+  `serveSelected` has the selected identity service after
+  `verifyServingDatabase` and before workers, SSO and `identityhttp.New`.
+  Call `Service.ConfigureAdminTOTP(startup, policy)` there and return its
+  error before constructing any handler. The zero policy preserves legacy
+  serving. When enabled, installation provisioning, restore and rotation
+  must supply all live key versions to each replica. The shared identity
+  issuer already refuses full Admin sessions for enrolled users without a
+  verified second factor. An SSO challenge flow for those users remains
+  with the SSO owner.
 - The identity OpenAPI and generated clients must describe the pending
   login response, completion, enrollment, recovery display, revocation
   and the inline proof. Web needs an Admin challenge screen and account
