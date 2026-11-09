@@ -63,3 +63,52 @@ async fn reporter_wakes_on_publication_but_respects_outage_backoff() {
     assert_eq!(attempts.load(Ordering::SeqCst), 5);
     gateway.stop().await;
 }
+
+#[tokio::test]
+async fn reporter_retries_retained_outcome_without_more_traffic() {
+    let fixture = Fixture::new().await;
+    let response = fixture
+        .chat(false)
+        .send()
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap();
+    let request_id =
+        uuid::Uuid::parse_str(response.headers()["x-request-id"].to_str().unwrap()).unwrap();
+    let body: serde_json::Value = response.json().await.unwrap();
+    assert_eq!(body["usage"]["total_tokens"], 9);
+
+    fixture.state.control_mode.store(6, Ordering::SeqCst);
+    let (stop, receiver) = watch::channel(false);
+    let app = fixture.app();
+    let reporter = tokio::spawn(crate::reporting::run(app.clone(), receiver));
+    let attempts = &fixture.state.outcome_attempts;
+    wait_until(|| attempts.load(Ordering::SeqCst) >= 1).await;
+    let pending = app.spool.next_pending().unwrap().unwrap();
+    assert_eq!(pending.request_id, request_id);
+    assert!(fixture.state.outcomes.lock().unwrap().is_empty());
+
+    fixture.state.control_mode.store(0, Ordering::SeqCst);
+    let retry = Duration::from_secs(app.configuration.limits.outcome_retry_seconds);
+    tokio::time::timeout(retry + Duration::from_secs(5), async {
+        while app.spool.next_pending().unwrap().is_some() {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .expect("a healthy control endpoint did not acknowledge the retained outcome");
+    assert!(!reporter.is_finished());
+    assert!(attempts.load(Ordering::SeqCst) >= 2);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
+    {
+        let outcomes = fixture.state.outcomes.lock().unwrap();
+        assert_eq!(outcomes.len(), 1);
+        assert_eq!(outcomes[0].digest().unwrap(), pending.digest().unwrap());
+    }
+    stop.send_replace(true);
+    tokio::time::timeout(Duration::from_secs(3), reporter)
+        .await
+        .unwrap()
+        .unwrap();
+}

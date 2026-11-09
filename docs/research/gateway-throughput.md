@@ -187,3 +187,22 @@ test host. Build the optimized gateway with
 `cargo build --release --locked --offline --bin projectone-gateway`,
 then run the profile's `run-profile.sh` with its own directory, a unique
 container name stem, and `^TestRealGoRustPostgresCapacityProfile$`.
+
+## Retry without additional traffic
+
+The [pinned Tokio timer](https://github.com/tokio-rs/tokio/blob/tokio-1.53.3/tokio/src/time/sleep.rs)
+allows the reporter to wake at its deadline independently of spool
+notifications. Existing backoff coverage exercises a fresh publication
+during a 503 and a final shutdown drain. Add a separate TLS regression
+that leaves one durable record pending after a 503, restores the
+control endpoint, and proves the same canonical digest is acknowledged
+while the reporter stays running and no new inference takes place.
+Calling the drain explicitly or ending the process would exercise a
+different recovery path. Reuse the existing pinned MIT test stack and
+synthetic fixture. No dependency, model or dataset is added.
+
+The disconnected Rust TLS run retained a receipt after a control 503,
+then acknowledged its original digest through the scheduled retry
+with the reporter still running. Only the original request generated
+output. The publication wake and outage backoff regression passed in
+the same run, followed by Clippy with warnings denied.
