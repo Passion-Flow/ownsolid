@@ -15,7 +15,10 @@ Measuring models and applications before release, and gating releases on the res
     binds a published validation partition to an existing base-model capture and
     re-scores it. Disconnected replay against a PostgreSQL-published fixture
     reproduced the report from synthetic captures. The authorized product
-    workflow, UI and real inference repeatability remain open.
+    workflow and UI remain open.
+  - [Persisted report integrity](../../research/evaluation-reproducibility.md#persisted-report-integrity-on-a-real-cpu-capture)
+    reproduced a report from real CPU responses and refused changed outcomes.
+    Repeatability evidence covers the fixed CPU safety profile.
 - [ ] EVL-102 Model-against-model comparison on the customer's own set (P1) - Catalog: F067
   - [Offline paired comparison](../../../runtimes/model-lifecycle/README.md#compare-two-captured-evaluations)
     replays two retained reports on one frozen validation version and records
