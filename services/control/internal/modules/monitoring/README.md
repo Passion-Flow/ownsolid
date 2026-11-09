@@ -367,19 +367,18 @@ Control's system CA store. Plain HTTP is restricted to loopback IP literals.
 The same origin cannot represent both tiers. Omitting the long origin allows
 raw-only reads within the raw horizon. Omitting the policy disables history.
 
-The Admin API owner should map the already authenticated and Origin-checked
-request to Service.GetFleetHistory with the workspace, whole-second start and
-end, and Control's request ID. The service checks the current installed
-tenant and workspace twice and commits the existing diagnostic audit before
-releasing counts. The API should publish the returned tier, evaluated grid
-bounds, step and sparse points. A missing point is unobserved. Reachable zero
-with a positive observed count is a real observation. Report
-MONITORING_HISTORY_NOT_CONFIGURED and MONITORING_LONG_TIER_NOT_CONFIGURED
-as configuration errors, MONITORING_RAW_TIER_UNAVAILABLE and
-MONITORING_LONG_TIER_UNAVAILABLE as retryable store failures, and
-MONITORING_HISTORY_RANGE_INVALID as an invalid time range. Do not retry a
-long-tier request against raw. Keep the VictoriaMetrics query endpoints
-private and the existing current snapshot contract intact.
+The unregistered HandleFleetHistory method accepts the cell-relative
+history path, exactly one `workspace_id` and the whole-second UTC
+`from` and `to` query parameters. The existing Admin dispatcher must
+authenticate the request, check its Origin, resolve its cell and
+supply the Control request ID. On success the method supplies a
+complete JSON body up to 1 MiB after the second authority check and
+the audit commit. Missing points are unobserved. Reachable zero with
+a positive observed count is an observation. Use the
+[HTTP candidate handoff](../../../../../docs/research/telemetry-retention-tiers.md#verified-bounded-http-candidate)
+to register the distinct candidate statuses and error codes through
+the shared problem writer before publishing the route. The regular
+snapshot stays on its existing path.
 
 For the Linux amd64 acceptance run, export OWNSOLID_TEST_POSTGRES_IMAGE to
 the preloaded, verified PostgreSQL 18.6 and pgvector 0.8.7 image ID. Set
