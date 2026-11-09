@@ -203,3 +203,35 @@ Go/Rust shared and dedicated HTTPS gateway regressions also passed.
 The HTTPS endpoint used to check the serving certificate was a Go
 fixture. The [public CA download contract](gateway-trust-download-contract.md)
 is published. Console and Portal links remain open.
+
+### Caller trust during issuer replacement
+
+[RFC 5280 path validation](https://www.rfc-editor.org/rfc/rfc5280.html#section-6.1)
+allows validation using a selected set of trust anchors. The existing
+model gateway authority uses the first certificate and matching private
+key for issuance. Its loaded bundle can also contain the previous
+public CA while existing leaves remain valid. Returning the issuer
+alone would strand callers that download trust during the overlap.
+Reading the configured file per request would let an unactivated edit
+change caller trust independently of the loaded authority.
+
+Use two generated fixture CAs and keep the original serving certificate
+live. Load a second control dispatcher with the replacement signing key
+and a bundle containing the replacement CA and the previous CA. Admin
+and Portal must receive the same ordered public certificate bundle.
+A client using only that download must still verify the original
+gateway hostname and leaf over TLS. The original dispatcher keeps the
+trust it loaded earlier. The existing Go, PostgreSQL and pgx licence
+terms apply. No dependency, model or data set is added.
+
+The disconnected Linux PostgreSQL and TLS run passed
+`TestModelGatewayCAForPublishedAliasOverTLS` with issuer overlap.
+Both audiences downloaded the replacement CA followed by the retained
+old CA. A fresh TLS client loaded only that attachment and verified the
+previously issued leaf against the published hostname. The original
+dispatcher still served its previously loaded CA. The endpoint and
+node observations were fixture data.
+
+```sh
+go -C services/control test -p 1 ./internal/modules/distribution -run '^TestModelGatewayCAForPublishedAliasOverTLS$' -count=1
+```
