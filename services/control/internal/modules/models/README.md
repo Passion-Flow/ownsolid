@@ -31,6 +31,16 @@ or cannot verify the published copy. Inspect the model store and restore damaged
 published files from a verified backup before retrying. The worker retries
 automatically, and the import's history and model files remain in the store.
 
+The optional PostgreSQL expiry worker is a candidate. A trusted caller
+can set `Service.ImportExpiry` before starting `Run` to reclaim incomplete
+uploads for one active workspace after an explicit period without new
+committed bytes. The worker writes a system audit and durable intent,
+discards recognized staging files, then records the cancelled import
+with `MODEL_IMPORT_EXPIRED`. The original import ID and byte count remain
+visible through the existing read and idempotency paths. After expiry,
+start a fresh import with a new idempotency key. Startup configuration and
+the Console are pending, so deployed installations leave expiry disabled.
+
 This is a large owner with distinct import, verified storage and derived-model areas. A future split should preserve one authority and the exact acceptance/retirement transaction; do not create parallel “base” and “derived” authorization systems just to reduce file count.
 
 Synchronize contracts/agent model catalogs and model-lifecycle references, [M06](../../../../../docs/milestones/m06-models), control/deployment consumers, [models frontend](../../../../../web/README.md), model-cache policy/examples and offline/image source manifests.
