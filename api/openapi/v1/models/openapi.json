@@ -197,11 +197,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Scoped result",
+            "description": "Scoped model detail with retained dataset lineage when available.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ModelVersionResponse"
+                  "$ref": "#/components/schemas/AdminModelDetailResponse"
                 }
               }
             }
@@ -1948,6 +1948,159 @@
           }
         ]
       },
+      "ModelDatasetVersionReference": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "maxLength": 36
+          },
+          "dataset_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "maxLength": 36
+          },
+          "manifest_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "dataset_id",
+          "dataset_version_id",
+          "manifest_sha256"
+        ]
+      },
+      "ModelDatasetLineage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "training": {
+            "$ref": "#/components/schemas/ModelDatasetVersionReference"
+          },
+          "holdout": {
+            "$ref": "#/components/schemas/ModelDatasetVersionReference"
+          }
+        },
+        "required": [
+          "training",
+          "holdout"
+        ]
+      },
+      "AdminModelDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "model_key": {
+            "type": "string",
+            "const": "qwen3-0.6b"
+          },
+          "catalog_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "approved_base",
+              "merged_lora"
+            ]
+          },
+          "manifest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelCatalog"
+              },
+              {
+                "$ref": "#/components/schemas/DerivedModelCatalog"
+              }
+            ]
+          },
+          "state": {
+            "type": "string",
+            "const": "ready"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataset_lineage": {
+            "$ref": "#/components/schemas/ModelDatasetLineage"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "model_key",
+          "catalog_digest",
+          "kind",
+          "manifest",
+          "state",
+          "created_at"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "approved_base"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "manifest": {
+                  "$ref": "#/components/schemas/ModelCatalog"
+                }
+              },
+              "not": {
+                "required": [
+                  "dataset_lineage"
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "merged_lora"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "manifest": {
+                  "$ref": "#/components/schemas/DerivedModelCatalog"
+                }
+              }
+            }
+          }
+        ]
+      },
       "ModelImport": {
         "type": "object",
         "additionalProperties": false,
@@ -2415,6 +2568,18 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/ModelVersion"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "AdminModelDetailResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AdminModelDetail"
           }
         },
         "required": [

@@ -86,3 +86,49 @@ The Console prerequisite landed in commit 7ae05f17. Its profile map
 accepts the Kubernetes value and the English and Simplified Chinese locale
 files define its label before the generated response enum expands. See the
 [Console verification](nodes-page.md#kubernetes-execution-profile-dev-101-arc-104).
+
+## MOD-103 and DAT-106 Admin model detail
+
+The [retained lineage handoff](training-dataset-lineage.md#dev-contract-handoff)
+defines the two source references and the server's existing integrity boundary.
+Publish the optional field only on the successful Admin detail operation.
+Leave the published manifest, scope, status codes, lists and Portal reads
+under their existing contracts.
+
+[OpenAPI 3.1.1](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
+uses JSON Schema 2020-12. Its
+[object applicators](https://json-schema.org/draft/2020-12/json-schema-core#name-applicators)
+evaluate `additionalProperties` in the schema that declares it. Combining the
+existing closed ModelVersion with an extra property under `allOf` would
+reject enriched data. Use a separate closed Admin detail object with the
+same base fields and manifest conditions. A tooling test compares those
+fields so the two schemas cannot drift. Reusing a newly factored open schema
+would also change the existing generated types. [AIP-180](https://google.aip.dev/180)
+distinguishes additive wire changes from generated source types. Existing
+SDKs that tolerate unknown response fields can read the enriched result.
+A consumer validating against the former closed Admin detail schema needs
+the updated schema before accepting an enriched response.
+
+Require both retained version references when lineage is present. Each is a
+closed object with canonical lowercase UUIDs and a lowercase SHA-256 digest.
+Reject null, incomplete pairs, unexpected members, noncanonical IDs and
+digests, and lineage on an approved base model. Keep omission valid for
+previously published metadata. A corrupt derived graph keeps the existing
+conflict error. The current [SDK license inventory](sdk.md#licenses)
+applies. This change adds no dependency, model, dataset or network access.
+
+Verify the SDK projection, regenerated Web artifacts, and the runtime response
+against the exact Admin schema. In the disconnected TLS and PostgreSQL fixture,
+check the retained training and holdout tuples, a base response without
+lineage, scope and conflict refusals, and the unchanged list and Portal schemas.
+
+The joined Linux amd64 fixture checked trusted HTTPS and PostgreSQL with
+only loopback. Retiring the training dataset version preserved both source triples.
+The Admin response passed its published schema. The same fixture checked
+the original shape for base and Portal reads and both lists, scope refusals,
+and the existing conflict error on corrupt metadata. The schema rejected
+null and incomplete lineage, extra fields, noncanonical identifiers and
+digests, and lineage on an approved base. Older generated Go and Python
+clients decoded the captured Admin response with the original fields. The
+new clients generated with the pinned tools also decoded both retained
+references and accepted responses with the property omitted.
