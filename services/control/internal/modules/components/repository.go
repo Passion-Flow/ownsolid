@@ -5,15 +5,18 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/google/uuid"
+
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
-	"github.com/google/uuid"
-	"strings"
-	"time"
 )
 
 func componentSQL(q transaction.Executor, pg, my, dm string, args ...any) transaction.Statement {
@@ -185,14 +188,16 @@ func componentStale(s *Service, n nodes.Node, received time.Time) bool {
 // recentLogRecords is how far back Logs looks past records of rolled-back settlements.
 const recentLogRecords = 16
 
+// Share a read slot across a user's sessions and nodes in this control process.
+var activeLogReaders sync.Map
+
 // settledRecord returns the newest record authorized by a succeeded task for that
 // operation. The log store also holds records from settlements that rolled back.
-func (s *Service) settledRecord(ctx context.Context, a identity.Auth, nodeID string, records []telemetrystore.Record) (*telemetrystore.Record, error) {
-	if len(records) == 0 {
-		return nil, nil
-	}
+func (s *Service) settledRecord(ctx context.Context, a identity.Auth, nodeID string, records []telemetrystore.Record) (nodes.Node, *telemetrystore.Record, error) {
+	var current nodes.Node
 	var settled *telemetrystore.Record
 	e := s.within(ctx, a, "", nodeID, func(ctx context.Context, q transaction.Executor, n nodes.Node) error {
+		current = n
 		scope := logScope(n)
 		for i := range records {
 			record := &records[i]
@@ -219,13 +224,28 @@ func (s *Service) settledRecord(ctx context.Context, a identity.Auth, nodeID str
 		}
 		return nil
 	})
-	return settled, e
+	return current, settled, e
 }
 
+// Logs reads the latest authorized, settled component snapshot within one request budget.
 func (s *Service) Logs(ctx context.Context, a identity.Auth, nodeID string) (LogSnapshot, error) {
 	if a.Me.Audience != "admin" || !a.Me.User.IsPlatformAdmin {
 		return LogSnapshot{}, errors.New("ACCESS_DENIED")
 	}
+	if ctx == nil {
+		return LogSnapshot{}, errors.New("VALIDATION_FAILED")
+	}
+	if _, e := s.repository(); e != nil {
+		return LogSnapshot{}, e
+	}
+	user := a.Me.User.ID
+	if _, busy := activeLogReaders.LoadOrStore(user, struct{}{}); busy {
+		return LogSnapshot{}, errors.New("RESOURCE_LIMIT_REACHED")
+	}
+	defer activeLogReaders.Delete(user)
+	ctx, cancel := context.WithTimeout(ctx, config.Seconds(s.Nodes.Identity.Config.Policy().HTTP.RequestSeconds))
+	defer cancel()
+
 	// The node is read in the transaction; the store is asked after it ends, so no
 	// database connection waits on the network.
 	var n nodes.Node
@@ -239,14 +259,20 @@ func (s *Service) Logs(ctx context.Context, a identity.Auth, nodeID string) (Log
 		return LogSnapshot{}, errors.New("STORAGE_UNAVAILABLE")
 	}
 	records, e := s.LogStore.Recent(ctx, logScope(n), recentLogRecords)
-	if e != nil {
+	if err := ctx.Err(); err != nil {
+		return LogSnapshot{}, componentError(err)
+	}
+	if e != nil || len(records) > recentLogRecords {
 		return LogSnapshot{}, errors.New("STORAGE_UNAVAILABLE")
 	}
-	record, e := s.settledRecord(ctx, a, nodeID, records)
+	current, record, e := s.settledRecord(ctx, a, nodeID, records)
 	if e != nil {
 		return LogSnapshot{}, e
 	}
-	out := LogSnapshot{NodeID: n.ID, Stale: true}
+	if err := ctx.Err(); err != nil {
+		return LogSnapshot{}, componentError(err)
+	}
+	out := LogSnapshot{NodeID: current.ID, Stale: true}
 	if record == nil || record.Removed {
 		return out, nil
 	}
@@ -258,6 +284,6 @@ func (s *Service) Logs(ctx context.Context, a identity.Auth, nodeID string) (Log
 	out.Snapshot = &value
 	out.ReceivedAt = &received
 	out.TaskID = &record.TaskID
-	out.Stale = componentStale(s, n, received)
+	out.Stale = componentStale(s, current, received)
 	return out, nil
 }

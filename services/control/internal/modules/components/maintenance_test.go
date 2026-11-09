@@ -30,6 +30,11 @@ func maintenanceSetup(t *testing.T) maintenanceScenario {
 	t.Helper()
 	account := fixture.New(t)
 	password := fixture.Bootstrap(t, account)
+	return maintenanceSetupWithIdentity(t, account, password)
+}
+
+func maintenanceSetupWithIdentity(t *testing.T, account *identity.Service, password string) maintenanceScenario {
+	t.Helper()
 	a := fixture.Login(t, account, "admin@example.invalid", password, "admin")
 	portal := fixture.Login(t, account, "admin@example.invalid", password, "portal")
 	n := &nodes.Service{DB: account.DB, Identity: account, Workspaces: &workspaces.Service{DB: account.DB, Identity: account}}

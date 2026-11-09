@@ -9,6 +9,11 @@ Migrations 000004–000005 retain managed component state. Log snapshots live in
 A log snapshot requires a succeeded logs task in the same tenant, workspace,
 node and component scope. A removal marker requires a succeeded remove task.
 Unrelated records are skipped so they cannot replace a valid snapshot or hide it.
+The Admin route allows one active snapshot read per user in a control process.
+Concurrent reads receive `RESOURCE_LIMIT_REACHED`. The request deadline and
+disconnect propagate to the store, and the slot is released on exit. The
+service rechecks the current role, session and node scope after the bounded
+store read, including empty results.
 
 Desired configuration/version is distinct from observed/applied state. Failure, stale observation, rollback and task result must remain tied to the exact node task; do not mark desired state as actual installation.
 
