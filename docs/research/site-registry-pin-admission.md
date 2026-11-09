@@ -12,18 +12,12 @@ separates publishing from serving.
 ## Authority and current boundary
 
 - [Release proof](../../tools/release/offline/pkg/bundle/image_proof.go)
-  exposes only legacy `PreparedImageProof` and `VerifyImageProof`. The former
-  calls the legacy prepared verifier. The latter directly calls
-  [the legacy manifest validator](../../api/release/v1/manifest.go), which refuses
-  the current profile. [The current bundle API](../../tools/release/offline/pkg/bundle/current.go)
-  exposes archive inspect, unpack and image reading, but no equivalent durable
-  prepared or cached proof verification. Current verification also owns versioned
-  release trust. The release owner needs profile-specific prepared, issue-proof
-  and verify-proof entry points under the same current manifest and trust policy,
-  with the expected archive and manifest hashes. Both catalog/import and
-  recovery/restore need the same verification selection. Reinterpreting the
-  current manifest as legacy or importing from a TLS digest alone loses signed
-  approval and license authority.
+  uses the signed release profile for prepared verification and cached proof
+  readback since the [DEL-108 proof change](https://github.com/Passion-Flow/ownsolid/commit/b30e8665).
+  The consumer selects the OCI reader using the verified profile returned
+  by that proof or by full prepared verification during reconciliation.
+  It does not retry a refusal under a different profile. The original
+  release verification still owns the license notices and approved digest.
 - [Registry configuration](../../services/control/internal/platform/registryconfig/config.go)
   has one endpoint, used for writes, verification and consumer references.
   The module now accepts a separate typed private source, with its own
@@ -63,7 +57,7 @@ and the existing test extension pgvector uses the
 These permit commercial use, redistribution with the applicable notices
 and offline operation.
 
-## Linux amd64 result
+## Initial Linux amd64 result
 
 The [isolated runner](../../services/control/internal/modules/imageregistry/testdata/run-site-admission.sh)
 passed on PostgreSQL 18.6 and Distribution 3.1.2 with only loopback.
@@ -110,9 +104,9 @@ explicit reconciliation after a SQL rollback without reading the site
 again. An incomplete stage retains the existing abandon and discard flow.
 
 The module constructor is additive and the control composition owner still
-needs to pass the protected configuration file. Current DEL-108 proof
-admission remains the release owner's boundary. Legacy bundle admission,
-tenant permissions and destination routing are unchanged. Verify against
+needs to pass the protected configuration file. The consumer uses the verified
+profile for initial archive reads and retry after SQL rollback. Legacy bundle
+admission, tenant permissions and destination routing are unchanged. Verify against
 the small loopback Distribution/PostgreSQL fixture with distinct source
 credentials and the same authenticated import entry point. Check wrong
 origin and trust, missing source bytes despite a usable archive, successful
@@ -136,5 +130,7 @@ the site receipt, signed archive digests and license notices. The destination
 verified every descriptor, and a different Workspace could not read the pin.
 Unit refusals covered a missing trust or credential file, a source using the
 destination authority or credential pair, a redirect toward the destination,
-and asset names that could escape the release namespace. The same integration
-run kept the incompatible current proof blocked before reservation.
+and asset names that could escape the release namespace. The small signed
+current-profile fixture uses synthetic OCI content. An incorrect expected
+release digest was refused before reservation. The installed DEL-108 release
+group and control startup still require integrated acceptance.
