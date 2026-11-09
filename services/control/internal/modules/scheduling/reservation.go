@@ -183,10 +183,15 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
 	return true, nil
 }
 
-// ReleaseWithin ends the exact attempt in the owner's existing transaction.
-// The owner must already have verified that the attempt stopped or was never
-// delivered. False with no error means this exact attempt was released earlier.
+// ReleaseWithin ends a single-replica attempt in the owner's transaction
+// after the owner has verified that it stopped or was never delivered.
+// An already released exact attempt replays with false and no error.
+// Active reservations with multiple replicas require ReleaseGangWithin.
 func ReleaseWithin(ctx context.Context, q transaction.Executor, a Attempt) (bool, error) {
+	return releaseWithin(ctx, q, a, nil)
+}
+
+func releaseWithin(ctx context.Context, q transaction.Executor, a Attempt, evidence []ReplicaRelease) (bool, error) {
 	if !a.valid() {
 		return false, ErrInvalidAttempt
 	}
@@ -198,18 +203,36 @@ func ReleaseWithin(ctx context.Context, q transaction.Executor, a Attempt) (bool
 	}
 	args := append(a.scopeArgs(), a.ID)
 	const exactAttempt = " WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5 AND attempt_id=$6"
-	changed, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
-		"UPDATE scheduling_reservations SET released_at=clock_timestamp()"+exactAttempt+" AND released_at IS NULL", args...))
-	if err != nil || changed == 1 {
-		return changed == 1, err
-	}
+	var body []byte
 	var released bool
-	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
-		"SELECT released_at IS NOT NULL FROM scheduling_reservations"+exactAttempt, args...)).Scan(&released)
-	if errors.Is(err, sql.ErrNoRows) || err == nil && !released {
+	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+		"SELECT intent,released_at IS NOT NULL FROM scheduling_reservations"+exactAttempt, args...)).Scan(&body, &released)
+	if errors.Is(err, sql.ErrNoRows) {
 		return false, ErrReservationNotFound
 	}
-	return false, err
+	if err != nil || released && len(evidence) == 0 {
+		return false, err
+	}
+	var intent JobIntent
+	if json.Unmarshal(body, &intent) != nil || intent.Kind != a.Kind || intent.SourceID != a.SourceID {
+		return false, ErrQuotaPolicyUnavailable
+	}
+	normalized, _, err := intent.Normalize()
+	if err != nil {
+		return false, ErrQuotaPolicyUnavailable
+	}
+	if err := checkReplicaReleases(a.ID, normalized.Groups, evidence); err != nil || released {
+		return false, err
+	}
+	changed, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
+		"UPDATE scheduling_reservations SET released_at=clock_timestamp()"+exactAttempt+" AND released_at IS NULL", args...))
+	if err != nil {
+		return false, err
+	}
+	if changed != 1 {
+		return false, ErrReservationNotFound
+	}
+	return true, nil
 }
 
 func requireDurableReservationCommit(ctx context.Context, q transaction.Executor) error {

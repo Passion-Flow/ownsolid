@@ -60,19 +60,20 @@ func assertLostReservationCommit(t *testing.T, proxy *commitfault.PlaintextPostg
 	}
 }
 
-func TestPostgresReservationCommitAcknowledgementLoss(t *testing.T) {
+func TestPostgresGangReservationCommitAcknowledgementLoss(t *testing.T) {
 	f := newReservationFixture(t)
 	store, proxy := reservationFaultStore(t, f.pool)
 	a := f.first
+	intent := gangTestIntent(a)
 	for _, op := range []struct {
 		name  string
 		write func(transaction.Store) (bool, error)
 	}{
 		{"reserve", func(store transaction.Store) (bool, error) {
-			return reserveInTransaction(t.Context(), store, a, reservationIntent(a, 2))
+			return reserveInTransaction(t.Context(), store, a, intent)
 		}},
 		{"release", func(store transaction.Store) (bool, error) {
-			return releaseInTransaction(t.Context(), store, a)
+			return releaseInTransaction(t.Context(), store, a, fixtureReplicaReleases(a, intent)...)
 		}},
 	} {
 		if err := proxy.Arm(commitfault.DropCommitAcknowledgement); err != nil {
