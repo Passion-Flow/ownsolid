@@ -298,3 +298,30 @@ notice asset and offline installation/readback of the signed media.
 An approved replacement wheel with embedded notices would require its
 own provenance and a reviewed lock update. Repacking the existing
 wheel changes the pinned digest and breaks the upstream attestation.
+
+#### Rust standard-library notices
+
+The selected native extension's ELF `.comment` names rustc 1.99.0.
+Its embedded source paths give the full commit
+`b940084d7eb6a299eb4bfeb8e34901bc051e7ac4`.
+The matching official Linux amd64 compiler and standard-library archives
+both report that commit. The compiler archive carries the generated
+`COPYRIGHT-library.html` and the distribution's license texts. The
+standard-library archive supplies the root copyright and MIT and Apache
+texts, which match the [source commit](https://github.com/rust-lang/rust/tree/b940084d7eb6a299eb4bfeb8e34901bc051e7ac4).
+
+| Rust notice input | SHA-256 |
+| --- | --- |
+| [Compiler distribution](https://static.rust-lang.org/dist/rustc-1.99.0-x86_64-unknown-linux-gnu.tar.xz) | `77171ba2a0345fdf2abc4fedda55d6de078dae7a68527c28be8c77dcc9604bd5` |
+| [Standard-library distribution](https://static.rust-lang.org/dist/rust-std-1.99.0-x86_64-unknown-linux-gnu.tar.xz) | `3e58dff2d0b72196b5ea4e90536e174d400de88564a52694686b81e091169933` |
+| Original `COPYRIGHT-library.html` | `5647be074c8edf7339fd863055923a8fc80bc5610a8d4661ec3b767b9d392c27` |
+| DEL Rust standard-library notice addendum | `39b279fc31fb3bbf743cf0569d7605dd92125aa0fe305e99b5675aae44a0d787` |
+| Addendum inventory JSON | `79e88854fbb39e90e37dc9adad3e0f324a1d43e652550924aaf5e97094a0ca3f` |
+
+The private `tokenizers-0.23.3-linux-amd64-rust-std-notices.tar.gz`
+contains the 18 original files and an inventory binding their digests
+to the same wheel and ELF. A disconnected read verified all 18
+files. This addendum covers the Rust toolchain's standard-library
+notice evidence alongside the wheel's dependency notices. DEL applies
+the official standard-library inventory and the selected base image's
+system-library terms when reviewing the signed release assets.
