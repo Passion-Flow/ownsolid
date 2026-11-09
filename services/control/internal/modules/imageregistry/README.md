@@ -25,7 +25,7 @@ An idempotent replay of a committed reservation does not reread the release
 source. Preparations that fail after reservation use the existing abandon,
 discard and reconciliation paths. The
 [site release pin boundary](../../../../../docs/research/site-registry-pin-admission.md)
-records the separate source and destination and the current-profile proof boundary.
+records the separate source and destination and the current-profile verification path.
 
 A control composition can opt in through `NewWithSiteReleaseSource` with
 the usual writable tenant registry configuration and a separate protected
@@ -50,7 +50,8 @@ A complete verified cache can be reconciled after a failed SQL bind while
 the site is unavailable. An incomplete cache uses the existing abandon and
 discard flow before a new import.
 
-The shared control startup and the current release proof still need
-integration. To exercise the module boundary on Linux, use
+The signed profile selects the OCI reader for import and reconciliation.
+Shared control startup still needs to pass the protected source file.
+To exercise the module boundary on Linux, use
 [the loopback runner](testdata/run-site-admission.sh) with the verified
 Distribution binary, its SHA-256 and a local PostgreSQL image ID.

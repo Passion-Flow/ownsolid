@@ -20,6 +20,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"testing"
 	"time"
 
@@ -70,14 +71,13 @@ func fixtureTar(t *testing.T, entries []fixtureArchiveEntry) []byte {
 	return out.Bytes()
 }
 
-func prepareRegistryTestRelease(t *testing.T, mount, profile string, img nativeTransportImage, manifest Descriptor, raw []byte) Config {
+func prepareRegistryTestRelease(t *testing.T, mount string, img nativeTransportImage, manifest Descriptor, raw []byte) Config {
 	t.Helper()
 	c := Defaults()
 	c.RequestSeconds, c.OperationSeconds, c.GrantSeconds = 5, 30, 30
 	c.MaximumBlobBytes, c.MaximumExpandedBytes, c.MaximumArchiveBytes, c.MaximumRetainedBytes = 1<<20, 1<<20, 1<<20, 2<<20
 	c.Verification.MountRoot = mount
 	c.Verification.MinimumFreeBytes = 1 << 20
-	c.Verification.AllowTestFixture = profile == release.FixtureProfile
 	root := t.TempDir()
 	c.Verification.TrustFile = filepath.Join(root, "trust.json")
 	c.PreparedReleaseRoot = filepath.Join(root, "prepared")
@@ -90,7 +90,7 @@ func prepareRegistryTestRelease(t *testing.T, mount, profile string, img nativeT
 		{"blobs/sha256/" + img.config.Digest[7:], fixtureRead(t, img.configFile)},
 		{"blobs/sha256/" + img.layer.Digest[7:], fixtureRead(t, img.layerFile)},
 	})
-	m := release.Manifest{FormatVersion: 1, ReleaseID: "site-admission-fixture", Profile: profile,
+	m := release.Manifest{FormatVersion: 1, ReleaseID: "site-admission-fixture", Profile: bundle.CurrentProfile,
 		SourceSHA256: release.Digest(archive), SchemaVersion: 1, MinimumPredecessor: 1, MaximumPredecessor: 1,
 		Capabilities: []string{}, Prerequisites: []string{"Isolated Linux fixture"}}
 	var entries []fixtureArchiveEntry
@@ -107,21 +107,19 @@ func prepareRegistryTestRelease(t *testing.T, mount, profile string, img nativeT
 	}
 	add("fixture-notice", "license", []byte("Synthetic image bytes used only by the integration test.\n"))
 	add("control-image", "image_archive", archive)
-	if profile == bundle.CurrentProfile {
-		for _, id := range []string{"postgres-image", "metrics-image", "logs-image"} {
-			add(id, "image_archive", archive)
-		}
-		add("compose", "compose", []byte("Synthetic Compose asset.\n"))
-		add("installer", "operator", []byte("Synthetic operator asset.\n"))
-		add("operator-docs", "runbook", []byte("Synthetic operator documentation.\n"))
-		packages := []map[string]any{}
-		for _, a := range m.Assets {
-			packages = append(packages, map[string]any{"SPDXID": "SPDXRef-" + a.ID, "name": a.ID,
-				"checksums": []map[string]string{{"algorithm": "SHA256", "checksumValue": a.SHA256}}})
-		}
-		add("release-sbom", "sbom", fixtureJSON(t, map[string]any{"spdxVersion": "SPDX-2.3", "dataLicense": "CC0-1.0",
-			"SPDXID": "SPDXRef-DOCUMENT", "name": "Site admission fixture", "documentNamespace": "https://ownsolid.test/site-admission", "packages": packages}))
+	for _, id := range []string{"postgres-image", "metrics-image", "logs-image"} {
+		add(id, "image_archive", archive)
 	}
+	add("compose", "compose", []byte("Synthetic Compose asset.\n"))
+	add("installer", "operator", []byte("Synthetic operator asset.\n"))
+	add("operator-docs", "runbook", []byte("Synthetic operator documentation.\n"))
+	packages := []map[string]any{}
+	for _, a := range m.Assets {
+		packages = append(packages, map[string]any{"SPDXID": "SPDXRef-" + a.ID, "name": a.ID,
+			"checksums": []map[string]string{{"algorithm": "SHA256", "checksumValue": a.SHA256}}})
+	}
+	add("release-sbom", "sbom", fixtureJSON(t, map[string]any{"spdxVersion": "SPDX-2.3", "dataLicense": "CC0-1.0",
+		"SPDXID": "SPDXRef-DOCUMENT", "name": "Site admission fixture", "documentNamespace": "https://ownsolid.test/site-admission", "packages": packages}))
 
 	pub, private, err := ed25519.GenerateKey(nil)
 	if err != nil {
@@ -152,13 +150,8 @@ func prepareRegistryTestRelease(t *testing.T, mount, profile string, img nativeT
 
 	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
 	defer cancel()
-	if profile == bundle.CurrentProfile {
-		_, err = bundle.UnpackCurrent(ctx, c.Verification, file, c.PreparedReleaseRoot)
-	} else {
-		_, err = bundle.Unpack(ctx, c.Verification, file, c.PreparedReleaseRoot, c.ReleaseArchiveSHA256, c.ReleaseManifestSHA256)
-	}
-	if err != nil {
-		t.Fatal("signed fixture preparation failed", profile, err)
+	if _, err := bundle.UnpackCurrent(ctx, c.Verification, file, c.PreparedReleaseRoot); err != nil {
+		t.Fatal("signed current fixture preparation failed", err)
 	}
 	return c
 }
@@ -324,11 +317,12 @@ func TestActualSiteRegistryPinAdmissionBoundary(t *testing.T) {
 	}
 	img := nativeTransportBytes(t, t.TempDir())
 	approved, approvedRaw := img.manifest(t, "approved synthetic asset")
-	current := prepareRegistryTestRelease(t, mount, bundle.CurrentProfile, img, approved, approvedRaw)
+	current := prepareRegistryTestRelease(t, mount, img, approved, approvedRaw)
 	g := registrySetupWithConfig(t, current)
 
-	if _, _, err := bundle.PreparedImageProof(g.ctx, current.Verification, current.PreparedReleaseRoot, current.ReleaseArchiveSHA256, current.ReleaseManifestSHA256, "control-image"); err == nil || bundle.ErrorCode(err) != "RELEASE_PREPARED_INVENTORY_INVALID" {
-		t.Fatalf("unexpected prepared proof boundary: %v", err)
+	_, proof, err := bundle.PreparedImageProof(g.ctx, current.Verification, current.PreparedReleaseRoot, current.ReleaseArchiveSHA256, current.ReleaseManifestSHA256, "control-image")
+	if err != nil || proof.Profile != bundle.CurrentProfile || proof.Asset.ImageID != approved.Digest {
+		t.Fatalf("current signed asset proof did not verify: %+v %v", proof, err)
 	}
 	unsigned, raw := img.manifest(t, "digest present in the registry but absent from the release")
 	seedSiteAdmissionFixture(t, g, img, unsigned, raw)
@@ -363,13 +357,16 @@ func TestActualSiteRegistryPinAdmissionBoundary(t *testing.T) {
 			t.Fatalf("invalid source reserved a pin: %+v %v", pin, err)
 		}
 	}
+	g.s.config.ReleaseManifestSHA256 = release.Digest([]byte("wrong expected release"))
 	refuses("control-image", "REGISTRY_RELEASE_INVALID")
-
-	// Enable the existing synthetic release verifier only inside this fixture.
-	legacy := prepareRegistryTestRelease(t, mount, release.FixtureProfile, img, approved, approvedRaw)
-	g.s.config.Verification = legacy.Verification
-	g.s.config.PreparedReleaseRoot = legacy.PreparedReleaseRoot
-	g.s.config.ReleaseArchiveSHA256, g.s.config.ReleaseManifestSHA256 = legacy.ReleaseArchiveSHA256, legacy.ReleaseManifestSHA256
+	g.s.config.ReleaseManifestSHA256 = current.ReleaseManifestSHA256
+	images, err := g.s.ReleaseImages(g.ctx, g.a, g.f.Workspace)
+	if err != nil || !slices.ContainsFunc(images, func(image ReleaseImage) bool {
+		return image.ID == "control-image" && image.ManifestDigest == approved.Digest &&
+			reflect.DeepEqual(image.Licenses, []string{"fixture-notice"})
+	}) {
+		t.Fatalf("current release catalog omitted the signed asset: %+v %v", images, err)
+	}
 	refuses(unsigned.Digest, "REGISTRY_RELEASE_INVALID")
 	refuses("control-image@"+unsigned.Digest, "REGISTRY_RELEASE_INVALID")
 
@@ -424,8 +421,8 @@ func TestActualSiteRegistryPinAdmissionBoundary(t *testing.T) {
 		t.Fatalf("explicit retry did not complete the verified site pin: %+v %v", pin, err)
 	}
 	cache, err := readCached(g.ctx, g.s.config, pin.ID)
-	if err != nil || cachedMatches(pin, cache) != nil || cache.ReleaseArchiveSHA256 != legacy.ReleaseArchiveSHA256 ||
-		cache.ReleaseManifestSHA256 != legacy.ReleaseManifestSHA256 || !reflect.DeepEqual(cache.Asset.Licenses, []string{"fixture-notice"}) ||
+	if err != nil || cachedMatches(pin, cache) != nil || cache.ReleaseArchiveSHA256 != current.ReleaseArchiveSHA256 ||
+		cache.ReleaseManifestSHA256 != current.ReleaseManifestSHA256 || !reflect.DeepEqual(cache.Asset.Licenses, []string{"fixture-notice"}) ||
 		cache.SiteSource == nil || cache.SiteSource.RegistryIdentity != site.identity ||
 		cache.SiteSource.Repository != "ownsolid/release/control-image" || cache.SiteSource.ManifestDigest != approved.Digest {
 		t.Fatal("signed source and notices were not retained", err)
