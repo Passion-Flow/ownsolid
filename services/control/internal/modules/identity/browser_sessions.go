@@ -91,7 +91,7 @@ func (s *Service) ListBrowserSessions(ctx context.Context, a Auth, query url.Val
 			if len(page.Items) == limit {
 				last := page.Items[limit-1]
 				page.NextCursor = pagination.Encode(last.CreatedAt, last.ID, fingerprint)
-				break
+				continue
 			}
 			item.Current = item.ID == a.SessionID
 			item.CreatedAt, item.LastSeenAt, item.AbsoluteExpiresAt = item.CreatedAt.UTC(), item.LastSeenAt.UTC(), item.AbsoluteExpiresAt.UTC()
