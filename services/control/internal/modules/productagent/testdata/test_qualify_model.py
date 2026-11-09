@@ -1,9 +1,11 @@
 """Check assistant qualification remains fail-closed with controlled evidence."""
 
+from pathlib import Path
+import tempfile
 import unittest
 
 from projectone_model_lifecycle import evaluation_report, evaluation_safety
-from qualify_model import qualify
+from qualify_model import qualify, verify_native_observations
 
 
 class QualificationTest(unittest.TestCase):
@@ -47,6 +49,42 @@ class QualificationTest(unittest.TestCase):
     def test_unrelated_scorer_is_rejected(self):
         with self.assertRaisesRegex(evaluation_report.ReplayError, "^ASSISTANT_SAFETY_RECIPE_REQUIRED$"):
             self.summary(evaluation_safety.CATEGORIES, 3, recipe="support_routing_v1")
+
+
+class NativeObservationsTest(unittest.TestCase):
+    def test_native_archive_binds_exact_response_bytes_and_order(self):
+        observations = []
+        cases = []
+        for identifier, response in (("first", "native response"), ("second", "another response")):
+            prompt_digest = evaluation_report.sha256(identifier.encode())
+            response_digest = evaluation_report.sha256(response.encode())
+            observations.append({
+                "source_id": identifier,
+                "prompt_sha256": prompt_digest,
+                "response": response,
+                "response_sha256": response_digest,
+            })
+            cases.append({
+                "source_id": identifier,
+                "prompt_sha256": prompt_digest,
+                "output_sha256": response_digest,
+            })
+        error = "^ASSISTANT_NATIVE_OBSERVATIONS_MISMATCH$"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "native.json"
+            raw = evaluation_report.compact(observations)
+            path.write_bytes(raw)
+            digest = evaluation_report.sha256(raw)
+            verify_native_observations(path, digest, cases)
+            with self.assertRaisesRegex(evaluation_report.ReplayError, error):
+                verify_native_observations(path, "0" * 64, cases)
+            with self.assertRaisesRegex(evaluation_report.ReplayError, error):
+                verify_native_observations(path, digest, cases[::-1])
+            observations[0]["response"] = "changed"
+            raw = evaluation_report.compact(observations)
+            path.write_bytes(raw)
+            with self.assertRaisesRegex(evaluation_report.ReplayError, error):
+                verify_native_observations(path, evaluation_report.sha256(raw), cases)
 
 
 if __name__ == "__main__":
