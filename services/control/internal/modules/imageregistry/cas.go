@@ -130,6 +130,13 @@ func admitDisk(c Config) error {
 	}
 	return nil
 }
+func openProfileImageSource(ctx context.Context, c Config, profile, path string, asset release.Asset) (*bundle.ImageSource, error) {
+	if profile == bundle.CurrentProfile {
+		return bundle.OpenCurrentImageSource(ctx, c.Verification, path, asset, c.MaximumExpandedBytes)
+	}
+	return bundle.OpenImageSource(ctx, c.Verification, path, asset, c.MaximumExpandedBytes)
+}
+
 func prepareImage(ctx context.Context, c Config, site *siteReleaseSource, pin string, signed bundle.ImageProof, proof bundle.ImageProofResult) (cachedImage, error) {
 	if !validID(pin) {
 		return cachedImage{}, failure("VALIDATION_FAILED")
@@ -138,7 +145,7 @@ func prepareImage(ctx context.Context, c Config, site *siteReleaseSource, pin st
 	if e := admitDisk(c); e != nil {
 		return cachedImage{}, e
 	}
-	source, e := bundle.OpenImageSource(ctx, c.Verification, filepath.Join(c.PreparedReleaseRoot, asset.Path), asset, c.MaximumExpandedBytes)
+	source, e := openProfileImageSource(ctx, c, proof.Profile, filepath.Join(c.PreparedReleaseRoot, asset.Path), asset)
 	if e != nil {
 		return cachedImage{}, failure("REGISTRY_IMAGE_INVALID")
 	}
@@ -377,7 +384,7 @@ func recoverPrepared(ctx context.Context, c Config, pin string) (cachedImage, er
 	archive := actual
 	archive.Size = image.Archive.TransportBytes
 	archive.SHA256 = image.Archive.TransportSHA256
-	source, e := bundle.OpenImageSource(ctx, c.Verification, filepath.Join(c.StoreRoot, name, "archive.tar"), archive, c.MaximumExpandedBytes)
+	source, e := openProfileImageSource(ctx, c, proof.Manifest.Profile, filepath.Join(c.StoreRoot, name, "archive.tar"), archive)
 	if e != nil {
 		return cachedImage{}, failure("REGISTRY_IMAGE_INVALID")
 	}

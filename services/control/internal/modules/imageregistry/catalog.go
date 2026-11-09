@@ -26,9 +26,15 @@ func (s *Service) ReleaseImages(ctx context.Context, a identity.Auth, workspace 
 			return failure("REGISTRY_RELEASE_INVALID")
 		}
 		for _, asset := range proof.Manifest.Assets {
-			if asset.Kind == "image_archive" {
-				out = append(out, ReleaseImage{asset.ID, asset.ImageID, asset.ImageConfigDigest, asset.Size, append([]string(nil), asset.Licenses...)})
+			if asset.Kind != "image_archive" {
+				continue
 			}
+			if s.siteSource != nil {
+				if _, e := siteReleaseRepository(asset.ID); e != nil {
+					continue
+				}
+			}
+			out = append(out, ReleaseImage{asset.ID, asset.ImageID, asset.ImageConfigDigest, asset.Size, append([]string(nil), asset.Licenses...)})
 		}
 		return s.license.CheckWithin(ctx, q)
 	})
