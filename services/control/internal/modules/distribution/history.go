@@ -231,7 +231,7 @@ func (s *Service) Alias(ctx context.Context, a identity.Auth, workspace, id stri
 	var out Alias
 	e := s.transaction(ctx, a, workspace, false, nil, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
 		var e error
-		out, e = scanAlias(tx.QueryRow(ctx, distributionNativeStatement(tx, "SELECT "+nativeAliasFields+" FROM MODEL_ALIASES WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=? AND (?=1 OR DISABLED_AT IS NULL)", []any{w.TenantID, w.ID, id, admin(a)}, "SELECT "+aliasFields+" FROM model_aliases WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND ($4 OR disabled_at IS NULL)", `SELECT `+mysqlAliasFields+` FROM model_aliases WHERE tenant_id=? AND workspace_id=? AND id=? AND (? OR disabled_at IS NULL)`, []any{w.TenantID, w.ID, id, admin(a)}, []any{w.TenantID, w.ID, id, admin(a)})))
+		out, e = visibleAliasWithin(ctx, tx, a, w, id)
 		if e != nil {
 			return e
 		}
@@ -242,6 +242,10 @@ func (s *Service) Alias(ctx context.Context, a identity.Auth, workspace, id stri
 	}
 	return out, nil
 }
+func visibleAliasWithin(ctx context.Context, tx transaction.Executor, a identity.Auth, w workspaces.Workspace, id string) (Alias, error) {
+	return scanAlias(tx.QueryRow(ctx, distributionNativeStatement(tx, "SELECT "+nativeAliasFields+" FROM MODEL_ALIASES WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=? AND (?=1 OR DISABLED_AT IS NULL)", []any{w.TenantID, w.ID, id, admin(a)}, "SELECT "+aliasFields+" FROM model_aliases WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND ($4 OR disabled_at IS NULL)", `SELECT `+mysqlAliasFields+` FROM model_aliases WHERE tenant_id=? AND workspace_id=? AND id=? AND (? OR disabled_at IS NULL)`, []any{w.TenantID, w.ID, id, admin(a)}, []any{w.TenantID, w.ID, id, admin(a)})))
+}
+
 func (s *Service) Key(ctx context.Context, a identity.Auth, workspace, id string) (APIKey, error) {
 	if !wire.ValidID(id) {
 		return APIKey{}, fail("VALIDATION_FAILED")
