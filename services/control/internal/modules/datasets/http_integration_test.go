@@ -169,20 +169,26 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	admin.Call("GET", adminPath+"/versions/"+versionID, nil, 200, "DatasetVersionResponse")
 	verifyThreeWayHTTPSPublication(t, handler.Datasets.Service, portal, admin, path, adminPath)
 	verifyNearPromptHTTPSPublication(t, handler.Datasets.Service, portal, admin, path, adminPath)
+	verifySingleTurnHTTPSUpload(t, handler.Datasets.Service, portal, admin, path, adminPath)
 }
 
-func prepareHTTPSPublicationDraft(t *testing.T, service *datasets.Service, client *httpfixture.Client, path string, raw []byte) map[string]any {
+func createHTTPSDatasetDraft(t *testing.T, client *httpfixture.Client, path string, raw []byte) map[string]any {
 	t.Helper()
 	sum := sha256.Sum256(raw)
 	digest := hex.EncodeToString(sum[:])
 	client.Headers["Idempotency-Key"] = uuid.NewString()
-	draft := client.Write("POST", path+"/drafts", map[string]any{
-		"source_name": "splits.jsonl", "expected_bytes": len(raw), "source_sha256": digest, "reason": "Validate split source",
+	return client.Write("POST", path+"/drafts", map[string]any{
+		"source_name": "fixture.jsonl", "expected_bytes": len(raw), "source_sha256": digest, "reason": "Validate the fixture source",
 	}, 201, "DatasetDraftResponse")
+}
+
+func prepareHTTPSPublicationDraft(t *testing.T, service *datasets.Service, client *httpfixture.Client, path string, raw []byte) map[string]any {
+	t.Helper()
+	draft := createHTTPSDatasetDraft(t, client, path, raw)
 	draftPath := path + "/drafts/" + draft["id"].(string)
 	client.Headers["Content-Type"] = "application/x-ndjson"
-	client.Headers["X-Content-SHA256"] = digest
-	client.Write("POST", draftPath+"/source", raw, 202, "DatasetDraftResponse")
+	client.Headers["X-Content-SHA256"] = draft["source_sha256"].(string)
+	client.Call("POST", draftPath+"/source", raw, 202, "DatasetDraftResponse")
 	delete(client.Headers, "Content-Type")
 	delete(client.Headers, "X-Content-SHA256")
 	if worked, err := service.ProcessNext(t.Context()); err != nil || !worked {
@@ -237,7 +243,7 @@ func verifyThreeWayHTTPSPublication(t *testing.T, service *datasets.Service, por
 		t.Fatalf("omitting the queued test ratio returned %v", problem["code"])
 	}
 
-	retry := retryHTTPSPublicationAfterProcessorExit(t, service, portal, path, job)
+	retry := retryHTTPSDatasetJobAfterProcessorExit(t, service, portal, path, job)
 	versionID := retry["version_id"].(string)
 	versionPath := path + "/versions/" + versionID
 	version := portal.Call("GET", versionPath, nil, 200, "DatasetVersionResponse")
@@ -276,9 +282,9 @@ func verifyThreeWayHTTPSPublication(t *testing.T, service *datasets.Service, por
 	portal.Call("GET", path+"/versions/"+shortJob["version_id"].(string), nil, 404, "Problem")
 }
 
-func retryHTTPSPublicationAfterProcessorExit(t *testing.T, service *datasets.Service, portal *httpfixture.Client, path string, job map[string]any) map[string]any {
+func retryHTTPSDatasetJobAfterProcessorExit(t *testing.T, service *datasets.Service, portal *httpfixture.Client, path string, job map[string]any) map[string]any {
 	t.Helper()
-	// Fail one worker execution after the HTTPS request has committed the job.
+	// Fail one worker execution after the HTTPS request commits the job.
 	configured := service.Identity.Config.Datasets
 	configured.ProcessorFile = filepath.Join(t.TempDir(), "fail.py")
 	if err := os.WriteFile(configured.ProcessorFile, []byte("raise SystemExit(9)\n"), 0600); err != nil {
@@ -293,20 +299,23 @@ func retryHTTPSPublicationAfterProcessorExit(t *testing.T, service *datasets.Ser
 	worked, err := service.ProcessNext(t.Context())
 	service.Processor = actual
 	if err != nil || !worked {
-		t.Fatal("run interrupted publication", err)
+		t.Fatal("run interrupted dataset job", err)
 	}
 	failedPath := path + "/jobs/" + job["id"].(string)
 	failed := portal.Call("GET", failedPath, nil, 200, "DatasetJobResponse")
 	if failed["state"] != "failed" || failed["retryable"] != true {
 		t.Fatalf("worker failure did not leave a retryable job: %v", failed["error_code"])
 	}
-	portal.Call("GET", path+"/versions/"+job["version_id"].(string), nil, 404, "Problem")
+	if versionID, ok := job["version_id"].(string); ok {
+		portal.Call("GET", path+"/versions/"+versionID, nil, 404, "Problem")
+	}
 
 	portal.Headers["Idempotency-Key"] = uuid.NewString()
-	retryInput := map[string]any{"reason": "Retry the frozen publication"}
+	retryInput := map[string]any{"reason": "Retry the frozen dataset job"}
 	retry := portal.Write("POST", failedPath+"/retry", retryInput, 202, "DatasetJobResponse")
-	retryReplay := portal.Write("POST", failedPath+"/retry", retryInput, 202, "DatasetJobResponse")
-	if retry["id"] == job["id"] || retryReplay["id"] != retry["id"] || retry["version_id"] == job["version_id"] {
+	retryReplay := portal.Call("POST", failedPath+"/retry", retryInput, 202, "DatasetJobResponse")
+	if retry["id"] == job["id"] || retryReplay["id"] != retry["id"] ||
+		job["version_id"] != nil && retry["version_id"] == job["version_id"] {
 		t.Fatal("retry did not create and replay one new job")
 	}
 	var retryOf string
@@ -314,11 +323,11 @@ func retryHTTPSPublicationAfterProcessorExit(t *testing.T, service *datasets.Ser
 		t.Fatal("retry lost its original job", err)
 	}
 	if worked, err := service.ProcessNext(t.Context()); err != nil || !worked {
-		t.Fatal("process retried HTTPS publication", err)
+		t.Fatal("process retried HTTPS dataset job", err)
 	}
 	completed := portal.Call("GET", path+"/jobs/"+retry["id"].(string), nil, 200, "DatasetJobResponse")
 	if completed["state"] != "succeeded" {
-		t.Fatalf("retried publication failed: %v", completed["error_code"])
+		t.Fatalf("retried dataset job failed: %v", completed["error_code"])
 	}
 	return retry
 }
