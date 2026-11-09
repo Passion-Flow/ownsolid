@@ -12,11 +12,10 @@ import (
 )
 
 const (
-	contractPath       = "../../../../../api/openapi/v1/applications/openapi.json"
-	overlayPath        = "tool_catalog_overlay.json"
-	catalogPath        = "gen/tools.json"
-	portalScheme       = "PortalSession"
-	legacyPortalScheme = "portalCookie"
+	contractPath = "../../../../../api/openapi/v1/applications/openapi.json"
+	overlayPath  = "tool_catalog_overlay.json"
+	catalogPath  = "gen/tools.json"
+	portalScheme = "PortalSession"
 )
 
 type review struct {
@@ -116,15 +115,7 @@ func admittedPortalRead(op operation, policy review, schemes map[string]security
 	if schemes[portalScheme] != (securityScheme{Type: "apiKey", In: "cookie", Name: "__Host-portal_session"}) {
 		return false
 	}
-	scopes, canonical := op.Security[0][portalScheme]
-	if !canonical {
-		// The application contract still uses an undeclared legacy reference.
-		// A declared legacy scheme must go through an explicit review.
-		if _, declared := schemes[legacyPortalScheme]; declared {
-			return false
-		}
-		scopes = op.Security[0][legacyPortalScheme]
-	}
+	scopes := op.Security[0][portalScheme]
 	return scopes != nil && len(scopes) == 0
 }
 
