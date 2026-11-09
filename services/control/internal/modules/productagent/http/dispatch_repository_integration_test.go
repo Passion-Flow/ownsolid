@@ -186,16 +186,42 @@ FROM audit_events WHERE request_id=$1`, id, tenant, workspace).Scan(&metadataOnl
 	nodes := admin.call(t, http.MethodPost, commandPath, `{"command":"  OPEN NODES  "}`, func(r *http.Request) {
 		r.Header.Set("X-Request-ID", forgedID)
 	})
-	if result := nodes.result(t); result.Command != "open_nodes" || result.Path != "/nodes" || nodes.id == forgedID {
+	if result := nodes.result(t); result != (productagent.Result{Command: "open_nodes", Path: "/nodes"}) || nodes.id == forgedID {
 		t.Fatal("admin navigation failed or honored the client's request ID")
 	}
 	assertAudit(t, nodes.id, "admin", "open_nodes")
 	assertNoAudit(t, forgedID)
 	keys := portal.call(t, http.MethodPost, commandPath, `{"command":"\u6253\u5f00\u5bc6\u94a5"}`, nil)
-	if result := keys.result(t); result.Command != "open_keys" || result.Path != "/keys" {
+	if result := keys.result(t); result != (productagent.Result{Command: "open_keys", Path: "/keys"}) {
 		t.Fatal("portal navigation failed")
 	}
 	assertAudit(t, keys.id, "portal", "open_keys")
+	for _, tt := range []struct {
+		audience, input, command, path string
+		client                         assistantClient
+	}{
+		{"admin", "open home", "open_home", "/", admin},
+		{"admin", "open model library", "open_model_library", "/library", admin},
+		{"admin", "open model services", "open_model_services", "/services", admin},
+		{"admin", "open gateway", "open_gateway", "/gateway", admin},
+		{"admin", "open audit", "open_audit", "/audit", admin},
+		{"admin", "open support", "open_support", "/support", admin},
+		{"portal", "open home", "open_home", "/", portal},
+		{"portal", "open models", "open_models", "/models", portal},
+		{"portal", "open support", "open_support", "/support", portal},
+	} {
+		t.Run("destination/"+tt.audience+"/"+tt.command, func(t *testing.T) {
+			body, err := json.Marshal(map[string]string{"command": tt.input})
+			if err != nil {
+				t.Fatal(err)
+			}
+			response := tt.client.call(t, http.MethodPost, commandPath, string(body), nil)
+			if result := response.result(t); result != (productagent.Result{Command: tt.command, Path: tt.path}) {
+				t.Fatal("navigation did not return the entrance's fixed destination")
+			}
+			assertAudit(t, response.id, tt.audience, tt.command)
+		})
+	}
 
 	const applications = `{"command":"show applications"}`
 	listed := portal.call(t, http.MethodPost, commandPath, applications, nil)
@@ -235,6 +261,11 @@ FROM audit_events WHERE request_id=$1`, id, tenant, workspace).Scan(&metadataOnl
 		{"wrong origin", commandPath, applications, "ORIGIN_REJECTED", portal, 403, func(r *http.Request) { r.Header.Set("Origin", httpfixture.AdminOrigin) }},
 		{"admin cannot read portal applications", commandPath, applications, "ACCESS_DENIED", admin, 403, nil},
 		{"portal cannot navigate to admin nodes", commandPath, `{"command":"open nodes"}`, "ACCESS_DENIED", portal, 403, nil},
+		{"admin cannot navigate to portal keys", commandPath, `{"command":"open keys"}`, "ACCESS_DENIED", admin, 403, nil},
+		{"absolute URL is not a destination", commandPath, `{"command":"open https://example.invalid"}`, "VALIDATION_FAILED", admin, 400, nil},
+		{"network path is not a destination", commandPath, `{"command":"open //example.invalid"}`, "VALIDATION_FAILED", admin, 400, nil},
+		{"caller path does not override a destination", commandPath, `{"command":"open home","path":"//example.invalid"}`, "VALIDATION_FAILED", portal, 400, nil},
+		{"cursor is not navigation state", commandPath, `{"command":"open home","cursor":"/keys"}`, "VALIDATION_FAILED", portal, 400, nil},
 		{"workspace in body", commandPath, `{"command":"show applications","workspace_id":"` + otherWorkspace + `"}`, "VALIDATION_FAILED", portal, 400, nil},
 		{"workspace in query", commandPath + "?workspace_id=" + otherWorkspace, applications, "VALIDATION_FAILED", portal, 400, nil},
 		{"caller risk in body", commandPath, `{"command":"show applications","risk":"navigate"}`, "VALIDATION_FAILED", portal, 400, nil},

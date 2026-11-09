@@ -72,3 +72,26 @@ and redistribution with their notices. The comparable products are references on
 - The core works with no model client and no external network. The final release
   must also pass the authenticated browser flow on both entrances with the model
   gateway disabled. A package test alone cannot close AGT-102.
+
+## Fixed result destinations
+
+AGT-109 can verify the existing navigation results before the command bar is
+registered. The [Console router](../../web/apps/console/src/router.tsx) has
+`/`, `/nodes`, `/library`, `/services`, `/gateway`, `/audit` and `/support`.
+The [Portal router](../../web/apps/portal/src/router.tsx) has `/`, `/models`,
+`/keys` and `/support`. The existing navigation table is the only source of
+these destinations. Return an exact same-origin absolute-path reference as
+defined by [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986.html#section-4.2).
+Do not concatenate caller URLs, network-path references, route fields or
+cursor data into a navigation result. Existing route permissions still apply.
+
+Exercise every fixed destination through its own authenticated HTTPS
+entrance. Refuse the other entrance's commands, absolute and network-path
+inputs, caller-supplied path and a cursor on navigation. Verify the shipped
+route views through their browser tests. Read results keep their existing
+typed shape until S-302 and S-303 supply actual routes and identifiers.
+No new dependency, model or dataset is required.
+
+`TestAuthenticatedAssistantHTTP` passed all 11 entrance and path pairs on
+disconnected PostgreSQL, along with the navigation refusals. It also verified
+that a refusal left no assistant event in the Admin audit list.
