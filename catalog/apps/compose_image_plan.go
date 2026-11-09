@@ -14,7 +14,7 @@ const (
 	maxComposeServices   = 256
 )
 
-// ErrComposeImagePlan identifies a rendered Compose model outside the signed local image set.
+// ErrComposeImagePlan identifies a rendered Compose model that fails the catalog's offline checks.
 var ErrComposeImagePlan = errors.New("CATALOG_COMPOSE_IMAGE_PLAN_INVALID")
 
 var composeServiceName = regexp.MustCompile(`^[A-Za-z0-9._-]{1,128}$`)
@@ -41,14 +41,15 @@ type ComposeImagePlan struct {
 	Services       []ComposeServiceImage
 }
 
-// VerifyRendered checks the source identity and exact bytes against a trusted
-// admitted plan. The installer passes those same bytes to the launcher.
+// VerifyRendered checks the source identity, exact bytes and resolved service
+// inputs against a trusted admitted plan before the installer launches it.
 func (p ComposeImagePlan) VerifyRendered(rendered RenderedCompose) error {
 	if !digest.MatchString(p.ArtifactSHA256) || rendered.ArtifactSHA256 != p.ArtifactSHA256 ||
 		len(rendered.JSON) == 0 || len(rendered.JSON) > maxComposeModelBytes || digestBytes(rendered.JSON) != p.ModelSHA256 {
 		return fmt.Errorf("%w: use the exact admitted Compose model and source digest", ErrComposeImagePlan)
 	}
-	return nil
+	_, err := decodeComposeModel(rendered.JSON)
+	return err
 }
 
 type composeImageModel struct {
@@ -58,34 +59,35 @@ type composeImageModel struct {
 }
 
 type composeImageService struct {
-	Image      string         `json:"image"`
-	PullPolicy string         `json:"pull_policy"`
-	Platform   string         `json:"platform"`
-	Build      jsontext.Value `json:"build"`
-	Develop    jsontext.Value `json:"develop"`
-	Extends    jsontext.Value `json:"extends"`
-	Provider   jsontext.Value `json:"provider"`
-	PreStart   jsontext.Value `json:"pre_start"`
-	Models     jsontext.Value `json:"models"`
-	Volumes    []struct {
+	Image       string             `json:"image"`
+	PullPolicy  string             `json:"pull_policy"`
+	Platform    string             `json:"platform"`
+	Build       jsontext.Value     `json:"build"`
+	Develop     jsontext.Value     `json:"develop"`
+	Extends     jsontext.Value     `json:"extends"`
+	Provider    jsontext.Value     `json:"provider"`
+	PreStart    jsontext.Value     `json:"pre_start"`
+	Models      jsontext.Value     `json:"models"`
+	EnvFile     jsontext.Value     `json:"env_file"`
+	LabelFile   jsontext.Value     `json:"label_file"`
+	Environment map[string]*string `json:"environment"`
+	Volumes     []struct {
 		Type string `json:"type"`
 	} `json:"volumes"`
 }
 
 // VerifyComposeImagePlan checks the installer's normalized Compose model against
 // an InstallBundle returned by the signed verifier. The installer provides a
-// trusted source digest from its disconnected renderer. This check covers
-// image acquisition. Authorization and workload admission belong to the installer.
+// trusted source digest from its disconnected renderer. This checks image
+// acquisition and resolved service inputs. The installer admits the workload.
 func (b InstallBundle) VerifyComposeImagePlan(rendered RenderedCompose) (ComposeImagePlan, error) {
 	if !b.Pin.valid() || b.Pin.Version != b.Manifest.Version || len(b.Archive.Images) == 0 ||
 		b.Manifest.Artifact.Engine != "compose" || rendered.ArtifactSHA256 != b.Manifest.Artifact.SHA256 {
 		return ComposeImagePlan{}, fmt.Errorf("%w: render the verified Compose artifact from the selected bundle", ErrComposeImagePlan)
 	}
-	var model composeImageModel
-	if len(rendered.JSON) > maxComposeModelBytes || json.Unmarshal(rendered.JSON, &model) != nil ||
-		len(model.Services) == 0 || len(model.Services) > maxComposeServices ||
-		len(model.Include) != 0 || len(model.Models) != 0 {
-		return ComposeImagePlan{}, fmt.Errorf("%w: supply bounded normalized Compose JSON with services and no unresolved includes or models", ErrComposeImagePlan)
+	model, err := decodeComposeModel(rendered.JSON)
+	if err != nil {
+		return ComposeImagePlan{}, err
 	}
 
 	approved := make(map[string]bool, len(b.Archive.Images))
@@ -122,4 +124,24 @@ func (b InstallBundle) VerifyComposeImagePlan(rendered RenderedCompose) (Compose
 		plan.Services = append(plan.Services, ComposeServiceImage{Service: name, ManifestDigest: service.Image})
 	}
 	return plan, nil
+}
+
+func decodeComposeModel(raw []byte) (composeImageModel, error) {
+	var model composeImageModel
+	if len(raw) > maxComposeModelBytes || json.Unmarshal(raw, &model) != nil ||
+		len(model.Services) == 0 || len(model.Services) > maxComposeServices ||
+		len(model.Include) != 0 || len(model.Models) != 0 {
+		return composeImageModel{}, fmt.Errorf("%w: supply bounded normalized Compose JSON with services and no unresolved includes or models", ErrComposeImagePlan)
+	}
+	for _, service := range model.Services {
+		if len(service.EnvFile) != 0 || len(service.LabelFile) != 0 {
+			return composeImageModel{}, fmt.Errorf("%w: inline approved service environment and labels before admission", ErrComposeImagePlan)
+		}
+		for _, value := range service.Environment {
+			if value == nil {
+				return composeImageModel{}, fmt.Errorf("%w: use explicit service environment strings and omit unset keys", ErrComposeImagePlan)
+			}
+		}
+	}
+	return model, nil
 }
