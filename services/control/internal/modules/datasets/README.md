@@ -170,3 +170,18 @@ When the comparison budget is exceeded, the attempt returns
 `DATASET_NEAR_DUPLICATE_BUDGET_EXCEEDED`. Publish a smaller draft or select
 the default exact policy. See the
 [policy and evidence](../../../../../docs/research/dataset-near-duplicates.md).
+
+## Opt-in test split
+
+An internal caller can queue a three-way publication with
+`PublishWithOptions` and `PublicationOptions.TestBasisPoints`. Validation
+and test ratios are measured in connected groups. Three-way publication
+uses near-prompt grouping regardless of which duplicate removal policy
+the caller selects. It requires three connected groups and keeps one or
+more in each partition. Both retry paths retain the original ratio.
+
+Schema 2 records the test ratio, group count, row count, and digest-bound
+`test.jsonl` alongside the existing training and validation assets.
+Dataset storage and file snapshots accept both schemas. The training
+transfer still exposes its existing two assets. See the
+[three-way policy and public contract handoff](../../../../../docs/research/dataset-three-way-splits.md).

@@ -2,3 +2,4 @@
 VERSION = "0.8.0"
 SCHEMA = "projectone.text-sft.v1"
 SPLIT_ALGORITHM = "source-union-sha256.v1"
+THREE_WAY_SPLIT_ALGORITHM = "source-union-sha256.v2"

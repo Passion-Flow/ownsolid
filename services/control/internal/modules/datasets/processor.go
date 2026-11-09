@@ -17,8 +17,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 )
 
 func failure(code string) error { return errors.New(code) }
@@ -346,11 +346,14 @@ func verifyPrepared(request wire.ProcessorRequest, result wire.ProcessorResult) 
 	if _, e := privatePath(directory, request.OutputDirectory, true, 0); e != nil {
 		return failure("DATASET_FILE_INVALID")
 	}
-	entries, e := os.ReadDir(directory)
-	if e != nil || len(entries) != 6 {
+	if result.Manifest == nil {
 		return failure("DATASET_FILE_INVALID")
 	}
 	manifest := *result.Manifest
+	entries, e := os.ReadDir(directory)
+	if e != nil || len(entries) != len(manifest.Files)+1 {
+		return failure("DATASET_FILE_INVALID")
+	}
 	assets := append(append([]wire.Asset{}, manifest.Files...), manifest.ManifestFile)
 	for _, asset := range assets {
 		path := filepath.Join(directory, asset.Path)

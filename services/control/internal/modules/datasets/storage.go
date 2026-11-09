@@ -11,8 +11,8 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/google/uuid"
 )
 
 const storeSchema = 1
@@ -285,13 +285,23 @@ func (s *Store) PutSource(ctx context.Context, id, uploadID, digest string, size
 	return s.Source(id, digest, size)
 }
 
+// CreateAttempt reserves and stages the protected input for a standard attempt.
 func (s *Store) CreateAttempt(job, attempt string, input io.Reader, digest string, size int64, maximumOutput int64) (string, string, string, error) {
+	return s.createAttempt(job, attempt, input, digest, size, maximumOutput, false)
+}
+
+func (s *Store) createAttempt(job, attempt string, input io.Reader, digest string, size, maximumOutput int64, withTest bool) (string, string, string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed || !wire.ValidID(job) || !wire.ValidID(attempt) || !wire.ValidDigest(digest) || size < 1 || maximumOutput < 4096 {
 		return "", "", "", failure("DATASET_ATTEMPT_STALE")
 	}
-	if e := s.reserve(size + maximumOutput*7); e != nil {
+	// The result, manifest, and five standard assets each have the output limit.
+	outputFiles := int64(7)
+	if withTest {
+		outputFiles++
+	}
+	if e := s.reserve(size + maximumOutput*outputFiles); e != nil {
 		return "", "", "", e
 	}
 	if e := s.ensureDirectory("attempts/" + job); e != nil {

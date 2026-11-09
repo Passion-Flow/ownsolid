@@ -176,6 +176,9 @@
     "PublishRequest": {
       "type": "object",
       "additionalProperties": false,
+      "dependentRequired": {
+        "test_basis_points": ["near_duplicate_plan_sha256"]
+      },
       "required": [
         "schema_version",
         "job_id",
@@ -232,6 +235,12 @@
         },
         "operation": {
           "const": "publish"
+        },
+        "test_basis_points": {
+          "description": "Held-out test group ratio. Validation and test may total at most 9000 basis points.",
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 5000
         },
         "near_duplicate_plan_sha256": {
           "type": "string",
