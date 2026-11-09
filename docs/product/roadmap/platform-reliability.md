@@ -34,6 +34,7 @@ recovery and support tooling.
   - The scheduled installer now persists a redacted, installation-bound history and can report it offline. Disconnected Linux process tests covered failure, interruption, retry and archive expiry. The authenticated API, Console and alerts remain open. See [status evidence](../status.md) and [ADR 0063](../../decisions/0063-keep-local-scheduled-backup-history.md).
 - [ ] REL-112 `apply` after a `restore` over a running installation: the administrator intent is bound to the database's OIDs, which the restored database does not have, so every later `apply` stops with `BOOTSTRAP_INTENT_MISMATCH` (found on `ownsolid-cpu`, 2026-11-07) (P1)
 - [ ] REL-113 An installation restored from a backup upgrades through every later migration: check constraints stay in a form pg_dump and pg_restore preserve (`IN` on varchar does not), and a test applies each new migration to a restored schema (P1)
+  - The [disconnected acceptance fixture](../../research/restored-schema-upgrade.md#linux-amd64-acceptance) reproduces the refusal using the historical control binaries and the installer's logical backup and load functions. Production catalog admission and the restored-upgrade release gate remain open.
 
 - [ ] REL-114 Resume or roll back an interrupted database restore by identifying its original and incoming databases across the swap, before bringing the writer online (P1)
 

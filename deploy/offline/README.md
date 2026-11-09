@@ -105,6 +105,42 @@ earlier UTC time. It withholds a required segment, kills an installer during
 activation, and checks retained dependencies, later writes and foreign files.
 See the [operator procedure](../../docs/operations/backup-and-restore.md#postgresql-point-in-time-recovery).
 
+## Compare upgrades before and after a logical restore
+
+Build the Linux amd64 control binaries from the historical repository worktrees
+and the candidate checkout. Use a private staging directory and keep the published
+migration file byte-for-byte. The fixture verifies its checksum against the
+historical ledger.
+
+```sh
+git worktree add --detach "$SCHEMA55_TREE" 3414559f7aa1a1124841807dc345b45382a1e8b8
+git worktree add --detach "$SCHEMA56_TREE" f98a160dcdfb39ec5f841e4a854753d8c20a25be
+export GOOS=linux GOARCH=amd64 CGO_ENABLED=0
+go -C "$SCHEMA55_TREE/services/control" build -trimpath -o "$STAGE/control-schema55" ./cmd/server
+go -C "$SCHEMA56_TREE/services/control" build -trimpath -o "$STAGE/control-schema56" ./cmd/server
+go -C services/control build -trimpath -o "$STAGE/control-candidate" ./cmd/server
+go -C deploy/offline test -c -trimpath -o "$STAGE/install.test" ./internal/install
+go -C tests/e2e build -trimpath -o "$STAGE/egress-recorder" ./cmd/egress-recorder
+cp "$SCHEMA56_TREE/services/control/migrations/postgresql/000056_cell_clusters.up.sql" "$STAGE/000056.up.sql"
+```
+
+On the Linux amd64 Docker host, supply that directory and the staged PostgreSQL
+image digest from [install.example.yaml](install.example.yaml). Run as root.
+
+```sh
+bash deploy/offline/test-restored-schema-upgrade.sh "$STAGE" "$POSTGRES_IMAGE" blocked
+```
+
+Use `blocked` to reproduce the current candidate failure, or `current` to
+require that a repaired candidate upgrades the restored schema and can repeat
+the command. The historical 000056 comparison runs in both modes. The installer
+test uses its shipped custom-archive dump and load functions with the real
+PostgreSQL clients, compares the migration ledger and row fingerprints, and
+prints the check constraint differences. One disposable database container
+holds all test databases and publishes no ports. The runner blocks and records
+IPv4, IPv6 and DNS probes before starting PostgreSQL, then checks for any further
+outbound attempt.
+
 ## Verify encrypted logical backup and restore
 
 Use the same Linux amd64 fixture and egress recorder as the preflight test.
