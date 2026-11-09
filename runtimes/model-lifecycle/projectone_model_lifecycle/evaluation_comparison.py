@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 import sys
 
+from . import evaluation_safety
 from .evaluation_report import ReplayError, compact, decode_object, read_bytes, replay_report, sha256, valid_digest
 
 OUTCOMES = {
@@ -75,6 +76,8 @@ def _compare(args):
         raise ReplayError('EVALUATION_DATASET_MISMATCH')
     if baseline['scorer'] != candidate['scorer']:
         raise ReplayError('EVALUATION_SCORER_MISMATCH')
+    if baseline['scorer']['recipe_id'] == evaluation_safety.SCORER_ID:
+        raise ReplayError('EVALUATION_COMPARISON_SCORER_UNSUPPORTED')
     pairs, counts = _paired_cases(baseline['cases'], candidate['cases'])
     result = {
         'schema_version': 1,

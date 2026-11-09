@@ -25,6 +25,10 @@ Measuring models and applications before release, and gating releases on the res
 - [ ] EVL-104 Production traces turned into regression cases (P1)
 - [ ] EVL-105 Performance benchmark: latency, throughput and cost per model and hardware (P1) - Catalog: F150
 - [ ] EVL-106 Safety and regression sets: injection, leakage, unsupported answers (P1) - Catalog: F149
+  - [Deterministic safety replay](../../../runtimes/model-lifecycle/README.md#replay-controlled-safety-cases)
+    scores controlled outputs on a frozen synthetic fixture for injection,
+    private context disclosure and unsupported requests. Real model safety,
+    authorized capture delivery and UI remain open.
 
 EVL-101 records the immutable dataset, scorer and model revisions, seed and execution
 profile. Re-scoring the same captured outputs must give the same scores. EVL-102

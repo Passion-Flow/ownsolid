@@ -1,4 +1,4 @@
-"""Replay a captured base-model classification report on frozen offline inputs."""
+"""Replay a captured evaluation on frozen offline inputs."""
 
 import argparse
 import hashlib
@@ -13,7 +13,7 @@ from projectone_data.limits_generated import LIMIT_CEILINGS
 from projectone_data.validation import DataError, Limits, inspect_file, invalid_constant, unique
 from projectone_training.catalog import TrainingError, catalog_digest
 
-from . import VERSION, evaluation
+from . import VERSION, evaluation, evaluation_safety
 
 # The preparation processor caps result.json at 8 MiB. The same bounded read
 # covers the smaller version, catalog, recipe and canonical report files.
@@ -174,7 +174,7 @@ def captured_profile(capture, recipe):
     }
 
 
-def replay_cases(rows, capture, labels):
+def _checked_cases(rows, capture, labels):
     error = 'EVALUATION_CASE_MISMATCH'
     cases = capture.get('cases')
     count = capture.get('row_count')
@@ -182,15 +182,22 @@ def replay_cases(rows, capture, labels):
             or len(cases) != len(rows) or {row.completion for row in rows} != set(labels)):
         raise ReplayError(error)
     seen = set()
-    observations = []
     for row, case in zip(rows, cases, strict=True):
         prompt_sha256 = sha256(row.prompt.encode('utf-8'))
         identity = (row.source_id, prompt_sha256)
         if (identity in seen or not isinstance(case, dict)
-                or (case.get('source_id'), case.get('prompt_sha256')) != identity
-                or case.get('expected_label') != row.completion):
+                or (case.get('source_id'), case.get('prompt_sha256')) != identity):
             raise ReplayError(error)
         seen.add(identity)
+        yield row, case, prompt_sha256
+
+
+def replay_cases(rows, capture, labels):
+    error = 'EVALUATION_CASE_MISMATCH'
+    observations = []
+    for row, case, prompt_sha256 in _checked_cases(rows, capture, labels):
+        if case.get('expected_label') != row.completion:
+            raise ReplayError(error)
         prediction = case.get('base')
         if (not isinstance(prediction, dict) or 'predicted_label' not in prediction
                 or not valid_digest(prediction.get('output_sha256'))):
@@ -211,21 +218,61 @@ def replay_cases(rows, capture, labels):
     return observations, scores
 
 
+def _safety_observations(rows, capture, recipe):
+    error = 'EVALUATION_SAFETY_OUTPUT_INVALID'
+    counts = dict.fromkeys(evaluation_safety.OUTCOMES, 0)
+    observations = []
+    markers = recipe['markers']
+    for row, case, prompt_sha256 in _checked_cases(rows, capture, evaluation_safety.CATEGORIES):
+        if markers['canary'] in row.prompt:
+            raise ReplayError('EVALUATION_CASE_MISMATCH')
+        output = case.get('output')
+        if not isinstance(output, str):
+            raise ReplayError(error)
+        try:
+            raw = output.encode('utf-8')
+        except UnicodeError:
+            raise ReplayError(error) from None
+        if len(raw) > evaluation_safety.MAX_OUTPUT_BYTES:
+            raise ReplayError(error)
+        outcome = evaluation_safety.outcome(row.completion, output, markers)
+        counts[outcome] += 1
+        observations.append({
+            'source_id': row.source_id, 'prompt_sha256': prompt_sha256,
+            'category': row.completion, 'expected': 'refusal', 'outcome': outcome,
+            'output_sha256': sha256(raw),
+        })
+    return observations, {'row_count': len(observations), 'outcomes': counts}
+
+
 def replay_report(args):
     version = read_object(args.dataset_version, 'EVALUATION_DATASET_MISMATCH', args.dataset_version_sha256)
     capture = read_object(args.capture, 'EVALUATION_CAPTURE_MISMATCH', args.capture_sha256)
-    if (type(capture.get('schema_version')) is not int or capture['schema_version'] != 1
-            or capture.get('status') != 'prepared' or capture.get('worker_version') != VERSION
-            or not all(valid_id(capture.get(field)) for field in ('attempt_id', 'heldout_id'))):
-        raise ReplayError('EVALUATION_CAPTURE_MISMATCH')
     recipe = read_object(args.recipe, 'EVALUATION_SCORER_MISMATCH')
     recipe_sha256 = sha256(compact(recipe))
-    labels = recipe.get('labels')
+    is_safety = recipe.get('recipe_id') == evaluation_safety.SCORER_ID
+    recipe_id = evaluation_safety.SCORER_ID if is_safety else SCORER_ID
+    if type(capture.get('schema_version')) is not int or capture['schema_version'] != 1:
+        raise ReplayError('EVALUATION_CAPTURE_MISMATCH')
     if (type(recipe.get('schema_version')) is not int or recipe['schema_version'] != 1
-            or recipe.get('recipe_id') != SCORER_ID or capture.get('recipe_id') != SCORER_ID
-            or capture.get('recipe_sha256') != recipe_sha256
-            or labels != ['account', 'billing', 'technical']):
+            or recipe.get('recipe_id') != recipe_id or capture.get('recipe_id') != recipe_id
+            or capture.get('recipe_sha256') != recipe_sha256):
         raise ReplayError('EVALUATION_SCORER_MISMATCH')
+    if is_safety:
+        if (capture.get('kind') != evaluation_safety.CAPTURE_KIND
+                or not valid_id(capture.get('capture_id'))):
+            raise ReplayError('EVALUATION_CAPTURE_MISMATCH')
+        if capture.get('dataset_version_sha256') != args.dataset_version_sha256:
+            raise ReplayError('EVALUATION_DATASET_MISMATCH')
+        if not evaluation_safety.valid_recipe(recipe):
+            raise ReplayError('EVALUATION_SCORER_MISMATCH')
+    else:
+        if (capture.get('status') != 'prepared' or capture.get('worker_version') != VERSION
+                or not all(valid_id(capture.get(field)) for field in ('attempt_id', 'heldout_id'))):
+            raise ReplayError('EVALUATION_CAPTURE_MISMATCH')
+        if recipe.get('labels') != ['account', 'billing', 'technical']:
+            raise ReplayError('EVALUATION_SCORER_MISMATCH')
+
     catalog = read_object(args.model_catalog, 'EVALUATION_MODEL_MISMATCH')
     try:
         model_sha256 = catalog_digest(catalog)
@@ -235,8 +282,29 @@ def replay_report(args):
         raise ReplayError('EVALUATION_MODEL_MISMATCH')
 
     rows = frozen_cases(version, args.validation, capture)
-    profile = captured_profile(capture, recipe)
-    observations, scores = replay_cases(rows, capture, labels)
+    scorer = {'recipe_id': recipe_id, 'recipe_sha256': recipe_sha256}
+    if is_safety:
+        captured = capture.get('execution_profile')
+        if not evaluation_safety.valid_profile(captured):
+            raise ReplayError('EVALUATION_PROFILE_MISMATCH')
+        profile = {
+            **captured, 'mode': 'controlled_output_replay', 'fresh_inference': 'unverified',
+            'profile_sha256': sha256(compact(captured)),
+        }
+        observations, scores = _safety_observations(rows, capture, recipe)
+        scorer['categories'] = evaluation_safety.CATEGORIES
+        implementation = evaluation_safety
+        capture_info = {'capture_id': capture['capture_id'], 'kind': evaluation_safety.CAPTURE_KIND}
+    else:
+        profile = captured_profile(capture, recipe)
+        observations, scores = replay_cases(rows, capture, recipe['labels'])
+        scorer['labels'] = recipe['labels']
+        implementation = evaluation
+        capture_info = {
+            'attempt_id': capture['attempt_id'], 'heldout_id': capture['heldout_id'],
+            'worker_version': capture['worker_version'], 'model_role': 'base',
+        }
+    scorer['implementation_sha256'] = sha256(read_bytes(Path(implementation.__file__), 'EVALUATION_SCORER_MISMATCH'))
     return compact({
         'schema_version': 1,
         'dataset': {
@@ -245,14 +313,8 @@ def replay_report(args):
             'validation_sha256': capture['heldout_sha256'],
         },
         'model': {'repository': catalog['repository'], 'revision': catalog['revision'], 'catalog_sha256': model_sha256},
-        'scorer': {
-            'recipe_id': SCORER_ID, 'recipe_sha256': recipe_sha256, 'labels': labels,
-            'implementation_sha256': sha256(read_bytes(Path(evaluation.__file__), 'EVALUATION_SCORER_MISMATCH')),
-        },
-        'capture': {
-            'sha256': args.capture_sha256, 'attempt_id': capture['attempt_id'], 'heldout_id': capture['heldout_id'],
-            'worker_version': capture['worker_version'], 'model_role': 'base',
-        },
+        'scorer': scorer,
+        'capture': {**capture_info, 'sha256': args.capture_sha256},
         'execution_profile': profile, 'score': scores, 'cases': observations,
     }) + b'\n'
 
