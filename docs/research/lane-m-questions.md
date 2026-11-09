@@ -20,7 +20,7 @@ responsible owners can extend their respective boundaries.
 | MOD-114 | Offline search depends on MOD-113. The browser's current local filter covers imported inventory. |
 | MOD-115 | The exact pinned fetch manifest depends on MOD-113. The connected-side command belongs in tools/cli, outside this lane. |
 | MOD-116 | Multi-model publication and tokenizer staging depend on MOD-101 and MOD-113. The Agent must verify the same pinned files and serve exclusively from the staged path. |
-| MOD-121 | The [expiry handoff](model-import-cleanup.md#mod-121-abandoned-upload-retention) identifies the typed Models policy and public expiry reason. The worker can reuse the existing import locks and bounded discard once those contracts are wired. |
+| MOD-121 | The [expiry handoff](model-import-cleanup.md#mod-121-abandoned-upload-retention) identifies the typed Models policy and public expiry reason. The worker candidate reuses the existing import locks and bounded discard and passed [disconnected PostgreSQL acceptance](model-import-cleanup.md#postgresql-expiry-acceptance). Shared startup configuration and the Console still need to opt in and render the durable reason. |
 | MOD-101 / MOD-119 archive instructions | The console's BSD tar command on macOS emits USTAR headers that Go classifies as unknown, even when every pinned payload hash matches. The existing importer accepts canonical USTAR. Use GNU tar or Python's `tarfile.USTAR_FORMAT` for the verified fixture. Updating the published console instructions or widening the shared archive verifier belongs to their owners. |
 
 ## Serving P1

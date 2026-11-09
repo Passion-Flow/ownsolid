@@ -21,6 +21,8 @@ import (
 )
 
 type Service struct {
+	// ImportExpiry enables the candidate only when configured by the caller.
+	ImportExpiry   *ImportExpiryPolicy
 	DirectoryCache DirectoryCache
 	DB             *pgxpool.Pool
 	Identity       *identity.Service
