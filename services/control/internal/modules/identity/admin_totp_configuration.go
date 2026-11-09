@@ -26,11 +26,8 @@ func (s *Service) ConfigureAdminTOTP(ctx context.Context, c AdminTOTPConfigurati
 	if c.KeyringFile == "" {
 		return failure("ADMIN_TOTP_KEYRING_REQUIRED")
 	}
-	if c.KeyringFile == s.Config.Security.MailKeyringFile || c.KeyringFile == s.Config.Security.AuthHMACKeyFile ||
-		c.KeyringFile == s.Config.SSO.KeyringFile {
-		return failure("ADMIN_TOTP_KEYRING_FILE_INVALID")
-	}
-	keys, err := loadAdminTOTPKeyring(c.KeyringFile)
+	keys, err := loadAdminTOTPKeyring(c.KeyringFile,
+		s.Config.Security.MailKeyringFile, s.Config.Security.AuthHMACKeyFile, s.Config.SSO.KeyringFile)
 	if err != nil {
 		return err
 	}
