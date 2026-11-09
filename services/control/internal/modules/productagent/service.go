@@ -180,11 +180,17 @@ func (s *Service) readApplications(ctx context.Context, actor identity.Auth, id,
 		if err != nil {
 			return Result{}, err
 		}
+		for i := range page.Items {
+			page.Items[i].Name = maskDisplayCredentials(page.Items[i].Name)
+		}
 		return Result{Command: id, Applications: &page}, nil
 	case listConversations:
 		page, err := s.applications.ConversationsForAssistant(ctx, actor, query, requestID)
 		if err != nil {
 			return Result{}, err
+		}
+		for i := range page.Items {
+			page.Items[i].WorkflowName = maskDisplayCredentials(page.Items[i].WorkflowName)
 		}
 		return Result{Command: id, Conversations: &page}, nil
 	default:
