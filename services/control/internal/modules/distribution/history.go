@@ -168,7 +168,7 @@ func (s *Service) GatewayPage(ctx context.Context, a identity.Auth, workspace st
 	return listPage(ctx, s, a, workspace, values, "", "gateways", "SELECT "+gatewayFields+" FROM gateway_instances g", "SELECT "+mysqlGatewayFields+" FROM gateway_instances g", "g", "g.created_at", "g.id", scanGateway, func(v Gateway) (time.Time, string) { return v.CreatedAt, v.ID }, nil)
 }
 func (s *Service) AliasPage(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[Alias], error) {
-	return listPage(ctx, s, a, workspace, values, "", "aliases", "SELECT "+aliasFields+" FROM model_aliases a", "SELECT "+mysqlAliasFields+" FROM model_aliases a", "a", "a.created_at", "a.id", scanAlias, func(v Alias) (time.Time, string) { return v.CreatedAt, v.ID }, s.aliasAvailability)
+	return listPage(ctx, s, a, workspace, values, "", "aliases", "SELECT "+aliasFields+" FROM model_aliases a", "SELECT "+mysqlAliasFields+" FROM model_aliases a", "a", "a.created_at", "a.id", scanAlias, func(v Alias) (time.Time, string) { return v.CreatedAt, v.ID }, s.publicAliasAvailability)
 }
 func (s *Service) KeyPage(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[APIKey], error) {
 	return listPage(ctx, s, a, workspace, values, "", "keys", "SELECT "+keyFields+keyJoins, "SELECT "+mysqlKeyFields+keyJoins, "k", "k.created_at", "k.id", scanKey, func(v APIKey) (time.Time, string) { return v.CreatedAt, v.ID }, nil)
@@ -235,7 +235,7 @@ func (s *Service) Alias(ctx context.Context, a identity.Auth, workspace, id stri
 		if e != nil {
 			return e
 		}
-		return s.aliasAvailability(ctx, tx, w, &out)
+		return s.publicAliasAvailability(ctx, tx, w, &out)
 	})
 	if e != nil {
 		return Alias{}, e
