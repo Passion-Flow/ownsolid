@@ -334,7 +334,11 @@ host in `OWNSOLID_LIVE_ORIGIN` and `OWNSOLID_LIVE_HOST_RULES`, and
 with one conversation of theirs of two turns and one unread failed run. Publishing needs a signed
 plugin or a knowledge base with a model, so on a test installation make them as rows in its own
 database, moving the run from `pending` to `failed` so the schema's trigger writes the notification.
-The run marks that notification as read.
+The run interrupts the notification read, retries it and marks the notification as read.
+For the member-scope check, supply the regular member's sign-in address and credential file,
+give another member a conversation in that workspace, and set
+`OWNSOLID_LIVE_HOME_RESTRICTED_WORKSPACE` to a workspace ID the test member cannot access.
+The signed-in member's only conversation in the fixture must be the two-turn one.
 
 `live-help.spec.ts`, in both `web/apps/console` and `web/apps/portal`, needs only the variables
 above for that entrance's host. It opens an article from the top bar, an operation of the API
