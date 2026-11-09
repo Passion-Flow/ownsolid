@@ -11,6 +11,14 @@ This owner authorizes training jobs from verified model/dataset versions, manage
 
 `AcceptedAdapterSnapshot` owns current actor/Workspace checks through the selected PostgreSQL/MySQL transaction; `AcceptedAdapterWithin` borrows those checks from its caller. Both retain the exact stopped job/attempt/command/descriptor identity. Snapshot errors, including an unknown commit, expose no source; file hashing/opening remains outside business locks. A machine claim binds its stop token to exactly one unbound attempt or rolls back its task lease and audit. See the [selected-result handoff contract](../../../../../docs/milestones/m09-training/selected-result-handoff.md) for the executable worker/callback/result path and its pending database gates.
 
+The exported adapter manifest uses the dataset version and manifest SHA-256
+frozen at job creation. Publishing a successor or retiring the original leaves
+existing results and authorized retries linked to the original train and
+validation bytes. Export verifies that the accepted result, exact stopped
+attempt and frozen job agree. An inconsistent record returns
+`TRAINING_DATA_INVALID`. Model preparation uses the same retained source.
+See the [training dataset lineage contract](../../../../../docs/research/training-dataset-lineage.md).
+
 Migration 000009 stores jobs, attempts, checkpoints, artifacts, recoveries and uploads. Input dataset/model hashes, node/profile, GPU lease and attempt identity remain part of acceptance. A sealed checkpoint can be resumed only through the exact recovery contract; a cancelled/disconnected worker cannot be promoted to success from partial logs.
 
 The [training lifecycle contract](../../../../../docs/research/training-job-lifecycle.md)

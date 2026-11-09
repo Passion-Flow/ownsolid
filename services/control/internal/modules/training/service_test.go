@@ -15,8 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
@@ -27,8 +28,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/teststorage"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 type scenario struct {
@@ -77,42 +77,7 @@ func setupOn(t *testing.T, account *identity.Service) scenario {
 	}
 	ds := &datasets.Service{DB: account.DB, Identity: account, Workspaces: w, Store: store, Processor: processor}
 	account.Config.Datasets = config.DatasetConfiguration{ArtifactRoot: root, PythonExecutable: binary, ProcessorFile: script}
-	data, e := ds.Create(ctx, p, datasets.CreateRequest{WorkspaceID: a.Me.Workspace.ID, Name: "Real native training dataset", Origin: "Synthetic local test records", License: "CC0 synthetic fixture", RightsAsserted: true, Reason: "Training input acceptance"}, uuid.NewString(), uuid.NewString())
-	if e != nil {
-		t.Fatal(e)
-	}
-	var raw bytes.Buffer
-	for i := 0; i < 10; i++ {
-		b, _ := json.Marshal(datawire.Record{SourceID: uuid.NewString(), Prompt: "Synthetic prompt " + uuid.NewString(), Completion: "Synthetic completion"})
-		raw.Write(b)
-		raw.WriteByte('\n')
-	}
-	sum := sha256.Sum256(raw.Bytes())
-	draft, e := ds.CreateDraft(ctx, p, a.Me.Workspace.ID, data.ID, datasets.DraftRequest{SourceName: "synthetic.jsonl", ExpectedBytes: int64(raw.Len()), SourceSHA256: hex.EncodeToString(sum[:]), Reason: "Import actual local processor input"}, uuid.NewString(), uuid.NewString())
-	if e != nil {
-		t.Fatal(e)
-	}
-	if _, e = ds.Upload(ctx, p, a.Me.Workspace.ID, data.ID, draft.ID, draft.SourceSHA256, draft.ExpectedBytes, &raw, uuid.NewString()); e != nil {
-		t.Fatal(e)
-	}
-	if worked, e := ds.ProcessNext(ctx); e != nil || !worked {
-		t.Fatal("actual source inspection", e)
-	}
-	draft, e = ds.GetDraft(ctx, p, a.Me.Workspace.ID, data.ID, draft.ID)
-	if e != nil {
-		t.Fatal(e)
-	}
-	publication, e := ds.Publish(ctx, p, a.Me.Workspace.ID, data.ID, draft.ID, datasets.PublicationRequest{ExpectedRevision: draft.Revision, Seed: "00112233445566778899aabbccddeeff", ValidationBasisPoints: 2000, Reason: "Publish actual immutable input"}, uuid.NewString(), uuid.NewString())
-	if e != nil {
-		t.Fatal(e)
-	}
-	if worked, e := ds.ProcessNext(ctx); e != nil || !worked {
-		t.Fatal("actual publication", e)
-	}
-	publication, e = ds.GetJob(ctx, p, a.Me.Workspace.ID, data.ID, publication.ID)
-	if e != nil || publication.State != "succeeded" || publication.VersionID == nil {
-		t.Fatal("actual published source", e)
-	}
+	dataset, version := publishFixtureDataset(t, ds, p, a.Me.Workspace.ID)
 	// Only node observations and model catalog metadata are synthetic in this business fixture.
 	// Actual approved full-model compute/weights are verified by separate native training profiles.
 	model := uuid.NewString()
@@ -138,7 +103,49 @@ func setupOn(t *testing.T, account *identity.Service) scenario {
 	s.Inference = &deployments.Service{Nodes: n, Models: s.Models}
 	n.Inference = s.Inference
 	n.Training = s
-	return scenario{s: s, admin: a, portal: p, credential: enrolled.Credential, password: password, input: training.CreateRequest{WorkspaceID: a.Me.Workspace.ID, NodeID: node, ModelID: model, DatasetID: data.ID, DatasetVersionID: *publication.VersionID, GPUUUID: "GPU-" + uuid.NewString(), Configuration: wire.DefaultConfiguration(), Reason: "Synthetic scoped training intent"}}
+	return scenario{s: s, admin: a, portal: p, credential: enrolled.Credential, password: password, input: training.CreateRequest{WorkspaceID: a.Me.Workspace.ID, NodeID: node, ModelID: model, DatasetID: dataset, DatasetVersionID: version, GPUUUID: "GPU-" + uuid.NewString(), Configuration: wire.DefaultConfiguration(), Reason: "Synthetic scoped training intent"}}
+}
+
+func publishFixtureDataset(t *testing.T, ds *datasets.Service, a identity.Auth, workspace string) (string, string) {
+	t.Helper()
+	ctx := t.Context()
+	data, e := ds.Create(ctx, a, datasets.CreateRequest{WorkspaceID: workspace, Name: "Real native training dataset", Origin: "Synthetic local test records", License: "CC0 synthetic fixture", RightsAsserted: true, Reason: "Training input acceptance"}, uuid.NewString(), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	var raw bytes.Buffer
+	for i := 0; i < 10; i++ {
+		b, _ := json.Marshal(datawire.Record{SourceID: uuid.NewString(), Prompt: "Synthetic prompt " + uuid.NewString(), Completion: "Synthetic completion"})
+		raw.Write(b)
+		raw.WriteByte('\n')
+	}
+	sum := sha256.Sum256(raw.Bytes())
+	draft, e := ds.CreateDraft(ctx, a, workspace, data.ID, datasets.DraftRequest{SourceName: "synthetic.jsonl", ExpectedBytes: int64(raw.Len()), SourceSHA256: hex.EncodeToString(sum[:]), Reason: "Import actual local processor input"}, uuid.NewString(), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = ds.Upload(ctx, a, workspace, data.ID, draft.ID, draft.SourceSHA256, draft.ExpectedBytes, &raw, uuid.NewString()); e != nil {
+		t.Fatal(e)
+	}
+	if worked, e := ds.ProcessNext(ctx); e != nil || !worked {
+		t.Fatal("actual source inspection", e)
+	}
+	draft, e = ds.GetDraft(ctx, a, workspace, data.ID, draft.ID)
+	if e != nil {
+		t.Fatal(e)
+	}
+	publication, e := ds.Publish(ctx, a, workspace, data.ID, draft.ID, datasets.PublicationRequest{ExpectedRevision: draft.Revision, Seed: "00112233445566778899aabbccddeeff", ValidationBasisPoints: 2000, Reason: "Publish actual immutable input"}, uuid.NewString(), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	if worked, e := ds.ProcessNext(ctx); e != nil || !worked {
+		t.Fatal("actual publication", e)
+	}
+	publication, e = ds.GetJob(ctx, a, workspace, data.ID, publication.ID)
+	if e != nil || publication.State != "succeeded" || publication.VersionID == nil {
+		t.Fatal("actual published source", e)
+	}
+	return data.ID, *publication.VersionID
 }
 
 func expected(t *testing.T, e error, code string) {
