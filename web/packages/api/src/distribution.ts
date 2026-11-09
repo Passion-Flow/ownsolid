@@ -1,9 +1,9 @@
 // The gateway's names for deployments and the keys that call them (api/openapi/v1/distribution).
 import { localCell } from './cell.ts';
-import { createClient } from './client.ts';
+import { buildUrl, createClient, type Options } from './client.ts';
 import type { distributionContract } from './gen/index.ts';
 import type { Audience } from './identity.ts';
-import type { RequestOptions } from './transport.ts';
+import { getFile, type DownloadedFile, type RequestOptions } from './transport.ts';
 
 type Schemas = distributionContract.components['schemas'];
 
@@ -30,6 +30,10 @@ const keyPaths = {
       '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}/revoke',
     requests:
       '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests',
+    usageCsv:
+      '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/export',
+    aliasCa:
+      '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/ca',
   },
   portal: {
     aliases:
@@ -41,8 +45,12 @@ const keyPaths = {
       '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}/revoke',
     requests:
       '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests',
+    usageCsv:
+      '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests/export',
+    aliasCa:
+      '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id}/ca',
   },
-} as const;
+} as const satisfies Record<Audience, Record<string, keyof distributionContract.paths>>;
 
 /** One page of a workspace's aliases, newest first. */
 export function listModelAliases(
@@ -151,6 +159,37 @@ export function listGatewayKeyCalls(
       ...(query.cursor ? { cursor: query.cursor } : {}),
     },
   });
+}
+
+/** Downloads one scoped CSV page for a key using the corresponding history cursor. */
+export function downloadGatewayKeyCalls(
+  audience: Audience,
+  workspaceId: string,
+  keyId: string,
+  limit: number,
+  cursor: string | null,
+  options?: RequestOptions,
+): Promise<DownloadedFile> {
+  const { path, query } = {
+    path: { ...localCell, workspace_id: workspaceId },
+    query: { api_key_id: keyId, limit, ...(cursor === null ? {} : { cursor }) },
+  } satisfies Options<distributionContract.operations['adminExportGatewayUsageCSV']> &
+    Options<distributionContract.operations['portalExportGatewayUsageCSV']>;
+  return getFile(buildUrl(keyPaths[audience].usageCsv, path, query), options);
+}
+
+/** Downloads the public trust bundle for an authorized, activated model alias. */
+export function downloadGatewayAliasCA(
+  audience: Audience,
+  workspaceId: string,
+  aliasId: string,
+  options?: RequestOptions,
+): Promise<DownloadedFile> {
+  const { path } = {
+    path: { ...localCell, workspace_id: workspaceId, resource_id: aliasId },
+  } satisfies Options<distributionContract.operations['adminDownloadGatewayAliasCA']> &
+    Options<distributionContract.operations['portalDownloadGatewayAliasCA']>;
+  return getFile(buildUrl(keyPaths[audience].aliasCa, path), options);
 }
 
 /** The gateway process registered for one node of a workspace. */
