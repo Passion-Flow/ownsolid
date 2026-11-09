@@ -373,7 +373,8 @@ history path, exactly one `workspace_id` and the whole-second UTC
 authenticate the request, check its Origin, resolve its cell and
 supply the Control request ID. On success the method supplies a
 complete JSON body up to 1 MiB after the second authority check and
-the audit commit. Missing points are unobserved. Reachable zero with
+the audit commit. Publish the prepared bytes directly to retain the
+body cap. Missing points are unobserved. Reachable zero with
 a positive observed count is an observation. Use the
 [HTTP candidate handoff](../../../../../docs/research/telemetry-retention-tiers.md#verified-bounded-http-candidate)
 to register the distinct candidate statuses and error codes through
@@ -396,6 +397,9 @@ Provision the applicable private CAs in Control's system trust store.
 Pass the raw CA to vmalert's `-datasource.tlsCAFile` and the long CA to
 its `-remoteWrite.tlsCAFile`. Match the certificates to the configured
 origins and restrict raw and rollup access by caller and route.
+Stage old and next CA trust before changing issuers and qualify
+Control and vmalert separately. The fixture reconnects at each read
+and exercises same-origin certificate rejection and recovery.
 See [the deployment evidence](../../../../../docs/research/telemetry-retention-tiers.md#verified-private-tls-handoff).
 
 The runner uses loopback only and stops all of its processes and container.
