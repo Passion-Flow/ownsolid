@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+case ${1:-history} in
+    history) fixture='^TestScopedFleetHistoryOffline$'; auxiliary=${OWNSOLID_TEST_VMALERT:-} ;;
+    scrape-inventory) fixture='^TestNodeScrapeInventoryThroughVmagent$'; auxiliary=${OWNSOLID_TEST_VMAGENT:-} ;;
+    *) echo "Choose history or scrape-inventory." >&2; exit 2 ;;
+esac
 image=${OWNSOLID_TEST_POSTGRES_IMAGE:-}
 metrics=${OWNSOLID_TEST_VICTORIA_METRICS:-}
-evaluator=${OWNSOLID_TEST_VMALERT:-}
-if [[ ! $image =~ ^sha256:[a-f0-9]{64}$ || $metrics != /* || ! -x $metrics || $evaluator != /* || ! -x $evaluator ]]; then
-    echo "Set OWNSOLID_TEST_POSTGRES_IMAGE to the verified local image ID and the two OWNSOLID_TEST binary paths to verified absolute executables." >&2
+if [[ ! $image =~ ^sha256:[a-f0-9]{64}$ || $metrics != /* || ! -x $metrics || $auxiliary != /* || ! -x $auxiliary ]]; then
+    echo "Set OWNSOLID_TEST_POSTGRES_IMAGE to the verified local image ID and the required test binary paths to verified absolute executables." >&2
     exit 2
 fi
 cd "$(dirname "$0")/../../../../../.."
@@ -55,11 +59,11 @@ nsenter --target "$pid" --net unshare --pid --fork --kill-child bash -ec '
     for attempt in $(seq 1 80); do
         if (exec 3<>/dev/tcp/127.0.0.1/5432) 2>/dev/null; then
             docker exec "$2" psql -X -U fixture -d ownsolid_history_test -v ON_ERROR_STOP=1 -c "$3"
-            exec "$1" -test.v -test.run "^TestScopedFleetHistoryOffline$" -test.timeout 110s
+            exec "$1" -test.v -test.run "$4" -test.timeout 110s
         fi
         sleep 0.25
     done
     echo "The isolated PostgreSQL listener did not become ready." >&2
     exit 1
 ' bash "$work/monitoring.test" "$container" \
-    "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC;"
+    "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC;" "$fixture"
