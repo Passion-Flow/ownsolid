@@ -32,6 +32,11 @@ keyed by the same field identifiers as the form. Each field supplies a `label`
 and a `description`. For a choice field, `choices` maps each option identifier
 to its label. Use an empty object for `fields` when the form has no fields.
 
+An optional `license_note` gives the publisher's release-specific license and
+attribution summary. Supply it in both locales as plain text of up to 2,048
+Unicode code points, or omit it in both. The signed bundle authenticates both
+summaries. They are available on the verified release's locale messages.
+
 After loading a manifest, call `Manifest.Platform.Supports` with the installed
 platform version and `Manifest.DecodeValues` with a configuration submission.
 The catalog package reads metadata and validates configuration without starting

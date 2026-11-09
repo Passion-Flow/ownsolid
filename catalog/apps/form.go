@@ -10,13 +10,18 @@ import (
 	"unicode/utf8"
 )
 
-const valueTextRunes = 4096
+const (
+	valueTextRunes   = 4096
+	licenseNoteRunes = 2048
+)
 
 // Messages contains display text for one locale.
 type Messages struct {
 	Title       string               `json:"title"`
 	Description string               `json:"description"`
 	Fields      map[string]FieldText `json:"fields"`
+	// LicenseNote is the publisher's optional plain-text release summary.
+	LicenseNote *string `json:"license_note,omitempty"`
 }
 
 // FieldText supplies plain-text labels for a form field and its choices.
