@@ -25,6 +25,7 @@ const (
 )
 
 var keyIDPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`)
+var errEncryptedState = errors.New("SSO_ENCRYPTED_STATE_INVALID")
 
 // Keyring keeps decoded key material private to the owning SSO module.
 type Keyring struct {
@@ -91,11 +92,23 @@ func objectFields(raw []byte, maximum int) (map[string]json.RawMessage, error) {
 }
 
 func LoadKeyring(path string) (*Keyring, error) {
+	ring, e := loadKeyring(path)
+	if errors.Is(e, errPrivateFileAbsent) {
+		return nil, fail("SSO_KEYRING_INVALID")
+	}
+	return ring, e
+}
+
+func loadKeyring(path string) (*Keyring, error) {
 	bad := errors.New("SSO_KEYRING_INVALID")
 	raw, e := readPrivateFile(path, maximumKeyringBytes)
+	if errors.Is(e, errPrivateFileAbsent) {
+		return nil, e
+	}
 	if e != nil {
 		return nil, bad
 	}
+	defer clear(raw)
 	fields, e := objectFields(raw, 3)
 	if e != nil || len(fields) != 3 {
 		return nil, bad
@@ -167,18 +180,17 @@ func (k *Keyring) seal(scope secretScope, plaintext []byte) (sealedSecret, error
 }
 
 func (k *Keyring) open(scope secretScope, value sealedSecret) ([]byte, error) {
-	bad := errors.New("SSO_ENCRYPTED_STATE_INVALID")
 	associated, e := scope.associatedData()
 	if e != nil {
 		return nil, e
 	}
 	a, e := k.aead(value.keyID)
 	if e != nil || len(value.nonce) != a.NonceSize() || len(value.ciphertext) <= a.Overhead() || len(value.ciphertext) > maximumSecretBytes+a.Overhead() {
-		return nil, bad
+		return nil, errEncryptedState
 	}
 	plaintext, e := a.Open(nil, value.nonce, value.ciphertext, associated)
 	if e != nil {
-		return nil, bad
+		return nil, errEncryptedState
 	}
 	return plaintext, nil
 }

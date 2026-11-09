@@ -6,12 +6,12 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 // anonymousStartTransaction takes the target connector before the shared late
@@ -65,7 +65,7 @@ func (s *Service) Start(ctx context.Context, connector, audience, previous strin
 	if e := s.policy.Validate(); e != nil {
 		return StartResult{}, e
 	}
-	if s.keys == nil {
+	if s.keys == nil && !s.keyringRecovery {
 		return StartResult{}, fail("SSO_CONFIGURATION_REQUIRED")
 	}
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(s.policy.OperationSeconds))
@@ -108,6 +108,11 @@ func (s *Service) Start(ctx context.Context, connector, audience, previous strin
 		}
 		if !c.Enabled {
 			return fail("SSO_CONNECTOR_DISABLED")
+		}
+		if s.keyringRecovery {
+			if e := s.verifyConnectorCredentialWithin(ctx, q, tenant, connector); e != nil {
+				return e
+			}
 		}
 		provider, e := s.provider(connector, c.Origin)
 		if e != nil {
