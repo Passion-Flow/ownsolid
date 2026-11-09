@@ -369,21 +369,26 @@ func makeScopedListPlan(kind string, q url.Values, policy config.RuntimePolicy, 
 		return fail("INVALID_CURSOR")
 	}
 	if c.ID != "" {
-		p.hasCursor = true
-		column, after := p.alias+"."+p.order, "<"
-		if p.ascending {
-			after = ">"
-		}
-		p.pgArgs = append(p.pgArgs, c.Time, c.ID)
-		n := len(p.pgArgs)
-		p.pgWhere = append(p.pgWhere, "("+column+","+p.alias+".id)"+after+"($"+strconv.Itoa(n-1)+",$"+strconv.Itoa(n)+"::uuid)")
-		p.myArgs = append(p.myArgs, c.Time, c.Time, c.ID)
-		p.myWhere = append(p.myWhere, "("+column+after+"? OR("+column+"=? AND "+p.alias+".id"+after+"?))")
-		p.dmArgs = append(p.dmArgs, c.Time.UTC(), c.Time.UTC(), c.ID)
-		p.dmWhere = append(p.dmWhere, "("+column+after+"? OR("+column+"=? AND "+p.alias+".id"+after+"?))")
+		p.seek(c.Time, c.ID)
 	}
 	return p, nil
 }
+
+func (p *listPlan) seek(stamp time.Time, id string) {
+	p.hasCursor = true
+	column, after := p.alias+"."+p.order, "<"
+	if p.ascending {
+		after = ">"
+	}
+	p.pgArgs = append(p.pgArgs, stamp, id)
+	n := len(p.pgArgs)
+	p.pgWhere = append(p.pgWhere, "("+column+","+p.alias+".id)"+after+"($"+strconv.Itoa(n-1)+",$"+strconv.Itoa(n)+"::uuid)")
+	p.myArgs = append(p.myArgs, stamp, stamp, id)
+	p.myWhere = append(p.myWhere, "("+column+after+"? OR("+column+"=? AND "+p.alias+".id"+after+"?))")
+	p.dmArgs = append(p.dmArgs, stamp.UTC(), stamp.UTC(), id)
+	p.dmWhere = append(p.dmWhere, "("+column+after+"? OR("+column+"=? AND "+p.alias+".id"+after+"?))")
+}
+
 func (p listPlan) statement(dialect transaction.Dialect) transaction.Statement {
 	direction := " DESC"
 	if p.ascending {
