@@ -14,6 +14,7 @@ import {
   Td,
   Th,
   Tr,
+  cn,
   type StatusTone,
 } from '@ownsolid/ui';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -79,6 +80,7 @@ export function ResourceHeader({
   description,
   status,
   actions,
+  className,
 }: {
   backTo: string;
   /** The way back's filters or tab, when they are worth returning to. */
@@ -88,11 +90,13 @@ export function ResourceHeader({
   description?: string | undefined;
   status: ReactNode;
   actions: ReactNode;
+  /** Layout adjustments for the name, status and action row. */
+  className?: string;
 }) {
   return (
     <>
       <BackLink to={backTo} search={backSearch} label={backLabel} />
-      <div className="mb-6 flex flex-wrap items-start gap-3">
+      <div className={cn('mb-6 flex flex-wrap items-start gap-3', className)}>
         <div className="min-w-0 flex-1">
           <h1 className="m-0 mb-1 text-[27px] leading-[1.2] font-[750] tracking-[-0.03em] [overflow-wrap:anywhere]">
             {title}

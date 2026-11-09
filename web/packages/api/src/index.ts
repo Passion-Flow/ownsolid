@@ -162,6 +162,7 @@ export {
   type DerivedModelCatalog,
   type ModelCatalog,
   type ModelCatalogAvailability,
+  type ModelDetail,
   type ModelFile,
   type ModelImport,
   type ModelImportState,
