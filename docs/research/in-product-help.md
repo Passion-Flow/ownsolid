@@ -269,3 +269,17 @@ and cookie parameters from the on-screen table while retaining the
 reference in the downloadable contract. Verify that `changePassword`
 has no empty parameter row and that a referenced path or query parameter
 retains its real location, name, schema and required flag.
+
+### Published preview acceptance on the Web development Mac
+
+Built both entrances after syncing `7d0d9e79` and opened each operation
+through its shareable address. Six local Chromium cases checked the
+status, title and recovery detail in the same error row in English and
+Simplified Chinese. Admin showed all five 409 conflicts on the alias
+preview. Both tokenizer previews showed all eight dataset codes under
+404, 409, 422 and 503. A Portal search for the Admin preview returned the
+filtered empty state. The browser loaded the published index as built,
+with zero requests outside the local preview origin. The 390-pixel
+screenshots retained the code and recovery text, including the four
+503 recovery instructions. The Help and locale suites passed against
+the same generated index.
