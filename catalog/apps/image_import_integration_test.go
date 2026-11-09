@@ -223,7 +223,10 @@ func TestImportVerifiedReleaseTransitions(t *testing.T) {
 func TestImportVerifiedRenderedCompose(t *testing.T) {
 	socket, mount, store := emptyDockerStore(t)
 	root, key, private := transitionCatalog(t)
-	pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.0.0", engine: "compose"})
+	pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{
+		version: "1.0.0", engine: "compose",
+		composeFields: "    env_file: ./fixture.env\n    environment:\n      CATALOG_EMPTY: ''\n",
+	})
 	staging := filepath.Join(root.Name(), pin.Version)
 	release, err := root.OpenRoot(pin.Version)
 	if err != nil {
@@ -238,13 +241,44 @@ func TestImportVerifiedRenderedCompose(t *testing.T) {
 	if err != nil || digestBytes(input) != verified.Manifest.Artifact.SHA256 {
 		t.Fatalf("read the verified Compose source: %v", err)
 	}
-	render := exec.CommandContext(t.Context(), "docker", "compose", "--project-name", "catalog-image-plan", "--profile", "*",
-		"--project-directory", staging, "-f", "-", "config", "--format", "json", "--no-env-resolution")
-	render.Stdin = bytes.NewReader(input)
-	model, err := render.Output()
-	if err != nil {
-		t.Fatalf("render the signed Compose fixture: %v", err)
+	render := func(source []byte, extra ...string) []byte {
+		t.Helper()
+		args := []string{"compose", "--project-name", "catalog-image-plan", "--profile", "*",
+			"--project-directory", staging, "-f", "-", "config", "--format", "json"}
+		cmd := exec.CommandContext(t.Context(), "docker", append(args, extra...)...)
+		cmd.Env = append(os.Environ(), "COMPOSE_DISABLE_ENV_FILE=1")
+		cmd.Stdin = bytes.NewReader(source)
+		model, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("render the signed Compose fixture: %v", err)
+		}
+		return model
 	}
+	writeEnvironment := func(mode string) {
+		t.Helper()
+		if err := release.WriteFile("fixture.env", []byte("CATALOG_MODE="+mode+"\n"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	requireMode := func(raw []byte, mode string) {
+		t.Helper()
+		model, err := decodeComposeModel(raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		environment := model.Services["fixture"].Environment
+		if value, empty := environment["CATALOG_MODE"], environment["CATALOG_EMPTY"]; value == nil || *value != mode || empty == nil || *empty != "" {
+			t.Fatal("Compose did not preserve the expected explicit service environment")
+		}
+	}
+	writeEnvironment("serve")
+	unresolved := RenderedCompose{ArtifactSHA256: digestBytes(input), JSON: render(input, "--no-env-resolution")}
+	model := render(input)
+	requireMode(render(unresolved.JSON), "serve")
+	writeEnvironment("debug")
+	requireMode(render(unresolved.JSON), "debug")
+	requireMode(render(model), "serve")
+
 	policy := bundle.Defaults()
 	policy.MountRoot = mount
 	rendered := RenderedCompose{ArtifactSHA256: digestBytes(input), JSON: model}
@@ -256,8 +290,17 @@ func TestImportVerifiedRenderedCompose(t *testing.T) {
 	options := ImageImportOptions{
 		DockerSocket: socket, Verification: policy, MaximumPayloadBytes: testTransitionBudget,
 		MaximumExpandedBytes: testTransitionBudget, Timeout: 30 * time.Second, ExpectedPin: &pin,
-		RenderedCompose: &replaced, ExpectedComposePlan: &plan,
 	}
+	retained := plan
+	retained.ModelSHA256 = digestBytes(unresolved.JSON)
+	options.RenderedCompose, options.ExpectedComposePlan = &unresolved, &retained
+	if err := retained.VerifyRendered(unresolved); !errors.Is(err, ErrComposeImagePlan) {
+		t.Fatalf("launch verification accepted a retained env_file reference: %v", err)
+	}
+	if _, err := ImportInstallImage(t.Context(), staging, key, options); !errors.Is(err, ErrComposeImagePlan) || len(listDockerImages(t, store)) != 0 {
+		t.Fatalf("unresolved environment changed the local image store: %v", err)
+	}
+	options.RenderedCompose, options.ExpectedComposePlan = &replaced, &plan
 	if _, err := ImportInstallImage(t.Context(), staging, key, options); !errors.Is(err, ErrComposeImagePlan) || len(listDockerImages(t, store)) != 0 {
 		t.Fatalf("replacement changed the local image store: %v", err)
 	}
