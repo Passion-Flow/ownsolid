@@ -84,6 +84,8 @@ Run the test with `-tags model_integration`,
 and `PROJECT_ONE_TEST_DSN_FILE` pointing to a private disposable loopback
 database. The model import and admission use the normal repository and Admin
 routes. The fixture supplies the site purpose when composing the service.
+The disconnected admission case also passed with the approved archive
+review and complete-file transfer checks present.
 
 ## Consumer handoff
 

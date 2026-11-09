@@ -58,11 +58,14 @@ responsible owners can extend their respective boundaries.
 ## Shared Help gate
 
 Clean upstream `e8c853c0` reproduced two failing cases in
-`web/packages/help/src/help.test.ts`. The Console API reference and
-Portal API reference cases both report that the listed operations differ
-from the contract. `pnpm --dir web --filter @ownsolid/help test`
-returned 17 passed and two failed in an archive containing only
-upstream files. The four missing operations are:
+`web/packages/help/src/help.test.ts`.
+`pnpm --dir web --filter @ownsolid/help test` returned 17 passed
+and two failed in an archive containing only upstream files.
+
+- `console API reference > lists exactly the operations the contracts give this entrance`
+- `portal API reference > lists exactly the operations the contracts give this entrance`
+
+The four missing operations are:
 
 - `GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter`
 - `GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/logs`
