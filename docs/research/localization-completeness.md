@@ -65,6 +65,26 @@ catalog test can see.
   transformed selectors, for the same answer.
 - **Rejected: translating on the server.** It would make stored audit rows depend on who wrote them.
 
+### Admin authenticator audit names (IAM-105)
+
+The IAM-105 candidate's `admin_totp.go` writes
+`auth.totp_enabled` when an authenticator enrollment takes effect and
+`auth.totp_revoked` when that enrollment is removed. Both are successful
+Admin audit events. [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238.html)
+defines the time-based codes used by the authenticator. Name the event
+by its operation on the authenticator enrollment. The existing
+audit list can show these names when the server records those codes.
+The action names are independent of the pending MFA screen specification.
+Keep the coverage test's scan of real server actions and verify the same
+test against an isolated IAM-105 candidate. Adding a family-level fallback
+or a test exception would leave the recorded actions unnamed. No new
+dependency, model or dataset is needed.
+
+In the detached candidate at `bad52f76`, audit coverage failed for
+both catalogs on exactly these two actions. With only the two labels
+per locale applied, the same audit coverage and catalog checks passed
+all nine tests.
+
 ## Glossary
 
 One word for one thing across the catalog, help and emails, kept beside the catalogs in
