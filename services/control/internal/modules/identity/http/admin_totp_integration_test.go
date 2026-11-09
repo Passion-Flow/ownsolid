@@ -11,6 +11,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -22,6 +23,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -33,8 +36,18 @@ import (
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 )
 
-//go:embed testdata/admin_totp_candidate.sql
+//go:embed testdata/admin_totp_candidate.up.sql
 var adminTOTPFixtureSQL string
+
+//go:embed testdata/admin_totp_candidate.down.sql
+var adminTOTPDownSQL string
+
+func applyAdminTOTPMigration(ctx context.Context, pool *pgxpool.Pool, migration string) error {
+	return pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, migration)
+		return err
+	})
+}
 
 func candidateOTP(seed []byte, step int64) string {
 	var data [8]byte
@@ -49,7 +62,7 @@ func candidateOTP(seed []byte, step int64) string {
 func adminTOTPCandidateFixture(t *testing.T) (*identity.Service, *httptest.Server, *client, *client, string) {
 	t.Helper()
 	s, server, portal, admin, password := setup(t)
-	if _, err := s.DB.Exec(t.Context(), adminTOTPFixtureSQL); err != nil {
+	if err := applyAdminTOTPMigration(t.Context(), s.DB, adminTOTPFixtureSQL); err != nil {
 		t.Fatal(err)
 	}
 	keyring := adminTOTPFixtureKeyFile(t, "candidate", map[string]string{"candidate": adminTOTPFixtureKey(t)})
@@ -101,10 +114,17 @@ func adminTOTPFixtureKeyFile(t *testing.T, active string, keys map[string]string
 }
 
 func TestAdminTOTPCandidateStartupHTTPS(t *testing.T) {
-	s, _, _, admin, password := setup(t)
+	s, _, portal, admin, password := setup(t)
 	ctx := t.Context()
 	if err := s.ConfigureAdminTOTP(ctx, identity.AdminTOTPConfiguration{}); err != nil || s.AdminTOTPCandidateReady() {
 		t.Fatalf("legacy startup failed or mounted TOTP: %v", err)
+	}
+	login := map[string]string{"email": "admin@example.invalid", "password": password}
+	portal.mutate(http.MethodPost, "/api/v1/auth/login", login, 200, "LoginResponse")
+	legacy := portal.request(http.MethodGet, "/api/v1/me", nil, 200, "MeResponse", nil)
+	if _, err := s.DB.Exec(ctx, `INSERT INTO sites(id,display_name) VALUES('iam-fixture','Secondary site');
+		INSERT INTO cells(id,site_id,display_name) VALUES('iam-fixture','iam-fixture','Secondary cell');`); err != nil {
+		t.Fatal(err)
 	}
 	oldKey := adminTOTPFixtureKey(t)
 	keyFile := adminTOTPFixtureKeyFile(t, "previous", map[string]string{"previous": oldKey})
@@ -117,26 +137,52 @@ func TestAdminTOTPCandidateStartupHTTPS(t *testing.T) {
 		}
 	}
 	refuse(s, cfg, "ADMIN_TOTP_SCHEMA_UNAVAILABLE")
-	for _, sql := range []string{
-		adminTOTPFixtureSQL,
-		"ALTER TABLE admin_totp_recovery_codes RENAME COLUMN expires_at TO missing_expiry",
-	} {
-		if _, err := s.DB.Exec(ctx, sql); err != nil {
+	for _, migration := range []string{adminTOTPFixtureSQL, adminTOTPDownSQL, adminTOTPFixtureSQL} {
+		if err := applyAdminTOTPMigration(ctx, s.DB, migration); err != nil {
 			t.Fatal(err)
 		}
+	}
+	var tables, scopeColumns int
+	if err := s.DB.QueryRow(ctx, `SELECT count(DISTINCT table_name),
+		count(*) FILTER (WHERE column_name IN ('site_id','cell_id'))
+		FROM information_schema.columns WHERE table_schema=current_schema()
+		AND table_name IN ('admin_totp_factors','admin_totp_challenges','admin_totp_recovery_codes')`).Scan(&tables, &scopeColumns); err != nil ||
+		tables != 3 || scopeColumns != 0 {
+		t.Fatalf("expected three global identity tables, got %d tables and %d scope columns: %v", tables, scopeColumns, err)
+	}
+	upgraded := portal.request(http.MethodGet, "/api/v1/me", nil, 200, "MeResponse", nil)
+	if upgraded["user"].(map[string]any)["id"] != legacy["user"].(map[string]any)["id"] {
+		t.Fatal("upgrade changed the pre-existing Portal session authority")
+	}
+	if _, err := s.DB.Exec(ctx, "ALTER TABLE admin_totp_recovery_codes RENAME COLUMN expires_at TO missing_expiry"); err != nil {
+		t.Fatal(err)
 	}
 	refuse(s, cfg, "ADMIN_TOTP_SCHEMA_UNAVAILABLE")
 	if _, err := s.DB.Exec(ctx, "ALTER TABLE admin_totp_recovery_codes RENAME COLUMN missing_expiry TO expires_at"); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.ConfigureAdminTOTP(ctx, cfg); err != nil || !s.AdminTOTPCandidateReady() {
-		t.Fatalf("configured startup did not mount TOTP: %v", err)
-	}
-	seed, _, _ := enrollAdminTOTPCandidate(t, s, admin, password)
-
 	restart := func() *identity.Service {
 		return &identity.Service{DB: s.DB, Config: s.Config, Passwords: s.Passwords, Mail: s.Mail, HMACKey: s.HMACKey}
 	}
+	refuse(restart(), identity.AdminTOTPConfiguration{Enabled: true, KeyringFile: keyFile + ".absent"}, "ADMIN_TOTP_KEYRING_FILE_INVALID")
+	if err := os.Chmod(keyFile, 0644); err != nil {
+		t.Fatal(err)
+	}
+	refuse(restart(), cfg, "ADMIN_TOTP_KEYRING_FILE_INVALID")
+	if err := os.Chmod(keyFile, 0600); err != nil {
+		t.Fatal(err)
+	}
+	invalid := adminTOTPFixtureKeyFile(t, "previous", map[string]string{"previous": "invalid fixture data"})
+	refuse(restart(), identity.AdminTOTPConfiguration{Enabled: true, KeyringFile: invalid}, "ADMIN_TOTP_KEYRING_INVALID")
+
+	first := restart()
+	if err := first.ConfigureAdminTOTP(ctx, cfg); err != nil || !first.AdminTOTPCandidateReady() {
+		t.Fatalf("configured startup did not mount TOTP: %v", err)
+	}
+	browser := newClient(t, accountTLSServer(t, transport.New(first)), "admin", admin.schemas)
+	seed, codes, factorID := enrollAdminTOTPCandidate(t, first, browser, password)
+	assertAdminTOTPMigrationPreservesFactors(t, s.DB, factorID, len(codes))
+
 	currentKey := adminTOTPFixtureKey(t)
 	refuse(restart(), identity.AdminTOTPConfiguration{Enabled: true, KeyringFile: adminTOTPFixtureKeyFile(t, "current", map[string]string{
 		"current": currentKey,
@@ -151,11 +197,51 @@ func TestAdminTOTPCandidateStartupHTTPS(t *testing.T) {
 	if err := replica.ConfigureAdminTOTP(ctx, rotated); err != nil {
 		t.Fatal(err)
 	}
-	browser := newClient(t, accountTLSServer(t, transport.New(replica)), "admin", admin.schemas)
-	pending := browser.mutate(http.MethodPost, "/api/v1/auth/login", map[string]string{"email": "admin@example.invalid", "password": password}, 202, "")
-	browser.mutate(http.MethodPost, "/api/v1/auth/login/totp", map[string]string{
+	server := accountTLSServer(t, transport.New(replica))
+	browser = newClient(t, server, "admin", admin.schemas)
+	pending := browser.mutate(http.MethodPost, "/api/v1/auth/login", login, 202, "")
+	const complete = "/api/v1/auth/login/totp"
+	browser.mutate(http.MethodPost, complete, map[string]string{
 		"challenge": pending["challenge"].(string), "code": candidateOTP(seed, adminTOTPCandidateStep(t, s)),
 	}, 200, "LoginResponse")
+	recovery := newClient(t, server, "admin", admin.schemas)
+	pending = recovery.mutate(http.MethodPost, "/api/v1/auth/login", login, 202, "")
+	recovery.mutate(http.MethodPost, complete, map[string]string{
+		"challenge": pending["challenge"].(string), "code": codes[0].(string),
+	}, 200, "LoginResponse")
+	pending = recovery.mutate(http.MethodPost, "/api/v1/auth/login", login, 202, "")
+	problemCode(t, recovery.mutate(http.MethodPost, complete, map[string]string{
+		"challenge": pending["challenge"].(string), "code": codes[0].(string),
+	}, 401, "Problem"), "AUTH_INVALID_CREDENTIALS")
+}
+
+func assertAdminTOTPMigrationPreservesFactors(t *testing.T, pool *pgxpool.Pool, factorID string, recoveryCount int) {
+	t.Helper()
+	ctx := t.Context()
+	var fault *pgconn.PgError
+	if err := applyAdminTOTPMigration(ctx, pool, adminTOTPDownSQL); !errors.As(err, &fault) || fault.Message != "ADMIN_TOTP_DOWNGRADE_HAS_FACTORS" {
+		t.Fatalf("expected a refusal to drop enrolled factors, got %v", err)
+	}
+	foreignTenant := uuid.NewString()
+	if _, err := pool.Exec(ctx, "INSERT INTO tenants(id,name,status) VALUES($1,'Synthetic foreign tenant','active')", foreignTenant); err != nil {
+		t.Fatal(err)
+	}
+	for _, insert := range []string{
+		`INSERT INTO admin_totp_challenges(challenge_hash,browser_hash,previous_hash,user_id,tenant_id,factor_id,auth_epoch,credential_version,expires_at)
+			SELECT sha256('challenge'::bytea),sha256('browser'::bytea),sha256('previous'::bytea),user_id,$2,id,1,1,clock_timestamp()
+			FROM admin_totp_factors WHERE id=$1`,
+		`INSERT INTO admin_totp_recovery_codes(digest,user_id,tenant_id,factor_id,expires_at)
+			SELECT sha256('recovery'::bytea),user_id,$2,id,clock_timestamp() FROM admin_totp_factors WHERE id=$1`,
+	} {
+		if _, err := pool.Exec(ctx, insert, factorID, foreignTenant); !errors.As(err, &fault) || fault.Code != "23503" {
+			t.Fatalf("expected a cross-tenant foreign key refusal, got %v", err)
+		}
+	}
+	var actual int
+	if err := pool.QueryRow(ctx, "SELECT count(*) FROM admin_totp_recovery_codes WHERE factor_id=$1", factorID).Scan(&actual); err != nil ||
+		actual != recoveryCount {
+		t.Fatalf("expected %d recovery digests to survive rollback, got %d: %v", recoveryCount, actual, err)
+	}
 }
 
 func adminTOTPCandidateStep(t *testing.T, s *identity.Service) int64 {
