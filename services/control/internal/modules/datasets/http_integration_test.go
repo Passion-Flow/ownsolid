@@ -79,6 +79,7 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	}
 	handler.Datasets.Service.Store = store
 	handler.Datasets.Service.Processor = processor
+	var previewFixture tokenizerPreviewProcessFixture
 	if python := os.Getenv("OWNSOLID_TEST_PREVIEW_PYTHON"); python != "" {
 		scratch := t.TempDir()
 		if e = os.Chmod(scratch, 0700); e != nil {
@@ -87,9 +88,13 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 		trainingRoot := filepath.Clean(filepath.Join(filepath.Dir(script), "../training"))
 		resources := account.Config.Policy().Datasets.Resources
 		resources.WallSeconds = 30
-		handler.Datasets.TokenizerPreview, e = datasets.NewTokenizerPreviewProcessor(processor, handler.Models.Service, datasets.TokenizerPreviewConfiguration{
-			PythonExecutable: python, TrainingRoot: trainingRoot, ScratchRoot: scratch, Resources: resources,
-		})
+		previewFixture = tokenizerPreviewProcessFixture{
+			models: handler.Models.Service, password: password,
+			configuration: datasets.TokenizerPreviewConfiguration{
+				PythonExecutable: python, TrainingRoot: trainingRoot, ScratchRoot: scratch, Resources: resources,
+			},
+		}
+		handler.Datasets.TokenizerPreview, e = datasets.NewTokenizerPreviewProcessor(processor, previewFixture.models, previewFixture.configuration)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -195,7 +200,7 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	verifyNearPromptHTTPSPublication(t, handler.Datasets.Service, portal, admin, path, adminPath)
 	verifySingleTurnHTTPSUpload(t, handler.Datasets.Service, portal, admin, path, adminPath)
 	if handler.Datasets.TokenizerPreview != nil {
-		verifyTokenizerPreviewHTTPS(t, handler.Datasets.Service, auth, portal, admin, path, adminPath)
+		verifyTokenizerPreviewHTTPS(t, handler.Datasets.Service, auth, portal, admin, path, adminPath, previewFixture)
 	}
 }
 
