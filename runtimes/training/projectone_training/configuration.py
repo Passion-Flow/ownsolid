@@ -12,13 +12,22 @@ from .configuration_generated import CONTRACT
 from .data import TrainingError
 
 
-def runtime_contract():
+def runtime_manifest():
+    """Read the installed training manifest for this source version."""
     path = Path(__file__).resolve().parents[1] / 'runtime.json'
     info = path.lstat()
     if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o022:
         raise TrainingError('TRAINING_EXECUTION_IDENTITY_REQUIRED')
     value = json.loads(path.read_text())
-    if value['version'] != VERSION or value['python'] != platform.python_version():
+    if value['version'] != VERSION:
+        raise TrainingError('TRAINING_EXECUTION_IDENTITY_REQUIRED')
+    return value
+
+
+def runtime_contract():
+    """Require the exact interpreter version admitted for training."""
+    value = runtime_manifest()
+    if value['python'] != platform.python_version():
         raise TrainingError('TRAINING_EXECUTION_IDENTITY_REQUIRED')
     return value
 

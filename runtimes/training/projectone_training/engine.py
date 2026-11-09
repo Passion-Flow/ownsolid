@@ -8,7 +8,7 @@ import stat
 import uuid
 from .configuration import Configuration, runtime_contract
 from .configuration_generated import CONTRACT
-from .data import CompletionCollator, TrainingError, tokenize_file
+from .data import CompletionCollator, TrainingError, load_training_tokenizer, tokenize_file
 from .checkpoints import file_digest, inventory, seal_checkpoint, sync_directory, verify_checkpoint
 from .catalog import catalog_digest
 from .processor_generated import PROCESSOR_CONTRACT
@@ -47,7 +47,7 @@ def train(model_directory: Path, catalog: dict, train_file: Path, train_sha256: 
           limits, maximum_output_bytes: int, maximum_output_files: int, cancelled, emit,
           execution_identity: dict, scope_identity: dict, resume_checkpoint=None):
     import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainerCallback, TrainingArguments, set_seed
+    from transformers import AutoModelForCausalLM, Trainer, TrainerCallback, TrainingArguments, set_seed
     from peft import LoraConfig, TaskType, get_peft_model
 
     recipe = CONTRACT['recipe']
@@ -81,7 +81,7 @@ def train(model_directory: Path, catalog: dict, train_file: Path, train_sha256: 
         torch.set_num_interop_threads(recipe['interop_threads'])
     set_seed(configuration.seed)
     verify_model(model_directory, catalog)
-    tokenizer = AutoTokenizer.from_pretrained(model_directory, local_files_only=True, trust_remote_code=False)
+    tokenizer = load_training_tokenizer(model_directory)
     train_data = tokenize_file(train_file, train_sha256, tokenizer, limits, configuration.maximum_tokens, 'train')
     validation_data = tokenize_file(validation_file, validation_sha256, tokenizer, limits, configuration.maximum_tokens, 'validation')
     if {row['content_sha256'] for row in train_data.provenance} & {row['content_sha256'] for row in validation_data.provenance}:
