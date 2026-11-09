@@ -222,3 +222,77 @@ file, with the collector stopped. The lease changes refresh and
 shutdown only. It does not change the number of samples, retention,
 disk format or query path measured in
 [the store qualification](telemetry-scale.md#linux-amd64-qualification).
+
+## Systemd deployment containment
+
+Use one foreground authorization supervisor and its vmagent child in
+the same systemd service cgroup. The supervisor is the main process.
+[systemd service lifecycle](https://github.com/systemd/systemd/blob/v255/man/systemd.service.xml)
+can treat main process exit as the end of the service, and
+[systemd kill settings](https://github.com/systemd/systemd/blob/v255/man/systemd.kill.xml)
+stop all remaining members and bound the stop deadline. Disable automatic
+restart and cgroup delegation for this boundary. An independently
+restarted vmagent or a service whose lifetime follows any remaining child
+could keep scraping the last successful inventory after supervisor death.
+
+This is a drop-in for the authorized supervisor's unit. It supplies no
+activation or target addresses. The base installation still needs an
+operator-provisioned enrolled endpoint assignment and IP SAN, a private CA,
+scope binding, and a foreground service that invokes the existing
+authorization and lease on every publication. Pin the protected scope,
+scrape configuration and CA for the lifetime of a run. A replacement
+requires that run to stop and a new authorized publication before start.
+Keep the collector child in the same cgroup and use a non-root service
+identity. Empty, missing, unbound or stale authority must never select
+targets by inference. The current Compose and Helm profiles leave the
+collector disabled.
+
+Reuse the host systemd and the previously tested Linux amd64 vmagent
+1.155.0. The [systemd license inventory](https://github.com/systemd/systemd/blob/v255/LICENSES/README.md)
+documents the existing host component's terms. The Apache-2.0
+vmagent and BSD-licensed Go conditions above still apply. The fixture
+uses generated TLS and synthetic metrics and adds no shipped dependency
+or dataset.
+
+Verify the actual drop-in under systemd in a recorded network namespace
+with a real vmagent and a TLS loopback exporter. A controlled approved
+assignment supplies the fixture authority. Reuse the existing lease and
+inventory file reader and writer. Require initial TLS and a current
+approval before spawning vmagent in the fixture. Prove the positive
+scrape and refuse missing or expired approval, a foreign workspace and
+an untrusted certificate. While scraping, kill the supervisor main PID,
+let approval expire, and atomically replace a pinned configuration file.
+Require an empty cgroup, no new scrape over multiple intervals, no
+automatic restart, and an unchanged last published discovery file.
+Keep the fixture proof separate from production enrollment, application
+and GPU publishers and live authenticated Control composition.
+
+### Disconnected systemd and vmagent acceptance
+
+On `ownsolid-cpu` (Linux amd64, systemd 255.4), the drop-in ran with
+vmagent 1.155.0, SHA-256
+`8fa27fc1c4f4e690dceafb30b3c884ef70eabd718e1b6cc5892279977d8571a2`,
+and the repository lease and publisher helpers at `8617a8b2`. The
+network namespace had loopback for the TLS fixture and a TUN recorder
+as its only IPv4 and IPv6 default route. TCP over IPv4 and IPv6 and a
+UDP DNS query established that outbound attempts reached the recorder
+and could not leave. The capture contained those three probes only.
+
+Missing, expired and foreign approval and an untrusted TLS exporter
+all left the existing inventory untouched and spawned no collector.
+In three separate runs, the approved TLS fixture received real scrape
+requests and both processes shared the service cgroup. `SIGKILL` of
+the supervisor, approval expiry and an atomic same-bytes replacement
+of the pinned scrape configuration each emptied the cgroup. After
+each event, request counts stayed flat for more than two scrape
+intervals, the inventory bytes were unchanged and systemd reported zero
+automatic restarts. A manual start with the expired approval was also
+refused. The fixture removed its runtime units, network and processes.
+
+The replay source archive has SHA-256
+`13bd94fa286cbb5e65d96448b409e57dbe9e99faf38f646d14477765a664b1a8`.
+The transcript has SHA-256
+`77d689910119400343f932f7e87b3fbcf4fdf3e19bcb2b727ad3dd37fecb7251`.
+The approval and TLS exporter were generated test inputs. Production
+startup still requires the foreground supervisor wired to authenticated
+Control publication and a real protected registration for the site.
