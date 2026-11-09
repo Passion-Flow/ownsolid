@@ -174,3 +174,23 @@ undrained request, foreign workspace and incompatible target arguments
 were refused. The history cursor returned the rollback source and
 replacement deployment. Deployment verification observations were
 synthetic. The test used the production dispatcher and PostgreSQL.
+
+## Prepared target boundary
+
+The native Portal key run at 23b99915 used the real Rust gateway,
+Control and PostgreSQL with a [synthetic loopback upstream](browser-suite-replacement.md#native-gateway-for-the-portal-key-flow).
+It is a useful protocol fixture for a single target. The Linux
+development lane had no pair of prepared, authorized actual targets.
+The existing staged model files do not establish that a second
+deployment is running or verified. The other lane's live environment
+was outside this test scope.
+
+Keep the cutover qualification open until the same authorized
+workspace and gateway node have two actual, ready target deployments
+available for the serial transitions. Rollback requires a ready target
+with the original retained model, catalogue and serving recipe. Then
+issue real native calls before and after pause, retarget, resume and
+rollback, and compare the bound revisions and reported usage with the
+immutable history. Existing evidence still covers the HTTP dispatcher,
+real SQL, synthetic deployment observations and preview semantics.
+Console interaction remains separate.
