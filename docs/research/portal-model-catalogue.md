@@ -17,8 +17,9 @@ models their workspace may call, what each costs and what it is good for.
   catalogue cannot use that history as a per-model price.
 - **What it is good for: facts only in the browser.** The gateway serves `POST /v1/chat/completions`
   and `GET /v1/models`, and every model this release can import is a text model. GW-120 has scoped
-  description handling in the PostgreSQL candidate. The generated Portal alias contract still
-  exposes the predecessor fields. See the [GW-120 acceptance and rollout boundary](gateway-model-description.md).
+  description handling in the PostgreSQL candidate. The [published Portal alias contract](../../api/openapi/v1/distribution/openapi.json)
+  includes optional `description` and `description_revision`. Installed predecessor schemas omit
+  both. See the [GW-120 acceptance and rollout boundary](gateway-model-description.md).
 
 ## How others do it
 
@@ -60,10 +61,13 @@ beside it, leading to the existing scoped issuance flow rather than opening a di
 page. Without a workspace the action is visible with the same access instructions as the keys page.
 If nothing is published, the issuance form explains that an administrator must publish a model.
 
-**An administrator's description waits for the published contract.** Open WebUI and LiteLLM both
+**An administrator's description waits for the installed migration.** Open WebUI and LiteLLM both
 let an administrator say what a model is for. GW-120 covers persistence, publication and editing.
-The Portal can display the description once the production migration and the formal alias read
-contract land. It currently shows known capabilities, base model and context length.
+The Portal can display the description once the production PostgreSQL migration is in the shared
+lineage and an upgraded installation returns the two fields through the formal alias read contract.
+At that point test absent fields on the predecessor, plain text and a cleared description on the
+upgraded installation, and refusal from a foreign workspace. The current page shows known
+capabilities, base model and context length.
 
 **POR-104 stays open** until prices and the description exist: its text names both.
 
@@ -169,5 +173,5 @@ Verify one run, two-model comparison and copying the exact request
 with placeholders for credentials. Include workspace refusal, a failed
 side of a comparison, cancellation with released capacity, retry after
 an upstream failure, and a disconnected run through the real gateway.
-The S-304 price and description still require their formal Portal
-read contracts before the catalogue can display them.
+S-304 price requires the authorized TEN-107 rate read contract. The
+published GW-120 read contract requires the production migration.
