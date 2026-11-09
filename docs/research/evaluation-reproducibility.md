@@ -75,3 +75,45 @@ incomplete comparisons and report profile drift before interpreting score
 differences. A successful replay proves the scoring calculation on the saved
 predictions. Two real isolated inference runs with matching per-case outputs
 are required to qualify a fresh inference profile.
+
+## EVL-101 offline report replay
+
+The [dataset version reader](../../services/control/internal/modules/datasets/versions.go)
+supplies an authorized frozen Version record with an immutable manifest identity
+and an exact validation asset. The [retained preparation reader](../../services/control/internal/modules/modelpreparations/read_preparations.go)
+supplies a report SHA-256 for the accepted captured output. Use their existing
+records and the approved model catalog. The operator supplies the two trusted
+digests with the local evidence. No new evaluation datastore or artifact
+authorization mechanism is introduced.
+
+Use the base-model observations of the existing v1 preparation result. Reuse
+the approved catalog digest and the existing classification scorer. The
+preparation holdout and the frozen dataset validation version are independent
+provenance. Require the same workspace and byte-identical validation and
+captured holdout digests before using the published version for replay. Keep
+both identities in the report. Never substitute the training partition or
+equate the holdout ID with the published version ID. The captured model catalog
+digest and recipe identity must match the supplied catalog and scorer recipe.
+
+Match every observation in frozen order by source ID and exact prompt SHA-256.
+Verify the expected label against the frozen record and reject duplicate case
+identities, extra cases, missing cases and invalid predicted labels. Recompute
+integer scores and compare them with the captured base score. The capture
+contains normalized labels and output digests. Replay scores those observations
+without reproducing the original response text or independently rerunning its
+normalization. Record the captured seed, device, computation precision,
+generation settings, runtime identity and package versions. Mark fresh
+inference as unverified. Keep durations and the current wall clock out of the
+report. Serialize sorted compact UTF-8 JSON using the recipe's existing
+encoding convention. This takes the invariance principle from
+[RFC 8785](https://www.rfc-editor.org/rfc/rfc8785.html) without claiming JCS
+encoding.
+
+No new runtime dependency, model or dataset is distributed. CPython and the
+existing ownsolid runtime modules are used offline. Verify byte-identical
+output in fresh processes, comparison with a retained report, and rejection
+of dataset, model, scorer, workspace and case mismatches. Use a real
+processor-published validation asset and the checked-in pinned catalog in the
+fixture. Record the origin of capture evidence separately from actual engine
+qualification. EVL-101 stays open for an authorized control-plane and UI
+workflow and real inference repeatability.
