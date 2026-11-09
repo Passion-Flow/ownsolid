@@ -234,6 +234,7 @@ its body correlation ID matched the `X-Request-ID` header.
 | HTTP status | Observed code | Trigger |
 | --- | --- | --- |
 | 400 | `VALIDATION_FAILED` | Missing idempotency key or invalid request object, encoding, control characters or description length |
+| 401 | `AUTH_REQUIRED` | Anonymous caller with a valid CSRF context |
 | 403 | `CSRF_INVALID` | Anonymous POST or an Admin POST without its CSRF proof |
 | 404 | `MODEL_ALIAS_NOT_FOUND` | Alias absent from another workspace in the same tenant |
 | 404 | `RESOURCE_NOT_FOUND` | Foreign tenant workspace or Portal mutation path |
