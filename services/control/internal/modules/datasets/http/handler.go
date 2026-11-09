@@ -6,11 +6,12 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"strings"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	"strings"
 )
 
 type Handler struct{ Service *datasets.Service }
@@ -231,11 +232,28 @@ func (h *Handler) drafts(r *http.Request, a identity.Auth, workspace, dataset st
 		if e != nil {
 			return nil, 0, e
 		}
-		var body datasets.PublicationRequest
+		var body struct {
+			ExpectedRevision      int64  `json:"expected_revision"`
+			Seed                  string `json:"seed"`
+			ValidationBasisPoints int    `json:"validation_basis_points"`
+			Reason                string `json:"reason"`
+			TestBasisPoints       *int   `json:"test_basis_points,omitempty"`
+		}
 		if e = decode(r, &body, httpserver.MaxJSONBytes); e != nil {
 			return nil, 0, e
 		}
-		out, e := h.Service.Publish(ctx, a, workspace, dataset, draft, body, intent, requestID)
+		var options datasets.PublicationOptions
+		if body.TestBasisPoints != nil {
+			if *body.TestBasisPoints == 0 {
+				return nil, 0, errors.New("VALIDATION_FAILED")
+			}
+			options.TestBasisPoints = *body.TestBasisPoints
+		}
+		input := datasets.PublicationRequest{
+			ExpectedRevision: body.ExpectedRevision, Seed: body.Seed,
+			ValidationBasisPoints: body.ValidationBasisPoints, Reason: body.Reason,
+		}
+		out, e := h.Service.PublishWithOptions(ctx, a, workspace, dataset, draft, input, options, intent, requestID)
 		return out, 202, e
 	}
 	if len(tail) >= 2 && tail[1] == "rows" {
