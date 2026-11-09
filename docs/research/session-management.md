@@ -154,3 +154,11 @@ PostgreSQL 18.6 with pgvector 0.8.7 in an isolated Linux arm64 container
 with no network. With the same disposable PostgreSQL configuration as
 above, run the new test with
 `go -C services/control test ./internal/modules/identity/http -run '^TestBrowserSessionRevocationPasswordChangeRaceHTTPS$' -count=3`.
+
+The existing SSO repository fixtures
+`TestM11ActualIssuedSessionIsRevokedByWaitingConnectorDisable` and
+`TestM11ActualFlowCannotReissueAfterOrdinarySessionRetention` also passed
+three times on the disconnected PostgreSQL fixture. They cover connector
+invalidation and prevention of session reissuance from a spent flow.
+They use a database-backed source fixture. Live provider sign-in followed
+by targeted device revocation through the browser remains a separate check.
