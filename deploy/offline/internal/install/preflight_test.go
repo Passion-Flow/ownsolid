@@ -467,6 +467,26 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 				command := []string{action, "--config", config, "--verification", verification, "--bundle", archive}
 				return run(installer, append(command, args...)...)
 			}
+			for _, pending := range []struct{ file, code string }{
+				{restoreIntentName, "INSTALL_RESTORE_PENDING"},
+				{coordinatedBackupIntentName, "INSTALL_BACKUP_RECOVERY_REQUIRED"},
+			} {
+				t.Run("requires recovery for "+pending.file, func(t *testing.T) {
+					record := filepath.Join(c.InstallRoot, pending.file)
+					if err := os.Symlink("unavailable-record", record); err != nil {
+						t.Fatal(err)
+					}
+					t.Cleanup(func() {
+						if err := os.Remove(record); err != nil {
+							t.Error(err)
+						}
+					})
+					out, err := runBundle("upgrade-plan", newArchive)
+					if err == nil || !strings.Contains(out, pending.code) {
+						t.Fatalf("upgrade plan during recovery: %v: %s", err, out)
+					}
+				})
+			}
 			out, err := runBundle("upgrade-plan", newArchive)
 			t.Logf("upgrade-plan: %s", out)
 			var plan upgradePlan

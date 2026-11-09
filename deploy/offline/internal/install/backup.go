@@ -109,15 +109,18 @@ func lockOperation(c Config) (func(), error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := restorePendingError(c); err != nil {
-		unlock()
-		return nil, err
-	}
-	if err := coordinatedBackupPending(c); err != nil {
+	if err := pendingDataRecovery(c); err != nil {
 		unlock()
 		return nil, err
 	}
 	return unlock, nil
+}
+
+func pendingDataRecovery(c Config) error {
+	if err := restorePendingError(c); err != nil {
+		return err
+	}
+	return coordinatedBackupPending(c)
 }
 
 // The kernel releases the operation lock when the process ends. Only restore

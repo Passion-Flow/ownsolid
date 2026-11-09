@@ -30,16 +30,19 @@ type upgradePlan struct {
 // PlanUpgrade compares a fully verified candidate with the live signed
 // installation. It takes a read lock and creates no files or containers.
 func PlanUpgrade(ctx context.Context, configPath, archive string, policy bundle.Verification, runner StreamRunner, out io.Writer) error {
-	candidate, err := bundle.InspectCurrent(ctx, policy, archive)
-	if err != nil {
-		return fmt.Errorf("INSTALL_BUNDLE_VERIFICATION_FAILED: %w", err)
-	}
 	c, err := LoadPreflight(configPath)
 	if err != nil {
 		return err
 	}
 	if c.ComposeFile != "" || c.Images != (ImagesConfig{}) {
 		return errors.New("INSTALL_UPGRADE_BOUND_RELEASE_REQUIRED: use the site configuration of a signed installation")
+	}
+	if err := pendingDataRecovery(c); err != nil {
+		return err
+	}
+	candidate, err := bundle.InspectCurrent(ctx, policy, archive)
+	if err != nil {
+		return fmt.Errorf("INSTALL_BUNDLE_VERIFICATION_FAILED: %w", err)
 	}
 	if err := checkLocalDocker(ctx, runner); err != nil {
 		return err
@@ -54,6 +57,11 @@ func PlanUpgrade(ctx context.Context, configPath, archive string, policy bundle.
 	}
 	if err := syscall.Flock(int(lock.Fd()), syscall.LOCK_SH|syscall.LOCK_NB); err != nil {
 		return errors.New("INSTALL_BUSY: another operation holds the installation lock; retry the plan")
+	}
+	// Candidate verification can take time. Recheck under the shared lock
+	// before reading the installed binding or a potentially fenced database.
+	if err := pendingDataRecovery(c); err != nil {
+		return err
 	}
 	if err := checkInstalledProject(c); err != nil {
 		return err
