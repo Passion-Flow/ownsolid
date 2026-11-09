@@ -159,6 +159,38 @@ func TestModelGatewayCAForPublishedAliasOverTLS(t *testing.T) {
 	if !bytes.Equal(bundle, portal.get(t, portalPath, http.StatusOK, "")) {
 		t.Fatal("the active CA download changed after an on-disk edit")
 	}
+	nextCA, nextKey := testGatewayCAMaterial(t, "replacement model gateway CA")
+	overlap := bytes.Join([][]byte{nextCA, cleanBundle}, nil)
+	setBundle(overlap)
+	if err := os.WriteFile(material.CAPrivateKeyFile, nextKey, 0600); err != nil {
+		t.Fatal(err)
+	}
+	reloaded := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
+	rolloverAdmin, rolloverPortal := admin, portal
+	rolloverAdmin.server, rolloverPortal.server = reloaded, reloaded
+	downloaded := rolloverPortal.get(t, portalPath, http.StatusOK, "")
+	if !bytes.Equal(downloaded, overlap) || !bytes.Equal(downloaded, rolloverAdmin.get(t, adminPath, http.StatusOK, "")) {
+		t.Fatal("issuer overlap did not return both public CAs")
+	}
+	if !bytes.Equal(portal.get(t, portalPath, http.StatusOK, ""), bundle) {
+		t.Fatal("the original dispatcher replaced its loaded issuer")
+	}
+	overlapRoots := x509.NewCertPool()
+	if !overlapRoots.AppendCertsFromPEM(downloaded) {
+		t.Fatal("issuer overlap contained no trust anchors")
+	}
+	overlapTransport := transport.Clone()
+	defer overlapTransport.CloseIdleConnections()
+	overlapTransport.TLSClientConfig.RootCAs = overlapRoots
+	originalPeer, err := (&http.Client{Transport: overlapTransport}).Do(request.Clone(ctx))
+	if err != nil {
+		t.Fatal("the replacement download could not verify the old serving leaf", err)
+	}
+	originalPeer.Body.Close()
+	if originalPeer.StatusCode != http.StatusNoContent {
+		t.Fatal("unexpected old gateway response during issuer overlap", originalPeer.StatusCode)
+	}
+
 	if _, err := c.s.RevokeGateway(ctx, c.a, g.WorkspaceID, g.ID, "Retire synthetic gateway", uuid.NewString()); err != nil {
 		t.Fatal(err)
 	}
