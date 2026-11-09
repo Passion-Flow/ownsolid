@@ -325,3 +325,29 @@ files. This addendum covers the Rust toolchain's standard-library
 notice evidence alongside the wheel's dependency notices. DEL applies
 the official standard-library inventory and the selected base image's
 system-library terms when reviewing the signed release assets.
+
+### Delivery readback of the retained notice candidates
+
+The delivery fixture on `ownsolid-cpu` read the exact retained pip
+26.2.1 wheel, Tokenizers wheel and two notice archives without extracting
+them. It matched the installer, wheel and ELF pins and compared the
+embedded CycloneDX bytes with the retained SBOM. All 127 component names
+and versions matched. The fixture verified the size and SHA-256 of 272
+distinct dependency archive payloads and all 18 Rust notice payloads.
+It checked the shared upstream license wherever the inventory referenced
+it and matched the `defmt-parser` source evidence to its recorded commit.
+It refused a changed archive and a changed Rust copyright file. The
+isolated namespace exposed only loopback and the recorder, which captured
+just the IPv4, IPv6 and DNS probes.
+
+The source archive has SHA-256
+`3a6d9da4b062531ba71e57424d2a4ec6f067f8b15cdfd1d5a67767b8218212ac`.
+The transcript has SHA-256
+`5b7dd16d232a686f657b8cffa1742e28183e8a2c948bcff6cca2b6af0021aeb7`.
+This is evidence for the retained candidates. Release admission still
+requires an approved binary notice asset bound to the exact wheel,
+the selected base image's applicable notices, and verification of
+the signed offline media. The embedded-notice checker remains in
+force. A preview image built from the accepted inputs still needs
+installed runtime injection and offline Qwen readback. The full
+training image and lock mapping remain separate.
