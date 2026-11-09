@@ -180,21 +180,22 @@ func (o *operation) restore(ctx context.Context, from string, manifest backupMan
 	if e != nil {
 		return e
 	}
-	i := restoreIntent{Version: 1, Site: site, Phase: restoreLoading, Suffix: hex.EncodeToString(suffix), Fresh: fresh, PITRActivation: manifest.pitrActivation()}
+	i := restoreIntent{Version: 1, Site: site, Phase: restoreAllocating, Suffix: hex.EncodeToString(suffix), Fresh: fresh, PITRActivation: manifest.pitrActivation()}
 	incoming := i.incomingName()
-	if e = o.createDatabase(ctx, incoming); e != nil {
-		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
-	}
 	catalog, e := o.restoreCatalog(ctx, i)
 	if e != nil {
-		return fmt.Errorf("INSTALL_RESTORE_LOAD_FAILED: could not identify scratch database %s: %w", incoming, e)
+		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
 	}
-	i.Cluster, i.Original, i.Incoming = catalog.cluster, catalog.current, catalog.incoming
-	if catalog != i.before() || i.Original == 0 || i.Incoming == 0 || i.Original == i.Incoming {
+	i.Cluster, i.Original = catalog.cluster, catalog.current
+	if catalog != i.before() || i.Original == 0 {
 		return restoreIdentityError()
 	}
 	if e = writeReleaseRecord(o.config, restoreIntentName, i); e != nil {
-		return restoreRecoveryRequired(fmt.Errorf("could not record scratch database %s: %w", incoming, e))
+		return restoreRecoveryRequired(e)
+	}
+	i, e = o.allocateRestoreDatabase(ctx, i)
+	if e != nil {
+		return restoreRecoveryRequired(e)
 	}
 	if e = o.loadRestoreCandidate(ctx, incoming, filepath.Join(from, backupDatabaseName), manifest); e != nil {
 		return o.failRestoreLoad(ctx, i, e)

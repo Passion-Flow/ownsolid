@@ -1,6 +1,7 @@
 package install
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -38,6 +39,20 @@ func (d *fakeDatabase) Stream(_ context.Context, stdin io.Reader, stdout io.Writ
 		}
 	}
 	switch {
+	case strings.Contains(line, "RESTORE_ALLOCATION_LOCKED"):
+		if _, e := io.WriteString(stdout, "RESTORE_ALLOCATION_LOCKED\n"+d.catalog+"\n"); e != nil {
+			return "", e
+		}
+		input := bufio.NewScanner(stdin)
+		for input.Scan() {
+			if strings.HasPrefix(input.Text(), `CREATE DATABASE "ownsolid_restore_`) {
+				d.catalog = "80|10|20|0|0"
+				if _, e := io.WriteString(stdout, d.catalog+"\n"); e != nil {
+					return "", e
+				}
+			}
+		}
+		return "", input.Err()
 	case strings.Contains(line, "pg_dump"):
 		io.WriteString(stdout, "DUMP BYTES")
 	case strings.Contains(line, "pg_restore"):
@@ -60,7 +75,7 @@ func (d *fakeDatabase) Stream(_ context.Context, stdin io.Reader, stdout io.Writ
 		d.catalog = "80|20|0|10|0"
 	case strings.Contains(line, "pg_control_system()"):
 		if d.catalog == "" {
-			d.catalog = "80|10|20|0|0"
+			d.catalog = "80|10|0|0|0"
 		}
 		io.WriteString(stdout, d.catalog)
 	}
@@ -447,7 +462,16 @@ const (
 func TestRestoreChecksSwapsThenRevokesAndServes(t *testing.T) {
 	c := installedConfig(t)
 	path := makeBackup(t, c)
-	d := &fakeDatabase{}
+	d := &fakeDatabase{override: func(line string) (string, error, bool) {
+		if !strings.Contains(line, "RESTORE_ALLOCATION_LOCKED") {
+			return "", nil, false
+		}
+		saved, err := readRestoreIntent(c)
+		if err != nil || saved == nil || saved.Phase != restoreAllocating || saved.Original != 10 || saved.Incoming != 0 {
+			return "", errors.New("allocation session opened before the original and vacancy were recorded"), true
+		}
+		return "", nil, false
+	}}
 	var out bytes.Buffer
 	if e := restoreFrom(t, c, d, path, &out); e != nil {
 		t.Fatal(e)

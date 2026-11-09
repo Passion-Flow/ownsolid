@@ -39,6 +39,7 @@ recovery and support tooling.
 
 - [ ] REL-114 Resume or roll back an interrupted database restore by identifying its original and incoming databases across the swap, before bringing the writer online (P1)
   - The [disconnected load drill](../../research/interrupted-database-restore.md#disconnected-load-recovery) recovered from SIGKILL after real pg_restore. Both entrances remained ready on the original database while the unverified scratch OID was retained for inspection.
+  - The [disconnected allocation drill](../../research/interrupted-database-restore.md#disconnected-allocation-recovery) covered SIGKILL before and after real CREATE, an occupied slot with no bound OID, and concurrent recovery. The live database and both entrances stayed available.
 
 ## P2 Fleet operations
 

@@ -108,6 +108,51 @@ func TestInterruptedLoadRecoveryNeverMutatesTheOriginal(t *testing.T) {
 	}
 }
 
+func TestAllocatingRestoreRecoveryPreservesUnknownDatabases(t *testing.T) {
+	i := restoreIntent{Version: 1, Phase: restoreAllocating, Cluster: 80, Original: 10, Suffix: "0123456789abcdef01234567"}
+	for _, tt := range []struct {
+		name, want string
+		catalog    restoreCatalog
+	}{
+		{"vacant", "", i.before()},
+		{"unbound", "INSTALL_RESTORE_ALLOCATION_UNBOUND", restoreCatalog{cluster: 80, current: 10, incoming: 30}},
+		{"changed original", "INSTALL_RESTORE_IDENTITY_CHANGED", restoreCatalog{cluster: 80, current: 30}},
+		{"changed cluster", "INSTALL_RESTORE_IDENTITY_CHANGED", restoreCatalog{cluster: 81, current: 10}},
+		{"unexpected previous", "INSTALL_RESTORE_IDENTITY_CHANGED", restoreCatalog{cluster: 80, current: 10, previous: 20}},
+		{"unexpected failed", "INSTALL_RESTORE_IDENTITY_CHANGED", restoreCatalog{cluster: 80, current: 10, failed: 20}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			c := installedConfig(t)
+			intent := i
+			var err error
+			if intent.Site, err = restoreSite(c); err != nil {
+				t.Fatal(err)
+			}
+			if err := writeReleaseRecord(c, restoreIntentName, intent); err != nil {
+				t.Fatal(err)
+			}
+			saved, err := readRestoreIntent(c)
+			if err != nil || saved == nil || *saved != intent {
+				t.Fatalf("invalid allocation record: %v", err)
+			}
+			d := &fakeDatabase{catalog: tt.catalog.key()}
+			var out bytes.Buffer
+			err = testOperation(t, c, d, &out).recoverRestore(t.Context(), intent, false)
+			if tt.want == "" {
+				if err != nil || !strings.Contains(out.String(), "RESTORE_ALLOCATION_ROLLED_BACK") || restorePendingError(c) != nil {
+					t.Fatalf("vacant allocation did not clear: %v %s", err, out.String())
+				}
+			} else if err == nil || !strings.Contains(err.Error(), tt.want) || restorePendingError(c) == nil {
+				t.Fatalf("uncertain allocation did not stay pending: %v", err)
+			}
+			if !d.ran("pg_advisory_xact_lock") || d.ran("ALTER DATABASE") || d.ran("DROP DATABASE") ||
+				d.ran("CREATE DATABASE") || d.ran("stop control") || d.ran("no-build control") {
+				t.Fatalf("unexpected recovery operations: %v", d.commands)
+			}
+		})
+	}
+}
+
 func assertInterruptedRestores(t *testing.T, installer, config string, run func(string, ...string) (string, error)) {
 	t.Helper()
 	c, err := LoadOperational(config)
