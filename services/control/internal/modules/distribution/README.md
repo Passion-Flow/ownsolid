@@ -63,6 +63,21 @@ alias revision, deployment and pause state. Preview leaves target
 history and audit unchanged. Apply rechecks the expected revision,
 target and outstanding requests in its own transaction.
 
+## Model alias descriptions
+
+On PostgreSQL with the description migration, publish a plain-text
+`description` with the alias. Admin changes it through a POST to
+`/aliases/{alias_id}/description` under the workspace distribution path.
+Send the current `expected_description_revision`, a reason and a UUID
+`Idempotency-Key`. A blank description clears the text. A revision
+conflict requires reading the alias again before editing. Portal sees
+the description on its authorized alias list and detail. Description
+edits preserve the published target, route revision and existing keys.
+
+The current PostgreSQL lineage still returns predecessor alias responses.
+The candidate DDL, offline fixture and shared integration order are
+recorded in the [description qualification](../../../../../docs/research/gateway-model-description.md).
+
 ## Development checks
 
 Synchronize [Rust gateway](../../../../gateway/README.md), contracts/gateway and HTTP/public gateway generators, nodes/deployments/modelpreparations, [distribution frontend](../../../../../web/README.md), [M07](../../../../../docs/milestones/m07-gateway) and gateway deployment/config.

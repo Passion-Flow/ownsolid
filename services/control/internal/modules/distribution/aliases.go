@@ -28,11 +28,14 @@ func scanAlias(row transaction.Row) (Alias, error) {
 	out.DisabledAt = distributionUTCPointer(out.DisabledAt)
 	return out, nil
 }
+
+const heldAliasRequests = "SELECT count(*) FROM gateway_requests WHERE tenant_id=$1 AND workspace_id=$2 AND alias_id=$3 AND capacity_held"
+
 func (s *Service) aliasAvailability(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, out *Alias) error {
 	if e := s.aliasReadiness(ctx, tx, w, out); e != nil {
 		return e
 	}
-	return tx.QueryRow(ctx, distributionNativeStatement(tx, `SELECT COUNT(*) FROM GATEWAY_REQUESTS WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ALIAS_ID=? AND CAPACITY_HELD=1`, []any{w.TenantID, w.ID, out.ID}, "SELECT count(*) FROM gateway_requests WHERE tenant_id=$1 AND workspace_id=$2 AND alias_id=$3 AND capacity_held", `SELECT count(*) FROM gateway_requests WHERE tenant_id=? AND workspace_id=? AND alias_id=? AND capacity_held`, []any{w.TenantID, w.ID, out.ID}, []any{w.TenantID, w.ID, out.ID})).Scan(&out.HeldRequests)
+	return tx.QueryRow(ctx, distributionNativeStatement(tx, `SELECT COUNT(*) FROM GATEWAY_REQUESTS WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ALIAS_ID=? AND CAPACITY_HELD=1`, []any{w.TenantID, w.ID, out.ID}, heldAliasRequests, `SELECT count(*) FROM gateway_requests WHERE tenant_id=? AND workspace_id=? AND alias_id=? AND capacity_held`, []any{w.TenantID, w.ID, out.ID}, []any{w.TenantID, w.ID, out.ID})).Scan(&out.HeldRequests)
 }
 
 // aliasReadiness checks the target without the held-request count used by management views.
@@ -71,8 +74,18 @@ func (s *Service) Publish(ctx context.Context, a identity.Auth, input PublishReq
 	if !wire.ValidID(input.GatewayID) || !wire.ValidID(input.DeploymentID) || !wire.ValidID(key) || !wire.ValidAlias(input.Name) || input.DeploymentRevision < 1 || input.DeploymentRevision >= maximumRevision || !reason(input.Reason) {
 		return Alias{}, fail("VALIDATION_FAILED")
 	}
+	var valid bool
+	input.Description, valid = normalizeAliasDescription(input.Description)
+	if !valid {
+		return Alias{}, fail("VALIDATION_FAILED")
+	}
 	var out Alias
 	e := s.transaction(ctx, a, input.WorkspaceID, true, nil, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+		if input.Description != "" {
+			if e := requireAliasDescription(ctx, tx); e != nil {
+				return e
+			}
+		}
 		expected := fingerprint(a.Me.User.ID, input)
 		var existing string
 		var stored []byte
@@ -85,7 +98,7 @@ func (s *Service) Publish(ctx context.Context, a identity.Auth, input PublishReq
 			if e != nil {
 				return e
 			}
-			return s.aliasAvailability(ctx, tx, w, &out)
+			return s.publicAliasAvailability(ctx, tx, w, &out)
 		}
 		if !errors.Is(e, sql.ErrNoRows) {
 			return e
@@ -124,6 +137,13 @@ func (s *Service) Publish(ctx context.Context, a identity.Auth, input PublishReq
 		if e != nil {
 			return e
 		}
+		if input.Description != "" {
+			if _, e = distributionExecOne(ctx, tx, transaction.SQL(transaction.PostgreSQL,
+				"UPDATE model_aliases SET description=$4 WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3",
+				w.TenantID, w.ID, id, input.Description)); e != nil {
+				return e
+			}
+		}
 		if _, e = distributionExecOne(ctx, tx, distributionNativeStatement(tx, `INSERT INTO MODEL_ALIAS_HISTORY(TENANT_ID,WORKSPACE_ID,ALIAS_ID,REVISION,ACTION,ACTOR_USER_ID,REASON) VALUES(?,?,?,1,'published',?,?)`, []any{w.TenantID, w.ID, id, a.Me.User.ID, input.Reason}, "INSERT INTO model_alias_history(tenant_id,workspace_id,alias_id,revision,action,actor_user_id,reason) VALUES($1,$2,$3,1,'published',$4,$5)", `INSERT INTO model_alias_history(tenant_id,workspace_id,alias_id,revision,action,actor_user_id,reason) VALUES(?,?,?,1,'published',?,?)`, []any{w.TenantID, w.ID, id, a.Me.User.ID, input.Reason}, []any{w.TenantID, w.ID, id, a.Me.User.ID, input.Reason})); e != nil {
 			return e
 		}
@@ -137,7 +157,7 @@ func (s *Service) Publish(ctx context.Context, a identity.Auth, input PublishReq
 		if e != nil {
 			return e
 		}
-		return s.aliasAvailability(ctx, tx, w, &out)
+		return s.publicAliasAvailability(ctx, tx, w, &out)
 	})
 	if e != nil {
 		return Alias{}, e
@@ -163,7 +183,7 @@ func (s *Service) DisableAlias(ctx context.Context, a identity.Auth, workspace, 
 		}
 		if current.DisabledAt != nil {
 			out = current
-			return s.aliasAvailability(ctx, tx, w, &out)
+			return s.publicAliasAvailability(ctx, tx, w, &out)
 		}
 		if _, e = distributionExecOne(ctx, tx, distributionNativeStatement(tx, `UPDATE MODEL_ALIASES SET DISABLED_AT=CURRENT_TIMESTAMP(6),REVISION=REVISION+1 WHERE ID=?`, []any{id}, "UPDATE model_aliases SET disabled_at=clock_timestamp(),revision=revision+1 WHERE id=$1", `UPDATE model_aliases SET disabled_at=UTC_TIMESTAMP(6),revision=revision+1 WHERE id=?`, []any{id}, []any{id})); e != nil {
 			return e
@@ -181,7 +201,7 @@ func (s *Service) DisableAlias(ctx context.Context, a identity.Auth, workspace, 
 		if e != nil {
 			return e
 		}
-		return s.aliasAvailability(ctx, tx, w, &out)
+		return s.publicAliasAvailability(ctx, tx, w, &out)
 	})
 	if e != nil {
 		return Alias{}, e
@@ -218,7 +238,7 @@ func (s *Service) Aliases(ctx context.Context, a identity.Auth, workspace string
 			return e
 		}
 		for i := range out {
-			if e = s.aliasAvailability(ctx, tx, w, &out[i]); e != nil {
+			if e = s.publicAliasAvailability(ctx, tx, w, &out[i]); e != nil {
 				return e
 			}
 		}
