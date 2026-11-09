@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -68,6 +69,58 @@ func TestSupportBundleReportsStoppedControlWithoutCollectingSecrets(t *testing.T
 		report.Operations[0].Outcome != "failed" || report.Operations[0].Time.Format(time.RFC3339) != "2026-11-09T02:00:00Z" ||
 		report.Operations[1].Action != "restore" || report.Operations[1].Outcome != "complete" {
 		t.Fatalf("unexpected operations: %+v", report.Operations)
+	}
+}
+
+func TestSupportBundleProjectsOnlyTheValidatedRestorePhase(t *testing.T) {
+	t.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
+	const suffix = "fedcba9876543210fedcba98"
+	for _, phase := range []string{"absent", restoreLoading, restorePending, restoreServing, restoreRollback, "foreign", "symlink", "invalid"} {
+		t.Run(phase, func(t *testing.T) {
+			c := installedConfig(t)
+			site, err := restoreSite(c)
+			if err != nil {
+				t.Fatal(err)
+			}
+			intent := restoreIntent{Version: 1, Site: site, Phase: phase, Suffix: suffix, Cluster: 7482983513342374911, Original: 97433113, Incoming: 97433114}
+			want := phase
+			wantIssue := false
+			record := filepath.Join(c.InstallRoot, restoreIntentName)
+			switch phase {
+			case "absent":
+				want = ""
+			case "symlink":
+				want, wantIssue = "", true
+				if err := os.Symlink(c.License.TrustFile, record); err != nil {
+					t.Fatal(err)
+				}
+			default:
+				if phase == "foreign" {
+					intent.Phase = restoreLoading
+					intent.Site = strings.Repeat("a", 64)
+				}
+				if phase == "foreign" || phase == "invalid" {
+					want, wantIssue = "", true
+				}
+				if err := writeReleaseRecord(c, restoreIntentName, intent); err != nil {
+					t.Fatal(err)
+				}
+			}
+			path := filepath.Join(t.TempDir(), "support.tar.gz")
+			runner := &fakeRunner{answer: func(string) (string, error) { return "", errors.New("docker unavailable") }}
+			if err := SupportBundle(t.Context(), c, runner, path, io.Discard); err != nil {
+				t.Fatal(err)
+			}
+			report, raw := readSupportArchive(t, path)
+			if report.Host.Docker || report.RestorePhase != want || slices.Contains(report.Issues, "RESTORE_STATE_UNAVAILABLE") != wantIssue {
+				t.Fatalf("restore phase=%q, collection issues=%v", report.RestorePhase, report.Issues)
+			}
+			for _, excluded := range []string{suffix, site, c.InstallRoot, "7482983513342374911", "97433113", "97433114"} {
+				if bytes.Contains(raw, []byte(excluded)) {
+					t.Fatal("archive included protected restore metadata")
+				}
+			}
+		})
 	}
 }
 

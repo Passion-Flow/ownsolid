@@ -287,7 +287,10 @@ The private archive contains one JSON snapshot of the host, available space,
 Docker, Compose service states and the database schema version when available.
 It also includes selected configuration such as TLS modes, resource limits,
 timeouts and retention, and up to 100 recent backup and restore events.
-Events contain a UTC timestamp, operation and outcome. The installer excludes
+Events contain a UTC timestamp, operation and outcome. If a protected restore
+record is pending, the report includes its validated phase even when Docker
+cannot be reached. The record identifies the local recovery phase. Use
+`recover-restore` to verify PostgreSQL placement. The installer excludes
 operation details, container output, raw configuration files, environment values,
 addresses, credentials and database records.
 
