@@ -282,3 +282,32 @@ Run the comparison fixture in
 with the same source Python path as the
 [offline replay command](../../runtimes/model-lifecycle/README.md#replay-a-captured-evaluation).
 Keep EVL-103 open for the authorized release and interface workflow.
+
+### Qualified CPU comparison at the same policy
+
+The [qualification archive](https://github.com/Passion-Flow/ownsolid/commit/0a722cff)
+contains two real native CPU preparation captures. On disconnected Linux,
+the existing EVL-101 scorer, EVL-102 pairing and independent Go result
+decoder each verified a base score of 1/3 and candidate score of 3/3 under
+the same 8000/0 gate. Both captures had matching per-case predictions,
+output digests and execution profiles. The Go decoder refused a changed
+verdict on each original request. The holdout bytes match the earlier
+quality refusal, so the policy and evaluation samples are fixed.
+
+| Capture | Original result SHA-256 |
+| --- | --- |
+| Initial qualification | `0eff66dab1940c7b219b50dd3b7bf0976fbcff55c0ff526fbfb76e81ea4aaf78` |
+| Replay bound to the authorized publication | `5b244e7c87060e0afab4c4dcd57387f46964d4e37506ad96827df82a0b5ecf47` |
+
+The authorized training manifest and exact train and validation assets
+match the retained training request and result. The preparation request
+binds the training job, attempt, configuration and adapter inventory.
+Neither the normalized holdout prompts nor their source IDs appear among
+the 21 training and three validation rows. The train and validation assets
+establish training lineage. The independently frozen holdout supplies
+evaluation ground truth.
+
+These are native CPU quality outcomes on three original CC0 cases.
+Production acceptance requires the NVIDIA preparation profile, an
+authenticated physical stop, and the authorized audited promotion flow.
+See the [retained publication and artifact evidence](training-dataset-lineage.md#qualified-cpu-result-and-authorized-dataset-publication).

@@ -11,7 +11,7 @@
 | AUD-107 | The authenticated export and approval flow needs the authorization and console boundaries. The database operator's integrity export covers the separate AUD-102 use case. |
 | AUD-108 | Diagnostic entry points must record access before serving the redacted data, including the support collector used while control is down. |
 | AUD-109 | The database, object-store, backup, deployment and TLS owners must agree on key custody, rotation, recovery and the first KMS fixture. |
-| AUD-111 | The SIEM delivery path needs typed startup configuration, durable delivery state and a registered worker. A transport without a live source or startup path cannot meet the item. |
+| AUD-111 | The [operator forwarder](audit-siem-delivery.md) has tenant-scoped TLS and a durable cursor. Continuous delivery still needs trusted startup registration, installation and tenant grants, a least-privilege export source or indexed database reader, a persistent operator volume, and an approved site SIEM. |
 
 The open items span entry points outside the lane. Leave the audit writer
 transactional and retain the current public contracts while those entry points
@@ -22,11 +22,14 @@ makes the pre-migration gap and independent checkpoint custody explicit.
 
 EVL-101 needs immutable dataset and model versions from DAT-106 and MOD-103 and
 an execution profile from serving. EVL-102 compares those identities. EVL-103
-also needs authority at the actual model and application promotion paths.
-EVL-104 needs approved production trace capture with redaction and case
-approval. EVL-105 needs a real serving workload, accelerator identity and
-metering. EVL-106 needs versioned evaluation sets and controlled evaluation
-execution. No evaluation-only registry or substitute promotion path will
+has [native CPU refusal and pass evidence](evaluation-reproducibility.md#evl-103-retained-preparation-quality-decision).
+Production acceptance still needs a NVIDIA attempt, authenticated physical
+stop and authorized audited promotion. EVL-104 needs a scoped OBS-103 trace
+export with content redaction and explicit regression case approval. EVL-105
+needs a real offline serving workload with a pinned deployment, accelerator
+identity, request timings and metered usage or cost inputs. The CPU preparation
+capture establishes quality on its own holdout. EVL-106 has deterministic
+replay and still needs real engine and authorized interface evidence. No evaluation-only registry or substitute promotion path will
 provide those guarantees.
 
 A scorer probe on Linux amd64 ran inside an isolated network namespace. Three
