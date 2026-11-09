@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
+	strict "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	strict "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 )
 
 type connectorOperation string
@@ -190,6 +190,9 @@ func (s *Service) CreateConnector(ctx context.Context, a identity.Auth, input Cr
 	if _, approved := s.approved[input.Origin]; !approved {
 		return Connector{}, fail("SSO_PROVIDER_DESTINATION_REJECTED")
 	}
+	if s.keyringRecovery && s.keys == nil {
+		return Connector{}, fail("SSO_KEYRING_INVALID")
+	}
 	if s.keys == nil || s.Identity == nil {
 		return Connector{}, fail("SSO_CONFIGURATION_REQUIRED")
 	}
@@ -262,6 +265,9 @@ func (s *Service) UpdateConnector(ctx context.Context, a identity.Auth, id strin
 	if s == nil || !s.enabled && (input.Enabled || input.ClientID != nil) {
 		return Connector{}, fail("SSO_DISABLED")
 	}
+	if s.keyringRecovery && input.ClientID != nil && s.keys == nil {
+		return Connector{}, fail("SSO_KEYRING_INVALID")
+	}
 	if s.Identity == nil || input.ClientID != nil && s.keys == nil {
 		return Connector{}, fail("SSO_CONFIGURATION_REQUIRED")
 	}
@@ -286,6 +292,21 @@ func (s *Service) UpdateConnector(ctx context.Context, a identity.Auth, id strin
 		}
 		if old.Revision != input.Revision || old.AuthVersion >= identity.MaximumAuthVersion {
 			return fail("SSO_REVISION_CONFLICT")
+		}
+		if s.keyringRecovery && (input.Enabled || input.ClientID != nil) {
+			if e := s.verifyConnectorCredentialWithin(ctx, q, tenant, id); e != nil {
+				if !errors.Is(e, errEncryptedState) || input.ClientID == nil {
+					return e
+				}
+				var local bool
+				if e := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+					"SELECT sso_connector_id IS NULL FROM sessions WHERE id=$1 AND user_id=$2", a.SessionID, a.Me.User.ID)).Scan(&local); e != nil {
+					return e
+				}
+				if !local {
+					return fail("ACCESS_DENIED")
+				}
+			}
 		}
 		authorityChanged := old.Enabled != input.Enabled || input.ClientID != nil
 		version := old.AuthVersion
