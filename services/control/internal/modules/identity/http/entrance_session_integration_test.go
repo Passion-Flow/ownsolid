@@ -3,6 +3,7 @@ package http_test
 import (
 	"bytes"
 	"encoding/json"
+	"maps"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -152,16 +153,17 @@ func TestSharedHostPortsKeepBrowserAuthoritySeparateHTTPS(t *testing.T) {
 
 	const csrfPath, loginPath, mePath, logoutPath = "/api/v1/auth/csrf", "/api/v1/auth/login", "/api/v1/me", "/api/v1/auth/logout"
 	const portalCookie, adminCookie = "__Host-portal_session", "__Host-admin_session"
-	csrf := func(server *httptest.Server) string {
+	csrf := func(server *httptest.Server, browser *http.Client) string {
 		t.Helper()
-		return request(server, server.Client(), http.MethodGet, csrfPath, "", "", nil, nil, 200)["token"].(string)
+		return request(server, browser, http.MethodGet, csrfPath, "", "", nil, nil, 200)["token"].(string)
 	}
 	login := map[string]string{"email": "admin@example.invalid", "password": password}
 	for _, entry := range []struct {
 		server   *httptest.Server
 		audience string
 	}{{portal, "portal"}, {admin, "admin"}} {
-		who := request(entry.server, entry.server.Client(), http.MethodPost, loginPath, entry.server.URL, csrf(entry.server), login, nil, 200)
+		browser := entry.server.Client()
+		who := request(entry.server, browser, http.MethodPost, loginPath, entry.server.URL, csrf(entry.server, browser), login, nil, 200)
 		if who["audience"] != entry.audience {
 			t.Fatalf("configured port resolved to the wrong audience for %s", entry.audience)
 		}
@@ -186,7 +188,76 @@ func TestSharedHostPortsKeepBrowserAuthoritySeparateHTTPS(t *testing.T) {
 		foreign := &http.Cookie{Name: entry.present, Value: tokens[entry.foreign]}
 		problemCode(t, request(entry.server, noJar, http.MethodGet, mePath, "", "", nil, foreign, 401), "AUTH_SESSION_EXPIRED")
 	}
-	adminCSRF, portalCSRF := csrf(admin), csrf(portal)
+	sessions := func(server *httptest.Server, browser *http.Client) map[string]bool {
+		t.Helper()
+		page := request(server, browser, http.MethodGet, managedSessionsPath, "", "", nil, nil, 200)
+		found := make(map[string]bool)
+		for _, raw := range page["items"].([]any) {
+			item := raw.(map[string]any)
+			id := item["id"].(string)
+			if _, exists := found[id]; exists {
+				t.Fatal("device list contained a duplicate session")
+			}
+			found[id] = item["current"].(bool)
+		}
+		return found
+	}
+	onlyCurrent := func(server *httptest.Server, browser *http.Client) string {
+		t.Helper()
+		found := sessions(server, browser)
+		for id, current := range found {
+			if len(found) == 1 && current {
+				return id
+			}
+		}
+		t.Fatal("expected only the current device in its entrance")
+		return ""
+	}
+	adminID := onlyCurrent(admin, admin.Client())
+	portalID := onlyCurrent(portal, portal.Client())
+	if adminID == portalID {
+		t.Fatal("the two ports resolved to the same device session")
+	}
+
+	adminCSRF, portalCSRF := csrf(admin, admin.Client()), csrf(portal, portal.Client())
+	problemCode(t, request(admin, admin.Client(), http.MethodDelete, managedSessionsPath+"/"+portalID,
+		admin.URL, adminCSRF, nil, nil, 404), "RESOURCE_NOT_FOUND")
+	problemCode(t, request(portal, portal.Client(), http.MethodDelete, managedSessionsPath+"/"+adminID,
+		portal.URL, portalCSRF, nil, nil, 404), "RESOURCE_NOT_FOUND")
+	peerJar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	peer := &http.Client{Transport: admin.Client().Transport, Jar: peerJar}
+	request(admin, peer, http.MethodPost, loginPath, admin.URL, csrf(admin, peer), login, nil, 200)
+	peerID := ""
+	for id, current := range sessions(admin, peer) {
+		if current {
+			peerID = id
+		}
+	}
+	if peerID == "" || peerID == adminID || peerID == portalID ||
+		!maps.Equal(sessions(admin, admin.Client()), map[string]bool{adminID: true, peerID: false}) {
+		t.Fatal("Admin device inventory included another audience or lost the peer")
+	}
+	target := managedSessionsPath + "/" + peerID
+	problemCode(t, request(admin, admin.Client(), http.MethodDelete, target, portal.URL, adminCSRF, nil, nil, 403), "ORIGIN_REJECTED")
+	problemCode(t, request(admin, admin.Client(), http.MethodDelete, target, admin.URL, portalCSRF, nil, nil, 403), "CSRF_INVALID")
+	request(admin, peer, http.MethodGet, mePath, "", "", nil, nil, 200)
+	request(admin, admin.Client(), http.MethodDelete, target, admin.URL, adminCSRF, nil, nil, 204)
+	problemCode(t, request(admin, peer, http.MethodGet, mePath, "", "", nil, nil, 401), "AUTH_SESSION_EXPIRED")
+	if onlyCurrent(admin, admin.Client()) != adminID || onlyCurrent(portal, portal.Client()) != portalID {
+		t.Fatal("targeted revocation changed another device's authority")
+	}
+	var total, bound int
+	if err := s.DB.QueryRow(t.Context(), `SELECT count(*),count(*) FILTER (WHERE a.target_id=$1 AND a.audience='admin'
+		AND a.actor_user_id=i.primary_admin_user_id AND a.subject_user_id=i.primary_admin_user_id)
+		FROM audit_events a CROSS JOIN installation_state i
+		WHERE i.id=1 AND a.action='auth.logout' AND a.reason='session_revoked' AND a.target_type='session'`, peerID).
+		Scan(&total, &bound); err != nil || total != 1 || bound != 1 {
+		t.Fatalf("expected one target-bound revocation audit, got %d total and %d bound: %v", total, bound, err)
+	}
+
 	problemCode(t, request(admin, admin.Client(), http.MethodPost, logoutPath, portal.URL, adminCSRF, nil, nil, 403), "ORIGIN_REJECTED")
 	problemCode(t, request(admin, admin.Client(), http.MethodPost, logoutPath, admin.URL, portalCSRF, nil, nil, 403), "CSRF_INVALID")
 	request(admin, admin.Client(), http.MethodPost, logoutPath, admin.URL, adminCSRF, nil, nil, 204)
