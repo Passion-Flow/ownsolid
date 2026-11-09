@@ -228,12 +228,12 @@ counters and retrospective audit counts cannot enforce that guarantee.
 The audit replay passed against the installation-policy candidate, and the
 real HTTPS assistant fixture and repository command tests passed on the
 synced APP worktree with PostgreSQL disconnected. The repository check and
-build passed on an earlier base with the same APP changes. The browser
-stage was stopped when another lane started a heavy suite, and the
-exclusive retry expired while other local suites were still running.
-Run the full repository gate in an exclusive local window before pushing
-these APP commits. Browser shards may run serially with the same tests,
-followed by the remaining `make test` targets.
+build passed. The full browser selection passed in four Console and two
+Portal shards, with 1,074 and 388 passes respectively. Every Go module
+listed in the Makefile, the locked Rust gateway tests and the Web unit
+suite passed in subsequent exclusive stages. Completed stages were
+retained when another lane started a heavy suite. Recheck affected targets
+after syncing concurrent main changes before pushing.
 
 ## AGT-108 production model result boundary
 
