@@ -8,14 +8,17 @@ import { expect, test, type Page } from '@playwright/test';
 
 /** The application published to the person's workspace, with one conversation and a failed run. */
 const application = process.env.OWNSOLID_LIVE_HOME_APPLICATION ?? '';
+const restrictedWorkspace = process.env.OWNSOLID_LIVE_HOME_RESTRICTED_WORKSPACE ?? '';
 
 test.skip(origin === '' || application === '', 'needs an installation and a published application');
-test.use(liveOptions);
+test.use({ ...liveOptions, trace: 'off' });
 
 const section = (page: Page, heading: string) =>
   page.locator('section').filter({ has: page.getByRole('heading', { name: heading }) });
 
-test('reads every section from the server and keeps a run marked as read', async ({ page }) => {
+test('reads each home source independently and keeps a run marked as read', async ({
+  page,
+}, info) => {
   test.setTimeout(120_000);
   const refused: string[] = [];
   const elsewhere: string[] = [];
@@ -32,6 +35,8 @@ test('reads every section from the server and keeps a run marked as read', async
     const workspace = url.searchParams.get('workspace_id');
     if (workspace) workspaces.add(workspace);
   });
+  const notifications = (url: URL) => url.pathname === '/api/v1/notifications';
+  await page.route(notifications, (route) => route.abort('connectionreset'));
 
   await page.goto('/');
   await page.getByLabel('Email').fill(email);
@@ -40,8 +45,9 @@ test('reads every section from the server and keeps a run marked as read', async
   await expect(page.getByRole('heading', { name: /^Welcome, /, level: 1 })).toBeVisible();
 
   const needs = section(page, 'Needs you');
-  await expect(needs.getByText(application)).toBeVisible();
-  await expect(needs.getByText('Workflow run failed')).toBeVisible();
+  const retry = needs.getByRole('button', { name: 'Try again' });
+  await expect(retry).toBeVisible();
+  await expect(needs.getByText('Notifications are not available')).toBeVisible();
   const conversations = section(page, 'Pick up where you left off');
   await expect(conversations.getByText(application)).toBeVisible();
   await expect(conversations.getByText('2 turns', { exact: false })).toBeVisible();
@@ -49,6 +55,17 @@ test('reads every section from the server and keeps a run marked as read', async
   await expect(published.getByText(application)).toBeVisible();
   await expect(published.getByText('Version 1', { exact: false })).toBeVisible();
   await expect(section(page, 'Usage').getByText('POR-111')).toBeVisible();
+  if (restrictedWorkspace !== '') {
+    await expect(conversations.getByRole('listitem')).toHaveCount(1);
+  }
+  await info.attach('portal-home-notifications-unavailable', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
+  await page.unroute(notifications);
+  await retry.click();
+  await expect(needs.getByText(application)).toBeVisible();
+  await expect(needs.getByText('Workflow run failed')).toBeVisible();
   await expectAccessible(page);
 
   await needs.getByRole('button', { name: `Mark as read: ${application}` }).click();
@@ -61,4 +78,22 @@ test('reads every section from the server and keeps a run marked as read', async
   expect(workspaces.size).toBe(1);
   expect(refused).toEqual([]);
   expect(elsewhere).toEqual([]);
+
+  if (restrictedWorkspace !== '') {
+    const scope = await page.evaluate(async (workspace) => {
+      const me = await fetch('/api/v1/me');
+      const identity = (await me.json()) as { data: { user: { is_platform_admin: boolean } } };
+      const base = '/api/v1/sites/default/cells/default';
+      const query = new URLSearchParams({ workspace_id: workspace, limit: '5' });
+      const statuses = await Promise.all(
+        ['applications', 'application-conversations'].map(async (resource) => {
+          const response = await fetch(`${base}/${resource}?${query.toString()}`);
+          return response.status;
+        }),
+      );
+      return { admin: identity.data.user.is_platform_admin, statuses };
+    }, restrictedWorkspace);
+    expect(scope.admin).toBe(false);
+    for (const status of scope.statuses) expect([403, 404]).toContain(status);
+  }
 });
