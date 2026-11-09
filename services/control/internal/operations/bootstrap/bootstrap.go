@@ -9,11 +9,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
@@ -189,7 +189,8 @@ func Run(ctx context.Context, s *identity.Service, lease *pgxpool.Conn, command,
 		}
 	} else {
 		var retained Intent
-		if _, e = readPrivate(output, &retained); e != nil {
+		retainedRaw, e := readPrivate(output, &retained)
+		if e != nil {
 			return "", e
 		}
 		secret, e := base64.RawURLEncoding.DecodeString(retained.Password)
@@ -200,6 +201,9 @@ func Run(ctx context.Context, s *identity.Service, lease *pgxpool.Conn, command,
 		status, e := observe(ctx, s, intent)
 		if e != nil || command == "reconcile-bootstrap-file" || status == Verified {
 			return status, e
+		}
+		if e = syncRetainedIntent(output, retainedRaw); e != nil {
+			return "", e
 		}
 	}
 	if e = ctx.Err(); e != nil {

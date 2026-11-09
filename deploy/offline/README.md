@@ -28,6 +28,15 @@ project and installed configuration path match. A refused preflight leaves the
 installation directory untouched. On a later step failure, fix the reported cause
 and run `apply` again with the same configuration to resume.
 
+When the administrator transaction has already committed, Apply uses the
+retained credential file to verify the same account. Keep that file protected
+and retain it through recovery. A credential write failure before publication
+leaves the final path absent and can be retried. If an older installer left an
+invalid final file, investigate the database and preserve that file before
+attempting recovery. Apply also checks that a generated HTTPS certificate
+matches its private key. An interrupted leaf update is repaired under the
+existing installation CA on the next Apply.
+
 Set the Docker budget for the loaded and expanded images and the data budget for each
 filesystem that holds application data. When Docker and application data share a
 filesystem, both reserves must fit. Set `containerd_root` to the actual image store

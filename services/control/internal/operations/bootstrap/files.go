@@ -3,6 +3,8 @@ package bootstrap
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"io"
 	"os"
@@ -52,6 +54,10 @@ func readPrivate(path string, out any) ([]byte, error) {
 	return b, nil
 }
 func readPrivateBytes(path string) ([]byte, error) {
+	return readProtectedBytes(path, false)
+}
+
+func readProtectedBytes(path string, durable bool) ([]byte, error) {
 	r, name, e := privateParent(path)
 	if e != nil {
 		return nil, e
@@ -72,7 +78,28 @@ func readPrivateBytes(path string) ([]byte, error) {
 	if e != nil || se != nil || le != nil || !os.SameFile(i, j) || !os.SameFile(i, current) || current.Mode()&os.ModeSymlink != 0 || i.Size() != int64(len(b)) || j.Size() != i.Size() || !j.ModTime().Equal(i.ModTime()) || !owned(j, true) {
 		return nil, errors.New("BOOTSTRAP_FILE_CHANGED")
 	}
+	if durable {
+		d, e := r.Open(".")
+		if e != nil {
+			return nil, errors.New("BOOTSTRAP_INTENT_SYNC_UNCERTAIN")
+		}
+		defer d.Close()
+		if f.Sync() != nil || d.Sync() != nil {
+			return nil, errors.New("BOOTSTRAP_INTENT_SYNC_UNCERTAIN")
+		}
+	}
 	return b, nil
+}
+
+func syncRetainedIntent(path string, expected []byte) error {
+	actual, e := readProtectedBytes(path, true)
+	if e != nil {
+		return e
+	}
+	if !bytes.Equal(actual, expected) {
+		return errors.New("BOOTSTRAP_INTENT_CHANGED")
+	}
+	return nil
 }
 
 func writeIntent(path string, b []byte) error {
@@ -86,11 +113,21 @@ func writeDocument(path string, b []byte, check any) error {
 		return e
 	}
 	defer r.Close()
-	f, e := r.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL|syscall.O_NOFOLLOW, 0600)
+	d, e := r.Open(".")
+	if e != nil {
+		return errors.New("BOOTSTRAP_INTENT_SYNC_UNCERTAIN")
+	}
+	defer d.Close()
+	var nonce [16]byte
+	if _, e = rand.Read(nonce[:]); e != nil {
+		return errors.New("BOOTSTRAP_RANDOM_UNAVAILABLE")
+	}
+	stage := ".bootstrap-" + hex.EncodeToString(nonce[:])
+	f, e := r.OpenFile(stage, os.O_WRONLY|os.O_CREATE|os.O_EXCL|syscall.O_NOFOLLOW, 0600)
 	if e != nil {
 		return errors.New("BOOTSTRAP_INTENT_CREATE_FAILED")
 	}
-	// Preserve every partial/uncertain file. No automatic cleanup or overwrite.
+	defer r.Remove(stage)
 	_, e = io.Copy(f, bytes.NewReader(b))
 	if e == nil {
 		e = f.Sync()
@@ -99,13 +136,12 @@ func writeDocument(path string, b []byte, check any) error {
 	if e != nil || ce != nil {
 		return errors.New("BOOTSTRAP_INTENT_WRITE_UNCERTAIN")
 	}
-	d, e := r.Open(".")
-	if e != nil {
-		return errors.New("BOOTSTRAP_INTENT_SYNC_UNCERTAIN")
+	// Publish only the complete, synced document. The final name is never
+	// overwritten, even when two offline preparations choose the same output.
+	if e = renameExclusive(int(d.Fd()), stage, name); e != nil {
+		return errors.New("BOOTSTRAP_INTENT_CREATE_FAILED")
 	}
-	e = d.Sync()
-	ce = d.Close()
-	if e != nil || ce != nil {
+	if e = d.Sync(); e != nil {
 		return errors.New("BOOTSTRAP_INTENT_SYNC_UNCERTAIN")
 	}
 	actual, e := readPrivate(path, check)

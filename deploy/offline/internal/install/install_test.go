@@ -3,6 +3,7 @@ package install
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -238,6 +239,55 @@ func TestMaterializeWritesPrivateFilesAndKeepsSecrets(t *testing.T) {
 		if strings.HasPrefix(entry.Name(), ".install-") {
 			t.Fatalf("temporary file left: %s", entry.Name())
 		}
+	}
+}
+
+func TestMaterializeRepairsInterruptedServingKeyUpdate(t *testing.T) {
+	c := validConfig(t)
+	if err := Materialize(c); err != nil {
+		t.Fatal(err)
+	}
+	dir := c.Layout().Config
+	certPath, keyPath := filepath.Join(dir, "certificate.pem"), filepath.Join(dir, "private-key.pem")
+	authority, err := os.ReadFile(filepath.Join(dir, "ca.pem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	original, err := os.ReadFile(certPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, replacement, err := generateCA("unrelated key")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = writeFile(keyPath, replacement, c, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = tls.LoadX509KeyPair(certPath, keyPath); err == nil {
+		t.Fatal("fixture does not reproduce the interrupted key update")
+	}
+	if err = Materialize(c); err != nil {
+		t.Fatal(err)
+	}
+	pair, err := tls.LoadX509KeyPair(certPath, keyPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hosts, err := c.originHosts()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repaired := encodeCertificate(pair.Certificate[0])
+	if bytes.Equal(original, repaired) || !serverCertificateCurrent(repaired, authority, hosts) {
+		t.Fatal("repair did not reissue the serving pair under the original authority")
+	}
+	if err = Materialize(c); err != nil {
+		t.Fatal(err)
+	}
+	repeated, err := tls.LoadX509KeyPair(certPath, keyPath)
+	if err != nil || !bytes.Equal(repaired, encodeCertificate(repeated.Certificate[0])) {
+		t.Fatal("repeat did not preserve the repaired serving pair", err)
 	}
 }
 
@@ -500,6 +550,35 @@ func TestApplyStopsAtTheFirstFailureAndNamesIt(t *testing.T) {
 	}
 	if strings.Contains(out.String(), "INSTALL_COMPLETE") {
 		t.Fatal("claimed success after a failure")
+	}
+}
+
+func TestAdministratorResumesOnlyAnExactUncommittedResult(t *testing.T) {
+	c := validConfig(t)
+	if err := Materialize(c); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(c.CredentialPath(), []byte("retained intent"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, result := range []struct {
+		output string
+		resume bool
+	}{
+		{"Container started\nBOOTSTRAP_FILE_NOT_COMMITTED\n", true},
+		{"unrelated failure mentions BOOTSTRAP_FILE_NOT_COMMITTED\n", false},
+	} {
+		runner := &fakeRunner{answer: func(line string) (string, error) {
+			if strings.Contains(line, "reconcile-bootstrap-file") {
+				return result.output, errors.New("exit status 1")
+			}
+			return successOutput(line), nil
+		}}
+		err := testInstaller(c, runner, new(bytes.Buffer)).administrator(t.Context())
+		resumed := strings.Contains(strings.Join(runner.commands, "\n"), "resume-bootstrap-file")
+		if resumed != result.resume || (err == nil) != result.resume {
+			t.Fatalf("reconciliation %q: resumed=%t, error=%v", result.output, resumed, err)
+		}
 	}
 }
 
