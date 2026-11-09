@@ -40,10 +40,14 @@ message for both cases and exposes no foreign name or metadata.
 
 The Admin and Portal draft source operations accept a whole
 `application/x-ndjson` body of the configured size with `X-Content-SHA256`
-and an actual `Content-Length`. The current handler uses the three-field
-training row `source_id`, `prompt`, `completion`. The internal CSV, JSON
-array, Parquet and alternative training formats do not use this HTTP
-operation. Keep their controls visible as unavailable with that reason.
+and an actual `Content-Length`. The default row has `source_id`, `prompt`
+and `completion`. The same operation accepts the explicit
+`Dataset-Source-Row-Format: single_turn_messages_v1` header for a source ID,
+one textual user message and one textual assistant reply per line. The
+processor retains the raw upload and materializes canonical prompt and
+completion rows for review. The internal CSV, JSON array, Parquet and
+other training formats do not use this HTTP operation. Keep their controls
+visible as unavailable with that reason.
 The browser supplies the length through a known-size file body. Hash exactly
 the selected bytes through Web Crypto on the HTTPS origin and apply the
 server's configuration limit before reading the file. At the contract's
@@ -97,12 +101,19 @@ new dataset and adding a draft to an existing one.
    source description, licence, a rights attestation and an audit reason.
    For an existing dataset show those facts. Accept one local JSONL file
    and display the configured byte and row limits and selected byte count
-   before starting. Create the dataset, create the draft with the exact
+   before starting. Offer Prompt and completion as the default and
+   Single-turn messages as the explicit alternate format. Explain the
+   expected fields and role order. Bind the selected format to the source
+   attachment and repeat the same header on a replay. Do not infer format
+   from the filename or contents. Create the dataset and the draft with the exact
    filename, byte count and digest, then submit the file. Use one immutable
    intent per create request. On reload use the persisted draft URL and
    server state. If upload is incomplete and the source has not been
    retained, ask for the same file again and verify length and digest
-   before sending it. An HTTP 202 enters validation, with no completion
+   before sending it. The draft read does not expose the source format.
+   Keep the selected format with the local draft intent or ask for it
+   explicitly before replay. Once retained, the import job owns the
+   format for retry. An HTTP 202 enters validation, with no completion
    toast and no need to keep a file in browser storage.
 2. Review. Poll the draft and its current job using the configured
    background interval. Display the real import state, total and invalid
@@ -207,6 +218,9 @@ implement in an opt-in `live-datasets.spec.ts` after the screen lands.
    verify a real line-number diagnostic. Correct the draft and verify
    that another tab's stale revision is refused and the fresh rows load.
    Reopen the draft by its address and verify the same draft and job.
+   Import a separate single-turn messages source, check role-order errors
+   and canonical rows, and verify replay and retry keep the original
+   source format.
 2. In the same workspace publish once without a test ratio and read
    schema 1. Publish a separate draft with at least three disjoint
    source groups and one near-prompt bridge, select three-way mode,
