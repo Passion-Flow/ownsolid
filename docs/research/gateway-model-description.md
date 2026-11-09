@@ -87,7 +87,95 @@ needs to land the migration with both signatures and the expected
 table count. Recalculate the signatures if another migration lands.
 The isolated SQL files are retained at
 `/root/lane-gw-acceptance/gw120.3Htyrvwt/candidate.up.sql` and
-`candidate.down.sql`. The SQL prototype does not exercise the
-publication or edit HTTP flow. Those still need the distribution
-implementation and the versioned contract before Console and Portal
+`candidate.down.sql`. The distribution acceptance below covers the HTTP flow with that DDL.
+The versioned contract remains a prerequisite for Console and Portal
 acceptance.
+
+## Distribution integration
+
+Use the existing scoped Admin alias publication with optional
+`description`, and a separate scoped Admin POST to
+`/aliases/{alias_id}/description` with `description`,
+`expected_description_revision`, `reason`, and the standard UUID
+`Idempotency-Key`. The response has the current text and description
+revision, the applied description revision, and a replay flag. A replay
+after a later edit returns the current value and the original applied
+revision. The standard origin, session, CSRF, workspace and role checks
+apply. An alias can be edited while paused. Portal keeps the existing
+visibility rules and reads the fields through alias list and detail.
+
+Use the existing scoped transaction and a row lock before comparing the
+description revision, following [PostgreSQL row locking](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-ROWS).
+Persist only the two description fields, the immutable intent and one
+audit event. Keep the same description semantics for publication and
+edit. Normalize CRLF and trim outer whitespace after validating UTF-8
+and controls. Permit newlines and horizontal tabs. Omit empty text from
+the publish fingerprint so old idempotency keys remain replayable.
+Reuse the shared strict JSON decoder and standard problem codes.
+
+Candidate writes recognize the owned intent table in the current
+PostgreSQL schema and return SERVICE_NOT_READY on a predecessor or
+another database engine. A normal publish with an omitted or blank
+description keeps the predecessor SQL and fingerprint. The authorized
+HTTP alias projection uses [PostgreSQL row-to-JSON conversion](https://www.postgresql.org/docs/18/functions-json.html)
+to read the optional columns in the existing held-request lookup. The
+projection omits the fields when the predecessor schema is active.
+Inference admission and its alias readiness queries do not read the
+description. An unconditional SELECT or INSERT of the new fields would
+break the current catalogue before the shared migration is published.
+
+Test the current schema and candidate successively in one disposable
+database through the real HTTPS dispatcher. Apply the unnumbered DDL
+only to the test schema after publishing an alias with the existing
+contract. Cover predecessor retries, real Admin and Portal sessions,
+a second Admin concurrently editing the same revision, foreign
+workspace and tenant refusal, replay with a conflicting payload,
+audit rollback, input bounds, clear, and preservation of target history,
+route revision and existing key authority. Verify the current published
+OpenAPI against predecessor responses. The shared PostgreSQL lineage,
+catalogue constants, public schema and generated clients remain
+separate integration steps.
+
+The disconnected PostgreSQL and HTTPS fixture
+`TestAliasDescriptionPostgreSQLUpgradeAndHTTPS` passed on 2026-11-09.
+The real dispatcher returned the published alias schema on the
+predecessor, and a described publication and edit returned
+SERVICE_NOT_READY. Applying the candidate allowed a predecessor
+publication to replay with the same key and the existing alias to
+show empty text at description revision 1. Described publication
+normalized and replayed the same text. Reusing the key with different
+text was refused.
+
+A Portal member read the description from both the scoped page and
+detail. Portal writes, an alias in another workspace path, a foreign
+tenant workspace, and a missing CSRF token or idempotency key were
+refused. The validator accepted 500 Unicode characters and rejected
+overlength, invalid UTF-8, prohibited controls, duplicate and null
+fields. Two independently authenticated Admin sessions edited the
+same expected revision over HTTPS. One won and one received
+VERSION_CONFLICT. A historical replay retained the original applied
+revision and returned the current description. A forced audit failure
+rolled back the update and its intent, and the same idempotency key
+could then be used for a different request. Clearing text while paused
+left the routing revision, deployment binding and target history
+intact, and the existing API key remained valid after resume. The
+candidate down SQL restored the predecessor HTTP response shape.
+
+The unnumbered, test-only up and down scripts live in
+`services/control/internal/modules/distribution/testdata/`. The fixture
+uses its own PostgreSQL schema and applies both scripts through that
+connection. To reproduce in a disconnected loopback fixture with
+PostgreSQL 18.6 and pgvector 0.8.7, set
+`PROJECT_ONE_TEST_DSN_FILE` to the private fixture DSN and run
+`go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescriptionPostgreSQLUpgradeAndHTTPS$' -count=1`
+from the repository root.
+
+The catalogue values above qualify the previous tail only. Once
+REL-113 and the audit migration settle, the shared database owner
+must append the exact DDL at the then-current tail, recompute both
+catalogue signatures and table count, and verify fresh, upgrade and
+restore. The DEV owner can publish the optional publication field,
+optional alias response fields and Admin edit contract before the
+migration activates these response fields on installations. WEB can
+then verify publishing and editing in Console and the S-304 display
+in Portal.

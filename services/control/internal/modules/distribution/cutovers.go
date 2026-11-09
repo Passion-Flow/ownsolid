@@ -115,7 +115,7 @@ func (s *Service) Cutover(ctx context.Context, a identity.Auth, workspace, id st
 			if e != nil {
 				return e
 			}
-			return s.aliasAvailability(ctx, tx, w, &out.Alias)
+			return s.publicAliasAvailability(ctx, tx, w, &out.Alias)
 		}
 		if !errors.Is(e, sql.ErrNoRows) {
 			return e
@@ -153,7 +153,7 @@ func (s *Service) Cutover(ctx context.Context, a identity.Auth, workspace, id st
 		if e != nil {
 			return e
 		}
-		return s.aliasAvailability(ctx, tx, w, &out.Alias)
+		return s.publicAliasAvailability(ctx, tx, w, &out.Alias)
 	})
 	if e != nil {
 		return CutoverResult{}, e

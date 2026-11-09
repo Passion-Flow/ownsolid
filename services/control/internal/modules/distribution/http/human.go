@@ -132,7 +132,9 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 		return nil, 0, bad
 	}
 	intent := ""
-	if r.Method == http.MethodPost && (len(parts) == 1 || len(parts) == 3 && parts[0] == "requests" && parts[2] == "recoveries" || len(parts) == 3 && parts[0] == "aliases" && parts[2] == "cutovers" || len(parts) == 3 && parts[0] == "keys" && parts[2] == "rotate") {
+	aliasWrite := len(parts) == 3 && parts[0] == "aliases" &&
+		(parts[2] == "cutovers" || isAdmin && parts[2] == "description")
+	if r.Method == http.MethodPost && (len(parts) == 1 || len(parts) == 3 && parts[0] == "requests" && parts[2] == "recoveries" || aliasWrite || len(parts) == 3 && parts[0] == "keys" && parts[2] == "rotate") {
 		keys := r.Header.Values("Idempotency-Key")
 		if len(keys) != 1 || !wire.ValidID(keys[0]) {
 			return nil, 0, bad
@@ -171,11 +173,12 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 				DeploymentRevision int64  `json:"deployment_revision"`
 				Name               string `json:"name"`
 				Reason             string `json:"reason"`
+				Description        string `json:"description,omitempty"`
 			}
 			if e := decode(r, &input); e != nil {
 				return nil, 0, e
 			}
-			v, e := h.Service.Publish(r.Context(), a, distribution.PublishRequest{WorkspaceID: workspace, GatewayID: input.GatewayID, DeploymentID: input.DeploymentID, DeploymentRevision: input.DeploymentRevision, Name: input.Name, Reason: input.Reason}, intent, request)
+			v, e := h.Service.Publish(r.Context(), a, distribution.PublishRequest{WorkspaceID: workspace, GatewayID: input.GatewayID, DeploymentID: input.DeploymentID, DeploymentRevision: input.DeploymentRevision, Name: input.Name, Reason: input.Reason, Description: input.Description}, intent, request)
 			return v, 200, e
 		case "keys":
 			var input struct {
@@ -243,6 +246,14 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 		}
 	}
 	if len(parts) == 3 && r.Method == http.MethodPost {
+		if parts[0] == "aliases" && parts[2] == "description" && isAdmin {
+			var input distribution.AliasDescriptionEdit
+			if e := decode(r, &input); e != nil {
+				return nil, 0, e
+			}
+			result, e := h.Service.EditAliasDescription(r.Context(), a, workspace, id, input, intent, request)
+			return result, http.StatusOK, e
+		}
 		if parts[0] == "keys" && parts[2] == "rotate" {
 			var input distribution.RotateRequest
 			if e := decode(r, &input); e != nil {
