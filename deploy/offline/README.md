@@ -689,7 +689,9 @@ ownsolid-install upgrade-bundle --bundle /mnt/release/next.tar.gz \
 ```
 
 The plan reads the installed schema and lists the service stop, recovery point,
-and target schema. Applying the candidate loads its signed images first, stops
+and target schema. If a restore or coordinated backup is pending, run its
+recovery command with the original site configuration before planning an
+upgrade. Applying the candidate loads its signed images first, stops
 the application writer, and produces a recovery point verified by restoring it
 into a scratch database. It then migrates and starts the candidate. Keep the
 backup location and archive unchanged when retrying a pending upgrade.

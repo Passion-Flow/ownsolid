@@ -1,12 +1,63 @@
 package install
 
 import (
+	"bytes"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	wire "github.com/Passion-Flow/ownsolid/api/release/v1"
 	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
+	"go.yaml.in/yaml/v3"
 )
+
+func TestUpgradePlanChecksPendingRecoveryBeforeCandidateMedia(t *testing.T) {
+	dir := shortTempDir(t)
+	root := filepath.Join(dir, "installation")
+	if err := os.Mkdir(root, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	var site map[string]any
+	if err := yaml.Unmarshal([]byte(validYAML(t, root)), &site); err != nil {
+		t.Fatal(err)
+	}
+	delete(site, "compose_file")
+	delete(site, "images")
+	raw, err := yaml.Marshal(site)
+	if err != nil {
+		t.Fatal(err)
+	}
+	config := filepath.Join(dir, "site.yaml")
+	if err := os.WriteFile(config, raw, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct{ file, want string }{
+		{restoreIntentName, "INSTALL_RESTORE_PENDING"},
+		{coordinatedBackupIntentName, "INSTALL_BACKUP_RECOVERY_REQUIRED"},
+		{"", "INSTALL_BUNDLE_VERIFICATION_FAILED"},
+	} {
+		t.Run(test.want, func(t *testing.T) {
+			if test.file != "" {
+				path := filepath.Join(root, test.file)
+				if err := os.Symlink("absent-recovery-record", path); err != nil {
+					t.Fatal(err)
+				}
+				t.Cleanup(func() {
+					if err := os.Remove(path); err != nil {
+						t.Error(err)
+					}
+				})
+			}
+			runner := &fakeDatabase{}
+			var out bytes.Buffer
+			err := PlanUpgrade(t.Context(), config, filepath.Join(dir, "missing.tar.gz"), bundle.Defaults(), runner, &out)
+			if err == nil || !strings.HasPrefix(err.Error(), test.want) || out.Len() != 0 || len(runner.commands) != 0 {
+				t.Fatalf("wanted %s without a plan or Docker call, got %v %q %v", test.want, err, out.String(), runner.commands)
+			}
+		})
+	}
+}
 
 func TestUpgradePlanRequiresSignedPredecessorAndStableStorage(t *testing.T) {
 	source := bundleBinding{ReleaseID: "release-old", ManifestSHA256: wire.Digest([]byte("old"))}
