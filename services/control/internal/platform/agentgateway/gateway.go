@@ -22,6 +22,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
 )
 
@@ -121,7 +122,7 @@ func Owns(r *http.Request) bool {
 // audience. address is the client address used for rate limits.
 func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request, address string) {
 	// The listener's request deadlines are for short requests. A session ends through its
-	// idle timeout, the agent closing it or the serving context being cancelled.
+	// idle timeout, connection age between exchanges, agent closing it or serving cancellation.
 	controller := http.NewResponseController(w)
 	if e := controller.SetReadDeadline(time.Time{}); e != nil && !errors.Is(e, http.ErrNotSupported) {
 		http.Error(w, "", http.StatusServiceUnavailable)
@@ -162,6 +163,10 @@ func header(md metadata.MD, name string) (string, bool) {
 }
 
 func (g *Gateway) connect(stream grpc.ServerStream) error {
+	age := httpserver.ConnectionDrainAt(stream.Context())
+	if !age.IsZero() && !time.Now().Before(age) {
+		return status.Error(codes.Unavailable, errDraining.Error())
+	}
 	select {
 	case g.slots <- struct{}{}:
 		defer func() { <-g.slots }()
@@ -228,9 +233,16 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 	idleAfter := idleTimeout
 	idle := time.NewTimer(idleAfter)
 	defer idle.Stop()
+	var aged <-chan time.Time
+	if !age.IsZero() {
+		timer := time.NewTimer(time.Until(age))
+		defer timer.Stop()
+		aged = timer.C
+	}
 	var last uint64
 	for {
 		var m wire.AgentMessage
+		var ageElapsed bool
 		select {
 		case m = <-messages:
 		case <-received:
@@ -238,11 +250,18 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 			return nil
 		case <-idle.C:
 			return status.Error(codes.DeadlineExceeded, "AGENT_SESSION_IDLE")
+		case <-aged:
+			ageElapsed = true
 		case <-ctx.Done():
 			if errors.Is(context.Cause(ctx), errReplaced) {
 				return status.Error(codes.Aborted, errReplaced.Error())
 			}
 			return status.Error(codes.Unavailable, "SERVICE_NOT_READY")
+		}
+		// The next message and the age timer may become ready together.
+		if ageElapsed || !age.IsZero() && !time.Now().Before(age) {
+			slog.Info("agent_session_connection_aged", "node_id", node)
+			return status.Error(codes.Unavailable, errDraining.Error())
 		}
 		if e := m.Validate(last); e != nil || last == 0 && m.Heartbeat == nil {
 			return status.Error(codes.InvalidArgument, "AGENT_SESSION_MESSAGE_INVALID")

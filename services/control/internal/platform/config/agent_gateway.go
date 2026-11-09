@@ -3,6 +3,7 @@ package config
 import (
 	"crypto/tls"
 	"errors"
+	"time"
 )
 
 // AgentGatewayConfiguration is the listener of an agent gateway process (ADR 0048), which
@@ -17,6 +18,16 @@ type AgentGatewayConfiguration struct {
 	// certificate must name the agent entrance's host, because agents verify that name.
 	TLSCertificateFile string `yaml:"tls_certificate_file"`
 	TLSPrivateKeyFile  string `yaml:"tls_private_key_file"`
+	// ConnectionMaxAgeSeconds bounds when a dedicated connection begins draining. Zero selects the default.
+	ConnectionMaxAgeSeconds int `yaml:"connection_max_age_seconds,omitempty"`
+}
+
+// MaxConnectionAge is the latest age at which a dedicated connection begins draining.
+func (g AgentGatewayConfiguration) MaxConnectionAge() time.Duration {
+	if g.ConnectionMaxAgeSeconds == 0 {
+		return 30 * time.Minute
+	}
+	return Seconds(g.ConnectionMaxAgeSeconds)
 }
 
 // Validate accepts an absent section and refuses an incomplete one.
@@ -24,7 +35,8 @@ func (g *AgentGatewayConfiguration) Validate() error {
 	if g == nil {
 		return nil
 	}
-	if validateServerListener(g.ListenAddress) != nil || !serverReference(g.TLSCertificateFile) || !serverReference(g.TLSPrivateKeyFile) || g.TLSCertificateFile == g.TLSPrivateKeyFile {
+	if validateServerListener(g.ListenAddress) != nil || !serverReference(g.TLSCertificateFile) || !serverReference(g.TLSPrivateKeyFile) || g.TLSCertificateFile == g.TLSPrivateKeyFile ||
+		g.ConnectionMaxAgeSeconds != 0 && (g.ConnectionMaxAgeSeconds < 60 || g.ConnectionMaxAgeSeconds > 86400) {
 		return errors.New("CONFIG_AGENT_GATEWAY_INVALID")
 	}
 	return nil

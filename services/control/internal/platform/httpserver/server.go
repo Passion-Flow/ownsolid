@@ -69,24 +69,24 @@ func serve(ctx context.Context, address string, tlsConfig *tls.Config, handler h
 	if e != nil {
 		return e
 	}
-	return serveListener(ctx, listener, tlsConfig, handler, policy)
+	return serveListener(ctx, listener, tlsConfig, handler, policy, ConnectionAge{})
 }
 
-// ServeListener serves direct TLS on a listener the caller bound, as Serve does on an
-// address, and closes it. It returns once the bounded shutdown that ctx starts has ended.
-func ServeListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) error {
+// ServeListener serves and ages connections on a dedicated prebound TLS listener.
+// It closes the listener and returns after the bounded shutdown that ctx starts.
+func ServeListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy, age ConnectionAge) error {
 	check := config.DefaultRuntimePolicy()
 	check.HTTP = policy
-	if listener == nil || tlsConfig == nil || check.Validate() != nil {
+	if listener == nil || tlsConfig == nil || check.Validate() != nil || age.Maximum <= 0 || age.Grace <= 0 {
 		if listener != nil {
 			listener.Close()
 		}
 		return errors.New("CONFIG_TRANSPORT_INVALID")
 	}
-	return serveListener(ctx, listener, tlsConfig, handler, policy)
+	return serveListener(ctx, listener, tlsConfig, handler, policy, age)
 }
 
-func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) error {
+func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy, age ConnectionAge) error {
 	server := &http.Server{BaseContext: func(net.Listener) context.Context { return ctx }, Handler: handler, ReadHeaderTimeout: config.Seconds(policy.ReadHeaderSeconds), ReadTimeout: config.Seconds(policy.RequestSeconds), WriteTimeout: config.Seconds(policy.RequestSeconds), IdleTimeout: config.Seconds(policy.IdleSeconds), MaxHeaderBytes: MaxJSONBytes, TLSConfig: tlsConfig}
 	servingDone := make(chan struct{})
 	shutdownDone := make(chan error, 1)
@@ -104,6 +104,11 @@ func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Co
 		shutdownDone <- err
 	}()
 	var accepted net.Listener = &bounded{listener, make(chan struct{}, policy.MaxConnections)}
+	if age.Maximum > 0 {
+		accepted = &agingListener{Listener: accepted, age: age}
+		server.ConnContext = withConnectionDrainAt
+		server.Handler = retireAgedConnections(handler)
+	}
 	if tlsConfig != nil {
 		accepted = tls.NewListener(accepted, tlsConfig)
 	}
