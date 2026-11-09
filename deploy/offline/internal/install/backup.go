@@ -179,12 +179,14 @@ func (o *operation) createDatabase(ctx context.Context, name string) error {
 }
 
 // dropDatabase removes a database this operation created. It outlives a cancelled ctx.
-func (o *operation) dropDatabase(ctx context.Context, name string) {
+func (o *operation) dropDatabase(ctx context.Context, name string) error {
 	cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), cleanupTimeout)
 	defer cancel()
 	if _, e := o.query(cleanup, maintenanceDatabase, `DROP DATABASE IF EXISTS "`+name+`" WITH (FORCE)`); e != nil {
 		fmt.Fprintf(o.out, "warning: database %s was left behind and can be dropped by hand: %v\n", name, e)
+		return e
 	}
+	return nil
 }
 
 // loadDump restores a dump into database. Owners and privileges are kept: the roles
