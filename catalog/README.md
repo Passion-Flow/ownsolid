@@ -158,11 +158,20 @@ start. The first path accepts up to 256 services and 1 MiB of normalized JSON.
 `InstallBundle.VerifyComposeImagePlan` checks the source digest and each
 service's signed Linux amd64 image digest and explicit `pull_policy: never`.
 It refuses builds, provider and init containers, models, watch definitions,
-unresolved includes and image mounts. Pass the rendered model in
-`ImageImportOptions.RenderedCompose` to apply the same check before Docker
-access. The plan returns the release pin, model SHA-256 and service images.
-The installer rechecks the exact model bytes after workload admission and
-uses `--pull never --no-build` for startup.
+unresolved includes and image mounts. Keep the resulting release pin, signed
+source SHA-256, model SHA-256 and ordered service image bindings in the
+trusted admission record for that scoped installation. Pass the retained
+model and plan through `ImageImportOptions.RenderedCompose` and
+`ImageImportOptions.ExpectedComposePlan`. Import rederives the complete plan
+from the staged signed bundle and rejects any mismatch before Docker access.
+
+Before startup, call `ComposeImagePlan.VerifyRendered` with the private
+buffer that the installer will pass to its launcher. Keep the approved
+project directory, profiles and environment fixed through launch. Compose
+accepts the buffer as the sole configuration via `-f -` and supports
+`up --pull never --no-build`. The installer is responsible for preserving
+the admitted model through Compose evaluation and recording the outcome
+against the same installation.
 
 ## Verification
 
