@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
@@ -40,10 +42,13 @@ type Usage struct {
 	Tokens             int64
 	StorageByteSeconds int64 // Byte-seconds.
 	Requests           int64
+	// UnmeasuredTokenRequests counts requests whose token quantity is unknown.
+	UnmeasuredTokenRequests int64
 }
 
 func (u Usage) valid() bool {
-	return u.GPUMicroseconds >= 0 && u.Tokens >= 0 && u.StorageByteSeconds >= 0 && u.Requests >= 0 && u != (Usage{})
+	return u.GPUMicroseconds >= 0 && u.Tokens >= 0 && u.StorageByteSeconds >= 0 && u.Requests >= 0 &&
+		u.UnmeasuredTokenRequests >= 0 && u.UnmeasuredTokenRequests <= u.Requests && u != (Usage{})
 }
 
 // Event is an immutable delta from a trusted producer. The producer must retain
@@ -72,35 +77,42 @@ func (e Event) normalized(scope Scope) (Event, error) {
 // on error and acknowledge only after commit. A transaction retried after
 // unknown commit must reuse the original event and scope.
 func AppendWithin(ctx context.Context, tx pgx.Tx, scope Scope, event Event) (bool, error) {
+	if event.Producer == gatewayReceiptProducer {
+		return false, ErrInvalidEvent
+	}
+	return appendWithin(ctx, transaction.PostgreSQLTransaction(tx), scope, event)
+}
+
+func appendWithin(ctx context.Context, tx transaction.Executor, scope Scope, event Event) (bool, error) {
 	event, err := event.normalized(scope)
 	if err != nil {
 		return false, err
 	}
-	if tx == nil {
+	if ctx == nil {
 		return false, ErrUnavailable
 	}
-	if _, err := tx.Exec(ctx, "SET LOCAL synchronous_commit = on"); err != nil {
+	if _, err := tx.Exec(ctx, transaction.SQL(transaction.PostgreSQL, "SET LOCAL synchronous_commit = on")); err != nil {
 		return false, operationError(ctx)
 	}
 	u := event.Usage
 	args := []any{event.Producer, event.ID, scope.TenantID, scope.WorkspaceID, event.OccurredAt,
-		u.GPUMicroseconds, u.Tokens, u.StorageByteSeconds, u.Requests}
-	insert, err := tx.Exec(ctx, `INSERT INTO usage_ledger
- (producer, event_id, tenant_id, workspace_id, occurred_at, gpu_microseconds, tokens, storage_byte_seconds, requests)
- VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
- ON CONFLICT (producer,event_id) DO NOTHING`, args...)
+		u.GPUMicroseconds, u.Tokens, u.StorageByteSeconds, u.Requests, u.UnmeasuredTokenRequests}
+	inserted, err := tx.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `INSERT INTO usage_ledger
+ (producer, event_id, tenant_id, workspace_id, occurred_at, gpu_microseconds, tokens, storage_byte_seconds, requests, unmeasured_token_requests)
+ VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+ ON CONFLICT (producer,event_id) DO NOTHING`, args...))
 	if err != nil {
 		return false, operationError(ctx)
 	}
-	if insert.RowsAffected() == 1 {
+	if inserted == 1 {
 		return true, nil
 	}
 	// In READ COMMITTED this statement sees the winner even if the prior
 	// INSERT encountered an index entry invisible to its own snapshot.
 	var matches bool
-	err = tx.QueryRow(ctx, `SELECT tenant_id=$3 AND workspace_id=$4 AND occurred_at=$5
-  AND gpu_microseconds=$6 AND tokens=$7 AND storage_byte_seconds=$8 AND requests=$9
- FROM usage_ledger WHERE producer=$1 AND event_id=$2`, args...).Scan(&matches)
+	err = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT tenant_id=$3 AND workspace_id=$4 AND occurred_at=$5
+  AND gpu_microseconds=$6 AND tokens=$7 AND storage_byte_seconds=$8 AND requests=$9 AND unmeasured_token_requests=$10
+ FROM usage_ledger WHERE producer=$1 AND event_id=$2`, args...)).Scan(&matches)
 	if err != nil {
 		return false, operationError(ctx)
 	}
@@ -112,14 +124,16 @@ func AppendWithin(ctx context.Context, tx pgx.Tx, scope Scope, event Event) (boo
 
 // Totals contains exact base-ten integer sums for one usage reporting window.
 type Totals struct {
-	GPUMicroseconds    string
-	Tokens             string
-	StorageByteSeconds string // Byte-seconds.
-	Requests           string
+	GPUMicroseconds         string
+	Tokens                  string
+	StorageByteSeconds      string // Byte-seconds.
+	Requests                string
+	UnmeasuredTokenRequests string
 }
 
 const usageTotalsProjection = `COALESCE(sum(gpu_microseconds),0)::text, COALESCE(sum(tokens),0)::text,
- COALESCE(sum(storage_byte_seconds),0)::text, COALESCE(sum(requests),0)::text`
+ COALESCE(sum(storage_byte_seconds),0)::text, COALESCE(sum(requests),0)::text,
+ COALESCE(sum(unmeasured_token_requests),0)::text`
 
 // TotalsWithin reports one authorized workspace over the half-open [from, to)
 // period. The caller must obtain scope from its current read authorization.
@@ -134,7 +148,7 @@ func TotalsWithin(ctx context.Context, tx pgx.Tx, scope Scope, from, to time.Tim
 	var out Totals
 	err = tx.QueryRow(ctx, `SELECT `+usageTotalsProjection+`
  FROM usage_ledger WHERE tenant_id=$1 AND workspace_id=$2 AND occurred_at >= $3 AND occurred_at < $4`,
-		scope.TenantID, scope.WorkspaceID, from, to).Scan(&out.GPUMicroseconds, &out.Tokens, &out.StorageByteSeconds, &out.Requests)
+		scope.TenantID, scope.WorkspaceID, from, to).Scan(&out.GPUMicroseconds, &out.Tokens, &out.StorageByteSeconds, &out.Requests, &out.UnmeasuredTokenRequests)
 	if err != nil {
 		return Totals{}, operationError(ctx)
 	}
