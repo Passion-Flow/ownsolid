@@ -241,11 +241,10 @@ func TestImportVerifiedRenderedCompose(t *testing.T) {
 	if err != nil || digestBytes(input) != verified.Manifest.Artifact.SHA256 {
 		t.Fatalf("read the verified Compose source: %v", err)
 	}
-	render := func(source []byte, extra ...string) []byte {
+	render := func(source []byte) []byte {
 		t.Helper()
-		args := []string{"compose", "--project-name", "catalog-image-plan", "--profile", "*",
-			"--project-directory", staging, "-f", "-", "config", "--format", "json"}
-		cmd := exec.CommandContext(t.Context(), "docker", append(args, extra...)...)
+		cmd := exec.CommandContext(t.Context(), "docker", "compose", "--project-name", "catalog-image-plan",
+			"--profile", "*", "--project-directory", staging, "-f", "-", "config", "--format", "json")
 		cmd.Env = append(os.Environ(), "COMPOSE_DISABLE_ENV_FILE=1")
 		cmd.Stdin = bytes.NewReader(source)
 		model, err := cmd.Output()
@@ -272,7 +271,17 @@ func TestImportVerifiedRenderedCompose(t *testing.T) {
 		}
 	}
 	writeEnvironment("serve")
-	unresolved := RenderedCompose{ArtifactSHA256: digestBytes(input), JSON: render(input, "--no-env-resolution")}
+	unresolved := RenderedCompose{
+		ArtifactSHA256: digestBytes(input),
+		JSON: ociJSON(t, map[string]any{"services": map[string]any{
+			"fixture": map[string]any{
+				"image":       verified.Archive.Images[0].ManifestDigest,
+				"pull_policy": "never",
+				"environment": map[string]string{"CATALOG_EMPTY": ""},
+				"env_file":    []map[string]any{{"path": filepath.Join(staging, "fixture.env"), "required": true}},
+			},
+		}}),
+	}
 	model := render(input)
 	requireMode(render(unresolved.JSON), "serve")
 	writeEnvironment("debug")
