@@ -23,9 +23,12 @@ database owner to land or authorize the exact fresh and restored fingerprints.
 - SCH-101 has a PostgreSQL reservation and release seam. The
   [training and database handoff](scheduling-training-reservations.md) names the
   existing owner transactions and records fresh and restored catalog evidence.
-- SCH-104 reserves whole demand in PostgreSQL. Full acceptance requires
-  a workload owner to submit and reconcile exact replica-group readiness
-  with an installed Kueue or Volcano controller before dispatch.
+- SCH-104 reserves whole demand in PostgreSQL and requires a verified
+  stop or non-delivery for every exact replica slot before release.
+  The [gang handoff](scheduling-admission.md#atomic-gang-reservation-and-release)
+  requires the workload owner to preserve each attempt-to-slot binding, fence
+  dispatch, verify positive physical proof, and reconcile group readiness
+  with an installed Kueue or Volcano controller.
 - SCH-110 has a read-only PostgreSQL submission estimate. The workload
   owner must authorize the workspace, provide cell capacity from a verified
   observation and expose the estimate in its authenticated submission flow.
