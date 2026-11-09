@@ -91,25 +91,7 @@ func TestScopedFleetHistoryOffline(t *testing.T) {
 	}
 	fixtureRequest(t, g.ctx, http.MethodGet, long+"/internal/force_flush", nil)
 	get := func(a identity.Auth, workspace string, from, to time.Time) (monitoring.FleetHistory, error) {
-		query := url.Values{"workspace_id": {workspace}, "from": {from.Format(time.RFC3339)}, "to": {to.Format(time.RFC3339)}}
-		request := httptest.NewRequestWithContext(g.ctx, http.MethodGet, monitoringhttp.FleetHistoryPath+"?"+query.Encode(), nil)
-		handler := monitoringhttp.Handler{Service: g.s}
-		requestID := uuid.NewString()
-		body, status, err := handler.HandleFleetHistory(request, a, requestID)
-		if err != nil {
-			if body != nil || status != 0 {
-				t.Fatal("failed history candidate returned a successful response")
-			}
-			return monitoring.FleetHistory{}, err
-		}
-		var out monitoring.FleetHistory
-		if status != http.StatusOK || len(body) > 1<<20 || json.Unmarshal(body, &out) != nil {
-			t.Fatalf("invalid candidate history response: status %d, bytes %d", status, len(body))
-		}
-		if g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot' AND request_id=$1", requestID) != 1 {
-			t.Fatal("successful candidate response lacked its committed audit")
-		}
-		return out, nil
+		return readFleetHistoryCandidate(t, g, a, workspace, from, to)
 	}
 	reject := func(a identity.Auth, workspace string, from, to time.Time, codes ...string) {
 		t.Helper()
@@ -202,6 +184,29 @@ func TestScopedFleetHistoryOffline(t *testing.T) {
 		t.Fatal("denied diagnostics emitted a successful audit")
 	}
 	t.Logf("fixture disks after graceful stop: raw=%d long=%d allocated bytes", rawDir(), longDir())
+}
+
+func readFleetHistoryCandidate(t *testing.T, g *story, a identity.Auth, workspace string, from, to time.Time) (monitoring.FleetHistory, error) {
+	t.Helper()
+	query := url.Values{"workspace_id": {workspace}, "from": {from.Format(time.RFC3339)}, "to": {to.Format(time.RFC3339)}}
+	request := httptest.NewRequestWithContext(g.ctx, http.MethodGet, monitoringhttp.FleetHistoryPath+"?"+query.Encode(), nil)
+	handler := monitoringhttp.Handler{Service: g.s}
+	requestID := uuid.NewString()
+	body, status, err := handler.HandleFleetHistory(request, a, requestID)
+	if err != nil {
+		if body != nil || status != 0 {
+			t.Fatal("failed history candidate returned a successful response")
+		}
+		return monitoring.FleetHistory{}, err
+	}
+	var out monitoring.FleetHistory
+	if status != http.StatusOK || len(body) > 1<<20 || json.Unmarshal(body, &out) != nil {
+		t.Fatalf("invalid candidate history response: status %d, bytes %d", status, len(body))
+	}
+	if g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot' AND request_id=$1", requestID) != 1 {
+		t.Fatal("successful candidate response lacked its committed audit")
+	}
+	return out, nil
 }
 
 func checkHistoryResponseLimit(t *testing.T, g *story, get func(identity.Auth, string, time.Time, time.Time) (monitoring.FleetHistory, error), end time.Time) {
