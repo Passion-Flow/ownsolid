@@ -116,3 +116,23 @@ Playwright requires an available web server URL and the preview command must bin
 port ([web server configuration](https://playwright.dev/docs/test-webserver)). The default ports
 are unchanged. A worktree must run its own preview, since reusing another lane's process can
 test the wrong build.
+
+## Contract path references in the reference test
+
+The [OpenAPI Path Item Object](https://spec.openapis.org/oas/v3.1.1.html#path-item-object)
+can refer to a path defined in a different contract. The Nodes contract
+retains node exporter bookmarks and client paths through references to
+the canonical Components definitions. The Web generators share
+`tools/codegen/openapi-paths.mjs`, which checks the owner and exact
+pointer before resolving a path item. Iterating raw Nodes entries
+mistakes a reference for an operation without an audience.
+
+Read effective paths through that same resolver in the reference test.
+Keep the expected audience-filtered set derived from source contracts
+and compare it to the separately generated public reference. Avoid a
+second resolver with a different list of supported references. The
+test uses the workspace's pinned Node runtime, whose
+[synchronous ESM loading](https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require)
+can read the existing resolver. A malformed reference must fail the
+test, and any extra or missing operation in either entrance must still
+fail the set comparison. There is no runtime dependency or UI change.
