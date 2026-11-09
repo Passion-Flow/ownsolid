@@ -95,11 +95,15 @@ func reserveInTransaction(ctx context.Context, store transaction.Store, a Attemp
 	return changed && err == nil, err
 }
 
-func releaseInTransaction(ctx context.Context, store transaction.Store, a Attempt) (bool, error) {
+func releaseInTransaction(ctx context.Context, store transaction.Store, a Attempt, evidence ...ReplicaRelease) (bool, error) {
 	var changed bool
 	err := ownerTransaction(ctx, store, func(ctx context.Context, q transaction.Executor) error {
 		var err error
-		changed, err = ReleaseWithin(ctx, q, a)
+		if len(evidence) == 0 {
+			changed, err = ReleaseWithin(ctx, q, a)
+		} else {
+			changed, err = ReleaseGangWithin(ctx, q, a, evidence)
+		}
 		return err
 	})
 	return changed && err == nil, err
@@ -133,7 +137,7 @@ func TestPostgresReservationAndReleaseReplay(t *testing.T) {
 	if _, err := releaseInTransaction(t.Context(), f.store, foreign); !errors.Is(err, ErrReservationNotFound) {
 		t.Fatalf("cross-workspace release: %v", err)
 	}
-	if changed, err := releaseInTransaction(t.Context(), f.store, a); err != nil || !changed {
+	if changed, err := releaseInTransaction(t.Context(), f.store, a, fixtureReplicaReleases(a, intent)...); err != nil || !changed {
 		t.Fatalf("initial release: %v %v", changed, err)
 	}
 	if _, err := reserveInTransaction(t.Context(), f.store, a, intent); !errors.Is(err, ErrReservationReleased) {
@@ -195,7 +199,7 @@ func TestPostgresReservationSharesOwnerRollbackAndSavepoint(t *testing.T) {
 	}
 	failedAudit := errors.New("synthetic failure before owner commit")
 	if err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
-		if changed, err := ReleaseWithin(ctx, q, a); err != nil || !changed {
+		if changed, err := ReleaseGangWithin(ctx, q, a, fixtureReplicaReleases(a, intent)); err != nil || !changed {
 			t.Fatalf("release before owner audit: %v %v", changed, err)
 		}
 		return failedAudit
