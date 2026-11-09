@@ -5,14 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"net/url"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"strconv"
 	"time"
 
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/pagination"
-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 )
 
 type Page[T any] struct {
@@ -42,28 +42,23 @@ type RequestRecord struct {
 	Outcome            *wire.Outcome `json:"outcome"`
 }
 
-const requestFields = `r.id::text,r.workspace_id::text,r.gateway_id::text,r.node_id::text,r.api_key_id::text,r.actor_user_id::text,r.alias_id::text,a.name,r.deployment_id::text,r.deployment_revision,r.state,r.capacity_held,r.stream,r.admitted_at,r.deadline_at,r.reported_at,r.reconciled_at,r.active_recovery_id::text,r.outcome`
+const requestFields = `r.id::text,r.workspace_id::text,r.gateway_id::text,r.node_id::text,r.api_key_id::text,r.actor_user_id::text,r.alias_id::text,a.name,r.deployment_id::text,r.deployment_revision,r.state,r.capacity_held,r.stream,r.admitted_at,r.deadline_at,r.reported_at,r.reconciled_at,r.active_recovery_id::text,r.outcome,r.outcome_sha256`
 const requestJoins = ` FROM gateway_requests r JOIN model_aliases a ON a.tenant_id=r.tenant_id AND a.workspace_id=r.workspace_id AND a.id=r.alias_id`
 
 func scanRequest(row transaction.Row) (RequestRecord, error) {
 	var out RequestRecord
 	var raw []byte
-	e := row.Scan(&out.ID, &out.WorkspaceID, &out.GatewayID, &out.NodeID, &out.APIKeyID, &out.ActorID, &out.AliasID, &out.AliasName, &out.DeploymentID, &out.DeploymentRevision, &out.State, &out.CapacityHeld, &out.Stream, &out.AdmittedAt, &out.DeadlineAt, &out.ReportedAt, &out.ReconciledAt, &out.ActiveRecoveryID, &raw)
+	var digest *string
+	e := row.Scan(&out.ID, &out.WorkspaceID, &out.GatewayID, &out.NodeID, &out.APIKeyID, &out.ActorID, &out.AliasID, &out.AliasName, &out.DeploymentID, &out.DeploymentRevision, &out.State, &out.CapacityHeld, &out.Stream, &out.AdmittedAt, &out.DeadlineAt, &out.ReportedAt, &out.ReconciledAt, &out.ActiveRecoveryID, &raw, &digest)
 	if errors.Is(e, sql.ErrNoRows) {
 		return RequestRecord{}, fail("RESOURCE_NOT_FOUND")
 	}
 	if e != nil {
-		if e != nil {
-			return RequestRecord{}, e
-		}
-		return out, nil
+		return RequestRecord{}, e
 	}
-	if raw != nil {
-		v, e := wire.DecodeOutcome(raw)
-		if e != nil {
-			return RequestRecord{}, fail("STORAGE_UNAVAILABLE")
-		}
-		out.Outcome = &v
+	out.Outcome, e = storedRequestOutcome(out.ID, raw, digest)
+	if e != nil {
+		return RequestRecord{}, e
 	}
 	out.AdmittedAt = out.AdmittedAt.UTC()
 	out.DeadlineAt = out.DeadlineAt.UTC()
@@ -178,6 +173,7 @@ func (s *Service) AliasPage(ctx context.Context, a identity.Auth, workspace stri
 func (s *Service) KeyPage(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[APIKey], error) {
 	return listPage(ctx, s, a, workspace, values, "", "keys", "SELECT "+keyFields+keyJoins, "SELECT "+mysqlKeyFields+keyJoins, "k", "k.created_at", "k.id", scanKey, func(v APIKey) (time.Time, string) { return v.CreatedAt, v.ID }, nil)
 }
+
 // RequestPage lists a workspace's admitted calls, newest first; `api_key_id` narrows them to one
 // key's calls, which is the key's call log.
 func (s *Service) RequestPage(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[RequestRecord], error) {

@@ -27,6 +27,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -594,6 +595,7 @@ func verifyForegroundText(
 		}
 	}
 	key := *access.key.Secret
+	reported := map[string]gatewaywire.Outcome{}
 	assertReported := func(id, status string, stream bool, usage *gatewaywire.Usage) {
 		t.Helper()
 		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
@@ -614,6 +616,7 @@ func verifyForegroundText(
 					(usage != nil && (receipt.Usage == nil || *receipt.Usage != *usage)) {
 					t.Fatal("foreground text receipt mismatch", receipt, err)
 				}
+				reported[id] = receipt
 				return
 			}
 			select {
@@ -675,6 +678,23 @@ func verifyForegroundText(
 	}
 	cancelled.Body.Close()
 	assertReported(cancelled.Header.Get("X-Request-Id"), "client_cancelled", true, nil)
+	history, err := c.s.RequestPage(t.Context(), access.owner, access.alias.WorkspaceID,
+		url.Values{"api_key_id": {access.key.Key.ID}, "limit": {"3"}})
+	if err != nil || len(history.Items) != len(reported) || history.NextCursor != nil {
+		t.Fatal("native gateway history did not return exactly the reported calls", err)
+	}
+	for _, row := range history.Items {
+		expected, ok := reported[row.ID]
+		if !ok || row.Outcome == nil {
+			t.Fatal("native gateway history missing a reported receipt")
+		}
+		actualDigest, actualErr := row.Outcome.Digest()
+		expectedDigest, expectedErr := expected.Digest()
+		if actualErr != nil || expectedErr != nil || actualDigest != expectedDigest {
+			t.Fatal("native gateway history changed usage, latency or cancellation")
+		}
+		delete(reported, row.ID)
+	}
 	if _, err := c.s.RevokeKey(context.Background(), access.owner, access.alias.WorkspaceID, access.key.Key.ID, "Synthetic foreground text revocation", uuid.NewString()); err != nil {
 		t.Fatal(err)
 	}
