@@ -12,7 +12,7 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-func TestUpgradePlanChecksPendingRecoveryBeforeCandidateMedia(t *testing.T) {
+func TestUpgradeEntrancesCheckPendingRecoveryBeforeCandidateMedia(t *testing.T) {
 	dir := shortTempDir(t)
 	root := filepath.Join(dir, "installation")
 	if err := os.Mkdir(root, 0o700); err != nil {
@@ -32,6 +32,16 @@ func TestUpgradePlanChecksPendingRecoveryBeforeCandidateMedia(t *testing.T) {
 	if err := os.WriteFile(config, raw, 0o600); err != nil {
 		t.Fatal(err)
 	}
+	c, err := LoadPreflight(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy := bundle.Defaults()
+	policy.MountRoot = filepath.Join(dir, "media")
+	if err := os.Mkdir(policy.MountRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	candidate := filepath.Join(dir, "missing.tar.gz")
 	for _, test := range []struct{ file, want string }{
 		{restoreIntentName, "INSTALL_RESTORE_PENDING"},
 		{coordinatedBackupIntentName, "INSTALL_BACKUP_RECOVERY_REQUIRED"},
@@ -49,11 +59,33 @@ func TestUpgradePlanChecksPendingRecoveryBeforeCandidateMedia(t *testing.T) {
 					}
 				})
 			}
-			runner := &fakeDatabase{}
-			var out bytes.Buffer
-			err := PlanUpgrade(t.Context(), config, filepath.Join(dir, "missing.tar.gz"), bundle.Defaults(), runner, &out)
-			if err == nil || !strings.HasPrefix(err.Error(), test.want) || out.Len() != 0 || len(runner.commands) != 0 {
-				t.Fatalf("wanted %s without a plan or Docker call, got %v %q %v", test.want, err, out.String(), runner.commands)
+			for _, command := range []string{"plan", "bundle", "patch"} {
+				t.Run(command, func(t *testing.T) {
+					runner := &fakeDatabase{}
+					var out bytes.Buffer
+					want := test.want
+					var err error
+					switch command {
+					case "plan":
+						err = PlanUpgrade(t.Context(), config, candidate, policy, runner, &out)
+					case "bundle":
+						err = upgradeBundle(t.Context(), c, candidate, dir, "", policy, runner, &out)
+					case "patch":
+						err = UpgradePatch(t.Context(), config, candidate, candidate, dir, policy, runner, &out)
+						if test.file == "" {
+							want = "INSTALL_UPGRADE_BOUND_RELEASE_REQUIRED"
+						}
+					}
+					if err == nil || !strings.HasPrefix(err.Error(), want) || out.Len() != 0 || len(runner.commands) != 0 {
+						t.Fatalf("wanted %s without output or Docker calls, got %v %q %v", want, err, out.String(), runner.commands)
+					}
+					if files, err := os.ReadDir(policy.MountRoot); err != nil || len(files) != 0 {
+						t.Fatalf("unexpected staging files: %v %v", files, err)
+					}
+					if _, err := os.Lstat(filepath.Join(root, operationLockName)); !os.IsNotExist(err) {
+						t.Fatalf("unexpected installation lock: %v", err)
+					}
+				})
 			}
 		})
 	}

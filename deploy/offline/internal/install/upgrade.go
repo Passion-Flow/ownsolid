@@ -69,11 +69,18 @@ func validateUpgradeBackupRoot(c Config, root string) error {
 // UpgradeBundle resumes or applies a verified application release after stopping
 // its writer and making a verified PostgreSQL recovery point.
 func UpgradeBundle(ctx context.Context, configPath, archive, backupRoot string, policy bundle.Verification, runner StreamRunner, out io.Writer) error {
-	return upgradeBundle(ctx, configPath, archive, backupRoot, "", policy, runner, out)
+	c, err := loadBundleSite(configPath)
+	if err != nil {
+		return err
+	}
+	return upgradeBundle(ctx, c, archive, backupRoot, "", policy, runner, out)
 }
 
-func upgradeBundle(ctx context.Context, configPath, archive, backupRoot, expectedBaseline string, policy bundle.Verification, runner StreamRunner, out io.Writer) error {
-	p, cleanup, err := prepareBundle(ctx, configPath, archive, policy)
+func upgradeBundle(ctx context.Context, siteConfig Config, archive, backupRoot, expectedBaseline string, policy bundle.Verification, runner StreamRunner, out io.Writer) error {
+	if err := pendingDataRecovery(siteConfig); err != nil {
+		return err
+	}
+	p, cleanup, err := prepareBundleForSite(ctx, siteConfig, archive, policy)
 	if err != nil {
 		return err
 	}
