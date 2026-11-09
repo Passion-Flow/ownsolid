@@ -617,7 +617,12 @@ func verifyForegroundText(
 	t.Helper()
 	path, prefix, delta, terminal := "/v1/responses", "resp_", "response.output_text.delta", "response.completed"
 	body := func(stream bool) map[string]any {
-		return map[string]any{"model": access.alias.Name, "input": "Synthetic foreground input", "max_output_tokens": 16, "stream": stream, "store": false}
+		var input any = "Synthetic foreground input"
+		if stream {
+			input = []any{map[string]any{"type": "message", "role": "user",
+				"content": []any{map[string]any{"type": "input_text", "text": "Synthetic foreground input"}}}}
+		}
+		return map[string]any{"model": access.alias.Name, "input": input, "max_output_tokens": 16, "stream": stream, "store": false}
 	}
 	if mode == foregroundMessages {
 		path, prefix, delta, terminal = "/v1/messages", "msg_", "content_block_delta", "message_stop"
