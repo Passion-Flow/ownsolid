@@ -78,6 +78,23 @@ transaction boundaries. The Web lane wires the decision controls to the
 versioned API and shows waiting, denied, cancelled and resumed states.
 See [restart and retry acceptance](workflow-human-approval.md).
 
+## Portal conversation and playground handoff
+
+APP-109 search has a registered backend path on PostgreSQL. The API owner
+publishes `q` on `ListApplicationConversations`, and Portal adds the search
+field with cursor reset on term, session and workspace changes. Rename and
+export still need workflow-owned title storage, revision and permission
+checks, and versioned operations. See [conversation search](application-conversation-search.md).
+
+The current Portal router has no S-302 conversation, S-303 application or
+S-305 playground route. The build plan reserves S-305 but does not define
+its flow. To resume APP-110, the Portal owner defines and wires the run
+screen, the gateway owner provides scoped admission for the model run, and
+the workflow owner exposes the pinned publication flow for the app run.
+Reuse that execution path from the existing application projection. AGT-109
+can add result links to conversations and applications once their routes
+and resource identifiers are fixed.
+
 ## Assistant catalog handoff for AGT-103
 
 The [applications OpenAPI](../../api/openapi/v1/applications/openapi.json)
