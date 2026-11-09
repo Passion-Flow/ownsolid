@@ -24,6 +24,7 @@ fully offline.
   - [Site-local Feishu relay](../../research/offline-alert-notifications.md#verified-feishu-relay-contract) qualifies signed delivery to a controlled private receiver. Vendor-side integration, remaining channels, installer and Console work remain open.
 - [ ] OBS-106 Dashboards for platform health, fleet, GPU and model usage (P1)
 - [ ] OBS-107 Export to customer Prometheus, Grafana and log systems (P1) - Catalog: F235
+  - [Native scoped federation prototype](../../research/tenant-telemetry-export.md#native-filter-prototype) qualifies the store filter. Authenticated export identity and installed store isolation remain prerequisites for customer integration.
 - [x] OBS-108 Load tested at about 17 million active series (P1) - Evidence: [Linux amd64 scale qualification](../../research/telemetry-scale.md#linux-amd64-qualification)
 - [ ] OBS-109 Retention tiers and long-range rollups built on recording rules, because downsampling and multiple retentions are Enterprise-only in the selected store (P1)
 - [ ] OBS-110 Series cardinality explorer with per-tenant and per-agent limits (P1)
