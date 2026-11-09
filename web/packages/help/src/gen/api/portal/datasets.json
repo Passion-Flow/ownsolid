@@ -904,6 +904,98 @@
    "errors": {}
   },
   {
+   "id": "portalPreviewDatasetTokenizer",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/tokenizer-preview",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "dataset_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "draft_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DatasetTokenizerPreviewRequest"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": null
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED",
+     "LICENSE_NEW_BUSINESS_UNAVAILABLE"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "429": [
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_STORED_STATE_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED"
+    ]
+   }
+  },
+  {
    "id": "portalGetDatasetJob",
    "method": "get",
    "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}",
@@ -2572,6 +2664,30 @@
    "properties": {
     "data": {
      "$ref": "DatasetRow"
+    }
+   }
+  },
+  "DatasetTokenizerPreviewRequest": {
+   "type": "object",
+   "required": [
+    "model_id",
+    "sample_limit",
+    "maximum_tokens"
+   ],
+   "properties": {
+    "model_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "sample_limit": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    },
+    "maximum_tokens": {
+     "type": "integer",
+     "minimum": 32,
+     "maximum": 2048
     }
    }
   },
