@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"bytes"
 	"errors"
 	"path/filepath"
 	"slices"
@@ -58,7 +59,8 @@ func TestVerifyComposeImagePlan(t *testing.T) {
 				return
 			}
 			want := []ComposeServiceImage{{Service: "api", ManifestDigest: image.image}, {Service: "worker", ManifestDigest: image.image}}
-			if err != nil || plan.Pin != verified.Pin || plan.ModelSHA256 != digestBytes(raw) || !slices.Equal(plan.Services, want) {
+			if err != nil || plan.Pin != verified.Pin || plan.ArtifactSHA256 != verified.Manifest.Artifact.SHA256 ||
+				plan.ModelSHA256 != digestBytes(raw) || !slices.Equal(plan.Services, want) {
 				t.Fatalf("unexpected signed image plan %+v, %v", plan, err)
 			}
 		})
@@ -74,6 +76,70 @@ func TestVerifyComposeImagePlan(t *testing.T) {
 		if _, err := verified.VerifyComposeImagePlan(RenderedCompose{ArtifactSHA256: verified.Manifest.Artifact.SHA256, JSON: []byte(raw)}); !errors.Is(err, ErrComposeImagePlan) {
 			t.Fatalf("invalid model was accepted: %v", err)
 		}
+	}
+}
+
+func TestImportRefusesChangesToAdmittedComposePlan(t *testing.T) {
+	image := newImageFixture(t, "amd64", false)
+	fixture := signOCI(t, ociTar(t, image.files, ""), image.image)
+	verified, err := VerifyInstallBundle(t.Context(), fixture.root, fixture.key, fixture.limit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	model := RenderedCompose{
+		ArtifactSHA256: verified.Manifest.Artifact.SHA256,
+		JSON:           []byte(`{"services":{"api":{"image":"` + image.image + `","pull_policy":"never","command":["serve"]}}}`),
+	}
+	plan, err := verified.VerifyComposeImagePlan(model)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := plan.VerifyRendered(model); err != nil {
+		t.Fatal(err)
+	}
+
+	replaced := model
+	replaced.JSON = bytes.Replace(model.JSON, []byte(`"serve"`), []byte(`"debug"`), 1)
+	alternate, err := verified.VerifyComposeImagePlan(replaced)
+	if err != nil || !slices.Equal(alternate.Services, plan.Services) || alternate.ModelSHA256 == plan.ModelSHA256 {
+		t.Fatalf("replacement fixture must retain the signed images and change the model: %v", err)
+	}
+	padded := model
+	padded.JSON = append(slices.Clone(model.JSON), '\n')
+	otherSource := model
+	otherSource.ArtifactSHA256 = digestBytes([]byte("another source"))
+	for _, candidate := range []RenderedCompose{replaced, padded, otherSource} {
+		if err := plan.VerifyRendered(candidate); !errors.Is(err, ErrComposeImagePlan) {
+			t.Fatalf("launch verification accepted a replacement: %v", err)
+		}
+	}
+
+	wrongPin, wrongSource, wrongBinding := plan, plan, plan
+	wrongPin.Pin.BundleSHA256 = digestBytes([]byte("another bundle"))
+	wrongSource.ArtifactSHA256 = otherSource.ArtifactSHA256
+	wrongBinding.Services = []ComposeServiceImage{{Service: "worker", ManifestDigest: image.image}}
+	for _, tc := range []struct {
+		name     string
+		rendered *RenderedCompose
+		plan     ComposeImagePlan
+	}{
+		{"changed command", &replaced, plan},
+		{"changed bytes", &padded, plan},
+		{"changed source", &otherSource, plan},
+		{"missing model", nil, plan},
+		{"wrong bundle", &model, wrongPin},
+		{"wrong source in plan", &model, wrongSource},
+		{"wrong service binding", &model, wrongBinding},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := ImportInstallImage(t.Context(), fixture.root.Name(), fixture.key, ImageImportOptions{
+				MaximumPayloadBytes: fixture.limit, MaximumExpandedBytes: testTransitionBudget, Timeout: time.Second,
+				ExpectedPin: &plan.Pin, RenderedCompose: tc.rendered, ExpectedComposePlan: &tc.plan,
+			})
+			if !errors.Is(err, ErrComposeImagePlan) || result.Pin != (ReleasePin{}) {
+				t.Fatalf("import did not reject the change before Docker access: %v", err)
+			}
+		})
 	}
 }
 
