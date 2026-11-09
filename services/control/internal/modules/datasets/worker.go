@@ -73,7 +73,11 @@ func (s *Service) ProcessNext(ctx context.Context) (bool, error) {
 			}
 			return e
 		}
-		if j.Kind != "publish" && work.policy.Deduplication != "" {
+		if j.Kind != "publish" && (work.policy.Deduplication != "" || work.policy.TestBasisPoints != 0) {
+			return s.finishFailure(ctx, tx, a, w, d, j, "DATASET_POLICY_INVALID", false, false)
+		}
+		if work.policy.TestBasisPoints != 0 && (j.Seed == nil || j.ValidationBasisPoints == nil ||
+			wire.ValidateThreeWaySplit(*j.Seed, *j.ValidationBasisPoints, work.policy.TestBasisPoints) != nil) {
 			return s.finishFailure(ctx, tx, a, w, d, j, "DATASET_POLICY_INVALID", false, false)
 		}
 		if work.policy.Limits != s.policy().Limits || work.policy.Resources != s.policy().Resources {
@@ -108,6 +112,7 @@ func (s *Service) ProcessNext(ctx context.Context) (bool, error) {
 			work.request.Operation = wire.PublishOperation
 			work.request.Seed = j.Seed
 			work.request.ValidationBasisPoints = j.ValidationBasisPoints
+			work.request.TestBasisPoints = work.policy.TestBasisPoints
 		}
 		if _, e := tx.Exec(ctx, datasetSQL(tx, "UPDATE dataset_jobs SET state='running',attempt_id=$2,attempt_count=attempt_count+1,lease_expires_at=clock_timestamp()+make_interval(secs=>$3),error_code=NULL,error_line_number=NULL,retryable=false,updated_at=clock_timestamp() WHERE id=$1", `UPDATE dataset_jobs SET state='running',attempt_id=?,attempt_count=attempt_count+1,lease_expires_at=TIMESTAMPADD(SECOND,?,CURRENT_TIMESTAMP(6)),error_code=NULL,error_line_number=NULL,retryable=false,updated_at=CURRENT_TIMESTAMP(6) WHERE id=?`, []any{j.ID, attemptID, s.policy().LeaseSeconds}, []any{attemptID, s.policy().LeaseSeconds, j.ID}, transaction.SQL(transaction.Dameng, dmWorkerClaim, attemptID, s.policy().LeaseSeconds, j.ID))); e != nil {
 			return e
@@ -146,7 +151,7 @@ func (s *Service) ProcessNext(ctx context.Context) (bool, error) {
 	} else {
 		source = bytes.NewReader(work.input)
 	}
-	scope, input, output, e := s.Store.CreateAttempt(work.job.ID, work.request.AttemptID, source, work.request.InputSHA256, size, work.policy.Resources.MaximumResultBytes)
+	scope, input, output, e := s.Store.createAttempt(work.job.ID, work.request.AttemptID, source, work.request.InputSHA256, size, work.policy.Resources.MaximumResultBytes, work.request.TestBasisPoints != 0)
 	if e != nil {
 		return true, s.recordAttemptFailure(ctx, c, work, e)
 	}
@@ -154,11 +159,11 @@ func (s *Service) ProcessNext(ctx context.Context) (bool, error) {
 	work.request.InputFile = input
 	work.request.OutputDirectory = output
 	processorCtx := executeCtx
-	if work.policy.Deduplication == NearPromptV1 {
+	if work.policy.Deduplication == NearPromptV1 || work.request.TestBasisPoints != 0 {
 		var stop context.CancelFunc
 		processorCtx, stop = context.WithTimeout(executeCtx, time.Duration(work.request.Resources.WallSeconds)*time.Second)
 		defer stop()
-		work.request.NearDuplicatePlanSHA256, e = s.Store.stageNearPlan(processorCtx, work.request, bytes.NewReader(work.input))
+		work.request.NearDuplicatePlanSHA256, e = s.Store.stageNearPlan(processorCtx, work.request, bytes.NewReader(work.input), work.policy.Deduplication == NearPromptV1)
 	}
 	var result wire.ProcessorResult
 	if e == nil {

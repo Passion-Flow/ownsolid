@@ -4,10 +4,11 @@ import json
 import os
 from pathlib import Path
 import re
-from . import VERSION,SCHEMA,SPLIT_ALGORITHM
+from . import VERSION,SCHEMA,SPLIT_ALGORITHM,THREE_WAY_SPLIT_ALGORITHM
 from .validation import DataError,Row,compact
 
 SPLIT_DOMAIN=b'projectone.text-sft.v1.split.v1\x00'
+THREE_WAY_SPLIT_DOMAIN=b'projectone.text-sft.v1.split.v2\x00'
 
 class Sources:
  def __init__(self):self.parents={}
@@ -22,8 +23,14 @@ class Sources:
   a=self.find(a);b=self.find(b)
   if a!=b:self.parents[max(a,b)]=min(a,b)
 
-def split(rows:list[Row],seed:str,validation_basis_points:int,near_plan=None):
+def split(rows:list[Row],seed:str,validation_basis_points:int,near_plan=None,*,test_basis_points=None):
  if not re.fullmatch('[a-f0-9]{32}',seed) or type(validation_basis_points) is not int or not 100<=validation_basis_points<=5000:raise DataError('DATASET_SPLIT_CONFIGURATION_INVALID')
+ three_way = test_basis_points is not None
+ if three_way:
+  if type(test_basis_points) is not int or not 100 <= test_basis_points <= 5000 or validation_basis_points + test_basis_points > 9000:
+   raise DataError('DATASET_SPLIT_CONFIGURATION_INVALID')
+  if near_plan is None:
+   raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
  if not rows:raise DataError('DATASET_EMPTY_SOURCE')
  if near_plan is not None and len(near_plan)!=len(rows):raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
  sources=Sources();retained={};duplicates=[]
@@ -43,16 +50,37 @@ def split(rows:list[Row],seed:str,validation_basis_points:int,near_plan=None):
   else:retained[fingerprint]=row
  groups={}
  for source in sorted(sources.parents):groups.setdefault(sources.find(source),[]).append(source)
- if len(groups)<2:raise DataError('DATASET_SPLIT_INSUFFICIENT_GROUPS')
- ordered=sorted(groups,key=lambda root:(hashlib.sha256(SPLIT_DOMAIN+seed.encode('ascii')+b'\x00'+compact(groups[root])).hexdigest(),compact(groups[root])))
- count=min(len(groups)-1,max(1,(len(groups)*validation_basis_points+5000)//10000));validation_roots=set(ordered[:count])
- train=[];validation=[];assignments=[]
- for fingerprint,row in retained.items():
-  partition='validation' if sources.find(row.source_id) in validation_roots else 'train'
-  (validation if partition=='validation' else train).append(row)
-  assignments.append({'line_number':row.line_number,'source_id':row.source_id,'content_sha256':fingerprint,'split':partition})
- if not train or not validation:raise DataError('DATASET_SPLIT_INSUFFICIENT_GROUPS')
- return {'train':train,'validation':validation,'samples':list(retained.values()),'assignments':assignments,'duplicates':duplicates,'groups':groups,'validation_groups':count,'seed':seed,'validation_basis_points':validation_basis_points}
+ required_groups = 3 if three_way else 2
+ if len(groups) < required_groups:
+  raise DataError('DATASET_SPLIT_INSUFFICIENT_GROUPS')
+ domain = THREE_WAY_SPLIT_DOMAIN if three_way else SPLIT_DOMAIN
+
+ def rank(root):
+  encoded = compact(groups[root])
+  return hashlib.sha256(domain + seed.encode('ascii') + b'\x00' + encoded).hexdigest(), encoded
+
+ ordered = sorted(groups, key=rank)
+ validation_groups = min(len(groups) - required_groups + 1, max(1, (len(groups) * validation_basis_points + 5000) // 10000))
+ test_groups = 0
+ partitions = {'train': [], 'validation': []}
+ if three_way:
+  test_groups = min(len(groups) - validation_groups - 1, max(1, (len(groups) * test_basis_points + 5000) // 10000))
+  partitions['test'] = []
+ validation_roots = set(ordered[:validation_groups])
+ test_roots = set(ordered[validation_groups:validation_groups + test_groups])
+ assignments = []
+ for fingerprint, row in retained.items():
+  root = sources.find(row.source_id)
+  partition = 'validation' if root in validation_roots else 'test' if root in test_roots else 'train'
+  partitions[partition].append(row)
+  assignments.append({'line_number': row.line_number, 'source_id': row.source_id, 'content_sha256': fingerprint, 'split': partition})
+ if not all(partitions.values()):
+  raise DataError('DATASET_SPLIT_INSUFFICIENT_GROUPS')
+ result = {**partitions, 'samples': list(retained.values()), 'assignments': assignments, 'duplicates': duplicates, 'groups': groups,
+           'validation_groups': validation_groups, 'seed': seed, 'validation_basis_points': validation_basis_points}
+ if three_way:
+  result['test_groups'] = test_groups
+ return result
 
 def write_immutable(path:Path,lines):
  digest=hashlib.sha256();size=0
@@ -63,14 +91,21 @@ def write_immutable(path:Path,lines):
   output.flush();os.fsync(output.fileno())
  return {'path':path.name,'size_bytes':size,'sha256':digest.hexdigest()}
 
-def materialize(rows:list[Row],directory:Path,seed:str,validation_basis_points:int,source_sha256:str,near_plan=None):
+def materialize(rows:list[Row],directory:Path,seed:str,validation_basis_points:int,source_sha256:str,near_plan=None,*,test_basis_points=None):
  if not re.fullmatch('[a-f0-9]{64}',source_sha256):raise DataError('DATASET_SOURCE_DIGEST_INVALID')
- result=split(rows,seed,validation_basis_points,near_plan)
+ result=split(rows,seed,validation_basis_points,near_plan,test_basis_points=test_basis_points)
  if directory.is_symlink() or not directory.is_dir() or list(directory.iterdir()):raise DataError('DATASET_OUTPUT_CONFLICT')
  files=[]
- for name in ['samples','train','validation']:files.append(write_immutable(directory/(name+'.jsonl'),(row.value() for row in result[name])))
+ row_assets = ['samples', 'train', 'validation']
+ if test_basis_points is not None:
+  row_assets.append('test')
+ for name in row_assets:
+  files.append(write_immutable(directory/(name+'.jsonl'), (row.value() for row in result[name])))
  files.append(write_immutable(directory/'assignments.jsonl',result['assignments']));files.append(write_immutable(directory/'duplicates.jsonl',result['duplicates']))
  manifest={'schema_version':1,'row_schema':SCHEMA,'processor_version':VERSION,'split_algorithm':SPLIT_ALGORITHM,'source_sha256':source_sha256,'seed':seed,'validation_basis_points':validation_basis_points,'total_rows':len(rows),'unique_rows':len(result['samples']),'duplicate_rows':len(result['duplicates']),'source_groups':len(result['groups']),'validation_groups':result['validation_groups'],'train_rows':len(result['train']),'validation_rows':len(result['validation']),'files':files}
+ if test_basis_points is not None:
+  manifest.update(schema_version=2, split_algorithm=THREE_WAY_SPLIT_ALGORITHM,
+                  test_basis_points=test_basis_points, test_groups=result['test_groups'], test_rows=len(result['test']))
  manifest_file=write_immutable(directory/'manifest.json',[manifest])
  descriptor=os.open(directory,os.O_RDONLY)
  try:os.fsync(descriptor)
