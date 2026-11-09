@@ -74,3 +74,19 @@ rate cutover and budget consistency. The candidate test schema includes the
 unmeasured-request column. Deploying the intake requires the production
 ledger and a call from the gateway owner. See the
 [transaction handoff](../../../../../docs/research/usage-ledger.md#gateway-receipt-intake).
+
+`PreviewWorkspaceBudgetAdmission` reuses the authorized report and accepts
+an explicit `BudgetAdmissionPolicy` from the policy owner. Set its mode to
+`alert_only` to preview alerts at the warning and limit. Set it to
+`deny_at_known_limit` to preview a denial only at the known limit, with an
+alert at the lower warning. Missing prices or measurements below the limit
+return an indeterminate action. A complete zero-priced report is clear.
+The result contains the same report and window used for its decision.
+
+The preview sends no alert and changes no admission or balance state.
+There is no production policy activation. With the protected PostgreSQL
+fixture inputs described above, run:
+
+```sh
+go -C services/control test -race -tags repository_integration ./internal/modules/metering -run 'TestPostgres(WorkspaceBudgetAdmissionPreview|GatewayReceiptProjectsVerifiedUsageAndBudget)$' -count=1
+```

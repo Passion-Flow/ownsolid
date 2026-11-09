@@ -43,3 +43,39 @@ usage below and at the limit, retry stability, currency mismatch and
 workspace isolation on the same PostgreSQL ledger fixture. Full acceptance
 needs effective authorized policy, reliable producer coverage, delivery
 deduplication and transactional enforcement in the workload path.
+
+## Authenticated admission preview
+
+Reuse the existing owner or Admin workspace report path for a preview of an
+explicit operator policy. The live session and workspace fence precede one
+rated ledger query. Return that same report and threshold status with the
+preview action. Read the full original price window in one statement and
+keep the original effective rates for late receipts. PostgreSQL documents
+[statement snapshots](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED).
+A second report query can observe a different commit even inside the
+authorization transaction.
+
+Require an explicit `alert_only` or `deny_at_known_limit` mode. Both
+preview an alert for a fully rated warning. At the inclusive limit, the
+alert-only policy previews an alert and the deny policy previews denial.
+Nonnegative prices make the known subtotal a lower bound. Once that bound
+reaches the limit, unmeasured or unpriced usage cannot reverse the result.
+Below the limit, either kind of incomplete data yields an indeterminate
+preview. Fully measured usage priced at zero is a clear result. Reject
+missing or invalid modes instead of defaulting to enforcement. An alert
+preview carries no notification identity and sends nothing.
+
+Prove these transitions with the existing authorized PostgreSQL fixture.
+Include exact warning and limit boundaries, old rate selection for late
+usage, a replay that would otherwise change the decision, and scope and
+permission failures. Run the verified gateway receipt regression as a
+separate source check. It proves that receipt replay leaves the charge
+unchanged and that null usage remains unmeasured.
+
+A budget preview is an observation of recorded usage. A clear preview
+grants no capacity or spend reservation. A production admission owner
+must use the effective workspace policy and reliable current and pending
+usage in the same atomic transaction as admission. The notification
+owner needs durable alert identity and delivery state. The current
+installation defines neither policy activation nor those write paths.
+No dependency, model, data set or runtime endpoint is introduced.
