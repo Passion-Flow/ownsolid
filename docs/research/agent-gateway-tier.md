@@ -131,3 +131,42 @@ connection to be cut, then flushes its liveness table and closes the pool.
   several gateways the fleet-wide resync rate is the sum; set it per gateway accordingly.
 - Rebalancing after a gateway returns, maximum connection age and GOAWAY on age are ARC-107.
 - Load at fleet scale across gateways belongs to ARC-105.
+
+## ARC-111 separate gateway role
+
+The standalone gateway currently opens Control's DSN and pool configuration.
+Startup and installation-holder changes both call the Control runtime privilege
+predicate. That predicate requires business read and write grants throughout the
+schema. The bootstrap query separately inspects installation, tenant, workspace
+and administrator state. The stream calls reach node and certificate checks,
+heartbeat and liveness, wake reads, claims and acknowledgement. Enabled
+Training, Model Preparation, Component, Inference and managed-cell profiles
+expand the database surface behind those calls.
+
+Use a distinct, non-inheriting PostgreSQL login, a typed DSN file and a separate
+pool budget for the standalone process. Keep the schema, bootstrap and
+installation-holder fences and apply the gateway-specific privilege predicate
+at startup and on a Control restart. Measure grants through the normal enabled
+profiles and background workers. Keep the embedded listener on Control's
+existing serving role. A second password with the same grant profile leaves the
+same database authority. Granting access table by table and checking effective
+privileges avoids that dependency.
+
+PostgreSQL describes [login and connection limits](https://www.postgresql.org/docs/18/sql-createrole.html),
+[grants](https://www.postgresql.org/docs/18/sql-grant.html) and
+[effective privilege checks](https://www.postgresql.org/docs/18/functions-info.html).
+The connection limit is approximate under concurrent admission, so the gateway
+also needs a bounded application pool. The existing
+[PostgreSQL license](https://www.postgresql.org/about/licence/) allows commercial
+and offline use and redistribution with its notice. There are no new
+dependencies, models or datasets.
+
+A disconnected PostgreSQL 18.6 fixture applied the exact schema-58 migration
+inputs. The existing privilege predicate accepted the serving role and refused
+a login with scoped read grants. The narrow login could read managed nodes,
+while a user-table delete and direct audit-chain-head access were denied.
+At its one-connection limit, PostgreSQL refused a second gateway session and
+still accepted a serving-role connection. These tests used Unix sockets and
+synthetic roles. Acceptance still requires installer provisioning and the
+normal TLS gateway with all enabled profiles, missing and excessive grant
+refusals, and privilege revalidation after a Control restart.
