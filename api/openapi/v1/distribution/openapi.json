@@ -562,7 +562,8 @@
             "LICENSE_STORED_STATE_INVALID",
             "LICENSE_CONFIGURATION_REQUIRED"
           ]
-        }
+        },
+        "description": "Publish a ready deployment under a model alias in the selected workspace. Optional description is plain text. The server normalizes CRLF and trims outer whitespace before applying the 500 Unicode character limit. Nonblank descriptions require the installed description schema. After activation, alias responses include description and its independent description_revision together."
       },
       "parameters": [
         {
@@ -4494,6 +4495,247 @@
           }
         }
       ]
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/description": {
+      "post": {
+        "operationId": "adminEditAliasDescription",
+        "summary": "Edit a model alias description",
+        "description": "Edit the selected alias's catalogue text at its current description revision. An exact retry with the same idempotency key returns the current text and original applied revision. The edit leaves the alias routing revision and target unchanged. This operation requires the installed alias description schema. The server normalizes CRLF and trims outer whitespace before applying the 500 Unicode character limit. Internal line feeds and tabs are allowed. Send an empty string to clear the description.",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AliasDescriptionEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current description and the revision applied by this intent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AliasDescriptionResultResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request, reason or required idempotency key is invalid.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "An authenticated Admin session is required.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access was denied or browser request validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The cell, workspace or alias could not be found in the caller's scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The description revision changed or the idempotency key belongs to a different edit.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds the allowed size.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Use the supported JSON request media type.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The installed schema does not support alias descriptions, or the service or storage is unavailable.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable safe error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "ORIGIN_REJECTED",
+            "CSRF_INVALID"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND",
+            "MODEL_ALIAS_NOT_FOUND"
+          ],
+          "409": [
+            "VERSION_CONFLICT",
+            "IDEMPOTENCY_CONFLICT",
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "SERVICE_NOT_READY",
+            "STORAGE_UNAVAILABLE"
+          ]
+        }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
     }
   },
   "components": {
@@ -4806,6 +5048,16 @@
                 "type": "null"
               }
             ]
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "description_revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -4823,7 +5075,15 @@
           "created_at",
           "available",
           "unavailable_code"
-        ]
+        ],
+        "dependentRequired": {
+          "description": [
+            "description_revision"
+          ],
+          "description_revision": [
+            "description"
+          ]
+        }
       },
       "AliasCutover": {
         "type": "object",
@@ -5144,6 +5404,9 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 500
+          },
+          "description": {
+            "type": "string"
           }
         },
         "required": [
@@ -7164,6 +7427,74 @@
         "required": [
           "overlap_seconds",
           "reason"
+        ]
+      },
+      "AliasDescriptionEdit": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "expected_description_revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740990
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "description",
+          "expected_description_revision",
+          "reason"
+        ]
+      },
+      "AliasDescriptionResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "description_revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "applied_description_revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "replayed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "description",
+          "description_revision",
+          "applied_description_revision",
+          "replayed"
+        ]
+      },
+      "AliasDescriptionResultResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AliasDescriptionResult"
+          }
+        },
+        "required": [
+          "data"
         ]
       }
     },
