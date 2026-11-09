@@ -51,6 +51,7 @@ const (
 	foregroundMessages
 	applicationBudget
 	promptCapacityRelease
+	lostOutcomeReply
 )
 
 // Actual Go/Rust/PostgreSQL transport and persistence; backend replies are explicitly synthetic.
@@ -157,6 +158,11 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 	control.Config.Handler = handler
 	if machine {
 		control.Config.Handler = handler.MachineHandler()
+	}
+	var lostReply *outcomeReplyLoss
+	if mode == lostOutcomeReply {
+		lostReply = newOutcomeReplyLoss(access.gateway.Gateway.ID)
+		control.Config.Handler = lostReply.wrap(t, control.Config.Handler)
 	}
 	var licenseOffset atomic.Int64
 	if licensePath {
@@ -270,6 +276,9 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 	configuration := map[string]any{"gateway_id": access.gateway.Gateway.ID, "node_id": c.node.NodeID, "listen_address": listen, "backend_address": strings.TrimPrefix(backend.URL, "http://"), "control_origin": control.URL, "control_ca_file": filepath.Join(root, "ca.pem"), "gateway_credential_file": filepath.Join(root, "credential"), "tls_certificate_file": filepath.Join(root, "certificate.pem"), "tls_private_key_file": filepath.Join(root, "key.pem"), "state_directory": state, "limits": limits}
 	if mode == promptCapacityRelease {
 		limits["outcome_retry_seconds"] = 30
+	}
+	if lostReply != nil {
+		limits["control_seconds"] = 4
 	}
 	if quota != nil {
 		configuration["quota_policy"] = quota.policy
@@ -420,6 +429,10 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 			body["stream_options"] = map[string]any{"include_usage": true}
 		}
 		return body
+	}
+	if lostReply != nil {
+		lostReply.verify(t, c, access, state, request("/v1/chat/completions", *access.key.Secret, chat(false)), &generations)
+		return
 	}
 	response := request("/v1/models", *access.key.Secret, nil)
 	modelBytes, _ := io.ReadAll(response.Body)
