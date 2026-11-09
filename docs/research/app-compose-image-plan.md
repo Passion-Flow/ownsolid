@@ -89,6 +89,14 @@ on replay, while existing inline labels took precedence.
 [Compose config](https://docs.docker.com/reference/cli/docker/compose/config/),
 [Compose service inputs](https://docs.docker.com/reference/compose-file/services/#env_file).
 
+The native Linux Compose 2.40.3 fixture emitted an inline value and
+discarded the file reference even with the flag. Compose 5.0.0 also
+sets a discard-env-file loader option for config output. Use a fixture
+with an explicit normalized file entry for the refusal case and normal
+rendering for the accepted case. This keeps the test independent of how
+the CLI serializes unresolved inputs.
+[Compose 5.0.0 config implementation](https://github.com/docker/compose/blob/v5.0.0/cmd/compose/config.go).
+
 The first Compose path accepts environment values as explicit strings
 in the normalized service environment object, including empty strings.
 Omit keys whose values should stay unset. Use inline labels and omit
