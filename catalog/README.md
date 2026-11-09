@@ -105,8 +105,10 @@ budgets and an operation timeout.
 
 The import checks expanded layers and DiffIDs, then reads back the image ID,
 manifest descriptor and platform. A retry can reuse the exact registered
-image. Keep staging immutable throughout. The caller authorizes and audits
-the operation. The installer still owns release state, workload admission
+image. Use the returned `Archive.Images[0].ManifestDigest` as the digest-only
+image reference in the deployment plan. `Archive.Digest` identifies the signed
+archive bytes. Keep staging immutable throughout. The caller authorizes and
+audits the operation. The installer owns release state, workload admission
 and startup.
 
 ## Verification
