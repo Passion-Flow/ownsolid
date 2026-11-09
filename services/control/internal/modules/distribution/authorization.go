@@ -74,6 +74,9 @@ func (s *Service) keyAuthority(ctx context.Context, q transaction.Executor, scop
 	if out.expired {
 		return keyAuthority{}, fail("API_KEY_EXPIRED")
 	}
+	if out.operation && out.used {
+		return keyAuthority{}, fail("API_KEY_INVALID")
+	}
 	return out, nil
 }
 
@@ -198,11 +201,6 @@ func (s *Service) Admit(ctx context.Context, gateway, credential string, input w
 	}
 	var out wire.Admission
 	e := s.authorized(ctx, gateway, credential, input.APIKey, true, func(ctx context.Context, tx transaction.Executor, scope machineScope, key keyAuthority, alias Alias) error {
-		// The original key lock serializes concurrent attempts. Consume only in
-		// the same commit as the request, capacity hold and audit below.
-		if key.operation && key.used {
-			return fail("API_KEY_INVALID")
-		}
 		if input.Model != alias.Name {
 			return fail("MODEL_ALIAS_NOT_FOUND")
 		}
