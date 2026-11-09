@@ -25,4 +25,32 @@ An idempotent replay of a committed reservation does not reread the release
 source. Preparations that fail after reservation use the existing abandon,
 discard and reconciliation paths. The
 [site release pin boundary](../../../../../docs/research/site-registry-pin-admission.md)
-documents the requirements for admitting the current site's read-only source.
+records the separate source and destination and the current-profile proof boundary.
+
+A control composition can opt in through `NewWithSiteReleaseSource` with
+the usual writable tenant registry configuration and a separate protected
+JSON source file. The source file contains these fields:
+
+```json
+{
+  "endpoint": "https://10.42.1.30:5443",
+  "allowed_cidrs": ["10.42.1.30/32"],
+  "ca_file": "/etc/ownsolid/registry/site-ca.pem",
+  "credential_file": "/etc/ownsolid/registry/site-reader.json"
+}
+```
+
+Use an HTTPS endpoint and a private allowlist. The credential file contains
+the site's read-only Basic username and password and is readable only by
+the service owner. Use a different credential pair and origin for tenant
+registry writes. Keep the verified prepared release mounted for signed
+asset selection and offline archive export. The source reader fetches only
+signed content by digest. An unavailable or invalid source stops preparation.
+A complete verified cache can be reconciled after a failed SQL bind while
+the site is unavailable. An incomplete cache uses the existing abandon and
+discard flow before a new import.
+
+The shared control startup and the current release proof still need
+integration. To exercise the module boundary on Linux, use
+[the loopback runner](testdata/run-site-admission.sh) with the verified
+Distribution binary, its SHA-256 and a local PostgreSQL image ID.
