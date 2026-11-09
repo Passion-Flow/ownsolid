@@ -1,8 +1,13 @@
 import type { ReactNode } from 'react';
+import { cn } from '../cn.ts';
 
 /** Name and value pairs in a drawer or a page. */
-export function DetailList({ children }: { children: ReactNode }) {
-  return <dl className="m-0 grid grid-cols-[130px_1fr] gap-y-2.5 text-[13.5px]">{children}</dl>;
+export function DetailList({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <dl className={cn('m-0 grid grid-cols-[130px_1fr] gap-y-2.5 text-[13.5px]', className)}>
+      {children}
+    </dl>
+  );
 }
 
 /** One pair in a {@link DetailList}. */

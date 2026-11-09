@@ -131,6 +131,71 @@ commands use tools already installed on the preparation machine. ownsolid does n
 bundle either tool for this feature and adds no runtime dependency or data set.
 The approved Qwen fixture retains its Apache-2.0 licence.
 
+## Model detail lineage (S-202, MOD-103, DAT-106)
+
+[MLflow Model Registry](https://mlflow.org/docs/latest/model-registry) links a model version
+to the run or artifact that produced it. [SageMaker model lineage](https://docs.aws.amazon.com/sagemaker/latest/dg/model-dashboard-lineage.html)
+traces the model through its training job to its input data. These are design references.
+No dependency, model, dataset, or redistributed asset is added. The browser fixtures use
+the pinned model metadata with synthetic derivative and dataset identifiers and digests.
+See the [licence inventory](training-dataset-lineage.md#failure-coverage)
+for the retained-source test stack.
+
+Use the [Admin detail response](training-dataset-lineage.md#dev-contract-handoff) through the
+existing model query. The generated response type is the authority for both inputs. Keep the
+existing origin link to the base model or the import record on the Versions and lineage tab.
+Give the training dataset and preparation holdout separate groups, with each original dataset
+ID, version ID and manifest SHA-256. Resolving current dataset details would hide retired inputs
+or substitute newer versions. A graph or a second lineage endpoint would require relationships
+and authority outside this slice. Keep the existing Deploy action and share the tab through its
+URL.
+
+An older or imported model can omit lineage while its origin is available. Explain that state
+without filling in values. The detail page retains its loading, missing, denied and retry
+behavior. The server refuses an inconsistent retained graph with
+`MODEL_DERIVED_CATALOG_INVALID`. The browser displays the refusal and keeps permission
+enforcement on the Admin endpoint.
+
+Browser coverage verifies both languages, exact values in the two groups, links to the base model
+and import, the missing-field state, and the existing denial and retry path. The installed
+acceptance reads a derived model from the owning test environment using the normal Admin route.
+Compare both triples with the retained fixture values and check the rendered page over the same
+installation. The opt-in browser case takes `OWNSOLID_LIVE_MODEL_LINEAGE_FILE`, a local JSON
+fixture with `model_id` and the two expected `dataset_lineage` references from the publication
+fixture, plus the existing live Console settings.
+
+### Verified Admin read
+
+Chromium and `TestActualAdminModelDetailDatasetLineageHTTPS` shared one model owner's
+loopback HTTPS dispatcher and PostgreSQL publication fixture. The browser matched both
+dataset triples after the training version was retired, followed the base model link, and
+saw the localized absence state for that base model. An unsigned read returned 401.
+After a browser transport interruption, retry read the same model through the actual
+Admin route. The browser made only same-origin requests. The owner test also verified
+that Portal and list responses omit lineage, that Portal cannot use the Admin detail route,
+and that an inconsistent retained graph returns `MODEL_DERIVED_CATALOG_INVALID`.
+This acceptance uses synthetic publication metadata under the normal database constraints.
+
+### Remaining roadmap evidence
+
+The [retained CPU acceptance](training-dataset-lineage.md#retained-cpu-acceptance)
+also verifies the actual derived files, their persisted copy, and the authorized
+transfer ranges. It used synthetic publication approval. The installed product
+flows below still need evidence from publication through the corresponding views.
+
+- **MOD-103** requires an end-to-end model version flow. Show multiple retained versions
+  of the same model and trace each version's weights, adapters, tokenizer and template
+  to its immutable artifacts, producing training run and version-bound evaluation report.
+  Verify those links and permissions in the installed UI with the network disconnected.
+- **DAT-106** requires an end-to-end dataset-to-run-to-model flow. Publish successive
+  dataset versions, complete training, preparation and product approval, and compare
+  the frozen version and manifest on the dataset, training run, preparation and published
+  model views. After
+  retiring the original source, retry the existing run with that exact input and verify
+  a new run cannot select the retired version. Exercise the installed flow offline,
+  including cross-workspace denial. The model detail read proves the final projection
+  from retained metadata.
+
 ## Failure modes and how the tests cover them
 
 | Failure | Coverage |
