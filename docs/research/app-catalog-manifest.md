@@ -36,6 +36,34 @@ decoding rejects unknown fields and incorrect scalar types. Keeping dependency
 bindings distinct lets a later resolver deliver secrets only as mounted file
 references (CAT-102).
 
+## Listing local releases
+
+Operator Lifecycle Manager models package and bundle metadata separately
+from installing a bundle. The Update Framework authenticates target
+metadata before retrieving the target bytes. A local ownsolid catalog
+can reuse its signed bundle index and locale verification to list
+versions without scanning every chart or image archive.
+[OLM file-based catalogs](https://olm.operatorframework.io/docs/reference/file-based-catalogs/),
+[TUF target metadata](https://theupdateframework.github.io/specification/v1.0.37/#45-targetsjson-and-delegated-target-roles).
+
+List up to 128 stable version directories for one authorized app and
+trusted publisher. Verify each index, manifest and both locales, check
+the signed app and directory version, and return newest versions first
+by numeric version ordering. Each entry supplies the exact pin that
+`VerifyInitialRelease` verifies at install time. Unsigned listing data
+could misstate configuration or license text. Fully verifying each
+payload during browsing would make the read depend on archive sizes.
+Return metadata only and leave payload and authorization checks with
+the installation and catalog service. A failed entry returns no list.
+The app directory supplies the local set of versions.
+
+Test sorted versions, both signed locale dictionaries and the pin
+handoff. With a missing archive, the release remains readable as
+metadata and installation fails. Refuse a wrong app or publisher,
+modified locale data, malformed or excess entries and cancellation.
+Reuse the existing BSD-3-Clause Go standard library and catalog
+verifier. This read adds no dependencies, models or datasets.
+
 Tests must exercise loading the same app release from local files, with each
 engine declaration, Chinese and English labels, accepted values and the
 compatibility boundaries. Reject unsupported manifest versions, unknown and
