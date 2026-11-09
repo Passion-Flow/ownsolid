@@ -211,3 +211,12 @@ embedded migration and the pinned PostgreSQL image. Require the three
 recorded digests, 118 tables, preserved checkpoints, scope refusal,
 concurrent appends and successful production migrator replay before
 promoting the integrated candidate.
+
+The admitted amd64 run verified the exact SQL hashes and the six SQL
+catalogue, checkpoint and 118-table paths. The source transport archive
+included macOS AppleDouble files. The Go embed glob read the 58 extra
+up-migration sidecars and the production migrator refused the sequence.
+Stream the tracked Git archive into the outer payload, preserving its
+file list, and check for exactly 58 up migrations and zero sidecars
+before compiling. The corrected archive passed those preflight checks
+locally. Repeat the Go migrator and Audit module after Linux admission.
