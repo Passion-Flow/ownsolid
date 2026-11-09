@@ -313,9 +313,11 @@ func (s *Service) completeSelected(ctx context.Context, id, credential, taskID s
 				return e
 			}
 		}
+		componentResultWithin := false
 		if input.Component != nil {
 			if owner, ok := s.Components.(ComponentResultObserverWithin); ok {
 				e = owner.RecordResultWithin(ctx, q, n, task, input)
+				componentResultWithin = true
 			} else if legacy != nil {
 				if owner, ok := s.Components.(ComponentResultObserver); ok {
 					e = owner.RecordResult(ctx, legacy, n, task, input)
@@ -361,12 +363,19 @@ func (s *Service) completeSelected(ctx context.Context, id, credential, taskID s
 				return e
 			}
 		}
-		// Owning callbacks may perform IO. Refuse an expired lease and roll back
-		// their SQL effects before committing any terminal projection.
-		if _, e = s.leasedTaskWithin(ctx, q, n, task.ID, input.LeaseToken); e != nil {
+		pgComplete := `UPDATE node_tasks SET state=$1,error_code=NULLIF($2,''),completed_lease_hash=lease_token_hash,
+			result_hash=$3,lease_token_hash=NULL,lease_expires_at=NULL,completed_at=clock_timestamp(),updated_at=clock_timestamp()
+			WHERE tenant_id=$4 AND workspace_id=$5 AND node_id=$6 AND id=$7 AND state='running'`
+		args := []any{out, input.ErrorCode, resultHash, n.TenantID, n.WorkspaceID, n.ID, task.ID}
+		// The component result already authenticated the digest and locked this
+		// task. Check the same operation and lease at settlement, after owner IO.
+		if componentResultWithin && q.Dialect() == transaction.PostgreSQL {
+			pgComplete += " AND operation=$8 AND lease_token_hash=$9 AND deadline_at>clock_timestamp()"
+			args = append(args, task.Operation, hash)
+		} else if _, e = s.leasedTaskWithin(ctx, q, n, task.ID, input.LeaseToken); e != nil {
 			return e
 		}
-		changed, e := q.Exec(ctx, nodeSQL(q, `UPDATE node_tasks SET state=$1,error_code=NULLIF($2,''),completed_lease_hash=lease_token_hash,result_hash=$3,lease_token_hash=NULL,lease_expires_at=NULL,completed_at=clock_timestamp(),updated_at=clock_timestamp() WHERE tenant_id=$4 AND workspace_id=$5 AND node_id=$6 AND id=$7 AND state='running'`, `UPDATE node_tasks SET state=?,error_code=NULLIF(?,''),completed_lease_hash=lease_token_hash,result_hash=?,lease_token_hash=NULL,lease_expires_at=NULL,completed_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND state='running'`, `UPDATE node_tasks SET state=?,error_code=NULLIF(?,''),completed_lease_hash=lease_token_hash,result_hash=?,lease_token_hash=NULL,lease_expires_at=NULL,completed_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND state='running'`, out, input.ErrorCode, resultHash, n.TenantID, n.WorkspaceID, n.ID, task.ID))
+		changed, e := q.Exec(ctx, nodeSQL(q, pgComplete, `UPDATE node_tasks SET state=?,error_code=NULLIF(?,''),completed_lease_hash=lease_token_hash,result_hash=?,lease_token_hash=NULL,lease_expires_at=NULL,completed_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND state='running'`, `UPDATE node_tasks SET state=?,error_code=NULLIF(?,''),completed_lease_hash=lease_token_hash,result_hash=?,lease_token_hash=NULL,lease_expires_at=NULL,completed_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND node_id=? AND id=? AND state='running'`, args...))
 		if e != nil {
 			return e
 		}

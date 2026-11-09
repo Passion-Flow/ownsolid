@@ -332,3 +332,48 @@ result exceeded its declaration of 16. The result still needs a current
 lease and deadline check after the owning callback. Any statement reduction
 must preserve rollback when that check fails. The audit append remains
 under the separate Audit authority.
+
+### PostgreSQL component result settlement
+
+A result already locks the exact task, checks the reported operation, and
+compares the supplied lease digest in constant time before invoking its
+owner. In the PostgreSQL component transaction, reuse that verified
+digest and operation as predicates of the terminal write. PostgreSQL
+[reports the number of updated rows](https://www.postgresql.org/docs/18/sql-update.html#SQL-UPDATE-OUTPUTS),
+and [clock_timestamp](https://www.postgresql.org/docs/18/functions-datetime.html#FUNCTIONS-DATETIME-CURRENT)
+tests the deadline at settlement. Zero updated rows returns
+AGENT_LEASE_STALE and rolls back the owner's SQL writes. A second task
+lock and a second digest read add two statements without acquiring a new
+fence. The update still sees any changes the callback made in the transaction. The same-operation predicate
+also prevents settlement if an owning callback changes the operation.
+
+Keep the original check for other engines, legacy callbacks and result
+kinds, including derived inference's changing actor authority. Preserve
+exact replay and ADR 0032's distinction between the agent liveness lease
+and the hard deadline. The agent request and response schemas, route
+and refusal code are unchanged across versions. The implementation
+uses the existing dependencies and synthetic test data above.
+
+The disconnected mTLS prototype measured 41 statements instead of 43
+on both 50 and 3,000 seeded peers. The initial result still exceeds
+its declared 16-statement limit. Replay stayed at 7 on both fleets.
+The 50-peer trace records 13 statements through the terminal node write
+and 28 in the following audit append, including the scope defaults and
+18 audit frame calls. A node-only reduction cannot close this budget.
+The audit owner can use that trace while preserving the retained hashes
+and measuring the same exchange against the existing ceiling.
+
+Inject deadline expiry and digest replacement after the real component
+owner writes. Each refusal must preserve the task, component and audit
+head. Retry with the original lease and result, then repeat it to verify
+exact replay. The tracked regression passed in a Linux arm64 container
+with networking disabled, on PostgreSQL 18.6 and pgvector 0.8.7. It also
+confirmed a valid result can settle after the liveness lease expires.
+The same run passed the component heartbeat budget (11, 9 and 2 statements
+on both fleets) and the enrollment replay and credential boundaries.
+
+Run the transaction regression against a protected PostgreSQL test DSN with:
+
+```sh
+go -C services/control test -p 1 ./internal/modules/nodes -run '^TestComponentResultFencesOwnerWritesAtSettlement$' -count=1 -v
+```
