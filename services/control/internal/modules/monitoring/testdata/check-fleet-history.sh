@@ -3,8 +3,9 @@ set -euo pipefail
 
 case ${1:-history} in
     history) fixture='^TestScopedFleetHistoryOffline$'; auxiliary=${OWNSOLID_TEST_VMALERT:-} ;;
+    history-tls) fixture='^TestFleetHistoryPrivateTLS$'; auxiliary=${OWNSOLID_TEST_VMALERT:-} ;;
     scrape-inventory) fixture='^TestNodeScrapeInventoryThroughVmagent$'; auxiliary=${OWNSOLID_TEST_VMAGENT:-} ;;
-    *) echo "Choose history or scrape-inventory." >&2; exit 2 ;;
+    *) echo "Choose history, history-tls or scrape-inventory." >&2; exit 2 ;;
 esac
 image=${OWNSOLID_TEST_POSTGRES_IMAGE:-}
 metrics=${OWNSOLID_TEST_VICTORIA_METRICS:-}

@@ -388,6 +388,17 @@ v1.155.0 binary paths. Run from the repository root with namespace access:
 
     bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh
 
+To qualify the protected configuration and native TLS with separately
+trusted raw and long origins, run the same fixture with the TLS selector.
+
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-tls
+
+Provision the applicable private CAs in Control's system trust store.
+Pass the raw CA to vmalert's `-datasource.tlsCAFile` and the long CA to
+its `-remoteWrite.tlsCAFile`. Match the certificates to the configured
+origins and restrict raw and rollup access by caller and route.
+See [the deployment evidence](../../../../../docs/research/telemetry-retention-tiers.md#verified-private-tls-handoff).
+
 The runner uses loopback only and stops all of its processes and container.
 See the [scope, test and scale evidence](../../../../../docs/research/telemetry-retention-tiers.md#scoped-history-read).
 
