@@ -81,10 +81,11 @@ candidate after migration and after a logical schema dump and reparse.
 | --- | --- |
 | Fresh | f7b8b2169bf305aedbf7c6339acb97cd62f319ae38607225a1e42e600e2eff37 |
 | Restored | 21995e131bbd56a90983ad4867a1fd10a31646075c707f12d7bb7712ebd4362d |
+| Restored at 55, upgraded through 57 | 32ebd0bf692acf93d8af50d7dd66e8b5d750a9cfd43b6fc13fc3e7b987c296e6 |
 
 The candidate raises the table count from 118 to 119. The DB owner
-needs to land the migration with both signatures and the expected
-table count. Recalculate the signatures if another migration lands.
+needs to land the migration with the exact catalogue signatures and
+expected table count. Recalculate the signatures if another migration lands.
 The isolated SQL files are retained at
 `/root/lane-gw-acceptance/gw120.3Htyrvwt/candidate.up.sql` and
 `candidate.down.sql`. The distribution acceptance below covers the HTTP flow with that DDL.
@@ -175,13 +176,13 @@ REL-113 and the audit migration settle, the shared database owner
 must append the exact DDL at the then-current tail, recompute the
 catalogue signatures and table count, and verify fresh, upgrade and
 restore. The main lineage now also admits a schema restored at 55
-and then upgraded through 56 and 57 (df1ec219). Include that history
-in the final candidate qualification alongside fresh and current-schema
-logical restore. The two prototype hashes do not cover it. The DEV owner can publish the optional publication field,
-optional alias response fields and Admin edit contract before the
-migration activates these response fields on installations. WEB can
-then verify publishing and editing in Console and the S-304 display
-in Portal.
+and then upgraded through 56 and 57 (df1ec219). The disconnected
+qualification reproduced that baseline signature, applied the candidate
+and verified the same predecessor signature after applying the down
+SQL. Recheck that history alongside fresh and current-schema logical
+restore after the shared tail moves. The public contract is available.
+WEB can verify publishing and editing in Console and the S-304 display
+in Portal once installations activate the migration.
 
 ## Public OpenAPI and client boundary
 
