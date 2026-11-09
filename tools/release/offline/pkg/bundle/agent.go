@@ -16,6 +16,15 @@ const (
 	AgentUnitAsset = factory.AgentUnitAsset
 )
 
+// InspectAgent verifies every signed Agent payload against independent release trust.
+func InspectAgent(ctx context.Context, p Verification, source string) (Result, error) {
+	c, err := p.config()
+	if err != nil {
+		return Result{}, err
+	}
+	return factory.Inspect(ctx, factory.WithAgentProfile(c), source)
+}
+
 // UnpackAgent verifies and prepares the dedicated Agent inventory using independent release trust.
 func UnpackAgent(ctx context.Context, p Verification, source, destination string) (Result, error) {
 	c, err := p.config()

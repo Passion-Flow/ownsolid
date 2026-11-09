@@ -137,4 +137,4 @@ replaced by Playwright flows; the rest wait for their pages
 | Capability | Why |
 | --- | --- |
 | Sizes other than `single-node` | Refused with `CONFIG_TOPOLOGY_SIZE_NOT_SUPPORTED` and the declared reason until their roadmap items land |
-| Complete production signed bundles | DEL-101 and DEL-110 require the exact release assets and their notice inventory. The signed Linux amd64 test bundle has been installed and upgraded offline |
+| Complete production signed bundles | DEL-101 and DEL-110 require the exact release assets and their notice inventory. The signed Linux amd64 test bundle has been installed and upgraded offline. The separate Agent fixture listed 23 verified notice paths and refused untrusted or changed media. See the [Agent notice inventory](../research/offline-bundle.md#read-only-agent-notice-inventory) |

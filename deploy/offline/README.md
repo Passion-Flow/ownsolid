@@ -814,3 +814,14 @@ enrollment committed. If it did commit and no valid identity was persisted,
 reconcile the node in Control before attempting another enrollment. This command
 is for initial delivery and replay. A conflict with existing installed files
 requires investigation before any replacement.
+
+Inspect the signed notice paths, checksums and payload references before
+installation:
+
+```sh
+ownsolid-install agent-notices --bundle /mnt/release/ownsolid-agent.tar.gz \
+  --verification /root/agent-input/release-verification.json
+```
+
+The command verifies the entire Agent archive against the site's independent
+trust and prints the signed inventory without changing the host.
