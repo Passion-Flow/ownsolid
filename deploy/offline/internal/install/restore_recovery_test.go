@@ -224,6 +224,15 @@ if [ -f "$dir/checkpoint" ]; then
             kill -KILL "$PPID"
             exit 125
             ;;
+        before-dump-file-change:*'postgres pg_dump '*)
+            file=$(cat "$dir/change-file")
+            touch -r "$file" "$dir/mtime"
+            sleep 0.02
+            printf '%s' 'changed' > "$file"
+            printf '%s' 'fixture' > "$file"
+            touch -r "$dir/mtime" "$file"
+            unlink "$dir/checkpoint"
+            ;;
         after-rollback:*'check-schema --config'*)
             printf '%s\n' 'injected schema check failure' >&2
             exit 1

@@ -114,6 +114,42 @@ restore, rejects an unrelated identity and changed or truncated ciphertext,
 interrupts backup and restore, and checks the unencrypted commands.
 See the [operator procedure](../../docs/operations/backup-and-restore.md#encrypt-an-operator-run-backup).
 
+## Take a coordinated local backup
+
+Use the shipped single-node Linux Compose configuration and a root-owned
+private output directory outside `install_root`. This maintenance command
+briefly takes the control process offline. It closes PostgreSQL to ordinary
+database connections and checks that the copied published model files and
+installation keys belong to the same interval as the verified SQL dump.
+
+```sh
+ownsolid-install backup-coordinated --config /private/site.yaml --output /srv/ownsolid-backups
+```
+
+Use the ordinary restore commands for the resulting logical backup.
+This profile covers generated Compose and control settings, the local
+PostgreSQL database, published local models and installation keys. It
+refuses custom control settings, PITR and rows that refer to uncovered
+object, dataset, training or preparation state. Keep privileged database
+clients and direct filesystem maintenance out of the window. The backup
+still requires enough space for the complete verified model copy. Keep the
+output private because it contains keys.
+
+The command restores the original database connection limit and control
+container state on success, failure or cancellation. If the installer is
+killed or reports `INSTALL_BACKUP_RECOVERY_REQUIRED`, run the following
+with the original site settings. A partial directory is not a backup.
+
+```sh
+ownsolid-install recover-backup --config /private/site.yaml
+ownsolid-install status --config /private/site.yaml
+```
+
+The isolated fixture uses `OWNSOLID_E2E_RUN='^TestCoordinatedBackupIsolatedDocker$'`.
+Supply a directory holding the approved USTAR `model.tar` via
+`OWNSOLID_E2E_MODEL_ARCHIVE` and use the installer test payload and the
+isolated runner described above.
+
 ## Restore a signed release onto an empty site
 
 Use a trusted installer that supports `restore-bundle`, the exact signed

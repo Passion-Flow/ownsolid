@@ -103,13 +103,17 @@ func newOperation(c Config, runner StreamRunner, out io.Writer) *operation {
 }
 
 // lockOperation excludes other mutating installer commands and refuses work
-// while a restore requires reconciliation.
+// while a backup or restore requires reconciliation.
 func lockOperation(c Config) (func(), error) {
 	unlock, err := lockRestoreOperation(c)
 	if err != nil {
 		return nil, err
 	}
 	if err := restorePendingError(c); err != nil {
+		unlock()
+		return nil, err
+	}
+	if err := coordinatedBackupPending(c); err != nil {
 		unlock()
 		return nil, err
 	}

@@ -24,6 +24,8 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install upgrade-patch --baseline <previous.tar.gz> --bundle <patch.tar.gz> --verification <policy.json> --config <site.yaml> --backup-output <directory>\n" +
 	"       ownsolid-install rollback-bundle --bundle <previous.tar.gz> --verification <policy.json> --config <site.yaml>\n" +
 	"       ownsolid-install support-bundle --config <install.yaml> --output <new archive.tar.gz>\n" +
+	"       ownsolid-install backup-coordinated --config <install.yaml> --output <directory>\n" +
+	"       ownsolid-install recover-backup --config <install.yaml>\n" +
 	"       ownsolid-install scheduled-backup --config <install.yaml>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <new archive.tar.age> --recipient-file <public key file>\n" +
@@ -82,7 +84,7 @@ func run(args []string, out io.Writer) error {
 		return errors.New(usage)
 	}
 	shed := command == "agents shed"
-	if (command == "backup" || command == "support-bundle") != (*output != "") || (command == "restore") != (*from != "") || shed != (*level != "") || shed != (*reason != "") || (*rollback && command != "recover-restore") {
+	if (command == "backup" || command == "backup-coordinated" || command == "support-bundle") != (*output != "") || (command == "restore") != (*from != "") || shed != (*level != "") || shed != (*reason != "") || (*rollback && command != "recover-restore") {
 		return errors.New(usage)
 	}
 	// Even an explicitly empty encryption option must never select plaintext.
@@ -131,6 +133,10 @@ func run(args []string, out io.Writer) error {
 			return install.BackupEncrypted(ctx, c, install.ExecRunner{}, *output, *recipient, out)
 		}
 		return install.Backup(ctx, c, install.ExecRunner{}, *output, out)
+	case "backup-coordinated":
+		return install.BackupCoordinated(ctx, c, install.ExecRunner{}, *output, out)
+	case "recover-backup":
+		return install.RecoverCoordinatedBackup(ctx, c, install.ExecRunner{}, out)
 	case "scheduled-backup":
 		return install.ScheduledBackup(ctx, c, install.ExecRunner{}, out)
 	case "restore":
