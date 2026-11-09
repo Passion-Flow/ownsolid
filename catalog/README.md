@@ -59,13 +59,15 @@ also be used as a form field.
 
 The installer resolves the resources through their owners in the authenticated
 tenant and workspace. The secret owner issues a reference tied to the resource,
-dependency slot and installation. `Manifest.Bind` checks those records and
-returns a plan in manifest order. It requires a different secret reference for
-each slot. The owner rechecks grants and revocations before the installer mounts
-the resolved files read-only under a slot-specific directory. The installer
-controls the parent directory and selected containers. Manifest authors supply
-neither credentials nor endpoints, and ordinary configuration values cannot
-override a binding.
+dependency slot and installation. Call `apps.VerifyInstallBindings` with the
+same selected pin and platform used for `apps.VerifyInitialRelease`. It
+authenticates the release's dependency declaration and returns the pin, scope
+and owner-resolved references in manifest order. Each slot requires a different
+secret reference. The owner rechecks grants and revocations before the installer
+mounts the resolved files read-only under a slot-specific directory. The
+installer controls the parent directory and selected containers. The signed
+manifest contains only the dependency declarations, and ordinary configuration
+values cannot override a binding.
 
 ## Signed bundle inventory
 
