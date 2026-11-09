@@ -83,3 +83,21 @@ network access.
 - Verify the previous unencrypted backup and restore flow without key flags.
   Encrypted backup is explicit. Scheduled backups, upgrade checkpoints and
   physical WAL archives keep their existing formats.
+
+## Release qualification
+
+The explicit single-node path passed the disconnected Linux amd64
+`TestEncryptedBackupIsolatedDocker` drill recorded in `fe49ce45`. The
+[signed cold restore in `3b47c1de`](signed-release-recovery.md#linux-amd64-acceptance)
+recovered the original account and all nine approved Qwen files from the
+age archive onto an empty site. This covers the installed CLI path with
+an external recovery identity.
+
+The repository's `make check`, `make build` and `make test` passed on the
+release input change that followed this work. The browser suite passed
+1,074 Console cases and 387 Portal cases. The Linux amd64 focused archive
+check accepted the complete stream and rejected a missing tar end and
+extra authenticated bytes. The accompanying transaction reconciliation
+check exercised both directions with controlled command replies. Its
+network namespace recorded only the deliberate IPv4, IPv6 and DNS
+probes. The every-release signed restore qualification remains REL-104.

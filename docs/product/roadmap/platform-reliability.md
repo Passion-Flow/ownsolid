@@ -30,8 +30,8 @@ recovery and support tooling.
 - [ ] REL-107 Self-monitoring of control-plane components with alerts (P1)
 - [ ] REL-108 Scheduled backups with retention, run by ownsolid (P1)
 - [ ] REL-109 Point-in-time recovery from a base backup and archived WAL, including incremental base backups (P1)
-- [ ] REL-110 Encrypted backups with the key held outside the archive (P1)
-  - The explicit single-node installer path passed the disconnected Linux amd64 drill. The repository-wide test gate is open. See the [status evidence](../status.md) and [ADR 0056](../../decisions/0056-encrypt-logical-backups-with-a-public-recipient.md).
+- [x] REL-110 Encrypted backups with the key held outside the archive (P1) - Evidence: fe49ce45 and 3b47c1de. Disconnected Linux amd64 verified explicit single-node encrypted backup, direct restore and restore into a clean site, with the age identity held separately.
+  - The [verification evidence](../../research/encrypted-backups.md#release-qualification) covers the repository gates and the encrypted archive refusal checks.
 - [ ] REL-111 Backup history, status and failure alerts in the console (P1)
   - The scheduled installer now persists a redacted, installation-bound history and can report it offline. Disconnected Linux process tests covered failure, interruption, retry and archive expiry. The authenticated API, Console and alerts remain open. See [status evidence](../status.md) and [ADR 0063](../../decisions/0063-keep-local-scheduled-backup-history.md).
 - [ ] REL-112 `apply` after a `restore` over a running installation: the administrator intent is bound to the database's OIDs, which the restored database does not have, so every later `apply` stops with `BOOTSTRAP_INTENT_MISMATCH` (found on `ownsolid-cpu`, 2026-11-07) (P1)
