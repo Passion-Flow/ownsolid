@@ -31,3 +31,9 @@ new one.
 REPEATABLE READ transaction. It uses the original occurrence time, returns
 rounded amounts as decimal integer strings and flags unpriced usage. The
 report is for internal showback. See [showback research](../../../../../docs/research/metering-showback.md).
+
+`BudgetWithin` compares one authorized workspace period against an
+operator's currency, limit in amount micros and warning in basis points.
+Use the whole budget period in one snapshot. A known subtotal that reaches
+the limit takes precedence over unrated usage. Below the limit, missing
+rates leave the assessment indeterminate. See [budget status research](../../../../../docs/research/metering-budget-status.md).
