@@ -33,7 +33,7 @@ def main():
                           "ProductAssistant: &productagenthttp.Handler{Service: assistant}")
     constructor = "return &Handler{TelemetryLogs:"
     source = replace_once(source, constructor, f"appService := {app_service}\n\t"
-                          f"assistant, assistantError := productagent.New(appService)\n\t{constructor}")
+                          f"assistant, assistantError := productagent.New(appService, nil)\n\t{constructor}")
     startup_errors = "errors.Join(licenseError, ssoError, localeError, p.err)"
     source = replace_once(source, startup_errors, startup_errors[:-1] + ", assistantError)")
     dispatch = "if applicationhttp.Owns(path) {"
