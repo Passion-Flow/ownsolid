@@ -100,9 +100,9 @@ the CLI serializes unresolved inputs.
 The first Compose path accepts environment values as explicit strings
 in the normalized service environment object, including empty strings.
 Omit keys whose values should stay unset. Use inline labels and omit
-`env_file` and `label_file` from the normalized model. Resolve approved
-non-secret inputs inside the trusted renderer and use the same
-normalized bytes for admission and launch. The catalog refuses file
+`env_file` and `label_file` from the normalized model. In the initial
+DEL profile, put literal non-secret values in the signed source and
+use the same normalized bytes for admission and launch. The catalog refuses file
 references even for optional files and refuses null environment values
 at admission, image import and launch verification, including plans
 retained from an earlier verifier.
@@ -144,3 +144,13 @@ Compose's render-only probe. The catalog refused that model at launch
 verification and import, leaving the image store empty. The inline model
 preserved the original value and an explicit empty string on replay, and
 imported only the signed image.
+
+After the closed installer boundary landed, a joint test ran on native
+Linux amd64 with only a loopback interface and no default routes. Each
+case shared the same signed source, release pin and OCI archive across
+both boundaries. Both refused env files, label files and inherited
+environment values. Replacing a previously admitted source refused
+image import and reached no launcher. The explicit empty string passed
+both gates and reached the controlled launcher with the exact admitted
+JSON. This replay used a test command runner and an unused Docker socket.
+[Closed installer profile](catalog-compose-staging.md).
