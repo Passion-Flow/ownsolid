@@ -172,7 +172,8 @@ this browser. The server checks access to the workspace on every request.
 - **Long-running tasks:** step timeline with durations plus a live log; the task keeps
   running when the user leaves the page ([research](../research/long-task-pattern.md)).
   - `StepTimeline` lists steps in order. The running step carries `aria-current="step"`, and a state
-    is never told by colour alone.
+    is never told by colour alone. A step stopped by the operator has a neutral Cancelled state.
+    Failed describes an execution error.
   - `LiveLog` is a named `role="log"` that a keyboard can reach. It follows its end only while
     scrolled to the end, offers pause, copy and download, and marks where a new attempt begins.
   - Pages poll with a cursor on the installation's interval, as background reads, and stop when the
