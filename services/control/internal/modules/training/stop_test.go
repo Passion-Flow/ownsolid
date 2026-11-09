@@ -8,11 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 // These are explicit synthetic node/container attestations for actual PostgreSQL lifecycle/fence tests, never Docker/GPU evidence.
@@ -64,11 +65,12 @@ func TestActualTrainingRestrictedStopAfterExpiryRevocationCancellationAndNodeDis
 			case "cancel":
 				_, e = f.s.Cancel(ctx, f.portal, f.input.WorkspaceID, j.ID, training.ActionRequest{ExpectedRevision: j.Revision, Reason: "Cancel before exact physical stop report"}, uuid.NewString())
 			case "disabled":
-				n, err := f.s.Nodes.Get(ctx, f.admin, "", f.input.NodeID)
+				nodeService := transport.New(f.s.Identity).Nodes.Service
+				n, err := nodeService.Get(ctx, f.admin, "", f.input.NodeID)
 				if err != nil {
 					t.Fatal(err)
 				}
-				_, e = f.s.Nodes.Update(ctx, f.admin, n.ID, n.Name, "disabled", n.Version, "Disable before restricted physical stop", uuid.NewString())
+				_, e = nodeService.Update(ctx, f.admin, n.ID, n.Name, "disabled", n.Version, "Disable before restricted physical stop", uuid.NewString())
 			}
 			if e != nil {
 				t.Fatal(e)
