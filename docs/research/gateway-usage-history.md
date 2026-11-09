@@ -161,3 +161,53 @@ The [published CSV contract](gateway-usage-csv-contract.md) uses
 JSON-cursor continuation and is ready for Web integration. Adopting the
 shared type and writer changes needs a corresponding contract update
 and verification from the usage page.
+
+## Optional transaction projection into metering
+
+The metering owner introduced `AppendGatewayReceiptWithin` in
+`cc2f1c3a`. It rechecks the persisted gateway receipt, scope, admission
+time and token bounds. The [Go transaction guide](https://go.dev/doc/database/execute-transactions)
+describes committing only when all operations succeed. Use the existing
+Report transaction after it stores the canonical outcome and audit, or
+after it verifies an exact replay. Pass the authenticated gateway, tenant
+and workspace and the canonical acknowledgement. The ledger's producer
+and event key make retries idempotent, including a replay of a receipt
+written before the projection was enabled. Changed reports are refused
+before the projection. The acknowledgement follows commit.
+
+Keep the projection disabled in the zero-valued service. Composition
+can opt in only after the owning production PostgreSQL ledger schema is
+available. An independent background write would leave an acknowledged
+outcome without its charge after a crash. A parallel usage calculation
+would drift from the existing token and unmeasured usage rules. No
+dependency, model or dataset is added. Existing Go, pgx and PostgreSQL
+licenses apply for commercial, offline and redistribution use under
+their notice terms.
+
+Use the metering owner's candidate ledger SQL in the isolated PostgreSQL
+test. Verify an ordinary outcome on the default service before the ledger
+exists. Enable projection in the real TLS dispatcher, inject a failing
+ledger insert, and verify that the report, audit and release of capacity
+roll back with no acknowledgement. Remove the failure and race exact
+retries. Require one ledger event with the original scope, admission
+time and token counts, one report audit event, and the matching canonical
+acknowledgement from both retries. Verify the same result when replaying
+an outcome already committed on the predecessor.
+
+The Linux amd64 loopback-only PostgreSQL run passed
+`TestPostgresGatewayOutcomeMeteringAtomicRetry`. An exception after the
+ledger insert returned `503 STORAGE_UNAVAILABLE` without an
+acknowledgement. The outcome, report audit and release of capacity all
+rolled back. Two concurrent retries returned the same acknowledgement
+with one event for nine tokens and one audit row. The predecessor
+receipt replay also created one event, preserving the original
+admission time and scope. A conflicting receipt returned 409. The same
+run passed the default TLS route without the ledger, the native Rust
+lost-acknowledgement recovery, and the scoped alias description upgrade.
+
+Run the test from the root with `PROJECT_ONE_TEST_DSN_FILE` pointing
+to the private loopback fixture DSN, PostgreSQL 18.6 and pgvector 0.8.7.
+
+```sh
+go -C services/control test -p 1 ./internal/modules/distribution -run '^TestPostgresGatewayOutcomeMeteringAtomicRetry$' -count=1
+```

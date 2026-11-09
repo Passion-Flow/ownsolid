@@ -21,6 +21,9 @@ type Service struct {
 	// Certificates signs the serving certificates of gateways agents run (ADR 0052). Only
 	// the agent path, which activates them, holds it.
 	Certificates *agentidentity.Authority
+	// ProjectGatewayReceipts enables transactional metering after the PostgreSQL ledger is installed.
+	// Set it only at composition time.
+	ProjectGatewayReceipts bool
 }
 
 type RecoveryChallenge struct {
