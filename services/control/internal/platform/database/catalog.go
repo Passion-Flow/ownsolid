@@ -33,9 +33,13 @@ SELECT jsonb_build_object('table_count',(SELECT count(*) FROM owned WHERE relkin
   (SELECT jsonb_agg(jsonb_build_array(t.tgname,t.tgtype,t.tgenabled,p.proname,encode(t.tgargs,'hex'),pg_get_expr(t.tgqual,t.tgrelid),p.prosrc,p.provolatile,p.prosecdef,p.proconfig) ORDER BY t.tgname)
    FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid WHERE t.tgrelid=o.oid AND NOT t.tgisinternal)) ORDER BY o.relname) FROM owned o))::text`
 
-// Exact native fresh and logical dump/reparse forms from pinned PostgreSQL18.6.
-const catalogFreshSHA256 = "8454a9e3039dfb669a532aaabd26419661c404d683cd9abfa45eb4ee2b25b4a4"
-const catalogRestoredSHA256 = "c160dfad296f6a93ec88aa88cc63bd232cbfd5dca0518c22d390961b0593e7be"
+// Exact schema 57 catalogs from pinned PostgreSQL 18.6. A restore at 55
+// reparses earlier expressions while migrations 56 and 57 run from source.
+const (
+	catalogFreshSHA256        = "8454a9e3039dfb669a532aaabd26419661c404d683cd9abfa45eb4ee2b25b4a4"
+	catalogRestoredSHA256     = "c160dfad296f6a93ec88aa88cc63bd232cbfd5dca0518c22d390961b0593e7be"
+	catalogRestoredAt55SHA256 = "4ae1c70a752af0056647e275114e2a16e8831bbcf875e6018ad3a7754b11efcc"
+)
 
 func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
 	var raw string
@@ -44,7 +48,7 @@ func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
 	}
 	digest := sha256.Sum256([]byte(raw))
 	switch hex.EncodeToString(digest[:]) {
-	case catalogFreshSHA256, catalogRestoredSHA256:
+	case catalogFreshSHA256, catalogRestoredSHA256, catalogRestoredAt55SHA256:
 	default:
 		return errors.New("SCHEMA_CATALOG_INCOMPATIBLE")
 	}
