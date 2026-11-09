@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Control abandoned model upload expiry",
+  "description": "Optional protected YAML mapping at runtime.models.import_expiry. Requires PostgreSQL and a private model store.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["workspace_id", "inactive_seconds"],
+  "properties": {
+    "workspace_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "not": {"const": "00000000-0000-0000-0000-000000000000"},
+      "description": "Canonical UUID of an active workspace in the bootstrapped installation tenant."
+    },
+    "inactive_seconds": {
+      "type": "integer",
+      "minimum": 3600,
+      "maximum": 31536000,
+      "description": "Minimum inactivity measured from the last committed upload progress."
+    }
+  }
+}

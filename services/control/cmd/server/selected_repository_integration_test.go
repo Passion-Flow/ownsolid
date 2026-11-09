@@ -96,7 +96,13 @@ func serverCompositionSetup(t *testing.T, unbootstrapped bool) *serverCompositio
 		role := "story_runtime_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 		schema := cc.RuntimeParams["search_path"]
 		quoted, scope := pgx.Identifier{role}.Sanitize(), pgx.Identifier{schema}.Sanitize()
-		for _, statement := range []string{"CREATE ROLE " + quoted + " LOGIN NOINHERIT CONNECTION LIMIT 32", "GRANT USAGE ON SCHEMA " + scope + " TO " + quoted, "GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA " + scope + " TO " + quoted, "REVOKE INSERT,UPDATE,DELETE ON " + scope + ".schema_migrations FROM " + quoted} {
+		for _, statement := range []string{
+			"CREATE ROLE " + quoted + " LOGIN NOINHERIT CONNECTION LIMIT 32",
+			"GRANT USAGE ON SCHEMA " + scope + " TO " + quoted,
+			"GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA " + scope + " TO " + quoted,
+			"REVOKE INSERT,UPDATE,DELETE ON " + scope + ".schema_migrations FROM " + quoted,
+			"REVOKE ALL ON " + scope + ".audit_chain_head FROM " + quoted,
+		} {
 			if _, e := f.PostgreSQL.Exec(ctx, statement); e != nil {
 				t.Fatal("story runtime principal", e)
 			}

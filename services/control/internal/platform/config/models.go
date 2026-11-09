@@ -2,10 +2,12 @@ package config
 
 import (
 	"errors"
+	"path/filepath"
 	"reflect"
 
-	"go.yaml.in/yaml/v3"
 	"github.com/Passion-Flow/ownsolid/api/agent/modelartifact"
+	"github.com/google/uuid"
+	"go.yaml.in/yaml/v3"
 )
 
 // These are immutable persistence ceilings, not deployment policy defaults.
@@ -21,11 +23,37 @@ const (
 )
 
 type ModelsPolicy struct {
-	ImportSeconds      int `yaml:"import_seconds"`
-	ImportPollSeconds  int `yaml:"import_poll_seconds"`
-	CleanupSeconds     int `yaml:"cleanup_seconds"`
-	MaximumAttempts    int `yaml:"maximum_attempts"`
-	MaximumBundleBytes int `yaml:"maximum_bundle_bytes"`
+	ImportSeconds      int                      `yaml:"import_seconds"`
+	ImportPollSeconds  int                      `yaml:"import_poll_seconds"`
+	CleanupSeconds     int                      `yaml:"cleanup_seconds"`
+	MaximumAttempts    int                      `yaml:"maximum_attempts"`
+	MaximumBundleBytes int                      `yaml:"maximum_bundle_bytes"`
+	ImportExpiry       *ModelImportExpiryPolicy `yaml:"import_expiry,omitempty" json:",omitempty"`
+}
+
+// ModelImportExpiryPolicy opts one workspace into abandoned upload reclamation.
+type ModelImportExpiryPolicy struct {
+	WorkspaceID     string `yaml:"workspace_id"`
+	InactiveSeconds int    `yaml:"inactive_seconds"`
+}
+
+func (p ModelImportExpiryPolicy) validate() error {
+	id, err := uuid.Parse(p.WorkspaceID)
+	if err != nil || id == uuid.Nil || id.String() != p.WorkspaceID || p.InactiveSeconds < 3600 || p.InactiveSeconds > 365*24*60*60 {
+		return errors.New("CONFIG_MODEL_IMPORT_EXPIRY_INVALID")
+	}
+	return nil
+}
+
+func (c Config) validateModelImportExpiry() error {
+	if c.Policy().Models.ImportExpiry == nil {
+		return nil
+	}
+	root := c.Models.ArtifactRoot
+	if c.DatabaseEngine() != PostgreSQLDatabaseEngine || !canonicalAbsolutePath(root) || filepath.Dir(root) == root {
+		return errors.New("CONFIG_MODEL_IMPORT_EXPIRY_REQUIRES_POSTGRESQL_AND_MODEL_STORE")
+	}
+	return nil
 }
 
 func DefaultModelsPolicy() ModelsPolicy {
@@ -36,6 +64,9 @@ func DefaultModelsPolicy() ModelsPolicy {
 func (p ModelsPolicy) Validate() error {
 	if p.ImportSeconds < 60 || p.ImportSeconds > 7200 || p.ImportPollSeconds < 1 || p.ImportPollSeconds > 60 || p.CleanupSeconds < 1 || p.CleanupSeconds > 30 || p.MaximumAttempts < 1 || p.MaximumAttempts > ModelImportSchemaMaximumAttempts || int64(p.MaximumBundleBytes) < modelartifact.MinimumArchiveBytes() || p.MaximumBundleBytes > ModelImportSchemaMaximumBundleBytes {
 		return errors.New("CONFIG_MODELS_BOUNDS_INVALID")
+	}
+	if p.ImportExpiry != nil {
+		return p.ImportExpiry.validate()
 	}
 	return nil
 }

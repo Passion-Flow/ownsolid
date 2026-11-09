@@ -361,6 +361,9 @@ func (c Config) Validate() error {
 	if e := p.Validate(); e != nil {
 		return e
 	}
+	if e := c.validateModelImportExpiry(); e != nil {
+		return e
+	}
 	if p.Mail.AttemptSeconds <= c.SMTP.OperationTimeoutSeconds {
 		return errors.New("CONFIG_MAIL_TIMEOUT_INVALID")
 	}

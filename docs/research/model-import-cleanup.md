@@ -187,3 +187,58 @@ Run with an isolated PostgreSQL test database prepared by the
 ```sh
 go -C services/control test ./internal/modules/models -run '^TestActualAbandonedImportExpiry' -count=1 -v
 ```
+
+### Startup configuration
+
+Use a single optional `runtime.models.import_expiry` mapping in the
+protected Control configuration. Require both `workspace_id`, a canonical
+nonzero UUID, and `inactive_seconds`, a whole number from 3600 to
+31536000 inclusive. Omission keeps all previously installed snapshots
+and worker defaults. Explicit null, partial, duplicate, aliased or
+mistyped values fail before environment overlays. This follows the
+existing strict Models configuration and the
+[YAML mapping and scalar rules](https://yaml.org/spec/1.2.2/).
+The new group is YAML-only. Operators select the workspace and its
+interval together in one protected restart snapshot.
+
+Opt-in requires PostgreSQL and a private model artifact root. At
+serving startup, use the selected database to confirm that the workspace
+is active and belongs to the active, bootstrapped installation tenant.
+A bounded [PostgreSQL existence check](https://www.postgresql.org/docs/18/functions-subquery.html#FUNCTIONS-SUBQUERY-EXISTS)
+uses the same scope predicates as the existing worker. Reject a missing,
+inactive or foreign workspace before listeners and the worker start.
+Attach the policy to the existing model owner before registering its
+worker. The worker retains its own per-import authority recheck and
+filesystem fences. Accepting any existing workspace or widening scope
+to all workspaces would allow a configuration mistake to authorize
+cleanup beyond the selected installation. The full Control server owns
+the expiry worker lifecycle.
+
+Use the already pinned [YAML decoder](https://github.com/yaml/go-yaml/blob/v3.0.5/LICENSE)
+(MIT and Apache-2.0 notices), Go, UUID, pgx and PostgreSQL under the
+terms above. This slice introduces no dependency, model weights or data.
+
+Test existing protected YAML, both interval boundaries, invalid shapes
+and IDs, incompatible database and missing storage. Start the production
+serving composition against real offline PostgreSQL and verify the
+default leaves an old upload alone. With the selected workspace
+configured, the normal worker must settle the abandoned import and
+write its audit entries. A second workspace's upload must survive.
+Refuse startup for missing, disabled and foreign workspaces.
+
+The serving regression passed on Linux arm64 with networking disabled,
+PostgreSQL 18.6 and pgvector 0.8.7. It loaded the actual protected YAML,
+verified loopback HTTPS in the old and opt-in configurations, and ran
+the existing worker under the restricted PostgreSQL runtime role. The
+legacy startup retained the stale upload. The opt-in startup removed
+only the selected upload's staging and wrote both expiry audit events.
+A second active workspace retained its staged upload. Missing, disabled
+and foreign workspaces failed before HTTPS startup.
+
+With the [protected repository fixture](../../services/control/internal/testing/repositoryfixture/README.md),
+run the same serving path using:
+
+```sh
+go -C services/control test -p 1 -tags repository_integration ./cmd/server \
+  -run '^TestActualModelImportExpiryStartup$' -count=1 -v
+```

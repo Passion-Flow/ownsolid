@@ -6,6 +6,14 @@ Database selection/connection, public origins, listener/TLS, protected component
 
 Cross-field validation matters: request/shutdown budgets must accommodate child/repository cleanup, private storage roots must not overlap incompatibly, and enabling a dependent component requires its actual prerequisites.
 
+The optional `runtime.models.import_expiry` mapping is a protected YAML
+setting for one active workspace. Set both `workspace_id` and
+`inactive_seconds` (3600 through 31536000). Enable it on PostgreSQL with an
+initialized private model artifact root, then restart Control. Omit the
+mapping to leave abandoned upload expiry disabled. See the
+[configuration schema](../../../../../api/configuration/v1/control-model-import-expiry/schema.json)
+and the [commented example](../../../config/examples/control/control.example.yaml).
+
 Workflows require either enabled Knowledge or enabled signed Plugins. Explicit
 `workflows=true/plugins=true/knowledge=false` selects the tool-only profile;
 publisher trust and conservative workflow/plugin HTTP budgets remain mandatory.
