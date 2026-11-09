@@ -303,6 +303,18 @@ third workspace must be inaccessible to the member. Print their `email`, `passwo
 Sign in as the fixture administrator for the separate ownership check. The portal's `live-models.spec.ts`
 uses the same fixture for the partial catalogue and retry check.
 
+For the alias-description contract, run
+`pnpm exec playwright test live-models.spec.ts -g 'renders authorized alias descriptions'`
+from `web/apps/portal`. Set the Portal origin and Chromium trust as above.
+Set `OWNSOLID_LIVE_MODEL_DESCRIPTION_FILE` to a private JSON file with
+`email`, `password`, `workspace`, `other_workspace` and `aliases`.
+Use a regular member with no access to the second workspace. The `aliases`
+array gives each published alias's `name` and its expected `description`.
+On the predecessor schema, omit the field. On a schema with GW-120, include
+one empty string and one nonempty description. Run against the real HTTPS
+dispatcher and PostgreSQL. The candidate SQL and the server-side predecessor
+refusal test are described in the [GW-120 research](../research/gateway-model-description.md).
+
 To run the key flow through the Rust gateway, set
 `OWNSOLID_LIVE_NATIVE_GATEWAY_URL` to the published alias's HTTPS base URL, including `/v1`.
 Set `NODE_EXTRA_CA_CERTS` to the gateway's public CA file before starting Playwright. The gateway
