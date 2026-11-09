@@ -62,9 +62,12 @@ func ReadNVIDIAJournal(reader io.Reader, bootID string) ([]NVIDIAXID, error) {
 		if entry.Transport != "kernel" || entry.Facility != "0" || entry.BootID != bootID {
 			continue
 		}
-		var message string
-		if err := json.Unmarshal(entry.Message, &message); err != nil {
-			return nil, ErrNVIDIAJournalInvalid
+		message, err := journalMessage(entry.Message)
+		if err != nil {
+			return nil, err
+		}
+		if strings.Contains(message, "[SIMULATED]") {
+			continue
 		}
 		match := nvidiaXIDMessage.FindStringSubmatch(message)
 		if match == nil {
@@ -86,6 +89,42 @@ func ReadNVIDIAJournal(reader io.Reader, bootID string) ([]NVIDIAXID, error) {
 		return nil, ErrNVIDIAJournalInvalid
 	}
 	return events, nil
+}
+
+func journalMessage(raw json.RawMessage) (string, error) {
+	if len(raw) == 0 {
+		return "", nil
+	}
+	if raw[0] != '[' {
+		var message string
+		if err := json.Unmarshal(raw, &message); err != nil {
+			return "", ErrNVIDIAJournalInvalid
+		}
+		return message, nil
+	}
+	var elements []json.RawMessage
+	if err := json.Unmarshal(raw, &elements); err != nil {
+		return "", ErrNVIDIAJournalInvalid
+	}
+	var repeated bool
+	message := make([]byte, 0, len(elements))
+	for _, element := range elements {
+		switch element[0] {
+		case '"', '[', 'n':
+			// journalctl uses an array of strings, byte arrays or nulls for repeated values.
+			repeated = true
+		default:
+			value, err := strconv.ParseUint(string(element), 10, 8)
+			if err != nil {
+				return "", ErrNVIDIAJournalInvalid
+			}
+			message = append(message, byte(value))
+		}
+	}
+	if repeated && len(message) != 0 {
+		return "", ErrNVIDIAJournalInvalid
+	}
+	return string(message), nil
 }
 
 var pciAddress = regexp.MustCompile(`^([0-9a-fA-F]{4}(?:[0-9a-fA-F]{4})?):([0-9a-fA-F]{2}):([01][0-9a-fA-F])(\.[0-7])?$`)

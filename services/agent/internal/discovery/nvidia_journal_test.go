@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
@@ -13,7 +14,12 @@ const currentBoot = "0123456789abcdef0123456789abcdef"
 const staleBoot = "123456789abcdef0123456789abcdef0"
 
 func xidJournalLine(boot, cursor, usec, transport, facility, message string) string {
-	return fmt.Sprintf(`{"_BOOT_ID":%q,"__CURSOR":%q,"__REALTIME_TIMESTAMP":%q,"_TRANSPORT":%q,"SYSLOG_FACILITY":%q,"MESSAGE":%q}`, boot, cursor, usec, transport, facility, message) + "\n"
+	messageJSON, _ := json.Marshal(message)
+	return xidJournalRawMessage(boot, cursor, usec, transport, facility, string(messageJSON))
+}
+
+func xidJournalRawMessage(boot, cursor, usec, transport, facility, messageJSON string) string {
+	return fmt.Sprintf("{\"_BOOT_ID\":%q,\"__CURSOR\":%q,\"__REALTIME_TIMESTAMP\":%q,\"_TRANSPORT\":%q,\"SYSLOG_FACILITY\":%q,\"MESSAGE\":%s}\n", boot, cursor, usec, transport, facility, messageJSON)
 }
 
 func TestReadNVIDIAJournalChecksProvenanceAndIdentity(t *testing.T) {
@@ -41,6 +47,54 @@ func TestReadNVIDIAJournalChecksProvenanceAndIdentity(t *testing.T) {
 	}
 }
 
+func TestReadNVIDIAJournalHandlesAlternateMessageEncodings(t *testing.T) {
+	line := func(cursor, message string) string {
+		return xidJournalRawMessage(currentBoot, cursor, "2", "kernel", "0", message)
+	}
+	byteArray := func(message string) string {
+		values := make([]int, len(message))
+		for i := range len(message) {
+			values[i] = int(message[i])
+		}
+		raw, _ := json.Marshal(values)
+		return string(raw)
+	}
+	body := line("first", "\"NVRM: Xid (0000:ab:00): 79\"") +
+		line("unrelated binary", "[255,0,128]") +
+		line("omitted", "null") +
+		line("repeated", "[\"NVRM: Xid (0000:ab:00): 79\",null,[255]]") +
+		line("binary xid", byteArray("NVRM: Xid (00000001:AB:00.2): 48, detail \xff")) +
+		line("simulated ecc", byteArray("NVRM: Xid (0000:ab:00): 48, detail \xff [SIMULATED]")) +
+		line("last", "\"NVRM: Xid (0000:ab:00): 63, detail\"")
+	at := time.UnixMicro(2).UTC()
+	want := []NVIDIAXID{
+		{BootID: currentBoot, Cursor: "first", PCIAddress: "00000000:ab:00", Code: 79, ObservedAt: at},
+		{BootID: currentBoot, Cursor: "binary xid", PCIAddress: "00000001:ab:00.2", Code: 48, ObservedAt: at},
+		{BootID: currentBoot, Cursor: "last", PCIAddress: "00000000:ab:00", Code: 63, ObservedAt: at},
+	}
+	got, err := ReadNVIDIAJournal(strings.NewReader(body), currentBoot)
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("ReadNVIDIAJournal = %+v, %v; want %+v", got, err, want)
+	}
+}
+
+func TestReadNVIDIAJournalExcludesSimulatedXIDs(t *testing.T) {
+	const drop = "NVRM: Xid (0000:ab:00): 79"
+	const ecc = "NVRM: Xid (0000:ab:00): 48"
+	line := func(cursor, message string) string {
+		return xidJournalLine(currentBoot, cursor, "2", "kernel", "0", message)
+	}
+	body := line("simulated drop", drop+", [SIMULATED] device lost") +
+		line("real drop", drop+", PCIe failure") +
+		line("simulated ecc", ecc+", detail [SIMULATED]") +
+		line("real ecc", ecc+", detail")
+	got, err := ReadNVIDIAJournal(strings.NewReader(body), currentBoot)
+	if err != nil || len(got) != 2 || got[0].Cursor != "real drop" || got[0].Code != 79 ||
+		got[1].Cursor != "real ecc" || got[1].Code != 48 {
+		t.Fatalf("ReadNVIDIAJournal retained simulated observations or lost genuine ones: %+v, %v", got, err)
+	}
+}
+
 func TestReadNVIDIAJournalFailsAtomically(t *testing.T) {
 	const msg = "NVRM: Xid (0000:ab:00): 48"
 	valid := xidJournalLine(currentBoot, "first", "1", "kernel", "0", msg)
@@ -50,6 +104,8 @@ func TestReadNVIDIAJournalFailsAtomically(t *testing.T) {
 		{"bad timestamp", xidJournalLine(currentBoot, "next", "0", "kernel", "0", msg)},
 		{"missing cursor", xidJournalLine(currentBoot, "", "2", "kernel", "0", msg)},
 		{"malformed JSON", "{\"MESSAGE\":"},
+		{"invalid message byte", xidJournalRawMessage(currentBoot, "next", "2", "kernel", "0", "[256]")},
+		{"mixed message encodings", xidJournalRawMessage(currentBoot, "next", "2", "kernel", "0", "[78,\"NVRM\"]")},
 		{"oversized entry", strings.Repeat("x", maximumNVIDIAJournalLine)},
 		{"oversized batch", large},
 	} {
