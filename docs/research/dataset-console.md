@@ -52,9 +52,9 @@ row materialization. Reuse the offline upload patterns where they fit. The
 chunked model import protocol cannot be used for datasets.
 
 Create dataset, create draft, publish and retry bind a UUID idempotency key
-to the request. The retry handler already requires `Idempotency-Key`, but
-the two public OpenAPI retry operations omit it. DEV owns the declaration
-and generated client correction before the Web wrapper ships. The read
+to the request. Both public retry operations declare the required
+`Idempotency-Key`, and the handler checks it. Reuse the generated operations
+and the browser transport's idempotency header. The read
 job shape returns seed, validation ratio, revision, status and retryability.
 It does not expose the frozen test ratio. On a resumed job, show the retained
 request without restating an unavailable ratio. Show the exact retained
@@ -230,6 +230,5 @@ implement in an opt-in `live-datasets.spec.ts` after the screen lands.
    `make check && make build && make test` and record only the
    scenarios that actually ran.
 
-The formal plan entries and the retry header declaration release the Web
-implementation. The HTTP proof already ran with the real processor.
+The formal plan entries release the Web implementation. The HTTP proof already ran with the real processor.
 The S-503 browser flow and its screenshots remain acceptance work.
