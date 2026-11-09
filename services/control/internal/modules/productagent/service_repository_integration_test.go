@@ -5,12 +5,14 @@ package productagent
 import (
 	"context"
 	"errors"
+	"net/url"
 	"slices"
 	"testing"
 	"time"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
@@ -132,16 +134,30 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 		exec(`UPDATE workflows SET current_version_id=$1 WHERE id=$2`, `UPDATE workflows SET current_version_id=? WHERE id=?`, version, workflow.ID)
 		return workflow.ID, version
 	}
-	workflow, version := publish("First fixture application")
+	const label = "Report \u4e16\u754c "
+	storedName := label + "pk1." + uuid.NewString() + "." + security.Token()
+	workflow, version := publish(storedName)
 	publish("Second fixture application")
 	page, err := service.Run(ctx, portal, "show applications", "")
 	if err != nil || page.Applications == nil || len(page.Applications.Items) != 1 || page.Applications.NextCursor == nil {
-		t.Fatalf("first application page: %#v, %v", page, err)
+		t.Fatalf("invalid first application page: %v", err)
 	}
 	cursor := *page.Applications.NextCursor
 	following, err := service.Run(ctx, portal, "\u67e5\u770b\u5e94\u7528", cursor)
 	if err != nil || following.Applications == nil || len(following.Applications.Items) != 1 || following.Applications.Items[0].WorkflowID == page.Applications.Items[0].WorkflowID || following.Applications.NextCursor != nil {
-		t.Fatalf("second application page: %#v, %v", following, err)
+		t.Fatalf("invalid second application page: %v", err)
+	}
+	results := []applications.Application{page.Applications.Items[0], following.Applications.Items[0]}
+	if !slices.ContainsFunc(results, func(item applications.Application) bool {
+		return item.WorkflowID == workflow && item.Name == label+maskedCredential
+	}) {
+		t.Fatal("assistant application name did not mask the display credential")
+	}
+	ordinary, err := apps.List(ctx, portal, workspace, url.Values{"limit": {"10"}})
+	if err != nil || len(ordinary.Items) != 2 || !slices.ContainsFunc(ordinary.Items, func(item applications.Application) bool {
+		return item.WorkflowID == workflow && item.Name == storedName
+	}) {
+		t.Fatalf("assistant redaction changed the ordinary Portal projection: %v", err)
 	}
 	if result, err := service.Run(ctx, portal, "show conversations", cursor); err == nil || result != (Result{}) {
 		t.Fatalf("application cursor accepted for conversation list: %#v, %v", result, err)
@@ -158,8 +174,8 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	}
 	ownConversation := conversation(fixture.User)
 	conversation(otherUser)
-	if result, err := service.Run(ctx, portal, "show conversations", ""); err != nil || result.Conversations == nil || len(result.Conversations.Items) != 1 || result.Conversations.Items[0].ID != ownConversation || result.Conversations.NextCursor != nil {
-		t.Fatalf("private conversation list: %#v, %v", result, err)
+	if result, err := service.Run(ctx, portal, "show conversations", ""); err != nil || result.Conversations == nil || len(result.Conversations.Items) != 1 || result.Conversations.Items[0].ID != ownConversation || result.Conversations.Items[0].WorkflowName != label+maskedCredential || result.Conversations.NextCursor != nil {
+		t.Fatalf("invalid private conversation projection: %v", err)
 	}
 
 	verifyScopedCommandAudit(t, ctx, fixture.PostgreSQL, service, apps, admin, portal)
