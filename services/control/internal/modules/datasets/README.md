@@ -173,12 +173,18 @@ the default exact policy. See the
 
 ## Opt-in test split
 
-An internal caller can queue a three-way publication with
-`PublishWithOptions` and `PublicationOptions.TestBasisPoints`. Validation
-and test ratios are measured in connected groups. Three-way publication
-uses near-prompt grouping regardless of which duplicate removal policy
-the caller selects. It requires three connected groups and keeps one or
-more in each partition. Both retry paths retain the original ratio.
+Admin and Portal publication requests can set the optional integer
+`test_basis_points` to reserve a test split. Omit it to retain the two-way
+default. Each held-out ratio must be between 100 and 5,000 basis points
+and their sum cannot exceed 9,000. Validation and test ratios target
+connected groups, and unequal group sizes can yield different row proportions.
+
+The handler calls `PublishWithOptions` with the selected test ratio.
+Three-way publication groups matching sources and near prompts under
+either duplicate removal policy. It requires three connected groups and
+keeps one or more in each partition. Both retry paths retain the original
+ratio. A publication request that changes the ratio under the same
+idempotency key returns `IDEMPOTENCY_CONFLICT`.
 
 Schema 2 records the test ratio, group count, row count, and digest-bound
 `test.jsonl` alongside the existing training and validation assets.

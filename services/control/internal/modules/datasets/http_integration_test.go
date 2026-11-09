@@ -6,18 +6,22 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/google/uuid"
+	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
-	"runtime"
-	"strings"
-	"testing"
+	"github.com/google/uuid"
 )
 
 func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *testing.T) {
@@ -128,7 +132,11 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	portal.Call("GET", path+"/jobs/"+job["id"].(string), nil, 200, "DatasetJobResponse")
 	versionID := job["version_id"].(string)
 	versionPath := path + "/versions/" + versionID
-	portal.Call("GET", versionPath, nil, 200, "DatasetVersionResponse")
+	legacy := portal.Call("GET", versionPath, nil, 200, "DatasetVersionResponse")["manifest"].(map[string]any)
+	if legacy["schema_version"] != float64(1) || legacy["test_basis_points"] != nil {
+		t.Fatal("omitting the test ratio changed the legacy manifest")
+	}
+	portal.Call("GET", versionPath+"/files/test", nil, 409, "Problem")
 	portal.Call("GET", path+"/versions", nil, 200, "DatasetVersionPageResponse")
 	exported := portal.Call("GET", versionPath+"/files/train", nil, 200, "dataset-file")
 	if exported["text"] == "" {
@@ -159,4 +167,206 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	portal.CSRF = csrf
 	portal.Write("POST", versionPath+"/retire", map[string]any{"reason": "Retain immutable history"}, 200, "DatasetVersionResponse")
 	admin.Call("GET", adminPath+"/versions/"+versionID, nil, 200, "DatasetVersionResponse")
+	verifyThreeWayHTTPSPublication(t, handler.Datasets.Service, portal, admin, path, adminPath)
+}
+
+func prepareHTTPSPublicationDraft(t *testing.T, service *datasets.Service, client *httpfixture.Client, path string, raw []byte) map[string]any {
+	t.Helper()
+	sum := sha256.Sum256(raw)
+	digest := hex.EncodeToString(sum[:])
+	client.Headers["Idempotency-Key"] = uuid.NewString()
+	draft := client.Write("POST", path+"/drafts", map[string]any{
+		"source_name": "splits.jsonl", "expected_bytes": len(raw), "source_sha256": digest, "reason": "Validate split source",
+	}, 201, "DatasetDraftResponse")
+	draftPath := path + "/drafts/" + draft["id"].(string)
+	client.Headers["Content-Type"] = "application/x-ndjson"
+	client.Headers["X-Content-SHA256"] = digest
+	client.Write("POST", draftPath+"/source", raw, 202, "DatasetDraftResponse")
+	delete(client.Headers, "Content-Type")
+	delete(client.Headers, "X-Content-SHA256")
+	if worked, err := service.ProcessNext(t.Context()); err != nil || !worked {
+		t.Fatal("inspect HTTPS split source", err)
+	}
+	return client.Call("GET", draftPath, nil, 200, "DatasetDraftResponse")
+}
+
+func verifyThreeWayHTTPSPublication(t *testing.T, service *datasets.Service, portal, admin *httpfixture.Client, path, adminPath string) {
+	t.Helper()
+	raw := []byte(`{"source_id":"a","prompt":"Identify the prime numbers","completion":"Two and three."}
+{"source_id":"a","prompt":"Explain why trees lose their leaves","completion":"Day length changes."}
+{"source_id":"b","prompt":"Translate a greeting into Spanish","completion":"Hola."}
+{"source_id":"c","prompt":"Name the largest ocean","completion":"Pacific."}
+`)
+	draft := prepareHTTPSPublicationDraft(t, service, portal, path, raw)
+	input := map[string]any{
+		"expected_revision": draft["revision"], "seed": "00112233445566778899aabbccddeeff",
+		"validation_basis_points": 5000, "reason": "Reserve independent test groups",
+	}
+	publication := adminPath + "/drafts/" + draft["id"].(string) + "/publications"
+	admin.Headers = map[string]string{"Idempotency-Key": uuid.NewString()}
+	required, err := json.Marshal(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	prefix := strings.TrimSuffix(string(required), "}")
+	for _, suffix := range []string{
+		`,"test_basis_points":0`, `,"test_basis_points":null`, `,"test_basis_points":99`, `,"test_basis_points":5001`,
+		`,"test_basis_points":4001`, `,"test_basis_points":-100`, `,"test_basis_points":100.5`, `,"test_basis_points":"100"`,
+		`,"test_basis_points":100,"test_basis_points":100`, `,"Test_basis_points":100`,
+	} {
+		problem := admin.Write("POST", publication, []byte(prefix+suffix+"}"), 400, "Problem")
+		if problem["code"] != "VALIDATION_FAILED" {
+			t.Fatalf("invalid split input returned %v", problem["code"])
+		}
+	}
+	input["test_basis_points"] = 4000
+	job := admin.Write("POST", publication, input, 202, "DatasetJobResponse")
+	replay := admin.Write("POST", publication, input, 202, "DatasetJobResponse")
+	if replay["id"] != job["id"] || replay["version_id"] != job["version_id"] {
+		t.Fatal("publication replay changed the job or version")
+	}
+	input["test_basis_points"] = 3999
+	problem := admin.Write("POST", publication, input, 409, "Problem")
+	if problem["code"] != "IDEMPOTENCY_CONFLICT" {
+		t.Fatalf("changed test ratio returned %v", problem["code"])
+	}
+	delete(input, "test_basis_points")
+	problem = admin.Write("POST", publication, input, 409, "Problem")
+	if problem["code"] != "IDEMPOTENCY_CONFLICT" {
+		t.Fatalf("omitting the queued test ratio returned %v", problem["code"])
+	}
+
+	// Fail one worker execution after the HTTPS request has committed the job.
+	configured := service.Identity.Config.Datasets
+	configured.ProcessorFile = filepath.Join(t.TempDir(), "fail.py")
+	if err := os.WriteFile(configured.ProcessorFile, []byte("raise SystemExit(9)\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	failing, err := datasets.NewProcessor(configured, service.Identity.Config.Policy().Datasets)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual := service.Processor
+	service.Processor = failing
+	worked, err := service.ProcessNext(t.Context())
+	service.Processor = actual
+	if err != nil || !worked {
+		t.Fatal("run interrupted publication", err)
+	}
+	failedPath := path + "/jobs/" + job["id"].(string)
+	failed := portal.Call("GET", failedPath, nil, 200, "DatasetJobResponse")
+	if failed["state"] != "failed" || failed["retryable"] != true {
+		t.Fatalf("worker failure did not leave a retryable job: %v", failed["error_code"])
+	}
+	portal.Call("GET", path+"/versions/"+job["version_id"].(string), nil, 404, "Problem")
+
+	portal.Headers["Idempotency-Key"] = uuid.NewString()
+	retryInput := map[string]any{"reason": "Retry the frozen publication"}
+	retry := portal.Write("POST", failedPath+"/retry", retryInput, 202, "DatasetJobResponse")
+	retryReplay := portal.Write("POST", failedPath+"/retry", retryInput, 202, "DatasetJobResponse")
+	if retry["id"] == job["id"] || retryReplay["id"] != retry["id"] || retry["version_id"] == job["version_id"] {
+		t.Fatal("retry did not create and replay one new job")
+	}
+	var retryOf string
+	if err := service.DB.QueryRow(t.Context(), "UPDATE dataset_jobs SET not_before=clock_timestamp() WHERE id=$1 RETURNING retry_of::text", retry["id"]).Scan(&retryOf); err != nil || retryOf != job["id"] {
+		t.Fatal("retry lost its original job", err)
+	}
+	if worked, err := service.ProcessNext(t.Context()); err != nil || !worked {
+		t.Fatal("process retried HTTPS publication", err)
+	}
+	completed := portal.Call("GET", path+"/jobs/"+retry["id"].(string), nil, 200, "DatasetJobResponse")
+	if completed["state"] != "succeeded" {
+		t.Fatalf("retried split publication failed: %v", completed["error_code"])
+	}
+	versionID := retry["version_id"].(string)
+	versionPath := path + "/versions/" + versionID
+	version := portal.Call("GET", versionPath, nil, 200, "DatasetVersionResponse")
+	admin.Call("GET", adminPath+"/versions/"+versionID, nil, 200, "DatasetVersionResponse")
+	portal.Call("GET", path+"/versions", nil, 200, "DatasetVersionPageResponse")
+	testDigest := checkHTTPSPartitionAssets(t, portal, versionPath, version["manifest"])
+	adminFile := admin.Call("GET", adminPath+"/versions/"+versionID+"/files/test", nil, 200, "dataset-file")
+	if adminFile["sha256"] != testDigest {
+		t.Fatal("Admin and Portal returned different test files")
+	}
+	foreignPath := "/api/v1/workspaces/" + uuid.NewString() + "/datasets/" + version["dataset_id"].(string)
+	portal.Call("GET", foreignPath+"/versions/"+versionID+"/files/test", nil, 404, "Problem")
+
+	tooFew := prepareHTTPSPublicationDraft(t, service, portal, path, []byte(`{"source_id":"a","prompt":"Identify the prime numbers","completion":"Two and three."}
+{"source_id":"b","prompt":"Name the largest ocean","completion":"Pacific."}
+`))
+	input["expected_revision"] = tooFew["revision"]
+	input["test_basis_points"] = 100
+	portal.Headers["Idempotency-Key"] = uuid.NewString()
+	shortJob := portal.Write("POST", path+"/drafts/"+tooFew["id"].(string)+"/publications", input, 202, "DatasetJobResponse")
+	if worked, err := service.ProcessNext(t.Context()); err != nil || !worked {
+		t.Fatal("process insufficient-groups publication", err)
+	}
+	shortResult := portal.Call("GET", path+"/jobs/"+shortJob["id"].(string), nil, 200, "DatasetJobResponse")
+	if shortResult["state"] != "failed" || shortResult["error_code"] != "DATASET_SPLIT_INSUFFICIENT_GROUPS" || shortResult["retryable"] != false {
+		t.Fatalf("insufficient groups produced an unexpected result: %v", shortResult["error_code"])
+	}
+	portal.Call("GET", path+"/versions/"+shortJob["version_id"].(string), nil, 404, "Problem")
+}
+
+func checkHTTPSPartitionAssets(t *testing.T, client *httpfixture.Client, versionPath string, value any) string {
+	t.Helper()
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest wire.Manifest
+	if err := json.Unmarshal(encoded, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if manifest.SchemaVersion != 2 || manifest.TestBasisPoints != 4000 || manifest.ValidationBasisPoints != 5000 ||
+		manifest.SourceGroups != 3 || manifest.ValidationGroups != 1 || manifest.TestGroups != 1 || manifest.UniqueRows != 4 {
+		t.Fatalf("unexpected three-way manifest: %+v", manifest)
+	}
+	sourceSplits := make(map[string]string)
+	sourceRows := make(map[string]int)
+	var testDigest string
+	for _, partition := range []struct {
+		name string
+		rows int64
+	}{{"train", manifest.TrainRows}, {"validation", manifest.ValidationRows}, {"test", manifest.TestRows}} {
+		file := client.Call("GET", versionPath+"/files/"+partition.name, nil, 200, "dataset-file")
+		raw := file["text"].(string)
+		if partition.name == "test" {
+			testDigest = file["sha256"].(string)
+		}
+		var matched bool
+		for _, asset := range manifest.Files {
+			if asset.Path == partition.name+".jsonl" {
+				matched = asset.SHA256 == file["sha256"] && asset.SizeBytes == int64(len(raw))
+			}
+		}
+		if !matched {
+			t.Fatalf("%s export differs from its manifest digest or length", partition.name)
+		}
+		decoder := json.NewDecoder(strings.NewReader(raw))
+		var rows int64
+		for {
+			var row wire.Record
+			err := decoder.Decode(&row)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if prior := sourceSplits[row.SourceID]; prior != "" && prior != partition.name {
+				t.Fatalf("source %s crossed partitions", row.SourceID)
+			}
+			sourceSplits[row.SourceID] = partition.name
+			sourceRows[row.SourceID]++
+			rows++
+		}
+		if rows == 0 || rows != partition.rows {
+			t.Fatalf("%s partition has %d rows, manifest has %d", partition.name, rows, partition.rows)
+		}
+	}
+	if len(sourceSplits) != 3 || sourceRows["a"] != 2 || sourceRows["b"] != 1 || sourceRows["c"] != 1 {
+		t.Fatalf("unexpected source counts: %v", sourceRows)
+	}
+	return testDigest
 }
