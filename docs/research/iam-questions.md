@@ -17,22 +17,17 @@
 ## Repository acceptance gate
 
 The IAM-105 candidate and IAM-111 and IAM-114 regressions passed
-`make check` and `make build` at `4f3593d8`. The full `make test` run
-passed Go, gateway and both Chromium suites, with 1,074 Console and 387
-Portal cases passed and 33 skipped. Thirteen IAM HTTPS cases passed
-three runs on disconnected PostgreSQL 18.6. The localized audit coverage
-test passed with both IAM-105 action names.
+`make check`, `make build` and `make test` at `36313f07`, based on
+`23b99915`. Chromium passed 1,074 Console and 387 Portal cases, with 33
+skipped. Eight focused IAM HTTPS cases passed three repetitions on
+disconnected Linux arm64 with PostgreSQL 18.6 and pgvector 0.8.7. The
+localized audit coverage test passed with both IAM-105 action names.
 
-The full suite is blocked by the Console and Portal API-reference
-assertions in `web/packages/help/src/help.test.ts`. The same two failures
-reproduced on unmodified `origin/main` at `c6de726c`. Since `601e3dc7`,
-the Web help generator resolves the Nodes path aliases to the canonical
-Components operations using `tools/codegen/openapi-paths.mjs`. The test
-still reads raw path items and misses three Console operations and one
-Portal operation for node-exporter. To clear the gate, the Web/DEV owners
-must make the reference test and generator enumerate the same resolved
-operation set for both entrances and run the full repository suite.
-The focused reproduction is
+At `c6de726c`, the Help test read raw OpenAPI path items while the generator
+followed the Nodes aliases to the canonical Components operations. The
+same two assertions failed on unmodified main. The shared resolution fix
+in `9d25ee7c` passed all 19 Help tests in the full gate. To exercise the
+contract independently, run
 `cd web && pnpm --filter @ownsolid/help exec vitest run src/help.test.ts`.
 
 The previous training shutdown failure was reproduced from an unmodified
