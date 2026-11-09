@@ -63,13 +63,12 @@ sessions, Portal and missing sessions, foreign or unknown workspace selection,
 sibling workspace isolation and cursor reuse across scopes. Verify that neither
 the hidden actor projection nor raw metadata changes the legacy JSON.
 
-A future HTTP wiring change can use `identity.Service.ListWorkspaceAuditForActor`
-with a workspace resolved by its route and look up each returned item by
+Call `identity.Service.ListWorkspaceAuditForActor` when the application has
+a resolved workspace. Look up each returned item by
 `identity.AuditEventKey{ID, OccurredAt}` in `AssistantActors`. Absent entries
-have no assistant attribution. Add the public OpenAPI fields and generated
-clients, settle workspace selection for the existing installation-wide list,
-and verify the public schema and console path end to end. The
-repository change does not close AUD-101 or AGT-107.
+have no assistant attribution. The installation-wide Admin HTTP list follows
+the separate representation described below. Public OpenAPI, generated
+clients and the console flow are separate acceptance work for AUD-101 and AGT-107.
 
 ## Verification
 
@@ -89,4 +88,63 @@ go -C services/control test ./internal/modules/identity \
   -run '^TestWorkspaceAuditAssistantProjection$' -count=3
 go -C services/control test -tags repository_integration ./internal/modules/identity/http \
   -run '^(TestM01EveryHTTPResponseSchema|TestM01CurrentHTTPKnownResourceScope|TestAuditListNamesPeopleAndFiltersByFamily)$' -count=1
+```
+
+## Admin HTTP representation
+
+The existing `GET /api/v1/admin/audit-events` is a platform Admin audit
+view. Its list has no workspace selector, and its published `AuditEvent`
+schema rejects additional properties. Keep the default representation
+compatible with strict consumers of that schema. The proposed DEV handoff is
+an optional `X-Ownsolid-Audit-Actor` request header with the single value
+`true`. Use the existing project convention for explicit request preferences.
+The response varies on that header and retains its private no-store policy.
+See [RFC 9110 section 12.5.5](https://www.rfc-editor.org/rfc/rfc9110.html#section-12.5.5)
+and [OpenAPI 3.1.1 Schema Object](https://spec.openapis.org/oas/v3.1.1.html#schema-object).
+
+On opted-in responses, add the optional non-null strings `actor_kind` and
+`actor_id` together only for verified assistant rows. Their values are
+`product_assistant` and `ownsolid.product-assistant`. Existing actor and
+subject fields remain required and retain their current nullability. For DEV,
+declare the request header and paired response properties in the closed schema,
+keep both properties out of `required`, and regenerate the clients. The
+header is a representation preference and gives no authority. An absent,
+unrecognized or repeated header selects the legacy representation.
+
+Reuse the existing authenticated platform Admin read transaction and cursor.
+On PostgreSQL, verify the V2 row commitment in that same list query only for
+candidates with a matching workspace under the completed installation tenant.
+Keep legacy rows visible to the existing platform administrator and omit
+assistant attribution for foreign, missing or mismatched scope. Keep historical
+attribution after workspace disablement or subject membership revocation. The
+separate repository operation with an explicit workspace keeps its own
+authorization and scope-bound cursor. Other database dialects retain their
+legacy projection and cannot return the pair.
+
+Reusing the scoped repository method with a default or user-supplied
+workspace would change page membership, cursor meaning and existing filters.
+Fetching a second workspace-scoped page after the legacy read would allow the
+two snapshots to disagree and would lose candidate rows at page boundaries.
+An unconditional additive response would fail old closed schema validators.
+
+Acceptance covers an actual HTTP request carrying the preference, a genuine
+assistant action in a non-default workspace, legacy schema validation of the
+same event, ordinary and cross-tenant redaction, pagination across the two
+representations, unchanged query validation, and stale Admin session denial
+after real logout. Existing Go and database dependencies above suffice.
+Keep the response change on the IAM branch until the public contract is ready.
+
+The repository projection and HTTP attribution passed three consecutive
+runs against disconnected PostgreSQL 18.6 with pgvector 0.8.7. The HTTP
+fixture used trusted TLS and the published legacy response schema. It
+exercised the same pagination cursor across the two representations,
+rejected tenant and workspace query selectors, and preserved a historical
+assistant attribution after the subject lost workspace membership.
+
+With the isolated PostgreSQL fixture configured as above, rerun the HTTP
+acceptance and existing authorization and response contracts.
+
+```sh
+go -C services/control test -tags repository_integration ./internal/modules/identity/http \
+  -run '^(TestAdminAuditHTTPAssistantAttribution|TestM01EveryHTTPResponseSchema|TestM01CurrentHTTPKnownResourceScope|TestAuditListNamesPeopleAndFiltersByFamily)$' -count=3
 ```
