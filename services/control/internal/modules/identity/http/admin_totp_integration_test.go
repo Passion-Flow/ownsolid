@@ -30,6 +30,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 )
 
 //go:embed testdata/admin_totp_candidate.sql
@@ -94,6 +95,20 @@ func adminTOTPCandidateStep(t *testing.T, s *identity.Service) int64 {
 	return now.Unix() / 30
 }
 
+func TestAdminTOTPCandidateUnmountedHTTPS(t *testing.T) {
+	_, _, portal, admin, password := setup(t)
+	credentials := map[string]string{"email": "admin@example.invalid", "password": password}
+	admin.mutate(http.MethodPost, "/api/v1/auth/login", credentials, 200, "LoginResponse")
+	problemCode(t, admin.mutate(http.MethodPost, "/api/v1/auth/login/totp", map[string]string{
+		"challenge": security.Token(), "code": "000000",
+	}, 404, "Problem"), "RESOURCE_NOT_FOUND")
+	problemCode(t, admin.mutate(http.MethodPost, "/api/v1/me/totp/enrollment", map[string]string{"password": password}, 404, "Problem"), "RESOURCE_NOT_FOUND")
+	change := map[string]string{"current_password": password, "new_password": fixture.Password(), "totp_code": "000000"}
+	problemCode(t, admin.mutate(http.MethodPost, passwordChanges, change, 400, "Problem"), "VALIDATION_FAILED")
+	portal.mutate(http.MethodPost, "/api/v1/auth/login", credentials, 200, "LoginResponse")
+	problemCode(t, portal.mutate(http.MethodPost, passwordChanges, change, 400, "Problem"), "VALIDATION_FAILED")
+}
+
 func TestAdminTOTPCandidateHTTPS(t *testing.T) {
 	s, server, portal, admin, password := adminTOTPCandidateFixture(t)
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
@@ -122,6 +137,7 @@ func TestAdminTOTPCandidateHTTPS(t *testing.T) {
 	adminMe := admin.request(http.MethodGet, me, nil, 200, "MeResponse", nil)
 	userID := adminMe["user"].(map[string]any)["id"].(string)
 	problemCode(t, portal.mutate(http.MethodPost, enrollment, map[string]string{"password": password}, 404, "Problem"), "RESOURCE_NOT_FOUND")
+	problemCode(t, admin.mutate(http.MethodPost, enrollment+"?tenant_id="+uuid.NewString(), map[string]string{"password": password}, 400, "Problem"), "VALIDATION_FAILED")
 	problemCode(t, admin.mutate(http.MethodPost, enrollment, map[string]string{"password": "Synthetic incorrect password"}, 403, "Problem"), "PASSWORD_CURRENT_INVALID")
 	setup := admin.mutate(http.MethodPost, enrollment, map[string]string{"password": password}, 201, "")
 	seed, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(setup["secret"].(string))
@@ -428,6 +444,15 @@ func TestAdminTOTPCandidatePasswordStepUpHTTPS(t *testing.T) {
 	foreignBody := maps.Clone(body)
 	foreignBody["tenant_id"] = uuid.NewString()
 	problemCode(t, admin.mutate(http.MethodPost, change, foreignBody, 400, "Problem"), "VALIDATION_FAILED")
+	ctx := t.Context()
+	if _, err := s.DB.Exec(ctx, "ALTER TABLE audit_events ADD CONSTRAINT fixture_refuses_mfa_change CHECK(action<>'auth.password_changed') NOT VALID"); err != nil {
+		t.Fatal(err)
+	}
+	problemCode(t, admin.mutate(http.MethodPost, change, body, 503, "Problem"), "STORAGE_UNAVAILABLE")
+	stale.request(http.MethodGet, me, nil, 200, "MeResponse", nil)
+	if _, err := s.DB.Exec(ctx, "ALTER TABLE audit_events DROP CONSTRAINT fixture_refuses_mfa_change"); err != nil {
+		t.Fatal(err)
+	}
 	admin.mutate(http.MethodPost, change, body, 200, "MeResponse")
 	problemCode(t, stale.request(http.MethodGet, me, nil, 401, "Problem", nil), "AUTH_SESSION_EXPIRED")
 	problemCode(t, waiting.mutate(http.MethodPost, complete, map[string]string{"challenge": staleChallenge, "code": codes[0].(string)}, 401, "Problem"), "AUTH_INVALID_CREDENTIALS")
@@ -439,4 +464,26 @@ func TestAdminTOTPCandidatePasswordStepUpHTTPS(t *testing.T) {
 	if err := s.DB.QueryRow(t.Context(), "SELECT count(*) FROM audit_events WHERE action='auth.password_changed' AND audience='admin'").Scan(&count); err != nil || count != 1 {
 		t.Fatalf("expected one authorized credential replacement, got %d: %v", count, err)
 	}
+}
+
+func TestAdminTOTPCandidatePasswordResetKeepsFactorHTTPS(t *testing.T) {
+	s, _, portal, admin, password := adminTOTPCandidateFixture(t)
+	seed, _, _ := enrollAdminTOTPCandidate(t, s, admin, password)
+	const email, login = "admin@example.invalid", "/api/v1/auth/login"
+	pending := admin.mutate(http.MethodPost, login, map[string]string{"email": email, "password": password}, 202, "")["challenge"].(string)
+	portal.mutate(http.MethodPost, "/api/v1/auth/password-reset-requests", map[string]string{"email": email}, 202, "AcceptedResponse")
+	replacement := fixture.Password()
+	portal.mutate(http.MethodPost, "/api/v1/auth/password-resets", map[string]string{
+		"token": fixture.ResetToken(t, s, email), "password": replacement,
+	}, 200, "ResetResponse")
+
+	otp := candidateOTP(seed, adminTOTPCandidateStep(t, s))
+	const complete = "/api/v1/auth/login/totp"
+	problemCode(t, admin.mutate(http.MethodPost, complete, map[string]string{"challenge": pending, "code": otp}, 401, "Problem"), "AUTH_INVALID_CREDENTIALS")
+	problemCode(t, admin.mutate(http.MethodPost, login, map[string]string{"email": email, "password": password}, 401, "Problem"), "AUTH_INVALID_CREDENTIALS")
+	pending = admin.mutate(http.MethodPost, login, map[string]string{"email": email, "password": replacement}, 202, "")["challenge"].(string)
+	if admin.cookies["__Host-admin_session"] != nil {
+		t.Fatal("password reset bypassed the enrolled factor")
+	}
+	admin.mutate(http.MethodPost, complete, map[string]string{"challenge": pending, "code": otp}, 200, "LoginResponse")
 }
