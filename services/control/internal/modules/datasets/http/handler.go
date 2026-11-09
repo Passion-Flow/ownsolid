@@ -15,8 +15,9 @@ import (
 )
 
 type Handler struct {
-	Service          *datasets.Service
-	TokenizerPreview *datasets.TokenizerPreviewProcessor
+	Service            *datasets.Service
+	TokenizerPreview   *datasets.TokenizerPreviewProcessor
+	CSVImportCandidate *datasets.CSVImportCandidate
 }
 
 func Owns(path string) bool {
@@ -166,6 +167,9 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, requestID string) (an
 		out, e := h.Service.Retire(r.Context(), a, workspace, dataset, body.ExpectedRevision, body.Reason, requestID)
 		return out, 200, e
 	}
+	if len(tail) == 2 && tail[0] == "drafts" && tail[1] == "from-csv" && r.Method == "POST" && h.CSVImportCandidate != nil {
+		return h.importCSVDraft(r, a, workspace, dataset, requestID)
+	}
 	if len(tail) > 0 && tail[0] == "mongodb" {
 		return h.mongodb(r, a, workspace, dataset, tail[1:], requestID)
 	}
@@ -180,6 +184,25 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, requestID string) (an
 	}
 	return nil, 0, missing
 }
+func (h *Handler) importCSVDraft(r *http.Request, a identity.Auth, workspace, dataset, requestID string) (any, int, error) {
+	media, parameters, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil || media != "text/csv" || len(parameters) > 1 || len(parameters) == 1 && !strings.EqualFold(parameters["charset"], "utf-8") {
+		return nil, 0, errors.New("UNSUPPORTED_MEDIA_TYPE")
+	}
+	intent, err := key(r)
+	if err != nil {
+		return nil, 0, err
+	}
+	digests, names := r.Header.Values("X-Content-SHA256"), r.Header.Values("X-Dataset-Source-Name")
+	if len(digests) != 1 || len(names) != 1 {
+		return nil, 0, errors.New("VALIDATION_FAILED")
+	}
+	result, err := h.CSVImportCandidate.Import(r.Context(), a, workspace, dataset, datasets.CSVImportRequest{
+		Name: names[0], SHA256: digests[0], Bytes: r.ContentLength,
+	}, intent, r.Body, requestID)
+	return result, 202, err
+}
+
 func (h *Handler) drafts(r *http.Request, a identity.Auth, workspace, dataset string, tail []string, query url.Values, requestID string) (any, int, error) {
 	missing := errors.New("RESOURCE_NOT_FOUND")
 	ctx := r.Context()
