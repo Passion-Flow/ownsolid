@@ -8,6 +8,8 @@ import (
 	"syscall"
 )
 
+var errPrivateFileAbsent = errors.New("SSO_PRIVATE_FILE_ABSENT")
+
 func privateOwned(info os.FileInfo, directory bool) bool {
 	if info == nil {
 		return false
@@ -37,7 +39,7 @@ func readPrivateFile(path string, maximum int64) ([]byte, error) {
 	if e != nil || !privateOwned(beforeDirectory, true) {
 		return nil, bad
 	}
-	root, e := os.OpenRoot(parent)
+	root, e := os.OpenRoot(parent + string(filepath.Separator) + ".")
 	if e != nil {
 		return nil, bad
 	}
@@ -48,6 +50,12 @@ func readPrivateFile(path string, maximum int64) ([]byte, error) {
 	}
 	name := filepath.Base(path)
 	before, e := root.Lstat(name)
+	if errors.Is(e, os.ErrNotExist) {
+		currentDirectory, statErr := os.Lstat(parent)
+		if statErr == nil && os.SameFile(beforeDirectory, currentDirectory) && privateOwned(currentDirectory, true) {
+			return nil, errPrivateFileAbsent
+		}
+	}
 	if e != nil || !privateOwned(before, false) || before.Size() < 1 || before.Size() > maximum {
 		return nil, bad
 	}
