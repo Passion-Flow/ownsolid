@@ -1,9 +1,11 @@
--- Candidate ledger shape for the isolated PostgreSQL transaction tests.
+-- Unnumbered PostgreSQL ledger migration. The formal catalog and grants are assigned by the database owner.
 CREATE TABLE usage_ledger (
   producer varchar(128) NOT NULL,
   event_id varchar(128) NOT NULL,
   tenant_id uuid NOT NULL,
   workspace_id uuid NOT NULL,
+  site_id varchar(32) NOT NULL DEFAULT local_site_id(),
+  cell_id varchar(32) NOT NULL DEFAULT local_cell_id(),
   occurred_at timestamptz NOT NULL CHECK (isfinite(occurred_at)),
   gpu_microseconds bigint NOT NULL CHECK (gpu_microseconds >= 0),
   tokens bigint NOT NULL CHECK (tokens >= 0),
@@ -14,7 +16,7 @@ CREATE TABLE usage_ledger (
   FOREIGN KEY (tenant_id, workspace_id) REFERENCES workspaces (tenant_id, id),
   CHECK (gpu_microseconds > 0 OR tokens > 0 OR storage_byte_seconds > 0 OR requests > 0)
 );
-CREATE INDEX usage_ledger_scope_time ON usage_ledger (tenant_id, workspace_id, occurred_at);
+CREATE INDEX usage_ledger_scope_time ON usage_ledger (site_id, cell_id, tenant_id, workspace_id, occurred_at);
 
 CREATE FUNCTION refuse_usage_ledger_mutation() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
