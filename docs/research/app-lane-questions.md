@@ -118,6 +118,17 @@ actor. The offline export needs separate attribution acceptance.
 Workspace-free navigation requires a shared global-scope decision. See the
 [registration handoff and acceptance cases](product-assistant-audit.md#authenticated-http-handoff).
 
+## Installation execution handoff for AGT-112
+
+`productagent.New` accepts the trusted local `ExecutionPolicy` reader.
+The configuration owner supplies a validated installation setting that
+preserves absence separately from explicit disable. The identity HTTP owner
+binds the reader during the shared route registration. The same gate covers
+Admin navigation and Portal navigation and reads. Keep AGT-112 open until
+the actual setting and its management authority, per-user budgets and
+disable policy, loop limits and both browser entrances pass together. See
+[execution policy acceptance](product-assistant-execution-policy.md).
+
 ## Repository test gate
 
 The previous console run on isolated ports had 18 failures, 1013 passes and 23
