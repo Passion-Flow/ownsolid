@@ -276,8 +276,12 @@ draft's private original or normalized bytes. The existing dataset file
 snapshot already references the normalized bytes and omits the original.
 Keep the NET-101 scope checks intact.
 
-DEL can publish both owner manifests with one PostgreSQL dump under a
-common writer-exclusion window. A
+The REL-103 [object checkpoint](../decisions/0068-bind-external-objects-to-the-logical-backup.md)
+already binds the verified PAX copy to the logical backup and its protected
+file inventory. Add the two dataset references on that logical side. Keep
+the same checkpoint format and trusted operation. The coordinator can
+publish both owner manifests with one PostgreSQL dump under a common
+writer-exclusion window. A
 [shared PostgreSQL snapshot](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-SNAPSHOT-SYNCHRONIZATION)
 can synchronize SQL readers. The coordinator must still exclude writes
 to both object stores until their verified inventories and the dump
