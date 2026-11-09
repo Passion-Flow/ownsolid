@@ -91,10 +91,11 @@ versions. The metering read now reuses current Workspace and session
 authorization. The integration owner must bind the public dispatcher to that
 read, retain historical rates and reconcile production ledger and producer
 coverage before exposing showback. See [showback](metering-showback.md).
-TEN-108 compares workspace showback against operator thresholds. Durable
-notification identity, complete producer coverage and an authorized
-transaction for current and pending usage are required before admission
-enforcement. See [budget status](metering-budget-status.md).
+TEN-108 previews alert-only and deny-at-known-limit policies on the
+authorized showback snapshot. Production activation requires an effective
+workspace policy, durable notification identity, complete producer coverage
+and an owner transaction for current and pending usage. See
+[budget status](metering-budget-status.md#authenticated-admission-preview).
 
 TEN-109 requires the commerce owner's verifiable grant authority, the
 database owner's durable credit records and the workload owner's exact
