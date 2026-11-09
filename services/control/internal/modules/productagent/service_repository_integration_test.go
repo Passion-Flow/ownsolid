@@ -135,7 +135,7 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 		return workflow.ID, version
 	}
 	const label = "Report \u4e16\u754c "
-	storedName := label + "pk1." + uuid.NewString() + "." + security.Token()
+	storedName := label + "\u202epk1." + uuid.NewString() + ".\u2066" + security.Token() + "\u2069\u202c"
 	workflow, version := publish(storedName)
 	publish("Second fixture application")
 	page, err := service.Run(ctx, portal, "show applications", "")
@@ -176,6 +176,12 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	conversation(otherUser)
 	if result, err := service.Run(ctx, portal, "show conversations", ""); err != nil || result.Conversations == nil || len(result.Conversations.Items) != 1 || result.Conversations.Items[0].ID != ownConversation || result.Conversations.Items[0].WorkflowName != label+maskedCredential || result.Conversations.NextCursor != nil {
 		t.Fatalf("invalid private conversation projection: %v", err)
+	}
+
+	ordinaryConversations, err := apps.Conversations(ctx, portal, workspace, nil)
+	if err != nil || len(ordinaryConversations.Items) != 1 || ordinaryConversations.Items[0].ID != ownConversation ||
+		ordinaryConversations.Items[0].WorkflowName != storedName {
+		t.Fatalf("assistant redaction changed the ordinary conversation projection: %v", err)
 	}
 
 	verifyScopedCommandAudit(t, ctx, fixture.PostgreSQL, service, apps, admin, portal)

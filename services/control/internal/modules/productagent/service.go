@@ -181,7 +181,7 @@ func (s *Service) readApplications(ctx context.Context, actor identity.Auth, id,
 			return Result{}, err
 		}
 		for i := range page.Items {
-			page.Items[i].Name = maskDisplayCredentials(page.Items[i].Name)
+			page.Items[i].Name = safeDisplayName(page.Items[i].Name)
 		}
 		return Result{Command: id, Applications: &page}, nil
 	case listConversations:
@@ -190,7 +190,7 @@ func (s *Service) readApplications(ctx context.Context, actor identity.Auth, id,
 			return Result{}, err
 		}
 		for i := range page.Items {
-			page.Items[i].WorkflowName = maskDisplayCredentials(page.Items[i].WorkflowName)
+			page.Items[i].WorkflowName = safeDisplayName(page.Items[i].WorkflowName)
 		}
 		return Result{Command: id, Conversations: &page}, nil
 	default:
