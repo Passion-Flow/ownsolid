@@ -4,6 +4,7 @@ use crate::routing::Application;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::watch;
+use tokio::time::Instant;
 
 pub async fn flush(application: &Application) -> Result<usize> {
     flush_spool(&application.control, &application.spool).await
@@ -33,16 +34,22 @@ pub async fn flush_spool(
 }
 
 pub async fn run(application: Arc<Application>, shutdown: watch::Receiver<bool>) {
-    let mut interval = tokio::time::interval(Duration::from_secs(
-        application.configuration.limits.outcome_retry_seconds,
-    ));
-    interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let retry = Duration::from_secs(application.configuration.limits.outcome_retry_seconds);
+    // Schedule startup recovery even when nobody can publish new work.
+    let mut retry_at = Some(Instant::now());
     loop {
-        tokio::select! {
+        let result = tokio::select! {
             biased;
-            _=stopped(shutdown.clone())=>break,
-            _=interval.tick()=>{let _=flush(&application).await;},
-        }
+            _ = stopped(shutdown.clone()) => break,
+            result = async {
+                match retry_at {
+                    Some(deadline) => tokio::time::sleep_until(deadline).await,
+                    None => application.spool.wait_for_publication().await,
+                }
+                flush(&application).await
+            } => result,
+        };
+        retry_at = result.err().map(|_| Instant::now() + retry);
     }
     let _ = tokio::time::timeout(
         Duration::from_secs(application.configuration.limits.shutdown_seconds),

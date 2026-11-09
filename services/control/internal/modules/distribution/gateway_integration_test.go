@@ -50,6 +50,7 @@ const (
 	foregroundResponses
 	foregroundMessages
 	applicationBudget
+	promptCapacityRelease
 )
 
 // Actual Go/Rust/PostgreSQL transport and persistence; backend replies are explicitly synthetic.
@@ -81,6 +82,10 @@ func TestRealGoRustPostgresForegroundResponses(t *testing.T) {
 
 func TestRealGoRustPostgresForegroundMessages(t *testing.T) {
 	realGatewayChain(t, foregroundMessages)
+}
+
+func TestRealGoRustPostgresPromptCapacityRelease(t *testing.T) {
+	realGatewayChain(t, promptCapacityRelease)
 }
 
 func realGatewayChain(t *testing.T, mode gatewayChainMode) {
@@ -261,7 +266,11 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 	listener := httptest.NewUnstartedServer(nil)
 	listen := listener.Listener.Addr().String()
 	listener.Close()
-	configuration := map[string]any{"gateway_id": access.gateway.Gateway.ID, "node_id": c.node.NodeID, "listen_address": listen, "backend_address": strings.TrimPrefix(backend.URL, "http://"), "control_origin": control.URL, "control_ca_file": filepath.Join(root, "ca.pem"), "gateway_credential_file": filepath.Join(root, "credential"), "tls_certificate_file": filepath.Join(root, "certificate.pem"), "tls_private_key_file": filepath.Join(root, "key.pem"), "state_directory": state, "limits": map[string]any{"active_requests": 2, "queued_requests": 2, "backend_idle_connections": 2, "connect_seconds": 1, "control_seconds": 1, "request_seconds": 5, "idle_seconds": 2, "header_seconds": 1, "shutdown_seconds": 2, "outcome_retry_seconds": 1}}
+	limits := map[string]any{"active_requests": 2, "queued_requests": 2, "backend_idle_connections": 2, "connect_seconds": 1, "control_seconds": 1, "request_seconds": 5, "idle_seconds": 2, "header_seconds": 1, "shutdown_seconds": 2, "outcome_retry_seconds": 1}
+	configuration := map[string]any{"gateway_id": access.gateway.Gateway.ID, "node_id": c.node.NodeID, "listen_address": listen, "backend_address": strings.TrimPrefix(backend.URL, "http://"), "control_origin": control.URL, "control_ca_file": filepath.Join(root, "ca.pem"), "gateway_credential_file": filepath.Join(root, "credential"), "tls_certificate_file": filepath.Join(root, "certificate.pem"), "tls_private_key_file": filepath.Join(root, "key.pem"), "state_directory": state, "limits": limits}
+	if mode == promptCapacityRelease {
+		limits["outcome_retry_seconds"] = 30
+	}
 	if quota != nil {
 		configuration["quota_policy"] = quota.policy
 	}
@@ -368,6 +377,10 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 			t.Fatal(e)
 		}
 		return response
+	}
+	if mode == promptCapacityRelease {
+		verifyPromptCapacityRelease(t, c, access, request)
+		return
 	}
 	if mode == foregroundMessages {
 		foreignKey := foreignFixtureKey(t, c.a.Me.Workspace.TenantID)
@@ -764,5 +777,47 @@ func verifyForegroundText(
 	denied.Body.Close()
 	if denied.StatusCode != 401 || backendCalls.Load() != before || generations.Load() != 3 {
 		t.Fatal("revoked key reached the text backend", denied.StatusCode)
+	}
+}
+
+// A second call must also release its hold well before the reporter's retry interval.
+func verifyPromptCapacityRelease(t *testing.T, c scenario, access access, request func(path, key string, body any) *http.Response) {
+	t.Helper()
+	chat := map[string]any{
+		"model": access.alias.Name, "max_tokens": 16,
+		"messages": []any{map[string]any{"role": "user", "content": "Synthetic capacity release"}},
+	}
+	for attempt := 1; attempt <= 2; attempt++ {
+		response := request("/v1/chat/completions", *access.key.Secret, chat)
+		var completion struct {
+			Model string            `json:"model"`
+			Usage gatewaywire.Usage `json:"usage"`
+		}
+		err := json.NewDecoder(io.LimitReader(response.Body, 16384)).Decode(&completion)
+		response.Body.Close()
+		id := response.Header.Get("X-Request-ID")
+		if err != nil || response.StatusCode != http.StatusOK || !gatewaywire.ValidID(id) ||
+			completion.Model != access.alias.Name || completion.Usage.TotalTokens != 9 {
+			t.Fatal("unexpected completion in capacity release fixture", response.StatusCode, err)
+		}
+		start := time.Now()
+		deadline := start.Add(4 * time.Second)
+		for {
+			var released bool
+			err := c.s.DB.QueryRow(t.Context(), `SELECT state='reported' AND NOT capacity_held
+				AND outcome->>'status'='succeeded' AND outcome->'usage'->>'total_tokens'='9'
+				FROM gateway_requests WHERE id=$1`, id).Scan(&released)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if released {
+				t.Logf("reported call %d released capacity after %v", attempt, time.Since(start))
+				break
+			}
+			if time.Now().After(deadline) {
+				t.Fatalf("call %d retained its deployment capacity until the retry timer", attempt)
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
 	}
 }

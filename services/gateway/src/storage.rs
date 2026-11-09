@@ -9,6 +9,7 @@ use std::io::Write;
 use std::os::unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use tokio::sync::Notify;
 use uuid::Uuid;
 
 mod fence;
@@ -55,6 +56,7 @@ pub struct Spool {
     maximum_bytes: u64,
     minimum_free_bytes: u64,
     state: Mutex<State>,
+    published: Notify,
     lock: Arc<Flock<File>>,
 }
 
@@ -207,6 +209,7 @@ impl Spool {
                 recovery_required: false,
                 fenced,
             }),
+            published: Notify::new(),
             lock: Arc::new(lock),
         };
         spool.recover()?;
@@ -419,12 +422,18 @@ impl Spool {
                 .pending
                 .insert(outcome.request_id, (digest, bytes.len() as u64));
             state.bytes += bytes.len() as u64;
+            self.published.notify_one();
             Ok(())
         })();
         if result.is_err() {
             state.healthy = false
         }
         result
+    }
+
+    /// Wait for a durable terminal record to be published. One wake can cover multiple records.
+    pub(crate) async fn wait_for_publication(&self) {
+        self.published.notified().await;
     }
 
     pub fn next_pending(&self) -> Result<Option<Outcome>> {

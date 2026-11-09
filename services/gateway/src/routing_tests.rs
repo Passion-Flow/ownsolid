@@ -20,6 +20,7 @@ use std::time::Duration;
 use tokio::time::Instant;
 use uuid::Uuid;
 
+mod reporting;
 mod throughput;
 mod tools;
 
@@ -53,6 +54,7 @@ struct Synthetic {
     admissions: Arc<Mutex<HashSet<Uuid>>>,
     backend_request_ids: Arc<Mutex<Vec<Uuid>>>,
     outcomes: Arc<Mutex<Vec<Outcome>>>,
+    outcome_attempts: Arc<AtomicUsize>,
 }
 impl Synthetic {
     fn binding(&self) -> Value {
@@ -82,6 +84,7 @@ async fn control(
             .into_response();
     }
     if operation == "outcomes" {
+        state.outcome_attempts.fetch_add(1, Ordering::SeqCst);
         if mode == 6 {
             return (
                 StatusCode::SERVICE_UNAVAILABLE,
@@ -410,6 +413,7 @@ impl Fixture {
             admissions: Arc::default(),
             backend_request_ids: Arc::default(),
             outcomes: Arc::default(),
+            outcome_attempts: Arc::default(),
         };
         let control_listener = TcpListener::bind("127.0.0.1:0").unwrap();
         control_listener.set_nonblocking(true).unwrap();
