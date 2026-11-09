@@ -192,3 +192,38 @@ test uses the workspace's pinned Node runtime, whose
 can read the existing resolver. A malformed reference must fail the
 test, and any extra or missing operation in either entrance must still
 fail the set comparison. There is no runtime dependency or UI change.
+
+## Versioned preview problem index (GW-111, DAT-107)
+
+The Web catalogs now supply titles and recovery details for all thirteen
+codes in English and Simplified Chinese. Use the existing per-operation
+`x-error-codes` [OpenAPI extension](https://spec.openapis.org/oas/v3.1.1.html#specification-extensions)
+as the source of the generated Help list. The runtime
+[RFC 9457 Problem](https://www.rfc-editor.org/rfc/rfc9457.html#section-3)
+responses remain the source of the codes, status and headers. Copying
+localized strings into the contract would create a second catalog.
+Adding the codes to unrelated operations would describe failures those
+operations have not qualified.
+
+Restore the five existing 409 codes to the Admin alias cutover preview
+index. Add the eight dataset codes to both registered tokenizer preview
+indices under 404, 409, 422 and 503. Keep existing generic codes and the
+downloadable responses. The established SDK, Web and Chromium test
+[licences](sdk.md#licenses) apply. No dependency, model or data set is
+added.
+
+Verify each indexed code against its released response group and the two
+catalog entries. Regenerate the offline Help projections and verify
+the real pages open the three operations with localized titles and
+details. Check that Portal has only its authorized operation index
+and that the wire contract apart from this metadata stays byte-equivalent
+when parsed.
+
+The Linux amd64 run built the real Console and Portal with the generated
+index and no browser-side index overlay. Chromium opened all three
+operations directly in both languages at a 390-pixel viewport. Each
+listed status, title and detail matched its released mapping. Portal
+excluded the Admin cutover preview. The local fixture made no request
+outside its loopback origin. The 19 Help tests and projection
+regression passed, and parsing the pre-change and final OpenAPI
+confirmed that only the three error indices changed.
