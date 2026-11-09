@@ -45,3 +45,42 @@ same command returned the media verification failure again.
 The recorder saw only the IPv4, IPv6 and DNS probes. This fixture exercised
 the native CLI refusal and admission order with absent media. The
 signed upgrade Compose test retains coverage for a valid candidate.
+
+## Apply admission for full and incremental media
+
+The read-only plan checks pending data recovery before reading candidate
+media. The full upgrade currently prepares the archive first, and the
+patch entry can reconstruct an archive before reaching the operation
+lock. An absent or large candidate can therefore obscure the recovery
+decision shown by the plan.
+
+Read the typed site configuration once. Check the same pending restore
+and coordinated backup records before staging a full archive or
+reconstructing a patch. Recheck through the existing exclusive operation
+lock before touching the installation. After patch reconstruction, check
+again before unpacking the target. Keep the signed binding, patch
+baseline, predecessor, configuration and host validation. The site
+snapshot used to resolve the patch baseline also governs the apply step.
+An early check is a refusal path. The lock continues to authorize later
+steps and catches a record that appeared during verification.
+
+Reuse the existing [kubeadm planning boundary](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-upgrade/)
+and [GitLab recovery preparation](https://docs.gitlab.com/update/plan_your_upgrade/)
+as comparisons. This change uses the same Go standard library and
+installer contracts. It adds no dependency or data. Run all three native
+Linux commands with protected recovery records and absent media. Assert
+the exact refusal, no Docker invocation or prepared output, and the
+preserved recovery records. Also verify that a clear site reaches its
+existing media or signed-binding checks.
+
+On disconnected Ubuntu 24.04 amd64, the predecessor's plan returned
+the required recovery action. Its full upgrade reached the mounted
+media check, and its patch returned the missing signed binding. The
+updated binaries returned `INSTALL_RESTORE_PENDING` and
+`INSTALL_BACKUP_RECOVERY_REQUIRED` from all three commands. No command
+invoked Docker, left staging output or created an operation lock. Both
+recovery records were preserved. After the records were removed, the
+plan and full upgrade reached the media check and the patch reached the
+signed-binding check. Only the recorder's IPv4, IPv6 and DNS probes
+appeared. The authenticated upload and Console preflight remain separate
+acceptance.
