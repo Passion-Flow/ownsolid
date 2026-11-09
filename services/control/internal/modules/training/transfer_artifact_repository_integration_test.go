@@ -12,12 +12,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 // Actual retained CPU tensor/optimizer/RNG files are unchanged. Scope, physical
@@ -42,22 +42,7 @@ func trainingRuntimeCheckpointUsing(t *testing.T, setup func(*testing.T, *wire.C
 		t.Fatal(e)
 	}
 	g := setup(t, &request.Configuration, true)
-	modelRoot := g.owner.Config.Models.ArtifactRoot
-	if e = os.MkdirAll(filepath.Join(modelRoot, "objects", g.input.ModelID), 0700); e != nil {
-		t.Fatal(e)
-	}
-	configuration, e := os.ReadFile(filepath.Join(base, "config.json"))
-	if e != nil {
-		t.Fatal(e)
-	}
-	if e = os.WriteFile(filepath.Join(modelRoot, "objects", g.input.ModelID, "config.json"), configuration, 0444); e != nil {
-		t.Fatal(e)
-	}
-	// Immutable installed model assets have an exact mode, independent of the private harness umask.
-	if e = os.Chmod(filepath.Join(modelRoot, "objects", g.input.ModelID, "config.json"), 0444); e != nil {
-		t.Fatal(e)
-	}
-	g.s.Models.RootDirectory = modelRoot
+	prepareRetainedTrainingBase(t, g, base)
 	directory := filepath.Join(output, "checkpoints", "checkpoint-1")
 	raw, e = os.ReadFile(filepath.Join(directory, "projectone-checkpoint.json"))
 	if e != nil {
@@ -92,6 +77,26 @@ func trainingRuntimeCheckpointUsing(t *testing.T, setup func(*testing.T, *wire.C
 	}
 	return g, upload, files, raw
 }
+func prepareRetainedTrainingBase(t *testing.T, g trainingRuntimeStory, base string) {
+	t.Helper()
+	modelRoot := g.owner.Config.Models.ArtifactRoot
+	if e := os.MkdirAll(filepath.Join(modelRoot, "objects", g.input.ModelID), 0700); e != nil {
+		t.Fatal(e)
+	}
+	configuration, e := os.ReadFile(filepath.Join(base, "config.json"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e := os.WriteFile(filepath.Join(modelRoot, "objects", g.input.ModelID, "config.json"), configuration, 0444); e != nil {
+		t.Fatal(e)
+	}
+	// Immutable installed model assets have an exact mode, independent of the private harness umask.
+	if e := os.Chmod(filepath.Join(modelRoot, "objects", g.input.ModelID, "config.json"), 0444); e != nil {
+		t.Fatal(e)
+	}
+	g.s.Models.RootDirectory = modelRoot
+}
+
 func (g trainingRuntimeStory) upload(t *testing.T, u training.Upload, files map[string][]byte) {
 	t.Helper()
 	for _, asset := range u.Files {

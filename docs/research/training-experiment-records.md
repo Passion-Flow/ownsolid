@@ -91,3 +91,66 @@ Go modules, run from the repository root on Linux:
 ```sh
 bash services/control/internal/modules/training/testdata/replay_accepted_experiment.sh
 ```
+
+## Production execution evidence
+
+An [OCI image manifest](https://specs.opencontainers.org/image-spec/manifest/)
+references a separate image configuration descriptor. The
+[OCI image ID](https://github.com/opencontainers/image-spec/blob/v1.1.1/config.md#imageid)
+identifies the configuration bytes. Training freezes both the digest-pinned
+distribution reference and the local image ID in its command. The Agent
+[inspects the image by ID](../../services/agent/internal/training/docker.go)
+and [checks the owned container](../../services/agent/internal/training/container.go).
+The protected worker result repeats the execution identity. The authenticated
+positive stop binds that local image ID to the command, task, node, attempt,
+container and accepted result digest. Report the distribution reference as
+the frozen request and the local ID as the image bound to that stop. Control
+has no independently retained registry manifest or installation attestation.
+
+Before promoting a stopped attempt to success, bind the scoped accepted
+upload and its exact original result bytes to the command, artifact inventory
+and attempt outcome. Verify the same chain when reading an accepted result.
+[PostgreSQL JSONB](https://www.postgresql.org/docs/18/datatype-json.html)
+normalizes representation, so compare decoded typed outcomes across SQL and
+the protected result. Hash only the original result bytes. Keep the existing
+physical release path for revoked, cancelled and disabled work.
+
+The [Linux training lock](../../runtimes/training/requirements/linux-amd64-cuda.lock)
+is hash-pinned in the runtime source. Pip hash checking can establish what the
+release builder installed. DEL must publish a verified mapping from the
+selected distribution manifest and local image ID to that exact lock digest.
+Control must retain the mapping with the attempt or a durable release
+reference. The worker package versions or a hash of the current checkout
+cannot establish the production lock identity.
+
+The Agent's [preflight](../../services/agent/internal/training/manager.go)
+probes the requested NVIDIA UUID and applies capability, driver, memory and
+MIG constraints. [NVIDIA's management interface](https://docs.nvidia.com/deploy/nvidia-smi/index.html)
+describes the UUID and observation fields. ARC must retain the bounded
+observation in the verified attempt journal and authenticate it with the
+same node, task, command, GPU UUID and attempt. The control-plane
+`HardwareWithin` reads current fleet observations for admission, and the
+stop only repeats the requested UUID. The experiment leaves the lock and
+hardware fields explicitly unavailable until their owners supply these
+bindings.
+
+Exercise the existing claim, result upload, stop and scoped read against
+disposable PostgreSQL with the retained CPU result and adapter. Refuse an
+unbound image ID, foreign attempt, invented lock or hardware fields and a
+CPU profile before creating an upload. Refuse inconsistent retained result
+copies or a foreign stop image before successful completion. Restore the
+exact result and retry. Read back both distinct image identifiers with the
+unavailable fields empty. The node, production envelope and stop are fixture
+inputs. This verifies the acceptance rules independently of NVIDIA. The
+change adds no dependencies or new redistributable material.
+
+`TestActualTrainingExecutionEvidenceAdmission` is included in the offline
+replay above. On Linux with only loopback, it used the retained result and
+adapter in the real PostgreSQL upload and stop path. It refused a registry
+digest substituted for the local image ID, a foreign attempt, the native
+CPU profile and fabricated lock and device fields before writing an upload.
+After accepting the exact adapter, it refused the wrong stop image, a
+changed attempt result and changed protected upload bytes. The exact retry
+completed once, the scoped read distinguished the two image identifiers,
+and a changed retained result was refused on read. No lock or hardware
+observation was returned from the fixture's current node telemetry.
