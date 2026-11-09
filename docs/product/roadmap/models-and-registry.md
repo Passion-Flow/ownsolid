@@ -18,7 +18,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
 - [ ] MOD-107 Model retirement with dependency check across deployments, apps and keys (P1) - Catalog: F585
 - [ ] MOD-108 Model file and code review: scan for executable code and unsafe formats before import (P1) - Catalog: F583
 - [ ] MOD-109 Model distribution to nodes through the in-site registry with pre-warm (P1) - Catalog: F642
-- [ ] MOD-110 Model licence register: licence, commercial use, redistribution, attribution and use restrictions per model and version; deployments and task runs are refused with the reason when the installation's declared use is not permitted (P1)
+- [ ] MOD-110 Model licence register: licence, commercial use, redistribution, attribution and use restrictions per model and version; deployments and task runs are refused with the reason when the installation's declared use is not permitted (P1) - [Deployment admission and consumer handoff](../../research/model-license-admission.md)
 
 - [ ] MOD-113 Catalogue index: names, publishers, parameter counts, context lengths, licences, tags and hashes for both registries, shipped with the product and refreshed from a signed bundle ([ADR 0036](../../decisions/0036-show-every-option-and-fetch-models-offline.md)) (P1)
 - [ ] MOD-114 Search and filter the catalogue with the network disconnected, covering Hugging Face and ModelScope in one list (P1)
