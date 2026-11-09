@@ -27,8 +27,8 @@ identities for execution.
 
 The local browser harness reserves ports 4310 and 4311. Other worktrees can
 occupy either port and stop `make test` before the suite starts. An alternate
-preview on private ports exercised part of both browser suites. Full acceptance
-still requires the normal harness on free ports.
+preview on private ports exercised part of both browser suites. That run left
+the native browser gate unverified.
 
 Running the non-browser gate and then repeating the focused tests with a
 resolved macOS temporary directory also exposed failures in the unchanged agent
@@ -36,7 +36,7 @@ packages `internal/modelpreparations` and `internal/training`. The shutdown and
 revocation tests reported cancellation or changed output while verifying
 ownership of the container. These tests belong to the agent owner. The OPS
 increment has separate passing catalog and component evidence. The repository
-gate remains open.
+gate was open in that run.
 
 The standalone control suite also reported failures in dataset import memory,
 password admission deadlines, backup restore roots and TLS file mode checks.
@@ -83,7 +83,8 @@ when cross-compiled with `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go test -c`
 and run in a disconnected Linux amd64 container as UID/GID 65534. Use a private
 tmpfs for the test's temporary directory. The restore-root contract rejects
 root-owned fixture identities, so the non-root UID and GID are required for
-this comparison. The native macOS non-browser gate remains red.
+this comparison. The native macOS non-browser gate was red with the original
+workstation fixture.
 
 
 ### Targeted recheck after the agent fix
@@ -94,3 +95,55 @@ agent packages each passed 10 repetitions with the resolved `TMPDIR` and
 subcases still failed on macOS. The same restore and TLS tests passed in
 a disconnected Linux amd64 container as UID/GID 65534. This run used the
 targeted tests, catalog checks and an isolated Docker import fixture.
+
+### Workstation fixture groups
+
+The native macOS restore-root and TLS setgid failures were reproducible on
+`e14d11b0` with the same assertions and a scratch directory inheriting GID 0
+from `/private/tmp`. The restore-root contract requires a nonzero group.
+On the workstation, chmod by the unprivileged file owner also cleared the
+setgid bit on a GID 0 fixture file. Setting only the lane's private test
+directory to the current user's primary group preserved the setgid bit and
+all four previously failing cases passed with the same code. Use a resolved
+path and an isolated directory owned by a non-root user with a nonzero
+primary group.
+
+```sh
+scratch=$(mktemp -d /private/tmp/ownsolid-ops-test.XXXXXXXX)
+mkdir -m 0700 "$scratch/tmp"
+chgrp "$(id -g)" "$scratch/tmp"
+export TMPDIR="$scratch/tmp/"
+```
+
+The same restore-root and TLS test binaries passed separately in a
+disconnected Linux amd64 container running as UID/GID 65534, using its
+private tmpfs. The Linux evidence and corrected workstation fixture are
+separate from the historical GID 0 runs.
+
+The catalog race suite and the opt-in Docker test passed after the rebase.
+The same real signed VictoriaLogs archive was imported through
+`ImportInstallImage` twice in a fresh, disconnected Docker 29.1.3 store.
+Readback retained the signed manifest digest and an empty tag list, with
+one image in the store. The operator still owns the catalog installation
+decision, audit and workload admission. OPS-104's five selected tests
+passed with disposable PostgreSQL 18.6, pgvector 0.8.7 and VictoriaLogs
+1.53.0, including exact settlement matching and the real log-store path.
+
+### Rebased acceptance run
+
+On the `e14d11b0` baseline with the private workstation fixture, `make check`,
+`make build`, and every default test target passed. Go ran with
+`GOMAXPROCS=2` and `GOFLAGS=-p=1`. The native browser harness used
+`OWNSOLID_PLAYWRIGHT_PORT_OFFSET` on two private loopback ports and two
+workers, running the two applications in sequence. Console passed 1,046
+tests with 23 live-installation skips. Portal passed 387 with five
+live-installation skips. The separate `make` invocation reused these
+completed browser and dependency prerequisites and ran the remaining Go,
+Rust and web unit recipes.
+
+```sh
+make check && make build
+(cd web && pnpm --filter ./apps/console run test:browser --workers=2)
+(cd web && pnpm --filter ./apps/portal run test:browser --workers=2)
+make -o test-web-browser -o web-install test
+```
