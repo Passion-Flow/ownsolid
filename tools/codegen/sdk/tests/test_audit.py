@@ -88,6 +88,24 @@ class InventoryTests(unittest.TestCase):
                 self.assertEqual(len(expected), 3)
                 self.assertCountEqual(actual, expected)
 
+    def test_legacy_path_alias_keeps_sdk_identity_without_a_second_route(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = "/node"
+            operation = {"get": {"operationId": "status", "x-audiences": ["admin", "portal"]}}
+            write_contract(root, "components", {path: operation})
+            write_contract(root, "nodes", {path: operation})
+            baseline = inventory(root)
+            self.assertEqual(len(baseline["findings"]), 2)
+            source = root / "nodes/openapi.json"
+            source.write_text(json.dumps({
+                "paths": {path: {"$ref": "../components/openapi.json#/paths/~1node"}},
+            }))
+            current = inventory(root)
+            self.assertEqual(current["operations"], baseline["operations"])
+            self.assertEqual(current["findings"], [])
+            self.assertEqual(compare_operations(baseline, current), [])
+
     def test_distinct_audiences_and_methods_do_not_conflict(self):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch)
