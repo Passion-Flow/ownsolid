@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
@@ -21,11 +22,17 @@ const passwordChangeRevokeReason = "password_changed"
 // PASSWORD_CURRENT_INVALID and is audited; the new one must pass the password policy and
 // differ from the current one (PASSWORD_UNCHANGED).
 func (s *Service) ChangePassword(ctx context.Context, a Auth, current, next, request string) (IssuedSession, error) {
+	return s.ChangePasswordWithAdminTOTP(ctx, a, current, next, "", request)
+}
+
+// ChangePasswordWithAdminTOTP verifies inline step-up for an enrolled Admin
+// in the transaction that replaces the credential and rotates the session.
+func (s *Service) ChangePasswordWithAdminTOTP(ctx context.Context, a Auth, current, next, otp, request string) (IssuedSession, error) {
 	var out IssuedSession
 	if !sessionActor(a) {
 		return out, failure("AUTH_SESSION_EXPIRED")
 	}
-	if !passwordInput(current) || !passwordInput(next) {
+	if !passwordInput(current) || !passwordInput(next) || otp != "" && !validAdminTOTPCode(otp) {
 		return out, failure("VALIDATION_FAILED")
 	}
 	store, e := s.recoveryStore(true)
@@ -75,6 +82,7 @@ func (s *Service) ChangePassword(ctx context.Context, a Auth, current, next, req
 	if e != nil {
 		return out, e
 	}
+	var refused error
 	e = store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
 		if e := s.RecheckWithin(ctx, tx, a); e != nil {
 			return e
@@ -85,6 +93,39 @@ func (s *Service) ChangePassword(ctx context.Context, a Auth, current, next, req
 				return failure("PASSWORD_CURRENT_INVALID")
 			}
 			return e
+		}
+		if a.Me.Audience == "admin" {
+			factor, err := adminTOTPFactorWithin(ctx, tx, a.Me.User.ID)
+			if err != nil {
+				return err
+			}
+			if factor.enabled {
+				if otp == "" {
+					return failure("ACCESS_DENIED")
+				}
+				tenant, err := adminTOTPTenant(ctx, tx)
+				if err != nil {
+					return err
+				}
+				if tenant != factor.tenant {
+					return failure("ACCESS_DENIED")
+				}
+				var now time.Time
+				if err := tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT clock_timestamp()")).Scan(&now); err != nil {
+					return err
+				}
+				step, ok, err := s.verifyAdminTOTPWithin(ctx, tx, factor, a.Me.User.ID, otp, now)
+				if err != nil {
+					return err
+				}
+				if !ok {
+					refused = failure("AUTH_INVALID_CREDENTIALS")
+					return nil
+				}
+				if err := advanceAdminTOTPStep(ctx, tx, a.Me.User.ID, factor.id, step); err != nil {
+					return err
+				}
+			}
 		}
 		if e := updateRecoveryCredential(ctx, tx, a.Me.User.ID, replacement); e != nil {
 			return e
@@ -98,7 +139,7 @@ func (s *Service) ChangePassword(ctx context.Context, a Auth, current, next, req
 		if e := revokeAuthorityWithin(ctx, tx, a.Me.User.ID, passwordChangeRevokeReason); e != nil {
 			return e
 		}
-		issued, e := s.issueSessionWithin(ctx, tx, a.Me.User.ID, a.Epoch+1, a.Me.Audience, "", request, nil, "")
+		issued, e := s.issueAuthorizedSessionWithin(ctx, tx, a.Me.User.ID, a.Epoch+1, a.Me.Audience, "", request, nil, "", true)
 		if e != nil {
 			return e
 		}
@@ -114,7 +155,7 @@ func (s *Service) ChangePassword(ctx context.Context, a Auth, current, next, req
 	if e != nil {
 		return IssuedSession{}, sessionError(e)
 	}
-	return out, nil
+	return out, refused
 }
 
 // passwordInput bounds a password as it arrives, before the policy normalizes it.

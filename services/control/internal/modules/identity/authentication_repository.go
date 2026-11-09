@@ -55,22 +55,28 @@ func (s *Service) Authenticate(ctx context.Context, token, audience string) (Aut
 }
 
 func (s *Service) Login(ctx context.Context, email, password, audience, previous, request string) (Me, string, time.Time, error) {
-	var out Me
+	issued, _, err := s.LoginBrowser(ctx, email, password, audience, previous, "", request)
+	return issued.Me, issued.Token, issued.ExpiresAt, err
+}
+
+// LoginBrowser starts password authentication and returns either a complete
+// session or a pending Admin challenge bound to the browser context.
+func (s *Service) LoginBrowser(ctx context.Context, email, password, audience, previous, browser, request string) (IssuedSession, *AdminTOTPChallenge, error) {
 	if !sessionAudience(audience) {
-		return out, "", time.Time{}, failure("AUTH_INVALID_CREDENTIALS")
+		return IssuedSession{}, nil, failure("AUTH_INVALID_CREDENTIALS")
 	}
 	store, e := s.Repository()
 	if e != nil {
-		return out, "", time.Time{}, e
+		return IssuedSession{}, nil, e
 	}
 	if s.Passwords == nil || len(s.HMACKey) < security.MinimumHMACKeyBytes || len(s.HMACKey) > security.MaximumHMACKeyBytes {
-		return out, "", time.Time{}, failure("IDENTITY_LOGIN_CONFIGURATION_REQUIRED")
+		return IssuedSession{}, nil, failure("IDENTITY_LOGIN_CONFIGURATION_REQUIRED")
 	}
 	ctx, cancel := s.sessionContext(ctx)
 	defer cancel()
 	canonical, _, e := security.Email(email)
 	if e != nil {
-		return out, "", time.Time{}, e
+		return IssuedSession{}, nil, e
 	}
 	var id, phc, status string
 	var credentialVersion, epoch int64
@@ -79,7 +85,7 @@ func (s *Service) Login(ctx context.Context, email, password, audience, previous
 		`SELECT u.id::text,c.password_phc,c.version,u.auth_epoch,u.status,u.is_platform_admin FROM users u JOIN password_credentials c ON c.user_id=u.id WHERE u.email_canonical=$1`,
 		`SELECT u.id,c.password_phc,c.version,u.auth_epoch,u.status,u.is_platform_admin FROM users u JOIN password_credentials c ON c.user_id=u.id WHERE u.email_canonical=?`, `SELECT U.ID,C.PASSWORD_PHC,C.VERSION,U.AUTH_EPOCH,U.STATUS,U.IS_PLATFORM_ADMIN FROM USERS U JOIN PASSWORD_CREDENTIALS C ON C.USER_ID=U.ID WHERE U.EMAIL_CANONICAL=?`, canonical)).Scan(&id, &phc, &credentialVersion, &epoch, &status, &admin)
 	if e != nil && !errors.Is(e, sql.ErrNoRows) {
-		return out, "", time.Time{}, sessionError(e)
+		return IssuedSession{}, nil, sessionError(e)
 	}
 	eligible := e == nil && status == "active" && (audience == "portal" || admin)
 	if !eligible {
@@ -87,18 +93,19 @@ func (s *Service) Login(ctx context.Context, email, password, audience, previous
 	}
 	ok, e := s.Passwords.Verify(ctx, phc, password)
 	if e != nil {
-		return out, "", time.Time{}, verifyError(e)
+		return IssuedSession{}, nil, verifyError(e)
 	}
 	if !eligible || !ok {
 		e = store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
 			return audit.WriteAnonymousWithin(ctx, tx, audience, "auth.login_failed", "failure", request, security.MAC(s.HMACKey, "m01-audit", canonical))
 		})
 		if e != nil {
-			return out, "", time.Time{}, sessionError(e)
+			return IssuedSession{}, nil, sessionError(e)
 		}
-		return out, "", time.Time{}, failure("AUTH_INVALID_CREDENTIALS")
+		return IssuedSession{}, nil, failure("AUTH_INVALID_CREDENTIALS")
 	}
 	var issued IssuedSession
+	var challenge *AdminTOTPChallenge
 	e = store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
 		if e := s.LockSessionUsersWithin(ctx, tx, id, previous, audience); e != nil {
 			return e
@@ -115,13 +122,24 @@ func (s *Service) Login(ctx context.Context, email, password, audience, previous
 		if current != phc || version != credentialVersion || u.Epoch != epoch || u.Status != "active" || audience == "admin" && !u.IsPlatformAdmin {
 			return failure("AUTH_INVALID_CREDENTIALS")
 		}
-		issued, e = s.IssueSessionWithin(ctx, tx, id, epoch, audience, previous, request, nil)
+		if audience == "admin" {
+			factor, e := adminTOTPFactorWithin(ctx, tx, id)
+			if e != nil {
+				return e
+			}
+			if factor.enabled {
+				challenge, e = s.startAdminTOTPWithin(ctx, tx, factor, id, epoch, version, previous, browser)
+				return e
+			}
+		}
+		// The user lock spans the factor lookup and the session write.
+		issued, e = s.issueAuthorizedSessionWithin(ctx, tx, id, epoch, audience, previous, request, nil, "auth.login_succeeded", true)
 		return e
 	})
 	if e != nil {
-		return out, "", time.Time{}, sessionError(e)
+		return IssuedSession{}, nil, sessionError(e)
 	}
-	return issued.Me, issued.Token, issued.ExpiresAt, nil
+	return issued, challenge, nil
 }
 
 func (s *Service) Logout(ctx context.Context, token, audience, request string) error {
