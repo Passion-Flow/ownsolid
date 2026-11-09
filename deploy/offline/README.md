@@ -765,3 +765,52 @@ The command verifies the entire archive before printing its release digest,
 notice paths and checksums, and the payload IDs referring to each notice.
 Use `prepare-bundle` to read the actual signed files. The inventory reflects
 the notice files selected and signed by the release manufacturer.
+
+## Install a read-only Agent from signed media
+
+Use a trusted Linux amd64 `ownsolid-install` on a systemd host. Stage the signed
+`ownsolid-agent-linux-amd64` archive on a private writable mounted volume with
+room for the verified extraction. Use public trust supplied independently of
+the archive. The protected release verification JSON needs `mount_root` and
+`trust_file`. The node needs private HTTPS access to the Control origin.
+
+Create a root-owned mode 0600 site JSON and supply the Control CA and one-use
+join token as separate root-owned mode 0600 files. Write the token using a
+protected input method that keeps it out of shell history and process arguments.
+
+```json
+{
+  "format_version": 1,
+  "control_origin": "https://control.site.example",
+  "ca_file": "/root/agent-input/control-ca.pem",
+  "join_token_file": "/root/agent-input/join-token"
+}
+```
+
+The optional `disk_path` selects the filesystem used for disk facts and
+defaults to `/`. Run as root:
+
+```sh
+ownsolid-install install-agent \
+  --bundle /mnt/release/ownsolid-agent.tar.gz \
+  --verification /root/agent-input/release-verification.json \
+  --config /root/agent-input/site.json
+```
+
+The installer verifies all signed bytes, creates the dedicated system account,
+and enrolls the Agent as that account. The service is enabled and started only
+after the installer confirms private identity state. Site inputs stay in place.
+The installer removes its own token copy after enrollment. If service startup
+fails, inspect the journal and repeat with the same signed inputs. Once the
+identity is saved, the original token can be absent and the site JSON can omit
+`join_token_file`.
+
+If Control definitively rejects the token, use a newly issued token. If the
+installer reports `INSTALL_AGENT_ENROLLMENT_UNRESOLVED`, preserve the private
+state directory and installed token copy at `/etc/ownsolid-agent/join-token`.
+Check the token and node records in Control using the request ID when reported.
+Remove the installed copy and issue a fresh token only after confirming that no
+enrollment committed. If it did commit and no valid identity was persisted,
+reconcile the node in Control before attempting another enrollment. This command
+is for initial delivery and replay. A conflict with existing installed files
+requires investigation before any replacement.

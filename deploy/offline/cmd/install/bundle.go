@@ -30,7 +30,7 @@ func runBundle(command string, args []string, out io.Writer) error {
 	timeout := flags.Duration("timeout", 30*time.Minute, "time limit for verifying or applying the release")
 	restore := command == "restore-bundle"
 	if err := flags.Parse(args); err != nil || flags.NArg() != 0 || *archive == "" || *policy == "" ||
-		(restore || command == "apply-bundle" || command == "registry-bundle" || command == "upgrade-plan" || command == "upgrade-bundle" || command == "upgrade-patch" || command == "rollback-bundle") != (*config != "") || (command == "prepare-bundle") != (*output != "") || (command == "upgrade-bundle" || command == "upgrade-patch") != (*backup != "") || (command == "upgrade-patch") != (*baseline != "") || restore != (*from != "") || (command == "helm-images") != (*registry != "") || *timeout <= 0 {
+		(restore || command == "install-agent" || command == "apply-bundle" || command == "registry-bundle" || command == "upgrade-plan" || command == "upgrade-bundle" || command == "upgrade-patch" || command == "rollback-bundle") != (*config != "") || (command == "prepare-bundle") != (*output != "") || (command == "upgrade-bundle" || command == "upgrade-patch") != (*backup != "") || (command == "upgrade-patch") != (*baseline != "") || restore != (*from != "") || (command == "helm-images") != (*registry != "") || *timeout <= 0 {
 		return errors.New(usage)
 	}
 	invalidIdentity := false
@@ -51,6 +51,8 @@ func runBundle(command string, args []string, out io.Writer) error {
 	ctx, cancel := context.WithTimeout(ctx, *timeout)
 	defer cancel()
 	switch command {
+	case "install-agent":
+		return install.InstallAgent(ctx, *config, *archive, verification, out)
 	case "restore-bundle":
 		return install.RestoreBundle(ctx, *config, *archive, *from, *identity, verification, install.ExecRunner{}, out)
 	case "apply-bundle":

@@ -63,6 +63,9 @@ func run(args []string) error {
 	case "validate-current", "build-current", "inspect-current":
 		c = factory.WithCurrentProfile(c)
 		command = strings.TrimSuffix(command, "-current")
+	case "validate-agent", "build-agent", "inspect-agent":
+		c = factory.WithAgentProfile(c)
+		command = strings.TrimSuffix(command, "-agent")
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

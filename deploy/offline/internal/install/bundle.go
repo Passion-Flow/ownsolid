@@ -152,6 +152,10 @@ func prepareBundle(ctx context.Context, configPath, archive string, policy bundl
 }
 
 func unpackCurrentBundle(ctx context.Context, archive string, policy bundle.Verification) (string, bundle.Result, func(), error) {
+	return unpackRelease(ctx, archive, policy, bundle.UnpackCurrent)
+}
+
+func unpackRelease(ctx context.Context, archive string, policy bundle.Verification, unpack func(context.Context, bundle.Verification, string, string) (bundle.Result, error)) (string, bundle.Result, func(), error) {
 	mount, err := filepath.EvalSymlinks(policy.MountRoot)
 	if err != nil || mount != policy.MountRoot || !canonicalPath(mount) || mount == "/" {
 		return "", bundle.Result{}, nil, errors.New("INSTALL_BUNDLE_STAGING_UNAVAILABLE: use a real mounted volume for release preparation")
@@ -162,7 +166,7 @@ func unpackCurrentBundle(ctx context.Context, archive string, policy bundle.Veri
 	}
 	cleanup := func() { _ = os.RemoveAll(stage) }
 	prepared := filepath.Join(stage, "prepared")
-	result, err := bundle.UnpackCurrent(ctx, policy, archive, prepared)
+	result, err := unpack(ctx, policy, archive, prepared)
 	if err != nil {
 		cleanup()
 		return "", bundle.Result{}, nil, fmt.Errorf("INSTALL_BUNDLE_VERIFICATION_FAILED: %w", err)

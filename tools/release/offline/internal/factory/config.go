@@ -14,6 +14,7 @@ import (
 
 type Config struct {
 	current               bool
+	agent                 bool
 	MountRoot             string `json:"mount_root"`
 	ArtifactRoot          string `json:"artifact_root"`
 	ManifestFile          string `json:"manifest_file"`
