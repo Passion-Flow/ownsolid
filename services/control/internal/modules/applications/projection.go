@@ -11,7 +11,7 @@ import (
 
 // projectionQuery keeps each vendor's SQL explicit. Source authority is still
 // rechecked by transaction and ConfigurationWithin before this query executes.
-func projectionQuery(dialect transaction.Dialect, conversations bool, tenant, workspace, user string, cursor pagination.Cursor, limit int) (transaction.Statement, error) {
+func projectionQuery(dialect transaction.Dialect, conversations bool, tenant, workspace, user, search string, cursor pagination.Cursor, limit int) (transaction.Statement, error) {
 	if limit < 1 || limit > pagination.MaximumLimit {
 		return transaction.Statement{}, failure("VALIDATION_FAILED")
 	}
@@ -42,6 +42,20 @@ func projectionQuery(dialect transaction.Dialect, conversations bool, tenant, wo
 		default:
 			return transaction.Statement{}, failure("STORAGE_UNAVAILABLE")
 		}
+	}
+	if search != "" {
+		if !conversations || dialect != transaction.PostgreSQL {
+			return transaction.Statement{}, failure("STORAGE_UNAVAILABLE")
+		}
+		// Reuse the conversation/turn index and return each conversation once.
+		query += ` AND (lower(f.name) LIKE lower($4) ESCAPE '!' OR EXISTS (
+			SELECT 1 FROM workflow_runs r
+			WHERE r.conversation_id=c.id AND r.tenant_id=c.tenant_id AND r.workspace_id=c.workspace_id
+			  AND r.workflow_id=c.workflow_id AND r.owner_id=c.owner_id AND r.version_id=c.version_id
+			  AND r.state IN ('succeeded','failed','cancelled','interrupted')
+			  AND (lower(r.question) LIKE lower($4) ESCAPE '!' OR lower(r.answer) LIKE lower($4) ESCAPE '!')
+		))`
+		args = append(args, pagination.ContainsPattern(search))
 	}
 	if cursor.ID != "" {
 		switch dialect {
