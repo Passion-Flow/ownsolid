@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from generate import CONTRACTS, METHODS, PUBLIC, UNLISTED, generate, project_contract
+from generate import CONTRACTS, METHODS, PUBLIC, UNLISTED, generate, project_contract, read_contract
 
 
 class ProjectionTests(unittest.TestCase):
@@ -74,7 +74,7 @@ class ProjectionTests(unittest.TestCase):
             if source.parent.name in UNLISTED:
                 continue
             with self.subTest(domain=source.parent.name):
-                original = json.loads(source.read_text(encoding="utf-8"))
+                original, _ = read_contract(source)
                 projected = project_contract(original)
                 actual = {
                     (path, method)
@@ -83,6 +83,55 @@ class ProjectionTests(unittest.TestCase):
                     if method in METHODS
                 }
                 self.assertEqual(actual, operations(original["paths"]))
+
+    def test_path_alias_keeps_the_legacy_local_schema(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = "/node/{node_id}"
+            owner, legacy = root / "components", root / "nodes"
+            owner.mkdir()
+            legacy.mkdir()
+            operation = {
+                "get": {
+                    "operationId": "status",
+                    "x-audiences": ["admin"],
+                    "responses": {"default": {"$ref": "#/components/responses/Problem"}},
+                },
+            }
+            (owner / "openapi.json").write_text(json.dumps({"paths": {path: operation}}))
+            local_problem = {"description": "Original Nodes error"}
+            source = legacy / "openapi.json"
+            source.write_text(json.dumps({
+                "paths": {path: {"$ref": "../components/openapi.json#/paths/~1node~1%7Bnode_id%7D"}},
+                "components": {"responses": {"Problem": local_problem}},
+            }))
+            materialized, aliases = read_contract(source)
+            self.assertEqual(aliases, {path})
+            projected = project_contract(materialized)
+            self.assertEqual(projected["paths"], {path: operation})
+            self.assertEqual(projected["components"]["responses"]["Problem"], local_problem)
+
+    def test_path_alias_rejects_remote_mismatched_and_chained_references(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            nodes, components = root / "nodes", root / "components"
+            nodes.mkdir()
+            components.mkdir()
+            source = nodes / "openapi.json"
+            target = components / "openapi.json"
+            path = "/node"
+            allowed = "../components/openapi.json#/paths/~1node"
+            for invalid in ("https://example.invalid/openapi.json#/paths/~1node",
+                            "../components/openapi.json#/paths/~1other", "../nodes/openapi.json#/paths/~1node"):
+                with self.subTest(reference=invalid):
+                    source.write_text(json.dumps({"paths": {path: {"$ref": invalid}}}))
+                    with self.assertRaisesRegex(ValueError, "unsupported OpenAPI path reference"):
+                        read_contract(source)
+            source.write_text(json.dumps({"paths": {path: {"$ref": allowed}}}))
+            for item in ({}, {"$ref": allowed}):
+                target.write_text(json.dumps({"paths": {path: item}}))
+                with self.assertRaisesRegex(ValueError, "missing canonical OpenAPI path"):
+                    read_contract(source)
 
     def test_existing_output_is_preserved(self):
         with tempfile.TemporaryDirectory() as temp:
