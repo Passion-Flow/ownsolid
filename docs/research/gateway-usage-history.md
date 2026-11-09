@@ -157,7 +157,7 @@ no next link. Failed responses returned only their normal problems.
 
 The passing overlay and runner are retained in
 `/root/lane-gw-acceptance/gw107-link.yMl6SoLb` on the Linux test host.
-The production route remains reachable with JSON-cursor continuation.
-DEV can adopt the shared type and writer changes with the public
-contract, and WEB can then verify attachment navigation and download
-from the actual usage page.
+The [published CSV contract](gateway-usage-csv-contract.md) uses
+JSON-cursor continuation and is ready for Web integration. Adopting the
+shared type and writer changes needs a corresponding contract update
+and verification from the usage page.
