@@ -183,9 +183,14 @@ func TestScopedFleetHistoryOffline(t *testing.T) {
 
 func startHistoryVM(t *testing.T, ctx context.Context, retention string, flags ...string) (string, func() int64, func()) {
 	t.Helper()
+	return startHistoryVMAt(t, ctx, retention, "http", flags...)
+}
+
+func startHistoryVMAt(t *testing.T, ctx context.Context, retention, scheme string, flags ...string) (string, func() int64, func()) {
+	t.Helper()
 	dir := filepath.Join(t.TempDir(), "data")
 	flags = append(flags, "-storageDataPath="+dir, "-retentionPeriod="+retention, "-memory.allowedBytes=192MB", "-search.disableCache")
-	origin, stop := startMonitoringFixtureProcess(t, ctx, "VictoriaMetrics "+retention, "OWNSOLID_TEST_VICTORIA_METRICS", flags...)
+	origin, stop := startMonitoringFixtureProcessAt(t, ctx, scheme, "VictoriaMetrics "+retention, "OWNSOLID_TEST_VICTORIA_METRICS", flags...)
 	return origin, func() int64 {
 		stop()
 		var size int64
@@ -202,6 +207,11 @@ func startHistoryVM(t *testing.T, ctx context.Context, retention string, flags .
 }
 
 func startMonitoringFixtureProcess(t *testing.T, ctx context.Context, name, environment string, flags ...string) (string, func()) {
+	t.Helper()
+	return startMonitoringFixtureProcessAt(t, ctx, "http", name, environment, flags...)
+}
+
+func startMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme, name, environment string, flags ...string) (string, func()) {
 	t.Helper()
 	binary := os.Getenv(environment)
 	if !filepath.IsAbs(binary) {
@@ -243,7 +253,7 @@ func startMonitoringFixtureProcess(t *testing.T, ctx context.Context, name, envi
 		t.Logf("stopped %s on %s", name, address)
 	})
 	t.Cleanup(stop)
-	origin := "http://" + address
+	origin := scheme + "://" + address
 	deadline, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 	for deadline.Err() == nil {
