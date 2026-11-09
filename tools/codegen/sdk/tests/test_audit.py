@@ -58,6 +58,21 @@ class InventoryTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertEqual(json.loads(result.stdout), report)
 
+    def test_cloud_inventory_keeps_generated_operation_identities(self):
+        contracts = SDK.parents[2] / "api/openapi/v1"
+        report = inventory(contracts)
+        cloud_ids = {
+            op["operation_id"] for op in report["operations"] if op["domain"] == "cloud-inventory"
+        }
+        self.assertEqual(cloud_ids, {
+            "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAws",
+            "postSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImports",
+            "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImportsKey",
+            "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAws",
+            "postSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImports",
+            "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImportsKey",
+        })
+
     def test_distinct_audiences_and_methods_do_not_conflict(self):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch)

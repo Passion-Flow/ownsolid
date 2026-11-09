@@ -48,6 +48,7 @@
         }
       ],
       "get": {
+        "operationId": "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAws",
         "x-audiences": [
           "portal"
         ],
@@ -141,6 +142,7 @@
         }
       ],
       "post": {
+        "operationId": "postSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImports",
         "x-audiences": [
           "portal"
         ],
@@ -251,6 +253,7 @@
         }
       ],
       "get": {
+        "operationId": "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImportsKey",
         "x-audiences": [
           "portal"
         ],
@@ -317,6 +320,7 @@
         }
       ],
       "get": {
+        "operationId": "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAws",
         "x-audiences": [
           "admin"
         ],
@@ -410,6 +414,7 @@
         }
       ],
       "post": {
+        "operationId": "postSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImports",
         "x-audiences": [
           "admin"
         ],
@@ -520,6 +525,7 @@
         }
       ],
       "get": {
+        "operationId": "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImportsKey",
         "x-audiences": [
           "admin"
         ],

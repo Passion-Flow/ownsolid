@@ -31,11 +31,35 @@ dataset or remote lookup is added.
 
 Test private and unlisted exclusion, multi-audience collisions, parameter
 renaming, per-document ID collisions, and missing IDs. Run the report on the
-current repository in a network namespace with no external routes. In the
-current tree the cloud inventory contract contains six public operations
-without IDs. The components and nodes contracts both declare four
-node-exporter routes. The owning contracts and generated clients require
-a coordinated change to resolve those records without breaking callers.
+current repository in a network namespace with no external routes. The
+components and nodes contracts both declare four node-exporter routes.
+The owning contracts and generated clients require a coordinated change
+to resolve those records without breaking callers.
+
+## Cloud inventory operation identities
+
+The six Admin and Portal [cloud inventory routes](../../api/openapi/v1/cloud-inventory/openapi.json)
+already serve retained observations, authorized import, and receipt lookup.
+The [OpenAPI operation object](https://spec.openapis.org/oas/v3.1.1.html#operation-object)
+gives each operation a unique identifier for client tooling. The pinned
+[oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) and
+[openapi-python-client](https://github.com/openapi-generators/openapi-python-client)
+already infer names for these routes. A scratch generation proved that
+making those inferred names explicit produces byte-identical Go and
+Python client sources. Shorter identifiers would change released client
+symbols. Keep the wire parameters, body, status and route unchanged.
+
+Use the current [SDK licenses](sdk.md#licenses). The metadata adds no
+dependency, model or dataset. Keep all six explicit identifiers covered
+by the offline inventory test. Confirm generated Web artifacts and
+exercise the existing TLS and PostgreSQL authority, import and receipt
+fixtures. The provider tests use loopback TLS protocol fixtures.
+
+The disconnected Linux fixture passed both audiences' authorization,
+retained reads, import and receipt replay, and rollback tests against real
+PostgreSQL and the loopback AWS protocol fixture. The inventory no longer
+reports missing cloud operation IDs. The generated help index changes only
+the six cloud operation identifiers.
 
 ## ARC-104 node enrollment profile
 
