@@ -972,6 +972,18 @@ export interface components {
             ];
             facts: components["schemas"]["Facts"];
             inference?: components["schemas"]["InferenceObservation"];
+        } | {
+            /** @constant */
+            protocol_version: "1.0";
+            /** @constant */
+            execution_profile: "kubernetes_node";
+            capabilities: [
+                "collect_facts.v1",
+                "kubernetes.join.v1",
+                "kubernetes.token.v1",
+                "kubernetes.observe.v1"
+            ];
+            facts: components["schemas"]["Facts"];
         };
         Enrollment: {
             /** @constant */
@@ -1074,6 +1086,21 @@ export interface components {
                 "training.run.v1",
                 "model.prepare.v1",
                 "inference.derived.v1"
+            ];
+            facts: components["schemas"]["Facts"];
+            join_token: string;
+            /** @description PEM certificate request from a key generated on the node; required where control issues certificates. */
+            certificate_request?: string;
+        } | {
+            /** @constant */
+            protocol_version: "1.0";
+            /** @constant */
+            execution_profile: "kubernetes_node";
+            capabilities: [
+                "collect_facts.v1",
+                "kubernetes.join.v1",
+                "kubernetes.token.v1",
+                "kubernetes.observe.v1"
             ];
             facts: components["schemas"]["Facts"];
             join_token: string;
@@ -1231,8 +1258,8 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
             /** @enum {string} */
-            execution_profile: "read_only" | "systemd_components" | "systemd_maintenance" | "docker_inference" | "docker_ai" | "docker_model_lifecycle";
-            capabilities: ("collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "training.run.v1" | "training.run.v1" | "model.prepare.v1" | "model.prepare.v1" | "model.prepare.v1" | "inference.derived.v1" | "inference.derived.v1" | "inference.derived.v1" | "gateway.start.v1" | "gateway.stop.v1")[];
+            execution_profile: "read_only" | "systemd_components" | "systemd_maintenance" | "docker_inference" | "docker_ai" | "docker_model_lifecycle" | "kubernetes_node";
+            capabilities: ("collect_facts.v1" | "node_exporter.install.v1" | "node_exporter.start.v1" | "node_exporter.stop.v1" | "node_exporter.remove.v1" | "node_exporter.observe.v1" | "node_exporter.configure.v1" | "node_exporter.restart.v1" | "node_exporter.upgrade.v1" | "node_exporter.rollback.v1" | "node_exporter.logs.v1" | "inference.deploy.v1" | "inference.stop.v1" | "inference.remove.v1" | "inference.observe.v1" | "inference.verify.v1" | "training.run.v1" | "model.prepare.v1" | "inference.derived.v1" | "gateway.start.v1" | "gateway.stop.v1" | "kubernetes.join.v1" | "kubernetes.token.v1" | "kubernetes.observe.v1")[];
         };
         JoinToken: {
             /** Format: uuid */
@@ -1252,7 +1279,7 @@ export interface components {
             /** Format: date-time */
             expires_at: string;
             /** @enum {string} */
-            execution_profile: "read_only" | "systemd_components" | "systemd_maintenance" | "docker_inference" | "docker_ai" | "docker_model_lifecycle";
+            execution_profile: "read_only" | "systemd_components" | "systemd_maintenance" | "docker_inference" | "docker_ai" | "docker_model_lifecycle" | "kubernetes_node";
         };
         MintedToken: {
             /** Format: uuid */
@@ -1273,7 +1300,7 @@ export interface components {
             expires_at: string;
             token: string;
             /** @enum {string} */
-            execution_profile: "read_only" | "systemd_components" | "systemd_maintenance" | "docker_inference" | "docker_ai" | "docker_model_lifecycle";
+            execution_profile: "read_only" | "systemd_components" | "systemd_maintenance" | "docker_inference" | "docker_ai" | "docker_model_lifecycle" | "kubernetes_node";
         };
         Task: {
             /** Format: uuid */
@@ -1303,7 +1330,7 @@ export interface components {
             workspace_id: string;
             node_name: string;
             /** @enum {string} */
-            execution_profile?: "read_only" | "systemd_components" | "systemd_maintenance" | "docker_inference" | "docker_ai" | "docker_model_lifecycle";
+            execution_profile?: "read_only" | "systemd_components" | "systemd_maintenance" | "docker_inference" | "docker_ai" | "docker_model_lifecycle" | "kubernetes_node";
         };
         Reason: {
             reason: string;
