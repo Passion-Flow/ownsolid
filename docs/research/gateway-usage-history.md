@@ -10,8 +10,8 @@ Export](https://portkey.ai/docs/product/observability/logs-export) separates
 the filtered request log from scheduled or manual file delivery. The ownsolid
 history API already returns bounded JSON pages with request identity, state,
 timestamps and canonical outcome metadata. This slice verifies extraction
-through the existing authorized request list. The distribution service owns the bounded CSV artifact. The public
-attachment contract and any bulk snapshot belong to the export owner.
+through the existing authorized request list. The distribution service
+owns the bounded CSV artifact and HTTP attachment.
 
 Use the existing descending keyset of admitted_at and request ID, with
 tenant and workspace equality, actor ownership in Portal, and the optional
@@ -92,19 +92,47 @@ A database aggregate would lose call-level identity and would need its own
 authorization and canonical receipt checks. A CSV projection of the entire
 history DTO would expose unnecessary identity and routing fields.
 
-Exercise the artifact through a test-only TLS adapter using real
-PostgreSQL-backed sessions. Check each row against the authorized history
-fixture, the final cursor, an over-limit request, cursor scope and a
-foreign tenant. Replay a page, verify that the request rows and request
-audit counts have not changed, and reject a corrupted receipt before
-emitting any CSV. DEV owns the production HTTP route, response headers
-and generated contract. UI acceptance stays open.
+## Download boundary
 
-On 2026-11-09, the isolated PostgreSQL TLS fixture exported four
-single-row Portal pages and five Admin workspace rows. The Portal pages
-totaled 20 verified tokens and distinguished literal zeros, cancellation
-with measured latency and an admission without a receipt. Replaying the
-same page preserved its bytes, cursor, request rows and audit count.
-An over-limit request, a changed key or audience cursor, and a foreign
-tenant were refused. Changing only the stored receipt latency made
-the export fail without publishing a CSV artifact.
+Use a read-only GET on the cell-scoped Admin and Portal request histories,
+adding `/export` to the list path. Use the dispatcher's existing bounded
+memory download to send `text/csv; charset=utf-8`, a fixed
+`gateway-usage.csv` attachment name per [RFC 6266](https://www.rfc-editor.org/rfc/rfc6266.html),
+the byte length and the SHA-256 of the complete artifact. Reject malformed
+raw queries before parsing the existing filters so an invalid key selector
+cannot silently widen the export. Return the normal problem response if
+authorization, pagination, storage or receipt verification fails. A caller
+may continue by passing the opaque next cursor from the corresponding JSON
+history page with the same key and scope. The two reads can observe
+different data if new calls are admitted between them.
+
+A self-contained download page should carry the next cursor from its own
+`ExportUsagePage` result as a [next Link](https://www.rfc-editor.org/rfc/rfc8288.html).
+The shared `httpserver.MemoryDownload` type in
+`services/control/internal/platform/httpserver/download.go` currently has
+no continuation field. Its writer, `success` in
+`services/control/internal/modules/identity/http/handler.go`, is the exact
+integration point for an optional next link before `WriteHeader`. The
+distribution export branch can then populate it from `UsageExport.NextCursor`
+and the original scoped route with the same key and limit. Omit the link
+on the last page. Keep pagination out of the CSV and the attachment name.
+The public OpenAPI and generated consumers should describe the download,
+its success headers and normal problem responses. The new route uses
+existing Go standard library types and has no new dependencies.
+
+Test through the production dispatcher over TLS using real PostgreSQL.
+Verify exact headers and rows, pagination with the JSON cursor, identical
+retries on unchanged data, empty foreign-actor results, cross-tenant and
+cross-audience refusal, malformed and over-limit queries, and a bad
+receipt. Failed responses must have no CSV body or attachment headers.
+The isolated run on 2026-11-09 used the real cell router and identity
+dispatcher with locally verified TLS. The container network namespace
+had only loopback. Four single-row Portal attachments contained 20
+verified tokens, and the Admin attachment contained five workspace rows.
+The CSV used the same JSON cursors, returned identical bytes on retry
+and left request rows and audit counts unchanged. An unauthenticated
+request, over-limit or malformed query, changed key or audience cursor,
+foreign tenant and corrupt receipt all returned a problem without any
+attachment. The companion receipt regression also passed on the JSON
+list and detail. The direct continuation link, versioned contract and
+UI acceptance remain open.

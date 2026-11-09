@@ -21,14 +21,16 @@ digest, the same check used for report replay. If a stored receipt fails
 verification, the request returns `STORAGE_UNAVAILABLE` without a partial
 page. See the [usage history verification](../../../../../docs/research/gateway-usage-history.md).
 
-The distribution service's ExportUsagePage serializes one authorized page as
-CSV and returns the next cursor separately. Each row counts one admitted
-request. Blank elapsed time means no reported outcome. Blank token cells
-mean unknown usage. A reported zero is written as 0. The artifact excludes
-key identifiers and secrets, request content and actor or deployment
-metadata. Follow the returned cursor with the same authorization and
-filter. These are live pages. The versioned download endpoint and UI are
-pending.
+Add `/export` to the cell-scoped Admin or Portal request list path to
+download one authorized page as `gateway-usage.csv`. The request takes the
+same `api_key_id`, `limit` and `cursor` query parameters. To continue,
+use the cursor from the corresponding JSON history page with the same
+authorization and filter. Both reads observe live data.
+
+Each CSV row counts one admitted request. Blank elapsed time means no
+reported outcome. Blank token cells mean unknown usage. A reported zero
+is written as 0. The file excludes key identifiers and secrets, request
+content and actor or deployment metadata.
 
 ## Trace an admitted call
 

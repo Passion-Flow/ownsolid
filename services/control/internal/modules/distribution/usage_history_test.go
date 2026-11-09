@@ -85,7 +85,7 @@ func TestGatewayUsageHistoryAuditExport(t *testing.T) {
 	sort.Sort(sort.Reverse(sort.StringSlice(expected)))
 	outcomes := map[string]gatewaywire.Outcome{first.RequestID: first, second.RequestID: second, cancelled.RequestID: cancelled}
 	var tokens uint32
-	var firstCursor string
+	var cursors []string
 	for i, id := range expected {
 		value := portal.Call("GET", path+"?"+values.Encode(), nil, 200, "GatewayRequestPageResponse")
 		raw, err := json.Marshal(value)
@@ -117,9 +117,7 @@ func TestGatewayUsageHistoryAuditExport(t *testing.T) {
 			t.Fatal("unknown usage was manufactured")
 		}
 		if page.NextCursor != nil {
-			if i == 0 {
-				firstCursor = *page.NextCursor
-			}
+			cursors = append(cursors, *page.NextCursor)
 			values.Set("cursor", *page.NextCursor)
 		}
 	}
@@ -134,9 +132,9 @@ func TestGatewayUsageHistoryAuditExport(t *testing.T) {
 		count(portal, path+"?api_key_id="+other.key.Key.ID) != 0 {
 		t.Fatal("history request totals crossed an actor or key boundary")
 	}
-	changed := url.Values{"api_key_id": {other.key.Key.ID}, "cursor": {firstCursor}}
+	changed := url.Values{"api_key_id": {other.key.Key.ID}, "cursor": {cursors[0]}}
 	portal.Call("GET", path+"?"+changed.Encode(), nil, 400, "Problem")
-	admin.Call("GET", adminPath+"?cursor="+url.QueryEscape(firstCursor), nil, 400, "Problem")
+	admin.Call("GET", adminPath+"?cursor="+url.QueryEscape(cursors[0]), nil, 400, "Problem")
 
 	foreign := setup(t)
 	if foreign.a.Me.Workspace.TenantID == c.a.Me.Workspace.TenantID {
@@ -147,7 +145,7 @@ func TestGatewayUsageHistoryAuditExport(t *testing.T) {
 	foreignAdmin.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": foreign.password}, 200, "")
 	foreignAdmin.Call("GET", adminPath, nil, 404, "Problem")
 	foreignAdmin.Call("GET", adminPath+"/"+first.RequestID, nil, 404, "Problem")
-	assertGatewayUsageCSV(t, c, foreign, a, other, stamp, expected, map[string][]string{
+	assertGatewayUsageCSV(t, c, foreign, server, foreignServer, a, other, stamp, expected, cursors, map[string][]string{
 		first.RequestID:     {"reported", "succeeded", "1", "42", "7", "2", "9"},
 		second.RequestID:    {"reported", "succeeded", "1", "0", "11", "0", "11"},
 		cancelled.RequestID: {"reported", "client_cancelled", "1", "23", "", "", ""},
