@@ -50,14 +50,15 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 		t.Fatal(e)
 	}
 	account.Config.Datasets = config.DatasetConfiguration{ArtifactRoot: root, PythonExecutable: binary, ProcessorFile: script}
+	policy := account.Config.Policy()
+	policy.Datasets.Concurrency = 2
+	account.Config.Runtime = &policy
 	if os.Getenv("OWNSOLID_TEST_PREVIEW_PYTHON") != "" {
 		if account.Config.Models.ArtifactRoot == "" {
 			account.Config.Models.ArtifactRoot = t.TempDir()
 		}
 		// Reserve the subprocess budget plus time for a cold model-store read.
-		policy := account.Config.Policy()
 		policy.HTTP.RequestSeconds = 45
-		account.Config.Runtime = &policy
 	}
 	if account.Config.Models.ArtifactRoot != "" {
 		if e = models.InitializeStore(account.Config.Models.ArtifactRoot, os.Geteuid(), os.Getegid()); e != nil {
@@ -98,6 +99,10 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 		if e != nil {
 			t.Fatal(e)
 		}
+	}
+	handler.Datasets.CSVImportCandidate, e = datasets.NewCSVImportCandidate(handler.Datasets.Service)
+	if e != nil {
+		t.Fatal(e)
 	}
 	server := httpfixture.NewTLSServer(t, handler)
 	defer server.Close()
@@ -202,6 +207,7 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	if handler.Datasets.TokenizerPreview != nil {
 		verifyTokenizerPreviewHTTPS(t, handler.Datasets.Service, auth, portal, admin, path, adminPath, previewFixture)
 	}
+	verifyCSVImportHTTPS(t, handler.Datasets, portal, admin, root, workspace, dataset, password)
 }
 
 func createHTTPSDatasetDraft(t *testing.T, client *httpfixture.Client, path string, raw []byte) map[string]any {
