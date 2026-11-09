@@ -131,7 +131,13 @@ data-processing Python and component assets are not installed there. The ARC-004
 was checked against that baseline and adds no failure. ARC-005 was checked the same way
 on the packages it touches (nodes, identity HTTP, machine composition, agent tests).
 
-On disconnected Linux PostgreSQL 18.6, the existing TestEveryCellOwnedTableCarriesScope check fails because audit_chain_head has zero of the two required cell scope columns. The [database catalogue review](../research/postgresql-catalog-upgrade-gate.md) records the baseline and the required Audit-owned forward migration.
+At schema 57, TestEveryCellOwnedTableCarriesScope fails because audit_chain_head lacks
+both required scope columns. The 58 candidate passed on disconnected local Linux arm64
+PostgreSQL 18.6, including exact catalog and audit checkpoint replay. Shared Linux amd64
+qualification is pending. The bounded replay attempt exited before starting a fixture
+because the shared heavy-test lock stayed occupied. Admission requires both locks and
+full I/O PSI avg10 at most 5%, along with the memory, disk and compiler checks in the
+[audit scope replay gate](../research/audit-chain-head-cell-scope.md#shared-linux-replay-gate).
 
 `deploy/images/control/assets/index.html`, the old placeholder page, is unused and awaits
 removal by the owner: no image build copies it.

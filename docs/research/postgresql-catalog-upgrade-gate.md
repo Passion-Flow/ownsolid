@@ -110,8 +110,23 @@ Applying those bytes in a disposable schema after 58 created
 columns with defaults required by [ADR 0006](../decisions/0006-cell-and-site-scope.md).
 The existing cell-owned table check therefore rejects this successor.
 
-Activation requires the Gateway-owned replacement SQL to define both
-scoped columns with the local defaults. Recompute the signed lineage
-checksum, table count and all three catalog forms on the actual
-predecessor, and rerun the ownership and logical restore tests against
-those exact bytes.
+The Gateway-owned replacement in c9654657 adds both non-null columns
+with the local defaults and references the exact alias tenant, workspace,
+site and cell through a composite foreign key. Its up checksum is
+`399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab`.
+The down checksum is
+`dff9447544bdb8b3fdb78f82356fbab997518250ca3c88049b454ebd33e63a32`.
+The Gateway fixture measured three successor catalogs after applying
+the Audit scope overlay. Keep these as comparison values. Assign the
+next contiguous migration only after the Audit migration lands on main.
+Recompute the signed lineage checksum, the 119-table expectation and
+the catalogs on the committed predecessor. Test fresh install, native
+upgrade and the logical restore histories starting at 55 through the
+then-current schema, including the exact down SQL and catalog replay.
+
+DAT-101 follows the Gateway migration and needs the coordinated
+REL-103/NET-101 checkpoint to bind both dataset references. The metering
+receipt and ledger fixture has no numbered production migration.
+Use the actual main tail when each owner hands off their SQL. See the
+[dataset restore boundary](dataset-import.md) and
+[metering admission requirements](usage-ledger.md).
