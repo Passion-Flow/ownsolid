@@ -58,5 +58,15 @@ The dispatcher has no product assistant command route. Keep the OpenAPI
 surface tied to registered operations. The adapter handoff must demonstrate
 the audience and session checks, propagate the server request ID to
 `RunForRequest`, and exercise the route's real success and failure responses
-before publishing its operation. The existing application cookie scheme
-reference mismatch is tracked in the [APP handoff](app-lane-questions.md#assistant-catalog-handoff-for-agt-103).
+before publishing its operation. Both existing reads now refer to the
+declared PortalSession scheme. See the [contract verification](public-api-inventory.md#portal-application-session-references).
+
+## Gateway usage CSV attachment
+
+Distribution can create a complete bounded CSV page from verified receipts.
+The current production dispatcher serves only the JSON page and detail.
+The CLI uses those registered reads. Add the public attachment operation
+after the HTTP owner registers the route and verifies its media type,
+continuation, authorization, and problem responses in the real dispatcher.
+See the [CSV service evidence](gateway-usage-history.md#bounded-csv-artifact)
+and the [CLI verification](gateway-usage-cli.md).
