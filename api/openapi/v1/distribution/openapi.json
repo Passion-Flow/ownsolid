@@ -2169,6 +2169,240 @@
         }
       ]
     },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/cutovers/preview": {
+      "post": {
+        "operationId": "adminPreviewAliasCutover",
+        "summary": "Preview a model alias cutover",
+        "description": "Resolve the current and proposed alias state in the selected cell and workspace. Send all cutover fields, using null for inapplicable targets. Pause and resume require all three target fields to be null. Retarget requires a deployment ID and revision with a null source revision. Rollback also requires the earlier alias source revision. Preview changes no alias, reserves no cutover, and needs no idempotency key. Applying rechecks the current revision and target.",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AliasCutover"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current and proposed alias state for this request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AliasCutoverPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid path or cutover request.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "An authenticated Admin session is required.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller lacks access or failed the browser safety checks.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The cell, workspace or alias is unavailable within the authorized scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The alias revision, pause state, drain state or proposed target prevents the cutover.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body exceeds the allowed size.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Use application/json with optional UTF-8 charset.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service or its storage is temporarily unavailable.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable safe error.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND",
+            "MODEL_ALIAS_NOT_FOUND"
+          ],
+          "409": [
+            "VERSION_CONFLICT",
+            "ALIAS_PAUSE_REQUIRED",
+            "ALIAS_ALREADY_PAUSED",
+            "ALIAS_NOT_PAUSED",
+            "ALIAS_REQUESTS_UNDRAINED",
+            "ALIAS_ROLLBACK_TARGET_INVALID",
+            "MODEL_ALIAS_UNAVAILABLE",
+            "GATEWAY_INSTANCE_REVOKED",
+            "RESOURCE_LIMIT_REACHED"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
+        }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/targets": {
       "get": {
         "operationId": "adminAliasTargets",
@@ -4668,6 +4902,57 @@
           "reason"
         ]
       },
+      "AliasCutoverState": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "deployment_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "not": {
+              "const": "00000000-0000-0000-0000-000000000000"
+            }
+          },
+          "deployment_revision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "paused": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revision",
+          "deployment_id",
+          "deployment_revision",
+          "paused"
+        ]
+      },
+      "AliasCutoverPreview": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "before": {
+            "$ref": "#/components/schemas/AliasCutoverState"
+          },
+          "after": {
+            "$ref": "#/components/schemas/AliasCutoverState"
+          }
+        },
+        "required": [
+          "before",
+          "after"
+        ]
+      },
       "AliasCutoverResult": {
         "type": "object",
         "additionalProperties": false,
@@ -6775,6 +7060,18 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/ProvisionedGateway"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "AliasCutoverPreviewResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AliasCutoverPreview"
           }
         },
         "required": [
