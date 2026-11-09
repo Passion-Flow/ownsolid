@@ -122,12 +122,12 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 		id := coldRestoreUUID(t)
 		query(t, databaseName, fmt.Sprintf(`INSERT INTO artifact_objects
 			(id,tenant_id,workspace_id,created_by,requested_audience,requested_epoch,execution_epoch,creation_key,fingerprint,
-			store_id,name,purpose,expected_bytes,sha256,part_bytes,state,remote_etag,upload_expires_at,expires_at)
+			store_id,name,purpose,expected_bytes,sha256,part_bytes,state,operation_id,operation_kind,operation_phase,operation_authority,upload_expires_at,expires_at)
 			SELECT '%s',tenant_id,default_workspace_id,primary_admin_user_id,'admin',1,1,gen_random_uuid(),decode(repeat('00',32),'hex'),
-			gen_random_uuid(),'Backup object fixture','model_bundle',1,repeat('a',64),5242880,'ready','fixture',now()+interval '1 hour',now()+interval '2 hours'
+			gen_random_uuid(),'Backup object fixture','model_bundle',1,repeat('a',64),5242880,'creating',gen_random_uuid(),'create','prepared','{}'::jsonb,now()+interval '1 hour',now()+interval '2 hours'
 			FROM installation_state WHERE id=1`, id))
 		check(t, config, "INSTALL_BACKUP_PROFILE_UNSUPPORTED", true, "backup-coordinated", "--output", output)
-		if got := query(t, databaseName, "SELECT remote_etag FROM artifact_objects WHERE id='"+id+"'"); got != "fixture" {
+		if got := query(t, databaseName, "SELECT state FROM artifact_objects WHERE id='"+id+"'"); got != "creating" {
 			t.Fatal("refusal changed the original object record")
 		}
 		query(t, databaseName, "DELETE FROM artifact_objects WHERE id='"+id+"'")
