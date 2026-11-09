@@ -112,6 +112,8 @@ type Handler struct {
 	// TelemetryLogs and TelemetryMetrics are nil when no telemetry stores are configured.
 	TelemetryLogs    *telemetrystore.Logs
 	TelemetryMetrics *telemetrystore.MetricsPusher
+
+	catalogOIDCCandidate bool
 }
 
 func New(s *identity.Service) *Handler {
@@ -572,6 +574,9 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 	}
 	if e := h.licenseAdmission(r, audience, session); e != nil {
 		return nil, 0, e
+	}
+	if h.catalogOIDCCandidate && path == catalogOIDCApprovalPath {
+		return h.approveCatalogOIDCCandidate(r, audience, origin, session, requestID)
 	}
 	if cellclusterhttp.Owns(path) {
 		if r.Header.Get("Origin") != "" && r.Header.Get("Origin") != origin {

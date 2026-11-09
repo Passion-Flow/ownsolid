@@ -88,10 +88,68 @@ redistribution. Preserve the applicable license and notices:
 - gu uses the Unlicense. Go uses BSD-3-Clause and PostgreSQL uses the
   PostgreSQL License.
 
-The next prototype boundary is browser authorization with real Portal
-authority and client registration. Verify state and exact redirects,
-cross-tenant and cross-client requests, expiration, a revoked Portal
-session and a disabled registration before adding the adapter to the
-product. Product acceptance also needs the real catalog registration and
-approval UI, file-key rotation and an installed catalog client completing
-the entire flow.
+## Portal integration boundary
+
+Run explicit approval as a same-origin Portal mutation under the existing
+transport, Origin, CSRF, license and session guards. Derive the tenant from
+the installation and a current Workspace membership. Use an isolated
+client registration fixture with one exact HTTPS redirect, a digest of a
+random confidential-client credential and a registration version. The
+candidate derives the callback exclusively from that registration.
+Browser approval persists the hashed code and binds it to the exact
+session, tenant, client version, redirect, S256 challenge and nonce.
+Send the client state back only after the approval and audit commit.
+
+Exchange rechecks the live Portal session and current tenant and client
+before locking the exact code. Build the token response in the database
+transaction, consume the code and write the audit, then release the
+response after commit. Retain the proven ZITADEL signer and relying
+party in the isolated integration build. The identity authority uses
+existing Go, pgx, HTTP and audit owners. A disposable alternate module
+manifest pins the integration dependency, leaving the production
+dependency graph and migrations under their owners.
+
+Verify exact redirect, cross-tenant and cross-client requests, missing
+and wrong PKCE, expiration, a revoked Portal session, disabled or
+rotated registration, two-replica replay, and signing and audit rollback.
+Product acceptance also needs the catalog registration and approval UI,
+standard public endpoints, startup key validation and rotation, production
+schema, and an installed catalog client completing the entire flow.
+
+The integration test invited and registered an ordinary member and signed
+in through the existing Portal handler over TLS. A same-origin approval
+returned the registered callback with the original query and state.
+The test visited that HTTPS callback without sending ownsolid cookies.
+The relying party discovered the issuer and verified the ID token and
+access-token hash. Two TLS exchange handlers with independent PostgreSQL
+pools shared code state. An injected signing or audit failure exposed no
+tokens, consumed no code and wrote no token row. The retry race committed
+one token and audit event. The Portal case and four existing identity
+HTTPS regressions passed three runs on PostgreSQL 18.6 with pgvector 0.8.7
+in an isolated Linux arm64 container with no network.
+
+Run with a disposable loopback PostgreSQL database and pgvector
+configured through `PROJECT_ONE_TEST_DSN`. Run these commands from the
+repository root with the dependency cache prepared:
+
+```sh
+probe=$(mktemp -d)
+cp services/control/go.mod "$probe/probe.mod"
+cp services/control/go.sum "$probe/probe.sum"
+net_version=$(go list -m -f '{{.Version}}' golang.org/x/net)
+GOWORK=off go -C services/control mod edit -modfile="$probe/probe.mod" \
+  -require=github.com/zitadel/oidc/v3@v3.51.17 -require="golang.org/x/net@$net_version"
+GOWORK=off GOPROXY=off go -C services/control test -mod=mod -modfile="$probe/probe.mod" \
+  -tags catalog_oidc_candidate ./internal/modules/identity/http \
+  -run '^TestCatalogOIDCCandidatePortalHTTPS$' -count=3
+```
+
+The alternate build manifest selects the same `x/net` version as the Go
+workspace. The regular build does not mount the approval route or compile
+the issuer adapter. The catalog owner must supply installed-app client
+registration with tenant scope, exact redirects, versioned secret rotation
+and disablement. DEV and Web must agree on the public authorization and
+approval flow and constrain discovery to supported operations. The schema
+and startup owners must add durable migration, expiry cleanup, signing key
+custody and rotation. A real installed catalog client must finish the flow
+offline before the roadmap item can close.
