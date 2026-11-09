@@ -311,3 +311,76 @@ second workspace, a failed stream with a valid prefix, rollback after a
 report constraint failure, two competing requests for one key, original
 bytes and digest, rejection of altered custody, and editable rows from the
 existing CPython inspection worker.
+
+## Scoped Parquet draft candidate
+
+The Apache [file format](https://parquet.apache.org/docs/file-format/)
+places metadata at the end of the file. The existing protected
+[Arrow batch decoder](https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetFile.html#pyarrow.parquet.ParquetFile.iter_batches)
+therefore needs a complete seekable file before emitting rows. Reuse the
+same private original file for bounded staging, decoding and eventual
+custody. This avoids a second full-size Parquet copy. Keep the locked
+CPython 3.12 PyArrow 26.0.1 wheel from commit `166151b6` and the existing
+Apache-2.0, PSF, and Go licence terms. The fixture uses two synthetic rows
+and adds no dependency. The explicit route uses the registered
+[Parquet media type](https://www.iana.org/assignments/media-types/application/vnd.apache.parquet).
+CSV keeps its earlier UTF-8 contract.
+
+The optional fixture-only `dataset_draft_import_candidates` table binds
+`source_format` and the JSON report to the composite tenant, workspace,
+dataset and draft key. Each report identifies exact original and output
+byte counts and SHA-256 digests. The source UUID belongs to
+`dataset_drafts.source_object_id`. Its directory contains
+`objects/<source_object_id>/source.parquet` or `source.csv`, and the same
+directory's `source.jsonl` remains the existing inspection input. Allow
+independent requests with the same key and original receipt in distinct
+authorized workspaces. Reject a valid dataset ID from the wrong workspace,
+a changed declaration in the same scope, and any replay whose original or
+normalized artifact fails its bound digest. A partial transfer, invalid
+decoder input, or report insert failure must leave neither a draft nor a
+report or private candidate. An uncertain commit retains the original
+files for reconciliation. These paths retain the configured legacy draft
+byte, row, and record limits.
+
+The migration owner must register the receipt in the next authorized
+schema and release lineage. Snapshot and restore must extend
+`snapshotReferences` and `referenceFiles` in
+[the dataset inventory](../../services/control/internal/modules/datasets/snapshot_inventory.go)
+to enumerate both file roles from the same scoped receipt, and bind the
+catalog and copied inventory in the restore checks in
+[snapshot_import.go](../../services/control/internal/modules/datasets/snapshot_import.go).
+The integrity owner must include both roles in
+[VerifyStored](../../services/control/internal/modules/datasets/integrity.go).
+Tests must restore the SQL receipt and both files together, then refuse
+an omitted, altered, or cross-scope original before readiness. The fixture
+migration is not selected by the production dispatcher or release catalog.
+The image build still owns wheelhouse admission, and the shared API and
+S-503 own the public upload and report flow.
+
+### Reproduce the isolated handoff
+
+Install the hash-locked wheel using the offline decoder instructions above.
+Set `OWNSOLID_TEST_PARQUET_PYTHON` to that protected CPython 3.12 executable
+and `PROJECT_ONE_DATA_PYTHON` to the protected draft processor interpreter.
+Stage the documented pgvector image and the Go module cache locally. On the
+Linux fixture host run:
+
+```sh
+bash services/control/internal/modules/datasets/testdata/replay_draft_import.sh
+```
+
+The script starts a disposable PostgreSQL 18 and pgvector instance with
+loopback only. It creates the production base schema through the identity
+fixture and adds [the draft receipt table](../../services/control/internal/modules/datasets/testdata/draft_import_candidate.sql)
+only after the released readiness assertions. The TLS test generates a real
+two-row Parquet file and verifies the stored originals, the bound inspection
+results, rollback and replay. The script stops the container and removes its
+connection file on exit. Use `.` as its first argument to run the full
+tagged dataset suite.
+
+The Linux amd64 PostgreSQL and HTTPS fixture passed for CSV and the
+hash-locked PyArrow Parquet source with loopback only. Both cases left
+independently scoped drafts and originals when the same request ran in a
+second authorized workspace. Both replayed the report after inspection
+and refused a modified original. An injected receipt constraint failure
+rolled back the draft, job and audit rows and removed the private source.
