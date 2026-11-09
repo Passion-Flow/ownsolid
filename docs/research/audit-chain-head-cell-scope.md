@@ -147,3 +147,29 @@ its TLS tests. `make check && make build` passed in a disconnected
 namespace on the `e32e2e89` base with the candidate under testdata.
 The relevant migration, audit and database scope inputs were unchanged
 at `0ae98e1e`, where layout, roadmap and tooling tests passed again.
+
+## Verification on the merged ARC predecessor
+
+The Help fix precedes ARC catalog repair `df1ec219` on main. The merged
+catalog query, allowlist and restore tests match `4f01aa39` byte for byte.
+The Linux rerun at candidate `ad7cf37e` measured the same three distinct
+58 fingerprints. The unmodified schema 57 migrator on `df1ec219` passed
+migration, replay and admission for an empty database and logical restores
+at 55, 56 and 57. The schema 58 overlay passed those paths plus a restore
+at 58 with the same exact digest allowlist measured above.
+
+The original three scope tests and the full audit module, with checkpoint
+readback, passed on a separate disconnected PostgreSQL fixture. Keeping
+every restore database while also creating the module schemas exhausted
+the first fixture's 512 MiB temporary volume. Separating the catalog and
+module fixtures eliminated that capacity failure. The exact candidate
+SQL, the catalog results and the fixture procedure are ready for ARC
+review. Release activation still requires agreement on the 58 allowlist
+and rerunning the gates with the production migration and release
+lineage in place.
+
+The disconnected repository gate also passed layout check passed
+roadmap ok: 589 items
+at  on the merged ARC predecessor. The release lineage in that
+gate still ends at 57. The overlay and the standalone catalog matrix
+qualify the candidate before production activation.
