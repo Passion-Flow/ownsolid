@@ -158,11 +158,22 @@ func (s *Service) ready() bool {
 }
 
 func (s *Service) authorizedScopeWithin(ctx context.Context, q transaction.Executor, a identity.Auth, workspace string) (workspaces.Workspace, error) {
+	w, e := s.authorizedWorkspaceWithin(ctx, q, a, workspace)
+	if e != nil {
+		return workspaces.Workspace{}, e
+	}
+	if w.Status != "active" {
+		return workspaces.Workspace{}, errors.New("ACCESS_DENIED")
+	}
+	return w, nil
+}
+
+func (s *Service) authorizedWorkspaceWithin(ctx context.Context, q transaction.Executor, a identity.Auth, workspace string) (workspaces.Workspace, error) {
 	if e := s.identity.RecheckOrderedWithin(ctx, q, a); e != nil {
 		return workspaces.Workspace{}, e
 	}
 	// Hold the actual installed tenant until commit. The Admin directory can
-	// include disabled Workspaces, but diagnostic reads require active scope.
+	// include disabled Workspaces so a privileged caller can withdraw targets.
 	var installedTenant string
 	if e := q.QueryRow(ctx, installationStatement(q)).Scan(&installedTenant); e != nil {
 		return workspaces.Workspace{}, e
@@ -171,7 +182,7 @@ func (s *Service) authorizedScopeWithin(ctx context.Context, q transaction.Execu
 	if e != nil {
 		return workspaces.Workspace{}, e
 	}
-	if w.ID != workspace || !validID(w.TenantID) || w.TenantID != installedTenant || w.Status != "active" {
+	if w.ID != workspace || !validID(w.TenantID) || w.TenantID != installedTenant || w.Status != "active" && w.Status != "disabled" {
 		return workspaces.Workspace{}, errors.New("ACCESS_DENIED")
 	}
 	return w, nil

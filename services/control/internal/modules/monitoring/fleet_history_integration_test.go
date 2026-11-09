@@ -181,23 +181,44 @@ func TestScopedFleetHistoryOffline(t *testing.T) {
 	t.Logf("fixture disks after graceful stop: raw=%d long=%d allocated bytes", rawDir(), longDir())
 }
 
-func startHistoryVM(t *testing.T, ctx context.Context, retention string) (string, func() int64, func()) {
+func startHistoryVM(t *testing.T, ctx context.Context, retention string, flags ...string) (string, func() int64, func()) {
 	t.Helper()
+	dir := filepath.Join(t.TempDir(), "data")
+	flags = append(flags, "-storageDataPath="+dir, "-retentionPeriod="+retention, "-memory.allowedBytes=192MB", "-search.disableCache")
+	origin, stop := startMonitoringFixtureProcess(t, ctx, "VictoriaMetrics "+retention, "OWNSOLID_TEST_VICTORIA_METRICS", flags...)
+	return origin, func() int64 {
+		stop()
+		var size int64
+		if e := filepath.Walk(dir, func(_ string, info os.FileInfo, e error) error {
+			if e == nil {
+				size += info.Sys().(*syscall.Stat_t).Blocks * 512
+			}
+			return e
+		}); e != nil {
+			t.Fatal(e)
+		}
+		return size
+	}, stop
+}
+
+func startMonitoringFixtureProcess(t *testing.T, ctx context.Context, name, environment string, flags ...string) (string, func()) {
+	t.Helper()
+	binary := os.Getenv(environment)
+	if !filepath.IsAbs(binary) {
+		t.Fatalf("%s must point to the verified binary", environment)
+	}
 	listener, e := net.Listen("tcp4", "127.0.0.1:0")
 	if e != nil {
 		t.Fatal(e)
 	}
 	address := listener.Addr().String()
 	listener.Close()
-	base := t.TempDir()
-	dir, log := filepath.Join(base, "data"), filepath.Join(base, "store.log")
+	log := filepath.Join(t.TempDir(), "store.log")
 	file, e := os.Create(log)
 	if e != nil {
 		t.Fatal(e)
 	}
-	cmd := exec.Command(os.Getenv("OWNSOLID_TEST_VICTORIA_METRICS"),
-		"-httpListenAddr="+address, "-storageDataPath="+dir, "-retentionPeriod="+retention,
-		"-memory.allowedBytes=192MB", "-search.disableCache")
+	cmd := exec.Command(binary, append(flags, "-httpListenAddr="+address)...)
 	cmd.Stdout, cmd.Stderr = file, file
 	e = cmd.Start()
 	file.Close()
@@ -212,14 +233,14 @@ func startHistoryVM(t *testing.T, ctx context.Context, retention string) (string
 		case e := <-finished:
 			if e != nil {
 				logText, _ := os.ReadFile(log)
-				t.Errorf("VictoriaMetrics %s exit: %v\n%s", retention, e, logText)
+				t.Errorf("%s exit: %v\n%s", name, e, logText)
 			}
 		case <-time.After(10 * time.Second):
 			_ = cmd.Process.Kill()
 			<-finished
-			t.Errorf("VictoriaMetrics %s missed the graceful stop deadline", retention)
+			t.Errorf("%s missed the graceful stop deadline", name)
 		}
-		t.Logf("stopped VictoriaMetrics %s on %s", retention, address)
+		t.Logf("stopped %s on %s", name, address)
 	})
 	t.Cleanup(stop)
 	origin := "http://" + address
@@ -231,27 +252,15 @@ func startHistoryVM(t *testing.T, ctx context.Context, retention string) (string
 		if e == nil {
 			resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
-				t.Logf("started VictoriaMetrics %s on %s", retention, address)
-				return origin, func() int64 {
-					stop()
-					var size int64
-					if e := filepath.Walk(dir, func(_ string, info os.FileInfo, e error) error {
-						if e == nil {
-							size += info.Sys().(*syscall.Stat_t).Blocks * 512
-						}
-						return e
-					}); e != nil {
-						t.Fatal(e)
-					}
-					return size
-				}, stop
+				t.Logf("started %s on %s", name, address)
+				return origin, stop
 			}
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
 	logText, _ := os.ReadFile(log)
-	t.Fatalf("VictoriaMetrics %s startup:\n%s", retention, logText)
-	return "", nil, nil
+	t.Fatalf("%s startup:\n%s", name, logText)
+	return "", nil
 }
 
 func fixtureRequest(t *testing.T, ctx context.Context, method, path string, body io.Reader) {
