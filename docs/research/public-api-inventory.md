@@ -215,3 +215,35 @@ Malformed schema 2 responses were rejected for missing counts, a mismatched
 algorithm, repeated asset names or a zero-size test asset. Both pinned SDK
 generators decoded the captured schema 1 response before and after the
 change, and the updated Go and Python clients decoded schema 2.
+
+## DAT-105 three-way publication request
+
+The existing [three-way split policy](dataset-three-way-splits.md) targets
+connected source groups and keeps the default two-way manifest. Google's
+[compatibility guidance](https://google.aip.dev/180#adding-components)
+keeps added request fields optional and preserves the prior behavior for
+omission. Its [request identification guidance](https://google.aip.dev/155)
+uses a stable identifier to replay a write after an uncertain response.
+Apply those properties to the existing Admin and Portal publication routes
+and their existing Idempotency-Key header.
+
+Add one optional integer to the closed request shape. Omission keeps the
+original request, fingerprint, and manifest. A test ratio from 100 through
+5,000 basis points opts in to a test split. The sum with the validation
+ratio must be at most 9,000. Document the aggregate limit and leave its
+enforcement to the shared split validator. A separate operation would
+duplicate workspace authorization, draft locking and replay semantics.
+A nullable field or a serialized default would hide a caller's explicit
+selection error. Keep the existing job and retry bodies and read the
+effective ratio from the sealed manifest. The existing [SDK licenses](sdk.md#licenses)
+and [processor and fixture licenses](dataset-three-way-splits.md) apply.
+No dependency, model or dataset is added.
+
+Use the data owner's disconnected TLS and PostgreSQL fixture on the same
+tree as the public contract. Exercise omission, malformed and out-of-range
+values, the combined limit, a conflicting replay and a foreign workspace.
+Drive a retryable worker failure and the existing retry endpoint, then
+verify the completed three-way manifest and sealed test download. An
+insufficient group count must be reported on the queued job without a
+published version. Confirm that pinned client generators omit the option
+for existing callers and encode it as an integer when set.

@@ -204,6 +204,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Queue publication for the current draft revision in the authorized workspace. Omit test_basis_points for the existing train and validation split. Test and validation ratios target connected source groups. Each ratio must be from 100 through 5000 basis points and their sum must be at most 9000 for a three-way split. Invalid split ratios return HTTP 400 with VALIDATION_FAILED. Replaying the same request and Idempotency-Key returns the existing job. Reusing the key with a different valid ratio returns HTTP 409 with IDEMPOTENCY_CONFLICT. A three-way job fails with DATASET_SPLIT_INSUFFICIENT_GROUPS if fewer than three connected groups can be assigned. */
         post: operations["adminPublishDataset"];
         delete?: never;
         options?: never;
@@ -261,6 +262,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Retry a failed, retryable dataset job in the authorized workspace. A publication retry reuses the original split ratios. */
         post: operations["adminRetryDatasetJob"];
         delete?: never;
         options?: never;
@@ -566,6 +568,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Queue publication for the current draft revision in the authorized workspace. Omit test_basis_points for the existing train and validation split. Test and validation ratios target connected source groups. Each ratio must be from 100 through 5000 basis points and their sum must be at most 9000 for a three-way split. Invalid split ratios return HTTP 400 with VALIDATION_FAILED. Replaying the same request and Idempotency-Key returns the existing job. Reusing the key with a different valid ratio returns HTTP 409 with IDEMPOTENCY_CONFLICT. A three-way job fails with DATASET_SPLIT_INSUFFICIENT_GROUPS if fewer than three connected groups can be assigned. */
         post: operations["portalPublishDataset"];
         delete?: never;
         options?: never;
@@ -623,6 +626,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Retry a failed, retryable dataset job in the authorized workspace. A publication retry reuses the original split ratios. */
         post: operations["portalRetryDatasetJob"];
         delete?: never;
         options?: never;
@@ -968,6 +972,7 @@ export interface components {
             seed: string;
             validation_basis_points: number;
             reason: string;
+            test_basis_points?: number;
         };
         RetireDataset: {
             expected_revision: number;
