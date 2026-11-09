@@ -178,6 +178,12 @@ PostgreSQL fixture and run:
 go -C services/control test -p 1 ./internal/modules/deployments -run '^(TestMutualTLSInferenceObservationCost|TestInferenceObservationKeepsNodeScopeOnConcurrentFirstWrites)$' -count=2 -v
 ```
 
-The one-node mTLS gate is green. ARC-108 still needs deployment-bound
-observations and component, preparation and Registry operations in the shared
-two-fleet cost suite. No declaration or fleet acceptance result has changed.
+The same test at `f316137c` added a retained deployment and restarted the
+HTTPS dispatcher over its database. Both independent replays measured 11
+statements, 15 rows and 44 blocks for the current revision. After a stop
+advanced the revision, a late report used 9 statements, 12 rows and 35
+blocks and preserved the stored observation and GPU reservation.
+
+The one-node mTLS gate is green. The shared two-fleet cost suite still needs
+the deployment-bound case and the component, preparation and Registry
+operations. No declaration or fleet acceptance result has changed.
