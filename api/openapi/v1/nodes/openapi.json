@@ -6071,6 +6071,53 @@
               "capabilities",
               "facts"
             ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "protocol_version": {
+                "type": "string",
+                "const": "1.0"
+              },
+              "execution_profile": {
+                "type": "string",
+                "const": "kubernetes_node"
+              },
+              "capabilities": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "prefixItems": [
+                  {
+                    "type": "string",
+                    "const": "collect_facts.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "kubernetes.join.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "kubernetes.token.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "kubernetes.observe.v1"
+                  }
+                ],
+                "items": false
+              },
+              "facts": {
+                "$ref": "#/components/schemas/Facts"
+              }
+            },
+            "required": [
+              "protocol_version",
+              "capabilities",
+              "facts",
+              "execution_profile"
+            ]
           }
         ]
       },
@@ -6483,6 +6530,63 @@
               "execution_profile",
               "capabilities",
               "facts",
+              "join_token"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "protocol_version": {
+                "type": "string",
+                "const": "1.0"
+              },
+              "execution_profile": {
+                "type": "string",
+                "const": "kubernetes_node"
+              },
+              "capabilities": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "prefixItems": [
+                  {
+                    "type": "string",
+                    "const": "collect_facts.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "kubernetes.join.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "kubernetes.token.v1"
+                  },
+                  {
+                    "type": "string",
+                    "const": "kubernetes.observe.v1"
+                  }
+                ],
+                "items": false
+              },
+              "facts": {
+                "$ref": "#/components/schemas/Facts"
+              },
+              "join_token": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{43}$"
+              },
+              "certificate_request": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "PEM certificate request from a key generated on the node; required where control issues certificates."
+              }
+            },
+            "required": [
+              "protocol_version",
+              "capabilities",
+              "facts",
+              "execution_profile",
               "join_token"
             ]
           }
@@ -7396,7 +7500,8 @@
               "systemd_maintenance",
               "docker_inference",
               "docker_ai",
-              "docker_model_lifecycle"
+              "docker_model_lifecycle",
+              "kubernetes_node"
             ]
           },
           "capabilities": {
@@ -7421,27 +7526,14 @@
                 "inference.remove.v1",
                 "inference.observe.v1",
                 "inference.verify.v1",
-                "inference.deploy.v1",
-                "inference.stop.v1",
-                "inference.remove.v1",
-                "inference.observe.v1",
-                "inference.verify.v1",
-                "inference.deploy.v1",
-                "inference.stop.v1",
-                "inference.remove.v1",
-                "inference.observe.v1",
-                "inference.verify.v1",
-                "training.run.v1",
-                "training.run.v1",
                 "training.run.v1",
                 "model.prepare.v1",
-                "model.prepare.v1",
-                "model.prepare.v1",
-                "inference.derived.v1",
-                "inference.derived.v1",
                 "inference.derived.v1",
                 "gateway.start.v1",
-                "gateway.stop.v1"
+                "gateway.stop.v1",
+                "kubernetes.join.v1",
+                "kubernetes.token.v1",
+                "kubernetes.observe.v1"
               ]
             }
           }
@@ -7527,7 +7619,8 @@
               "systemd_maintenance",
               "docker_inference",
               "docker_ai",
-              "docker_model_lifecycle"
+              "docker_model_lifecycle",
+              "kubernetes_node"
             ]
           }
         },
@@ -7609,7 +7702,8 @@
               "systemd_maintenance",
               "docker_inference",
               "docker_ai",
-              "docker_model_lifecycle"
+              "docker_model_lifecycle",
+              "kubernetes_node"
             ]
           }
         },
@@ -7776,7 +7870,8 @@
               "systemd_maintenance",
               "docker_inference",
               "docker_ai",
-              "docker_model_lifecycle"
+              "docker_model_lifecycle",
+              "kubernetes_node"
             ]
           }
         },
