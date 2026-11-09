@@ -75,8 +75,12 @@ native wheels, the verified five-file snapshot and kernel network denial.
 The real cases matched the previous training algorithm's token IDs,
 label masks and source provenance, exercised the three overflow sections
 and exact fit, and rejected a package mismatch and altered assets.
-Linux unit tests exercise the refusal paths without the tokenizer wheels.
-The Linux release and product preview still require an end-to-end run.
+On Linux amd64, all 19 tests also passed with CPython 3.12.3 and 30
+hash-checked wheels selected from the existing Linux training lock.
+Installation used the local wheelhouse with index access disabled, and
+both installation and tests ran in a network namespace. The real tokenizer
+tests used the five assets from the retained Linux snapshot. The packaged
+release and dataset preview UI still require an end-to-end run.
 
 ### Release and control handoff
 
