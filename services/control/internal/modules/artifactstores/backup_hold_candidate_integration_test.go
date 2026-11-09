@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	_ "embed"
 	"encoding/hex"
+	"errors"
 	"os"
 	"os/exec"
 	"strings"
@@ -19,11 +20,15 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/objectstore"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-//go:embed testdata/backup-hold.sql
+//go:embed testdata/backup-hold.up.sql
 var backupHoldSchema string
+
+//go:embed testdata/backup-hold.down.sql
+var backupHoldRollback string
 
 const backupHoldChild = "OWNSOLID_TEST_BACKUP_HOLD_CHILD"
 
@@ -33,13 +38,30 @@ func checkActualDurableBackupHold(t *testing.T, g *objectStory, proxy *backupTes
 	h, err := g.s.backupHoldCandidate(site)
 	requireBackupHoldCode(t, err, "")
 	requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "OBJECT_BACKUP_AUTHORITY_UNAVAILABLE")
-	g.exec(t, backupHoldSchema, "", "")
+	provision := func() {
+		t.Helper()
+		requireBackupHoldCode(t, applyHoldDDL(g, backupHoldSchema), "")
+		requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "OBJECT_BACKUP_AUTHORITY_UNAVAILABLE")
+		g.exec(t, `INSERT INTO artifact_store_bindings(tenant_id,store_id,site_sha256,backend_sha256)
+			VALUES($1,$2,$3,$4)`, "", "", h.tenant, h.namespace, h.site, h.backend)
+		seed := `INSERT INTO artifact_backup_holds(system_identifier,database_oid,tenant_id,store_id,site_sha256,backend_sha256,cell_id)
+			SELECT c.system_identifier::text,d.oid,$1,$2,$3,$4,$5 FROM pg_catalog.pg_database d
+			CROSS JOIN pg_catalog.pg_control_system() c WHERE d.datname=pg_catalog.current_database()`
+		_, err := g.f.PostgreSQL.Exec(g.ctx, seed, h.tenant, h.namespace, h.site, h.backend, "other-cell")
+		requireHoldSQLState(t, err, "23503")
+		g.exec(t, seed, "", "", h.tenant, h.namespace, h.site, h.backend, "default")
+		requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "")
+	}
+	g.exec(t, "INSERT INTO cells(id,site_id,display_name) VALUES('other-cell','default','Other cell')", "", "")
+	provision()
+	requireBackupHoldCode(t, applyHoldDDL(g, backupHoldRollback), "")
 	requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "OBJECT_BACKUP_AUTHORITY_UNAVAILABLE")
-	g.exec(t, `INSERT INTO artifact_backup_holds(system_identifier,database_oid,tenant_id,store_id,site_sha256,backend_sha256)
-		SELECT c.system_identifier::text,d.oid,$1,$2,$3,$4 FROM pg_catalog.pg_database d
-		CROSS JOIN pg_catalog.pg_control_system() c WHERE d.datname=pg_catalog.current_database()`, "", "",
-		h.tenant, h.namespace, h.site, h.backend)
-	requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "")
+	var candidates int
+	if err := g.f.PostgreSQL.QueryRow(g.ctx, `SELECT num_nonnulls(
+		to_regclass('artifact_backup_holds'), to_regclass('artifact_store_bindings'))`).Scan(&candidates); err != nil || candidates != 0 {
+		t.Fatalf("rollback left candidate tables: %d %v", candidates, err)
+	}
+	provision()
 	foreign := h
 	foreign.site = strings.Repeat("b", 64)
 	requireBackupHoldCode(t, foreign.checkWriterGate(g.ctx), "OBJECT_BACKUP_AUTHORITY_UNAVAILABLE")
@@ -67,7 +89,7 @@ func checkActualDurableBackupHold(t *testing.T, g *objectStory, proxy *backupTes
 	// privileged coordinator process is killed. No provider exclusion is inferred.
 	local, err := g.s.AcquireBackupFence(g.ctx)
 	requireBackupHoldCode(t, err, "")
-	previous := backupHoldToken{uuid.NewString(), uuid.NewString(), 1}
+	previous := backupHoldToken{operation: uuid.NewString(), owner: uuid.NewString()}
 	killBackupHoldCoordinator(t, g.ctx, h, previous)
 
 	// A different connection pool also exercises loss of the original session.
@@ -79,6 +101,21 @@ func checkActualDurableBackupHold(t *testing.T, g *objectStory, proxy *backupTes
 	h.store, err = transaction.FromPostgreSQL(restarted)
 	requireBackupHoldCode(t, err, "")
 	requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "OBJECT_BUSY")
+	op, owner := previous.operation, previous.owner
+	err = h.withRow(g.ctx, func(_ transaction.Executor, row backupHoldRow, _ time.Time) error {
+		previous = row.token
+		return nil
+	})
+	requireBackupHoldCode(t, err, "")
+	if previous.operation != op || previous.owner != owner || previous.generation != 1 || previous.binding.scope.CellID != "default" {
+		t.Fatal("restart recovered a different hold or cell")
+	}
+	requireHoldSQLState(t, applyHoldDDL(g, backupHoldRollback), "55000")
+	// A different local cell in the same catalog cannot use the old namespace.
+	g.exec(t, "UPDATE cells SET is_local=false WHERE id='default'; UPDATE cells SET is_local=true WHERE id='other-cell'", "", "")
+	requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "OBJECT_BACKUP_AUTHORITY_UNAVAILABLE")
+	requireBackupHoldCode(t, h.release(g.ctx, previous, backupHoldCopy{}), "OBJECT_BACKUP_AUTHORITY_UNAVAILABLE")
+	g.exec(t, "UPDATE cells SET is_local=false WHERE id='other-cell'; UPDATE cells SET is_local=true WHERE id='default'", "", "")
 	_, err = h.takeOver(g.ctx, previous, uuid.NewString(), time.Minute)
 	requireBackupHoldCode(t, err, "OBJECT_BACKUP_TOKEN_INVALID")
 	requireBackupHoldCode(t, h.release(g.ctx, previous, backupHoldCopy{}), "OBJECT_BACKUP_COPY_UNCONFIRMED")
@@ -88,6 +125,10 @@ func checkActualDurableBackupHold(t *testing.T, g *objectStory, proxy *backupTes
 		requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "OBJECT_BUSY")
 	}
 	expire()
+	replay := previous
+	replay.binding.scope.CellID = "other-cell"
+	_, err = h.takeOver(g.ctx, replay, uuid.NewString(), time.Minute)
+	requireBackupHoldCode(t, err, "OBJECT_BACKUP_TOKEN_INVALID")
 
 	type claim struct {
 		token backupHoldToken
@@ -115,12 +156,22 @@ func checkActualDurableBackupHold(t *testing.T, g *objectStory, proxy *backupTes
 	if retry != current {
 		t.Fatal("same takeover did not recover the persisted token")
 	}
+	_, err = h.takeOver(g.ctx, replay, current.owner, time.Minute)
+	requireBackupHoldCode(t, err, "OBJECT_BACKUP_TOKEN_INVALID")
 
 	requests := proxy.requests.Load()
 	_, err = h.copyAndConfirm(g.ctx, previous, uuid.NewString(), local, backupCopyFixture(t), 8, 4096)
 	requireBackupHoldCode(t, err, "OBJECT_BACKUP_TOKEN_INVALID")
 	requireBackupHoldCode(t, h.release(g.ctx, previous, backupHoldCopy{}), "OBJECT_BACKUP_TOKEN_INVALID")
 	requireBackupHoldCode(t, h.release(g.ctx, current, backupHoldCopy{}), "OBJECT_BACKUP_COPY_UNCONFIRMED")
+	replay = current
+	replay.binding.scope.CellID = "other-cell"
+	_, err = h.copyAndConfirm(g.ctx, replay, uuid.NewString(), local, backupCopyFixture(t), 8, 4096)
+	requireBackupHoldCode(t, err, "OBJECT_BACKUP_TOKEN_INVALID")
+	g.exec(t, "UPDATE artifact_objects SET cell_id='other-cell' WHERE id=$1", "", "", ready.ID)
+	_, err = h.copyAndConfirm(g.ctx, current, uuid.NewString(), local, backupCopyFixture(t), 8, 4096)
+	requireBackupHoldCode(t, err, "OBJECT_BACKUP_SCOPE_MISMATCH")
+	g.exec(t, "UPDATE artifact_objects SET cell_id='default' WHERE id=$1", "", "", ready.ID)
 	requireBackupHoldCode(t, cleanup(), "OBJECT_BUSY")
 	worked, err := g.s.ProcessNext(g.ctx)
 	requireBackupHoldCode(t, err, "OBJECT_BUSY")
@@ -170,6 +221,10 @@ func checkActualDurableBackupHold(t *testing.T, g *objectStory, proxy *backupTes
 	requireBackupHoldCode(t, h.release(g.ctx, last, first), "OBJECT_BACKUP_COPY_UNCONFIRMED")
 	requireBackupHoldCode(t, h.release(g.ctx, last, second), "")
 	requireBackupHoldCode(t, h.release(g.ctx, last, second), "")
+	replay = last
+	replay.binding.scope.CellID = "other-cell"
+	requireBackupHoldCode(t, h.release(g.ctx, replay, second), "OBJECT_BACKUP_TOKEN_INVALID")
+	requireHoldSQLState(t, applyHoldDDL(g, backupHoldRollback), "55000")
 	requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "")
 	requireBackupHoldCode(t, local.Release(), "")
 	requireBackupHoldCode(t, cleanup(), "")
@@ -186,7 +241,28 @@ func checkActualDurableBackupHold(t *testing.T, g *objectStory, proxy *backupTes
 	}
 	requireBackupHoldCode(t, h.release(g.ctx, last, second), "OBJECT_BACKUP_TOKEN_INVALID")
 	requireBackupHoldCode(t, h.checkWriterGate(g.ctx), "OBJECT_BUSY")
+	t.Log("qualified PostgreSQL upgrade, unused rollback, downgrade refusal after use, and rejected cell replay")
 	t.Log("killed coordinator, serialized takeover, rejected stale in-flight confirmation and release, and preserved staging until exact copy release")
+}
+
+func applyHoldDDL(g *objectStory, script string) error {
+	tx, err := g.f.PostgreSQL.Begin(g.ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(g.ctx)
+	if _, err := tx.Exec(g.ctx, script); err != nil {
+		return err
+	}
+	return tx.Commit(g.ctx)
+}
+
+func requireHoldSQLState(t *testing.T, err error, code string) {
+	t.Helper()
+	var pg *pgconn.PgError
+	if !errors.As(err, &pg) || pg.Code != code {
+		t.Fatalf("got %v, want PostgreSQL SQLSTATE %s", err, code)
+	}
 }
 
 func requireBackupHoldCode(t *testing.T, err error, want string) {

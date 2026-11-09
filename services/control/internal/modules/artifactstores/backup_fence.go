@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"io"
 
+	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
+
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/objectstore"
@@ -120,6 +122,7 @@ type BackupInventory struct {
 	BackendSHA256   string                `json:"backend_sha256"`
 	Objects         []BackupObjectVersion `json:"objects"`
 	InventorySHA256 string                `json:"inventory_sha256"`
+	scope           agent.Scope
 }
 
 // VerifyInventory checks object bytes and settled operations under the fence.
@@ -175,7 +178,7 @@ func (f *BackupFence) withBackupInventory(ctx context.Context, maximumObjects in
 	if err != nil {
 		return BackupInventory{}, err
 	}
-	if before.InventorySHA256 != after.InventorySHA256 {
+	if before.InventorySHA256 != after.InventorySHA256 || before.scope != after.scope {
 		return BackupInventory{}, fail("OBJECT_BACKUP_INVENTORY_CHANGED")
 	}
 	l.mu.Lock()
@@ -209,16 +212,17 @@ func (s *Service) readBackupInventory(ctx context.Context, limit int) (BackupInv
 	err = r.Within(ctx, true, func(ctx context.Context, q transaction.Executor) error {
 		var tenant string
 		if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `
-			SELECT d.datname::text, d.oid::bigint, n.nspname::text, i.tenant_id::text
+			SELECT d.datname::text, d.oid::bigint, n.nspname::text, i.tenant_id::text, local.site_id, local.id
 			FROM pg_catalog.pg_database d
 			JOIN pg_catalog.pg_class c ON c.oid='artifact_objects'::regclass
 			JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
 			CROSS JOIN installation_state i
-			WHERE d.datname=current_database() AND i.id=1 AND i.bootstrap_complete`,
-		)).Scan(&out.Database, &out.DatabaseOID, &out.Schema, &tenant); err != nil {
+			CROSS JOIN cells local
+			WHERE local.is_local AND d.datname=current_database() AND i.id=1 AND i.bootstrap_complete`,
+		)).Scan(&out.Database, &out.DatabaseOID, &out.Schema, &tenant, &out.scope.SiteID, &out.scope.CellID); err != nil {
 			return err
 		}
-		if tenant != out.TenantID {
+		if tenant != out.TenantID || !out.scope.Valid() {
 			return fail("OBJECT_BACKUP_SCOPE_MISMATCH")
 		}
 		var unsettled bool
@@ -232,7 +236,7 @@ func (s *Service) readBackupInventory(ctx context.Context, limit int) (BackupInv
 		}
 		rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL, `
 			SELECT o.tenant_id::text, o.store_id::text, o.workspace_id::text, o.id::text,
-				o.state, o.revision, o.expected_bytes, o.sha256::text, o.remote_etag,
+				o.site_id, o.cell_id, o.state, o.revision, o.expected_bytes, o.sha256::text, o.remote_etag,
 				o.operation_id IS NOT NULL OR (o.state='ready' AND EXISTS (
 					SELECT 1 FROM artifact_object_parts p WHERE p.tenant_id=o.tenant_id
 						AND p.workspace_id=o.workspace_id AND p.object_id=o.id AND p.state='intent'
@@ -248,11 +252,12 @@ func (s *Service) readBackupInventory(ctx context.Context, limit int) (BackupInv
 			}
 			var entry BackupObjectVersion
 			var rowTenant, store string
-			if err := rows.Scan(&rowTenant, &store, &entry.WorkspaceID, &entry.ObjectID, &entry.State,
+			var scope agent.Scope
+			if err := rows.Scan(&rowTenant, &store, &entry.WorkspaceID, &entry.ObjectID, &scope.SiteID, &scope.CellID, &entry.State,
 				&entry.Revision, &entry.SizeBytes, &entry.SHA256, &entry.ETag, &unsettled); err != nil {
 				return err
 			}
-			if rowTenant != out.TenantID || store != out.StoreID {
+			if rowTenant != out.TenantID || store != out.StoreID || scope != out.scope {
 				return fail("OBJECT_BACKUP_SCOPE_MISMATCH")
 			}
 			if unsettled || entry.State != "ready" && entry.State != "deleted" && entry.State != "aborted" {
