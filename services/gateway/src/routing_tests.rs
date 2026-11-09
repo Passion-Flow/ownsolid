@@ -649,6 +649,78 @@ async fn real_gateway_tls_models_chat_sse_and_durable_metadata_receipts() {
 }
 
 #[tokio::test]
+async fn chat_text_parts_are_normalized_before_tokenization_and_generation() {
+    let fixture = Fixture::new().await;
+    let payload = |content: Value, stream: bool| {
+        json!({
+            "model": "public-alias", "max_completion_tokens": 16, "stream": stream,
+            "messages": [
+                {"role": "system", "content": [{"type": "text", "text": "Preserve ordering"}]},
+                {"role": "user", "content": content}
+            ]
+        })
+    };
+    for content in [
+        json!([]),
+        json!([{"type": "text", "text": ""}]),
+        json!([{"type": "text", "text": "synthetic"}, {"type": "image_url", "image_url": {"url": "https://example.invalid/image"}}]),
+        json!([{"type": "text", "text": "synthetic", "extra": true}]),
+        json!([{"type": "text"}]),
+    ] {
+        let denied = fixture
+            .chat(false)
+            .json(&payload(content, false))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(denied.status(), StatusCode::BAD_REQUEST);
+    }
+    assert_eq!(fixture.state.model_checks.load(Ordering::SeqCst), 0);
+    assert!(fixture.state.admissions.lock().unwrap().is_empty());
+    assert_eq!(fixture.state.tokenizations.load(Ordering::SeqCst), 0);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 0);
+
+    *fixture.state.expected_messages.lock().unwrap() = Some(json!([
+        {"role": "system", "content": "Preserve ordering"},
+        {"role": "user", "content": "First part\nSecond part \u{4e2d}"}
+    ]));
+    let parts = json!([
+        {"type": "text", "text": "First part"},
+        {"type": "text", "text": "Second part \u{4e2d}"}
+    ]);
+    let response = fixture
+        .chat(false)
+        .json(&payload(parts.clone(), false))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let value: Value = response.json().await.unwrap();
+    assert_eq!(value["model"], "public-alias");
+    assert_eq!(value["usage"]["total_tokens"], 9);
+    let mut streaming = payload(parts, true);
+    streaming["stream_options"] = json!({"include_usage": true});
+    let response = fixture
+        .chat(true)
+        .json(&streaming)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let text = response.text().await.unwrap();
+    assert!(text.ends_with("data: [DONE]\n\n"));
+    assert!(text.contains(r#""total_tokens":9"#));
+    assert_eq!(fixture.state.tokenizations.load(Ordering::SeqCst), 2);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 2);
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 2);
+    let outcomes = fixture.state.outcomes.lock().unwrap();
+    assert!(outcomes.iter().all(|receipt| {
+        receipt.status == Status::Succeeded
+            && receipt.usage.as_ref().is_some_and(|usage| usage.total_tokens == 9)
+    }));
+}
+
+#[tokio::test]
 async fn alias_admission_rejects_a_different_identity_before_backend_use() {
     let fixture = Fixture::new().await;
     fixture

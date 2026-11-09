@@ -11,6 +11,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 ## P1 Enterprise release
 
 - [ ] GW-101 OpenAI Chat Completions with streaming (P1) - Catalog: F073
+  - Text-only Chat messages accept strings and ordered text parts. [Native TLS acceptance](../../research/gateway-chat-streaming.md) verifies the same prompt at tokenization and generation, strict rejection and durable JSON/SSE usage. Current production backend and UI qualification remain open.
 - [ ] GW-102 OpenAI Embeddings and rerank endpoints (P1) - Catalog: F073
   - [Pooling prerequisites](../../research/gateway-pooling.md) identify the offline serving recipes and task-aware admission required before gateway implementation.
 - [ ] GW-103 OpenAI Responses API and Anthropic Messages API for coding tools (P1) - Catalog: F073
