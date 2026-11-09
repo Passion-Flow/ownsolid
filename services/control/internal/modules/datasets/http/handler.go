@@ -15,9 +15,9 @@ import (
 )
 
 type Handler struct {
-	Service            *datasets.Service
-	TokenizerPreview   *datasets.TokenizerPreviewProcessor
-	CSVImportCandidate *datasets.CSVImportCandidate
+	Service              *datasets.Service
+	TokenizerPreview     *datasets.TokenizerPreviewProcessor
+	DraftSourceCandidate *datasets.DraftSourceCandidate
 }
 
 func Owns(path string) bool {
@@ -167,8 +167,13 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, requestID string) (an
 		out, e := h.Service.Retire(r.Context(), a, workspace, dataset, body.ExpectedRevision, body.Reason, requestID)
 		return out, 200, e
 	}
-	if len(tail) == 2 && tail[0] == "drafts" && tail[1] == "from-csv" && r.Method == "POST" && h.CSVImportCandidate != nil {
-		return h.importCSVDraft(r, a, workspace, dataset, requestID)
+	if len(tail) == 2 && tail[0] == "drafts" && r.Method == "POST" && h.DraftSourceCandidate != nil {
+		switch tail[1] {
+		case "from-csv":
+			return h.importDraftSource(r, a, workspace, dataset, datasets.SourceCSV, requestID)
+		case "from-parquet":
+			return h.importDraftSource(r, a, workspace, dataset, datasets.SourceParquet, requestID)
+		}
 	}
 	if len(tail) > 0 && tail[0] == "mongodb" {
 		return h.mongodb(r, a, workspace, dataset, tail[1:], requestID)
@@ -184,9 +189,13 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, requestID string) (an
 	}
 	return nil, 0, missing
 }
-func (h *Handler) importCSVDraft(r *http.Request, a identity.Auth, workspace, dataset, requestID string) (any, int, error) {
+func (h *Handler) importDraftSource(r *http.Request, a identity.Auth, workspace, dataset string, format datasets.SourceFormat, requestID string) (any, int, error) {
 	media, parameters, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-	if err != nil || media != "text/csv" || len(parameters) > 1 || len(parameters) == 1 && !strings.EqualFold(parameters["charset"], "utf-8") {
+	validMedia := media == "text/csv" && (len(parameters) == 0 || len(parameters) == 1 && strings.EqualFold(parameters["charset"], "utf-8"))
+	if format == datasets.SourceParquet {
+		validMedia = media == "application/vnd.apache.parquet" && len(parameters) == 0
+	}
+	if err != nil || !validMedia {
 		return nil, 0, errors.New("UNSUPPORTED_MEDIA_TYPE")
 	}
 	intent, err := key(r)
@@ -197,7 +206,7 @@ func (h *Handler) importCSVDraft(r *http.Request, a identity.Auth, workspace, da
 	if len(digests) != 1 || len(names) != 1 {
 		return nil, 0, errors.New("VALIDATION_FAILED")
 	}
-	result, err := h.CSVImportCandidate.Import(r.Context(), a, workspace, dataset, datasets.CSVImportRequest{
+	result, err := h.DraftSourceCandidate.Import(r.Context(), a, workspace, dataset, format, datasets.DraftSourceRequest{
 		Name: names[0], SHA256: digests[0], Bytes: r.ContentLength,
 	}, intent, r.Body, requestID)
 	return result, 202, err
