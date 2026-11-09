@@ -384,3 +384,50 @@ independently scoped drafts and originals when the same request ran in a
 second authorized workspace. Both replayed the report after inspection
 and refused a modified original. An injected receipt constraint failure
 rolled back the draft, job and audit rows and removed the private source.
+
+## Restore acceptance for the isolated Parquet receipt
+
+Use the existing owned PostgreSQL fixture's
+[custom dump](https://www.postgresql.org/docs/18/app-pgdump.html) and
+[restore](https://www.postgresql.org/docs/18/app-pgrestore.html) in a new
+database. The test script gives its network-none container a unique cluster
+name and passes its exact identity to the replay test. Reuse the dataset
+file snapshot for the normalized input and the signed S3 TLS fixture for
+the supplemental original. It provides the exact tenant, workspace, object
+and ETag expected by the object transport. Both streams and the SQL archive
+come from synthetic fixture data. PostgreSQL, the Go libraries, and the
+existing Apache-2.0 PyArrow and S3 libraries retain the licenses above.
+This test adds no runtime dependency or new dataset.
+
+A restored receipt is read by draft ID using the normal workspace and draft
+authorization. Verify the row's source format, both byte counts and SHA-256
+digests, and the existing draft's normalized receipt before returning any
+report. Share this verification with idempotent replay. Recover into a new
+store with the original namespace marker, invalidate the restored account
+sessions, and sign in again as the same person. Compare both the restored
+draft and report with the original and refuse a real second workspace.
+Require failure when either file or the report is missing or changed.
+The ordinary file snapshot omits Parquet originals, so test read refusal
+before the supplemental object has been restored as well.
+
+This remains a module acceptance fixture. It does not change the
+production backup manifest or apply restore operators for other domains.
+The restore owner must join `dataset_draft_import_candidates` to
+`dataset_drafts` by tenant, workspace, dataset and draft in the shared
+migration order, include both object paths in `snapshotReferences` and
+`referenceFiles`, and verify the pair with the receipt before marking the
+restored installation ready. Repeat the same missing and corrupt cases at
+the coordinated restore entry point, then bind the public S-503 report
+read to the same authorization and custody checks.
+
+On Linux amd64 with only loopback, the restored PostgreSQL 18.6 database
+and a fresh login returned the original editing draft and identical
+report. The fixture fetched the exact original through a signed S3 TLS
+GET after importing the normalized snapshot. The old session, another
+workspace, missing and same-length altered files, and missing and changed
+report rows were refused. To run only this acceptance:
+
+```sh
+bash services/control/internal/modules/datasets/testdata/replay_draft_import.sh \
+  '^TestActualParquetDraftAfterMetadataAndObjectRestore$'
+```
