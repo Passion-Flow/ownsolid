@@ -57,7 +57,12 @@ def read_request(path):
  except (ValueError,UnicodeError,RecursionError):raise DataError('DATASET_PROCESSOR_REQUEST_INVALID') from None
  if not isinstance(value,dict):raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
  fields={'schema_version','operation','job_id','attempt_id','scope_directory','input_file','input_sha256','output_directory','limits','resources'}
- if value.get('operation')=='publish':fields|={'seed','validation_basis_points'}
+ if value.get('operation')=='publish':
+  fields|={'seed','validation_basis_points'}
+  if 'near_duplicate_plan_sha256' in value:
+   fields.add('near_duplicate_plan_sha256')
+   plan_digest=value['near_duplicate_plan_sha256']
+   if not isinstance(plan_digest,str) or not re.fullmatch('[a-f0-9]{64}',plan_digest):raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
  exact(value,fields)
  if type(value['schema_version']) is not int or value['schema_version']!=1 or value['operation'] not in {'inspect','publish'} or not valid_id(value['job_id']) or not valid_id(value['attempt_id']):raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
  scope=private_directory(value['scope_directory']);private_file(str(file),MAX_REQUEST_BYTES,scope)
@@ -74,6 +79,36 @@ def read_request(path):
   if type(value['resources'][name]) is not int or not minimum<=value['resources'][name]<=maximum:raise DataError('DATASET_PROCESSOR_RESOURCES_INVALID')
  if value['resources']['wall_seconds']<value['resources']['cpu_seconds']:raise DataError('DATASET_PROCESSOR_RESOURCES_INVALID')
  return value,limits,source,output
+
+
+def read_near_plan(request, maximum_rows):
+ """Read the Go-owned plan from the exact attempt and verify its frozen digest."""
+ expected = request.get('near_duplicate_plan_sha256')
+ if expected is None:
+  return None
+ scope = Path(request['scope_directory'])
+ maximum_bytes = maximum_rows * 64
+ path = private_file(str(scope / 'near-duplicates.json'), maximum_bytes, scope)
+ with path.open('rb') as plan_file:
+  raw = plan_file.read(maximum_bytes + 1)
+ if len(raw) > maximum_bytes or hashlib.sha256(raw).hexdigest() != expected:
+  raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
+ try:
+  plan = json.loads(raw.decode('utf-8'), object_pairs_hook=unique, parse_constant=invalid_constant)
+ except (ValueError, UnicodeError, RecursionError):
+  raise DataError('DATASET_PROCESSOR_REQUEST_INVALID') from None
+ if not isinstance(plan, list) or not 0 < len(plan) <= maximum_rows:
+  raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
+ for line, entry in enumerate(plan, 1):
+  exact(entry, {'group', 'match'})
+  group, match = entry['group'], entry['match']
+  if type(group) is not int or not 1 <= group <= line or type(match) is not int or not 0 <= match < line:
+   raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
+  if plan[group - 1]['group'] != group or match and (
+      plan[match - 1]['group'] != group or plan[match - 1]['match'] != 0
+  ):
+   raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
+ return plan
 
 
 def apply_limits(values):

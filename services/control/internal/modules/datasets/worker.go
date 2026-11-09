@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"io"
 	"os"
+	"strings"
+	"time"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	"strings"
-	"time"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type claimedAttempt struct {
@@ -64,11 +65,15 @@ func (s *Service) ProcessNext(ctx context.Context) (bool, error) {
 		if j.AttemptCount >= s.policy().MaxAttempts {
 			return s.finishFailure(ctx, tx, a, w, d, j, "DATASET_ATTEMPTS_EXHAUSTED", false, false)
 		}
-		var policyRaw []byte
-		if e := tx.QueryRow(ctx, datasetSQL(tx, "SELECT input_policy,source_object_id::text,expected_bytes FROM dataset_jobs JOIN dataset_drafts ON dataset_drafts.id=dataset_jobs.draft_id WHERE dataset_jobs.id=$1", `SELECT input_policy,source_object_id,expected_bytes FROM dataset_jobs JOIN dataset_drafts ON dataset_drafts.id=dataset_jobs.draft_id WHERE dataset_jobs.id=?`, []any{j.ID}, []any{j.ID}, transaction.SQL(transaction.Dameng, dmWorkerInput, j.ID))).Scan(&policyRaw, &work.sourceObject, &work.sourceBytes); e != nil {
+		var e error
+		work.policy, work.sourceObject, work.sourceBytes, e = datasetJobInput(ctx, tx, j.ID)
+		if e != nil {
+			if errors.Is(e, errDatasetJobPolicy) {
+				return s.finishFailure(ctx, tx, a, w, d, j, e.Error(), false, false)
+			}
 			return e
 		}
-		if wire.DecodeStrict(policyRaw, &work.policy) != nil || work.policy.Limits.Validate() != nil || work.policy.Resources.Validate() != nil {
+		if j.Kind != "publish" && work.policy.Deduplication != "" {
 			return s.finishFailure(ctx, tx, a, w, d, j, "DATASET_POLICY_INVALID", false, false)
 		}
 		if work.policy.Limits != s.policy().Limits || work.policy.Resources != s.policy().Resources {
@@ -148,7 +153,20 @@ func (s *Service) ProcessNext(ctx context.Context) (bool, error) {
 	work.request.ScopeDirectory = scope
 	work.request.InputFile = input
 	work.request.OutputDirectory = output
-	result, e := s.Processor.Execute(executeCtx, work.request)
+	processorCtx := executeCtx
+	if work.policy.Deduplication == NearPromptV1 {
+		var stop context.CancelFunc
+		processorCtx, stop = context.WithTimeout(executeCtx, time.Duration(work.request.Resources.WallSeconds)*time.Second)
+		defer stop()
+		work.request.NearDuplicatePlanSHA256, e = s.Store.stageNearPlan(processorCtx, work.request, bytes.NewReader(work.input))
+	}
+	var result wire.ProcessorResult
+	if e == nil {
+		result, e = s.Processor.Execute(processorCtx, work.request)
+	}
+	if errors.Is(processorCtx.Err(), context.DeadlineExceeded) && executeCtx.Err() == nil {
+		e = failure("DATASET_PROCESSOR_TIMEOUT")
+	}
 	if cause := context.Cause(executeCtx); cause != nil && cause.Error() == "DATASET_ATTEMPT_MONITOR_FAILED" {
 		e = cause
 	}

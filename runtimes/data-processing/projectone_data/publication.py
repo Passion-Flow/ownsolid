@@ -22,12 +22,19 @@ class Sources:
   a=self.find(a);b=self.find(b)
   if a!=b:self.parents[max(a,b)]=min(a,b)
 
-def split(rows:list[Row],seed:str,validation_basis_points:int):
+def split(rows:list[Row],seed:str,validation_basis_points:int,near_plan=None):
  if not re.fullmatch('[a-f0-9]{32}',seed) or type(validation_basis_points) is not int or not 100<=validation_basis_points<=5000:raise DataError('DATASET_SPLIT_CONFIGURATION_INVALID')
  if not rows:raise DataError('DATASET_EMPTY_SOURCE')
+ if near_plan is not None and len(near_plan)!=len(rows):raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
  sources=Sources();retained={};duplicates=[]
  for row in rows:
   sources.find(row.source_id);fingerprint=row.content_hash()
+  if near_plan is not None:
+   entry=near_plan[row.line_number-1]
+   sources.union(row.source_id,rows[entry['group']-1].source_id)
+   if entry['match']:
+    duplicates.append({'line_number':row.line_number,'source_id':row.source_id,'kept_line_number':entry['match'],'content_sha256':fingerprint,'match_rule':'near_prompt_v1'})
+    continue
   if fingerprint in retained:
    first=retained[fingerprint]
    # Union before dropping content duplicates, including transitive source bridges.
@@ -56,9 +63,9 @@ def write_immutable(path:Path,lines):
   output.flush();os.fsync(output.fileno())
  return {'path':path.name,'size_bytes':size,'sha256':digest.hexdigest()}
 
-def materialize(rows:list[Row],directory:Path,seed:str,validation_basis_points:int,source_sha256:str):
+def materialize(rows:list[Row],directory:Path,seed:str,validation_basis_points:int,source_sha256:str,near_plan=None):
  if not re.fullmatch('[a-f0-9]{64}',source_sha256):raise DataError('DATASET_SOURCE_DIGEST_INVALID')
- result=split(rows,seed,validation_basis_points)
+ result=split(rows,seed,validation_basis_points,near_plan)
  if directory.is_symlink() or not directory.is_dir() or list(directory.iterdir()):raise DataError('DATASET_OUTPUT_CONFLICT')
  files=[]
  for name in ['samples','train','validation']:files.append(write_immutable(directory/(name+'.jsonl'),(row.value() for row in result[name])))
