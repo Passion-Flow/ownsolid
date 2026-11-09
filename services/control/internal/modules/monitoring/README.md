@@ -325,9 +325,13 @@ assignment or refresh after disabling the node to withdraw it. A
 current platform Admin can refresh a disabled Workspace to withdraw
 its entire list.
 
-The production composition owner supplies the protected policy reference,
-refresh supervisor and stale-collection stop. The node endpoint owner
-supplies the TLS relay or exporter. Set OWNSOLID_TEST_VMAGENT and
+Use RunNodeScrapeLease to require current publication before collector
+startup and to stop the Workspace collector on denied refresh or expiry.
+The deployment owner supplies a protected policy reference, refreshed
+authorization and independent process containment if the supervisor
+exits unexpectedly. The node endpoint owner supplies the TLS relay or
+exporter. See [the collector lease boundary](../../../../../docs/research/node-scrape-budgets.md#collector-lease-and-authority-loss).
+Set OWNSOLID_TEST_VMAGENT and
 OWNSOLID_TEST_VICTORIA_METRICS to the verified 1.155.0 executables and
 OWNSOLID_TEST_POSTGRES_IMAGE to the verified PostgreSQL 18.6 image ID
 with pgvector 0.8.7. Run from the repository root with namespace access.
