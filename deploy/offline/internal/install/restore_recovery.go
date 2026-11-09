@@ -20,6 +20,7 @@ import (
 
 const (
 	restoreIntentName = "restore-intent.json"
+	restoreLoading    = "loading"
 	restorePending    = "pending"
 	restoreServing    = "serving"
 	restoreRollback   = "rollback"
@@ -67,7 +68,7 @@ func readRestoreIntent(c Config) (*restoreIntent, error) {
 		i.Version != 1 || !restoreSuffix.MatchString(i.Suffix) ||
 		i.Cluster == 0 || i.Original == 0 || i.Incoming == 0 || i.Original == i.Incoming ||
 		(i.PITRActivation != "" && !validPITRActivation(i.PITRActivation)) ||
-		(i.Phase != restorePending && i.Phase != restoreServing && i.Phase != restoreRollback) {
+		(i.Phase != restoreLoading && i.Phase != restorePending && i.Phase != restoreServing && i.Phase != restoreRollback) {
 		return nil, errors.New("INSTALL_RESTORE_INTENT_INVALID: preserve the recovery record and the databases for inspection")
 	}
 	site, err := restoreSite(c)
@@ -125,6 +126,15 @@ func RecoverRestore(ctx context.Context, c Config, runner StreamRunner, rollback
 }
 
 func (o *operation) recoverRestore(ctx context.Context, i restoreIntent, rollback bool) error {
+	if i.Phase == restoreLoading {
+		if err := o.runSteps(ctx, []struct {
+			name string
+			run  func(context.Context) error
+		}{{"database", o.database}}); err != nil {
+			return err
+		}
+		return o.recoverRestoreLoad(ctx, i)
+	}
 	if err := o.runSteps(ctx, []struct {
 		name string
 		run  func(context.Context) error
@@ -149,6 +159,50 @@ func (o *operation) recoverRestore(ctx context.Context, i restoreIntent, rollbac
 	default:
 		return restoreIdentityError()
 	}
+}
+
+func (o *operation) failRestoreLoad(ctx context.Context, i restoreIntent, cause error) error {
+	if ctx.Err() != nil {
+		return restoreRecoveryRequired(cause)
+	}
+	catalog, err := o.restoreCatalog(ctx, i)
+	if err != nil || catalog != i.before() {
+		return restoreRecoveryRequired(errors.Join(cause, restoreIdentityError(), err))
+	}
+	if err := o.dropDatabase(ctx, i.incomingName()); err != nil {
+		return restoreRecoveryRequired(errors.Join(cause, err))
+	}
+	return errors.Join(cause, o.clearRestoreIntent())
+}
+
+func (o *operation) recoverRestoreLoad(ctx context.Context, i restoreIntent) error {
+	catalog, err := o.restoreCatalog(ctx, i)
+	if err != nil {
+		return err
+	}
+	retained := ""
+	switch catalog {
+	case i.before():
+		if err := o.renameForRestore(ctx, i, true); err != nil {
+			return err
+		}
+		retained = i.failedName()
+	case i.rolledBack():
+		retained = i.failedName()
+	case (restoreCatalog{cluster: i.Cluster, current: i.Original}):
+		// Cleanup completed before the installer could remove the record.
+	default:
+		return restoreIdentityError()
+	}
+	if err := o.clearRestoreIntent(); err != nil {
+		return err
+	}
+	o.record("restore", "rolled-back", retained)
+	fmt.Fprintln(o.out, "RESTORE_LOAD_ROLLED_BACK")
+	if retained != "" {
+		fmt.Fprintf(o.out, "Unverified candidate retained as %s\n", retained)
+	}
+	return nil
 }
 
 func (o *operation) finishRestored(ctx context.Context, i restoreIntent) error {
@@ -316,10 +370,12 @@ func (i restoreIntent) renameSQL(reverse bool) (string, restoreCatalog) {
 	if reverse {
 		fromBefore := fmt.Sprintf(`%s ALTER DATABASE "%s" RENAME TO "%s";`,
 			terminate(fmt.Sprint(i.Incoming)), i.incomingName(), i.failedName())
-		fromSwapped := fmt.Sprintf(`%s ALTER DATABASE "%s" RENAME TO "%s"; ALTER DATABASE "%s" RENAME TO "%s";`,
-			both, databaseName, i.failedName(), i.previousName(), databaseName)
-		branches = fmt.Sprintf("IF placement = '%s' THEN %s ELSIF placement = '%s' THEN %s",
-			before.key(), fromBefore, swapped.key(), fromSwapped)
+		branches = fmt.Sprintf("IF placement = '%s' THEN %s", before.key(), fromBefore)
+		if i.Phase != restoreLoading {
+			fromSwapped := fmt.Sprintf(`%s ALTER DATABASE "%s" RENAME TO "%s"; ALTER DATABASE "%s" RENAME TO "%s";`,
+				both, databaseName, i.failedName(), i.previousName(), databaseName)
+			branches += fmt.Sprintf(" ELSIF placement = '%s' THEN %s", swapped.key(), fromSwapped)
+		}
 		target = rolledBack
 	}
 	return fmt.Sprintf(`BEGIN ISOLATION LEVEL READ COMMITTED;
@@ -338,6 +394,9 @@ COMMIT;`, restoreSwapLock, i.catalogSQL(), branches, target.key()), target
 }
 
 func (o *operation) renameForRestore(ctx context.Context, i restoreIntent, reverse bool) error {
+	if i.Phase == restoreLoading && !reverse {
+		return restoreIdentityError()
+	}
 	statement, target := i.renameSQL(reverse)
 	var err error
 	for attempt := 0; attempt < swapAttempts; attempt++ {
@@ -352,7 +411,7 @@ func (o *operation) renameForRestore(ctx context.Context, i restoreIntent, rever
 			if catalog == target {
 				return nil
 			}
-			if catalog != i.before() && (!reverse || catalog != i.swapped()) {
+			if catalog != i.before() && !(reverse && i.Phase != restoreLoading && catalog == i.swapped()) {
 				return restoreIdentityError()
 			}
 		}
