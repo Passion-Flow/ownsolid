@@ -23,6 +23,16 @@ skipped. Eight focused IAM HTTPS cases passed three repetitions on
 disconnected Linux arm64 with PostgreSQL 18.6 and pgvector 0.8.7. The
 localized audit coverage test passed with both IAM-105 action names.
 
+After the private-file alias regression was added, all eight disconnected
+HTTPS cases passed three repetitions at `ab02c3b1`. The same IAM test
+inputs were used at `544c77a9`, where `make check`, `make build` and both
+Chromium suites passed with Python 3.12. Console passed 1,074 cases and
+Portal passed 387, with 35 skipped. The dataset import peak-RSS assertion
+failed in the first Go run. It passed four targeted repetitions on the
+unmodified base `3641bd42` and four on the candidate. The full non-browser
+test phase passed on the same candidate with Go package scheduling limited
+to two concurrent packages.
+
 At `c6de726c`, the Help test read raw OpenAPI path items while the generator
 followed the Nodes aliases to the canonical Components operations. The
 same two assertions failed on unmodified main. The shared resolution fix
