@@ -873,6 +873,7 @@
   "nodes.profile.docker_ai": "Model serving and training",
   "nodes.profile.docker_inference": "Model serving",
   "nodes.profile.docker_model_lifecycle": "Model preparation",
+  "nodes.profile.kubernetes_node": "Kubernetes node",
   "nodes.profile.read_only": "Read only",
   "nodes.profile.systemd_components": "Host components",
   "nodes.profile.systemd_maintenance": "Host maintenance",
