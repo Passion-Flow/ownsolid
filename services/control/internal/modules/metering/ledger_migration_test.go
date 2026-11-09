@@ -94,7 +94,7 @@ func TestPostgresLedgerCandidateDownRemovesEmptyTable(t *testing.T) {
 	}
 	var gone bool
 	if err := pool.QueryRow(ctx, `SELECT to_regclass('usage_ledger') IS NULL
-  AND to_regprocedure('refuse_usage_ledger_mutation()') IS NULL`).Scan(&gone); err != nil || !gone {
+  AND to_regprocedure('guard_usage_ledger_write()') IS NULL`).Scan(&gone); err != nil || !gone {
 		t.Fatalf("empty candidate objects remain: %v, %v", gone, err)
 	}
 }
@@ -106,10 +106,22 @@ func TestPostgresLedgerCandidateRefusesForeignCellReplayAndFiltersReports(t *tes
 	at := time.Date(2026, 11, 9, 9, 0, 0, 0, time.UTC)
 	end := at.Add(time.Hour)
 	foreign := Event{Producer: "fixture/foreign-cell", ID: "retained", OccurredAt: at, Usage: Usage{Requests: 900}}
-	if _, err := pool.Exec(ctx, `INSERT INTO usage_ledger
- (producer,event_id,tenant_id,workspace_id,site_id,cell_id,occurred_at,gpu_microseconds,tokens,storage_byte_seconds,requests)
- VALUES($1,$2,$3,$4,'fixture-site','sibling-cell',$5,0,0,0,$6)`,
-		foreign.Producer, foreign.ID, scope.TenantID, scope.WorkspaceID, at, foreign.Usage.Requests); err != nil {
+	// Record the retained event while its cell is the fixture's local cell.
+	if err := pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, `UPDATE cells SET is_local=false WHERE is_local;
+ UPDATE cells SET is_local=true WHERE id='sibling-cell'`); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO usage_ledger
+ (producer,event_id,tenant_id,workspace_id,occurred_at,gpu_microseconds,tokens,storage_byte_seconds,requests)
+ VALUES($1,$2,$3,$4,$5,0,0,0,$6)`,
+			foreign.Producer, foreign.ID, scope.TenantID, scope.WorkspaceID, at, foreign.Usage.Requests); err != nil {
+			return err
+		}
+		_, err := tx.Exec(ctx, `UPDATE cells SET is_local=false WHERE is_local;
+ UPDATE cells SET is_local=true WHERE id='fixture-cell'`)
+		return err
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if inserted, err := writeEvent(ctx, pool, scope, foreign); inserted || !errors.Is(err, ErrEventConflict) {

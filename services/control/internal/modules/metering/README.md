@@ -93,9 +93,10 @@ go -C services/control test -race -tags repository_integration ./internal/module
 
 The unnumbered [up SQL](testdata/ledger.sql) and [down SQL](testdata/ledger.down.sql)
 form the PostgreSQL migration candidate. The existing local site and cell
-functions supply both stored coordinates. Receipt intake verifies the source
-coordinates, and totals and showback read the local cell only. The down SQL
-requires a migration transaction and an empty ledger.
+functions supply both stored coordinates. The insert trigger verifies them
+against the registry in the ledger's schema. Receipt intake verifies the
+source coordinates, and totals and showback read the local cell only. The
+down SQL requires a migration transaction and an empty ledger.
 
 With the protected fixture inputs above, verify the native schema 55 upgrade,
 foreign-cell refusal and the empty and nonempty downgrade behavior:
@@ -104,7 +105,18 @@ foreign-cell refusal and the empty and nonempty downgrade behavior:
 go -C services/control test -race -tags repository_integration ./internal/modules/metering -run 'TestPostgres(LedgerCandidate|GatewayReceiptProjectsVerifiedUsageAndBudget)' -count=1
 ```
 
+Use the serving-role integration test with the same PostgreSQL fixture.
+Enable SCRAM on the fixture endpoint, including its socket when using a
+loopback relay. The test provisions the Control role through the installed
+runtime access path and verifies both the current business-table grant and
+the minimum ledger privileges.
+
+```sh
+go -C services/control test -race -tags repository_integration ./internal/modules/metering -run '^TestPostgresLedgerCandidateServingRole$' -count=1
+```
+
 The database owner assigns the formal migration number, table count, grants
 and catalog fingerprints. The optional gateway Report hook uses this SQL path
-and its existing authenticated arguments. Activate it only with the accepted
-production schema.
+and its existing authenticated arguments. See the
+[serving-role grants and rollback prerequisites](../../../../../docs/research/usage-ledger.md#serving-principal-and-ledger-grants)
+before activation.
