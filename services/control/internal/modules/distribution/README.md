@@ -56,11 +56,12 @@ same UUID in the generation request to its local engine.
 
 ## Cutover preview
 
-The control service's `PreviewCutover` uses the same authorization, expected
-revision, drain and ready-target checks as `Cutover`. It returns the current
-and proposed deployment revision and pause state without writing. Apply
-rechecks the expected revision and current readiness in its own
-transaction. The public preview route and Console flow are pending.
+In Admin, append `/cutovers/preview` to the cell-scoped alias detail
+path. Send a POST with the same JSON body used for apply and an Admin
+session with CSRF protection. The response shows the before and after
+alias revision, deployment and pause state. Preview leaves target
+history and audit unchanged. Apply rechecks the expected revision,
+target and outstanding requests in its own transaction.
 
 ## Development checks
 

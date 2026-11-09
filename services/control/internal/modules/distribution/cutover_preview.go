@@ -12,16 +12,16 @@ import (
 
 // CutoverState identifies the alias revision, serving target and pause state.
 type CutoverState struct {
-	Revision           int64
-	DeploymentID       string
-	DeploymentRevision int64
-	Paused             bool
+	Revision           int64  `json:"revision"`
+	DeploymentID       string `json:"deployment_id"`
+	DeploymentRevision int64  `json:"deployment_revision"`
+	Paused             bool   `json:"paused"`
 }
 
 // CutoverPreview describes the checked state before and after a proposed cutover.
 type CutoverPreview struct {
-	Before CutoverState
-	After  CutoverState
+	Before CutoverState `json:"before"`
+	After  CutoverState `json:"after"`
 }
 
 // PreviewCutover validates a proposed cutover against current authority without
