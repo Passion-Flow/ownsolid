@@ -143,6 +143,54 @@ func TestImportRefusesChangesToAdmittedComposePlan(t *testing.T) {
 	}
 }
 
+func TestComposePlanRefusesUnresolvedServiceInputs(t *testing.T) {
+	image := newImageFixture(t, "amd64", false)
+	fixture := signOCI(t, ociTar(t, image.files, ""), image.image)
+	verified, err := VerifyInstallBundle(t.Context(), fixture.root, fixture.key, fixture.limit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name  string
+		field string
+		value any
+	}{
+		{"env file", "env_file", "fixture.env"},
+		{"optional env file", "env_file", []map[string]any{{"path": "fixture.env", "required": false}}},
+		{"raw env file", "env_file", []map[string]string{{"path": "fixture.env", "format": "raw"}}},
+		{"label file", "label_file", []string{"fixture.labels"}},
+		{"inherited env", "environment", map[string]any{"CATALOG_MODE": nil}},
+		{"unnormalized env", "environment", []string{"CATALOG_MODE"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rendered := RenderedCompose{
+				ArtifactSHA256: verified.Manifest.Artifact.SHA256,
+				JSON: ociJSON(t, map[string]any{"services": map[string]any{
+					"fixture": map[string]any{"image": image.image, "pull_policy": "never", tc.field: tc.value},
+				}}),
+			}
+			if _, err := verified.VerifyComposeImagePlan(rendered); !errors.Is(err, ErrComposeImagePlan) {
+				t.Fatalf("admission accepted an unresolved service input: %v", err)
+			}
+			// An earlier verifier admitted these same bytes.
+			retained := ComposeImagePlan{
+				Pin: verified.Pin, ArtifactSHA256: rendered.ArtifactSHA256, ModelSHA256: digestBytes(rendered.JSON),
+				Services: []ComposeServiceImage{{Service: "fixture", ManifestDigest: image.image}},
+			}
+			if err := retained.VerifyRendered(rendered); !errors.Is(err, ErrComposeImagePlan) {
+				t.Fatalf("launch verification accepted a retained unresolved service input: %v", err)
+			}
+			options := ImageImportOptions{
+				MaximumPayloadBytes: fixture.limit, MaximumExpandedBytes: testTransitionBudget, Timeout: time.Second,
+				ExpectedPin: &verified.Pin, RenderedCompose: &rendered, ExpectedComposePlan: &retained,
+			}
+			if result, err := ImportInstallImage(t.Context(), fixture.root.Name(), fixture.key, options); !errors.Is(err, ErrComposeImagePlan) || result.Pin != (ReleasePin{}) {
+				t.Fatalf("import did not reject an unresolved service input before Docker access: %v", err)
+			}
+		})
+	}
+}
+
 func TestImportRefusesRenderedComposeFromAnotherArtifact(t *testing.T) {
 	root, key, private := transitionCatalog(t)
 	pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.0.0", engine: "compose"})
