@@ -197,6 +197,7 @@ function EntryDrawer({
   onClose: () => void;
 }) {
   const { t, format } = useI18n();
+  const description = entry?.alias.description;
   return (
     <Drawer open={entry !== null} onClose={onClose} title={entry?.alias.name ?? ''}>
       {entry ? (
@@ -246,7 +247,14 @@ function EntryDrawer({
               </Fact>
             </Detail>
             <Detail label={t('portalModels.detail.goodFor')}>
-              {t('portalModels.detail.goodFor.chat')}
+              <span className="whitespace-pre-wrap [overflow-wrap:anywhere]">
+                {description?.length ? description : t('portalModels.detail.goodFor.chat')}
+              </span>
+              {description === '' ? (
+                <span className="mt-1 block text-text-3">
+                  {t('portalModels.detail.goodFor.empty')}
+                </span>
+              ) : null}
             </Detail>
             <Detail label={t('portalModels.column.context')}>
               <Fact entry={entry} pending={pending}>
@@ -259,9 +267,6 @@ function EntryDrawer({
               <Fact entry={entry} pending={pending}>
                 {(model) => model.manifest.license}
               </Fact>
-            </Detail>
-            <Detail label={t('portalModels.detail.price')}>
-              <span className="text-text-3">{t('portalModels.detail.price.notReady')}</span>
             </Detail>
           </DetailList>
         </div>

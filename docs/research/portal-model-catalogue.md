@@ -15,7 +15,7 @@ models their workspace may call, what each costs and what it is good for.
 - **What it costs.** TEN-107 has an internal rate history for occurrence-rated workspace showback.
   The [showback contract](metering-showback.md) still lacks an authorized read API. The portal model
   catalogue cannot use that history as a per-model price.
-- **What it is good for: facts only in the browser.** The gateway serves `POST /v1/chat/completions`
+- **What it is good for.** The gateway serves `POST /v1/chat/completions`
   and `GET /v1/models`, and every model this release can import is a text model. GW-120 has scoped
   description handling in the PostgreSQL candidate. The [published Portal alias contract](../../api/openapi/v1/distribution/openapi.json)
   includes optional `description` and `description_revision`. Installed predecessor schemas omit
@@ -51,9 +51,9 @@ not available now, because it can come back and the person should know why their
 backend capability. If the deployments or models read fails, the names and availability stay on screen and a
 notice offers a retry; the person can still see what they may call.
 
-**Cost is shown as not ready, with the reason**, as [ADR 0036](../decisions/0036-show-every-option-and-fetch-models-offline.md)
-sets out. It sits in the model's drawer and not as a column, because a column of the same words tells nothing.
-Inventing a price field on the alias was rejected: rate cards belong to TEN-107 and would replace it.
+**Cost requires a real rate read.** The drawer leaves pricing out until
+TEN-107 supplies authorized rates. An alias field or an informational price
+placeholder cannot represent a rate.
 
 **Try is shown as not ready**, because S-304's primary action needs the playground (POR-105), which needs a running
 gateway reachable through a portal-safe contract (POR-105). Issue a key is the available action
@@ -61,13 +61,34 @@ beside it, leading to the existing scoped issuance flow rather than opening a di
 page. Without a workspace the action is visible with the same access instructions as the keys page.
 If nothing is published, the issuance form explains that an administrator must publish a model.
 
-**An administrator's description waits for the installed migration.** Open WebUI and LiteLLM both
+**The existing alias read carries an administrator's description.** Open WebUI and LiteLLM both
 let an administrator say what a model is for. GW-120 covers persistence, publication and editing.
-The Portal can display the description once the production PostgreSQL migration is in the shared
-lineage and an upgraded installation returns the two fields through the formal alias read contract.
-At that point test absent fields on the predecessor, plain text and a cleared description on the
-upgraded installation, and refusal from a foreign workspace. The current page shows known
-capabilities, base model and context length.
+Read the optional field from the generated alias page already used by the catalogue. A separate
+detail fetch would repeat an authorized read and add a dependency to opening the drawer. An omitted
+field keeps the verified capability summary. An explicit empty string also shows that the
+administrator has supplied no description. A nonempty string appears in the same drawer as
+plain text, with line breaks and long words contained at narrow widths. The
+[React DOM reference](https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html)
+explains the risk of interpreting text as markup. Use React string children and existing CSS.
+No dependency, model or dataset is added by the UI.
+
+Qualify the predecessor and the GW-120 candidate with a small PostgreSQL fixture serving the real
+HTTPS dispatcher. Check the wire fields and browser text for omitted, empty and nonempty values.
+Read both alias list and detail in the member's workspace and verify foreign workspace refusal.
+A separate failed model-facts request must preserve the name and description and allow a retry.
+The older installation's `503 SERVICE_NOT_READY` on a description write remains a refusal.
+Repeat on an installation after ARC adds the numbered migration to the production lineage.
+
+Local Chromium read both schemas through the production HTTPS dispatcher at `c9654657` and
+PostgreSQL 18.6, on an internal container network. The predecessor omitted both fields.
+Applying the exact GW-120 candidate SQL to the isolated schema made the original alias's
+description empty and allowed a second alias to publish multiline text. The member saw both
+states, and foreign workspace list and detail returned `RESOURCE_NOT_FOUND` without content.
+During the failed model-facts read, both names and the stored description remained visible.
+Retry restored the facts. The browser treated markup in the description as text and attempted
+zero requests outside the Portal origin. The native HTTPS contract test also verified the old
+write's `503 SERVICE_NOT_READY`. The Simplified Chinese 390 px browser case checked the
+description layout and empty text. The numbered production migration is a separate release gate.
 
 **POR-104 stays open** until prices and the description exist: its text names both.
 
@@ -173,5 +194,5 @@ Verify one run, two-model comparison and copying the exact request
 with placeholders for credentials. Include workspace refusal, a failed
 side of a comparison, cancellation with released capacity, retry after
 an upstream failure, and a disconnected run through the real gateway.
-S-304 price requires the authorized TEN-107 rate read contract. The
-published GW-120 read contract requires the production migration.
+S-304 price requires the authorized TEN-107 rate read contract. Production
+GW-120 display requires the numbered PostgreSQL migration.
