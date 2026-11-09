@@ -206,3 +206,39 @@ then acknowledged its original digest through the scheduled retry
 with the reporter still running. Only the original request generated
 output. The publication wake and outage backoff regression passed in
 the same run, followed by Clippy with warnings denied.
+
+## Retry after a committed acknowledgement is lost
+
+The [HTTP retry boundary](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2)
+requires the client to know that repeating a non-idempotent method is
+safe. Outcome reporting is a scoped idempotent write keyed by the
+request ID and canonical digest. The Rust reporter keeps the exact
+record until the matching acknowledgement reaches it. A transport
+failure cannot establish whether Control committed.
+
+Reuse the native single-target Go/Rust fixture and its prepared
+synthetic loopback upstream. Let the real Control dispatcher handle
+the first outcome and commit in PostgreSQL. Drop only that successful
+HTTPS reply. Hold the following report request long enough to check
+the committed row and the gateway's pending spool record, then let it
+reach the dispatcher and return the actual replay acknowledgement.
+This exercises response loss after a commit, which a simulated 503
+before the write or a direct service method replay would miss.
+
+Verify the original workspace, key, actor, alias and target revisions,
+nine reported tokens and released capacity before replay. After
+replay, require the same canonical acknowledgement, one reported
+audit event, one generation and removal of the pending file. Keep the
+run within the existing disconnected PostgreSQL fixture. The test adds
+no dependencies and uses the existing Go BSD-3-Clause and PostgreSQL
+License fixture components. The synthetic upstream remains separate
+from actual deployment or installation qualification.
+
+The disconnected Linux run passed
+`TestRealGoRustPostgresLostOutcomeReply` and the existing
+`TestRealGoRustPostgresGatewayChainAndControlOutage` variants. The
+first attempt committed nine tokens, released capacity and created
+one audit event under the original scope before its TLS connection
+closed. The second returned the same digest. The native gateway
+removed its pending record, PostgreSQL preserved the original report
+timestamp and outcome, and the upstream saw one generation.
