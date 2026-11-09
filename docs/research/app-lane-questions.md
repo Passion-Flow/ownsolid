@@ -267,3 +267,12 @@ result adapter and run live offline inference under the same restrictions.
 Verify no unreviewed tool call, caller destination, protected result or success
 audit. The command-adapter regression and offline scoring are separate
 evidence.
+
+## AGT-112 paired release gate
+
+The paired constructor and audit fixture candidate has passed the
+disconnected PostgreSQL checks and SCI input review. The Mac repository
+gate follows the scheduled OPS and model runs. Keep the paired candidate
+available for the next eligible exclusive window. The offline model
+qualification evidence work is independent of that gate and does not
+activate installation settings or user allowances.
