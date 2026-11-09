@@ -37,6 +37,8 @@ const (
 	feishuRejected   deliveryOutcome = "RELAY_FEISHU_REJECTED"
 	dingTalkRetry    deliveryOutcome = "RELAY_DINGTALK_RETRY"
 	dingTalkRejected deliveryOutcome = "RELAY_DINGTALK_REJECTED"
+	weComRetry       deliveryOutcome = "RELAY_WECOM_RETRY"
+	weComRejected    deliveryOutcome = "RELAY_WECOM_REJECTED"
 )
 
 var eventID = regexp.MustCompile(`^\$[A-Za-z0-9._=+/:~-]{1,254}$`)
@@ -64,6 +66,12 @@ func RunFeishuRelay(ctx context.Context, configurationFile string, logger *slog.
 // that supports signed DingTalk messages and the ownsolid durable receipt contract.
 func RunDingTalkRelay(ctx context.Context, configurationFile string, logger *slog.Logger) error {
 	return runRelay(ctx, configurationFile, dingTalkChannel, logger)
+}
+
+// RunWeComRelay serves authenticated tenant webhooks for a private receiver
+// that supports WeCom text messages and the ownsolid durable receipt contract.
+func RunWeComRelay(ctx context.Context, configurationFile string, logger *slog.Logger) error {
+	return runRelay(ctx, configurationFile, weComChannel, logger)
 }
 
 func runRelay(ctx context.Context, configurationFile string, channel relayChannel, logger *slog.Logger) error {
@@ -180,7 +188,7 @@ func (s *webhookRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, string(result), http.StatusBadRequest)
 	case scopeRejected:
 		http.Error(w, string(result), http.StatusForbidden)
-	case matrixRejected, feishuRejected, dingTalkRejected:
+	case matrixRejected, feishuRejected, dingTalkRejected, weComRejected:
 		http.Error(w, string(result), http.StatusUnprocessableEntity)
 	default:
 		http.Error(w, string(result), http.StatusServiceUnavailable)
@@ -200,6 +208,8 @@ func (s *webhookRelay) send(ctx context.Context, route tenantRoute, text, transa
 		return s.sendFeishu(ctx, route, text, transaction)
 	case dingTalkChannel:
 		return s.sendDingTalk(ctx, route, text, transaction)
+	case weComChannel:
+		return s.sendWeCom(ctx, route, text, transaction)
 	}
 	raw, err := json.Marshal(matrixMessage{MsgType: "m.text", Body: text})
 	if err != nil {

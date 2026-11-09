@@ -225,3 +225,53 @@ signature vector, missing and ambiguous receipts, redirect refusal and
 untrusted TLS rejection before any HTTP request reached the receiver.
 The shared Feishu and Matrix integration tests passed on the same host.
 The vendor-side path remains unqualified.
+
+## Site-local WeCom message push
+
+The [WeCom message push guide](https://developer.work.weixin.qq.com/document/path/99110)
+defines POST /cgi-bin/webhook/send with a group key in the query and a
+JSON text message with msgtype and text.content. Text is UTF-8 and capped
+at 2048 bytes. The group key authorizes the request and must be protected.
+The [WeCom error reference](https://developer.work.weixin.qq.com/document/path/90313)
+uses numeric errcode zero for success, -1 for busy and 45009 for rate limiting.
+The message push guide caps each endpoint at 20 messages per minute.
+
+Use one protected site key per tenant and the same private TLS policy,
+Alertmanager grouping, routing, silences and durable receipt transport.
+The site capability probe is an unsigned OPTIONS without a query. After
+capability validation, send the POST with the scoped query key. Keep URL
+queries out of access logs, error logs and traces. Preserve the group
+summary and clip long details at a UTF-8 boundary with a visible marker.
+Use one message per group. Splitting a large group into several messages
+would amplify outages and create partial-send and retry ambiguity. Omit
+mentions so a group notification cannot become an individual fan-out.
+
+Require the site's durable-v1 capability and quoted receipt, since the
+vendor format does not provide durable idempotency. The site owns key
+retention and reconciliation of any uncertain downstream operation.
+Reject direct public webhook delivery and interactive bot credentials
+because they are outside the offline boundary and unnecessary for push.
+No SDK, model or dataset is introduced. This reuses the same Go BSD
+standard library and Apache-2.0 Alertmanager release described above.
+Commercial use, offline execution and redistribution are permitted
+subject to their license terms.
+
+Unit coverage checks the exact text limit, valid UTF-8 at the cut, one
+message with no mentions, unauthorized TLS and retryable error codes.
+The native receiver must verify the per-tenant key, payload and durable
+retry, resolve an alert and respect a tenant-specific silence without
+contacting any vendor endpoint. Vendor-side, installer and Console
+qualification remain separate steps.
+
+### Verified WeCom relay contract
+
+Alertmanager 0.34.2 sent 40 distinct, same-rack firing alerts to the
+compiled WeCom relay in a loopback-only Linux amd64 namespace. The
+controlled HTTPS receiver verified the per-tenant key and bounded UTF-8
+text. The relay preserved the count of 40 in one notification and marked
+the shortened details. The receiver persisted the message, returned
+errcode zero without a receipt header, and then acknowledged the retry
+under the same key. Its inventory contained one firing and one resolved
+group of 40, with tenant-specific silencing and cross-tenant refusal.
+The same test runner exercised the DingTalk and Feishu routes. The
+WeCom vendor connection remains unqualified.

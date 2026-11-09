@@ -23,6 +23,7 @@ fully offline.
   - [Site-local Matrix relay](../../research/offline-alert-notifications.md#verified-matrix-path) qualifies one authenticated chat path.
   - [Site-local Feishu relay](../../research/offline-alert-notifications.md#verified-feishu-relay-contract) qualifies signed delivery to a controlled private receiver. Vendor-side integration, remaining channels, installer and Console work remain open.
   - [Site-local DingTalk relay](../../research/offline-alert-notifications.md#verified-dingtalk-relay-contract) qualifies signed, durable delivery through a controlled private endpoint. Vendor-side deployment remains open.
+  - [Site-local WeCom relay](../../research/offline-alert-notifications.md#verified-wecom-relay-contract) qualifies durable bounded text and a 40-alert group through a controlled private endpoint. Vendor and product wiring remain open.
 - [ ] OBS-106 Dashboards for platform health, fleet, GPU and model usage (P1)
 - [ ] OBS-107 Export to customer Prometheus, Grafana and log systems (P1) - Catalog: F235
   - [Native scoped federation prototype](../../research/tenant-telemetry-export.md#native-filter-prototype) qualifies the store filter. Authenticated export identity and installed store isolation remain prerequisites for customer integration.

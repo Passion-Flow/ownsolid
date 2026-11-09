@@ -212,6 +212,39 @@ Set `OWNSOLID_TEST_ALERTMANAGER` to the checksum-verified Alertmanager
 
 See the [wire contract and native evidence](../../../../../docs/research/offline-alert-notifications.md#site-local-dingtalk-signed-webhook-compatibility).
 
+### Site-local WeCom delivery
+
+Use the [WeCom settings](alerting/wecom-relay.example.json) and
+[Alertmanager receiver example](alerting/alertmanager-matrix.example.yaml).
+Rename the receiver names and references from `-matrix` to `-wecom`.
+Put each tenant's site push key and Alertmanager bearer in separate
+protected files. Configure the exact private HTTPS IP and its CA.
+
+    go -C services/control build -o /absolute/path/to/wecom-relay ./internal/modules/monitoring/alerting/cmd/wecom-relay
+    /absolute/path/to/wecom-relay -config /etc/ownsolid/relay/wecom-relay.json
+
+The customer receiver serves `/cgi-bin/webhook/send`. Return HTTP 204
+with `X-Ownsolid-Idempotency: durable-v1` on an unsigned `OPTIONS` with no
+query. Authenticate the `POST` with the `key` query value and persist
+the tenant-scoped message and quoted `Idempotency-Key` atomically.
+Acknowledge successful storage and equal replays with HTTP 200,
+`{"errcode":0}` and exactly one matching receipt header. Retain keys
+for the site's replay horizon. Suppress query capture in listener and
+proxy logs and traces because the query contains the push key.
+
+Each notification contains one text message. The relay preserves its
+group summary and shortens oversized details to meet the WeCom
+2,048-byte UTF-8 text limit. Delivery follows the Alertmanager route,
+silences and retry cadence. The receiver owns any downstream quota
+policy and reconciliation.
+
+Set `OWNSOLID_TEST_ALERTMANAGER` to the checksum-verified Alertmanager
+0.34.2 binary and run with Linux network namespace permission.
+
+    bash services/control/internal/modules/monitoring/alerting/testdata/check-local-wecom.sh
+
+See the [wire contract and native evidence](../../../../../docs/research/offline-alert-notifications.md#site-local-wecom-message-push).
+
 ### Long retention for fleet health aggregates
 
 Run the [fleet recording rules](alerting/fleet-rollup-rules.yaml) in a separate
