@@ -1,4 +1,5 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -19,6 +20,13 @@ const entrances: readonly Entrance[] = ['console', 'portal'];
 const locales: readonly HelpLocale[] = ['en', 'zh-CN'];
 const audiences: Readonly<Record<Entrance, string>> = { console: 'admin', portal: 'portal' };
 const root = join(import.meta.dirname, '..', '..', '..', '..');
+const { readContract } = createRequire(import.meta.url)(
+  join(root, 'tools', 'codegen', 'openapi-paths.mjs'),
+) as {
+  readContract: (source: string) => {
+    document: { paths: Record<string, Record<string, { 'x-audiences'?: string[] }>> };
+  };
+};
 
 function links(node: RootContent | { children?: RootContent[] }): string[] {
   const own = 'url' in node ? [node.url] : [];
@@ -92,15 +100,9 @@ describe.each(entrances)('%s API reference', (entrance) => {
     const expected = new Set<string>();
     for (const domain of readdirSync(contracts)) {
       if (domain === 'knowledge') continue;
-      let raw: string;
-      try {
-        raw = readFileSync(join(contracts, domain, 'openapi.json'), 'utf8');
-      } catch {
-        continue;
-      }
-      const contract = JSON.parse(raw) as {
-        paths: Record<string, Record<string, { 'x-audiences'?: string[] }>>;
-      };
+      const source = join(contracts, domain, 'openapi.json');
+      if (!existsSync(source)) continue;
+      const { document: contract } = readContract(source);
       for (const [path, item] of Object.entries(contract.paths)) {
         for (const [method, operation] of Object.entries(item)) {
           if (operation['x-audiences']?.includes(audiences[entrance])) {
