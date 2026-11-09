@@ -89,6 +89,29 @@ Nothing is downloaded at runtime; the installation serves the built files. `mdas
   keyboard; the bundle budget.
 - Offline: the live run checks that no request leaves the installation.
 
+### Alias cutover recovery copy (GW-111)
+
+Use the existing bilingual `problem.<code>.title` and `detail` entries.
+[RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html#section-3.1.4)
+describes the detail as recovery guidance. The
+[cutover contract](gateway-cutover-preview.md#public-contract-and-client-acceptance)
+and the preview and apply validators define five distinct 409 conflicts.
+Pause before changing the target, refresh when already paused or already
+enabled, wait for held calls to release capacity, and use the recorded
+alias target history to choose a matching deployment for rollback.
+These responses have no Retry-After. Treating all five as a generic
+retry would lose the change needed to proceed.
+
+Web owns the two message catalogs. The API contract owner publishes the
+codes in the versioned `x-error-codes` index, which supplies the existing
+Help renderer. The downloadable contract already describes the conflicts.
+Use the existing catalog and Help tests, and check the production Problem
+status and headers offline. This adds no dependency, model or dataset.
+
+A loopback HTTPS probe of the production Problem writer returned all
+five codes as 409 with the scoped request ID and without Retry-After.
+The bilingual catalog and existing Help unit tests passed.
+
 ## What the finished item does
 
 Both entrances have `/help` with articles for their reader, searchable from the page and the command
