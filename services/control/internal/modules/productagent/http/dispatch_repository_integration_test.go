@@ -5,9 +5,11 @@ package http_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -87,14 +89,32 @@ func TestAuthenticatedAssistantHTTP(t *testing.T) {
 SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_by FROM workflows WHERE id=$2`, version, workflow.ID)
 		exec(t, `UPDATE workflows SET current_version_id=$1 WHERE id=$2`, version, workflow.ID)
 	}
+	const (
+		enabled int32 = iota
+		disabled
+		unreadable
+	)
+	const privatePolicyError = "fixture private policy detail"
+	var policyMode atomic.Int32
+	assistant, err := productagent.New(dispatcher.Applications.Service, func(ctx context.Context) (bool, error) {
+		mode := policyMode.Load()
+		if mode == unreadable {
+			return false, errors.New(privatePolicyError)
+		}
+		return mode == enabled, ctx.Err()
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dispatcher.ProductAssistant.Service = assistant
 	server := httpfixture.NewTLSServer(t, dispatcher)
 	policyCookies, err := httpserver.NewCookiePolicy(owner.Config.Server.EffectiveTransportMode())
 	if err != nil {
 		t.Fatal(err)
 	}
-	client := func(audience, origin, token string) assistantClient {
+	client := func(t *testing.T, transport *http.Client, audience, origin, token string) assistantClient {
 		t.Helper()
-		c := assistantClient{http: server.Client(), origin: origin, session: &http.Cookie{
+		c := assistantClient{http: transport, origin: origin, session: &http.Cookie{
 			Name: policyCookies.Name(audience, httpserver.SessionCookie), Value: token,
 		}}
 		response := c.call(t, http.MethodGet, "/api/v1/auth/csrf", "", nil)
@@ -113,8 +133,8 @@ SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_
 		}
 		return c
 	}
-	admin := client("admin", httpfixture.AdminOrigin, adminToken)
-	portal := client("portal", httpfixture.PortalOrigin, portalToken)
+	admin := client(t, server.Client(), "admin", httpfixture.AdminOrigin, adminToken)
+	portal := client(t, server.Client(), "portal", httpfixture.PortalOrigin, portalToken)
 
 	readAudit := func(t *testing.T, id string, includeActor bool) []map[string]any {
 		t.Helper()
@@ -258,7 +278,7 @@ FROM audit_events WHERE request_id=$1`, id, tenant, workspace).Scan(&metadataOnl
 	assertAudit(t, conversations.id, "portal", "list_conversations")
 
 	// Mint CSRF for the re-labeled cookie to exercise audience verification itself.
-	wrongSession := client("portal", httpfixture.PortalOrigin, adminToken)
+	wrongSession := client(t, server.Client(), "portal", httpfixture.PortalOrigin, adminToken)
 	for _, tt := range []struct {
 		name, path, body, code string
 		client                 assistantClient
@@ -296,6 +316,48 @@ FROM audit_events WHERE request_id=$1`, id, tenant, workspace).Scan(&metadataOnl
 			assertNoAudit(t, response.id)
 		})
 	}
+
+	t.Run("installation execution policy", func(t *testing.T) {
+		missingServer := httpfixture.NewTLSServer(t, identityhttp.New(owner))
+		missingAdmin := client(t, missingServer.Client(), "admin", httpfixture.AdminOrigin, adminToken)
+		missingPortal := client(t, missingServer.Client(), "portal", httpfixture.PortalOrigin, portalToken)
+		for _, tc := range []struct {
+			name, code    string
+			mode          int32
+			status        int
+			admin, portal assistantClient
+		}{
+			{"disabled", "ACCESS_DENIED", disabled, http.StatusForbidden, admin, portal},
+			{"unreadable", "SERVICE_NOT_READY", unreadable, http.StatusServiceUnavailable, admin, portal},
+			{"missing", "SERVICE_NOT_READY", enabled, http.StatusServiceUnavailable, missingAdmin, missingPortal},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				policyMode.Store(tc.mode)
+				for _, attempt := range []struct {
+					client assistantClient
+					body   string
+				}{
+					{tc.admin, `{"command":"open nodes"}`},
+					{tc.portal, `{"command":"open keys"}`},
+					{tc.portal, applications},
+					{tc.portal, `{"command":"show conversations"}`},
+				} {
+					response := attempt.client.call(t, http.MethodPost, commandPath, attempt.body, nil)
+					response.problem(t, tc.status, tc.code)
+					if strings.Contains(response.raw, privatePolicyError) {
+						t.Fatal("policy failure disclosed private source details")
+					}
+					assertNoAudit(t, response.id)
+				}
+			})
+		}
+		policyMode.Store(enabled)
+		retry := portal.call(t, http.MethodPost, commandPath, applications, nil)
+		if page := retry.result(t).Applications; page == nil || len(page.Items) != 1 || page.Items[0].WorkspaceID != workspace {
+			t.Fatal("the read did not recover after the installation policy was enabled")
+		}
+		assertAudit(t, retry.id, "portal", "list_applications")
+	})
 
 	t.Run("audit append failure", func(t *testing.T) {
 		exec(t, `CREATE FUNCTION reject_assistant_http_fixture() RETURNS trigger LANGUAGE plpgsql AS $$

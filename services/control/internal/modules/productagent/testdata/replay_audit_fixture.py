@@ -1,20 +1,12 @@
 """Run the SCI assistant audit fixture offline against the AGT-112 candidate."""
 
 import argparse
-import json
 import os
 from pathlib import Path
 import subprocess
 import tempfile
 import time
 
-FIXTURE = Path(
-    "services/control/internal/modules/audit/assistant_disclosure_integration_test.go"
-)
-CONSTRUCTOR = (
-    "productagent.New(&applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow})"
-)
-ENABLE = "func(context.Context) (bool, error) { return true, nil }"
 AUDIT_DIR = "/tmp/audit-fixture"
 TEST_DIR = AUDIT_DIR + "/services/control/internal/modules/audit"
 DSN_FILE = AUDIT_DIR + "/postgres.dsn"
@@ -25,26 +17,7 @@ def run(*args, **kwargs):
     return subprocess.run(args, check=True, text=True, **kwargs)
 
 
-def write_overlay(repo, scratch):
-    fixture = repo / FIXTURE
-    source = fixture.read_text(encoding="utf-8")
-    if source.count(CONSTRUCTOR) != 1:
-        raise SystemExit("Expected one legacy constructor in the SCI audit fixture")
-    replacement = scratch / fixture.name
-    replacement.write_text(
-        source.replace(CONSTRUCTOR, CONSTRUCTOR[:-1] + f", {ENABLE})", 1),
-        encoding="utf-8",
-    )
-    overlay = scratch / "overlay.json"
-    overlay.write_text(
-        json.dumps({"Replace": {str(fixture): str(replacement)}}) + "\n",
-        encoding="utf-8",
-    )
-    return overlay
-
-
 def build(repo, scratch, arch):
-    overlay = write_overlay(repo, scratch)
     env = os.environ | {
         "CGO_ENABLED": "0",
         "GOOS": "linux",
@@ -53,7 +26,7 @@ def build(repo, scratch, arch):
         "GOSUMDB": "off",
     }
     run(
-        "go", "-C", "services/control", "test", "-p=1", "-overlay", str(overlay),
+        "go", "-C", "services/control", "test", "-p=1",
         "-c", "-o", str(scratch / "audit.test"), "./internal/modules/audit",
         cwd=repo, env=env,
     )
@@ -86,7 +59,7 @@ def exercise(container, repo, scratch):
         "REVOKE CREATE ON SCHEMA public FROM PUBLIC; SHOW server_version;",
     )
     run(
-        "docker", "exec", container, "install", "-d", "-m", "0700", TEST_DIR,
+        "docker", "exec", container, "install", "-d", "-m", "0700", AUDIT_DIR, TEST_DIR,
         AUDIT_DIR + "/tools/audit-verify",
     )
     run(
@@ -100,13 +73,19 @@ def exercise(container, repo, scratch):
         (repo / "tools/audit-verify/export.sql", AUDIT_DIR + "/tools/audit-verify/export.sql"),
     ):
         run("docker", "cp", str(source), f"{container}:{target}")
-    run(
-        "docker", "exec", "-w", TEST_DIR, "-e", "GOMAXPROCS=2",
-        "-e", f"PROJECT_ONE_TEST_DSN_FILE={DSN_FILE}",
-        "-e", f"OWNSOLID_TEST_AUDIT_VERIFY={AUDIT_DIR}/audit-verify",
-        container, AUDIT_DIR + "/audit.test", "-test.v", "-test.parallel=1",
-        "-test.timeout=180s", "-test.run", "^TestProductAssistantAuditWithin$",
+    result = subprocess.run(
+        ["docker", "exec", "-w", TEST_DIR, "-e", "GOMAXPROCS=2",
+         "-e", f"PROJECT_ONE_TEST_DSN_FILE={DSN_FILE}",
+         "-e", f"OWNSOLID_TEST_AUDIT_VERIFY={AUDIT_DIR}/audit-verify",
+         container, AUDIT_DIR + "/audit.test", "-test.v", "-test.parallel=1",
+         "-test.timeout=180s", "-test.run", "^TestProductAssistantAuditWithin$"],
+        text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
     )
+    print(result.stdout, end="")
+    result.check_returncode()
+    if not any(line.startswith("--- PASS: TestProductAssistantAuditWithin (")
+               for line in result.stdout.splitlines()):
+        raise SystemExit("The audit fixture did not complete")
 
 
 def main():
