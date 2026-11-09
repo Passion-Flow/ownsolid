@@ -317,10 +317,11 @@ size of two, and three reported calls for the member's key. Seed another actor's
 in the same workspace, and give the member no access to a second workspace. Publish the member's
 key scope on an agent-activated gateway with a signed HTTPS listener. The fixture file supplies
 `email`, `password`, `workspace`, `other_workspace`, `key_name`, `key_id`, `request_ids`
-in history order, `other_key_id`, `alias_id`, `gateway_origin`, and the lowercase hexadecimal
+in history order, `other_key_id`, `alias_id`, `alias_name`, `deployment_id`, `gateway_origin`, and the lowercase hexadecimal
 `ca_fingerprint` of the issuer DER and `ca_digest` of the attachment PEM.
-Set `OWNSOLID_LIVE_DOWNLOADS_ADMIN_ORIGIN` and the administrator credential variables above
-to exercise the same key drawer through the Admin entrance. Chromium must trust both entrances.
+The Portal run also checks the model catalogue endpoint. Set
+`OWNSOLID_LIVE_DOWNLOADS_ADMIN_ORIGIN` and the administrator credential variables above
+to exercise the Admin key drawer and the deployment endpoint. Chromium must trust both entrances.
 
 `live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
 to the license history. It needs test files signed with the key the installation trusts.

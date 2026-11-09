@@ -1,24 +1,22 @@
 // How to call with a key: the endpoint, a sample in each language, and what a private certificate
 // authority needs. It never holds the secret, which was shown once when the key was issued
 // (docs/research/portal-api-keys.md).
-import { downloadGatewayAliasCA, isProblem, type GatewayKey } from '@ownsolid/api';
+import { isProblem, type GatewayKey } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
 import {
-  Button,
   CodeBlock,
   CopyText,
   Detail,
   DetailList,
   Notice,
   ProblemNotice,
-  saveFile,
   Skeleton,
   Tabs,
 } from '@ownsolid/ui';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Download } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useAudience } from '../session.ts';
+import { GatewayCADownload } from './gateway-ca-download.tsx';
 import { gatewayAliasesQuery } from './key-state.ts';
 import { gatewayBaseUrl, sampleCall, sampleLanguages, type SampleLanguage } from './key-usage.ts';
 
@@ -28,17 +26,6 @@ export function KeyUsage({ workspace, gatewayKey }: { workspace: string; gateway
   const audience = useAudience();
   const aliases = useQuery(gatewayAliasesQuery(audience, workspace));
   const [language, setLanguage] = useState<SampleLanguage>('curl');
-  const ca = useMutation({
-    mutationFn: (aliasId: string) => downloadGatewayAliasCA(audience, workspace, aliasId),
-  });
-  const startCa = (aliasId: string) => {
-    if (ca.isPending) return;
-    ca.mutate(aliasId, {
-      onSuccess: ({ content, name }) => {
-        saveFile(content, name);
-      },
-    });
-  };
   if (gatewayKey.state !== 'active') return null;
   const alias = aliases.data?.items.find((item) => item.id === gatewayKey.alias_id);
   let body;
@@ -63,7 +50,6 @@ export function KeyUsage({ workspace, gatewayKey }: { workspace: string; gateway
     );
   } else {
     const languageName = t(`gateway.use.language.${language}`);
-    const missingCa = isProblem(ca.error, 'RESOURCE_NOT_FOUND', 'GATEWAY_AUTHORITY_UNAVAILABLE');
     body = (
       <>
         {alias.available ? null : <Notice className="m-0" title={t('gateway.use.unavailable')} />}
@@ -75,27 +61,7 @@ export function KeyUsage({ workspace, gatewayKey }: { workspace: string; gateway
             <CopyText text={alias.name} />
           </Detail>
         </DetailList>
-        <Button
-          className="self-start"
-          size="sm"
-          aria-disabled={ca.isPending || undefined}
-          onClick={() => {
-            startCa(alias.id);
-          }}
-        >
-          <Download aria-hidden />
-          {t(ca.isPending ? 'gateway.download.pending' : 'gateway.use.ca')}
-        </Button>
-        {isProblem(ca.error) ? (
-          <ProblemNotice
-            problem={ca.error}
-            title={missingCa ? t('gateway.use.ca.unavailable.title') : undefined}
-            detail={missingCa ? t('gateway.use.ca.unavailable.detail') : undefined}
-            onRetry={() => {
-              startCa(alias.id);
-            }}
-          />
-        ) : null}
+        <GatewayCADownload key={alias.id} workspace={workspace} aliasId={alias.id} />
         <p className="m-0 text-[13px] text-text-2">{t('gateway.use.environment')}</p>
         <Tabs
           label={t('gateway.use.languages')}
