@@ -25,6 +25,7 @@ real installation.
 | `TestM20WorkspaceReconciliationBrowser`                         | A page catches up with a change made elsewhere                   | `workspaces.spec.ts`: someone else changed it first                                                   |
 | `TestM15PriorActorThemeMutationResponseCannotOverrideNextActor` | One person's late save never reaches the next                    | `sessionFlows`: a save still on its way                                                               |
 | `TestM20ModelRecoveryTailBrowser` | An immutable object recovers without upload chunks, its model opens and retires, and an empty import can be discarded | [Live model recovery](../../web/apps/console/e2e/live-model-recovery.spec.ts) against HTTPS and PostgreSQL |
+| `TestM20ModelImportRecoveryBrowser` | An interrupted real upload resumes from the committed offset, rejects a different file, publishes once and retires with retained files | [Live model upload](../../web/apps/console/e2e/live-models.spec.ts) with scoped PostgreSQL and file proof. First-chunk discard is covered by the scripted Model library flow. |
 
 The last flow was checked by removing what it protects: without the account in the preference's
 cache key it fails with the next person on the dark theme.
@@ -41,7 +42,6 @@ and removed with it, so a scenario is not lost by deleting its only record.
 | `TestM08DatasetBrowser`                                                | S-503 Datasets                                                              |
 | `TestM09TrainingBrowser`                                               | S-501 Fine-tuning                                                           |
 | `TestM10HoldoutBrowser`                                                | S-504 Evaluation                                                            |
-| `TestM20ModelImportRecoveryBrowser` | S-201 Model library: upload, lost replies, resume and retirement have Playwright flows in `models.spec.ts` and `live-models.spec.ts`. The Playwright cancellation case holds the first chunk and verifies the browser aborts it before discarding. The old harness also reads scoped audit rows and retained file hashes directly, which still needs an installation-level check. |
 | `TestM12KnowledgeBrowser`                                              | Never a page of ours: knowledge is DeepParser's. Removed when the module is |
 
 ## Rejected
@@ -136,3 +136,70 @@ verification attempt, zero chunks, eight correctly scoped audit events
 and nine matching retained file hashes. The recovered version was
 retired and the empty import was cancelled. No training or inference
 ran. UX-117 remains open for the other inherited browser scenarios.
+
+## Interrupted upload and retained audit (UX-117, S-201)
+
+Use the existing Model library import, status and retirement pages from
+[S-201](../product/plan/README.md#stage-2--serve-a-model). The
+[Playwright network guide](https://playwright.dev/docs/network) and
+[route abort API](https://playwright.dev/docs/api/class-route#route-abort)
+allow a deterministic interruption while other requests reach the
+real server. Keep the existing
+[model fixture licence and archive format](model-library.md#making-an-import-bundle-mod-101-mod-119).
+The test adds no dependency, model or dataset.
+
+Let two full chunks commit. Abort later chunk requests on the original
+tab, leaving the authenticated status reads live. Closing after a
+displayed progress number alone races the next committed chunk and
+does not identify which offset was durable. Use the real chunk response
+and a status read after reopening to identify the checkpoint. Preserve
+the original request failure events and the real refusal body for a
+same-size file whose bytes differ. Do not record credentials, session
+headers or request bodies in the proof attachment.
+
+The upload contract intentionally replays the last stored chunk to
+verify a file selected in a new tab. Assert that its success keeps the
+same committed offset, and then that the next write begins at that
+offset. Starting with an empty upload would miss the protected replay.
+Scripted chunk responses cannot prove durability. An independent
+PostgreSQL check reads the two contiguous chunk rows while the transfer
+is interrupted. The published import retains its total byte count after
+the [cleanup worker](../../services/control/internal/modules/models/import_cleanup.go)
+removes the chunk rows. After retirement verify one ready import, one
+verification attempt, one version and one scoped success audit each
+for start, queue, verification, publication and retirement. Re-read the retained model files after retirement and
+compare their byte counts and digests to the approved catalogue.
+
+Run the [installation HTTPS recipe](../development/environment.md#browser-test-against-an-installation)
+from `web/apps/console` with the configured Admin TLS and credential
+variables. Use a clean workspace and the approved USTAR archive. The
+impostor has the same byte length and a different stored chunk.
+
+```sh
+OWNSOLID_LIVE_MODEL_BUNDLE=<approved-ustar> \
+OWNSOLID_LIVE_MODEL_IMPOSTOR=<same-size-impostor> \
+  pnpm exec playwright test e2e/live-models.spec.ts
+```
+
+During the interruption, read the import and its ordered chunk rows
+in the fixture database. Bind the observation to the workspace, actor
+and import ID printed by the browser evidence. After retirement verify
+the scoped import, version and audit rows and hash the files in the
+retained object directory. The three browser proof attachments contain
+the raw failed request outcomes, the real server refusal and the
+resume receipts. The attachments omit request headers and model bytes.
+
+The workstation run used the approved Qwen archive (1,519,216,640
+bytes), private HTTPS with local Chromium and an isolated PostgreSQL
+18.6 fixture. PostgreSQL observed two committed 8 MiB chunks while
+Chromium's later requests failed with `net::ERR_CONNECTION_RESET`.
+A fresh tab read 16,777,216 committed bytes. The wrong file received
+HTTP 409 `MODEL_CHUNK_CONFLICT`. The original replay at 8,388,608
+left the checkpoint unchanged. The next write began at 16,777,216
+and committed through 25,165,824. The browser opened the published
+model and retired it by name. The database had one import, one version,
+one verification attempt, and five exact scoped success audits. All
+nine retained files matched their approved digests after retirement.
+The verified upload ledger had already been cleaned up. The browser
+sent no external requests. UX-117 still tracks the browser scenarios
+that depend on other pages.

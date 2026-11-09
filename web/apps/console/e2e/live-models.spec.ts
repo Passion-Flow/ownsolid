@@ -1,9 +1,11 @@
 // Imports the real model into a real installation: a browser sends the whole bundle, is interrupted,
 // refuses a different file, continues, and the server verifies every file against its published
 // hash. Skipped unless the environment names a bundle; docs/development/environment.md has the recipe.
+import type { ModelImport } from '@ownsolid/api';
+import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import { expectAccessible } from '@ownsolid/shell/testing';
 import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testing/live';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page, type Request } from '@playwright/test';
 
 const bundle = process.env.OWNSOLID_LIVE_MODEL_BUNDLE ?? '';
 // A file of the same size as the bundle, with different bytes.
@@ -23,67 +25,179 @@ const signIn = async (page: Page, path: string, heading: string | RegExp) => {
   await expect(page.getByRole('heading', { name: heading, level: 1 })).toBeVisible();
 };
 
-test('imports the model from the console, through an interruption', async ({ browser }) => {
+const chunkPath = /\/model-imports\/[^/]+\/chunks$/;
+
+const chunkOffset = (request: Request): number =>
+  Number(request.headers()['x-chunk-offset'] ?? Number.NaN);
+
+async function readImport(page: Page, id: string): Promise<ModelImport> {
+  return page.evaluate(async (importId) => {
+    const path = `/api/v1/sites/default/cells/default/admin/model-imports/${importId}`;
+    const response = await fetch(path, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Import read returned HTTP ${response.status}`);
+    return ((await response.json()) as { data: ModelImport }).data;
+  }, id);
+}
+
+test('resumes at the durable offset after a real chunk interruption', async ({
+  page: first,
+  context,
+}, testInfo) => {
   test.setTimeout(30 * 60_000);
-  const context = await browser.newContext();
-  const first = await context.newPage();
-  const outside: string[] = [];
+  const allowed = new URL(origin).origin;
+  const outside = new Set<string>();
   context.on('request', (request) => {
-    if (!request.url().startsWith(origin) && !request.url().startsWith('blob:')) {
-      outside.push(request.url());
+    const address = new URL(request.url());
+    if (address.origin !== allowed && address.protocol !== 'blob:') outside.add(address.origin);
+  });
+  const failures: { offset: number; error: string }[] = [];
+  first.on('requestfailed', (request) => {
+    if (chunkPath.test(new URL(request.url()).pathname)) {
+      failures.push({
+        offset: chunkOffset(request),
+        error: request.failure()?.errorText ?? '',
+      });
     }
   });
+  // Only the first two writes leave the original tab. Status reads and all writes
+  // on the reopened tab use the real server without route interception.
+  let forwarded = 0;
+  await first.route(chunkPath, async (route) => {
+    if (forwarded >= 2) {
+      await route.abort('connectionreset');
+      return;
+    }
+    forwarded++;
+    await route.continue();
+  });
+
   await signIn(first, '/library/import', 'Import a bundle');
   await expectAccessible(first);
   await first.getByTestId('model-bundle').setInputFiles(bundle);
-  await expect(
-    first.getByText(/takes .* of the model store: the bundle, and the model/),
-  ).toBeVisible();
+  await expect(first.getByText(/Allow about .* in the model store during import/)).toBeVisible();
   await first.getByLabel('Reason').fill('Live run of the Model library');
   await first.getByRole('checkbox').check();
+  const checkpointReply = first.waitForResponse(
+    (response) =>
+      chunkPath.test(new URL(response.url()).pathname) &&
+      response.ok() &&
+      chunkOffset(response.request()) > 0,
+    { timeout: 120_000 },
+  );
   await first.getByRole('button', { name: 'Start import' }).click();
-  await expect(first.getByRole('meter')).toBeVisible();
-  await expect(first.getByRole('status').filter({ hasText: / of / })).toContainText(/^\d/);
-  // Far enough that continuing means something.
-  await expect(first.getByText(/^[1-9]\d{1,2}(\.\d)? MB of /)).toBeVisible({ timeout: 300_000 });
-  const importPath = new URL(first.url()).pathname;
-  first.on('dialog', (dialog) => {
-    void dialog.accept();
+  const checkpointResponse = await checkpointReply;
+  const lastStoredOffset = chunkOffset(checkpointResponse.request());
+  const { data: stored } = (await checkpointResponse.json()) as { data: ModelImport };
+  const checkpoint = stored.uploaded_bytes;
+  expect(checkpoint).toBe(lastStoredOffset * 2);
+  await expect(
+    first.getByText(english['problem.NETWORK_UNAVAILABLE.title'], { exact: true }),
+  ).toBeVisible({ timeout: 30_000 });
+  await testInfo.attach('upload-interruption-events', {
+    body: JSON.stringify({ importId: stored.id, checkpoint, lastStoredOffset, failures }, null, 2),
+    contentType: 'application/json',
   });
-  await first.close({ runBeforeUnload: false });
+  expect(failures.length).toBeGreaterThan(0);
+  expect(failures).toEqual(
+    failures.map(() => ({ offset: checkpoint, error: 'net::ERR_CONNECTION_RESET' })),
+  );
+  await testInfo.attach('model-upload-interrupted', {
+    body: await first.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
 
+  const importPath = new URL(first.url()).pathname;
+  await first.close({ runBeforeUnload: false });
   const page = await context.newPage();
   await page.goto('/library?tab=imports');
-  // Earlier runs leave their discarded imports in the list.
   await page
     .getByRole('row', { name: /Uploading/ })
     .getByRole('link', { name: modelName })
     .click();
-  await expect(page).toHaveURL(new RegExp(`${importPath}$`));
+  await expect(page).toHaveURL(`${allowed}${importPath}`);
   await expect(page.getByText('This tab is not uploading')).toBeVisible();
+  expect((await readImport(page, stored.id)).uploaded_bytes).toBe(checkpoint);
   await expectAccessible(page);
 
+  const refusal = page.waitForResponse(
+    (response) => chunkPath.test(new URL(response.url()).pathname) && response.status() === 409,
+  );
   await page.getByTestId('model-bundle-resume').setInputFiles(impostor);
-  await expect(page.getByText('This is not the file this import began with')).toBeVisible({
-    timeout: 60_000,
+  const refused = await refusal;
+  const refusalBody = await refused.text();
+  await testInfo.attach('model-upload-original-refusal', {
+    body: JSON.stringify(
+      {
+        status: refused.status(),
+        offset: chunkOffset(refused.request()),
+        response: refusalBody,
+      },
+      null,
+      2,
+    ),
+    contentType: 'application/json',
+  });
+  expect(chunkOffset(refused.request())).toBe(lastStoredOffset);
+  expect(JSON.parse(refusalBody)).toMatchObject({ code: 'MODEL_CHUNK_CONFLICT' });
+  await expect(page.getByText('This is not the file this import began with')).toBeVisible();
+  expect((await readImport(page, stored.id)).uploaded_bytes).toBe(checkpoint);
+  await testInfo.attach('model-upload-wrong-file', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
   });
 
+  const resumedReplies = [lastStoredOffset, checkpoint].map((offset) =>
+    page.waitForResponse(
+      (response) =>
+        chunkPath.test(new URL(response.url()).pathname) &&
+        response.ok() &&
+        chunkOffset(response.request()) === offset,
+      { timeout: 120_000 },
+    ),
+  );
+  const resumedOffsets: number[] = [];
+  page.on('request', (request) => {
+    if (chunkPath.test(new URL(request.url()).pathname)) resumedOffsets.push(chunkOffset(request));
+  });
   await page.getByTestId('model-bundle-resume').setInputFiles(bundle);
-  await expect(page.getByText('You can use the rest of the console')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Open the model' })).toBeVisible({
+  const writes = await Promise.all(resumedReplies);
+  const [replayed, continued] = await Promise.all(
+    writes.map(
+      async (reply) => ((await reply.json()) as { data: ModelImport }).data.uploaded_bytes,
+    ),
+  );
+  expect(resumedOffsets.slice(0, 2)).toEqual([lastStoredOffset, checkpoint]);
+  expect(replayed).toBe(checkpoint);
+  expect(continued).toBe(checkpoint + lastStoredOffset);
+  await testInfo.attach('model-upload-resume-receipts', {
+    body: JSON.stringify({ importId: stored.id, checkpoint, replayed, continued }, null, 2),
+    contentType: 'application/json',
+  });
+
+  const openModel = page.getByRole('link', { name: 'Open the model' });
+  await expect(openModel).toHaveAttribute('href', `/library/${stored.id}`, {
     timeout: 20 * 60_000,
   });
+  expect(await readImport(page, stored.id)).toMatchObject({
+    state: 'ready',
+    model_id: stored.id,
+    uploaded_bytes: stored.expected_bytes,
+    attempts: 1,
+  });
   await expectAccessible(page);
+  await testInfo.attach('model-upload-resumed-and-published', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
 
-  await page.getByRole('link', { name: 'Open the model' }).click();
+  await openModel.click();
   await expect(page.getByRole('heading', { name: modelName, level: 1 })).toBeVisible();
   await expect(page.getByText('Apache-2.0')).toBeVisible();
-  await expect(page.getByRole('link', { name: /^Import of / })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Import of / })).toHaveAttribute('href', importPath);
   await page.getByRole('tab', { name: 'Files' }).click();
   await expect(page.getByRole('cell', { name: 'model.safetensors' })).toBeVisible();
   await expectAccessible(page);
-  expect(outside).toEqual([]);
-  await context.close();
+  expect([...outside]).toEqual([]);
 });
 
 test('retires the model', async ({ page }) => {
