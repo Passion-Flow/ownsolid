@@ -282,3 +282,50 @@ were outside this rehearsal. A production acceptance run must use the
 authorized version and exact quality policy in a fresh NVIDIA attempt,
 then retain the verified physical stop and audited Admin decision before
 checking the derived model's lineage.
+
+### Deployment admission for the accepted adapter
+
+The [PEFT checkpoint format](https://huggingface.co/docs/peft/main/developer_guides/checkpoint)
+stores adapter parameters separately from the base model.
+[vLLM's documented LoRA path](https://docs.vllm.ai/en/stable/features/lora/)
+loads an explicit adapter alongside the base. The existing ownsolid
+deployment contract instead uses a ready model version. It can serve a
+reviewed merged model with a catalog digest and a serving recipe. Using
+the accepted training upload ID as a model version would bypass that
+handoff. Serving an adapter alongside a base would require a separate
+runtime and registry contract. Keep the current reviewed model path and
+its existing deployment admission. This test adds no dependencies or
+data. PEFT and vLLM use Apache-2.0. The approved Qwen revision, existing
+locked dependencies and CC0 generated rows retain the terms above.
+
+Use the same retained CPU output as the training experiment replay. After
+the authenticated fixture stop, read the accepted experiment and the
+scoped adapter source from the same job. Match the exact command, upload
+ID, result digest and file inventory. Recheck the retained bytes. Confirm
+the pinned base resolves in the registry, then try deploying the accepted
+upload ID under the authenticated Admin. The deployment service must
+return `RESOURCE_NOT_FOUND` twice with the same idempotency key and leave
+the deployment, node-task and GPU-lease tables unchanged for the target.
+This exercises the real PostgreSQL registry and deployment admission
+without constructing a fake ready derived version. Fixture node facts
+and the training production envelope remain synthetic, and the accepted
+adapter bytes are the retained CPU worker's bytes.
+
+A positive production handoff requires a fresh approved NVIDIA run,
+authenticated physical stop, and an audited Admin review registering the
+exact merged result. The deployment owner must then observe that version's
+catalog digest and serving recipe on a capable node. Runtime image and
+dependency lock provenance and observed hardware remain with their
+owners. The native CPU comparison above remains separately reproducible
+without those production receipts.
+
+The acceptance subtest ran under PostgreSQL 18.6 in a Docker network
+namespace with only loopback. The pinned base was present, and both
+deployment requests returned the expected refusal without changing any of
+the three target-node counts. To replay, set
+`PROJECT_ONE_ACTUAL_TRAINING_OUTPUT` to the retained worker's absolute
+output directory, `PROJECT_ONE_ACTUAL_DATASET_DIRECTORY` to the authorized
+publication export, and `PROJECT_ONE_APPROVED_MODEL_DIRECTORY` to the
+retained base configuration directory. From the repository root run
+`bash services/control/internal/modules/training/testdata/replay_accepted_experiment.sh`.
+The runner creates and removes its own PostgreSQL fixture.

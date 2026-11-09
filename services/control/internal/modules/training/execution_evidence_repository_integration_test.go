@@ -14,6 +14,7 @@ import (
 
 	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/google/uuid"
@@ -192,6 +193,44 @@ func TestActualTrainingExecutionEvidenceAdmission(t *testing.T) {
 		experiment.Execution.DependencyLockSHA256 != nil || experiment.Execution.HardwareObservation != nil {
 		t.Fatal("accepted experiment did not distinguish bound and unavailable evidence", e)
 	}
+	t.Run("accepted_adapter_requires_a_registered_model_for_deployment", func(t *testing.T) {
+		source, e := g.s.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job.ID)
+		if e != nil || source.Descriptor.UploadID != experiment.ArtifactID ||
+			source.Descriptor.ManifestSHA256 != experiment.ResultSHA256 ||
+			!reflect.DeepEqual(source.Command, experiment.Command) ||
+			!reflect.DeepEqual(source.Descriptor.Files, experiment.Files) {
+			t.Fatal("deployment handoff differs from the accepted experiment", e)
+		}
+		if e = g.s.VerifyAcceptedAdapter(g.ctx, source); e != nil {
+			t.Fatal("deployment handoff cannot read the retained adapter", e)
+		}
+		base, e := g.s.Models.Get(g.ctx, g.a, g.f.Workspace, source.Command.ModelID)
+		if e != nil || base.Kind != "approved_base" || base.CatalogDigest != source.Command.ModelCatalogSHA256 {
+			t.Fatal("pinned base is missing from the scoped model registry", e)
+		}
+		nodeCounts := func() [3]int {
+			return [3]int{
+				g.count(t, "SELECT count(*) FROM deployments WHERE node_id=$1", "", experiment.NodeID),
+				g.count(t, "SELECT count(*) FROM node_tasks WHERE node_id=$1", "", experiment.NodeID),
+				g.count(t, "SELECT count(*) FROM gpu_leases WHERE node_id=$1", "", experiment.NodeID),
+			}
+		}
+		before := nodeCounts()
+		input := deployments.CreateRequest{
+			NodeID: experiment.NodeID, ModelID: experiment.ArtifactID, GPUUUID: source.Command.GPUUUID,
+			Reason: "Verify that a training upload cannot bypass model review",
+		}
+		key := uuid.NewString()
+		for range 2 {
+			got, e := g.s.Inference.Create(g.ctx, g.a, input, key, uuid.NewString())
+			if e == nil || e.Error() != "RESOURCE_NOT_FOUND" || !reflect.DeepEqual(got, deployments.Deployment{}) {
+				t.Fatal("training upload admitted to deployment", e)
+			}
+		}
+		if after := nodeCounts(); after != before {
+			t.Fatalf("refused deployment changed node state: before %v, after %v", before, after)
+		}
+	})
 	changeOutcome(forgedOutcome)
 	if experiment, e := readExperiment(); e == nil || e.Error() != "TRAINING_DATA_INVALID" || !reflect.DeepEqual(experiment, training.AcceptedExperiment{}) {
 		t.Fatal("inconsistent retained evidence escaped", e)
