@@ -92,6 +92,13 @@ routes. The fixture supplies the site purpose when composing the service.
   composition in `identity/http/agent_path.go` sets
   `deployments.Service.ModelUse`. Supply the same declaration to all
   execution owners. The default currently uses the on-site commercial rule.
+- Node delivery rechecks the same current purpose at the inference
+  deploy branch of `nodes.Service.claimSelected` before handing out a
+  previously queued launch. Use the retained command's scoped model and
+  catalogue. Apply the existing task refusal and release rules. Exact
+  idempotent HTTP replay stays a read, and stop, observation and removal
+  remain available. The current deployment change gates the creation of
+  intents and explicit relaunches.
 - The public problem owner registers `MODEL_LICENSE_UNKNOWN`,
   `MODEL_LICENSE_USE_UNDECLARED` and `MODEL_LICENSE_USE_DENIED` as 403
   responses for placement, deployment creation and deploy actions. Update
