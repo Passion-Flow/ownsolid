@@ -19,3 +19,15 @@ The second command uses the PostgreSQL wire fault harness with an isolated
 plaintext loopback endpoint. The candidate schema is exercised in tests.
 The installation migration and real producers are tracked in the
 [ledger research](../../../../../docs/research/usage-ledger.md).
+
+`DecodeRateCard` validates installation-owned JSON with one `currency` and
+effective `versions`. Each version has an `id`, microsecond-aligned RFC 3339
+`effective_at` and explicit `rates` array. Each rate has a ledger `meter`,
+positive base `units` and explicit nonnegative `amount_micros`. One million
+amount micros equal one currency unit. Retain earlier versions when adding a
+new one.
+
+`ShowbackWithin` reads an authorized workspace in a read-only PostgreSQL
+REPEATABLE READ transaction. It uses the original occurrence time, returns
+rounded amounts as decimal integer strings and flags unpriced usage. The
+report is for internal showback. See [showback research](../../../../../docs/research/metering-showback.md).
