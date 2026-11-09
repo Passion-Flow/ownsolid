@@ -577,6 +577,10 @@ export interface components {
             actor_user_id: string | null;
             /** @description The email of the actor, null for the system. */
             actor_email: string | null;
+            /** @constant */
+            actor_kind?: "product_assistant";
+            /** @constant */
+            actor_id?: "ownsolid.product-assistant";
             /** Format: uuid */
             subject_user_id: string | null;
             subject_email: string | null;
@@ -1323,7 +1327,10 @@ export interface operations {
                 /** @description Only events about this resource. */
                 target_id?: string;
             };
-            header?: never;
+            header?: {
+                /** @description Send exactly one header with the value `true` to include the optional actor_kind and actor_id pair on verified PostgreSQL audit events. The user subject fields stay separate. Omitted, unrecognized or repeated values return the legacy representation. The header leaves authorization, filters and pagination unchanged. */
+                "X-Ownsolid-Audit-Actor"?: "true";
+            };
             path?: never;
             cookie?: never;
         };
@@ -1334,6 +1341,10 @@ export interface operations {
                 headers: {
                     /** @description Server-generated correlation UUID. */
                     "X-Request-ID"?: string;
+                    /** @description Includes X-Ownsolid-Audit-Actor because that request header selects the response representation. */
+                    Vary?: string;
+                    /** @description The audit response is not cacheable. */
+                    "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
