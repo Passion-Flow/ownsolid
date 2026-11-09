@@ -28,7 +28,7 @@ def main():
    if not inspected.valid():raise DataError('DATASET_VALIDATION_FAILED')
    near_plan=read_near_plan(request,limits.maximum_rows)
    artifacts=output/'artifacts';artifacts.mkdir(mode=0o700)
-   result.update(status='prepared',manifest=materialize(inspected.rows,artifacts,request['seed'],request['validation_basis_points'],inspected.source_sha256,near_plan))
+   result.update(status='prepared',manifest=materialize(inspected.rows,artifacts,request['seed'],request['validation_basis_points'],inspected.source_sha256,near_plan,test_basis_points=request.get('test_basis_points')))
   write_result(output,result,maximum);print(json.dumps({'status':'prepared' if request['operation']=='publish' else result['status'],'job_id':request['job_id'],'attempt_id':request['attempt_id']}));return 0
  except (DataError,OSError,ValueError,TypeError,MemoryError,RecursionError) as error:
   code=error.code if isinstance(error,DataError) else 'DATASET_PROCESSOR_MEMORY_EXCEEDED' if isinstance(error,MemoryError) else 'DATASET_PROCESSOR_FAILED'

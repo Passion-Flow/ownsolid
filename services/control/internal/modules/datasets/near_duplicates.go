@@ -225,7 +225,7 @@ func (p *nearPlanner) add(ctx context.Context, row wire.Record, digest string) e
 	return nil
 }
 
-func (s *Store) stageNearPlan(ctx context.Context, request wire.ProcessorRequest, source io.Reader) (string, error) {
+func (s *Store) stageNearPlan(ctx context.Context, request wire.ProcessorRequest, source io.Reader, removeNearDuplicates bool) (string, error) {
 	planner := newNearPlanner(request.Resources.MemoryBytes)
 	var planError error
 	e := scanLines(source, request.Limits.MaximumLineBytes, request.Limits.MaximumRows, func(_ int64, raw []byte) error {
@@ -257,6 +257,9 @@ func (s *Store) stageNearPlan(ctx context.Context, request wire.ProcessorRequest
 	}
 	for i := range planner.plan {
 		planner.plan[i].Group = planner.root(i + 1)
+		if !removeNearDuplicates {
+			planner.plan[i].Match = 0
+		}
 	}
 	raw, e := json.Marshal(planner.plan)
 	if e != nil {

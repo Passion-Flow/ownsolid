@@ -59,6 +59,10 @@ def read_request(path):
  fields={'schema_version','operation','job_id','attempt_id','scope_directory','input_file','input_sha256','output_directory','limits','resources'}
  if value.get('operation')=='publish':
   fields|={'seed','validation_basis_points'}
+  if 'test_basis_points' in value:
+   fields.add('test_basis_points')
+   if type(value['test_basis_points']) is not int or 'near_duplicate_plan_sha256' not in value:
+    raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
   if 'near_duplicate_plan_sha256' in value:
    fields.add('near_duplicate_plan_sha256')
    plan_digest=value['near_duplicate_plan_sha256']
