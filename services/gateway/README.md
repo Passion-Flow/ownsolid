@@ -10,6 +10,14 @@ The [source guide](src/README.md) maps request admission, backend streaming, dur
 
 [backend.rs](src/backend.rs), [transport.rs](src/transport.rs) and [streaming.rs](src/streaming.rs) bound backend requests, response/event bytes, deadlines and stream completion. [admission.rs](src/admission.rs) owns queue/active permits and terminal execution accounting. [control.rs](src/control.rs) validates control responses and outcome acknowledgements.
 
+## Published model aliases
+
+Use the model name returned by the authorized HTTPS model list. The
+gateway checks that the durable admission belongs to the same alias
+before calling the engine. A fresh target for that alias can serve an
+admitted request after a cutover. An inconsistent alias identity returns
+`gateway_unavailable` and records the request without token usage.
+
 ## Foreground Responses
 
 Send `POST /v1/responses` over gateway HTTPS with `Authorization: Bearer <workspace API key>`
