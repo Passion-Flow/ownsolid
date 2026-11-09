@@ -148,7 +148,7 @@
     {
      "status": "200",
      "schema": {
-      "$ref": "ModelVersionResponse"
+      "$ref": "AdminModelDetailResponse"
      }
     }
    ],
@@ -752,6 +752,85 @@
   }
  ],
  "schemas": {
+  "AdminModelDetail": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "name",
+    "model_key",
+    "catalog_digest",
+    "kind",
+    "manifest",
+    "state",
+    "created_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 100
+    },
+    "model_key": {
+     "type": "string",
+     "const": "qwen3-0.6b"
+    },
+    "catalog_digest": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string",
+     "enum": [
+      "approved_base",
+      "merged_lora"
+     ]
+    },
+    "manifest": {
+     "anyOf": [
+      {
+       "$ref": "ModelCatalog"
+      },
+      {
+       "$ref": "DerivedModelCatalog"
+      }
+     ]
+    },
+    "state": {
+     "type": "string",
+     "const": "ready"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "dataset_lineage": {
+     "$ref": "ModelDatasetLineage"
+    }
+   },
+   "allOf": [
+    {},
+    {}
+   ]
+  },
+  "AdminModelDetailResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "AdminModelDetail"
+    }
+   }
+  },
   "DerivedModelCatalog": {
    "type": "object",
    "required": [
@@ -980,6 +1059,45 @@
    "properties": {
     "data": {
      "$ref": "ModelCatalogAvailability"
+    }
+   }
+  },
+  "ModelDatasetLineage": {
+   "type": "object",
+   "required": [
+    "training",
+    "holdout"
+   ],
+   "properties": {
+    "training": {
+     "$ref": "ModelDatasetVersionReference"
+    },
+    "holdout": {
+     "$ref": "ModelDatasetVersionReference"
+    }
+   }
+  },
+  "ModelDatasetVersionReference": {
+   "type": "object",
+   "required": [
+    "dataset_id",
+    "dataset_version_id",
+    "manifest_sha256"
+   ],
+   "properties": {
+    "dataset_id": {
+     "type": "string",
+     "format": "uuid",
+     "maxLength": 36
+    },
+    "dataset_version_id": {
+     "type": "string",
+     "format": "uuid",
+     "maxLength": 36
+    },
+    "manifest_sha256": {
+     "type": "string",
+     "maxLength": 64
     }
    }
   },
@@ -1313,17 +1431,6 @@
     {},
     {}
    ]
-  },
-  "ModelVersionResponse": {
-   "type": "object",
-   "required": [
-    "data"
-   ],
-   "properties": {
-    "data": {
-     "$ref": "ModelVersion"
-    }
-   }
   },
   "Reason": {
    "type": "object",
