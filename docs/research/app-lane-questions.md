@@ -206,9 +206,10 @@ The verified session supplies the user and workspace to the command service.
 The [control-plane runtime policy](../../services/control/internal/platform/config/policy.go)
 has no assistant allowance or window. Its existing HTTP rate settings belong
 to other operations. The [workspace budget report](../../services/control/internal/modules/metering/budget.go)
-classifies historical costs in a read transaction. It does not reserve capacity
-for concurrent commands. Reusing either policy would change its purpose and
-would leave command admission without a shared allowance.
+classifies historical costs in a read transaction. The
+[TEN-108 admission preview](../../services/control/internal/modules/metering/budget_admission.go)
+also operates on that workspace report and reserves no capacity. Reusing
+either policy would leave command admission without a shared allowance.
 
 [Kubernetes admission quotas](https://kubernetes.io/docs/concepts/policy/resource-quotas/)
 enforce aggregate limits at admission. The assistant needs a trusted, validated
@@ -221,3 +222,15 @@ identity. Keep the budget open until concurrent requests through both
 authenticated entrances prove that the allowance cannot be exceeded and a
 refused request produces no tool effect or success audit. Process-local
 counters and retrospective audit counts cannot enforce that guarantee.
+
+## AGT-108 and AGT-112 repository gate boundary
+
+The audit replay passed against the installation-policy candidate, and the
+real HTTPS assistant fixture and repository command tests passed on the
+synced APP worktree with PostgreSQL disconnected. The repository check and
+build passed on an earlier base with the same APP changes. The browser
+stage was stopped when another lane started a heavy suite, and the
+exclusive retry expired while other local suites were still running.
+Run the full repository gate in an exclusive local window before pushing
+these APP commits. Browser shards may run serially with the same tests,
+followed by the remaining `make test` targets.
