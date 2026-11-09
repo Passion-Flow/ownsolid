@@ -126,27 +126,45 @@ type preparedBundle struct {
 }
 
 func prepareBundle(ctx context.Context, configPath, archive string, policy bundle.Verification) (preparedBundle, func(), error) {
-	var candidate preparedBundle
+	c, err := loadBundleSite(configPath)
+	if err != nil {
+		return preparedBundle{}, nil, err
+	}
+	return prepareBundleForSite(ctx, c, archive, policy)
+}
+
+func requireBundleInstallHost() error {
 	if runtime.GOOS != "linux" || runtime.GOARCH != "amd64" || os.Geteuid() != 0 {
-		return candidate, nil, errors.New("INSTALL_BUNDLE_HOST_REQUIRED: run as root on the Linux amd64 Docker host")
+		return errors.New("INSTALL_BUNDLE_HOST_REQUIRED: run as root on the Linux amd64 Docker host")
+	}
+	return nil
+}
+
+func loadBundleSite(configPath string) (Config, error) {
+	if err := requireBundleInstallHost(); err != nil {
+		return Config{}, err
 	}
 	c, err := readConfiguration(configPath)
 	if err != nil {
-		return candidate, nil, err
+		return Config{}, err
 	}
 	if err := c.validate(true); err != nil {
-		return candidate, nil, err
+		return Config{}, err
 	}
+	return c, nil
+}
+
+func prepareBundleForSite(ctx context.Context, c Config, archive string, policy bundle.Verification) (preparedBundle, func(), error) {
 	prepared, result, cleanup, err := unpackCurrentBundle(ctx, archive, policy)
 	if err != nil {
-		return candidate, nil, err
+		return preparedBundle{}, nil, err
 	}
 	assets, binding := bundleInventory(result)
 	c.ComposeFile = filepath.Join(prepared, filepath.FromSlash(assets["compose"].Path))
 	c.Images = binding.images()
 	if err := checkBundleCompose(c.ComposeFile); err != nil {
 		cleanup()
-		return candidate, nil, err
+		return preparedBundle{}, nil, err
 	}
 	return preparedBundle{config: c, result: result, assets: assets, binding: binding, root: prepared}, cleanup, nil
 }

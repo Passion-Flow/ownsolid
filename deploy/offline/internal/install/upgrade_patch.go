@@ -21,6 +21,9 @@ func UpgradePatch(ctx context.Context, configPath, baseline, patch, backupRoot s
 	if c.ComposeFile != "" || c.Images != (ImagesConfig{}) {
 		return errors.New("INSTALL_UPGRADE_BOUND_RELEASE_REQUIRED: use the site configuration of a signed installation")
 	}
+	if err := pendingDataRecovery(c); err != nil {
+		return err
+	}
 	active, err := readBundleBinding(c)
 	if err != nil {
 		return err
@@ -35,6 +38,9 @@ func UpgradePatch(ctx context.Context, configPath, baseline, patch, backupRoot s
 	expected := active.ManifestSHA256
 	if intent != nil {
 		expected = intent.Source.ManifestSHA256
+	}
+	if err := requireBundleInstallHost(); err != nil {
+		return err
 	}
 	mount, err := filepath.EvalSymlinks(policy.MountRoot)
 	if err != nil || mount != policy.MountRoot || !canonicalPath(mount) || mount == "/" {
@@ -64,5 +70,5 @@ func UpgradePatch(ctx context.Context, configPath, baseline, patch, backupRoot s
 	if err != nil {
 		return fmt.Errorf("INSTALL_PATCH_VERIFICATION_FAILED: %w", err)
 	}
-	return upgradeBundle(ctx, configPath, output, backupRoot, expected, policy, runner, out)
+	return upgradeBundle(ctx, c, output, backupRoot, expected, policy, runner, out)
 }
