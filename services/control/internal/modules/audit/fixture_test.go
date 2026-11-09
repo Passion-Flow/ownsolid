@@ -79,6 +79,11 @@ func newAuditFixture(t *testing.T, version int) *pgxpool.Pool {
 // to validate its ledger and append the remaining migrations.
 func seedAuditMigrationPrefix(t *testing.T, db *pgxpool.Pool, version int) {
 	t.Helper()
+	appendAuditFixtureMigrations(t, db, 1, version)
+}
+
+func appendAuditFixtureMigrations(t *testing.T, db *pgxpool.Pool, first, last int) {
+	t.Helper()
 	var lineage struct {
 		Entries []struct {
 			Version int    `json:"version"`
@@ -86,7 +91,7 @@ func seedAuditMigrationPrefix(t *testing.T, db *pgxpool.Pool, version int) {
 			SHA256  string `json:"sha256"`
 		} `json:"entries"`
 	}
-	if err := json.Unmarshal(release.MVPPostgreSQLCPULineage(), &lineage); err != nil || version < 1 || version >= len(lineage.Entries) {
+	if err := json.Unmarshal(release.MVPPostgreSQLCPULineage(), &lineage); err != nil || first < 1 || first > last || last >= len(lineage.Entries) {
 		t.Fatal("invalid published PostgreSQL fixture prefix", err)
 	}
 	ctx := t.Context()
@@ -95,10 +100,12 @@ func seedAuditMigrationPrefix(t *testing.T, db *pgxpool.Pool, version int) {
 		t.Fatal(err)
 	}
 	defer tx.Rollback(ctx)
-	if _, err := tx.Exec(ctx, `CREATE TABLE schema_migrations(version integer PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP)`); err != nil {
-		t.Fatal(err)
+	if first == 1 {
+		if _, err := tx.Exec(ctx, `CREATE TABLE schema_migrations(version integer PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP)`); err != nil {
+			t.Fatal(err)
+		}
 	}
-	for _, entry := range lineage.Entries[:version] {
+	for _, entry := range lineage.Entries[first-1 : last] {
 		path := strings.TrimPrefix(entry.Path, "services/control/migrations/")
 		sql, err := migrations.Files.ReadFile(path)
 		if err != nil {
