@@ -83,8 +83,8 @@ Show the label in the node list's Agent column, the pending enrollment record,
 and the existing node preview and detail. The profile describes what the ownsolid
 agent is authorized to do. Agent connectivity and the
 [Kubernetes Ready condition](https://kubernetes.io/docs/reference/node/node-status/#condition)
-have separate evidence. The create-token form retains its existing supported
-choices and the cell screens still require their plan entries.
+have separate evidence. The label-map change covers inventory and pending token
+reads. The cell screens still require their plan entries.
 
 Compile the Web change with the current generated types and with the incoming
 profile in the generated node and token shapes. In Chromium, return both the
@@ -95,6 +95,59 @@ dataset.
 
 Land the label map before the Nodes contract change. Regenerate and check the
 Web workspace on the combined branch before merging the contract.
+
+### Registering a Kubernetes node (S-104)
+
+The existing S-104 flow in the [build plan](../product/plan/README.md)
+can issue an ownsolid Agent token for this profile. The
+[token writer](../../services/control/internal/modules/nodes/join_writes.go)
+accepts `kubernetes_node` on PostgreSQL. The
+[Agent runtime](../../services/agent/internal/runtime/runtime.go) accepts the
+profile with the default Kubernetes settings. Its existing
+[`enroll --config` and `run --config` commands](../../services/agent/cmd/agent/main.go)
+use the same protected token file and configuration paths as the other roles.
+The [signed release acceptance](kubernetes-cells.md#signed-release-and-managed-api-acceptance)
+exercised that profile with two real Agents on an isolated network.
+
+[RKE2 requirements](https://docs.rke2.io/install/requirements) and the
+[air-gap install guide](https://docs.rke2.io/install/airgap) describe a separate
+cluster installation with operating-system, network and artifact prerequisites.
+Registering the Agent prepares the node for the managed cell workflow and leaves
+RKE2 installation and Kubernetes readiness to that workflow. Keep the existing
+three copyable steps. Do not generate a Docker command, an RKE2 token or a host
+IP override. [Control](../../services/control/internal/modules/nodes/http/handler.go)
+records the enrollment connection's source IP, and the
+[Agent's later join operation](../../services/agent/internal/kubernetes/manager.go)
+checks that the IP belongs to the host. The host needs to reach Control over its
+private network from an address it owns. Loopback and link-local addresses fail
+admission, and an address rewritten by NAT can fail the later join check.
+
+Require the HTTPS origin that the operator configured for Agents and the CA
+that verifies it. [Machine ingress](../../services/control/internal/platform/httpserver/README.md)
+may use a different listener from the Console. Prefilling the Console URL
+would send some users to the wrong ingress. Validate and normalize the origin
+before minting. [The Agent client](../../services/agent/internal/client/client.go)
+verifies the CA and host and refuses paths, credentials, queries and fragments.
+
+Use the existing authenticated [cell-clusters list](../../api/openapi/v1/cell-clusters/openapi.json)
+as a read-only check. A successful empty list permits registration for the first
+cluster. A missing route, missing configuration, unsupported storage, or denied
+request leaves the Kubernetes role visible with its reason. A failed check can
+be retried. Guessing support from the Console version or issuing a disposable
+token would either miss deployment prerequisites or write server state. The
+check cannot verify the host route, CA file or later artifact delivery. The token
+writer remains authoritative if support or permission changes after the check.
+
+Verify both languages, explicit disabled reasons, an invalid Agent origin,
+a transient read failure, server token refusal and the three copy steps.
+Exercise the actual commands against a disposable Linux amd64 Agent on a
+private unicast address, and verify that the existing Console flow sees it
+register. The live Chromium test uses `OWNSOLID_LIVE_KUBERNETES_NODE_SHELL`
+and `OWNSOLID_LIVE_KUBERNETES_AGENT_ORIGIN` in addition to the live Console
+settings. The host needs the matching Agent at `/opt/agent` and the machine
+ingress CA at `/opt/ca.pem`, as in the existing live node test.
+No new dependency, model or dataset. The pinned RKE2 distribution and its
+offline redistribution are covered by [signed delivery](rke2-signed-delivery.md).
 
 ## Failure modes and tests
 

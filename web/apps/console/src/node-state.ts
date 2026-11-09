@@ -27,4 +27,4 @@ export const profiles = {
   docker_ai: 'nodes.profile.docker_ai',
   docker_model_lifecycle: 'nodes.profile.docker_model_lifecycle',
   kubernetes_node: 'nodes.profile.kubernetes_node',
-} satisfies Record<Node['execution_profile'] | 'kubernetes_node', TranslationKey>;
+} satisfies Record<Node['execution_profile'], TranslationKey>;

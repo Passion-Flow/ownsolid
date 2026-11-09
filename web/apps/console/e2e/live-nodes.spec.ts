@@ -8,12 +8,13 @@ import { adminPassword, email, liveOptions, origin } from '@ownsolid/shell/testi
 
 // A shell on the host, reading its script from standard input.
 const hostShell = process.env.OWNSOLID_LIVE_NODE_SHELL ?? '';
+const kubernetesHostShell = process.env.OWNSOLID_LIVE_KUBERNETES_NODE_SHELL ?? '';
+const kubernetesAgentOrigin = process.env.OWNSOLID_LIVE_KUBERNETES_AGENT_ORIGIN ?? '';
 
-test.skip(origin === '' || hostShell === '', 'needs a disposable host');
 test.use(liveOptions);
 
-const onHost = (script: string): string =>
-  execSync(hostShell, { input: script, encoding: 'utf8', timeout: 60_000 });
+const onHost = (script: string, shell = hostShell): string =>
+  execSync(shell, { input: script, encoding: 'utf8', timeout: 60_000 });
 
 const signIn = async (page: Page) => {
   await page.goto('/nodes');
@@ -24,6 +25,7 @@ const signIn = async (page: Page) => {
 };
 
 test('adds a node with the commands on the page and works with it', async ({ page }) => {
+  test.skip(origin === '' || hostShell === '', 'needs a disposable host');
   test.setTimeout(240_000);
   const problems: string[] = [];
   page.on('console', (message) => {
@@ -178,4 +180,61 @@ test('adds a node with the commands on the page and works with it', async ({ pag
   await expect(renamedRow).toContainText('Removed');
   await expectAccessible(page);
   expect(problems).toEqual([]);
+});
+
+test('registers a Kubernetes Agent from a private unicast address', async ({ page }, testInfo) => {
+  test.skip(
+    origin === '' || kubernetesHostShell === '' || kubernetesAgentOrigin === '',
+    'needs a disposable Kubernetes Agent host and its Control HTTPS origin',
+  );
+  test.setTimeout(120_000);
+  const name = `live-kube-${String(Date.now())}`;
+  await signIn(page);
+  await page.getByRole('main').getByRole('button', { name: 'Add node' }).first().click();
+  const form = page.getByRole('dialog', { name: 'Add a node' });
+  await form.getByLabel('Node name').fill(name);
+  const role = form.getByLabel('What it will do');
+  await expect(role.getByRole('option', { name: 'Run Kubernetes workloads' })).toBeEnabled();
+  await role.selectOption('kubernetes_node');
+  await form.getByLabel('Agent HTTPS address').fill(kubernetesAgentOrigin);
+  await form.getByRole('button', { name: 'Issue join token' }).click();
+
+  const steps = page.getByRole('dialog', { name: `Join ${name}` });
+  const commands = steps.locator('pre');
+  await expect(commands).toHaveCount(3);
+  await expect(steps).toContainText('Waiting for the node to join');
+  const secret = steps.locator('.font-mono').first();
+  const token = await secret.innerText();
+  expect(/^[A-Za-z0-9_-]{43}$/.test(token)).toBe(true);
+  const [directories, store, join] = await Promise.all([
+    commands.nth(0).innerText(),
+    commands.nth(1).innerText(),
+    commands.nth(2).innerText(),
+  ]);
+  const lines = join.split('\n');
+  const run = lines.pop();
+  expect(run).toBe('sudo agent run --config /etc/ownsolid-agent/agent.json');
+  onHost(
+    `set -eu
+${directories}
+install -m 0755 /opt/agent /usr/local/bin/agent
+install -m 0600 /opt/ca.pem /etc/ownsolid-agent/ca.pem
+printf '%s\\n' '${token}' | ${store}
+${lines.join('\n')}
+nohup ${run} >/var/log/agent.log 2>&1 &
+`,
+    kubernetesHostShell,
+  );
+
+  await expect(steps).toContainText(`${name} has joined`, { timeout: 60_000 });
+  await testInfo.attach('unicast-registration-joined', {
+    body: await page.screenshot({ animations: 'disabled', mask: [secret] }),
+    contentType: 'image/png',
+  });
+  await steps.getByRole('button', { name: 'Open the node' }).click();
+  const node = page.getByRole('dialog', { name });
+  await expect(node).toContainText('Kubernetes node');
+  await expect(node).toContainText('Online');
+  await node.getByRole('button', { name: 'Collect facts' }).click();
+  await expect(node.getByText('Succeeded').first()).toBeVisible({ timeout: 60_000 });
 });

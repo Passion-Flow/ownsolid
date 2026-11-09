@@ -7,7 +7,8 @@ export interface SelectFieldProps extends Omit<ComponentProps<'select'>, 'id' | 
   label: ReactNode;
   /** Guidance under the field. */
   hint?: ReactNode | undefined;
-  options: readonly { value: string; label: string }[];
+  /** Choices to display. A disabled choice remains visible in the list. */
+  options: readonly { value: string; label: string; disabled?: boolean }[];
 }
 
 /** A labelled choice among a few options, using the browser's own list. */
@@ -29,7 +30,12 @@ export function SelectField({ label, hint, options, className, ...props }: Selec
         {...props}
       >
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option
+            key={option.value}
+            value={option.value}
+            disabled={option.disabled}
+            aria-disabled={option.disabled}
+          >
             {option.label}
           </option>
         ))}

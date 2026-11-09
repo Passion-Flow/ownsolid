@@ -2,6 +2,7 @@
 // out of the commands, so they can be pasted anywhere; it reaches the host through a file, never a
 // command line or shell history (docs/research/nodes-page.md).
 import {
+  checkKubernetesEnrollment,
   createJoinToken,
   isProblem,
   listNodes,
@@ -43,9 +44,35 @@ export const servingImage =
   'vllm/vllm-openai@sha256:a4a4c0437bf7240089da5f08aa370c4aee17ae5290f7a3b468825ee26c4c3a6b';
 
 /** What a node can be asked to do. It is fixed when the node joins. */
-const roles = ['read_only', 'docker_inference'] as const;
+const roles = [
+  'read_only',
+  'docker_inference',
+  'kubernetes_node',
+] as const satisfies readonly MintedJoinToken['execution_profile'][];
 
 type Role = (typeof roles)[number];
+
+/** The Agent accepts an HTTPS origin without a path, query, fragment or credentials. */
+function agentOrigin(value: string): string {
+  const address = value.trim();
+  if (!/^https:\/\/[^/?#@\\\s]+\/?$/i.test(address)) return '';
+  try {
+    return new URL(address).origin;
+  } catch {
+    return '';
+  }
+}
+
+function kubernetesUnavailable(error: unknown) {
+  if (isProblem(error)) {
+    if (error.status === 404) return 'nodes.add.kubernetes.olderControl';
+    if (error.status === 403) return 'nodes.add.kubernetes.permission';
+    if (error.code === 'KUBERNETES_CELLS_UNCONFIGURED') return 'nodes.add.kubernetes.unconfigured';
+    if (error.code === 'KUBERNETES_CLUSTER_STORAGE_UNSUPPORTED')
+      return 'nodes.add.kubernetes.storage';
+  }
+  return 'nodes.add.kubernetes.checkFailed';
+}
 
 /** Where the agent keeps what it needs. */
 function directoryCommand(serving: boolean): string {
@@ -66,18 +93,16 @@ export const imageCommands = [
 const tokenCommand = `sudo sh -c 'umask 077; cat > ${configDirectory}/join-token'`;
 
 /** How to write the agent's configuration, join and start reporting. */
-function joinCommands(origin: string, serving: boolean): string {
+function joinCommands(origin: string, role: MintedJoinToken['execution_profile']): string {
   const configuration = JSON.stringify({
     control_origin: origin,
     ca_file: `${configDirectory}/ca.pem`,
     state_directory: stateDirectory,
     disk_path: '/',
     join_token_file: `${configDirectory}/join-token`,
-    ...(serving
-      ? {
-          execution_profile: 'docker_inference',
-          inference: { root_directory: inferenceDirectory, docker_socket: dockerSocket },
-        }
+    ...(role === 'read_only' ? {} : { execution_profile: role }),
+    ...(role === 'docker_inference'
+      ? { inference: { root_directory: inferenceDirectory, docker_socket: dockerSocket } }
       : {}),
   });
   return [
@@ -89,7 +114,15 @@ function joinCommands(origin: string, serving: boolean): string {
   ].join('\n');
 }
 
-function Waiting({ token, onOpen }: { token: MintedJoinToken; onOpen: (node: Node) => void }) {
+function JoinProgress({
+  token,
+  onClose,
+  onOpen,
+}: {
+  token: MintedJoinToken;
+  onClose: () => void;
+  onOpen: (node: Node) => void;
+}) {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const poll = useQuery(runtimeConfigQuery()).data?.ui.pollMilliseconds ?? false;
@@ -112,30 +145,41 @@ function Waiting({ token, onOpen }: { token: MintedJoinToken; onOpen: (node: Nod
   useEffect(() => {
     if (joined) void queryClient.invalidateQueries({ queryKey: ['nodes'] });
   }, [joined, queryClient]);
-  return joined ? (
-    <div role="status" className="flex flex-wrap items-center justify-between gap-3">
-      <span className="font-semibold">{t('nodes.add.joined', { name: joined.name })}</span>
-      <Button
-        variant="primary"
-        onClick={() => {
-          onOpen(joined);
-        }}
-      >
-        {t('nodes.add.openNode')}
-      </Button>
-    </div>
-  ) : (
-    <div className="flex items-center gap-2 text-text-2">
-      <Spinner label={t('nodes.add.waiting')} />
-      <span aria-hidden>{t('nodes.add.waiting')}</span>
+  return (
+    <div className="flex w-full flex-wrap items-center justify-end gap-2">
+      <div className="mr-auto min-w-0 grow basis-48 text-text-2">
+        {joined ? (
+          <span role="status" className="font-semibold">
+            {t('nodes.add.joined', { name: joined.name })}
+          </span>
+        ) : isProblem(found.error) ? (
+          <ProblemNotice problem={found.error} onRetry={() => void found.refetch()} />
+        ) : (
+          <div className="flex items-center gap-2">
+            <Spinner label={t('nodes.add.waiting')} />
+            <span aria-hidden>{t('nodes.add.waiting')}</span>
+          </div>
+        )}
+      </div>
+      <Button onClick={onClose}>{t('nodes.add.close')}</Button>
+      {joined ? (
+        <Button
+          variant="primary"
+          onClick={() => {
+            onOpen(joined);
+          }}
+        >
+          {t('nodes.add.openNode')}
+        </Button>
+      ) : null}
     </div>
   );
 }
 
-function Steps({ token, onOpen }: { token: MintedJoinToken; onOpen: (node: Node) => void }) {
+function Steps({ token, origin }: { token: MintedJoinToken; origin: string }) {
   const { t, format } = useI18n();
-  const origin = window.location.origin;
   const serving = token.execution_profile === 'docker_inference';
+  const kubernetes = token.execution_profile === 'kubernetes_node';
   return (
     <div className="flex flex-col gap-4">
       <Notice
@@ -151,7 +195,11 @@ function Steps({ token, onOpen }: { token: MintedJoinToken; onOpen: (node: Node)
             code={directoryCommand(serving)}
             label={t('nodes.add.step.directoriesLabel')}
           />
-          <p className="m-0 mt-2">{t('nodes.add.step.files', { directory: configDirectory })}</p>
+          <p className="m-0 mt-2">
+            {t(kubernetes ? 'nodes.add.kubernetes.files' : 'nodes.add.step.files', {
+              directory: configDirectory,
+            })}
+          </p>
         </li>
         {serving ? (
           <li>
@@ -165,13 +213,21 @@ function Steps({ token, onOpen }: { token: MintedJoinToken; onOpen: (node: Node)
         </li>
         <li>
           <p className="m-0 mb-2">{t('nodes.add.step.join')}</p>
-          <CodeBlock code={joinCommands(origin, serving)} label={t('nodes.add.step.joinLabel')} />
+          <CodeBlock
+            code={joinCommands(origin, token.execution_profile)}
+            label={t('nodes.add.step.joinLabel')}
+          />
         </li>
       </ol>
       <p className="m-0 text-[12.5px] text-text-3">
-        {t(serving ? 'nodes.add.serving' : 'nodes.add.readOnly')}
+        {t(
+          serving
+            ? 'nodes.add.serving'
+            : kubernetes
+              ? 'nodes.add.kubernetes.enrolled'
+              : 'nodes.add.readOnly',
+        )}
       </p>
-      <Waiting token={token} onOpen={onOpen} />
     </div>
   );
 }
@@ -189,19 +245,48 @@ export function AddNodeDialog({
   const workspaces = useWorkspaces();
   const capabilities = useQuery(capabilitiesQuery());
   const systems = readyCapabilityNames(t, capabilities.data, 'node-operating-systems');
+  const kubernetes = useQuery({
+    queryKey: ['nodes', 'kubernetes-enrollment'],
+    queryFn: ({ signal }) => checkKubernetesEnrollment({ signal, background: true }),
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+  const checking = kubernetes.isPending || kubernetes.isFetching;
+  const kubernetesReady = kubernetes.isSuccess && !checking;
+  const unavailable =
+    !checking && kubernetes.isError ? kubernetesUnavailable(kubernetes.error) : null;
   const [name, setName] = useState('');
   const [chosen, setChosen] = useState<string | null>(null);
   const [role, setRole] = useState<Role>('read_only');
+  const [address, setAddress] = useState('');
+  const origin = agentOrigin(address);
+  const wantsKubernetes = role === 'kubernetes_node';
   const workspace = chosen ?? workspaces.active?.id ?? '';
   const mint = useMutation({
-    mutationFn: () =>
-      createJoinToken({ workspaceId: workspace, nodeName: name.trim(), executionProfile: role }),
+    mutationFn: async () => ({
+      token: await createJoinToken({
+        workspaceId: workspace,
+        nodeName: name.trim(),
+        executionProfile: role,
+      }),
+      origin: wantsKubernetes ? origin : window.location.origin,
+    }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['nodes', 'join-tokens'] }),
   });
-  const token = mint.data;
+  const token = mint.data?.token;
+  const rejected = wantsKubernetes && isProblem(mint.error, 'AGENT_PROFILE_REJECTED');
+  const canMint =
+    name.trim() !== '' &&
+    workspace !== '' &&
+    !mint.isPending &&
+    (!wantsKubernetes || (kubernetesReady && origin !== ''));
+  const issue = () => {
+    if (canMint) mint.mutate();
+  };
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (name.trim() !== '' && workspace !== '' && !mint.isPending) mint.mutate();
+    issue();
   };
   return (
     <Dialog
@@ -211,32 +296,27 @@ export function AddNodeDialog({
       description={token ? undefined : t('nodes.add.detail')}
       footer={
         token ? (
-          <Button onClick={onClose}>{t('nodes.add.close')}</Button>
+          <JoinProgress token={token} onClose={onClose} onOpen={onOpenNode} />
         ) : (
           <>
             <Button onClick={onClose}>{t('action.cancel')}</Button>
-            <Button
-              type="submit"
-              form="add-node"
-              variant="primary"
-              disabled={name.trim() === '' || workspace === '' || mint.isPending}
-            >
-              {t('nodes.add.submit')}
+            <Button type="submit" form="add-node" variant="primary" disabled={!canMint}>
+              {t(wantsKubernetes ? 'nodes.add.kubernetes.submit' : 'nodes.add.submit')}
             </Button>
           </>
         )
       }
     >
-      {token ? (
-        <Steps token={token} onOpen={onOpenNode} />
+      {mint.data ? (
+        <Steps token={mint.data.token} origin={mint.data.origin} />
       ) : (
         <form id="add-node" noValidate className="flex flex-col gap-3.5" onSubmit={submit}>
           {mint.error && isProblem(mint.error) ? (
             <ProblemNotice
               problem={mint.error}
-              onRetry={() => {
-                mint.mutate();
-              }}
+              onRetry={canMint ? issue : undefined}
+              title={rejected ? t('nodes.add.kubernetes.rejected') : undefined}
+              detail={rejected ? t('nodes.add.kubernetes.rejectedDetail') : undefined}
             />
           ) : null}
           {workspaces.error && isProblem(workspaces.error) ? (
@@ -251,6 +331,7 @@ export function AddNodeDialog({
             autoComplete="off"
             maxLength={100}
             required
+            disabled={mint.isPending}
             hint={t('nodes.add.name.hint')}
             value={name}
             onChange={(event) => {
@@ -259,16 +340,57 @@ export function AddNodeDialog({
           />
           <SelectField
             label={t('nodes.add.role')}
-            hint={t('nodes.add.role.hint')}
+            hint={
+              <>
+                {t('nodes.add.role.hint')}{' '}
+                <span role="status" className="block">
+                  {checking ? t('nodes.add.kubernetes.checking') : null}
+                  {unavailable ? t(unavailable) : null}
+                </span>
+              </>
+            }
+            disabled={mint.isPending}
             value={role}
-            options={roles.map((value) => ({ value, label: t(`nodes.add.role.${value}`) }))}
+            options={roles.map((value) => ({
+              value,
+              label: t(`nodes.add.role.${value}`),
+              disabled: value === 'kubernetes_node' && !kubernetesReady,
+            }))}
             onChange={(event) => {
               setRole(roles.find((value) => value === event.target.value) ?? 'read_only');
+              mint.reset();
             }}
           />
+          {unavailable === 'nodes.add.kubernetes.checkFailed' ? (
+            <Button size="sm" className="self-start" onClick={() => void kubernetes.refetch()}>
+              {t('action.retry')}
+            </Button>
+          ) : null}
+          {wantsKubernetes ? (
+            <TextField
+              label={t('nodes.add.kubernetes.origin')}
+              name="agent-origin"
+              type="url"
+              autoComplete="off"
+              spellCheck={false}
+              required
+              disabled={mint.isPending}
+              value={address}
+              hint={t('nodes.add.kubernetes.originHint')}
+              error={
+                address.trim() !== '' && !origin
+                  ? t('nodes.add.kubernetes.originInvalid')
+                  : undefined
+              }
+              onChange={(event) => {
+                setAddress(event.target.value);
+              }}
+            />
+          ) : null}
           {workspaces.items.length > 1 ? (
             <SelectField
               label={t('nodes.add.workspace')}
+              disabled={mint.isPending}
               value={workspace}
               options={workspaces.items.map((item) => ({ value: item.id, label: item.name }))}
               onChange={(event) => {
