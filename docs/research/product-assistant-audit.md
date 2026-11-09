@@ -123,8 +123,10 @@ and the [OWASP CSRF guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cro
 Do not put command text in the URL or echo it in a problem response.
 
 Construct `productagent.New` with the same application service used by the
-ordinary portal routes in `identity/http.New`, join its error into startup
-initialization, and store the resulting adapter on `identity/http.Handler`.
+ordinary portal routes in `identity/http.New` and the
+[installation execution policy](product-assistant-execution-policy.md).
+Join the constructor error into startup initialization and store the adapter
+on `identity/http.Handler`.
 In `identity/http.Handler.api`, dispatch `productagenthttp.Owns(path)` beside
 the existing application branch after the shared origin, CSRF and license guards.
 Call `Authenticate(ctx, session, audience)` and pass its result and the
@@ -192,20 +194,16 @@ The policy reads the current local decision from `context.Context`. It returns
 error rejects execution with `SERVICE_NOT_READY`. Explicit `false, nil` rejects
 with `ACCESS_DENIED`.
 
-SCI owns the constructor call in
-[`runProductAssistantAuditCommands`](../../services/control/internal/modules/audit/assistant_disclosure_integration_test.go#L29).
-When integrating the candidate, pass
-`func(context.Context) (bool, error) { return true, nil }` as the second argument
-in that synthetic fixture. The test already imports `context`. Keep the
-fixture and constructor updates in the same integration change. The identity
-dispatcher binds the real trusted configuration when it mounts the route.
+SCI's reviewed fixture in
+[`runProductAssistantAuditCommands`](../../services/control/internal/modules/audit/assistant_disclosure_integration_test.go#L29)
+passes `func(context.Context) (bool, error) { return true, nil }` for its
+synthetic installation. Keep the fixture and constructor updates together.
+The identity dispatcher binds the real trusted configuration when it
+mounts the route.
 
-The [Go build overlay](https://pkg.go.dev/cmd/go#hdr-Compile_packages_and_dependencies)
-replaces only the fixture's legacy constructor line in a temporary file. It
-checks that the original line occurs exactly once. No dispatcher, production
-source or audit writer changes in this rehearsal. Build the real audit test
-and standalone verifier with dependency downloads disabled. Run both with
-PostgreSQL 18.6 and pgvector 0.8.7 on a disposable
+The replay compiles the tracked audit fixture and standalone verifier
+with dependency downloads disabled. Run both with PostgreSQL 18.6 and
+pgvector 0.8.7 on a disposable
 [Docker none network](https://docs.docker.com/engine/network/drivers/none/).
 The container has loopback only and exposes no ports. The verified fixture
 exports the mixed V1/V2 chain, discloses the assistant subject and actor,
@@ -221,21 +219,14 @@ under Apache 2.0. The pinned fixture uses
 PostgreSQL License. These terms allow commercial use, offline use and
 redistribution with the applicable notices. The test uses synthetic rows.
 
-Run the replay with the AGT-112 candidate checked out. The script may be
-copied from the APP checkout if the candidate does not yet contain it. Use
-the local image and the warmed Go module cache described in the development
-environment guide.
+Run from the integrated checkout with the local image and warmed Go module
+cache described in the development environment guide.
 
 ```sh
-python3 /path/to/replay_audit_fixture.py /path/to/agt-112-candidate-checkout
+python3 services/control/internal/modules/productagent/testdata/replay_audit_fixture.py .
 ```
 
 The [replay script](../../services/control/internal/modules/productagent/testdata/replay_audit_fixture.py)
-creates and removes its own container and scratch directory. After SCI has
-updated the tracked fixture, the regular `TestProductAssistantAuditWithin`
-test with the same protected DSN and verifier inputs proves the integrated
-tree directly.
-
-The replay passed on the installation policy candidate with PostgreSQL 18.6,
-pgvector 0.8.7 and the Linux arm64 verifier. It exercised both real assistant
-commands and all ten scope and export tamper subtests with no external route.
+creates and removes its own container and scratch directory. The regular
+`TestProductAssistantAuditWithin` test accepts the same protected DSN and
+standalone verifier inputs.
