@@ -129,3 +129,10 @@ same expected revision and the apply operation's idempotency key. A
 `VERSION_CONFLICT` requires a fresh preview after reading the current alias.
 An `ALIAS_REQUESTS_UNDRAINED` response leaves the alias paused. The UI owns
 the preview display, confirmation and retry flow.
+
+Help currently indexes conflict codes with entries in both locale catalogs.
+The downloadable contract's 409 description and shared Problem schema
+retain ALIAS_PAUSE_REQUIRED, ALIAS_ALREADY_PAUSED, ALIAS_NOT_PAUSED,
+ALIAS_REQUESTS_UNDRAINED and ALIAS_ROLLBACK_TARGET_INVALID. WEB can add
+these codes to the localized error list when both message catalogs have
+their titles and recovery details.
