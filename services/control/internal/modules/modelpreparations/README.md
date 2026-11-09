@@ -11,6 +11,13 @@ Use create.go, holdouts.go and training_admission.go for source admission; dispa
 
 Migration 000010 stores held-outs, attempts, reviews, artifacts, derivations and alias target/cutover intents. Current training/held-out/model/node/Workspace authority is rechecked at the relevant stage. Input mutation, partial transfer, unknown result, invalidated review and failed alias cutover retain their own reconciliation; do not collapse them into one status.
 
+The scoped preparation detail read exposes internal `DatasetLineage.Training`
+and `DatasetLineage.Holdout` references from the validated version 1 input
+snapshot. Each contains the dataset ID, version ID and manifest SHA-256. These
+references survive source version replacement or retirement. The HTTP detail
+response keeps its existing fields. See the
+[dataset lineage handoff](../../../../../docs/research/training-dataset-lineage.md#preparation-detail-projection).
+
 This large module should only be split along held-out source, attempt/result and review/publication ownership after cross-domain transactions and snapshot consumers are enumerated. Domain policy must not move into the Python evaluator.
 
 Synchronize [contracts/model-lifecycle](../../../../../contracts/model-lifecycle), [preparation runtime](../../../../../runtimes/model-lifecycle/README.md), agent/modelpreparations, training/models/distribution, [model-lifecycle frontend](../../../../../web/README.md), [model lifecycle image](../../../../../deploy/images/model-lifecycle/Dockerfile) and [agent assets](../../../../../deploy/model-lifecycle/agent) and [M10](../../../../../docs/milestones/m10-model-lifecycle).

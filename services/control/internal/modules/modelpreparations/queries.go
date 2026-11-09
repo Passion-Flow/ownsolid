@@ -6,14 +6,14 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/jackc/pgx/v5"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	trainingwire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/pagination"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
-	trainingwire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/jackc/pgx/v5"
 )
 
 const preparationFields = `id::text,tenant_id::text,workspace_id::text,node_id::text,current_node_id::text,model_id::text,training_job_id::text,training_attempt_id::text,training_artifact_id::text,heldout_id::text,gpu_uuid,input_snapshot,input_sha256,configuration,configuration_sha256,execution_recipe,created_by::text,reason,state,revision,wait_code,error_code,cancel_requested_at,created_at,updated_at,finished_at,attempt_number,current_attempt_id::text,pending_recovery_id::text,review_id::text,derived_model_id::text`
@@ -47,6 +47,8 @@ func lockedPreparation(ctx context.Context, tx pgx.Tx, w workspaces.Workspace, i
 	}
 	return scanPreparation(tx.QueryRow(ctx, "SELECT "+preparationFields+" FROM model_preparations WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE", w.TenantID, w.ID, id))
 }
+
+// Get returns a preparation and its retained dataset lineage within the authorized workspace.
 func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, id string) (Preparation, error) {
 	var p Preparation
 	e := s.preparationActorTransaction(ctx, a, workspace, false, func(ctx context.Context, q transaction.Executor, w workspaces.Workspace) error {
@@ -56,6 +58,19 @@ func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, id string
 	})
 	if e != nil {
 		return Preparation{}, e
+	}
+	c, h := p.inputs.TrainingCommand, p.inputs.Heldout
+	p.DatasetLineage = PreparationDatasetLineage{
+		Training: DatasetVersionLineage{
+			DatasetID:        c.DatasetID,
+			DatasetVersionID: c.DatasetVersionID,
+			ManifestSHA256:   c.DatasetManifestSHA256,
+		},
+		Holdout: DatasetVersionLineage{
+			DatasetID:        h.DatasetID,
+			DatasetVersionID: h.DatasetVersionID,
+			ManifestSHA256:   h.ManifestSHA256,
+		},
 	}
 	return p, nil
 }
