@@ -344,3 +344,15 @@ func TestACertificateRefusalIsRetriedNotFatal(t *testing.T) {
 		t.Fatal(e)
 	}
 }
+
+func TestEnrollmentCertificateMustMatchTheReturnedScope(t *testing.T) {
+	r := newCertificateRig(t, 24*time.Hour)
+	saved := r.enrolled(r.now.Add(-time.Hour), r.now.Add(23*time.Hour))
+	if _, err := checkEnrollmentCertificate(saved.Certificate, saved.PrivateKey, certificateTestNode, wire.LocalScope()); err != nil {
+		t.Fatal("matching enrollment certificate was refused", err)
+	}
+	foreign := wire.Scope{SiteID: wire.DefaultSiteID, CellID: "other-cell"}
+	if _, err := checkEnrollmentCertificate(saved.Certificate, saved.PrivateKey, certificateTestNode, foreign); err == nil {
+		t.Fatal("certificate for a different cell was accepted")
+	}
+}

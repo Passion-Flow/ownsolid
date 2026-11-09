@@ -6,9 +6,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"os"
 	"os/signal"
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
 	"syscall"
 
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/discovery"
@@ -24,6 +24,7 @@ func execute(ctx context.Context, args []string) error {
 	flags.SetOutput(os.Stderr)
 	config := flags.String("config", "", "Protected JSON configuration path")
 	environment := flags.String("env-file", "", "Protected explicit typed agent environment file")
+	ifNeeded := flags.Bool("if-needed", false, "Reuse a matching completed read-only enrollment")
 	fencedNode := flags.String("confirm-fenced-node", "", "Already credential-revoked node ID, explicitly confirmed by the isolated operator")
 	deployment := flags.String("deployment-id", "", "Exact owned deployment ID")
 	receipt := flags.String("receipt-file", "", "New absolute private removal-receipt path")
@@ -35,6 +36,9 @@ func execute(ctx context.Context, args []string) error {
 	registryArchive := flags.String("archive-file", "", "Exact signed offline Registry archive path")
 	disk := flags.String("disk-path", "/", "Existing filesystem path for facts command")
 	if flags.Parse(args[1:]) != nil || flags.NArg() != 0 {
+		return errors.New("AGENT_ARGUMENT_INVALID")
+	}
+	if *ifNeeded && command != "enroll" {
 		return errors.New("AGENT_ARGUMENT_INVALID")
 	}
 	registryCommand := command == agent.RegistryImportOffline || command == agent.RegistryReconcileOffline || command == agent.RegistryReconcileTask
@@ -106,6 +110,9 @@ func execute(ctx context.Context, args []string) error {
 	if command == "enroll" {
 		bounded, cancel := context.WithTimeout(ctx, settings.Seconds(c.Policy().EnrollSeconds))
 		defer cancel()
+		if *ifNeeded {
+			return agent.EnrollIfNeeded(bounded, c)
+		}
 		return agent.Enroll(bounded, c)
 	}
 	return agent.Run(ctx, c)
