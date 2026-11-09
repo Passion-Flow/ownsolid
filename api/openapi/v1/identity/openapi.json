@@ -833,6 +833,245 @@
         }
       }
     },
+    "/api/v1/me/sessions": {
+      "get": {
+        "operationId": "listBrowserSessions",
+        "summary": "List the current account's active browser sessions",
+        "description": "Lists the account's active sessions on the same Admin or Portal entrance, newest first. Omit limit to use the installed page size. Pass next_cursor unchanged to read the next page on this account and entrance. A background read does not extend the idle deadline.",
+        "tags": [
+          "Identity"
+        ],
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED",
+            "INVALID_CURSOR"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "STORAGE_COMMIT_ROLLED_BACK",
+            "SERVICE_NOT_READY",
+            "AUTH_CAPACITY_EXCEEDED"
+          ]
+        },
+        "security": [
+          {
+            "PortalSession": []
+          },
+          {
+            "AdminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          },
+          {
+            "name": "X-Ownsolid-Background",
+            "in": "header",
+            "required": false,
+            "description": "true when the person did not ask for this read, so it does not count as activity.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of live browser sessions.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Server-generated correlation UUID.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowserSessionListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/BrowserSessionUnavailable"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/me/sessions/{session_id}": {
+      "delete": {
+        "operationId": "revokeBrowserSession",
+        "summary": "End one browser session owned by the current account",
+        "description": "Requires the current entrance's Origin and CSRF token. Send no query or request body. A live caller can repeat a successful revocation of the same owned session. Ending the current session also expires its identity cookies. An unknown session or a session outside this account or entrance returns the same 404. Revocation remains available when the license blocks new business.",
+        "tags": [
+          "Identity"
+        ],
+        "x-audiences": [
+          "portal",
+          "admin"
+        ],
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "ORIGIN_REJECTED",
+            "CSRF_INVALID"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "STORAGE_COMMIT_ROLLED_BACK",
+            "SERVICE_NOT_READY",
+            "AUTH_CAPACITY_EXCEEDED"
+          ]
+        },
+        "security": [
+          {
+            "PortalSession": []
+          },
+          {
+            "AdminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "maxLength": 36,
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "description": "Signed, audience/session/context-bound token from getCsrf."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Session ended or was already ended. No response body.",
+            "headers": {
+              "X-Request-ID": {
+                "description": "Server-generated correlation UUID.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "Set-Cookie": {
+                "description": "Present when ending the current session. Separate Set-Cookie fields expire this entrance's session and CSRF cookies.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/BrowserSessionUnavailable"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
     "/api/v1/me/password-changes": {
       "post": {
         "operationId": "changePassword",
@@ -2768,6 +3007,157 @@
           "data"
         ]
       },
+      "BrowserSession": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "maxLength": 36,
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "not": {
+              "const": "00000000-0000-0000-0000-000000000000"
+            }
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_seen_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "absolute_expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "authentication_method": {
+            "type": "string",
+            "enum": [
+              "password",
+              "sso"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "current",
+          "created_at",
+          "last_seen_at",
+          "absolute_expires_at",
+          "authentication_method"
+        ]
+      },
+      "BrowserSessionList": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/BrowserSession"
+            }
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ]
+      },
+      "BrowserSessionListResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BrowserSessionList"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "BrowserSessionStorageProblem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "about:blank"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "status": {
+            "type": "integer",
+            "const": 503
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "STORAGE_UNAVAILABLE",
+              "STORAGE_COMMIT_ROLLED_BACK",
+              "SERVICE_NOT_READY",
+              "AUTH_CAPACITY_EXCEEDED"
+            ]
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "fields": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "code": {
+                  "type": "string",
+                  "maxLength": 64
+                }
+              },
+              "required": [
+                "field",
+                "code"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "request_id"
+        ]
+      },
       "UpdateMeRequest": {
         "type": "object",
         "additionalProperties": false,
@@ -3535,6 +3925,32 @@
           "application/problem+json": {
             "schema": {
               "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "BrowserSessionUnavailable": {
+        "description": "Problem Details; see error catalog. Retry-After is required for throttling and temporary unavailability.",
+        "headers": {
+          "X-Request-ID": {
+            "description": "Server-generated correlation UUID.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "Retry-After": {
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Present for 429 and temporary 503."
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/BrowserSessionStorageProblem"
             }
           }
         }
