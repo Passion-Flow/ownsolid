@@ -306,3 +306,66 @@ a signed fetch of the original, scope denial and corrupt or missing
 files. Run the same assertions against the coordinated restore once
 its trusted datasets inventory admits both paths. The current
 NET-101 copy cannot be used for that replay.
+
+## Scoped CSV draft candidate
+
+The released draft stores one source object and one receipt. The existing
+inspection worker interprets that object as JSONL. The released schema has
+no dataset-owned slot for a second immutable source and a generic import
+report. The isolated PostgreSQL candidate creates a real editable draft and
+its existing inspection job, with an additional scoped report table supplied
+only by the module test fixture. It uses the existing store and writes UTF-8
+CSV into a private UUID directory as the parser consumes it. The existing
+`SourceImporter` writes the corresponding JSONL into the same directory.
+Both files must be synced before the database can publish a reference.
+
+The [Go streaming reader contract](https://pkg.go.dev/io#TeeReader) supports
+writing exact input bytes without reading the entire file into memory.
+[PostgreSQL transactions](https://www.postgresql.org/docs/18/tutorial-transactions.html)
+make the draft, its job, the import report, and the audit visible together.
+A [composite foreign key](https://www.postgresql.org/docs/18/ddl-constraints.html#DDL-CONSTRAINTS-FK)
+binds the report to the same tenant, workspace, and dataset as the draft.
+The candidate uses the [Go standard library](https://go.dev/LICENSE),
+[pgx](https://github.com/jackc/pgx/blob/master/LICENSE), and
+[PostgreSQL](https://www.postgresql.org/about/licence/) already in the
+product. Their licenses allow commercial use, offline use, and redistribution
+with their respective notices. The fixture has synthetic rows and adds no
+dependency, dataset, or model.
+
+The first flow accepts the legacy `source_id,prompt,completion` record shape
+and uses the configured draft byte, line, and row limits. It streams and
+validates records with a bounded working set. Authentication, dataset scope,
+and delegated authority are checked before the request body is consumed and
+again before committing. A completed idempotency key verifies both files and returns the same draft
+and report. A changed source declaration conflicts. A competing attempt for
+the same key is checked again under the existing dataset lock before any
+insert. An interrupted stream, schema error, or known database rollback
+removes that attempt's private files and exposes no report or preview.
+If PostgreSQL cannot determine the commit outcome, retain that attempt's
+sealed files and resolve the result by repeating the same key.
+
+A JSON sidecar alone cannot give atomic publication with the draft, and
+adding report data to a job policy or audit event would change their
+contracts. The candidate adds no deployment migration, public API contract,
+or default handler registration. The release/schema owner must adopt the
+scoped table and both files into backup, restore and garbage collection before
+enabling a production route. The shared API and S-503 owners must wire the
+user flow. The legacy byte and row ceilings remain in force for this path.
+
+
+The HTTP fixture registers the candidate explicitly and installs its table
+after verifying the released catalog. With the isolated PostgreSQL and
+CPython settings in [development environment](../development/environment.md),
+run the actual TLS, upload, and draft inspection flow:
+
+```sh
+go -C services/control test -tags dataset_processor_integration -count=1 \
+  ./internal/modules/datasets \
+  -run '^TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness$'
+```
+
+The Linux amd64 fixture ran with loopback only. It checked CSRF, a real
+second workspace, a failed stream with a valid prefix, rollback after a
+report constraint failure, two competing requests for one key, original
+bytes and digest, rejection of altered custody, and editable rows from the
+existing CPython inspection worker.
