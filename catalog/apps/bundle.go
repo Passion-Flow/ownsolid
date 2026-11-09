@@ -68,17 +68,21 @@ func VerifyInstallBundle(ctx context.Context, root *os.Root, key ed25519.PublicK
 }
 
 func verifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64, install bool) (InstallBundle, error) {
-	if root == nil || len(key) != ed25519.PublicKeySize || maximumPayloadBytes <= 0 {
-		return InstallBundle{}, fmt.Errorf("%w: supply a local bundle, trusted publisher key and payload limit", ErrBundle)
-	}
-	if err := ctx.Err(); err != nil {
-		return InstallBundle{}, err
-	}
-	release, index, err := readSignedRelease(root, key)
+	release, index, err := readVerifiedBundleMetadata(ctx, root, key, maximumPayloadBytes)
 	if err != nil {
 		return InstallBundle{}, err
 	}
 	return verifyReleasePayloads(ctx, root, release, index, maximumPayloadBytes, install)
+}
+
+func readVerifiedBundleMetadata(ctx context.Context, root *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64) (Release, bundleIndex, error) {
+	if root == nil || len(key) != ed25519.PublicKeySize || maximumPayloadBytes <= 0 {
+		return Release{}, bundleIndex{}, fmt.Errorf("%w: supply a local bundle, trusted publisher key and payload limit", ErrBundle)
+	}
+	if err := ctx.Err(); err != nil {
+		return Release{}, bundleIndex{}, err
+	}
+	return readSignedRelease(root, key)
 }
 
 func verifyReleasePayloads(ctx context.Context, root *os.Root, release Release, index bundleIndex, maximumPayloadBytes int64, install bool) (InstallBundle, error) {

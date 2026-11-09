@@ -135,8 +135,9 @@ applies to each verified bundle.
 
 Pass the result's `Pin` as `ImageImportOptions.ExpectedPin` and use its version
 directory for the import. This binds image registration to the selected
-artifact, even if another signed bundle claims the same version. Keep
-staging private and immutable. Installation history, permissions, audit,
+artifact, even if another signed bundle claims the same version. The importer
+authenticates and matches the pin before reading the artifact or image archive.
+Keep staging private and immutable. Installation history, permissions, audit,
 workload execution and configuration or data recovery belong to the installer.
 
 ## Local image import

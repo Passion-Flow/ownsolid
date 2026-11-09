@@ -248,3 +248,31 @@ image IDs and descriptor digests, with no tags.
 
 - `sha256:45dc9bef07c0c404255790e41f2c22c62ff55a690a1d556e0f9cb6f6e2556f1b`
 - `sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84`
+
+## Selected release at image import
+
+An installer that retains a release pin must reject a substituted signed
+release before scanning its chart or archive. A large or missing payload can
+otherwise obscure the selection error. [TUF target retrieval](https://theupdateframework.github.io/specification/v1.0.37/#57-fetch-target)
+checks trusted metadata before retrieving target bytes. The catalog already
+uses that order for initial release verification.
+
+Read and authenticate the bounded metadata once, compare the version and
+signed index digest with the retained pin, then verify the payloads against
+that same metadata. Checking the pin after a full archive scan can consume
+the operation budget on a release the installer did not select. Opening the
+index a second time creates a second selection point. A matching pin still
+requires complete payload and OCI verification before Docker access.
+The signature-only verifier and calls without an expected pin keep their
+existing behavior. This uses the existing Go standard library and factory
+under the terms above. It adds no packages, images, models or datasets.
+
+Test a publisher-signed replacement that claims the same version with its
+payloads absent. The old pin must fail as a selection mismatch, the new pin
+must fail on missing media, and a wrong publisher must fail signature
+verification before either selection is considered. The test needs neither
+the Docker daemon nor a network.
+
+The targeted regression passed on the workstation with networking denied
+for the test process. It exercised the replacement, matching pin, no-pin
+and wrong-publisher cases without a Docker socket.
