@@ -64,6 +64,8 @@
   "audit.action.auth.password_reset": "Password reset",
   "audit.action.auth.recovery_requested": "Password reset requested",
   "audit.action.auth.sso_login_succeeded": "Signed in with single sign-on",
+  "audit.action.auth.totp_enabled": "Authenticator app enabled",
+  "audit.action.auth.totp_revoked": "Authenticator app revoked",
   "audit.action.installation.bootstrapped": "Installation set up",
   "audit.action.invitation.accepted": "Invitation accepted",
   "audit.action.invitation.created": "Invitation sent",

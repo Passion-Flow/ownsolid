@@ -64,6 +64,8 @@
   "audit.action.auth.password_reset": "重置密码",
   "audit.action.auth.recovery_requested": "申请重置密码",
   "audit.action.auth.sso_login_succeeded": "通过单点登录登录",
+  "audit.action.auth.totp_enabled": "启用身份验证器",
+  "audit.action.auth.totp_revoked": "撤销身份验证器",
   "audit.action.installation.bootstrapped": "完成安装初始化",
   "audit.action.invitation.accepted": "接受邀请",
   "audit.action.invitation.created": "发送邀请",
