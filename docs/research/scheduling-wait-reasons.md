@@ -52,3 +52,38 @@ admission, and verify that foreign and absent scopes give the same result.
 Include an exact replay and a release rolled back by its owner. HTTP, browser
 rendering, permissions at the product entrance and cell placement diagnostics
 remain owner integrations for full SCH-108 acceptance.
+
+## Verified Kueue blockers
+
+Read the same exact v1beta2 Workload over the existing cell TLS connection.
+The [Kueue v0.20.0 Workload contract](https://github.com/kubernetes-sigs/kueue/blob/v0.20.0/apis/kueue/v1beta2/workload_types.go)
+defines granular quota reservation reasons. Its
+[condition writer](https://github.com/kubernetes-sigs/kueue/blob/v0.20.0/pkg/workload/workload.go)
+stamps the Workload generation. The
+[versioned troubleshooting guide](https://kueue.sigs.k8s.io/v0.20/docs/tasks/troubleshooting/troubleshooting_jobs/)
+also documents legacy `Pending` and `Inadmissible` conditions and shows
+that an unattempted Workload can lack any condition.
+
+Use current `QuotaReserved=False` with `WaitingForQuota` to wait for
+reservation, `ExceedsMaxQuota` to adjust the request or quota, and
+`TopologyPlacementFailed` to review the cell's placement constraints.
+`Misconfigured` and the legacy `Inadmissible` ask the operator to review
+the cell queue. A current admitted Workload with `PodsReady=False` waits
+for its pods. Ignore stale and unrecognized reasons, including generic
+`Pending` when it cannot identify a blocker. Finished and terminating
+states take precedence. Preserve Volcano's separate observation semantics.
+
+Project the fixed codes through the scheduling wait-reason boundary.
+Never copy Kueue's message, queue name, capacity amounts or other jobs into
+the result. This avoids leaking details while reusing the decision that
+actually deferred the workload. The controller observation never releases
+a reservation or grants placement authority.
+
+Verify the allowlisted codes, a current false condition versus stale
+conditions, readiness and terminal transitions, and an exact-UID TLS read.
+The Linux lane has no pinned offline cell-controller assets installed.
+The installation owner must supply the signed RKE2, Kueue and Volcano
+artifacts, scoped service account and workload ownership binding before
+live cell qualification. This slice uses the existing Go standard
+library and authenticated transport. Kueue is an Apache-2.0 reference
+with no new runtime dependency, model or dataset.

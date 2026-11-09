@@ -3,6 +3,8 @@ package scheduling
 import (
 	"errors"
 	"fmt"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/scheduling/celladapter"
 )
 
 // WaitAction describes how the caller can resolve or recheck a blocked decision.
@@ -27,6 +29,14 @@ const (
 	VerifyWorkspaceAccess WaitAction = "verify_workspace_access"
 	// WaitForQueueTurn applies when the dispatcher defers the entry by its current rank.
 	WaitForQueueTurn WaitAction = "wait_for_queue_turn"
+	// WaitForCellQuota applies when the cell scheduler is waiting for unused quota.
+	WaitForCellQuota WaitAction = "wait_for_cell_quota"
+	// ReviewCellTopology asks the operator to review the current placement constraints.
+	ReviewCellTopology WaitAction = "review_cell_topology"
+	// ReviewCellQueue asks the operator to verify the cell queue configuration.
+	ReviewCellQueue WaitAction = "review_cell_queue"
+	// WaitForCellPods applies when an admitted workload's pods are not ready.
+	WaitForCellPods WaitAction = "wait_for_cell_pods"
 )
 
 // WaitReason is guidance from one decision. Available is present only for a
@@ -77,6 +87,27 @@ func WaitReasons(err error) []WaitReason {
 	default:
 		return nil
 	}
+}
+
+// CellWaitReasons projects an exact cell observation already scoped to the
+// caller's authorized workload. It exposes only fixed actions and codes.
+func CellWaitReasons(observation celladapter.Observation) []WaitReason {
+	var action WaitAction
+	switch observation.Blocker {
+	case celladapter.WaitingForQuota:
+		action = WaitForCellQuota
+	case celladapter.ExceedsMaxQuota:
+		action = ChangeRequestOrQuota
+	case celladapter.TopologyPlacementFailed:
+		action = ReviewCellTopology
+	case celladapter.QueueInadmissible:
+		action = ReviewCellQueue
+	case celladapter.PodsNotReady:
+		action = WaitForCellPods
+	default:
+		return nil
+	}
+	return []WaitReason{{Code: string(observation.Blocker), Action: action}}
 }
 
 func explainLimits(limits []Limit) []WaitReason {
