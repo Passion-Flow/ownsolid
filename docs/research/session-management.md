@@ -113,6 +113,13 @@ admission, and show the current session independently from other entries.
 The browser flow and upstream sign-in or credential-change race acceptance
 remain outside this verified slice.
 
+The bundled Admin and Portal API references use the same localized problem
+messages as the browser. The [identity contract](../../api/openapi/v1/identity/openapi.json)
+maps a confirmed storage rollback to retryable 503. Explain that the operation
+was rolled back and offer another try. An unknown commit returns 409 and needs
+a fresh read before another write. The help tests require an explanation for
+each exposed code in both languages. This adds no dependency or stored state.
+
 Configure `PROJECT_ONE_TEST_DSN` for an isolated loopback PostgreSQL test
 database with pgvector installed. Run from the repository root.
 

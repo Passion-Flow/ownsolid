@@ -1225,6 +1225,8 @@
   "problem.SSO_SCOPE_REJECTED.title": "The provider did not grant access",
   "problem.STORAGE_COMMIT_OUTCOME_UNKNOWN.detail": "The database stopped answering while saving, so the change may or may not have been saved. Reload to check before trying again.",
   "problem.STORAGE_COMMIT_OUTCOME_UNKNOWN.title": "The change may not have been saved",
+  "problem.STORAGE_COMMIT_ROLLED_BACK.detail": "The database rolled back this operation. Try again.",
+  "problem.STORAGE_COMMIT_ROLLED_BACK.title": "The request could not be completed",
   "problem.STORAGE_TIMEOUT.detail": "The control plane is busy. Try again in a moment.",
   "problem.STORAGE_TIMEOUT.title": "The database took too long",
   "problem.STORAGE_UNAVAILABLE.detail": "The control plane cannot reach its database. Try again in a moment; if it persists, ask your administrator to check the database.",
