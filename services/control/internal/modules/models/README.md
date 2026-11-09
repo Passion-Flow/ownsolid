@@ -11,6 +11,14 @@ to canonical metadata and the installed archive and directory verifiers.
 Admission, chunk writes, recovery and publication use that authority.
 The existing Qwen digest retains the shared Agent verification path.
 
+After upload completes, the worker checks the approved USTAR member layout
+before extracting any model payload. It refuses executable and unknown
+members, invalid Safetensors structure and changed loader configuration.
+The full extraction still verifies committed chunk and file hashes. If the
+worker reports an invalid bundle or weight format, discard the upload and
+import a fresh archive of the pinned revision. Repeating verification on
+the same unsafe bytes leaves the import failed.
+
 [license.go](license.go) resolves reviewed terms for an exact verified catalogue
 and evaluates the installation's on-site use. It uses the pinned license text
 hash. A derivative requires its own reviewed terms.

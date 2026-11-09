@@ -19,6 +19,7 @@ type chunk struct {
 	digest       string
 }
 type chunkReader struct {
+	ctx       context.Context
 	root      *os.Root
 	id        string
 	chunks    []chunk
@@ -45,28 +46,9 @@ func (r *chunkReader) Read(p []byte) (int, error) {
 			return 0, io.EOF
 		}
 		value := r.chunks[r.index]
-		path := chunkPath(r.id, value.offset)
-		info, e := r.root.Lstat(path)
-		if e != nil || !info.Mode().IsRegular() || info.Size() != value.size || info.Mode().Perm()&0077 != 0 {
-			return 0, fail("MODEL_CHUNK_INVALID")
-		}
-		owner, ok := info.Sys().(*syscall.Stat_t)
-		if !ok || owner.Uid != uint32(os.Geteuid()) || owner.Nlink != 1 {
-			return 0, fail("MODEL_CHUNK_INVALID")
-		}
-		file, e := r.root.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
-		if e != nil {
-			return 0, fail("MODEL_CHUNK_INVALID")
-		}
-		opened, statError := file.Stat()
-		if statError != nil {
-			file.Close()
-			return 0, fail("MODEL_CHUNK_INVALID")
-		}
-		openedOwner, openedOK := opened.Sys().(*syscall.Stat_t)
-		if !os.SameFile(info, opened) || !openedOK || openedOwner.Uid != uint32(os.Geteuid()) || openedOwner.Nlink != 1 {
-			file.Close()
-			return 0, fail("MODEL_CHUNK_INVALID")
+		file, err := r.openChunk(value)
+		if err != nil {
+			return 0, err
 		}
 		r.file = file
 		r.remaining = value.size
@@ -91,6 +73,68 @@ func (r *chunkReader) Read(p []byte) (int, error) {
 		return n, io.ErrUnexpectedEOF
 	}
 	return n, e
+}
+
+// ReadAt visits small archive regions without moving the authenticated stream
+// used by Read. The repository has already checked the contiguous chunk layout.
+func (r *chunkReader) ReadAt(p []byte, offset int64) (int, error) {
+	if offset < 0 {
+		return 0, fail("MODEL_CHUNK_INVALID")
+	}
+	total := 0
+	for len(p) > 0 {
+		if err := r.ctx.Err(); err != nil {
+			return total, err
+		}
+		index := offset / ChunkBytes
+		if index >= int64(len(r.chunks)) {
+			return total, io.EOF
+		}
+		value := r.chunks[index]
+		position := offset - value.offset
+		if position >= value.size {
+			return total, io.EOF
+		}
+		file, err := r.openChunk(value)
+		if err != nil {
+			return total, err
+		}
+		n, err := file.ReadAt(p[:min(int64(len(p)), value.size-position)], position)
+		closeErr := file.Close()
+		total += n
+		if err != nil {
+			return total, err
+		}
+		if closeErr != nil {
+			return total, closeErr
+		}
+		p = p[n:]
+		offset += int64(n)
+	}
+	return total, nil
+}
+
+func (r *chunkReader) openChunk(value chunk) (*os.File, error) {
+	path := chunkPath(r.id, value.offset)
+	info, owned := ownedRegular(r.root, path)
+	if !owned || info.Size() != value.size || info.Mode().Perm()&0077 != 0 {
+		return nil, fail("MODEL_CHUNK_INVALID")
+	}
+	file, err := r.root.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
+	if err != nil {
+		return nil, fail("MODEL_CHUNK_INVALID")
+	}
+	opened, err := file.Stat()
+	if err != nil || !os.SameFile(info, opened) || opened.Size() != value.size || opened.Mode().Perm()&0077 != 0 {
+		file.Close()
+		return nil, fail("MODEL_CHUNK_INVALID")
+	}
+	owner, ok := opened.Sys().(*syscall.Stat_t)
+	if !ok || owner.Uid != uint32(os.Geteuid()) || owner.Nlink != 1 {
+		file.Close()
+		return nil, fail("MODEL_CHUNK_INVALID")
+	}
+	return file, nil
 }
 
 // ProcessNext reconciles one durably queued import under a database session advisory lock.
