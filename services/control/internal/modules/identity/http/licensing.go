@@ -37,7 +37,7 @@ func authenticationRecovery(r *http.Request) bool {
 		return false
 	}
 	switch r.URL.Path {
-	case "/api/v1/auth/login", "/api/v1/auth/logout", "/api/v1/auth/invitation-validations", "/api/v1/auth/register", "/api/v1/auth/password-reset-requests", "/api/v1/auth/password-resets":
+	case "/api/v1/auth/login", adminTOTPLoginPath, "/api/v1/auth/logout", "/api/v1/auth/invitation-validations", "/api/v1/auth/register", "/api/v1/auth/password-reset-requests", "/api/v1/auth/password-resets":
 		return true
 	}
 	// SSO owns exact mode decoding; linking additionally admits after real login.
@@ -120,6 +120,9 @@ func recoveryMutation(r *http.Request) (bool, error) {
 	}
 	if r.Method != http.MethodPost {
 		return false, nil
+	}
+	if adminTOTPManagementPath(path) {
+		return true, nil
 	}
 	// Inspecting a file changes nothing and is how a refused import is explained.
 	if path == "/api/v1/admin/license" || path == "/api/v1/admin/license/inspections" {
