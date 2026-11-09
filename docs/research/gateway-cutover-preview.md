@@ -129,3 +129,41 @@ same expected revision and the apply operation's idempotency key. A
 `VERSION_CONFLICT` requires a fresh preview after reading the current alias.
 An `ALIAS_REQUESTS_UNDRAINED` response leaves the alias paused. The UI owns
 the preview display, confirmation and retry flow.
+
+## Admin CLI (DEV-102)
+
+The [decK diff workflow](https://developer.konghq.com/deck/gateway/diff/) shows
+live changes before an explicit [sync](https://developer.konghq.com/deck/gateway/sync/).
+Use the same separation in the existing `deployment alias` command group.
+`cutover preview` checks the proposed change on the server and shows both states.
+`cutover apply` requires explicit confirmation and the operator's request UUID.
+Use the same alias revision and arguments for apply after reviewing preview.
+Reuse the same UUID and arguments on uncertain apply. The server performs
+revision and authorization checks under lock and owns idempotent replay.
+The `cutover history` read shows immutable revisions and an opaque cursor
+bound to the selected alias, operator and workspace. A rollback selects an
+older alias revision and a currently ready deployment of that recorded model.
+
+The CLI preserves null target fields and uses the installed Admin HTTPS
+origin and existing session, CSRF, scoped paths, problem handling and page
+rendering. A single interactive command would make automation and replay
+harder. A local diff would miss server drain and target checks. No dependency,
+model or dataset is added. The existing Go standard library and Cobra
+licenses are recorded in the [SDK review](sdk.md#licenses) and permit offline
+commercial use and redistribution under their notice terms.
+
+Run the compiled CLI through the disconnected TLS/PostgreSQL fixture.
+Confirm that preview changes no state, apply needs confirmation, lost apply
+results can be replayed with the same UUID, stale state and undrained requests
+are refused, and history retains the original target revisions. Test a
+retarget and a rollback with verified replacement observations and verify
+that unrelated workspaces and invalid action/target combinations fail closed.
+
+The disconnected Linux CLI run covered all four preview/apply actions.
+Preview and an unconfirmed apply preserved target history. A truncated
+successful pause response led to an exact replay with the same UUID,
+with one audit entry for each committed pause. Stale revisions, an
+undrained request, foreign workspace and incompatible target arguments
+were refused. The history cursor returned the rollback source and
+replacement deployment. Deployment verification observations were
+synthetic. The test used the production dispatcher and PostgreSQL.
