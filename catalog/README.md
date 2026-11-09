@@ -147,6 +147,23 @@ image reference in the deployment plan. `Archive.Digest` identifies the signed
 archive bytes. The caller authorizes and audits the operation. The installer
 owns release state, workload admission and startup.
 
+## Rendered Compose images
+
+Render the verified `compose.yaml` in the installer's disconnected sandbox
+with access to the signed artifact and approved inputs only. Supply the
+source artifact digest and exact `docker compose config --format json`
+output as `RenderedCompose`. Include all services that the installer can
+start. The first path accepts up to 256 services and 1 MiB of normalized JSON.
+
+`InstallBundle.VerifyComposeImagePlan` checks the source digest and each
+service's signed Linux amd64 image digest and explicit `pull_policy: never`.
+It refuses builds, provider and init containers, models, watch definitions,
+unresolved includes and image mounts. Pass the rendered model in
+`ImageImportOptions.RenderedCompose` to apply the same check before Docker
+access. The plan returns the release pin, model SHA-256 and service images.
+The installer rechecks the exact model bytes after workload admission and
+uses `--pull never --no-build` for startup.
+
 ## Verification
 
 Run the catalog's local checks from the repository root.
@@ -170,4 +187,6 @@ go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportInst
 go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportInstallImageSetIntoEmptyDockerStore$'
 # Use a fresh engine for the upgrade and rollback import fixture as well.
 go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportVerifiedReleaseTransitions$'
+# With Compose installed and another empty local engine.
+go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportVerifiedRenderedCompose$'
 ```

@@ -10,6 +10,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -215,5 +216,39 @@ func TestImportVerifiedReleaseTransitions(t *testing.T) {
 				t.Fatalf("rollback added an image: before %v, after %v", before, after)
 			}
 		})
+	}
+}
+
+func TestImportVerifiedRenderedCompose(t *testing.T) {
+	socket, mount, store := emptyDockerStore(t)
+	root, key, private := transitionCatalog(t)
+	pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.0.0", engine: "compose"})
+	staging := filepath.Join(root.Name(), pin.Version)
+	artifact := filepath.Join(staging, "compose.yaml")
+	input, err := os.ReadFile(artifact)
+	if err != nil {
+		t.Fatal(err)
+	}
+	model, err := exec.CommandContext(t.Context(), "docker", "compose", "--project-name", "catalog-image-plan", "--profile", "*",
+		"-f", artifact, "config", "--format", "json", "--no-env-resolution").Output()
+	if err != nil {
+		t.Fatalf("render the signed Compose fixture: %v", err)
+	}
+	policy := bundle.Defaults()
+	policy.MountRoot = mount
+	rendered := RenderedCompose{ArtifactSHA256: digestBytes(input), JSON: model}
+	options := ImageImportOptions{
+		DockerSocket: socket, Verification: policy, MaximumPayloadBytes: testTransitionBudget,
+		MaximumExpandedBytes: testTransitionBudget, Timeout: 30 * time.Second, ExpectedPin: &pin,
+		RenderedCompose: &rendered,
+	}
+	result, err := ImportInstallImage(t.Context(), staging, key, options)
+	if err != nil || result.Pin != pin {
+		t.Fatalf("rendered signed image import failed: %v", err)
+	}
+	plan, err := result.VerifyComposeImagePlan(rendered)
+	want := []ComposeServiceImage{{Service: "fixture", ManifestDigest: result.Archive.Images[0].ManifestDigest}}
+	if err != nil || !slices.Equal(plan.Services, want) || !slices.Equal(listDockerImages(t, store), []string{want[0].ManifestDigest}) {
+		t.Fatalf("engine does not contain the verified service image: %v", err)
 	}
 }
