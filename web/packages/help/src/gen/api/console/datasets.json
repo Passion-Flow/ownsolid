@@ -2607,6 +2607,12 @@
      "type": "integer",
      "minimum": 100,
      "maximum": 5000
+    },
+    "deduplication": {
+     "type": "string",
+     "enum": [
+      "near_prompt_v1"
+     ]
     }
    }
   },
