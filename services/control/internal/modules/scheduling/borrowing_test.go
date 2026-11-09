@@ -106,9 +106,15 @@ func TestPostgresReclaimWaitsForOrderedCommittedReleases(t *testing.T) {
 	}
 
 	intent := borrowingIntent(f.lender, 2)
-	if _, err := reserveInTransaction(t.Context(), f.store, f.lender, intent); !errors.Is(err, ErrReclaimRequired) {
-		t.Fatalf("lender ignored live loans: %v", err)
+	assertWait := func(err, cause error, code string, action WaitAction) {
+		t.Helper()
+		want := []WaitReason{{Code: code, Action: action}}
+		if !errors.Is(err, cause) || !slices.Equal(WaitReasons(err), want) {
+			t.Fatalf("reclaim guidance: %v, %+v, want %v", err, WaitReasons(err), want)
+		}
 	}
+	_, err := reserveInTransaction(t.Context(), f.store, f.lender, intent)
+	assertWait(err, ErrReclaimRequired, ErrReclaimRequired.Error(), RequestQuotaReclaim)
 	plan, err := requestReclaimInTransaction(t.Context(), f.store, f.lender, intent)
 	if err != nil || plan.State != ReclaimPending || !slices.Equal(plan.Victims, []string{latest.ID, old.ID}) {
 		t.Fatalf("ordered reclaim: %+v, %v", plan, err)
@@ -130,9 +136,8 @@ func TestPostgresReclaimWaitsForOrderedCommittedReleases(t *testing.T) {
 	if !errors.Is(err, rolledBack) {
 		t.Fatal(err)
 	}
-	if _, err := reserveInTransaction(t.Context(), f.store, f.lender, intent); !errors.Is(err, ErrReclaimPending) {
-		t.Fatalf("rolled back stop freed quota: %v", err)
-	}
+	_, err = reserveInTransaction(t.Context(), f.store, f.lender, intent)
+	assertWait(err, ErrReclaimPending, "SCHEDULING_RECLAIM_RELEASE_PENDING", WaitForReclaimRelease)
 	if changed, err := releaseInTransaction(t.Context(), f.store, latest); err != nil || !changed {
 		t.Fatalf("release newest victim: %v %v", changed, err)
 	}
@@ -141,13 +146,13 @@ func TestPostgresReclaimWaitsForOrderedCommittedReleases(t *testing.T) {
 		t.Fatalf("reclaim changed after a victim stopped: %+v, %v", replay, err)
 	}
 	other := newBorrowingAttempt(f.partner, f.partner.WorkspaceID)
-	if _, err := reserveInTransaction(t.Context(), f.store, other, borrowingIntent(other, 1)); !errors.Is(err, ErrBorrowingUnavailable) {
-		t.Fatalf("new loan bypassed pending reclaim: %v", err)
-	}
+	_, err = reserveInTransaction(t.Context(), f.store, other, borrowingIntent(other, 1))
+	assertWait(err, ErrBorrowingUnavailable, ErrBorrowingUnavailable.Error(), ReviewBorrowableQuota)
 	later := newBorrowingAttempt(f.lender, f.lender.WorkspaceID)
-	if _, err := reserveInTransaction(t.Context(), f.store, later, borrowingIntent(later, 1)); !errors.Is(err, ErrReclaimPending) {
-		t.Fatalf("another admission bypassed pending reclaim: %v", err)
-	}
+	_, err = reserveInTransaction(t.Context(), f.store, later, borrowingIntent(later, 1))
+	assertWait(err, ErrReclaimPending, ErrReclaimPending.Error(), WaitForWorkspaceClaim)
+	_, err = requestReclaimInTransaction(t.Context(), f.store, later, borrowingIntent(later, 1))
+	assertWait(err, ErrReclaimPending, ErrReclaimPending.Error(), WaitForWorkspaceClaim)
 	if _, err := reserveInTransaction(t.Context(), f.store, f.lender, intent); !errors.Is(err, ErrReclaimPending) {
 		t.Fatalf("partial release admitted whole request: %v", err)
 	}

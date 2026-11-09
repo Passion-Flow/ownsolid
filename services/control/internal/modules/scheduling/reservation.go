@@ -1,12 +1,13 @@
 package scheduling
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
+	"slices"
 	"strconv"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
@@ -243,13 +244,17 @@ func checkWorkspaceCapacity(ctx context.Context, q transaction.Executor, a Attem
 	if err := rows.Err(); err != nil {
 		return err
 	}
+	var limits []Limit
 	for resource, requested := range demand {
-		available := max(0, ceiling[resource]-used[resource])
-		if requested > available {
-			return fmt.Errorf("%w: %s requires %d, %d available", ErrReservationQuota, resource, requested, available)
+		if limit, blocked := capacityLimit(resource, requested, ceiling[resource], used[resource], WorkspaceQuota, QuotaTooSmall, QuotaInUse); blocked {
+			limits = append(limits, limit)
 		}
 	}
-	return nil
+	if len(limits) == 0 {
+		return nil
+	}
+	slices.SortFunc(limits, func(a, b Limit) int { return cmp.Compare(a.Resource, b.Resource) })
+	return &reservationQuotaError{limits: limits}
 }
 
 func parseReservationUsage(resource Resource, raw string) (int64, error) {

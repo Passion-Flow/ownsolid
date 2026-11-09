@@ -215,7 +215,7 @@ func requireReclaimReleases(ctx context.Context, q transaction.Executor, tenant 
 		return err
 	}
 	if !released {
-		return ErrReclaimPending
+		return errReclaimReleasePending
 	}
 	return nil
 }

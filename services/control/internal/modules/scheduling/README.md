@@ -26,3 +26,9 @@ real lost commit acknowledgements with an isolated plaintext loopback endpoint.
 
 [Borrowing and reclaim](../../../../../docs/research/scheduling-quota-borrowing.md)
 describes the optional candidate schema and its isolated test.
+
+[Wait reasons](../../../../../docs/research/scheduling-wait-reasons.md) describes
+how to project an authorized decision without leaking other workloads' details.
+Use `WaitReasons` on the current reservation or reclaim error,
+`PreflightResult.WaitReasons` on the estimate and `QueueTurnReason` when rank
+actually deferred the current entry.
