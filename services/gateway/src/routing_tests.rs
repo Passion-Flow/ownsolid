@@ -24,6 +24,8 @@ mod throughput;
 mod tools;
 
 const QUOTA_TEST_NOW: i64 = 1_794_116_800;
+const ADMIT_DIFFERENT_ALIAS: usize = 8;
+const ADMIT_RETARGETED_ALIAS: usize = 9;
 const REFUSE_GENERATION: usize = 6;
 const INTERRUPT_STREAM_AFTER_TEXT: usize = 7;
 const LENGTH_FINISH: usize = 8;
@@ -45,6 +47,7 @@ struct Synthetic {
     backend_mode: Arc<AtomicUsize>,
     model_checks: Arc<AtomicUsize>,
     expected_messages: Arc<Mutex<Option<Value>>>,
+    tokenizations: Arc<AtomicUsize>,
     generations: Arc<AtomicUsize>,
     dropped_generations: Arc<AtomicUsize>,
     admissions: Arc<Mutex<HashSet<Uuid>>>,
@@ -144,7 +147,14 @@ async fn control(
     assert_eq!(body["model"], "public-alias");
     let id = serde_json::from_value(body["request_id"].clone()).unwrap();
     state.admissions.lock().unwrap().insert(id);
-    Json(json!({"data":{"request_id":id,"gateway_id":gateway,"node_id":state.node,"workspace_id":state.workspace,"binding":state.binding(),"maximum_context_tokens":2048,"maximum_request_seconds":state.request_seconds}})).into_response()
+    let mut binding = state.binding();
+    if mode == ADMIT_DIFFERENT_ALIAS {
+        binding["id"] = json!(Uuid::new_v4());
+    } else if mode == ADMIT_RETARGETED_ALIAS {
+        binding["deployment_id"] = json!(Uuid::new_v4());
+        binding["deployment_revision"] = json!(2);
+    }
+    Json(json!({"data":{"request_id":id,"gateway_id":gateway,"node_id":state.node,"workspace_id":state.workspace,"binding":binding,"maximum_context_tokens":2048,"maximum_request_seconds":state.request_seconds}})).into_response()
 }
 
 struct GenerationDrop(Arc<AtomicUsize>);
@@ -185,6 +195,7 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
         assert_eq!(&body["messages"], expected);
     }
     if tokenize {
+        state.tokenizations.fetch_add(1, Ordering::SeqCst);
         return Json(json!({"count":7,"tokens":[1,2,3,4,5,6,7],"max_model_len":2048}))
             .into_response();
     }
@@ -393,6 +404,7 @@ impl Fixture {
             backend_mode: Arc::default(),
             model_checks: Arc::default(),
             expected_messages: Arc::default(),
+            tokenizations: Arc::default(),
             generations: Arc::default(),
             dropped_generations: Arc::default(),
             admissions: Arc::default(),
@@ -634,6 +646,56 @@ async fn real_gateway_tls_models_chat_sse_and_durable_metadata_receipts() {
             .all(|value| value.status == Status::Succeeded
                 && value.usage.as_ref().unwrap().total_tokens == 9)
     );
+}
+
+#[tokio::test]
+async fn alias_admission_rejects_a_different_identity_before_backend_use() {
+    let fixture = Fixture::new().await;
+    fixture
+        .state
+        .control_mode
+        .store(ADMIT_DIFFERENT_ALIAS, Ordering::SeqCst);
+    let response = fixture.chat(false).send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    let request_id = Uuid::parse_str(response.headers()["x-request-id"].to_str().unwrap())
+        .unwrap();
+    let value: Value = response.json().await.unwrap();
+    assert_eq!(value["error"]["code"], "gateway_unavailable");
+    assert_eq!(fixture.state.tokenizations.load(Ordering::SeqCst), 0);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 0);
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 1);
+    assert!(fixture.app().spool.next_pending().unwrap().is_none());
+    let outcomes = fixture.state.outcomes.lock().unwrap();
+    assert_eq!(outcomes.len(), 1);
+    let outcome = &outcomes[0];
+    assert_eq!(outcome.request_id, request_id);
+    assert_eq!(outcome.status, Status::UpstreamError);
+    assert_eq!(
+        outcome.error_code,
+        Some(crate::outcome::ErrorCode::GatewayUnavailable)
+    );
+    assert!(outcome.usage.is_none());
+    assert!(!outcome.output_started);
+}
+
+#[tokio::test]
+async fn alias_admission_accepts_a_fresh_target_for_the_same_identity() {
+    let fixture = Fixture::new().await;
+    fixture
+        .state
+        .control_mode
+        .store(ADMIT_RETARGETED_ALIAS, Ordering::SeqCst);
+    let response = fixture.chat(false).send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let value: Value = response.json().await.unwrap();
+    assert_eq!(value["model"], "public-alias");
+    assert_eq!(fixture.state.tokenizations.load(Ordering::SeqCst), 1);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 1);
+    let outcomes = fixture.state.outcomes.lock().unwrap();
+    assert_eq!(outcomes.len(), 1);
+    assert_eq!(outcomes[0].status, Status::Succeeded);
+    assert_eq!(outcomes[0].usage.as_ref().unwrap().total_tokens, 9);
 }
 
 #[tokio::test]

@@ -343,13 +343,14 @@ async fn accept(
         Format::Messages => messages::parse(&body, limits)?,
     };
     let authorization = app.control.models_with_retry(&key).await?;
-    if !authorization
+    let Some(alias_id) = authorization
         .models
         .iter()
-        .any(|binding| binding.name == request.alias)
-    {
+        .find(|binding| binding.name == request.alias)
+        .map(|binding| binding.id)
+    else {
         return Err("model_not_found".into());
-    }
+    };
     let quota = app.quota_permit(authorization.workspace_id, &key).await?;
     let active = app.limiter.active(app.receiver()).await?;
     let reservation = app.spool.reserve(id)?;
@@ -365,7 +366,7 @@ async fn accept(
         })
         .await?;
     let mut execution = Execution::new(reservation, id);
-    if admission.workspace_id != authorization.workspace_id {
+    if admission.workspace_id != authorization.workspace_id || admission.binding.id != alias_id {
         execution.refused_before_generation()?;
         return Err("gateway_unavailable".into());
     }
