@@ -99,11 +99,26 @@ production call sites do not provide a workload lookup.
 
 The workload owner must persist the controller kind, namespace, name
 and UID from the creation result with the exact authorized site, cell,
-tenant, workspace and attempt. The read dispatcher must derive that
-binding from its rechecked authority and call `Observe` with it before
-projecting `CellWaitReasons`. A name supplied by a caller cannot identify
-the original controller object. A new attempt or a replaced UID requires
-a fresh owner binding.
+tenant, workspace and attempt. [Kubernetes object identity](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids)
+distinguishes successive objects that reuse a name by UID. A new attempt
+or a replaced UID requires a fresh owner binding.
+
+The scheduling consumer takes the reference from rechecked owner
+authority and the client for its bound cell. It must read the exact
+object over that client's verified TLS connection and only project the
+blocker after the adapter checks API kind, namespace, name and UID.
+Remove the public projection of caller-assembled observations. A
+name-only lookup or an exported projection of cached input could show
+another object's blocker after name reuse. Keep errors from the adapter
+and leave the decision free of guidance when verification fails.
+This contract does not create the owner binding or authorize a caller.
+
+Use a disconnected TLS fixture to exercise the consumer with a current
+blocker, a stale generation, a replacement at the same name and a
+forbidden read. Require fixed guidance from the exact current UID only
+and no guidance on errors. An incomplete reference must fail before
+network I/O. The test uses the existing Go transport and the pinned
+Kueue contract above, with no added dependency or test data source.
 
 Live qualification requires the signed offline RKE2, Kueue and Volcano
 asset inventory and a ready disposable cell. Provision a service account
