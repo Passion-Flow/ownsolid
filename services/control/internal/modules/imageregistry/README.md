@@ -18,3 +18,11 @@ configured registry and within that repository's upload collection.
 TestActualNativeRegistryTransport covers the path-relative case using
 a header rewrite over the real TLS Distribution connection and verifies
 the blobs by digest after upload.
+
+Import checks the authenticated scope and any existing idempotency key before
+verifying the signed asset. It verifies the asset before reserving a new pin.
+An idempotent replay of a committed reservation does not reread the release
+source. Preparations that fail after reservation use the existing abandon,
+discard and reconciliation paths. The
+[site release pin boundary](../../../../../docs/research/site-registry-pin-admission.md)
+documents the requirements for admitting the current site's read-only source.

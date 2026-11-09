@@ -12,13 +12,12 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	licensewire "github.com/Passion-Flow/ownsolid/pkg/license/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
@@ -30,7 +29,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/retention"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/registryfixture"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
-	licensewire "github.com/Passion-Flow/ownsolid/pkg/license/v1"
+	"github.com/google/uuid"
 )
 
 type registryStory struct {
@@ -44,6 +43,30 @@ type registryStory struct {
 }
 
 func registrySetup(t *testing.T) *registryStory {
+	t.Helper()
+	c, e := Load(os.Getenv("PROJECT_ONE_REGISTRY_TEST_CONFIGURATION"))
+	if e != nil {
+		t.Fatal("real private Distribution/signed release config required", e)
+	}
+	g := registrySetupWithConfig(t, c)
+	images, e := g.s.ReleaseImages(g.ctx, g.a, g.f.Workspace)
+	if e != nil {
+		t.Fatal("actual complete signed release required", e)
+	}
+	asset := ""
+	for _, image := range images {
+		if image.ManifestDigest == wire.ApprovedInferenceRecipe().ImageManifestDigest && image.ConfigDigest == wire.ApprovedInferenceRecipe().ImageConfigDigest {
+			asset = image.ID
+		}
+	}
+	if asset == "" {
+		t.Fatal("actual approved M06 image absent from actual signed release")
+	}
+	g.asset = asset
+	return g
+}
+
+func registrySetupWithConfig(t *testing.T, c Config) *registryStory {
 	t.Helper()
 	f := repositoryfixture.New(t)
 	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Hour)
@@ -64,21 +87,17 @@ func registrySetup(t *testing.T) *registryStory {
 		}
 	}
 
-	c, e := Load(os.Getenv("PROJECT_ONE_REGISTRY_TEST_CONFIGURATION"))
-	if e != nil {
-		t.Fatal("real private Distribution/signed release config required", e)
-	}
 	native := registryfixture.New(t, os.Getenv("PROJECT_ONE_REGISTRY_NATIVE_BINARY"), os.Getenv("PROJECT_ONE_REGISTRY_NATIVE_SHA256"), c.RequestSeconds, 512)
 	c.Endpoint = native.Endpoint
 	c.CAFile = native.CAFile
 	c.CredentialFile = native.CredentialFile
 	c.AllowedCIDRs = []string{"127.0.0.0/8"}
 	c.StoreRoot = t.TempDir()
-	if e = os.Chmod(c.StoreRoot, 0700); e != nil {
+	if e := os.Chmod(c.StoreRoot, 0700); e != nil {
 		t.Fatal(e)
 	}
 	i := &identity.Service{Storage: f.Store, HMACKey: make([]byte, 32)}
-	if _, e = rand.Read(i.HMACKey); e != nil {
+	if _, e := rand.Read(i.HMACKey); e != nil {
 		t.Fatal(e)
 	}
 	i.Config.Server.AdminOrigin = "https://admin.example.invalid"
@@ -89,7 +108,7 @@ func registrySetup(t *testing.T) *registryStory {
 	d := &deployments.Service{Nodes: n, Models: m}
 	n.Inference = d
 	var issued identity.IssuedSession
-	if e = f.Store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
+	if e := f.Store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
 		var e error
 		issued, e = i.IssueSessionWithin(ctx, q, f.User, 1, "admin", "", uuid.NewString(), nil)
 		return e
@@ -100,7 +119,7 @@ func registrySetup(t *testing.T) *registryStory {
 	if e != nil {
 		t.Fatal(e)
 	}
-	private, trust, e := licensewire.GenerateKey("explicit-registry-SQL-fixture")
+	private, trust, e := licensewire.GenerateKey("explicit-registry-sql-fixture")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -127,21 +146,9 @@ func registrySetup(t *testing.T) *registryStory {
 		t.Fatal(e)
 	}
 	t.Cleanup(s.Close)
-	images, e := s.ReleaseImages(ctx, a, f.Workspace)
-	if e != nil {
-		t.Fatal("actual complete signed release required", e)
-	}
-	asset := ""
-	for _, image := range images {
-		if image.ManifestDigest == wire.ApprovedInferenceRecipe().ImageManifestDigest && image.ConfigDigest == wire.ApprovedInferenceRecipe().ImageConfigDigest {
-			asset = image.ID
-		}
-	}
-	if asset == "" {
-		t.Fatal("actual approved M06 image absent from actual signed release")
-	}
-	return &registryStory{f: f, s: s, ctx: ctx, a: a, asset: asset, t: t, native: native}
+	return &registryStory{f: f, s: s, ctx: ctx, a: a, t: t, native: native}
 }
+
 func (g *registryStory) mutation() Mutation {
 	return Mutation{WorkspaceID: g.f.Workspace, Reason: "Actual isolated registry acceptance", Key: uuid.NewString(), RequestID: uuid.NewString()}
 }
@@ -373,11 +380,11 @@ func TestActualPairedRegistryRuntime(t *testing.T) {
 	})
 	t.Run("failed_preparation_abandon_discard", func(t *testing.T) {
 		g := registrySetup(t)
-		g.s.config.ReleaseManifestSHA256 = strings.Repeat("0", 64)
+		g.s.config.MaximumBlobBytes, g.s.config.MaximumExpandedBytes = 1, 1
 		m := g.mutation()
 		out, e := g.s.Import(g.ctx, g.a, m, g.asset, true)
 		if e == nil || !reflect.DeepEqual(out, Pin{}) {
-			t.Fatal("wrong release accepted")
+			t.Fatal("preparation exceeded its expansion limit")
 		}
 		page, e := g.s.List(g.ctx, g.a, g.f.Workspace, "")
 		if e != nil || len(page.Items) != 1 || page.Items[0].State != "importing" {
@@ -459,11 +466,11 @@ func TestActualPairedRegistryRuntime(t *testing.T) {
 	t.Run("unbound_preparation_restart_and_explicit_discard", func(t *testing.T) {
 		g := registrySetup(t)
 		key := g.mutation()
-		// The asset is deliberately absent from the actual signed release. The real
-		// committed preparation intent must remain recoverable without remote upload.
-		out, err := g.s.Import(g.ctx, g.a, key, "explicit-missing-registry-test-asset", true)
+		// The asset is signed, but the local expansion limit fails after reservation.
+		g.s.config.MaximumBlobBytes, g.s.config.MaximumExpandedBytes = 1, 1
+		out, err := g.s.Import(g.ctx, g.a, key, g.asset, true)
 		if err == nil || !reflect.DeepEqual(out, Pin{}) {
-			t.Fatal("missing actual release asset was admitted")
+			t.Fatal("preparation exceeded its expansion limit")
 		}
 		page, err := g.s.List(g.ctx, g.a, g.f.Workspace, "")
 		if err != nil || len(page.Items) != 1 || page.Items[0].State != "importing" {

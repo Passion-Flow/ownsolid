@@ -13,9 +13,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/google/uuid"
-	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
 	release "github.com/Passion-Flow/ownsolid/api/release/v1"
+	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
+	"github.com/google/uuid"
 )
 
 type cachedImage struct {
@@ -129,17 +129,12 @@ func admitDisk(c Config) error {
 	}
 	return nil
 }
-func prepareImage(ctx context.Context, c Config, pin, assetID string) (cachedImage, error) {
-	if !validID(pin) || assetID == "" {
+func prepareImage(ctx context.Context, c Config, pin string, signed bundle.ImageProof, proof bundle.ImageProofResult) (cachedImage, error) {
+	if !validID(pin) {
 		return cachedImage{}, failure("VALIDATION_FAILED")
 	}
-	signed, proof, e := bundle.PreparedImageProof(ctx, c.Verification, c.PreparedReleaseRoot, c.ReleaseArchiveSHA256, c.ReleaseManifestSHA256, assetID)
-	if e != nil {
-		return cachedImage{}, failure("REGISTRY_RELEASE_INVALID")
-	}
 	asset := proof.Asset
-
-	if e = admitDisk(c); e != nil {
+	if e := admitDisk(c); e != nil {
 		return cachedImage{}, e
 	}
 	source, e := bundle.OpenImageSource(ctx, c.Verification, filepath.Join(c.PreparedReleaseRoot, asset.Path), asset, c.MaximumExpandedBytes)
