@@ -18,11 +18,27 @@ CREATE TABLE usage_ledger (
 );
 CREATE INDEX usage_ledger_scope_time ON usage_ledger (site_id, cell_id, tenant_id, workspace_id, occurred_at);
 
-CREATE FUNCTION refuse_usage_ledger_mutation() RETURNS trigger LANGUAGE plpgsql AS $$
+CREATE FUNCTION guard_usage_ledger_write() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  local_site varchar(32);
+  local_cell varchar(32);
 BEGIN
+  IF TG_OP = 'INSERT' THEN
+    -- Resolve the registry in the ledger's owning schema, even if the
+    -- session has a temporary table with the same name.
+    EXECUTE pg_catalog.format('SELECT site_id,id FROM %I.cells WHERE is_local', TG_TABLE_SCHEMA)
+      INTO local_site,local_cell;
+    IF NEW.site_id IS DISTINCT FROM local_site OR NEW.cell_id IS DISTINCT FROM local_cell THEN
+      RAISE EXCEPTION 'METERING_FOREIGN_CELL' USING ERRCODE = '23514';
+    END IF;
+    RETURN NEW;
+  END IF;
   RAISE EXCEPTION 'METERING_APPEND_ONLY' USING ERRCODE = '55000';
 END;
 $$;
 
+CREATE TRIGGER usage_ledger_local_scope BEFORE INSERT ON usage_ledger
+  FOR EACH ROW EXECUTE FUNCTION guard_usage_ledger_write();
+
 CREATE TRIGGER usage_ledger_append_only BEFORE UPDATE OR DELETE OR TRUNCATE ON usage_ledger
-  FOR EACH STATEMENT EXECUTE FUNCTION refuse_usage_ledger_mutation();
+  FOR EACH STATEMENT EXECUTE FUNCTION guard_usage_ledger_write();

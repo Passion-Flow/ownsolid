@@ -164,3 +164,65 @@ unnumbered SQL and retained the old workspace and original migration
 checksums. One append and one replay left a single event. Refusing the
 nonempty down migration preserved the event. The archive, restore and
 test ran inside the owned disconnected database fixture.
+
+## Serving principal and ledger grants
+
+The installed PostgreSQL role comes from
+[prepare-runtime-access](../../services/control/internal/operations/databaseaccess/access.go).
+Its current grant catalog applies table-level SELECT, INSERT, UPDATE and
+DELETE to ordinary business tables. The
+[serving privilege check](../../services/control/internal/platform/database/runtime_privileges.go)
+requires those grants for ordinary tables and rejects table ownership,
+TRUNCATE, trigger administration and grant options. A ledger-specific
+least-privilege policy therefore needs a matching exception in ARC's
+grant provision, upgrade inspection and readiness contracts. The
+unnumbered candidate can be qualified with the current role and the
+ordinary grant for the new table without admitting the candidate catalog.
+
+The metering statements need SELECT on the ledger and INSERT on only
+`producer`, `event_id`, `tenant_id`, `workspace_id`, `occurred_at`,
+`gpu_microseconds`, `tokens`, `storage_byte_seconds`, `requests` and
+`unmeasured_token_requests`. Existing schema USAGE, EXECUTE on
+`local_site_id()` and `local_cell_id()`, and SELECT on the three columns
+they read in `cells` remain prerequisites. Reading the trusted gateway
+receipt uses existing SELECT on `gateway_requests` and its row-lock
+authority. PostgreSQL's [SELECT contract](https://www.postgresql.org/docs/18/sql-select.html)
+requires UPDATE on at least one selected table column for FOR SHARE.
+The gateway owner already holds the full permission for its Report
+transition. No additional cell-registry write grant is required for
+metering. The [GRANT contract](https://www.postgresql.org/docs/18/sql-grant.html)
+allows restricting INSERT to the listed columns.
+
+Keep the statement-level append-only guard for the existing broad role.
+Check each new row's coordinates against the database-local authority
+before insertion, including explicit SQL or COPY values. The
+[trigger contract](https://www.postgresql.org/docs/18/trigger-definition.html)
+keeps this invoker-rights check in the same transaction. Resolve the
+cell registry in the ledger table's own schema, so a session's temporary
+table cannot substitute coordinates. The ledger's select predicates
+continue to isolate retained rows from other cells.
+Current Control credentials are a trusted service principal with existing
+access to the cell registry and other business state. Application
+authorization and verified receipt identity remain mandatory before
+using them. A runtime credential with broad Control access cannot stand
+in for a caller's authority.
+
+On disconnected PostgreSQL 18.6, the installed SCRAM role appended,
+replayed and read with both grants. The test refused a wrong password,
+an ungranted principal, explicit foreign scope, a shadowed local lookup,
+mutation, TRUNCATE, trigger disable and replication-mode bypass. The
+unnumbered candidate still failed catalog admission. The optional GW
+Report transaction from `eeb0e9a6` ran in a source overlay with the same
+candidate SQL, authenticated receipt input and installed role. Under
+the narrower grant it appended and replayed an authenticated receipt.
+Invalid credentials and a persisted foreign-cell source produced no
+successful acknowledgment or ledger entry. Candidate DDL and fault
+injection ran only as the fixture owner.
+
+Before a rollback, quiesce the Report projection and other ledger
+writers. ARC must verify the exact predecessor schema and runtime grant
+contract and run the down SQL under the installation lock in a
+transaction. The exclusive table lock protects the empty-ledger
+precondition. An occupied ledger requires a compatible roll-forward or
+a separately verified recovery that preserves its records. This uses
+the existing Go, pgx and PostgreSQL stack and its recorded licenses.
