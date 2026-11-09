@@ -71,7 +71,8 @@ func readRatedReport(ctx context.Context, q transaction.Executor, scope Scope, f
 	// keeps every rate interval on the same ledger snapshot after those checks.
 	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
 		`SELECT width_bucket(occurred_at, $5::timestamptz[]), `+usageTotalsProjection+`
- FROM usage_ledger WHERE tenant_id=$1 AND workspace_id=$2 AND occurred_at >= $3 AND occurred_at < $4
+ FROM usage_ledger WHERE site_id=local_site_id() AND cell_id=local_cell_id()
+  AND tenant_id=$1 AND workspace_id=$2 AND occurred_at >= $3 AND occurred_at < $4
  GROUP BY 1 ORDER BY 1`, scope.TenantID, scope.WorkspaceID, from, to, starts))
 	if err != nil {
 		return ShowbackReport{}, operationError(ctx)

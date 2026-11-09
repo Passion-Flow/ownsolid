@@ -90,3 +90,21 @@ fixture inputs described above, run:
 ```sh
 go -C services/control test -race -tags repository_integration ./internal/modules/metering -run 'TestPostgres(WorkspaceBudgetAdmissionPreview|GatewayReceiptProjectsVerifiedUsageAndBudget)$' -count=1
 ```
+
+The unnumbered [up SQL](testdata/ledger.sql) and [down SQL](testdata/ledger.down.sql)
+form the PostgreSQL migration candidate. The existing local site and cell
+functions supply both stored coordinates. Receipt intake verifies the source
+coordinates, and totals and showback read the local cell only. The down SQL
+requires a migration transaction and an empty ledger.
+
+With the protected fixture inputs above, verify the native schema 55 upgrade,
+foreign-cell refusal and the empty and nonempty downgrade behavior:
+
+```sh
+go -C services/control test -race -tags repository_integration ./internal/modules/metering -run 'TestPostgres(LedgerCandidate|GatewayReceiptProjectsVerifiedUsageAndBudget)' -count=1
+```
+
+The database owner assigns the formal migration number, table count, grants
+and catalog fingerprints. The optional gateway Report hook uses this SQL path
+and its existing authenticated arguments. Activate it only with the accepted
+production schema.
