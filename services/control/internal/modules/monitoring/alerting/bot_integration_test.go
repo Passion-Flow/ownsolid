@@ -36,14 +36,20 @@ func newBotFixtureRoute(t *testing.T, root, id, name string, channel relayChanne
 	}
 	tokenPath := filepath.Join(root, id+"-hook")
 	secretPath := filepath.Join(root, id+"-signing")
-	if channel == dingTalkChannel {
+	var secret string
+	switch channel {
+	case dingTalkChannel:
 		config.DingTalkAccessTokenFile, config.DingTalkSigningSecretFile = tokenPath, secretPath
-	} else {
+		secret = relayFixtureSecret(t, secretPath)
+	case weComChannel:
+		config.WeComKeyFile = tokenPath
+	case feishuChannel:
 		config.FeishuHookFile, config.FeishuSigningSecretFile = tokenPath, secretPath
+		secret = relayFixtureSecret(t, secretPath)
 	}
 	return botFixtureRoute{
 		relayFixtureTenant{config: config, webhookKey: relayFixtureSecret(t, config.WebhookTokenFile)},
-		relayFixtureSecret(t, tokenPath), relayFixtureSecret(t, secretPath),
+		relayFixtureSecret(t, tokenPath), secret,
 	}
 }
 
@@ -79,6 +85,10 @@ func TestDingTalkRelayRetriesOneDurableTenantDelivery(t *testing.T) {
 	testDurableBotDelivery(t, dingTalkChannel, "dingtalk", "OWNSOLID_TEST_DINGTALK_RELAY", `{"errcode":0}`)
 }
 
+func TestWeComRelayRetriesOneDurableTenantDelivery(t *testing.T) {
+	testDurableBotDelivery(t, weComChannel, "wecom", "OWNSOLID_TEST_WECOM_RELAY", `{"errcode":0}`)
+}
+
 func testDurableBotDelivery(t *testing.T, channel relayChannel, name, binary, receipt string) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(t.Context(), 45*time.Second)
@@ -97,9 +107,13 @@ func testDurableBotDelivery(t *testing.T, channel relayChannel, name, binary, re
 	keyFormat := regexp.MustCompile(`^ownsolid-am-v1-[a-f0-9]{64}$`)
 	site := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		hook, validPath := strings.CutPrefix(req.URL.Path, "/open-apis/bot/v2/hook/")
-		if channel == dingTalkChannel {
+		switch channel {
+		case dingTalkChannel:
 			validPath = req.URL.Path == "/robot/send"
 			hook = req.URL.Query().Get("access_token")
+		case weComChannel:
+			validPath = req.URL.Path == "/cgi-bin/webhook/send"
+			hook = req.URL.Query().Get("key")
 		}
 		route, found := routes[hook]
 		if !validPath || (channel == feishuChannel && (!found || req.URL.RawQuery != "")) {
@@ -137,7 +151,7 @@ func testDurableBotDelivery(t *testing.T, channel relayChannel, name, binary, re
 			err = persistBotFixture(directory, key, message)
 			// The fixture commits a real file before dropping the acknowledgement.
 			if err == nil && route.config.ID == "tenant-a" && strings.Contains(message, "ownsolid firing") {
-				if channel == dingTalkChannel {
+				if channel != feishuChannel {
 					io.WriteString(w, receipt)
 				} else {
 					w.WriteHeader(http.StatusServiceUnavailable)
@@ -169,9 +183,12 @@ func testDurableBotDelivery(t *testing.T, channel relayChannel, name, binary, re
 		DeliverySeconds: 3, MaxConcurrent: 2,
 		Tenants: []tenantConfig{tenantA.config, tenantB.config},
 	}
-	if channel == dingTalkChannel {
+	switch channel {
+	case dingTalkChannel:
 		config.DingTalkOrigin, config.DingTalkCAFile = site.URL, siteCA
-	} else {
+	case weComChannel:
+		config.WeComOrigin, config.WeComCAFile = site.URL, siteCA
+	case feishuChannel:
 		config.FeishuOrigin, config.FeishuCAFile = site.URL, siteCA
 	}
 	writeFixture(t, configFile, fixtureRelayJSON(t, config))
@@ -208,8 +225,21 @@ func testDurableBotDelivery(t *testing.T, channel relayChannel, name, binary, re
 			t.Fatal(err)
 		}
 	}
-	alert := create("tenant-a", "NodeUnreachable")
-	publish(alert, create("tenant-a", "Maintenance"), create("tenant-b", "Maintenance"))
+	alerts := []fixtureSubmittedAlert{create("tenant-a", "NodeUnreachable")}
+	if channel == weComChannel {
+		// Long, shared rack labels force clipping while keeping 40 distinct
+		// alerts in one group. The notification must retain the group count.
+		alerts = make([]fixtureSubmittedAlert, 40)
+		for i := range alerts {
+			alerts[i] = create("tenant-a", "NodeUnreachable")
+			labels := alerts[i].Labels
+			labels["site_id"] = strings.Repeat("s", 90)
+			labels["cell_id"] = strings.Repeat("c", 90)
+			labels["rack_id"] = strings.Repeat("r", 90)
+			labels["node_id"] = fmt.Sprintf("node-%02d-%s", i, strings.Repeat("n", 80))
+		}
+	}
+	publish(append(alerts, create("tenant-a", "Maintenance"), create("tenant-b", "Maintenance"))...)
 
 	check := func(tenant string, want int, required ...string) []string {
 		t.Helper()
@@ -244,16 +274,25 @@ func testDurableBotDelivery(t *testing.T, channel relayChannel, name, binary, re
 		})
 		return keys
 	}
-	first := check("tenant-a", 1, "ownsolid firing", "NodeUnreachable", "severity=critical")[0]
+	firing := []string{"ownsolid firing", "NodeUnreachable", "severity=critical"}
+	resolved := []string{"ownsolid resolved", "NodeUnreachable"}
+	if channel == weComChannel {
+		firing = append(firing, "40 firing, 0 resolved", "[Alert details shortened]")
+		resolved = append(resolved, "0 firing, 40 resolved", "[Alert details shortened]")
+	}
+	first := check("tenant-a", 1, firing...)[0]
 	check("tenant-b", 1, "ownsolid firing", "Maintenance")
 	relayFixtureWait(t, ctx, func() bool {
 		mu.Lock()
 		defer mu.Unlock()
 		return attempts[first] >= 2 && acknowledged[first]
 	})
-	alert.EndsAt = time.Now().Add(-time.Second)
-	publish(alert)
-	check("tenant-a", 2, "ownsolid resolved", "NodeUnreachable")
+	end := time.Now().Add(-time.Second)
+	for i := range alerts {
+		alerts[i].EndsAt = end
+	}
+	publish(alerts...)
+	check("tenant-a", 2, resolved...)
 	check("tenant-b", 1, "Maintenance")
 	t.Logf("Alertmanager %s, %s relay %s and controlled HTTPS receiver %s", manager, name, ingress, site.URL)
 }
@@ -264,16 +303,21 @@ func readBotFixturePost(w http.ResponseWriter, req *http.Request, secret string,
 	var stamp, signature, text string
 	var expected []byte
 	var at time.Time
-	if channel == dingTalkChannel {
+	if channel != feishuChannel {
 		var message struct {
 			Type string `json:"msgtype"`
 			Text struct {
 				Content string `json:"content"`
 			} `json:"text"`
 		}
+		if body.Decode(&message) != nil || message.Type != "text" {
+			return "", false
+		}
 		q := req.URL.Query()
-		if len(q) != 3 || len(q["access_token"]) != 1 || len(q["timestamp"]) != 1 || len(q["sign"]) != 1 ||
-			body.Decode(&message) != nil || message.Type != "text" {
+		if channel == weComChannel {
+			return message.Text.Content, len(q) == 1 && len(q["key"]) == 1 && len(message.Text.Content) <= 2048
+		}
+		if len(q) != 3 || len(q["access_token"]) != 1 || len(q["timestamp"]) != 1 || len(q["sign"]) != 1 {
 			return "", false
 		}
 		stamp, signature, text = q.Get("timestamp"), q.Get("sign"), message.Text.Content

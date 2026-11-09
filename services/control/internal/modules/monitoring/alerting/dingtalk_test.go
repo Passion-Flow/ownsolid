@@ -83,7 +83,7 @@ func TestDingTalkRequiresCapabilityAndDurableReceipt(t *testing.T) {
 			defer server.Close()
 			roots := x509.NewCertPool()
 			roots.AddCert(server.Certificate())
-			relay := newDingTalkTestRelay(t, server.URL, roots)
+			relay := newBotTestRelay(t, server.URL, dingTalkChannel, roots)
 			outcome := relay.send(t.Context(), tenantRoute{target: token, outbound: "public-signature-vector"}, "test firing", "fixture-transaction")
 			if outcome != test.want || int(posts.Load()) != test.posts {
 				t.Fatalf("unexpected delivery: %s after %d posts", outcome, posts.Load())
@@ -99,20 +99,20 @@ func TestDingTalkRejectsUntrustedTLS(t *testing.T) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
 	defer server.Close()
-	relay := newDingTalkTestRelay(t, server.URL, x509.NewCertPool())
+	relay := newBotTestRelay(t, server.URL, dingTalkChannel, x509.NewCertPool())
 	if got := relay.send(t.Context(), tenantRoute{}, "test firing", "fixture-transaction"); got != dingTalkRetry || calls.Load() != 0 {
 		t.Fatalf("untrusted TLS produced %s with %d HTTP requests", got, calls.Load())
 	}
 }
 
-func newDingTalkTestRelay(t *testing.T, target string, roots *x509.CertPool) *webhookRelay {
+func newBotTestRelay(t *testing.T, target string, channel relayChannel, roots *x509.CertPool) *webhookRelay {
 	t.Helper()
 	origin, err := url.Parse(target)
 	if err != nil {
 		t.Fatal(err)
 	}
 	relay := newWebhookRelay(relaySettings{
-		channel: dingTalkChannel, origin: origin, roots: roots, concurrent: 1, timeout: 2 * time.Second,
+		channel: channel, origin: origin, roots: roots, concurrent: 1, timeout: 2 * time.Second,
 	}, slog.Default())
 	t.Cleanup(relay.client.CloseIdleConnections)
 	return relay

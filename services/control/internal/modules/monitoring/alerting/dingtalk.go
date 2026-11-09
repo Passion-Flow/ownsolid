@@ -16,15 +16,6 @@ const maxDingTalkRequestBytes = 16 << 10
 
 var dingTalkContract = durableBotContract{"errcode", []int{-1, 410100}, dingTalkRetry, dingTalkRejected}
 
-type dingTalkMessage struct {
-	MsgType string       `json:"msgtype"`
-	Text    dingTalkText `json:"text"`
-}
-
-type dingTalkText struct {
-	Content string `json:"content"`
-}
-
 func signDingTalk(timestamp, secret string) string {
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write([]byte(timestamp + "\n" + secret))
@@ -32,7 +23,7 @@ func signDingTalk(timestamp, secret string) string {
 }
 
 func (s *webhookRelay) sendDingTalk(ctx context.Context, route tenantRoute, text, transaction string) deliveryOutcome {
-	raw, err := json.Marshal(dingTalkMessage{"text", dingTalkText{text}})
+	raw, err := json.Marshal(textBotMessage{"text", textBotContent{text}})
 	if err != nil || len(raw) > maxDingTalkRequestBytes {
 		return dingTalkRejected
 	}

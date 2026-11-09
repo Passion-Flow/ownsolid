@@ -16,6 +16,15 @@ const relayCapabilityHeader = "X-Ownsolid-Idempotency"
 const relayCapabilityVersion = "durable-v1"
 const idempotencyKeyHeader = "Idempotency-Key"
 
+type textBotMessage struct {
+	MsgType string         `json:"msgtype"`
+	Text    textBotContent `json:"text"`
+}
+
+type textBotContent struct {
+	Content string `json:"content"`
+}
+
 type durableBotContract struct {
 	codeField       string
 	transientCodes  []int

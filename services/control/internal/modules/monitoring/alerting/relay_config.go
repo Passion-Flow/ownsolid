@@ -30,6 +30,7 @@ const (
 	matrixChannel relayChannel = iota
 	feishuChannel
 	dingTalkChannel
+	weComChannel
 )
 
 type relayConfig struct {
@@ -42,6 +43,8 @@ type relayConfig struct {
 	FeishuCAFile    string         `json:"feishu_ca_file,omitempty"`
 	DingTalkOrigin  string         `json:"dingtalk_origin,omitempty"`
 	DingTalkCAFile  string         `json:"dingtalk_ca_file,omitempty"`
+	WeComOrigin     string         `json:"wecom_origin,omitempty"`
+	WeComCAFile     string         `json:"wecom_ca_file,omitempty"`
 	DeliverySeconds int            `json:"delivery_seconds"`
 	MaxConcurrent   int            `json:"max_concurrent"`
 	Tenants         []tenantConfig `json:"tenants"`
@@ -57,6 +60,7 @@ type tenantConfig struct {
 	FeishuSigningSecretFile   string `json:"feishu_signing_secret_file,omitempty"`
 	DingTalkAccessTokenFile   string `json:"dingtalk_access_token_file,omitempty"`
 	DingTalkSigningSecretFile string `json:"dingtalk_signing_secret_file,omitempty"`
+	WeComKeyFile              string `json:"wecom_key_file,omitempty"`
 }
 
 type relaySettings struct {
@@ -95,6 +99,7 @@ func loadRelaySettings(filename string, channel relayChannel) (relaySettings, er
 		matrixChannel:   {c.MatrixOrigin, c.MatrixCAFile, "MATRIX"},
 		feishuChannel:   {c.FeishuOrigin, c.FeishuCAFile, "FEISHU"},
 		dingTalkChannel: {c.DingTalkOrigin, c.DingTalkCAFile, "DINGTALK"},
+		weComChannel:    {c.WeComOrigin, c.WeComCAFile, "WECOM"},
 	}
 	if int(channel) >= len(destinations) {
 		return relaySettings{}, errors.New("RELAY_CHANNEL_INVALID")
@@ -140,7 +145,10 @@ func loadRelaySettings(filename string, channel relayChannel) (relaySettings, er
 		if _, exists := routes[t.ID]; exists || targets[route.target] {
 			return relaySettings{}, fmt.Errorf("RELAY_TENANT_BINDING_DUPLICATE entry %d", i+1)
 		}
-		secrets := [][32]byte{route.inbound, sha256.Sum256([]byte(route.outbound))}
+		secrets := [][32]byte{route.inbound}
+		if route.outbound != "" {
+			secrets = append(secrets, sha256.Sum256([]byte(route.outbound)))
+		}
 		if channel != matrixChannel {
 			secrets = append(secrets, sha256.Sum256([]byte(route.target)))
 		}
@@ -170,7 +178,8 @@ func loadTenantRoute(t tenantConfig, channel relayChannel) (tenantRoute, error) 
 	route := tenantRoute{receiver: t.Receiver, inbound: sha256.Sum256([]byte(in))}
 	if (channel != matrixChannel && (t.RoomID != "" || t.MatrixTokenFile != "")) ||
 		(channel != feishuChannel && (t.FeishuHookFile != "" || t.FeishuSigningSecretFile != "")) ||
-		(channel != dingTalkChannel && (t.DingTalkAccessTokenFile != "" || t.DingTalkSigningSecretFile != "")) {
+		(channel != dingTalkChannel && (t.DingTalkAccessTokenFile != "" || t.DingTalkSigningSecretFile != "")) ||
+		(channel != weComChannel && t.WeComKeyFile != "") {
 		return tenantRoute{}, errors.New("RELAY_CHANNEL_CONFIGURATION_MIXED")
 	}
 	switch channel {
@@ -178,6 +187,13 @@ func loadTenantRoute(t tenantConfig, channel relayChannel) (tenantRoute, error) 
 		return loadBotRoute(route, t.FeishuHookFile, t.FeishuSigningSecretFile, "FEISHU_HOOK", "FEISHU")
 	case dingTalkChannel:
 		return loadBotRoute(route, t.DingTalkAccessTokenFile, t.DingTalkSigningSecretFile, "DINGTALK_ACCESS_TOKEN", "DINGTALK")
+	case weComChannel:
+		key, err := readBotToken(t.WeComKeyFile, "WECOM_KEY")
+		if err != nil {
+			return tenantRoute{}, err
+		}
+		route.target = key
+		return route, nil
 	}
 	if !roomID.MatchString(t.RoomID) {
 		return tenantRoute{}, errors.New("RELAY_TENANT_SCOPE_INVALID")
@@ -191,9 +207,9 @@ func loadTenantRoute(t tenantConfig, channel relayChannel) (tenantRoute, error) 
 }
 
 func loadBotRoute(route tenantRoute, tokenFile, secretFile, tokenName, channelName string) (tenantRoute, error) {
-	token, err := readBearer(tokenFile, 16)
-	if err != nil || !botToken.MatchString(token) {
-		return tenantRoute{}, errors.New("RELAY_" + tokenName + "_INVALID")
+	token, err := readBotToken(tokenFile, tokenName)
+	if err != nil {
+		return tenantRoute{}, err
 	}
 	secret, err := readBearer(secretFile, 16)
 	if err != nil {
@@ -201,6 +217,14 @@ func loadBotRoute(route tenantRoute, tokenFile, secretFile, tokenName, channelNa
 	}
 	route.target, route.outbound = token, secret
 	return route, nil
+}
+
+func readBotToken(filename, name string) (string, error) {
+	token, err := readBearer(filename, 16)
+	if err != nil || !botToken.MatchString(token) {
+		return "", errors.New("RELAY_" + name + "_INVALID")
+	}
+	return token, nil
 }
 
 func privateAddress(value string) bool {
