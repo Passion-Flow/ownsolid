@@ -395,3 +395,41 @@ func TestImportRefusesAnotherSignedReleaseAfterSelection(t *testing.T) {
 		t.Fatalf("import accepted another signed release or reached the engine: %v", err)
 	}
 }
+
+func TestImportChecksRetainedPinBeforePayloads(t *testing.T) {
+	root, key, private := transitionCatalog(t)
+	fixture := catalogReleaseFixture{version: "1.0.0", engine: "compose"}
+	selected := writeTransitionRelease(t, root, private, fixture)
+	fixture.variant = "reissued"
+	replacement := writeTransitionRelease(t, root, private, fixture)
+	for _, payload := range []string{"compose.yaml", ImageArchiveName} {
+		if err := root.Remove(fixture.version + "/" + payload); err != nil {
+			t.Fatal(err)
+		}
+	}
+	wrongKey, _, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name, message string
+		key           ed25519.PublicKey
+		pin           *ReleasePin
+		want          error
+	}{
+		{"selected", "differs from the selected release pin", key, &selected, ErrImageImport},
+		{"matching", "provide a regular compose.yaml", key, &replacement, ErrBundle},
+		{"no pin", "provide a regular compose.yaml", key, nil, ErrBundle},
+		{"wrong publisher", "verify the publisher", wrongKey, &selected, ErrBundle},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := ImportInstallImage(t.Context(), root.Name()+"/"+fixture.version, tc.key, ImageImportOptions{
+				MaximumPayloadBytes: testTransitionBudget, MaximumExpandedBytes: testTransitionBudget,
+				Timeout: time.Second, ExpectedPin: tc.pin,
+			})
+			if !errors.Is(err, tc.want) || !strings.Contains(err.Error(), tc.message) || result.Pin != (ReleasePin{}) {
+				t.Fatalf("wanted %q before Docker access, got %v", tc.message, err)
+			}
+		})
+	}
+}
