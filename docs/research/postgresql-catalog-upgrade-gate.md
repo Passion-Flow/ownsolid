@@ -51,11 +51,11 @@ in objects written by 56 and retained by 57. The remaining difference at 56,
 `node_tasks_operation_check`, is replaced by 57. The comparison found no
 structural differences between these fixture paths.
 
-Separately, the clean main branch fails `TestEveryCellOwnedTableCarriesScope`
+The schema 57 baseline fails `TestEveryCellOwnedTableCarriesScope`
 because `audit_chain_head` introduced by 53 lacks the two cell-owned columns
 required by [ADR 0006](../decisions/0006-cell-and-site-scope.md). Fresh and restored
-databases both have this shape. Resolving that scope contract requires an
-Audit-owned forward migration and retained-checkpoint verification.
+databases both have this shape. The [Audit scope migration](audit-chain-head-cell-scope.md) qualifies the
+forward fix and verifies retained checkpoints.
 
 Admit the measured mixed version 57 fingerprint in addition to the two existing
 complete fingerprints. Keep the immutable migration files and the original
@@ -99,3 +99,19 @@ redistribution with their notices. The existing [Go standard library](https://go
 and [pgx](https://github.com/jackc/pgx/blob/v5.11.0/LICENSE) use BSD-3-Clause
 and MIT, respectively, and allow those same uses with their required notices.
 No models, datasets or new runtime downloads are required.
+
+## Gateway alias description successor
+
+The original [GW-120 SQL](gateway-model-description.md) matches the
+reviewed Gateway fixture. Its up checksum is
+`158f874037201b0309d2f4dc579dcf988153a8d0d19e438bf92b328b3ca97466`.
+Applying those bytes in a disposable schema after 58 created
+`model_alias_description_intents` with zero of the two non-null cell
+columns with defaults required by [ADR 0006](../decisions/0006-cell-and-site-scope.md).
+The existing cell-owned table check therefore rejects this successor.
+
+Activation requires the Gateway-owned replacement SQL to define both
+scoped columns with the local defaults. Recompute the signed lineage
+checksum, table count and all three catalog forms on the actual
+predecessor, and rerun the ownership and logical restore tests against
+those exact bytes.
