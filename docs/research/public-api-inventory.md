@@ -32,9 +32,8 @@ dataset or remote lookup is added.
 Test private and unlisted exclusion, multi-audience collisions, parameter
 renaming, per-document ID collisions, and missing IDs. Run the report on the
 current repository in a network namespace with no external routes. The
-components and nodes contracts both declare four node-exporter routes.
-The owning contracts and generated clients require a coordinated change
-to resolve those records without breaking callers.
+route audit counts source declarations separately from compatibility
+projections.
 
 ## Cloud inventory operation identities
 
@@ -63,6 +62,48 @@ retained reads, import and receipt replay, and rollback tests against real
 PostgreSQL and the loopback AWS protocol fixture. The inventory no longer
 reports missing cloud operation IDs. The existing reference summaries and
 bookmark anchors are byte-identical.
+
+## Node exporter operation aliases
+
+The four node exporter path items in Nodes and Components were identical.
+The registered [components handler](../../services/control/internal/modules/components/http/handler.go)
+owns status, actions and logs. Give Components the canonical operations
+and point the Nodes path items to the same paths in that contract.
+[OpenAPI Path Item references](https://spec.openapis.org/oas/v3.1.1.html#path-item-object)
+and [JSON Pointer fragments](https://www.rfc-editor.org/rfc/rfc6901#section-6)
+describe the reference and escaping. The local authoring prototype expanded
+the four items to the previous Nodes document and TypeScript bytes.
+
+Preserve both SDK packages and the help downloads by materializing the
+four references before projection. Nodes and Components keep their own
+legacy local schema and security names, including their distinct Problem
+schemas. A generic dereference to the Components schema would change the
+Nodes SDK error type. Dropping the Nodes projection would remove existing
+methods and help bookmarks. Limit the authoring resolver to same-path,
+one-hop Nodes references to Components. Unknown, dangling or chained
+references fail before generation. The audit retains the Nodes operation
+identities for release comparison and counts each Components declaration
+once for route collisions.
+
+No library is added. The existing [SDK licenses](sdk.md#licenses), Node.js
+MIT license and Go BSD-style license cover generation and fixture code.
+Compare both pinned SDK outputs, TypeScript, help summaries and the
+downloaded contracts with the previous versions. Verify the four real
+HTTPS routes and their existing scope and refusal behavior.
+
+The Go and Python Nodes and Components sources, generated TypeScript and
+both help projections were byte-identical. The audit retained 421 public
+operation identities, removed the four duplicate findings and reported no
+compatibility changes. The raw Nodes document also resolved through
+openapi-typescript in a disconnected namespace.
+
+The Linux TLS fixture used PostgreSQL 18.6, VictoriaLogs 1.53.0 and both
+digest-checked [Apache-2.0 node exporter archives](https://github.com/prometheus/node_exporter/blob/v1.12.1/LICENSE).
+It verified Admin and Portal status, scoped maintenance and task-backed
+journal download. The original fixtures predated the current Models
+composition, scoped enrollment and external log store. A temporary
+fixture used the current Nodes enrollment schema and the real log store
+while retaining the four existing exporter response schemas.
 
 ## ARC-104 node enrollment profile
 

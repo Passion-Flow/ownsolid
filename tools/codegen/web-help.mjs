@@ -8,6 +8,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { createRequire } from 'node:module';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readContract } from './openapi-paths.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const help = join(root, 'web', 'packages', 'help');
@@ -210,7 +211,7 @@ function api(files, index) {
   for (const [entrance, audience] of Object.entries(entrances)) {
     index.api[entrance] = [];
     for (const domain of domains) {
-      const contract = JSON.parse(readFileSync(join(contracts, domain, 'openapi.json'), 'utf8'));
+      const { document: contract } = readContract(join(contracts, domain, 'openapi.json'));
       const all = contract.components?.schemas ?? {};
       const operations = [];
       const used = new Set();

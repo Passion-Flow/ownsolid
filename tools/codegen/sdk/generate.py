@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from urllib.parse import quote
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -34,6 +35,29 @@ def public_sources(contracts):
     """Find local contracts that may contribute public operations."""
     return (source for source in sorted(contracts.glob("*/openapi.json"))
             if source.parent.name not in UNLISTED)
+
+
+def read_contract(source):
+    """Resolve the supported local path aliases before client projection."""
+    document = json.loads(source.read_text(encoding="utf-8"))
+    aliases = set()
+    owner = None
+    for path, item in document.get("paths", {}).items():
+        if "$ref" not in item:
+            continue
+        pointer = quote(path.replace("~", "~0").replace("/", "~1"), safe="~")
+        expected = {"$ref": "../components/openapi.json#/paths/" + pointer}
+        if source.parent.name != "nodes" or item != expected:
+            raise ValueError(f"{source}: unsupported OpenAPI path reference for {path}")
+        if owner is None:
+            target = source.parent.parent / "components" / "openapi.json"
+            owner = json.loads(target.read_text(encoding="utf-8"))
+        canonical = owner.get("paths", {}).get(path)
+        if not canonical or "$ref" in canonical or not METHODS.intersection(canonical):
+            raise ValueError(f"{source}: missing canonical OpenAPI path for {path}")
+        document["paths"][path] = canonical
+        aliases.add(path)
+    return document, aliases
 
 
 def project_contract(document):
@@ -101,7 +125,8 @@ def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
     domain = source.parent.name.replace("-", "_")
     if not re.fullmatch(r"[a-z][a-z0-9_]*", domain):
         raise ValueError(f"cannot use {source.parent.name!r} as a package name")
-    contract = project_contract(json.loads(source.read_text(encoding="utf-8")))
+    document, _ = read_contract(source)
+    contract = project_contract(document)
     if not contract["paths"]:
         return False
     local_contract = temp / f"{domain}.json"
