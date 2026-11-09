@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-
-	"golang.org/x/sys/unix"
 )
 
 // The versioned import contract limits each binary write to 8 MiB.
@@ -78,23 +76,6 @@ func decodeModelImport(raw json.RawMessage, id, workspace string) (modelImport, 
 		return record, errors.New("the server returned an invalid model import")
 	}
 	return record, nil
-}
-
-func openModelBundle(path string) (*os.File, int64, error) {
-	file, err := os.OpenFile(path, os.O_RDONLY|unix.O_NONBLOCK, 0)
-	if err != nil {
-		return nil, 0, fmt.Errorf("open model bundle: %w", err)
-	}
-	info, err := file.Stat()
-	if err != nil {
-		file.Close()
-		return nil, 0, fmt.Errorf("inspect model bundle: %w", err)
-	}
-	if !info.Mode().IsRegular() || info.Size() < 1 {
-		file.Close()
-		return nil, 0, errors.New("the model bundle must be a nonempty regular file")
-	}
-	return file, info.Size(), nil
 }
 
 func (c *apiClient) transferModel(ctx context.Context, path, workspace string, record modelImport, file *os.File, chunk int64) error {
