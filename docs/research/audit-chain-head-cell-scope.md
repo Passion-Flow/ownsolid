@@ -172,3 +172,12 @@ The disconnected repository gate also passed `make check && make build`
 at `ad7cf37e` on the merged ARC predecessor. The release lineage in that
 gate still ends at 57. The overlay and the standalone catalog matrix
 qualify the candidate before production activation.
+
+A smaller disconnected fixture combined all of the restore-at-55
+assertions on one database. It checked the exact `ad7cf37e` up SQL hash,
+confirmed the accepted 57 fingerprint before applying the candidate,
+and matched the same 58 fingerprint afterward. The retained V1 and V2
+export matched byte for byte, the standalone verifier accepted the
+independently saved checkpoint, and PostgreSQL refused foreign site
+and cell values. The verifier then accepted 32 consecutive new rows
+from that checkpoint through the final head at position 34.
