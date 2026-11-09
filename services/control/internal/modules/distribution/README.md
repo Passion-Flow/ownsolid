@@ -21,6 +21,15 @@ digest, the same check used for report replay. If a stored receipt fails
 verification, the request returns `STORAGE_UNAVAILABLE` without a partial
 page. See the [usage history verification](../../../../../docs/research/gateway-usage-history.md).
 
+The distribution service's ExportUsagePage serializes one authorized page as
+CSV and returns the next cursor separately. Each row counts one admitted
+request. Blank elapsed time means no reported outcome. Blank token cells
+mean unknown usage. A reported zero is written as 0. The artifact excludes
+key identifiers and secrets, request content and actor or deployment
+metadata. Follow the returned cursor with the same authorization and
+filter. These are live pages. The versioned download endpoint and UI are
+pending.
+
 ## Trace an admitted call
 
 Keep the gateway's X-Request-ID response header. In the matching site and
@@ -40,15 +49,6 @@ revision, drain and ready-target checks as `Cutover`. It returns the current
 and proposed deployment revision and pause state without writing. Apply
 rechecks the expected revision and current readiness in its own
 transaction. The public preview route and Console flow are pending.
-
-The distribution service's ExportUsagePage serializes one authorized page as
-CSV and returns the next cursor separately. Each row counts one admitted
-request. Blank elapsed time means no reported outcome. Blank token cells
-mean unknown usage. A reported zero is written as 0. The artifact excludes
-key identifiers and secrets, request content and actor or deployment
-metadata. Follow the returned cursor with the same authorization and
-filter. These are live pages. The versioned download endpoint and UI are
-pending.
 
 ## Development checks
 
