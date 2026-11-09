@@ -227,3 +227,45 @@ excluded the Admin cutover preview. The local fixture made no request
 outside its loopback origin. The 19 Help tests and projection
 regression passed, and parsing the pre-change and final OpenAPI
 confirmed that only the three error indices changed.
+
+## Error declarations on the published operation
+
+An [OpenAPI specification extension](https://spec.openapis.org/oas/v3.1.1.html#specification-extensions)
+can attach structured metadata to an operation. The source of truth for
+S-108 is each effective contract operation's status-to-code map.
+Compare those maps to the generated details, keyed by contract, HTTP
+method and path in each entrance. The existing locale check then covers
+the exact set of codes readers can see. A missing, extra, moved or
+misclassified code must fail even if all locale entries exist.
+Re-running generation alone cannot detect an error dropped consistently
+by the generator.
+
+For browser coverage, open the published change-password operation by
+its shareable anchor and assert the 403 status, title and recovery text
+in the same error row in English and Simplified Chinese. The
+[Playwright locator assertions](https://playwright.dev/docs/test-assertions)
+wait for the generated detail and locale chunks to load. Keep the real
+generated index in the browser. Do not supply a test error list or
+replace the loaded chunk. The alias cutover and tokenizer preview
+checks can use this same path when their specific codes are published
+by the API contract owner. This adds no dependency, model or dataset.
+
+The built reference in both entrances rendered the declared password
+error's status, title and recovery guidance in both languages in local
+Chromium, with zero requests outside the preview origin. The
+focused preview checks read the five alias conflict codes on
+`adminPreviewAliasCutover` and the eight dataset codes on both
+`adminPreviewDatasetTokenizer` and `portalPreviewDatasetTokenizer`.
+The separate `adminCutoverAlias` operation calls the same cutover
+planner but still has no published error map.
+
+The same visual run exposed an independent parameter gap. The Identity
+contract declares `#/components/parameters/Csrf` on `changePassword`.
+Both generated details instead have an unnamed parameter with no
+location, and the page shows `help.api.in.undefined`. The generator
+must resolve Parameter Object references before deciding what to
+project. Preserve the current policy of omitting browser-managed header
+and cookie parameters from the on-screen table while retaining the
+reference in the downloadable contract. Verify that `changePassword`
+has no empty parameter row and that a referenced path or query parameter
+retains its real location, name, schema and required flag.

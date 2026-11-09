@@ -3,6 +3,7 @@
 // pages, the API reference of this entrance only, and both languages, with nothing fetched from
 // outside the installation.
 import { article } from '@ownsolid/help/catalog';
+import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import { expect, test } from '@playwright/test';
 import { mockControlPlane, type ControlPlane } from './control-plane.ts';
@@ -80,22 +81,33 @@ export function helpFlows(audience: ControlPlane['audience']): void {
       await expect(page.getByRole('heading', { name: 'Your account', level: 1 })).toBeVisible();
     });
 
-    test('the API reference opens an operation from its address with its errors explained', async ({
-      page,
-    }) => {
-      await page.goto('/help/api');
-      await page.getByLabel('Search operations').fill('password');
-      const operation = page.getByRole('button', { name: /changePassword/ });
-      await operation.click();
-      await expect(page).toHaveURL(/#identity\.changePassword$/);
-      await expect(page.getByRole('heading', { name: 'Request body' })).toBeVisible();
-      await expect(page.getByText('PASSWORD_CURRENT_INVALID')).toBeVisible();
-      await page.reload();
-      await expect(page.getByRole('heading', { name: 'Request body' })).toBeVisible();
-      await expect(operation).toHaveAttribute('aria-expanded', 'true');
-      const save = page.getByRole('link', { name: 'Save the contract: identity' });
-      await expect(save).toHaveAttribute('download', 'identity.openapi.json');
-    });
+    for (const [locale, messages] of [
+      ['en', english],
+      ['zh-CN', chinese],
+    ] as const) {
+      test(`the published operation explains its error in ${locale}`, async ({ page }) => {
+        control.preferences.locale = locale;
+        await page.goto('/help/api');
+        await page.getByLabel(messages['help.api.search']).fill('password');
+        const operation = page.getByRole('button', { name: /changePassword/ });
+        await operation.click();
+        await expect(page).toHaveURL(/#identity\.changePassword$/);
+        await expect(page.getByRole('heading', { name: messages['help.api.body'] })).toBeVisible();
+        await page.reload();
+        await expect(operation).toHaveAttribute('aria-expanded', 'true');
+        const detail = page.locator('[id="identity.changePassword-detail"]');
+        const error = detail.getByRole('listitem').filter({
+          has: page.getByText('PASSWORD_CURRENT_INVALID', { exact: true }),
+        });
+        await expect(error.getByText('403', { exact: true })).toBeVisible();
+        await expect(error).toContainText(messages['problem.PASSWORD_CURRENT_INVALID.title']);
+        await expect(error).toContainText(messages['problem.PASSWORD_CURRENT_INVALID.detail']);
+        const save = page.getByRole('link', {
+          name: messages['help.api.save.label'].replace('{domain}', 'identity'),
+        });
+        await expect(save).toHaveAttribute('download', 'identity.openapi.json');
+      });
+    }
 
     test('the API reference lists only what this entrance serves', async ({ page }) => {
       await page.goto('/help/api?q=admin%2Fnodes');
