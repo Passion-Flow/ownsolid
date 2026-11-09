@@ -1,6 +1,6 @@
 // Models and how they arrive, for platform administrators (api/openapi/v1/models).
 import { localCell } from './cell.ts';
-import { buildUrl, createClient } from './client.ts';
+import { buildUrl, createClient, type Success } from './client.ts';
 import type { modelsContract } from './gen/index.ts';
 import { sha256Hex } from './sha256.ts';
 import { writeBytes, type RequestOptions } from './transport.ts';
@@ -9,6 +9,9 @@ type Schemas = modelsContract.components['schemas'];
 
 /** A model in a workspace. */
 export type ModelVersion = Schemas['ModelVersion'];
+
+/** The administrator's detail for one model. */
+export type ModelDetail = Success<modelsContract.operations['getAdminModel']>;
 
 /** What is known about a model that arrived as it was published. */
 export type ModelCatalog = Schemas['ModelCatalog'];
@@ -66,8 +69,8 @@ export async function listWorkspaceModels(
   return page.items;
 }
 
-/** Reads one model. */
-export function getModel(id: string, options?: RequestOptions): Promise<ModelVersion> {
+/** Reads one model's administrator detail. */
+export function getModel(id: string, options?: RequestOptions): Promise<ModelDetail> {
   return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}', {
     ...options,
     path: { ...localCell, model_id: id },

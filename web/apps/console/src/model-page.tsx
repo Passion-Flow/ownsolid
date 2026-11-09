@@ -6,12 +6,14 @@ import {
   listDeployments,
   listModelImports,
   retireModel,
+  type ModelDetail,
   type ModelVersion,
 } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
 import {
   Button,
   Card,
+  CopyText,
   Detail,
   DetailList,
   EmptyState,
@@ -30,8 +32,8 @@ import {
 } from '@ownsolid/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
-import { ServerOff, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { GitBranch, ServerOff, Trash2 } from 'lucide-react';
+import { useId, useState } from 'react';
 import { DeployLink, DeploymentStatePill, useDeploymentNames } from './deployment-details.tsx';
 import { deploymentKeys } from './deployment-state.ts';
 import { ModelFacts, ModelFiles, modelSummary } from './model-details.tsx';
@@ -45,7 +47,7 @@ import {
 
 const route = getRouteApi('/authenticated/frame/library/$modelId');
 
-const tabs = ['overview', 'files', 'deployments', 'activity'] as const;
+const tabs = ['overview', 'lineage', 'files', 'deployments', 'activity'] as const;
 
 function RetireDialog({ model, onClose }: { model: ModelVersion; onClose: () => void }) {
   const { t } = useI18n();
@@ -129,6 +131,57 @@ function Origin({ model }: { model: ModelVersion }) {
   );
 }
 
+type DatasetLineage = NonNullable<ModelDetail['dataset_lineage']>;
+
+function LineageSource({ title, version }: { title: string; version: DatasetLineage['training'] }) {
+  const { t } = useI18n();
+  const heading = useId();
+  return (
+    <Card className="min-w-0 space-y-3 p-3.5 sm:p-[18px]" aria-labelledby={heading}>
+      <h2 id={heading} className="m-0 text-[15px] font-semibold">
+        {title}
+      </h2>
+      <DetailList className="grid-cols-1 gap-y-1 max-sm:[&>dd:not(:last-child)]:mb-2 sm:grid-cols-[130px_1fr] sm:gap-y-2.5">
+        <Detail label={t('models.lineage.datasetId')}>
+          <CopyText text={version.dataset_id} />
+        </Detail>
+        <Detail label={t('models.lineage.versionId')}>
+          <CopyText text={version.dataset_version_id} />
+        </Detail>
+        <Detail label={t('models.lineage.digest')}>
+          <CopyText text={version.manifest_sha256} />
+        </Detail>
+      </DetailList>
+    </Card>
+  );
+}
+
+function ModelLineage({ model }: { model: ModelDetail }) {
+  const { t } = useI18n();
+  const lineage = model.dataset_lineage;
+  return (
+    <div className="grid gap-3">
+      <Card className="p-[18px]">
+        <DetailList>
+          <Origin model={model} />
+        </DetailList>
+      </Card>
+      {lineage ? (
+        <div className="grid gap-3 xl:grid-cols-2">
+          <LineageSource title={t('models.lineage.training')} version={lineage.training} />
+          <LineageSource title={t('models.lineage.holdout')} version={lineage.holdout} />
+        </div>
+      ) : (
+        <Card>
+          <EmptyState icon={GitBranch} title={t('models.lineage.empty.title')}>
+            {t('models.lineage.empty.detail')}
+          </EmptyState>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 /** The deployments serving a model, or the way to make the first. */
 function ModelDeployments({ model }: { model: ModelVersion }) {
   const { t, format } = useI18n();
@@ -196,7 +249,7 @@ function ModelDeployments({ model }: { model: ModelVersion }) {
   );
 }
 
-function Loaded({ model }: { model: ModelVersion }) {
+function Loaded({ model }: { model: ModelDetail }) {
   const { t, format } = useI18n();
   const [tab, setTab] = useChosenTab(tabs);
   const [retiring, setRetiring] = useState(false);
@@ -204,6 +257,7 @@ function Loaded({ model }: { model: ModelVersion }) {
   return (
     <>
       <ResourceHeader
+        className="flex-col sm:flex-row"
         backTo="/library"
         backLabel={t('models.page.back')}
         title={model.name}
@@ -247,6 +301,7 @@ function Loaded({ model }: { model: ModelVersion }) {
             </DetailList>
           </Card>
         ) : null}
+        {tab === 'lineage' ? <ModelLineage model={model} /> : null}
         {tab === 'files' ? (
           <Card className="overflow-x-auto">
             <ModelFiles files={summary.files} />

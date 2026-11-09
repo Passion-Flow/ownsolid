@@ -1,8 +1,12 @@
 // The Model library: finding what a workspace has, bringing a model in through upload and
 // verification, and what happens when any of that goes wrong (docs/research/model-library.md).
+import { readFileSync } from 'node:fs';
+import type { DerivedModelCatalog, ModelCatalog, ModelDetail } from '@ownsolid/api';
+import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import {
   derivedModel,
+  expectAccessible,
   failedImport,
   mockControlPlane,
   modelCatalog,
@@ -388,6 +392,174 @@ test('leads from a fine-tuned model to the one it was made from', async ({ page 
   await page.goto(`/library/${derivedModel.id}`);
   await page.getByRole('link', { name: 'The model it was made from' }).click();
   await expect(page.getByRole('heading', { name: readyModel.name, level: 1 })).toBeVisible();
+});
+
+// The upload tests use a two-file model. The detail contract describes the complete model.
+const pinnedManifest = JSON.parse(
+  readFileSync(new URL('../../../../api/agent/v1/model-catalog.json', import.meta.url), 'utf8'),
+) as Omit<ModelCatalog, 'files'> & { files: DerivedModelCatalog['files'] };
+const baseDigest = '4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc';
+const lineageBase = {
+  ...readyModel,
+  catalog_digest: baseDigest,
+  manifest: pinnedManifest,
+} satisfies ModelDetail;
+const derivedManifest = derivedModel.manifest;
+if (!('base_model_id' in derivedManifest)) throw new Error('Expected a derived model fixture');
+const [license, readme, config, generation, merges, weights, ...tokenizer] = pinnedManifest.files;
+const lineageDerivative = {
+  ...derivedModel,
+  manifest: {
+    ...derivedManifest,
+    artifact_id: derivedModel.id,
+    base_catalog_sha256: baseDigest,
+    recipe_sha256: '758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496',
+    precision: 'BF16',
+    files: [
+      license,
+      readme,
+      config,
+      generation,
+      merges,
+      { ...weights, sha256: '2b'.repeat(32) },
+      ...tokenizer,
+    ],
+  },
+} satisfies ModelDetail;
+
+const lineage = {
+  training: {
+    dataset_id: '6f1c7a1e-0000-4000-8000-000000000091',
+    dataset_version_id: '6f1c7a1e-0000-4000-8000-000000000092',
+    manifest_sha256: '3a'.repeat(32),
+  },
+  holdout: {
+    dataset_id: '6f1c7a1e-0000-4000-8000-000000000093',
+    dataset_version_id: '6f1c7a1e-0000-4000-8000-000000000094',
+    manifest_sha256: '4b'.repeat(32),
+  },
+} satisfies NonNullable<ModelDetail['dataset_lineage']>;
+
+const modelDetailRoute = `**/admin/models/${derivedModel.id}`;
+const lineagePath = `/library/${derivedModel.id}?tab=lineage`;
+const modelWithLineage = { ...lineageDerivative, dataset_lineage: lineage } satisfies ModelDetail;
+
+for (const locale of ['en', 'zh-CN'] as const) {
+  test(`shows both retained dataset versions in the model detail (${locale})`, async ({
+    page,
+    context,
+  }, testInfo) => {
+    const messages = locale === 'en' ? english : chinese;
+    control.preferences.locale = locale;
+    control.models = [lineageBase, lineageDerivative];
+    let reads = 0;
+    await page.route(modelDetailRoute, (route) => {
+      reads += 1;
+      return route.fulfill({ json: { data: modelWithLineage } });
+    });
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto(`/library/${derivedModel.id}`);
+    const tab = page.getByRole('tab', { name: messages['resource.tab.lineage'] });
+    await tab.click();
+    await expect(page).toHaveURL(new RegExp(`/library/${derivedModel.id}\\?tab=lineage$`));
+    const panel = page.getByRole('tabpanel', { name: messages['resource.tab.lineage'] });
+    const training = panel.getByRole('region', { name: messages['models.lineage.training'] });
+    const holdout = panel.getByRole('region', { name: messages['models.lineage.holdout'] });
+    for (const [group, version] of [
+      [training, lineage.training],
+      [holdout, lineage.holdout],
+    ] as const) {
+      await expect(group.locator('dd')).toHaveText([
+        version.dataset_id,
+        version.dataset_version_id,
+        version.manifest_sha256,
+      ]);
+    }
+    await expect(panel.getByRole('link', { name: messages['models.origin.base'] })).toHaveAttribute(
+      'href',
+      `/library/${readyModel.id}`,
+    );
+    await expect(page.getByRole('link', { name: messages['services.new.open'] })).toHaveAttribute(
+      'href',
+      `/services/new?model=${derivedModel.id}`,
+    );
+    expect(reads).toBe(1);
+    await training
+      .locator('dd')
+      .filter({ hasText: lineage.training.manifest_sha256 })
+      .getByRole('button', { name: messages['action.copy'], exact: true })
+      .click();
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(lineage.training.manifest_sha256);
+    await page.reload();
+    await expect(tab).toHaveAttribute('aria-selected', 'true');
+    await expect(holdout).toContainText(lineage.holdout.manifest_sha256);
+    await expectAccessible(page);
+    await testInfo.attach('model-lineage', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+  });
+
+  test(`keeps origin available when a model has no lineage field (${locale})`, async ({
+    page,
+  }, testInfo) => {
+    const messages = locale === 'en' ? english : chinese;
+    control.preferences.locale = locale;
+    control.models = [lineageBase, lineageDerivative];
+    control.modelImports = [publishedImport];
+    await page.goto(lineagePath);
+    const panel = page.getByRole('tabpanel', { name: messages['resource.tab.lineage'] });
+    await expect(
+      panel.getByRole('heading', { name: messages['models.lineage.empty.title'] }),
+    ).toBeVisible();
+    await expect(
+      panel.getByRole('region', { name: messages['models.lineage.training'] }),
+    ).toHaveCount(0);
+    await panel.getByRole('link', { name: messages['models.origin.base'] }).click();
+    await expect(page.getByRole('heading', { name: readyModel.name, level: 1 })).toBeVisible();
+    await page.getByRole('tab', { name: messages['resource.tab.lineage'] }).click();
+    await expect(panel.getByRole('link')).toHaveAttribute(
+      'href',
+      `/library/imports/${publishedImport.id}`,
+    );
+    await expect(panel.getByText(messages['models.lineage.empty.detail'])).toBeVisible();
+    await expectAccessible(page);
+    await testInfo.attach('model-lineage-unavailable', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+  });
+}
+
+for (const { status, code } of [
+  { status: 403, code: 'ACCESS_DENIED' },
+  { status: 409, code: 'MODEL_DERIVED_CATALOG_INVALID' },
+] as const) {
+  test(`preserves the Admin detail refusal for ${code}`, async ({ page }) => {
+    await page.route(modelDetailRoute, (route) => route.fulfill({ status, json: { code } }));
+    await page.goto(lineagePath);
+    await expect(page.getByRole('alert')).toContainText(english[`problem.${code}.title`]);
+    await expect(page.getByRole('tab', { name: english['resource.tab.lineage'] })).toHaveCount(0);
+  });
+}
+
+test('retries a failed model detail read and returns to its lineage tab', async ({ page }) => {
+  let available = false;
+  await page.route(modelDetailRoute, (route) =>
+    available
+      ? route.fulfill({ json: { data: modelWithLineage } })
+      : route.fulfill({ status: 503, json: { code: 'STORAGE_UNAVAILABLE' } }),
+  );
+  await page.goto(lineagePath);
+  const notice = page.getByRole('alert');
+  await expect(notice).toContainText(english['problem.STORAGE_UNAVAILABLE.title']);
+  available = true;
+  await notice.getByRole('button', { name: english['action.retry'] }).click();
+  const panel = page.getByRole('tabpanel', { name: english['resource.tab.lineage'] });
+  await expect(panel).toContainText(lineage.training.dataset_version_id);
+  await expect(panel).toContainText(lineage.holdout.dataset_version_id);
 });
 
 test('says when a model or an import does not exist', async ({ page }) => {
