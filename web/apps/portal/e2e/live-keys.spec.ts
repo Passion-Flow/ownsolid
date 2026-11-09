@@ -1,7 +1,7 @@
 // A person's own keys on a real installation, in a session that is not an administrator's. A fixture
-// readies a published model, and stands in for the gateway process by admitting calls over
-// the real /gateway/v1 protocol; no model runs. The browser issues, rotates and revokes a key, reads
-// its calls, and proves that nobody else's session and no other workspace can reach it.
+// readies a published model. With a native gateway URL, calls use its public HTTPS endpoint.
+// The protocol fixture remains available for installations without that listener. The browser
+// issues, rotates and revokes the key, and proves its call history stays with its owner.
 import { execFileSync } from 'node:child_process';
 import type { GatewayCall } from '@ownsolid/api';
 import { expectAccessible } from '@ownsolid/shell/testing';
@@ -10,6 +10,7 @@ import { expect, test, type Browser, type Page } from '@playwright/test';
 
 const fixture = process.env.OWNSOLID_LIVE_GATEWAY_COMMAND ?? '';
 const personCommand = process.env.OWNSOLID_LIVE_PERSON_COMMAND ?? '';
+const nativeGateway = process.env.OWNSOLID_LIVE_NATIVE_GATEWAY_URL ?? '';
 const name = `key-${String(Date.now())}`;
 const keySecret = /^pk1\.[0-9a-f-]{36}\./;
 
@@ -22,6 +23,77 @@ function run(command: string, args: string[], secret?: string): string {
     encoding: 'utf8',
     input: secret,
   }).trim();
+}
+
+type Usage = NonNullable<NonNullable<GatewayCall['outcome']>['usage']>;
+interface GatewayReceipt {
+  id: string;
+  usage: Usage;
+}
+
+async function nativeCompletion(model: string, key: string) {
+  const base = new URL(nativeGateway);
+  if (
+    base.protocol !== 'https:' ||
+    base.pathname !== '/v1' ||
+    base.username ||
+    base.password ||
+    base.search ||
+    base.hash
+  ) {
+    throw new Error('The native gateway needs its canonical HTTPS base URL ending in /v1');
+  }
+  const response = await fetch(new URL('/v1/chat/completions', base), {
+    method: 'POST',
+    headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: 'Reply to this isolated Portal test.' }],
+      max_tokens: 16,
+      stream: false,
+    }),
+    redirect: 'error',
+    signal: AbortSignal.timeout(20_000),
+  });
+  const body = (await response.json()) as {
+    object?: string;
+    model?: string;
+    choices?: { message?: { content?: string } }[];
+    usage?: Usage;
+    error?: { code?: string };
+  };
+  return { status: response.status, id: response.headers.get('x-request-id') ?? '', body };
+}
+
+async function callGateway(
+  state: string,
+  secret: string,
+  count: number,
+): Promise<GatewayReceipt[]> {
+  if (!nativeGateway) {
+    expect(run(fixture, ['call', state, String(count)], secret)).toBe(String(count));
+    return [];
+  }
+  const receipts: GatewayReceipt[] = [];
+  for (let index = 0; index < count; index++) {
+    const { status, id, body } = await nativeCompletion(name, secret);
+    expect(status, body.error?.code).toBe(200);
+    expect(id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(body).toMatchObject({ object: 'chat.completion', model: name });
+    expect(body.choices?.[0]?.message?.content).toBeTruthy();
+    if (!body.usage) throw new Error('The gateway completion has no token usage');
+    expect(body.usage.total_tokens).toBeGreaterThan(0);
+    receipts.push({ id, usage: body.usage });
+  }
+  return receipts;
+}
+
+function expectReceipt(requests: GatewayCall[], receipt: GatewayReceipt) {
+  expect(requests.find(({ id }) => id === receipt.id)).toMatchObject({
+    state: 'reported',
+    capacity_held: false,
+    outcome: { request_id: receipt.id, status: 'succeeded', usage: receipt.usage },
+  });
 }
 
 async function signedIn(
@@ -72,6 +144,13 @@ async function readCalls(page: Page, path: string): Promise<GatewayCall[]> {
     if (!response.ok) throw new Error(`Call history returned HTTP ${response.status}`);
     return ((await response.json()) as { data: { items: GatewayCall[] } }).data.items;
   }, path);
+}
+
+async function reportedCalls(page: Page, path: string, count: number): Promise<GatewayCall[]> {
+  await expect
+    .poll(async () => (await readCalls(page, path)).map(({ state }) => state), { timeout: 15_000 })
+    .toEqual(Array.from({ length: count }, () => 'reported'));
+  return readCalls(page, path);
 }
 
 async function selectWorkspace(page: Page, name: string) {
@@ -125,24 +204,30 @@ test('a person goes from a published model to their own key and scoped calls', a
   // Done opens the key with what is needed to call it, and the secret is gone.
   const opened = page.getByRole('dialog', { name });
   await expect(opened.getByRole('heading', { name: 'Use this key' })).toBeVisible();
-  await expect(opened.locator('pre')).toContainText('https://gateway.lane-b.test:18443/v1');
+  await expect(opened.locator('pre')).toContainText(
+    nativeGateway || 'https://gateway.lane-b.test:18443/v1',
+  );
   await expect(opened.locator('pre')).toContainText(name);
   await expect(page.getByText(keySecret)).toHaveCount(0);
   await expectAccessible(page);
 
   // The scope is enforced by the control plane: the key calls its model and nothing else.
-  expect(run(fixture, ['call', state, '3'], first)).toBe('3');
-  expect(run(fixture, ['wrong', state], first)).toMatch(/^4\d\d /);
+  const initialReceipts = await callGateway(state, first, 3);
+  if (nativeGateway) {
+    const { status, body } = await nativeCompletion(`not-${name}`, first);
+    expect({ status, code: body.error?.code }).toEqual({ status: 404, code: 'model_not_found' });
+  } else {
+    expect(run(fixture, ['wrong', state], first)).toMatch(/^4\d\d /);
+  }
   const keyId = first.split('.')[1] ?? '';
-  const history = (workspace: string) =>
-    `${distribution(workspace)}/requests?api_key_id=${keyId}&limit=20`;
+  const history = (workspace: string, id = keyId) =>
+    `${distribution(workspace)}/requests?api_key_id=${id}&limit=20`;
   const ownerId = await page.evaluate(async () => {
     const response = await fetch('/api/v1/me');
     if (!response.ok) throw new Error(`Identity read returned HTTP ${response.status}`);
     return ((await response.json()) as { data: { user: { id: string } } }).data.user.id;
   });
-  const requests = await readCalls(page, history(person.workspace));
-  expect(requests).toHaveLength(3);
+  const requests = await reportedCalls(page, history(person.workspace), 3);
   for (const request of requests) {
     expect(request).toMatchObject({
       api_key_id: keyId,
@@ -152,6 +237,7 @@ test('a person goes from a published model to their own key and scoped calls', a
       state: 'reported',
     });
   }
+  for (const receipt of initialReceipts) expectReceipt(requests, receipt);
   let drawer = await openKey(page);
   const calls = drawer.getByRole('table', { name: 'Calls with this key' });
   await expect(calls.getByRole('row')).toHaveCount(4);
@@ -187,8 +273,9 @@ test('a person goes from a published model to their own key and scoped calls', a
   await rotating.getByRole('button', { name: 'Rotate', exact: true }).click();
   const second = await secretIn(page, `${name} has a new secret`);
   expect(second === first).toBe(false);
-  expect(run(fixture, ['call', state, '1'], first)).toBe('1');
-  expect(run(fixture, ['call', state, '1'], second)).toBe('1');
+  const overlapReceipts = await callGateway(state, first, 1);
+  const replacementReceipts = await callGateway(state, second, 1);
+  const replacementId = second.split('.')[1] ?? '';
 
   // Nobody else's session can see or reach the key, an administrator's portal session included.
   const stranger = await signedIn(browser, email, adminPassword(), '/keys');
@@ -202,6 +289,7 @@ test('a person goes from a published model to their own key and scoped calls', a
   expect([403, 404]).toContain(
     await statusOf(page, `${distribution(person.other_workspace)}/keys?limit=20`),
   );
+  expect([403, 404]).toContain(await statusOf(page, history(person.other_workspace)));
 
   // The newer key is listed first; revoke it by typing its name.
   drawer = await openKey(page, 0);
@@ -212,7 +300,32 @@ test('a person goes from a published model to their own key and scoped calls', a
   await revoking.getByLabel('Reason').fill('Live revocation');
   await revoking.getByRole('button', { name: 'Revoke', exact: true }).click();
   await expect(page.getByText(`${name} is revoked`)).toBeVisible();
-  expect(() => run(fixture, ['call', state, '1'], second)).toThrow();
+  if (nativeGateway) {
+    const { status, id, body } = await nativeCompletion(name, second);
+    const refusal = { status, id, code: body.error?.code };
+    expect(refusal).toMatchObject({ status: 401, code: 'invalid_api_key' });
+    const oldRows = await reportedCalls(page, history(person.workspace), 4);
+    const newRows = await reportedCalls(page, history(person.workspace, replacementId), 1);
+    for (const receipt of overlapReceipts) expectReceipt(oldRows, receipt);
+    for (const receipt of replacementReceipts) expectReceipt(newRows, receipt);
+    expect(newRows[0]).toMatchObject({ actor_id: ownerId, workspace_id: person.workspace });
+    expect(newRows.some((row) => row.id === id)).toBe(false);
+    const revoked = await openKey(page);
+    await expect(revoked.getByText('Revoked', { exact: true })).toBeVisible();
+    const historyTable = revoked.getByRole('table', { name: 'Calls with this key' });
+    await expect(historyTable.getByRole('row')).toHaveCount(2);
+    await expect(historyTable.getByRole('row').nth(1)).toContainText('Succeeded');
+    await testInfo.attach('portal-native-gateway-receipts', {
+      body: JSON.stringify(
+        { initialReceipts, overlapReceipts, replacementReceipts, refusal },
+        null,
+        2,
+      ),
+      contentType: 'application/json',
+    });
+  } else {
+    expect(() => run(fixture, ['call', state, '1'], second)).toThrow();
+  }
 
   expect(outside).toEqual([]);
   expect(administrative).toEqual([]);
