@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
@@ -124,6 +125,17 @@ type BackupInventory struct {
 // VerifyInventory checks object bytes and settled operations under the fence.
 // The caller supplies the deadline and maximum row count, including tombstones.
 func (f *BackupFence) VerifyInventory(ctx context.Context, maximumObjects int) (BackupInventory, error) {
+	return f.withBackupInventory(ctx, maximumObjects, func(run context.Context, inventory BackupInventory) error {
+		for _, entry := range inventory.Objects {
+			if err := f.service.verifyBackupObject(run, inventory.TenantID, entry, io.Discard); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (f *BackupFence) withBackupInventory(ctx context.Context, maximumObjects int, verify func(context.Context, BackupInventory) error) (BackupInventory, error) {
 	if f == nil || f.service == nil || ctx == nil || maximumObjects < 1 || maximumObjects > backupInventoryLimit {
 		return BackupInventory{}, fail("OBJECT_BACKUP_REQUEST_INVALID")
 	}
@@ -156,10 +168,8 @@ func (f *BackupFence) VerifyInventory(ctx context.Context, maximumObjects int) (
 	if err != nil {
 		return BackupInventory{}, err
 	}
-	for _, entry := range before.Objects {
-		if err := s.verifyBackupObject(run, before.TenantID, entry); err != nil {
-			return BackupInventory{}, err
-		}
+	if err := verify(run, before); err != nil {
+		return BackupInventory{}, err
 	}
 	after, err := s.readBackupInventory(run, maximumObjects)
 	if err != nil {
@@ -264,7 +274,7 @@ func (s *Service) readBackupInventory(ctx context.Context, limit int) (BackupInv
 	return out, nil
 }
 
-func (s *Service) verifyBackupObject(ctx context.Context, tenant string, entry BackupObjectVersion) error {
+func (s *Service) verifyBackupObject(ctx context.Context, tenant string, entry BackupObjectVersion, destination io.Writer) error {
 	ref := objectstore.Ref{Tenant: tenant, Workspace: entry.WorkspaceID, Object: entry.ObjectID}
 	uploads, err := s.Transport.FindUploads(ctx, ref)
 	if err != nil {
@@ -277,14 +287,8 @@ func (s *Service) verifyBackupObject(ctx context.Context, tenant string, entry B
 		o := storedObject{Tenant: tenant, Object: Object{
 			ID: entry.ObjectID, WorkspaceID: entry.WorkspaceID, ExpectedBytes: entry.SizeBytes, SHA256: entry.SHA256,
 		}}
-		info, err := s.verifyWhole(ctx, o)
-		if err != nil {
-			return err
-		}
-		if info.ETag != *entry.ETag {
-			return fail("OBJECT_CHANGED")
-		}
-		return nil
+		_, err := s.verifyWholeTo(ctx, o, *entry.ETag, destination)
+		return err
 	}
 	if _, err := s.Transport.Head(ctx, ref); err == nil {
 		return fail("OBJECT_CHANGED")
