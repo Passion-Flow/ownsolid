@@ -155,6 +155,32 @@ func (i *SourceImporter) ImportUpload(ctx context.Context, body io.Reader, desti
 	return i.importSource(ctx, body, destination, opts)
 }
 
+// PreviewUpload evaluates a cleaning policy against a complete, sealed source.
+// The caller owns authorization for the source and any private samples.
+// Scratch is a private directory used by the Parquet decoder.
+func (i *SourceImporter) PreviewUpload(ctx context.Context, body io.Reader, scratch string, opts SourceImportOptions) (SourceImportReport, error) {
+	if opts.Cleaning == nil {
+		return SourceImportReport{}, failure("DATASET_CLEANING_POLICY_INVALID")
+	}
+	if body == nil || opts.ExpectedBytes < 1 || !wire.ValidDigest(opts.ExpectedSHA256) {
+		return SourceImportReport{}, failure("DATASET_IMPORT_SOURCE_INVALID")
+	}
+	if err := i.validateOptions(opts); err != nil {
+		return SourceImportReport{}, err
+	}
+	if _, err := privatePath(scratch, "", true, 0); err != nil {
+		return SourceImportReport{}, failure("DATASET_STORAGE_PATH_INVALID")
+	}
+	ctx, cancel := context.WithTimeout(ctx, i.limits.Timeout)
+	defer cancel()
+	report, samples, err := i.scanSource(ctx, body, scratch, opts, bufio.NewWriter(io.Discard))
+	if err != nil {
+		return SourceImportReport{}, err
+	}
+	report.Cleaning.Samples = samples
+	return report, nil
+}
+
 // ImportObject fetches exactly the configured transport object bound by the
 // authorized receipt. It verifies size and SHA-256 before making rows visible.
 func (i *SourceImporter) ImportObject(ctx context.Context, storage SourceObjectReader, object SourceObject, destination string, opts SourceImportOptions) (SourceImportReport, error) {
@@ -230,60 +256,16 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 	defer os.Remove(output.Name())
 	defer output.Close()
 
-	limit := i.limits.SourceBytes
-	if opts.ExpectedBytes > 0 {
-		limit = opts.ExpectedBytes
-	}
-	input := sourceReadObserver{Reader: boundedContextReader{ctx, body}}
-	limited := &io.LimitedReader{R: &input, N: limit + 1}
-	sourceHash := sha256.New()
 	outputHash := sha256.New()
-	source := io.TeeReader(limited, sourceHash)
-	state := sourceImportState{
-		ctx: ctx, limits: i.limits, opts: opts, output: bufio.NewWriter(io.MultiWriter(output, outputHash)),
-		fields: make(map[string]*sourceFieldCount), cleaning: newSourceCleaning(opts.Cleaning),
-	}
-	switch opts.Format {
-	case SourceJSONL:
-		err = state.readJSONL(source)
-	case SourceJSON:
-		err = state.readJSONArray(source)
-	case SourceCSV:
-		err = state.readCSV(source)
-	case SourceParquet:
-		err = state.readParquet(source, directory, *i.parquet)
-	}
-
-	report := state.report()
-	report.SourceBytes = limit + 1 - limited.N
-	if ctx.Err() != nil {
-		return report, ctx.Err()
-	}
-	if report.SourceBytes > i.limits.SourceBytes {
-		return report, failure("DATASET_FILE_TOO_LARGE")
-	}
-	if opts.ExpectedBytes > 0 && report.SourceBytes > opts.ExpectedBytes {
-		return report, failure("DATASET_SOURCE_CHANGED")
-	}
-	if input.interrupted {
-		var issue SourceIssue
-		if errors.As(err, &issue) && issue.Code == sourceReadFailedCode {
-			return report, issue
-		}
-		return report, failure(sourceReadFailedCode)
-	}
+	writer := bufio.NewWriter(io.MultiWriter(output, outputHash))
+	report, samples, err := i.scanSource(ctx, body, directory, opts, writer)
 	if err != nil {
 		return report, err
-	}
-	report.SourceSHA256 = hex.EncodeToString(sourceHash.Sum(nil))
-	if opts.ExpectedBytes > 0 && report.SourceBytes != opts.ExpectedBytes ||
-		opts.ExpectedSHA256 != "" && report.SourceSHA256 != opts.ExpectedSHA256 {
-		return report, failure("DATASET_SOURCE_CHANGED")
 	}
 	if report.Rows == 0 {
 		return report, failure("DATASET_IMPORT_NO_VALID_ROWS")
 	}
-	if state.output.Flush() != nil || output.Sync() != nil {
+	if writer.Flush() != nil || output.Sync() != nil {
 		return report, failure("DATASET_STORAGE_UNAVAILABLE")
 	}
 	if output.Close() != nil {
@@ -307,10 +289,67 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 	if dir.Sync() != nil {
 		return report, failure("DATASET_IMPORT_COMMIT_UNCERTAIN")
 	}
-	if state.cleaning != nil {
-		report.Cleaning.Samples = state.cleaning.report.Samples
+	if report.Cleaning != nil {
+		report.Cleaning.Samples = samples
 	}
 	return report, nil
+}
+
+func (i *SourceImporter) scanSource(ctx context.Context, body io.Reader, directory string, opts SourceImportOptions, output *bufio.Writer) (SourceImportReport, []SourceCleaningSample, error) {
+	limit := i.limits.SourceBytes
+	if opts.ExpectedBytes > 0 {
+		limit = opts.ExpectedBytes
+	}
+	input := sourceReadObserver{Reader: boundedContextReader{ctx, body}}
+	limited := &io.LimitedReader{R: &input, N: limit + 1}
+	sourceHash := sha256.New()
+	source := io.TeeReader(limited, sourceHash)
+	state := sourceImportState{
+		ctx: ctx, limits: i.limits, opts: opts, output: output,
+		fields: make(map[string]*sourceFieldCount), cleaning: newSourceCleaning(opts.Cleaning),
+	}
+	var err error
+	switch opts.Format {
+	case SourceJSONL:
+		err = state.readJSONL(source)
+	case SourceJSON:
+		err = state.readJSONArray(source)
+	case SourceCSV:
+		err = state.readCSV(source)
+	case SourceParquet:
+		err = state.readParquet(source, directory, *i.parquet)
+	}
+
+	report := state.report()
+	report.SourceBytes = limit + 1 - limited.N
+	if ctx.Err() != nil {
+		return report, nil, ctx.Err()
+	}
+	if report.SourceBytes > i.limits.SourceBytes {
+		return report, nil, failure("DATASET_FILE_TOO_LARGE")
+	}
+	if opts.ExpectedBytes > 0 && report.SourceBytes > opts.ExpectedBytes {
+		return report, nil, failure("DATASET_SOURCE_CHANGED")
+	}
+	if input.interrupted {
+		var issue SourceIssue
+		if errors.As(err, &issue) && issue.Code == sourceReadFailedCode {
+			return report, nil, issue
+		}
+		return report, nil, failure(sourceReadFailedCode)
+	}
+	if err != nil {
+		return report, nil, err
+	}
+	report.SourceSHA256 = hex.EncodeToString(sourceHash.Sum(nil))
+	if opts.ExpectedBytes > 0 && report.SourceBytes != opts.ExpectedBytes ||
+		opts.ExpectedSHA256 != "" && report.SourceSHA256 != opts.ExpectedSHA256 {
+		return report, nil, failure("DATASET_SOURCE_CHANGED")
+	}
+	if state.cleaning == nil {
+		return report, nil, nil
+	}
+	return report, state.cleaning.report.Samples, nil
 }
 
 // sourceReadObserver records body failures before buffered parsers can
