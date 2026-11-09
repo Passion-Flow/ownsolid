@@ -478,6 +478,133 @@ artifact transport and install them locally when assigned a cluster join.
 The signed single-node Compose apply continues to install the control
 plane. This preparation hands the RKE2 inputs to the cell services.
 
+## Preflight the joint RKE2, Registry and Helm release
+
+Use one signed archive for preparation, the cold worker check and the Helm
+image values. Keep its independently recorded archive and manifest SHA-256
+with the public trust policy. Select `require_rke2_components: true` for the
+joint fixture, and retain the signed Registry group and Chart asset. The
+fixture signer, site private keys and pull credentials live outside the archive.
+
+Compile the lightweight installer test for Linux amd64:
+
+```sh
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C deploy/offline test -c \
+  -trimpath -o "$INSTALLER_TEST" ./internal/install
+```
+
+In a disposable namespace with only the repository egress recorder as its
+IPv4 and IPv6 route, mount the signed archive read-only under the verification
+policy's mount root. Set `TMPDIR` to a private writable directory on that
+mount. The protected JSON file in `OWNSOLID_SIGNED_HELM_PREFLIGHT` names
+`installer`, `helm`, `archive`, `verification`, `archive_sha256`,
+`manifest_sha256`, `chart_asset`, `registry_config`, `site_values`,
+`browser_ca`, `browser_certificate`, and `browser_key`. Use the actual
+site Registry configuration and Helm site values with their private
+certificate files. Run the existing installer and local Helm 4.3.1 through
+the fixture:
+
+```sh
+OWNSOLID_SIGNED_HELM_PREFLIGHT="$PREFLIGHT_INPUTS" "$INSTALLER_TEST" \
+  -test.v -test.run '^TestSignedHelmBundlePreflight$' -test.timeout "$PREFLIGHT_TIMEOUT"
+```
+
+The preflight checks prepared release identity and the Chart bytes, verifies
+the Registry address certificate and both browser hostnames, and matches
+the overlay to the signed OCI manifest. The render checks the init and
+serving image references, pull Secret, exact SNI routes and existing PVC
+claim. Confirm the recorder captured the three deliberate IPv4, IPv6 and
+DNS probes and no workload traffic.
+
+### Qualify the cold RKE2 worker first
+
+Prepare the same archive with the strict RKE2 policy. Give the ARC cold
+diagnostic the prepared artifacts and keep the original archive and its
+digests for Registry bootstrap. Use a disposable, empty RKE2 data directory
+and the existing managed enrollment and CNI diagnostic. Retain the node
+readiness, kubelet and containerd diagnostics, CNI Pod events and recorder
+output on a failure. Require the worker and its CNI and DNS path to pass
+before scheduling Helm. Use the private site CA on each pulling worker
+and the explicit signed Registry authority. Configure fallback denial
+for any mirror and use the namespace-local pull Secret from the chart
+procedure.
+
+Record the cold diagnostic node and CNI state with the cell's own kubeconfig.
+
+```sh
+kubectl --kubeconfig "$CELL_KUBECONFIG" get nodes -o wide
+kubectl --kubeconfig "$CELL_KUBECONFIG" -n kube-system get pods -o wide
+kubectl --kubeconfig "$CELL_KUBECONFIG" wait --for=condition=Ready \
+  "node/$RKE2_WORKER" --timeout "$INSTALL_TIMEOUT"
+```
+
+For the actual Helm drill, bootstrap the Registry and regenerate the overlay
+from the same archive. Use a cold eligible worker for the first pull of the
+Control image. Before applying the chart, record that worker's CRI inventory
+and check that the signed Control manifest reference and config ID are absent:
+
+```sh
+ownsolid-install registry-bundle --bundle "$RELEASE_ARCHIVE" \
+  --verification "$VERIFICATION" --config "$REGISTRY_CONFIG"
+ownsolid-install helm-images --bundle "$RELEASE_ARCHIVE" \
+  --verification "$VERIFICATION" --registry "$REGISTRY_AUTHORITY" >"$VERIFIED_IMAGE_VALUES"
+CONTROL_DIGEST=$(jq -er '.images.control' "$VERIFIED_IMAGE_VALUES")
+CONTROL_REF="$REGISTRY_AUTHORITY/ownsolid/release/control-image@$CONTROL_DIGEST"
+CONTROL_CONFIG=$(jq -er '.assets[] | select(.id == "control-image") | .image_config_digest' "$PREPARED/manifest.json")
+"$RKE2_CRICTL" --runtime-endpoint "$CRI_ENDPOINT" images -o json >"$COLD_IMAGES"
+jq -e --arg digest "$CONTROL_DIGEST" --arg config "$CONTROL_CONFIG" \
+  '(.images | type == "array") and all(.images[];
+    .id != $digest and .id != $config and
+    all((.repoDigests // [])[]; (split("@") | last) != $digest))' "$COLD_IMAGES"
+```
+
+Run the CRI command on the selected worker. Apply the [chart](../helm/ownsolid/README.md#install-the-signed-release)
+with the prepared Chart, verified overlay, existing claim and protected site
+Secrets. Retain kubelet pull events, Registry digest reads and the resulting
+Pod image IDs. Check both HTTPS entrances through the private ingress before
+and after replacing the disposable Control Pod. Record the existing PVC
+identity and a known model artifact read from that claim:
+
+```sh
+k() { kubectl --kubeconfig "$CELL_KUBECONFIG" -n "$NAMESPACE" "$@"; }
+selector="app.kubernetes.io/name=ownsolid-control,app.kubernetes.io/instance=$RELEASE"
+pod_name() { k get pod -l "$selector" -o json | jq -er '.items | select(length == 1) | .[0].metadata.name'; }
+claim_identity() { k get pvc "$MODEL_CLAIM" -o json | jq -cer '[.metadata.uid,.spec.volumeName] | select(all(.[]; type == "string" and length > 0))'; }
+model_hash() { k exec "$1" -c control -- sha256sum "$MODEL_PROBE_FILE"; }
+pod_images() {
+  k get pod "$1" -o json | jq -e --arg image "$CONTROL_REF" \
+    '[.spec.initContainers[].image,.spec.containers[].image] == [$image,$image]'
+}
+check_entrances() {
+  for host in "$ADMIN_HOST" "$PORTAL_HOST"; do
+    test "$(curl --fail --silent --show-error --max-time "$PROBE_SECONDS" \
+      --cacert "$BROWSER_CA" --resolve "$host:443:$INGRESS_IP" \
+      --output /dev/null --write-out '%{http_code}' "https://$host/sign-in")" = 200
+  done
+}
+before=$(pod_name)
+before_uid=$(k get pod "$before" -o jsonpath='{.metadata.uid}')
+claim_before=$(claim_identity)
+data_before=$(model_hash "$before")
+pod_images "$before"
+check_entrances
+k delete pod "$before" --wait --timeout "$INSTALL_TIMEOUT"
+k wait --for=create pod -l "$selector" --timeout "$INSTALL_TIMEOUT"
+k rollout status "deployment/$RELEASE-control" --timeout "$INSTALL_TIMEOUT"
+after=$(pod_name)
+k wait --for=condition=Ready "pod/$after" --timeout "$INSTALL_TIMEOUT"
+test "$(k get pod "$after" -o jsonpath='{.metadata.uid}')" != "$before_uid"
+test "$(claim_identity)" = "$claim_before"
+test "$(model_hash "$after")" = "$data_before"
+pod_images "$after"
+check_entrances
+```
+
+Use a known published model file under the Pod's model mount for
+`MODEL_PROBE_FILE`. The commands replace only the disposable application's
+Pod and verify its existing claim. The installed drill also checks sign-in
+through both entrances and requires zero unexpected recorder traffic.
+
 ## Upgrade or roll back the signed application release
 
 Keep the previous archive and use a separate private backup directory. The
