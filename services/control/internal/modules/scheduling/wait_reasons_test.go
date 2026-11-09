@@ -1,9 +1,19 @@
 package scheduling
 
 import (
+	"crypto/rand"
+	"encoding/pem"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/netip"
+	"os"
+	"path/filepath"
 	"reflect"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/scheduling/celladapter"
 	"github.com/google/uuid"
@@ -153,13 +163,92 @@ func TestCellWaitReasonsExposeOnlyFixedGuidance(t *testing.T) {
 		{celladapter.QueueInadmissible, ReviewCellQueue},
 		{celladapter.PodsNotReady, WaitForCellPods},
 	} {
-		got := CellWaitReasons(celladapter.Observation{Blocker: tc.blocker, ResourceVersion: "private-version"})
+		got := cellWaitReasons(tc.blocker)
 		want := WaitReason{Code: string(tc.blocker), Action: tc.action}
 		if len(got) != 1 || got[0] != want {
 			t.Fatalf("got %+v, want %+v", got, want)
 		}
 	}
-	if got := CellWaitReasons(celladapter.Observation{Blocker: "unrecognized-cell-text"}); got != nil {
+	if got := cellWaitReasons("unrecognized-cell-text"); got != nil {
 		t.Fatalf("unknown blocker leaked: %+v", got)
+	}
+}
+
+func TestObserveCellWaitReasonsRequiresCurrentBoundUID(t *testing.T) {
+	token := rand.Text()
+	type response struct {
+		uid        string
+		generation int
+		forbidden  bool
+	}
+	var current atomic.Pointer[response]
+	const boundUID = "owner-bound-uid"
+	current.Store(&response{uid: boundUID, generation: 2})
+	var reads atomic.Int32
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reads.Add(1)
+		if r.Method != http.MethodGet ||
+			r.URL.Path != "/apis/kueue.x-k8s.io/v1beta2/namespaces/workspace-a/workloads/job" ||
+			r.Header.Get("Authorization") != "Bearer "+token {
+			t.Error("unexpected cell request")
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		state := current.Load()
+		if state.forbidden {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		fmt.Fprintf(w, `{"apiVersion":"kueue.x-k8s.io/v1beta2","kind":"Workload",
+"metadata":{"name":"job","namespace":"workspace-a","uid":%q,"resourceVersion":"private-version","generation":2},
+"status":{"conditions":[{"type":"QuotaReserved","status":"False","reason":"WaitingForQuota",
+"message":"private queue and capacity data","observedGeneration":%d}]}}`, state.uid, state.generation)
+	}))
+	t.Cleanup(server.Close)
+	dir := t.TempDir()
+	caFile, tokenFile := filepath.Join(dir, "ca.pem"), filepath.Join(dir, "token")
+	certificate := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})
+	if err := os.WriteFile(caFile, certificate, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(tokenFile, []byte(token), 0600); err != nil {
+		t.Fatal(err)
+	}
+	client, err := celladapter.New(celladapter.Config{
+		Origin: server.URL, DialAddress: netip.MustParseAddr("127.0.0.1"),
+		CAFile: caFile, TokenFile: tokenFile, Timeout: 5 * time.Second, MaxConcurrent: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(client.CloseIdleConnections)
+	binding := celladapter.Reference{Scheduler: celladapter.Kueue, Namespace: "workspace-a", Name: "job"}
+	if got, err := ObserveCellWaitReasons(t.Context(), client, binding); !errors.Is(err, celladapter.ErrReference) || got != nil || reads.Load() != 0 {
+		t.Fatalf("incomplete binding reached cell or produced guidance: %+v, %v", got, err)
+	}
+	binding.UID = boundUID
+	if got, err := ObserveCellWaitReasons(t.Context(), nil, binding); !errors.Is(err, celladapter.ErrConfiguration) || got != nil {
+		t.Fatalf("missing cell client: %+v, %v", got, err)
+	}
+
+	want := []WaitReason{{Code: string(celladapter.WaitingForQuota), Action: WaitForCellQuota}}
+	for _, tc := range []struct {
+		name    string
+		state   response
+		reasons []WaitReason
+		err     error
+	}{
+		{"current", response{uid: binding.UID, generation: 2}, want, nil},
+		{"stale", response{uid: binding.UID, generation: 1}, nil, nil},
+		{"replaced", response{uid: "new-uid", generation: 2}, nil, celladapter.ErrReplaced},
+		{"forbidden", response{forbidden: true}, nil, celladapter.ErrForbidden},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			current.Store(&tc.state)
+			got, err := ObserveCellWaitReasons(t.Context(), client, binding)
+			if !errors.Is(err, tc.err) || !reflect.DeepEqual(got, tc.reasons) {
+				t.Fatalf("guidance: %+v, %v; want %+v, %v", got, err, tc.reasons, tc.err)
+			}
+		})
 	}
 }

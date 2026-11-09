@@ -39,10 +39,11 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   observation and expose the estimate in its authenticated submission flow.
   See [live submission estimate](scheduling-admission.md#live-submission-estimate).
 - SCH-108 projects actionable reasons from queue, preflight, reservation and
-  reclaim decisions, and from current Kueue conditions on the exact Workload.
-  The workload owner must persist the exact attempt-to-controller UID
-  binding. The authenticated API and browser owners must resolve that
-  binding under current authority. Live validation requires signed offline
+  reclaim decisions. The cell consumer reads the current Workload over TLS
+  and checks its exact UID before projecting a Kueue blocker. The workload
+  owner must persist the attempt-to-controller binding. The authenticated
+  API and browser owners must resolve it under current authority. Live
+  validation requires signed offline
   controller assets and a ready isolated cell. See the
   [installed workload handoff](scheduling-wait-reasons.md#installed-workload-handoff).
 - SCH-105 requires a durable preemption attempt, explicit checkpoint support

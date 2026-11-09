@@ -1,6 +1,7 @@
 package scheduling
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -89,11 +90,23 @@ func WaitReasons(err error) []WaitReason {
 	}
 }
 
-// CellWaitReasons projects an exact cell observation already scoped to the
-// caller's authorized workload. It exposes only fixed actions and codes.
-func CellWaitReasons(observation celladapter.Observation) []WaitReason {
+// ObserveCellWaitReasons reads fresh guidance for an owner-authorized workload.
+// The caller supplies the reference from the durable attempt binding and the
+// client for that bound cell. Failed identity checks return no guidance.
+func ObserveCellWaitReasons(ctx context.Context, client *celladapter.Client, reference celladapter.Reference) ([]WaitReason, error) {
+	if client == nil {
+		return nil, celladapter.ErrConfiguration
+	}
+	observation, err := client.Observe(ctx, reference)
+	if err != nil {
+		return nil, err
+	}
+	return cellWaitReasons(observation.Blocker), nil
+}
+
+func cellWaitReasons(blocker celladapter.Blocker) []WaitReason {
 	var action WaitAction
-	switch observation.Blocker {
+	switch blocker {
 	case celladapter.WaitingForQuota:
 		action = WaitForCellQuota
 	case celladapter.ExceedsMaxQuota:
@@ -107,7 +120,7 @@ func CellWaitReasons(observation celladapter.Observation) []WaitReason {
 	default:
 		return nil
 	}
-	return []WaitReason{{Code: string(observation.Blocker), Action: action}}
+	return []WaitReason{{Code: string(blocker), Action: action}}
 }
 
 func explainLimits(limits []Limit) []WaitReason {
