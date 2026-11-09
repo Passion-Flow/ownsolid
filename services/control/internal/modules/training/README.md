@@ -19,6 +19,14 @@ attempt and frozen job agree. An inconsistent record returns
 `TRAINING_DATA_INVALID`. Model preparation uses the same retained source.
 See the [training dataset lineage contract](../../../../../docs/research/training-dataset-lineage.md).
 
+`ReadAcceptedExperiment` projects the accepted stopped attempt's command,
+dataset partition inventory and protected result, stop and adapter digests.
+It shares the adapter export's file verification and final authority check.
+The selected node and GPU identify placement. The runtime lock and historical
+device observations require separate trusted bindings. See the
+[experiment record contract](../../../../../docs/research/training-experiment-records.md)
+for the offline CPU and PostgreSQL replay.
+
 Migration 000009 stores jobs, attempts, checkpoints, artifacts, recoveries and uploads. Input dataset/model hashes, node/profile, GPU lease and attempt identity remain part of acceptance. A sealed checkpoint can be resumed only through the exact recovery contract; a cancelled/disconnected worker cannot be promoted to success from partial logs.
 
 The [training lifecycle contract](../../../../../docs/research/training-job-lifecycle.md)
