@@ -67,3 +67,62 @@ add an offline dependency and a second inventory authority.
 - The node and inventory HTTP contracts, migrations and console need to land
   together with offline acceptance. The ARC lane can own node storage, but this
   item remains open under the current API and web ownership boundary.
+
+## Readable observations on the current schema
+
+Reviewed 2026-11-09 against the device identity and placement rules linked above.
+The Nodes owner can read an observation from `managed_nodes.facts` through the
+same ordered session, installation and workspace fences as node detail. The
+site and cell come from that scoped row. Do not accept them from agent facts,
+observation payloads or query parameters. Legacy engines that project the
+installation's default site and cell keep that behavior. Keep the v1 wire
+contract and existing node HTTP response unchanged.
+
+- The persisted v1 facts provide OS, architecture, hostname, logical CPU count,
+  total memory, agent version and one filesystem sample at the configured path.
+  The [Linux statfs interface](https://man7.org/linux/man-pages/man2/statfs.2.html)
+  reports filesystem blocks available to the caller. A filesystem sample cannot
+  establish a physical disk, drive serial or mount topology. Report the original
+  observation time. A stored missing or null available count is unknown. A stored
+  zero is a measured value. An incomplete stored object yields no host
+  observation. Corrupt stored JSON keeps the existing storage error. Existing agents already send the available count, including zero.
+- The Deployments owner already exposes `HardwareWithin` for the current node,
+  workspace and installation in the same repository transaction. Use its bounded
+  freshness window and validated NVIDIA observation. A missing, stale or
+  unavailable probe is unknown. A successful empty list is a measured empty
+  list. The current agent can report a populated list and an engine-readiness
+  error together, so retain positively observed devices. Project hardware identity
+  and capacity without the deployment envelope or scheduling metrics. Sort by
+  UUID for deterministic output. These facts neither establish durable device
+  identity nor qualify the hardware for scheduling.
+- Exercise this slice through authenticated reads on real PostgreSQL, including
+  a v1 enrollment, a scoped inference heartbeat, absent facts and probe failure,
+  measured zero and empty, stale observation, forged placement in persisted
+  payload, revoked membership and foreign tenant/workspace refusals. The normal
+  Agent needs no new capability or software update. There is no new dependency or
+  license beyond those already identified above.
+
+On local PostgreSQL 18.6 with pgvector 0.8.7, `TestActualObservedInventory`,
+`TestActualNodeReadCatalog` and `TestActualNodeReadAuthority` passed with a
+loopback database and synthetic enrollment and GPU observations. The existing
+Linux arm64 collector independently passed in a network-disconnected, unprivileged
+container, reading its actual OS, memory, CPU and filesystem. This does not
+establish a physical GPU inventory or an end-to-end console flow.
+
+## Handoff for placement and the inventory entrance
+
+The next persistence change needs operator-owned room, row, rack and node
+placement records with installation and parent foreign keys, nullable placement
+for old nodes, and a transactional non-overlap rule for rack positions. Assign
+placement through existing actor authorization, explicit node or join-token
+scope, idempotency and audit. The Agent observation owner must supply optional
+NIC, physical disk, serial and slot observations with their own stable local
+identities, timestamps and absent-versus-empty semantics before those categories
+can appear in inventory. Keep observation refresh separate from placement writes.
+
+The Nodes API and Web owners can expose `Service.ObservedInventory` as a typed
+read after agreeing the additive OpenAPI route, generated client and presentation
+of observation timestamps and unknown categories. The physical placement API and
+console need the schema and operator permissions described above. Do not close
+FLT-101 until real enrollment, authorized placement and reads complete offline
+through the console and the isolation and concurrency checks pass.

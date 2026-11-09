@@ -6,11 +6,11 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 // Connectivity is derived from the last heartbeat, in one place for each dialect, so a list, its
@@ -114,46 +114,58 @@ func (s *Service) readScope(ctx context.Context, q transaction.Executor, a ident
 	return s.Workspaces.ReadScopeWithin(ctx, q, a, workspace)
 }
 func (s *Service) lookupWithin(ctx context.Context, q transaction.Executor, tenant, workspace, id string) (Node, error) {
+	return scanNode(s.lookupNodeRow(ctx, q, tenant, workspace, id))
+}
+
+func (s *Service) lookupNodeRow(ctx context.Context, q transaction.Executor, tenant, workspace, id string) transaction.Row {
 	p := s.Identity.Config.Policy().Nodes
 	if q.Dialect() == transaction.Dameng {
-		return scanNode(q.QueryRow(ctx, transaction.SQL(transaction.Dameng, "SELECT "+damengNodeFields+" FROM managed_nodes n WHERE n.tenant_id=? AND n.workspace_id=? AND n.id=?", -p.OnlineSeconds, -p.OfflineSeconds, tenant, workspace, id)))
+		return q.QueryRow(ctx, transaction.SQL(transaction.Dameng, "SELECT "+damengNodeFields+" FROM managed_nodes n WHERE n.tenant_id=? AND n.workspace_id=? AND n.id=?", -p.OnlineSeconds, -p.OfflineSeconds, tenant, workspace, id))
 	}
 	if q.Dialect() == transaction.MySQL {
-		return scanNode(q.QueryRow(ctx, transaction.SQL(transaction.MySQL, "SELECT "+mysqlNodeFields+" FROM managed_nodes n WHERE n.tenant_id=? AND n.workspace_id=? AND n.id=?", -p.OnlineSeconds, -p.OfflineSeconds, tenant, workspace, id)))
+		return q.QueryRow(ctx, transaction.SQL(transaction.MySQL, "SELECT "+mysqlNodeFields+" FROM managed_nodes n WHERE n.tenant_id=? AND n.workspace_id=? AND n.id=?", -p.OnlineSeconds, -p.OfflineSeconds, tenant, workspace, id))
 	}
-	return scanNode(q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT "+pairedNodeFields+" FROM managed_nodes n WHERE n.tenant_id=$3 AND n.workspace_id=$4 AND n.id=$5", p.OnlineSeconds, p.OfflineSeconds, tenant, workspace, id)))
+	return q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT "+pairedNodeFields+" FROM managed_nodes n WHERE n.tenant_id=$3 AND n.workspace_id=$4 AND n.id=$5", p.OnlineSeconds, p.OfflineSeconds, tenant, workspace, id))
 }
 func (s *Service) getWithin(ctx context.Context, q transaction.Executor, a identity.Auth, workspace, id string) (Node, error) {
+	w, e := s.nodeReadScopeWithin(ctx, q, a, workspace, id)
+	if e != nil {
+		return Node{}, e
+	}
+	return s.lookupWithin(ctx, q, w.TenantID, w.ID, id)
+}
+
+func (s *Service) nodeReadScopeWithin(ctx context.Context, q transaction.Executor, a identity.Auth, workspace, id string) (workspaces.Workspace, error) {
 	if !nodeID(id) || workspace != "" && !nodeID(workspace) {
-		return Node{}, fail("RESOURCE_NOT_FOUND")
+		return workspaces.Workspace{}, fail("RESOURCE_NOT_FOUND")
 	}
 	if workspace == "" {
 		if !isAdmin(a) {
-			return Node{}, fail("RESOURCE_NOT_FOUND")
+			return workspaces.Workspace{}, fail("RESOURCE_NOT_FOUND")
 		}
-		// Discover only the scope,then authorize/fence it before reading the DTO.
+		// Discover only the scope, then authorize/fence it before reading the DTO.
 		e := q.QueryRow(ctx, nodeSQL(q,
 			`SELECT n.workspace_id::text FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND n.id=$1`,
 			`SELECT n.workspace_id FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND n.id=?`, `SELECT n.workspace_id FROM managed_nodes n JOIN installation_state i ON i.tenant_id=n.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND n.id=?`, id)).Scan(&workspace)
 		if errors.Is(e, sql.ErrNoRows) {
-			return Node{}, fail("RESOURCE_NOT_FOUND")
+			return workspaces.Workspace{}, fail("RESOURCE_NOT_FOUND")
 		}
 		if e != nil {
-			return Node{}, e
+			return workspaces.Workspace{}, e
 		}
 	}
 	w, e := s.readScope(ctx, q, a, workspace)
 	if e != nil {
-		return Node{}, e
+		return workspaces.Workspace{}, e
 	}
 	tenant, e := nodeTenant(ctx, q)
 	if e != nil {
-		return Node{}, e
+		return workspaces.Workspace{}, e
 	}
 	if w.TenantID != tenant {
-		return Node{}, fail("RESOURCE_NOT_FOUND")
+		return workspaces.Workspace{}, fail("RESOURCE_NOT_FOUND")
 	}
-	return s.lookupWithin(ctx, q, tenant, w.ID, id)
+	return w, nil
 }
 func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, id string) (Node, error) {
 	var out Node
