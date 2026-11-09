@@ -1,4 +1,5 @@
 // The Nodes page: an administrator sees the fleet, finds a node, changes it and adds another.
+import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import {
   disabledNode,
   expectAccessible,
@@ -22,6 +23,68 @@ test.beforeEach(async ({ page }) => {
 const row = (page: Page, name: string) => page.getByRole('row', { name: new RegExp(name) });
 const open = (page: Page, name: string) =>
   page.getByRole('button', { name: `Open details of ${name}` }).click();
+
+for (const locale of ['en', 'zh-CN'] as const) {
+  test(`shows Kubernetes profiles on node and registration reads (${locale})`, async ({ page }) => {
+    const zh = locale === 'zh-CN';
+    control.preferences.locale = locale;
+    const profile = zh ? chinese['nodes.profile.kubernetes_node'] : 'Kubernetes node';
+    // Exercise the newer HTTP response while this checkout can still use the old generated types.
+    const joined = {
+      ...node,
+      execution_profile: 'kubernetes_node',
+      capabilities: [
+        'collect_facts.v1',
+        'kubernetes.join.v1',
+        'kubernetes.token.v1',
+        'kubernetes.observe.v1',
+      ],
+    };
+    const waiting = { ...joinToken, execution_profile: 'kubernetes_node' };
+    await page.route('**/admin/nodes?*', (route) =>
+      route.fulfill({
+        json: { data: { items: [joined, offlineNode, disabledNode], next_cursor: null } },
+      }),
+    );
+    await page.route(`**/admin/nodes/${node.id}`, (route) =>
+      route.fulfill({ json: { data: joined } }),
+    );
+    await page.route('**/admin/node-join-tokens?*', (route) =>
+      route.fulfill({ json: { data: { items: [waiting], next_cursor: null } } }),
+    );
+
+    await page.goto('/nodes');
+    await expect(row(page, node.name)).toContainText(profile);
+    await expect(row(page, node.name)).toContainText(zh ? chinese['nodes.state.online'] : 'Online');
+    await expect(row(page, offlineNode.name)).toContainText(
+      zh ? chinese['nodes.profile.read_only'] : 'Read only',
+    );
+    const pending = page.getByRole('region', {
+      name: zh ? chinese['nodes.pending.title'] : 'Waiting to join',
+    });
+    await expect(
+      pending.getByRole('listitem').filter({ hasText: waiting.node_name }),
+    ).toContainText(profile);
+
+    await page
+      .getByRole('button', {
+        name: (zh ? chinese['nodes.detail.open'] : 'Open details of {name}').replace(
+          '{name}',
+          node.name,
+        ),
+      })
+      .click();
+    const drawer = page.getByRole('dialog', { name: node.name });
+    await expect(drawer.getByText(profile, { exact: true })).toBeVisible();
+    await drawer
+      .getByRole('link', {
+        name: zh ? chinese['resource.openPage'] : 'Open the full page',
+      })
+      .click();
+    await expect(page).toHaveURL(new RegExp(`/nodes/${node.id}$`));
+    await expect(page.getByRole('tabpanel').getByText(profile, { exact: true })).toBeVisible();
+  });
+}
 
 test.describe('the list', () => {
   test('is reached from the navigation and shows each node as it stands', async ({ page }) => {

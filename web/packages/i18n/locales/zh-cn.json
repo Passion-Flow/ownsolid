@@ -873,6 +873,7 @@
   "nodes.profile.docker_ai": "模型服务和训练",
   "nodes.profile.docker_inference": "模型服务",
   "nodes.profile.docker_model_lifecycle": "模型准备",
+  "nodes.profile.kubernetes_node": "Kubernetes 节点",
   "nodes.profile.read_only": "只读",
   "nodes.profile.systemd_components": "主机组件",
   "nodes.profile.systemd_maintenance": "主机维护",

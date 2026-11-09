@@ -54,7 +54,7 @@ import { useMemo, useRef } from 'react';
 import { AddNodeDialog } from './add-node-dialog.tsx';
 import { NodesShedNotice } from './agent-shed.tsx';
 import { NodeDrawer } from './node-drawer.tsx';
-import { nodeState } from './node-state.ts';
+import { nodeState, profiles } from './node-state.ts';
 
 type Filter = 'all' | NodeConnectivity;
 
@@ -121,9 +121,12 @@ function PendingJoins() {
                 key={token.id}
                 className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-2 last:border-b-0"
               >
-                <span>
+                <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
                   <span className="font-medium">{token.node_name}</span>
-                  <span className="ml-2 text-[12.5px] text-text-3">
+                  <span className="text-[12.5px] text-text-2">
+                    {t(profiles[token.execution_profile])}
+                  </span>
+                  <span className="text-[12.5px] text-text-3">
                     {t('nodes.pending.expires', { time: format.dateTime(token.expires_at) })}
                   </span>
                 </span>
@@ -341,7 +344,14 @@ function Rows({
                     </div>
                   </Td>
                 ) : null}
-                {shows('agent') ? <Td>{node.facts.agent_version}</Td> : null}
+                {shows('agent') ? (
+                  <Td>
+                    {node.facts.agent_version}
+                    <div className="text-[12px] text-text-2">
+                      {t(profiles[node.execution_profile])}
+                    </div>
+                  </Td>
+                ) : null}
                 {shows('seen') ? (
                   <Td className="text-text-2">{format.dateTime(node.last_heartbeat_at)}</Td>
                 ) : null}
