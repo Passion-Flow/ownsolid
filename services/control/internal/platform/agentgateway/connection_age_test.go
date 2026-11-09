@@ -23,6 +23,7 @@ type heldAgeClaim struct {
 	fakeBackend
 	started chan time.Time
 	finish  chan struct{}
+	next    wire.Lease
 }
 
 func (b *heldAgeClaim) Claim(ctx context.Context, node, credential, request string, input wire.ClaimRequest) (wire.Claim, error) {
@@ -34,7 +35,7 @@ func (b *heldAgeClaim) Claim(ctx context.Context, node, credential, request stri
 	case <-ctx.Done():
 		return wire.Claim{}, ctx.Err()
 	case <-b.finish:
-		return wire.Claim{}, nil
+		return wire.Claim{Lease: &b.next}, nil
 	}
 }
 
@@ -90,7 +91,13 @@ func TestAgedGatewayFinishesHeldClaimAndPreservesCursor(t *testing.T) {
 	}
 
 	lease := wire.Lease{TaskID: testNode, Operation: wire.CollectFacts, LeaseToken: strings.Repeat("A", 43), Attempt: 1, Sequence: 7}
-	first := &heldAgeClaim{fakeBackend: fakeBackend{lease: &lease}, started: make(chan time.Time, 1), finish: make(chan struct{})}
+	nextLease := lease
+	nextLease.TaskID = "9334a6cf-5382-4150-99f7-ac4d142a1731"
+	nextLease.Sequence++
+	first := &heldAgeClaim{
+		fakeBackend: fakeBackend{lease: &lease}, started: make(chan time.Time, 1),
+		finish: make(chan struct{}), next: nextLease,
+	}
 	second := &fakeBackend{}
 	older := start(first, 2*time.Second)
 	newer := start(second, time.Minute)
@@ -131,6 +138,10 @@ func TestAgedGatewayFinishesHeldClaimAndPreservesCursor(t *testing.T) {
 	var reply wire.ControlMessage
 	if err := stream.RecvMsg(&reply); err != nil || reply.Validate(claim) != nil {
 		t.Fatalf("held claim did not finish: %+v %v", reply, err)
+	}
+	if reply.Claim == nil || reply.Claim.Lease == nil ||
+		reply.Claim.Lease.TaskID != nextLease.TaskID || reply.Claim.Lease.Sequence != nextLease.Sequence {
+		t.Fatalf("held claim lost the next lease: %+v", reply.Claim)
 	}
 	if err := stream.RecvMsg(&reply); status.Code(err) != codes.Unavailable || status.Convert(err).Message() != "SERVICE_NOT_READY" {
 		t.Fatalf("legacy drain status: %v", err)
