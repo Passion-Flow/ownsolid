@@ -174,3 +174,15 @@ RUST_TEST_THREADS=1 cargo test --locked --offline --lib \
 The unchanged native assertion still blocks the required acceptance gate.
 The gateway fixture belongs to the gateway lane. Keep the tested catalog
 implementation local until the full gate can pass.
+
+### Recheck after the gateway fixture repair
+
+The exact refused-connection test passed natively on macOS after rebasing
+onto `6f4e45b0`. All five selected OPS-104 tests passed with new private
+PostgreSQL 18.6, pgvector 0.8.7 and VictoriaLogs 1.53.0 fixtures.
+The catalog-only delivery worktree used the same catalog sources and
+Go workspace entry. It passed race tests, vet, build and both offline
+Docker import runs, including exact signed digest readback after retry.
+The catalog research retains the original `bcb614f5` evidence and the
+repeat on this baseline. The delivery scope excludes OPS-104, so its
+component changes and real-store evidence remain on this lane.
