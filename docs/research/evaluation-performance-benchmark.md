@@ -138,3 +138,40 @@ matched. The raw observation SHA-256 is
 With eight measured calls per group, P95 is the longest observed response.
 This run covers direct HTTP on one shared CPU host. Authorized gateway
 admission, signed usage, GPU measurements and rates for cost remain open.
+
+## Gateway request and receipt compatibility
+
+On disconnected Linux, reconstruct the original JSON for the photosynthesis
+and tides cases. Both request digests matched the retained direct observations.
+Each case had the same output digest and 21 prompt plus 24 completion tokens
+at both direct concurrency levels. The direct completions have different
+backend IDs and are still the original vLLM observations.
+
+An isolated probe compiled the [tracked Rust parser](../../services/gateway/src/protocol.rs)
+and its default limits at `dde0f058`. Both original request bodies returned
+`unsupported_parameter`. The parser also refused `seed` and
+`chat_template_kwargs` when supplied individually. Controls without those
+fields parsed with the original messages, output limit and temperature.
+The gateway backend rewrite supplied `enable_thinking=false` itself and
+omitted the seed. This establishes the request contract. The controls did
+not generate a model response or receive an authorized admission.
+
+The retained GW-112 log and fixture matched their digests and showed 216
+settled gateway requests against synthetic inference. The
+[Go outcome protocol](../../api/gateway/v1/protocol.go) carries request ID,
+status, usage and timing. Its acknowledgment carries the request ID and
+canonical SHA-256. [Control's report owner](../../services/control/internal/modules/distribution/outcomes.go)
+authenticates the gateway and binds the persisted outcome to the already
+admitted tenant, workspace, gateway and request. The digest supports
+integrity checks within that authority. The receipt has no detached
+signature and carries no input or output content digest. The direct
+vLLM IDs cannot join those synthetic gateway receipts.
+
+For paired acceptance, use one authorized gateway and the same approved
+model in an isolated fixture. Pin generation semantics for both paths and
+capture the exact backend input, output digest and prompt, completion and
+total tokens. Join the gateway-generated `X-Request-ID` to one durable
+receipt and its authorized tenant, workspace, gateway and deployment.
+A detached signature requires a verifiable signing contract. Keep the
+retained CPU observations and gateway transport results separate until a
+paired run supplies those links. GPU and cost acceptance remain open.
