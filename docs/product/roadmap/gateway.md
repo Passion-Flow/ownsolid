@@ -18,6 +18,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [ ] GW-105 Keys scoped by workspace, app, model and expiry; upstream credentials never exposed (P1) - Catalog: F078, F079
 - [ ] GW-106 Rate limits, concurrency and token-aware budgets per tenant, app and key (P1) - Catalog: F080, F617
 - [ ] GW-107 Usage ledger: tokens, requests, latency per call, exportable (P1) - Catalog: F081
+  - The existing authorized request history supports scoped JSON extraction by key. The [usage history research](../../research/gateway-usage-history.md) records the disconnected PostgreSQL and native gateway run, including canonical receipt verification, pagination, unknown usage, and rejection across tenants. An export artifact and its public contract and UI remain open.
 - [ ] GW-108 Load balancing, failover and circuit breaking across replicas (P1) - Catalog: F075, F076
 - [ ] GW-109 Request tracing from caller to deployment and GPU (P1) - Catalog: F082
 - [ ] GW-110 Optional external OpenAI-compatible upstreams for connected sites (P1) - Catalog: F071

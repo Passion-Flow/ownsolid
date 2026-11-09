@@ -2,9 +2,26 @@
 
 Distribution owns gateway identity, Workspace API keys, model aliases and target history, request admission/outcomes and gateway recovery. Rust forwards model traffic but calls this owner for current business authority.
 
-[authorization.go](authorization.go), [keys.go](keys.go) and [aliases.go](aliases.go) are the current access surface. [rotation.go](rotation.go) replaces a key's secret: the successor keeps the key's alias, label, owner and authority, the old key stops after an overlap of at most seven days, and a key has one successor (migration 000051, PostgreSQL only). The request list takes `api_key_id` for one key's call log ([research](../../../../../docs/research/gateway-keys.md)). [outcomes.go](outcomes.go), [reconciliation.go](reconciliation.go) and [recovery.go](recovery.go) bind reported outcomes. [cutovers.go](cutovers.go) and target_history.go retain model target changes. [monitoring.go](monitoring.go) projects existing observations without becoming a new traffic owner.
+[authorization.go](authorization.go), [keys.go](keys.go) and [aliases.go](aliases.go) are the current access surface. [rotation.go](rotation.go) replaces a key's secret: the successor keeps the key's alias, label, owner and authority, the old key stops after an overlap of at most seven days, and a key has one successor (migration 000051, PostgreSQL only). [outcomes.go](outcomes.go), [reconciliation.go](reconciliation.go) and [recovery.go](recovery.go) bind reported outcomes. [cutovers.go](cutovers.go) and target_history.go retain model target changes. [monitoring.go](monitoring.go) projects existing observations without becoming a new traffic owner.
 
 Migration 000007 holds gateways, aliases/history, API keys, requests and recovery records; lifecycle migrations extend target versions/intents. Keep request/gateway identity, canonical outcome digest and current alias/model target consistent. A response stream is not proof that accounting was acknowledged; revoked keys, stale alias targets, duplicate outcomes and fenced recovery stay explicit.
+
+## Request usage history
+
+Use the existing workspace request list and its returned cursor to extract
+authorized JSON pages in descending admission order. Keep the
+`api_key_id` filter and authorization scope fixed across pages. Admin can
+read workspace history and Portal reads calls owned by the signed-in actor.
+Counts come from the admitted rows. Sum only known token counts. A null
+outcome or null usage leaves the token count unknown. Each reported outcome
+carries elapsed milliseconds and the terminal status.
+
+History detail and pagination check each stored outcome against its canonical
+digest, the same check used for report replay. If a stored receipt fails
+verification, the request returns `STORAGE_UNAVAILABLE` without a partial
+page. See the [usage history verification](../../../../../docs/research/gateway-usage-history.md).
+
+## Development checks
 
 Synchronize [Rust gateway](../../../../gateway/README.md), contracts/gateway and HTTP/public gateway generators, nodes/deployments/modelpreparations, [distribution frontend](../../../../../web/README.md), [M07](../../../../../docs/milestones/m07-gateway) and gateway deployment/config.
 

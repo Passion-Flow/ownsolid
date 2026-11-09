@@ -119,3 +119,41 @@ func TestProvisionRejectsUnsafeAdvertisedOriginsAndBindsIntent(t *testing.T) {
 	_, e = c.s.Provision(ctx, c.a, input, intent, uuid.NewString())
 	check(t, e, "IDEMPOTENCY_CONFLICT")
 }
+
+func TestGatewayUsageHistoryRejectsAlteredReceipt(t *testing.T) {
+	c := setup(t)
+	ctx := t.Context()
+	a := c.access(t)
+	for i := 0; i < 2; i++ {
+		input := a.input()
+		if _, err := c.s.Admit(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, input, uuid.NewString()); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := c.s.Report(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, success(input.RequestID), uuid.NewString()); err != nil {
+			t.Fatal(err)
+		}
+		if i == 0 {
+			// This remains a valid receipt, including its request ID and token arithmetic.
+			if _, err := c.s.DB.Exec(ctx, "UPDATE gateway_requests SET outcome=jsonb_set(jsonb_set(outcome,'{usage,prompt_tokens}','8'),'{usage,total_tokens}','10') WHERE id=$1", input.RequestID); err != nil {
+				t.Fatal(err)
+			}
+			t.Run("detail", func(t *testing.T) {
+				record, err := c.s.Request(t.Context(), a.owner, a.alias.WorkspaceID, input.RequestID)
+				if err == nil {
+					t.Fatal("history accepted an altered receipt", record.Outcome.Usage.TotalTokens)
+				}
+				check(t, err, "STORAGE_UNAVAILABLE")
+			})
+		}
+	}
+	t.Run("page", func(t *testing.T) {
+		page, err := c.s.RequestPage(t.Context(), a.owner, a.alias.WorkspaceID, url.Values{"limit": {"2"}})
+		if err == nil {
+			t.Fatal("history page accepted an altered receipt", len(page.Items))
+		}
+		check(t, err, "STORAGE_UNAVAILABLE")
+		if len(page.Items) != 0 || page.NextCursor != nil {
+			t.Fatal("history returned a partial page on integrity failure")
+		}
+	})
+}
