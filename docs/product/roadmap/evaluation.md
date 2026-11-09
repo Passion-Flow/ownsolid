@@ -28,6 +28,9 @@ Measuring models and applications before release, and gating releases on the res
     acceptance remain open.
 - [ ] EVL-104 Production traces turned into regression cases (P1)
 - [ ] EVL-105 Performance benchmark: latency, throughput and cost per model and hardware (P1) - Catalog: F150
+  - [Transport baseline](../../research/evaluation-performance-benchmark.md)
+    independently checks the retained gateway summary. Representative engine,
+    hardware and cost acceptance remain open.
 - [ ] EVL-106 Safety and regression sets: injection, leakage, unsupported answers (P1) - Catalog: F149
   - [Deterministic safety replay](../../../runtimes/model-lifecycle/README.md#replay-controlled-safety-cases)
     scores controlled outputs on a frozen synthetic fixture for injection,
