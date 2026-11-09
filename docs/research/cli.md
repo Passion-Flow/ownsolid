@@ -309,3 +309,36 @@ read the queued gateway, and found one gateway task and one audit event.
 The fixture refused a different workspace and verified the CLI output
 contained neither credential field. Model import and exporter fixtures
 were skipped in this run because their optional assets were not supplied.
+
+## Training attempt and metric reads (DEV-102, TRN-106)
+
+[Kubeflow Trainer's progress and metrics guide](https://trainer.kubeflow.org/en/latest/user-guides/trainjob-progress.html)
+exposes training progress through the admitted job. Ownsolid already
+retains optimizer steps and event sequence by attempt. The existing
+Admin training routes read attempt history and the metrics for one
+selected attempt with the operator's scoped workspace and cell. Use
+the published API to show attempt IDs and page metrics in sequence.
+Keep cursors opaque and bind each continuation to the same job, attempt
+and workspace. Attempts use the standard 512-byte cursor limit. The
+metrics endpoint accepts up to 2,048 bytes. This uses the existing
+Cobra, Go and SDK-reviewed dependencies and synthetic fixture inputs.
+Their licences and offline redistribution terms are listed above.
+
+Reading local trainer logs would bypass scoped access and merge metrics
+across retries. A new metrics stream would duplicate the stored event
+owner. Add one-page CLI reads for both resources and use the existing
+table, JSON and YAML output. Verify the empty queued history, an admitted
+attempt and two metric pages on a disconnected HTTPS/PostgreSQL fixture.
+Check a cursor sent to the wrong collection or attempt, foreign workspace,
+unknown attempt, and successful repeat reads. The fixture supplies
+synthetic agent events through the existing training event admission.
+
+The Linux amd64 verification used the compiled CLI against the real Admin
+HTTPS dispatcher and loopback-only PostgreSQL 18.6. It confirmed an empty
+queued history, a real dispatched attempt with synthetic events, stable
+pagination on retry, and a measured zero in the last metric page. The
+CLI preserved the table continuation. It refused cross-workspace reads,
+an unknown attempt, a missing attempt flag, and cursors reused across
+attempts and collections. The independent Admin and Portal HTTPS fixture
+passed training intent, history, metric and recovery checks. The fixture
+did not execute a GPU worker.
