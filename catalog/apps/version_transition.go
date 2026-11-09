@@ -12,7 +12,7 @@ import (
 
 const maxCatalogVersions = 128
 
-// ErrReleaseTransition identifies a missing, ambiguous or incompatible version transition.
+// ErrReleaseTransition identifies a missing, ambiguous or incompatible release selection.
 var ErrReleaseTransition = errors.New("CATALOG_RELEASE_TRANSITION_INVALID")
 
 // ReleasePin identifies a release by its version and exact signed bundle.json bytes.
@@ -37,9 +37,37 @@ type TransitionRequest struct {
 	RollbackTo      *ReleasePin
 }
 
+// InitialReleaseRequest carries the app, platform and exact pin selected by the installer.
+type InitialReleaseRequest struct {
+	AppID           string
+	PlatformVersion string
+	Pin             ReleasePin
+}
+
 type signedVersion struct {
 	pin      ReleasePin
 	manifest Manifest
+}
+
+// VerifyInitialRelease verifies the exact release chosen for a fresh install.
+// appRoot contains the app's private, immutable version directories. The
+// caller supplies the app, platform and release pin from its trusted selection.
+func VerifyInitialRelease(ctx context.Context, appRoot *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64, request InitialReleaseRequest) (InstallBundle, error) {
+	if appRoot == nil || len(key) != ed25519.PublicKeySize || maximumPayloadBytes <= 0 ||
+		!validID(request.AppID) || !request.Pin.valid() {
+		return InstallBundle{}, transitionError("supply a trusted app and release pin and a payload limit")
+	}
+	release, err := verifyCatalogVersion(ctx, appRoot, key, maximumPayloadBytes, request.Pin)
+	if err != nil {
+		return InstallBundle{}, err
+	}
+	if release.Manifest.ID != request.AppID {
+		return InstallBundle{}, transitionError("the selected release belongs to a different app")
+	}
+	if err := checkTransitionPlatform(release.Manifest, request.PlatformVersion); err != nil {
+		return InstallBundle{}, err
+	}
+	return release, nil
 }
 
 // VerifyReleaseTransition selects an adjacent signed release and runs the
