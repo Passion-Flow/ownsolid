@@ -32,8 +32,8 @@ type adminTOTPKeyring struct {
 func (*adminTOTPKeyring) String() string   { return "ADMIN_TOTP_KEYRING_REDACTED" }
 func (*adminTOTPKeyring) GoString() string { return "ADMIN_TOTP_KEYRING_REDACTED" }
 
-func loadAdminTOTPKeyring(path string) (*adminTOTPKeyring, error) {
-	raw, err := readAdminTOTPKeyFile(path)
+func loadAdminTOTPKeyring(path string, otherKeyPaths ...string) (*adminTOTPKeyring, error) {
+	raw, err := readAdminTOTPKeyFile(path, otherKeyPaths)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func sameAdminTOTPKeyFile(before, after os.FileInfo) bool {
 		before.Mode() == after.Mode() && before.Size() == after.Size() && before.ModTime().Equal(after.ModTime())
 }
 
-func readAdminTOTPKeyFile(path string) ([]byte, error) {
+func readAdminTOTPKeyFile(path string, otherKeyPaths []string) ([]byte, error) {
 	bad := failure("ADMIN_TOTP_KEYRING_FILE_INVALID")
 	if !filepath.IsAbs(path) || filepath.Clean(path) != path || strings.ContainsFunc(path, unicode.IsControl) {
 		return nil, bad
@@ -132,6 +132,16 @@ func readAdminTOTPKeyFile(path string) ([]byte, error) {
 	opened, err := file.Stat()
 	if err != nil || !sameAdminTOTPKeyFile(before, opened) {
 		return nil, bad
+	}
+	for _, otherPath := range otherKeyPaths {
+		if otherPath == "" {
+			continue
+		}
+		// Existing secret readers may follow symbolic links. Compare against the pinned file.
+		other, err := os.Stat(otherPath)
+		if err == nil && os.SameFile(opened, other) {
+			return nil, bad
+		}
 	}
 	raw, err := io.ReadAll(io.LimitReader(file, maxAdminTOTPKeyFileBytes+1))
 	after, statErr := file.Stat()

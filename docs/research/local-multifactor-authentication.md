@@ -101,7 +101,10 @@ Keep the candidate's `active` and `keys` JSON format and AES-GCM
 associated-data layout so retained seed rows remain readable. Match the
 protected file pattern used by SSO with a canonical absolute path, a
 private process-owned parent and file, no symlinks or hard links, and
-one bounded read from a pinned descriptor.
+one bounded read from a pinned descriptor. Compare the pinned file's
+identity against the configured mail, authentication HMAC and SSO key
+references so a symbolic alias cannot cause two authorities to share the
+same key file.
 [Go's rooted file API](https://pkg.go.dev/os#OpenRoot) supports that
 descriptor boundary. Use the standard
 [strict JSON decoder](https://pkg.go.dev/encoding/json/v2) to reject
@@ -113,7 +116,8 @@ checks observe different content.
 
 Use the existing Go, pgx and PostgreSQL licenses above. The startup
 tests exercise missing and permissive files, malformed content and
-private error diagnostics, a legacy database without the factor schema,
+private error diagnostics, shared key references through aliases, a legacy
+database without the factor schema,
 and valid and unusable retained encrypted factors. The shared config
 owner maps its eventual `security.admin_totp` policy to this typed
 initializer before constructing the public handler. Migration, restore
