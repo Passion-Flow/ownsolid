@@ -23,6 +23,23 @@ The [internal owner index](internal/README.md) links each execution manager and 
 | [settings](internal/settings) | Validated bounded runtime policy |
 | [state](internal/state) | Private persisted node identity, process lock and durable creation |
 
+## Offline read-only enrollment
+
+Once the local Agent binary, site CA, private state directory, protected JSON
+configuration and token file are prepared, run:
+
+```sh
+agent enroll --if-needed --config /etc/ownsolid-agent/agent.json
+```
+
+A first run enrolls over verified HTTPS. A completed matching enrollment is
+recognized locally, including a pre-certificate read-only identity. An
+installer can replay this command after removing the spent token file and
+start `agent run` only after it succeeds. Bare `agent enroll` still refuses an
+existing identity. On an uncertain enrollment or a committed enrollment with
+a local write failure, preserve the state and reconcile the Control record
+before attempting a new join. See [offline enrollment and release handoff](../../docs/research/agent-offline-enrollment.md).
+
 ## Configuration, data and failures
 
 Use [agent examples](../../config/examples/agent), the corresponding [agent contracts](../../contracts/agent) and explicit protected config/env-file flags. Component, inference, training and preparation roots must satisfy their profile and disjointness rules. Credentials stay in protected state/reference files; never place them in task logs or image layers.
