@@ -45,6 +45,9 @@ Measuring models and applications before release, and gating releases on the res
     scores controlled outputs on a frozen synthetic fixture for injection,
     private context disclosure and unsupported requests. Real model safety,
     authorized capture delivery and UI remain open.
+  - [Native CPU adversarial qualification](../../research/evaluation-reproducibility.md#native-cpu-adversarial-qualification)
+    published the frozen validation group and repeated three real responses
+    byte for byte. All three were unverified and the originals were retained.
 
 EVL-101 records the immutable dataset, scorer and model revisions, seed and execution
 profile. Re-scoring the same captured outputs must give the same scores. EVL-102
