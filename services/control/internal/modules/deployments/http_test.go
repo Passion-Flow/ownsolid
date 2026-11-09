@@ -13,10 +13,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+	"github.com/google/uuid"
 )
 
 func TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer(t *testing.T) {
@@ -102,9 +102,17 @@ func TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer(t *testing.T) {
 	if _, e = c.s.Nodes.DB.Exec(ctx, "UPDATE node_tasks SET lease_expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", lease.TaskID); e != nil {
 		t.Fatal(e)
 	}
+	// A delivery timeout does not revoke the current token before the task deadline.
+	status, _, _ = post(base+"/model-files", c.node.Credential, input)
+	if status != 200 {
+		t.Fatal("current token refused before the deadline", status)
+	}
+	if _, e = c.s.Nodes.DB.Exec(ctx, "UPDATE node_tasks SET deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1", lease.TaskID); e != nil {
+		t.Fatal(e)
+	}
 	status, _, _ = post(base+"/model-files", c.node.Credential, input)
 	if status != 409 {
-		t.Fatal("expired lease read", status)
+		t.Fatal("model read after the task deadline", status)
 	}
 	portal := httpfixture.New(t, server, "portal", schemas)
 	portal.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": password}, 200, "")
