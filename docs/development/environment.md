@@ -303,6 +303,14 @@ third workspace must be inaccessible to the member. Print their `email`, `passwo
 Sign in as the fixture administrator for the separate ownership check. The portal's `live-models.spec.ts`
 uses the same fixture for the partial catalogue and retry check.
 
+To run the key flow through the Rust gateway, set
+`OWNSOLID_LIVE_NATIVE_GATEWAY_URL` to the published alias's HTTPS base URL, including `/v1`.
+Set `NODE_EXTRA_CA_CERTS` to the gateway's public CA file before starting Playwright. The gateway
+command still publishes the alias through `prepare <name>`. The test sends its five serial calls
+through the HTTPS endpoint and checks the reported request IDs and token usage in Portal. The
+Rust gateway can use the loopback tokenizer and completion fixture from the native GW-112 tests.
+Use the same Portal credentials and Chromium trust settings as above.
+
 `live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
 to the license history. It needs test files signed with the key the installation trusts.
 `OWNSOLID_LIVE_LICENSE_COMMAND` reads the license state as JSON on standard input and prints a JSON
