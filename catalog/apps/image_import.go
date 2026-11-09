@@ -29,6 +29,8 @@ type ImageImportOptions struct {
 	Timeout              time.Duration
 	// ExpectedPin binds the staged import to a previously verified transition.
 	ExpectedPin *ReleasePin
+	// RenderedCompose optionally checks the selected Compose model before loading images.
+	RenderedCompose *RenderedCompose
 }
 
 // ImportInstallImage verifies the signed release and confirms every exact
@@ -54,6 +56,11 @@ func ImportInstallImage(ctx context.Context, stagingDirectory string, key ed2551
 	}
 	if options.ExpectedPin != nil && verified.Pin != *options.ExpectedPin {
 		return InstallBundle{}, imageImportError("the signed bundle differs from the selected release pin")
+	}
+	if options.RenderedCompose != nil {
+		if _, err := verified.VerifyComposeImagePlan(*options.RenderedCompose); err != nil {
+			return InstallBundle{}, err
+		}
 	}
 
 	archive := verified.Archive
