@@ -17,16 +17,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/api/agent/modelartifact"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/snapshot"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 // These are explicit relational metadata fixtures, not training/GPU/creator
@@ -162,13 +163,28 @@ func retirementTraining(t *testing.T, x modelReadFixture, model string) retireme
 }
 func retirementPreparation(t *testing.T, x modelReadFixture, p retirementProvenance, model string) {
 	t.Helper()
+	retirementPreparationWithSnapshot(t, x, p, model, nil)
+}
+
+func retirementPreparationWithSnapshot(t *testing.T, x modelReadFixture, p retirementProvenance, model string, inputs *snapshot.Inputs) {
+	t.Helper()
 	sha := strings.Repeat("1", 64)
+	holdoutDataset, holdoutVersion := p.dataset, p.version
+	raw, digest := retirementJSON(`{}`), sha
+	if inputs != nil {
+		frozen, err := json.Marshal(inputs)
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw, digest = retirementJSON(frozen), inputs.Digest()
+		holdoutDataset, holdoutVersion = inputs.Heldout.DatasetID, inputs.Heldout.DatasetVersionID
+	}
 	put := func(table string, v map[string]any) { retirementSeed(t, x, x.f.Store, table, v) }
 	put("training_attempts", map[string]any{"id": p.attempt, "job_id": p.job, "node_id": p.node, "attempt_number": 1, "state": "cancelled", "requested_by": x.f.User, "requested_audience": "admin", "requested_epoch": 1, "input_inventory": retirementJSON(`{}`)})
 	put("training_uploads", map[string]any{"id": p.artifact, "job_id": p.job, "attempt_id": p.attempt, "kind": "artifact", "global_step": 0, "manifest_sha256": sha, "manifest": retirementJSON(`{}`), "manifest_bytes": []byte(`{}`), "state": "accepted"})
 	put("training_artifacts", map[string]any{"id": p.artifact, "job_id": p.job, "attempt_id": p.attempt, "manifest_sha256": sha, "manifest": retirementJSON(`{}`), "file_inventory": retirementJSON(`{}`), "storage_key": "artifacts/" + p.job + "/" + p.attempt + "/" + p.artifact})
-	put("model_holdouts", map[string]any{"id": p.holdout, "dataset_id": p.dataset, "dataset_version_id": p.version, "name": "Synthetic holdout", "manifest_sha256": sha, "effective_source_sha256": sha, "row_mapping_sha256": sha, "source_bytes": 3, "row_count": 3, "label_counts": retirementJSON(`{"account":1,"billing":1,"technical":1}`), "recipe_id": "synthetic", "recipe_sha256": sha, "instruction_sha256": sha, "fingerprint_algorithm": "synthetic", "created_by": x.f.User, "audience": "admin", "reason": "Synthetic provenance", "creation_key": uuid.NewString(), "creation_fingerprint": bytes.Repeat([]byte{8}, 32)})
-	put("model_preparations", map[string]any{"id": p.preparation, "node_id": p.node, "current_node_id": p.node, "model_id": model, "training_job_id": p.job, "training_attempt_id": p.attempt, "training_artifact_id": p.artifact, "heldout_id": p.holdout, "gpu_uuid": "GPU-" + uuid.NewString(), "input_snapshot": retirementJSON(`{}`), "input_sha256": sha, "configuration": retirementJSON(`{}`), "configuration_sha256": sha, "execution_recipe": retirementJSON(`{}`), "created_by": x.f.User, "requested_by": x.f.User, "creation_audience": "admin", "requested_audience": "admin", "requested_epoch": 1, "reason": "Synthetic retained preparation", "creation_key": uuid.NewString(), "creation_fingerprint": bytes.Repeat([]byte{9}, 32), "state": "cancelled"})
+	put("model_holdouts", map[string]any{"id": p.holdout, "dataset_id": holdoutDataset, "dataset_version_id": holdoutVersion, "name": "Synthetic holdout", "manifest_sha256": sha, "effective_source_sha256": sha, "row_mapping_sha256": sha, "source_bytes": 3, "row_count": 3, "label_counts": retirementJSON(`{"account":1,"billing":1,"technical":1}`), "recipe_id": "synthetic", "recipe_sha256": sha, "instruction_sha256": sha, "fingerprint_algorithm": "synthetic", "created_by": x.f.User, "audience": "admin", "reason": "Synthetic provenance", "creation_key": uuid.NewString(), "creation_fingerprint": bytes.Repeat([]byte{8}, 32)})
+	put("model_preparations", map[string]any{"id": p.preparation, "node_id": p.node, "current_node_id": p.node, "model_id": model, "training_job_id": p.job, "training_attempt_id": p.attempt, "training_artifact_id": p.artifact, "heldout_id": p.holdout, "gpu_uuid": "GPU-" + uuid.NewString(), "input_snapshot": raw, "input_sha256": digest, "configuration": retirementJSON(`{}`), "configuration_sha256": sha, "execution_recipe": retirementJSON(`{}`), "created_by": x.f.User, "requested_by": x.f.User, "creation_audience": "admin", "requested_audience": "admin", "requested_epoch": 1, "reason": "Synthetic retained preparation", "creation_key": uuid.NewString(), "creation_fingerprint": bytes.Repeat([]byte{9}, 32), "state": "cancelled"})
 }
 func retirementDerivation(t *testing.T, x modelReadFixture, p retirementProvenance, base, derived string) {
 	t.Helper()
