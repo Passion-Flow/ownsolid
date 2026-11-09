@@ -31,6 +31,7 @@ fully offline.
 - [x] OBS-108 Load tested at about 17 million active series (P1) - Evidence: [Linux amd64 scale qualification](../../research/telemetry-scale.md#linux-amd64-qualification)
 - [ ] OBS-109 Retention tiers and long-range rollups built on recording rules, because downsampling and multiple retentions are Enterprise-only in the selected store (P1)
 - [ ] OBS-110 Series cardinality explorer with per-tenant and per-agent limits (P1)
+  - [Scoped cardinality fixture](../../research/series-cardinality-scope.md#verified-query-boundary) qualifies native daily counts and ranks and identifies query-usage metadata that must be omitted. Authorized API, Console and ingest limit enforcement remain open.
 - [ ] OBS-111 Log-based alert rules and SLO burn-rate alerts (P1)
   - [Node exporter journal alert](../../research/log-alert-rules.md#verified-linux-path) qualifies tenant-scoped native evaluation and offline notification. Continuous log collection, service SLI inputs, rule administration and packaged evaluator wiring remain open.
 - [ ] OBS-112 Black-box probes of platform endpoints and model routes (P1)

@@ -41,3 +41,17 @@ Use 5 nodes and 2 rounds for a short smoke test. The runner creates its own
 storage directory and stops the process after the test. Its port is 58428
 inside the isolated namespace only. See the [scale qualification](../../../../../docs/research/telemetry-scale.md)
 for measured size, throughput and query times.
+
+## Scoped series cardinality fixture
+
+The fixture checks the native TSDB status rankings and totals for one
+workspace with 10,000 synthetic agents. It also reproduces cross-scope
+metric-name usage metadata in the raw response. A customer-facing
+projection must expose the qualified counts and omit usage metadata.
+See the [scope and admission boundary](../../../../../docs/research/series-cardinality-scope.md).
+
+From this directory on a Linux test host with permission to create a network
+namespace, use the verified VictoriaMetrics 1.155.0 binary.
+
+    unshare --net --pid --fork sh -ec 'ip link set lo up; python3 "$1" "$2"' sh \
+      testdata/check_cardinality_scope.py /absolute/path/to/victoria-metrics-prod
