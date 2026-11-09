@@ -6,16 +6,16 @@ import (
 	"errors"
 	"sync/atomic"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/liveness"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service struct {
@@ -95,6 +95,11 @@ func mapped(e error) error {
 }
 
 func scanNode(row pgx.Row) (Node, error) {
+	return scanNodeFacts(row, nil)
+}
+
+// scanNodeFacts optionally retains the stored JSON to distinguish missing measurements from zero.
+func scanNodeFacts(row pgx.Row, storedFacts *json.RawMessage) (Node, error) {
 	var n Node
 	var facts, capabilities []byte
 	e := row.Scan(&n.ID, &n.TenantID, &n.WorkspaceID, &n.Name, &n.Status, &n.Version, &n.ProtocolVersion, &facts, &n.LastHeartbeatAt, &n.CreatedAt, &n.UpdatedAt, &n.Connectivity, &n.ExecutionProfile, &capabilities, &n.SiteID, &n.CellID, &n.ConnectivityChangedAt)
@@ -105,6 +110,9 @@ func scanNode(row pgx.Row) (Node, error) {
 		return n, fail("STORAGE_UNAVAILABLE")
 	}
 	if e == nil {
+		if storedFacts != nil {
+			*storedFacts = facts
+		}
 		n.LastHeartbeatAt, n.CreatedAt, n.UpdatedAt = n.LastHeartbeatAt.UTC(), n.CreatedAt.UTC(), n.UpdatedAt.UTC()
 		if n.ConnectivityChangedAt != nil {
 			changed := n.ConnectivityChangedAt.UTC()
