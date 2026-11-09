@@ -168,3 +168,52 @@ func TestImportInstallImageSetIntoEmptyDockerStore(t *testing.T) {
 		t.Fatalf("readback did not contain the two exact signed manifests: %v", ids)
 	}
 }
+
+func TestImportVerifiedReleaseTransitions(t *testing.T) {
+	socket, mount, store := emptyDockerStore(t)
+	policy := bundle.Defaults()
+	policy.MountRoot = mount
+	for _, engine := range []string{"compose", "helm"} {
+		t.Run(engine, func(t *testing.T) {
+			root, key, private := transitionCatalog(t)
+			first := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.0.0", engine: engine, variant: engine})
+			second := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.1.0", engine: engine, variant: engine, predecessors: []ReleasePin{first}})
+			importVersion := func(pin ReleasePin) InstallBundle {
+				t.Helper()
+				result, err := ImportInstallImage(t.Context(), filepath.Join(root.Name(), pin.Version), key, ImageImportOptions{
+					DockerSocket: socket, Verification: policy, MaximumPayloadBytes: testTransitionBudget,
+					MaximumExpandedBytes: testTransitionBudget, Timeout: 30 * time.Second, ExpectedPin: &pin,
+				})
+				if err != nil || result.Pin != pin {
+					t.Fatalf("import of the selected release failed: %v", err)
+				}
+				return result
+			}
+			original := importVersion(first)
+			request := TransitionRequest{AppID: "example-app", PlatformVersion: "1.2.0", Installed: first}
+			upgrade, err := VerifyReleaseTransition(t.Context(), root, key, testTransitionBudget, request)
+			if err != nil || upgrade.Pin != second {
+				t.Fatalf("signed upgrade selection failed: %v", err)
+			}
+			importVersion(upgrade.Pin)
+			before := listDockerImages(t, store)
+			slices.Sort(before)
+			request.Installed, request.RollbackTo = upgrade.Pin, &original.Pin
+			for range 2 {
+				rollback, err := VerifyReleaseTransition(t.Context(), root, key, testTransitionBudget, request)
+				if err != nil || rollback.Pin != original.Pin {
+					t.Fatalf("exact rollback selection failed: %v", err)
+				}
+				restored := importVersion(rollback.Pin)
+				if restored.Manifest.Artifact != original.Manifest.Artifact || !slices.Equal(restored.Archive.Images, original.Archive.Images) {
+					t.Fatal("rollback changed the original artifact or image identities")
+				}
+			}
+			after := listDockerImages(t, store)
+			slices.Sort(after)
+			if !slices.Equal(after, before) {
+				t.Fatalf("rollback added an image: before %v, after %v", before, after)
+			}
+		})
+	}
+}
