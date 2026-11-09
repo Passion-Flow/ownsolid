@@ -156,3 +156,21 @@ identical at the time. After syncing `aa5e712f`, the same cases each passed
 five serial repetitions. The complete Agent training and model-preparation
 packages passed with one test worker. This resolves the two reproduced
 failures. The repository-wide test gate remains separate from these checks.
+
+The AGT-107 HTTP adapter passed its disconnected PostgreSQL and HTTPS test,
+`make check` and `make build`. The full browser suites passed on isolated ports
+with three workers. The first test run inherited the SQL fixture's private
+umask and restored a model at mode `0400` instead of `0444`. Under the normal
+`022` umask, the installer case passed three times and the remaining Go suites
+passed. The Web unit suites also passed.
+
+The current macOS gate is blocked by
+`backend_tests::actual_connection_refusal_opens_only_its_backend_circuit`,
+introduced by `1b293a01`. On the unchanged gateway tree from `origin/main`,
+both the full suite and a serial focused run returned `upstream_timeout`
+instead of `upstream_unavailable`. A separate local socket probe on the same
+machine timed out when connecting to a loopback socket held by `bind()` without
+`listen()`. Releasing the socket gave immediate `ECONNREFUSED`. The remaining
+66 Rust tests passed, with six ignored. This points to the refusal fixture's
+port reservation on macOS. The Gateway lane owns that fixture and the APP
+commit stays local until the full gate passes.
