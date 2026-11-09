@@ -39,6 +39,9 @@ func TestObserveVerifiedTLSAndIdentity(t *testing.T) {
 			case 3:
 				w.WriteHeader(http.StatusNotFound)
 				return
+			case 4:
+				fmt.Fprint(w, `{"apiVersion":"kueue.x-k8s.io/v1beta2","kind":"Workload","metadata":{"name":"job","namespace":"team-a","uid":"original","resourceVersion":"opaque-c","generation":2},"status":{"conditions":[{"type":"QuotaReserved","status":"False","reason":"TopologyPlacementFailed","message":"synthetic sibling and capacity details","observedGeneration":2}]}}`)
+				return
 			}
 			fmt.Fprint(w, `{"apiVersion":"kueue.x-k8s.io/v1beta2","kind":"Workload","metadata":{"name":"job","namespace":"team-a","uid":"original","resourceVersion":"opaque-a","generation":2},"status":{"conditions":[{"type":"Admitted","status":"True","observedGeneration":2},{"type":"PodsReady","status":"True","observedGeneration":1}]}}`)
 		case "/apis/batch.volcano.sh/v1alpha1/namespaces/team-a/jobs/job":
@@ -70,6 +73,12 @@ func TestObserveVerifiedTLSAndIdentity(t *testing.T) {
 	if err != nil || got != (Observation{ResourceVersion: "opaque-a", State: Admitted}) {
 		t.Fatalf("Kueue stale readiness: %+v, %v", got, err)
 	}
+	mode.Store(4)
+	got, err = client.Observe(t.Context(), ref)
+	if err != nil || got != (Observation{ResourceVersion: "opaque-c", State: Pending, Blocker: TopologyPlacementFailed}) {
+		t.Fatalf("verified Kueue topology blocker: %+v, %v", got, err)
+	}
+	mode.Store(0)
 	ref.Scheduler = Volcano
 	got, err = client.Observe(t.Context(), ref)
 	if err != nil || got != (Observation{ResourceVersion: "opaque-b", State: Active}) {
@@ -138,14 +147,16 @@ func TestKueueReadyAndStopping(t *testing.T) {
 	var obj object
 	obj.Metadata.Generation = 2
 	for _, kind := range []string{"Admitted", "PodsReady"} {
-		obj.Status.Conditions = append(obj.Status.Conditions, struct {
-			Type, Status       string
-			ObservedGeneration int64
-		}{kind, "True", 2})
+		obj.Status.Conditions = append(obj.Status.Conditions, condition{Type: kind, Status: "True", ObservedGeneration: 2})
 	}
 	if got := obj.observation(Kueue).State; got != Ready {
 		t.Fatalf("current ready condition: %v", got)
 	}
+	obj.Status.Conditions[1].Status = "False"
+	if got := obj.observation(Kueue); got.State != Admitted || got.Blocker != PodsNotReady {
+		t.Fatalf("current admitted pods not ready: %+v", got)
+	}
+	obj.Status.Conditions[1].Status = "True"
 	obj.Status.Conditions[1].Type = "Evicted"
 	if got := obj.observation(Kueue).State; got != Terminating {
 		t.Fatalf("evicted workload: %v", got)
@@ -158,5 +169,36 @@ func TestKueueReadyAndStopping(t *testing.T) {
 	obj.Metadata.DeletionTimestamp = &now
 	if got := obj.observation(Kueue).State; got != Terminating {
 		t.Fatalf("deleted workload: %v", got)
+	}
+}
+
+func TestKueueQuotaBlockerRequiresCurrentNegativeCondition(t *testing.T) {
+	for _, tc := range []struct {
+		name, status, reason string
+		generation           int64
+		want                 Blocker
+	}{
+		{"quota", "False", "WaitingForQuota", 2, WaitingForQuota},
+		{"quota ceiling", "False", "ExceedsMaxQuota", 2, ExceedsMaxQuota},
+		{"topology", "False", "TopologyPlacementFailed", 2, TopologyPlacementFailed},
+		{"queue", "False", "Misconfigured", 2, QueueInadmissible},
+		{"legacy queue", "False", "Inadmissible", 2, QueueInadmissible},
+		{"generic pending", "False", "Pending", 2, ""},
+		{"stale", "False", "WaitingForQuota", 1, ""},
+		{"unknown condition status", "Unknown", "WaitingForQuota", 2, ""},
+		{"quota reserved", "True", "WaitingForQuota", 2, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var obj object
+			obj.Metadata.Generation = 2
+			obj.Status.Conditions = []condition{{Type: "QuotaReserved", Status: tc.status, Reason: tc.reason, ObservedGeneration: tc.generation}}
+			if got := obj.observation(Kueue); got.State != Pending || got.Blocker != tc.want {
+				t.Fatalf("observed %+v, want pending with blocker %q", got, tc.want)
+			}
+			obj.Status.Conditions = append(obj.Status.Conditions, condition{Type: "Finished", Status: "True", ObservedGeneration: 2})
+			if got := obj.observation(Kueue); got.State != Terminal || got.Blocker != "" {
+				t.Fatalf("finished workload kept a blocker: %+v", got)
+			}
+		})
 	}
 }

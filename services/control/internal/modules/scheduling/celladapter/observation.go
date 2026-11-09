@@ -21,10 +21,33 @@ const (
 	Unknown State = "unknown"
 )
 
-// Observation carries an opaque Kubernetes object version and scheduler state.
+// Blocker is a current, allowlisted scheduler reason.
+type Blocker string
+
+const (
+	// WaitingForQuota means Kueue is waiting for unused quota.
+	WaitingForQuota Blocker = "SCHEDULING_CELL_QUOTA_WAIT"
+	// ExceedsMaxQuota means the Workload exceeds Kueue's quota ceiling.
+	ExceedsMaxQuota Blocker = "SCHEDULING_CELL_QUOTA_EXCEEDED"
+	// TopologyPlacementFailed means the current Kueue topology cannot place the Workload.
+	TopologyPlacementFailed Blocker = "SCHEDULING_CELL_TOPOLOGY_PLACEMENT_FAILED"
+	// QueueInadmissible means the Workload cannot be admitted to its cell queue.
+	QueueInadmissible Blocker = "SCHEDULING_CELL_QUEUE_INADMISSIBLE"
+	// PodsNotReady means the admitted Workload is waiting for its pods.
+	PodsNotReady Blocker = "SCHEDULING_CELL_PODS_NOT_READY"
+)
+
+// Observation carries an opaque Kubernetes object version, scheduler state
+// and an optional verified blocker.
 type Observation struct {
 	ResourceVersion string
 	State           State
+	Blocker         Blocker
+}
+
+type condition struct {
+	Type, Status, Reason string
+	ObservedGeneration   int64
 }
 
 type object struct {
@@ -37,10 +60,7 @@ type object struct {
 	}
 	Status struct {
 		State      struct{ Phase string }
-		Conditions []struct {
-			Type, Status       string
-			ObservedGeneration int64
-		}
+		Conditions []condition
 	}
 }
 
@@ -50,7 +70,7 @@ func (obj object) observation(scheduler Scheduler) Observation {
 	case obj.Metadata.DeletionTimestamp != nil:
 		out.State = Terminating
 	case scheduler == Kueue:
-		out.State = obj.kueueState()
+		out.State, out.Blocker = obj.kueueState()
 	default:
 		switch obj.Status.State.Phase {
 		case "", "Pending", "Inqueue", "Restarting", "Completing":
@@ -68,31 +88,56 @@ func (obj object) observation(scheduler Scheduler) Observation {
 	return out
 }
 
-func (obj object) kueueState() State {
-	var admitted, ready, evicted bool
+func (obj object) kueueState() (State, Blocker) {
+	var admitted, ready, notReady, evicted bool
+	var quotaBlocker Blocker
 	for _, condition := range obj.Status.Conditions {
-		if condition.Status != "True" || condition.ObservedGeneration != obj.Metadata.Generation || obj.Metadata.Generation <= 0 {
+		if condition.ObservedGeneration != obj.Metadata.Generation || obj.Metadata.Generation <= 0 {
 			continue
 		}
 		switch condition.Type {
 		case "Finished":
-			return Terminal
+			if condition.Status == "True" {
+				return Terminal, ""
+			}
 		case "Admitted":
-			admitted = true
+			admitted = admitted || condition.Status == "True"
 		case "PodsReady":
-			ready = true
+			ready = ready || condition.Status == "True"
+			notReady = notReady || condition.Status == "False"
 		case "Evicted":
-			evicted = true
+			evicted = evicted || condition.Status == "True"
+		case "QuotaReserved":
+			if condition.Status == "False" {
+				quotaBlocker = kueueQuotaBlocker(condition.Reason)
+			}
 		}
 	}
-	if evicted {
-		return Terminating
+	switch {
+	case evicted:
+		return Terminating, ""
+	case admitted && ready:
+		return Ready, ""
+	case admitted && notReady:
+		return Admitted, PodsNotReady
+	case admitted:
+		return Admitted, ""
+	default:
+		return Pending, quotaBlocker
 	}
-	if admitted && ready {
-		return Ready
+}
+
+func kueueQuotaBlocker(reason string) Blocker {
+	switch reason {
+	case "WaitingForQuota":
+		return WaitingForQuota
+	case "ExceedsMaxQuota":
+		return ExceedsMaxQuota
+	case "TopologyPlacementFailed":
+		return TopologyPlacementFailed
+	case "Misconfigured", "Inadmissible":
+		return QueueInadmissible
+	default:
+		return ""
 	}
-	if admitted {
-		return Admitted
-	}
-	return Pending
 }
