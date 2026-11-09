@@ -185,3 +185,43 @@ and its own recomputed digest returned
 `runtimes/training/tests/test_checkpoints.py` passed with all 20
 disconnected training runtime tests. `make check` and `make build`
 also passed with external networking disabled.
+
+### Retained CPU baselines
+
+The disconnected Linux verifier also compared the two existing 24-step
+support-routing runs. Each reported `resume_from_step=0`. Their original
+bindings matched on the model, configuration, seed, partition hashes,
+recipe, worker identity and package versions. Their job and publication
+identities differed. The original and authorized-export manifest hashes
+were `6a69e524b2fb600abfe7dff3287774096525f2a85cb5907d1ad55d6fa68b6125`
+and `134bedd3dd44e53bf1ed10f1eae0ac5638ebb3395218cc586604b8eb695a936d`.
+The verifier derived each expected seal from its own request, checked
+each original checkpoint and result inventory, and refused the valid
+48-step extension against both seals.
+
+| Matching step-24 state | SHA-256 |
+| --- | --- |
+| Adapter tensors | `a46897f648b94c94a3fe55dff81c15a082e1a427126f958e3075a8feee2bf06b` |
+| Optimizer state | `12aee1107dcc4fb67df33a0cc1b9aa2a29e27a837eebaccb133e9abe63cf34dc` |
+| Scheduler state | `9957c822345dc1c7815e98abd277a4db02b912d5988fa2398f19020ea9bab22c` |
+| Random state | `e3a77d4a8b98ce027a4d6a3b9fb5d7c904e27ec1efd5c0468c24fa26bb738316` |
+| Trainer metadata | `dff5fb095d4f0609ba291cb0056a8fc763df020c56580227bfc92d16bada73cd` |
+
+The 25 metric events, final loss and the raw exported tensor file
+matched. The exported `adapter_config.json` differed only in the order
+of `target_modules`. Both declared `q_proj` and `v_proj`, and every
+other parsed field matched. The pinned PEFT version
+[stores module names as a set](https://github.com/huggingface/peft/blob/v0.21.2/src/peft/tuners/lora/config.py#L1014-L1016)
+and [writes sets as lists](https://github.com/huggingface/peft/blob/v0.21.2/src/peft/config.py#L149-L153).
+Compare that field as an unordered collection while retaining both
+original export digests. The original config hashes were
+`8a68945fb5d71cf20d15bdaeeb32e33f99f095dcd8b2c65277c75291e0c0eb2f`
+and `4ed67247993152de870045c4551f54de48a5fb0b65d61118bf95acb2c15dfe67`.
+
+The original requests, results, events, seals and exports are retained
+with the private comparison. Its SHA-256 is
+`354fa59372f9d8834e2f82f2d99e2983257c5a3c32719a61c36e0c633cdb09a9`.
+The export comparison SHA-256 is
+`fe88b399091ff6e1706931f4e2b79e424b28dcaf85db3e0605343ed3f8dcbe39`.
+Use the two-step rehearsal above to establish continuity within one
+job and one publication when the admitted runtime is available.
