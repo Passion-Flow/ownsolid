@@ -3,22 +3,27 @@
 package monitoring_test
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
-	"net/http/httptest"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
-	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
+	monitoringhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/smtpsink"
-	"github.com/google/uuid"
 )
 
 const historyTLSChild = "OWNSOLID_TEST_HISTORY_TLS_CHILD"
@@ -43,13 +48,13 @@ func TestFleetHistoryPrivateTLS(t *testing.T) {
 		return
 	}
 
-	_, rawCA, rawCert, rawKey := smtpsink.Certificate(t, t.TempDir())
-	_, longCA, longCert, longKey := smtpsink.Certificate(t, t.TempDir())
+	rawTLS, longTLS := newHistoryCertificate(t), newHistoryCertificate(t)
+	nextTLS, deniedTLS := newHistoryCertificate(t), newHistoryCertificate(t)
 	root := t.TempDir()
 	caDirectory := t.TempDir()
 	systemCA := filepath.Join(root, "trusted-sites.pem")
 	var roots []byte
-	for _, path := range []string{rawCA, longCA} {
+	for _, path := range []string{rawTLS.ca, longTLS.ca, nextTLS.ca} {
 		pem, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatal(err)
@@ -64,30 +69,26 @@ func TestFleetHistoryPrivateTLS(t *testing.T) {
 	t.Cleanup(http.DefaultClient.CloseIdleConnections)
 
 	g := setup(t, false)
-	raw, _, _ := startHistoryVMAt(t, g.ctx, "2d", "https", "-tls=true", "-tlsCertFile="+rawCert, "-tlsKeyFile="+rawKey)
-	long, _, _ := startHistoryVMAt(t, g.ctx, "90d", "https", "-tls=true", "-tlsCertFile="+longCert, "-tlsKeyFile="+longKey)
+	raw, _, _ := startHistoryVMAt(t, g.ctx, "2d", "https", "-tls=true", "-tlsCertFile="+rawTLS.cert, "-tlsKeyFile="+rawTLS.key)
+	long, _, _ := startHistoryVMAt(t, g.ctx, "90d", "https", "-tls=true", "-tlsCertFile="+longTLS.cert, "-tlsKeyFile="+longTLS.key, "-http.disableKeepAlive")
 	policyPath := filepath.Join(root, "monitoring.json")
-	load := func(longOrigin string) {
-		t.Helper()
-		policy := monitoring.Defaults()
-		policy.FleetHistory = monitoring.FleetHistoryPolicy{
-			RawOrigin: raw, LongOrigin: longOrigin, RawHorizonSeconds: 3600,
-			MaxRangeSeconds: 90 * 86400, SettlingSeconds: 30,
-		}
-		data, err := json.Marshal(policy)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(policyPath, data, 0600); err != nil {
-			t.Fatal(err)
-		}
-		g.config, err = monitoring.LoadEnvironment(map[string]string{monitoring.ConfigEnvironment: policyPath})
-		if err != nil {
-			t.Fatal(err)
-		}
-		g.rebuild()
+	policy := monitoring.Defaults()
+	policy.FleetHistory = monitoring.FleetHistoryPolicy{
+		RawOrigin: raw, LongOrigin: long, RawHorizonSeconds: 3600,
+		MaxRangeSeconds: 90 * 86400, SettlingSeconds: 30,
 	}
-	load(long)
+	policyJSON, err := json.Marshal(policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(policyPath, policyJSON, 0600); err != nil {
+		t.Fatal(err)
+	}
+	g.config, err = monitoring.LoadEnvironment(map[string]string{monitoring.ConfigEnvironment: policyPath})
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.rebuild()
 
 	recent := time.Now().UTC().Truncate(time.Minute).Add(-4 * time.Minute)
 	old := recent.Add(-2 * time.Hour)
@@ -97,8 +98,8 @@ func TestFleetHistoryPrivateTLS(t *testing.T) {
 	fixtureRequest(t, g.ctx, http.MethodPost, raw+"/api/v1/import/prometheus", strings.NewReader(data))
 	fixtureRequest(t, g.ctx, http.MethodGet, raw+"/internal/force_flush", nil)
 	replay := exec.CommandContext(g.ctx, os.Getenv("OWNSOLID_TEST_VMALERT"),
-		"-rule=alerting/fleet-rollup-rules.yaml", "-datasource.url="+raw, "-datasource.tlsCAFile="+rawCA,
-		"-remoteWrite.url="+long, "-remoteWrite.tlsCAFile="+longCA,
+		"-rule=alerting/fleet-rollup-rules.yaml", "-datasource.url="+raw, "-datasource.tlsCAFile="+rawTLS.ca,
+		"-remoteWrite.url="+long, "-remoteWrite.tlsCAFile="+longTLS.ca,
 		"-replay.timeFrom="+old.Format(time.RFC3339), "-replay.timeTo="+old.Add(3*time.Minute).Format(time.RFC3339),
 		"-replay.rulesDelay=0", "-replay.disableProgressBar")
 	replay.Env = append(os.Environ(), "SSL_CERT_FILE="+filepath.Join(caDirectory, "missing.pem"))
@@ -107,28 +108,123 @@ func TestFleetHistoryPrivateTLS(t *testing.T) {
 	}
 	fixtureRequest(t, g.ctx, http.MethodGet, long+"/internal/force_flush", nil)
 
-	for _, tc := range []struct {
-		tier string
-		from time.Time
-	}{{"raw", recent}, {"rollup", old}} {
-		out, err := g.s.GetFleetHistory(g.ctx, g.admin, g.f.Workspace, tc.from, tc.from.Add(2*time.Minute), uuid.NewString())
-		if err != nil || out.Tier != tc.tier || len(out.Cells) != 1 || out.Cells[0].CellID != "test-cell" ||
+	read := func(from time.Time) (monitoring.FleetHistory, error) {
+		return readFleetHistoryCandidate(t, g, g.admin, g.f.Workspace, from, from.Add(2*time.Minute))
+	}
+	check := func(tier string, from time.Time) {
+		t.Helper()
+		out, err := read(from)
+		if err != nil || out.Tier != tier || len(out.Cells) != 1 || out.Cells[0].CellID != "test-cell" ||
 			len(out.Cells[0].Points) == 0 || out.Cells[0].Points[0].Reachable != 1 || out.Cells[0].Points[0].Observed != 1 {
-			t.Fatalf("%s read using the installed policy and private CAs: %+v, %v", tc.tier, out, err)
+			t.Fatalf("%s read using the installed policy and private CAs: %+v, %v", tier, out, err)
 		}
 	}
+	check("raw", recent)
+	check("rollup", old)
 
-	var untrustedRequests atomic.Int32
-	untrusted := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
-		untrustedRequests.Add(1)
-	}))
-	t.Cleanup(untrusted.Close)
-	load(untrusted.URL)
+	rawQueries := historyRangeRequests(t, g.ctx, raw)
 	audits := g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'")
-	out, err := g.s.GetFleetHistory(g.ctx, g.admin, g.f.Workspace, old, old.Add(2*time.Minute), uuid.NewString())
-	if err == nil || err.Error() != "MONITORING_LONG_TIER_UNAVAILABLE" || out.Tier != "" || out.Cells != nil ||
-		untrustedRequests.Load() != 0 || g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'") != audits {
-		t.Fatalf("untrusted long tier returned data or emitted a successful audit: %+v, %v", out, err)
+	replaceHistoryCertificate(t, g.ctx, long, longTLS, deniedTLS)
+	out, err := read(old)
+	code, status := monitoringhttp.FleetHistoryProblem(err)
+	if code != "MONITORING_LONG_TIER_UNAVAILABLE" || status != http.StatusServiceUnavailable ||
+		out.Tier != "" || out.Cells != nil || historyRangeRequests(t, g.ctx, raw) != rawQueries ||
+		g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'") != audits {
+		t.Fatalf("untrusted long tier returned data, fell back, or recorded success: %s %d %+v", code, status, out)
 	}
-	t.Log("Control and vmalert used verified native TLS on both tiers, and an untrusted long tier received no query")
+	check("raw", recent)
+	replaceHistoryCertificate(t, g.ctx, long, longTLS, nextTLS)
+	check("rollup", old)
+	if historyRangeRequests(t, g.ctx, raw) != rawQueries+1 ||
+		g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'") != audits+2 {
+		t.Fatal("certificate replacement changed tier routing or audit accounting")
+	}
+	t.Log("same-origin certificate reload refused the untrusted leaf, kept raw available, and recovered rollup on the trusted replacement")
+}
+
+type historyCertificate struct {
+	leaf          tls.Certificate
+	ca, cert, key string
+}
+
+func newHistoryCertificate(t *testing.T) historyCertificate {
+	t.Helper()
+	leaf, ca, cert, key := smtpsink.Certificate(t, t.TempDir())
+	return historyCertificate{leaf, ca, cert, key}
+}
+
+func replaceHistoryCertificate(t *testing.T, parent context.Context, origin string, active, expected historyCertificate) {
+	t.Helper()
+	for _, paths := range [][2]string{{expected.cert, active.cert}, {expected.key, active.key}} {
+		data, err := os.ReadFile(paths[0])
+		if err != nil {
+			t.Fatal(err)
+		}
+		next := paths[1] + ".next"
+		if err := os.WriteFile(next, data, 0600); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Rename(next, paths[1]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ca, err := os.ReadFile(expected.ca)
+	roots := x509.NewCertPool()
+	if err != nil || !roots.AppendCertsFromPEM(ca) {
+		t.Fatal("fixture issuer is unavailable", err)
+	}
+	u, err := url.Parse(origin)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(parent, 12*time.Second)
+	defer cancel()
+	dial := tls.Dialer{Config: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}}
+	tick := time.NewTicker(100 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		attempt, stop := context.WithTimeout(ctx, time.Second)
+		conn, err := dial.DialContext(attempt, "tcp", u.Host)
+		stop()
+		if err == nil {
+			peer := conn.(*tls.Conn).ConnectionState().PeerCertificates
+			_ = conn.Close()
+			if len(peer) == 1 && bytes.Equal(peer[0].Raw, expected.leaf.Certificate[0]) {
+				return
+			}
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatal("native listener did not present the expected replacement leaf")
+		case <-tick.C:
+		}
+	}
+}
+
+func historyRangeRequests(t *testing.T, ctx context.Context, raw string) uint64 {
+	t.Helper()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, raw+"/metrics", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatal("native metrics request returned", resp.Status)
+	}
+	rows := bufio.NewScanner(io.LimitReader(resp.Body, 1<<20))
+	for rows.Scan() {
+		if value, ok := strings.CutPrefix(rows.Text(), `vm_http_requests_total{path="/api/v1/query_range"} `); ok {
+			count, err := strconv.ParseUint(value, 10, 64)
+			if err != nil {
+				t.Fatal(err)
+			}
+			return count
+		}
+	}
+	t.Fatal("native range counter is unavailable", rows.Err())
+	return 0
 }

@@ -242,3 +242,53 @@ DEV owns dispatch through the existing Admin entrance, the public
 problem registry, scoped OpenAPI and generated clients. DEL owns the
 private store, CA and retention inputs. The candidate can be rerun
 using the default `history` selector.
+
+## Certificate replacement at the same long origin
+
+The pinned [VictoriaMetrics listener](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/httpserver/httpserver.go)
+reloads its configured certificate and key files. A TLS connection
+authenticates the peer during its
+[handshake](https://www.rfc-editor.org/rfc/rfc8446.html#section-4.4.2).
+Use the native listener's `-http.disableKeepAlive` in the fixture so
+each request must prove the current certificate. This fixture setting
+is unnecessary for ordinary operation. Established TLS connections
+retain their negotiated trust until they close.
+
+Before switching issuers, provision the old and next CA in the
+authorized clients' trust bundles. Go's system roots are process
+state. Restart Control or use the installed trust-update procedure
+when that bundle changes, and qualify vmalert's separately configured
+trust. The fixture preloads both permitted issuers and keeps the
+origin and Control reader unchanged while the long listener reloads
+first an unauthorized certificate and then the permitted replacement.
+A bounded probe verifies each new leaf with its fixture CA so that
+the readiness check cannot pass on the previous certificate.
+
+Exercise the bounded HTTP candidate with real Admin authority.
+During the unauthorized replacement require the long-tier
+unavailable problem and no successful audit. Read the pinned raw
+[range request counter](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/app/vmselect/main.go)
+to prove no fallback. Confirm that the authorized raw request still
+works, then check the same long origin again after replacement.
+This tests listener reload and authorization with preinstalled trust.
+Certificate issuance, process containment, trust distribution and
+connection draining remain DEL's deployed acceptance. No
+dependencies, models or data sets are added.
+
+### Verified certificate replacement
+
+`TestFleetHistoryPrivateTLS` kept the same protected configuration,
+Control reader and native long listener through two certificate
+replacements in the loopback-only Linux amd64 fixture. Initial vmalert
+replay used the independent CA files. A handshake confirmed the
+unauthorized leaf was active before the next long query. The candidate
+returned 503 with `MONITORING_LONG_TIER_UNAVAILABLE`, no body and no
+successful audit. VictoriaMetrics's raw range counter did not move.
+A fresh raw read still returned data and committed its own audit.
+The same long origin recovered with the pretrusted replacement and
+committed exactly one success audit. PostgreSQL and both stores stopped.
+
+This exercises trusted issuer overlap at process startup. DEL owns the
+installed trust rotation, including vmalert's remote-write trust update
+and draining already established connections when old trust is removed.
+Run the `history-tls` selector with the pinned binaries to repeat it.
