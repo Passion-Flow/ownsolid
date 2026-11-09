@@ -147,3 +147,58 @@ signed bundle that carries the image (DEL-101).
 Tests: unit tests for the configuration rules and the listener's ALPN (done), agent tests for the gateway's
 lifecycle and its private files, control tests for the credential digest and the certificate, and a live run
 with the real image.
+
+## Downloading caller trust (GW-125)
+
+Reviewed 2026-11-09.
+
+[curl's TLS documentation](https://curl.se/docs/sslcerts.html) describes
+using a caller-selected CA file while checking both the chain and the
+endpoint name. [RFC 7468](https://www.rfc-editor.org/rfc/rfc7468.html)
+defines the PEM encoding for a PKIX certificate. [RFC 6266](https://www.rfc-editor.org/rfc/rfc6266.html)
+defines attachment names. Reuse the installation's loaded model gateway
+CA bundle that signed the node's certificate. Download the public
+certificates as `model-gateway-ca.pem`, an octet-stream attachment, and
+use the file with `curl --cacert` and the published HTTPS origin.
+The clients use existing functionality. No code, dependency, model or
+dataset from these sources is distributed. The existing [Go standard
+library](https://go.dev/LICENSE) is BSD-3-Clause. [PostgreSQL](https://www.postgresql.org/about/licence/)
+uses the PostgreSQL License and [pgx](https://github.com/jackc/pgx/blob/master/LICENSE)
+uses MIT. These allow commercial, offline and redistribution use with
+their notice terms.
+
+Use a GET on an authorized, published alias in a cell-scoped Admin or
+Portal workspace. Recheck session and workspace scope in the
+distribution transaction. Join to the active gateway, require agent
+delivery and a recorded activation, and return the loaded CA from the
+same control process's agent authority. Other installations can manage
+their own trust separately. Read the bundle from the loaded issuer so
+a changed configuration file does not substitute a different root
+before control loads it. Re-encode parsed CA certificates only, and
+refuse invalid or mixed PEM. Retain replacement roots already loaded
+by control until older leaf certificates are replaced. Use the same
+certificate-only encoding before issuing an activation receipt. Never
+send signing keys, make a request to the gateway origin or select the
+CA by an origin supplied by the caller.
+
+Test the authenticated HTTPS download and metadata through the normal
+dispatcher with PostgreSQL. Verify a TLS peer bearing a certificate from
+the existing agent activation path with the downloaded bundle and the
+advertised name. Reject a wrong hostname and foreign or unauthenticated
+readers. Exercise manual and revoked gateway states, invalid material,
+and retry. Add the public API contract before using the route in the
+Console or Portal endpoint samples.
+
+The isolated PostgreSQL run on 2026-11-09 exercised the production
+cell router and identity dispatcher over TLS with only loopback. Admin
+and Portal obtained the same certificate-only attachment. The file
+verified a loopback HTTPS endpoint using an agent-activated serving
+certificate and refused the wrong hostname. Unauthenticated, foreign
+tenant, manual gateway, revoked gateway and mixed-PEM requests returned
+problems without attachment bytes. The real activation path refused the
+mixed bundle before persisting the advertised origin or certificate.
+Replacing the file on disk did not change the already loaded public
+bundle. The delivered-gateway lifecycle, scoped usage CSV and native
+Go/Rust shared and dedicated HTTPS gateway regressions also passed.
+The HTTPS endpoint used to check the serving certificate was a Go
+fixture. Public contract and Console and Portal links remain open.

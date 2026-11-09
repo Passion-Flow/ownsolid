@@ -32,6 +32,16 @@ reported outcome. Blank token cells mean unknown usage. A reported zero
 is written as 0. The file excludes key identifiers and secrets, request
 content and actor or deployment metadata.
 
+## Trust a published gateway
+
+Add `/ca` to a cell-scoped Admin or Portal alias detail path to download
+`model-gateway-ca.pem` for its active agent-managed gateway. Use the file
+with `curl --cacert model-gateway-ca.pem` and the alias's published HTTPS
+origin. The download contains the public gateway CA certificates loaded by
+control. Retain previous roots during a CA replacement until the serving
+certificates they issued have been replaced. An administrator-placed
+gateway uses its administrator's trust setup.
+
 ## Trace an admitted call
 
 Keep the gateway's X-Request-ID response header. In the matching site and
