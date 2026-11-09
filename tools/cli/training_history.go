@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -14,38 +15,84 @@ var trainingAttemptColumns = []column{
 	{"NODE ID", "node_id"}, {"STEP", "last_global_step"}, {"ERROR", "error_code"},
 }
 
+var trainingCheckpointColumns = []column{
+	{"ID", "id"}, {"ATTEMPT ID", "attempt_id"}, {"STEP", "global_step"},
+	{"RECEIPT SHA256", "receipt_sha256"}, {"CREATED", "created_at"},
+}
+
+var trainingRecoveryColumns = []column{
+	{"ID", "id"}, {"MODE", "mode"}, {"PREVIOUS ATTEMPT", "previous_attempt_id"},
+	{"NEXT ATTEMPT", "next_attempt_id"}, {"CHECKPOINT ID", "checkpoint_id"}, {"CREATED", "created_at"},
+}
+
 var trainingMetricColumns = []column{
 	{"SEQUENCE", "sequence"}, {"STEP", "global_step"}, {"RECORDED", "recorded_at"}, {"VALUES", "values"},
 }
 
-func (opts *options) listTrainingAttempts(workspace *string) *cobra.Command {
+func (opts *options) listTrainingJobHistory(workspace *string, collection, record string, columns []column,
+	valid func(json.RawMessage, string) bool,
+) *cobra.Command {
 	var paging pageOptions
 	cmd := &cobra.Command{
-		Use:     "attempts <job-id>",
-		Short:   "Read one page of a training job's attempt history.",
-		Example: "  ownsolid training attempts \"$JOB_ID\" --limit 10",
+		Use:     collection + " <job-id>",
+		Short:   fmt.Sprintf("Read one page of a training job's %s history.", record),
+		Example: fmt.Sprintf("  ownsolid training %s \"$JOB_ID\" --limit 10", collection),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			job := args[0]
-			page, err := opts.readTrainingPage(cmd, *workspace, job, "attempts", "", paging)
+			page, err := opts.readTrainingPage(cmd, *workspace, job, collection, "", paging)
 			if err != nil {
 				return err
 			}
 			for _, item := range page.Items {
-				var attempt struct {
-					ID    string `json:"id"`
-					JobID string `json:"job_id"`
-				}
-				if err := json.Unmarshal(item, &attempt); err != nil ||
-					!resourceID.MatchString(attempt.ID) || attempt.JobID != job {
-					return errors.New("the server returned an invalid attempt or a different training job")
+				if !valid(item, job) {
+					return fmt.Errorf("the server returned an invalid %s or a different training job", record)
 				}
 			}
-			return opts.renderPage(cmd, trainingAttemptColumns, page)
+			return opts.renderPage(cmd, columns, page)
 		},
 	}
-	paging.bind(cmd, "Next cursor from the same workspace and training job")
+	paging.bind(cmd, "Next cursor from the same collection, workspace and training job")
 	return cmd
+}
+
+func validTrainingAttempt(raw json.RawMessage, job string) bool {
+	var attempt struct {
+		ID    string `json:"id"`
+		JobID string `json:"job_id"`
+	}
+	return json.Unmarshal(raw, &attempt) == nil && resourceID.MatchString(attempt.ID) && attempt.JobID == job
+}
+
+func validTrainingCheckpoint(raw json.RawMessage, job string) bool {
+	var checkpoint struct {
+		ID        string `json:"id"`
+		JobID     string `json:"job_id"`
+		AttemptID string `json:"attempt_id"`
+	}
+	return json.Unmarshal(raw, &checkpoint) == nil && resourceID.MatchString(checkpoint.ID) &&
+		checkpoint.JobID == job && resourceID.MatchString(checkpoint.AttemptID)
+}
+
+func validTrainingRecovery(raw json.RawMessage, job string) bool {
+	var recovery struct {
+		ID                string  `json:"id"`
+		JobID             string  `json:"job_id"`
+		PreviousAttemptID *string `json:"previous_attempt_id"`
+		NextAttemptID     *string `json:"next_attempt_id"`
+		CheckpointID      *string `json:"checkpoint_id"`
+		Mode              string  `json:"mode"`
+	}
+	if json.Unmarshal(raw, &recovery) != nil || !resourceID.MatchString(recovery.ID) || recovery.JobID != job {
+		return false
+	}
+	for _, id := range []*string{recovery.PreviousAttemptID, recovery.NextAttemptID, recovery.CheckpointID} {
+		if id != nil && !resourceID.MatchString(*id) {
+			return false
+		}
+	}
+	return recovery.Mode == "checkpoint" && recovery.CheckpointID != nil ||
+		recovery.Mode == "restart" && recovery.CheckpointID == nil
 }
 
 func (opts *options) listTrainingMetrics(workspace *string) *cobra.Command {
