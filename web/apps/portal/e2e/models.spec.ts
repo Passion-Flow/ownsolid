@@ -165,11 +165,13 @@ test('keeps the names when what is behind them cannot be read, and recovers', as
   const row = page.getByRole('row', { name: /support-chat/ });
   const retry = page.getByRole('button', { name: 'Try again' });
   await retry.waitFor();
+  await expect(page.getByText('Some model details could not load')).toBeVisible();
   await expect(row.getByText('Not known').first()).toBeVisible();
   await expect(row.getByText('Can be called')).toBeVisible();
   control.deploymentsProblem = null;
   await retry.click();
   await expect(row.getByText('Qwen3-0.6B')).toBeVisible();
+  await expect(page.getByText('Some model details could not load')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Try again' })).toHaveCount(0);
 });
 
@@ -206,7 +208,9 @@ test('says what to do without a workspace', async ({ page }) => {
 test.describe('with a browser that prefers Chinese', () => {
   test.use({ locale: 'zh-CN' });
 
-  test('is complete in Simplified Chinese', async ({ page }) => {
+  test('explains and recovers missing facts in Simplified Chinese', async ({ page }, info) => {
+    control.deploymentsProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/models');
     await expect(
       page.getByRole('heading', { name: chinese['portalModels.title'], level: 1 }),
@@ -214,5 +218,15 @@ test.describe('with a browser that prefers Chinese', () => {
     const row = page.getByRole('row', { name: /support-chat/ });
     await expect(row.getByText(chinese['portalModels.state.callable'])).toBeVisible();
     await expect(page.getByRole('button', { name: chinese['portalModels.try'] })).toBeVisible();
+    await expect(page.getByText(chinese['portalModels.factsUnavailable.title'])).toBeVisible();
+    await expect(page.getByText(chinese['portalModels.factsUnavailable.detail'])).toBeVisible();
+    await info.attach('portal-model-facts-unavailable-zh-cn', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    control.deploymentsProblem = null;
+    await page.getByRole('button', { name: chinese['action.retry'] }).click();
+    await expect(row.getByText('Qwen3-0.6B')).toBeVisible();
+    await expect(page.getByText(chinese['portalModels.factsUnavailable.title'])).toHaveCount(0);
   });
 });

@@ -2338,6 +2338,8 @@
   "portalModels.emptyFilter.detail": "更改搜索内容或筛选项，或清除筛选以查看全部模型。",
   "portalModels.emptyFilter.clear": "清除筛选",
   "portalModels.partial": "仅显示前 {count} 个模型。搜索名称可查找其余模型。",
+  "portalModels.factsUnavailable.title": "部分模型详情加载失败",
+  "portalModels.factsUnavailable.detail": "仍可查看调用名称和可用状态。模型、来源和上下文长度可能暂时缺失。",
   "portalModels.noWorkspace.detail": "管理员将你加入工作空间后，你可以在这里看到其中的模型。",
   "keys.title": "我的 API 密钥",
   "keys.subtitle": "用于调用 {workspace} 模型的密钥。每个密钥只能调用一个模型，在到期、被你撤销或你离开工作空间时失效。",
