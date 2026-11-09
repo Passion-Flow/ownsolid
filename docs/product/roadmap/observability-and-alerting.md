@@ -16,6 +16,7 @@ fully offline.
 ## P1 Enterprise release
 
 - [ ] OBS-101 Node, GPU, service and app metrics with per-agent series budgets (P1) - Catalog: F230
+  - [Scoped node scrape profile](../../research/node-scrape-budgets.md#verified-scoped-scrape-path) qualifies TLS discovery labels, per-target series and sample limits, and recovery. Enrollment-driven inventory and GPU, service and app publishers remain open.
 - [ ] OBS-102 Log collection with agent-side rate limits and retention (P1)
 - [ ] OBS-103 OpenTelemetry tracing across gateway, workflows and jobs (P1) - Catalog: F235
 - [ ] OBS-104 Alert rules with severity, grouping, silencing and escalation (P1)
