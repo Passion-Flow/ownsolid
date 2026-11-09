@@ -1,0 +1,29 @@
+# Operations lane integration boundaries
+
+## OPS-104 live delivery
+
+The [component log settlement note](component-log-settlement.md) specifies
+the existing Admin snapshot and its acceptance. Live delivery requires
+the task producer and log store to supply a scoped cursor or content
+reference that becomes visible after settlement and survives retries.
+The shared route and console owners can then register an authenticated
+resumable stream with an authorization check at delivery. The current
+component route remains a bounded on-demand snapshot.
+
+## CAT-106 installed application operations
+
+The [Compose launcher](../../deploy/offline/internal/install/catalog_compose.go)
+accepts the admitted source and model digests and returns the launch
+outcome. The [applications API](../../api/openapi/v1/applications/openapi.json)
+lists Portal workflow apps and conversations. Neither supplies an
+installed workload identity or a source to query for an installed app.
+
+The installation owner must retain an installation ID and exact release
+pin, the server-authorized tenant, workspace, site and cell, and the
+admitted engine project or namespace and workload IDs. A log producer
+must resolve that identity to its scoped source and a committed cursor.
+The shared API and console owners must register health, log and terminal
+operations against that installation. Terminal access requires a current
+permission check, an audit record and explicit operator confirmation.
+Admission digests and caller-supplied project names cannot establish
+workload ownership.
