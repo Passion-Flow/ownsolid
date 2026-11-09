@@ -4,9 +4,12 @@ A PostgreSQL restore exchanges the old and incoming database names in one
 transaction. The transaction can commit even when the installer never receives
 its result. The name `ownsolid` alone cannot say which database it contains.
 
-Persist a private restore record after dump verification and before stopping
-the writer. Bind it to the site configuration, PostgreSQL cluster identifier
-and both database OIDs. Check those identities inside the rename transaction.
+Persist a private restore record after identifying the scratch database and
+before loading the dump. Bind it to the site configuration, PostgreSQL cluster
+identifier and both database OIDs. Verify the load before admitting the exchange
+or stopping the writer. An interrupted load can move only the scratch database
+to the failed name while the original stays online. Check those identities
+inside the rename transaction.
 A reverse rename puts the candidate under a distinct name, so a delayed forward
 transaction cannot move it back. Keep both databases for inspection.
 
