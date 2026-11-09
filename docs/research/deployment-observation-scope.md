@@ -65,3 +65,26 @@ loopback PostgreSQL database. The first test uses the declared heartbeat
 budget of 11 and disables parameter logging. ARC can use this commit for
 the shared two-fleet cost run. This evidence covers one node and the
 three listed transport exchanges.
+
+## Deployment-bound heartbeat
+
+A deployed model's report also reads the owning deployment and updates
+its current revision. The transport budget still applies after a Control
+restart when the PostgreSQL receipt and deployment survive but the
+pacing and liveness caches start empty. Measure this case separately
+from a new hardware row. Reuse the same production HTTPS dispatcher,
+certificate, installed deployment and nested recorder. A current report
+must update the exact deployment without moving the GPU reservation.
+An older revision must not overwrite the retained deployment observation.
+The code paths and wire contract are unchanged unless the measurement
+finds a new excess.
+
+The actual deployment service committed an intent and the node task
+completed with a protocol fixture observation. After restarting the
+dispatcher over the same database, the first current-revision mTLS
+report used **11 statements, 15 rows and 44 shared blocks**. It updated
+the stored observation and retained the GPU reservation. After an
+authorized stop advanced the revision, the delayed report used **9
+statements, 12 rows and 35 shared blocks** and left the retained
+deployment observation and reservation intact. These are real
+PostgreSQL and TLS exchanges with synthetic GPU and runtime metadata.

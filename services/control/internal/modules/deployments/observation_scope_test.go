@@ -9,6 +9,7 @@ import (
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
@@ -44,7 +45,8 @@ func TestMutualTLSInferenceObservationCost(t *testing.T) {
 	}
 	server := httpfixture.NewTLSServerAskingClients(t, handler, roots)
 	t.Cleanup(server.Close)
-	client := httpfixture.New(t, server, "admin", httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json"))
+	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json")
+	client := httpfixture.New(t, server, "admin", schemas)
 
 	profile := wire.DockerInferenceProfile
 	token, err := handler.Nodes.Service.MintForProfile(ctx, admin, admin.Me.Workspace.ID, "Inference cost node", profile, uuid.NewString())
@@ -94,23 +96,13 @@ func TestMutualTLSInferenceObservationCost(t *testing.T) {
 		t.Run(probe.name, func(t *testing.T) {
 			h.Inference.ProbeErrorCode = probe.probeError
 			client.Headers = map[string]string{"Authorization": "Bearer " + probe.credential}
-			cost, err := recorder.Record(func() {
+			checkHeartbeatCost(t, &recorder, func() {
 				if probe.credential == node.Credential {
 					client.Call("POST", path, h, 200, "DispositionResponse")
 				} else if code := client.Problem("POST", path, h, 401); code != "AGENT_UNAUTHORIZED" {
 					t.Errorf("foreign credential: %s", code)
 				}
 			})
-			if err != nil {
-				t.Fatal(err)
-			}
-			t.Logf("statements=%d rows=%d blocks=%d", len(cost.Statements), cost.Rows(), cost.Blocks())
-			if n := len(cost.Statements); n == 0 || n > wire.CallHeartbeat.Cost().Statements {
-				for _, statement := range cost.Statements {
-					t.Log(strings.TrimSpace(statement.Query))
-				}
-				t.Errorf("ran %d statements for a ceiling of %d", n, wire.CallHeartbeat.Cost().Statements)
-			}
 		})
 	}
 	var site, cell string
@@ -118,6 +110,93 @@ func TestMutualTLSInferenceObservationCost(t *testing.T) {
 	var stored wire.InferenceObservation
 	if err != nil || site != node.SiteID || cell != node.CellID || json.Unmarshal(raw, &stored) != nil || stored.ProbeErrorCode != "INFERENCE_NVIDIA_UNAVAILABLE" {
 		t.Fatalf("observation did not persist in its node scope: %q/%q, %v", site, cell, err)
+	}
+
+	t.Run("cold report for retained deployment", func(t *testing.T) {
+		model := uuid.NewString()
+		catalog, err := json.Marshal(wire.ApprovedModel())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := account.DB.Exec(ctx, `INSERT INTO model_versions(id,tenant_id,workspace_id,name,model_key,catalog_digest,manifest,state,created_by)
+			VALUES($1,$2,$3,'Approved catalogue fixture',$4,$5,$6,'ready',$7)`,
+			model, admin.Me.Workspace.TenantID, admin.Me.Workspace.ID, wire.ApprovedModel().ModelKey, wire.ModelCatalogDigest(), catalog, admin.Me.User.ID); err != nil {
+			t.Fatal(err)
+		}
+		now := time.Now().UTC()
+		h.Inference = &wire.InferenceObservation{ObservedAt: now, GPUs: []wire.NVIDIAGPU{{
+			UUID: gpuID, Name: "Protocol fixture GPU", DriverVersion: "580.1", ComputeCapability: 8,
+			MemoryTotalMiB: 16384, MemoryFreeMiB: 16384, MIGMode: "Disabled", ObservedAt: now,
+		}}}
+		client.Headers = map[string]string{"Authorization": "Bearer " + node.Credential}
+		client.Call("POST", path, h, 200, "DispositionResponse")
+		deployment, err := handler.Deployments.Service.Create(ctx, admin, deployments.CreateRequest{
+			NodeID: node.NodeID, ModelID: model, GPUUUID: gpuID, Reason: "Commit the deployment before restarting the dispatcher",
+		}, uuid.NewString(), uuid.NewString())
+		if err != nil {
+			t.Fatal(err)
+		}
+		claim, err := handler.Nodes.Service.Claim(ctx, node.NodeID, node.Credential, uuid.NewString())
+		if err != nil || claim.Lease == nil || claim.Lease.Inference == nil {
+			t.Fatal("claim retained deployment", err)
+		}
+		observed := result(*claim.Lease, "running")
+		if state, err := handler.Nodes.Service.Complete(ctx, node.NodeID, node.Credential, claim.Lease.TaskID, observed, uuid.NewString()); err != nil || state != "succeeded" {
+			t.Fatal("complete retained deployment", state, err)
+		}
+
+		server.Close()
+		restarted := transport.New(account)
+		restarted.Nodes.Service.Certificates = authority
+		coldServer := httpfixture.NewTLSServerAskingClients(t, restarted, roots)
+		t.Cleanup(coldServer.Close)
+		cold := httpfixture.New(t, coldServer, "admin", schemas).WithCertificate(cert)
+		cold.Headers = map[string]string{"Authorization": "Bearer " + node.Credential}
+		h.Inference.Deployment = observed.Inference.Deployment
+		h.Inference.Deployment.State = "loading"
+		h.Inference.Deployment.Ready = false
+		h.Inference.Deployment.Verification = nil
+		checkHeartbeatCost(t, &recorder, func() {
+			cold.Call("POST", path, h, 200, "DispositionResponse")
+		})
+		current, err := restarted.Deployments.Service.Get(ctx, admin, "", deployment.ID)
+		if err != nil || current.ObservedState != "loading" || current.ResourceState != "held" || current.Observation == nil || current.Observation.Revision != deployment.Revision {
+			t.Fatalf("current report did not update the retained deployment: %+v, %v", current, err)
+		}
+
+		// A delayed report from before the new desired revision cannot replace
+		// the stored observation or release the deployment's reservation.
+		stopping, err := restarted.Deployments.Service.Action(ctx, admin, deployment.ID, deployments.ActionRequest{
+			Action: "stop", Revision: current.Revision, Reason: "Advance desired state before the delayed report",
+		}, uuid.NewString(), uuid.NewString())
+		if err != nil {
+			t.Fatal(err)
+		}
+		h.Inference.Deployment.State = "failed"
+		t.Run("stale revision", func(t *testing.T) {
+			checkHeartbeatCost(t, &recorder, func() {
+				cold.Call("POST", path, h, 200, "DispositionResponse")
+			})
+		})
+		current, err = restarted.Deployments.Service.Get(ctx, admin, "", deployment.ID)
+		if err != nil || current.Revision != stopping.Revision || current.ObservedState != "loading" || current.ResourceState != "held" {
+			t.Fatalf("delayed report changed retained deployment: %+v, %v", current, err)
+		}
+	})
+}
+
+func checkHeartbeatCost(t *testing.T, recorder *agentcost.Recorder, heartbeat func()) {
+	t.Helper()
+	cost, err := recorder.Record(heartbeat)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("statements=%d rows=%d blocks=%d", len(cost.Statements), cost.Rows(), cost.Blocks())
+	if n := len(cost.Statements); n == 0 || n > wire.CallHeartbeat.Cost().Statements {
+		for _, statement := range cost.Statements {
+			t.Log(strings.TrimSpace(statement.Query))
+		}
+		t.Errorf("ran %d statements for a ceiling of %d", n, wire.CallHeartbeat.Cost().Statements)
 	}
 }
 
