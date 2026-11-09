@@ -12,13 +12,13 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -192,23 +192,35 @@ func registryAudit(ctx context.Context, q transaction.Executor, a identity.Auth,
 	_, e := q.Exec(ctx, statement(q, `INSERT INTO audit_events(id,occurred_at,actor_user_id,audience,action,outcome,target_type,target_id,reason,request_id,tenant_id,workspace_id) VALUES($1,clock_timestamp(),$2,$3,$4,'success','image_registry_pin',$5,$6,$7,$8,$9)`, `INSERT INTO audit_events(id,occurred_at,actor_user_id,audience,action,outcome,target_type,target_id,reason,request_id,tenant_id,workspace_id) VALUES(?,UTC_TIMESTAMP(6),?,?,?,'success','image_registry_pin',?,?,?,?,?)`, uuid.NewString(), a.Me.User.ID, a.Me.Audience, "image_registry."+action, target, m.Reason, m.RequestID, w.TenantID, w.ID))
 	return e
 }
-func mutationWithin(ctx context.Context, q transaction.Executor, a identity.Auth, w workspaces.Workspace, operation, target string, m Mutation, intent any) (string, bool, error) {
+func mutationFingerprint(intent any) ([32]byte, error) {
 	raw, e := json.Marshal(intent)
+	return sha256.Sum256(raw), e
+}
+
+func lookupMutationWithin(ctx context.Context, q transaction.Executor, a identity.Auth, w workspaces.Workspace, operation, key string, fingerprint [32]byte) (string, bool, error) {
+	var previous string
+	var stored []byte
+	e := q.QueryRow(ctx, statement(q, `SELECT target_id::text,fingerprint FROM image_registry_mutations WHERE tenant_id=$1 AND workspace_id=$2 AND actor_id=$3 AND operation=$4 AND idempotency_key=$5 FOR UPDATE`, `SELECT target_id,fingerprint FROM image_registry_mutations WHERE tenant_id=? AND workspace_id=? AND actor_id=? AND operation=? AND idempotency_key=? FOR UPDATE`, w.TenantID, w.ID, a.Me.User.ID, operation, key)).Scan(&previous, &stored)
+	if errors.Is(e, sql.ErrNoRows) {
+		return "", false, nil
+	}
 	if e != nil {
 		return "", false, e
 	}
-	fingerprint := sha256.Sum256(raw)
-	var previous string
-	var stored []byte
-	e = q.QueryRow(ctx, statement(q, `SELECT target_id::text,fingerprint FROM image_registry_mutations WHERE tenant_id=$1 AND workspace_id=$2 AND actor_id=$3 AND operation=$4 AND idempotency_key=$5 FOR UPDATE`, `SELECT target_id,fingerprint FROM image_registry_mutations WHERE tenant_id=? AND workspace_id=? AND actor_id=? AND operation=? AND idempotency_key=? FOR UPDATE`, w.TenantID, w.ID, a.Me.User.ID, operation, m.Key)).Scan(&previous, &stored)
-	if e == nil {
-		if !bytes.Equal(stored, fingerprint[:]) {
-			return "", false, failure("IDEMPOTENCY_CONFLICT")
-		}
-		return previous, true, nil
+	if !bytes.Equal(stored, fingerprint[:]) {
+		return "", false, failure("IDEMPOTENCY_CONFLICT")
 	}
-	if !errors.Is(e, sql.ErrNoRows) {
+	return previous, true, nil
+}
+
+func mutationWithin(ctx context.Context, q transaction.Executor, a identity.Auth, w workspaces.Workspace, operation, target string, m Mutation, intent any) (string, bool, error) {
+	fingerprint, e := mutationFingerprint(intent)
+	if e != nil {
 		return "", false, e
+	}
+	previous, replay, e := lookupMutationWithin(ctx, q, a, w, operation, m.Key, fingerprint)
+	if e != nil || replay {
+		return previous, replay, e
 	}
 	_, e = q.Exec(ctx, statement(q, `INSERT INTO image_registry_mutations(tenant_id,workspace_id,actor_id,operation,idempotency_key,fingerprint,target_id) VALUES($1,$2,$3,$4,$5,$6,$7)`, `INSERT INTO image_registry_mutations(tenant_id,workspace_id,actor_id,operation,idempotency_key,fingerprint,target_id) VALUES(?,?,?,?,?,?,?)`, w.TenantID, w.ID, a.Me.User.ID, operation, m.Key, fingerprint[:], target))
 	return target, false, e
