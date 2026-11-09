@@ -39,11 +39,14 @@ func (opts *options) trainingCommand() *cobra.Command {
 	var workspace string
 	group := &cobra.Command{
 		Use:     "training",
-		Short:   "Create, read, or cancel a training job in the Admin control plane.",
+		Short:   "Manage training jobs and read attempt history and metrics.",
 		Example: "  ownsolid training get \"$JOB_ID\" --output json",
 	}
 	group.PersistentFlags().StringVar(&workspace, "workspace", "", "Workspace UUID (defaults to the configured or current workspace)")
-	group.AddCommand(opts.createTrainingJob(&workspace), opts.getTrainingJob(&workspace), opts.cancelTrainingJob(&workspace))
+	group.AddCommand(
+		opts.createTrainingJob(&workspace), opts.getTrainingJob(&workspace), opts.cancelTrainingJob(&workspace),
+		opts.listTrainingAttempts(&workspace), opts.listTrainingMetrics(&workspace),
+	)
 	return group
 }
 
