@@ -84,3 +84,62 @@ namespace with only loopback. All 40 agents went from 18/22 sessions to 0/40 and
 returned to their original 18/22 split in 12.732 seconds. The separate
 500-agent installation drill stopped when its Docker-in-Docker container exited
 during setup. No installation-level result is recorded for ARC-107.
+
+## Dedicated listener connection age
+
+The standalone `serve-agent-gateway` listener has its own TLS socket and
+connection budget. Attach the drain instant in
+[Go's ConnContext](https://pkg.go.dev/net/http#Server) and bound the
+underlying socket's read and write deadlines through the public
+[net.Conn interface](https://pkg.go.dev/net#Conn). Choose the instant
+uniformly from the final tenth of the configured maximum age. Set the
+hard socket deadline after the largest allowed claim wait and the
+existing request budgets for peer validation, the exchange and its
+reply. Clamp every transport deadline update to that hard limit,
+including a request to clear a deadline. This keeps a stalled TLS or
+HTTP/2 peer from keeping the aged connection indefinitely.
+
+The stream owns one exchange at a time. Age ends it between exchanges
+using the same v1 `SERVICE_NOT_READY` status as process drain. An
+exchange admitted before the age keeps its normal context and can
+deliver its reply. The v1 Agent retains its persisted acknowledged
+sequence and already retries an interrupted acknowledgement through
+the authenticated HTTPS path. The dedicated server's original process
+drain stays independent. A new HTTP request on an aged connection
+selects `Connection: close` before committing headers. The pinned
+[Go HTTP/2 server](https://github.com/golang/go/blob/go1.27.3/src/net/http/internal/http2/server.go)
+consumes that header to schedule GOAWAY and omits it from the wire.
+An existing stream whose headers were already sent drains at the
+application boundary, with the socket deadline as the final bound.
+
+Reject use of the global Gateway drain for one connection. It would
+cancel existing claims and refuse every healthy connection. Avoid
+writing frames directly on the TLS socket, which would race the
+standard library's HTTP/2 framer. The embedded Agent endpoint shares a
+listener with other traffic and needs its own scoped integration.
+The dedicated option keeps older YAML valid with a 1,800-second
+maximum and leaves the v1 messages, leases and cursor format intact.
+
+Test verified local TLS and HTTP/2 through the production listener.
+Hold an admitted claim across age, complete its reply, observe the v1
+drain status, and reconnect to a second listener with the same
+acknowledged cursor. Refuse post-age exchanges on the old stream.
+Check the pinned HTTP/2 close behavior and bound a transport that
+does not reconnect. The Go and gRPC licences above apply and no
+new runtime dependency or data is added. This scope does not
+qualify installed gateways or fleet load.
+
+The two-listener regression passed under the Go race detector and
+in an isolated Linux arm64 container with no network. It held a
+claim across age, read the complete reply and the legacy drain
+status, then confirmed that the same listener accepted a new
+connection and the second listener received the previous cursor.
+The transport test decoded a real HTTP/2 GOAWAY on an aged request
+and proved the socket deadline closed a silent connection. The
+legacy configuration default, bounds and process-wide drain passed
+in the same disconnected run. For the focused replay use:
+
+```sh
+go -C services/control test -p 1 ./internal/platform/agentgateway ./internal/platform/httpserver ./internal/platform/config \
+  -run '^(TestAgedGatewayFinishesHeldClaimAndPreservesCursor|TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport|TestAgentGatewayConnectionMaxAgeDefaultsAndBounds|TestDrainEndsSessionsAndRefusesNewOnes)$' -count=1
+```
