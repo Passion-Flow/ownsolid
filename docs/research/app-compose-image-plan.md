@@ -17,18 +17,30 @@ the pinned Compose CLI. The catalog matches the source digest to the
 verified bundle and checks every rendered service against the signed
 manifest digests registered by the existing Docker importer. Require
 digest-only references and explicit never-pull, and refuse unsupported
-image acquisition paths before contacting Docker. Use the model byte
-digest and release pin as the handoff to the installer.
+image acquisition paths before contacting Docker. The handoff binds the
+release pin, signed source digest, exact model byte digest and ordered
+service-to-manifest pairs to the installer's scoped operation.
 
 A renderer can access files and includes before a normalized model
 exists. Rendering belongs to the installer sandbox. Workload
 privileges, secret and mount admission, egress policy, authorization,
-audit and startup are separate gates. The deployer verifies the same
-rendered digest before use and supplies pull never and no-build.
+audit and startup are separate gates. A model can preserve every
+image rule while replacing a command, mount or privilege setting.
+Rechecking image rules alone would admit that replacement at import.
+Pass the trusted plan recorded at admission back into the importer
+and compare it with the complete plan rederived from the staged
+bundle and the rendered bytes. At startup, recheck the retained
+model bytes against that plan and pass the same private buffer to the
+launcher. Compose can read a sole configuration from standard input
+and disable pulls and builds. The installer owns the execution
+context, including profiles, environment, interpolation and project
+paths, and must preserve the admitted model when consuming it.
+[Compose CLI](https://docs.docker.com/reference/cli/docker/compose/),
+[Compose up](https://docs.docker.com/reference/cli/docker/compose/up/).
+
 A parser of raw Compose YAML would duplicate interpolation, merge and
 profile semantics. Querying tags, registries or image metadata would
 lose the signed image identity or the offline property.
-[Compose up](https://docs.docker.com/reference/cli/docker/compose/up/).
 
 A disconnected Docker Compose 5.0.0 prototype rendered two digest-only
 services using the pinned Docker development fixture. It preserved the
@@ -49,8 +61,22 @@ missing or unsigned image, a mutable reference, a pull policy that
 permits registry access, a build, provider, init image, model or image
 mount, and a mismatched source artifact digest. Return a stable list
 of service and image identities and the exact verified JSON digest.
+Use signed fixtures to verify that changing only the command still
+passes image policy but fails the admitted plan comparison before
+Docker access. Also refuse a missing model or mismatched pin, source,
+service binding or exact model bytes. The tagged Docker fixture
+derives its expected plan before image import and verifies the
+retained bytes before passing control to a prospective launcher.
 
-The disconnected Linux amd64 integration rendered the actual signed
+The installer integration needs an authorized installation with a
+correlated audit record containing the pin and digests. Exercise a
+replaced source file before rendering, a command or privilege change
+with unchanged images after admission, a staged-file replacement
+before launch, and a stale release pin. Deny cross-scope use of the
+admission record, verify that rejected attempts reach no launcher,
+and keep the installation unsettled when startup fails.
+
+The initial disconnected Linux amd64 integration rendered the actual signed
 Compose artifact with Compose 5.0.0, checked the normalized bytes,
 and loaded the one verified manifest into a disposable Docker 29.1.3
 containerd image store. The store contained exactly that untagged
