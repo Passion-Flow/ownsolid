@@ -12,6 +12,49 @@ DataTrove ([Apache-2.0](https://github.com/huggingface/datatrove/blob/main/LICEN
 - Keep source text, original positions, effective-source and clone behavior. Approximate removals record the original row digest and retained line in the existing duplicates asset with `match_rule`. Freeze the opt-in policy in the publication job and carry it into retries. A cloned version is a new draft, and its next publication selects a policy independently.
 - Build one authoritative plan in Go outside the database transaction. It records only line references, is sealed by SHA-256 for the private worker, and is applied by the existing worker and its Go verification path. Manifest shape and row mapping stay compatible. Budget the index from configured memory, and cap posting visits and exact comparison work. An exhausted budget fails the attempt without committing a version. This opt-in route uses the existing bounded publication contract. The generic large-file intake remains streaming and unmodified.
 
+## Public publication
+
+[Google's compatibility guidance](https://google.aip.dev/180#adding-components)
+preserves existing behavior when an optional request field is absent.
+Its [request identification guidance](https://google.aip.dev/155) uses an
+unchanged request identifier for replay. Add an optional `deduplication`
+field to the existing Admin and Portal publication request. Omission
+keeps exact deduplication and its original fingerprint. The explicit
+value `near_prompt_v1` selects the existing lexical policy. Reject empty,
+null, duplicate and unknown values through the strict request boundary
+and the service validator. An explicit exact alias would add a second
+spelling to the same intent. A separate operation would duplicate the
+existing authorization, locking and retry path.
+
+Pass the selected policy and any test ratio together to
+`PublishWithOptions`. Three-way grouping still joins all known leakage
+edges under either removal policy. Replaying the same key with a
+different policy must conflict, and retry must carry both the frozen
+policy and the test ratio. The existing worker and dependency licenses
+continue to apply. DEV owns the public schema and generated types.
+Deliver them with the handler on the same main-branch update.
+
+Use the existing disconnected TLS and PostgreSQL fixture to publish
+both policies from the same effective source, including an exact
+duplicate, a spelling change, a distinct answer, a transitive bridge
+and multiple rows sharing a source ID. Check that near removal records
+its rule in the sealed duplicates asset, that protected rows remain
+in one partition, and that all three file digests match the manifest.
+Exercise an invalid strategy, an idempotency conflict and a retryable
+worker failure. Keep the S-503 controls and generic-format preview
+as separate integrations.
+
+On Linux amd64, the real HTTPS dispatcher and CPython processor passed with
+PostgreSQL 18.6 and pgvector 0.8.7 in a loopback-only network namespace.
+The same eight effective rows produced two marked removals under the
+near policy and one exact removal under the omitted policy. The two
+distinct answers, spelling bridge and shared-source rows stayed in one
+partition. All three partition downloads and the duplicates export
+matched their sealed sizes and digests. Invalid strategies returned
+HTTP 400, and changing the strategy under the same key returned 409.
+After an injected worker exit, the HTTPS retry published all three
+partitions with the original near policy and test ratio.
+
 ## Prototype and acceptance
 
 An isolated CPython 3.12 prototype checked English and Chinese typos, a transitive bridge, changed completions, negation, numeric changes, short prompts and unrelated text. A 96-code-point Chinese example scored 87/97, below the cutoff, and remained distinct. The longer typo fixture qualified. Candidate edges matched exhaustive comparison on 524 rows and were invariant under input permutation. For a fixed source order the earliest eligible representative is deterministic. With the network disconnected and a 256 MiB container limit, 10,000 sparse synthetic rows used 780,000 index units, 74 posting visits, and 66,836 KiB peak RSS in 0.51 seconds. Forced small index and candidate budgets refused dense inputs. These are prototype measurements on synthetic data.
@@ -21,5 +64,5 @@ Run production tests against the exact comparison and an exhaustive oracle, and 
 For the focused publication check, configure the loopback PostgreSQL and CPython 3.12 fixture described in the [development environment](../development/environment.md), then run:
 
 ```sh
-go -C services/control test -tags dataset_processor_integration ./internal/modules/datasets   -run '^(TestNearPrompt|TestActualNearPrompt)' -count=1
+go -C services/control test -tags dataset_processor_integration ./internal/modules/datasets   -run '^(TestNearPrompt|TestActualNearPrompt|TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness)' -count=1
 ```

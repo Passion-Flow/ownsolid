@@ -168,6 +168,7 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	portal.Write("POST", versionPath+"/retire", map[string]any{"reason": "Retain immutable history"}, 200, "DatasetVersionResponse")
 	admin.Call("GET", adminPath+"/versions/"+versionID, nil, 200, "DatasetVersionResponse")
 	verifyThreeWayHTTPSPublication(t, handler.Datasets.Service, portal, admin, path, adminPath)
+	verifyNearPromptHTTPSPublication(t, handler.Datasets.Service, portal, admin, path, adminPath)
 }
 
 func prepareHTTPSPublicationDraft(t *testing.T, service *datasets.Service, client *httpfixture.Client, path string, raw []byte) map[string]any {
@@ -236,6 +237,47 @@ func verifyThreeWayHTTPSPublication(t *testing.T, service *datasets.Service, por
 		t.Fatalf("omitting the queued test ratio returned %v", problem["code"])
 	}
 
+	retry := retryHTTPSPublicationAfterProcessorExit(t, service, portal, path, job)
+	versionID := retry["version_id"].(string)
+	versionPath := path + "/versions/" + versionID
+	version := portal.Call("GET", versionPath, nil, 200, "DatasetVersionResponse")
+	admin.Call("GET", adminPath+"/versions/"+versionID, nil, 200, "DatasetVersionResponse")
+	portal.Call("GET", path+"/versions", nil, 200, "DatasetVersionPageResponse")
+	manifest := readHTTPSDatasetManifest(t, version["manifest"])
+	if manifest.SchemaVersion != 2 || manifest.TestBasisPoints != 4000 || manifest.ValidationBasisPoints != 5000 ||
+		manifest.SourceGroups != 3 || manifest.ValidationGroups != 1 || manifest.TestGroups != 1 || manifest.UniqueRows != 4 {
+		t.Fatalf("unexpected three-way manifest: %+v", manifest)
+	}
+	testDigest, sourceSplits, sourceRows := checkHTTPSPartitionAssets(t, portal, versionPath, manifest)
+	if len(sourceSplits) != 3 || sourceRows["a"] != 2 || sourceRows["b"] != 1 || sourceRows["c"] != 1 {
+		t.Fatalf("unexpected source counts: %v", sourceRows)
+	}
+	adminFile := admin.Call("GET", adminPath+"/versions/"+versionID+"/files/test", nil, 200, "dataset-file")
+	if adminFile["sha256"] != testDigest {
+		t.Fatal("Admin and Portal returned different test files")
+	}
+	foreignPath := "/api/v1/workspaces/" + uuid.NewString() + "/datasets/" + version["dataset_id"].(string)
+	portal.Call("GET", foreignPath+"/versions/"+versionID+"/files/test", nil, 404, "Problem")
+
+	tooFew := prepareHTTPSPublicationDraft(t, service, portal, path, []byte(`{"source_id":"a","prompt":"Identify the prime numbers","completion":"Two and three."}
+{"source_id":"b","prompt":"Name the largest ocean","completion":"Pacific."}
+`))
+	input["expected_revision"] = tooFew["revision"]
+	input["test_basis_points"] = 100
+	portal.Headers["Idempotency-Key"] = uuid.NewString()
+	shortJob := portal.Write("POST", path+"/drafts/"+tooFew["id"].(string)+"/publications", input, 202, "DatasetJobResponse")
+	if worked, err := service.ProcessNext(t.Context()); err != nil || !worked {
+		t.Fatal("process insufficient-groups publication", err)
+	}
+	shortResult := portal.Call("GET", path+"/jobs/"+shortJob["id"].(string), nil, 200, "DatasetJobResponse")
+	if shortResult["state"] != "failed" || shortResult["error_code"] != "DATASET_SPLIT_INSUFFICIENT_GROUPS" || shortResult["retryable"] != false {
+		t.Fatalf("insufficient groups produced an unexpected result: %v", shortResult["error_code"])
+	}
+	portal.Call("GET", path+"/versions/"+shortJob["version_id"].(string), nil, 404, "Problem")
+}
+
+func retryHTTPSPublicationAfterProcessorExit(t *testing.T, service *datasets.Service, portal *httpfixture.Client, path string, job map[string]any) map[string]any {
+	t.Helper()
 	// Fail one worker execution after the HTTPS request has committed the job.
 	configured := service.Identity.Config.Datasets
 	configured.ProcessorFile = filepath.Join(t.TempDir(), "fail.py")
@@ -276,39 +318,12 @@ func verifyThreeWayHTTPSPublication(t *testing.T, service *datasets.Service, por
 	}
 	completed := portal.Call("GET", path+"/jobs/"+retry["id"].(string), nil, 200, "DatasetJobResponse")
 	if completed["state"] != "succeeded" {
-		t.Fatalf("retried split publication failed: %v", completed["error_code"])
+		t.Fatalf("retried publication failed: %v", completed["error_code"])
 	}
-	versionID := retry["version_id"].(string)
-	versionPath := path + "/versions/" + versionID
-	version := portal.Call("GET", versionPath, nil, 200, "DatasetVersionResponse")
-	admin.Call("GET", adminPath+"/versions/"+versionID, nil, 200, "DatasetVersionResponse")
-	portal.Call("GET", path+"/versions", nil, 200, "DatasetVersionPageResponse")
-	testDigest := checkHTTPSPartitionAssets(t, portal, versionPath, version["manifest"])
-	adminFile := admin.Call("GET", adminPath+"/versions/"+versionID+"/files/test", nil, 200, "dataset-file")
-	if adminFile["sha256"] != testDigest {
-		t.Fatal("Admin and Portal returned different test files")
-	}
-	foreignPath := "/api/v1/workspaces/" + uuid.NewString() + "/datasets/" + version["dataset_id"].(string)
-	portal.Call("GET", foreignPath+"/versions/"+versionID+"/files/test", nil, 404, "Problem")
-
-	tooFew := prepareHTTPSPublicationDraft(t, service, portal, path, []byte(`{"source_id":"a","prompt":"Identify the prime numbers","completion":"Two and three."}
-{"source_id":"b","prompt":"Name the largest ocean","completion":"Pacific."}
-`))
-	input["expected_revision"] = tooFew["revision"]
-	input["test_basis_points"] = 100
-	portal.Headers["Idempotency-Key"] = uuid.NewString()
-	shortJob := portal.Write("POST", path+"/drafts/"+tooFew["id"].(string)+"/publications", input, 202, "DatasetJobResponse")
-	if worked, err := service.ProcessNext(t.Context()); err != nil || !worked {
-		t.Fatal("process insufficient-groups publication", err)
-	}
-	shortResult := portal.Call("GET", path+"/jobs/"+shortJob["id"].(string), nil, 200, "DatasetJobResponse")
-	if shortResult["state"] != "failed" || shortResult["error_code"] != "DATASET_SPLIT_INSUFFICIENT_GROUPS" || shortResult["retryable"] != false {
-		t.Fatalf("insufficient groups produced an unexpected result: %v", shortResult["error_code"])
-	}
-	portal.Call("GET", path+"/versions/"+shortJob["version_id"].(string), nil, 404, "Problem")
+	return retry
 }
 
-func checkHTTPSPartitionAssets(t *testing.T, client *httpfixture.Client, versionPath string, value any) string {
+func readHTTPSDatasetManifest(t *testing.T, value any) wire.Manifest {
 	t.Helper()
 	encoded, err := json.Marshal(value)
 	if err != nil {
@@ -318,10 +333,24 @@ func checkHTTPSPartitionAssets(t *testing.T, client *httpfixture.Client, version
 	if err := json.Unmarshal(encoded, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if manifest.SchemaVersion != 2 || manifest.TestBasisPoints != 4000 || manifest.ValidationBasisPoints != 5000 ||
-		manifest.SourceGroups != 3 || manifest.ValidationGroups != 1 || manifest.TestGroups != 1 || manifest.UniqueRows != 4 {
-		t.Fatalf("unexpected three-way manifest: %+v", manifest)
+	return manifest
+}
+
+func readHTTPSDatasetAsset(t *testing.T, client *httpfixture.Client, versionPath, name string, manifest wire.Manifest) (string, string) {
+	t.Helper()
+	file := client.Call("GET", versionPath+"/files/"+name, nil, 200, "dataset-file")
+	raw, digest := file["text"].(string), file["sha256"].(string)
+	for _, asset := range manifest.Files {
+		if asset.Path == name+".jsonl" && asset.SHA256 == digest && asset.SizeBytes == int64(len(raw)) {
+			return raw, digest
+		}
 	}
+	t.Fatalf("%s export differs from its manifest digest or length", name)
+	return "", ""
+}
+
+func checkHTTPSPartitionAssets(t *testing.T, client *httpfixture.Client, versionPath string, manifest wire.Manifest) (string, map[string]string, map[string]int) {
+	t.Helper()
 	sourceSplits := make(map[string]string)
 	sourceRows := make(map[string]int)
 	var testDigest string
@@ -329,19 +358,9 @@ func checkHTTPSPartitionAssets(t *testing.T, client *httpfixture.Client, version
 		name string
 		rows int64
 	}{{"train", manifest.TrainRows}, {"validation", manifest.ValidationRows}, {"test", manifest.TestRows}} {
-		file := client.Call("GET", versionPath+"/files/"+partition.name, nil, 200, "dataset-file")
-		raw := file["text"].(string)
+		raw, digest := readHTTPSDatasetAsset(t, client, versionPath, partition.name, manifest)
 		if partition.name == "test" {
-			testDigest = file["sha256"].(string)
-		}
-		var matched bool
-		for _, asset := range manifest.Files {
-			if asset.Path == partition.name+".jsonl" {
-				matched = asset.SHA256 == file["sha256"] && asset.SizeBytes == int64(len(raw))
-			}
-		}
-		if !matched {
-			t.Fatalf("%s export differs from its manifest digest or length", partition.name)
+			testDigest = digest
 		}
 		decoder := json.NewDecoder(strings.NewReader(raw))
 		var rows int64
@@ -365,8 +384,5 @@ func checkHTTPSPartitionAssets(t *testing.T, client *httpfixture.Client, version
 			t.Fatalf("%s partition has %d rows, manifest has %d", partition.name, rows, partition.rows)
 		}
 	}
-	if len(sourceSplits) != 3 || sourceRows["a"] != 2 || sourceRows["b"] != 1 || sourceRows["c"] != 1 {
-		t.Fatalf("unexpected source counts: %v", sourceRows)
-	}
-	return testDigest
+	return testDigest, sourceSplits, sourceRows
 }
