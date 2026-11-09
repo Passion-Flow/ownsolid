@@ -19,8 +19,11 @@ under the auditor's separate control. See the
 - [ ] AUD-101 Unified audit log for people, services and the product agent (P1) - Catalog: F007
   - Scoped PostgreSQL commands write a distinct assistant actor and user subject.
     The [offline disclosure](../../../tools/audit-verify/README.md#verify-a-disclosed-assistant-actor)
-    verifies both against the existing chain. Service-account identity, the remaining
-    AGT-107 paths and the public audit actor projection remain open.
+    verifies both against the existing chain. The [opt-in Admin audit response](../../research/audit-list-assistant-projection.md#admin-http-representation)
+    shows the verified actor. The [AGT-107 correlation fixture](../../research/product-assistant-audit.md#http-acceptance)
+    read both Admin representations and confirmed that refused requests wrote no
+    event. Production assistant registration, workspace-free navigation, confirmed
+    writes and service-account identity (IAM-109) remain open.
 - [x] AUD-102 Hash-chained audit records with an offline verifier (P1) - Evidence: [verification record](../../research/lane-e-decisions.md#repository-verification-on-a-shared-workstation) at c4f3a69. PostgreSQL 18.6 wrote 1,000 concurrent events and the disconnected verifier checked 1,003 exported events across two months.
 - [ ] AUD-103 One trace from user through app, gateway, model version and GPU, exportable (P1) - Catalog: F082
 - [ ] AUD-104 Retention settings with a six-month minimum for network logs (P1)
