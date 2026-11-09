@@ -66,5 +66,5 @@ docker run --rm --pull never --network "$network" --label ownsolid.lane=lane-d "
       -c "CREATE EXTENSION vector WITH SCHEMA public VERSION \$\$0.8.7\$\$; REVOKE CREATE ON SCHEMA public FROM PUBLIC" >/dev/null
     export PROJECT_ONE_TEST_DSN=postgresql://postgres@127.0.0.1/lane_d_test?sslmode=disable
     export LANE_D_CLI_BINARY=/fixture/ownsolid
-    /fixture/admin.test -test.v -test.run "^TestLaneD(Admin|ModelImport|Exporter|Alias|ManagedGateway)TLS$" -test.timeout=6m
+    /fixture/admin.test -test.v -test.run "^TestLaneD(Admin|ModelImport|Exporter|Alias|ManagedGateway|AgentPacing)TLS$" -test.timeout=6m
   '
