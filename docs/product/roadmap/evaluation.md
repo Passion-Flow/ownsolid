@@ -37,6 +37,9 @@ Measuring models and applications before release, and gating releases on the res
   - [Transport baseline](../../research/evaluation-performance-benchmark.md)
     independently checks the retained gateway summary. Representative engine,
     hardware and cost acceptance remain open.
+  - [Native CPU generation windows](../../research/evaluation-performance-benchmark.md#retained-native-cpu-generation-windows)
+    independently recompute the per-case timings and continuation token rates
+    from two real CPU preparation captures.
 - [ ] EVL-106 Safety and regression sets: injection, leakage, unsupported answers (P1) - Catalog: F149
   - [Deterministic safety replay](../../../runtimes/model-lifecycle/README.md#replay-controlled-safety-cases)
     scores controlled outputs on a frozen synthetic fixture for injection,

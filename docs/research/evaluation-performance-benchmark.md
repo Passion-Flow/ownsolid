@@ -50,3 +50,31 @@ rate basis for any cost result. A customer-provided rate and measured
 usage are distinct inputs. The current Linux test host has no GPU,
 and the retained native CPU preparation trial measures a different
 workload.
+
+## Retained native CPU generation windows
+
+The [qualified preparation captures](evaluation-reproducibility.md#qualified-cpu-comparison-at-the-same-policy)
+contain six per-model observations across two native macOS arm64 CPU
+runs of the same three CC0 holdout cases. Both use the pinned
+Qwen3-0.6B base, the derived model, float32 computation, seed 42 and
+two threads. A disconnected readback independently verified both
+report digests and matched case identities, prompts, expected labels
+and generated output digests across the two runs.
+
+The [worker timing loop](../../runtimes/model-lifecycle/projectone_model_lifecycle/engine.py)
+starts after prompt tokenization and measures tensor setup, serial
+generation and output decoding. Each recorded continuation has two
+tokens. The rate divides the six continuation tokens by the sum of
+the three measured intervals for that model and run.
+
+| Capture | Model | Per-case windows in ms | Median ms | Tokens per measured second |
+| --- | --- | --- | ---: | ---: |
+| Initial | Base | 140, 89, 88 | 89 | 18.93 |
+| Initial | Derived | 241, 114, 345 | 241 | 8.57 |
+| Authorized publication replay | Base | 208, 97, 98 | 98 | 14.89 |
+| Authorized publication replay | Derived | 104, 133, 110 | 110 | 17.29 |
+
+The same output digests accompanied substantial timing variation.
+These retained windows cover one tiny serial preparation workload.
+Representative gateway latency, sustained throughput, device
+comparison and cost remain open.
