@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -34,20 +35,20 @@ func TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer(t *testing.T) {
 	if e = os.MkdirAll(directory, 0700); e != nil {
 		t.Fatal(e)
 	}
-	installConfig := func(data []byte) {
+	installModelFile := func(name string, data []byte) {
 		t.Helper()
-		temp := filepath.Join(directory, "config-replacement")
+		temp := filepath.Join(directory, name+".replacement")
 		if e := os.WriteFile(temp, data, 0600); e != nil {
 			t.Fatal(e)
 		}
 		if e := os.Chmod(temp, 0444); e != nil {
 			t.Fatal(e)
 		}
-		if e := os.Rename(temp, filepath.Join(directory, "config.json")); e != nil {
+		if e := os.Rename(temp, filepath.Join(directory, name)); e != nil {
 			t.Fatal(e)
 		}
 	}
-	installConfig(content)
+	installModelFile("config.json", content)
 	server := httpfixture.NewTLSServer(t, transport.New(c.s.Nodes.Identity))
 	defer server.Close()
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/deployments/openapi.json")
@@ -93,7 +94,7 @@ func TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer(t *testing.T) {
 	}
 	changed := bytes.Clone(content)
 	changed[0] ^= 1
-	installConfig(changed)
+	installModelFile("config.json", changed)
 	status, body, headers = post(base+"/model-files", c.node.Credential, input)
 	var problem struct {
 		Code string `json:"code"`
@@ -102,10 +103,75 @@ func TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer(t *testing.T) {
 		problem.Code != "MODEL_FILE_CHANGED" || headers.Get("X-Artifact-SHA256") != "" {
 		t.Fatalf("changed pinned config was not refused: %d %s %v", status, problem.Code, e)
 	}
-	installConfig(content)
+	installModelFile("config.json", content)
 	status, body, headers = post(base+"/model-files", c.node.Credential, input)
 	if status != http.StatusOK || !bytes.Equal(body, content) || headers.Get("X-Artifact-SHA256") != approved.SHA256 {
 		t.Fatalf("the same lease could not retry the restored file: %d", status)
+	}
+	if fixtureDirectory := os.Getenv("PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY"); fixtureDirectory != "" {
+		tokenizer, _ := wire.ModelFileForName("tokenizer.json")
+		original, e := os.ReadFile(filepath.Join(fixtureDirectory, tokenizer.Path))
+		if e != nil || int64(len(original)) != tokenizer.SizeBytes {
+			t.Fatalf("pinned tokenizer fixture: %d bytes, %v", len(original), e)
+		}
+		installModelFile(tokenizer.Path, original)
+		request := wire.ModelFileRequest{LeaseToken: lease.LeaseToken, File: tokenizer.Path}
+		readRange := func() []byte {
+			t.Helper()
+			status, body, headers := post(base+"/model-files", c.node.Credential, request)
+			digest := sha256.Sum256(body)
+			if status != http.StatusOK || !bytes.Equal(body, original[request.Offset:request.Offset+request.Length]) ||
+				headers.Get("Content-Length") != strconv.FormatInt(request.Length, 10) ||
+				headers.Get("X-Artifact-SHA256") != hex.EncodeToString(digest[:]) {
+				t.Fatalf("invalid tokenizer range at %d: %d", request.Offset, status)
+			}
+			return body
+		}
+		assembled := sha256.New()
+		for request.Offset = 0; request.Offset < tokenizer.SizeBytes; request.Offset += request.Length {
+			request.Length = min(wire.ModelTransferChunkBytes, tokenizer.SizeBytes-request.Offset)
+			assembled.Write(readRange())
+		}
+		if hex.EncodeToString(assembled.Sum(nil)) != tokenizer.SHA256 {
+			t.Fatal("the range assembly did not match the pinned tokenizer digest")
+		}
+		request.Offset = (tokenizer.SizeBytes + wire.ModelTransferChunkBytes - 1) / wire.ModelTransferChunkBytes * wire.ModelTransferChunkBytes
+		status, _, headers = post(base+"/model-files", c.node.Credential, request)
+		if status != http.StatusBadRequest || headers.Get("X-Artifact-SHA256") != "" {
+			t.Fatalf("a range beyond the approved tokenizer was admitted: %d", status)
+		}
+		request.Offset = wire.ModelTransferChunkBytes
+		request.Length = tokenizer.SizeBytes - request.Offset
+		refuseFile := func() {
+			t.Helper()
+			status, body, headers := post(base+"/model-files", c.node.Credential, request)
+			var problem struct{ Code string }
+			if e := json.Unmarshal(body, &problem); e != nil || status != http.StatusConflict ||
+				problem.Code != "MODEL_FILE_INVALID" || headers.Get("X-Artifact-SHA256") != "" {
+				t.Fatalf("non-immutable tokenizer file was served: %d %s %v", status, problem.Code, e)
+			}
+		}
+		tokenizerPath := filepath.Join(directory, tokenizer.Path)
+		saved := tokenizerPath + ".saved"
+		if e = os.Rename(tokenizerPath, saved); e != nil {
+			t.Fatal(e)
+		}
+		if e = os.Symlink(filepath.Base(saved), tokenizerPath); e != nil {
+			t.Fatal(e)
+		}
+		refuseFile()
+		if e = os.Rename(saved, tokenizerPath); e != nil {
+			t.Fatal(e)
+		}
+		if e = os.Chmod(tokenizerPath, 0644); e != nil {
+			t.Fatal(e)
+		}
+		refuseFile()
+		if e = os.Chmod(tokenizerPath, 0444); e != nil {
+			t.Fatal(e)
+		}
+		readRange()
+		t.Logf("Verified %d pinned tokenizer bytes, short terminal range and exact retry", tokenizer.SizeBytes)
 	}
 	input.File = "../config.json"
 	status, _, _ = post(base+"/model-files", c.node.Credential, input)

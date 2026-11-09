@@ -64,3 +64,33 @@ go -C services/control test -tags repository_integration ./internal/modules/mode
   -run '^TestActualBorrowedModelAccess$/^(base_range_hash_and_owned_descriptor|derived_metadata_file_mode_link_missing_refusal|cancelled_IO_returns_no_download)$' \
   -count=1 -v
 ```
+
+## Descriptor and multi-range follow-up
+
+Go's [traversal-resistant root](https://go.dev/blog/osroot) constrains
+file traversal. Use the same no-follow open flag as derived storage to
+refuse a final-component symlink at the open itself. Check the open
+descriptor's regular file, size, mode, owner and link count both before
+and after hashing. A stat of the pathname alone leaves a window for a
+local replacement to change the opened file. Keep the existing file
+identity, modification time and pinned digest checks.
+
+The current agent contract bounds each transfer to 8 MiB. A real
+approved Qwen tokenizer is 11,422,654 bytes and exercises a full range
+plus a short terminal range without importing weights. Over the
+existing TLS lease, verify both range hashes, replay the terminal range,
+and assemble the original pinned digest. Refuse an aligned request
+beyond the end, a final-component symlink to an in-store file and
+a writable file. A valid retry after fixture restoration must return
+the pinned bytes. The base file and derived transfer keep their
+existing response shape and per-range integrity.
+
+On disconnected Linux arm64 and PostgreSQL 18.6, the existing real TLS
+transfer test sent the original 11,422,654-byte tokenizer in two
+ranges. The concatenated bytes matched the pinned catalogue digest.
+The server rejected an aligned offset beyond the end, a final symlink
+and a writable replacement. With the original file restored, the same
+lease returned the exact short range again. The base and derived
+repository checks also passed. Use
+`PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` for the pinned tokenizer
+when running the TLS test. This check does not import the weights.
