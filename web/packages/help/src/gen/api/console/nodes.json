@@ -1705,7 +1705,8 @@
       "systemd_maintenance",
       "docker_inference",
       "docker_ai",
-      "docker_model_lifecycle"
+      "docker_model_lifecycle",
+      "kubernetes_node"
      ]
     }
    }
@@ -1868,7 +1869,8 @@
       "systemd_maintenance",
       "docker_inference",
       "docker_ai",
-      "docker_model_lifecycle"
+      "docker_model_lifecycle",
+      "kubernetes_node"
      ]
     }
    }
@@ -2218,7 +2220,8 @@
       "systemd_maintenance",
       "docker_inference",
       "docker_ai",
-      "docker_model_lifecycle"
+      "docker_model_lifecycle",
+      "kubernetes_node"
      ]
     }
    }
@@ -2341,7 +2344,8 @@
       "systemd_maintenance",
       "docker_inference",
       "docker_ai",
-      "docker_model_lifecycle"
+      "docker_model_lifecycle",
+      "kubernetes_node"
      ]
     },
     "capabilities": {
@@ -2366,27 +2370,14 @@
        "inference.remove.v1",
        "inference.observe.v1",
        "inference.verify.v1",
-       "inference.deploy.v1",
-       "inference.stop.v1",
-       "inference.remove.v1",
-       "inference.observe.v1",
-       "inference.verify.v1",
-       "inference.deploy.v1",
-       "inference.stop.v1",
-       "inference.remove.v1",
-       "inference.observe.v1",
-       "inference.verify.v1",
-       "training.run.v1",
-       "training.run.v1",
        "training.run.v1",
        "model.prepare.v1",
-       "model.prepare.v1",
-       "model.prepare.v1",
-       "inference.derived.v1",
-       "inference.derived.v1",
        "inference.derived.v1",
        "gateway.start.v1",
-       "gateway.stop.v1"
+       "gateway.stop.v1",
+       "kubernetes.join.v1",
+       "kubernetes.token.v1",
+       "kubernetes.observe.v1"
       ]
      }
     }
