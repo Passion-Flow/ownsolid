@@ -173,3 +173,45 @@ Represent the existing audit actor header's single accepted value with an
 equivalent one-value enum. The server behavior and generated Go client
 are unchanged. The pinned Python generator now retains the audit operation
 along with the two browser session operations.
+
+## DAT-105 retained three-way dataset reads
+
+The [split handoff](dataset-three-way-splits.md#verification-and-devweb-handoff)
+describes the retained schema 2 manifest. Hugging Face
+[DatasetDict](https://huggingface.co/docs/datasets/package_reference/main_classes#datasets.DatasetDict)
+keeps split names explicit. The current dataset version handlers already
+serialize the retained manifest and serve the sealed test asset when it
+exists. The public publication handler still uses the two-way default.
+Describe the existing version detail, list and download behavior while the
+data owner prepares a separately verified public write path.
+
+Keep the existing named manifest and asset types and preserve all required
+schema 1 fields. Widen the two discriminator enums and use
+[JSON Schema conditions](https://json-schema.org/understanding-json-schema/reference/conditionals#if-then-else)
+for the matching split algorithm, test fields and file inventory. The schema
+2 file list must contain each of the six asset names once, with a nonempty
+test file. The retained writer verifies aggregate counts and ratio arithmetic.
+The raw manifest download keeps its existing binary response contract.
+A separate endpoint would duplicate authorization and retained file checks.
+A union wrapper in generated Go would replace existing field access.
+The existing [SDK licenses](sdk.md#licenses) apply. This change adds no
+library, model or data.
+
+Check both Admin and Portal over trusted loopback TLS and real PostgreSQL.
+Publish the original default through HTTP and prepare a three-way version
+through the current owning service with the installed Python processor.
+Verify version list and detail, the test asset digest, access scope, and
+rejection of a test download from a schema 1 version. Verify that old clients
+still decode schema 1 and newly generated types decode both. Existing strict
+schema 1 clients need the updated contract to read schema 2.
+
+The Linux test used a disposable PostgreSQL instance in a network namespace
+with only loopback, the production TLS dispatcher and the installed Python
+processor. Admin and Portal detail and mixed-version list responses validated
+against the public schemas. Both test downloads matched the sealed digest.
+A schema 1 test download returned HTTP 409 and a foreign workspace could
+not read schema 2. The public write handler rejected a test split option.
+Malformed schema 2 responses were rejected for missing counts, a mismatched
+algorithm, repeated asset names or a zero-size test asset. Both pinned SDK
+generators decoded the captured schema 1 response before and after the
+change, and the updated Go and Python clients decoded schema 2.
