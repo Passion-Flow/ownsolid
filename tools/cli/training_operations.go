@@ -39,13 +39,16 @@ func (opts *options) trainingCommand() *cobra.Command {
 	var workspace string
 	group := &cobra.Command{
 		Use:     "training",
-		Short:   "Manage training jobs and read attempt history and metrics.",
+		Short:   "Manage training jobs and read history and metrics.",
 		Example: "  ownsolid training get \"$JOB_ID\" --output json",
 	}
 	group.PersistentFlags().StringVar(&workspace, "workspace", "", "Workspace UUID (defaults to the configured or current workspace)")
 	group.AddCommand(
 		opts.createTrainingJob(&workspace), opts.getTrainingJob(&workspace), opts.cancelTrainingJob(&workspace),
-		opts.listTrainingAttempts(&workspace), opts.listTrainingMetrics(&workspace),
+		opts.listTrainingJobHistory(&workspace, "attempts", "attempt", trainingAttemptColumns, validTrainingAttempt),
+		opts.listTrainingJobHistory(&workspace, "checkpoints", "checkpoint", trainingCheckpointColumns, validTrainingCheckpoint),
+		opts.listTrainingJobHistory(&workspace, "recoveries", "recovery", trainingRecoveryColumns, validTrainingRecovery),
+		opts.listTrainingMetrics(&workspace),
 	)
 	return group
 }
