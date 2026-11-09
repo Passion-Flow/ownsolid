@@ -98,12 +98,11 @@ and resource identifiers are fixed.
 ## Assistant catalog handoff for AGT-103
 
 The [applications OpenAPI](../../api/openapi/v1/applications/openapi.json)
-references `portalCookie` on `ListApplications` and
-`ListApplicationConversations` but declares `PortalSession`. The API owner
-can align both operation references with `PortalSession` and regenerate the
-SDK. The assistant's in-process generator verifies that scheme's cookie type,
-location and name before accepting the legacy reference. The generated tool
-metadata carries no cookie and does not perform HTTP calls.
+references `PortalSession` on `ListApplications` and
+`ListApplicationConversations`. The assistant generator requires that scheme's
+declared cookie type, location and name. The generated metadata contains only
+the two reviewed reads. It does not carry cookies or perform HTTP calls. See
+[catalog verification](product-assistant-tool-catalog.md).
 
 ## Audit handoff for AGT-107 and AUD-101
 
