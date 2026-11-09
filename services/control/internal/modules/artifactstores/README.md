@@ -30,3 +30,12 @@ Release the fence after the coordinated operation finishes so ordinary
 reconciliation can proceed. See the
 [backup research note](../../../../../docs/research/object-backup-fence.md#verified-copy-under-the-artifactstores-fence)
 for the provider and installer boundary and the Linux reproduction.
+
+The [PostgreSQL hold candidate](backup_hold_candidate.go) and
+[unnumbered SQL](testdata/backup-hold.sql) qualify coordinator takeover
+in the isolated backup fence fixture. Run the existing
+`testdata/run-backup-fence.sh` with the verified SeaweedFS binary and
+PostgreSQL image ID. The candidate is private to this module. Production
+activation requires a numbered migration, least-privilege database
+composition, durable writer permits and qualified provider exclusion.
+See [the restart boundary](../../../../../docs/research/object-backup-fence.md#postgresql-hold-candidate).
