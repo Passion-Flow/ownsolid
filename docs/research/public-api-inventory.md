@@ -511,3 +511,50 @@ token for each entrance and still read the correct second metric.
 Pinned generation preserved the four Go attempt and metric requests and
 all ten Python collection requests. The public inventory reported no
 changed operation identities.
+
+## GW-104 alias capability contract preparation
+
+The gateway owner's local candidate 65ed7c87 provides a scoped internal
+projection. Its follow-up 42efece0 verifies that the four public reads
+still use the released shape. The [LiteLLM model management API](https://docs.litellm.ai/docs/proxy/ui_store_model_db_setting)
+distinguishes informational model metadata from enabled endpoints. The
+[OpenAI model object](https://developers.openai.com/api/reference/resources/models)
+has its own compatible shape. Keep ownsolid capability evidence on
+the versioned Admin and Portal alias reads. Use the
+[OpenAPI 3.1 Schema Object](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
+to constrain its presence and fields.
+
+| Candidate read contract | Value |
+| --- | --- |
+| Operations | adminListModelAlias, adminGetModelAlias, portalListModelAlias, portalGetModelAlias |
+| capabilities | Optional closed object. When present, it contains both fields below |
+| text_generation_verified | Boolean true, backed by the exact ready target's generation verification |
+| context_token_ceiling | Positive integer. The minimum of the approved model, serving recipe and gateway policy ceilings. The live tokenizer can enforce a smaller limit |
+| Missing evidence | Omit capabilities entirely for a visible alias with no exact verified target. This includes legacy snapshots, stale or mismatched revisions, unsupported recipes and unavailable targets |
+| Paused alias | Admin keeps the existing visible alias with capabilities omitted. Portal keeps its current list and detail visibility, including MODEL_ALIAS_NOT_FOUND for detail |
+| Scope refusal | Keep the current workspace, tenant, cell and session authorization and the existing public problem codes |
+
+Publish only after the gateway owner lands list and detail response
+composition for both audiences. Require each alias and its optional
+projection to share the same authorized transaction and exact alias
+and deployment revisions. Keep the compatible model list, machine
+bindings and mutation responses on their existing shapes. The current
+ModelAlias component is shared by reads and writes, so verify the four
+operations' actual response boundaries before choosing the published
+component binding. A new endpoint would duplicate alias discovery and
+require separate authorization. Deriving flags from the model family
+would bypass verified target evidence. Keep tools, pooling, rerank and
+multimodal claims outside this projection.
+
+After the backend lands, validate mixed list pages and detail for a
+verified target, missing evidence and a retarget. Exercise paused,
+foreign-workspace and foreign-tenant refusals over disconnected HTTPS
+and PostgreSQL. Keep the existing operation identities and cursor
+scope. Verify the generated Web, Help, Go and Python projections for
+both presence and omission, and check that machine and mutation
+responses retain their fields. The [SDK licences](sdk.md#licenses)
+apply. This preparation adds no dependency, model or data set.
+
+GW-111 and DAT-107 retain their exact released error codes. The Help
+error index can add the remaining entries after the Web owner lands
+both English and Simplified Chinese title and detail text.
