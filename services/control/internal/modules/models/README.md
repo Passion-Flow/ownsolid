@@ -11,6 +11,14 @@ to canonical metadata and the installed archive and directory verifiers.
 Admission, chunk writes, recovery and publication use that authority.
 The existing Qwen digest retains the shared Agent verification path.
 
+The scoped derived model detail checks its retained catalog and publication
+graph, then validates the frozen preparation input against the original
+training job, adapter and holdout references. PostgreSQL and MySQL return
+the verified training and holdout versions separately to internal callers.
+The published manifest and the HTTP response retain their existing shapes.
+The native approved-base detail path retains its existing behavior.
+See the [lineage contract handoff](../../../../../docs/research/training-dataset-lineage.md#dev-contract-handoff).
+
 After the import's version and audit event commit, the worker reclaims the
 upload chunks and failed stages. During import the store still needs space
 for the bundle and extracted model. The worker retains staging and logs

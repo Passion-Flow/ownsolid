@@ -6,18 +6,18 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"github.com/google/uuid"
-	"net/url"
-	"os"
-	"path/filepath"
 	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/google/uuid"
+	"net/url"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
@@ -169,7 +169,7 @@ func TestActualPairedHoldoutReservation(t *testing.T) {
 		g := holdoutSetup(t)
 		key := uuid.NewString()
 		v, e := g.reserve(key)
-		if e != nil || v.RowCount != 3 || v.SourceBytes < 1 || v.Labels != (LabelCounts{1, 1, 1}) || v.CreatedAt.Location() != time.UTC {
+		if e != nil || v.RowCount != 3 || v.SourceBytes < 1 || v.Labels != (LabelCounts{Account: 1, Billing: 1, Technical: 1}) || v.CreatedAt.Location() != time.UTC {
 			t.Fatal(v, e)
 		}
 		again, e := g.reserve(key)

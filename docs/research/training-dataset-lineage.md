@@ -25,3 +25,64 @@ The preparation detail service can return two named dataset version references a
 Verify the detail read with a version 1 snapshot in PostgreSQL, a separate holdout source, and a second version of the training dataset. Retiring the original version must preserve its ID and digest on subsequent reads. A request in a different authorized workspace must not find the preparation. An internally consistent snapshot that names a different training attempt must fail against the scoped preparation row. Compare the serialized detail before and after projection to guard the existing HTTP response shape.
 
 `TestPreparationDetailRetainsDatasetLineage` and the existing `TestActualPairedPreparationReview` passed on PostgreSQL 18.6 with pgvector 0.8.7 inside a Linux arm64 container with no network interface beyond loopback. The test seeds synthetic source and artifact metadata under the ordinary SQL constraints. It verifies the scoped read and compatibility with retained snapshots, without running training or rebuilding model artifacts.
+
+## Derived model detail
+
+The model registry detail read binds the ready model and its retained derivation
+through the existing catalog validator. PostgreSQL's [row lock rules](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-ROWS)
+allow the existing model and derivation share locks to remain held through the
+scoped source read. Reconcile the approved preparation, its current attempt,
+approval, artifact, base model and report digest in that transaction. Decode
+the frozen preparation input with the same version 1 codec used by the
+preparation detail. Match the command and holdout references to the retained
+training job, adapter and holdout records. The training and holdout triples
+remain distinct even after retirement. The current dataset head and physical
+model or dataset files are outside this metadata read.
+
+Keep the existing catalog digest, publication bytes, and public model
+response. A detached source query or a second lineage record would create
+another authorization or consistency boundary. The snapshot codec is shared
+by the two owning modules without introducing a dependency on either service
+or modifying the training wire contract. The existing license inventory above
+applies, with no new dependency or distributed asset.
+
+Verify against real PostgreSQL using the existing publication graph and a
+version 1 preparation snapshot. Add a newer training version, retire the old
+one, read the original training and separate holdout triples, and exercise
+both the explicit scope and the administrator model-by-ID read. Refuse a
+different workspace, inconsistent catalog references, inconsistent relational
+approval and artifact references, and a corrupted snapshot or source tuple.
+Compare the existing response serialization and verify previously published
+model metadata reads without a data migration.
+
+The published detail and reference refusal tests passed on PostgreSQL 18.6
+with pgvector 0.8.7 in a Linux arm64 container with only loopback. The fixture
+publishes synthetic metadata under the existing SQL constraints. It verifies
+the version 1 encoding, retained training and holdout triples, and unchanged
+catalog and HTTP bytes. Fault cases alter each catalog reference or inject
+inconsistent metadata into the disposable schema. This exercises metadata
+readback without running training, evaluation or model file transfer.
+
+### DEV contract handoff
+
+Use `Version.DatasetLineage` in the Admin detail handler for `getAdminModel`
+(`GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}`).
+Define a detail-specific success schema so lists and `getPortalModel` keep
+their existing shapes. Add optional `data.dataset_lineage` to Admin detail.
+If present it requires two objects, `training` and `holdout`. Each requires
+`dataset_id` and `dataset_version_id` as canonical lowercase UUIDs and
+`manifest_sha256` as 64 lowercase hexadecimal characters. Use closed
+objects with no extra fields. Omit the field for a base model or when the
+repository cannot project lineage. An invalid derived graph returns the
+existing `MODEL_DERIVED_CATALOG_INVALID` error rather than an omitted field.
+Use the current model manifest for preparation, attempt, artifact, base and
+report references. Leave that manifest and its digest as published.
+
+In `web/packages/api/src/models.ts`, return the generated Admin detail type
+from `getModel`. In `web/apps/console/src/model-page.tsx`, use the existing
+detail query and add the S-202 Versions and lineage tab. Keep the existing
+base/import links from `Origin`. Label the two sources separately as training
+dataset version and preparation holdout version. Show each retained version
+ID and digest even when a dataset was retired. A record with no lineage field
+needs a localized unavailable state. Keep permissions and data visibility
+on the server and use the existing model detail error and retry behavior.

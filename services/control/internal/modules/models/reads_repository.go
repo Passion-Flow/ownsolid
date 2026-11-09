@@ -89,6 +89,14 @@ func (s *Service) getVersion(ctx context.Context, a identity.Auth, workspace, id
 			"SELECT "+versionFields+" FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND state='ready'",
 			"SELECT "+mysqlVersionFields+" FROM model_versions WHERE tenant_id=? AND workspace_id=? AND id=? AND state='ready'",
 			w.TenantID, w.ID, id)), w.TenantID)
+		if e != nil || out.Kind != "merged_lora" || q.Dialect() == transaction.Dameng {
+			return e
+		}
+		catalog, e := s.DecodeDerivedVersionWithin(ctx, q, w.TenantID, w.ID, id)
+		if e != nil {
+			return e
+		}
+		out.DatasetLineage, e = derivedLineageWithin(ctx, q, catalog)
 		return e
 	})
 	if e != nil {

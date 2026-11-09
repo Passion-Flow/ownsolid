@@ -10,6 +10,7 @@ import (
 	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	trainingwire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/snapshot"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/pagination"
@@ -29,14 +30,20 @@ func scanPreparation(row pgx.Row) (Preparation, error) {
 	if e != nil {
 		return p, e
 	}
-	if wire.DecodeStrict(inputs, &p.inputs) != nil || p.inputs.validate() != nil || p.inputs.digest() != p.InputSHA256 || wire.DecodeStrict(configuration, &p.Configuration) != nil || p.Configuration.Validate() != nil || p.Configuration.Device != trainingwire.ProductionProfile || wire.DecodeStrict(recipe, &p.Recipe) != nil || p.Recipe.Validate() != nil || !validPreparationState(p.State) {
+	decoded, e := snapshot.Decode(inputs, p.InputSHA256)
+	if e != nil || wire.DecodeStrict(configuration, &p.Configuration) != nil || p.Configuration.Validate() != nil || p.Configuration.Device != trainingwire.ProductionProfile || wire.DecodeStrict(recipe, &p.Recipe) != nil || p.Recipe.Validate() != nil || !validPreparationState(p.State) {
 		return Preparation{}, fail("MODEL_PREPARATION_DATA_INVALID")
 	}
 	digest, e := p.Configuration.Digest()
-	c := p.inputs.TrainingCommand
-	if e != nil || digest != p.ConfigurationSHA256 || c.Scope.TenantID != p.tenant || c.Scope.WorkspaceID != p.WorkspaceID || c.Scope.JobID != p.TrainingJobID || c.AttemptID != p.TrainingAttemptID || c.ModelID != p.ModelID || p.inputs.Adapter.UploadID != p.TrainingArtifactID || p.inputs.Heldout.ID != p.HeldoutID || p.inputs.inventory().Validate(p.Recipe.DataLimits) != nil || p.Recipe.Resources.CPUSeconds > p.Recipe.Resources.WallSeconds*p.Configuration.Threads {
+	binding := snapshot.Binding{
+		TrainingScope:     trainingwire.Scope{TenantID: p.tenant, WorkspaceID: p.WorkspaceID, JobID: p.TrainingJobID},
+		TrainingAttemptID: p.TrainingAttemptID, ModelID: p.ModelID,
+		TrainingArtifactID: p.TrainingArtifactID, HoldoutID: p.HeldoutID,
+	}
+	if e != nil || digest != p.ConfigurationSHA256 || !decoded.Matches(binding) || decoded.Inventory().Validate(p.Recipe.DataLimits) != nil || p.Recipe.Resources.CPUSeconds > p.Recipe.Resources.WallSeconds*p.Configuration.Threads {
 		return Preparation{}, fail("MODEL_PREPARATION_DATA_INVALID")
 	}
+	p.inputs = preparationInputs(decoded)
 	p.TrainingResultSHA256 = p.inputs.Adapter.ManifestSHA256
 	p.HeldoutManifestSHA256 = p.inputs.Heldout.ManifestSHA256
 	return p, nil
@@ -59,19 +66,7 @@ func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, id string
 	if e != nil {
 		return Preparation{}, e
 	}
-	c, h := p.inputs.TrainingCommand, p.inputs.Heldout
-	p.DatasetLineage = PreparationDatasetLineage{
-		Training: DatasetVersionLineage{
-			DatasetID:        c.DatasetID,
-			DatasetVersionID: c.DatasetVersionID,
-			ManifestSHA256:   c.DatasetManifestSHA256,
-		},
-		Holdout: DatasetVersionLineage{
-			DatasetID:        h.DatasetID,
-			DatasetVersionID: h.DatasetVersionID,
-			ManifestSHA256:   h.ManifestSHA256,
-		},
-	}
+	p.DatasetLineage = snapshot.Inputs(p.inputs).Lineage()
 	return p, nil
 }
 func (s *Service) List(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[Preparation], error) {
