@@ -266,6 +266,37 @@ Set `OWNSOLID_TEST_ALERTMANAGER` to the checksum-verified Alertmanager
 
 See the [wire contract and native evidence](../../../../../docs/research/offline-alert-notifications.md#site-local-wecom-message-push).
 
+### Scoped node scrape budgets
+
+The [vmagent example](alerting/node-scrape.example.yaml) reads nodes.json
+and node-ca.pem from its configuration directory. The operator-owned
+inventory must supply one HTTPS address per enrolled node with the trusted
+tenant_id, workspace_id, site_id, cell_id and node_id labels. Use distinct
+node IDs and restrict the exporter and remote-write routes to the private
+operator network. Protect the CA and inventory from exporter writes. The
+profile admits the initial CPU and available-memory families. Apply
+inventory-owned rack assignment when enabling rack-level alerting.
+
+The example sets a byte cap, a per-scrape sample cap and a per-target
+distinct-series budget. Expose scrape_series_limit_samples_dropped in
+operator monitoring. Tune the caps for the installed exporter and measure
+ingress before scaling. See the
+[scope, operational limits and evidence](../../../../../docs/research/node-scrape-budgets.md).
+
+To reproduce on Linux amd64, set OWNSOLID_TEST_VMAGENT and
+OWNSOLID_TEST_VICTORIA_METRICS to the verified 1.155.0 binary paths, then
+run from the repository root with namespace access:
+
+    work=$(mktemp -d)
+    go -C services/control test -tags alerting_integration -c \
+      -o "$work/alerting.test" ./internal/modules/monitoring/alerting
+    cd services/control/internal/modules/monitoring/alerting
+    unshare --net --pid --fork --kill-child sh -ec \
+      'ip link set lo up; exec "$1" -test.v -test.run "^TestScopedNodeScrapeBudgets$" -test.timeout 90s' \
+      sh "$work/alerting.test"
+    rm "$work/alerting.test"
+    rmdir "$work"
+
 ### Long retention for fleet health aggregates
 
 Run the [fleet recording rules](alerting/fleet-rollup-rules.yaml) in a separate
