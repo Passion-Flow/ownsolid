@@ -57,6 +57,19 @@ Return metadata only and leave payload and authorization checks with
 the installation and catalog service. A failed entry returns no list.
 The app directory supplies the local set of versions.
 
+At initial selection, authenticate the selected app, exact pin and
+platform range using the bounded signed metadata before opening the
+engine artifact or image archive. TUF checks trusted target metadata
+before retrieval. Helm applies a declared platform compatibility
+range during installation. Reuse the catalog's existing ownsolid range
+and verify payloads under the same open version root after admission.
+Checking compatibility after reading the media can obscure an
+incompatible selection behind a missing archive. Test below-minimum
+and exclusive upper-bound cases and changed pins with missing media.
+A compatible selection still requires the complete signed payloads.
+[TUF target retrieval](https://theupdateframework.github.io/specification/v1.0.37/#57-fetch-target),
+[Helm compatibility metadata](https://helm.sh/docs/topics/charts/#the-kubeversion-field).
+
 Test sorted versions, both signed locale dictionaries and the pin
 handoff. With a missing archive, the release remains readable as
 metadata and installation fails. Refuse a wrong app or publisher,

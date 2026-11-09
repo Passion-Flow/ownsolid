@@ -224,6 +224,40 @@ func TestVerifyInitialReleaseChecksSelectedIdentityAndCompatibility(t *testing.T
 	}
 }
 
+func TestVerifyInitialReleaseChecksMetadataBeforePayloads(t *testing.T) {
+	root, key, private := transitionCatalog(t)
+	pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.0.0", engine: "compose", before: "2.0.0"})
+	base := InitialReleaseRequest{AppID: "example-app", PlatformVersion: "1.0.0", Pin: pin}
+	if _, err := VerifyInitialRelease(t.Context(), root, key, testTransitionBudget, base); err != nil {
+		t.Fatalf("minimum supported version: %v", err)
+	}
+	if err := root.Remove(pin.Version + "/" + ImageArchiveName); err != nil {
+		t.Fatal(err)
+	}
+	other := pin
+	other.BundleSHA256 = digestBytes([]byte("another signed index"))
+	for _, tc := range []struct {
+		name, app, platform string
+		pin                 ReleasePin
+		want                error
+	}{
+		{"wrong pin", base.AppID, base.PlatformVersion, other, ErrReleaseTransition},
+		{"wrong app", "different-app", base.PlatformVersion, pin, ErrReleaseTransition},
+		{"below minimum", base.AppID, "0.9.0", pin, ErrReleaseTransition},
+		{"exclusive upper bound", base.AppID, "2.0.0", pin, ErrReleaseTransition},
+		{"invalid platform", base.AppID, "2.0.0-preview", pin, ErrPlatformVersion},
+		{"compatible platform still requires payloads", base.AppID, base.PlatformVersion, pin, ErrBundle},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			request := InitialReleaseRequest{AppID: tc.app, PlatformVersion: tc.platform, Pin: tc.pin}
+			bundle, err := VerifyInitialRelease(t.Context(), root, key, testTransitionBudget, request)
+			if !errors.Is(err, tc.want) || bundle.Pin != (ReleasePin{}) {
+				t.Fatalf("initial selection: got %v, want %v", err, tc.want)
+			}
+		})
+	}
+}
+
 func TestVerifyReleaseTransitionSelectsAndRecoversExactBundles(t *testing.T) {
 	for _, engine := range []string{"compose", "helm"} {
 		t.Run(engine, func(t *testing.T) {
