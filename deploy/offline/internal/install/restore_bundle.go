@@ -115,6 +115,10 @@ func (p preparedBundle) checkRestoreBackup(manifest backupManifest) error {
 	if _, err := encryptedMembers(manifest); err != nil {
 		return errors.New("INSTALL_BACKUP_INVALID: the backup contains an invalid file inventory")
 	}
+	return checkRequiredBackupKeys(manifest)
+}
+
+func checkRequiredBackupKeys(manifest backupManifest) error {
 	required := append(slices.Clone(keyFiles), "secrets/postgres-password")
 	for _, path := range required {
 		if !slices.ContainsFunc(manifest.Files, func(file backupFile) bool { return file.Path == path && file.Bytes > 0 }) {
