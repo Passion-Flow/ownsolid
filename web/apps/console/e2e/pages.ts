@@ -506,6 +506,15 @@ export const consolePages: readonly PageState[] = [
     },
   },
   {
+    name: 'CSV node registration before import',
+    path: '/fleet/enroll',
+    open: async (page, control) => {
+      control.signedIn = true;
+      await page.goto('/fleet/enroll');
+      await page.getByRole('heading', { name: 'No CSV selected' }).waitFor();
+    },
+  },
+  {
     name: 'nodes with none yet',
     path: '/nodes',
     open: async (page, control) => {

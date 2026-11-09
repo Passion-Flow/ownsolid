@@ -178,8 +178,6 @@ function JoinProgress({
 
 function Steps({ token, origin }: { token: MintedJoinToken; origin: string }) {
   const { t, format } = useI18n();
-  const serving = token.execution_profile === 'docker_inference';
-  const kubernetes = token.execution_profile === 'kubernetes_node';
   return (
     <div className="flex flex-col gap-4">
       <Notice
@@ -188,6 +186,24 @@ function Steps({ token, origin }: { token: MintedJoinToken; origin: string }) {
       >
         <CopyText text={token.token} className="mt-1 break-all" />
       </Notice>
+      <EnrollmentCommands origin={origin} profile={token.execution_profile} />
+    </div>
+  );
+}
+
+/** Offline host preparation and enrollment instructions shared by the single and CSV flows. */
+export function EnrollmentCommands({
+  origin,
+  profile,
+}: {
+  origin: string;
+  profile: MintedJoinToken['execution_profile'];
+}) {
+  const { t } = useI18n();
+  const serving = profile === 'docker_inference';
+  const kubernetes = profile === 'kubernetes_node';
+  return (
+    <div className="flex flex-col gap-4">
       <ol className="m-0 flex list-decimal flex-col gap-3.5 pl-5">
         <li>
           <p className="m-0 mb-2">{t('nodes.add.step.directories')}</p>
@@ -213,10 +229,7 @@ function Steps({ token, origin }: { token: MintedJoinToken; origin: string }) {
         </li>
         <li>
           <p className="m-0 mb-2">{t('nodes.add.step.join')}</p>
-          <CodeBlock
-            code={joinCommands(origin, token.execution_profile)}
-            label={t('nodes.add.step.joinLabel')}
-          />
+          <CodeBlock code={joinCommands(origin, profile)} label={t('nodes.add.step.joinLabel')} />
         </li>
       </ol>
       <p className="m-0 text-[12.5px] text-text-3">

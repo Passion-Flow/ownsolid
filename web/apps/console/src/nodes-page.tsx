@@ -503,13 +503,6 @@ export function NodesPage() {
           <p className="m-0 text-text-2">{t('nodes.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to="/nodes/pacing"
-            className="inline-flex h-9 items-center gap-[7px] rounded-field border border-border-strong bg-surface px-3.5 font-[550] text-text hover:bg-surface-2"
-          >
-            <Gauge aria-hidden className="size-4" />
-            {t('nodes.pacing.open')}
-          </Link>
           <Button
             variant="primary"
             onClick={() => {
@@ -519,6 +512,19 @@ export function NodesPage() {
             <Plus aria-hidden />
             {t('nodes.add.open')}
           </Button>
+          <Link
+            to="/fleet/enroll"
+            className="inline-flex h-9 items-center rounded-field border border-border-strong bg-surface px-3.5 font-[550] text-text hover:bg-surface-2"
+          >
+            {t('nodes.bulk.open')}
+          </Link>
+          <Link
+            to="/nodes/pacing"
+            className="inline-flex h-9 items-center gap-[7px] rounded-field border border-border-strong bg-surface px-3.5 font-[550] text-text hover:bg-surface-2"
+          >
+            <Gauge aria-hidden className="size-4" />
+            {t('nodes.pacing.open')}
+          </Link>
         </div>
       </div>
       <NodesShedNotice />

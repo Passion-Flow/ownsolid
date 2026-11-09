@@ -26,7 +26,12 @@ export {
   useSession,
   type QueryClientOptions,
 } from './session.ts';
-export { capabilitiesQuery, readyCapabilityNames } from './capabilities.ts';
+export {
+  capabilitiesQuery,
+  capabilityDetail,
+  capabilityName,
+  readyCapabilityNames,
+} from './capabilities.ts';
 export { ColumnChooser } from './list/column-chooser.tsx';
 export { CopyLinkButton } from './list/copy-link-button.tsx';
 export {

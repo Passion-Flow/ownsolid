@@ -238,3 +238,63 @@ nohup ${run} >/var/log/agent.log 2>&1 &
   await node.getByRole('button', { name: 'Collect facts' }).click();
   await expect(node.getByText('Succeeded').first()).toBeVisible({ timeout: 60_000 });
 });
+
+test('issues a 48-node CSV and observes real Agent enrollment', async ({ page }, testInfo) => {
+  test.skip(origin === '' || hostShell === '', 'needs a disposable host and Control');
+  test.setTimeout(240_000);
+  const outside = new Set<string>();
+  page.on('request', (request) => {
+    if (!request.url().startsWith(origin + '/') && !request.url().startsWith('blob:')) {
+      outside.add(new URL(request.url()).origin);
+    }
+  });
+  await signIn(page);
+  await page.getByRole('link', { name: 'Register from CSV' }).click();
+  const prefix = `live-bulk-${Date.now()}`;
+  const rows = Array.from(
+    { length: 48 },
+    (_, index) =>
+      `${prefix}-${String(index + 1).padStart(2, '0')},${index < 24 ? 'Rack A' : 'Rack B'}`,
+  );
+  await page.locator('#enrollment-csv').setInputFiles({
+    name: 'bulk-enrollment.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(['node_name,rack', ...rows].join('\n')),
+  });
+  await page.getByRole('button', { name: 'Issue tokens', exact: true }).click();
+  await expect(page.getByText('0 of 24 joined · 24 awaiting join', { exact: true })).toHaveCount(
+    2,
+    {
+      timeout: 60_000,
+    },
+  );
+  const first = page.getByRole('listitem').filter({ hasText: `${prefix}-01` });
+  const token = await first.locator('.font-mono').innerText();
+  expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+  await page.getByText('Offline install commands', { exact: true }).click();
+  const commands = page.getByRole('main').locator('pre');
+  await expect(commands).toHaveCount(3);
+  const [directories, store, join] = await commands.allTextContents();
+  expect(`${directories}${store}${join}`).not.toContain(token);
+  onHost(directories ?? '');
+  onHost(
+    'install -m 0755 /opt/agent /usr/local/bin/agent\ninstall -m 0600 /opt/ca.pem /etc/ownsolid-agent/ca.pem\n',
+  );
+  onHost(`printf '%s\\n' '${token}' | ${store}\n`);
+  const lines = (join ?? '').split('\n');
+  const run = lines.pop() ?? '';
+  onHost(`${lines.join('\n')}\nnohup ${run} >/var/log/agent.log 2>&1 &\n`);
+
+  await expect(first.getByRole('link', { name: 'Open node' })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText('1 of 24 joined · 23 awaiting join', { exact: true })).toBeVisible();
+  await page.getByText('Offline install commands', { exact: true }).click();
+  await page.getByLabel('Row status', { exact: true }).selectOption('consumed');
+  await expectAccessible(page);
+  await testInfo.attach('bulk-enrollment-real-agent', {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: 'image/png',
+  });
+  await first.getByRole('link', { name: 'Open node' }).click();
+  await expect(page.getByRole('heading', { name: `${prefix}-01`, level: 1 })).toBeVisible();
+  expect([...outside]).toEqual([]);
+});

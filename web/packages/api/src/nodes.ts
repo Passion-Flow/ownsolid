@@ -133,15 +133,20 @@ export function listNodeTasks(
   });
 }
 
-/** Lists join tokens that can still be used, newest first. */
+/** Lists usable join tokens by default, or the token history when requested, newest first. */
 export function listJoinTokens(
-  query: { limit: number },
+  query: { limit: number; cursor?: string | undefined; includeHistory?: boolean },
   options?: RequestOptions,
 ): Promise<Schemas['JoinTokenList']> {
+  const { limit, cursor, includeHistory } = query;
   return client.get('/api/v1/sites/{site_id}/cells/{cell_id}/admin/node-join-tokens', {
     ...options,
     path: localCell,
-    query: { ...query, status: 'pending' },
+    query: {
+      limit,
+      ...(cursor ? { cursor } : {}),
+      ...(includeHistory ? {} : { status: 'pending' }),
+    },
   });
 }
 

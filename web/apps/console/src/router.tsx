@@ -33,6 +33,15 @@ const nodesRoute = createRoute({
   component: lazyRouteComponent(() => import('./nodes-page.tsx'), 'NodesPage'),
 });
 
+const enrollmentRoute = createRoute({
+  getParentRoute: () => frameRoute,
+  path: '/fleet/enroll',
+  component: lazyRouteComponent(
+    () => import('./bulk-node-enrollment-page.tsx'),
+    'BulkNodeEnrollmentPage',
+  ),
+});
+
 const pacingRoute = createRoute({
   getParentRoute: () => frameRoute,
   path: '/nodes/pacing',
@@ -180,6 +189,7 @@ const routeTree = rootRoute.addChildren([
       supportRoute,
       ...helpRoutes,
       nodesRoute,
+      enrollmentRoute,
       pacingRoute,
       nodeRoute,
       libraryRoute,

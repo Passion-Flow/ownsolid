@@ -173,3 +173,55 @@ state has loading, empty, error and permission views in both languages.
 - The offline bundle does not carry the agent binary yet, and no service unit is installed; a person
   copies the binary from the release. FLT-102 closes this.
 - Live resource use and accelerators are not in the API (FLT-103, OBS items).
+
+## CSV enrollment (S-104, FLT-102)
+
+[AWS IoT bulk registration](https://docs.aws.amazon.com/iot/latest/developerguide/bulk-provisioning.html)
+separates a cancelable batch from individual successes and failures. Its hosted task and S3
+input are unsuitable for an offline site. ownsolid's Nodes API has a one-token POST, a cursor
+list and a revocation POST. It has no batch job, per-token GET or idempotency key. Use a
+browser queue with three workers. Stopping the queue leaves the requests already sent to
+settle. Retry a row only when the server confirms no token was issued. A transport failure or
+uncertain commit leaves that row unresolved and directs the operator to the pending-token
+list for reconciliation before issuing again. Honor the server's retry interval on throttling.
+The default tenant capacity of 100 live tokens accommodates an otherwise empty 48-node batch.
+Existing tokens consume the same capacity.
+
+Accept UTF-8 CSV with a required `node_name` header and an optional `rack` column using
+[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180.html) quoting. Also accept LF and a UTF-8 BOM.
+Preview input locally, reject ambiguous duplicate names after normalization and fix rejected
+rows before issuance. Bound file size and row count. The operator chooses one authorized
+workspace for the entire batch. The CSV never supplies a workspace or credentials. Initial
+bulk support covers Linux amd64 with the read-only Agent profile and reuses the single-node
+offline instructions. Pool assignment, labels and the other Agent profiles remain visible with
+their availability explained.
+
+Poll the authenticated token history and match each result to the original token ID and
+workspace. The enrollment transaction sets `consumed` and the linked `node_id` together.
+This is proof of enrollment. Agent connectivity remains the node detail's responsibility.
+A missing history record stays unverified. Keep the last confirmed results on a failed poll.
+Show issued, joined, revoked and expired separately and aggregate only by the rack label from
+the CSV. The Nodes API does not expose authoritative physical rack data. FLT-101 owns that
+gap. Drafts retain names and status for the signed-in operator in the current tab. Secrets
+exist only in the mounted page's memory and expire according to Control. The bulk flow revokes individual pending tokens with typed confirmation.
+
+Validate syntax and duplicate names before writes. Exercise a 48-row batch, stopping and
+resuming, refused writes, uncertain delivery, wrong-workspace results and actual Agent
+enrollment. Verify the English and Simplified Chinese flow at desktop and narrow widths.
+No new library, model, dataset or runtime service is required. The RFC and AWS documentation
+are design references and are not bundled.
+
+The enrollment record has no rejected-handshake history. If an Agent fails before consumption
+(including a collision with an existing node), its token still appears as pending. The Agent's
+output identifies the refusal. The Console can report token issuance refusals and actual
+enrollment, and does not infer a rejected join from a quiet Agent.
+
+The [live browser test](../../web/apps/console/e2e/live-nodes.spec.ts) used the local Mac's
+Chromium, an isolated Docker network, real Control and PostgreSQL 18.6. Control issued 48
+tokens and recorded 48 issuance audit events. One Linux amd64 Agent used the commands and
+its token, producing a consumed receipt linked to a node in the same workspace. The
+corresponding rack count changed on the open page. The other 47 tokens remained pending.
+The Agent and Control had no external route. The browser asserted that all requests stayed
+on the fixture origin. The [browser scenarios](../../web/apps/console/e2e/bulk-node-enrollment.spec.ts)
+also cover scope mismatch, duplicate names, permission refusals, stopping, throttled retry,
+uncertain delivery, resumed drafts and typed revocation.
