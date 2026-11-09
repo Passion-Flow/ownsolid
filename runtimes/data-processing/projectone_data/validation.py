@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import unicodedata
+from . import SINGLE_TURN_MESSAGES_V1
 from .limits_generated import LIMIT_CEILINGS
 
 class DataError(Exception):
@@ -78,7 +79,7 @@ def valid_text(value,maximum,source=False):
   if unicodedata.category(character)=='Cc' and (source or character not in '\t\r\n'):return False
  return True
 
-def parse_line(raw,line_number,limits):
+def parse_line(raw,line_number,limits,*,source_row_format=None):
  if len(raw)>limits.maximum_line_bytes:raise DataError('DATASET_LINE_TOO_LARGE')
  try:text=raw.decode('utf-8',errors='strict')
  except UnicodeError:raise DataError('DATASET_ENCODING_INVALID') from None
@@ -87,10 +88,32 @@ def parse_line(raw,line_number,limits):
  try:value=json.loads(text,object_pairs_hook=unique,parse_constant=invalid_constant)
  except DataError:raise
  except (ValueError,RecursionError):raise DataError('DATASET_JSON_INVALID') from None
- if not isinstance(value,dict) or set(value)!={'source_id','prompt','completion'}:raise DataError('DATASET_FIELDS_INVALID')
- if not valid_text(value['source_id'],limits.maximum_source_bytes,True):raise DataError('DATASET_SOURCE_INVALID')
- if not all(valid_text(value[key],limits.maximum_text_bytes) for key in ['prompt','completion']):raise DataError('DATASET_TEXT_INVALID')
- return Row(line_number,value['source_id'],value['prompt'],value['completion'])
+ source_id, prompt, completion = row_contents(value, source_row_format)
+ if not valid_text(source_id, limits.maximum_source_bytes, True):
+  raise DataError('DATASET_SOURCE_INVALID')
+ if not all(valid_text(content, limits.maximum_text_bytes) for content in (prompt, completion)):
+  raise DataError('DATASET_TEXT_INVALID')
+ return Row(line_number, source_id, prompt, completion)
+
+
+def row_contents(value, source_row_format):
+ if source_row_format is None:
+  if not isinstance(value, dict) or set(value) != {'source_id', 'prompt', 'completion'}:
+   raise DataError('DATASET_FIELDS_INVALID')
+  return value['source_id'], value['prompt'], value['completion']
+ if source_row_format != SINGLE_TURN_MESSAGES_V1:
+  raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
+ if not isinstance(value, dict) or set(value) != {'source_id', 'messages'}:
+  raise DataError('DATASET_FIELDS_INVALID')
+ messages = value['messages']
+ if not isinstance(messages, list) or len(messages) != 2:
+  raise DataError('DATASET_MESSAGE_SEQUENCE_INVALID')
+ for message, role in zip(messages, ('user', 'assistant'), strict=True):
+  if not isinstance(message, dict) or set(message) != {'role', 'content'}:
+   raise DataError('DATASET_FIELDS_INVALID')
+  if message['role'] != role:
+   raise DataError('DATASET_MESSAGE_SEQUENCE_INVALID')
+ return value['source_id'], messages[0]['content'], messages[1]['content']
 
 def preview(raw):
  try:text=raw[:256].decode('utf-8',errors='strict');replaced=False
@@ -98,7 +121,7 @@ def preview(raw):
  # Escaped preview is labeled; original immutable bytes/hash remain the authority.
  return json.dumps(text,ensure_ascii=False)[1:-1],replaced
 
-def inspect_file(path:Path,limits:Limits):
+def inspect_file(path:Path,limits:Limits,*,source_row_format=None):
  if path.stat().st_size>limits.maximum_bytes:raise DataError('DATASET_FILE_TOO_LARGE')
  rows=[];errors=[];total=0;invalid=0;size=0;digest=hashlib.sha256();fatal=False;fatal_line=None
  def consume(block):
@@ -127,7 +150,7 @@ def inspect_file(path:Path,limits:Limits):
     error(first,total,'DATASET_LINE_TOO_LARGE');continue
    content=raw[:-1] if raw.endswith(b'\n') else raw
    if content.endswith(b'\r'):content=content[:-1]
-   try:rows.append(parse_line(content,total,limits))
+   try:rows.append(parse_line(content,total,limits,source_row_format=source_row_format))
    except DataError as e:error(content,total,e.code)
  if total==0:error(b'',0,'DATASET_EMPTY_SOURCE')
  return Inspection(rows,errors,total,invalid,invalid>len(errors),digest.hexdigest(),size,fatal,fatal_line)

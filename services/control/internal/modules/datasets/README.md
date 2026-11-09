@@ -185,3 +185,14 @@ Schema 2 records the test ratio, group count, row count, and digest-bound
 Dataset storage and file snapshots accept both schemas. The training
 transfer still exposes its existing two assets. See the
 [three-way policy and public contract handoff](../../../../../docs/research/dataset-three-way-splits.md).
+
+## Single-turn messages sources
+
+Internal callers can use `UploadWithSourceRowFormat` with
+`SingleTurnMessagesV1` from the dataset wire package. Each JSONL line
+requires a source ID, a textual user message, and a textual assistant
+reply. Inspection retains the raw upload and its physical line numbers
+while writing prompt/completion rows for existing publishing and training
+consumers. Replays and retries keep the original source format. A clone
+starts from the canonical effective rows. See the
+[format and public integration contract](../../../../../docs/research/dataset-training-formats.md#published-single-turn-messages).

@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
@@ -13,8 +14,17 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// Upload attaches a source using the default prompt/completion row format.
 func (s *Service) Upload(ctx context.Context, a identity.Auth, workspace, dataset, draft, digest string, size int64, source io.Reader, requestID string) (Draft, error) {
+	return s.UploadWithSourceRowFormat(ctx, a, workspace, dataset, draft, digest, size, source, "", requestID)
+}
+
+// UploadWithSourceRowFormat freezes the interpretation when the source and import job commit.
+func (s *Service) UploadWithSourceRowFormat(ctx context.Context, a identity.Auth, workspace, dataset, draft, digest string, size int64, source io.Reader, format wire.SourceRowFormat, requestID string) (Draft, error) {
 	var out Draft
+	if !format.Valid() {
+		return out, failure("VALIDATION_FAILED")
+	}
 	if s.Store == nil || s.Processor == nil {
 		return out, failure("DATASET_STORAGE_UNAVAILABLE")
 	}
@@ -36,6 +46,9 @@ func (s *Service) Upload(ctx context.Context, a identity.Auth, workspace, datase
 		if e = draftAccess(a, w, d, true); e != nil {
 			return e
 		}
+		if d.ParentVersionID != nil && format != "" {
+			return failure("VALIDATION_FAILED")
+		}
 		if size != d.ExpectedBytes || digest != d.SourceSHA256 {
 			return failure("DATASET_SOURCE_CHANGED")
 		}
@@ -43,6 +56,13 @@ func (s *Service) Upload(ctx context.Context, a identity.Auth, workspace, datase
 			return e
 		}
 		if d.SourceReceivedAt != nil {
+			frozen, e := uploadedSourceRowFormat(ctx, tx, w, d)
+			if e != nil {
+				return e
+			}
+			if format != frozen {
+				return failure("IDEMPOTENCY_CONFLICT")
+			}
 			if _, e = s.Store.Source(object, digest, size); e != nil {
 				return e
 			}
@@ -128,8 +148,12 @@ func (s *Service) Upload(ctx context.Context, a identity.Auth, workspace, datase
 			return failure("DATASET_ATTEMPT_STALE")
 		}
 		job := uuid.NewString()
-		intent := fingerprint(struct{ Draft, Upload string }{draft, upload}, a.Me.User.ID)
-		_, e = tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,input_sha256,input_policy,creation_key,creation_fingerprint) VALUES($1,$2,$3,$4,$5,'import',$6,$7,$8,$9,'Validate uploaded source',$10,'pending',$11,$12,$13,$14)`, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,input_sha256,input_policy,creation_key,creation_fingerprint) VALUES(?,?,?,?,?,'import',?,?,?,?,'Validate uploaded source',?,'pending',?,CAST(? AS JSON),?,?)`, []any{job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, s.jobPolicyBytes(PublicationOptions{}), uuid.NewString(), intent}, []any{job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, s.jobPolicyBytes(PublicationOptions{}), uuid.NewString(), intent}, transaction.SQL(transaction.Dameng, dmUploadQueueInspection, job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, string(s.jobPolicyBytes(PublicationOptions{})), uuid.NewString(), intent)))
+		intent := fingerprint(struct {
+			Draft, Upload   string
+			SourceRowFormat wire.SourceRowFormat `json:"source_row_format,omitempty"`
+		}{draft, upload, format}, a.Me.User.ID)
+		policy := s.jobPolicyBytes(PublicationOptions{}, format)
+		_, e = tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,input_sha256,input_policy,creation_key,creation_fingerprint) VALUES($1,$2,$3,$4,$5,'import',$6,$7,$8,$9,'Validate uploaded source',$10,'pending',$11,$12,$13,$14)`, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,input_sha256,input_policy,creation_key,creation_fingerprint) VALUES(?,?,?,?,?,'import',?,?,?,?,'Validate uploaded source',?,'pending',?,CAST(? AS JSON),?,?)`, []any{job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, policy, uuid.NewString(), intent}, []any{job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, policy, uuid.NewString(), intent}, transaction.SQL(transaction.Dameng, dmUploadQueueInspection, job, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, d.Revision, digest, string(policy), uuid.NewString(), intent)))
 		if e != nil {
 			return e
 		}
@@ -145,6 +169,24 @@ func (s *Service) Upload(ctx context.Context, a identity.Auth, workspace, datase
 	})
 	return committed(out, e)
 }
+
+// The locked draft has exactly one original inspection for its immutable source.
+// Later inspection retries and publications do not change the upload replay.
+func uploadedSourceRowFormat(ctx context.Context, q transaction.Executor, w workspaces.Workspace, d Draft) (wire.SourceRowFormat, error) {
+	const native = "SELECT input_policy FROM dataset_jobs WHERE tenant_id=? AND workspace_id=? AND dataset_id=? AND draft_id=? AND input_sha256=? AND kind='import' AND retry_of IS NULL"
+	args := []any{w.TenantID, w.ID, d.DatasetID, d.ID, d.SourceSHA256}
+	var raw []byte
+	e := q.QueryRow(ctx, datasetSQL(q, "SELECT input_policy FROM dataset_jobs WHERE tenant_id=$1 AND workspace_id=$2 AND dataset_id=$3 AND draft_id=$4 AND input_sha256=$5 AND kind='import' AND retry_of IS NULL", native, args, args, transaction.SQL(transaction.Dameng, native, args...))).Scan(&raw)
+	if e != nil {
+		if errors.Is(e, pgx.ErrNoRows) {
+			return "", errDatasetJobPolicy
+		}
+		return "", e
+	}
+	policy, e := decodeJobPolicy(raw)
+	return policy.SourceRowFormat, e
+}
+
 func safeDatasetError(e error) string {
 	if e == nil {
 		return ""

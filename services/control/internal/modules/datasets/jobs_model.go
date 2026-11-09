@@ -15,10 +15,11 @@ import (
 var errDatasetJobPolicy = failure("DATASET_POLICY_INVALID")
 
 type jobPolicy struct {
-	Limits          wire.Limits    `json:"limits"`
-	Resources       wire.Resources `json:"resources"`
-	Deduplication   string         `json:"deduplication,omitempty"`
-	TestBasisPoints int            `json:"test_basis_points,omitempty"`
+	Limits          wire.Limits          `json:"limits"`
+	Resources       wire.Resources       `json:"resources"`
+	Deduplication   string               `json:"deduplication,omitempty"`
+	TestBasisPoints int                  `json:"test_basis_points,omitempty"`
+	SourceRowFormat wire.SourceRowFormat `json:"source_row_format,omitempty"`
 }
 
 const jobFields = `error_line_number,reason,id::text,dataset_id::text,draft_id::text,workspace_id::text,kind,requested_by::text,expected_revision,state,version_id::text,input_sha256,split_seed,validation_basis_points,attempt_count,attempt_id::text,lease_expires_at,cancel_requested_at,error_code,retryable,created_at,updated_at,completed_at`
@@ -77,9 +78,9 @@ func (s *Service) GetJob(ctx context.Context, a identity.Auth, workspace, datase
 	})
 	return committed(out, e)
 }
-func (s *Service) jobPolicyBytes(options PublicationOptions) []byte {
+func (s *Service) jobPolicyBytes(options PublicationOptions, format wire.SourceRowFormat) []byte {
 	p := s.policy()
-	raw, _ := json.Marshal(jobPolicy{Limits: p.Limits, Resources: p.Resources, Deduplication: options.Deduplication, TestBasisPoints: options.TestBasisPoints})
+	raw, _ := json.Marshal(jobPolicy{Limits: p.Limits, Resources: p.Resources, Deduplication: options.Deduplication, TestBasisPoints: options.TestBasisPoints, SourceRowFormat: format})
 	return raw
 }
 
@@ -87,14 +88,19 @@ func datasetJobInput(ctx context.Context, tx transaction.Executor, id string) (j
 	var raw []byte
 	var sourceObject string
 	var sourceBytes int64
-	var policy jobPolicy
 	e := tx.QueryRow(ctx, datasetSQL(tx, "SELECT input_policy,source_object_id::text,expected_bytes FROM dataset_jobs JOIN dataset_drafts ON dataset_drafts.id=dataset_jobs.draft_id WHERE dataset_jobs.id=$1", `SELECT input_policy,source_object_id,expected_bytes FROM dataset_jobs JOIN dataset_drafts ON dataset_drafts.id=dataset_jobs.draft_id WHERE dataset_jobs.id=?`, []any{id}, []any{id}, transaction.SQL(transaction.Dameng, dmWorkerInput, id))).Scan(&raw, &sourceObject, &sourceBytes)
 	if e != nil {
-		return policy, "", 0, e
+		return jobPolicy{}, "", 0, e
 	}
+	policy, e := decodeJobPolicy(raw)
+	return policy, sourceObject, sourceBytes, e
+}
+
+func decodeJobPolicy(raw []byte) (jobPolicy, error) {
+	var policy jobPolicy
 	if wire.DecodeStrict(raw, &policy) != nil || policy.Limits.Validate() != nil || policy.Resources.Validate() != nil ||
-		policy.Deduplication != "" && policy.Deduplication != NearPromptV1 {
-		return jobPolicy{}, "", 0, errDatasetJobPolicy
+		policy.Deduplication != "" && policy.Deduplication != NearPromptV1 || !policy.SourceRowFormat.Valid() {
+		return jobPolicy{}, errDatasetJobPolicy
 	}
-	return policy, sourceObject, sourceBytes, nil
+	return policy, nil
 }

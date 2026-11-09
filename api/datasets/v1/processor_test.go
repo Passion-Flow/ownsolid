@@ -125,3 +125,45 @@ func TestThreeWayManifestCannotMixSplitVersions(t *testing.T) {
 		t.Fatalf("default manifest gained test metadata: %s, %v", encoded, err)
 	}
 }
+
+func TestInspectionSourceRowFormatBindsProtectedReceipt(t *testing.T) {
+	request := wireRequest()
+	request.SourceRowFormat = SingleTurnMessagesV1
+	if err := request.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	result := ProcessorResult{
+		SchemaVersion: 1, ProcessorVersion: ProcessorVersion, JobID: request.JobID, AttemptID: request.AttemptID,
+		Operation: request.Operation, Status: "failed", SourceRowFormat: request.SourceRowFormat,
+		ErrorCode: "DATASET_MESSAGE_SEQUENCE_INVALID",
+	}
+	raw, err := json.Marshal(result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := DecodeResult(raw, request); err != nil {
+		t.Fatal(err)
+	}
+	withoutFormat := request
+	withoutFormat.SourceRowFormat = ""
+	if _, err := DecodeResult(raw, withoutFormat); err == nil {
+		t.Fatal("default inspection accepted a receipt from the opted-in parser")
+	}
+	result.SourceRowFormat = ""
+	raw, _ = json.Marshal(result)
+	if _, err := DecodeResult(raw, request); err == nil {
+		t.Fatal("opted-in inspection accepted a receipt without its source format")
+	}
+	request.SourceRowFormat = "preference"
+	if request.Validate() == nil {
+		t.Fatal("unsupported source shape reached the processor")
+	}
+	request.SourceRowFormat = SingleTurnMessagesV1
+	request.Operation = PublishOperation
+	seed := strings.Repeat("a", 32)
+	validation := 2000
+	request.Seed, request.ValidationBasisPoints = &seed, &validation
+	if request.Validate() == nil {
+		t.Fatal("published artifacts accepted a noncanonical input format")
+	}
+}
