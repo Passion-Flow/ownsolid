@@ -68,6 +68,10 @@ func recoveryMutation(r *http.Request) (bool, error) {
 	if privateClusterRecoveryMutation(r) {
 		return true, nil
 	}
+	// A user can contain a compromised session while new business is blocked.
+	if r.Method == http.MethodDelete && licensePath(path, browserSessionsPath+"/:id") {
+		return true, nil
+	}
 	// A person's own interface state, like a saved view, is not new business.
 	if (r.Method == http.MethodPut || r.Method == http.MethodDelete) && licensePath(path, "/api/v1/saved-views/:id") {
 		return true, nil
