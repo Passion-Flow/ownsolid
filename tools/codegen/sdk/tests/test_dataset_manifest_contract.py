@@ -107,6 +107,31 @@ class DatasetManifestContractTests(unittest.TestCase):
                 )
         self.assertEqual(set(self.schemas["DatasetReason"]["properties"]), {"reason"})
 
+    def test_source_upload_preserves_binary_body_and_adds_one_optional_format(self):
+        for audience in ("admin", "portal"):
+            with self.subTest(audience=audience):
+                upload = self.operations[audience + "UploadDatasetSource"]
+                body = upload["requestBody"]
+                self.assertTrue(body["required"])
+                self.assertEqual(body["content"], {
+                    "application/x-ndjson": {
+                        "schema": {"type": "string", "format": "binary", "maxLength": 67108864},
+                    },
+                })
+                headers = {parameter["name"]: parameter for parameter in upload["parameters"]
+                           if parameter["in"] == "header"}
+                self.assertEqual(set(headers), {
+                    "Origin", "X-CSRF-Token", "X-Content-SHA256", "Content-Length", "Dataset-Source-Row-Format",
+                })
+                self.assertEqual(headers["Dataset-Source-Row-Format"], {
+                    "name": "Dataset-Source-Row-Format",
+                    "in": "header",
+                    "required": False,
+                    "schema": {"type": "string", "enum": ["single_turn_messages_v1"]},
+                })
+                for name in ("Origin", "X-CSRF-Token", "X-Content-SHA256", "Content-Length"):
+                    self.assertTrue(headers[name]["required"])
+
     def version_conditions(self):
         return {
             rule["if"]["properties"]["schema_version"]["const"]: rule["then"]

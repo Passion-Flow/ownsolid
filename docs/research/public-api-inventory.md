@@ -293,3 +293,31 @@ invalid policy values, replay and conflict, and verify a failed attempt
 and retry keep the frozen choice. Check that the generated clients leave
 the field absent by default and can encode only the documented selection
 through their declared types.
+
+## DAT-102 single-turn source attachment
+
+The [single-turn row policy](dataset-training-formats.md#published-single-turn-messages)
+uses the textual role and content sequence described by
+[Hugging Face TRL](https://huggingface.co/docs/trl/dataset_formats#language-modeling).
+The [OpenAPI parameter contract](https://spec.openapis.org/oas/v3.1.1.html#parameter-object)
+describes request headers separately from the uploaded bytes.
+[RFC 9110 field handling](https://www.rfc-editor.org/rfc/rfc9110.html#section-5.2)
+distinguishes singleton fields from list-valued fields.
+
+Add one optional singleton Dataset-Source-Row-Format header to the two
+existing attachments. Its only explicit value is single_turn_messages_v1.
+Omission preserves the old prompt/completion decoder. Keep the bounded
+NDJSON body, byte count, digest and all response shapes. A JSON wrapper
+would change digest identity and streaming behavior, and inference from
+row contents would reinterpret older uploads. Store the interpretation
+with the import job so repeated uploads and explicit retries cannot
+change it. The existing [processor licenses](dataset-training-formats.md#published-single-turn-messages)
+and [SDK licenses](sdk.md#licenses) apply. No dependency, model or dataset
+is added.
+
+Verify omitted and explicit values in the generated clients and check that
+the binary payload is identical to its input. Run the shared disconnected
+HTTPS and PostgreSQL fixture against the actual handler, processor and
+contract. Check malformed and repeated headers, an identical replay, a
+changed-format conflict, a retryable processor failure, physical line
+errors, and canonical publication with the raw source digest preserved.

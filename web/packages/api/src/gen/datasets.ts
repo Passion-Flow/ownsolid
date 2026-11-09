@@ -147,6 +147,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Attach bounded NDJSON using the existing content length and SHA-256. Omit Dataset-Source-Row-Format to keep prompt and completion rows. The single_turn_messages_v1 value selects a textual user message followed by a textual assistant reply for each row. Send the header at most once. Empty or unsupported values return HTTP 400 with VALIDATION_FAILED. Replaying an accepted source with a different format returns HTTP 409 with IDEMPOTENCY_CONFLICT. Import retries keep the original format. */
         post: operations["adminUploadDatasetSource"];
         delete?: never;
         options?: never;
@@ -511,6 +512,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** @description Attach bounded NDJSON using the existing content length and SHA-256. Omit Dataset-Source-Row-Format to keep prompt and completion rows. The single_turn_messages_v1 value selects a textual user message followed by a textual assistant reply for each row. Send the header at most once. Empty or unsupported values return HTTP 400 with VALIDATION_FAILED. Replaying an accepted source with a different format returns HTTP 409 with IDEMPOTENCY_CONFLICT. Import retries keep the original format. */
         post: operations["portalUploadDatasetSource"];
         delete?: never;
         options?: never;
@@ -1396,6 +1398,7 @@ export interface operations {
                 "X-CSRF-Token": string;
                 "X-Content-SHA256": string;
                 "Content-Length": number;
+                "Dataset-Source-Row-Format"?: "single_turn_messages_v1";
             };
             path: {
                 site_id: string;
@@ -2291,6 +2294,7 @@ export interface operations {
                 "X-CSRF-Token": string;
                 "X-Content-SHA256": string;
                 "Content-Length": number;
+                "Dataset-Source-Row-Format"?: "single_turn_messages_v1";
             };
             path: {
                 site_id: string;
