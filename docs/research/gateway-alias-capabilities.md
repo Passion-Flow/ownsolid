@@ -157,3 +157,54 @@ run this from the repository root.
 ```sh
 go -C services/control test -p 1 ./internal/modules/distribution   -run '^Test(PostgresAliasCapabilitiesFollowVerifiedScopedTarget|AliasContextCeilingRequiresRecognizedSource|ActualAliasCutoverTLSNullableContractCSRFHistoryAndExactReplay)$' -count=1
 ```
+
+### Compatibility boundary and DEV inputs
+
+The sole positive capability source is `Service.AliasCapabilities`.
+It authorizes the alias with the same workspace and visibility rules
+as alias detail. In that transaction it requires the current alias
+ID and revision, node, deployment ID and revision, model ID and kind,
+catalogue digest and nullable recipe digest to agree across the
+local-cell alias, immutable target, live deployment and ready model.
+The deployment owner also requires a fresh generation observation.
+A valid alias with unavailable or unidentified evidence yields a nil
+projection. A paused alias yields no projection for Admin and the
+existing not-found result for Portal. A refusal keeps its existing
+problem code. The internal result carries the exact alias and
+deployment revisions to prevent attaching it to a stale view.
+
+The [OpenAPI Schema Object](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
+and the released `ModelAlias` schema keep the current response closed.
+Test all four registered Admin and Portal list and detail operations
+against their released response schemas. Check that the existing
+payload never acquires a capability field and that a workspace without
+membership and a foreign tenant cannot read it. Admin still sees a
+paused alias in its normal representation. Portal omits it from the
+list and returns the existing not-found problem on detail.
+
+DEV can bind the optional object to these exact operations once the
+schema changes. Use the same authorization, page limit and cursor.
+For a projected result, require both proposed fields together.
+`text_generation_verified` is true and `context_token_ceiling` is a
+positive integer. Omit the entire object when the projection is nil.
+List and detail must both use the exact target in the same authorized
+transaction. Publish the schema and regenerate both clients before
+exposing the object. The public model list, machine binding and
+mutation responses retain their current fields. No runtime, dependency
+or product data changes are needed to verify this boundary.
+
+The versioned operation IDs are `adminListModelAlias`,
+`adminGetModelAlias`, `portalListModelAlias` and `portalGetModelAlias`.
+The disconnected `TestPostgresAliasCapabilityPublicContractBoundary`
+run checked all four through the real TLS dispatcher. Their published
+response schemas accepted the replies. Each authorized item retained
+its alias and deployment identity without a capability object. The
+Portal member could not read a separate workspace, and neither
+audience could read a foreign tenant. Admin could still read the
+paused alias, while Portal detail returned MODEL_ALIAS_NOT_FOUND
+and its list excluded the alias. This run used PostgreSQL 18.6 and
+synthetic deployment observations.
+
+```sh
+go -C services/control test -p 1 ./internal/modules/distribution -run '^TestPostgresAliasCapabilityPublicContractBoundary$' -count=1
+```
