@@ -13,6 +13,7 @@ pub mod outcome;
 pub mod protocol;
 mod quota;
 pub mod reporting;
+mod responses;
 pub mod routing;
 #[cfg(test)]
 mod routing_tests;

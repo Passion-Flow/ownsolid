@@ -1,7 +1,6 @@
 use crate::admission::{Execution, stopped};
 use crate::backend::transport_error;
 use crate::configuration::Result;
-use crate::errors;
 use crate::protocol::Usage;
 use crate::streaming::Decoder;
 use futures_util::StreamExt;
@@ -54,6 +53,9 @@ impl StreamWork {
         } = self;
         let mut stream = response.bytes_stream();
         let result: Result<(Usage, Vec<u8>)> = async {
+            if let Some(bytes) = decoder.start() {
+                send(&sender, shutdown.clone(), deadline, idle, bytes).await?;
+            }
             loop {
                 if deadline <= Instant::now() {
                     return Err("upstream_timeout");
@@ -85,18 +87,14 @@ impl StreamWork {
                 execution.settle_tokens(&usage).await;
                 match execution.success(usage) {
                     Ok(()) => terminal,
-                    Err(code) => error_event(code, request_id),
+                    Err(code) => decoder.failure(code, request_id),
                 }
             }
             Err(code) => {
                 let code = execution.failure(code, None).err().unwrap_or(code);
-                error_event(code, request_id)
+                decoder.failure(code, request_id)
             }
         };
         let _ = send(&sender, shutdown, deadline, idle, terminal).await;
     }
-}
-
-fn error_event(code: &'static str, id: Uuid) -> Vec<u8> {
-    format!("data: {}\n\n", errors::document(code, id)).into_bytes()
 }

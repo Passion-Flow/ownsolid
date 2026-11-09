@@ -1,5 +1,6 @@
 use crate::configuration::{Limits, Result};
-use crate::protocol::{ChatRequest, Usage};
+use crate::protocol::{ChatRequest, FinishReason, Usage};
+use crate::responses::{ResponseIdentity, ResponsesStream};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
@@ -15,7 +16,7 @@ struct Delta {
 struct Choice {
     index: u32,
     delta: Delta,
-    finish_reason: Option<String>,
+    finish_reason: Option<FinishReason>,
 }
 
 #[derive(Deserialize)]
@@ -43,7 +44,8 @@ pub struct Decoder {
     prompt_tokens: u32,
     maximum_tokens: u32,
     identity: Option<(String, u64)>,
-    finish_seen: bool,
+    finish_reason: Option<FinishReason>,
+    responses: Option<ResponsesStream>,
     done_seen: bool,
     usage: Option<Usage>,
 }
@@ -69,13 +71,33 @@ impl Decoder {
             prompt_tokens,
             maximum_tokens: request.maximum_tokens,
             identity: None,
-            finish_seen: false,
+            finish_reason: None,
+            responses: None,
             done_seen: false,
             usage: None,
         }
     }
 
-    /// Consumes at most one event, allowing the caller to apply client backpressure immediately.
+    pub(crate) fn with_responses(mut self, identity: ResponseIdentity, limits: &Limits) -> Self {
+        self.responses = Some(ResponsesStream::new(
+            identity,
+            limits.response_bytes as usize,
+        ));
+        self
+    }
+
+    pub(crate) fn start(&mut self) -> Option<Vec<u8>> {
+        self.responses.as_mut().map(ResponsesStream::start)
+    }
+
+    pub(crate) fn failure(&self, code: &'static str, id: uuid::Uuid) -> Vec<u8> {
+        self.responses.as_ref().map_or_else(
+            || format!("data: {}\n\n", crate::errors::document(code, id)).into_bytes(),
+            |responses| responses.failure(code),
+        )
+    }
+
+    /// Consumes at most one upstream event before the caller applies client backpressure.
     pub fn consume(&mut self, bytes: &[u8]) -> Result<(usize, Option<Vec<u8>>)> {
         for (index, byte) in bytes.iter().copied().enumerate() {
             self.total_bytes += 1;
@@ -149,7 +171,7 @@ impl Decoder {
             return Ok(None);
         }
         if data == "[DONE]" {
-            if !self.finish_seen || self.usage.is_none() {
+            if self.finish_reason.is_none() || self.usage.is_none() {
                 return Err("upstream_response_invalid");
             }
             // The transport persists its outcome before emitting DONE after the actual upstream EOF.
@@ -176,7 +198,7 @@ impl Decoder {
             self.identity = Some((value.id.clone(), value.created));
         }
         if value.choices.is_empty() {
-            if !self.finish_seen || self.usage.is_some() {
+            if self.finish_reason.is_none() || self.usage.is_some() {
                 return Err("upstream_response_invalid");
             }
             let usage = value.usage.ok_or("upstream_response_invalid")?;
@@ -184,7 +206,7 @@ impl Decoder {
             self.usage = Some(usage);
             return Ok(None);
         }
-        if self.finish_seen || value.choices.len() != 1 || value.usage.is_some() {
+        if self.finish_reason.is_some() || value.choices.len() != 1 || value.usage.is_some() {
             return Err("upstream_response_invalid");
         }
         let choice = &value.choices[0];
@@ -196,13 +218,13 @@ impl Decoder {
                 .is_some_and(|role| role != "assistant")
             || choice.delta.tool_calls.is_some()
             || choice.delta.function_call.is_some()
-            || choice.finish_reason.as_ref().is_some_and(|reason| {
-                !matches!(reason.as_str(), "stop" | "length" | "content_filter")
-            })
         {
             return Err("upstream_response_invalid");
         }
-        self.finish_seen = choice.finish_reason.is_some();
+        self.finish_reason = choice.finish_reason;
+        if let Some(responses) = &mut self.responses {
+            return responses.delta(choice.delta.content.as_deref().unwrap_or_default());
+        }
         let mut delta = serde_json::Map::new();
         if let Some(role) = &choice.delta.role {
             delta.insert("role".into(), json!(role));
@@ -222,14 +244,19 @@ impl Decoder {
     }
 
     /// Builds the terminal write once EOF confirms the full upstream stream.
-    pub fn finish(self) -> Result<(Usage, Vec<u8>)> {
+    pub fn finish(&mut self) -> Result<(Usage, Vec<u8>)> {
         if !self.done_seen || !self.buffer.iter().all(u8::is_ascii_whitespace) {
             return Err("upstream_response_invalid");
         }
-        let usage = self.usage.ok_or("upstream_response_invalid")?;
+        let usage = self.usage.take().ok_or("upstream_response_invalid")?;
+        if let Some(responses) = &self.responses {
+            let reason = self.finish_reason.ok_or("upstream_response_invalid")?;
+            let terminal = responses.finish(reason, &usage);
+            return Ok((usage, terminal));
+        }
         let mut terminal = Vec::new();
         if self.include_usage {
-            let (id, created) = self.identity.ok_or("upstream_response_invalid")?;
+            let (id, created) = self.identity.as_ref().ok_or("upstream_response_invalid")?;
             terminal = encode_event(json!({
                 "id": id,
                 "object": "chat.completion.chunk",

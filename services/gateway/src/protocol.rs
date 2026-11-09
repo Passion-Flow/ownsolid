@@ -63,13 +63,60 @@ impl ChatRequest {
         if bytes.len() as u64 > limits.request_body_bytes {
             return Err("request_too_large");
         }
-        let input: ChatInput = serde_json::from_slice(bytes).map_err(|error| {
-            if error.to_string().starts_with("unknown field") {
-                "unsupported_parameter"
-            } else {
-                "invalid_request_error"
-            }
-        })?;
+        Self::validate(parse_input(bytes)?, limits)
+    }
+
+    /// Translate the foreground string-input Responses subset to text generation.
+    pub fn parse_responses(bytes: &[u8], limits: &Limits) -> Result<Self> {
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Input {
+            model: String,
+            input: String,
+            instructions: Option<String>,
+            max_output_tokens: Option<u32>,
+            temperature: Option<f64>,
+            #[serde(default)]
+            stream: bool,
+            #[serde(default)]
+            store: bool,
+            #[serde(default)]
+            background: bool,
+        }
+        if bytes.len() as u64 > limits.request_body_bytes {
+            return Err("request_too_large");
+        }
+        let input: Input = parse_input(bytes)?;
+        if input.store || input.background {
+            return Err("unsupported_parameter");
+        }
+        let mut messages = Vec::with_capacity(2);
+        if let Some(content) = input.instructions {
+            messages.push(Message {
+                role: Role::System,
+                content,
+            });
+        }
+        messages.push(Message {
+            role: Role::User,
+            content: input.input,
+        });
+        Self::validate(
+            ChatInput {
+                model: input.model,
+                messages,
+                max_tokens: None,
+                max_completion_tokens: input.max_output_tokens,
+                temperature: input.temperature,
+                n: None,
+                stream: input.stream,
+                stream_options: None,
+            },
+            limits,
+        )
+    }
+
+    fn validate(input: ChatInput, limits: &Limits) -> Result<Self> {
         if !valid_alias(&input.model)
             || input.messages.is_empty()
             || input.messages.len() > limits.maximum_messages
@@ -144,6 +191,16 @@ impl ChatRequest {
     }
 }
 
+fn parse_input<'a, T: Deserialize<'a>>(bytes: &'a [u8]) -> Result<T> {
+    serde_json::from_slice(bytes).map_err(|error| {
+        if error.to_string().starts_with("unknown field") {
+            "unsupported_parameter"
+        } else {
+            "invalid_request_error"
+        }
+    })
+}
+
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq, Eq)]
 pub struct Usage {
     pub prompt_tokens: u32,
@@ -163,13 +220,35 @@ impl Usage {
     }
 }
 
-pub fn normalize_completion(
+#[derive(Clone, Copy, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum FinishReason {
+    Stop,
+    Length,
+    ContentFilter,
+}
+
+pub(crate) struct Completion {
+    id: String,
+    created: u64,
+    pub(crate) text: String,
+    pub(crate) reason: FinishReason,
+    pub(crate) usage: Usage,
+}
+
+impl Completion {
+    pub(crate) fn chat(&self, alias: &str) -> Value {
+        json!({"id":self.id,"object":"chat.completion","created":self.created,"model":alias,"choices":[{"index":0,"message":{"role":"assistant","content":self.text},"finish_reason":self.reason}],"usage":self.usage})
+    }
+}
+
+pub(crate) fn normalize_completion(
     bytes: &[u8],
     request: &ChatRequest,
     backend_model: &str,
     prompt_tokens: u32,
     limits: &Limits,
-) -> Result<(Value, Usage)> {
+) -> Result<Completion> {
     if bytes.len() as u64 > limits.response_bytes {
         return Err("upstream_response_invalid");
     }
@@ -184,10 +263,10 @@ pub fn normalize_completion(
     struct Choice {
         index: u32,
         message: AssistantMessage,
-        finish_reason: String,
+        finish_reason: FinishReason,
     }
     #[derive(Deserialize)]
-    struct Completion {
+    struct BackendCompletion {
         id: String,
         object: String,
         created: u64,
@@ -195,7 +274,7 @@ pub fn normalize_completion(
         choices: Vec<Choice>,
         usage: Usage,
     }
-    let value: Completion =
+    let value: BackendCompletion =
         serde_json::from_slice(bytes).map_err(|_| "upstream_response_invalid")?;
     let valid_id = !value.id.is_empty()
         && value.id.len() <= 128
@@ -210,30 +289,62 @@ pub fn normalize_completion(
     {
         return Err("upstream_response_invalid");
     }
-    let choice = &value.choices[0];
+    let choice = value
+        .choices
+        .into_iter()
+        .next()
+        .ok_or("upstream_response_invalid")?;
     if choice.index != 0
         || choice.message.role != "assistant"
         || choice.message.tool_calls.is_some()
         || choice.message.function_call.is_some()
-        || !matches!(
-            choice.finish_reason.as_str(),
-            "stop" | "length" | "content_filter"
-        )
     {
         return Err("upstream_response_invalid");
     }
     value
         .usage
         .validate(prompt_tokens, request.maximum_tokens)?;
-    let usage = value.usage;
-    // Construct only the supported wire surface; unknown upstream diagnostic fields are never forwarded.
-    let value = json!({"id":value.id,"object":"chat.completion","created":value.created,"model":request.alias,"choices":[{"index":0,"message":{"role":"assistant","content":choice.message.content},"finish_reason":choice.finish_reason}],"usage":usage});
-    Ok((value, usage))
+    Ok(Completion {
+        id: value.id,
+        created: value.created,
+        text: choice.message.content,
+        reason: choice.finish_reason,
+        usage: value.usage,
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn responses_input_is_translated_once_for_tokenization_and_generation() {
+        let limits = Limits::default();
+        let request = ChatRequest::parse_responses(
+            br#"{"model":"public-alias","input":"Synthetic prompt","instructions":"Synthetic instructions","max_output_tokens":16,"temperature":0.5,"background":false,"store":false,"stream":true}"#,
+            &limits,
+        ).unwrap();
+        let tokenize = request.tokenize_payload("internal");
+        let generation = request.completion_payload("internal");
+        assert_eq!(
+            tokenize["messages"],
+            json!([
+                {"role":"system","content":"Synthetic instructions"},
+                {"role":"user","content":"Synthetic prompt"}
+            ])
+        );
+        assert_eq!(tokenize["messages"], generation["messages"]);
+        assert_eq!(generation["max_tokens"], 16);
+        assert_eq!(generation["temperature"], 0.5);
+        assert_eq!(generation["stream_options"]["include_usage"], true);
+        assert!(
+            ChatRequest::parse_responses(
+                br#"{"model":"public-alias","input":"first","input":"second"}"#,
+                &limits
+            )
+            .is_err()
+        );
+    }
 
     #[test]
     fn configured_defaults_apply_without_rebuilding_request_logic() {
@@ -329,7 +440,7 @@ mod tests {
         let limits = Limits::default();
         let request = ChatRequest::parse(&input(json!({})), &limits).unwrap();
         let mut value = json!({"id":"chatcmpl-synthetic","object":"chat.completion","created":1,"model":"approved-internal","choices":[{"index":0,"message":{"role":"assistant","content":"synthetic response"},"finish_reason":"stop"}],"usage":{"prompt_tokens":7,"completion_tokens":2,"total_tokens":9},"private_diagnostic":"must never be forwarded"});
-        let (normalized, usage) = normalize_completion(
+        let completion = normalize_completion(
             &serde_json::to_vec(&value).unwrap(),
             &request,
             "approved-internal",
@@ -337,9 +448,10 @@ mod tests {
             &limits,
         )
         .unwrap();
+        let normalized = completion.chat(&request.alias);
         assert_eq!(normalized["model"], "sample-model");
         assert!(normalized.get("private_diagnostic").is_none());
-        assert_eq!(usage.total_tokens, 9);
+        assert_eq!(completion.usage.total_tokens, 9);
         value["usage"]["total_tokens"] = json!(10);
         assert!(
             normalize_completion(
