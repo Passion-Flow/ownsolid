@@ -75,3 +75,65 @@ Exercise backup with pg_dump and pg_restore in the egress-recorder network
 namespace. A verified candidate and its original must remain separately
 identifiable throughout recovery. Test with signed and unsigned installation
 entry-point guards as applicable.
+
+## Recover an interrupted logical load
+
+A single-database PostgreSQL [custom archive restore](https://www.postgresql.org/docs/18/app-pgrestore.html)
+can commit individual commands before a later command fails. Even when a
+restore uses a single SQL transaction, that transaction cannot cover
+[CREATE DATABASE](https://www.postgresql.org/docs/18/sql-createdatabase.html).
+Changing the archive transaction mode cannot tell the installer which
+database it created or whether its tables passed fingerprint verification.
+
+Persist a loading phase in the existing recovery record immediately after
+PostgreSQL supplies the scratch database OID and before opening the archive.
+The original can keep serving while the scratch database is loaded and
+checked. Only a successfully verified load can advance the record to pending
+exchange. Loading recovery validates the cluster and exact original and
+candidate placement, terminates only the scratch connections, and moves the
+candidate to the existing failed name in a guarded transaction. It leaves the
+original writer running. A repeat after the guarded rename can clear the
+record. A completed cleanup that left the exact original and neither
+candidate name can also clear it. An unknown placement refuses without
+changing either database.
+
+Preserve immediate cleanup for a completed load command that reports failure
+while the installer still owns its operation lock. Check the exact scratch
+identity first. If cleanup is uncertain, retain the recovery record. An
+interrupted or unacknowledged load keeps its candidate for inspection. The
+short interval before a successful CREATE result has been tied to an OID is
+still outside automatic recovery. An unbound name is insufficient authority
+to remove a database. PostgreSQL's optional explicit OID is intended for
+upgrade tooling, so the installer leaves OID allocation to PostgreSQL.
+
+Acceptance includes a real pg_restore followed by loss of the installer
+process before it observes load completion, while the existing writer remains
+ready. Recover without the archive, verify the original OID and live writes,
+and confirm that the candidate OID is preserved under the failed name. Also
+test a lost response to the recovery rename, a substituted name, and ordinary
+invalid archives. Reuse the PostgreSQL and Go dependencies listed above.
+
+### Disconnected load recovery
+
+On 2026-11-09, a targeted run on `ownsolid-cpu` drove the installer Backup,
+Restore and RecoverRestore entry points against PostgreSQL 18.6. The same
+one-container adapter described in the [DEL-103 acceptance](first-run-bootstrap.md#linux-amd64-acceptance)
+ran native Control and forwarded the actual pg_dump and pg_restore streams.
+It used no published ports or telemetry services. The installer verified the
+logical backup across 118 tables.
+
+The adapter sent SIGKILL to the Restore process immediately after real
+pg_restore completed, before the installer verified the candidate or stopped
+Control. Both HTTPS entrances still returned ready. The recovery record
+identified the original and scratch OIDs. With the backup directory moved
+away, RecoverRestore kept the original OID, its later tenant write, and the
+same Control PID. It moved the scratch OID and the original backup data to
+the reported failed name. Both origins still returned ready. A second
+recovery reported `RESTORE_NO_RECOVERY_PENDING`.
+
+The recorder captured the IPv4, IPv6 and DNS probes and zero product
+attempts. The disposable container and namespace were removed. The focused
+tests additionally simulated a lost recovery rename response, a substituted
+OID, an already-removed scratch database, and an unexpected promotion. The
+full Compose regression adds the same process-loss checkpoint to
+`TestPreflightIsolatedDocker`.

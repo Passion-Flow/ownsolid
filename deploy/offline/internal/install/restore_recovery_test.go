@@ -1,6 +1,7 @@
 package install
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -60,6 +61,53 @@ func TestPendingRestoreBlocksOtherInstallOperations(t *testing.T) {
 	}
 }
 
+func TestInterruptedLoadRecoveryNeverMutatesTheOriginal(t *testing.T) {
+	i := restoreIntent{Version: 1, Phase: restoreLoading, Cluster: 80, Original: 10, Incoming: 20, Suffix: "0123456789abcdef01234567"}
+	for _, tt := range []struct {
+		name      string
+		placement restoreCatalog
+		rename    bool
+		refuse    bool
+	}{
+		{"lost recovery response", i.before(), true, false},
+		{"already retained", i.rolledBack(), false, false},
+		{"already removed", restoreCatalog{cluster: i.Cluster, current: i.Original}, false, false},
+		{"candidate replaced", restoreCatalog{cluster: i.Cluster, current: i.Original, incoming: 30}, false, true},
+		{"unexpected promotion", i.swapped(), false, true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			c := installedConfig(t)
+			intent := i
+			var err error
+			if intent.Site, err = restoreSite(c); err != nil {
+				t.Fatal(err)
+			}
+			if err := writeReleaseRecord(c, restoreIntentName, intent); err != nil {
+				t.Fatal(err)
+			}
+			d := &fakeDatabase{catalog: tt.placement.key()}
+			d.override = func(line string) (string, error, bool) {
+				if !strings.Contains(line, "pg_advisory_xact_lock") {
+					return "", nil, false
+				}
+				if strings.Contains(line, `ALTER DATABASE "ownsolid" RENAME`) || strings.Contains(line, "datid IN (10") {
+					t.Fatal("load recovery tried to mutate the original")
+				}
+				d.catalog = intent.rolledBack().key()
+				return "", errors.New("lost reply"), true
+			}
+			var out bytes.Buffer
+			err = testOperation(t, c, d, &out).recoverRestore(t.Context(), intent, false)
+			if (err != nil) != tt.refuse || (restorePendingError(c) != nil) != tt.refuse {
+				t.Fatalf("recovery error=%v, pending=%v", err, restorePendingError(c))
+			}
+			if d.ran("ALTER DATABASE") != tt.rename || d.ran("stop control") || d.ran("no-build control") || d.ran("DROP DATABASE") {
+				t.Fatalf("unexpected recovery operations: %v", d.commands)
+			}
+		})
+	}
+}
+
 func assertInterruptedRestores(t *testing.T, installer, config string, run func(string, ...string) (string, error)) {
 	t.Helper()
 	c, err := LoadOperational(config)
@@ -101,6 +149,7 @@ func assertInterruptedRestores(t *testing.T, installer, config string, run func(
 		name, checkpoint, phase, placement string
 		rollback                           bool
 	}{
+		{"after scratch load", "after-load", restoreLoading, "before", false},
 		{"before exchange", "before-swap", restorePending, "before", false},
 		{"after exchange committed", "after-swap", restorePending, "swapped", false},
 		{"after rollback committed", "after-rollback", restoreRollback, "rolled-back", false},
@@ -128,7 +177,11 @@ func assertInterruptedRestores(t *testing.T, installer, config string, run func(
 				t.Fatalf("placement at interruption = %v, want %v (%v)", catalog, placements[test.placement], err)
 			}
 			t.Logf("catalog placement at SIGKILL %s (cluster|live|incoming|previous|failed)", catalog.key())
-			if test.checkpoint != "after-control" {
+			if test.checkpoint == "after-load" {
+				if status := checkedCommand(t, "status", c.Origins.Admin+": ready", false); !strings.Contains(status, c.Origins.Portal+": ready") {
+					t.Fatal("scratch load interrupted the existing writer")
+				}
+			} else if test.checkpoint != "after-control" {
 				if status := checkedCommand(t, "status", "INSTALL_NOT_HEALTHY", true); strings.Contains(status, ": ready") {
 					t.Fatal("the writer answered before recovery")
 				}
@@ -149,6 +202,9 @@ func assertInterruptedRestores(t *testing.T, installer, config string, run func(
 			wantName, wantStatus, wantOID, kept, keptName := "Backed up before interruption", "RESTORE_COMPLETE", fmt.Sprint(i.Incoming), i.previousName(), "Original contains newer data"
 			if test.placement != "swapped" {
 				wantName, wantStatus, wantOID, kept, keptName = "Original contains newer data", "RESTORE_ROLLED_BACK", original, i.failedName(), "Backed up before interruption"
+			}
+			if test.checkpoint == "after-load" {
+				wantStatus = "RESTORE_LOAD_ROLLED_BACK"
 			}
 			if test.checkpoint == "after-control" {
 				wantName = "A write after promotion"
@@ -183,7 +239,7 @@ func assertInterruptedRestores(t *testing.T, installer, config string, run func(
 			if live, state, retained := query(t, databaseName, oid), query(t, databaseName, name), query(t, kept, name); live != wantOID || state != wantName || retained != keptName {
 				t.Fatalf("after restart live OID=%s state=%q retained=%q; expected %s/%q/%q", live, state, retained, wantOID, wantName, keptName)
 			}
-			if wantStatus == "RESTORE_ROLLED_BACK" {
+			if wantStatus == "RESTORE_ROLLED_BACK" || wantStatus == "RESTORE_LOAD_ROLLED_BACK" {
 				lateForward, _ := i.renameSQL(false)
 				if _, err := o.query(t.Context(), maintenanceDatabase, lateForward); err == nil || !strings.Contains(err.Error(), "INSTALL_RESTORE_IDENTITY_CHANGED") {
 					t.Fatalf("a delayed forward transaction could not be fenced: %v", err)
@@ -241,6 +297,7 @@ if [ -f "$dir/checkpoint" ]; then
             printf '%s\n' 'injected control start failure' >&2
             exit 1
             ;;
+        after-load:*'postgres pg_restore '*|\
         after-swap:*'ALTER DATABASE "ownsolid" RENAME TO "ownsolid_before_restore_'*|\
         after-rollback:*'ALTER DATABASE "ownsolid" RENAME TO "ownsolid_failed_restore_'*|\
         after-control:*'up --detach --wait --no-build control')

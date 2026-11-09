@@ -83,9 +83,10 @@ The preflight test kills the installer after the administrator step and
 before the control service starts. It reruns the same apply command and
 checks that both entrances are ready and the administrator identity,
 tenant, workspace, and credential bytes match the committed state.
-The same run kills restore around the PostgreSQL exchange, during rollback
-and after control starts. It invokes `recover-restore` in a new process and
-checks both database OIDs and their data before reporting readiness.
+The same test covers loss of the installer after scratch loading, around the
+PostgreSQL exchange, during rollback and after control starts. It invokes
+`recover-restore` in a new process and checks both database OIDs and their data
+before reporting readiness.
 
 ### Check a bundled model with a cold runtime cache
 

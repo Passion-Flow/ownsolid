@@ -37,6 +37,7 @@ recovery and support tooling.
   - The [disconnected acceptance fixture](../../research/restored-schema-upgrade.md#linux-amd64-acceptance) reproduces the refusal using the historical control binaries and the installer's logical backup and load functions. Production catalog admission and the restored-upgrade release gate remain open.
 
 - [ ] REL-114 Resume or roll back an interrupted database restore by identifying its original and incoming databases across the swap, before bringing the writer online (P1)
+  - The [disconnected load drill](../../research/interrupted-database-restore.md#disconnected-load-recovery) recovered from SIGKILL after real pg_restore. Both entrances remained ready on the original database while the unverified scratch OID was retained for inspection.
 
 ## P2 Fleet operations
 
