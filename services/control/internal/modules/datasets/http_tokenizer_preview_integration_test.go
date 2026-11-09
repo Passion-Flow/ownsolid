@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -64,6 +65,22 @@ VALUES($1,$2,$3,'Preview fixture',$4,$5,$6,'ready',$7)`,
 		}
 		writePreviewModelFixture(t, filepath.Join(modelPath, name), raw)
 	}
+	// The HTTPS client has a fixed 30-second deadline. Warm the exact
+	// interpreter and tokenizer after cold installs on the shared test host.
+	warm, stopWarmup := context.WithTimeout(t.Context(), 75*time.Second)
+	defer stopWarmup()
+	const load = `import sys
+from transformers import AutoTokenizer
+AutoTokenizer.from_pretrained(sys.argv[1], local_files_only=True, trust_remote_code=False)
+`
+	probe := exec.CommandContext(warm, process.configuration.PythonExecutable, "-I", "-B", "-c", load, modelPath)
+	probe.Env = []string{"PATH=/usr/bin:/bin", "LANG=C.UTF-8", "LC_ALL=C.UTF-8",
+		"OPENBLAS_NUM_THREADS=1", "OMP_NUM_THREADS=1", "TOKENIZERS_PARALLELISM=false"}
+	if e = probe.Run(); e != nil {
+		t.Fatal("warm the verified local tokenizer", e)
+	}
+	stopWarmup()
+
 	record := wire.Record{SourceID: "preview", Prompt: strings.Repeat("token ", 65), Completion: "A synthetic response."}
 	encoded, e := record.Canonical(service.Identity.Config.Policy().Datasets.Limits)
 	if e != nil {
