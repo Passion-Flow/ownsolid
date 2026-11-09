@@ -90,8 +90,9 @@ independent control handler and pool, same-account cookie replay across hosts,
 foreign account/session and cursor rejection, expired and rotated row
 exclusion, concurrent revoke and idempotent retry, CSRF/Origin refusal,
 cookie cleanup for the current session and a pre-captured actor losing its
-transactional authority. Keep the new routes on the IAM branch pending the
-public OpenAPI, generated client and browser device-management flow.
+transactional authority. The [identity contract](../../api/openapi/v1/identity/openapi.json)
+now describes the session list and deletion. The browser device-management
+flow remains a separate acceptance condition.
 
 ### Verified behavior and integration handoff
 
@@ -127,3 +128,29 @@ database with pgvector installed. Run from the repository root.
 go -C services/control test -tags repository_integration ./internal/modules/identity/http \
   -run '^(TestBrowserSessionManagementHTTPS|TestBrowserSessionRevocationWithoutLicense|TestBrowserEntranceSessionIsolation|TestSessionStatusReportsWhatIsLeft|TestM01EveryHTTPResponseSchema|TestM01CurrentHTTPKnownResourceScope)$' -count=3
 ```
+
+### Credential rotation interleaving
+
+Exercise targeted revocation and password change over HTTPS through two
+handlers with separate database pools. Both use the identity repository's
+user-first lock order. An independent fixture transaction holds the
+target session row and observes the real blocking chain using
+[PostgreSQL's `pg_blocking_pids`](https://www.postgresql.org/docs/18/functions-info.html#FUNCTIONS-INFO-SESSION).
+The session row lock allows the first caller to acquire the user fence
+while delaying its write. This gives both orderings without changing
+production code or guessing when a request reached the fence.
+
+When revocation wins, the target's in-flight password change must fail
+with expired session authority. The credential and manager session stay
+valid. When password change wins, the in-flight manager must lose its
+authority, both previous sessions end, and only the changing browser
+gets a fresh session. Check credential version, auth epoch, affected
+session rows and the exact committed audit counts in each ordering.
+Reuse Go, pgx and PostgreSQL with the licenses above.
+
+Both orderings and three existing browser session and password change
+regressions passed three consecutive runs over verified HTTPS against
+PostgreSQL 18.6 with pgvector 0.8.7 in an isolated Linux arm64 container
+with no network. With the same disposable PostgreSQL configuration as
+above, run the new test with
+`go -C services/control test ./internal/modules/identity/http -run '^TestBrowserSessionRevocationPasswordChangeRaceHTTPS$' -count=3`.
