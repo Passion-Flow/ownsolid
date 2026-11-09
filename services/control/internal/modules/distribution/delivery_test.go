@@ -32,15 +32,8 @@ const declaredOrigin = "https://gw.rack7.example:18443"
 func deliveredScenario(t *testing.T) (scenario, *x509.CertPool) {
 	t.Helper()
 	c := setup(t)
-	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	template := &x509.Certificate{SerialNumber: big.NewInt(7), Subject: pkix.Name{CommonName: "test model gateway CA"}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(48 * time.Hour), IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign}
-	der, e := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
-	if e != nil {
-		t.Fatal(e)
-	}
-	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)
-	bundle := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
-	caKey := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER})
+	bundle, caKey := testGatewayCAMaterial(t, "test model gateway CA")
+	var e error
 	dir := t.TempDir()
 	certPath, keyPath := filepath.Join(dir, "certificate.pem"), filepath.Join(dir, "key.pem")
 	if e := os.WriteFile(certPath, bundle, 0600); e != nil {
@@ -60,6 +53,29 @@ func deliveredScenario(t *testing.T) (scenario, *x509.CertPool) {
 	roots := x509.NewCertPool()
 	roots.AppendCertsFromPEM(bundle)
 	return c, roots
+}
+
+func testGatewayCAMaterial(t *testing.T, name string) ([]byte, []byte) {
+	t.Helper()
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(7), Subject: pkix.Name{CommonName: name},
+		NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(48 * time.Hour),
+		IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign,
+	}
+	der, err := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	keyDER, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}),
+		pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER})
 }
 
 func (c scenario) deliveredInput() distribution.ProvisionRequest {
