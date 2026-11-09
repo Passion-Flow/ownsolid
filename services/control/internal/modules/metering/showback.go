@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
 // ErrReportSnapshotRequired requires a read-only PostgreSQL REPEATABLE READ transaction.
@@ -51,26 +53,51 @@ func ShowbackWithin(ctx context.Context, tx pgx.Tx, scope Scope, from, to time.T
 		return ShowbackReport{}, err
 	}
 
+	return readRatedReport(ctx, transaction.PostgreSQLTransaction(tx), scope, from, to, card)
+}
+
+func readRatedReport(ctx context.Context, q transaction.Executor, scope Scope, from, to time.Time, card *RateCard) (ShowbackReport, error) {
+	first := sort.Search(len(card.versions), func(i int) bool { return card.versions[i].effective.After(from) }) - 1
+	starts := []time.Time{from}
+	for _, version := range card.versions[first+1:] {
+		if !version.effective.Before(to) {
+			break
+		}
+		starts = append(starts, version.effective)
+	}
+
+	// READ COMMITTED authority checks can precede the report. One statement
+	// keeps every rate interval on the same ledger snapshot after those checks.
+	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
+		`SELECT width_bucket(occurred_at, $5::timestamptz[]), `+usageTotalsProjection+`
+ FROM usage_ledger WHERE tenant_id=$1 AND workspace_id=$2 AND occurred_at >= $3 AND occurred_at < $4
+ GROUP BY 1 ORDER BY 1`, scope.TenantID, scope.WorkspaceID, from, to, starts))
+	if err != nil {
+		return ShowbackReport{}, operationError(ctx)
+	}
+	defer rows.Close()
+
 	report := ShowbackReport{Currency: card.currency, From: from, To: to, FullyRated: true}
 	var known big.Int
-	next := sort.Search(len(card.versions), func(i int) bool { return card.versions[i].effective.After(from) })
-	for cursor := from; cursor.Before(to); next++ {
-		end := to
-		if next < len(card.versions) && card.versions[next].effective.Before(end) {
-			end = card.versions[next].effective
+	for rows.Next() {
+		var bucket int
+		var totals Totals
+		if err := rows.Scan(&bucket, &totals.GPUMicroseconds, &totals.Tokens, &totals.StorageByteSeconds, &totals.Requests); err != nil {
+			return ShowbackReport{}, operationError(ctx)
+		}
+		if bucket < 1 || bucket > len(starts) {
+			return ShowbackReport{}, ErrUnavailable
 		}
 		var version rateVersion
-		if next > 0 {
-			version = card.versions[next-1]
-		}
-		totals, err := TotalsWithin(ctx, tx, scope, cursor, end)
-		if err != nil {
-			return ShowbackReport{}, err
+		if i := first + bucket - 1; i >= 0 {
+			version = card.versions[i]
 		}
 		if err := report.addRatedTotals(version, totals, &known); err != nil {
 			return ShowbackReport{}, err
 		}
-		cursor = end
+	}
+	if err := rows.Err(); err != nil {
+		return ShowbackReport{}, operationError(ctx)
 	}
 	report.KnownAmountMicros = known.String()
 	return report, nil
