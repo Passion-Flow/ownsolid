@@ -445,3 +445,94 @@ dropped below 2 GiB during staging and testing, so only ARC-owned
 file cache was reclaimed before subsequent heavy steps. This run
 did not include fleet load. The managed console remains a separate
 ARC-104 acceptance gate.
+
+## Signed site Registry consumption by a managed worker
+
+The [DEL-108 signed Registry](signed-registry-bootstrap.md) verifies and
+serves original OCI manifests and blobs from private IPv4 TLS. Its
+cold Docker test does not exercise the RKE2 kubelet or the Agent's
+site-supplied registry configuration. Reuse the existing signed API
+cell fixture and install a separate signed Registry test release in
+its isolated site. Keep the RKE2 runtime and system image sets on
+their approved artifact path. Require the worker's containerd to
+start without the signed workload image and let kubelet fetch it.
+A cached image, a Docker pull, or a successful registry health check
+cannot prove that path.
+
+[RKE2 private registry configuration](https://docs.rke2.io/install/private_registry)
+places endpoint authentication and the trust file in the native
+`registries.yaml`. Leave this site file and its permissions intact
+during Agent provisioning. Use a site-owned
+[RKE2 configuration drop-in](https://docs.rke2.io/install/configuration#multiple-config-files)
+to disable default endpoint fallback for configured mirrors. Test a
+Docker Hub image name through a configured mirror and require the
+local manifest refusal without any public DNS lookup or external
+packet. RKE2 limits the switch to configured mirrors, so this test
+does not establish a policy for arbitrary unconfigured registry names.
+
+Use the digest reference printed by the verified Registry installer
+and [OCI digest semantics](https://github.com/opencontainers/distribution-spec/blob/v1.1.1/spec.md#pulling-manifests).
+With the target absent, reject a wrong site CA, an anonymous request,
+and a missing manifest by digest. Check the actual containerd errors
+and the absence of the signed workload in the store after each
+attempt. Restore the protected site configuration and let the real
+scheduler bind a Pod on the intended worker. Require its process
+exit and its running image identity to match the signed manifest
+or its signed config identity as reported by CRI. Keep the raw DNS
+and packet captures and validate the exact deliberate probes.
+
+RKE2, containerd and CNCF Distribution use Apache-2.0. The Registry
+image's transitive notices and conditions for commercial redistribution
+and offline use remain in the [DEL-108 inventory](signed-registry-bootstrap.md).
+Use the existing signed workload images and notices without adding
+a product dependency, model, dataset, protocol field, delivery change
+or Helm change. The test signer's key stays outside the release mount.
+Supply Registry credentials and the TLS key only through site-owned
+private files. Do not put either in a Pod, command line or retained log.
+
+### Registry consumer fixture and first refusal
+
+The private runner on `ownsolid-cpu` is
+`/root/lane-arc104-registry.JFfDHO`. It reused the earlier signed RKE2
+test archive and manufactured a distinct Registry test release with
+the `8d02a017` factory. The Registry archive SHA-256 is
+`f325071c67b59b78cf4cacaf5cce5761b1a01e7d97e90dfcddd305630a42f626`
+and its signed manifest SHA-256 is
+`16052a9220114f7916c2be623aef90ca2d9b74ee9e690299d64ce14a6cfced47`.
+The first factory attempt refused the staging directory permissions.
+After changing the private staging directory to mode 0700, the factory
+signed the archive and passed a separate archive inspection. The Registry
+installer subsequently published four signed image references in the
+isolated site. The target was the metrics image at digest
+`sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84`.
+These test-signed inputs do not qualify production release inventory.
+
+The consumer fixture reserves 18 GiB MemAvailable for the 6 GiB
+Control and Registry container, two 5 GiB node containers, and a 2 GiB
+host reserve. It also requires 2 GiB free memory, 35 GiB free disk,
+full I/O PSI avg10 at most 5%, and no competing heavy work. The
+ARC-105 22 GiB gate and scale fixture are separate. The first consumer
+start refused 5.55% I/O PSI. The next attempt exposed a fixture bug
+that used systemd child cgroups as container budget boundaries.
+After changing the monitor to check the Docker scope's actual cap,
+the Registry published and the RKE2 archive verified. The live
+monitor then detected a DEL test entering its private namespace and
+stopped the ARC fixture before the worker pull phase.
+
+The final recovery started after DEL was absent. SSH initially
+worked, MemAvailable was about 20.50 GiB, free memory about 4.46 GiB,
+and full I/O PSI avg10 was 0.03%. The first test failure was
+`RELEASE_PREPARATION_OCCUPIED_OR_UNCERTAIN` from
+`prepare-bundle` at `/release/arc-prepared`. The interrupted
+attempt had already prepared that path. The Go process and launcher
+returned 1. The strict Control recorder check passed for its two
+exact probes. The pull proof had not started, so this run supplies no
+wrong-CA, anonymous, unknown-digest, fallback, or Pod result. Preserve
+the earlier prepared files and use a distinct preparation path on the
+next permitted run. Subsequent SSH evidence collection timed out
+during the banner exchange, with exit 255. No further test was started.
+
+The private run directory is `cell.QShAJf` under the runner. Keep
+its separate attempt captures and the actual nonzero wrapper result.
+The managed worker path, the ARC-104 console, and DEL-108's remaining
+consumer and release gates are open.
