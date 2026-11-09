@@ -489,3 +489,74 @@ report rows were refused. To run only this acceptance:
 bash services/control/internal/modules/datasets/testdata/replay_draft_import.sh \
   '^TestActualParquetDraftAfterMetadataAndObjectRestore$'
 ```
+
+## Site and cell scope for the candidate receipt
+
+[ADR 0006](../decisions/0006-cell-and-site-scope.md) puts drafts and
+their receipt in the cell. Workspaces and memberships remain global.
+The request router first selects the cell. Within the candidate's
+PostgreSQL transaction, use the authenticated tenant and workspace and
+the database's `local_site_id()` and `local_cell_id()`. Lock the local
+dataset before reading an import body. Select the receipt scope from
+the exact locked local draft. Apply the same local restriction to reads
+and idempotent retries.
+
+Follow the [alias description candidate](gateway-model-description.md#site-and-cell-scope-for-edit-intents)
+for nullable-field refusal and local defaults. PostgreSQL requires a
+unique target for the
+[full foreign key](https://www.postgresql.org/docs/18/ddl-constraints.html#DDL-CONSTRAINTS-FK).
+Add a named unique key to `dataset_drafts` over tenant, workspace,
+dataset, draft, site and cell, and reference all six values. Keep the
+existing primary keys and ownership keys. A separate foreign key to the
+cell registry would admit a valid foreign cell without binding the
+receipt to the draft and would lock a shared row on every insert.
+
+The up SQL starts with an empty receipt table. Older drafts already
+carry their scope from 000030, and keep their metadata and normalized
+files without an invented original or report. The down SQL removes the
+candidate table and its parent key. ARC owns catalog and release
+registration after 000058 and the GW-120 candidate on the actual tail.
+The disposable replay can overlay those two SQL inputs on the published
+predecessor. Restore the populated predecessor first, apply the
+candidate, exercise the down SQL and compare the old draft. Then restore
+the populated candidate into another database and recheck both the
+foreign key and the authorized read.
+
+Test a registered second cell at the same site and a different site,
+explicit nulls, refusal before any foreign-dataset body read, and a
+same-workspace foreign draft with a matching receipt. Inspect the
+private dataset file inventory as well as the recovered bytes. The
+normalized digest must match the receipt, while the Parquet original
+remains a supplemental object in this replay. The coordinated dataset
+inventory and NET-101 archive boundary described above remain separate.
+No new dependency, license or dataset is introduced.
+
+The isolated PostgreSQL 18.6 and PyArrow 26.0.1 replay on the predecessor
+at `f83a9fde` ran the full tagged datasets suite. The restore test
+applied the audit scope candidate from `4380fb94` and the alias
+description candidate from `c9654657` as an overlay before the dataset
+SQL. The concatenated overlay had SHA-256
+`b8df9e9c7a6f90225f3ffdd8fd6ed7980834974e3451d159656783014ae34c58`.
+On both the source and restored databases PostgreSQL rejected mismatched
+site and cell with the named foreign key, and rejected explicit null scope.
+The authorized restored read matched the original Parquet bytes, the
+normalized JSONL and their separate report digests. The private snapshot
+preserved the legacy JSONL and included the candidate's normalized
+source path, size and digest. The test restored the Parquet original
+as an explicit supplemental object and refused both missing and
+same-length corrupted files.
+
+For the full replay, set `OWNSOLID_TEST_DRAFT_RESTORE_PREDECESSOR_SQL`
+to the absolute path to the trusted overlay assembled from those two
+up SQL files. Set `OWNSOLID_TEST_PARQUET_PYTHON` and
+`PROJECT_ONE_DATA_PYTHON` to the protected interpreter executables.
+From the repository root run
+`bash services/control/internal/modules/datasets/testdata/replay_draft_import.sh .`.
+The runner creates its own network-isolated database. The replay does
+not register a release migration or alter the coordinated backup inventory.
+
+The focused replay on the `1881ae27` base also verified the restored
+legacy JSONL byte for byte. It exercised an existing idempotency key on
+a foreign draft while its dataset was still local, then tried a new key
+against the foreign dataset. Both returned `DATASET_NOT_FOUND` before
+reading the upload body.
