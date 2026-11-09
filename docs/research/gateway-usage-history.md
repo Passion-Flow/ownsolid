@@ -10,8 +10,8 @@ Export](https://portkey.ai/docs/product/observability/logs-export) separates
 the filtered request log from scheduled or manual file delivery. The ownsolid
 history API already returns bounded JSON pages with request identity, state,
 timestamps and canonical outcome metadata. This slice verifies extraction
-through the existing authorized request list. An attachment, bulk snapshot
-or new public contract belongs to the export owner.
+through the existing authorized request list. The distribution service owns the bounded CSV artifact. The public
+attachment contract and any bulk snapshot belong to the export owner.
 
 Use the existing descending keyset of admitted_at and request ID, with
 tenant and workspace equality, actor ownership in Portal, and the optional
@@ -65,3 +65,46 @@ and five Admin requests. It denied the same list and detail to a separately
 authenticated tenant. Native foreground Responses and Messages runs persisted
 and read back each canonical JSON, SSE and cancellation receipt. The list and
 detail mutation regression failed before the fix and passed after it.
+
+## Bounded CSV artifact
+
+Use Go's [encoding/csv writer](https://pkg.go.dev/encoding/csv) with the
+header and CRLF convention described by [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180.html).
+The writer is in the existing BSD-3-Clause standard library. No new
+dependency, model or dataset is needed.
+
+Build one complete artifact from RequestPage and return its next cursor
+separately. The existing maximum is 100 rows. Keep the same tenant,
+workspace, audience, actor and optional key filter, and let RequestPage
+validate canonical receipts before serialization. A failed page returns no
+bytes or cursor. Each row has a request ID, UTC admission time, request
+state, outcome status, request count, elapsed milliseconds and token
+counts. Exclude API key IDs and secrets, actor and deployment metadata,
+and all user-entered text. The result contains only UUIDs, dates, server
+enums and unsigned decimal values. A missing receipt leaves outcome status
+and elapsed time blank. Unknown usage leaves the token cells blank. Zero
+milliseconds or a zero token count that the receipt proves is literal zero.
+
+Export one bounded page instead of buffering or streaming a full workspace.
+A live page can reflect a receipt reported since a prior read, while retrying
+the same unchanged page returns the same bytes without altering the ledger.
+A database aggregate would lose call-level identity and would need its own
+authorization and canonical receipt checks. A CSV projection of the entire
+history DTO would expose unnecessary identity and routing fields.
+
+Exercise the artifact through a test-only TLS adapter using real
+PostgreSQL-backed sessions. Check each row against the authorized history
+fixture, the final cursor, an over-limit request, cursor scope and a
+foreign tenant. Replay a page, verify that the request rows and request
+audit counts have not changed, and reject a corrupted receipt before
+emitting any CSV. DEV owns the production HTTP route, response headers
+and generated contract. UI acceptance stays open.
+
+On 2026-11-09, the isolated PostgreSQL TLS fixture exported four
+single-row Portal pages and five Admin workspace rows. The Portal pages
+totaled 20 verified tokens and distinguished literal zeros, cancellation
+with measured latency and an admission without a receipt. Replaying the
+same page preserved its bytes, cursor, request rows and audit count.
+An over-limit request, a changed key or audience cursor, and a foreign
+tenant were refused. Changing only the stored receipt latency made
+the export fail without publishing a CSV artifact.

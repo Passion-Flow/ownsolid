@@ -41,6 +41,15 @@ and proposed deployment revision and pause state without writing. Apply
 rechecks the expected revision and current readiness in its own
 transaction. The public preview route and Console flow are pending.
 
+The distribution service's ExportUsagePage serializes one authorized page as
+CSV and returns the next cursor separately. Each row counts one admitted
+request. Blank elapsed time means no reported outcome. Blank token cells
+mean unknown usage. A reported zero is written as 0. The artifact excludes
+key identifiers and secrets, request content and actor or deployment
+metadata. Follow the returned cursor with the same authorization and
+filter. These are live pages. The versioned download endpoint and UI are
+pending.
+
 ## Development checks
 
 Synchronize [Rust gateway](../../../../gateway/README.md), contracts/gateway and HTTP/public gateway generators, nodes/deployments/modelpreparations, [distribution frontend](../../../../../web/README.md), [M07](../../../../../docs/milestones/m07-gateway) and gateway deployment/config.

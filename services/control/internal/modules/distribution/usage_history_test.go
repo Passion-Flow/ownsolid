@@ -50,8 +50,8 @@ func TestGatewayUsageHistoryAuditExport(t *testing.T) {
 	_, err = c.s.Report(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, conflict, uuid.NewString())
 	check(t, err, "GATEWAY_OUTCOME_CONFLICT")
 	second := success(admit(a))
-	second.ElapsedMilliseconds = 57
-	second.Usage = &gatewaywire.Usage{PromptTokens: 8, CompletionTokens: 3, TotalTokens: 11}
+	second.ElapsedMilliseconds = 0
+	second.Usage = &gatewaywire.Usage{PromptTokens: 11, CompletionTokens: 0, TotalTokens: 11}
 	report(second)
 	cancelCode := "client_cancelled"
 	cancelled := gatewaywire.Outcome{
@@ -147,4 +147,10 @@ func TestGatewayUsageHistoryAuditExport(t *testing.T) {
 	foreignAdmin.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": foreign.password}, 200, "")
 	foreignAdmin.Call("GET", adminPath, nil, 404, "Problem")
 	foreignAdmin.Call("GET", adminPath+"/"+first.RequestID, nil, 404, "Problem")
+	assertGatewayUsageCSV(t, c, foreign, a, other, stamp, expected, map[string][]string{
+		first.RequestID:     {"reported", "succeeded", "1", "42", "7", "2", "9"},
+		second.RequestID:    {"reported", "succeeded", "1", "0", "11", "0", "11"},
+		cancelled.RequestID: {"reported", "client_cancelled", "1", "23", "", "", ""},
+		unknown:             {"admitted", "", "1", "", "", "", ""},
+	})
 }
