@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
-	"github.com/jackc/pgx/v5"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/jackc/pgx/v5"
 )
 
 // OpenVerificationAsset requires the owning caller's current authorized scope transaction.
@@ -31,10 +31,6 @@ func (s *Service) OpenVerificationAssetWithin(ctx context.Context, q transaction
 	out, e := s.OpenTransferWithin(ctx, q, tenant, workspace, model, wire.ModelFileRequest{LeaseToken: lease, File: name, Offset: 0, Length: length})
 	if e != nil {
 		return nil, asset, e
-	}
-	if length == asset.SizeBytes && out.SHA256 != asset.SHA256 {
-		out.File.Close()
-		return nil, asset, fail("MODEL_FILE_CHANGED")
 	}
 	return out.File, asset, nil
 }

@@ -509,6 +509,33 @@ func TestActualBorrowedModelAccess(t *testing.T) {
 			t.Fatal(e)
 		}
 		path := filepath.Join(dir, r.File)
+		weights, e := os.ReadFile(path)
+		if e != nil {
+			t.Fatal(e)
+		}
+		replaceWeights := func(body []byte) {
+			t.Helper()
+			if e := os.Chmod(path, 0600); e != nil {
+				t.Fatal(e)
+			}
+			if e := os.WriteFile(path, body, 0600); e != nil {
+				t.Fatal(e)
+			}
+			if e := os.Chmod(path, 0444); e != nil {
+				t.Fatal(e)
+			}
+		}
+		changed := bytes.Clone(weights)
+		changed[0] ^= 1
+		replaceWeights(changed)
+		d, e = x.s.OpenDerivedTransferWithin(x.ctx, x.f.Store, x.f.Tenant, x.f.Workspace, cmd, r)
+		accessDownloadError(t, d, e, "MODEL_FILE_CHANGED")
+		replaceWeights(weights)
+		d, e = x.s.OpenDerivedTransferWithin(x.ctx, x.f.Store, x.f.Tenant, x.f.Workspace, cmd, r)
+		if e != nil {
+			t.Fatal("restored derived transfer was refused", e)
+		}
+		accessRange(t, d, r)
 		link := filepath.Join(x.s.RootDirectory, "owned-hardlink")
 		if e = os.Link(path, link); e != nil {
 			t.Fatal(e)
