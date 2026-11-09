@@ -63,3 +63,53 @@ previous real PostgreSQL evidence for the backup mechanism separate from
 these history tests. The future API should compare the deployment ID with
 its authenticated installation context and consume the projected fields.
 Console and alert policy remain open.
+
+## Installation-bound consumer readback
+
+The root-only CLI is the installed read boundary. An operations consumer
+needs to supply the expected deployment ID from its own authenticated
+installation context. Add an explicit `--expected-deployment-id` to the
+same command. Compare against the persisted deployment ID after validating
+the root and Compose project. A mismatched ID or history without a verified
+deployment ID emits no projection. The local operator command can still
+diagnose attempts that failed before the first database binding.
+
+Use the same open directory for the advisory lock and for history lookup
+with [openat](https://man7.org/linux/man-pages/man2/openat.2.html). Following
+the original pathname after taking the lock can read a different directory
+if the path is replaced. Refuse symlinks, hard links, nonregular files,
+foreign ownership, exposed permissions and oversized history. Decode the
+atomic snapshot through the existing strict versioned decoder. A bounded,
+explicit projection keeps installation paths, project names, archive paths
+and diagnostic details private. The kernel's
+[flock semantics](https://man7.org/linux/man-pages/man2/flock.2.html) still
+determine whether an unfinished run is active or interrupted. An interrupted
+read projects the state in memory and leaves the on-disk record intact.
+
+Reuse the existing Go standard library and
+[`golang.org/x/sys` v0.49.0](https://github.com/golang/sys/blob/v0.49.0/LICENSE).
+Their BSD-style terms allow commercial use, offline use and redistribution
+with notices. No dependency, model or dataset is added. The consumer should
+invoke the command through an authorized installation-side operation with a
+fixed site configuration and an independent expected ID. Reading the raw
+file, trusting the ID returned by the file as the expected ID, or allowing
+an API caller to choose the command path would bypass this boundary.
+
+Verify a matching, mismatched, malformed and unbound deployment through
+the Linux command. Exercise copied history, unsafe files, directory
+substitution, the 256-run bound and the interrupted record before and
+after retry. Compare the file bytes before and after readback. Scope the
+handoff to this CLI projection. The authenticated Control/API operation and
+its Console and alert policy retain their own acceptance.
+
+On Ubuntu 24.04 amd64, the native bound CLI returned the ordered 256-run
+projection for a matching deployment. A malformed ID, different ID,
+copied installation root, unbound history and 257 rows each failed with
+empty stdout. Killing a real holder of the directory lock changed the
+last outcome from running to interrupted in the projection. The file's
+SHA-256 remained unchanged and the reader supplied no finish time. The
+focused tests also refused a changed directory, links and oversized
+history, and preserved a verified publication through retention failure
+and a retry. The retention test uses controlled PostgreSQL responses.
+The CLI harness saw no Docker invocation and only the three recorder
+probes over IPv4, IPv6 and DNS.

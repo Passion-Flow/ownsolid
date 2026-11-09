@@ -63,10 +63,22 @@ publication unconfirmed. `expired_backups` reports the number removed when
 retention finished successfully. If expiry fails, the run reports that
 failure and still identifies the confirmed publication.
 
-The output excludes private paths and diagnostic text. A later consumer
-must match the last verified deployment ID to its own authenticated
-installation context before exposing the record. Console access and alerts
-have separate ownership. The local query covers scheduled attempts.
+The output excludes private paths and diagnostic text. A privileged
+installation-side consumer uses the same query with the deployment ID
+from its authenticated installation context.
+
+```sh
+ownsolid-install backup-history --config /private/site.yaml \
+  --expected-deployment-id "$deployment_id"
+```
+
+The bound query exits without JSON when the history is unbound or its
+deployment ID differs. The local operator query without the flag can
+show attempts made before the first verified database binding. Both
+queries read the same private history, and an interrupted snapshot stays
+unchanged on disk. Keep the configuration path and expected ID under
+installation authority. The authenticated Control/API operation, Console
+access and alerts have separate acceptance.
 
 ## Run the read-only Agent
 
