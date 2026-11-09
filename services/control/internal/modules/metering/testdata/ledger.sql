@@ -1,10 +1,4 @@
 -- Candidate ledger shape for the isolated PostgreSQL transaction tests.
-CREATE TABLE workspaces (
-  tenant_id uuid NOT NULL,
-  id uuid NOT NULL,
-  PRIMARY KEY (tenant_id, id)
-);
-
 CREATE TABLE usage_ledger (
   producer varchar(128) NOT NULL,
   event_id varchar(128) NOT NULL,
