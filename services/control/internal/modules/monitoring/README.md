@@ -89,6 +89,58 @@ It reuses the repository's disposable SMTP sink and refuses to start if
 the namespace has a non-loopback interface. It starts and stops both
 processes and verifies the alert subject and recipient in the received mail.
 
+### Site-local Matrix delivery
+
+Use the [relay settings](alerting/matrix-relay.example.json) and
+[Alertmanager receiver example](alerting/alertmanager-matrix.example.yaml)
+on a dedicated operator network. Provision a local homeserver with
+federation disabled and a private, non-federating, unencrypted room
+and bot device for each tenant. Give each bot membership only in its own
+room and use a distinct access token. Restrict room membership and history
+to the authorized audience. Keep external push gateways and egress disabled.
+
+Configure explicit private IP addresses and ports for the relay listener
+and homeserver HTTPS origin. Their certificates need the corresponding
+IP SANs. Configure both CA paths and install the same per-tenant webhook
+token in protected files readable by the respective Alertmanager and relay
+accounts. Give the relay account separate, protected Matrix token files.
+Each receiver URL file points to the relay's
+`https://<private-address>:<port>/v1/alertmanager/<tenant-id>`.
+The receiver name, tenant group label and all member tenant labels must
+match. Restrict Alertmanager API access to trusted operators and rules.
+Keep tenant labels in every group, silence and inhibition boundary.
+The sample uses separate node groups for nodes without a rack.
+
+Build from the repository root and start with an owned, protected JSON
+settings file:
+
+    go -C services/control build -o /absolute/path/to/matrix-relay ./internal/modules/monitoring/alerting/cmd/matrix-relay
+    /absolute/path/to/matrix-relay -config /etc/ownsolid/relay/matrix-relay.json
+
+Keep the delivery timeout below the Alertmanager webhook timeout.
+A retryable Matrix failure returns 503 so Alertmanager can repeat the
+same notification. A permanent upstream refusal returns 422. The relay
+accepts at most 256 complete alerts and 256 KiB per webhook, and renders
+one plain-text room event with at most ten alert details. Identical
+firing reminders collapse under the same Matrix transaction. Resolutions
+and new starts have their own identities. Preserve bot devices and
+homeserver transaction history for retries across process restarts.
+Credential or routing changes require a relay restart. The relay logs
+tenant, outcome, transaction digest and processing time for local
+collection.
+
+For a native Linux test, set `OWNSOLID_TEST_ALERTMANAGER` and
+`OWNSOLID_TEST_TUWUNEL` to checksum-verified Alertmanager 0.34.2 and
+Tuwunel 1.9.4 binaries. Run the following from the repository root
+as a user allowed to create an isolated network namespace:
+
+    bash services/control/internal/modules/monitoring/alerting/testdata/check-local-matrix.sh
+
+The runner starts three disposable processes and stops them after
+checking real room history and Alertmanager silence state. The [research
+note](../../../../../docs/research/offline-alert-notifications.md)
+records installation and Console handoff requirements.
+
 ### Long retention for fleet health aggregates
 
 Run the [fleet recording rules](alerting/fleet-rollup-rules.yaml) in a separate

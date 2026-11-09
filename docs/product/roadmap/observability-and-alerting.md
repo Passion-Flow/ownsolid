@@ -20,6 +20,7 @@ fully offline.
 - [ ] OBS-103 OpenTelemetry tracing across gateway, workflows and jobs (P1) - Catalog: F235
 - [ ] OBS-104 Alert rules with severity, grouping, silencing and escalation (P1)
 - [ ] OBS-105 Offline notification channels: email, webhook, WeCom, DingTalk and Feishu over internal relays (P1) - Catalog: F002, F567
+  - [Site-local Matrix relay](../../research/offline-alert-notifications.md#verified-matrix-path) qualifies one authenticated chat path. Installer, Console and vendor relay work remain open.
 - [ ] OBS-106 Dashboards for platform health, fleet, GPU and model usage (P1)
 - [ ] OBS-107 Export to customer Prometheus, Grafana and log systems (P1) - Catalog: F235
 - [x] OBS-108 Load tested at about 17 million active series (P1) - Evidence: [Linux amd64 scale qualification](../../research/telemetry-scale.md#linux-amd64-qualification)
