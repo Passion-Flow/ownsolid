@@ -2786,6 +2786,11 @@
      "type": "string",
      "minLength": 1,
      "maxLength": 500
+    },
+    "test_basis_points": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 5000
     }
    }
   },

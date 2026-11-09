@@ -65,7 +65,7 @@ class DatasetManifestContractTests(unittest.TestCase):
             }],
         )
 
-    def test_download_reaches_both_entrances_without_a_new_write_option(self):
+    def test_download_reaches_both_entrances(self):
         for audience in ("admin", "portal"):
             with self.subTest(audience=audience):
                 download = self.operations[audience + "DatasetVersionFile"]
@@ -74,17 +74,34 @@ class DatasetManifestContractTests(unittest.TestCase):
                     parameter["schema"]["enum"],
                     ["samples", "train", "validation", "test", "assignments", "duplicates", "manifest"],
                 )
-                publish = self.operations[audience + "PublishDataset"]
-                body = publish["requestBody"]["content"]["application/json"]["schema"]
-                request = self.schemas[body["$ref"].rsplit("/", 1)[-1]]
-                self.assertEqual(
-                    set(request["properties"]),
-                    {"expected_revision", "seed", "validation_basis_points", "reason"},
-                )
         self.assertEqual(
             self.schemas["DatasetVersion"]["properties"]["manifest"],
             {"$ref": "#/components/schemas/DatasetManifest"},
         )
+
+    def test_publish_opt_in_preserves_the_existing_request_and_retry(self):
+        request = self.schemas["PublishDataset"]
+        legacy_fields = {"expected_revision", "seed", "validation_basis_points", "reason"}
+        self.assertFalse(request["additionalProperties"])
+        self.assertEqual(set(request["required"]), legacy_fields)
+        self.assertEqual(set(request["properties"]), legacy_fields | {"test_basis_points"})
+        self.assertEqual(
+            request["properties"]["test_basis_points"],
+            {"type": "integer", "minimum": 100, "maximum": 5000},
+        )
+        for audience in ("admin", "portal"):
+            with self.subTest(audience=audience):
+                publish = self.operations[audience + "PublishDataset"]
+                retry = self.operations[audience + "RetryDatasetJob"]
+                self.assertEqual(
+                    publish["requestBody"]["content"]["application/json"]["schema"],
+                    {"$ref": "#/components/schemas/PublishDataset"},
+                )
+                self.assertEqual(
+                    retry["requestBody"]["content"]["application/json"]["schema"],
+                    {"$ref": "#/components/schemas/DatasetReason"},
+                )
+        self.assertEqual(set(self.schemas["DatasetReason"]["properties"]), {"reason"})
 
     def version_conditions(self):
         return {
