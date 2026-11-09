@@ -14,8 +14,19 @@ Focused unit check: `go -C services/control test ./internal/modules/artifactstor
 
 A privileged coordinator can use [the object backup fence](backup_fence.go)
 to pause this instance, wait for admitted calls, and verify a bounded
-PostgreSQL inventory against the S3 data plane. Release the fence after
-verification or an unsettled result so normal reconciliation can proceed.
-The [backup research note](../../../../../docs/research/object-backup-fence.md)
-describes provider exclusion, durable coordination and copy verification
-required before an installer can admit external object backups.
+PostgreSQL inventory against the S3 data plane. With external writers
+excluded, pass CopyInventory an exclusively opened, empty regular file
+with mode 0600 in the coordinator's private staging directory, and
+supply the deadline, inventory row cap and content byte budget. Each
+ready object is written under objects/<workspace UUID>/<object UUID>.
+The inventory.json entry contains the SQL inventory and tombstones.
+The returned length and SHA-256 cover the entire PAX archive after sync
+and readback. A failure yields no copy identity. Use a fresh private
+file for a retry and dispose of the failed staging file.
+
+The installation coordinator owns durable provider exclusion across
+replicas, publication with the database dump, directory sync and recovery.
+Release the fence after the coordinated operation finishes so ordinary
+reconciliation can proceed. See the
+[backup research note](../../../../../docs/research/object-backup-fence.md#verified-copy-under-the-artifactstores-fence)
+for the provider and installer boundary and the Linux reproduction.
