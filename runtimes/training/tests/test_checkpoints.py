@@ -1,7 +1,7 @@
 import errno
 import json
 import os
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -127,6 +127,19 @@ class CheckpointTest(unittest.TestCase):
         optimizer.write_bytes(b'x' * optimizer.stat().st_size)
         with self.assertRaisesRegex(TrainingError, '^TRAINING_CHECKPOINT_CHANGED$'):
             self.verify(receipt)
+
+    def test_final_checkpoint_cannot_extend_the_sealed_training_horizon(self):
+        final = replace(self.configuration, maximum_steps=2)
+        bindings = {**self.bindings, 'configuration': asdict(final), 'configuration_sha256': final.digest()}
+        receipt = checkpoints.seal_checkpoint(self.directory, bindings, 2, 8192, 16)
+        reference = checkpoints.CheckpointReference(self.directory, receipt['receipt_sha256'])
+        seal, _ = checkpoints.verify_checkpoint(reference, bindings, final, 8192, 16)
+        self.assertEqual(seal['global_step'], final.maximum_steps)
+
+        extended = replace(final, maximum_steps=4)
+        changed = {**bindings, 'configuration': asdict(extended), 'configuration_sha256': extended.digest()}
+        with self.assertRaisesRegex(TrainingError, '^TRAINING_CHECKPOINT_INCOMPATIBLE$'):
+            checkpoints.verify_checkpoint(reference, changed, extended, 8192, 16)
 
     def test_duplicate_seal_preserves_original(self):
         receipt = self.seal()
