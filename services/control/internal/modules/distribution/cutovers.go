@@ -5,13 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	"reflect"
 	"time"
 
-	"github.com/google/uuid"
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/google/uuid"
 )
 
 type CutoverRequest struct {
@@ -121,90 +120,23 @@ func (s *Service) Cutover(ctx context.Context, a identity.Auth, workspace, id st
 		if !errors.Is(e, sql.ErrNoRows) {
 			return e
 		}
-		// The Workspace lock serializes all admission/report/alias mutation; lock remaining owners in node/gateway/alias order.
-		current, e := scanAlias(tx.QueryRow(ctx, distributionStatement(tx, "SELECT "+aliasFields+" FROM model_aliases WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3", `SELECT `+mysqlAliasFields+` FROM model_aliases WHERE tenant_id=? AND workspace_id=? AND id=?`, []any{w.TenantID, w.ID, id}, []any{w.TenantID, w.ID, id})))
+		plan, e := s.planCutover(ctx, tx, w, id, in)
 		if e != nil {
 			return e
-		}
-		var node string
-		if e = tx.QueryRow(ctx, distributionStatement(tx, "SELECT id::text FROM managed_nodes WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE", `SELECT id FROM managed_nodes WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE`, []any{w.TenantID, w.ID, current.NodeID}, []any{w.TenantID, w.ID, current.NodeID})).Scan(&node); e != nil {
-			return e
-		}
-		gateway, e := scanGateway(tx.QueryRow(ctx, distributionStatement(tx, "SELECT "+gatewayFields+" FROM gateway_instances WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND node_id=$4 FOR UPDATE", `SELECT `+mysqlGatewayFields+` FROM gateway_instances WHERE tenant_id=? AND workspace_id=? AND id=? AND node_id=? FOR UPDATE`, []any{w.TenantID, w.ID, current.GatewayID, node}, []any{w.TenantID, w.ID, current.GatewayID, node})))
-		if e != nil {
-			return e
-		}
-		current, e = scanAlias(tx.QueryRow(ctx, distributionStatement(tx, "SELECT "+aliasFields+" FROM model_aliases WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE", `SELECT `+mysqlAliasFields+` FROM model_aliases WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE`, []any{w.TenantID, w.ID, id}, []any{w.TenantID, w.ID, id})))
-		if e != nil {
-			return e
-		}
-		if current.Revision != in.ExpectedRevision {
-			return fail("VERSION_CONFLICT")
 		}
 		action := map[string]string{"pause": "paused", "resume": "resumed", "retarget": "retargeted", "rollback": "rolled_back"}[in.Action]
-		if in.Action == "pause" {
-			if current.DisabledAt != nil {
-				return fail("ALIAS_ALREADY_PAUSED")
-			}
-			if _, e = tx.Exec(ctx, distributionStatement(tx, "UPDATE model_aliases SET disabled_at=clock_timestamp(),revision=revision+1 WHERE id=$1", `UPDATE model_aliases SET disabled_at=UTC_TIMESTAMP(6),revision=revision+1 WHERE id=?`, []any{id}, []any{id})); e != nil {
-				return e
-			}
-		} else {
-			if current.DisabledAt == nil {
-				if in.Action == "resume" {
-					return fail("ALIAS_NOT_PAUSED")
-				}
-				return fail("ALIAS_PAUSE_REQUIRED")
-			}
-			var held bool
-			if e = tx.QueryRow(ctx, distributionStatement(tx, "SELECT EXISTS(SELECT 1 FROM gateway_requests WHERE tenant_id=$1 AND workspace_id=$2 AND alias_id=$3 AND capacity_held)", `SELECT EXISTS(SELECT 1 FROM gateway_requests WHERE tenant_id=? AND workspace_id=? AND alias_id=? AND capacity_held)`, []any{w.TenantID, w.ID, id}, []any{w.TenantID, w.ID, id})).Scan(&held); e != nil {
-				return e
-			}
-			if held {
-				return fail("ALIAS_REQUESTS_UNDRAINED")
-			}
-			if gateway.State != "active" {
-				return fail("GATEWAY_INSTANCE_REVOKED")
-			}
-			deployment, revision := current.DeploymentID, current.DeploymentRevision
-			if in.Action != "resume" {
-				deployment, revision = *in.DeploymentID, *in.DeploymentRevision
-			}
-			target, e := s.Deployments.ReadyGatewayTargetWithin(ctx, tx, w.TenantID, w.ID, node, deployment, revision)
-			if e != nil {
-				return e
-			}
-			if in.Action == "rollback" {
-				source, e := scanAliasTarget(tx.QueryRow(ctx, distributionStatement(tx, "SELECT "+targetFields+" FROM model_alias_target_versions WHERE tenant_id=$1 AND workspace_id=$2 AND alias_id=$3 AND revision=$4", `SELECT `+mysqlTargetFields+` FROM model_alias_target_versions WHERE tenant_id=? AND workspace_id=? AND alias_id=? AND revision=?`, []any{w.TenantID, w.ID, id, *in.SourceRevision}, []any{w.TenantID, w.ID, id, *in.SourceRevision})))
-				if e != nil {
-					return fail("ALIAS_ROLLBACK_TARGET_INVALID")
-				}
-				var kind, digest string
-				var recipe *string
-				if e = tx.QueryRow(ctx, distributionStatement(tx, "SELECT model_kind,catalog_digest,serving_recipe_sha256 FROM deployments WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3", `SELECT model_kind,catalog_digest,serving_recipe_sha256 FROM deployments WHERE tenant_id=? AND workspace_id=? AND id=?`, []any{w.TenantID, w.ID, target.ID}, []any{w.TenantID, w.ID, target.ID})).Scan(&kind, &digest, &recipe); e != nil {
-					return e
-				}
-				if source.ModelID != target.ModelID || source.ModelKind != kind || source.CatalogDigest != digest || !reflect.DeepEqual(source.ServingRecipeSHA256, recipe) {
-					return fail("ALIAS_ROLLBACK_TARGET_INVALID")
-				}
-			}
-			if in.Action == "resume" {
-				var count int
-				if e = tx.QueryRow(ctx, distributionStatement(tx, "SELECT count(*) FROM model_aliases WHERE tenant_id=$1 AND workspace_id=$2 AND disabled_at IS NULL", `SELECT count(*) FROM model_aliases WHERE tenant_id=? AND workspace_id=? AND disabled_at IS NULL`, []any{w.TenantID, w.ID}, []any{w.TenantID, w.ID})).Scan(&count); e != nil {
-					return e
-				}
-				if count >= s.Identity.Config.Policy().Distribution.AliasMaxActive {
-					return fail("RESOURCE_LIMIT_REACHED")
-				}
-				_, e = tx.Exec(ctx, distributionStatement(tx, "UPDATE model_aliases SET disabled_at=NULL,revision=revision+1 WHERE id=$1", `UPDATE model_aliases SET disabled_at=NULL,revision=revision+1 WHERE id=?`, []any{id}, []any{id}))
-			} else {
-				_, e = tx.Exec(ctx, distributionStatement(tx, "UPDATE model_aliases SET deployment_id=$2,deployment_revision=$3,revision=revision+1 WHERE id=$1", `UPDATE model_aliases SET deployment_id=?,deployment_revision=?,revision=revision+1 WHERE id=?`, []any{id, target.ID, target.Revision}, []any{target.ID, target.Revision, id}))
-			}
-			if e != nil {
-				return e
-			}
+		switch in.Action {
+		case "pause":
+			_, e = tx.Exec(ctx, distributionStatement(tx, "UPDATE model_aliases SET disabled_at=clock_timestamp(),revision=revision+1 WHERE id=$1", `UPDATE model_aliases SET disabled_at=UTC_TIMESTAMP(6),revision=revision+1 WHERE id=?`, []any{id}, []any{id}))
+		case "resume":
+			_, e = tx.Exec(ctx, distributionStatement(tx, "UPDATE model_aliases SET disabled_at=NULL,revision=revision+1 WHERE id=$1", `UPDATE model_aliases SET disabled_at=NULL,revision=revision+1 WHERE id=?`, []any{id}, []any{id}))
+		default:
+			_, e = tx.Exec(ctx, distributionStatement(tx, "UPDATE model_aliases SET deployment_id=$2,deployment_revision=$3,revision=revision+1 WHERE id=$1", `UPDATE model_aliases SET deployment_id=?,deployment_revision=?,revision=revision+1 WHERE id=?`, []any{id, plan.After.DeploymentID, plan.After.DeploymentRevision}, []any{plan.After.DeploymentID, plan.After.DeploymentRevision, id}))
 		}
-		out.AppliedRevision = current.Revision + 1
+		if e != nil {
+			return e
+		}
+		out.AppliedRevision = plan.After.Revision
 		if _, e = tx.Exec(ctx, distributionStatement(tx, "INSERT INTO model_alias_history(tenant_id,workspace_id,alias_id,revision,action,actor_user_id,reason) VALUES($1,$2,$3,$4,$5,$6,$7)", `INSERT INTO model_alias_history(tenant_id,workspace_id,alias_id,revision,action,actor_user_id,reason) VALUES(?,?,?,?,?,?,?)`, []any{w.TenantID, w.ID, id, out.AppliedRevision, action, a.Me.User.ID, in.Reason}, []any{w.TenantID, w.ID, id, out.AppliedRevision, action, a.Me.User.ID, in.Reason})); e != nil {
 			return e
 		}

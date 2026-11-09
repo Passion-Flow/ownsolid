@@ -21,6 +21,14 @@ digest, the same check used for report replay. If a stored receipt fails
 verification, the request returns `STORAGE_UNAVAILABLE` without a partial
 page. See the [usage history verification](../../../../../docs/research/gateway-usage-history.md).
 
+## Cutover preview
+
+The control service's `PreviewCutover` uses the same authorization, expected
+revision, drain and ready-target checks as `Cutover`. It returns the current
+and proposed deployment revision and pause state without writing. Apply
+rechecks the expected revision and current readiness in its own
+transaction. The public preview route and Console flow are pending.
+
 ## Development checks
 
 Synchronize [Rust gateway](../../../../gateway/README.md), contracts/gateway and HTTP/public gateway generators, nodes/deployments/modelpreparations, [distribution frontend](../../../../../web/README.md), [M07](../../../../../docs/milestones/m07-gateway) and gateway deployment/config.
