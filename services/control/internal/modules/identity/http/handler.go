@@ -557,6 +557,14 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 			return nil, 0, errors.New("CSRF_INVALID")
 		}
 	}
+	if path == adminTOTPLoginPath || adminTOTPManagementPath(path) {
+		if !s.AdminTOTPCandidateReady() || audience != "admin" || r.URL.RawPath != "" {
+			return nil, 0, errors.New("RESOURCE_NOT_FOUND")
+		}
+		if r.URL.RawQuery != "" || r.URL.ForceQuery {
+			return nil, 0, bad
+		}
+	}
 	if monitoringhttp.Owns(path) {
 		if r.Method != http.MethodGet {
 			return nil, 0, errors.New("RESOURCE_NOT_FOUND")
@@ -789,9 +797,6 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 		}
 		return h.browserLoginResponse(w, cookies, audience, issued)
 	case "POST " + adminTOTPLoginPath:
-		if audience != "admin" {
-			return nil, 0, errors.New("RESOURCE_NOT_FOUND")
-		}
 		var input struct {
 			Challenge string `json:"challenge"`
 			Code      string `json:"code"`
