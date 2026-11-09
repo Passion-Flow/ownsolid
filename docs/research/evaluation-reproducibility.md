@@ -214,3 +214,71 @@ provenance. Exercise exact refusal, leakage mixed with refusal text, the
 known injection and unsupported claim, and unverified alternatives. Reject
 missing cases, wrong bindings and oversized output. Real model safety,
 authorized capture delivery and UI remain open.
+
+## EVL-103 retained preparation quality decision
+
+[MLflow's result validator](https://mlflow.org/docs/latest/api_reference/_modules/mlflow/models/evaluation/validation.html)
+checks a candidate's metric floor separately from its change against a baseline.
+Use the existing ownsolid integer gate and the original preparation request.
+The [Go result decoder](../../api/model-lifecycle/v1/result.go) independently
+rebuilds both confusion matrices from the exact held-out cases and checks the
+saved verdict. The [review code](../../services/control/internal/modules/modelpreparations/review_snapshot.go)
+recalculates the gate under the persisted preparation configuration and returns
+`MODEL_PREPARATION_QUALITY_FAILED` when the quality condition fails.
+
+### Retained CPU capture
+
+Replay the original files from the [retained CPU run](https://github.com/Passion-Flow/ownsolid/commit/50fb5b01).
+The approved model is Qwen3-0.6B at revision
+`c1899de289a04d12100db370d81485cdf75e47ca`. The run used the existing
+Apache-2.0 model and generated CC0 rows documented in the
+[artifact evidence](training-dataset-lineage.md#retained-cpu-acceptance).
+Replay calculates scores from the small archived metadata and normalized
+predictions.
+
+| Frozen bytes | SHA-256 |
+| --- | --- |
+| Original `result.json` | `f8cb63963210b9af5886624e107b05386bc8a01894eb0293fbe7c3cd9f4539d3` |
+| Original `request.json` | `238d7a378f215a65d7a1a4fe632f491762c09a992c31f89ad4351275c7bfec0d` |
+| Original `heldout.jsonl` | `0fd36fecf2b79bfd5e23a09cf0c66d395304824d5ae18ca4be8d01a23f9b09af` |
+
+On disconnected Linux, the EVL-101 scorer and EVL-102 pairing recomputed
+both scores from the original request-bound holdout. The archive supplies
+the preparation holdout identity. The published dataset report entry point
+requires a separate authorized Version JSON. The Go decoder independently
+checked the same request and held-out rows, plus the tokenizer template
+pinned by the approved catalog.
+
+The CPU profile used float32 computation and seed 42. Both models predicted
+`technical` on all three rows and scored 1/3. The captured policy required
+8000 basis points of accuracy and allowed zero basis points of regression.
+The accuracy check failed at 10000 versus 24000 in the integer comparison.
+The regression check passed with zero difference. The original verdict was
+false, and changing only the recorded verdict to true made the Go decoder
+return `MODEL_PREPARATION_REPORT_INVALID`. The production review error is a
+source-level check. The authorized review flow remains open.
+
+### Offline control
+
+Use the existing synthetic comparison fixture from [EVL-102](https://github.com/Passion-Flow/ownsolid/commit/e13a27d3).
+The fixture uses repository-authored prompts, controlled labels and model
+catalog metadata. The processor freezes a three-way partition and both
+reports bind its validation asset. Repeat the existing comparison entry point
+with two Python hash seeds. The bytes matched, and the original gate accepted
+the 2/3 to 3/3 direction and rejected the 3/3 to 2/3 direction under the same
+8000/0 policy. The [existing Go gate vectors](../../api/model-lifecycle/v1/contract_test.go)
+and Python gate agreed at both exact edges. Two correct out of three meets
+6666 basis points and misses 6667. A one-of-three drop exceeds 3333 basis
+points and fits 3334. Under the captured 8000/0 policy, both gate
+implementations accepted a 4/5 tie at exactly 80% and rejected a 3/5 tie on
+accuracy. A drop from 5/5 to 4/5 passed the accuracy check and failed
+regression. These controlled scores establish gate behavior. The real
+model quality result is the retained CPU capture above.
+
+Run the contract vectors with
+`go -C api test -count=1 ./model-lifecycle/v1 -run '^TestResourceAndConfigurationBoundsAndExactIntegerGate$'`.
+Run the comparison fixture in
+[test_evaluation_report.py](../../runtimes/model-lifecycle/tests/test_evaluation_report.py)
+with the same source Python path as the
+[offline replay command](../../runtimes/model-lifecycle/README.md#replay-a-captured-evaluation).
+Keep EVL-103 open for the authorized release and interface workflow.

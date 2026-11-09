@@ -22,6 +22,9 @@ Measuring models and applications before release, and gating releases on the res
     per-case differences. Authorized delivery, UI and real engine evidence
     remain open.
 - [ ] EVL-103 Release gates: a model or app version cannot be promoted below its threshold (P1) - Catalog: F650
+  - [Retained preparation replay](../../research/evaluation-reproducibility.md#evl-103-retained-preparation-quality-decision)
+    confirms the real CPU quality refusal and both gate outcomes on frozen
+    controls. Authorized release and UI acceptance remain open.
 - [ ] EVL-104 Production traces turned into regression cases (P1)
 - [ ] EVL-105 Performance benchmark: latency, throughput and cost per model and hardware (P1) - Catalog: F150
 - [ ] EVL-106 Safety and regression sets: injection, leakage, unsupported answers (P1) - Catalog: F149
