@@ -84,6 +84,13 @@ No new dependency, model or data set.
 - An email in the wrong language: `TestEveryMailPurposeReadsInEachLanguage`, then a live delivery.
 - A term outside the glossary, or Latin punctuation beside Chinese: `catalogs.test.ts`.
 
+The provider updates the document's language in a
+[React effect](https://react.dev/reference/react/useEffect#reference).
+The translated button can appear before that effect runs. Use Testing
+Library's [`waitFor`](https://testing-library.com/docs/dom-testing-library/api-async/#waitfor)
+to assert the real document language after each transition. The test
+still fails if the metadata never changes and adds no new dependency.
+
 The walk cannot judge a translation's quality, and it passes a value the server sends as data.
 A bare enum value does not count as data, which is what catches a raw status.
 

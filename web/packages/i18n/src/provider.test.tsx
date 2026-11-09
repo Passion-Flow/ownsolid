@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import chinese from '../locales/zh-cn.json';
 import { I18nProvider, useI18n } from './provider.tsx';
@@ -19,6 +19,7 @@ function Probe() {
 
 afterEach(() => {
   localStorage.clear();
+  document.documentElement.removeAttribute('lang');
 });
 
 describe('I18nProvider', () => {
@@ -30,14 +31,18 @@ describe('I18nProvider', () => {
     );
     const button = await screen.findByRole('button');
     expect(button).toHaveTextContent('Sign in');
-    expect(document.documentElement.lang).toBe('en');
+    await waitFor(() => {
+      expect(document.documentElement.lang).toBe('en');
+    });
     act(() => {
       button.click();
     });
     expect(
       await screen.findByRole('button', { name: chinese['signIn.title'] }),
     ).toBeInTheDocument();
-    expect(document.documentElement.lang).toBe('zh-CN');
+    await waitFor(() => {
+      expect(document.documentElement.lang).toBe('zh-CN');
+    });
     expect(localStorage.getItem('ownsolid.locale')).toBe('zh-CN');
   });
 
