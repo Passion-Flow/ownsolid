@@ -187,3 +187,44 @@ blocks and preserved the stored observation and GPU reservation.
 The one-node mTLS gate is green. The shared two-fleet cost suite still needs
 the deployment-bound case and the component, preparation and Registry
 operations. No declaration or fleet acceptance result has changed.
+
+### Scoped mTLS inference on two seeded fleets
+
+The retained-deployment replay also ran against the same PostgreSQL and
+pgvector versions with 50 and 3,000 seeded peers in separate fixture schemas.
+An isolated Go test overlay extended `TestMutualTLSInferenceObservationCost`
+without changing the Deployments or Training sources. Each peer had an inference
+row, four finished facts tasks and four audit events. Statistics were refreshed
+before measuring. A second transaction held the installation, tenant, workspace,
+user and membership rows `FOR SHARE` during each request, as in
+[ADR 0020](../decisions/0020-agent-call-cost-rule.md). The cost recorder was
+disabled only during fixture seeding. The original mTLS, scope, persisted
+observation and reservation assertions still ran.
+
+| Exchange | SQL statements | Rows | Shared blocks |
+| --- | ---: | ---: | ---: |
+| Cold first report | 10 / 10 | 14 / 14 | 131 / 140 |
+| Warm update | 8 / 8 | 11 / 11 | 31 / 37 |
+| Foreign credential | 2 / 2 | 1 / 1 | 3 / 5 |
+| Current revision after dispatcher restart | 11 / 11 | 15 / 15 | 121 / 124 |
+| Stale revision | 9 / 9 | 12 / 12 | 36 / 41 |
+
+The unchanged heartbeat ceiling of 11 and the shared row-growth and index
+checks passed. This measures the cost of individual exchanges against seeded
+data. It does not measure simulator traffic or concurrent fleet throughput.
+The two-fleet mTLS overlay is local evidence. The shared test still needs to
+incorporate those exchanges with the Deployments and Training owners.
+
+The existing shared suite independently measured both fleets and found these
+statement budget failures at the same counts on each fleet: certificate 38/13,
+enrollment 57/36, facts result 41/16, training chunk 80/76, claim 75/51,
+events 139/75 and stop 52/28. The publication section exceeded the local
+test deadline. Reproduce the declared-cost checks without the publication
+section using the protected test database and pinned CPython:
+
+```sh
+go -C services/control test -p 1 ./internal/modules/training -run '^TestAgentCallCostDoesNotGrowWithTheFleet$/^declared_cost$' -count=1 -v
+```
+
+ARC-108 remains open for the missing exchanges and the unresolved shared
+budget failures. Admission and budget assertions were kept intact.
