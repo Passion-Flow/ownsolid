@@ -79,6 +79,14 @@ func (g portalStory) exec(t *testing.T, pg, my string, args ...any) {
 }
 func (g portalStory) auth(t *testing.T, user, audience string) identity.Auth {
 	t.Helper()
+	a, e := g.owner.Authenticate(g.ctx, g.issue(t, user, audience), audience)
+	if e != nil {
+		t.Fatal(e)
+	}
+	return a
+}
+func (g portalStory) issue(t *testing.T, user, audience string) string {
+	t.Helper()
 	var issued identity.IssuedSession
 	if e := g.f.Store.Within(g.ctx, false, func(ctx context.Context, q transaction.Executor) error {
 		var e error
@@ -87,11 +95,7 @@ func (g portalStory) auth(t *testing.T, user, audience string) identity.Auth {
 	}); e != nil {
 		t.Fatal(e)
 	}
-	a, e := g.owner.Authenticate(g.ctx, issued.Token, audience)
-	if e != nil {
-		t.Fatal(e)
-	}
-	return a
+	return issued.Token
 }
 func (g portalStory) other(t *testing.T) identity.Auth {
 	t.Helper()
