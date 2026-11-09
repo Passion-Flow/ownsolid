@@ -20,7 +20,7 @@ var (
 	relayLabel = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$`)
 	tenantID   = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,63}$`)
 	roomID     = regexp.MustCompile(`^![A-Za-z0-9._=:-]{1,254}$`)
-	feishuHook = regexp.MustCompile(`^[A-Za-z0-9_-]{16,128}$`)
+	botToken   = regexp.MustCompile(`^[A-Za-z0-9_-]{16,128}$`)
 	bearer     = regexp.MustCompile(`^[A-Za-z0-9._~+/-]+={0,2}$`)
 )
 
@@ -29,6 +29,7 @@ type relayChannel uint8
 const (
 	matrixChannel relayChannel = iota
 	feishuChannel
+	dingTalkChannel
 )
 
 type relayConfig struct {
@@ -39,19 +40,23 @@ type relayConfig struct {
 	MatrixCAFile    string         `json:"matrix_ca_file,omitempty"`
 	FeishuOrigin    string         `json:"feishu_origin,omitempty"`
 	FeishuCAFile    string         `json:"feishu_ca_file,omitempty"`
+	DingTalkOrigin  string         `json:"dingtalk_origin,omitempty"`
+	DingTalkCAFile  string         `json:"dingtalk_ca_file,omitempty"`
 	DeliverySeconds int            `json:"delivery_seconds"`
 	MaxConcurrent   int            `json:"max_concurrent"`
 	Tenants         []tenantConfig `json:"tenants"`
 }
 
 type tenantConfig struct {
-	ID                      string `json:"id"`
-	Receiver                string `json:"receiver"`
-	WebhookTokenFile        string `json:"webhook_token_file"`
-	MatrixTokenFile         string `json:"matrix_token_file,omitempty"`
-	RoomID                  string `json:"room_id,omitempty"`
-	FeishuHookFile          string `json:"feishu_hook_file,omitempty"`
-	FeishuSigningSecretFile string `json:"feishu_signing_secret_file,omitempty"`
+	ID                        string `json:"id"`
+	Receiver                  string `json:"receiver"`
+	WebhookTokenFile          string `json:"webhook_token_file"`
+	MatrixTokenFile           string `json:"matrix_token_file,omitempty"`
+	RoomID                    string `json:"room_id,omitempty"`
+	FeishuHookFile            string `json:"feishu_hook_file,omitempty"`
+	FeishuSigningSecretFile   string `json:"feishu_signing_secret_file,omitempty"`
+	DingTalkAccessTokenFile   string `json:"dingtalk_access_token_file,omitempty"`
+	DingTalkSigningSecretFile string `json:"dingtalk_signing_secret_file,omitempty"`
 }
 
 type relaySettings struct {
@@ -83,22 +88,29 @@ func loadRelaySettings(filename string, channel relayChannel) (relaySettings, er
 		len(c.Tenants) == 0 || len(c.Tenants) > 128 {
 		return relaySettings{}, errors.New("RELAY_CONFIG_INVALID")
 	}
-	endpoint, caFile := c.MatrixOrigin, c.MatrixCAFile
-	originInvalid, caInvalid := "RELAY_MATRIX_ORIGIN_INVALID", "RELAY_MATRIX_CA_INVALID"
-	if channel == feishuChannel {
-		if endpoint != "" || caFile != "" {
+	type destination struct {
+		origin, caFile, name string
+	}
+	destinations := [...]destination{
+		matrixChannel:   {c.MatrixOrigin, c.MatrixCAFile, "MATRIX"},
+		feishuChannel:   {c.FeishuOrigin, c.FeishuCAFile, "FEISHU"},
+		dingTalkChannel: {c.DingTalkOrigin, c.DingTalkCAFile, "DINGTALK"},
+	}
+	if int(channel) >= len(destinations) {
+		return relaySettings{}, errors.New("RELAY_CHANNEL_INVALID")
+	}
+	for i, d := range destinations {
+		if relayChannel(i) != channel && (d.origin != "" || d.caFile != "") {
 			return relaySettings{}, errors.New("RELAY_CHANNEL_CONFIGURATION_MIXED")
 		}
-		endpoint, caFile = c.FeishuOrigin, c.FeishuCAFile
-		originInvalid, caInvalid = "RELAY_FEISHU_ORIGIN_INVALID", "RELAY_FEISHU_CA_INVALID"
-	} else if c.FeishuOrigin != "" || c.FeishuCAFile != "" {
-		return relaySettings{}, errors.New("RELAY_CHANNEL_CONFIGURATION_MIXED")
 	}
+	chosen := destinations[channel]
+	endpoint := chosen.origin
 	origin, err := url.Parse(endpoint)
 	if err != nil || origin.Scheme != "https" || !privateAddress(origin.Host) ||
 		origin.User != nil || origin.Path != "" || origin.ForceQuery || origin.RawQuery != "" || origin.Fragment != "" ||
 		origin.String() != endpoint {
-		return relaySettings{}, errors.New(originInvalid)
+		return relaySettings{}, errors.New("RELAY_" + chosen.name + "_ORIGIN_INVALID")
 	}
 	cert, err := bundle.ReadProtectedConfiguration(c.CertificateFile)
 	if err != nil {
@@ -112,10 +124,10 @@ func loadRelaySettings(filename string, channel relayChannel) (relaySettings, er
 	if err != nil {
 		return relaySettings{}, errors.New("RELAY_TLS_KEYPAIR_INVALID")
 	}
-	pem, err := bundle.ReadProtectedConfiguration(caFile)
+	pem, err := bundle.ReadProtectedConfiguration(chosen.caFile)
 	roots := x509.NewCertPool()
 	if err != nil || !roots.AppendCertsFromPEM(pem) {
-		return relaySettings{}, errors.New(caInvalid)
+		return relaySettings{}, errors.New("RELAY_" + chosen.name + "_CA_INVALID")
 	}
 	routes := make(map[string]tenantRoute, len(c.Tenants))
 	targets := make(map[string]bool, len(c.Tenants))
@@ -129,7 +141,7 @@ func loadRelaySettings(filename string, channel relayChannel) (relaySettings, er
 			return relaySettings{}, fmt.Errorf("RELAY_TENANT_BINDING_DUPLICATE entry %d", i+1)
 		}
 		secrets := [][32]byte{route.inbound, sha256.Sum256([]byte(route.outbound))}
-		if channel == feishuChannel {
+		if channel != matrixChannel {
 			secrets = append(secrets, sha256.Sum256([]byte(route.target)))
 		}
 		for _, secret := range secrets {
@@ -156,23 +168,16 @@ func loadTenantRoute(t tenantConfig, channel relayChannel) (tenantRoute, error) 
 		return tenantRoute{}, errors.New("RELAY_WEBHOOK_TOKEN_INVALID")
 	}
 	route := tenantRoute{receiver: t.Receiver, inbound: sha256.Sum256([]byte(in))}
-	if channel == feishuChannel {
-		if t.RoomID != "" || t.MatrixTokenFile != "" {
-			return tenantRoute{}, errors.New("RELAY_CHANNEL_CONFIGURATION_MIXED")
-		}
-		hook, err := readBearer(t.FeishuHookFile, 16)
-		if err != nil || !feishuHook.MatchString(hook) {
-			return tenantRoute{}, errors.New("RELAY_FEISHU_HOOK_INVALID")
-		}
-		secret, err := readBearer(t.FeishuSigningSecretFile, 16)
-		if err != nil {
-			return tenantRoute{}, errors.New("RELAY_FEISHU_SECRET_INVALID")
-		}
-		route.target, route.outbound = hook, secret
-		return route, nil
-	}
-	if t.FeishuHookFile != "" || t.FeishuSigningSecretFile != "" {
+	if (channel != matrixChannel && (t.RoomID != "" || t.MatrixTokenFile != "")) ||
+		(channel != feishuChannel && (t.FeishuHookFile != "" || t.FeishuSigningSecretFile != "")) ||
+		(channel != dingTalkChannel && (t.DingTalkAccessTokenFile != "" || t.DingTalkSigningSecretFile != "")) {
 		return tenantRoute{}, errors.New("RELAY_CHANNEL_CONFIGURATION_MIXED")
+	}
+	switch channel {
+	case feishuChannel:
+		return loadBotRoute(route, t.FeishuHookFile, t.FeishuSigningSecretFile, "FEISHU_HOOK", "FEISHU")
+	case dingTalkChannel:
+		return loadBotRoute(route, t.DingTalkAccessTokenFile, t.DingTalkSigningSecretFile, "DINGTALK_ACCESS_TOKEN", "DINGTALK")
 	}
 	if !roomID.MatchString(t.RoomID) {
 		return tenantRoute{}, errors.New("RELAY_TENANT_SCOPE_INVALID")
@@ -182,6 +187,19 @@ func loadTenantRoute(t tenantConfig, channel relayChannel) (tenantRoute, error) 
 		return tenantRoute{}, errors.New("RELAY_MATRIX_TOKEN_INVALID")
 	}
 	route.target, route.outbound = t.RoomID, out
+	return route, nil
+}
+
+func loadBotRoute(route tenantRoute, tokenFile, secretFile, tokenName, channelName string) (tenantRoute, error) {
+	token, err := readBearer(tokenFile, 16)
+	if err != nil || !botToken.MatchString(token) {
+		return tenantRoute{}, errors.New("RELAY_" + tokenName + "_INVALID")
+	}
+	secret, err := readBearer(secretFile, 16)
+	if err != nil {
+		return tenantRoute{}, errors.New("RELAY_" + channelName + "_SECRET_INVALID")
+	}
+	route.target, route.outbound = token, secret
 	return route, nil
 }
 
