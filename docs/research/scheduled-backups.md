@@ -38,3 +38,44 @@ the last recovery point, successful expiry, collisions with a second
 installation and unrelated files remaining untouched. Exercise the scheduled
 job against real PostgreSQL on the isolated Compose installation. Verify a
 Linux systemd timer starts the oneshot command and records its result.
+
+### Timer-to-archive verification
+
+A successful direct job and a separate systemd probe leave the command
+search path and the timer's actual backup invocation unverified. Run the
+shipped service and timer under unique runtime unit names on Linux. Set
+the installer executable search path and site configuration in a test
+drop-in. Override the daily schedule for the bounded drill. Use
+[systemd execution settings](https://github.com/systemd/systemd/blob/v255/man/systemd.exec.xml)
+to join the isolated PostgreSQL container's network namespace, with the
+egress recorder as the only default route. Use the real
+[Compose exec path](https://docs.docker.com/reference/cli/docker/compose/exec/)
+and the pinned PostgreSQL image with local sockets and no published ports.
+
+Migrate the disposable database with the real Control binary and keep the
+normal installer configuration and generated key files. Require a timer
+run to publish a logical dump and a completed history entry. Pause the
+fixture's PostgreSQL container for a second trigger and require a failed
+history entry and unchanged recovery point. Resume it and require a new
+verified backup to expire only the previous owned one. Independently load
+the retained dump and compare the deployment identity. Leave the live
+database OID and the ordinary backup directory intact. This drill uses
+only the existing systemd, Compose, PostgreSQL and ownsolid binaries and
+adds no dependency or redistributable data.
+
+On Ubuntu 24.04 amd64, systemd 255 activated the shipped timer and
+oneshot service under private runtime names. With no schedule, the
+installer returned `INSTALL_BACKUP_SCHEDULE_REQUIRED` before creating
+an installation. A test root with group and other access was refused
+by the history reader and writer. With a mode-0700 root, a schedule,
+and an unavailable fixture Docker socket, two timer activations exited
+with `INSTALL_BACKUP_OWNER_UNAVAILABLE`. The real `backup-history`
+command retained two finished, failed entries in order. It reported no
+deployment ID or verified publication, and the backup directory stayed
+empty. The runtime units were removed. Both network defaults led only
+to the egress recorder, which saw the IPv4, IPv6 and DNS probes.
+
+The combined timer, PostgreSQL success and retention drill remains open.
+It needs the exclusive shared test lock and a passing host resource
+preflight before the fixture starts. The earlier manual scheduled job
+with real PostgreSQL remains separate evidence.

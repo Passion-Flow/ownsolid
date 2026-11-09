@@ -29,6 +29,7 @@ recovery and support tooling.
 - [ ] REL-106 Long-running tasks idempotent, retryable and resumable after any component restart (P1) - Catalog: F530
 - [ ] REL-107 Self-monitoring of control-plane components with alerts (P1)
 - [ ] REL-108 Scheduled backups with retention, run by ownsolid (P1)
+  - The [disconnected timer drill](../../research/scheduled-backups.md#timer-to-archive-verification) exercised the shipped systemd units, policy refusal and durable retry history. Timer-triggered PostgreSQL success and expiry remain open.
 - [ ] REL-109 Point-in-time recovery from a base backup and archived WAL, including incremental base backups (P1)
 - [x] REL-110 Encrypted backups with the key held outside the archive (P1) - Evidence: fe49ce45 and 3b47c1de. Disconnected Linux amd64 verified explicit single-node encrypted backup, direct restore and restore into a clean site, with the age identity held separately.
   - The [verification evidence](../../research/encrypted-backups.md#release-qualification) covers the repository gates and the encrypted archive refusal checks.
