@@ -131,7 +131,7 @@ run with the archive delivery in FLT-109.
 
 | Item | Available lane D slice or required boundary |
 | --- | --- |
-| DEV-101 | The six cloud inventory operations have explicit IDs that preserve SDK names and help bookmarks. Four node exporter routes remain duplicated across the nodes and components contracts. Resolving them requires one canonical declaration and a compatibility check for existing clients. API coverage for features still in development remains with the module owners. |
+| DEV-101 | The six cloud inventory operations have explicit IDs that preserve SDK names and help bookmarks. The four node exporter routes have a canonical Components declaration and unchanged Nodes client and help projections. API coverage for features still in development remains with the module owners. |
 | DEV-102 | GW-114 now allows the CLI to register an agent-managed gateway through the existing Admin endpoint. The full CLI item still depends on common operations across the owning modules and an installed exporter run with FLT-109 delivery. |
 | DEV-103 | The SDK tick and its existing evidence are already on main. |
 | DEV-104 | Signed delivery requires authenticated subscriptions, committed events in all four families, per-subscriber retries and private endpoint policy. There is no public webhook contract in the current tree. The domain producers, persistence and the operator flow require their owners. |
