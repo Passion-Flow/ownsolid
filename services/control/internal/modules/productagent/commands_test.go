@@ -36,7 +36,7 @@ func TestLocalizedCommandDestinations(t *testing.T) {
 }
 
 func TestCommandRejection(t *testing.T) {
-	service, err := New(&applications.Service{Identity: &identity.Service{}})
+	service, err := New(&applications.Service{Identity: &identity.Service{}}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
