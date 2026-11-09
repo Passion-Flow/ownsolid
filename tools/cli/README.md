@@ -101,6 +101,25 @@ Detail JSON or YAML includes the stored outcome. A null outcome means no
 reported receipt. An outcome can have null usage. A numeric zero in usage
 is a verified token count.
 
+## Query installation audit events
+
+```sh
+ownsolid audit list --category auth --limit 20
+ownsolid audit list --category auth --cursor "$NEXT_CURSOR" --output json
+ownsolid audit list --request-id "$REQUEST_ID" --assistant-actor --output json
+```
+
+The audit list uses the platform Admin session and covers the installation.
+Narrow it by exact action, action family, actor user, outcome, request,
+target, or RFC 3339 time window. The server applies its configured window
+and page size when omitted. Use the same filters with the returned cursor.
+JSON and YAML include `items` and `next_cursor`, which is null at the end.
+The table displays the continuation after the rows.
+
+Use `--assistant-actor` to request verified assistant attribution when
+the server has it. The assistant and the user subject stay separate in
+structured output.
+
 ## Maintain nodes
 
 Read the node's current `version` with `node get --output json` before a
