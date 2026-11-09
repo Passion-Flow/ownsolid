@@ -75,7 +75,7 @@ func TestGatewayRequestPageRefusesUnexpectedScopeOrCursor(t *testing.T) {
 				}
 				return
 			}
-			var page gatewayRequestPage
+			var page boundedPage
 			if err != nil || json.Unmarshal([]byte(out), &page) != nil || len(page.Items) != 1 || page.NextCursor == nil || *page.NextCursor != tt.next {
 				t.Fatalf("unexpected output %q or error %v", out, err)
 			}
