@@ -154,3 +154,13 @@ gateway owner enables receipt projection only with the accepted schema.
 Budget enforcement remains separately gated on an authorized effective
 policy and complete and pending usage. This uses the existing Go, pgx and
 PostgreSQL stack under the licenses recorded above.
+
+An isolated PostgreSQL 18.6 run also exported a real version 55 fixture
+with `pg_dump -Fc` and restored it into a new test database with pgvector
+0.8.7. The verification overlay substituted that restored pool for the
+source pool in `TestPostgresLedgerCandidateUpgradesFromSchema55`. The test
+then ran the canonical upgrade and readiness check, applied the same
+unnumbered SQL and retained the old workspace and original migration
+checksums. One append and one replay left a single event. Refusing the
+nonempty down migration preserved the event. The archive, restore and
+test ran inside the owned disconnected database fixture.
