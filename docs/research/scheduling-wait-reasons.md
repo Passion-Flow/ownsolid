@@ -87,3 +87,29 @@ artifacts, scoped service account and workload ownership binding before
 live cell qualification. This slice uses the existing Go standard
 library and authenticated transport. Kueue is an Apache-2.0 reference
 with no new runtime dependency, model or dataset.
+
+## Installed workload handoff
+
+The existing [training attempt record](../../services/control/migrations/postgresql/000015_training.up.sql)
+binds the job, node and agent task. The
+[cell orchestration contract](../../api/agent/v1/kubernetes.go) provisions
+the Kubernetes cell. These records do not establish which scheduler
+object belongs to an authorized attempt. The scheduler adapter's current
+production call sites do not provide a workload lookup.
+
+The workload owner must persist the controller kind, namespace, name
+and UID from the creation result with the exact authorized site, cell,
+tenant, workspace and attempt. The read dispatcher must derive that
+binding from its rechecked authority and call `Observe` with it before
+projecting `CellWaitReasons`. A name supplied by a caller cannot identify
+the original controller object. A new attempt or a replaced UID requires
+a fresh owner binding.
+
+Live qualification requires the signed offline RKE2, Kueue and Volcano
+asset inventory and a ready disposable cell. Provision a service account
+restricted to the scheduler objects in the workload namespace and
+materialize its protected credential and CA. On that cell, prove an
+authorized workload waiting for reservation and pods, refusal of an
+inaccessible namespace and replacement UID, and clean cancellation
+through the existing owner path. The current lane can qualify TLS and
+condition projection independently while these inputs are pending.
