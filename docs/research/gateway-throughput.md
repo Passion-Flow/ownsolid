@@ -101,3 +101,54 @@ Responses and Messages reached the synthetic engine through the real Go
 owner and recorded their reports. Cutover and revocation interleavings
 passed. No installation-wide throughput or latency claim follows from
 this query trace.
+
+## Release durable capacity as soon as the outcome is published
+
+The real control plane keeps a deployment slot until it acknowledges the
+terminal outcome. The native Rust reporter currently polls the spool at
+the configured retry interval. The approved runtime defaults to four
+held requests per deployment. A fast call can still occupy that slot for
+most of a reporter interval, and a burst can see a capacity refusal
+while the engine is idle. The isolated component baseline above flushed
+receipts after each batch, so it did not measure this effect.
+
+Wake the single reporter after an outcome becomes durable and visible in
+the existing spool index. The pinned
+[Tokio Notify implementation](https://github.com/tokio-rs/tokio/blob/tokio-1.53.3/tokio/src/sync/notify.rs)
+retains one permit if the waiter has not started. Multiple publications
+can coalesce into one wake because the reporter drains the durable
+spool. Startup schedules a first drain to cover retained records.
+If an attempt fails, wait the configured retry interval before retrying.
+New completions during a failure must never bypass this delay. Shutdown
+interrupts the regular worker and keeps the final bounded flush.
+
+A shorter polling interval would wake the process repeatedly while idle
+and still leave completed capacity held for a timer interval. Sending
+reports in the foreground would make a client response depend on
+control being reachable after an otherwise successful generation.
+An in-memory work queue would duplicate the durable spool. Keep
+publication before response, validated acknowledgements before deletion,
+and the control plane as the sole owner of capacity release.
+
+Test startup recovery and a second completed call with a retry interval
+long enough to expose timer-only dispatch. Run the native gateway with
+the real PostgreSQL owner and verify each returned request is reported
+and its capacity hold released before the interval. Exercise control
+outage, publication while retrying, replay and bounded shutdown. The
+test backend is synthetic. Tokio is already pinned under
+[MIT](https://github.com/tokio-rs/tokio/blob/tokio-1.53.3/LICENSE), which
+allows commercial and offline use and redistribution with notices.
+No dependency, model or dataset is added.
+
+In the disconnected native Go/Rust/PostgreSQL test on 2026-11-09,
+the prior reporter still held capacity at the four-second test cutoff
+with a 30-second retry interval. The wake-based reporter released two
+successive holds about 24 ms and 13 ms after the corresponding client
+responses, as observed by polling PostgreSQL. The same run verified
+canonical nine-token receipts. The Rust TLS fixture delivered an
+already pending receipt at startup, woke for the next publication,
+kept new publications from bypassing backoff after a 503, and drained
+the retained receipts on shutdown after control recovered. Native
+shared and dedicated TLS outage tests and the scoped CSV regression
+also passed. This measures receipt-driven capacity release on two
+synthetic calls. Installed-system throughput and latency remain open.
