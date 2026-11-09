@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -63,13 +64,34 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	}
 	problem := func(client *httpfixture.Client, path string, body any, status int, code string) {
 		t.Helper()
-		if got := client.Write("POST", path, body, status, ""); got["code"] != code {
-			t.Fatalf("expected %s, got %v", code, got["code"])
+		got := client.Write("POST", path, body, status, "Problem")
+		if got["code"] != code || got["title"] != code || got["status"] != float64(status) {
+			t.Fatalf("expected %d %s, got %v %v", status, code, got["status"], got["code"])
 		}
 	}
 	edit := distribution.AliasDescriptionEdit{Description: "Initial edit", ExpectedDescriptionRevision: 1, Reason: "Synthetic catalogue edit"}
 	admin.Headers["Idempotency-Key"] = uuid.NewString()
-	problem(admin, adminPath+"/"+legacyID+"/description", edit, 503, "SERVICE_NOT_READY")
+	predecessorEditPath := adminPath + "/" + legacyID + "/description"
+	problem(admin, predecessorEditPath, edit, 503, "SERVICE_NOT_READY")
+	anonymous := httpfixture.New(t, server, "admin", schemas)
+	if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
+		t.Fatal("unauthenticated edit did not return the standard problem")
+	}
+	predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
+	predecessorResponse, err := server.Client().Do(predecessorRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var predecessorProblem map[string]any
+	decodeError := json.NewDecoder(predecessorResponse.Body).Decode(&predecessorProblem)
+	predecessorResponse.Body.Close()
+	if decodeError != nil || predecessorResponse.StatusCode != 503 ||
+		predecessorResponse.Header.Get("Content-Type") != "application/problem+json" ||
+		predecessorResponse.Header.Get("Retry-After") != strconv.Itoa(c.s.Identity.Config.Policy().HTTP.ServiceUnavailableRetrySeconds) ||
+		predecessorResponse.Header.Get("X-Request-ID") == "" || predecessorProblem["request_id"] != predecessorResponse.Header.Get("X-Request-ID") ||
+		predecessorProblem["code"] != "SERVICE_NOT_READY" || schemas["Problem"].Validate(predecessorProblem) != nil {
+		t.Fatal("invalid predecessor response or retry metadata", decodeError)
+	}
 	publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
 	admin.Headers["Idempotency-Key"] = describedKey
 	problem(admin, adminPath, publish, 503, "SERVICE_NOT_READY")
@@ -152,7 +174,7 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	problem(admin, "/api/v1/admin/distribution/workspaces/"+foreignWorkspace+"/aliases/"+id+"/description", edit, 404, "RESOURCE_NOT_FOUND")
 	csrf := admin.CSRF
 	admin.CSRF = ""
-	if got := admin.Call("POST", editPath, edit, 403, ""); got["code"] != "CSRF_INVALID" {
+	if got := admin.Call("POST", editPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
 		t.Fatal("edit skipped CSRF")
 	}
 	admin.CSRF = csrf
@@ -160,6 +182,13 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	problem(admin, editPath, edit, 400, "VALIDATION_FAILED")
 	firstEdit := uuid.NewString()
 	admin.Headers["Idempotency-Key"] = firstEdit
+	admin.Headers["Content-Type"] = "text/plain"
+	problem(admin, editPath, edit, 415, "UNSUPPORTED_MEDIA_TYPE")
+	delete(admin.Headers, "Content-Type")
+	oversized := edit
+	oversized.Description = strings.Repeat("a", httpserver.MaxJSONBytes)
+	problem(admin, editPath, oversized, 413, "PAYLOAD_TOO_LARGE")
+	problem(admin, editPath, []byte(`{"description":"x","expected_description_revision":1,"reason":"Synthetic reason","revision":1}`), 400, "VALIDATION_FAILED")
 	for _, value := range []string{strings.Repeat("\u4e2d", 501), "hidden\u0000", "hidden\u0085", "\r"} {
 		bad := edit
 		bad.Description = value
@@ -172,7 +201,7 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	edit.Description = strings.Repeat("\u4e2d", 500)
 	updated := admin.Write("POST", editPath, edit, 200, "")
 	assertDescription(updated, edit.Description, 2)
-	if updated["applied_description_revision"] != float64(2) || updated["replayed"] != false {
+	if len(updated) != 4 || updated["applied_description_revision"] != float64(2) || updated["replayed"] != false {
 		t.Fatal("unexpected first edit receipt")
 	}
 	different := edit

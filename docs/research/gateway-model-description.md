@@ -95,7 +95,7 @@ acceptance.
 
 Use the existing scoped Admin alias publication with optional
 `description`, and a separate scoped Admin POST to
-`/aliases/{alias_id}/description` with `description`,
+`/aliases/{resource_id}/description` with `description`,
 `expected_description_revision`, `reason`, and the standard UUID
 `Idempotency-Key`. The response has the current text and description
 revision, the applied description revision, and a replay flag. A replay
@@ -182,3 +182,68 @@ optional alias response fields and Admin edit contract before the
 migration activates these response fields on installations. WEB can
 then verify publishing and editing in Console and the S-304 display
 in Portal.
+
+## Versioned contract handoff
+
+Use the existing scoped paths and session schemes in the Distribution
+OpenAPI. Keep the original alias properties and response envelopes.
+Describe each request and response with the
+[OpenAPI 3.1 Response Object](https://spec.openapis.org/oas/v3.1.1.html#response-object)
+and the existing [Problem Details](https://www.rfc-editor.org/rfc/rfc9457.html)
+schema. This only changes the handoff and the real HTTP assertions. It
+uses the existing Go and PostgreSQL test stack and adds no dependency.
+
+- Admin publication stays a POST to
+  `/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases`.
+  The optional `description` is a non-null JSON string. Normalize CRLF to
+  LF, trim outer whitespace, allow LF and tab, and reject the remaining
+  controls. The 500-character bound applies to normalized text. Keep
+  the 16,384-byte request-envelope limit separately. Omitted or blank
+  descriptions keep the legacy publication fingerprint.
+- Add optional `description` (non-null string, at most 500 characters)
+  and `description_revision` (integer 1 through 9007199254740991)
+  to `ModelAlias`. They appear together after the database migration.
+  A blank description is the empty string. Apply this shape to
+  existing Admin and Portal alias list and detail responses and to
+  Admin mutations returning a `ModelAlias`, including cutover results.
+  Predecessor and other database responses omit both fields.
+- Admin editing uses POST to the publication path plus
+  `/{resource_id}/description`. It takes the Admin session and standard
+  CSRF and origin checks, and one nonzero, lowercase canonical UUID
+  `Idempotency-Key` header. The
+  JSON object requires only `description` (same input rules),
+  `expected_description_revision` (integer 1 through 9007199254740990)
+  and `reason` (non-blank string of at most 500 characters before
+  trimming). Missing,
+  duplicate, null and unknown fields are invalid. Portal uses the
+  existing read paths.
+- Edit success is HTTP 200 with the usual `data` envelope. It contains
+  exactly `description`, `description_revision`,
+  `applied_description_revision` (same output revision range) and
+  `replayed` (boolean). After another edit, an idempotent replay
+  retains its original applied revision and returns the current text
+  and description revision. The routing `revision` does not appear in
+  the edit response.
+
+The disconnected PostgreSQL and Admin HTTPS probe verified standard
+`application/problem+json` responses without a success envelope. The
+problem contains `type`, `title`, `status`, `code` and `request_id`.
+The predecessor response used the configured `Retry-After` seconds and
+its body correlation ID matched the `X-Request-ID` header.
+
+| HTTP status | Observed code | Trigger |
+| --- | --- | --- |
+| 400 | `VALIDATION_FAILED` | Missing idempotency key or invalid request object, encoding, control characters or description length |
+| 403 | `CSRF_INVALID` | Anonymous POST or an Admin POST without its CSRF proof |
+| 404 | `MODEL_ALIAS_NOT_FOUND` | Alias absent from another workspace in the same tenant |
+| 404 | `RESOURCE_NOT_FOUND` | Foreign tenant workspace or Portal mutation path |
+| 409 | `VERSION_CONFLICT` | Stale description revision in a concurrent edit |
+| 409 | `IDEMPOTENCY_CONFLICT` | Changed payload under the same intent key |
+| 413 | `PAYLOAD_TOO_LARGE` | Request object exceeds the JSON envelope limit |
+| 415 | `UNSUPPORTED_MEDIA_TYPE` | Edit sent as plain text |
+| 503 | `SERVICE_NOT_READY` | Alias description fields are absent from the predecessor database |
+| 503 | `STORAGE_UNAVAILABLE` | Forced audit insertion failure rolled back the edit |
+
+Publish the contract before enabling the candidate migration in an
+installation. The next migration number is determined only from the
+committed PostgreSQL tail after the shared ordering is resolved.
