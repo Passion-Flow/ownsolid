@@ -1,0 +1,93 @@
+# Published model descriptions (GW-120)
+
+Reviewed 2026-11-09.
+
+[Hugging Face model cards](https://huggingface.co/docs/hub/model-cards)
+record intended uses and limitations with the imported model. The
+[LiteLLM model API](https://docs.litellm.ai/api-reference) separates
+creating, reading and updating a published endpoint's metadata.
+S-304 needs the local administrator's description of a workspace alias.
+Two workspaces can publish the same model for different purposes, and an
+alias can change its target. Store the description on the alias and keep
+the model card and the administrator's audit reason separate.
+
+Use optional plain text on publication and a dedicated administrator edit.
+A blank value clears the field. Normalize outer whitespace, allow
+multiline text, reject malformed UTF-8 and disallowed control characters,
+and limit the result to 500 Unicode characters. Use a constant empty
+database default for existing aliases. [PostgreSQL 18](https://www.postgresql.org/docs/18/ddl-alter.html)
+can add a constant default without rewriting all the existing rows.
+Return the description in the authorized alias detail and list. Render
+it as text in the Portal catalogue.
+
+Keep a separate description revision and store a scoped edit intent
+with its request fingerprint and applied revision. Reuse the current
+workspace authorization and the cutover replay pattern. Store the edit
+and its audit event in the same transaction. Replay identical intents
+without changing the revision or adding an audit event, and reject an
+intent reused with a different payload. Check the expected description
+revision before an edit so competing administrators see a conflict.
+Publication fingerprinting must continue to accept pre-upgrade retries
+with an omitted or empty description. The audit event records the
+actor, workspace, alias and edit reason. The description itself is
+catalogue content.
+
+A routing revision participates in admissions and the cutover history
+and describes the actual serving target. Updating it for a text edit
+would change the meaning of retained target versions. Storing the
+description in audit reasons would couple display to audit retention and
+could expose operator notes. Copying a model card would lose local,
+per-alias intent. This design adds no dependency, model or dataset.
+[Go](https://go.dev/LICENSE) is BSD-3-Clause,
+[pgx](https://github.com/jackc/pgx/blob/master/LICENSE) is MIT, and
+[PostgreSQL](https://www.postgresql.org/about/licence/) and
+[pgvector](https://github.com/pgvector/pgvector/blob/master/LICENSE)
+use the PostgreSQL License. They allow commercial, offline and
+redistribution use subject to their notice terms.
+
+Test existing aliases across upgrade, publication with and without a
+description, editing and clearing, canonical replay, concurrent edits,
+stale revisions, foreign-workspace and Portal writes, and visibility only
+through the existing authorized catalogue reads. Confirm that retarget
+and rollback preserve the description and that edits leave the serving
+revision and existing keys intact. Run an actual Console publish/edit
+and Portal read on a disconnected installation.
+
+The database migration and pinned fresh/restored catalogue signatures
+are shared database ownership. The strict ModelAlias JSON schema and
+its generated clients are DEV ownership. Update both before activating
+the distribution field or write route. WEB owns Console and Portal
+acceptance for S-304.
+
+## Disconnected schema qualification
+
+The PostgreSQL 18.6 fixture with pgvector 0.8.7 and only loopback
+reproduced both current production catalogue signatures on lineage 57.
+An isolated schema added `model_aliases.description`,
+`model_aliases.description_revision` and immutable
+`model_alias_description_intents`. A synthetic predecessor row
+received an empty description and initial description revision of 1.
+Updating the text and description revision kept the routing and
+deployment revisions. The test seeded that row with foreign key
+triggers disabled for the synthetic identifiers. The migration and
+edit ran with normal triggers. Applying the down migration returned
+the original fresh catalogue signature.
+
+The catalogue query in
+`services/control/internal/platform/database/catalog.go` measured the
+candidate after migration and after a logical schema dump and reparse.
+
+| Catalogue | Candidate SHA-256 |
+| --- | --- |
+| Fresh | f7b8b2169bf305aedbf7c6339acb97cd62f319ae38607225a1e42e600e2eff37 |
+| Restored | 21995e131bbd56a90983ad4867a1fd10a31646075c707f12d7bb7712ebd4362d |
+
+The candidate raises the table count from 118 to 119. The DB owner
+needs to land the migration with both signatures and the expected
+table count. Recalculate the signatures if another migration lands.
+The isolated SQL files are retained at
+`/root/lane-gw-acceptance/gw120.3Htyrvwt/candidate.up.sql` and
+`candidate.down.sql`. The SQL prototype does not exercise the
+publication or edit HTTP flow. Those still need the distribution
+implementation and the versioned contract before Console and Portal
+acceptance.
