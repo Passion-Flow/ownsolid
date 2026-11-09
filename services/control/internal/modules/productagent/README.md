@@ -25,6 +25,13 @@ the exact reviewed paths and portal cookie scheme. Regenerate
 it with `go -C services/control/internal/modules/productagent generate` and run
 the tests to detect contract drift. Tool admission never builds an HTTP request.
 
+Command discovery and execution share the server's risk check. Navigation
+uses a fixed route for the current entrance. A read requires the matching
+reviewed policy and the existing workspace and resource checks. Sensitive
+reads and reversible writes are denied by this dispatcher. See the
+[risk tiers](../../../../../docs/research/product-assistant-risk-tiers.md)
+and [write confirmation](../../../../../docs/research/product-assistant-write-confirmation.md).
+
 ## Tests
 
 ```sh

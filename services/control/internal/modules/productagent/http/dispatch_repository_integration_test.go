@@ -201,6 +201,12 @@ FROM audit_events WHERE request_id=$1`, id, tenant, workspace).Scan(&metadataOnl
 		{"portal cannot navigate to admin nodes", commandPath, `{"command":"open nodes"}`, "ACCESS_DENIED", portal, 403, nil},
 		{"workspace in body", commandPath, `{"command":"show applications","workspace_id":"` + otherWorkspace + `"}`, "VALIDATION_FAILED", portal, 400, nil},
 		{"workspace in query", commandPath + "?workspace_id=" + otherWorkspace, applications, "VALIDATION_FAILED", portal, 400, nil},
+		{"caller risk in body", commandPath, `{"command":"show applications","risk":"navigate"}`, "VALIDATION_FAILED", portal, 400, nil},
+		{"caller risk in query", commandPath + "?risk=navigate", applications, "VALIDATION_FAILED", portal, 400, nil},
+		{"caller risk in header", commandPath, applications, "ACCESS_DENIED", admin, 403, func(r *http.Request) { r.Header.Set("X-Tool-Risk", "navigate") }},
+		{"caller authority in body", commandPath, `{"command":"show applications","permission":"workspace_member","audience":"portal"}`, "VALIDATION_FAILED", admin, 400, nil},
+		{"structured model proposal in command text", commandPath, `{"command":"{\"tool\":\"list_applications\",\"risk\":\"read\"}"}`, "VALIDATION_FAILED", portal, 400, nil},
+		{"caller confirmation in body", commandPath, `{"command":"confirm plan","confirmed":true}`, "VALIDATION_FAILED", admin, 400, nil},
 		{"no confirmed write route", commandPath, `{"command":"confirm plan"}`, "VALIDATION_FAILED", admin, 400, nil},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
