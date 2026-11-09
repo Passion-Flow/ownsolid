@@ -3,13 +3,17 @@ use crate::protocol::ChatRequest;
 use futures_util::StreamExt;
 use reqwest::{Response, StatusCode, header};
 use serde::Deserialize;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use uuid::Uuid;
+
+mod circuit;
+use circuit::{ConnectionCircuit, Observation};
 
 /// One operator-configured colocated backend. No request data can select a destination.
 pub struct Backend {
     client: reqwest::Client,
     origin: String,
+    preflight_circuit: ConnectionCircuit,
 }
 
 pub(crate) fn transport_error(error: reqwest::Error) -> &'static str {
@@ -69,6 +73,7 @@ impl Backend {
         configuration.validate()?;
         crate::control::initialize_tls_provider();
         let limits = &configuration.limits;
+        let connect_timeout = Duration::from_secs(limits.connect_seconds);
         // The backend is plain HTTP on loopback. An empty trust list keeps the client from
         // loading the platform's roots, which a minimal image does not have and which no
         // backend call may use.
@@ -78,7 +83,7 @@ impl Backend {
             .no_proxy()
             .redirect(reqwest::redirect::Policy::none())
             .retry(reqwest::retry::never())
-            .connect_timeout(Duration::from_secs(limits.connect_seconds))
+            .connect_timeout(connect_timeout)
             .read_timeout(Duration::from_secs(limits.idle_seconds))
             .timeout(Duration::from_secs(limits.request_seconds))
             .pool_max_idle_per_host(limits.backend_idle_connections)
@@ -87,7 +92,20 @@ impl Backend {
         Ok(Self {
             client,
             origin: format!("http://{}", configuration.backend_address),
+            preflight_circuit: ConnectionCircuit::new(connect_timeout),
         })
+    }
+
+    async fn preflight(&self, request: reqwest::RequestBuilder) -> Result<Response> {
+        let attempt = self.preflight_circuit.begin(Instant::now())?;
+        let response = request.send().await;
+        let observation = match &response {
+            Ok(_) => Observation::Response,
+            Err(error) if error.is_connect() => Observation::ConnectionFailure,
+            Err(_) => Observation::OtherFailure,
+        };
+        attempt.observe(observation, Instant::now());
+        response.map_err(transport_error)
     }
 
     pub async fn verify_model(&self, expected_model: &str, limits: &Limits) -> Result<()> {
@@ -102,11 +120,8 @@ impl Backend {
             data: Vec<Model>,
         }
         let response = self
-            .client
-            .get(format!("{}/v1/models", self.origin))
-            .send()
-            .await
-            .map_err(transport_error)?;
+            .preflight(self.client.get(format!("{}/v1/models", self.origin)))
+            .await?;
         let bytes = bounded_json(response, limits.response_bytes).await?;
         let value: Models =
             serde_json::from_slice(&bytes).map_err(|_| "upstream_response_invalid")?;
@@ -127,12 +142,12 @@ impl Backend {
         limits: &Limits,
     ) -> Result<u32> {
         let response = self
-            .client
-            .post(format!("{}/tokenize", self.origin))
-            .json(&request.tokenize_payload(model))
-            .send()
-            .await
-            .map_err(transport_error)?;
+            .preflight(
+                self.client
+                    .post(format!("{}/tokenize", self.origin))
+                    .json(&request.tokenize_payload(model)),
+            )
+            .await?;
         let bytes = bounded_json(response, limits.response_bytes).await?;
         request.validate_tokenization(&bytes, limits)
     }

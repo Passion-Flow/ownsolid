@@ -198,6 +198,53 @@ async fn actual_http_models_tokenize_and_completion_use_fixed_destination_and_sa
 }
 
 #[tokio::test]
+async fn actual_connection_refusal_opens_only_its_backend_circuit() {
+    let healthy = Fixture::new().await;
+    let socket = tokio::net::TcpSocket::new_v4().unwrap();
+    socket.bind("127.0.0.1:0".parse().unwrap()).unwrap();
+    let SocketAddr::V4(address) = socket.local_addr().unwrap() else {
+        panic!("IPv4 fixture required");
+    };
+    let mut configuration = healthy.configuration.clone();
+    configuration.backend_address = address;
+    configuration.limits.connect_seconds = 10;
+    configuration.limits.control_seconds = 10;
+    configuration.limits.request_seconds = 15;
+    let failing = Backend::new(&configuration).unwrap();
+    assert_eq!(
+        failing
+            .verify_model("synthetic-internal", &configuration.limits)
+            .await,
+        Err("upstream_unavailable")
+    );
+
+    // The port can accept connections now, but preflight must still honor the cooldown.
+    let listening = socket.listen(1).unwrap();
+    assert_eq!(
+        failing
+            .tokenize(
+                &healthy.request(),
+                "synthetic-internal",
+                &configuration.limits
+            )
+            .await,
+        Err("upstream_unavailable")
+    );
+    assert!(
+        tokio::time::timeout(Duration::from_millis(20), listening.accept())
+            .await
+            .is_err()
+    );
+    assert_eq!(healthy.state.calls.load(Ordering::SeqCst), 0);
+    Backend::new(&healthy.configuration)
+        .unwrap()
+        .verify_model("synthetic-internal", &healthy.configuration.limits)
+        .await
+        .unwrap();
+    assert_eq!(healthy.state.calls.load(Ordering::SeqCst), 1);
+}
+
+#[tokio::test]
 async fn actual_http_redirect_errors_oversized_chunked_and_wrong_model_are_safe_without_retry() {
     let fixture = Fixture::new().await;
     let backend = Backend::new(&fixture.configuration).unwrap();

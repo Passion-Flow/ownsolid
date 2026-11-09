@@ -23,6 +23,8 @@ use uuid::Uuid;
 mod throughput;
 
 const QUOTA_TEST_NOW: i64 = 1_794_116_800;
+const REFUSE_GENERATION: usize = 6;
+const INTERRUPT_STREAM_AFTER_TEXT: usize = 7;
 
 #[derive(Clone)]
 struct Synthetic {
@@ -177,7 +179,11 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
             .into_response();
     }
     state.generations.fetch_add(1, Ordering::SeqCst);
-    if body["stream"] == false && state.backend_mode.load(Ordering::SeqCst) == 3 {
+    let mode = state.backend_mode.load(Ordering::SeqCst);
+    if mode == REFUSE_GENERATION {
+        return (StatusCode::SERVICE_UNAVAILABLE, "private synthetic refusal").into_response();
+    }
+    if body["stream"] == false && mode == 3 {
         let _owned = GenerationDrop(state.dropped_generations.clone());
         std::future::pending::<()>().await;
     }
@@ -185,11 +191,15 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
         return Json(json!({"id":"chatcmpl-synthetic","object":"chat.completion","created":1,"model":"synthetic-internal","choices":[{"index":0,"message":{"role":"assistant","content":"Synthetic reply \u{4e2d}\u{6587}"},"finish_reason":"stop"}],"usage":{"prompt_tokens":7,"completion_tokens":2,"total_tokens":9},"private_diagnostic":"must not forward"})).into_response();
     }
     assert_eq!(body["stream_options"]["include_usage"], true);
-    let mode = state.backend_mode.load(Ordering::SeqCst);
     let stream = async_stream::stream! {
         let _owned=GenerationDrop(state.dropped_generations.clone());
         let first=event(json!([{"index":0,"delta":{"role":"assistant","content":"Synthetic \u{4e2d}\u{6587}"},"finish_reason":null}]),Value::Null);
         yield Ok::<_,std::io::Error>(first);
+        if mode == INTERRUPT_STREAM_AFTER_TEXT {
+            state.complete_stream.notified().await;
+            yield Err(std::io::Error::other("synthetic stream interruption"));
+            return;
+        }
         if mode==2 {std::future::pending::<()>().await;}
         if mode==4 {state.complete_stream.notified().await;}
         if mode!=1 {
@@ -780,6 +790,62 @@ async fn final_usage_requires_a_valid_stream_and_durable_outcome() {
     assert!(!tail.contains("[DONE]"));
     assert!(!fixture.app().spool.ready());
     assert_eq!(fs::read(stage).unwrap(), b"occupied");
+}
+
+#[tokio::test]
+async fn backend_refusal_and_interrupted_stream_each_dispatch_once() {
+    let primary = Fixture::with_quota(Some(json!({}))).await;
+    let other = Fixture::new().await;
+    primary
+        .state
+        .backend_mode
+        .store(REFUSE_GENERATION, Ordering::SeqCst);
+    let refusal = primary.chat(false).send().await.unwrap();
+    assert_eq!(refusal.status(), StatusCode::SERVICE_UNAVAILABLE);
+    let refusal = refusal.text().await.unwrap();
+    assert!(refusal.contains("upstream_unavailable"));
+    assert!(!refusal.contains("private synthetic refusal"));
+    assert_eq!(primary.state.generations.load(Ordering::SeqCst), 1);
+    assert_eq!(other.state.generations.load(Ordering::SeqCst), 0);
+    let outcome = primary.app().spool.next_pending().unwrap().unwrap();
+    assert_eq!(outcome.status, Status::UpstreamError);
+    assert!(!outcome.output_started);
+    assert!(outcome.usage.is_none());
+    assert_eq!(crate::reporting::flush(primary.app()).await.unwrap(), 1);
+
+    primary
+        .state
+        .backend_mode
+        .store(INTERRUPT_STREAM_AFTER_TEXT, Ordering::SeqCst);
+    let response = primary.chat(true).send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let mut stream = response.bytes_stream();
+    let mut first = Vec::new();
+    while !first.ends_with(b"\n\n") {
+        first.extend(stream.next().await.unwrap().unwrap());
+    }
+    assert!(String::from_utf8_lossy(&first).contains("Synthetic"));
+    primary.state.complete_stream.notify_one();
+    let mut tail = Vec::new();
+    while let Some(bytes) = stream.next().await {
+        tail.extend(bytes.unwrap());
+    }
+    let tail = String::from_utf8(tail).unwrap();
+    assert!(tail.contains("upstream_unavailable"));
+    assert!(!tail.contains("[DONE]"));
+    assert!(!tail.contains("total_tokens"));
+    assert_eq!(primary.state.generations.load(Ordering::SeqCst), 2);
+    assert_eq!(other.state.generations.load(Ordering::SeqCst), 0);
+    let outcome = primary.app().spool.next_pending().unwrap().unwrap();
+    assert_eq!(outcome.status, Status::UpstreamError);
+    assert!(outcome.output_started);
+    assert!(outcome.usage.is_none());
+
+    assert_eq!(
+        other.chat(false).send().await.unwrap().status(),
+        StatusCode::OK
+    );
+    assert_eq!(other.state.generations.load(Ordering::SeqCst), 1);
 }
 
 #[tokio::test]
