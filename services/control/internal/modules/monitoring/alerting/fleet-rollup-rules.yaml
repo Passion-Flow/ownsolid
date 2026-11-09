@@ -10,3 +10,11 @@ groups:
         expr: |
           sum by (site_id, cell_id)
             (last_over_time(up{job="ownsolid-node",site_id!="",cell_id!="",node_id!=""}[45s]) == bool 1)
+      - record: ownsolid:workspace_cell_nodes_observed:count
+        expr: |
+          count by (tenant_id, workspace_id, site_id, cell_id)
+            (last_over_time(up{job="ownsolid-node",tenant_id!="",workspace_id!="",site_id!="",cell_id!="",node_id!=""}[45s]))
+      - record: ownsolid:workspace_cell_nodes_reachable:count
+        expr: |
+          sum by (tenant_id, workspace_id, site_id, cell_id)
+            (last_over_time(up{job="ownsolid-node",tenant_id!="",workspace_id!="",site_id!="",cell_id!="",node_id!=""}[45s]) == bool 1)
