@@ -34,10 +34,12 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   requires the workload owner to preserve each attempt-to-slot binding, fence
   dispatch, verify positive physical proof, and reconcile group readiness
   with an installed Kueue or Volcano controller.
-- SCH-110 has a read-only PostgreSQL submission estimate. The workload
-  owner must authorize the workspace, provide cell capacity from a verified
-  observation and expose the estimate in its authenticated submission flow.
-  See [live submission estimate](scheduling-admission.md#live-submission-estimate).
+- SCH-110 has a read-only submission estimate. It accepts only complete,
+  current samples for the database's local site and cell. The Workspace
+  authority and snapshot have been exercised together using fixture samples.
+  The workload owner must compose the authenticated endpoint and the cell
+  owner must supply verified total and occupied capacity from the same
+  observation. See the [capacity handoff](scheduling-admission.md#authorized-scope-and-cell-capacity-handoff).
 - SCH-108 projects actionable reasons from queue, preflight, reservation and
   reclaim decisions. The cell consumer reads the current Workload over TLS
   and checks its exact UID before projecting a Kueue blocker. The workload

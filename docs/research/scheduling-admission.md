@@ -80,6 +80,65 @@ that preview never creates or consumes a hold or claim. Full acceptance
 needs the owner's authorized submission endpoint, verified cell observation
 and an offline user flow.
 
+### Authorized scope and cell capacity handoff
+
+Training's [submission authority](../../services/control/internal/modules/training/creator_repository.go)
+resolves the installed tenant and Workspace from current actor/session state.
+The owner checks the Workspace's active status and submit permission. The
+Workspace's [fenced read](../../services/control/internal/modules/workspaces/scope.go)
+reuses the same current actor authority and takes a shared Workspace lock.
+Keep that authority outside the scheduling package. PostgreSQL disallows the
+owner's row locks inside a read-only transaction. An owner can retain the
+existing authority fences on one connection while it opens the bounded
+read-only quota snapshot on another connection in the same repository.
+Acquire authority first and release both transactions before exposing a result.
+The workload owner's endpoint and transaction composition remain owner work.
+
+The [training target](../../services/control/internal/modules/training/history.go)
+reads one authorized node's GPU observations and probe status. The
+[private-cluster discovery](../../services/control/internal/modules/privateclusters/discovery.go)
+returns observed Node CPU and memory allocatable values. Kubernetes defines
+[Node Allocatable](https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/#node-allocatable)
+as the capacity made available to Pods. That declaration omits current
+reservations. Kueue's [ClusterQueue](https://kueue.sigs.k8s.io/v0.20/docs/concepts/cluster_queue/)
+tracks quota for specific flavors and queues. Neither its counters nor the
+[SCH-108 Workload observation](scheduling-wait-reasons.md#installed-workload-handoff)
+measure total and occupied capacity for the selected cell.
+
+The scheduler consumer takes one trusted sample containing the installation's
+site and cell IDs, sample time, an exclusive expiration from the owner's
+freshness policy, and total and reserved quantities in scheduling units.
+It checks those coordinates against the local database cell and compares
+the times with the PostgreSQL clock when evaluating the quota snapshot.
+Every requested dimension must appear in both vectors. Explicit measured
+zero is valid; an omitted quantity is unavailable. Stale, future, foreign,
+malformed or unavailable input yields one retryable capacity error and
+no estimate. A resource shortfall only exposes the requested units and
+a fixed reason. Workspace availability comes only from its own quota
+ceiling and held usage. The database remains read-only throughout the
+scheduling calculation.
+
+The [cell cluster owner](../../services/control/internal/modules/cellclusters/README.md)
+provides installed cluster/member identity, readiness and CA evidence.
+The selected cell owner must collect complete, current total and occupied
+capacity for the same cell and observation cut, including non-ownsolid
+occupancy where it affects scheduling. Reuse the SCH-108 transport's
+configured private origin, verified CA, scoped credential and bound cell
+identity when the source is an installed cluster. A Workload UID proves
+which object returned a blocker. It supplies no cell capacity. A timeout,
+missing coverage or unreachable source must keep the sample unavailable.
+Probe time cannot refresh an older underlying measurement. Keep admission
+and topology placement with their existing owners. This contract uses
+the Go, pgx and PostgreSQL licenses already recorded and adds no dependency,
+model or dataset.
+
+Verify a real actor's Workspace resolution before reading the protected
+quota snapshot on disconnected PostgreSQL. Use fixture samples to check
+whole multi-group fit, occupied and zero capacity, expired and future
+samples, the wrong site or cell and missing dimensions. Check that no
+preview creates a hold or claim. Installed-cell acceptance requires the
+owner's complete source and one authorized offline submission flow.
+
 ## Atomic gang reservation and release
 
 The version 1 intent already describes named replica groups with counts and
