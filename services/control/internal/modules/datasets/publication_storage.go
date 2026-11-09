@@ -5,10 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"io"
 	"os"
 	"path/filepath"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 )
 
 type publicationReceipt struct {
@@ -76,12 +76,14 @@ func (s *Store) PrepareVersionFiles(request wire.ProcessorRequest, result wire.P
 	return mappingSHA, nil
 }
 
+// A retained version has its listed assets, manifest, effective source, mapping, and receipt.
+func versionFileCount(manifest wire.Manifest) int { return len(manifest.Files) + 4 }
+
 func (s *Store) VerifyVersion(version, draft, job, attempt, effective, mappingSHA string, manifest wire.Manifest) error {
 	return s.VerifyVersionContext(context.Background(), version, draft, job, attempt, effective, mappingSHA, manifest)
 }
 func (s *Store) VerifyVersionContext(ctx context.Context, version, draft, job, attempt, effective, mappingSHA string, manifest wire.Manifest) error {
-	validation := wire.ProcessorRequest{InputSHA256: effective, Limits: wire.Limits{MaximumRows: wire.MaximumRowsCeiling}, Resources: wire.Resources{MaximumResultBytes: wire.MaximumResultBytesCeiling}, Seed: &manifest.Seed, ValidationBasisPoints: &manifest.ValidationBasisPoints}
-	if wire.ValidateSplit(manifest.Seed, manifest.ValidationBasisPoints) != nil || manifest.Validate(validation) != nil {
+	if manifest.ValidateStored(effective, wire.MaximumRowsCeiling, wire.MaximumResultBytesCeiling) != nil {
 		return failure("DATASET_FILE_INVALID")
 	}
 	if !wire.ValidID(version) || !wire.ValidID(draft) || !wire.ValidID(job) || !wire.ValidID(attempt) || !wire.ValidDigest(effective) || !wire.ValidDigest(mappingSHA) {
@@ -92,7 +94,7 @@ func (s *Store) VerifyVersionContext(ctx context.Context, version, draft, job, a
 		return failure("DATASET_FILE_INVALID")
 	}
 	entries, e := os.ReadDir(directory)
-	if e != nil || len(entries) != 9 {
+	if e != nil || len(entries) != versionFileCount(manifest) {
 		return failure("DATASET_FILE_INVALID")
 	}
 	receiptPath := filepath.Join(directory, "publication.json")
@@ -132,7 +134,7 @@ func (s *Store) VerifyVersionContext(ctx context.Context, version, draft, job, a
 }
 func validAsset(name string) bool {
 	switch name {
-	case "samples.jsonl", "train.jsonl", "validation.jsonl", "assignments.jsonl", "duplicates.jsonl", "manifest.json":
+	case "samples.jsonl", "train.jsonl", "validation.jsonl", "test.jsonl", "assignments.jsonl", "duplicates.jsonl", "manifest.json":
 		return true
 	}
 	return false

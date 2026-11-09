@@ -32,6 +32,14 @@ func ValidateSplit(seed string, basisPoints int) error {
 	return nil
 }
 
+// ValidateThreeWaySplit checks held-out group ratios for a three-way publication.
+func ValidateThreeWaySplit(seed string, validation, test int) error {
+	if ValidateSplit(seed, validation) != nil || test < 100 || test > 5000 || validation+test > 9000 {
+		return errors.New("DATASET_SPLIT_CONFIGURATION_INVALID")
+	}
+	return nil
+}
+
 func ValidID(value string) bool {
 	return idPattern.MatchString(value) && value != "00000000-0000-0000-0000-000000000000"
 }
@@ -50,6 +58,7 @@ type ProcessorRequest struct {
 	Resources               Resources `json:"resources"`
 	Seed                    *string   `json:"seed,omitempty"`
 	ValidationBasisPoints   *int      `json:"validation_basis_points,omitempty"`
+	TestBasisPoints         int       `json:"test_basis_points,omitempty"`
 	NearDuplicatePlanSHA256 string    `json:"near_duplicate_plan_sha256,omitempty"`
 }
 
@@ -68,7 +77,7 @@ func (r ProcessorRequest) Validate() error {
 	}
 	switch r.Operation {
 	case InspectOperation:
-		if r.Seed != nil || r.ValidationBasisPoints != nil || r.NearDuplicatePlanSHA256 != "" {
+		if r.Seed != nil || r.ValidationBasisPoints != nil || r.TestBasisPoints != 0 || r.NearDuplicatePlanSHA256 != "" {
 			return errors.New("DATASET_PROCESSOR_REQUEST_INVALID")
 		}
 	case PublishOperation:
@@ -77,6 +86,14 @@ func (r ProcessorRequest) Validate() error {
 		}
 		if r.Seed == nil || r.ValidationBasisPoints == nil || ValidateSplit(*r.Seed, *r.ValidationBasisPoints) != nil {
 			return errors.New("DATASET_SPLIT_CONFIGURATION_INVALID")
+		}
+		if r.TestBasisPoints != 0 {
+			if err := ValidateThreeWaySplit(*r.Seed, *r.ValidationBasisPoints, r.TestBasisPoints); err != nil {
+				return err
+			}
+			if r.NearDuplicatePlanSHA256 == "" {
+				return errors.New("DATASET_PROCESSOR_REQUEST_INVALID")
+			}
 		}
 	default:
 		return errors.New("DATASET_PROCESSOR_REQUEST_INVALID")
@@ -114,13 +131,16 @@ type Manifest struct {
 	SourceSHA256          string  `json:"source_sha256"`
 	Seed                  string  `json:"seed"`
 	ValidationBasisPoints int     `json:"validation_basis_points"`
+	TestBasisPoints       int     `json:"test_basis_points,omitempty"`
 	TotalRows             int64   `json:"total_rows"`
 	UniqueRows            int64   `json:"unique_rows"`
 	DuplicateRows         int64   `json:"duplicate_rows"`
 	SourceGroups          int64   `json:"source_groups"`
 	ValidationGroups      int64   `json:"validation_groups"`
+	TestGroups            int64   `json:"test_groups,omitempty"`
 	TrainRows             int64   `json:"train_rows"`
 	ValidationRows        int64   `json:"validation_rows"`
+	TestRows              int64   `json:"test_rows,omitempty"`
 	Files                 []Asset `json:"files"`
 	ManifestFile          Asset   `json:"manifest_file"`
 }
@@ -355,22 +375,60 @@ func DecodeResult(raw []byte, request ProcessorRequest) (ProcessorResult, error)
 	}
 	return out, nil
 }
+
+// Validate binds a prepared manifest to the selected processor request.
 func (m Manifest) Validate(request ProcessorRequest) error {
-	if m.SchemaVersion != 1 || m.RowSchema != RowSchema || m.ProcessorVersion != ProcessorVersion || m.SplitAlgorithm != SplitAlgorithm || m.SourceSHA256 != request.InputSHA256 || request.Seed == nil || m.Seed != *request.Seed || request.ValidationBasisPoints == nil || m.ValidationBasisPoints != *request.ValidationBasisPoints || m.TotalRows < 2 || m.TotalRows > request.Limits.MaximumRows || m.UniqueRows < 2 || m.UniqueRows+m.DuplicateRows != m.TotalRows || m.DuplicateRows < 0 || m.SourceGroups < 2 || m.SourceGroups > m.UniqueRows || m.ValidationGroups < 1 || m.ValidationGroups >= m.SourceGroups || m.TrainRows < 1 || m.ValidationRows < 1 || m.TrainRows+m.ValidationRows != m.UniqueRows || len(m.Files) != 5 {
+	if request.Seed == nil || m.Seed != *request.Seed || request.ValidationBasisPoints == nil ||
+		m.ValidationBasisPoints != *request.ValidationBasisPoints || m.TestBasisPoints != request.TestBasisPoints {
+		return invalidResult()
+	}
+	return m.ValidateStored(request.InputSHA256, request.Limits.MaximumRows, request.Resources.MaximumResultBytes)
+}
+
+// ValidateStored checks the shape of a retained manifest under storage limits.
+func (m Manifest) ValidateStored(sourceSHA string, maximumRows, maximumFileBytes int64) error {
+	if m.RowSchema != RowSchema || m.ProcessorVersion != ProcessorVersion || m.SourceSHA256 != sourceSHA ||
+		m.TotalRows < 2 || m.TotalRows > maximumRows || m.UniqueRows < 2 || m.UniqueRows > m.TotalRows ||
+		m.DuplicateRows != m.TotalRows-m.UniqueRows || m.SourceGroups < 2 || m.SourceGroups > m.UniqueRows ||
+		m.ValidationGroups < 1 || m.ValidationGroups >= m.SourceGroups ||
+		m.TrainRows < 1 || m.TrainRows > m.UniqueRows || m.ValidationRows < 1 || m.ValidationRows > m.UniqueRows {
 		return invalidResult()
 	}
 	names := map[string]bool{"samples.jsonl": true, "train.jsonl": true, "validation.jsonl": true, "assignments.jsonl": true, "duplicates.jsonl": true}
+	switch m.SchemaVersion {
+	case 1:
+		if m.SplitAlgorithm != SplitAlgorithm || ValidateSplit(m.Seed, m.ValidationBasisPoints) != nil ||
+			m.TestBasisPoints != 0 || m.TestRows != 0 || m.TestGroups != 0 {
+			return invalidResult()
+		}
+	case 2:
+		if m.SplitAlgorithm != ThreeWaySplitAlgorithm || ValidateThreeWaySplit(m.Seed, m.ValidationBasisPoints, m.TestBasisPoints) != nil ||
+			m.TestGroups < 1 || m.TestGroups >= m.SourceGroups-m.ValidationGroups ||
+			m.TestRows < m.TestGroups || m.TestRows > m.UniqueRows || m.ValidationRows < m.ValidationGroups ||
+			m.TrainRows < m.SourceGroups-m.ValidationGroups-m.TestGroups {
+			return invalidResult()
+		}
+		names["test.jsonl"] = true
+	default:
+		return invalidResult()
+	}
+	if m.TestRows != m.UniqueRows-m.TrainRows-m.ValidationRows || len(m.Files) != len(names) {
+		return invalidResult()
+	}
 	for _, file := range m.Files {
-		if !names[file.Path] || file.SizeBytes < 0 || file.SizeBytes > request.Resources.MaximumResultBytes || !ValidDigest(file.SHA256) {
+		if !names[file.Path] || file.SizeBytes < 0 || file.SizeBytes > maximumFileBytes || !ValidDigest(file.SHA256) ||
+			file.Path == "test.jsonl" && file.SizeBytes == 0 {
 			return invalidResult()
 		}
 		delete(names, file.Path)
 	}
-	if m.ManifestFile.Path != "manifest.json" || m.ManifestFile.SizeBytes < 1 || m.ManifestFile.SizeBytes > request.Resources.MaximumResultBytes || !ValidDigest(m.ManifestFile.SHA256) {
+	if m.ManifestFile.Path != "manifest.json" || m.ManifestFile.SizeBytes < 1 ||
+		m.ManifestFile.SizeBytes > maximumFileBytes || !ValidDigest(m.ManifestFile.SHA256) {
 		return invalidResult()
 	}
 	return nil
 }
+
 func KnownError(code string) bool {
 	switch code {
 	case "DATASET_JSON_INVALID", "DATASET_FIELDS_INVALID", "DATASET_TEXT_INVALID", "DATASET_SOURCE_INVALID", "DATASET_LINE_TOO_LARGE", "DATASET_ENCODING_INVALID", "DATASET_BOM_FORBIDDEN", "DATASET_EMPTY_LINE", "DATASET_ROW_LIMIT", "DATASET_EMPTY_SOURCE", "DATASET_FILE_TOO_LARGE", "DATASET_DUPLICATE_FIELD", "DATASET_SOURCE_CHANGED", "DATASET_SOURCE_DIGEST_INVALID", "DATASET_PROCESSOR_LIMITS_INVALID", "DATASET_PROCESSOR_RESOURCES_INVALID", "DATASET_PROCESSOR_REQUEST_INVALID", "DATASET_PROCESSOR_PATH_INVALID", "DATASET_PROCESSOR_TIMEOUT", "DATASET_PROCESSOR_FAILED", "DATASET_PROCESSOR_MEMORY_EXCEEDED", "DATASET_PROCESSOR_RESULT_TOO_LARGE", "DATASET_OUTPUT_CONFLICT", "DATASET_SPLIT_CONFIGURATION_INVALID", "DATASET_SPLIT_INSUFFICIENT_GROUPS", "DATASET_VALIDATION_FAILED", "DATASET_NEAR_DUPLICATE_BUDGET_EXCEEDED":

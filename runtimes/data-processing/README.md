@@ -15,7 +15,7 @@ The [package guide](projectone_data/README.md) documents parser, private boundar
 
 ## Execution and failures
 
-The private request selects input hash, job/attempt identity, operation, seed/split policy and resource limits. Opt-in near-duplicate publication also binds the Go-owned line plan by SHA-256. The worker checks the plan before applying it and keeps it outside the version assets. The worker rechecks the inspected digest, applies process limits and writes an exclusive bounded result with file/directory sync. Failure result creation is best effort if storage itself has failed; absence of a result is never acceptance.
+The private request selects input hash, job/attempt identity, operation, seed/split policy and resource limits. Opt-in near-duplicate publication also binds the Go-owned line plan by SHA-256. The worker checks the plan before applying it and keeps it outside the version assets. A request with a test ratio requires that plan and writes manifest schema 2 with a separate test asset. Requests without a test ratio retain the original manifest and files. The worker rechecks the inspected digest, applies process limits and writes an exclusive bounded result with file/directory sync. Failure result creation is best effort if storage itself has failed; absence of a result is never acceptance.
 
 [Control processor.go](../../services/control/internal/modules/datasets/processor.go) verifies installed programs, request/output paths and returned artifacts. Keep worker output preparation separate from SQL publication and authorization.
 

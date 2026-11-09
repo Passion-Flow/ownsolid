@@ -17,6 +17,9 @@ const RowSchema = "projectone.text-sft.v1"
 const ProcessorVersion = "0.8.0"
 const SplitAlgorithm = "source-union-sha256.v1"
 
+// ThreeWaySplitAlgorithm identifies the versioned train/validation/test assignment.
+const ThreeWaySplitAlgorithm = "source-union-sha256.v2"
+
 type Record struct {
 	SourceID   string `json:"source_id"`
 	Prompt     string `json:"prompt"`

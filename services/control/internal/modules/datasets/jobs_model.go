@@ -15,9 +15,10 @@ import (
 var errDatasetJobPolicy = failure("DATASET_POLICY_INVALID")
 
 type jobPolicy struct {
-	Limits        wire.Limits    `json:"limits"`
-	Resources     wire.Resources `json:"resources"`
-	Deduplication string         `json:"deduplication,omitempty"`
+	Limits          wire.Limits    `json:"limits"`
+	Resources       wire.Resources `json:"resources"`
+	Deduplication   string         `json:"deduplication,omitempty"`
+	TestBasisPoints int            `json:"test_basis_points,omitempty"`
 }
 
 const jobFields = `error_line_number,reason,id::text,dataset_id::text,draft_id::text,workspace_id::text,kind,requested_by::text,expected_revision,state,version_id::text,input_sha256,split_seed,validation_basis_points,attempt_count,attempt_id::text,lease_expires_at,cancel_requested_at,error_code,retryable,created_at,updated_at,completed_at`
@@ -76,9 +77,9 @@ func (s *Service) GetJob(ctx context.Context, a identity.Auth, workspace, datase
 	})
 	return committed(out, e)
 }
-func (s *Service) jobPolicyBytes(deduplication string) []byte {
+func (s *Service) jobPolicyBytes(options PublicationOptions) []byte {
 	p := s.policy()
-	raw, _ := json.Marshal(jobPolicy{Limits: p.Limits, Resources: p.Resources, Deduplication: deduplication})
+	raw, _ := json.Marshal(jobPolicy{Limits: p.Limits, Resources: p.Resources, Deduplication: options.Deduplication, TestBasisPoints: options.TestBasisPoints})
 	return raw
 }
 

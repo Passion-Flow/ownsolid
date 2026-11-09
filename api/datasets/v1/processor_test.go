@@ -52,3 +52,76 @@ func TestRequestDecoderBoundsAndStrictRecordUnicode(t *testing.T) {
 		}
 	}
 }
+
+func TestThreeWayManifestCannotMixSplitVersions(t *testing.T) {
+	request := wireRequest()
+	request.Operation = PublishOperation
+	seed := strings.Repeat("1", 32)
+	validation := 5000
+	request.Seed, request.ValidationBasisPoints = &seed, &validation
+	request.TestBasisPoints = 4000
+	if request.Validate() == nil {
+		t.Fatal("three-way request accepted without the sealed grouping plan")
+	}
+	request.NearDuplicatePlanSHA256 = strings.Repeat("b", 64)
+	if err := request.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	invalidRequest := request
+	invalidRequest.TestBasisPoints++
+	if invalidRequest.Validate() == nil {
+		t.Fatal("held-out fractions exceed the combined ceiling")
+	}
+	invalidRequest = request
+	invalidRequest.Operation = InspectOperation
+	if invalidRequest.Validate() == nil {
+		t.Fatal("inspection accepted a test split")
+	}
+	m := Manifest{
+		SchemaVersion: 2, RowSchema: RowSchema, ProcessorVersion: ProcessorVersion, SplitAlgorithm: ThreeWaySplitAlgorithm,
+		SourceSHA256: request.InputSHA256, Seed: seed, ValidationBasisPoints: validation, TestBasisPoints: 4000,
+		TotalRows: 4, UniqueRows: 3, DuplicateRows: 1, SourceGroups: 3, ValidationGroups: 1, TestGroups: 1,
+		TrainRows: 1, ValidationRows: 1, TestRows: 1,
+		ManifestFile: Asset{Path: "manifest.json", SizeBytes: 1, SHA256: request.InputSHA256},
+	}
+	for _, name := range []string{"samples.jsonl", "train.jsonl", "validation.jsonl", "assignments.jsonl", "duplicates.jsonl", "test.jsonl"} {
+		m.Files = append(m.Files, Asset{Path: name, SizeBytes: 1, SHA256: request.InputSHA256})
+	}
+	if err := m.Validate(request); err != nil {
+		t.Fatal(err)
+	}
+	cases := map[string]func(*Manifest){
+		"legacy schema":     func(m *Manifest) { m.SchemaVersion = 1 },
+		"legacy ranking":    func(m *Manifest) { m.SplitAlgorithm = SplitAlgorithm },
+		"missing asset":     func(m *Manifest) { m.Files = m.Files[:5] },
+		"empty asset":       func(m *Manifest) { m.Files[5].SizeBytes = 0 },
+		"zero test rows":    func(m *Manifest) { m.TestRows = 0 },
+		"zero test groups":  func(m *Manifest) { m.TestGroups = 0 },
+		"no training group": func(m *Manifest) { m.TestGroups = 2 },
+		"ratio mismatch":    func(m *Manifest) { m.TestBasisPoints = 3000 },
+		"unassigned row":    func(m *Manifest) { m.TotalRows++; m.UniqueRows++ },
+	}
+	for name, change := range cases {
+		t.Run(name, func(t *testing.T) {
+			invalid := m
+			invalid.Files = append([]Asset{}, m.Files...)
+			change(&invalid)
+			if invalid.Validate(request) == nil {
+				t.Fatal("accepted a mixed or incomplete three-way manifest")
+			}
+		})
+	}
+	legacy := m
+	legacy.SchemaVersion, legacy.SplitAlgorithm, legacy.TestBasisPoints = 1, SplitAlgorithm, 0
+	legacy.TrainRows, legacy.TestRows, legacy.TestGroups = 2, 0, 0
+	legacy.Files = legacy.Files[:5]
+	request.TestBasisPoints = 0
+	request.NearDuplicatePlanSHA256 = ""
+	if err := legacy.Validate(request); err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := json.Marshal(legacy)
+	if err != nil || strings.Contains(string(encoded), `"test_`) {
+		t.Fatalf("default manifest gained test metadata: %s, %v", encoded, err)
+	}
+}

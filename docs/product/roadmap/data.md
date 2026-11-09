@@ -14,7 +14,7 @@ Reviewed 2026-11-09 against [Datasets streaming](https://huggingface.co/docs/dat
 - [ ] DAT-102 Training formats: plain text, messages, instruction, preference pairs (P1) - Catalog: F091
 - [ ] DAT-103 Validation, cleaning and filtering with before and after samples (P1) - Catalog: F092
 - [ ] DAT-104 Exact and near-duplicate removal (P1) - Catalog: F093 - [Near-duplicate publication](../../research/dataset-near-duplicates.md)
-- [ ] DAT-105 Train, validation and test splits with leakage checks (P1) - Catalog: F095
+- [ ] DAT-105 Train, validation and test splits with leakage checks (P1) - Catalog: F095 - [Three-way publication](../../research/dataset-three-way-splits.md)
 - [ ] DAT-106 Dataset versions and lineage to training runs and models (P1) - Catalog: F099 - [Training lineage and model handoff](../../research/training-dataset-lineage.md)
 - [ ] DAT-107 Tokenizer preview: lengths, truncation and template rendering (P1) - Catalog: F098
 

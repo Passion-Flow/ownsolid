@@ -3,9 +3,9 @@ package datasets
 import (
 	"context"
 	"encoding/json"
-	"path"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"path"
 	"sort"
 )
 
@@ -77,13 +77,15 @@ func (s *Service) snapshotReferences(ctx context.Context) (snapshotReferences, e
 		return committed(out, e)
 	}
 	defer rows.Close()
+	fileCount := len(out.Sources)
 	for rows.Next() {
 		v, e := scanVersion(rows)
 		if e != nil {
 			return committed(out, e)
 		}
 		out.Versions = append(out.Versions, SnapshotVersion{v.ID, v.DraftID, v.JobID, v.AttemptID, v.EffectiveSourceSHA256, v.RowMappingSHA256, v.Manifest})
-		if len(out.Sources)+9*len(out.Versions) > s.policy().SnapshotMaximumFiles {
+		fileCount += versionFileCount(v.Manifest)
+		if fileCount > s.policy().SnapshotMaximumFiles {
 			return out, failure("DATASET_SNAPSHOT_LIMIT_REACHED")
 		}
 	}
@@ -110,8 +112,7 @@ func referenceFiles(references snapshotReferences) (map[string]SnapshotFile, err
 			return nil, failure("DATASET_SNAPSHOT_INVALID")
 		}
 		versions[v.ID] = true
-		validation := wire.ProcessorRequest{InputSHA256: v.EffectiveSHA256, Limits: wire.Limits{MaximumRows: wire.MaximumRowsCeiling}, Resources: wire.Resources{MaximumResultBytes: wire.MaximumResultBytesCeiling}, Seed: &v.Manifest.Seed, ValidationBasisPoints: &v.Manifest.ValidationBasisPoints}
-		if wire.ValidateSplit(v.Manifest.Seed, v.Manifest.ValidationBasisPoints) != nil || v.Manifest.Validate(validation) != nil {
+		if v.Manifest.ValidateStored(v.EffectiveSHA256, wire.MaximumRowsCeiling, wire.MaximumResultBytesCeiling) != nil {
 			return nil, failure("DATASET_SNAPSHOT_INVALID")
 		}
 		prefix := versionDirectory(v.ID, v.AttemptID)
