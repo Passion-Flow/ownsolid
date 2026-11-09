@@ -26,6 +26,15 @@ workspace, so it cannot be replayed by another user or against another workspace
 availability and the question limit come from the workflow owner's configuration in the same
 transaction.
 
+On PostgreSQL, the Portal conversation list accepts one optional `q` term of
+1–120 Unicode characters. It matches literal text in the application name or
+in the question or plain-text answer of a completed turn. Search returns the
+same caller-private metadata as the unfiltered list. A search continuation
+also binds the exact term, login session and page position. Use a fresh first
+page when changing the term, workspace or session. Requests without `q` keep
+the existing query and cursor. The public parameter and UI handoff are tracked
+in [APP-109 search](../../../../../docs/research/application-conversation-search.md).
+
 `ListForAssistant` and `ConversationsForAssistant` share those projections.
 They append the scoped assistant event after closing the query rows and before
 commit. The authenticated workspace supplies the selector and the owner
@@ -40,6 +49,9 @@ transaction resolves the scope. The ordinary portal routes call `List` and
   pages, revoked membership and sessions, another workspace, cancellation and unknown commit
   outcomes. `TestActualPairedPortalProcessorProjection` also needs the offline data-processing
   encoder inputs.
+- `TestPortalConversationSearch` uses the existing Portal dispatcher over TLS
+  and an isolated PostgreSQL schema. It verifies signed continuations and
+  keeps transcripts out of the response.
 - MySQL and Dameng statements are covered by statement tests only ([dameng_test.go](dameng_test.go)).
   Dameng's tables come from the
   [applications schema contribution](../../platform/database/dameng/migrate/contribution_applications.go),
