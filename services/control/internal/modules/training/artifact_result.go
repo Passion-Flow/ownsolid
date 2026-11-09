@@ -33,8 +33,10 @@ func decodeAcceptedArtifactResult(command wire.Command, descriptor UploadDescrip
 		return wire.Result{}, fail("TRAINING_DATA_INVALID")
 	}
 
-	// The SQL outcome is JSON, whose stored representation can differ from
-	// the original protected bytes. Compare the two strictly decoded values.
+	// SQL JSON can expand whitespace and number representations. The
+	// original bytes already passed the attempt budget. The projection has
+	// its own storage bound and must decode to the same typed result.
+	request.Resources.MaximumResultBytes = max(request.Resources.MaximumResultBytes, int64(len(attemptOutcome)))
 	recorded, e := wire.DecodeResult(attemptOutcome, request, repository)
 	if e != nil || !reflect.DeepEqual(recorded, result) {
 		return wire.Result{}, fail("TRAINING_DATA_INVALID")

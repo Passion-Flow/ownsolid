@@ -154,3 +154,9 @@ changed attempt result and changed protected upload bytes. The exact retry
 completed once, the scoped read distinguished the two image identifiers,
 and a changed retained result was refused on read. No lock or hardware
 observation was returned from the fixture's current node telemetry.
+
+The replay also verified readback when the JSONB projection was larger
+than the exact accepted result budget. The test fixed the original byte
+budget to the size of the valid report and confirmed that PostgreSQL's
+normalized projection exceeded that limit. The accepted record remained
+readable because the original bytes and the typed outcomes still matched.
