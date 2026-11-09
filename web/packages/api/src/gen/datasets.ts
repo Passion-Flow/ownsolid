@@ -316,6 +316,7 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** @description Download a sealed file from a retained dataset version. The test selector is available for manifest schema 2. For schema 1 it returns DATASET_FILE_INVALID. */
         get: operations["adminDatasetVersionFile"];
         put?: never;
         post?: never;
@@ -677,6 +678,7 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** @description Download a sealed file from a retained dataset version. The test selector is available for manifest schema 2. For schema 1 it returns DATASET_FILE_INVALID. */
         get: operations["portalDatasetVersionFile"];
         put?: never;
         post?: never;
@@ -842,10 +844,10 @@ export interface components {
         };
         DatasetAsset: {
             /** @enum {string} */
-            path: "samples.jsonl" | "train.jsonl" | "validation.jsonl" | "assignments.jsonl" | "duplicates.jsonl";
+            path: "samples.jsonl" | "train.jsonl" | "validation.jsonl" | "test.jsonl" | "assignments.jsonl" | "duplicates.jsonl";
             size_bytes: number;
             sha256: string;
-        };
+        } & unknown;
         DatasetManifestAsset: {
             /** @constant */
             path: "manifest.json";
@@ -853,14 +855,14 @@ export interface components {
             sha256: string;
         };
         DatasetManifest: {
-            /** @constant */
-            schema_version: 1;
+            /** @enum {integer} */
+            schema_version: 1 | 2;
             /** @constant */
             row_schema: "projectone.text-sft.v1";
             /** @constant */
             processor_version: "0.8.0";
-            /** @constant */
-            split_algorithm: "source-union-sha256.v1";
+            /** @enum {string} */
+            split_algorithm: "source-union-sha256.v1" | "source-union-sha256.v2";
             source_sha256: string;
             seed: string;
             validation_basis_points: number;
@@ -873,7 +875,10 @@ export interface components {
             validation_rows: number;
             files: components["schemas"]["DatasetAsset"][];
             manifest_file: components["schemas"]["DatasetManifestAsset"];
-        };
+            test_basis_points?: number;
+            test_groups?: number;
+            test_rows?: number;
+        } & (unknown & unknown);
         DatasetVersion: {
             /** Format: uuid */
             id: string;
@@ -1817,7 +1822,7 @@ export interface operations {
                 cell_id: string;
                 dataset_id: string;
                 version_id: string;
-                asset: "samples" | "train" | "validation" | "assignments" | "duplicates" | "manifest";
+                asset: "samples" | "train" | "validation" | "test" | "assignments" | "duplicates" | "manifest";
             };
             cookie?: never;
         };
@@ -2724,7 +2729,7 @@ export interface operations {
                 workspace_id: string;
                 dataset_id: string;
                 version_id: string;
-                asset: "samples" | "train" | "validation" | "assignments" | "duplicates" | "manifest";
+                asset: "samples" | "train" | "validation" | "test" | "assignments" | "duplicates" | "manifest";
             };
             cookie?: never;
         };

@@ -1276,6 +1276,7 @@
        "samples",
        "train",
        "validation",
+       "test",
        "assignments",
        "duplicates",
        "manifest"
@@ -1623,6 +1624,7 @@
       "samples.jsonl",
       "train.jsonl",
       "validation.jsonl",
+      "test.jsonl",
       "assignments.jsonl",
       "duplicates.jsonl"
      ]
@@ -1635,7 +1637,10 @@
     "sha256": {
      "type": "string"
     }
-   }
+   },
+   "allOf": [
+    {}
+   ]
   },
   "DatasetConfiguration": {
    "type": "object",
@@ -2252,7 +2257,10 @@
    "properties": {
     "schema_version": {
      "type": "integer",
-     "const": 1
+     "enum": [
+      1,
+      2
+     ]
     },
     "row_schema": {
      "type": "string",
@@ -2264,7 +2272,10 @@
     },
     "split_algorithm": {
      "type": "string",
-     "const": "source-union-sha256.v1"
+     "enum": [
+      "source-union-sha256.v1",
+      "source-union-sha256.v2"
+     ]
     },
     "source_sha256": {
      "type": "string"
@@ -2314,15 +2325,34 @@
     },
     "files": {
      "type": "array",
-     "maxItems": 5,
+     "maxItems": 6,
      "items": {
       "$ref": "DatasetAsset"
      }
     },
     "manifest_file": {
      "$ref": "DatasetManifestAsset"
+    },
+    "test_basis_points": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 5000
+    },
+    "test_groups": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9998
+    },
+    "test_rows": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9998
     }
-   }
+   },
+   "allOf": [
+    {},
+    {}
+   ]
   },
   "DatasetManifestAsset": {
    "type": "object",

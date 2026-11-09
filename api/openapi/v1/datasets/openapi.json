@@ -1891,6 +1891,7 @@
                 "samples",
                 "train",
                 "validation",
+                "test",
                 "assignments",
                 "duplicates",
                 "manifest"
@@ -1948,7 +1949,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Download a sealed file from a retained dataset version. The test selector is available for manifest schema 2. For schema 1 it returns DATASET_FILE_INVALID."
       },
       "parameters": [
         {
@@ -4265,6 +4267,7 @@
                 "samples",
                 "train",
                 "validation",
+                "test",
                 "assignments",
                 "duplicates",
                 "manifest"
@@ -4322,7 +4325,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Download a sealed file from a retained dataset version. The test selector is available for manifest schema 2. For schema 1 it returns DATASET_FILE_INVALID."
       },
       "parameters": [
         {
@@ -5294,6 +5298,7 @@
               "samples.jsonl",
               "train.jsonl",
               "validation.jsonl",
+              "test.jsonl",
               "assignments.jsonl",
               "duplicates.jsonl"
             ]
@@ -5307,7 +5312,25 @@
             "type": "string",
             "pattern": "^[a-f0-9]{64}$"
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "path": {
+                  "const": "test.jsonl"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "size_bytes": {
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        ]
       },
       "DatasetManifestAsset": {
         "type": "object",
@@ -5356,8 +5379,11 @@
         ],
         "properties": {
           "schema_version": {
-            "const": 1,
-            "type": "integer"
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
           },
           "row_schema": {
             "const": "projectone.text-sft.v1",
@@ -5368,8 +5394,11 @@
             "type": "string"
           },
           "split_algorithm": {
-            "const": "source-union-sha256.v1",
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "source-union-sha256.v1",
+              "source-union-sha256.v2"
+            ]
           },
           "source_sha256": {
             "type": "string",
@@ -5424,13 +5453,170 @@
             "items": {
               "$ref": "#/components/schemas/DatasetAsset"
             },
-            "maxItems": 5,
+            "maxItems": 6,
             "minItems": 5
           },
           "manifest_file": {
             "$ref": "#/components/schemas/DatasetManifestAsset"
+          },
+          "test_basis_points": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 5000
+          },
+          "test_groups": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9998
+          },
+          "test_rows": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9998
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "schema_version": {
+                  "const": 1
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "split_algorithm": {
+                  "const": "source-union-sha256.v1"
+                },
+                "files": {
+                  "maxItems": 5,
+                  "items": {
+                    "properties": {
+                      "path": {
+                        "enum": [
+                          "samples.jsonl",
+                          "train.jsonl",
+                          "validation.jsonl",
+                          "assignments.jsonl",
+                          "duplicates.jsonl"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "test_basis_points"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "test_groups"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "test_rows"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "test_basis_points",
+                "test_groups",
+                "test_rows"
+              ],
+              "properties": {
+                "split_algorithm": {
+                  "const": "source-union-sha256.v2"
+                },
+                "total_rows": {
+                  "minimum": 3
+                },
+                "unique_rows": {
+                  "minimum": 3
+                },
+                "source_groups": {
+                  "minimum": 3
+                },
+                "files": {
+                  "minItems": 6,
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "path": {
+                            "const": "samples.jsonl"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "path": {
+                            "const": "train.jsonl"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "path": {
+                            "const": "validation.jsonl"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "path": {
+                            "const": "test.jsonl"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "path": {
+                            "const": "assignments.jsonl"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "path": {
+                            "const": "duplicates.jsonl"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
       },
       "DatasetVersion": {
         "type": "object",
