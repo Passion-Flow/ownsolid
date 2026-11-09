@@ -47,6 +47,22 @@ func OpenCurrentImageSource(ctx context.Context, p Verification, filename string
 	return factory.OpenImageSource(ctx, factory.WithCurrentProfile(c), filename, asset, maximumExpandedBytes)
 }
 
+// ImageIdentity pairs an approved runtime manifest with its exact image config.
+type ImageIdentity = factory.ImageIdentity
+
+// OpenCurrentImageSelection opens one image from an app's flat Linux amd64 OCI
+// archive. The caller supplies the independently verified archive size, digest
+// and exact selected manifest/config on asset, plus every approved image pair.
+// The source checks the full local descriptor closure and bounds expansion of
+// the selected image. Open every required selection before importing any image.
+func OpenCurrentImageSelection(ctx context.Context, p Verification, filename string, asset wire.Asset, approved []ImageIdentity, maximumExpandedBytes int64) (*ImageSource, error) {
+	c, err := p.config()
+	if err != nil {
+		return nil, err
+	}
+	return factory.OpenImageSelection(ctx, factory.WithCurrentProfile(c), filename, asset, approved, maximumExpandedBytes)
+}
+
 // RebuildCurrentPatch expands a verified patch against the exact installed baseline.
 func RebuildCurrentPatch(ctx context.Context, p Verification, baseline, patch, output, expectedBaseline string) (Result, error) {
 	c, err := p.config()

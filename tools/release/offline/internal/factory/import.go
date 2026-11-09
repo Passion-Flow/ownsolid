@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
+	"math"
 	"os"
 	"strings"
 
@@ -94,14 +95,18 @@ func (s *ImageSource) OpenRuntimeBlob(digest string) (*io.SectionReader, error) 
 // CheckUnchanged checks the pinned archive descriptor after a consuming operation.
 func (s *ImageSource) CheckUnchanged() error {
 	current, err := s.file.Stat()
-	if err != nil || !sameVersion(s.before, current) {
+	if err != nil || !sameRegularSnapshot(s.before, current, s.asset.Size, true, 1) {
 		return fail("RELEASE_IMPORT_IMAGE_SOURCE_CHANGED")
 	}
 	return nil
 }
 
 func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asset, maximumExpandedBytes int64) (*ImageSource, error) {
-	if mounted(c.MountRoot) != nil || !within(c.MountRoot, filename) || a.Kind != "image_archive" || a.Size < 1 || a.Size > c.MaximumAssetBytes || !wire.ValidSHA256(a.SHA256) || maximumExpandedBytes < 1 {
+	return openImageSource(ctx, c, filename, a, maximumExpandedBytes, nil)
+}
+
+func openImageSource(ctx context.Context, c Config, filename string, a wire.Asset, maximumExpandedBytes int64, selection map[string]string) (*ImageSource, error) {
+	if ctx == nil || ctx.Err() != nil || mounted(c.MountRoot) != nil || !within(c.MountRoot, filename) || a.Kind != "image_archive" || a.Size < 1 || a.Size > c.MaximumAssetBytes || !wire.ValidSHA256(a.SHA256) || maximumExpandedBytes < 1 {
 		return nil, fail("RELEASE_IMPORT_IMAGE_INPUT_INVALID")
 	}
 	f, e := openRegular(filename, a.Size, true)
@@ -114,7 +119,10 @@ func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asse
 			f.Close()
 		}
 	}()
-	before, _ := f.Stat()
+	before, e := f.Stat()
+	if e != nil || !regularInput(before, a.Size, true, 1) {
+		return nil, fail("RELEASE_IMPORT_IMAGE_SOURCE_CHANGED")
+	}
 	input, e := newStreamReader(ctx, f)
 	if e != nil {
 		return nil, e
@@ -122,7 +130,7 @@ func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asse
 	sum := sha256.New()
 	counter := &countReader{r: io.TeeReader(input, sum)}
 	var inventory ImageInventory
-	if e = validateImageInventory(ctx, counter, a, c, &inventory); e != nil {
+	if e = validateImageInventory(ctx, counter, a, c, &inventory, selection); e != nil {
 		return nil, e
 	}
 	if counter.n != a.Size || hex.EncodeToString(sum.Sum(nil)) != a.SHA256 {
@@ -203,8 +211,12 @@ func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asse
 			return nil, fail("RELEASE_IMPORT_LAYER_ENCODING_UNSUPPORTED")
 		}
 		allowance := remaining / multiplicity[header.Name]
+		limit := allowance
+		if limit < math.MaxInt64 {
+			limit++
+		}
 		digest := sha256.New()
-		n, e := io.CopyBuffer(digest, io.LimitReader(checkedReader{ctx, input}, allowance+1), make([]byte, 65536))
+		n, e := io.CopyBuffer(digest, io.LimitReader(checkedReader{ctx, input}, limit), make([]byte, 65536))
 		if compressed != nil {
 			compressed.Close()
 		}
@@ -222,7 +234,7 @@ func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asse
 	}
 	after, e := f.Stat()
 	pathAfter, pe := os.Lstat(filename)
-	if e != nil || pe != nil || !sameVersion(before, after) || !sameVersion(before, pathAfter) {
+	if e != nil || pe != nil || !sameRegularSnapshot(before, after, a.Size, true, 1) || !sameRegularSnapshot(before, pathAfter, a.Size, true, 1) {
 		return nil, fail("RELEASE_IMPORT_IMAGE_SOURCE_CHANGED")
 	}
 	inventory.ExpandedBytes = maximumExpandedBytes - remaining
@@ -240,11 +252,10 @@ func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asse
 // A caller must treat any stream/hash error after submission as an uncertain effect.
 func (s *ImageSource) WriteTagless(ctx context.Context, output io.Writer) (ImportReceipt, error) {
 	result := ImportReceipt{}
-	current, e := s.file.Stat()
-	if e != nil || !sameVersion(s.before, current) {
-		return result, fail("RELEASE_IMPORT_IMAGE_SOURCE_CHANGED")
+	if err := s.CheckUnchanged(); err != nil {
+		return result, err
 	}
-	if _, e = s.file.Seek(0, io.SeekStart); e != nil {
+	if _, err := s.file.Seek(0, io.SeekStart); err != nil {
 		return result, fail("RELEASE_IMPORT_IMAGE_SEEK_FAILED")
 	}
 	sourceHash := sha256.New()
@@ -310,8 +321,7 @@ func (s *ImageSource) WriteTagless(ctx context.Context, output io.Writer) (Impor
 	if e != nil || len(tail) > 10240 || len(bytes.Trim(tail, "\x00")) != 0 || counter.n != s.asset.Size || hex.EncodeToString(sourceHash.Sum(nil)) != s.asset.SHA256 {
 		return result, fail("RELEASE_IMPORT_TRANSPORT_SOURCE_CHANGED")
 	}
-	after, e := s.file.Stat()
-	if e != nil || !sameVersion(s.before, after) {
+	if err := s.CheckUnchanged(); err != nil {
 		return result, fail("RELEASE_IMPORT_TRANSPORT_SOURCE_CHANGED")
 	}
 	for name := range wanted {

@@ -25,13 +25,15 @@ type descriptor struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Data        string            `json:"data,omitempty"`
 	Platform    *struct {
-		Architecture string `json:"architecture"`
-		OS           string `json:"os"`
-		Variant      string `json:"variant"`
+		Architecture string   `json:"architecture"`
+		OS           string   `json:"os"`
+		Variant      string   `json:"variant"`
+		OSFeatures   []string `json:"os.features"`
 	} `json:"platform,omitempty"`
 }
 type imageDocument struct {
 	SchemaVersion int          `json:"schemaVersion"`
+	MediaType     string       `json:"mediaType"`
 	Manifests     []descriptor `json:"manifests"`
 	Config        descriptor   `json:"config"`
 	Layers        []descriptor `json:"layers"`
@@ -50,9 +52,9 @@ func imageJSON(raw []byte, v any) error {
 // validateImage hashes every blob and follows the complete local descriptor closure.
 // Layers are opaque signed content; runtime behavior remains a separate acceptance.
 func validateImage(ctx context.Context, reader io.Reader, a wire.Asset, c Config) error {
-	return validateImageInventory(ctx, reader, a, c, nil)
+	return validateImageInventory(ctx, reader, a, c, nil, nil)
 }
-func validateImageInventory(ctx context.Context, reader io.Reader, a wire.Asset, c Config, inventory *ImageInventory) error {
+func validateImageInventory(ctx context.Context, reader io.Reader, a wire.Asset, c Config, inventory *ImageInventory, selection map[string]string) error {
 	t := tar.NewReader(checkedReader{ctx, reader})
 	blobs := map[string]imageBlob{}
 	seen := map[string]bool{}
@@ -136,6 +138,24 @@ func validateImageInventory(ctx context.Context, reader io.Reader, a wire.Asset,
 	if imageJSON(index, &root) != nil || root.SchemaVersion != 2 || len(root.Manifests) == 0 {
 		return fail("RELEASE_OCI_INDEX_INVALID")
 	}
+	var err error
+	if selection != nil {
+		err = validateImageSelection(root, compat, blobs, a, c, selection, inventory)
+	} else {
+		err = validateSingleImage(root, compat, blobs, a, c, inventory)
+	}
+	if err != nil {
+		return err
+	}
+	// tar.Reader stops at the end marker; no second archive or nonzero trailer is admitted.
+	tail, err := io.ReadAll(io.LimitReader(reader, 10241))
+	if err != nil || len(tail) > 10240 || len(bytes.Trim(tail, "\x00")) != 0 {
+		return fail("RELEASE_OCI_TRAILING_DATA")
+	}
+	return nil
+}
+
+func validateSingleImage(root imageDocument, compat []byte, blobs map[string]imageBlob, a wire.Asset, c Config, inventory *ImageInventory) error {
 	configs := 0
 	visited := map[string]bool{}
 	var selectedLayers []descriptor
@@ -181,45 +201,10 @@ func validateImageInventory(ctx context.Context, reader io.Reader, a wire.Asset,
 			if d.Digest != a.ImageID {
 				return fail("RELEASE_OCI_PLATFORM_MANIFEST_IDENTITY_INVALID")
 			}
-			config, ok := blobs[doc.Config.Digest]
-			if !ok || config.size != doc.Config.Size || doc.Config.Digest != a.ImageConfigDigest || len(doc.Config.URLs) > 0 || (doc.Config.MediaType != "application/vnd.oci.image.config.v1+json" && doc.Config.MediaType != "application/vnd.docker.container.image.v1+json") {
-				return fail("RELEASE_OCI_CONFIG_IDENTITY_INVALID")
-			}
-			var identity struct {
-				Architecture string `json:"architecture"`
-				OS           string `json:"os"`
-				RootFS       struct {
-					Type    string   `json:"type"`
-					DiffIDs []string `json:"diff_ids"`
-				} `json:"rootfs"`
-			}
-			if imageJSON(config.data, &identity) != nil || identity.Architecture != a.Architecture || identity.OS != "linux" || identity.RootFS.Type != "layers" || len(identity.RootFS.DiffIDs) != len(doc.Layers) {
-				return fail("RELEASE_OCI_ARCHITECTURE_INVALID")
-			}
-			for i, layer := range doc.Layers {
-				b, ok := blobs[layer.Digest]
-				media := layer.MediaType
-				allowed := media == "application/vnd.oci.image.layer.v1.tar" || media == "application/vnd.oci.image.layer.v1.tar+gzip" || (!c.current && media == "application/vnd.oci.image.layer.v1.tar+zstd") || media == "application/vnd.docker.image.rootfs.diff.tar.gzip"
-				if !ok || b.size != layer.Size || layer.Size < 1 || len(layer.URLs) > 0 || !allowed || !strings.HasPrefix(identity.RootFS.DiffIDs[i], "sha256:") || !wire.ValidSHA256(strings.TrimPrefix(identity.RootFS.DiffIDs[i], "sha256:")) {
-					return fail("RELEASE_OCI_LAYER_INVALID")
-				}
+			if err := readImageManifest(d, doc, blobs, a.ImageConfigDigest, a.Architecture, c, false, inventory); err != nil {
+				return err
 			}
 			configs++
-			if inventory != nil {
-				inventory.manifestMediaType = d.MediaType
-				inventory.manifestBytes = d.Size
-				inventory.ManifestDigest = d.Digest
-				inventory.ConfigDigest = doc.Config.Digest
-				inventory.configMediaType = doc.Config.MediaType
-				inventory.configBytes = doc.Config.Size
-				inventory.OS = identity.OS
-				inventory.Architecture = identity.Architecture
-				inventory.DiffIDs = append([]string(nil), identity.RootFS.DiffIDs...)
-				inventory.Layers = make([]ImageLayer, len(doc.Layers))
-				for i, layer := range doc.Layers {
-					inventory.Layers[i] = ImageLayer{Digest: layer.Digest, MediaType: layer.MediaType, Size: layer.Size, DiffID: identity.RootFS.DiffIDs[i]}
-				}
-			}
 			selectedLayers = doc.Layers
 		default:
 			return fail("RELEASE_OCI_MEDIA_TYPE_UNSUPPORTED")
@@ -253,10 +238,55 @@ func validateImageInventory(ctx context.Context, reader io.Reader, a wire.Asset,
 			}
 		}
 	}
-	// tar.Reader stops at the end marker; no second archive or nonzero trailer is admitted.
-	tail, e := io.ReadAll(io.LimitReader(reader, 10241))
-	if e != nil || len(tail) > 10240 || len(bytes.Trim(tail, "\x00")) != 0 {
-		return fail("RELEASE_OCI_TRAILING_DATA")
+	return nil
+}
+
+func readImageManifest(d descriptor, doc imageDocument, blobs map[string]imageBlob, configDigest, architecture string, c Config, catalog bool, inventory *ImageInventory) error {
+	config, ok := blobs[doc.Config.Digest]
+	configMedia := doc.Config.MediaType
+	const ociConfig = "application/vnd.oci.image.config.v1+json"
+	if !ok || config.size != doc.Config.Size || doc.Config.Digest != configDigest || len(doc.Config.URLs) > 0 ||
+		(configMedia != ociConfig && configMedia != "application/vnd.docker.container.image.v1+json") ||
+		(catalog && (configMedia != ociConfig || doc.Config.Data != "")) {
+		return fail("RELEASE_OCI_CONFIG_IDENTITY_INVALID")
+	}
+	var identity struct {
+		Architecture string   `json:"architecture"`
+		OS           string   `json:"os"`
+		Variant      string   `json:"variant"`
+		OSFeatures   []string `json:"os.features"`
+		RootFS       struct {
+			Type    string   `json:"type"`
+			DiffIDs []string `json:"diff_ids"`
+		} `json:"rootfs"`
+	}
+	if imageJSON(config.data, &identity) != nil || identity.Architecture != architecture || identity.OS != "linux" ||
+		identity.RootFS.Type != "layers" || len(identity.RootFS.DiffIDs) != len(doc.Layers) ||
+		(catalog && (identity.RootFS.DiffIDs == nil || !catalogAMD64(identity.OS, identity.Architecture, identity.Variant, identity.OSFeatures))) {
+		return fail("RELEASE_OCI_ARCHITECTURE_INVALID")
+	}
+	for i, layer := range doc.Layers {
+		b, ok := blobs[layer.Digest]
+		media := layer.MediaType
+		allowed := media == "application/vnd.oci.image.layer.v1.tar" || media == "application/vnd.oci.image.layer.v1.tar+gzip"
+		if !catalog {
+			allowed = allowed || media == "application/vnd.docker.image.rootfs.diff.tar.gzip" || (!c.current && media == "application/vnd.oci.image.layer.v1.tar+zstd")
+		}
+		if !ok || b.size != layer.Size || layer.Size < 1 || len(layer.URLs) > 0 || !allowed ||
+			(catalog && layer.Data != "") || !imageDigest(identity.RootFS.DiffIDs[i]) {
+			return fail("RELEASE_OCI_LAYER_INVALID")
+		}
+	}
+	if inventory != nil {
+		inventory.manifestMediaType, inventory.manifestBytes = d.MediaType, d.Size
+		inventory.ManifestDigest, inventory.ConfigDigest = d.Digest, doc.Config.Digest
+		inventory.configMediaType, inventory.configBytes = configMedia, doc.Config.Size
+		inventory.OS, inventory.Architecture = identity.OS, identity.Architecture
+		inventory.DiffIDs = append([]string(nil), identity.RootFS.DiffIDs...)
+		inventory.Layers = make([]ImageLayer, len(doc.Layers))
+		for i, layer := range doc.Layers {
+			inventory.Layers[i] = ImageLayer{Digest: layer.Digest, MediaType: layer.MediaType, Size: layer.Size, DiffID: identity.RootFS.DiffIDs[i]}
+		}
 	}
 	return nil
 }
