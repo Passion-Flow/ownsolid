@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
@@ -59,6 +60,15 @@ func TestActualOnSiteDeploymentModelLicenseAdmission(t *testing.T) {
 	foreignNode, err := c.s.Nodes.Enroll(ctx, wire.Enrollment{JoinToken: token.Token, Handshake: handshake}, uuid.NewString())
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	// File verification can outlast the previous hardware observation.
+	now := time.Now().UTC()
+	c.h.Facts.ObservedAt = now
+	c.h.Inference.ObservedAt = now
+	c.h.Inference.GPUs[0].ObservedAt = now
+	if _, err := c.s.Nodes.Heartbeat(ctx, c.node.NodeID, c.node.Credential, c.h); err != nil {
+		t.Fatal("refresh the fixture hardware observation", err)
 	}
 
 	path := "/api/v1/admin/deployments"

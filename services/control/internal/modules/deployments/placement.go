@@ -89,6 +89,7 @@ func (s *Service) Placement(ctx context.Context, a identity.Auth, model string) 
 		if e != nil {
 			return e
 		}
+		window := s.gpuObservationWindow()
 		for _, row := range rows {
 			n, e := s.Nodes.LookupWithin(ctx, q, w.TenantID, w.ID, row.node)
 			if e != nil {
@@ -98,7 +99,7 @@ func (s *Service) Placement(ctx context.Context, a identity.Auth, model string) 
 			if e := runtimeDecodeObservation(q, row.raw, &o); e != nil {
 				return e
 			}
-			out.Candidates = append(out.Candidates, judgeNode(n, o, row, derived))
+			out.Candidates = append(out.Candidates, judgeNode(n, o, row, derived, window))
 		}
 		return nil
 	})
@@ -149,7 +150,7 @@ func placementStatement(dialect transaction.Dialect, tenant, workspace string, a
 
 // judgeNode applies, in the order a deployment applies them, the checks a new deployment of
 // the model on this node would meet.
-func judgeNode(n nodes.Node, o wire.InferenceObservation, row placementRow, derived bool) PlacementNode {
+func judgeNode(n nodes.Node, o wire.InferenceObservation, row placementRow, derived bool, window gpuObservationWindow) PlacementNode {
 	out := PlacementNode{NodeID: n.ID, Name: n.Name, ObservedAt: o.ObservedAt.UTC(), GPUs: []PlacementGPU{}}
 	refuse := func(e error) *string {
 		if e == nil {
@@ -167,13 +168,15 @@ func judgeNode(n nodes.Node, o wire.InferenceObservation, row placementRow, deri
 		out.Refusal = refuse(fail("INFERENCE_PREFLIGHT_REQUIRED"))
 	case admitObservation(o, wire.InferenceCommand{Action: "deploy"}) != nil:
 		out.Refusal = refuse(admitObservation(o, wire.InferenceCommand{Action: "deploy"}))
+	case !window.contains(o.ObservedAt):
+		out.Refusal = refuse(fail("INFERENCE_PREFLIGHT_REQUIRED"))
 	case row.retained:
 		out.Refusal = refuse(fail("INFERENCE_RESOURCE_BUSY"))
 	}
 	for _, g := range o.GPUs {
 		gpu := PlacementGPU{UUID: g.UUID, Name: g.Name, MemoryTotalMiB: g.MemoryTotalMiB, MemoryFreeMiB: g.MemoryFreeMiB}
 		if out.Refusal == nil {
-			gpu.Refusal = refuse(admitGPU(o, g.UUID, derived, true))
+			gpu.Refusal = refuse(admitGPU(o, g.UUID, derived, true, window))
 		}
 		out.GPUs = append(out.GPUs, gpu)
 	}

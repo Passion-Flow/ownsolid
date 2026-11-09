@@ -71,3 +71,47 @@ inventory required by DEL-110. Triton, Kubernetes and KServe are design
 references here. Agent runtime and gateway route/drain behavior are outside
 lane M. The current deployment schema owns one retained deployment per node
 and exposes no revision rollback or replica routing contract.
+
+### SRV-115 measurement freshness and integer headroom
+
+The node stores when Control receives a hardware report. The report also
+contains the agent's observation time and a separate time for each GPU.
+A current heartbeat can carry old observations. A placement or new load
+must have recent receipt and observation times. Use the already validated
+node online window for both age and tolerated clock difference. A report
+or GPU observation outside that window cannot establish available memory.
+Keep this check in deployment admission and placement so existing gateway
+routing and training's borrowed hardware read retain their behavior.
+
+Retain the [approved Agent recipe](../../api/agent/v1/inference-recipe.json)
+and its minimum total capacity. Before loading, use the ceiling of the
+existing 80% requirement in whole MiB. For example, at 8,193 MiB total
+the mathematical requirement is 6,554.4 MiB and the minimum report that
+can satisfy it is 6,555 MiB. The previous integer truncation accepted
+6,554 MiB. A derived load must also meet its existing absolute free
+memory floor. This server-side check cannot lower either engine floor.
+There are no new dependencies or data.
+
+Verify that placement and creation both refuse a current receipt with an
+old report, an old individual GPU sample, a sample too far in the future,
+and a device one MiB below the ceiling. Exercise the exact threshold on
+the same isolated installation. Do not infer an empirically qualified
+runtime margin from these boundary checks. The full breakdown and
+hardware qualification above remain open.
+
+#### Offline verification
+
+`TestRealTLSPlacementAndCreationRequireFreshCapacity` ran over Admin
+HTTPS and real PostgreSQL 18.6 in an isolated Linux arm64 namespace.
+The node protocol fixture sent current receipts with a stale report, a
+stale GPU observation, and a GPU timestamp outside the future clock
+window. Each refused before reserving a deployment. With a fresh
+observation of an 8,193 MiB GPU, both routes refused 6,554 MiB free
+and admitted exactly 6,555 MiB. The existing placement contract and
+the actual pinned-model license admission also passed in the same
+disconnected run. Hardware and generation were protocol fixtures.
+
+The remaining public breakdown needs an additive contract update for
+`PlacementGPU` and coordinated Admin consumers. The full claim needs
+a measured reserve and full-context execution with the approved
+engine image on a supported GPU with egress blocked.
