@@ -628,3 +628,44 @@ two share a traced cause. The controlled results distinguish query-stage
 failures from commit-stage failures, while the original trigger remains
 unknown. No production or cold-run test code was changed and no cluster
 write was replayed.
+
+### Cold diagnostic capture
+
+The disposable diagnostic build attaches the Control-generated request ID
+to the admission, authorization and member-read stages. The pgx tracer
+records pool acquisition, PostgreSQL backend PID, statement category,
+remaining context time, sanitized error type and SQLSTATE. It records
+whether pgx observed a successful COMMIT response. Background commit
+errors remain separate from HTTP request events. The client records its
+own elapsed time, timeout and response request ID. The tracer records
+no SQL text or arguments.
+
+The Docker observer follows PostgreSQL and Control logs by container ID
+and retains selected lifecycle events with exit status and OOM state
+before teardown. PostgreSQL logging includes timestamp, backend PID,
+SQLSTATE, lock waits and connection events. A fixture-requested
+shutdown is marked separately from a spontaneous process exit. The
+cold executable is built from the original Control fixture source
+`4a3f0aba` with an external overlay. The kit uses a read-only executable
+mount after the signed installer, and records the signed base image
+identity. Its eventual results are a separate diagnostic experiment.
+
+The small PostgreSQL 18.6 fixture verified 24 correlated requests
+across three repetitions. A blocked member query ended with SQLSTATE
+`55P03` and HTTP 503 before COMMIT. Suppressing an observed PostgreSQL
+COMMIT success left the client with HTTP 409 and no successful
+acknowledgement in the tracer. Killing the isolated member-handler
+child during its identified query produced SIGKILL and shell status
+137, a PostgreSQL disconnect and a client transport error without
+an HTTP response. The Docker collector separately retained
+PostgreSQL exit 0 and the Control-labelled sentinel exit 37.
+Other cancellation and deadline controls kept their original statuses.
+
+The source, stable command, checksums, two prior capture fingerprints,
+new logs and compiled Linux amd64 cold kit live in
+`lane-arc-diagnostics/arc104-cold-observability` beside the worktree.
+The cold kit passed compilation and syntax checks. Its integration
+still needs an admitted cold run. The Linux host refused admission
+with 33.95% full I/O PSI avg10. A later check measured 0.23% and
+refused an active Go build. Both checks exited 75. No diagnostic cold
+run or cluster write replay occurred.
