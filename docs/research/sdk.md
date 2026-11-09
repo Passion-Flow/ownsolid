@@ -134,3 +134,35 @@ also retained the body of a 403 response.
 
 [httpx-stream]: https://www.python-httpx.org/quickstart/#streaming-responses
 [python-request-builder]: https://raw.githubusercontent.com/openapi-generators/openapi-python-client/v0.29.1/openapi_python_client/templates/endpoint_module.py.jinja
+
+## Python UUID request headers
+
+The pinned [openapi-python-client UUID template](https://raw.githubusercontent.com/openapi-generators/openapi-python-client/v0.29.1/openapi_python_client/templates/property_templates/uuid_property.py.jinja)
+serializes UUIDs in JSON but has no header transform. The generated
+endpoint passes a UUID object to HTTPX, whose
+[header encoding](https://raw.githubusercontent.com/encode/httpx/0.28.1/httpx/_models.py)
+requires strings or bytes. The GW-120 client reproduced the failure with
+its UUID idempotency key. Existing generated writes have the same shape.
+
+Preserve the public UUID contract and Python type. In generated endpoint
+request builders, serialize direct header assignments of UUID parameters
+as strings. Match the request-builder syntax and typed parameter so other
+headers, path arguments, bodies and optional-value guards keep their
+semantics. Removing the format from the Python projection would change
+the generated parameter type. Copying the upstream property template
+would also take ownership of the unrelated JSON and multipart paths.
+No dependency, model or dataset changes. openapi-python-client remains
+MIT, HTTPX BSD-3-Clause and Python under the PSF License. These allow
+commercial and offline use and redistribution under their notice terms.
+
+Test a required UUID header and an optional UUID header, including the
+omitted case. Preserve string headers and body values. Verify both an
+existing generated Admin mutation and the new description edit with a
+real HTTPX transport object and no network access.
+
+The pinned local SDK generation and HTTPX wire probe passed for the existing
+alias cutover and the new description edit. Both requests used a Python
+UUID and transmitted its canonical text. The generated Go clients compiled,
+and the Python probe decoded the predecessor problem and the typed replay
+result. The generator regression checks preserve omitted UUIDs and string
+headers.
