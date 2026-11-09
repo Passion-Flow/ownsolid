@@ -2,7 +2,6 @@ package factory
 
 import (
 	"context"
-	"path/filepath"
 
 	wire "github.com/Passion-Flow/ownsolid/api/release/v1"
 )
@@ -16,12 +15,26 @@ type ImageProof struct {
 	Signature     []byte `json:"signature_bytes"`
 	AssetID       string `json:"asset_id"`
 }
+
+// ImageProofResult identifies the exact approved release and image.
 type ImageProofResult struct {
 	ReleaseID      string     `json:"release_id"`
 	ManifestSHA256 string     `json:"manifest_sha256"`
 	Asset          wire.Asset `json:"asset"`
+	// Profile selects the matching OCI reader in Go consumers.
+	Profile string `json:"-"`
 }
 
+// verificationConfigForManifest selects the same policy as archive preparation.
+// Both callers still authenticate the exact manifest bytes before using its data.
+func verificationConfigForManifest(c Config, manifest wire.Manifest) Config {
+	if manifest.Profile == CurrentProfile {
+		return WithCurrentProfile(c)
+	}
+	return c
+}
+
+// VerifyImageProof checks a transported proof against independently configured public trust.
 func VerifyImageProof(ctx context.Context, c Config, proof ImageProof) (ImageProofResult, error) {
 	if ctx == nil || ctx.Err() != nil {
 		return ImageProofResult{}, fail("RELEASE_IMAGE_PROOF_INTERRUPTED")
@@ -29,6 +42,11 @@ func VerifyImageProof(ctx context.Context, c Config, proof ImageProof) (ImagePro
 	if proof.FormatVersion != 1 || proof.AssetID == "" || len(proof.Manifest) < 1 || int64(len(proof.Manifest)) > c.MaximumManifestBytes || len(proof.Signature) < 1 || int64(len(proof.Signature)) > c.MaximumMetadataBytes {
 		return ImageProofResult{}, fail("RELEASE_IMAGE_PROOF_INVALID")
 	}
+	var manifest wire.Manifest
+	if wire.StrictJSON(proof.Manifest, &manifest) != nil {
+		return ImageProofResult{}, fail("RELEASE_IMAGE_PROOF_INVENTORY_INVALID")
+	}
+	c = verificationConfigForManifest(c, manifest)
 	trust, e := loadTrust(c)
 	if e != nil {
 		return ImageProofResult{}, e
@@ -36,36 +54,38 @@ func VerifyImageProof(ctx context.Context, c Config, proof ImageProof) (ImagePro
 	if e = verifySignature(proof.Manifest, proof.Signature, trust); e != nil {
 		return ImageProofResult{}, e
 	}
-	var manifest wire.Manifest
-	if wire.StrictJSON(proof.Manifest, &manifest) != nil || manifest.Validate(c.MaximumAssets, c.MaximumAssetBytes, c.MaximumTotalBytes, c.AllowTestFixture) != nil {
+	if c.validateManifest(manifest) != nil {
 		return ImageProofResult{}, fail("RELEASE_IMAGE_PROOF_INVENTORY_INVALID")
 	}
+	return selectProofImage(manifest, wire.Digest(proof.Manifest), proof.AssetID)
+}
+
+func selectProofImage(manifest wire.Manifest, manifestSHA, assetID string) (ImageProofResult, error) {
 	for _, asset := range manifest.Assets {
-		if asset.ID == proof.AssetID {
+		if asset.ID == assetID {
 			if asset.Kind != "image_archive" {
 				return ImageProofResult{}, fail("RELEASE_IMAGE_PROOF_ASSET_INVALID")
 			}
-			return ImageProofResult{manifest.ReleaseID, wire.Digest(proof.Manifest), asset}, nil
+			return ImageProofResult{ReleaseID: manifest.ReleaseID, ManifestSHA256: manifestSHA, Asset: asset, Profile: manifest.Profile}, nil
 		}
 	}
 	return ImageProofResult{}, fail("RELEASE_IMAGE_PROOF_ASSET_MISSING")
 }
+
+// PreparedImageProof exports the selected image only after verifying the complete
+// prepared tree. It returns the same manifest and signature bytes that were checked.
 func PreparedImageProof(ctx context.Context, c Config, directory, archiveSHA, manifestSHA, asset string) (ImageProof, ImageProofResult, error) {
-	if _, e := VerifyPrepared(ctx, c, directory, archiveSHA, manifestSHA); e != nil {
-		return ImageProof{}, ImageProofResult{}, e
+	if asset == "" {
+		return ImageProof{}, ImageProofResult{}, fail("RELEASE_IMAGE_PROOF_INVALID")
 	}
-	manifest, e := readRegular(filepath.Join(directory, "manifest.json"), c.MaximumManifestBytes, true)
-	if e != nil || wire.Digest(manifest) != manifestSHA {
-		return ImageProof{}, ImageProofResult{}, fail("RELEASE_PREPARED_MANIFEST_INVALID")
-	}
-	signature, e := readRegular(filepath.Join(directory, "signature.json"), c.MaximumMetadataBytes, true)
+	var authority preparedAuthority
+	prepared, e := verifyPrepared(ctx, c, directory, archiveSHA, manifestSHA, &authority)
 	if e != nil {
 		return ImageProof{}, ImageProofResult{}, e
 	}
-	proof := ImageProof{1, manifest, signature, asset}
-	result, e := VerifyImageProof(ctx, c, proof)
+	result, e := selectProofImage(prepared.Manifest, prepared.ManifestSHA256, asset)
 	if e != nil {
 		return ImageProof{}, ImageProofResult{}, e
 	}
-	return proof, result, nil
+	return ImageProof{FormatVersion: 1, Manifest: authority.manifest, Signature: authority.signature, AssetID: asset}, result, nil
 }
