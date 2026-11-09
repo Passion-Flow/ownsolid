@@ -164,3 +164,64 @@ tests cover missing capability, missing or mismatched receipts, rate
 limits, signature rejection and redirects. The controlled endpoint
 qualifies the site relay contract. A vendor-side connection and packaged
 installer and Console flows remain unqualified.
+
+## Site-local DingTalk signed webhook compatibility
+
+The [DingTalk robot send reference](https://developer.alibaba.com/docs/api.htm?apiId=37246)
+defines POST /robot/send, the access_token query parameter, the text body
+with msgtype and text.content, and a numeric errcode in the receipt.
+[DingTalk's signing example](https://dingtalk.apifox.cn/doc-3550006) uses
+Unix milliseconds and HMAC-SHA256 with the signing secret as the key and
+timestamp, a newline and the secret as the message. Base64-encode the
+MAC and URL-encode it as sign. The [DingTalk error contract](https://s.apifox.cn/apidoc/docs-site/467052/api-140275634)
+identifies -1 and 410100 as retryable and 310000 as a security rejection.
+[Alibaba Cloud's alert integration](https://help.aliyun.com/zh/sls/create-a-webhook)
+also accepts signing secrets for private group integrations. The
+[DingTalk developer guide](https://open-dingtalk.github.io/developerpedia/docs/learn/bot/webhook/overview/)
+flags retirement of the legacy custom-robot entry point. The chosen
+contract is signed webhook compatibility at a customer-owned site relay.
+Direct cloud webhook delivery and application OAuth would require outside
+connectivity and are outside the offline boundary. A legacy wire-format
+fixture cannot qualify a currently provisioned vendor-side robot.
+The site profile bounds the JSON body at 16 KiB.
+
+Reuse the Feishu durable-v1 transport and shared tenant authorization.
+Probe OPTIONS /robot/send without query credentials. Send the signed POST
+only after the receiver declares capability. Use separate protected files
+for the Alertmanager bearer, access token and signing secret. The HTTPS
+origin is a private IP with a pinned site CA. Because the compatibility
+wire format contains credentials and a signature in the query, the site
+must suppress query logging and tracing at the receiving listener and any
+reverse proxy. The relay reports only bounded outcome codes and scope.
+The controlled receiver returns numeric errcode zero and echoes the
+quoted Idempotency-Key only after committing the semantic payload.
+Changing timestamps or signatures do not change the transaction identity.
+Site receivers must reconcile ambiguous downstream delivery before retrying
+an operation that the downstream system cannot deduplicate.
+
+Unit tests check an independent signing vector, request encoding, retryable
+and permanent outcomes, missing or repeated receipts, redirects and
+certificate rejection. The native Alertmanager fixture checks exact text,
+resolution, silence, scope, and retry after a persisted message loses its
+receipt. Everything runs on a loopback-only Linux namespace. A vendor-side
+connection and installer/Console wiring are separate qualification steps.
+No SDK, model or dataset is introduced. The existing Go standard library
+uses the [Go BSD license](https://go.dev/LICENSE), and the existing
+[Alertmanager release](https://github.com/prometheus/alertmanager/blob/v0.34.2/LICENSE)
+uses Apache-2.0. Both permit commercial use, offline operation and
+redistribution subject to their terms.
+
+### Verified DingTalk relay contract
+
+On Linux amd64 with only loopback and no default route, Alertmanager 0.34.2
+delivered the group through the compiled DingTalk relay. A controlled HTTPS
+receiver independently verified the query signature and message structure,
+then synchronized the semantic message and key to disk. The first response
+returned numeric zero without the receipt header. Alertmanager retried, and
+the receiver acknowledged the same key with one stored firing message.
+The test observed a resolution, tenant-specific silencing, and refusal of
+a cross-tenant webhook credential. Unit checks verified an independent
+signature vector, missing and ambiguous receipts, redirect refusal and
+untrusted TLS rejection before any HTTP request reached the receiver.
+The shared Feishu and Matrix integration tests passed on the same host.
+The vendor-side path remains unqualified.
