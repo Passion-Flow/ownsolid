@@ -142,3 +142,37 @@ The direct generation and gateway streaming probes were never reached.
 The logs establish a startup limit on this shared host before model
 loading. They provide no result for the selected CPU configuration or
 for the gateway's handling of actual model events.
+
+## Comparison with the installed GW-114 run
+
+[GW-114's prototype](gateway-delivery.md#prototype-2026-11-08) used the
+vLLM CPU 0.29.0 tag and the approved Qwen3-0.6B revision, with eight CPUs
+and 10 GiB. The engine served on host loopback TCP, and the documented
+warm-up took about four minutes. The later installed run
+([commit 90ebbad](https://github.com/Passion-Flow/ownsolid/commit/90ebbadd664a8102ba2e20e3bff32bc913aeb668))
+verified a scoped key, real chat and streamed generation, and matching
+usage in the call log. The installation evidence records the image tag
+and model family. The archived launcher available for comparison names
+the backend address but does not identify the successful engine
+container's digest or complete arguments.
+
+The current cached tag resolves to
+`sha256:66064cf683152e60eff2e5b18ec2d4ace236fb063c0a241f918691db9caddcf4`.
+That is the pinned image from the bounded GW-101 rerun. The same catalogue
+revision and weight digest appear in the GW-114 source and the verified
+GW-101 inputs. GW-101 staged its weights on tmpfs, used four CPUs and
+8 GiB, and wrapped the image entrypoint to timestamp imports. It probed
+`/v1/models` over a Unix socket before running chat. The last observation
+was inside CLI startup, before model loading or socket bind. Changes to
+engine request or streaming semantics could only be evaluated after that
+stage.
+
+For the next isolated run, use the cached digest and the image's original
+`vllm serve` entrypoint, the approved files, and the recorded eight-CPU and
+10 GiB allocation when the shared-host gate permits it. Keep the engine
+in its own disconnected network namespace. Probe its private socket for
+the approved served name and run one direct stream before the Rust
+gateway fixture. Record startup time, socket readiness, direct SSE
+completion, and the gateway's usage and request-ID checks separately.
+The GW-114 TCP setup is evidence for the installed path. The socket and
+loopback relay preserve the no-egress condition for this acceptance.
