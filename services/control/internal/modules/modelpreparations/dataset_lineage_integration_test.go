@@ -19,8 +19,8 @@ func TestPreparationDetailRetainsDatasetLineage(t *testing.T) {
 	}
 	command, holdout := before.inputs.TrainingCommand, before.inputs.Heldout
 	want := PreparationDatasetLineage{
-		Training: DatasetVersionLineage{command.DatasetID, command.DatasetVersionID, strings.Repeat("a", 64)},
-		Holdout:  DatasetVersionLineage{holdout.DatasetID, holdout.DatasetVersionID, strings.Repeat("e", 64)},
+		Training: DatasetVersionLineage{DatasetID: command.DatasetID, DatasetVersionID: command.DatasetVersionID, ManifestSHA256: strings.Repeat("a", 64)},
+		Holdout:  DatasetVersionLineage{DatasetID: holdout.DatasetID, DatasetVersionID: holdout.DatasetVersionID, ManifestSHA256: strings.Repeat("e", 64)},
 	}
 	if before.inputs.SchemaVersion != 1 || before.DatasetLineage != want ||
 		want.Training.DatasetID == want.Holdout.DatasetID ||

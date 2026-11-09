@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/snapshot"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
@@ -35,7 +36,7 @@ func (s *Service) retainedPreparationSourcesWithin(ctx context.Context, q transa
 		return zero, datasets.Version{}, fail("MODEL_PREPARATION_INPUT_CHANGED")
 	}
 	h.CreatedAt = h.CreatedAt.UTC()
-	out := preparationInputs{SchemaVersion: 1, TrainingCommand: training.Command, Adapter: training.Descriptor, TrainingIdentitySHA256: training.IdentitySHA256(), Heldout: h, DatasetAttemptID: version.AttemptID}
+	out := preparationInputs{SchemaVersion: 1, TrainingCommand: training.Command, Adapter: snapshot.Adapter(training.Descriptor), TrainingIdentitySHA256: training.IdentitySHA256(), Heldout: h, DatasetAttemptID: version.AttemptID}
 	if e = out.validate(); e != nil {
 		return zero, datasets.Version{}, e
 	}

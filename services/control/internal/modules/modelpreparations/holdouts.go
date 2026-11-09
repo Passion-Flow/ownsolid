@@ -8,59 +8,24 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
-	"time"
 
-	"github.com/google/uuid"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/snapshot"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/pagination"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/google/uuid"
 )
 
-type LabelCounts struct {
-	Account   int64 `json:"account"`
-	Billing   int64 `json:"billing"`
-	Technical int64 `json:"technical"`
-}
+// LabelCounts is the frozen holdout label distribution.
+type LabelCounts = snapshot.LabelCounts
 
-func (c *LabelCounts) increment(label string) {
-	switch label {
-	case "account":
-		c.Account++
-	case "billing":
-		c.Billing++
-	case "technical":
-		c.Technical++
-	}
-}
-func (c LabelCounts) valid(rows int64) bool {
-	return c.Account > 0 && c.Billing > 0 && c.Technical > 0 && c.Account+c.Billing+c.Technical == rows
-}
+// Holdout is the version 1 snapshot of the preparation evaluation input.
+type Holdout = snapshot.Holdout
 
-type Holdout struct {
-	ID                    string      `json:"id"`
-	WorkspaceID           string      `json:"workspace_id"`
-	DatasetID             string      `json:"dataset_id"`
-	DatasetVersionID      string      `json:"dataset_version_id"`
-	Name                  string      `json:"name"`
-	ManifestSHA256        string      `json:"manifest_sha256"`
-	EffectiveSourceSHA256 string      `json:"effective_source_sha256"`
-	RowMappingSHA256      string      `json:"row_mapping_sha256"`
-	SourceBytes           int64       `json:"source_bytes"`
-	RowCount              int64       `json:"row_count"`
-	Labels                LabelCounts `json:"label_counts"`
-	RecipeID              string      `json:"recipe_id"`
-	RecipeSHA256          string      `json:"recipe_sha256"`
-	InstructionSHA256     string      `json:"instruction_sha256"`
-	FingerprintAlgorithm  string      `json:"fingerprint_algorithm"`
-	CreatedBy             string      `json:"created_by"`
-	Audience              string      `json:"audience"`
-	Reason                string      `json:"reason"`
-	CreatedAt             time.Time   `json:"created_at"`
-}
 type HoldoutRequest struct {
 	WorkspaceID            string `json:"workspace_id"`
 	DatasetID              string `json:"dataset_id"`
@@ -87,7 +52,7 @@ func scanHoldout(row transaction.Row) (Holdout, error) {
 	if e != nil {
 		return Holdout{}, e
 	}
-	if wire.DecodeStrict(labels, &value.Labels) != nil || value.RowCount < wire.MinimumRows || value.RowCount > wire.MaximumRows || !value.Labels.valid(value.RowCount) || value.SourceBytes < 1 || value.SourceBytes > datawire.MaximumBytesCeiling || !datawire.ValidDigest(value.ManifestSHA256) || !datawire.ValidDigest(value.EffectiveSourceSHA256) || !datawire.ValidDigest(value.RowMappingSHA256) || !datawire.ValidDigest(value.RecipeSHA256) || !datawire.ValidDigest(value.InstructionSHA256) {
+	if wire.DecodeStrict(labels, &value.Labels) != nil || value.RowCount < wire.MinimumRows || value.RowCount > wire.MaximumRows || !value.Labels.ValidForRows(value.RowCount) || value.SourceBytes < 1 || value.SourceBytes > datawire.MaximumBytesCeiling || !datawire.ValidDigest(value.ManifestSHA256) || !datawire.ValidDigest(value.EffectiveSourceSHA256) || !datawire.ValidDigest(value.RowMappingSHA256) || !datawire.ValidDigest(value.RecipeSHA256) || !datawire.ValidDigest(value.InstructionSHA256) {
 		return Holdout{}, fail("MODEL_HOLDOUT_DATA_INVALID")
 	}
 	value.CreatedAt = value.CreatedAt.UTC()
