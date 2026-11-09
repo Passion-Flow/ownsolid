@@ -2,6 +2,7 @@
 // the page says when part of that cannot be read (docs/research/portal-model-catalogue.md).
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import {
+  expectAccessible,
   deploymentAlias,
   derivedModel,
   mockControlPlane,
@@ -81,7 +82,7 @@ test('says what a fine-tuned model comes from', async ({ page }) => {
   await expect(drawer.getByText('Qwen/Qwen3-0.6B')).toBeVisible();
 });
 
-test('shows how to call a model, that its price is not ready, and leads to a key', async ({
+test('shows what a predecessor knows about calling a model and leads to a key', async ({
   page,
 }) => {
   await open(page);
@@ -90,7 +91,10 @@ test('shows how to call a model, that its price is not ready, and leads to a key
   await expect(drawer.getByText('https://gateway.example.test/v1')).toBeVisible();
   await expect(drawer.getByText('Apache-2.0')).toBeVisible();
   await expect(drawer.getByText('Chat and text generation', { exact: false })).toBeVisible();
-  await expect(drawer.getByText('Not ready in this release', { exact: false })).toBeVisible();
+  await expect(drawer.getByText('The administrator has not added a description yet.')).toHaveCount(
+    0,
+  );
+  await expect(drawer.getByText('Price', { exact: true })).toHaveCount(0);
   const issue = drawer.getByRole('link', { name: 'Issue a key' });
   await expect(issue).toHaveAttribute('href', /\/keys#issue$/);
   await issue.click();
@@ -207,6 +211,43 @@ test('says what to do without a workspace', async ({ page }) => {
 
 test.describe('with a browser that prefers Chinese', () => {
   test.use({ locale: 'zh-CN' });
+
+  test('distinguishes a description from an explicit empty description', async ({ page }, info) => {
+    const description = 'Review support requests.\n<img src="https://outside.example.invalid/a">';
+    control.aliases = [
+      { ...deploymentAlias, description, description_revision: 1 },
+      { ...unavailableAlias, description: '', description_revision: 1 },
+    ];
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/models');
+    const described = page.getByRole('dialog', { name: deploymentAlias.name });
+    await page
+      .getByRole('row', { name: new RegExp(deploymentAlias.name) })
+      .getByRole('button')
+      .first()
+      .click();
+    await expect(
+      described.getByText(chinese['portalModels.detail.goodFor'], { exact: true }),
+    ).toBeVisible();
+    const text = described.getByText('Review support requests.', { exact: false });
+    await expect(text).toBeVisible();
+    expect(await text.textContent()).toBe(description);
+    await expect(described.locator('img')).toHaveCount(0);
+    await expectAccessible(page);
+    await info.attach('portal-model-description-zh-cn', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    await page.keyboard.press('Escape');
+    const empty = page.getByRole('dialog', { name: unavailableAlias.name });
+    await page
+      .getByRole('row', { name: new RegExp(unavailableAlias.name) })
+      .getByRole('button')
+      .first()
+      .click();
+    await expect(empty.getByText(chinese['portalModels.detail.goodFor.chat'])).toBeVisible();
+    await expect(empty.getByText(chinese['portalModels.detail.goodFor.empty'])).toBeVisible();
+  });
 
   test('explains and recovers missing facts in Simplified Chinese', async ({ page }, info) => {
     control.deploymentsProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
