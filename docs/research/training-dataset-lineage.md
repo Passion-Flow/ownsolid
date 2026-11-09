@@ -178,3 +178,107 @@ PostgreSQL fixture, run `TestActualAdminModelDetailDatasetLineageHTTPS`
 with `-tags repository_integration` in
 `services/control/internal/modules/models`. The HTTP fixture without the
 producer directory continues to serve the metadata-only Web acceptance.
+
+### Bounded qualification rehearsal
+
+The retained 1/3 outcome was [independently recalculated](evaluation-reproducibility.md#evl-103-retained-preparation-quality-decision).
+Keep the exact 8,000-basis-point accuracy floor and zero-regression
+requirement. Production preparation creation and the node command require
+the NVIDIA BF16 profile. Review checks the authorized actor, persisted
+request, artifact, report, and authenticated physical stop before publishing.
+The inherited positive CPU review fixture sets a 3,000-basis-point floor
+and substitutes production identity and physical stop. It cannot establish
+qualification at the original floor.
+
+Use one bounded native rehearsal of the real workers. Freeze generated
+support-routing examples with the dataset publication-preparation processor
+and bind the exact manifest, train and validation bytes to training. Keep
+the original three holdout cases unchanged and outside both partitions.
+Train against the recipe's exact instruction prefix and completion labels.
+This matches the existing completion-only loss and the [upstream SFT
+interface](https://huggingface.co/docs/trl/sft_trainer#train-on-completion-only).
+Use the [pinned Qwen release](https://huggingface.co/Qwen/Qwen3-0.6B/tree/c1899de289a04d12100db370d81485cdf75e47ca)
+and the same locked packages and license conditions as the earlier run.
+The generated source rows are CC0. There are no new dependencies or
+external data. The worker uses the local model and tokenizer with network
+access denied, consistent with the [upstream offline loading interface](https://huggingface.co/docs/transformers/v5.19.0/installation#offline-mode).
+
+Keep the trial independent of any simulated production approval. The
+qualification trial uses one protected training run and one protected
+preparation run. Replay once with the authorized publication export to
+verify the binding. Keep the recorded quality verdict in both runs. A
+passing CPU run still needs a fresh production-profile attempt, physical
+stop and authorized review on the same lineage before either item can close.
+
+### Qualified CPU result and authorized dataset publication
+
+No quality-passing report at the original threshold was found in the
+retained local producer outputs or the inspected test-server paths. The
+new rehearsal used source from `3d261ffe`, locked CPython 3.12.15 on macOS
+arm64, and the approved Qwen files from the earlier run. It froze 24
+generated rows in eight independent source groups. The seed
+`00112233445566778899aabbccddeeff` and a 1,250-basis-point validation
+fraction selected 21 training and three validation rows, balanced across
+the three labels in each partition. The original three holdout prompts and
+source IDs were absent from both. Neither the holdout nor the quality
+policy changed between runs.
+
+The training worker ran 24 optimizer steps, rank 8, a learning rate of
+`0.0005`, a 96-token training limit, seed 42 and two threads. The parent
+enforced a 6 GiB RSS ceiling and 240-second wall limit for training. The
+preparation worker used the same RSS ceiling and a 120-second wall limit.
+Both workers ran under kernel network denial. On replay, training took
+11.387 seconds and peaked at 3,925,049,344 bytes RSS. Preparation took
+11.632 seconds and peaked at 4,363,960,320 bytes RSS. The limit applies to
+this native CPU fixture.
+
+The signed-in Portal actor imported and published the same source through
+the datasets service on PostgreSQL 18.6 with pgvector 0.8.7 and pinned
+CPython 3.12.15. Both containers shared a network namespace with only
+loopback. The test found the publication audit and read the two exact
+partition files back through `VersionFile`. The publication's manifest
+differed from the standalone worker's manifest even though the partitions
+were byte-identical. The bounded replay used the authorized export's
+version ID, tenant, workspace, manifest and partition bytes. The native
+training result repeated the version and manifest identifiers. The native
+preparation request bound that training job, attempt and adapter bytes.
+
+Both runs produced baseline 1/3, candidate 3/3, and a passing gate under
+the unchanged 8,000/0 policy. The two adapters, all nine model files
+(1,208,042,441 bytes), normalized predictions and generated-output hashes
+matched across runs. Request bindings and timing fields differed. The
+independent Go decoder verified the original request-bound reports and
+refused tampered verdicts. The Go tensor verifier confirmed the 56
+changed target tensors and the merged file hash. The production command
+test rejected promotion of a native verification request.
+
+| Frozen replay evidence | SHA-256 |
+| --- | --- |
+| Generated source | `961ec26524c833881ded802656a20b753e855a686494cd0c9c9759eca78dd116` |
+| Authorized version manifest | `134bedd3dd44e53bf1ed10f1eae0ac5638ebb3395218cc586604b8eb695a936d` |
+| Train partition | `3eeeb12fe713677b1394fdd1aed5c52a721f2be74c52abd34feae63b4a5a8089` |
+| Validation partition | `a35d91989ab8a6defa821375306c7dcaaefb1397eb8355d606395f3f6e307d05` |
+| Original three-row holdout | `0fd36fecf2b79bfd5e23a09cf0c66d395304824d5ae18ca4be8d01a23f9b09af` |
+| Protected training result | `42f0790680294637f8248a37a405cec920ee6d1d6c3b678248946b769781796f` |
+| LoRA adapter tensors | `a46897f648b94c94a3fe55dff81c15a082e1a427126f958e3075a8feee2bf06b` |
+| Merged BF16 weights | `07f5338cd5727efdd0e44ff64e8cf92b0ce6903cb9dd464c9763438c6c61e482` |
+| Preparation result | `5b244e7c87060e0afab4c4dcd57387f46964d4e37506ad96827df82a0b5ecf47` |
+
+The private evidence root retains the source generator, original holdout,
+publication overlay, authorized manifest and partitions, protected worker
+requests and reports, merged files and independent verification logs. The
+replay copy of `run.sh` takes the absolute replay directory, locked Python
+executable and approved model directory. Run it under the same kernel
+network-denial profile in a fresh private scope. Use the retained
+`compare.py` with CPython 3.12 and the evidence root to verify the existing
+pair without retraining. `replay/preparation/report-path` points to the
+unaltered report and adjacent model inventory.
+
+The local hardware and the authorized test host do not provide a production
+NVIDIA BF16 worker. The disposable database was removed after its export.
+The native training and preparation requests exercised the protected
+workers. The production training queue, physical stop, and Admin review
+were outside this rehearsal. A production acceptance run must use the
+authorized version and exact quality policy in a fresh NVIDIA attempt,
+then retain the verified physical stop and audited Admin decision before
+checking the derived model's lineage.
