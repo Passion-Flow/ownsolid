@@ -78,3 +78,31 @@ application projection.
 The same disconnected PostgreSQL fixture verified the directional-control case
 in both assistant reads and matched the original name in both ordinary Portal
 projections. The focused race tests also passed.
+
+## Model-shaped output at the command boundary
+
+The [model gateway request contract](../../api/openapi/v1/model-gateway/openapi.json)
+rejects arbitrary tools. The product assistant's staged model-independent
+adapter accepts a complete command and optional cursor. A tool result, model
+completion envelope, or text with embedded instructions carries no command
+authority. Preserve the existing strict object decoder and exact alias lookup.
+Adding a model response parser before a real gateway route would create an
+unused second admission path. Rendering and admitting structured proposals from
+a real model remain part of the model integration.
+
+[OWASP improper output handling](https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/)
+calls for validating model-controlled text before it reaches application actions
+and for encoding it in its output context. Qualify the existing boundary through
+the authenticated HTTPS dispatcher. Seed a published application name containing
+markup, a valid command phrase and an external URL. The scoped read must return
+the full name in its data field and no navigation destination. Resubmitting
+the name as a command must fail. A model completion envelope and a command
+object carrying model tool metadata must also fail, even when they contain a
+valid command phrase. Check the real audit store and Admin audit response for
+each refused request. These checks need the same offline PostgreSQL fixture,
+Go standard library and synthetic data as the existing adapter tests.
+
+The staged dispatcher passed these cases in
+`TestAuthenticatedAssistantHTTP` using real TLS, a Portal session and isolated
+PostgreSQL 18.6. The read remained ordinary typed data. Each refused request
+returned no result and produced no event in PostgreSQL or the Admin audit list.
