@@ -152,7 +152,7 @@ func NewSourceImporter(limits SourceImportLimits, parquet *ParquetImportConfig) 
 func (i *SourceImporter) ImportUpload(ctx context.Context, body io.Reader, destination string, opts SourceImportOptions) (SourceImportReport, error) {
 	ctx, cancel := context.WithTimeout(ctx, i.limits.Timeout)
 	defer cancel()
-	return i.importSource(ctx, body, destination, opts)
+	return i.importSource(ctx, body, destination, opts, nil)
 }
 
 // PreviewUpload evaluates a cleaning policy against a complete, sealed source.
@@ -210,7 +210,7 @@ func (i *SourceImporter) validatePreviewSource(scratch string, opts SourceImport
 }
 
 func (i *SourceImporter) previewSource(ctx context.Context, body io.Reader, scratch string, opts SourceImportOptions) (SourceImportReport, error) {
-	report, samples, err := i.scanSource(ctx, body, scratch, opts, bufio.NewWriter(io.Discard))
+	report, samples, err := i.scanSource(ctx, body, scratch, opts, bufio.NewWriter(io.Discard), nil)
 	if err != nil {
 		return SourceImportReport{}, err
 	}
@@ -235,7 +235,7 @@ func (i *SourceImporter) ImportObject(ctx context.Context, storage SourceObjectR
 		return SourceImportReport{}, err
 	}
 	defer body.Close()
-	return i.importSource(ctx, body, destination, opts)
+	return i.importSource(ctx, body, destination, opts, nil)
 }
 
 func sourceObjectOptions(storage SourceObjectReader, object SourceObject, opts SourceImportOptions) (SourceImportOptions, error) {
@@ -292,7 +292,7 @@ func (i *SourceImporter) validateOptions(opts SourceImportOptions) error {
 	return nil
 }
 
-func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, destination string, opts SourceImportOptions) (SourceImportReport, error) {
+func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, destination string, opts SourceImportOptions, parquetOriginal *os.File) (SourceImportReport, error) {
 	if err := i.validateOptions(opts); err != nil {
 		return SourceImportReport{}, err
 	}
@@ -312,7 +312,7 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 
 	outputHash := sha256.New()
 	writer := bufio.NewWriter(io.MultiWriter(output, outputHash))
-	report, samples, err := i.scanSource(ctx, body, directory, opts, writer)
+	report, samples, err := i.scanSource(ctx, body, directory, opts, writer, parquetOriginal)
 	if err != nil {
 		return report, err
 	}
@@ -349,7 +349,7 @@ func (i *SourceImporter) importSource(ctx context.Context, body io.Reader, desti
 	return report, nil
 }
 
-func (i *SourceImporter) scanSource(ctx context.Context, body io.Reader, directory string, opts SourceImportOptions, output *bufio.Writer) (SourceImportReport, []SourceCleaningSample, error) {
+func (i *SourceImporter) scanSource(ctx context.Context, body io.Reader, directory string, opts SourceImportOptions, output *bufio.Writer, parquetOriginal *os.File) (SourceImportReport, []SourceCleaningSample, error) {
 	limit := i.limits.SourceBytes
 	if opts.ExpectedBytes > 0 {
 		limit = opts.ExpectedBytes
@@ -371,7 +371,7 @@ func (i *SourceImporter) scanSource(ctx context.Context, body io.Reader, directo
 	case SourceCSV:
 		err = state.readCSV(source)
 	case SourceParquet:
-		err = state.readParquet(source, directory, *i.parquet)
+		err = state.readParquet(source, directory, *i.parquet, parquetOriginal)
 	}
 
 	report := state.report()
