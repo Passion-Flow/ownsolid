@@ -81,6 +81,26 @@ emit the resource fields as an array for a list or an object for a detail.
 Prompts and errors go to stderr. A failed command exits nonzero. Run
 `ownsolid --help` or `ownsolid node list --help` for usage and examples.
 
+## Inspect gateway request history
+
+```sh
+ownsolid gateway request list --limit 20
+ownsolid gateway request list --api-key-id "$KEY_ID" --output json
+ownsolid gateway request list --api-key-id "$KEY_ID" --cursor "$NEXT_CURSOR" --output json
+ownsolid gateway request get "$REQUEST_ID" --output json
+```
+
+Use the gateway response's `X-Request-ID` to find the recorded call in the
+matching site and cell. The commands use the selected workspace. List
+reads one page. In JSON and YAML, `items` contains the records and
+`next_cursor` is null at the end. In table output, the continuation is shown
+after the rows. Reuse it with the same workspace and key filter. Without
+`--limit`, the installation selects the page size.
+
+Detail JSON or YAML includes the stored outcome. A null outcome means no
+reported receipt. An outcome can have null usage. A numeric zero in usage
+is a verified token count.
+
 ## Maintain nodes
 
 Read the node's current `version` with `node get --output json` before a
