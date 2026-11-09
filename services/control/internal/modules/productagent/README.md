@@ -1,7 +1,8 @@
 # Product assistant command service
 
 `New` binds the deterministic command service to the control plane's existing
-application projection and session owner. `Run` takes a server-authenticated
+application projection, session owner and trusted local execution policy.
+`Run` takes a server-authenticated
 identity, a complete command and an optional cursor, and generates a request
 ID. `RunForRequest` accepts the ID assigned by the trusted HTTP dispatcher.
 Navigation, application reads and conversation reads resolve the authenticated
@@ -18,6 +19,12 @@ matches one complete alias after case and space normalization. The service
 works offline with fixed routes and typed reads. See the
 [entry-point and audit handoff](../../../../../docs/research/app-lane-questions.md)
 for the remaining browser, HTTP and confirmed mutation work.
+
+Every admitted command reads the installation decision before dispatch.
+An explicit disable returns `ACCESS_DENIED`. A missing source or failed read
+returns `SERVICE_NOT_READY`. Both leave the result empty and produce no success
+audit. Later commands read policy again. Production binding requires the
+[typed configuration and dispatcher handoff](../../../../../docs/research/product-assistant-execution-policy.md).
 
 The reviewed tool overlay selects only the typed read adapters. The generated
 catalog derives HTTP metadata from the applications OpenAPI contract and checks
@@ -82,5 +89,7 @@ entrance cookies and the standard CSRF route. It checks that an application
 cursor cannot cross workspace boundaries and a failed audit append suppresses
 the response data. It correlates real command requests with the Admin audit
 list in its legacy and opt-in forms, and checks that denied commands leave no
-audit event. Once the shared dispatcher mounts the adapter, run the same test
+audit event. It also exercises an enabled, explicitly disabled, absent and
+unreadable installation policy on both entrances and retries after recovery.
+Once the shared dispatcher mounts the adapter, exercise the real policy source
 without the overlay.
