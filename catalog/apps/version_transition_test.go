@@ -3,6 +3,7 @@ package apps
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/ed25519"
 	"encoding/json/v2"
 	"errors"
@@ -102,6 +103,81 @@ func engineFixture(t *testing.T, engine, version, image string) []byte {
 		t.Fatal(err)
 	}
 	return output.Bytes()
+}
+
+func TestListReleaseMetadataReturnsSignedLocalVersions(t *testing.T) {
+	root, key, private := transitionCatalog(t)
+	if releases, err := ListReleaseMetadata(t.Context(), root, key, "example-app"); err != nil || len(releases) != 0 {
+		t.Fatalf("empty catalog: %v", err)
+	}
+	old := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.9.0", engine: "helm"})
+	recent := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.10.0", engine: "compose"})
+	if err := root.Remove(old.Version + "/" + ImageArchiveName); err != nil {
+		t.Fatal(err)
+	}
+	releases, err := ListReleaseMetadata(t.Context(), root, key, "example-app")
+	if err != nil || len(releases) != 2 || releases[0].Pin != recent || releases[1].Pin != old {
+		t.Fatalf("expected newest signed metadata first even with an absent payload: %v", err)
+	}
+	for _, release := range releases {
+		if release.English.Title != "Example app" || release.SimplifiedChinese.Title != "\u793a\u4f8b\u5e94\u7528" {
+			t.Fatal("signed locale metadata was not retained")
+		}
+	}
+	request := InitialReleaseRequest{AppID: "example-app", PlatformVersion: "1.2.0", Pin: releases[0].Pin}
+	if installed, err := VerifyInitialRelease(t.Context(), root, key, testTransitionBudget, request); err != nil || installed.Pin != recent {
+		t.Fatalf("the selected pin did not reach payload verification: %v", err)
+	}
+	request.Pin = releases[1].Pin
+	if _, err := VerifyInitialRelease(t.Context(), root, key, testTransitionBudget, request); !errors.Is(err, ErrBundle) {
+		t.Fatalf("installation accepted missing media: %v", err)
+	}
+}
+
+func TestListReleaseMetadataRefusesUntrustedCatalog(t *testing.T) {
+	root, key, private := transitionCatalog(t)
+	release := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.0.0", engine: "compose"})
+	_, wrongKey, _ := transitionCatalog(t)
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	for _, tc := range []struct {
+		ctx context.Context
+		key ed25519.PublicKey
+		app string
+		err error
+	}{
+		{t.Context(), key, "another-app", ErrReleaseTransition},
+		{t.Context(), wrongKey, "example-app", ErrBundle},
+		{ctx, key, "example-app", context.Canceled},
+	} {
+		if releases, err := ListReleaseMetadata(tc.ctx, root, tc.key, tc.app); !errors.Is(err, tc.err) || releases != nil {
+			t.Fatalf("catalog did not refuse the invalid request: %v", err)
+		}
+	}
+
+	if err := root.Rename(release.Version, "1.1.0"); err != nil {
+		t.Fatal(err)
+	}
+	if releases, err := ListReleaseMetadata(t.Context(), root, key, "example-app"); !errors.Is(err, ErrReleaseTransition) || releases != nil {
+		t.Fatalf("a directory did not match its signed version: %v", err)
+	}
+	if err := root.Rename("1.1.0", release.Version); err != nil {
+		t.Fatal(err)
+	}
+	if err := root.WriteFile(release.Version+"/"+chineseName, []byte("{}"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if releases, err := ListReleaseMetadata(t.Context(), root, key, "example-app"); !errors.Is(err, ErrLocale) || releases != nil {
+		t.Fatalf("catalog accepted a modified locale: %v", err)
+	}
+	for i := range maxCatalogVersions {
+		if err := root.Mkdir(fmt.Sprintf("2.%d.0", i), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if releases, err := ListReleaseMetadata(t.Context(), root, key, "example-app"); !errors.Is(err, ErrReleaseTransition) || errors.Is(err, ErrBundle) || releases != nil {
+		t.Fatalf("catalog did not reject too many directories before reading entries: %v", err)
+	}
 }
 
 func TestVerifyInitialReleaseChecksSelectedIdentityAndCompatibility(t *testing.T) {
