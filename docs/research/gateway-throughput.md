@@ -58,3 +58,46 @@ cd services/gateway
 TMPDIR=/dev/shm cargo test --release --locked --offline chat_route_throughput_benchmark \
   -- --ignored --nocapture --test-threads=1
 ```
+
+## Control-plane query cost
+
+The shared machine authorization path uses the management alias projection.
+That projection counts held requests for the alias so Admin and Portal can
+show them. The count is ignored by both machine operations, and admission
+separately counts held requests for the selected deployment before taking
+a capacity slot. One normal generation runs model authorization before
+queueing and fresh admission after queueing, so the unused aggregate runs
+twice. The PostgreSQL partial capacity index is keyed by deployment.
+
+The [PostgreSQL wire protocol](https://www.postgresql.org/docs/18/protocol-flow.html)
+and the pinned [pgx query tracer](https://pkg.go.dev/github.com/jackc/pgx/v5@v5.11.0#QueryTracer)
+make each awaited SQL call observable. Split the administrative count from
+the shared readiness check. Keep the ready-revision checks and deployment
+capacity count in their current transactions. Retain the per-alias count
+on the management projection and the existing explicit cutover drain
+checks. A cache would make ready and revoked state lag. Adding an index
+for the extra query would still execute an aggregate machine callers never use.
+
+Use a real PostgreSQL connection with a test-only tracer that counts
+matching SQL statements without recording arguments. After issuance,
+the model lookup and admission should each execute zero alias-capacity
+counts, and admission should still execute one deployment-capacity
+count. The human alias detail must report one held request after
+admission and zero after its receipt. Re-run native gateway traffic,
+cutover interleavings, and rejected and concurrent admissions against
+the same isolated engine. The resulting query counts are separate from
+installed-system requests per second and latency.
+
+This change reuses the [pgx MIT license](https://github.com/jackc/pgx/blob/master/LICENSE)
+and [PostgreSQL License](https://www.postgresql.org/about/licence/).
+Both permit commercial use, offline use and redistribution with their
+notice terms. No dependency, model or data set is added.
+
+The disconnected PostgreSQL trace observed one administrative alias count
+in model lookup and one in admission before the change. Afterward both
+were absent, admission still checked deployment capacity once, and the
+human alias detail reflected the hold and release. Native Rust foreground
+Responses and Messages reached the synthetic engine through the real Go
+owner and recorded their reports. Cutover and revocation interleavings
+passed. No installation-wide throughput or latency claim follows from
+this query trace.

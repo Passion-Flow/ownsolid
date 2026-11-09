@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/google/uuid"
+
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/google/uuid"
 )
 
 const maximumRevision int64 = 9007199254740991
@@ -28,13 +29,18 @@ func scanAlias(row transaction.Row) (Alias, error) {
 	return out, nil
 }
 func (s *Service) aliasAvailability(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, out *Alias) error {
+	if e := s.aliasReadiness(ctx, tx, w, out); e != nil {
+		return e
+	}
+	return tx.QueryRow(ctx, distributionNativeStatement(tx, `SELECT COUNT(*) FROM GATEWAY_REQUESTS WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ALIAS_ID=? AND CAPACITY_HELD=1`, []any{w.TenantID, w.ID, out.ID}, "SELECT count(*) FROM gateway_requests WHERE tenant_id=$1 AND workspace_id=$2 AND alias_id=$3 AND capacity_held", `SELECT count(*) FROM gateway_requests WHERE tenant_id=? AND workspace_id=? AND alias_id=? AND capacity_held`, []any{w.TenantID, w.ID, out.ID}, []any{w.TenantID, w.ID, out.ID})).Scan(&out.HeldRequests)
+}
+
+// aliasReadiness checks the target without the held-request count used by management views.
+func (s *Service) aliasReadiness(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, out *Alias) error {
 	if e := s.gatewayComponents(); e != nil {
 		return e
 	}
 	unavailable := "MODEL_ALIAS_UNAVAILABLE"
-	if e := tx.QueryRow(ctx, distributionNativeStatement(tx, `SELECT COUNT(*) FROM GATEWAY_REQUESTS WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ALIAS_ID=? AND CAPACITY_HELD=1`, []any{w.TenantID, w.ID, out.ID}, "SELECT count(*) FROM gateway_requests WHERE tenant_id=$1 AND workspace_id=$2 AND alias_id=$3 AND capacity_held", `SELECT count(*) FROM gateway_requests WHERE tenant_id=? AND workspace_id=? AND alias_id=? AND capacity_held`, []any{w.TenantID, w.ID, out.ID}, []any{w.TenantID, w.ID, out.ID})).Scan(&out.HeldRequests); e != nil {
-		return e
-	}
 	out.Available = false
 	out.UnavailableCode = &unavailable
 	var active bool
