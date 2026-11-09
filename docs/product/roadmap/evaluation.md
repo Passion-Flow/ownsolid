@@ -27,6 +27,9 @@ Measuring models and applications before release, and gating releases on the res
     outcomes on frozen controls. Authorized production release and UI
     acceptance remain open.
 - [ ] EVL-104 Production traces turned into regression cases (P1)
+  - [Capture and publication boundary](../../research/evaluation-trace-regression.md)
+    records which inputs an authorized trace needs to become an immutable
+    regression case. The product capture and review flow remains open.
 - [ ] EVL-105 Performance benchmark: latency, throughput and cost per model and hardware (P1) - Catalog: F150
   - [Transport baseline](../../research/evaluation-performance-benchmark.md)
     independently checks the retained gateway summary. Representative engine,
