@@ -108,7 +108,7 @@ func TestPostgresShowbackRatesOccurrenceAndRejectsCrossScope(t *testing.T) {
 	appendEvent(foreign, event("foreign", cutover, Usage{Requests: 800}))
 	appendEvent(sibling, event("sibling", cutover, Usage{Requests: 700}))
 
-	want := ShowbackReport{Currency: "XTS", From: before, To: end, KnownAmountMicros: "4", FullyRated: false, Lines: []ShowbackLine{
+	want := ShowbackReport{Currency: "XTS", From: before, To: end, KnownAmountMicros: "4", FullyRated: false, UnmeasuredTokenRequests: "0", Lines: []ShowbackLine{
 		{Meter: Requests, Quantity: "1"},
 		{Meter: Requests, RateVersion: "first", Quantity: "2", Rate: &MeterRate{Units: 4, AmountMicros: 1}, AmountMicros: "1"},
 		{Meter: Tokens, RateVersion: "next", Quantity: "7"},
