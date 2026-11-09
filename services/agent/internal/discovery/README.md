@@ -24,6 +24,8 @@ for source versions, units and deployment gates.
 `ReadNVIDIAJournal` reads a bounded page of local `journalctl --kernel
 --output=json` output for a caller-supplied current boot ID. It checks kernel
 provenance and returns PCI addresses, Xid numbers and replay cursors.
+It accepts text and single byte-array messages and excludes events with the
+NVIDIA simulation marker and ambiguous multi-value messages.
 Persist the cursor only after accepted delivery. A PCI address must resolve
 uniquely to the physical GPU in same-boot inventory before an action can
 target it. `AdviceForNVIDIAXID` and `AdviceForDCGMIncident` return operator
