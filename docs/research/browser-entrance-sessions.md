@@ -63,6 +63,16 @@ cookies in the jar at both ports. Verify that renaming either token
 cannot cross audiences, Origin and CSRF proofs from the other port fail,
 and signing out at one entrance leaves the other usable.
 
+Exercise the published device session operations in that same shared jar.
+Each port must list only its own audience. Send each port the other port's
+live session ID with the local Origin and CSRF proof and require a scoped
+404. For a second Admin browser, require a wrong-port Origin and a Portal
+CSRF proof to fail before revocation. Then revoke that device from the
+original Admin browser and verify the target is expired, the managing
+Admin and Portal remain live, and exactly one target-bound revocation audit
+event was committed. These checks cover the identity handler after
+selection of the shared-host topology.
+
 Use the existing Go cookie jar and PostgreSQL fixture with the licenses
 above. A fixture using separate hostnames cannot establish shared-host
 behavior. Changing cookie names alone cannot create port isolation.
@@ -76,5 +86,8 @@ is selected.
 `TestSharedHostPortsKeepBrowserAuthoritySeparateHTTPS` and the existing
 distinct-host regression each passed three times over verified TLS against
 PostgreSQL 18.6 with pgvector 0.8.7 in an isolated Linux arm64 container.
+The extended device-session check, distinct-host check, device-management
+check and revocation/password-change race each passed three repetitions with
+the container network disabled.
 With the isolated `PROJECT_ONE_TEST_DSN` configured, run
 `go -C services/control test ./internal/modules/identity/http -run '^TestSharedHostPortsKeepBrowserAuthoritySeparateHTTPS$' -count=3`.
