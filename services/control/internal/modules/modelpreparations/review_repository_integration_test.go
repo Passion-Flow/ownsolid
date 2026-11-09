@@ -19,6 +19,7 @@ import (
 	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	trainwire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/snapshot"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
@@ -48,6 +49,11 @@ func reviewRaw(t *testing.T, v any) []byte {
 }
 func (g reviewStory) seed(t *testing.T, table string, values map[string]any) {
 	t.Helper()
+	g.seedWithin(t, g.f.Store, table, values)
+}
+
+func (g reviewStory) seedWithin(t *testing.T, q transaction.Executor, table string, values map[string]any) {
+	t.Helper()
 	values["tenant_id"], values["workspace_id"] = g.f.Tenant, g.f.Workspace
 	columns := []string{}
 	for k := range values {
@@ -58,13 +64,13 @@ func (g reviewStory) seed(t *testing.T, table string, values map[string]any) {
 	marks := []string{}
 	for _, k := range columns {
 		mark := "?"
-		if g.f.Store.Dialect() == transaction.PostgreSQL {
+		if q.Dialect() == transaction.PostgreSQL {
 			mark = fmt.Sprintf("$%d", len(args)+1)
 		}
 		v := values[k]
 		if j, ok := v.(reviewJSON); ok {
 			v = string(j)
-			if g.f.Store.Dialect() == transaction.MySQL {
+			if q.Dialect() == transaction.MySQL {
 				mark = "CAST(" + mark + " AS JSON)"
 			} else {
 				mark += "::jsonb"
@@ -73,7 +79,7 @@ func (g reviewStory) seed(t *testing.T, table string, values map[string]any) {
 		args = append(args, v)
 		marks = append(marks, mark)
 	}
-	_, e := g.f.Store.Exec(g.ctx, transaction.SQL(g.f.Store.Dialect(), "INSERT INTO "+table+"("+strings.Join(columns, ",")+") VALUES("+strings.Join(marks, ",")+")", args...))
+	_, e := q.Exec(g.ctx, transaction.SQL(q.Dialect(), "INSERT INTO "+table+"("+strings.Join(columns, ",")+") VALUES("+strings.Join(marks, ",")+")", args...))
 	if e != nil {
 		t.Fatal("explicit synthetic constrained review fixture", table, e)
 	}
@@ -165,11 +171,11 @@ func reviewGraph(t *testing.T, g reviewStory, variant string) reviewStory {
 	tc := trainwire.Command{SchemaVersion: 1, Scope: trainwire.Scope{TenantID: g.f.Tenant, WorkspaceID: g.f.Workspace, JobID: g.job}, AttemptID: g.trainAttempt, AttemptNumber: 1, ModelID: g.model, DatasetID: dataset, DatasetVersionID: version, DatasetManifestSHA256: digest, ModelCatalogSHA256: agent.ModelCatalogDigest(), GPUUUID: "GPU-" + uuid.NewString(), Configuration: trainCfg, ConfigurationSHA256: trainSHA, Recipe: trainwire.ExecutionRecipe{SchemaVersion: 1, WorkerVersion: trainwire.WorkerVersion, ImageReference: "projectone/training@sha256:" + digest, Identity: recipe.Identity, Resources: trainwire.DefaultResources(), DataLimits: limits}, Inputs: trainwire.InputInventory{Train: datawire.Asset{Path: "train.jsonl", SizeBytes: 128, SHA256: digest}, Validation: datawire.Asset{Path: "validation.jsonl", SizeBytes: 128, SHA256: strings.Repeat("d", 64)}}}
 	adapter := training.UploadDescriptor{SchemaVersion: 1, Scope: tc.Scope, UploadID: g.trainArtifact, AttemptID: g.trainAttempt, Kind: "artifact", GlobalStep: 1, ManifestSHA256: digest, Files: []datawire.Asset{{Path: "README.md", SizeBytes: 248, SHA256: digest}, {Path: "adapter_config.json", SizeBytes: 1092, SHA256: digest}, {Path: "adapter_model.safetensors", SizeBytes: 2308432, SHA256: digest}}}
 	h := Holdout{ID: g.holdout, WorkspaceID: g.f.Workspace, DatasetID: holdoutDataset, DatasetVersionID: holdoutVersion, Name: "Synthetic heldout", ManifestSHA256: holdoutDigest, EffectiveSourceSHA256: holdoutDigest, RowMappingSHA256: holdoutDigest, SourceBytes: 512, RowCount: 3, Labels: LabelCounts{Account: 1, Billing: 1, Technical: 1}, RecipeID: wire.RecipeID, RecipeSHA256: wire.RecipeDigest(), InstructionSHA256: wire.InstructionDigest(), FingerprintAlgorithm: wire.PromptFingerprintAlgorithm, CreatedBy: g.f.User, Audience: "admin", Reason: "Synthetic SQL provenance", CreatedAt: stamp}
-	inputs := preparationInputs{SchemaVersion: 1, TrainingCommand: tc, Adapter: adapter, TrainingIdentitySHA256: (training.AcceptedAdapter{Command: tc, Descriptor: adapter}).IdentitySHA256(), Heldout: h, DatasetAttemptID: dsAttempt}
+	inputs := preparationInputs{SchemaVersion: 1, TrainingCommand: tc, Adapter: snapshot.Adapter(adapter), TrainingIdentitySHA256: (training.AcceptedAdapter{Command: tc, Descriptor: adapter}).IdentitySHA256(), Heldout: h, DatasetAttemptID: dsAttempt}
 	if variant == "lineage_conflict" {
 		inputs.TrainingCommand.AttemptID = uuid.NewString()
 		inputs.Adapter.AttemptID = inputs.TrainingCommand.AttemptID
-		inputs.TrainingIdentitySHA256 = (training.AcceptedAdapter{Command: inputs.TrainingCommand, Descriptor: inputs.Adapter}).IdentitySHA256()
+		inputs.TrainingIdentitySHA256 = (training.AcceptedAdapter{Command: inputs.TrainingCommand, Descriptor: training.UploadDescriptor(inputs.Adapter)}).IdentitySHA256()
 	}
 	if e := inputs.validate(); e != nil {
 		t.Fatal("synthetic typed inputs", e)
@@ -385,9 +391,7 @@ func TestActualPairedPreparationReview(t *testing.T) {
 			ws := &workspaces.Service{Identity: owner}
 			copyService := *x.s
 			copyService.DB, copyService.Identity, copyService.Workspaces = nil, owner, ws
-			copyNodes := *x.s.Nodes
-			copyNodes.DB, copyNodes.Identity, copyNodes.Workspaces = nil, owner, ws
-			copyService.Nodes = &copyNodes
+			copyService.Nodes = &nodes.Service{Identity: owner, Workspaces: ws}
 			x.s = &copyService
 			key := uuid.NewString()
 			v, e := x.review(x.input, key)
