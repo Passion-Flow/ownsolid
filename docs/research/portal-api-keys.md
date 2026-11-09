@@ -86,3 +86,41 @@ A person in the portal, in the workspace chosen in the switcher, issues a key fo
 and copies its secret once; sees the endpoint and a working call in cURL, Python and Node.js; rotates it with
 an overlap and revokes it by typing its name; reads only that key's calls; and sees no one else's keys. Every
 write is audited, enforced on the server, retryable after a failure, and works with no network.
+
+## Per-page CSV and caller CA downloads
+
+The [CSV handoff](gateway-usage-csv-contract.md#web-handoff) and
+[CA handoff](gateway-trust-download-contract.md) define the registered
+attachment paths and problem responses. Use the generated operations'
+path and query types with the existing file transport. It uses the
+signed-in browser session, decodes problems and hands successful bytes
+to the existing file saver. Save the server's attachment name. A
+navigating link would discard the drawer when the server returns a
+problem. Do not fetch files on page load.
+
+The call log is an accumulated list of JSON pages. Export one chosen
+loaded page with its own opaque cursor, key and limit. The first page
+uses no cursor. Show which page the CSV represents, and let the existing
+More calls control load the next page before offering its CSV. This
+avoids claiming a full export and preserves the production continuation
+contract. A cursor rejected by the server shows its problem and reload
+action. A failure produces no browser download. Keep download state in
+the scoped drawer so switching keys or workspaces cannot reuse a
+previous cursor or display its error.
+
+Place the CA action beside the endpoint in the key drawer. The
+server owns which aliases have activated trust. Preserve the existing
+private-CA setup instructions, including for administrator-managed
+gateways. An unavailable bundle explains that the operator provides
+the CA for that endpoint. Scope and authorization still come from the
+server. The browser saves the public PEM bytes.
+
+Check both attachments in Chromium against the real TLS dispatcher and
+PostgreSQL. For CSV, compare the request IDs and digest with the
+corresponding key-history pages, including continuation, and exercise
+a changed-scope cursor and inaccessible workspace. For CA, compare
+the downloaded X.509 fingerprint to the loaded issuer and use the
+downloaded bundle to verify the signed gateway endpoint. Check a
+refusal without a file. Keep controls in the existing drawer and use
+its established error notice and retry behavior. No new dependency,
+model or dataset is required.
