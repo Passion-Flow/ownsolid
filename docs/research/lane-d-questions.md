@@ -79,3 +79,6 @@ An isolated comparison using the existing readContract path resolver
 produced exact sets for both entrances. The Web owner can make the
 comparison resolve Path Item Objects before enumerating methods. Retain
 the independent check of the audience and operation set.
+
+The Web owner landed this resolution in 9d25ee7c. The Help comparison
+now resolves references before enumerating methods.
