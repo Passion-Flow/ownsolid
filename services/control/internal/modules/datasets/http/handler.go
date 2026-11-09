@@ -224,7 +224,14 @@ func (h *Handler) drafts(r *http.Request, a identity.Auth, workspace, dataset st
 		if len(digests) != 1 || !wire.ValidDigest(digests[0]) || r.ContentLength < 1 || r.ContentLength > h.Service.Identity.Config.Policy().Datasets.Limits.MaximumBytes {
 			return nil, 0, errors.New("VALIDATION_FAILED")
 		}
-		out, e := h.Service.Upload(ctx, a, workspace, dataset, draft, digests[0], r.ContentLength, r.Body, requestID)
+		var format wire.SourceRowFormat
+		if values := r.Header.Values("Dataset-Source-Row-Format"); len(values) != 0 {
+			if len(values) != 1 || values[0] != string(wire.SingleTurnMessagesV1) {
+				return nil, 0, errors.New("VALIDATION_FAILED")
+			}
+			format = wire.SingleTurnMessagesV1
+		}
+		out, e := h.Service.UploadWithSourceRowFormat(ctx, a, workspace, dataset, draft, digests[0], r.ContentLength, r.Body, format, requestID)
 		return out, 202, e
 	}
 	if len(tail) == 2 && tail[1] == "publications" && r.Method == "POST" {

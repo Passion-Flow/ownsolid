@@ -95,16 +95,45 @@ mapping while the existing training projection verified the canonical assets.
 The frozen training reader preserved completion-only labels and refused a
 too-long sequence in a smoke check using a fixture tokenizer.
 
-DEV/Web owns public selection, format help, and validation presentation.
-Offer the versioned choice when attaching a source, surface its frozen value
-from the original import, and present sequence errors with their physical
-line numbers. Deploy the matching processor before enabling the choice.
-DAT-102 remains open for public workflow verification and the other training
-formats.
+### Public single-turn attachment
+
+[RFC 9110 field handling](https://www.rfc-editor.org/rfc/rfc9110.html#section-5.2)
+distinguishes a singleton request field from a list-valued field. The
+[OpenAPI parameter contract](https://spec.openapis.org/oas/v3.1.1.html#parameter-object)
+can describe an optional header independently of the binary request body.
+Use the optional singleton `Dataset-Source-Row-Format` header on the existing
+Admin and Portal source attachment routes. Its explicit value is
+`single_turn_messages_v1`. Omission keeps the original prompt/completion
+decoder. Reject repeated, empty and unsupported selections. The existing
+NDJSON media type, content length, SHA-256 verification and streaming
+copy still apply. A JSON wrapper would change the uploaded bytes and the
+streaming contract. An inferred schema would reinterpret old uploads.
+
+Pass the selection to `UploadWithSourceRowFormat` so the protected import
+job binds the original interpretation. Verify over disconnected HTTPS and
+PostgreSQL that an identical replay keeps the job, an omitted format
+cannot reinterpret the same digest, and a failed import retries with the
+same selection. Verify Unicode, exact source bytes, physical line errors
+and the sealed canonical publication. DEV owns the matching optional
+header contract and generated clients. Release the handler with the
+matching processor and those generated artifacts. Web owns the selector
+and error presentation. The other DAT-102 training formats have separate
+consumer boundaries.
+
+The Linux HTTPS run passed with PostgreSQL 18.6 and pgvector 0.8.7
+in a loopback-only network namespace. The route rejected unsupported
+header values, replayed one inspection for the original format, and
+returned HTTP 409 when the same digest was replayed without the header.
+An injected worker exit was retryable and the retry retained the frozen
+format. The retained raw file matched the original bytes, including
+line endings. The canonical samples preserved the text and matched the
+published digest. An invalid role order reported its physical line and
+blocked publication. A source without the header kept the legacy
+prompt/completion interpretation.
 
 With the [PostgreSQL and CPython fixture](../development/environment.md)
-configured, run the focused publication tests:
+configured, run the focused HTTPS and publication tests:
 
 ```sh
-go -C services/control test -tags dataset_processor_integration ./internal/modules/datasets -run '^(TestActualProcessorSingleTurnMessages|TestActualSingleTurnMessages)'
+go -C services/control test -tags dataset_processor_integration ./internal/modules/datasets -run '^(TestActualProcessorSingleTurnMessages|TestActualSingleTurnMessages|TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness)'
 ```
