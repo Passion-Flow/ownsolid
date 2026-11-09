@@ -25,6 +25,7 @@ var ErrBundle = errors.New("CATALOG_BUNDLE_INVALID")
 type InstallBundle struct {
 	Release
 	Archive OCIArchive
+	Pin     ReleasePin
 }
 
 // OCIArchive describes the exact images.tar bytes and its OCI root inventory.
@@ -46,6 +47,7 @@ type bundleIndex struct {
 	English       string `json:"en"`
 	Chinese       string `json:"zh_cn"`
 	Images        string `json:"images"`
+	digest        string
 }
 
 // VerifyBundle authenticates the manifest and locales, then checks the bytes of
@@ -72,15 +74,9 @@ func verifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, max
 	if err := ctx.Err(); err != nil {
 		return InstallBundle{}, err
 	}
-	index, err := readIndex(root, key)
+	release, index, err := readSignedRelease(root, key)
 	if err != nil {
 		return InstallBundle{}, err
-	}
-	release, err := load(root, map[string]string{
-		manifestName: index.Manifest, englishName: index.English, chineseName: index.Chinese,
-	})
-	if err != nil {
-		return InstallBundle{}, fmt.Errorf("%w: %w", ErrBundle, err)
 	}
 	artifact := release.Manifest.Artifact
 	artifactBytes, err := verifyPayload(ctx, root, artifact.Filename(), artifact.SHA256, maximumPayloadBytes)
@@ -97,7 +93,24 @@ func verifyBundle(ctx context.Context, root *os.Root, key ed25519.PublicKey, max
 	if err != nil {
 		return InstallBundle{}, err
 	}
-	return InstallBundle{Release: release, Archive: archive}, nil
+	return InstallBundle{
+		Release: release, Archive: archive,
+		Pin: ReleasePin{Version: release.Manifest.Version, BundleSHA256: index.digest},
+	}, nil
+}
+
+func readSignedRelease(root *os.Root, key ed25519.PublicKey) (Release, bundleIndex, error) {
+	index, err := readIndex(root, key)
+	if err != nil {
+		return Release{}, bundleIndex{}, err
+	}
+	release, err := load(root, map[string]string{
+		manifestName: index.Manifest, englishName: index.English, chineseName: index.Chinese,
+	})
+	if err != nil {
+		return Release{}, bundleIndex{}, fmt.Errorf("%w: %w", ErrBundle, err)
+	}
+	return release, index, nil
 }
 
 func readIndex(root *os.Root, key ed25519.PublicKey) (bundleIndex, error) {
@@ -115,6 +128,7 @@ func readIndex(root *os.Root, key ed25519.PublicKey) (bundleIndex, error) {
 		!digest.MatchString(index.Chinese) || !digest.MatchString(index.Images) {
 		return bundleIndex{}, fmt.Errorf("%w: provide a version 1 index with SHA-256 digests", ErrBundle)
 	}
+	index.digest = digestBytes(raw)
 	return index, nil
 }
 

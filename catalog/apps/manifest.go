@@ -13,13 +13,14 @@ import (
 )
 
 const (
-	documentBytes = 64 << 10
-	manifestName  = "manifest.json"
-	englishName   = "locales/en.json"
-	chineseName   = "locales/zh-cn.json"
-	maxImages     = 128
-	maxFields     = 32
-	maxChoices    = 32
+	documentBytes   = 64 << 10
+	manifestName    = "manifest.json"
+	englishName     = "locales/en.json"
+	chineseName     = "locales/zh-cn.json"
+	maxImages       = 128
+	maxFields       = 32
+	maxChoices      = 32
+	maxPredecessors = 32
 )
 
 var (
@@ -79,6 +80,7 @@ type Manifest struct {
 	Images        []string      `json:"images"`
 	Form          []Field       `json:"form"`
 	Dependencies  []Dependency  `json:"dependencies,omitempty"`
+	UpgradeFrom   []ReleasePin  `json:"upgrade_from,omitempty"`
 }
 
 // Release holds a validated manifest and its two local message catalogs.
@@ -173,8 +175,12 @@ func (m Manifest) validate() error {
 	if m.SchemaVersion != 1 {
 		return fmt.Errorf("%w: use schema_version 1", ErrManifest)
 	}
-	if !validID(m.ID) || !triplet.MatchString(m.Version) {
+	releaseVersion, versionOK := parseVersion(m.Version)
+	if !validID(m.ID) || !versionOK {
 		return fmt.Errorf("%w: use a lowercase app identifier and a stable major.minor.patch version", ErrManifest)
+	}
+	if !validPredecessors(m.UpgradeFrom, releaseVersion) {
+		return fmt.Errorf("%w: list up to %d distinct older upgrade versions with signed bundle digests", ErrManifest, maxPredecessors)
 	}
 	if _, _, err := m.Platform.bounds(); err != nil {
 		return err
@@ -211,6 +217,22 @@ func (m Manifest) validate() error {
 		seen[slot.ID] = true
 	}
 	return nil
+}
+
+func validPredecessors(predecessors []ReleasePin, releaseVersion version) bool {
+	if len(predecessors) > maxPredecessors {
+		return false
+	}
+	seen := make(map[string]bool, len(predecessors))
+	for _, predecessor := range predecessors {
+		previous, ok := parseVersion(predecessor.Version)
+		if !ok || !digest.MatchString(predecessor.BundleSHA256) || seen[predecessor.Version] ||
+			slices.Compare(previous[:], releaseVersion[:]) >= 0 {
+			return false
+		}
+		seen[predecessor.Version] = true
+	}
+	return true
 }
 
 func distinct(values []string, valid func(string) bool) bool {
