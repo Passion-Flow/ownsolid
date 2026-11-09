@@ -23,7 +23,7 @@ import (
 
 const webhookPath = "/v1/alertmanager/"
 const maxWebhookBytes = 256 << 10
-const maxMatrixResponse = 8 << 10
+const maxRelayReceipt = 8 << 10
 
 type deliveryOutcome string
 
@@ -33,11 +33,13 @@ const (
 	scopeRejected  deliveryOutcome = "RELAY_SCOPE_REJECTED"
 	matrixRetry    deliveryOutcome = "RELAY_MATRIX_RETRY"
 	matrixRejected deliveryOutcome = "RELAY_MATRIX_REJECTED"
+	feishuRetry    deliveryOutcome = "RELAY_FEISHU_RETRY"
+	feishuRejected deliveryOutcome = "RELAY_FEISHU_REJECTED"
 )
 
 var eventID = regexp.MustCompile(`^\$[A-Za-z0-9._=+/:~-]{1,254}$`)
 
-type matrixRelay struct {
+type webhookRelay struct {
 	settings relaySettings
 	client   *http.Client
 	slots    chan struct{}
@@ -47,7 +49,17 @@ type matrixRelay struct {
 // RunMatrixRelay serves authenticated tenant webhooks on the configured private
 // TLS listener until the context is canceled. Alertmanager owns retry scheduling.
 func RunMatrixRelay(ctx context.Context, configurationFile string, logger *slog.Logger) error {
-	settings, err := loadRelaySettings(configurationFile)
+	return runRelay(ctx, configurationFile, matrixChannel, logger)
+}
+
+// RunFeishuRelay serves authenticated tenant webhooks for a private Feishu
+// receiver that advertises the ownsolid durable idempotency contract.
+func RunFeishuRelay(ctx context.Context, configurationFile string, logger *slog.Logger) error {
+	return runRelay(ctx, configurationFile, feishuChannel, logger)
+}
+
+func runRelay(ctx context.Context, configurationFile string, channel relayChannel, logger *slog.Logger) error {
+	settings, err := loadRelaySettings(configurationFile, channel)
 	if err != nil {
 		return err
 	}
@@ -55,7 +67,7 @@ func RunMatrixRelay(ctx context.Context, configurationFile string, logger *slog.
 	if err != nil {
 		return err
 	}
-	relay := newMatrixRelay(settings, logger)
+	relay := newWebhookRelay(settings, logger)
 	defer relay.client.CloseIdleConnections()
 	const readTimeout = 10 * time.Second
 	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12, Certificates: []tls.Certificate{settings.certificate}}
@@ -86,7 +98,7 @@ func RunMatrixRelay(ctx context.Context, configurationFile string, logger *slog.
 	}
 }
 
-func newMatrixRelay(settings relaySettings, logger *slog.Logger) *matrixRelay {
+func newWebhookRelay(settings relaySettings, logger *slog.Logger) *webhookRelay {
 	transport := &http.Transport{
 		TLSClientConfig:    &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: settings.roots},
 		DisableCompression: true, MaxConnsPerHost: settings.concurrent, IdleConnTimeout: 30 * time.Second,
@@ -95,10 +107,10 @@ func newMatrixRelay(settings relaySettings, logger *slog.Logger) *matrixRelay {
 		Transport: transport, Timeout: settings.timeout,
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}
-	return &matrixRelay{settings, client, make(chan struct{}, settings.concurrent), logger}
+	return &webhookRelay{settings, client, make(chan struct{}, settings.concurrent), logger}
 }
 
-func (s *matrixRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *webhookRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	tenant, matches := strings.CutPrefix(r.URL.Path, webhookPath)
 	if !matches || !tenantID.MatchString(tenant) || r.URL.RawPath != "" || r.URL.ForceQuery || r.URL.RawQuery != "" {
 		http.NotFound(w, r)
@@ -160,7 +172,7 @@ func (s *matrixRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, string(result), http.StatusBadRequest)
 	case scopeRejected:
 		http.Error(w, string(result), http.StatusForbidden)
-	case matrixRejected:
+	case matrixRejected, feishuRejected:
 		http.Error(w, string(result), http.StatusUnprocessableEntity)
 	default:
 		http.Error(w, string(result), http.StatusServiceUnavailable)
@@ -174,12 +186,15 @@ func logLevel(result deliveryOutcome) slog.Level {
 	return slog.LevelWarn
 }
 
-func (s *matrixRelay) send(ctx context.Context, route tenantRoute, msg matrixMessage, transaction string) deliveryOutcome {
-	raw, err := json.Marshal(msg)
+func (s *webhookRelay) send(ctx context.Context, route tenantRoute, text, transaction string) deliveryOutcome {
+	if s.settings.channel == feishuChannel {
+		return s.sendFeishu(ctx, route, text, transaction)
+	}
+	raw, err := json.Marshal(matrixMessage{MsgType: "m.text", Body: text})
 	if err != nil {
 		return matrixRejected
 	}
-	path := s.settings.matrix.String() + "/_matrix/client/v3/rooms/" + url.PathEscape(route.room) + "/send/m.room.message/" + transaction
+	path := s.settings.origin.String() + "/_matrix/client/v3/rooms/" + url.PathEscape(route.target) + "/send/m.room.message/" + transaction
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, path, bytes.NewReader(raw))
 	if err != nil {
 		return matrixRejected
@@ -196,15 +211,19 @@ func (s *matrixRelay) send(ctx context.Context, route tenantRoute, msg matrixMes
 		var receipt struct {
 			EventID string `json:"event_id"`
 		}
-		data, err := io.ReadAll(io.LimitReader(res.Body, maxMatrixResponse+1))
-		if err != nil || len(data) > maxMatrixResponse ||
+		data, err := io.ReadAll(io.LimitReader(res.Body, maxRelayReceipt+1))
+		if err != nil || len(data) > maxRelayReceipt ||
 			release.UniqueJSON(data, &receipt) != nil || !eventID.MatchString(receipt.EventID) {
 			return matrixRetry
 		}
 		return delivered
-	case res.StatusCode == http.StatusTooManyRequests || res.StatusCode == http.StatusRequestTimeout || res.StatusCode >= 500:
+	case retryableRelayStatus(res.StatusCode):
 		return matrixRetry
 	default:
 		return matrixRejected
 	}
+}
+
+func retryableRelayStatus(status int) bool {
+	return status == http.StatusTooManyRequests || status == http.StatusRequestTimeout || status >= 500
 }

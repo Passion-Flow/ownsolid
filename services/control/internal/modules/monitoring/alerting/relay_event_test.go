@@ -23,8 +23,8 @@ func TestWebhookMappingKeepsOccurrenceIdentity(t *testing.T) {
 	}
 	route := tenantRoute{receiver: "tenant-a-matrix"}
 	first, firingID, result := mapWebhook("tenant-a", route, batch)
-	if result != delivered || !strings.Contains(first.Body, "2 firing") || first.MsgType != "m.text" {
-		t.Fatalf("unexpected mapping: %v %s", result, first.Body)
+	if result != delivered || !strings.Contains(first, "2 firing") {
+		t.Fatalf("unexpected mapping: %v %s", result, first)
 	}
 	slices.Reverse(batch.Alerts)
 	batch.Alerts[0].StartsAt = start.In(time.FixedZone("other", 8*3600))

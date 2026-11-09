@@ -347,15 +347,17 @@ func relayFixtureAlertmanager(t *testing.T, ctx context.Context, client *http.Cl
 	if err != nil {
 		t.Fatal(err)
 	}
+	substitutions := []string{
+		"/etc/ownsolid/relay/", root + "/",
+		"group_wait: 15s", "group_wait: 2s",
+		"group_interval: 1m", "group_interval: 2s",
+	}
 	for _, tenant := range tenants {
 		path := filepath.Join(root, tenant.config.ID+"-url")
 		writeFixture(t, path, []byte(ingress+webhookPath+tenant.config.ID+"\n"))
+		substitutions = append(substitutions, tenant.config.ID+"-matrix", tenant.config.Receiver)
 	}
-	rules := strings.NewReplacer(
-		"/etc/ownsolid/relay/", root+"/",
-		"group_wait: 15s", "group_wait: 2s",
-		"group_interval: 1m", "group_interval: 2s",
-	).Replace(string(raw))
+	rules := strings.NewReplacer(substitutions...).Replace(string(raw))
 	configFile := filepath.Join(root, "alertmanager.yml")
 	writeFixture(t, configFile, []byte(rules))
 	return runAlertService(t, ctx, client, "OWNSOLID_TEST_ALERTMANAGER", "/-/ready",
