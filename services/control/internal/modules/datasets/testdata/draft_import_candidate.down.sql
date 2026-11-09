@@ -1,0 +1,2 @@
+DROP TABLE dataset_draft_import_candidates;
+ALTER TABLE dataset_drafts DROP CONSTRAINT dataset_draft_import_scope_key;

@@ -32,7 +32,7 @@ func verifyDraftSourceHTTPS(t *testing.T, handler *datasethttp.Handler, portal, 
 	service := handler.Service
 	// The candidate table is outside the published catalog fingerprint.
 	// Install it only after the released readiness checks have run.
-	schema, err := os.ReadFile("testdata/draft_import_candidate.sql")
+	schema, err := os.ReadFile("testdata/draft_import_candidate.up.sql")
 	if err != nil {
 		t.Fatal(err)
 	}
