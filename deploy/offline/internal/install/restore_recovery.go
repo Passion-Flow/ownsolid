@@ -20,12 +20,13 @@ import (
 
 const (
 	restoreIntentName = "restore-intent.json"
+	restoreAllocating = "allocating"
 	restoreLoading    = "loading"
 	restorePending    = "pending"
 	restoreServing    = "serving"
 	restoreRollback   = "rollback"
-	// Serialize the forward and reverse rename transactions, including a
-	// PostgreSQL request left behind after the installer process is killed.
+	// Serialize allocation and both rename directions, including PostgreSQL
+	// requests left behind after the installer process is killed.
 	restoreSwapLock = 6750471102516012
 )
 
@@ -66,9 +67,9 @@ func readRestoreIntent(c Config) (*restoreIntent, error) {
 	var i restoreIntent
 	if err != nil || wire.StrictJSON(raw, &i) != nil ||
 		i.Version != 1 || !restoreSuffix.MatchString(i.Suffix) ||
-		i.Cluster == 0 || i.Original == 0 || i.Incoming == 0 || i.Original == i.Incoming ||
+		i.Cluster == 0 || i.Original == 0 || (i.Incoming == 0) != (i.Phase == restoreAllocating) || i.Original == i.Incoming ||
 		(i.PITRActivation != "" && !validPITRActivation(i.PITRActivation)) ||
-		(i.Phase != restoreLoading && i.Phase != restorePending && i.Phase != restoreServing && i.Phase != restoreRollback) {
+		(i.Phase != restoreAllocating && i.Phase != restoreLoading && i.Phase != restorePending && i.Phase != restoreServing && i.Phase != restoreRollback) {
 		return nil, errors.New("INSTALL_RESTORE_INTENT_INVALID: preserve the recovery record and the databases for inspection")
 	}
 	site, err := restoreSite(c)
@@ -126,12 +127,15 @@ func RecoverRestore(ctx context.Context, c Config, runner StreamRunner, rollback
 }
 
 func (o *operation) recoverRestore(ctx context.Context, i restoreIntent, rollback bool) error {
-	if i.Phase == restoreLoading {
+	if i.Phase == restoreAllocating || i.Phase == restoreLoading {
 		if err := o.runSteps(ctx, []struct {
 			name string
 			run  func(context.Context) error
 		}{{"database", o.database}}); err != nil {
 			return err
+		}
+		if i.Phase == restoreAllocating {
+			return o.recoverRestoreAllocation(ctx, i)
 		}
 		return o.recoverRestoreLoad(ctx, i)
 	}
@@ -338,15 +342,20 @@ func (o *operation) restoreCatalog(ctx context.Context, i restoreIntent) (restor
 	if err != nil {
 		return restoreCatalog{}, err
 	}
+	return parseRestoreCatalog(raw)
+}
+
+func parseRestoreCatalog(raw string) (restoreCatalog, error) {
 	var c restoreCatalog
 	parts := strings.Split(raw, "|")
 	if len(parts) != 5 {
 		return c, restoreIdentityError()
 	}
-	c.cluster, err = strconv.ParseInt(parts[0], 10, 64)
-	if err != nil || c.cluster == 0 {
+	cluster, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil || cluster == 0 {
 		return c, restoreIdentityError()
 	}
+	c.cluster = cluster
 	for n, oid := range []*uint32{&c.current, &c.incoming, &c.previous, &c.failed} {
 		value, err := strconv.ParseUint(parts[n+1], 10, 32)
 		if err != nil {
@@ -394,7 +403,7 @@ COMMIT;`, restoreSwapLock, i.catalogSQL(), branches, target.key()), target
 }
 
 func (o *operation) renameForRestore(ctx context.Context, i restoreIntent, reverse bool) error {
-	if i.Phase == restoreLoading && !reverse {
+	if i.Phase == restoreAllocating || (i.Phase == restoreLoading && !reverse) {
 		return restoreIdentityError()
 	}
 	statement, target := i.renameSQL(reverse)

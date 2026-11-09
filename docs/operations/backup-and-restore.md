@@ -152,9 +152,17 @@ installation files and PostgreSQL cluster. The backup directory can be offline.
   unverified scratch database is retained as `ownsolid_failed_restore_<id>`
   if it still exists. Retry the restore with the original backup after
   addressing the interruption.
+- `RESTORE_ALLOCATION_ROLLED_BACK` means the scratch allocation settled with
+  no database in the recorded scratch slot. The original is still selected
+  and the restore can be retried.
+- `INSTALL_RESTORE_ALLOCATION_UNBOUND` means a database exists in the
+  recorded slot and its OID was never bound to the restore. Recovery preserves
+  the database and record and reports the observed name and OID. A PostgreSQL
+  administrator can inspect its ownership and active use and, when appropriate,
+  move it to a separate name before rerunning recovery.
 - `RESTORE_NO_RECOVERY_PENDING` means there is no unfinished recorded restore.
-  An interruption before the installer records the scratch OID can leave an
-  unreferenced `ownsolid_restore_<id>` database. The original stays in service.
+  An installer from before allocation recording can leave an unreferenced
+  `ownsolid_restore_<id>` database. Preserve it for inspection.
 
 If the candidate cannot start, retry after fixing the cause or run
 `recover-restore --config install.yaml --rollback` to serve on the original.
@@ -223,6 +231,7 @@ docker compose --env-file <install_root>/compose.env -f <install_root>/compose.y
 | `INSTALL_RESTORE_LOAD_FAILED`, `INSTALL_RESTORE_CONTENT_MISMATCH` | The backup did not load as recorded; the current database serves again |
 | `INSTALL_RESTORE_SWAP_FAILED` | The databases could not be renamed. If rollback also failed, use `recover-restore` |
 | `INSTALL_RESTORE_PENDING` | Run `recover-restore` before other installer maintenance |
+| `INSTALL_RESTORE_ALLOCATION_UNBOUND` | Inspect the reported PostgreSQL database before retrying recovery |
 | `INSTALL_RESTORE_SITE_CHANGED` | Use the site configuration that started the restore |
 | `INSTALL_RESTORE_IDENTITY_CHANGED`, `INSTALL_RESTORE_INTENT_INVALID` | Preserve the recovery record and both databases for inspection |
 | `INSTALL_BUSY` | Another apply, backup or restore is running on this installation |
