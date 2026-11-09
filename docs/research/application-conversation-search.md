@@ -17,9 +17,11 @@ literal text using the existing pagination helpers. Bind the term as a
 parameter. PostgreSQL supports this case-insensitive substring predicate with
 [`lower`, `LIKE` and `ESCAPE`](https://www.postgresql.org/docs/18/functions-matching.html).
 Use a correlated `EXISTS` on completed runs so multiple matching turns yield
-one conversation. Match the run's tenant, workspace, workflow, conversation,
-owner and version to the already authorized row. The existing conversation
-page index restricts the outer scan and the unique conversation and turn key
+one conversation. Bind the same tenant, workspace and owner inside the run
+subquery so PostgreSQL can scope it even when it builds a hash table. Match
+the run's workflow, conversation and version to the authorized row. The
+existing conversation page index restricts the outer scan, and the unique
+conversation and turn key
 gives the inner query its conversation prefix. Workflow retention and the
 existing operation timeout still apply. Keep the unfiltered SQL unchanged.
 
