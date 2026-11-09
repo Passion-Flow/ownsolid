@@ -220,3 +220,14 @@ Stream the tracked Git archive into the outer payload, preserving its
 file list, and check for exactly 58 up migrations and zero sidecars
 before compiling. The corrected archive passed those preflight checks
 locally. Repeat the Go migrator and Audit module after Linux admission.
+
+The clean archive remains the replay input after rebasing on
+`273929ee`. The Linux amd64 package list for the production database
+and Audit tests and the standalone verifier selected 758 Go and
+embed inputs across 48 repository package directories. None changed
+from the archived tree `77795679e6c4dc82abbb5b5328ea8cb621c635f1`,
+and the module manifests, release lineage and migration files also
+match. Keep the archive SHA-256
+`400305ad8c014ad6652301af098f2b3bc09276caf6d8aa8a0aaa4c39cad0993e`
+for the SCI replay. The full repository gate runs against the actual
+integration tree.
