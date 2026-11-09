@@ -1225,6 +1225,8 @@
   "problem.SSO_SCOPE_REJECTED.title": "身份提供方未授权",
   "problem.STORAGE_COMMIT_OUTCOME_UNKNOWN.detail": "保存时数据库停止响应，改动可能已保存，也可能没有。请先刷新确认，再决定是否重试。",
   "problem.STORAGE_COMMIT_OUTCOME_UNKNOWN.title": "改动可能未保存",
+  "problem.STORAGE_COMMIT_ROLLED_BACK.detail": "数据库已回滚此次操作，请重试。",
+  "problem.STORAGE_COMMIT_ROLLED_BACK.title": "请求未完成",
   "problem.STORAGE_TIMEOUT.detail": "控制面繁忙，请稍后重试。",
   "problem.STORAGE_TIMEOUT.title": "数据库响应超时",
   "problem.STORAGE_UNAVAILABLE.detail": "控制平面无法连接数据库。请稍后重试；如果持续出现，请让管理员检查数据库。",
