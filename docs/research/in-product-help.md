@@ -109,7 +109,7 @@ Use the existing catalog and Help tests, and check the production Problem
 status and headers offline. This adds no dependency, model or dataset.
 
 A loopback HTTPS probe of the production Problem writer returned all
-five codes as 409 with the scoped request ID and without Retry-After.
+five codes as 409 with a correlation ID and without Retry-After.
 The bilingual catalog and existing Help unit tests passed.
 
 ### Dataset tokenizer recovery copy (DAT-107)
@@ -133,6 +133,17 @@ Keep the shared text applicable to other dataset operations. A new screen
 or a preview-specific catalog would duplicate the same problem semantics.
 The contract owner supplies the versioned Help index entries. This adds
 no dependency, model or dataset.
+
+### Bilingual error review
+
+The existing Help browser suite passed in Admin and Portal. For visual
+review, a scratch browser fixture added only the expected status-to-code
+groups to the loaded Help index in memory. The running pages then showed
+all thirteen titles and recovery details in both languages, including
+the narrow layout. The fixture observed zero requests outside the local
+origin. Its index overlay was confined to the test browser. The
+versioned metadata and generated files remain the contract owner's
+publication boundary.
 
 ## What the finished item does
 
