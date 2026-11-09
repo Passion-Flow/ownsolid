@@ -52,14 +52,10 @@ func (s *Service) OpenTransferWithin(ctx context.Context, q transaction.Executor
 	path := "objects/" + model + "/" + input.File
 	info, e := root.Lstat(path)
 	approved, _ := wire.ModelFileForName(input.File)
-	if e != nil || !info.Mode().IsRegular() || info.Size() != approved.SizeBytes || info.Mode().Perm() != 0444 {
+	if e != nil || !transferFileMatches(info, approved.SizeBytes) {
 		return out, fail("MODEL_FILE_INVALID")
 	}
-	owner, ok := info.Sys().(*syscall.Stat_t)
-	if !ok || int(owner.Uid) != os.Geteuid() || owner.Nlink != 1 {
-		return out, fail("MODEL_FILE_INVALID")
-	}
-	file, e := root.Open(path)
+	file, e := root.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
 	if e != nil {
 		return out, fail("MODEL_FILE_INVALID")
 	}
@@ -70,7 +66,7 @@ func (s *Service) OpenTransferWithin(ctx context.Context, q transaction.Executor
 		}
 	}()
 	current, e := file.Stat()
-	if e != nil || !os.SameFile(info, current) || info.Size() != current.Size() || !info.ModTime().Equal(current.ModTime()) {
+	if e != nil || !transferFileMatches(current, approved.SizeBytes) || !os.SameFile(info, current) || !info.ModTime().Equal(current.ModTime()) {
 		return out, fail("MODEL_FILE_CHANGED")
 	}
 	hash := sha256.New()
@@ -79,7 +75,7 @@ func (s *Service) OpenTransferWithin(ctx context.Context, q transaction.Executor
 		return out, fail("MODEL_IO_FAILED")
 	}
 	after, e := file.Stat()
-	if e != nil || after.Size() != info.Size() || !after.ModTime().Equal(info.ModTime()) {
+	if e != nil || !transferFileMatches(after, approved.SizeBytes) || !after.ModTime().Equal(current.ModTime()) {
 		return out, fail("MODEL_FILE_CHANGED")
 	}
 	digest, e := modelTransferDigest(input, approved, hash.Sum(nil))
@@ -88,6 +84,16 @@ func (s *Service) OpenTransferWithin(ctx context.Context, q transaction.Executor
 	}
 	keep = true
 	return httpserver.Download{File: file, Offset: input.Offset, Size: input.Length, SHA256: digest, ContentType: "application/octet-stream"}, nil
+}
+
+// Check the opened descriptor as well as the pathname so the range stays
+// tied to an ordinary, private immutable file throughout hashing.
+func transferFileMatches(info os.FileInfo, size int64) bool {
+	if !info.Mode().IsRegular() || info.Size() != size || info.Mode().Perm() != 0444 {
+		return false
+	}
+	owner, ok := info.Sys().(*syscall.Stat_t)
+	return ok && owner.Uid == uint32(os.Geteuid()) && owner.Nlink == 1
 }
 
 func modelTransferDigest(input wire.ModelFileRequest, asset wire.ModelFile, sum []byte) (string, error) {
