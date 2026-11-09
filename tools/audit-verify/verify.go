@@ -159,6 +159,10 @@ func calculateHash(row record, predecessor []byte) string {
 }
 
 func verify(input io.Reader, previousHash, expectedLastHash string, requireAssistantActors bool) report {
+	return verifyWindow(input, previousHash, expectedLastHash, requireAssistantActors, nil)
+}
+
+func verifyWindow(input io.Reader, previousHash, expectedLastHash string, requireAssistantActors bool, visit func(record, int64) string) report {
 	var result report
 	fail := func(line int64, field, problem string) report {
 		result.Line, result.Field, result.Error = line, field, problem
@@ -222,6 +226,11 @@ func verify(input io.Reader, previousHash, expectedLastHash string, requireAssis
 			return fail(line, field, problem)
 		}
 
+		if visit != nil {
+			if problem := visit(row, current); problem != "" {
+				return fail(line, "delivery", problem)
+			}
+		}
 		if result.From == "" || occurred < result.From {
 			result.From = occurred
 		}
