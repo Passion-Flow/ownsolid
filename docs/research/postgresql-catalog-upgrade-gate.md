@@ -124,9 +124,21 @@ the catalogs on the committed predecessor. Test fresh install, native
 upgrade and the logical restore histories starting at 55 through the
 then-current schema, including the exact down SQL and catalog replay.
 
+## Dataset and metering successors
+
 DAT-101 follows the Gateway migration and needs the coordinated
-REL-103/NET-101 checkpoint to bind both dataset references. The metering
-receipt and ledger fixture has no numbered production migration.
-Use the actual main tail when each owner hands off their SQL. See the
-[dataset restore boundary](dataset-import.md) and
-[metering admission requirements](usage-ledger.md).
+REL-103/NET-101 checkpoint to bind both dataset references. The isolated
+fixture at 8d7a6363 creates dataset_draft_import_candidates with a
+tenant, workspace, dataset and draft foreign key. It omits site and
+cell. The release handoff must bind the candidate to the draft's
+stored site and cell and verify those identities through the
+[dataset restore boundary](dataset-import.md).
+
+The metering receipt tests at cc2f1c3a create usage_ledger with a
+tenant and workspace foreign key. That fixture also omits site and
+cell. Its release handoff needs both non-null scope columns with
+local defaults and a disconnected check of its least-privilege
+producer, cross-scope refusal and append-only behavior. See the
+[metering admission requirements](usage-ledger.md). Each owner
+hands off unnumbered up and down SQL. Assign a version from the
+actual committed main tail after the preceding gate passes.
