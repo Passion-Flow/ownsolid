@@ -55,6 +55,7 @@ export {
 } from './gateway-keys/key-list.tsx';
 export { IssueKeyDialog, ReasonField, useIntentKeys } from './gateway-keys/key-dialogs.tsx';
 export { gatewayKeys } from './gateway-keys/key-state.ts';
+export { GatewayCADownload } from './gateway-keys/gateway-ca-download.tsx';
 export { gatewayBaseUrl, sampleCall } from './gateway-keys/key-usage.ts';
 export type { SingleKeyShortcut } from './keyboard-shortcuts.tsx';
 export { useWorkspaces, type Workspaces } from './workspace.ts';

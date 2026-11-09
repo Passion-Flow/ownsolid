@@ -13,6 +13,7 @@ import {
   ColumnChooser,
   CopyLinkButton,
   everyPage,
+  GatewayCADownload,
   gatewayBaseUrl,
   pageSize,
   runtimeConfigQuery,
@@ -186,10 +187,12 @@ function IssueKeyLink() {
 
 function EntryDrawer({
   entry,
+  workspace,
   pending,
   onClose,
 }: {
   entry: CatalogueEntry | null;
+  workspace: string;
   pending: boolean;
   onClose: () => void;
 }) {
@@ -206,18 +209,27 @@ function EntryDrawer({
               {t('portalModels.unavailable.detail')}
             </Notice>
           )}
-          <DetailList>
-            <Detail label={t('portalModels.column.state')}>
-              <EntryState entry={entry} />
-            </Detail>
-            <Detail label={t('portalModels.detail.callName')}>
-              <span className="font-mono text-[12.5px]">{entry.alias.name}</span>
-            </Detail>
-            <Detail label={t('portalModels.detail.baseUrl')}>
-              <span className="font-mono text-[12.5px]">
-                {gatewayBaseUrl(entry.alias.client_origin)}
-              </span>
-            </Detail>
+          <div className="flex flex-col gap-3">
+            <DetailList className="grid-cols-[96px_1fr] sm:grid-cols-[130px_1fr]">
+              <Detail label={t('portalModels.column.state')}>
+                <EntryState entry={entry} />
+              </Detail>
+              <Detail label={t('portalModels.detail.callName')}>
+                <span className="font-mono text-[12.5px]">{entry.alias.name}</span>
+              </Detail>
+              <Detail label={t('portalModels.detail.baseUrl')}>
+                <span className="font-mono text-[12.5px] [overflow-wrap:anywhere]">
+                  {gatewayBaseUrl(entry.alias.client_origin)}
+                </span>
+              </Detail>
+            </DetailList>
+            <GatewayCADownload
+              key={entry.alias.id}
+              workspace={workspace}
+              aliasId={entry.alias.id}
+            />
+          </div>
+          <DetailList className="grid-cols-[96px_1fr] sm:grid-cols-[130px_1fr]">
             <Detail label={t('portalModels.column.model')}>
               <Fact entry={entry} pending={pending}>
                 {(model) => model.name}
@@ -389,6 +401,7 @@ function Catalogue({ workspace }: { workspace: string }) {
       {body}
       <EntryDrawer
         entry={opened}
+        workspace={workspace}
         pending={factsPending}
         onClose={() => {
           list.setOpenRow(null);

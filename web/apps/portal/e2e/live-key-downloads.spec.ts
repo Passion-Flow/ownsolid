@@ -23,6 +23,8 @@ interface DownloadFixture {
   request_ids: string[];
   other_key_id: string;
   alias_id: string;
+  alias_name: string;
+  deployment_id: string;
   gateway_origin: string;
   ca_fingerprint: string;
   ca_digest: string;
@@ -31,6 +33,19 @@ interface DownloadFixture {
 const base = '/api/v1/sites/default/cells/default/workspaces';
 const scope = (workspace: string) => `${base}/${workspace}/distribution`;
 const sha256 = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
+
+async function restrictBrowserOrigin(page: Page, address: string): Promise<string[]> {
+  const expected = new URL(address).origin;
+  const foreign: string[] = [];
+  await page.route(
+    (url) => (url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== expected,
+    async (route) => {
+      foreign.push(new URL(route.request().url()).origin);
+      await route.abort();
+    },
+  );
+  return foreign;
+}
 
 async function signIn(
   page: Page,
@@ -88,9 +103,26 @@ function signedEndpointStatus(endpoint: string, ca: Buffer): Promise<number | un
   });
 }
 
+async function verifyGatewayCA(page: Page, button: Locator, path: string, data: DownloadFixture) {
+  const { bytes } = await downloadFrom(
+    page,
+    button,
+    path,
+    'model-gateway-ca.pem',
+    'application/octet-stream',
+  );
+  const certificate = new X509Certificate(bytes);
+  expect(certificate.ca).toBe(true);
+  expect(certificate.fingerprint256.replaceAll(':', '').toLowerCase()).toBe(data.ca_fingerprint);
+  expect(sha256(bytes)).toBe(data.ca_digest);
+  expect(await signedEndpointStatus(data.gateway_origin, bytes)).toBe(204);
+  return bytes;
+}
+
 test('downloads scoped CSV pages and verifies the gateway CA', async ({ page }, info) => {
   test.setTimeout(120_000);
   const data = JSON.parse(await readFile(fixture, 'utf8')) as DownloadFixture;
+  const foreignOrigins = await restrictBrowserOrigin(page, origin);
   const distribution = scope(data.workspace);
   const history = `${distribution}/requests`;
   const exportPath = `${history}/export`;
@@ -131,25 +163,14 @@ test('downloads scoped CSV pages and verifies the gateway CA', async ({ page }, 
   await info.attach('gateway-usage-second-page', { body: second.bytes, contentType: csvType });
 
   const caButton = drawer.getByRole('button', { name: 'Download gateway CA' });
-  const ca = await downloadFrom(
-    page,
-    caButton,
-    caPath,
-    'model-gateway-ca.pem',
-    'application/octet-stream',
-  );
-  const certificate = new X509Certificate(ca.bytes);
-  expect(certificate.ca).toBe(true);
-  expect(certificate.fingerprint256.replaceAll(':', '').toLowerCase()).toBe(data.ca_fingerprint);
-  expect(sha256(ca.bytes)).toBe(data.ca_digest);
-  expect(await signedEndpointStatus(data.gateway_origin, ca.bytes)).toBe(204);
+  const ca = await verifyGatewayCA(page, caButton, caPath, data);
   await caButton.scrollIntoViewIfNeeded();
   await info.attach('portal-gateway-ca-action', {
     body: await page.screenshot({ animations: 'disabled' }),
     contentType: 'image/png',
   });
   await info.attach('model-gateway-ca.pem', {
-    body: ca.bytes,
+    body: ca,
     contentType: 'application/octet-stream',
   });
   await expectAccessible(page);
@@ -222,6 +243,32 @@ test('downloads scoped CSV pages and verifies the gateway CA', async ({ page }, 
     body: await page.screenshot({ animations: 'disabled' }),
     contentType: 'image/png',
   });
+
+  await page.goto('/models');
+  await page.getByRole('button', { name: `Show ${data.alias_name}` }).click();
+  const model = page.getByRole('dialog', { name: data.alias_name });
+  const modelCA = model.getByRole('button', { name: 'Download gateway CA' });
+  await expect(model.getByText(`${data.gateway_origin}/v1`, { exact: true })).toBeVisible();
+  await modelCA.click();
+  await expect(model.getByText('Gateway CA is unavailable')).toBeVisible();
+  await expect(model.getByText(`${data.gateway_origin}/v1`, { exact: true })).toBeVisible();
+  expect(unexpectedDownloads).toBe(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await modelCA.scrollIntoViewIfNeeded();
+  await info.attach('portal-model-endpoint-ca-refusal', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.unroute(caRoute);
+  expect(await verifyGatewayCA(page, modelCA, caPath, data)).toEqual(ca);
+  await expect(model.getByText('Gateway CA is unavailable')).toHaveCount(0);
+  await expectAccessible(page);
+  await info.attach('portal-model-endpoint-ca', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
+  expect(foreignOrigins).toEqual([]);
 });
 
 test('downloads the selected key page and CA from the Admin drawer', async ({ browser }, info) => {
@@ -234,6 +281,7 @@ test('downloads the selected key page and CA from the Admin drawer', async ({ br
   });
   try {
     const page = await context.newPage();
+    const foreignOrigins = await restrictBrowserOrigin(page, adminOrigin);
     await signIn(page, '/gateway', email, adminPassword(), 'Gateway and keys');
     await page.getByRole('button', { name: `Show ${data.key_name}` }).click();
     const drawer = page.getByRole('dialog', { name: data.key_name });
@@ -249,20 +297,43 @@ test('downloads the selected key page and CA from the Admin drawer', async ({ br
     expect(csv.query.get('api_key_id')).toBe(data.key_id);
     expect(csvIds(csv.bytes)).toEqual(data.request_ids.slice(0, 2));
     const caButton = drawer.getByRole('button', { name: 'Download gateway CA' });
-    const ca = await downloadFrom(
+    const ca = await verifyGatewayCA(
       page,
       caButton,
       `${distribution}/aliases/${data.alias_id}/ca`,
-      'model-gateway-ca.pem',
-      'application/octet-stream',
+      data,
     );
-    expect(sha256(ca.bytes)).toBe(data.ca_digest);
     await expectAccessible(page);
     await csvButton.scrollIntoViewIfNeeded();
     await info.attach('admin-gateway-downloads', {
       body: await page.screenshot({ animations: 'disabled' }),
       contentType: 'image/png',
     });
+    await page.goto(`/services/${data.deployment_id}`);
+    const deployment = page.getByRole('region', { name: 'On the gateway' });
+    const deploymentCA = deployment.getByRole('button', { name: 'Download gateway CA' });
+    await expect(deployment.getByText(`${data.gateway_origin}/v1`, { exact: true })).toBeVisible();
+    const scale = page.getByRole('button', { name: 'Scale', exact: true });
+    await scale.scrollIntoViewIfNeeded();
+    await info.attach('admin-deployment-overview', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    expect(
+      await verifyGatewayCA(
+        page,
+        deploymentCA,
+        `${distribution}/aliases/${data.alias_id}/ca`,
+        data,
+      ),
+    ).toEqual(ca);
+    await expectAccessible(page);
+    await deploymentCA.scrollIntoViewIfNeeded();
+    await info.attach('admin-deployment-endpoint-ca', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    expect(foreignOrigins).toEqual([]);
   } finally {
     await context.close();
   }
