@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"go.yaml.in/yaml/v3"
 	"github.com/Passion-Flow/ownsolid/api/agent/modelartifact"
+	"go.yaml.in/yaml/v3"
 )
 
 func modelPolicyFields() []struct {
@@ -106,5 +106,67 @@ func TestModelImportPolicyStrictYAMLAndInvalidBase(t *testing.T) {
 				t.Fatal("override repaired invalid base YAML", e)
 			}
 		})
+	}
+}
+
+func TestModelImportExpiryConfig(t *testing.T) {
+	const workspace = "12345678-1234-4234-8234-123456789abc"
+	c := validConfig()
+	c.Models.ArtifactRoot = "/var/lib/ownsolid/models"
+	raw, err := yaml.Marshal(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacy, err := Decode(raw)
+	if err != nil || legacy.Policy().Models.ImportExpiry != nil {
+		t.Fatal("legacy configuration enabled expiry", err)
+	}
+	base := strings.Replace(string(raw), "runtime: null\n", "", 1) + "\nruntime:\n  models:\n    import_expiry: "
+	for _, seconds := range []int{3600, 86400, 31536000} {
+		input := fmt.Sprintf("%s{workspace_id: %q, inactive_seconds: %d}\n", base, workspace, seconds)
+		c, err := Decode([]byte(input))
+		want := ModelImportExpiryPolicy{WorkspaceID: workspace, InactiveSeconds: seconds}
+		if got := c.Policy().Models.ImportExpiry; err != nil || got == nil || *got != want {
+			t.Fatalf("valid expiry policy %d was rejected: %v", seconds, err)
+		}
+	}
+	for name, policy := range map[string]string{
+		"null": "null", "empty": "{}", "anchor": "&policy {workspace_id: " + workspace + ", inactive_seconds: 3600}",
+		"alias": "*policy", "workspace_only": "{workspace_id: " + workspace + "}", "interval_only": "{inactive_seconds: 3600}",
+		"quoted_interval":        "{workspace_id: " + workspace + ", inactive_seconds: '3600'}",
+		"fractional_interval":    "{workspace_id: " + workspace + ", inactive_seconds: 3600.5}",
+		"interval_below_minimum": "{workspace_id: " + workspace + ", inactive_seconds: 3599}",
+		"interval_above_maximum": "{workspace_id: " + workspace + ", inactive_seconds: 31536001}",
+		"nil_workspace":          "{workspace_id: 00000000-0000-0000-0000-000000000000, inactive_seconds: 3600}",
+		"noncanonical_workspace": "{workspace_id: " + strings.ToUpper(workspace) + ", inactive_seconds: 3600}",
+		"invalid_workspace":      "{workspace_id: synthetic-invalid, inactive_seconds: 3600}",
+		"duplicate":              "{workspace_id: " + workspace + ", inactive_seconds: 3600, inactive_seconds: 7200}",
+		"unknown":                "{workspace_id: " + workspace + ", inactive_seconds: 3600, enabled: true}",
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := Decode([]byte(base + policy + "\n")); err == nil || strings.Contains(err.Error(), "synthetic-invalid") {
+				t.Fatal("invalid expiry policy accepted or exposed", err)
+			}
+		})
+	}
+}
+
+func TestModelImportExpiryRequiresPostgreSQLModelStore(t *testing.T) {
+	for _, probe := range []struct{ engine, root string }{
+		{PostgreSQLDatabaseEngine, ""}, {PostgreSQLDatabaseEngine, "relative"}, {PostgreSQLDatabaseEngine, "/"},
+		{MySQLDatabaseEngine, "/var/lib/ownsolid/models"}, {DamengDatabaseEngine, "/var/lib/ownsolid/models"},
+	} {
+		c := validConfig()
+		c.Database.Engine = probe.engine
+		c.Database.MySQLConfigurationFile = "/etc/ownsolid/mysql.yaml"
+		c.Models.ArtifactRoot = probe.root
+		policy := DefaultRuntimePolicy()
+		policy.Models.ImportExpiry = &ModelImportExpiryPolicy{
+			WorkspaceID: "12345678-1234-4234-8234-123456789abc", InactiveSeconds: 3600,
+		}
+		c.Runtime = &policy
+		if err := c.validateModelImportExpiry(); err == nil || err.Error() != "CONFIG_MODEL_IMPORT_EXPIRY_REQUIRES_POSTGRESQL_AND_MODEL_STORE" {
+			t.Fatalf("expected expiry prerequisite refusal for %q/%q, got %v", probe.engine, probe.root, err)
+		}
 	}
 }

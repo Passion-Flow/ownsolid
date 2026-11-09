@@ -237,6 +237,10 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 		}
 	}
 	if bootstrapped {
+		h.Models.Service.ImportExpiry, e = resolveModelImportExpiry(startup, selected.store, c.Policy().Models.ImportExpiry)
+		if e != nil {
+			return e
+		}
 		if e = h.Models.Service.VerifyStoredVersions(startup); e != nil {
 			return e
 		}

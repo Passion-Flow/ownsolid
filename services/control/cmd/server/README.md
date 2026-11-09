@@ -34,6 +34,12 @@ for partial/unknown outcomes, role/serving writes and Kubernetes qualification.
 
 [runtime_lifecycle.go](runtime_lifecycle.go) owns dependency construction, cancellation, worker readiness, stop/join order and closers. Component helpers such as artifactstores.go, imageregistry.go, task_events.go, middleware.go and monitoring.go connect their existing owners. The identity HTTP package still composes/routes domains; extracting that historical hub is a separate verified change, not an invitation to create duplicate owners here.
 
+The full Control server resolves optional model upload expiry against the
+selected PostgreSQL installation before it starts listeners or registers the
+model worker. It accepts an active workspace in the installed tenant and
+injects the policy into the model owner already used by the server. See the
+[operator configuration](../../../../docs/research/model-import-cleanup.md#startup-configuration).
+
 Configuration comes from [platform/config](../../internal/platform/config/README.md), protected command inputs and explicit policy environment mapping. Bootstrap packets and verification-store helpers preserve exact installation/artifact identity. Unknown commit, failed readiness, interrupted backup or failed worker shutdown must remain visible; cleanup cannot silently destroy the only recovery evidence.
 
 When changing construction, update configuration/schema/examples, actual HTTP mounting, worker shutdown and [release builders](../../../../tools/release). New modules must be wired into current-authority, readiness/restore and both selected-database paths as needed. Source-only imports are not completed composition.

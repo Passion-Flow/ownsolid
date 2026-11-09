@@ -288,6 +288,11 @@ runtime:
     import_seconds: 600
     import_poll_seconds: 2
     cleanup_seconds: 2
+    # Optional PostgreSQL policy. Omit to leave abandoned upload expiry disabled.
+    # Select an active workspace in this installation and 3600-31536000 seconds.
+    # import_expiry:
+    #   workspace_id: "12345678-1234-4234-8234-123456789abc"
+    #   inactive_seconds: 86400
   distribution:
     recovery_seconds: 600
     key_ttl_seconds: 86400
