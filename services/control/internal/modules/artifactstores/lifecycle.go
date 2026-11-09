@@ -22,6 +22,8 @@ type lifecycle struct {
 	mu         sync.Mutex
 	stopped    bool
 	active     sync.WaitGroup
+	calls      int
+	backup     *BackupFence
 	ctx        context.Context
 	cancel     context.CancelFunc
 	digest     string
@@ -81,21 +83,58 @@ func NewService(ctx context.Context, i *identity.Service, w *workspaces.Service,
 	return s, nil
 }
 func (s *Service) begin(ctx context.Context) (context.Context, func(), error) {
+	return s.enter(ctx, true)
+}
+
+// enter joins shutdown. Only individual operations count toward the backup
+// drain. The idle worker supervisor must stay alive across a fence.
+func (s *Service) enter(ctx context.Context, operation bool) (context.Context, func(), error) {
 	if s == nil || s.lifecycle == nil || ctx == nil {
 		return nil, nil, fail("OBJECT_NOT_ADMITTED")
 	}
 	l := s.lifecycle
 	l.mu.Lock()
-	license, licenseError := configuredLicenseOwner(s.Identity)
-	if l.stopped || licenseError != nil || license != l.license || l.digest != configurationDigest(s.Configuration) || s.Identity != l.identity || s.Workspaces != l.workspaces || s.Models != l.models || s.Datasets != l.datasets || s.Transport != l.transport || s.Stage != l.stage {
+	if !s.admittedLocked() {
 		l.mu.Unlock()
 		return nil, nil, fail("OBJECT_NOT_ADMITTED")
 	}
+	if operation && l.backup != nil {
+		l.mu.Unlock()
+		return nil, nil, errBackupFenced
+	}
+	if operation {
+		l.calls++
+	}
 	l.active.Add(1)
 	l.mu.Unlock()
-	operation, cancel := context.WithCancel(ctx)
+
+	run, finish := l.operationContext(ctx)
+	return run, func() {
+		if operation {
+			l.mu.Lock()
+			l.calls--
+			if l.calls == 0 && l.backup != nil {
+				close(l.backup.drained)
+			}
+			l.mu.Unlock()
+		}
+		finish()
+	}, nil
+}
+
+func (s *Service) admittedLocked() bool {
+	l := s.lifecycle
+	license, err := configuredLicenseOwner(s.Identity)
+	return !l.stopped && err == nil && license == l.license && l.digest == configurationDigest(s.Configuration) &&
+		s.Identity == l.identity && s.Workspaces == l.workspaces && s.Models == l.models &&
+		s.Datasets == l.datasets && s.Transport == l.transport && s.Stage == l.stage
+}
+
+// operationContext owns an already registered active operation.
+func (l *lifecycle) operationContext(ctx context.Context) (context.Context, func()) {
+	run, cancel := context.WithCancel(ctx)
 	stop := context.AfterFunc(l.ctx, cancel)
-	return operation, func() { stop(); cancel(); l.active.Done() }, nil
+	return run, func() { stop(); cancel(); l.active.Done() }
 }
 
 // Close fences new calls, cancels accepted calls, and waits before releasing the
@@ -125,7 +164,7 @@ func (s *Service) Close(ctx context.Context) error {
 // Run processes only durable prepared work. Unknown sent effects are never
 // retried here; explicit Reconcile inspects their exact remote identity.
 func (s *Service) Run(ctx context.Context, report func(error)) error {
-	ctx, done, e := s.begin(ctx)
+	ctx, done, e := s.enter(ctx, false)
 	if e != nil {
 		return e
 	}
@@ -139,11 +178,11 @@ func (s *Service) Run(ctx context.Context, report func(error)) error {
 		case <-timer.C:
 		}
 		_, e = s.ProcessNext(ctx)
-		if workerReportable(e, ctx.Err() != nil) && report != nil {
+		if e != errBackupFenced && workerReportable(e, ctx.Err() != nil) && report != nil {
 			report(safe(e))
 		}
 		if ctx.Err() != nil {
-			if workerReportable(e, true) {
+			if e != errBackupFenced && workerReportable(e, true) {
 				return safe(e)
 			}
 			return safe(ctx.Err())
