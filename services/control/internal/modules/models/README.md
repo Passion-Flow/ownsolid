@@ -11,6 +11,10 @@ to canonical metadata and the installed archive and directory verifiers.
 Admission, chunk writes, recovery and publication use that authority.
 The existing Qwen digest retains the shared Agent verification path.
 
+[license.go](license.go) resolves reviewed terms for an exact verified catalogue
+and evaluates the installation's on-site use. It uses the pinned license text
+hash. A derivative requires its own reviewed terms.
+
 The scoped derived model detail checks its retained catalog and publication
 graph, then validates the frozen preparation input against the original
 training job, adapter and holdout references. PostgreSQL and MySQL return

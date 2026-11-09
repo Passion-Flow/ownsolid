@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+	"github.com/google/uuid"
 )
 
 type Handler struct{ Service *deployments.Service }
@@ -91,7 +92,7 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, request string) (any,
 			return nil, 0, bad
 		}
 		out, e := h.Service.Placement(r.Context(), a, q.Get("model_id"))
-		return out, 200, e
+		return out, 200, publicModelUseError(e)
 	}
 	if len(parts) == 0 && r.Method == "GET" {
 		q := r.URL.Query()
@@ -129,7 +130,7 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, request string) (any,
 			return nil, 0, e
 		}
 		out, e := h.Service.Create(r.Context(), a, input, key, request)
-		return out, 202, e
+		return out, 202, publicModelUseError(e)
 	}
 	if len(parts) < 1 || !id(parts[0]) {
 		return nil, 0, bad
@@ -144,7 +145,20 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, request string) (any,
 			return nil, 0, e
 		}
 		out, e := h.Service.Action(r.Context(), a, parts[0], input, key, request)
-		return out, 202, e
+		return out, 202, publicModelUseError(e)
 	}
 	return nil, 0, missing
+}
+
+// The public problem registry currently exposes one access denial for these
+// model-use refusals. The service retains the precise reason in its logs.
+func publicModelUseError(err error) error {
+	switch {
+	case errors.Is(err, models.ErrModelLicenseUnknown),
+		errors.Is(err, models.ErrModelLicenseUseUndeclared),
+		errors.Is(err, models.ErrModelLicenseUseDenied):
+		return errors.New("ACCESS_DENIED")
+	default:
+		return err
+	}
 }
