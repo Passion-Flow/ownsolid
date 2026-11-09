@@ -71,3 +71,28 @@ cd services/gateway
 cargo test --locked --offline
 cargo clippy --locked --offline --all-targets -- -D warnings
 ```
+
+## Portable refused-connection fixture
+
+On macOS, the bound TCP socket used by the original Linux fixture could
+time out before it started listening. Select an OS-assigned loopback port
+with a listener and close it before attempting the connection. Require a
+direct socket probe to observe `ConnectionRefused`. The
+[Apple connect manual](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/connect.2.html)
+and [Linux connect manual](https://man7.org/linux/man-pages/man2/connect.2.html)
+describe the refused-connection error for a target without a listener.
+
+Rebind the same address immediately after gateway preflight. If another
+process claimed the port during the brief gap, discard the candidate and
+try another OS-assigned port within a fixed attempt limit. Keep the rebound
+listener open through the cooldown check and the recovery probe. Verify the
+public error code, separate backend availability, the absence of a TCP
+accept during cooldown, and the same backend serving again after cooldown.
+The circuit's deterministic tests still cover probe concurrency and
+cancellation. This changes the test fixture and uses the existing
+standard library, Tokio and Axum test stack.
+
+The repaired fixture passed in the 67-test gateway suites on Linux amd64
+and macOS arm64. The focused macOS run logged both the circuit open and
+the successful same-address recovery. Linux ran with only loopback and
+also passed Clippy with warnings denied.

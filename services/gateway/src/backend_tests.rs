@@ -9,12 +9,14 @@ use axum::response::{IntoResponse, Response};
 use axum::{Json, Router};
 use serde_json::json;
 use std::fs;
+use std::io::ErrorKind;
 use std::net::SocketAddr;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
+use tokio::net::{TcpListener, TcpStream};
 use uuid::Uuid;
 
 #[derive(Clone, Default)]
@@ -197,29 +199,45 @@ async fn actual_http_models_tokenize_and_completion_use_fixed_destination_and_sa
     assert_eq!(fixture.state.calls.load(Ordering::SeqCst), 3);
 }
 
+async fn open_circuit_on_closed_port(configuration: &mut Configuration) -> (Backend, TcpListener) {
+    for _ in 0..4 {
+        let reserved = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let SocketAddr::V4(address) = reserved.local_addr().unwrap() else {
+            panic!("IPv4 fixture required");
+        };
+        configuration.backend_address = address;
+        let backend = Backend::new(configuration).unwrap();
+
+        // A bound socket that has never listened can time out on macOS.
+        drop(reserved);
+        match tokio::time::timeout(Duration::from_millis(250), TcpStream::connect(address)).await {
+            Ok(Err(error)) if error.kind() == ErrorKind::ConnectionRefused => {}
+            Ok(Err(error)) => panic!("unexpected loopback probe error: {error}"),
+            Ok(Ok(_)) | Err(_) => continue,
+        }
+        let refusal = backend
+            .verify_model("synthetic-internal", &configuration.limits)
+            .await;
+        let listening = match TcpListener::bind(address).await {
+            Ok(listening) => listening,
+            Err(error) if error.kind() == ErrorKind::AddrInUse => continue,
+            Err(error) => panic!("could not rebind the loopback fixture: {error}"),
+        };
+        assert_eq!(refusal, Err("upstream_unavailable"));
+        return (backend, listening);
+    }
+    panic!("could not obtain and rebind a refused loopback port");
+}
+
 #[tokio::test]
 async fn actual_connection_refusal_opens_only_its_backend_circuit() {
     let healthy = Fixture::new().await;
-    let socket = tokio::net::TcpSocket::new_v4().unwrap();
-    socket.bind("127.0.0.1:0".parse().unwrap()).unwrap();
-    let SocketAddr::V4(address) = socket.local_addr().unwrap() else {
-        panic!("IPv4 fixture required");
-    };
     let mut configuration = healthy.configuration.clone();
-    configuration.backend_address = address;
-    configuration.limits.connect_seconds = 10;
-    configuration.limits.control_seconds = 10;
-    configuration.limits.request_seconds = 15;
-    let failing = Backend::new(&configuration).unwrap();
-    assert_eq!(
-        failing
-            .verify_model("synthetic-internal", &configuration.limits)
-            .await,
-        Err("upstream_unavailable")
-    );
+    configuration.limits.connect_seconds = 2;
+    let (failing, listening) = open_circuit_on_closed_port(&mut configuration).await;
+    let recovery_at =
+        tokio::time::Instant::now() + Duration::from_secs(configuration.limits.connect_seconds);
 
-    // The port can accept connections now, but preflight must still honor the cooldown.
-    let listening = socket.listen(1).unwrap();
     assert_eq!(
         failing
             .tokenize(
@@ -242,6 +260,21 @@ async fn actual_connection_refusal_opens_only_its_backend_circuit() {
         .await
         .unwrap();
     assert_eq!(healthy.state.calls.load(Ordering::SeqCst), 1);
+
+    tokio::time::sleep_until(recovery_at).await;
+    let recovered = Synthetic::default();
+    let router = Router::new()
+        .fallback(upstream)
+        .with_state(recovered.clone());
+    tokio::select! {
+        result = failing.verify_model("synthetic-internal", &configuration.limits) => {
+            result.unwrap();
+        }
+        result = async { axum::serve(listening, router).await } => {
+            panic!("recovery backend stopped before the probe: {result:?}");
+        }
+    }
+    assert_eq!(recovered.calls.load(Ordering::SeqCst), 1);
 }
 
 #[tokio::test]
