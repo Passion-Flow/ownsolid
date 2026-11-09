@@ -1123,6 +1123,14 @@
      "description": "The email of the actor, null for the system.",
      "maxLength": 254
     },
+    "actor_kind": {
+     "type": "string",
+     "const": "product_assistant"
+    },
+    "actor_id": {
+     "type": "string",
+     "const": "ownsolid.product-assistant"
+    },
     "subject_user_id": {
      "type": [
       "string",

@@ -35,22 +35,21 @@ The contract change is prepared in the lane until that consumer check passes.
 
 ## AUD-101 assistant actor HTTP merge point
 
-The registered installation-wide Admin audit read dispatches to
-`identity.Service.ListForActor`. It returns the existing
-`actor_user_id`, `actor_email` and subject fields.
-`ListWorkspaceAuditForActor` is a separate PostgreSQL repository method
-with a current Admin-session check, installed-tenant workspace resolution
-and scoped pagination. Its `AssistantActors` lookup is excluded from JSON.
-The current OpenAPI continues to describe the public response.
+The public installation-wide Admin list on main retains the original actor
+and subject fields. The scoped `ListWorkspaceAuditForActor` repository
+method from `fbf038f0` verifies assistant attribution without serializing
+it in the legacy response. That method keeps its explicit workspace and
+scope-bound cursor.
 
-The HTTP owner can wire an authorized workspace-scoped audit read to
-`ListWorkspaceAuditForActor`, look up each returned event with
-`AuditEventKey{ID, OccurredAt}`, and emit an optional typed assistant actor
-only when that lookup succeeds. Preserve the independent user subject and
-legacy installation-wide list, and cover an ordinary event, a genuine
-assistant event, a foreign workspace, and cursor reuse across workspaces
-against the public schema. Service-account attribution and offline export
-have their own authentication and integrity prerequisites.
+IAM's staged `9a6d1b6c` handler uses the existing installation-wide route.
+Exactly one `X-Ownsolid-Audit-Actor: true` header selects the enriched
+representation, without changing authorization, filters or pagination.
+Only the verified actor pair is exposed, separately from the user subject.
+The [joint audit contract](audit-actor-contract.md) records the matching
+OpenAPI, the validation and the landing order. In the joint fast-forward,
+the IAM handler precedes the DEV contract and generated-client commit.
+Availability follows the joined revision. The Nodes candidate remains an
+independent handoff.
 
 ## Product assistant HTTP registration
 
