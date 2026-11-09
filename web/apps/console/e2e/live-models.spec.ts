@@ -245,6 +245,8 @@ test('discards a real import before accepting its first chunk', async ({ page },
   await discard.click();
   const failed = await aborted;
   await expect(page.getByText('Discarded', { exact: true })).toBeVisible();
+  const uploadStep = page.getByRole('listitem').filter({ hasText: 'Upload the bundle' });
+  await expect(uploadStep.getByText('Cancelled', { exact: true })).toBeVisible();
   const cancelled = await readImport(page, id);
   expect(cancelled).toMatchObject({
     state: 'cancelled',

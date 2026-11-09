@@ -1616,6 +1616,7 @@
   "tasks.tray.open": "打开",
   "tasks.tray.succeeded": "{name}已完成",
   "tasks.tray.title": "你正在运行的任务",
+  "timeline.state.cancelled": "已取消",
   "timeline.state.done": "已完成",
   "timeline.state.failed": "失败",
   "timeline.state.pending": "未开始",
