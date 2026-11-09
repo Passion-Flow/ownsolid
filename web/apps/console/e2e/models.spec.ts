@@ -275,6 +275,30 @@ test('discards an import before its first chunk is accepted', async ({ page }) =
   expect(control.models).toEqual([]);
 });
 
+test('shows cancelled verification in Chinese on a narrow screen', async ({ page }, info) => {
+  control.preferences.locale = 'zh-CN';
+  control.modelImports = [
+    { ...stalledImport, state: 'cancelled', uploaded_bytes: stalledImport.expected_bytes },
+  ];
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`/library/imports/${stalledImport.id}`);
+  await expect(
+    page.getByText(chinese['models.import.state.cancelled'], { exact: true }),
+  ).toBeVisible();
+  const steps = page.getByRole('list', { name: chinese['models.import.steps'] });
+  await expect(
+    steps.getByRole('listitem').filter({ hasText: chinese['models.import.step.upload'] }),
+  ).toContainText(chinese['timeline.state.done']);
+  await expect(
+    steps.getByRole('listitem').filter({ hasText: chinese['models.import.step.verify'] }),
+  ).toContainText(chinese['timeline.state.cancelled']);
+  await expectAccessible(page);
+  await info.attach('model-cancelled-verification-zh-cn', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
+});
+
 test('keeps uploading while the person moves around the console', async ({ page }) => {
   control.chunkDelayMilliseconds = 400;
   await fillForm(page);
