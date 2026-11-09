@@ -60,6 +60,82 @@ func signFixtureIndex(t *testing.T, root *os.Root, key ed25519.PrivateKey, index
 	}
 }
 
+func writeFixtureLicenseNote(t *testing.T, root *os.Root, path string, note *string) string {
+	t.Helper()
+	raw, err := root.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var messages Messages
+	if err := json.Unmarshal(raw, &messages); err != nil {
+		t.Fatal(err)
+	}
+	messages.LicenseNote = note
+	updated := ociJSON(t, messages)
+	if err := root.WriteFile(path, updated, 0600); err != nil {
+		t.Fatal(err)
+	}
+	return digestBytes(updated)
+}
+
+func TestVerifySignedLicenseNotes(t *testing.T) {
+	english := "MIT. Retain the publisher attribution."
+	chinese := "MIT. \u8bf7\u4fdd\u7559\u53d1\u5e03\u8005\u7f72\u540d\u3002"
+	empty, control, oversized := "", "notice\x1b", strings.Repeat("\u8bb8", licenseNoteRunes+1)
+	for _, tc := range []struct {
+		name      string
+		en, zh    *string
+		wantError bool
+	}{
+		{name: "paired", en: &english, zh: &chinese},
+		{name: "legacy"},
+		{name: "missing Chinese", en: &english, wantError: true},
+		{name: "missing English", zh: &chinese, wantError: true},
+		{name: "empty", en: &empty, zh: &chinese, wantError: true},
+		{name: "control characters", en: &control, zh: &chinese, wantError: true},
+		{name: "over limit", en: &english, zh: &oversized, wantError: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			image := newImageFixture(t, "amd64", false)
+			fixture := signOCI(t, ociTar(t, image.files, ""), image.image)
+			index, err := readIndex(fixture.root, fixture.key)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.en != nil || tc.zh != nil {
+				index.English = writeFixtureLicenseNote(t, fixture.root, englishName, tc.en)
+				index.Chinese = writeFixtureLicenseNote(t, fixture.root, chineseName, tc.zh)
+				signFixtureIndex(t, fixture.root, fixture.private, ociJSON(t, index))
+			}
+			result, err := VerifyInstallBundle(t.Context(), fixture.root, fixture.key, fixture.limit)
+			if tc.wantError {
+				if !errors.Is(err, ErrBundle) || !errors.Is(err, ErrLocale) || result.Pin != (ReleasePin{}) {
+					t.Fatalf("invalid note returned a verified release: %v", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.en == nil {
+				if result.English.LicenseNote != nil || result.SimplifiedChinese.LicenseNote != nil {
+					t.Fatal("the legacy release unexpectedly contains license notes")
+				}
+				return
+			}
+			if result.English.LicenseNote == nil || result.SimplifiedChinese.LicenseNote == nil ||
+				*result.English.LicenseNote != *tc.en || *result.SimplifiedChinese.LicenseNote != *tc.zh {
+				t.Fatal("the verified release did not return both exact notes")
+			}
+			changed := "A different notice"
+			writeFixtureLicenseNote(t, fixture.root, chineseName, &changed)
+			if _, err := VerifyInstallBundle(t.Context(), fixture.root, fixture.key, fixture.limit); !errors.Is(err, ErrBundle) {
+				t.Fatalf("an unsigned note change was accepted: %v", err)
+			}
+		})
+	}
+}
+
 func TestVerifySignedBundle(t *testing.T) {
 	for _, engine := range []string{"helm", "compose"} {
 		t.Run(engine, func(t *testing.T) {
