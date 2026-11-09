@@ -29,10 +29,11 @@ type ImageImportOptions struct {
 	Timeout              time.Duration
 }
 
-// ImportInstallImage verifies a single-image release and ensures its exact
-// manifest is registered in the local Docker containerd image store. The caller
-// authorizes and audits the import and keeps staging private and immutable.
-// Workload admission and startup belong to the installer.
+// ImportInstallImage verifies the signed release and confirms every exact
+// manifest in the local Docker containerd image store. A failed call may leave
+// verified images registered for reuse on retry. The caller authorizes and
+// audits the import and keeps staging private and immutable. Workload admission
+// and startup belong to the installer.
 func ImportInstallImage(ctx context.Context, stagingDirectory string, key ed25519.PublicKey, options ImageImportOptions) (InstallBundle, error) {
 	if !filepath.IsAbs(stagingDirectory) || filepath.Clean(stagingDirectory) != stagingDirectory ||
 		options.Timeout <= 0 || options.MaximumExpandedBytes <= 0 {
@@ -49,56 +50,105 @@ func ImportInstallImage(ctx context.Context, stagingDirectory string, key ed2551
 	if err != nil {
 		return InstallBundle{}, err
 	}
-	if len(verified.Archive.Images) != 1 {
-		return InstallBundle{}, imageImportError("the local importer requires a single Linux amd64 image")
+
+	archive := verified.Archive
+	var approved []bundle.ImageIdentity
+	if len(archive.Images) > 1 {
+		approved = make([]bundle.ImageIdentity, 0, len(archive.Images))
+		for _, image := range archive.Images {
+			approved = append(approved, bundle.ImageIdentity(image))
+		}
 	}
 
-	image := verified.Archive.Images[0]
-	asset := wire.Asset{
-		Kind: "image_archive", Size: verified.Archive.Bytes,
-		SHA256:  strings.TrimPrefix(verified.Archive.Digest, "sha256:"),
-		ImageID: image.ManifestDigest, ImageConfigDigest: image.ConfigDigest,
-		Architecture: "amd64",
+	// Pin and validate every selected image before the first Docker request.
+	sources := make([]*bundle.ImageSource, 0, len(archive.Images))
+	defer func() {
+		for _, source := range sources {
+			source.Close()
+		}
+	}()
+	filename := filepath.Join(stagingDirectory, ImageArchiveName)
+	remaining := options.MaximumExpandedBytes
+	for _, image := range archive.Images {
+		asset := imageAsset(image, archive.Bytes, archive.Digest)
+		source, err := openImportSource(ctx, options.Verification, filename, asset, max(1, remaining), approved)
+		if err != nil {
+			return InstallBundle{}, fmt.Errorf("verify image %s: %w", image.ManifestDigest, err)
+		}
+		sources = append(sources, source)
+		expanded := source.Inventory().ExpandedBytes
+		if expanded > remaining {
+			return InstallBundle{}, imageImportError("the image set exceeds the expanded byte limit")
+		}
+		remaining -= expanded
 	}
-	source, err := bundle.OpenCurrentImageSource(ctx, options.Verification,
-		filepath.Join(stagingDirectory, ImageArchiveName), asset, options.MaximumExpandedBytes)
+	if err := registerImages(ctx, options.DockerSocket, archive.Images, sources); err != nil {
+		return InstallBundle{}, err
+	}
+	return verified, nil
+}
+
+func imageAsset(image OCIImage, size int64, digest string) wire.Asset {
+	return wire.Asset{
+		Kind: "image_archive", Size: size, SHA256: strings.TrimPrefix(digest, "sha256:"),
+		ImageID: image.ManifestDigest, ImageConfigDigest: image.ConfigDigest, Architecture: "amd64",
+	}
+}
+
+func openImportSource(ctx context.Context, policy bundle.Verification, filename string, asset wire.Asset, limit int64, approved []bundle.ImageIdentity) (*bundle.ImageSource, error) {
+	var source *bundle.ImageSource
+	var err error
+	if approved == nil {
+		source, err = bundle.OpenCurrentImageSource(ctx, policy, filename, asset, limit)
+	} else {
+		source, err = bundle.OpenCurrentImageSelection(ctx, policy, filename, asset, approved, limit)
+	}
 	if err != nil {
 		if ctx.Err() != nil {
-			return InstallBundle{}, ctx.Err()
+			return nil, ctx.Err()
 		}
-		return InstallBundle{}, fmt.Errorf("%w: verify the image source and expanded layers: %w", ErrImageImport, err)
+		return nil, fmt.Errorf("%w: verify the image source and expanded layers: %w", ErrImageImport, err)
 	}
-	defer source.Close()
+	return source, nil
+}
 
-	store, err := newDockerImageStore(options.DockerSocket)
+func registerImages(ctx context.Context, socket string, images []OCIImage, sources []*bundle.ImageSource) error {
+	store, err := newDockerImageStore(socket)
 	if err != nil {
-		return InstallBundle{}, err
+		return err
 	}
 	defer store.client.CloseIdleConnections()
 	if err := store.requireContainerd(ctx); err != nil {
-		return InstallBundle{}, err
-	}
-	found, err := store.inspect(ctx, image.ManifestDigest)
-	if err != nil {
-		return InstallBundle{}, err
-	}
-	if found {
-		return verified, nil
-	}
-	if err := store.load(ctx, func(output io.Writer) error {
-		_, err := source.WriteTagless(ctx, output)
 		return err
-	}); err != nil {
-		return InstallBundle{}, err
 	}
-	found, err = store.inspect(ctx, image.ManifestDigest)
-	if err != nil {
-		return InstallBundle{}, err
+	for i, image := range images {
+		found, err := store.inspect(ctx, image.ManifestDigest)
+		if err != nil {
+			return fmt.Errorf("inspect image %s: %w", image.ManifestDigest, err)
+		}
+		if found {
+			if len(images) == 1 {
+				return nil
+			}
+			continue
+		}
+		if err := store.load(ctx, func(output io.Writer) error {
+			_, err := sources[i].WriteTagless(ctx, output)
+			return err
+		}); err != nil {
+			return fmt.Errorf("load image %s: %w", image.ManifestDigest, err)
+		}
 	}
-	if !found {
-		return InstallBundle{}, imageImportError("Docker did not register the signed image digest")
+	for _, image := range images {
+		found, err := store.inspect(ctx, image.ManifestDigest)
+		if err != nil {
+			return fmt.Errorf("confirm image %s: %w", image.ManifestDigest, err)
+		}
+		if !found {
+			return fmt.Errorf("%w: Docker did not register signed image %s", ErrImageImport, image.ManifestDigest)
+		}
 	}
-	return verified, nil
+	return nil
 }
 
 func imageImportError(message string) error {

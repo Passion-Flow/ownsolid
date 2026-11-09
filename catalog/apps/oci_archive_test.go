@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 type imageFixture struct {
@@ -17,10 +18,20 @@ type imageFixture struct {
 
 func newImageFixture(t *testing.T, architecture string, remoteLayer bool) imageFixture {
 	t.Helper()
+	return imageVariant(t, architecture, remoteLayer, "base", false)
+}
+
+func imageVariant(t *testing.T, architecture string, remoteLayer bool, name string, badDiffID bool) imageFixture {
+	t.Helper()
 	layer := ociTar(t, map[string][]byte{"app.txt": []byte("offline fixture\n")}, "")
+	diffID := digestBytes(layer)
+	if badDiffID {
+		diffID = digestBytes([]byte("different expanded bytes"))
+	}
 	config := ociJSON(t, map[string]any{
 		"os": "linux", "architecture": architecture,
-		"rootfs": map[string]any{"type": "layers", "diff_ids": []string{digestBytes(layer)}},
+		"rootfs": map[string]any{"type": "layers", "diff_ids": []string{diffID}},
+		"config": map[string]any{"Labels": map[string]string{"fixture": name}},
 	})
 	descriptor := func(mediaType string, data []byte) map[string]any {
 		return map[string]any{"mediaType": mediaType, "digest": digestBytes(data), "size": len(data)}
@@ -47,6 +58,26 @@ func newImageFixture(t *testing.T, architecture string, remoteLayer bool) imageF
 		},
 		image: image, config: digestBytes(config), layer: layerPath,
 	}
+}
+
+func imageSetFiles(t *testing.T, images ...imageFixture) map[string][]byte {
+	t.Helper()
+	files := make(map[string][]byte)
+	manifests := make([]map[string]any, 0, len(images))
+	for _, image := range images {
+		for name, data := range image.files {
+			files[name] = data
+		}
+		manifests = append(manifests, map[string]any{
+			"mediaType": ociManifestType, "digest": image.image,
+			"size":        len(files[ociBlobPrefix+strings.TrimPrefix(image.image, "sha256:")]),
+			"annotations": map[string]string{"org.opencontainers.image.ref.name": "example.invalid/source:tag"},
+		})
+	}
+	files["index.json"] = ociJSON(t, map[string]any{
+		"schemaVersion": 2, "mediaType": ociIndexType, "manifests": manifests,
+	})
+	return files
 }
 
 func ociJSON(t *testing.T, value any) []byte {
@@ -85,7 +116,7 @@ func ociTar(t *testing.T, files map[string][]byte, duplicate string) []byte {
 	return output.Bytes()
 }
 
-func signOCI(t *testing.T, archive []byte, image string) signedFixture {
+func signOCI(t *testing.T, archive []byte, images ...string) signedFixture {
 	t.Helper()
 	fixture := signedBundle(t, "compose")
 	read := func(name string) []byte {
@@ -96,7 +127,8 @@ func signOCI(t *testing.T, archive []byte, image string) signedFixture {
 		}
 		return raw
 	}
-	manifest := bytes.Replace(read(manifestName), []byte("sha256:"+strings.Repeat("b", 64)), []byte(image), 1)
+	placeholder := []byte(`["sha256:` + strings.Repeat("b", 64) + `"]`)
+	manifest := bytes.Replace(read(manifestName), placeholder, ociJSON(t, images), 1)
 	if err := fixture.root.WriteFile(manifestName, manifest, 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -109,6 +141,33 @@ func signOCI(t *testing.T, archive []byte, image string) signedFixture {
 	}))
 	fixture.limit = int64(len(archive) + len(read("compose.yaml")))
 	return fixture
+}
+
+func TestImportImageSetRejectsMissingOrTamperedMember(t *testing.T) {
+	first := newImageFixture(t, "amd64", false)
+	second := imageVariant(t, "amd64", false, "other", false)
+	for _, missing := range []bool{true, false} {
+		name := "tampered"
+		if missing {
+			name = "missing"
+		}
+		t.Run(name, func(t *testing.T) {
+			files := imageSetFiles(t, first, second)
+			path := ociBlobPrefix + strings.TrimPrefix(second.config, "sha256:")
+			if missing {
+				delete(files, path)
+			} else {
+				files[path] = append([]byte(" "), files[path]...)
+			}
+			fixture := signOCI(t, ociTar(t, files, ""), first.image, second.image)
+			result, err := ImportInstallImage(t.Context(), fixture.root.Name(), fixture.key, ImageImportOptions{
+				MaximumPayloadBytes: fixture.limit, MaximumExpandedBytes: 1 << 20, Timeout: time.Second,
+			})
+			if !errors.Is(err, ErrBundle) || len(result.Archive.Images) != 0 {
+				t.Fatalf("invalid second member was admitted: %v", err)
+			}
+		})
+	}
 }
 
 func TestVerifyInstallBundleOCIClosure(t *testing.T) {
