@@ -19,6 +19,7 @@ fully offline.
 - [ ] OBS-102 Log collection with agent-side rate limits and retention (P1)
 - [ ] OBS-103 OpenTelemetry tracing across gateway, workflows and jobs (P1) - Catalog: F235
 - [ ] OBS-104 Alert rules with severity, grouping, silencing and escalation (P1)
+  - [Scoped acknowledgement candidate](../../research/alert-occurrence-escalation.md#verified-loopback-path) qualifies durable confirmation and retry through real Alertmanager and PostgreSQL. Product migration, authorized Admin write, Console workflow and grouped escalation remain open.
 - [ ] OBS-105 Offline notification channels: email, webhook, WeCom, DingTalk and Feishu over internal relays (P1) - Catalog: F002, F567
   - [Site-local Matrix relay](../../research/offline-alert-notifications.md#verified-matrix-path) qualifies one authenticated chat path.
   - [Site-local Feishu relay](../../research/offline-alert-notifications.md#verified-feishu-relay-contract) qualifies signed delivery to a controlled private receiver. Vendor-side integration, remaining channels, installer and Console work remain open.

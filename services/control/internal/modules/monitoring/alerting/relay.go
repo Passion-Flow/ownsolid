@@ -126,7 +126,18 @@ func newWebhookRelay(settings relaySettings, logger *slog.Logger) *webhookRelay 
 	return &webhookRelay{settings, client, make(chan struct{}, settings.concurrent), logger}
 }
 
+type relayDelivery struct {
+	tenant string
+	route  tenantRoute
+	batch  relayWebhook
+	text   string
+}
+
 func (s *webhookRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.serveWebhook(w, r, nil)
+}
+
+func (s *webhookRelay) serveWebhook(w http.ResponseWriter, r *http.Request, deliver func(context.Context, relayDelivery) deliveryOutcome) {
 	tenant, matches := strings.CutPrefix(r.URL.Path, webhookPath)
 	if !matches || !tenantID.MatchString(tenant) || r.URL.RawPath != "" || r.URL.ForceQuery || r.URL.RawQuery != "" {
 		http.NotFound(w, r)
@@ -176,7 +187,11 @@ func (s *webhookRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	started := time.Now()
 	msg, transaction, result := mapWebhook(tenant, route, batch)
 	if result == delivered {
-		result = s.send(r.Context(), route, msg, transaction)
+		if deliver == nil {
+			result = s.send(r.Context(), route, msg, transaction)
+		} else {
+			result = deliver(r.Context(), relayDelivery{tenant, route, batch, msg})
+		}
 	}
 	s.logger.LogAttrs(r.Context(), logLevel(result), "alert relay delivery",
 		slog.String("tenant_id", tenant), slog.String("outcome", string(result)),
