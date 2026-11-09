@@ -23,8 +23,13 @@ database owner to land or authorize the exact fresh and restored fingerprints.
 - SCH-101 has a PostgreSQL reservation and release seam. The
   [training and database handoff](scheduling-training-reservations.md) names the
   existing owner transactions and records fresh and restored catalog evidence.
-- SCH-104 and SCH-110 have snapshot checks. The repository can reserve
-  whole demand, and the runtime reconciliation and product entrance are still needed.
+- SCH-104 reserves whole demand in PostgreSQL. Full acceptance requires
+  a workload owner to submit and reconcile exact replica-group readiness
+  with an installed Kueue or Volcano controller before dispatch.
+- SCH-110 has a read-only PostgreSQL submission estimate. The workload
+  owner must authorize the workspace, provide cell capacity from a verified
+  observation and expose the estimate in its authenticated submission flow.
+  See [live submission estimate](scheduling-admission.md#live-submission-estimate).
 - SCH-108 projects actionable reasons from the existing queue, preflight,
   reservation and reclaim decisions. The authenticated API and browser owners
   must call these decisions with authorized scope and combine them with the
