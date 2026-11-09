@@ -48,6 +48,8 @@
         }
       ],
       "get": {
+        "operationId": "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAws",
+        "x-help-use-path-anchor": true,
         "x-audiences": [
           "portal"
         ],
@@ -141,6 +143,8 @@
         }
       ],
       "post": {
+        "operationId": "postSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImports",
+        "x-help-use-path-anchor": true,
         "x-audiences": [
           "portal"
         ],
@@ -251,6 +255,8 @@
         }
       ],
       "get": {
+        "operationId": "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImportsKey",
+        "x-help-use-path-anchor": true,
         "x-audiences": [
           "portal"
         ],
@@ -317,6 +323,8 @@
         }
       ],
       "get": {
+        "operationId": "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAws",
+        "x-help-use-path-anchor": true,
         "x-audiences": [
           "admin"
         ],
@@ -410,6 +418,8 @@
         }
       ],
       "post": {
+        "operationId": "postSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImports",
+        "x-help-use-path-anchor": true,
         "x-audiences": [
           "admin"
         ],
@@ -520,6 +530,8 @@
         }
       ],
       "get": {
+        "operationId": "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImportsKey",
+        "x-help-use-path-anchor": true,
         "x-audiences": [
           "admin"
         ],
