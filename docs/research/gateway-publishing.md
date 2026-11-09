@@ -114,3 +114,18 @@ gateway's credential once when the node had none, sees the base URL and a sample
 for that model from the same card, and stops publishing with a confirmation that names the keys
 that stop; each failure above shows its explanation and can be retried; English and Chinese are
 complete.
+
+## Alias rollback boundary
+
+The S-205 deployment detail specifies rolling back a deployment version.
+GW-111 previews and applies a change to a published alias using the
+alias's current revision and the previous target's retained revision.
+The deployment and alias have separate identities and histories. See
+the [S-205 specification](../product/plan/README.md#s-205--deployment-detail-deploymentid)
+and the [alias cutover contract](gateway-cutover-preview.md#public-contract).
+
+The current plan defines the deployment action and the gateway card's
+publish, issue and stop-publishing actions. A Console alias rollback
+requires its own screen definition for selecting a previous target,
+reviewing the server preview and applying the scoped change. GW-111's
+Console work remains open at that boundary.
