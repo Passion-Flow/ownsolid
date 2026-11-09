@@ -104,3 +104,31 @@ test above supplies the actual filesystem and PostgreSQL evidence.
 With the acceptance assertions in this change on baseline `1bbdca7e`,
 `make check`, `make build` and `make test` passed in sequence.
 Chromium passed 1,039 console and 387 portal tests.
+
+## MOD-121 abandoned upload retention
+
+The [tus expiration extension](https://tus.io/protocols/resumable-upload#expiration)
+makes an expiration visible to a resuming client. [S3 incomplete multipart
+lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html)
+separates unfinished parts from completed objects. Keep ownsolid's existing
+protocol and apply the same lifecycle distinction. These are design
+references. This work adds no dependency, model or data.
+
+The deployment configuration needs an opt-in inactivity interval in
+`config.ModelsPolicy` and its validated runtime policy. Use the last
+committed progress timestamp under the import's file and repository session
+locks. A replay of an already recorded chunk leaves that timestamp alone.
+The model worker should select and recheck one candidate at a time. Active
+writers and jobs already queued for verification keep their current paths.
+Committed publications stay in the existing post-publication cleanup path.
+
+First record an expiry intent and a system audit transaction. Recover the
+exact import staging directory through the existing bounded discard logic.
+Confirm that cleanup before releasing the one-active-import constraint.
+Use the existing cancelled terminal state with a distinct expiry reason if
+its contract permits it. Keep idempotent history readable. The shared
+problem registry, Models contract and Console must carry the expiry reason
+and show when a fresh import is needed. A missing, conflicting or uncertain
+expiry commit must never authorize deletion. Verify lost replies, process
+restart, partial cleanup, fresh progress that races the candidate, and a
+completed model in the same workspace before enabling the interval.
