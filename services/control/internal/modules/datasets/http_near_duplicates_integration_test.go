@@ -70,7 +70,7 @@ func verifyNearPromptHTTPSPublication(t *testing.T, service *datasets.Service, p
 	if problem["code"] != "IDEMPOTENCY_CONFLICT" {
 		t.Fatalf("replacing near deduplication with the default returned %v", problem["code"])
 	}
-	retry := retryHTTPSPublicationAfterProcessorExit(t, service, portal, path, job)
+	retry := retryHTTPSDatasetJobAfterProcessorExit(t, service, portal, path, job)
 	nearPath := path + "/versions/" + retry["version_id"].(string)
 	near := portal.Call("GET", nearPath, nil, 200, "DatasetVersionResponse")
 	nearManifest := readHTTPSDatasetManifest(t, near["manifest"])
