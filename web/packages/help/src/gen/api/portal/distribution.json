@@ -1436,6 +1436,16 @@
        "type": "null"
       }
      ]
+    },
+    "description": {
+     "type": "string",
+     "maxLength": 500
+    },
+    "description_revision": {
+     "type": "integer",
+     "format": "int64",
+     "minimum": 1,
+     "maximum": 9007199254740991
     }
    }
   },
