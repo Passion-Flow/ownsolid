@@ -17,6 +17,22 @@ import (
 
 type Handler struct{ Service *models.Service }
 
+type datasetVersionLineage struct {
+	DatasetID        string `json:"dataset_id"`
+	DatasetVersionID string `json:"dataset_version_id"`
+	ManifestSHA256   string `json:"manifest_sha256"`
+}
+
+type datasetLineage struct {
+	Training datasetVersionLineage `json:"training"`
+	Holdout  datasetVersionLineage `json:"holdout"`
+}
+
+type adminModelDetail struct {
+	models.Version
+	DatasetLineage *datasetLineage `json:"dataset_lineage,omitempty"`
+}
+
 func Owns(path string) bool {
 	return path == "/api/v1/admin/models" || strings.HasPrefix(path, "/api/v1/admin/models/") || path == "/api/v1/admin/model-imports" || strings.HasPrefix(path, "/api/v1/admin/model-imports/") || strings.HasPrefix(path, "/api/v1/workspaces/") && (strings.HasSuffix(path, "/models") || strings.Contains(path, "/models/"))
 }
@@ -87,7 +103,17 @@ func (h *Handler) Handle(r *http.Request, a identity.Auth, request string) (any,
 	}
 	if len(parts) == 5 && parts[3] == "models" && r.Method == "GET" {
 		value, e := h.Service.Get(ctx, a, "", parts[4])
-		return value, 200, e
+		if e != nil {
+			return nil, 0, e
+		}
+		detail := adminModelDetail{Version: value}
+		if lineage := value.DatasetLineage; lineage != nil {
+			detail.DatasetLineage = &datasetLineage{
+				Training: datasetVersionLineage(lineage.Training),
+				Holdout:  datasetVersionLineage(lineage.Holdout),
+			}
+		}
+		return detail, 200, nil
 	}
 	if len(parts) == 4 && parts[3] == "model-imports" && r.Method == "POST" {
 		var input models.ImportRequest
