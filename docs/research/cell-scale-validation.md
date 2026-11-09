@@ -359,3 +359,51 @@ point also exited 1 after rejecting the deliberate IPv6 probe. That
 result and the original raw capture are unchanged. No dispatch,
 reconnect or database write-rate measurement was collected at
 1,000 nodes.
+
+### Host resource attribution
+
+A read-only follow-up on the same Linux host checked the Docker systemd
+cgroup v2 paths, active mount namespaces, loop devices, and open fixture
+files. Neither the Docker daemon nor its parent system slice had a
+finite memory limit. The parent held 5.66 GiB, including 3.17 GiB of
+shmem. The user slice held 11.87 GiB, including 5.20 GiB of shmem.
+These are shared cgroup totals. No ARC fixture process, live container
+cgroup, mount, or loop device was present.
+
+The five ARC fixture directories were on ext4. The core, Canal and RKE2
+archives visible under three fixture paths were already hard-linked to
+one inode per archive. An inode-deduplicated [mincore snapshot](https://man7.org/linux/man-pages/man2/mincore.2.html)
+found 106.38 MiB of resident file cache across all five directories,
+including 21.41 MiB for the signed media file. The three hard-linked
+archives had no resident pages in that snapshot. On the host's
+ext4-backed Docker store, two untagged image IDs had the same complete layer
+list as the node base image. Their ownership was unverified and no
+container referenced either ID. The DinD base had no matching layer
+list under a different image ID. These image records provided no
+evidence of a resident duplicate. The signed media and the KWOK
+OCI archive are separate offline inputs. The large tmpfs filesystems
+visible in the host mount namespace belonged to lane B. Their combined
+16.26 GiB of allocated blocks can include swapped pages.
+Host Shmem was 8.37 GiB and about 172 KiB of swap remained free. See
+the kernel accounting for [tmpfs](https://docs.kernel.org/filesystems/tmpfs.html)
+and [MemAvailable](https://docs.kernel.org/filesystems/proc.html#meminfo).
+
+No ARC resources warranted removal or migration. The cache snapshot
+was smaller than the available-memory deficit, and Linux already
+accounts for reclaimable file cache in its MemAvailable estimate.
+The same gate returned 75 before and after the inspection. MemAvailable
+was 20.80 then 20.77 GiB, free memory was 12.27 then 12.24 GiB, and
+disk stayed about 822 GiB. Full I/O PSI avg10 was 0.02% then 0.01%.
+No active DEL restore appeared in either sample. These are host
+samples taken without a capacity intervention. A later check again
+returned 75 with 20.75 GiB MemAvailable and 30.36% full I/O PSI avg10.
+No load was started and no fleet KPI was measured.
+
+The private runner retains the samples, inode and cgroup inventory,
+image identity comparison, and checksums under `resource-attribution.V2Dg47`.
+The prior packet and DNS captures remain in place and passed a checksum
+recheck. Admit a formal run only when the original host gate passes
+with at least 22 GiB MemAvailable, 2 GiB free memory, 30 GiB free disk,
+full I/O PSI avg10 at most 5%, and no competing heavy work. The live
+cgroup headroom gate still runs before the generator. The 1,000-agent
+count and twice-load schedule are unchanged.
