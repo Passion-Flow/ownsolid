@@ -46,6 +46,12 @@ the database, so any gateway serves any agent.
 `SERVICE_NOT_READY`, so agents move at once; the liveness table is flushed before the pool
 closes.
 
+**A dedicated gateway also ages individual connections.** The listener sets a
+jittered drain point and a later socket deadline. Age retires the v1 stream
+between exchanges, preserving the current reply and the Agent's persisted
+acknowledgement cursor. The common embedded listener follows its existing
+lifecycle. See [the ARC-107 listener research](../research/agent-gateway-rebalance.md#dedicated-listener-connection-age).
+
 ## Consequences
 
 - The session tier scales by adding gateway processes on more hosts; connections per agent stay

@@ -121,6 +121,7 @@ agent_gateway:
   listen_address: 0.0.0.0:9443
   tls_certificate_file: /run/projectone/certificate.pem
   tls_private_key_file: /run/projectone/private-key.pem
+  connection_max_age_seconds: 1800
 ```
 
 The certificate must name the host of the origin agents use (the admin origin unless
@@ -131,6 +132,12 @@ whose connection limit is control's pool unless `resources.database_role_connect
 install configuration raises it: set it to 10 plus each gateway's pool and apply again. A gateway
 that finds the limit full stops with `DATABASE_CONNECTION_LIMIT_REACHED`. It serves only the session stream and `/health/live` and `/health/ready`; agents keep
 sending enrollment, results, renewals and transfers to the origin.
+
+The dedicated listener begins draining each connection at a randomized point in
+the final tenth of `connection_max_age_seconds`. Omission or zero selects 1,800 seconds.
+Overrides range from 60 to 86,400 seconds. A current exchange can finish.
+The transport closes by the end of the bounded drain window. Reconnecting agents
+keep their acknowledged task sequence. Restart the gateway to change the setting.
 
 Give agents the gateways in their configuration, the addresses they reach them on:
 
