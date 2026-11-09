@@ -62,3 +62,40 @@ messages that merely mention an Xid. Test recognized and unknown advisories
 separately. Full acceptance requires authenticated event delivery,
 deduplication and an operator surface, followed by real NVIDIA events on a
 qualified host. The CPU fixture establishes parsing and safety properties.
+
+## Journal message encodings and simulated Xids
+
+[Journal JSON](https://systemd.io/JOURNAL_EXPORT_FORMATS/#journal-json-format)
+distinguishes text from byte arrays, repeated values and values omitted by
+the output size limit. A valid byte-array message should not strand later
+events behind its journal cursor. Decode a single byte array without lossy
+UTF-8 conversion, match only the existing ASCII Xid prefix and keep no
+payload. Skip missing, size-omitted and multi-value messages because they
+cannot identify one unambiguous event. Reject malformed messages and keep
+the existing atomic batch limits. Treating all arrays as errors can block
+unrelated events. Choosing one repeated value could manufacture evidence.
+
+The [NVIDIA R620 kernel log guidance](https://docs.nvidia.com/deploy/gpu-operational-events/620/analyzing-gpu-operational-events.html#kernel-log)
+says that fault-injection events retain the legacy prefix and Xid code and
+carry the `[SIMULATED]` marker. Exclude marked messages from fault
+observations even when journal provenance is valid. The documentation
+does not fix a marker offset. The collector conservatively withholds a
+message containing that exact marker and does not infer health from its
+absence. Replacing the existing parser with the preview structured
+interface would add driver-version and privilege dependencies.
+
+Use the existing Go standard library and systemd format under the licence
+terms above. No new dependencies, models, data sets or vendor code are
+shipped. Verify that ordinary Xids before and after documented alternate
+encodings still arrive, that an Xid in a single byte array preserves its
+identity, and that ambiguous arrays, binary data without the exact prefix,
+and simulated drop-off and ECC records never produce observations.
+Corrupt fields must continue to reject the full batch.
+
+The Linux amd64 loopback-only discovery and inference suites passed. With
+the original parser, the alternate encoding stopped the batch, and the
+simulation fixture returned both marked events alongside the genuine ones.
+The revised parser retains the genuine Xid 79 and 48 observations and the
+Xid in a binary message. Invalid byte values and mixed encodings still
+fail the batch. The server had no NVIDIA hardware. The driver fixtures
+were synthetic, and reporting and quarantine remain separate gates.
