@@ -53,3 +53,33 @@ same job from an accepted checkpoint through the product, verifies the
 optimizer step and produces accepted output. A worker receipt demonstrates
 local durability on the tested filesystem. Surviving node loss requires the
 Agent and control plane to have accepted a copy before the interruption.
+
+## Controller recovery replay
+
+On Linux amd64, PostgreSQL 18.6 in a loopback-only container ran
+`TestActualCpuAcceptedCheckpointRecoveryFreezesNewAttemptAndPrivateRanges`.
+The test used the retained CPU worker's eight checkpoint files, including
+the 4,679,051-byte optimizer state with SHA-256
+`9af4c306f041bb3ca4ef1de52eb55c0aafc8117a103080cae58c50dcdd308c9f`.
+The original CPU receipt had SHA-256
+`77321f4a896732daef90fd156942321727c6ab44526676ad7590e721877c9fb6`.
+The fixture retains the worker's file digests and supplies synthetic
+production request bindings and an authenticated synthetic physical stop.
+
+A same-length change to the optimizer state blocked readiness and the
+recovery request without creating an intent. Restoring the original bytes
+allowed the same idempotency key to queue the same job. Attempt 2 bound
+the accepted checkpoint at step 1 and served an optimizer byte range that
+matched the worker output. The previous lease could not fetch the range
+or stop the new attempt. Revoking the current actor blocked the new
+lease's fetch.
+
+Run the named test from `services/control` with
+`-tags training_artifact_integration` and an isolated PostgreSQL fixture
+with the vector extension. Set `PROJECT_ONE_TEST_DSN_FILE` and
+`PROJECT_ONE_DATA_PYTHON` for the fixture, and
+`PROJECT_ONE_ACTUAL_TRAINING_OUTPUT` and
+`PROJECT_ONE_APPROVED_MODEL_DIRECTORY` to the retained worker output and
+approved base configuration directories. This replay proves the control
+handoff and storage checks. A worker restoring optimizer state and
+advancing a real interrupted run remains a separate acceptance gate.
