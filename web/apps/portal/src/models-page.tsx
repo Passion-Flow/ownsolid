@@ -377,6 +377,8 @@ function Catalogue({ workspace }: { workspace: string }) {
         <div className="mb-3.5">
           <ProblemNotice
             problem={factsProblem}
+            title={t('portalModels.factsUnavailable.title')}
+            detail={factsProblem.retryable ? t('portalModels.factsUnavailable.detail') : undefined}
             onRetry={() => {
               void deployments.refetch();
               void models.refetch();
