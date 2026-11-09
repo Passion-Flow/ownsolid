@@ -1,13 +1,11 @@
 package scheduling
 
 import (
-	"cmp"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"math"
-	"slices"
 	"strconv"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
@@ -220,12 +218,23 @@ func requireDurableReservationCommit(ctx context.Context, q transaction.Executor
 }
 
 func checkWorkspaceCapacity(ctx context.Context, q transaction.Executor, a Attempt, ceiling, demand Resources) error {
+	used, err := readWorkspaceUsageWithin(ctx, q, a.TenantID, a.WorkspaceID)
+	if err != nil {
+		return err
+	}
+	if limits := workspaceCapacityLimits(demand, ceiling, used); len(limits) != 0 {
+		return &reservationQuotaError{limits: limits}
+	}
+	return nil
+}
+
+func readWorkspaceUsageWithin(ctx context.Context, q transaction.Executor, tenant, workspace string) (Resources, error) {
 	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
 		`SELECT r.key,sum(r.value::numeric)::text
  FROM scheduling_reservations s CROSS JOIN LATERAL jsonb_each_text(s.demand) r
- WHERE s.tenant_id=$1 AND s.workspace_id=$2 AND s.released_at IS NULL GROUP BY r.key`, a.TenantID, a.WorkspaceID))
+ WHERE s.tenant_id=$1 AND s.workspace_id=$2 AND s.released_at IS NULL GROUP BY r.key`, tenant, workspace))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer rows.Close()
 	used := make(Resources)
@@ -233,28 +242,18 @@ func checkWorkspaceCapacity(ctx context.Context, q transaction.Executor, a Attem
 		var resource Resource
 		var raw string
 		if err := rows.Scan(&resource, &raw); err != nil {
-			return err
+			return nil, err
 		}
 		quantity, err := parseReservationUsage(resource, raw)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		used[resource] = quantity
 	}
 	if err := rows.Err(); err != nil {
-		return err
+		return nil, err
 	}
-	var limits []Limit
-	for resource, requested := range demand {
-		if limit, blocked := capacityLimit(resource, requested, ceiling[resource], used[resource], WorkspaceQuota, QuotaTooSmall, QuotaInUse); blocked {
-			limits = append(limits, limit)
-		}
-	}
-	if len(limits) == 0 {
-		return nil
-	}
-	slices.SortFunc(limits, func(a, b Limit) int { return cmp.Compare(a.Resource, b.Resource) })
-	return &reservationQuotaError{limits: limits}
+	return used, nil
 }
 
 func parseReservationUsage(resource Resource, raw string) (int64, error) {
