@@ -88,8 +88,8 @@ func verifyPartitions(request wire.ProcessorRequest, manifest wire.Manifest, dir
 	duplicates := []duplicate{}
 	sources := sourceUnion{}
 	plan, e := readNearPlan(request)
-	if e != nil {
-		return e
+	if e != nil || request.TestBasisPoints != 0 && plan == nil {
+		return failure("DATASET_FILE_INVALID")
 	}
 	var rowSources []string
 	var total int64
@@ -139,6 +139,16 @@ func verifyPartitions(request wire.ProcessorRequest, manifest wire.Manifest, dir
 		root := sources.find(s)
 		groups[root] = append(groups[root], s)
 	}
+	requiredGroups := 2
+	domain := "projectone.text-sft.v1.split.v1\x00"
+	if request.TestBasisPoints != 0 {
+		requiredGroups = 3
+		domain = "projectone.text-sft.v1.split.v2\x00"
+	}
+	if len(groups) < requiredGroups {
+		return failure("DATASET_FILE_INVALID")
+	}
+	prefix := []byte(domain + *request.Seed + "\x00")
 	type ranked struct {
 		root, digest string
 		encoded      []byte
@@ -149,7 +159,6 @@ func verifyPartitions(request wire.ProcessorRequest, manifest wire.Manifest, dir
 		if e != nil {
 			return failure("DATASET_FILE_INVALID")
 		}
-		prefix := []byte("projectone.text-sft.v1.split.v1\x00" + *request.Seed + "\x00")
 		digest := sha256.Sum256(append(prefix, raw...))
 		ordered = append(ordered, ranked{root, hex.EncodeToString(digest[:]), raw})
 	}
@@ -159,45 +168,49 @@ func verifyPartitions(request wire.ProcessorRequest, manifest wire.Manifest, dir
 		}
 		return ordered[i].digest < ordered[j].digest
 	})
-	count := (len(ordered)**request.ValidationBasisPoints + 5000) / 10000
-	if count < 1 {
-		count = 1
+	validationGroups := min(len(ordered)-requiredGroups+1, max(1, (len(ordered)**request.ValidationBasisPoints+5000)/10000))
+	testGroups := 0
+	partitions := map[string][]wire.Record{"samples": nil, "train": nil, "validation": nil}
+	if request.TestBasisPoints != 0 {
+		testGroups = min(len(ordered)-validationGroups-1, max(1, (len(ordered)*request.TestBasisPoints+5000)/10000))
+		partitions["test"] = nil
 	}
-	if count >= len(ordered) {
-		count = len(ordered) - 1
+	partitionByRoot := make(map[string]string, len(ordered))
+	for i, group := range ordered {
+		switch {
+		case i < validationGroups:
+			partitionByRoot[group.root] = "validation"
+		case i < validationGroups+testGroups:
+			partitionByRoot[group.root] = "test"
+		default:
+			partitionByRoot[group.root] = "train"
+		}
 	}
-	validation := map[string]bool{}
-	for i := 0; i < count; i++ {
-		validation[ordered[i].root] = true
-	}
-	samples := []wire.Record{}
-	train := []wire.Record{}
-	valid := []wire.Record{}
 	assignments := []assignment{}
 	for _, row := range retained {
-		partition := "train"
-		if validation[sources.find(row.record.SourceID)] {
-			partition = "validation"
-			valid = append(valid, row.record)
-		} else {
-			train = append(train, row.record)
-		}
-		samples = append(samples, row.record)
+		partition := partitionByRoot[sources.find(row.record.SourceID)]
+		partitions[partition] = append(partitions[partition], row.record)
+		partitions["samples"] = append(partitions["samples"], row.record)
 		assignments = append(assignments, assignment{row.line, row.record.SourceID, row.digest, partition})
 	}
-	if total != manifest.TotalRows || int64(len(samples)) != manifest.UniqueRows || int64(len(duplicates)) != manifest.DuplicateRows || int64(len(groups)) != manifest.SourceGroups || int64(count) != manifest.ValidationGroups || int64(len(train)) != manifest.TrainRows || int64(len(valid)) != manifest.ValidationRows {
+	if total != manifest.TotalRows || int64(len(partitions["samples"])) != manifest.UniqueRows ||
+		int64(len(duplicates)) != manifest.DuplicateRows || int64(len(groups)) != manifest.SourceGroups ||
+		int64(validationGroups) != manifest.ValidationGroups || int64(testGroups) != manifest.TestGroups ||
+		int64(len(partitions["train"])) != manifest.TrainRows || int64(len(partitions["validation"])) != manifest.ValidationRows ||
+		int64(len(partitions["test"])) != manifest.TestRows {
 		return failure("DATASET_FILE_INVALID")
 	}
-	for name, expected := range map[string][]wire.Record{"samples.jsonl": samples, "train.jsonl": train, "validation.jsonl": valid} {
-		var actual []wire.Record
-		e = readLines(filepath.Join(directory, name), request.Limits.MaximumLineBytes, request.Limits.MaximumRows, func(_ int64, raw []byte) error {
-			r, e := wire.DecodeRecord(raw, request.Limits)
-			if e == nil {
-				actual = append(actual, r)
+	for name, expected := range partitions {
+		var seen int64
+		e = readLines(filepath.Join(directory, name+".jsonl"), request.Limits.MaximumLineBytes, request.Limits.MaximumRows, func(line int64, raw []byte) error {
+			record, e := wire.DecodeRecord(raw, request.Limits)
+			if e != nil || line > int64(len(expected)) || record != expected[line-1] {
+				return failure("DATASET_FILE_INVALID")
 			}
-			return e
+			seen = line
+			return nil
 		})
-		if e != nil || !reflect.DeepEqual(expected, actual) {
+		if e != nil || seen != int64(len(expected)) {
 			return failure("DATASET_FILE_INVALID")
 		}
 	}

@@ -160,20 +160,20 @@ func (s *Service) RetryJob(ctx context.Context, a identity.Auth, workspace, data
 			version = &v
 		}
 		digest := j.InputSHA256
-		var rule string
+		var options PublicationOptions
 		if j.Kind == "publish" {
 			previous, _, _, e := datasetJobInput(ctx, tx, j.ID)
 			if e != nil {
 				return e
 			}
-			rule = previous.Deduplication
+			options = PublicationOptions{Deduplication: previous.Deduplication, TestBasisPoints: previous.TestBasisPoints}
 			_, _, value, e := snapshot(ctx, tx, d.ID, s.policy().Limits)
 			if e != nil {
 				return e
 			}
 			digest = &value
 		}
-		_, e = tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,version_id,input_sha256,input_policy,split_seed,validation_basis_points,retry_of,not_before,creation_key,creation_fingerprint) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'pending',$13,$14,$15,$16,$17,$18,clock_timestamp()+make_interval(secs=>$19),$20,$21)`, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,version_id,input_sha256,input_policy,split_seed,validation_basis_points,retry_of,not_before,creation_key,creation_fingerprint) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'pending',?,?,CAST(? AS JSON),?,?,?,TIMESTAMPADD(SECOND,?,CURRENT_TIMESTAMP(6)),?,?)`, []any{newID, w.TenantID, w.ID, dataset, d.ID, j.Kind, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, reason, d.Revision, version, digest, s.jobPolicyBytes(rule), j.Seed, j.ValidationBasisPoints, j.ID, s.policy().RetryDelaySeconds, key, intent}, []any{newID, w.TenantID, w.ID, dataset, d.ID, j.Kind, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, reason, d.Revision, version, digest, s.jobPolicyBytes(rule), j.Seed, j.ValidationBasisPoints, j.ID, s.policy().RetryDelaySeconds, key, intent}, transaction.SQL(transaction.Dameng, dmRetryInsertJob, newID, w.TenantID, w.ID, dataset, d.ID, j.Kind, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, reason, d.Revision, version, digest, string(s.jobPolicyBytes(rule)), j.Seed, j.ValidationBasisPoints, j.ID, s.policy().RetryDelaySeconds, key, intent)))
+		_, e = tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,version_id,input_sha256,input_policy,split_seed,validation_basis_points,retry_of,not_before,creation_key,creation_fingerprint) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'pending',$13,$14,$15,$16,$17,$18,clock_timestamp()+make_interval(secs=>$19),$20,$21)`, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,version_id,input_sha256,input_policy,split_seed,validation_basis_points,retry_of,not_before,creation_key,creation_fingerprint) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'pending',?,?,CAST(? AS JSON),?,?,?,TIMESTAMPADD(SECOND,?,CURRENT_TIMESTAMP(6)),?,?)`, []any{newID, w.TenantID, w.ID, dataset, d.ID, j.Kind, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, reason, d.Revision, version, digest, s.jobPolicyBytes(options), j.Seed, j.ValidationBasisPoints, j.ID, s.policy().RetryDelaySeconds, key, intent}, []any{newID, w.TenantID, w.ID, dataset, d.ID, j.Kind, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, reason, d.Revision, version, digest, s.jobPolicyBytes(options), j.Seed, j.ValidationBasisPoints, j.ID, s.policy().RetryDelaySeconds, key, intent}, transaction.SQL(transaction.Dameng, dmRetryInsertJob, newID, w.TenantID, w.ID, dataset, d.ID, j.Kind, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, reason, d.Revision, version, digest, string(s.jobPolicyBytes(options)), j.Seed, j.ValidationBasisPoints, j.ID, s.policy().RetryDelaySeconds, key, intent)))
 		if e != nil {
 			return e
 		}

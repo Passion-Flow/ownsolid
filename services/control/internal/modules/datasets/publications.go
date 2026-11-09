@@ -89,7 +89,7 @@ func snapshot(ctx context.Context, tx transaction.Executor, draft string, limits
 
 // Publish uses the established exact-deduplication publication path.
 func (s *Service) Publish(ctx context.Context, a identity.Auth, workspace, dataset, draft string, input PublicationRequest, key, requestID string) (Job, error) {
-	return s.publish(ctx, a, workspace, dataset, draft, input, "", key, requestID)
+	return s.PublishWithOptions(ctx, a, workspace, dataset, draft, input, PublicationOptions{}, key, requestID)
 }
 
 // PublishWithDeduplication selects the opt-in lexical rule for an existing draft.
@@ -97,18 +97,27 @@ func (s *Service) PublishWithDeduplication(ctx context.Context, a identity.Auth,
 	if rule != NearPromptV1 {
 		return Job{}, failure("VALIDATION_FAILED")
 	}
-	return s.publish(ctx, a, workspace, dataset, draft, input, rule, key, requestID)
+	return s.PublishWithOptions(ctx, a, workspace, dataset, draft, input, PublicationOptions{Deduplication: rule}, key, requestID)
 }
 
-func (s *Service) publish(ctx context.Context, a identity.Auth, workspace, dataset, draft string, input PublicationRequest, rule, key, requestID string) (Job, error) {
+// PublicationOptions selects internal publication behavior independently of the public request.
+type PublicationOptions struct {
+	Deduplication   string `json:"deduplication,omitempty"`
+	TestBasisPoints int    `json:"test_basis_points,omitempty"`
+}
+
+// PublishWithOptions queues an immutable publication, optionally reserving a test split.
+func (s *Service) PublishWithOptions(ctx context.Context, a identity.Auth, workspace, dataset, draft string, input PublicationRequest, options PublicationOptions, key, requestID string) (Job, error) {
 	var out Job
-	if !wire.ValidID(key) || input.ExpectedRevision < 1 || !validReason(input.Reason) || wire.ValidateSplit(input.Seed, input.ValidationBasisPoints) != nil {
+	if !wire.ValidID(key) || input.ExpectedRevision < 1 || !validReason(input.Reason) || wire.ValidateSplit(input.Seed, input.ValidationBasisPoints) != nil ||
+		options.Deduplication != "" && options.Deduplication != NearPromptV1 ||
+		options.TestBasisPoints != 0 && wire.ValidateThreeWaySplit(input.Seed, input.ValidationBasisPoints, options.TestBasisPoints) != nil {
 		return out, failure("VALIDATION_FAILED")
 	}
 	intent := fingerprint(struct {
 		PublicationRequest
-		Deduplication string `json:"deduplication,omitempty"`
-	}{input, rule}, a.Me.User.ID)
+		PublicationOptions
+	}{input, options}, a.Me.User.ID)
 	e := s.transaction(ctx, a, workspace, true, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
 		parent, e := lockedDataset(ctx, tx, w, dataset)
 		if e != nil {
@@ -162,7 +171,7 @@ func (s *Service) publish(ctx context.Context, a identity.Auth, workspace, datas
 			return e
 		}
 		id = uuid.NewString()
-		_, e = tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,version_id,input_sha256,input_policy,split_seed,validation_basis_points,creation_key,creation_fingerprint) VALUES($1,$2,$3,$4,$5,'publish',$6,$7,$8,$9,$10,$11,'pending',$12,$13,$14,$15,$16,$17,$18)`, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,version_id,input_sha256,input_policy,split_seed,validation_basis_points,creation_key,creation_fingerprint) VALUES(?,?,?,?,?,'publish',?,?,?,?,?,?,'pending',?,?,CAST(? AS JSON),?,?,?,?)`, []any{id, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, input.Reason, d.Revision, uuid.NewString(), digest, s.jobPolicyBytes(rule), input.Seed, input.ValidationBasisPoints, key, intent}, []any{id, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, input.Reason, d.Revision, uuid.NewString(), digest, s.jobPolicyBytes(rule), input.Seed, input.ValidationBasisPoints, key, intent}, transaction.SQL(transaction.Dameng, dmPublicationQueue, id, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, input.Reason, d.Revision, uuid.NewString(), digest, string(s.jobPolicyBytes(rule)), input.Seed, input.ValidationBasisPoints, key, intent)))
+		_, e = tx.Exec(ctx, datasetSQL(tx, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,version_id,input_sha256,input_policy,split_seed,validation_basis_points,creation_key,creation_fingerprint) VALUES($1,$2,$3,$4,$5,'publish',$6,$7,$8,$9,$10,$11,'pending',$12,$13,$14,$15,$16,$17,$18)`, `INSERT INTO dataset_jobs(id,tenant_id,workspace_id,dataset_id,draft_id,kind,requested_by,requested_audience,requested_epoch,membership_authority,reason,expected_revision,state,version_id,input_sha256,input_policy,split_seed,validation_basis_points,creation_key,creation_fingerprint) VALUES(?,?,?,?,?,'publish',?,?,?,?,?,?,'pending',?,?,CAST(? AS JSON),?,?,?,?)`, []any{id, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, input.Reason, d.Revision, uuid.NewString(), digest, s.jobPolicyBytes(options), input.Seed, input.ValidationBasisPoints, key, intent}, []any{id, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, input.Reason, d.Revision, uuid.NewString(), digest, s.jobPolicyBytes(options), input.Seed, input.ValidationBasisPoints, key, intent}, transaction.SQL(transaction.Dameng, dmPublicationQueue, id, w.TenantID, w.ID, dataset, draft, a.Me.User.ID, a.Me.Audience, a.Epoch, authority, input.Reason, d.Revision, uuid.NewString(), digest, string(s.jobPolicyBytes(options)), input.Seed, input.ValidationBasisPoints, key, intent)))
 		if e != nil {
 			return e
 		}
