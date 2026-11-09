@@ -1,0 +1,23 @@
+{
+  "listen_address": "10.42.1.20:8445",
+  "certificate_file": "/etc/ownsolid/relay/relay-cert.pem",
+  "private_key_file": "/etc/ownsolid/relay/relay-key.pem",
+  "wecom_origin": "https://10.42.1.23:8448",
+  "wecom_ca_file": "/etc/ownsolid/relay/wecom-ca.pem",
+  "delivery_seconds": 5,
+  "max_concurrent": 8,
+  "tenants": [
+    {
+      "id": "tenant-a",
+      "receiver": "tenant-a-wecom",
+      "webhook_token_file": "/etc/ownsolid/relay/tenant-a-webhook",
+      "wecom_key_file": "/etc/ownsolid/relay/tenant-a-wecom-key"
+    },
+    {
+      "id": "tenant-b",
+      "receiver": "tenant-b-wecom",
+      "webhook_token_file": "/etc/ownsolid/relay/tenant-b-webhook",
+      "wecom_key_file": "/etc/ownsolid/relay/tenant-b-wecom-key"
+    }
+  ]
+}
