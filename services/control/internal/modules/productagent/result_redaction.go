@@ -2,6 +2,8 @@ package productagent
 
 import (
 	"regexp"
+	"strings"
+	"unicode"
 
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 )
@@ -13,6 +15,16 @@ var displayCredential = regexp.MustCompile(`(?:pk1|` + regexp.QuoteMeta(agentwir
 
 const maskedCredential = "[redacted]"
 
-func maskDisplayCredentials(label string) string {
+func safeDisplayName(label string) string {
+	// Drop directional controls before matching keys split by invisible marks.
+	label = strings.Map(func(r rune) rune {
+		if unicode.Is(unicode.Bidi_Control, r) {
+			return -1
+		}
+		return r
+	}, label)
+	if strings.TrimSpace(label) == "" {
+		return maskedCredential
+	}
 	return displayCredential.ReplaceAllString(label, maskedCredential)
 }

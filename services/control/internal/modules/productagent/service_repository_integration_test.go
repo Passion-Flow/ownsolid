@@ -135,9 +135,10 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 		return workflow.ID, version
 	}
 	const label = "Report \u4e16\u754c "
-	storedName := label + "pk1." + uuid.NewString() + "." + security.Token()
+	storedName := label + "\u202epk1." + uuid.NewString() + ".\u2066" + security.Token() + "\u2069\u202c"
 	workflow, version := publish(storedName)
-	publish("Second fixture application")
+	const blankAfterSanitizing = "\u202e \u202c"
+	blankWorkflow, _ := publish(blankAfterSanitizing)
 	page, err := service.Run(ctx, portal, "show applications", "")
 	if err != nil || page.Applications == nil || len(page.Applications.Items) != 1 || page.Applications.NextCursor == nil {
 		t.Fatalf("invalid first application page: %v", err)
@@ -153,9 +154,16 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	}) {
 		t.Fatal("assistant application name did not mask the display credential")
 	}
+	if !slices.ContainsFunc(results, func(item applications.Application) bool {
+		return item.WorkflowID == blankWorkflow && item.Name == maskedCredential
+	}) {
+		t.Fatal("a control-only name returned a blank assistant label")
+	}
 	ordinary, err := apps.List(ctx, portal, workspace, url.Values{"limit": {"10"}})
 	if err != nil || len(ordinary.Items) != 2 || !slices.ContainsFunc(ordinary.Items, func(item applications.Application) bool {
 		return item.WorkflowID == workflow && item.Name == storedName
+	}) || !slices.ContainsFunc(ordinary.Items, func(item applications.Application) bool {
+		return item.WorkflowID == blankWorkflow && item.Name == blankAfterSanitizing
 	}) {
 		t.Fatalf("assistant redaction changed the ordinary Portal projection: %v", err)
 	}
@@ -176,6 +184,12 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	conversation(otherUser)
 	if result, err := service.Run(ctx, portal, "show conversations", ""); err != nil || result.Conversations == nil || len(result.Conversations.Items) != 1 || result.Conversations.Items[0].ID != ownConversation || result.Conversations.Items[0].WorkflowName != label+maskedCredential || result.Conversations.NextCursor != nil {
 		t.Fatalf("invalid private conversation projection: %v", err)
+	}
+
+	ordinaryConversations, err := apps.Conversations(ctx, portal, workspace, nil)
+	if err != nil || len(ordinaryConversations.Items) != 1 || ordinaryConversations.Items[0].ID != ownConversation ||
+		ordinaryConversations.Items[0].WorkflowName != storedName {
+		t.Fatalf("assistant redaction changed the ordinary conversation projection: %v", err)
 	}
 
 	verifyScopedCommandAudit(t, ctx, fixture.PostgreSQL, service, apps, admin, portal)
