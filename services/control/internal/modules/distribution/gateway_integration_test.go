@@ -49,6 +49,7 @@ const (
 	licenseExpiry
 	foregroundResponses
 	foregroundMessages
+	applicationBudget
 )
 
 // Actual Go/Rust/PostgreSQL transport and persistence; backend replies are explicitly synthetic.
@@ -165,6 +166,11 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 		c.s.Identity.BusinessAdmission = licensed
 	}
 	ownedSecrets := []string{*access.gateway.Secret, *access.key.Secret}
+	var quota *applicationQuotaFixture
+	if mode == applicationBudget {
+		quota = newApplicationQuotaFixture(t, c, access)
+		ownedSecrets = append(ownedSecrets, *quota.sibling.Secret, *quota.independent.Secret)
+	}
 	control.StartTLS()
 	defer control.Close()
 	foreground := mode == foregroundResponses || mode == foregroundMessages
@@ -256,7 +262,13 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 	listen := listener.Listener.Addr().String()
 	listener.Close()
 	configuration := map[string]any{"gateway_id": access.gateway.Gateway.ID, "node_id": c.node.NodeID, "listen_address": listen, "backend_address": strings.TrimPrefix(backend.URL, "http://"), "control_origin": control.URL, "control_ca_file": filepath.Join(root, "ca.pem"), "gateway_credential_file": filepath.Join(root, "credential"), "tls_certificate_file": filepath.Join(root, "certificate.pem"), "tls_private_key_file": filepath.Join(root, "key.pem"), "state_directory": state, "limits": map[string]any{"active_requests": 2, "queued_requests": 2, "backend_idle_connections": 2, "connect_seconds": 1, "control_seconds": 1, "request_seconds": 5, "idle_seconds": 2, "header_seconds": 1, "shutdown_seconds": 2, "outcome_retry_seconds": 1}}
-	configBytes, _ := json.Marshal(configuration)
+	if quota != nil {
+		configuration["quota_policy"] = quota.policy
+	}
+	configBytes, e := json.Marshal(configuration)
+	if e != nil {
+		t.Fatal(e)
+	}
 	configPath := filepath.Join(root, "gateway.json")
 	if e = os.WriteFile(configPath, configBytes, 0600); e != nil {
 		t.Fatal(e)
@@ -383,6 +395,10 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 	}
 	if foreground {
 		verifyForegroundText(t, mode, c, access, request, &paused, &backendCalls, &generations, &generationIDs)
+		return
+	}
+	if quota != nil {
+		quota.verify(t, c, access, request, &generations)
 		return
 	}
 	chat := func(stream bool) map[string]any {
