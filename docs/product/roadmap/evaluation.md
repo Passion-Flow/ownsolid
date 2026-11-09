@@ -17,6 +17,10 @@ Measuring models and applications before release, and gating releases on the res
     reproduced the report from synthetic captures. The authorized product
     workflow, UI and real inference repeatability remain open.
 - [ ] EVL-102 Model-against-model comparison on the customer's own set (P1) - Catalog: F067
+  - [Offline paired comparison](../../../runtimes/model-lifecycle/README.md#compare-two-captured-evaluations)
+    replays two retained reports on one frozen validation version and records
+    per-case differences. Authorized delivery, UI and real engine evidence
+    remain open.
 - [ ] EVL-103 Release gates: a model or app version cannot be promoted below its threshold (P1) - Catalog: F650
 - [ ] EVL-104 Production traces turned into regression cases (P1)
 - [ ] EVL-105 Performance benchmark: latency, throughput and cost per model and hardware (P1) - Catalog: F150
