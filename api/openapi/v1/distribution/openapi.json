@@ -668,6 +668,112 @@
         }
       ]
     },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/ca": {
+      "get": {
+        "operationId": "adminDownloadGatewayAliasCA",
+        "summary": "Download the public model gateway CA bundle",
+        "description": "Download the loaded certificate-only trust bundle for an authorized alias served by an activated agent-managed gateway.",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/GatewayAliasCADownload"
+          },
+          "400": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "401": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "403": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "404": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "503": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "default": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "GATEWAY_AUTHORITY_UNAVAILABLE",
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
+        }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys": {
       "get": {
         "operationId": "adminListDistributionKey",
@@ -2810,6 +2916,112 @@
               }
             }
           }
+        }
+      },
+      "parameters": [
+        {
+          "name": "site_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        },
+        {
+          "name": "cell_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$"
+          }
+        }
+      ]
+    },
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id}/ca": {
+      "get": {
+        "operationId": "portalDownloadGatewayAliasCA",
+        "summary": "Download the public model gateway CA bundle",
+        "description": "Download the loaded certificate-only trust bundle for an authorized alias served by an activated agent-managed gateway.",
+        "x-audiences": [
+          "portal"
+        ],
+        "security": [
+          {
+            "portalSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/GatewayAliasCADownload"
+          },
+          "400": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "401": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "403": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "404": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "503": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          },
+          "default": {
+            "$ref": "#/components/responses/GatewayAliasCAProblem"
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "503": [
+            "GATEWAY_AUTHORITY_UNAVAILABLE",
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "parameters": [
@@ -5841,6 +6053,7 @@
               "DATASET_VERSION_RETIRED",
               "DEFAULT_WORKSPACE_PROTECTED",
               "FORBIDDEN",
+              "GATEWAY_AUTHORITY_UNAVAILABLE",
               "GATEWAY_BACKEND_STOP_UNCONFIRMED",
               "GATEWAY_FENCE_RECEIPT_CONFLICT",
               "GATEWAY_FENCE_SCOPE_CONFLICT",
@@ -6734,6 +6947,69 @@
         }
       },
       "GatewayUsageCSVProblem": {
+        "description": "Stable safe error.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "GatewayAliasCADownload": {
+        "description": "The public PEM CA certificate bundle loaded by control for the activated model gateway.",
+        "headers": {
+          "Content-Disposition": {
+            "description": "Attachment with the fixed name model-gateway-ca.pem.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "attachment; filename=model-gateway-ca.pem"
+            }
+          },
+          "Content-Length": {
+            "description": "Exact byte length of the complete attachment.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          "X-Artifact-SHA256": {
+            "description": "Lowercase hexadecimal SHA-256 of the attachment bytes.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          "Cache-Control": {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "no-store"
+            }
+          },
+          "X-Request-ID": {
+            "description": "Server-generated request correlation UUID.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/octet-stream": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "GatewayAliasCAProblem": {
         "description": "Stable safe error.",
         "content": {
           "application/problem+json": {
