@@ -176,13 +176,20 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
 			if err != nil {
 				return failure("DATASET_DATA_INVALID")
 			}
-			_, err = tx.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `
-				INSERT INTO dataset_draft_import_candidates(tenant_id,workspace_id,dataset_id,draft_id,source_format,report)
-				VALUES($1,$2,$3,$4,$5,$6::jsonb)`, w.TenantID, w.ID, dataset, draftID, string(format), raw))
-			if err == nil {
-				result = DraftSourceResult{Draft: d, Report: report}
+			inserted, err := tx.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `
+				INSERT INTO dataset_draft_import_candidates(tenant_id,workspace_id,dataset_id,draft_id,site_id,cell_id,source_format,report)
+				SELECT d.tenant_id,d.workspace_id,d.dataset_id,d.id,d.site_id,d.cell_id,$5,$6::jsonb
+				FROM dataset_drafts d
+				WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.dataset_id=$3 AND d.id=$4
+				  AND d.site_id=local_site_id() AND d.cell_id=local_cell_id()`, w.TenantID, w.ID, dataset, draftID, string(format), raw))
+			if err != nil {
+				return err
 			}
-			return err
+			if inserted != 1 {
+				return failure("DATASET_NOT_FOUND")
+			}
+			result = DraftSourceResult{Draft: d, Report: report}
+			return nil
 		})
 	// A lost commit acknowledgement can leave a valid reference. Preserve this
 	// attempt's files until the outcome can be reconciled with the same key.
@@ -199,14 +206,11 @@ func (c *DraftSourceCandidate) Read(ctx context.Context, a identity.Auth, worksp
 		if w.TenantID != s.Store.namespace.TenantID {
 			return failure("DATASET_NOT_FOUND")
 		}
-		if _, err := lockedDataset(ctx, tx, w, dataset); err != nil {
+		if _, err := lockedDraftSourceDataset(ctx, tx, w, dataset); err != nil {
 			return err
 		}
 		draft, err := lockedDraft(ctx, tx, w, dataset, id)
 		if err != nil {
-			return err
-		}
-		if err = draftAccess(a, w, draft, false); err != nil {
 			return err
 		}
 		var object, format string
@@ -214,13 +218,18 @@ func (c *DraftSourceCandidate) Read(ctx context.Context, a identity.Auth, worksp
 		err = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `
 			SELECT d.source_object_id::text,c.source_format,c.report
 			FROM dataset_drafts d JOIN dataset_draft_import_candidates c
-			  ON (c.tenant_id,c.workspace_id,c.dataset_id,c.draft_id)=(d.tenant_id,d.workspace_id,d.dataset_id,d.id)
-			WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.dataset_id=$3 AND d.id=$4`,
+			  ON (c.tenant_id,c.workspace_id,c.dataset_id,c.draft_id,c.site_id,c.cell_id)
+		     =(d.tenant_id,d.workspace_id,d.dataset_id,d.id,d.site_id,d.cell_id)
+			WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.dataset_id=$3 AND d.id=$4
+			  AND d.site_id=local_site_id() AND d.cell_id=local_cell_id()`,
 			w.TenantID, w.ID, dataset, id)).Scan(&object, &format, &raw)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return failure("DATASET_NOT_FOUND")
 		}
 		if err != nil {
+			return err
+		}
+		if err = draftAccess(a, w, draft, false); err != nil {
 			return err
 		}
 		result, err = s.Store.verifyDraftSource(draft, object, SourceFormat(format), raw)
@@ -257,6 +266,17 @@ func (s *Store) verifyDraftSource(draft Draft, object string, format SourceForma
 	return DraftSourceResult{Draft: draft, Report: report}, nil
 }
 
+// The candidate is PostgreSQL-only. Resolve its cell from the database
+// selected by the router, while retaining the authenticated workspace fence.
+func lockedDraftSourceDataset(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, id string) (Dataset, error) {
+	if !wire.ValidID(id) {
+		return Dataset{}, failure("DATASET_NOT_FOUND")
+	}
+	return scanDataset(tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT "+datasetFields+`
+		FROM datasets WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3
+		  AND site_id=local_site_id() AND cell_id=local_cell_id() FOR UPDATE`, w.TenantID, w.ID, id)))
+}
+
 func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, workspace, dataset, key string, format SourceFormat, input DraftSourceRequest, intent []byte, apply func(context.Context, transaction.Executor, workspaces.Workspace, DraftSourceResult) error) error {
 	return s.transaction(ctx, a, workspace, true, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
 		if w.TenantID != s.Store.namespace.TenantID {
@@ -265,18 +285,21 @@ func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, w
 		if err := s.mongoAttachmentFence(ctx, tx, a, w, dataset); err != nil {
 			return err
 		}
-		target, err := lockedDataset(ctx, tx, w, dataset)
+		target, err := lockedDraftSourceDataset(ctx, tx, w, dataset)
 		if err != nil {
 			return err
 		}
 		var id, object, storedFormat string
 		var original, raw []byte
+		var local bool
 		err = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `
-			SELECT d.id::text, d.source_object_id::text, d.creation_fingerprint, COALESCE(c.source_format,''), c.report
+			SELECT d.id::text,d.source_object_id::text,d.creation_fingerprint,COALESCE(c.source_format,''),c.report,
+			       d.site_id=local_site_id() AND d.cell_id=local_cell_id()
 			FROM dataset_drafts d LEFT JOIN dataset_draft_import_candidates c
-			  ON (c.tenant_id,c.workspace_id,c.dataset_id,c.draft_id)=(d.tenant_id,d.workspace_id,d.dataset_id,d.id)
+			  ON (c.tenant_id,c.workspace_id,c.dataset_id,c.draft_id,c.site_id,c.cell_id)
+		     =(d.tenant_id,d.workspace_id,d.dataset_id,d.id,d.site_id,d.cell_id)
 			WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.dataset_id=$3
-			  AND d.created_by=$4 AND d.creation_key=$5`, w.TenantID, w.ID, dataset, a.Me.User.ID, key)).Scan(&id, &object, &original, &storedFormat, &raw)
+			  AND d.created_by=$4 AND d.creation_key=$5`, w.TenantID, w.ID, dataset, a.Me.User.ID, key)).Scan(&id, &object, &original, &storedFormat, &raw, &local)
 		if errors.Is(err, pgx.ErrNoRows) {
 			if target.RetiredAt != nil {
 				return failure("DATASET_RETIRED")
@@ -285,6 +308,9 @@ func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, w
 		}
 		if err != nil {
 			return err
+		}
+		if !local {
+			return failure("DATASET_NOT_FOUND")
 		}
 		if !sameFingerprint(original, intent) {
 			return failure("IDEMPOTENCY_CONFLICT")
