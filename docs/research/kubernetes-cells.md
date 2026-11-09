@@ -669,3 +669,31 @@ still needs an admitted cold run. The Linux host refused admission
 with 33.95% full I/O PSI avg10. A later check measured 0.23% and
 refused an active Go build. Both checks exited 75. No diagnostic cold
 run or cluster write replay occurred.
+
+### Diagnostic cold admission attempt
+
+The diagnostic kit from `068b0e0d` was copied to a new private
+directory and passed its SHA-256 manifest. The first Linux check
+saw 20.76 GiB MemAvailable, 3.99 GiB free, zero full I/O PSI avg10
+and no active DEL or other heavy process. Docker used systemd
+cgroup v2 and the Docker service and parent slice had no finite
+memory cap. A Go process appeared after staging. Admission waited
+until it cleared.
+
+The launcher admitted the initial host sample with 2.14 GiB free.
+After attaching the existing signed media and staging the private
+run files, the second gate measured 1.94 GiB free against the
+unchanged 2 GiB requirement. It exited 75 at
+`container-cgroup-preflight` before creating the fixture containers
+or their cgroups. The media was unmounted. There was no Control,
+PostgreSQL or member-read outcome in this attempt.
+
+Six later host samples all refused admission. Each saw an active
+Go or Rust build and full I/O PSI avg10 between 36.68% and 49.42%.
+None saw DEL active. The failed run remains under
+`/root/lane-arc104-registry.JFfDHO/cold-diagnostic.m75o4D/run.5jRcKF`.
+The prior raw checksums passed. The first refusal and follow-up
+samples are preserved in
+`lane-arc-diagnostics/arc104-diagnostic-admission-0417` beside the
+worktree. The diagnostic cold experiment remains pending a quiet
+window that passes both admission gates.
