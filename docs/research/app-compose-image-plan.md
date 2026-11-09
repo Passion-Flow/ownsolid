@@ -136,3 +136,11 @@ containerd image store. The store contained exactly that untagged
 digest. The same suite refused unsafe fields and refused a mismatched
 artifact or unsigned image before Docker access. No workload was
 started.
+
+The service-input regression passed on native Linux amd64 with the same
+Docker and Compose versions in a fresh container with networking disabled.
+Replaying the retained file reference loaded the replacement value in
+Compose's render-only probe. The catalog refused that model at launch
+verification and import, leaving the image store empty. The inline model
+preserved the original value and an explicit empty string on replay, and
+imported only the signed image.
