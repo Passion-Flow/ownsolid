@@ -60,10 +60,7 @@ pub fn valid_alias(value: &str) -> bool {
 
 impl ChatRequest {
     pub fn parse(bytes: &[u8], limits: &Limits) -> Result<Self> {
-        if bytes.len() as u64 > limits.request_body_bytes {
-            return Err("request_too_large");
-        }
-        Self::validate(parse_input(bytes)?, limits)
+        Self::validate(parse_input(bytes, limits)?, limits)
     }
 
     /// Translate the foreground string-input Responses subset to text generation.
@@ -83,10 +80,7 @@ impl ChatRequest {
             #[serde(default)]
             background: bool,
         }
-        if bytes.len() as u64 > limits.request_body_bytes {
-            return Err("request_too_large");
-        }
-        let input: Input = parse_input(bytes)?;
+        let input: Input = parse_input(bytes, limits)?;
         if input.store || input.background {
             return Err("unsupported_parameter");
         }
@@ -101,15 +95,33 @@ impl ChatRequest {
             role: Role::User,
             content: input.input,
         });
+        Self::from_text(
+            input.model,
+            messages,
+            input.max_output_tokens,
+            input.temperature,
+            input.stream,
+            limits,
+        )
+    }
+
+    pub(crate) fn from_text(
+        model: String,
+        messages: Vec<Message>,
+        maximum_tokens: Option<u32>,
+        temperature: Option<f64>,
+        stream: bool,
+        limits: &Limits,
+    ) -> Result<Self> {
         Self::validate(
             ChatInput {
-                model: input.model,
+                model,
                 messages,
                 max_tokens: None,
-                max_completion_tokens: input.max_output_tokens,
-                temperature: input.temperature,
+                max_completion_tokens: maximum_tokens,
+                temperature,
                 n: None,
-                stream: input.stream,
+                stream,
                 stream_options: None,
             },
             limits,
@@ -191,7 +203,10 @@ impl ChatRequest {
     }
 }
 
-fn parse_input<'a, T: Deserialize<'a>>(bytes: &'a [u8]) -> Result<T> {
+pub(crate) fn parse_input<'a, T: Deserialize<'a>>(bytes: &'a [u8], limits: &Limits) -> Result<T> {
+    if bytes.len() as u64 > limits.request_body_bytes {
+        return Err("request_too_large");
+    }
     serde_json::from_slice(bytes).map_err(|error| {
         if error.to_string().starts_with("unknown field") {
             "unsupported_parameter"
