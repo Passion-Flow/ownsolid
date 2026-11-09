@@ -28,13 +28,15 @@ const maxRelayReceipt = 8 << 10
 type deliveryOutcome string
 
 const (
-	delivered      deliveryOutcome = "RELAY_DELIVERED"
-	invalidWebhook deliveryOutcome = "RELAY_WEBHOOK_INVALID"
-	scopeRejected  deliveryOutcome = "RELAY_SCOPE_REJECTED"
-	matrixRetry    deliveryOutcome = "RELAY_MATRIX_RETRY"
-	matrixRejected deliveryOutcome = "RELAY_MATRIX_REJECTED"
-	feishuRetry    deliveryOutcome = "RELAY_FEISHU_RETRY"
-	feishuRejected deliveryOutcome = "RELAY_FEISHU_REJECTED"
+	delivered        deliveryOutcome = "RELAY_DELIVERED"
+	invalidWebhook   deliveryOutcome = "RELAY_WEBHOOK_INVALID"
+	scopeRejected    deliveryOutcome = "RELAY_SCOPE_REJECTED"
+	matrixRetry      deliveryOutcome = "RELAY_MATRIX_RETRY"
+	matrixRejected   deliveryOutcome = "RELAY_MATRIX_REJECTED"
+	feishuRetry      deliveryOutcome = "RELAY_FEISHU_RETRY"
+	feishuRejected   deliveryOutcome = "RELAY_FEISHU_REJECTED"
+	dingTalkRetry    deliveryOutcome = "RELAY_DINGTALK_RETRY"
+	dingTalkRejected deliveryOutcome = "RELAY_DINGTALK_REJECTED"
 )
 
 var eventID = regexp.MustCompile(`^\$[A-Za-z0-9._=+/:~-]{1,254}$`)
@@ -56,6 +58,12 @@ func RunMatrixRelay(ctx context.Context, configurationFile string, logger *slog.
 // receiver that advertises the ownsolid durable idempotency contract.
 func RunFeishuRelay(ctx context.Context, configurationFile string, logger *slog.Logger) error {
 	return runRelay(ctx, configurationFile, feishuChannel, logger)
+}
+
+// RunDingTalkRelay serves authenticated tenant webhooks for a private receiver
+// that supports signed DingTalk messages and the ownsolid durable receipt contract.
+func RunDingTalkRelay(ctx context.Context, configurationFile string, logger *slog.Logger) error {
+	return runRelay(ctx, configurationFile, dingTalkChannel, logger)
 }
 
 func runRelay(ctx context.Context, configurationFile string, channel relayChannel, logger *slog.Logger) error {
@@ -172,7 +180,7 @@ func (s *webhookRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, string(result), http.StatusBadRequest)
 	case scopeRejected:
 		http.Error(w, string(result), http.StatusForbidden)
-	case matrixRejected, feishuRejected:
+	case matrixRejected, feishuRejected, dingTalkRejected:
 		http.Error(w, string(result), http.StatusUnprocessableEntity)
 	default:
 		http.Error(w, string(result), http.StatusServiceUnavailable)
@@ -187,8 +195,11 @@ func logLevel(result deliveryOutcome) slog.Level {
 }
 
 func (s *webhookRelay) send(ctx context.Context, route tenantRoute, text, transaction string) deliveryOutcome {
-	if s.settings.channel == feishuChannel {
+	switch s.settings.channel {
+	case feishuChannel:
 		return s.sendFeishu(ctx, route, text, transaction)
+	case dingTalkChannel:
+		return s.sendDingTalk(ctx, route, text, transaction)
 	}
 	raw, err := json.Marshal(matrixMessage{MsgType: "m.text", Body: text})
 	if err != nil {
