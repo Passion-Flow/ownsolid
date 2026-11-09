@@ -3,14 +3,15 @@ package distribution
 import (
 	"context"
 	"errors"
+	"sort"
+	"strings"
+	"time"
+
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
-	"sort"
-	"strings"
-	"time"
 )
 
 func distributionError(e error) error {
@@ -149,7 +150,7 @@ const mysqlAliasFields = `id,workspace_id,gateway_id,node_id,name,deployment_id,
 
 const mysqlKeyFields = `k.id,k.workspace_id,k.alias_id,a.name,k.label,k.created_by,CASE WHEN k.revoked_at IS NOT NULL THEN 'revoked' WHEN k.expires_at<=UTC_TIMESTAMP(6) THEN 'expired' WHEN k.requested_epoch<>u.auth_epoch OR u.status<>'active' OR NOT EXISTS(SELECT 1 FROM workspace_memberships m WHERE m.tenant_id=k.tenant_id AND m.workspace_id=k.workspace_id AND m.user_id=k.created_by AND m.authority_id=k.membership_authority) THEN 'invalidated' WHEN w.status<>'active' THEN 'unavailable' ELSE 'active' END,k.created_at,k.expires_at,k.last_used_at,k.revoked_at,NULL,NULL`
 
-const mysqlRequestFields = `r.id,r.workspace_id,r.gateway_id,r.node_id,r.api_key_id,r.actor_user_id,r.alias_id,a.name,r.deployment_id,r.deployment_revision,r.state,r.capacity_held,r.stream,r.admitted_at,r.deadline_at,r.reported_at,r.reconciled_at,r.active_recovery_id,r.outcome`
+const mysqlRequestFields = `r.id,r.workspace_id,r.gateway_id,r.node_id,r.api_key_id,r.actor_user_id,r.alias_id,a.name,r.deployment_id,r.deployment_revision,r.state,r.capacity_held,r.stream,r.admitted_at,r.deadline_at,r.reported_at,r.reconciled_at,r.active_recovery_id,r.outcome,r.outcome_sha256`
 
 const mysqlRecoveryFields = `id,request_id,workspace_id,CASE WHEN confirmed_at IS NOT NULL THEN 'completed' WHEN invalidated_at IS NOT NULL THEN 'invalidated' WHEN superseded_at IS NOT NULL THEN 'superseded' WHEN expires_at<=UTC_TIMESTAMP(6) THEN 'expired' WHEN fence_accepted_at IS NOT NULL THEN 'fenced' ELSE 'pending_fence' END,created_at,expires_at,fence_accepted_at,confirmed_at,fence_receipt`
 

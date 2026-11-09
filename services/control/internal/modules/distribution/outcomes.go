@@ -5,10 +5,30 @@ import (
 	"crypto/subtle"
 	"database/sql"
 	"errors"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"time"
+
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
+
+// storedRequestOutcome checks the canonical receipt for both history and report replay.
+func storedRequestOutcome(requestID string, raw []byte, digest *string) (*wire.Outcome, error) {
+	if raw == nil && digest == nil {
+		return nil, nil
+	}
+	if raw == nil || digest == nil {
+		return nil, fail("STORAGE_UNAVAILABLE")
+	}
+	outcome, err := wire.DecodeOutcome(raw)
+	if err != nil || outcome.RequestID != requestID {
+		return nil, fail("STORAGE_UNAVAILABLE")
+	}
+	actual, err := outcome.Digest()
+	if err != nil || subtle.ConstantTimeCompare([]byte(actual), []byte(*digest)) != 1 {
+		return nil, fail("STORAGE_UNAVAILABLE")
+	}
+	return &outcome, nil
+}
 
 // Report accepts only metadata for this credential's already committed admission, including after revocation.
 func (s *Service) Report(ctx context.Context, gateway, credential string, outcome wire.Outcome, request string) (wire.Acknowledgment, error) {
@@ -60,14 +80,9 @@ func (s *Service) Report(ctx context.Context, gateway, credential string, outcom
 		if usage := outcome.Usage; usage != nil && (usage.CompletionTokens > uint32(maximumOutput) || usage.TotalTokens > uint32(maximumContext)) {
 			return fail("GATEWAY_USAGE_INVALID")
 		}
-		if previousHash != nil {
-			saved, e := wire.DecodeOutcome(previous)
-			if e != nil {
-				return fail("STORAGE_UNAVAILABLE")
-			}
-			savedDigest, e := saved.Digest()
-			if e != nil || subtle.ConstantTimeCompare([]byte(savedDigest), []byte(*previousHash)) != 1 {
-				return fail("STORAGE_UNAVAILABLE")
+		if previousHash != nil || previous != nil {
+			if _, e := storedRequestOutcome(outcome.RequestID, previous, previousHash); e != nil {
+				return e
 			}
 			if subtle.ConstantTimeCompare([]byte(*previousHash), []byte(digest)) != 1 {
 				return fail("GATEWAY_OUTCOME_CONFLICT")
