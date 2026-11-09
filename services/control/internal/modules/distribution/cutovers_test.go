@@ -175,6 +175,17 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	if _, e = c.s.Report(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, success(input.RequestID), uuid.NewString()); e != nil {
 		t.Fatal(e)
 	}
+	tracePath := "/api/v1/admin/distribution/workspaces/" + workspace + "/requests/" + admitted.RequestID
+	trace := admin.Call(http.MethodGet, tracePath, nil, http.StatusOK, "GatewayRequestResponse")
+	if trace["id"] != admitted.RequestID || trace["node_id"] != a.alias.NodeID ||
+		trace["deployment_id"] != a.alias.DeploymentID || trace["deployment_revision"] != float64(a.alias.DeploymentRevision) ||
+		trace["alias_id"] != a.alias.ID || trace["api_key_id"] != a.key.Key.ID || trace["actor_id"] != a.owner.Me.User.ID ||
+		trace["state"] != "reported" {
+		t.Fatal("request detail did not identify the original admitted target and owner")
+	}
+	if problem := foreignAdmin.Call(http.MethodGet, tracePath, nil, http.StatusNotFound, "Problem"); problem["code"] != "RESOURCE_NOT_FOUND" {
+		t.Fatal("historical request detail crossed tenant scope")
+	}
 	next := c.replaceBaseDeployment(t, a.alias.DeploymentID)
 	retarget := distribution.CutoverRequest{Action: "retarget", ExpectedRevision: 2, DeploymentID: &next.ID, DeploymentRevision: &next.Revision, Reason: "Same key explicit verified fresh target"}
 	changed, e := applyPreview(retarget, uuid.NewString())
@@ -192,9 +203,8 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	if e != nil || models.Models[0].DeploymentID != next.ID {
 		t.Fatal("same original key changed binding", e)
 	}
-	var retained string
-	if e = c.s.DB.QueryRow(ctx, "SELECT deployment_id::text FROM gateway_requests WHERE id=$1", admitted.RequestID).Scan(&retained); e != nil || retained != a.alias.DeploymentID {
-		t.Fatal("admitted snapshot mutated", e)
+	if current := admin.Call(http.MethodGet, tracePath, nil, http.StatusOK, "GatewayRequestResponse"); !reflect.DeepEqual(current, trace) {
+		t.Fatal("retarget rewrote the historical request detail")
 	}
 	pause.ExpectedRevision = 4
 	paused, e = c.s.Cutover(ctx, c.a, workspace, id, pause, uuid.NewString(), uuid.NewString())
@@ -211,6 +221,9 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
 	resume.ExpectedRevision = rolled.Alias.Revision
 	if _, e = c.s.Cutover(ctx, c.a, workspace, id, resume, uuid.NewString(), uuid.NewString()); e != nil {
 		t.Fatal(e)
+	}
+	if current := admin.Call(http.MethodGet, tracePath, nil, http.StatusOK, "GatewayRequestResponse"); !reflect.DeepEqual(current, trace) {
+		t.Fatal("rollback rewrote the historical request detail")
 	}
 	history, e := c.s.TargetHistory(ctx, c.a, workspace, id, url.Values{"limit": {"2"}})
 	if e != nil || len(history.Items) != 2 || history.NextCursor == nil {
