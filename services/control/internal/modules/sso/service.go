@@ -5,26 +5,27 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/jackc/pgx/v5"
 )
 
 const maximumStartupSecretRecords = config.SSOMaximumConnectors + config.SSOMaximumPendingFlows
 
 type Service struct {
-	Identity *identity.Service
-	keys     *Keyring
-	policy   config.SSOPolicy
-	enabled  bool
-	approved map[string]config.SSOProvider
+	Identity        *identity.Service
+	keys            *Keyring
+	policy          config.SSOPolicy
+	enabled         bool
+	keyringRecovery bool
+	approved        map[string]config.SSOProvider
 	// origins lists the approved provider origins in configuration order.
 	origins []string
-	slots    chan struct{}
-	mu       sync.Mutex
-	clients  map[string]*giteaProvider
+	slots   chan struct{}
+	mu      sync.Mutex
+	clients map[string]*giteaProvider
 }
 
 func fail(code string) error { return errors.New(code) }
@@ -32,7 +33,17 @@ func fail(code string) error { return errors.New(code) }
 // New validates enabled-mode private assets before exposing any SSO capability.
 // Disabled recovery mode deliberately opens neither private files nor provider sockets.
 func New(accounts *identity.Service) (*Service, error) {
-	if accounts == nil {
+	return newService(context.Background(), accounts, false)
+}
+
+// NewWithKeyringRecovery permits local serving and scoped connector recovery
+// on PostgreSQL when protected key material is missing or cannot open records.
+func NewWithKeyringRecovery(ctx context.Context, accounts *identity.Service) (*Service, error) {
+	return newService(ctx, accounts, true)
+}
+
+func newService(ctx context.Context, accounts *identity.Service, recovery bool) (*Service, error) {
+	if ctx == nil || accounts == nil {
 		return nil, fail("SSO_CONFIGURATION_REQUIRED")
 	}
 	c := accounts.Config.SSO
@@ -50,7 +61,23 @@ func New(accounts *identity.Service) (*Service, error) {
 	if !config.SSOOrigin(accounts.Config.Server.PortalOrigin) || !config.SSOOrigin(accounts.Config.Server.AdminOrigin) {
 		return nil, fail("SSO_PROVIDER_CONFIGURATION_INVALID")
 	}
-	keys, e := LoadKeyring(c.KeyringFile)
+	if recovery {
+		store, e := accounts.Repository()
+		if e != nil {
+			return nil, e
+		}
+		if store.Dialect() != transaction.PostgreSQL {
+			return nil, fail("SSO_CONFIGURATION_REQUIRED")
+		}
+		s.keyringRecovery = true
+	}
+	keys, e := loadKeyring(c.KeyringFile)
+	if errors.Is(e, errPrivateFileAbsent) {
+		if !recovery {
+			return nil, fail("SSO_KEYRING_INVALID")
+		}
+		e = nil
+	}
 	if e != nil {
 		return nil, e
 	}
@@ -66,7 +93,7 @@ func New(accounts *identity.Service) (*Service, error) {
 		s.approved[provider.Origin] = provider
 		s.origins = append(s.origins, provider.Origin)
 	}
-	startup, cancel := context.WithTimeout(context.Background(), config.Seconds(policy.OperationSeconds))
+	startup, cancel := context.WithTimeout(ctx, config.Seconds(policy.OperationSeconds))
 	defer cancel()
 	if e = s.verifyStoredSecrets(startup); e != nil {
 		s.Close()
@@ -113,7 +140,7 @@ func (s *Service) verifyStoredSecrets(ctx context.Context) error {
 		if e = rows.Scan(&scope.tenant, &scope.connector, &scope.record, &scope.purpose, &sealed.keyID, &sealed.nonce, &sealed.ciphertext); e != nil {
 			return fail("STORAGE_UNAVAILABLE")
 		}
-		if e := s.verifyStoredSecret(scope, sealed); e != nil {
+		if e := s.verifyStoredSecret(scope, sealed); e != nil && !(s.keyringRecovery && errors.Is(e, errEncryptedState)) {
 			return e
 		}
 	}
@@ -124,15 +151,21 @@ func (s *Service) verifyStoredSecrets(ctx context.Context) error {
 }
 
 func (s *Service) verifyStoredSecret(scope secretScope, sealed sealedSecret) error {
+	plain, e := s.openStoredSecret(scope, sealed)
+	clear(plain)
+	return e
+}
+
+func (s *Service) openStoredSecret(scope secretScope, sealed sealedSecret) ([]byte, error) {
 	plain, e := s.keys.open(scope, sealed)
 	if e != nil {
-		return e
+		return nil, e
 	}
-	defer clear(plain)
 	if scope.purpose == flowVerifierPurpose && !security.ValidToken(string(plain)) || scope.purpose == clientSecretPurpose && !safeOpaque(string(plain), maximumSecretBytes) {
-		return fail("SSO_ENCRYPTED_STATE_INVALID")
+		clear(plain)
+		return nil, errEncryptedState
 	}
-	return nil
+	return plain, nil
 }
 
 func (s *Service) Close() {
