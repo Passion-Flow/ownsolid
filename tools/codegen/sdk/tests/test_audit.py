@@ -58,6 +58,36 @@ class InventoryTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertEqual(json.loads(result.stdout), report)
 
+    def test_cloud_inventory_keeps_generated_operation_identities(self):
+        contracts = SDK.parents[2] / "api/openapi/v1"
+        report = inventory(contracts)
+        cloud_ids = {
+            op["operation_id"] for op in report["operations"] if op["domain"] == "cloud-inventory"
+        }
+        self.assertEqual(cloud_ids, {
+            "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAws",
+            "postSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImports",
+            "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImportsKey",
+            "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAws",
+            "postSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImports",
+            "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImportsKey",
+        })
+
+    def test_cloud_inventory_keeps_existing_help_anchors(self):
+        root = SDK.parents[2]
+        report = inventory(root / "api/openapi/v1")
+        for entrance, audience in (("console", "admin"), ("portal", "portal")):
+            with self.subTest(entrance=entrance):
+                summary = root / "web/packages/help/src/gen/api" / entrance / "cloud-inventory.json"
+                actual = [operation["id"] for operation in json.loads(summary.read_text())["operations"]]
+                expected = [
+                    f"{operation['method'].lower()} {operation['path']}"
+                    for operation in report["operations"]
+                    if operation["domain"] == "cloud-inventory" and audience in operation["audiences"]
+                ]
+                self.assertEqual(len(expected), 3)
+                self.assertCountEqual(actual, expected)
+
     def test_distinct_audiences_and_methods_do_not_conflict(self):
         with tempfile.TemporaryDirectory() as scratch:
             root = Path(scratch)
