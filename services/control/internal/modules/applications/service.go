@@ -95,7 +95,7 @@ func (s *Service) list(ctx context.Context, a identity.Auth, workspace string, v
 		if e != nil {
 			return e
 		}
-		query, e := projectionQuery(tx.Dialect(), false, w.TenantID, w.ID, a.Me.User.ID, cursor, limit)
+		query, e := projectionQuery(tx.Dialect(), false, w.TenantID, w.ID, a.Me.User.ID, "", cursor, limit)
 		if e != nil {
 			return e
 		}
@@ -138,6 +138,9 @@ func (s *Service) Conversations(ctx context.Context, a identity.Auth, workspace 
 // ConversationsForAssistant returns caller-private conversations after committing
 // the scoped assistant audit. requestID must be assigned by the server.
 func (s *Service) ConversationsForAssistant(ctx context.Context, a identity.Auth, values url.Values, requestID string) (Page[Conversation], error) {
+	if _, search := values[pagination.ListSearchParameter]; search {
+		return Page[Conversation]{}, failure("VALIDATION_FAILED")
+	}
 	return s.conversations(ctx, a, assistantWorkspace(a), values, &assistantRead{requestID: requestID, toolID: "list_conversations"})
 }
 
@@ -149,7 +152,13 @@ func (s *Service) conversations(ctx context.Context, a identity.Auth, workspace 
 	if a.Me.Audience != "portal" || !strict.ValidID(workspace) {
 		return out, failure("ACCESS_DENIED")
 	}
-	limit, cursor, scope, e := pagination.Parse(s.options(values), "application-conversations:"+a.Me.Audience+":"+a.Me.User.ID+":"+workspace)
+	options := s.options(values)
+	listScope := "application-conversations:" + a.Me.Audience + ":" + a.Me.User.ID + ":" + workspace
+	search, e := prepareConversationSearch(options, listScope, a.SessionID, s.Identity.HMACKey)
+	if e != nil {
+		return out, e
+	}
+	limit, cursor, scope, e := pagination.Parse(options, listScope)
 	if e != nil {
 		return out, e
 	}
@@ -161,7 +170,7 @@ func (s *Service) conversations(ctx context.Context, a identity.Auth, workspace 
 		if e != nil {
 			return e
 		}
-		query, e := projectionQuery(tx.Dialect(), true, w.TenantID, w.ID, a.Me.User.ID, cursor, limit)
+		query, e := projectionQuery(tx.Dialect(), true, w.TenantID, w.ID, a.Me.User.ID, search.term, cursor, limit)
 		if e != nil {
 			return e
 		}
@@ -189,6 +198,10 @@ func (s *Service) conversations(ctx context.Context, a identity.Auth, workspace 
 			out.Items = out.Items[:limit]
 			last := out.Items[limit-1]
 			out.NextCursor = pagination.Encode(last.UpdatedAt, last.ID, scope)
+			if search.term != "" {
+				position := *out.NextCursor
+				*out.NextCursor = position + "." + search.tag(position)
+			}
 		}
 		return nil
 	})
