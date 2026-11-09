@@ -135,3 +135,66 @@ older exports without the strict flag.
 
 See [assistant actor disclosure](../../docs/research/audit-assistant-disclosure.md)
 and [AUD-102 serialization and threat model](../../docs/research/audit-chain.md).
+
+## Forward a verified window to site-local syslog
+
+Use `forward-syslog` on Linux or macOS with an operator-approved export and
+the independently held checkpoints at both ends of its contiguous window.
+Each window may contain up to 4096 records. The command verifies the window
+before opening a connection. It checks V1 and V2 chain records using the same
+verifier as the offline audit command.
+
+Keep the grant and export files private to the operator. Create a dedicated
+cursor directory with mode `0700` on a local persistent volume. Use an explicit
+private or loopback IP address, TLS server certificate name, and SHA-256 of
+the receiver's DER leaf certificate. The receiver must accept TLS 1.3,
+authorize the supplied client certificate, and use RFC 5425 octet framing.
+The CA, client certificate and client key are file references. Keep the
+client key private to the operator.
+
+Example grant.
+
+```json
+{
+  "version": 1,
+  "tenant_id": "00000000-0000-4000-8000-000000000010",
+  "endpoint": "10.20.30.40:6514",
+  "server_name": "siem.site.example",
+  "server_certificate_sha256": "<receiver certificate SHA-256>",
+  "ca_file": "/path/to/site-ca.pem",
+  "client_certificate_file": "/path/to/siem-client.pem",
+  "client_key_file": "/path/to/siem-client-key.pem",
+  "cursor_directory": "/path/to/private-cursor"
+}
+```
+
+```sh
+audit-verify forward-syslog --file exported-window.jsonl --grant siem-grant.json \
+  --previous-position "$previous_position" --previous-hash "$previous_hash" \
+  --last-position "$last_position" --expected-last-hash "$last_hash"
+```
+
+For the first position use predecessor position zero and the 64-digit
+all-zero hash. To resume, supply an export that includes the saved position
+and hash or starts immediately after them. Repeat the same verified input
+to retry a blocked position. Recover a missing window from retained exports.
+A different tenant or receiver identity requires a separate grant directory
+and an independently authorized starting checkpoint.
+
+Syslog carries a versioned projection with the event and granted tenant
+UUIDs, UTC timestamp, action and outcome. Scope identifiers, actor and
+subject details, request and target data, and integrity digests stay in the
+operator export. Event and tenant UUIDs provide a receiver deduplication key.
+The cursor covers global positions while the destination receives the
+granted tenant's events.
+
+The JSON result reports the saved cursor position, committed local writes in
+this run as `sent`, cumulative local writes as `total_sent`, and `dropped`.
+The forwarder stops at the first known failed event and keeps `dropped` at
+zero. A certificate rejection returns `AUDIT_SIEM_TLS_PEER_REJECTED`. Other
+transport failures retry within `--attempts` and `--timeout` and return
+`AUDIT_SIEM_TLS_WRITE_FAILED` if the budget is exhausted. Syslog over TLS
+provides no application acknowledgment. A completed local write may be
+replayed after interruption and provides no receiver durability receipt.
+
+See [the delivery boundary and acceptance](../../docs/research/audit-siem-delivery.md).
