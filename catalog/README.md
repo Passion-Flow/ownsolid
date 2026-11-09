@@ -113,8 +113,9 @@ The installer records `InstallBundle.Pin` with a successful installation.
 It contains the manifest version and the SHA-256 of the exact signed
 `bundle.json` bytes. For a fresh install, call `apps.VerifyInitialRelease`
 with the selected app and pin, a trusted publisher key and the running
-platform version. It verifies the selected version directory and checks the
-signed app identity and platform range. Reuse the same pin on retries.
+platform version. It checks the exact pin, signed app identity and platform
+range before opening the selected engine artifact and image archive. Reuse
+the same pin on retries.
 
 Publish a new version when any signed content changes. An edge in the
 new manifest's `upgrade_from` names the retained pin of an approved predecessor.
