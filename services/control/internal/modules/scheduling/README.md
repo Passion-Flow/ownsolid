@@ -34,9 +34,10 @@ describes the optional candidate schema and its isolated test.
 how to project an authorized decision without leaking other workloads' details.
 Use `WaitReasons` on the current reservation or reclaim error,
 `PreflightResult.WaitReasons` on the estimate and `QueueTurnReason` when rank
-actually deferred the current entry. Use `CellWaitReasons` for an authorized
-workload's exact cell observation. Current Kueue conditions distinguish
-waiting for quota, exceeding its ceiling, topology placement failure,
+actually deferred the current entry. Use `ObserveCellWaitReasons` with the
+client for the authorized attempt's bound cell and its persisted workload
+reference. The adapter verifies the UID before projecting any blocker. Current
+Kueue conditions distinguish waiting for quota, exceeding its ceiling, topology placement failure,
 an inadmissible queue and admitted pods that are not ready. The projection
 uses fixed codes and actions without controller messages or capacity figures.
 
