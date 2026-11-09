@@ -72,6 +72,22 @@ asset ID. Use the verified `ImageProofResult.Profile` to select
 returned manifest digest and asset to its recorded identity. Catalog listing
 and recovery can use `bundle.VerifyPrepared` for the full prepared tree.
 
+For a verified catalog app archive, call `bundle.OpenCurrentImageSelection`
+with its independently verified byte count and archive SHA-256 in the
+`wire.Asset`, the selected manifest and config in `ImageID` and
+`ImageConfigDigest`, and every approved pair as `[]bundle.ImageIdentity`.
+Populate that list from the authenticated app bundle verification result.
+The reader checks the exact flat OCI inventory and complete local closure.
+It verifies the selected image's expanded layer sizes and DiffIDs.
+`WriteTagless` emits the original runtime blobs and one selected manifest
+descriptor. The platform release reader keeps its single-image contract.
+
+Open each required selection before submitting any image to Docker. Keep
+the archive immutable, carry one installation timeout across the selections,
+and charge each reported `Inventory().ExpandedBytes` against the installer
+operation's expansion budget. The importer owns authorization, audit and
+workload admission. See the [CAT-107 handoff](../../../docs/research/catalog-image-selection.md).
+
 `files.go` owns canonical file admission, the pinned nonblocking descriptor-open
 boundary and bounded immutable reads. Existing public/private file permission
 semantics and specifically admitted archive hardlinks are preserved; they differ
