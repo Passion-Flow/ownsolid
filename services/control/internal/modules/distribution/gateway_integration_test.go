@@ -16,6 +16,11 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	gatewaywire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/google/uuid"
 	"io"
 	"math/big"
@@ -25,15 +30,20 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"strings"
 	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
+)
+
+type gatewayChainMode int
+
+const (
+	sharedHTTPS gatewayChainMode = iota
+	dedicatedHTTPS
+	licenseExpiry
+	foregroundResponses
 )
 
 // Actual Go/Rust/PostgreSQL transport and persistence; backend replies are explicitly synthetic.
@@ -46,14 +56,24 @@ func TestRealGoRustPostgresGatewayChainAndControlOutage(t *testing.T) {
 				t.Fatal(e)
 			}
 			t.Setenv("PROJECT_ONE_EVIDENCE_ROOT", output)
-			realGatewayChain(t, false, mode == "dedicated-machine-https")
+			chain := sharedHTTPS
+			if mode == "dedicated-machine-https" {
+				chain = dedicatedHTTPS
+			}
+			realGatewayChain(t, chain)
 		})
 	}
 }
 
-func TestM19RealGoRustLicenseExpiryAndAcceptedOperation(t *testing.T) { realGatewayChain(t, true) }
+func TestM19RealGoRustLicenseExpiryAndAcceptedOperation(t *testing.T) {
+	realGatewayChain(t, licenseExpiry)
+}
 
-func realGatewayChain(t *testing.T, licensePath bool, dedicated ...bool) {
+func TestRealGoRustPostgresForegroundResponses(t *testing.T) {
+	realGatewayChain(t, foregroundResponses)
+}
+
+func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 	t.Helper()
 	binary := os.Getenv("PROJECT_ONE_GATEWAY_BINARY")
 	if binary == "" {
@@ -96,7 +116,8 @@ func realGatewayChain(t *testing.T, licensePath bool, dedicated ...bool) {
 	}
 	control.TLS = &tls.Config{Certificates: []tls.Certificate{pair}, MinVersion: tls.VersionTLS12}
 	controlOrigin := "https://" + control.Listener.Addr().String()
-	machine := len(dedicated) == 1 && dedicated[0]
+	machine := mode == dedicatedHTTPS
+	licensePath := mode == licenseExpiry
 	c.s.Identity.Config.Server.AdminOrigin = controlOrigin
 	if machine {
 		material := t.TempDir()
@@ -309,6 +330,10 @@ func realGatewayChain(t *testing.T, licensePath bool, dedicated ...bool) {
 		}
 		return response
 	}
+	if mode == foregroundResponses {
+		verifyForegroundResponses(t, c, access, request, &paused, &backendCalls, &generations)
+		return
+	}
 	chat := func(stream bool) map[string]any {
 		body := map[string]any{"model": access.alias.Name, "messages": []any{map[string]any{"role": "user", "content": "Synthetic coupled request \u4e2d\u6587"}}, "max_tokens": 16, "stream": stream}
 		if stream {
@@ -491,5 +516,103 @@ func realGatewayChain(t *testing.T, licensePath bool, dedicated ...bool) {
 		if e = os.WriteFile(filepath.Join(output, "go-rust-chain.json"), summary, 0600); e != nil {
 			t.Fatal(e)
 		}
+	}
+}
+
+func verifyForegroundResponses(
+	t *testing.T,
+	c scenario,
+	access access,
+	request func(string, string, any) *http.Response,
+	paused *atomic.Bool,
+	backendCalls, generations *atomic.Int32,
+) {
+	t.Helper()
+	const path = "/v1/responses"
+	key := *access.key.Secret
+	responses := func(stream bool) map[string]any {
+		return map[string]any{"model": access.alias.Name, "input": "Synthetic foreground input", "max_output_tokens": 16, "stream": stream, "store": false}
+	}
+	assertReported := func(id, status string, stream bool, usage *gatewaywire.Usage) {
+		t.Helper()
+		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+		defer cancel()
+		for {
+			var data []byte
+			var held, streamed bool
+			var workspace, keyID string
+			err := c.s.DB.QueryRow(ctx, "SELECT outcome, capacity_held, stream, workspace_id, api_key_id FROM gateway_requests WHERE id=$1", id).Scan(&data, &held, &streamed, &workspace, &keyID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if data != nil {
+				receipt, err := gatewaywire.DecodeOutcome(data)
+				if err != nil || receipt.RequestID != id || receipt.Status != status || held || streamed != stream ||
+					workspace != access.alias.WorkspaceID || keyID != access.key.Key.ID ||
+					(usage == nil && receipt.Usage != nil) ||
+					(usage != nil && (receipt.Usage == nil || *receipt.Usage != *usage)) {
+					t.Fatal("foreground Responses receipt mismatch", receipt, err)
+				}
+				return
+			}
+			select {
+			case <-ctx.Done():
+				t.Fatal("foreground Responses outcome was not reported")
+			case <-time.After(10 * time.Millisecond):
+			}
+		}
+	}
+	usage := &gatewaywire.Usage{PromptTokens: 7, CompletionTokens: 2, TotalTokens: 9}
+	answer := request(path, key, responses(false))
+	id := answer.Header.Get("X-Request-Id")
+	var value struct {
+		ID, Model, Status string
+		Usage             struct {
+			Input  int `json:"input_tokens"`
+			Output int `json:"output_tokens"`
+			Total  int `json:"total_tokens"`
+		}
+	}
+	err := json.NewDecoder(answer.Body).Decode(&value)
+	answer.Body.Close()
+	if err != nil || answer.StatusCode != 200 || !gatewaywire.ValidID(id) || value.ID != "resp_"+id ||
+		value.Model != access.alias.Name || value.Status != "completed" ||
+		value.Usage.Input != 7 || value.Usage.Output != 2 || value.Usage.Total != 9 {
+		t.Fatal("foreground Responses JSON failed", answer.StatusCode, err)
+	}
+	assertReported(id, "succeeded", false, usage)
+	stream := request(path, key, responses(true))
+	body, err := io.ReadAll(stream.Body)
+	stream.Body.Close()
+	if err != nil || stream.StatusCode != 200 ||
+		!bytes.Contains(body, []byte("event: response.output_text.delta\n")) ||
+		!bytes.Contains(body, []byte("event: response.completed\n")) {
+		t.Fatal("foreground Responses SSE failed", stream.StatusCode, err)
+	}
+	assertReported(stream.Header.Get("X-Request-Id"), "succeeded", true, usage)
+
+	paused.Store(true)
+	cancelled := request(path, key, responses(true))
+	defer cancelled.Body.Close()
+	reader := bufio.NewReader(cancelled.Body)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			t.Fatal("foreground Responses delta missing", err)
+		}
+		if line == "event: response.output_text.delta\n" {
+			break
+		}
+	}
+	cancelled.Body.Close()
+	assertReported(cancelled.Header.Get("X-Request-Id"), "client_cancelled", true, nil)
+	if _, err := c.s.RevokeKey(context.Background(), access.owner, access.alias.WorkspaceID, access.key.Key.ID, "Synthetic Responses revocation", uuid.NewString()); err != nil {
+		t.Fatal(err)
+	}
+	before := backendCalls.Load()
+	denied := request(path, key, responses(false))
+	denied.Body.Close()
+	if denied.StatusCode != 401 || backendCalls.Load() != before || generations.Load() != 3 {
+		t.Fatal("revoked key reached the Responses backend", denied.StatusCode)
 	}
 }

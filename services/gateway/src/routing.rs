@@ -5,6 +5,7 @@ use crate::control::{AdmissionRequest, Control};
 use crate::errors::{self, Failure};
 use crate::protocol::{ChatRequest, normalize_completion};
 use crate::quota::{Quotas, RequestPermit, shared};
+use crate::responses::ResponseIdentity;
 use crate::storage::Spool;
 use axum::body::Body;
 use axum::extract::{Request, State};
@@ -125,6 +126,7 @@ pub fn router(application: Arc<Application>) -> Router {
     let mut router = Router::new()
         .route("/v1/models", get(models))
         .route("/v1/chat/completions", post(chat))
+        .route("/v1/responses", post(responses))
         .route(
             "/health/live",
             get(|| async { Json(json!({"status":"alive"})) }),
@@ -276,10 +278,17 @@ struct Accepted {
     active: OwnedSemaphorePermit,
 }
 
+#[derive(Clone, Copy)]
+enum Format {
+    Chat,
+    Responses,
+}
+
 async fn accept(
     app: &Application,
     request: Request,
     id: Uuid,
+    format: Format,
 ) -> std::result::Result<Accepted, Failure> {
     if app.is_stopped() {
         return Err("gateway_shutdown".into());
@@ -299,7 +308,11 @@ async fn accept(
     .await
     .map_err(|_| "invalid_request_error")?
     .map_err(|_| "request_too_large")?;
-    let request = ChatRequest::parse(&body, &app.configuration.limits)?;
+    let limits = &app.configuration.limits;
+    let request = match format {
+        Format::Chat => ChatRequest::parse(&body, limits)?,
+        Format::Responses => ChatRequest::parse_responses(&body, limits)?,
+    };
     let authorization = app.control.models_with_retry(&key).await?;
     if !authorization
         .models
@@ -351,11 +364,21 @@ async fn accept(
 }
 
 async fn chat(State(app): State<Arc<Application>>, request: Request) -> Response {
+    generate(app, request, Format::Chat).await
+}
+
+async fn responses(State(app): State<Arc<Application>>, request: Request) -> Response {
+    generate(app, request, Format::Responses).await
+}
+
+async fn generate(app: Arc<Application>, request: Request, format: Format) -> Response {
     let id = Uuid::new_v4();
-    let mut accepted = match accept(&app, request, id).await {
+    let mut accepted = match accept(&app, request, id, format).await {
         Ok(value) => value,
         Err(error) => return errors::respond(error, id),
     };
+    let identity =
+        matches!(format, Format::Responses).then(|| ResponseIdentity::new(id, &accepted.request));
     let prompt = match bounded(
         app.receiver(),
         accepted.deadline,
@@ -411,9 +434,13 @@ async fn chat(State(app): State<Arc<Application>>, request: Request) -> Response
         })
         .await;
         return match result {
-            Ok((value, usage)) => {
-                accepted.execution.settle_tokens(&usage).await;
-                match accepted.execution.success(usage) {
+            Ok(completion) => {
+                let value = identity.as_ref().map_or_else(
+                    || completion.chat(&accepted.request.alias),
+                    |identity| identity.complete(&completion),
+                );
+                accepted.execution.settle_tokens(&completion.usage).await;
+                match accepted.execution.success(completion.usage) {
                     Ok(()) => {
                         let mut response = Json(value).into_response();
                         errors::protect(&mut response, id);
@@ -436,6 +463,11 @@ async fn chat(State(app): State<Arc<Application>>, request: Request) -> Response
         prompt,
         &accepted.limits,
     );
+    let decoder = if let Some(identity) = identity {
+        decoder.with_responses(identity, &accepted.limits)
+    } else {
+        decoder
+    };
     let work = crate::transport::StreamWork {
         response,
         decoder,

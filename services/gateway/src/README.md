@@ -16,6 +16,13 @@ local outcome publication. The decoder returns at most one event per consume cal
 client backpressure. These framing rules do not add unsupported SSE field types
 or change durable outcome publication.
 
+[responses.rs](responses.rs) projects validated chat backend events into the
+foreground text Responses wire format. It bounds accumulated output text by the
+configured JSON response byte limit. The chat and Responses handlers share one
+admission and generation path. Responses lifecycle events alone do not mark
+text as started. The client gets terminal text and usage only after the same
+EOF validation and durable outcome publication as chat.
+
 Keep configured startup/shutdown, queue stops, worker/reporter joins and uncertain outcomes intact. No fallback may bypass control authorization, TLS verification or spool admission. Current IPv4 socket and transport constraints are described in the [service guide](../README.md).
 
 Synchronize control/distribution, [gateway configuration](../../../api/configuration/v1/gateway/schema.json), public protocol/contracts, protected examples and process/recovery tests. Run `cargo test --locked --offline --manifest-path services/gateway/Cargo.toml --all-targets` only with admitted pinned toolchain/external output paths; tokenizer-integration and actual process/backend profiles require their explicit feature/fixture inputs. This source guide makes no target inference or capacity claim.
