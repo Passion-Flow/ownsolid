@@ -16,7 +16,43 @@ pub enum Role {
 #[serde(deny_unknown_fields)]
 pub struct Message {
     pub role: Role,
+    #[serde(deserialize_with = "deserialize_message_text")]
     pub content: String,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum MessageText {
+    String(String),
+    Parts(Vec<TextPart>),
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "type", rename_all = "lowercase", deny_unknown_fields)]
+enum TextPart {
+    Text { text: String },
+}
+
+fn deserialize_message_text<'de, D>(decoder: D) -> std::result::Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    match MessageText::deserialize(decoder)? {
+        MessageText::String(text) => Ok(text),
+        MessageText::Parts(parts) => {
+            let mut content = String::new();
+            for TextPart::Text { text } in parts {
+                if text.is_empty() {
+                    return Err(serde::de::Error::custom("empty text part"));
+                }
+                if !content.is_empty() {
+                    content.push('\n');
+                }
+                content.push_str(&text);
+            }
+            Ok(content)
+        }
+    }
 }
 
 #[derive(Default, Deserialize)]
@@ -395,7 +431,7 @@ mod tests {
             json!({"n":2}),
             json!({"max_completion_tokens":4}),
             json!({"stream_options":{"include_usage":true}}),
-            json!({"messages":[{"role":"user","content":[{"type":"text","text":"unsupported"}]}]}),
+            json!({"messages":[{"role":"user","content":[{"type":"image_url","image_url":{"url":"https://example.invalid/image"}}]}]}),
         ] {
             assert!(ChatRequest::parse(&input(extra), &limits).is_err());
         }

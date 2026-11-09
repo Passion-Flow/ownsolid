@@ -18,6 +18,15 @@ before calling the engine. A fresh target for that alias can serve an
 admitted request after a cutover. An inconsistent alias identity returns
 `gateway_unavailable` and records the request without token usage.
 
+## Chat message content
+
+Chat Completions accepts a nonempty string or an array of nonempty
+`type: "text"` content parts for the existing system, user and assistant
+roles. The gateway joins text parts in order with newline separators,
+then uses the same text for tokenization and generation. The request
+body, context and output limits apply to both forms. Invalid or
+unsupported parts fail before authorization or dispatch.
+
 ## Foreground Responses
 
 Send `POST /v1/responses` over gateway HTTPS with `Authorization: Bearer <workspace API key>`

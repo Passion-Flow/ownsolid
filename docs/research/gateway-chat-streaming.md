@@ -176,3 +176,40 @@ gateway fixture. Record startup time, socket readiness, direct SSE
 completion, and the gateway's usage and request-ID checks separately.
 The GW-114 TCP setup is evidence for the installed path. The socket and
 loopback relay preserve the no-egress condition for this acceptance.
+
+## Text-only message content parts
+
+The [OpenAI Chat Completions request](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
+permits text parts in the message content array. The approved local
+text route currently accepts a string only, which rejects clients
+that send their text in parts. The pinned
+[vLLM 0.31.0 chat parser](https://github.com/vllm-project/vllm/blob/v0.31.0/vllm/entrypoints/chat_utils.py)
+joins text parts with newline separators for a string-content template.
+
+Accept an array of exact text parts for the existing system, user and
+assistant roles. Flatten once, in order, before both tokenization and
+generation. Keep the existing body and context limits, and refuse empty
+arrays, empty parts, unsupported modalities and extra part fields. A
+literal string keeps its original text. Passing arrays straight to the
+engine would make behavior depend on its template autodetection and
+would expand the accepted input beyond the qualified text adapter.
+Joining without separators would change the approved engine semantics.
+
+No dependency, model or dataset is added. The new parser uses the
+existing Serde stack (MIT or Apache-2.0) and the pinned vLLM source
+describes the text convention under Apache-2.0. These licenses permit
+commercial and offline use and redistribution under their notice
+terms.
+
+The native Rust TLS fixture should assert the same newline-joined
+messages at both tokenizer and generation, in JSON and SSE. Confirm
+existing verified usage and DONE behavior. Check that a malformed,
+empty or non-text part reaches neither authorization nor the engine.
+The fixture uses synthetic text and no live vLLM process.
+
+The disconnected native Rust TLS fixture first reproduced HTTP 400 for
+valid text parts. After normalization, both JSON and SSE returned verified
+usage. The fixture checked the same newline-joined messages at tokenization
+and generation. Empty, malformed and non-text parts caused no model
+authorization, admission or backend calls. The default Rust suite and
+Clippy passed on Linux.
