@@ -15,7 +15,7 @@ import sys
 
 repo, overlay = map(Path, sys.argv[1:])
 target = repo / "services/control/internal/modules/distribution/lane_d_gateway_history_test.go"
-source = repo / "tools/cli/testdata/gateway_history_tls_test.go"
+source = repo / "tools/cli/testdata/gateway_history_workflow_test.go"
 overlay.write_text(json.dumps({"Replace": {str(target): str(source)}}), encoding="utf-8")
 PY
 export LANE_D_CLI_BINARY="$scratch/ownsolid"
