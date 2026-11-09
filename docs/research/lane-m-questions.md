@@ -54,3 +54,22 @@ responsible owners can extend their respective boundaries.
 | SRV-201, SRV-202, SRV-203 | Cache-aware routing, disaggregation and cache tiers depend on replica routing (SRV-105) and engine/gateway instrumentation and isolation. |
 | SRV-204, SRV-205, SRV-206 | Alternative engines, Ascend and parallel workers require the Agent engine contract (SRV-101) and hardware execution profiles. |
 | SRV-207 | Traffic splitting and rollback depend on ready replicas and revision routing (SRV-105 and SRV-113). |
+
+## Shared Help gate
+
+Clean upstream `e8c853c0` reproduced two failing cases in
+`web/packages/help/src/help.test.ts`. The Console API reference and
+Portal API reference cases both report that the listed operations differ
+from the contract. `pnpm --dir web --filter @ownsolid/help test`
+returned 17 passed and two failed in an archive containing only
+upstream files. The four missing operations are:
+
+- `GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter`
+- `GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/logs`
+- `POST /api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/actions`
+- `GET /api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/components/node-exporter`
+
+The Help package, generator and Nodes contract had the same contents at
+`0c78eb79`. The local MOD-121 expiry and MOD-107 deployment retirement
+candidates are absent from that upstream commit. The gate remains with
+the Help and contract owners.
