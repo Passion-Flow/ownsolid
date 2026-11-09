@@ -112,6 +112,28 @@ A loopback HTTPS probe of the production Problem writer returned all
 five codes as 409 with the scoped request ID and without Retry-After.
 The bilingual catalog and existing Help unit tests passed.
 
+### Dataset tokenizer recovery copy (DAT-107)
+
+The Admin and Portal
+[preview contract](../../api/openapi/v1/datasets/openapi.json) describes
+eight dataset-specific problems. The scoped 404 calls for selecting an
+accessible dataset and draft. A 409 calls for verified files. Both 422
+responses require rows or validation corrections before another request.
+The four 503 problems carry the server's wait hint. For time and memory
+limits, use a smaller sample or source after that delay. For repeated
+storage or result failures, ask the administrator to check the owning
+service. The existing 429 guidance already covers the busy preview slot.
+See the [dispatcher and client qualification](training-tokenizer-preview.md)
+and the [HTTP Retry-After definition](https://www.rfc-editor.org/rfc/rfc9110.html#name-retry-after).
+
+The loopback HTTPS Problem probe verified the redacted body, absent
+retry hints on 404, 409 and 422, and the configured hint on 503. It also
+checked that the typed 429 hint takes precedence over the policy default.
+Keep the shared text applicable to other dataset operations. A new screen
+or a preview-specific catalog would duplicate the same problem semantics.
+The contract owner supplies the versioned Help index entries. This adds
+no dependency, model or dataset.
+
 ## What the finished item does
 
 Both entrances have `/help` with articles for their reader, searchable from the page and the command
