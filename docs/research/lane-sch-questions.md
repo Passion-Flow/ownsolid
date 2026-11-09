@@ -71,8 +71,13 @@ database owner to land or authorize the exact fresh and restored fingerprints.
 TEN-106 ingestion is downstream of trusted scheduling, gateway and storage
 observations. A durable source must supply a stable identity and measured delta
 and atomically record the delta or retain an outbox entry until acknowledged.
-Wall-clock differences must not be used to derive duration. Installing a ledger
-without these producer hooks would silently omit usage.
+Wall-clock differences must not be used to derive duration. The gateway
+intake verifies the canonical receipt against the exact scoped reported
+row in the owner's transaction. The distribution owner must call it after
+canonical persistence or replay verification, before acknowledging Report.
+The database owner must admit the candidate ledger with its unmeasured-token
+request count. Requests without a report and historical reconciliation remain
+coverage boundaries. See [gateway receipt intake](usage-ledger.md#gateway-receipt-intake).
 
 ## Tenancy and commerce
 

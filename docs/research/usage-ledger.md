@@ -58,3 +58,49 @@ Test totals beyond 64 bits and refusal of negative quantities. The SQL in the
 module's test fixture qualifies transaction behavior. The product item also
 requires the production migration and grants, authorized producer hooks and
 operator access with an end-to-end usage reconciliation.
+
+## Gateway receipt intake
+
+The distribution service's Report operation authenticates the machine
+credential, locks the authorized workspace and its exact admitted request,
+checks the admission's token bounds, and stores the canonical v1 outcome
+with its SHA-256 and audit event in one transaction. Report replay uses the
+same request ID and digest. The request row retains the tenant, workspace,
+gateway and original server-side admission time. The outcome itself carries
+no occurrence timestamp or scope. See the [gateway contract](../../api/gateway/v1/protocol.go)
+and the [receipt verification evidence](gateway-usage-history.md).
+
+Accept the same scoped identity and receipt acknowledgment in the borrowed
+PostgreSQL transaction. Read the exact reported row, verify its persisted
+digest against the acknowledgment and recompute the digest with the existing
+strict gateway codec. Keep the canonical request ID as the event ID under a
+fixed gateway producer. Use the persisted admission time for both request
+and token rating. Report arrival can be delayed, and replay must not move a
+request across rate cutovers. The admission time is a stable accounting
+anchor for the whole request. It does not estimate token generation time.
+Keep credentials, identity from request bodies, and client quantities out of
+the intake. A history or CSV export cannot share the source transaction and
+does not supply the machine's verified scope and digest at this boundary.
+
+A reported request counts once. Null usage preserves the request count and
+increments the unmeasured-token request count. Only a verified non-null
+receipt supplies token totals. A valid zero completion count still leaves
+known prompt and total tokens. The v1 wire contract rejects zero prompt
+tokens, so a zero total is not a valid gateway receipt. Preserve these
+distinctions in the report and budget. An unmeasured request makes the
+known subtotal incomplete even when all observed quantities have rates.
+A known subtotal at or above the limit is still sufficient to flag the
+limit. The [OpenTelemetry token convention](https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-metrics/)
+also distinguishes input and output counts and defines the token metrics
+around available usage. It is a reference, with no runtime dependency.
+
+Prove scoped receipt retry, altered digest and foreign-scope refusal,
+atomic rollback, valid zero completion, null usage and an older admission
+delivered after the rate cutover in disconnected PostgreSQL. Compare the
+budget with the report from the same snapshot. The production call belongs
+in distribution Report after canonical persistence or replay verification
+and before the outer transaction returns success. The database owner must
+ship the ledger, including the unmeasured-request count. Historical
+reconciliation and coverage of requests without a report remain prerequisites
+to budget enforcement. This path uses the existing gateway codec, pgx,
+UUID and PostgreSQL under the project and dependency licenses above.
