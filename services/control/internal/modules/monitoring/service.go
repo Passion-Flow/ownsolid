@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
+	release "github.com/Passion-Flow/ownsolid/api/release/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
@@ -17,7 +17,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/monitoringmetrics"
-	release "github.com/Passion-Flow/ownsolid/api/release/v1"
+	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -27,6 +27,7 @@ type Service struct {
 	components   *components.Service
 	distribution *distribution.Service
 	metrics      *monitoringmetrics.Recorder
+	fleetHistory *fleetHistoryReader
 	config       Config
 	slots        chan struct{}
 }
@@ -52,7 +53,10 @@ func New(i *identity.Service, w *workspaces.Service, l *licensing.Service, c *co
 	if _, e := i.Repository(); e != nil {
 		return nil, e
 	}
-	return &Service{i, w, l, c, d, m, policy, make(chan struct{}, policy.ConcurrentSnapshots)}, nil
+	return &Service{
+		identity: i, workspaces: w, license: l, components: c, distribution: d, metrics: m,
+		fleetHistory: newFleetHistoryReader(policy.FleetHistory), config: policy, slots: make(chan struct{}, policy.ConcurrentSnapshots),
+	}, nil
 }
 
 // RequestBudgetSeconds lets the original dispatcher use this module's validated
@@ -149,10 +153,34 @@ func encodeCursor(at time.Time, id string) *string {
 	return &s
 }
 
+func (s *Service) ready() bool {
+	return s != nil && s.identity != nil && s.workspaces != nil && s.license != nil && s.components != nil && s.distribution != nil && s.metrics != nil && s.slots != nil && s.config.Validate() == nil
+}
+
+func (s *Service) authorizedScopeWithin(ctx context.Context, q transaction.Executor, a identity.Auth, workspace string) (workspaces.Workspace, error) {
+	if e := s.identity.RecheckOrderedWithin(ctx, q, a); e != nil {
+		return workspaces.Workspace{}, e
+	}
+	// Hold the actual installed tenant until commit. The Admin directory can
+	// include disabled Workspaces, but diagnostic reads require active scope.
+	var installedTenant string
+	if e := q.QueryRow(ctx, installationStatement(q)).Scan(&installedTenant); e != nil {
+		return workspaces.Workspace{}, e
+	}
+	w, e := s.workspaces.RecheckScopeWithin(ctx, q, a, workspace)
+	if e != nil {
+		return workspaces.Workspace{}, e
+	}
+	if w.ID != workspace || !validID(w.TenantID) || w.TenantID != installedTenant || w.Status != "active" {
+		return workspaces.Workspace{}, errors.New("ACCESS_DENIED")
+	}
+	return w, nil
+}
+
 // Get publishes only after the real selected store confirms commit, including
 // current authority, trusted license clock and atomic diagnostic-read audit.
 func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, after, requestID string) (Snapshot, error) {
-	if s == nil || ctx == nil || s.identity == nil || s.workspaces == nil || s.license == nil || s.components == nil || s.distribution == nil || s.metrics == nil || s.slots == nil || s.config.Validate() != nil {
+	if ctx == nil || !s.ready() {
 		return Snapshot{}, errors.New("MONITORING_OWNER_REQUIRED")
 	}
 	if a.Me.Audience != "admin" || !a.Me.User.IsPlatformAdmin {
@@ -179,23 +207,9 @@ func (s *Service) Get(ctx context.Context, a identity.Auth, workspace, after, re
 	defer cancel()
 	var out Snapshot
 	e = store.Within(operation, false, func(ctx context.Context, q transaction.Executor) error {
-		if e := s.identity.RecheckOrderedWithin(ctx, q, a); e != nil {
-			return e
-		}
-		// Hold the actual installed active-tenant fact until the same outer commit.
-		// No client tenant or cached bootstrap flag is accepted as authority.
-		var installedTenant string
-		if e := q.QueryRow(ctx, installationStatement(q)).Scan(&installedTenant); e != nil {
-			return e
-		}
-		w, e := s.workspaces.RecheckScopeWithin(ctx, q, a, workspace)
+		w, e := s.authorizedScopeWithin(ctx, q, a, workspace)
 		if e != nil {
 			return e
-		}
-		// The directory owner permits Admin inspection of disabled Workspaces.
-		// Monitoring requires this locked scope to remain active until commit.
-		if w.TenantID != installedTenant || w.Status != "active" {
-			return errors.New("ACCESS_DENIED")
 		}
 		license, e := s.license.MonitoringWithin(ctx, q, a)
 		if e != nil {
