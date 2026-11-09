@@ -3,12 +3,12 @@ package deployments
 import (
 	"context"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/google/uuid"
 )
 
 func servingSHA(command wire.InferenceCommand) *string {
@@ -92,7 +92,7 @@ func (s *Service) preflightCommand(ctx context.Context, q transaction.Executor, 
 	if e := admitObservation(o, c); e != nil {
 		return e
 	}
-	return admitGPU(o, c.GPUUUID, derived, newLoad)
+	return admitGPU(o, c.GPUUUID, derived, newLoad, s.gpuObservationWindow())
 }
 
 // derivedProfile reports whether a node's agent can serve a model made here.
