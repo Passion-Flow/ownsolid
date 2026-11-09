@@ -54,11 +54,18 @@ preflight. [PostgreSQL snapshot semantics](https://www.postgresql.org/docs/18/tr
 keep the policy and all queue usage in one committed snapshot. Validate the
 whole input scope before reading usage. Return the order without exposing
 other tenants' usage or any individual job's reserved resource quantities.
-A distinct queue is read once per snapshot, regardless of its number of
-pending entries. Dispatch still performs its own current admission transaction.
+Fetch held resources for all validated workspaces in one reservation query.
+Use PostgreSQL's [array membership](https://www.postgresql.org/docs/18/functions-comparisons.html#FUNCTIONS-COMPARISONS-ANY-SOME)
+and group the existing numeric totals by workspace and resource. Reuse the
+bound UUID array that the borrowing repository already uses and keep the
+tenant predicate and unreleased-row filter. Workspaces without holds have
+zero usage. This keeps reservation reads constant as the number of queues
+increases and sends only aggregate rows to the ranker. Dispatch still
+performs its own current admission transaction.
 
 Caller-maintained counters would diverge on owner rollback or uncertain
-commit. Reading independently under READ COMMITTED could mix policy revisions.
+commit. A query per workspace adds a network round trip to each eligible queue.
+Reading independently under READ COMMITTED could mix policy revisions.
 Combining all tenants in this first path would require a distinct authority
 and policy. The same [Go](https://go.dev/LICENSE), [pgx](https://github.com/jackc/pgx/blob/master/LICENSE)
 and [PostgreSQL](https://www.postgresql.org/about/licence/) dependencies permit
@@ -68,6 +75,8 @@ an Apache-2.0 design reference. This path adds no dependency, model or dataset.
 Verify with isolated PostgreSQL that a committed reservation changes the
 next rank, an existing read snapshot stays consistent, a release restores
 the FIFO tie, a higher priority remains first, and foreign and missing
-workspaces return the same error without partial results. Durable queue
-membership, priority management and the authenticated dispatch flow remain
-owner integrations for SCH-103.
+workspaces return the same error without partial results. Count actual
+reservation query calls for multiple eligible workspaces and assert that an
+invalid scope issues no reservation read. Durable queue membership, priority
+management and the authenticated dispatch flow remain owner integrations
+for SCH-103.
