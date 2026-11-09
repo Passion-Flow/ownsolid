@@ -65,31 +65,65 @@ echo 'Restored the expected metric through the VictoriaMetrics query API.'
 
 logs=http://127.0.0.1:59428
 start_store victoria-logs-prod "$work/logs" "$logs"
-now=$(date -u +%FT%TZ)
-day=$(date -u --date="$now" +%Y%m%d)
-printf '{"_time":"%s","_msg":"ownsolid backup fixture"}\n' "$now" \
-  | get -H 'Content-Type: application/stream+json' --data-binary @- "$logs/insert/jsonline"
-get --data "" "$logs/internal/force_flush"
-snapshot=$(get --data-urlencode "partition_prefix=$day" "$logs/internal/partition/snapshot/create" \
+now=$(date -u +%s)
+for account in 17 42; do
+  for epoch in "$((now - 86400))" "$now"; do
+    timestamp=$(date -u --date="@$epoch" +%FT%TZ)
+    day=$(date -u --date="@$epoch" +%Y%m%d)
+    printf '{"_time":"%s","_msg":"ownsolid backup account-%s day-%s"}\n' "$timestamp" "$account" "$day" \
+      | get -H "AccountID: $account" -H 'Content-Type: application/stream+json' \
+          --data-binary @- "$logs/insert/jsonline"
+  done
+done
+get --data '' "$logs/internal/force_flush"
+today=$(date -u --date="@$now" +%Y%m%d)
+yesterday=$(date -u --date="@$((now - 86400))" +%Y%m%d)
+manifest="$work/log-snapshots.tsv"
+get --data '' "$logs/internal/partition/snapshot/create" \
   | python3 -c '
 import json
 from pathlib import Path
 import sys
-paths = json.load(sys.stdin)
-assert len(paths) == 1
-path = Path(paths[0]).resolve(strict=True)
-assert path.is_dir() and path.is_relative_to(Path(sys.argv[1]).resolve(strict=True))
-print(path)
-' "$work/logs")
-mkdir "$work/logs-backup"
-rsync -aH "$snapshot/" "$work/logs-backup/"
-get --data-urlencode "path=$snapshot" "$logs/internal/partition/snapshot/delete"
+
+root = (Path(sys.argv[1]) / "partitions").resolve(strict=True)
+expected = set(sys.argv[2:])
+found = set()
+for item in json.load(sys.stdin):
+    path = Path(item).resolve(strict=True)
+    parts = path.relative_to(root).parts
+    assert len(parts) == 3 and parts[1] == "snapshots" and path.is_dir(), item
+    day = parts[0]
+    assert day in expected and day not in found, day
+    assert (path / "indexdb").is_dir() and (path / "datadb").is_dir(), item
+    found.add(day)
+    print(f"{day}\t{path}")
+assert found == expected, (found, expected)
+' "$work/logs" "$yesterday" "$today" >"$manifest"
+
+while IFS=$'\t' read -r day snapshot; do
+  mkdir -p "$work/logs-backup/$day"
+  rsync -aH "$snapshot/" "$work/logs-backup/$day/"
+done <"$manifest"
+while IFS=$'\t' read -r day snapshot; do
+  get --data-urlencode "path=$snapshot" "$logs/internal/partition/snapshot/delete"
+  test ! -e "$snapshot"
+done <"$manifest"
 stop_store
 
-mkdir -p "$work/logs-restore/partitions/$day"
-rsync -aH "$work/logs-backup/" "$work/logs-restore/partitions/$day/"
+mkdir -p "$work/logs-restore/partitions"
+rsync -aH "$work/logs-backup/" "$work/logs-restore/partitions/"
 start_store victoria-logs-prod "$work/logs-restore" "$logs"
-get --get --data-urlencode 'query=_msg:"ownsolid backup fixture"' "$logs/select/logsql/query" \
-  | python3 -c 'import json,sys; assert [json.loads(row)["_msg"] for row in sys.stdin] == ["ownsolid backup fixture"]'
+for account in 17 42; do
+  get -H "AccountID: $account" --get --data-urlencode 'query=_msg:"ownsolid backup"' \
+    "$logs/select/logsql/query" | python3 -c '
+import json
+import sys
+
+account = sys.argv[1]
+expected = {f"ownsolid backup account-{account} day-{day}" for day in sys.argv[2:]}
+rows = [json.loads(row)["_msg"] for row in sys.stdin]
+assert len(rows) == len(expected) and set(rows) == expected, rows
+' "$account" "$yesterday" "$today"
+done
 stop_store
-echo 'Restored the expected log through the VictoriaLogs query API.'
+echo 'Restored both UTC log partitions for both VictoriaLogs accounts without crossover.'

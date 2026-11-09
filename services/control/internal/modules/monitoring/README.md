@@ -278,6 +278,7 @@ network namespace:
       services/control/internal/modules/monitoring/testdata/check-telemetry-restore.sh \
       /absolute/path/to/verified/upstream-binaries
 
-The fixture stops each store before starting the restored instance and
-queries both restored values. Installation scheduling and recovery remain
-separate from this check.
+The fixture stops each store before starting the restored instance. It
+reads back a metric and two UTC log partitions, with a separate LogsQL
+query for each of two native accounts. Installation scheduling and
+cross-store recovery coordination remain separate from this check.
