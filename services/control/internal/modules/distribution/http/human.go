@@ -2,19 +2,22 @@ package http
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
 	"mime"
 	"net/http"
-	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"net/url"
 	"reflect"
 	"strings"
 
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 )
 
 func Owns(path string) bool {
@@ -110,6 +113,23 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 			return nil, 0, missing
 		}
 	}
+	if len(parts) == 2 && parts[0] == "requests" && parts[1] == "export" && r.Method == http.MethodGet {
+		values, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			return nil, 0, bad
+		}
+		page, err := h.Service.ExportUsagePage(r.Context(), a, workspace, values)
+		if err != nil {
+			return nil, 0, err
+		}
+		digest := sha256.Sum256(page.CSV)
+		return httpserver.MemoryDownload{
+			Bytes:       page.CSV,
+			SHA256:      hex.EncodeToString(digest[:]),
+			FileName:    "gateway-usage.csv",
+			ContentType: "text/csv; charset=utf-8",
+		}, http.StatusOK, nil
+	}
 	if len(parts) == 3 && parts[0] == "aliases" && wire.ValidID(parts[1]) && parts[2] == "targets" && r.Method == http.MethodGet && isAdmin {
 		v, e := h.Service.TargetHistory(r.Context(), a, workspace, parts[1], r.URL.Query())
 		return v, 200, e
@@ -132,8 +152,8 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 				return nil, 0, missing
 			}
 			var input struct {
-				NodeID       string `json:"node_id"`
-				Name         string `json:"name"`
+				NodeID string `json:"node_id"`
+				Name   string `json:"name"`
 				// The node declares where callers reach a gateway its agent runs.
 				ClientOrigin string `json:"client_origin,omitempty"`
 				Reason       string `json:"reason"`
