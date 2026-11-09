@@ -150,3 +150,75 @@ the diagnostic audit and durable publication took 247.7 ms in that run.
 The collector was stopped before that measurement. This measures
 inventory generation on one test host. The scrape and retention limits
 remain as described above. The PostgreSQL and telemetry fixtures stopped.
+
+## Collector lease and authority loss
+
+[VictoriaMetrics file discovery](https://docs.victoriametrics.com/victoriametrics/sd_configs/#file_sd_configs)
+and [Prometheus file discovery](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config)
+refresh local target lists. Neither file format expresses a deadline.
+A stale successful snapshot stays readable when the publisher stops.
+Keep the discovery format and TLS scope unchanged. Bind the collector's
+process lifetime to successful, fresh publication through a private
+supervisor. Before launch require a fresh authorized publication in the
+same run. Begin each lease before attempting the authorization and
+publication, so a slow refresh cannot extend the prior deadline.
+Allow renewal only when the full operation returns successfully
+before both deadlines. Cancel and join the collector on a rejected
+refresh or expiry. Use Go's
+[monotonic duration measurements](https://pkg.go.dev/time#hdr-Monotonic_Clocks)
+within the running supervisor. No package, model or dataset is added.
+
+A per-workspace collector process avoids interrupting other scopes.
+A file timestamp can be changed independently of authorization.
+Publishing an empty file on error still depends on a working file
+system and delays cancellation until the next discovery poll. A process
+deadline is independent of a blocked refresh. The supervisor does not
+promise retraction of history or of already queued samples.
+
+DEL owns the systemd unit or equivalent process containment. A
+[bound unit with ordering](https://github.com/systemd/systemd/blob/main/man/systemd.unit.xml)
+can stop the collector after unexpected supervisor exit. Use
+[control-group termination](https://github.com/systemd/systemd/blob/main/man/systemd.kill.xml)
+or a qualified equivalent and a bounded stop deadline. Do not run
+the collector as an independently restarted process reading the last
+file. Mount the exact inventory and protected TLS settings per scope.
+The deployed publisher must reacquire authorized authority at each
+refresh, with policy controlling the refresh interval and maximum age.
+A revoked role, expired session or blocked refresh must stop the
+collector and require a new successful publication before restart.
+Test forced supervisor death separately in the installed environment.
+
+Qualify the boundary with real vmagent and verified HTTPS inside the
+loopback-only PostgreSQL and VictoriaMetrics fixture. Observe scrape
+requests at the endpoint. Keep the old file intact, revoke the Admin
+role in PostgreSQL and verify the collector exits. Restore authority
+and verify that a fresh publication can start a new collector. In a
+separate run stall refresh until lease expiry and verify that the
+collector stops despite the stale file. Require no further exporter
+requests after process shutdown over multiple scrape intervals.
+The published inventory and 10,000-target database query are unchanged.
+Renewal adds one existing bounded refresh per workspace each interval.
+At 10,000 targets the earlier 247.7 ms run measures that refresh
+cost. It does not measure dedicated process overhead or the capacity
+of a production site with many workspaces.
+
+### Verified collector invalidation
+
+The loopback-only Linux amd64 fixture used PostgreSQL 18.6 with
+pgvector 0.8.7 and vmagent and VictoriaMetrics 1.155.0. The collector
+sent real TLS scrape requests before both fault injections. Removing
+the stored Admin role caused the next publication to fail, the
+collector to stop and a new lease to refuse startup. Restoring the
+role permitted a fresh publication. A later refresh was held until
+after the current lease expired. The collector stopped before that
+refresh unblocked. Both old discovery files remained byte-identical.
+The exporter received no new HTTPS requests for 2.2 seconds after
+each collector exited with a one-second scrape interval. The runner
+stopped all owned processes and PostgreSQL.
+
+The same run regenerated the 10,000-target inventory in 479 ms
+from the 890,120-byte protected input to the 2,690,002-byte discovery
+file, with the collector stopped. The lease changes refresh and
+shutdown only. It does not change the number of samples, retention,
+disk format or query path measured in
+[the store qualification](telemetry-scale.md#linux-amd64-qualification).
