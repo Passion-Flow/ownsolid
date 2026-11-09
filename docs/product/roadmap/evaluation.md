@@ -43,6 +43,9 @@ Measuring models and applications before release, and gating releases on the res
   - [Native CPU generation windows](../../research/evaluation-performance-benchmark.md#retained-native-cpu-generation-windows)
     independently recompute the per-case timings and continuation token rates
     from two real CPU preparation captures.
+  - [Disconnected direct CPU serving](../../research/evaluation-performance-benchmark.md#disconnected-direct-cpu-serving)
+    recalculated 16 real vLLM HTTP observations at two concurrency levels.
+    Authorized gateway usage, GPU and cost acceptance remain open.
 - [ ] EVL-106 Safety and regression sets: injection, leakage, unsupported answers (P1) - Catalog: F149
   - [Deterministic safety replay](../../../runtimes/model-lifecycle/README.md#replay-controlled-safety-cases)
     scores controlled outputs on a frozen synthetic fixture for injection,
