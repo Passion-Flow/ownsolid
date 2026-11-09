@@ -42,12 +42,16 @@ type Attempt struct {
 
 func (a Attempt) valid() bool {
 	for _, id := range []string{a.TenantID, a.WorkspaceID, a.ID} {
-		parsed, err := uuid.Parse(id)
-		if err != nil || parsed == uuid.Nil || parsed.String() != id {
+		if !canonicalReservationID(id) {
 			return false
 		}
 	}
 	return a.Number > 0 && a.Number <= math.MaxInt32 && validJobIdentity(a.Kind, a.SourceID)
+}
+
+func canonicalReservationID(id string) bool {
+	parsed, err := uuid.Parse(id)
+	return err == nil && parsed != uuid.Nil && parsed.String() == id
 }
 
 func (a Attempt) scopeArgs() []any {
@@ -91,20 +95,28 @@ func lockReservationScope(ctx context.Context, q transaction.Executor, a Attempt
 	return revision, err
 }
 
+func reservationPayload(a Attempt, intent JobIntent) ([]byte, Resources, error) {
+	if !a.valid() || a.Kind != intent.Kind || a.SourceID != intent.SourceID {
+		return nil, nil, ErrInvalidAttempt
+	}
+	normalized, demand, err := intent.Normalize()
+	if err != nil {
+		return nil, nil, err
+	}
+	body, err := json.Marshal(normalized)
+	if err != nil {
+		return nil, nil, ErrInvalidJob
+	}
+	return body, demand, nil
+}
+
 // ReserveWithin takes all requested resources in the owner's existing
 // transaction. False with no error means an exact replay of a held attempt.
 // The caller must roll back on error and publish no result until commit.
 func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, intent JobIntent) (bool, error) {
-	if !a.valid() || a.Kind != intent.Kind || a.SourceID != intent.SourceID {
-		return false, ErrInvalidAttempt
-	}
-	normalized, demand, err := intent.Normalize()
+	body, demand, err := reservationPayload(a, intent)
 	if err != nil {
 		return false, err
-	}
-	body, err := json.Marshal(normalized)
-	if err != nil {
-		return false, ErrInvalidJob
 	}
 	requested, err := json.Marshal(demand)
 	if err != nil {
@@ -148,6 +160,10 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
 	if err := checkWorkspaceCapacity(ctx, q, a, workspace.Limits.Burst, demand); err != nil {
 		return false, err
 	}
+	loans, reclaimed, err := borrowingForReservation(ctx, q, a, tree, workspace, body, demand)
+	if err != nil {
+		return false, err
+	}
 	if err := requireDurableReservationCommit(ctx, q); err != nil {
 		return false, err
 	}
@@ -161,6 +177,9 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
 	}
 	if inserted != 1 {
 		return false, ErrReservationConflict
+	}
+	if err := recordBorrowingWithin(ctx, q, a, loans, reclaimed); err != nil {
+		return false, err
 	}
 	return true, nil
 }

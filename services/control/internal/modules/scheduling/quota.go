@@ -42,7 +42,9 @@ type QuotaNode struct {
 	ParentID string
 	TenantID string
 	Level    QuotaLevel
-	Limits   Quota
+	// Borrowing enables loans among the department's direct workspaces.
+	Borrowing bool `json:"Borrowing,omitempty"`
+	Limits    Quota
 }
 
 // QuotaTree is an immutable, validated allocation snapshot.
@@ -82,6 +84,9 @@ func BuildQuotaTree(nodes []QuotaNode) (*QuotaTree, error) {
 		} else if node.ParentID == "" || node.TenantID == "" {
 			return nil, fmt.Errorf("%w: node %q needs a parent and tenant", ErrInvalidQuotaTree, node.ID)
 		}
+		if node.Borrowing && (node.Level != DepartmentQuota || !canonicalReservationID(node.TenantID)) {
+			return nil, fmt.Errorf("%w: borrowing requires a department with a tenant ID", ErrInvalidQuotaTree)
+		}
 		guaranteed, err := normalizeResources(node.Limits.Guaranteed)
 		if err != nil {
 			return nil, fmt.Errorf("quota %q guarantee: %w", node.ID, err)
@@ -108,6 +113,9 @@ func BuildQuotaTree(nodes []QuotaNode) (*QuotaTree, error) {
 		for _, child := range children[parent.ID] {
 			if !parent.accepts(child) {
 				return nil, fmt.Errorf("%w: node %q cannot be a child of %q", ErrInvalidQuotaTree, child.ID, parent.ID)
+			}
+			if parent.Borrowing && child.Level == WorkspaceQuota && !canonicalReservationID(child.ID) {
+				return nil, fmt.Errorf("%w: borrowing requires an owner workspace ID", ErrInvalidQuotaTree)
 			}
 			if total.Guaranteed.addScaled(child.Limits.Guaranteed, 1) != nil || !total.Guaranteed.fits(parent.Limits.Guaranteed) {
 				return nil, fmt.Errorf("%w: guarantees under %q exceed the parent allocation", ErrQuotaExceedsParent, parent.ID)
