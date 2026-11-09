@@ -566,3 +566,65 @@ The prior packet and DNS checksums still matched and the old
 `/release/arc-prepared` directory retained its inode and mode.
 The isolated containers and network were removed and the media
 unmounted. No retry or scale run was launched.
+
+### Member-list transaction diagnosis
+
+For request `73e99a41-76f4-4d49-9234-642ee3a8ef78`, Control logged
+HTTPS transport admission at 03:00:11 UTC. The client received the
+HTTP 409 problem with that request ID. The gateway logged
+`SERVICE_NOT_READY` at 03:00:21 UTC. Control also emitted an uncorrelated
+process failure with the same storage code. The test exit was written
+at 03:00:35 UTC. The fixture HTTP client had a 30-second timeout and
+received the problem before its transport returned an error. The
+packaged Control defaults to a 15-second request policy, and the fixture
+provided no override. The capture
+has no per-phase request timing, PostgreSQL backend PID, original
+PostgreSQL log, or underlying pgx commit error. It cannot establish
+which transaction failed or whether a SQL connection closed, a server
+deadline expired, or a reply was lost.
+
+[Members](../../services/control/internal/modules/cellclusters/reads.go)
+runs its two reads through
+[`adminWithin`](../../services/control/internal/modules/cellclusters/service.go).
+The authority recheck takes locks on the user and session, so the
+wrapper uses a read-write transaction even for this GET. The
+[PostgreSQL adapter](../../services/control/internal/platform/database/transaction/postgres.go)
+checks the context after a successful callback, then maps commit
+errors other than a known rollback to the same unknown outcome.
+The HTTP response preserves the category and loses the underlying cause.
+
+The small fixture called the actual member GET handler over local
+HTTPS with a real synthetic administrator session. It seeded a
+single joining member with SQL in a disposable PostgreSQL 18.6
+container on Linux arm64. It did not call the create route or run
+the full Control router and lifecycle. Three repetitions produced
+the following results.
+
+| Fault point | PostgreSQL or driver observation | HTTP result |
+| --- | --- | --- |
+| No fault | Member read and COMMIT completed | 200, one joining member |
+| Member query waiting for a lock | SQLSTATE `55P03` before COMMIT | 503 `STORAGE_UNAVAILABLE` |
+| Request deadline during the member query | Driver deadline before COMMIT | 503 `STORAGE_TIMEOUT` |
+| Connection cut before COMMIT reached PostgreSQL | One COMMIT intercepted, zero forwarded | 409 `STORAGE_COMMIT_OUTCOME_UNKNOWN` |
+| Successful COMMIT reply suppressed | One COMMIT forwarded, server completion observed | 409 `STORAGE_COMMIT_OUTCOME_UNKNOWN` |
+| Context cancelled during the COMMIT call | Driver cancellation after the pre-commit check | 409 `STORAGE_COMMIT_OUTCOME_UNKNOWN` |
+| Request deadline during the COMMIT call | Driver deadline after the pre-commit check | 409 `STORAGE_COMMIT_OUTCOME_UNKNOWN` |
+
+The [PostgreSQL lock timeout](https://www.postgresql.org/docs/18/runtime-config-client.html#GUC-LOCK-TIMEOUT)
+and [CommandComplete](https://www.postgresql.org/docs/18/protocol-message-formats.html#PROTOCOL-MESSAGE-FORMATS-COMMANDCOMPLETE)
+controls were observed on real protocol traffic. Every GET kept the
+persisted member unchanged. The fault proxy saw a single COMMIT in
+each wire-fault case. The fixture source, script, request timeline,
+PostgreSQL log and test log are under
+`lane-arc-diagnostics/arc104-member-read-73e99a41` beside the lane worktree.
+Run `bash reproduce.sh /absolute/path/to/lane-arc` from that directory.
+
+For the next isolated read, the cell-cluster and database owners should
+correlate the request ID with authorization, member query and commit
+phases, the PostgreSQL backend PID and matching server logs, remaining
+context budget, and the sanitized commit error type or SQLSTATE. Track
+the Control process failure separately from the HTTP request until the
+two share a traced cause. The controlled results distinguish query-stage
+failures from commit-stage failures, while the original trigger remains
+unknown. No production or cold-run test code was changed and no cluster
+write was replayed.
