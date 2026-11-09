@@ -48,14 +48,16 @@ type Result struct {
 
 // Service dispatches only fixed destinations and scoped, typed reads.
 type Service struct {
-	catalog      commandCatalog
-	tools        map[string]tool
-	identity     *identity.Service
-	applications *applications.Service
+	catalog         commandCatalog
+	tools           map[string]tool
+	identity        *identity.Service
+	applications    *applications.Service
+	executionPolicy ExecutionPolicy
 }
 
-// New binds the command layer to the application projection's identity owner.
-func New(apps *applications.Service) (*Service, error) {
+// New binds the command layer to the application projection's identity owner
+// and the installation's execution policy. A nil policy denies execution.
+func New(apps *applications.Service, policy ExecutionPolicy) (*Service, error) {
 	if apps == nil || apps.Identity == nil {
 		return nil, errors.New("PRODUCT_AGENT_IDENTITY_REQUIRED")
 	}
@@ -67,7 +69,10 @@ func New(apps *applications.Service) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Service{catalog: catalog, tools: tools, identity: apps.Identity, applications: apps}, nil
+	return &Service{
+		catalog: catalog, tools: tools, identity: apps.Identity, applications: apps,
+		executionPolicy: policy,
+	}, nil
 }
 
 // Commands lists the exact phrases for the authenticated entrance and the
@@ -121,6 +126,9 @@ func (s *Service) RunForRequest(ctx context.Context, actor identity.Auth, input,
 
 	path, err := s.admit(cmd, actor, cursor)
 	if err != nil {
+		return Result{}, err
+	}
+	if err := s.admitExecution(ctx); err != nil {
 		return Result{}, err
 	}
 	switch cmd.risk {
