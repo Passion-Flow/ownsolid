@@ -285,11 +285,12 @@ func Enroll(ctx context.Context, c Config) error {
 	if e = enrollPaced(ctx, connection, wire.Enrollment{JoinToken: join, CertificateRequest: request, Handshake: handshake(f, c)}, &response); e != nil {
 		return e
 	}
-	if !idPattern.MatchString(response.NodeID) || !token(response.Credential) || response.ProtocolVersion != wire.ProfileVersion(profile(c)) || response.HeartbeatSeconds < wire.MinHeartbeatSeconds || response.HeartbeatSeconds > wire.MaxHeartbeatSeconds || !(wire.Scope{SiteID: response.SiteID, CellID: response.CellID}).Valid() {
+	scope := wire.Scope{SiteID: response.SiteID, CellID: response.CellID}
+	if !idPattern.MatchString(response.NodeID) || !token(response.Credential) || response.ProtocolVersion != wire.ProfileVersion(profile(c)) || response.HeartbeatSeconds < wire.MinHeartbeatSeconds || response.HeartbeatSeconds > wire.MaxHeartbeatSeconds || !scope.Valid() {
 		return errors.New("ENROLLMENT_RESPONSE_INVALID")
 	}
 	if response.Certificate != "" {
-		leaf, e := wire.CheckIssuedCertificate(response.Certificate, key, response.NodeID)
+		leaf, e := checkEnrollmentCertificate(response.Certificate, key, response.NodeID, scope)
 		if e != nil {
 			return errors.New("ENROLLMENT_RESPONSE_INVALID")
 		}
@@ -523,12 +524,9 @@ func Run(ctx context.Context, c Config) error {
 		return e
 	}
 	defer lock.Close()
-	identity, e := state.Load(c.StateDirectory)
+	identity, e := loadBoundIdentity(c)
 	if e != nil {
 		return e
-	}
-	if identity.ControlOrigin != c.ControlOrigin || identity.ProtocolVersion != wire.ProfileVersion(profile(c)) || (identity.ExecutionProfile != "" && identity.ExecutionProfile != profile(c)) || !idPattern.MatchString(identity.NodeID) || !token(identity.Credential) {
-		return errors.New("IDENTITY_INVALID")
 	}
 	connection, e := client.New(c.ControlOrigin, c.CAFile, c.Policy())
 	if e != nil {
