@@ -228,3 +228,36 @@ go -C services/control test -p 1 ./internal/modules/training -run '^TestAgentCal
 
 ARC-108 remains open for the missing exchanges and the unresolved shared
 budget failures. Admission and budget assertions were kept intact.
+
+### Component exchanges on the same two fleet sizes
+
+A separate overlay exercised the existing Systemd Components profile and its
+Node Exporter task through the real mTLS dispatch path. It used 50 and 3,000
+peers with component state, task and audit history, the same shared-row locks
+and the unchanged Agent cost comparator. Component and host observations
+were synthetic. The fixture verified a persisted failed result and exact
+result replay.
+
+| Exchange | SQL statements | Rows | Shared blocks | Statement ceiling |
+| --- | ---: | ---: | ---: | ---: |
+| First component report | 14 / 14 | 19 / 19 | 233 / 238 | 11 |
+| Component state update | 12 / 12 | 16 / 16 | 48 / 55 | 11 |
+| Foreign credential | 2 / 2 | 1 / 1 | 3 / 5 | 11 |
+| Start task claim | 44 / 44 | 25 / 25 | 426 / 377 | 51 |
+| Task renewal | 15 / 15 | 16 / 16 | 50 / 61 | 22 |
+| Failed task result | 45 / 45 | 25 / 25 | 245 / 244 | 16 |
+| Exact result replay | 8 / 8 | 11 / 11 | 27 / 33 | 16 |
+
+The first report, update and first result exceeded their budgets. Both
+heartbeat writes selected the installation and locked node again inside the
+component observer, then evaluated both local cell defaults on the upsert.
+The result additionally reread the task and its lease during settlement.
+The audit append acquired the singleton chain-head lock, evaluated each
+projection frame, and updated both the audit row and chain head.
+
+The component owner can use the authenticated node's explicit site and cell
+on the PostgreSQL upsert. Avoiding the extra reads requires the caller to
+prove it holds the scoped node fence in the same transaction. Keep the active
+and disabled passive-observation semantics and validate the lease before a
+result changes state. Audit append and offline checkpoint compatibility
+remain Audit-owned. The strict test still fails for these three exchanges.
