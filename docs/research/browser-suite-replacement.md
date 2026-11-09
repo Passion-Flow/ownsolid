@@ -281,3 +281,53 @@ revocation. PostgreSQL found two published aliases and five reported
 calls, all owned by the member in the original workspace. The separate
 catalogue run recovered the real model facts with the visible retry after
 the forced read failure. No browser request went beyond the fixture origin.
+
+### Native gateway for the Portal key flow
+
+Keep the existing S-304 to S-306 browser scenario and choose the native
+path explicitly with a private HTTPS gateway URL. Use the real Rust
+gateway, the Go control plane's authenticated machine endpoint, and
+PostgreSQL. Reuse the
+[native gateway test profile](../../services/control/internal/modules/distribution/gateway_integration_test.go)
+from GW-112, including the loopback tokenizer and text-completion
+upstream. Its responses are synthetic. This run qualifies the gateway's
+client TLS, routing, admission and durable outcomes for a key created in
+the Portal. It does not require a GPU, a cluster or a model download.
+
+Use the [Chat Completions request shape](https://platform.openai.com/docs/api-reference/chat/create)
+from the existing endpoint sample. Send serial requests with the key
+kept in process memory. Trust the fixture's public CA with
+[Node's extra certificate store](https://nodejs.org/api/cli.html#node_extra_ca_certsfile)
+and verify the advertised host. Match each gateway response's request ID
+to a reported row with the same key, actor, alias, workspace and token
+usage. Poll the real read for the asynchronous receipt before inspecting
+the browser's call table. The rotated key must have its own history. A
+different alias and the revoked replacement must receive their exact
+gateway errors and add no receipt. The inaccessible workspace must
+refuse both the key list and call history reads.
+
+Keep the protocol fixture available for installations with no native
+gateway listener. A successful protocol stub is not a substitute for
+this native run. No new dependency is added. The code uses the existing
+Node and Rust toolchains, and the already approved Qwen files retain
+their Apache-2.0 licence. The loopback upstream supplies test responses
+and uses no third-party data.
+
+The local run used the native arm64 macOS Rust gateway built offline
+from `9c72e93c`, with the same revision's Go control plane and
+PostgreSQL 18.6 in a private container network. The gateway listened
+on loopback TLS and verified the dedicated machine endpoint against
+its own CA. The first fixture attempt used the root as the endpoint
+certificate and Rust refused it. The rerun used a separate signed
+leaf with the loopback IP in its SAN and verified both TLS hops.
+
+Chromium issued the initial key, confirmed the member's history and
+switched workspaces, then rotated and revoked the replacement. All
+five serial completions returned nine tokens each. Their IDs matched
+the synthetic loopback upstream dispatch and the scoped Control
+receipts. PostgreSQL counted five reported rows with capacity released.
+The wrong alias returned 404 `model_not_found` and the revoked
+replacement returned 401 `invalid_api_key`, with no extra upstream
+completion or persisted call. The replacement still showed its one
+success in Portal. Another Portal session saw no calls with the
+original key, and both reads for the inaccessible workspace were refused.
