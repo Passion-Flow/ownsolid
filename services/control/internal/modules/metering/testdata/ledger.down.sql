@@ -10,4 +10,4 @@ END;
 $$;
 
 DROP TABLE usage_ledger;
-DROP FUNCTION refuse_usage_ledger_mutation();
+DROP FUNCTION guard_usage_ledger_write();
