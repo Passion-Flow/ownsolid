@@ -23,7 +23,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [ ] GW-106 Rate limits, concurrency and token-aware budgets per tenant, app and key (P1) - Catalog: F080, F617
   - [Native quota acceptance](../../research/gateway-limits.md) used real workspace keys and PostgreSQL receipts to verify one application's shared monthly ceiling and another application's continued access. Automatic application assignment and policy UI remain open.
 - [ ] GW-107 Usage ledger: tokens, requests, latency per call, exportable (P1) - Catalog: F081
-  - Admin and Portal download scoped CSV attachments through the production request dispatcher. [Offline TLS and PostgreSQL acceptance](../../research/gateway-usage-history.md) covers JSON-cursor continuation, retries, cancellation, unknown usage and receipt integrity. A shared-writer continuation link passed in an isolated overlay. Production link integration, the public contract and UI remain open.
+  - Admin and Portal download scoped CSV attachments through the production request dispatcher. [Offline TLS and PostgreSQL acceptance](../../research/gateway-usage-history.md) covers JSON-cursor continuation, retries, cancellation, unknown usage and receipt integrity. A shared-writer continuation link passed in an isolated overlay. The [CSV contract](../../research/gateway-usage-csv-contract.md) uses JSON cursors. Production link integration and UI remain open.
 - [ ] GW-108 Load balancing, failover and circuit breaking across replicas (P1) - Catalog: F075, F076
 - [ ] GW-109 Request tracing from caller to deployment and GPU (P1) - Catalog: F082
   - [Request correlation acceptance](../../research/gateway-request-tracing.md) followed native Responses and Messages UUIDs through engine dispatch, PostgreSQL history and authenticated Admin placement lookup. Real GPU execution and distributed spans remain open.
@@ -43,7 +43,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [ ] GW-123 The AI and model lifecycle profiles run node gateways too, as the inference profile does since GW-114 (P1)
 - [ ] GW-124 Node gateways renew their serving certificates before they expire, without dropping calls (P1)
 - [ ] GW-125 Callers get the model gateway CA from the console and the portal, beside each endpoint and code sample (P1)
-  - Authorized aliases serve the loaded gateway CA as a PEM attachment. [Disconnected PostgreSQL and TLS acceptance](../../research/gateway-delivery.md#downloading-caller-trust-gw-125) verifies a serving certificate and rejects mixed PEM. Public contract and Console and Portal links remain open.
+  - Authorized aliases serve the loaded gateway CA as a PEM attachment. [Disconnected PostgreSQL and TLS acceptance](../../research/gateway-delivery.md#downloading-caller-trust-gw-125) verifies a serving certificate and rejects mixed PEM. The [CA download contract](../../research/gateway-trust-download-contract.md) is published. Console and Portal links remain open.
 
 ## P2 Fleet operations
 
