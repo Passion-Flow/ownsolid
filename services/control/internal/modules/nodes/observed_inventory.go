@@ -70,7 +70,7 @@ func (s *Service) ObservedInventory(ctx context.Context, a identity.Auth, worksp
 			return err
 		}
 		var storedFacts json.RawMessage
-		n, err := scanNodeFacts(s.lookupNodeRow(ctx, q, w.TenantID, w.ID, id), &storedFacts)
+		n, err := scanNodeRow(s.lookupNodeRow(ctx, q, w.TenantID, w.ID, id), &storedFacts, nil)
 		if err != nil {
 			return err
 		}
