@@ -63,9 +63,9 @@ literal wildcard and Unicode text, a repeated match, stable timestamp ties,
 empty results, invalid input, another owner and workspace, deletion, session
 revocation, and exact legacy query behavior. Exercise replay with a changed
 term, workspace or login session and with a substituted cursor position.
-The API owner adds `q` and the opaque search cursor semantics to
-`ListApplicationConversations` in the applications OpenAPI. The Portal owner
-wires the search field and starts a new page when the term, session or
+DEV published `q` and the opaque search cursor semantics on
+`ListApplicationConversations` in `9cb3d16a`. The Portal owner still needs
+to wire the search field and start a new page when the term, session or
 workspace changes. Rename and export require the workflow owner's persisted
 title and export permission, versioned operations and Portal flows. Keep
 APP-109 open for those integrations.
