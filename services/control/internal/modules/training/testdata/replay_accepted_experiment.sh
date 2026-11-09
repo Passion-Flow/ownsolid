@@ -56,4 +56,4 @@ nsenter -t "$pid" -n ip -br address
 nsenter -t "$pid" -n go -C services/control test \
     -tags 'training_artifact_integration,training_experiment_integration,repository_integration' \
     -p 1 -count=1 -timeout 5m -v ./internal/modules/training \
-    -run '^(TestActualCPUExperimentInputs|TestActualApprovedCpuAdapterMetadataShapeAndEveryF32Value|TestActualAcceptedExperimentRead|TestActualBorrowedAcceptedAdapter)$'
+    -run '^(TestActualTrainingExecutionEvidenceAdmission|TestActualCPUExperimentInputs|TestActualApprovedCpuAdapterMetadataShapeAndEveryF32Value|TestActualAcceptedExperimentRead|TestActualBorrowedAcceptedAdapter)$'
