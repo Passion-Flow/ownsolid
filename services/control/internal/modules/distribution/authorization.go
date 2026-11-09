@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/google/uuid"
+
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/google/uuid"
 )
 
 type machineScope struct{ gateway, node, tenant, workspace string }
@@ -161,7 +162,7 @@ func (s *Service) authorized(ctx context.Context, gateway, credential, rawKey st
 			return e
 		}
 		w := workspaces.Workspace{ID: scope.workspace, TenantID: scope.tenant, Status: "active"}
-		if e = s.aliasAvailability(ctx, tx, w, &alias); e != nil {
+		if e = s.aliasReadiness(ctx, tx, w, &alias); e != nil {
 			return e
 		}
 		if !alias.Available {
