@@ -65,3 +65,34 @@ or commitment, and reject a one-field disclosure or one attached to an unrelated
 event. Check that strict disclosure verification detects removed fields and
 that ordinary verification accepts historical exports. Verify that unrelated
 metadata remains redacted even when it contains the two assistant keys.
+
+## AGT-112 explicit audit fixture policy
+
+The APP candidate `c2b1bb5a` passes a typed
+`productagent.ExecutionPolicy` into `productagent.New`. Missing or failed
+policy returns `SERVICE_NOT_READY`. Explicit disable returns
+`ACCESS_DENIED`. The local APP replay overlay for this test supplies one
+constant enable in the synthetic audit fixture. Carry the same explicit
+reader into the tracked constructor call when the two changes are paired.
+Keep policy selection at the existing constructor boundary and use the
+unchanged production denial and authorized command paths. A fallback
+enable would bypass the trusted installation decision.
+
+Use the existing audit module fixture and standalone verifier on
+disconnected PostgreSQL. Dispatch both commands with the synthetic
+enable, verify the V1/V2 export against its held checkpoint, and retain
+the redaction and tamper refusals. No dependency, model, data or public
+contract is added. The [APP policy qualification](product-assistant-execution-policy.md)
+records the Go, PostgreSQL, pgvector and Python license conditions and
+the default-denial acceptance.
+
+The tracked fixture matched the APP overlay byte for byte. With the policy
+candidate replayed as `c90229f8` on `f83a9fde`, the complete audit module
+passed against PostgreSQL 18.6 and pgvector 0.8.7 in a disconnected Linux
+amd64 container with no published ports. The two real assistant commands
+produced the expected audit events. The standalone verifier accepted the
+export and held checkpoint, and the scope and tamper cases were refused.
+The standalone verifier suite and the APP missing, disabled and unreadable
+policy tests passed. Disconnected `make check && make build` passed on the
+paired sources. The one-argument constructor on `f83a9fde` requires the
+policy change to land together with this fixture update.
