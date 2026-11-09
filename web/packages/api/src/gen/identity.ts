@@ -159,6 +159,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the current account's active browser sessions
+         * @description Lists the account's active sessions on the same Admin or Portal entrance, newest first. Omit limit to use the installed page size. Pass next_cursor unchanged to read the next page on this account and entrance. A background read does not extend the idle deadline.
+         */
+        get: operations["listBrowserSessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * End one browser session owned by the current account
+         * @description Requires the current entrance's Origin and CSRF token. Send no query or request body. A live caller can repeat a successful revocation of the same owned session. Ending the current session also expires its identity cookies. An unknown session or a session outside this account or entrance returns the same 404. Revocation remains available when the license blocks new business.
+         */
+        delete: operations["revokeBrowserSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/password-changes": {
         parameters: {
             query?: never;
@@ -508,6 +548,42 @@ export interface components {
         SessionStatusResponse: {
             data: components["schemas"]["SessionStatus"];
         };
+        BrowserSession: {
+            /** Format: uuid */
+            id: string;
+            current: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            last_seen_at: string;
+            /** Format: date-time */
+            absolute_expires_at: string;
+            /** @enum {string} */
+            authentication_method: "password" | "sso";
+        };
+        BrowserSessionList: {
+            items: components["schemas"]["BrowserSession"][];
+            next_cursor: string | null;
+        };
+        BrowserSessionListResponse: {
+            data: components["schemas"]["BrowserSessionList"];
+        };
+        BrowserSessionStorageProblem: {
+            /** @constant */
+            type: "about:blank";
+            title: string;
+            /** @constant */
+            status: 503;
+            /** @enum {string} */
+            code: "STORAGE_UNAVAILABLE" | "STORAGE_COMMIT_ROLLED_BACK" | "SERVICE_NOT_READY" | "AUTH_CAPACITY_EXCEEDED";
+            /** Format: uuid */
+            request_id: string;
+            detail?: string;
+            fields?: {
+                field: string;
+                code: string;
+            }[];
+        };
         UpdateMeRequest: {
             /** @description Trim and NFC-normalize; final 1-100 code points, at most 400 UTF-8 bytes; reject control characters. */
             display_name: string;
@@ -671,6 +747,19 @@ export interface components {
             };
             content: {
                 "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Problem Details; see error catalog. Retry-After is required for throttling and temporary unavailability. */
+        BrowserSessionUnavailable: {
+            headers: {
+                /** @description Server-generated correlation UUID. */
+                "X-Request-ID"?: string;
+                /** @description Present for 429 and temporary 503. */
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["BrowserSessionStorageProblem"];
             };
         };
     };
@@ -1014,6 +1103,75 @@ export interface operations {
             401: components["responses"]["Problem"];
             403: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
+            default: components["responses"]["Problem"];
+        };
+    };
+    listBrowserSessions: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: {
+                /** @description true when the person did not ask for this read, so it does not count as activity. */
+                "X-Ownsolid-Background"?: "true";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page of live browser sessions. */
+            200: {
+                headers: {
+                    /** @description Server-generated correlation UUID. */
+                    "X-Request-ID"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserSessionListResponse"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            503: components["responses"]["BrowserSessionUnavailable"];
+            default: components["responses"]["Problem"];
+        };
+    };
+    revokeBrowserSession: {
+        parameters: {
+            query?: never;
+            header: {
+                Origin: string;
+                /** @description Signed, audience/session/context-bound token from getCsrf. */
+                "X-CSRF-Token": string;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Session ended or was already ended. No response body. */
+            204: {
+                headers: {
+                    /** @description Server-generated correlation UUID. */
+                    "X-Request-ID"?: string;
+                    /** @description Present when ending the current session. Separate Set-Cookie fields expire this entrance's session and CSRF cookies. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            503: components["responses"]["BrowserSessionUnavailable"];
             default: components["responses"]["Problem"];
         };
     };

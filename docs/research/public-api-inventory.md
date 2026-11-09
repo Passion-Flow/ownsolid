@@ -132,3 +132,44 @@ digests, and lineage on an approved base. Older generated Go and Python
 clients decoded the captured Admin response with the original fields. The
 new clients generated with the pinned tools also decoded both retained
 references and accepted responses with the property omitted.
+
+## IAM-111 current account browser sessions
+
+The [identity handoff](session-management.md#verified-behavior-and-integration-handoff)
+defines the Admin and Portal paths and retention behavior.
+[GitLab Active Sessions](https://docs.gitlab.com/user/profile/active_sessions/)
+allows people to inspect and end browser sessions. The
+[OpenAPI security requirement](https://spec.openapis.org/oas/v3.1.1.html#security-requirement-object)
+can express the Admin or Portal cookie as separate alternatives. Reuse
+those existing schemes and the server's Origin and CSRF checks. Each
+entrance works only with its authenticated account and live sessions.
+
+Use the current session route for expiry status and the existing logout route
+for ordinary sign-out. Add a distinct paginated list and a
+[bodyless DELETE](https://www.rfc-editor.org/rfc/rfc9110.html#name-delete)
+for ending an owned session. A later retry against an already ended session
+returns 204 for a still-authenticated caller. Ending the caller's current
+session expires both identity cookies for that entrance. A foreign or unknown
+UUID yields the same 404. Device labels and raw client identifiers would
+exceed the retained metadata. The contract exposes only the six fields
+projected by the handler. The existing [SDK licenses](sdk.md#licenses) apply,
+with no additional dependency, model or dataset.
+
+Validate the response and request headers on a real loopback HTTPS fixture
+backed by disconnected PostgreSQL. Exercise both audiences, account-scoped
+cursors, background reads, cookie replay, Origin and CSRF refusal, no response
+body on DELETE, current-session cookie cleanup, revocation without a license
+and one durable audit on concurrent retries. Check that existing identity
+operations and their generated symbols retain the same shapes.
+
+The disconnected Linux HTTPS fixture validated live pages against the
+published list response. Both entrances rejected foreign cursors and
+sessions. Concurrent revocation and a retry returned bodyless 204 responses
+and produced one audit record. Current-session cookie cleanup, an unlicensed
+revocation, session status and the Admin audit regression also passed.
+
+The pinned Python generator rejects a string literal in a header parameter.
+Represent the existing audit actor header's single accepted value with an
+equivalent one-value enum. The server behavior and generated Go client
+are unchanged. The pinned Python generator now retains the audit operation
+along with the two browser session operations.
