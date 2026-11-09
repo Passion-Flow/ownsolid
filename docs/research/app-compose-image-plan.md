@@ -76,6 +76,14 @@ before launch, and a stale release pin. Deny cross-scope use of the
 admission record, verify that rejected attempts reach no launcher,
 and keep the installation unsettled when startup fails.
 
+A Compose 5.5.1 render-only fixture retained an `env_file` reference
+using `config --no-env-resolution`. Changing that file from
+`CATALOG_MODE=serve` to `CATALOG_MODE=debug` changed normal Compose
+evaluation of the identical admitted JSON. Include that replacement
+in the installer test. The installer keeps referenced input files
+immutable through startup or resolves them before admission.
+[Compose config](https://docs.docker.com/reference/cli/docker/compose/config/).
+
 The initial disconnected Linux amd64 integration rendered the actual signed
 Compose artifact with Compose 5.0.0, checked the normalized bytes,
 and loaded the one verified manifest into a disposable Docker 29.1.3
