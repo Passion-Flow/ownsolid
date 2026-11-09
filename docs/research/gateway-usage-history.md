@@ -136,3 +136,28 @@ foreign tenant and corrupt receipt all returned a problem without any
 attachment. The companion receipt regression also passed on the JSON
 list and detail. The direct continuation link, versioned contract and
 UI acceptance remain open.
+
+## Isolated continuation qualification
+
+An isolated Go overlay tested the shared seam with the normal production
+cell and identity dispatcher on 2026-11-09. The candidate adds optional
+`NextPagePath` to `httpserver.MemoryDownload`. The distribution handler
+sets it only when the exported page has a next cursor. It replaces the
+cursor in the validated query, preserving the key and limit, and
+reconstructs the scoped path using `cellroute.Public`. The shared
+`success` writer formats the server-owned path as an RFC 8288 next
+`Link` before sending the attachment. Existing downloads omit the field.
+
+The disconnected TLS test followed only the attachment links to
+navigate four Portal pages. It checked each same-origin path and scope,
+compared each cursor with the JSON history contract, and verified an
+identical link on retry. The final page, over-limit and malformed
+queries, foreign tenant, scope mismatch and corrupt receipt returned
+no next link. Failed responses returned only their normal problems.
+
+The passing overlay and runner are retained in
+`/root/lane-gw-acceptance/gw107-link.yMl6SoLb` on the Linux test host.
+The production route remains reachable with JSON-cursor continuation.
+DEV can adopt the shared type and writer changes with the public
+contract, and WEB can then verify attachment navigation and download
+from the actual usage page.

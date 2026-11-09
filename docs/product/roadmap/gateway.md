@@ -23,7 +23,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [ ] GW-106 Rate limits, concurrency and token-aware budgets per tenant, app and key (P1) - Catalog: F080, F617
   - [Native quota acceptance](../../research/gateway-limits.md) used real workspace keys and PostgreSQL receipts to verify one application's shared monthly ceiling and another application's continued access. Automatic application assignment and policy UI remain open.
 - [ ] GW-107 Usage ledger: tokens, requests, latency per call, exportable (P1) - Catalog: F081
-  - Admin and Portal download scoped CSV attachments through the production request dispatcher. [Offline TLS and PostgreSQL acceptance](../../research/gateway-usage-history.md) covers JSON-cursor continuation, retries, cancellation, unknown usage and receipt integrity. The attachment continuation link, versioned contract and UI remain open.
+  - Admin and Portal download scoped CSV attachments through the production request dispatcher. [Offline TLS and PostgreSQL acceptance](../../research/gateway-usage-history.md) covers JSON-cursor continuation, retries, cancellation, unknown usage and receipt integrity. A shared-writer continuation link passed in an isolated overlay. Production link integration, the public contract and UI remain open.
 - [ ] GW-108 Load balancing, failover and circuit breaking across replicas (P1) - Catalog: F075, F076
 - [ ] GW-109 Request tracing from caller to deployment and GPU (P1) - Catalog: F082
   - [Request correlation acceptance](../../research/gateway-request-tracing.md) followed native Responses and Messages UUIDs through engine dispatch, PostgreSQL history and authenticated Admin placement lookup. Real GPU execution and distributed spans remain open.
