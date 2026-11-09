@@ -324,3 +324,11 @@ using:
 ```sh
 go -C services/control test -p 1 ./internal/modules/nodes -run '^TestComponentHeartbeatCostAtFleetSizes$' -count=1 -v
 ```
+
+After the scope change, the original seven-exchange mTLS probe reported
+43 statements for component claim, 14 for renewal, 43 for the initial
+result and 7 for exact result replay on both fleet sizes. Only the initial
+result exceeded its declaration of 16. The result still needs a current
+lease and deadline check after the owning callback. Any statement reduction
+must preserve rollback when that check fails. The audit append remains
+under the separate Audit authority.
