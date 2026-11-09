@@ -201,4 +201,5 @@ Replacing the file on disk did not change the already loaded public
 bundle. The delivered-gateway lifecycle, scoped usage CSV and native
 Go/Rust shared and dedicated HTTPS gateway regressions also passed.
 The HTTPS endpoint used to check the serving certificate was a Go
-fixture. Public contract and Console and Portal links remain open.
+fixture. The [public CA download contract](gateway-trust-download-contract.md)
+is published. Console and Portal links remain open.

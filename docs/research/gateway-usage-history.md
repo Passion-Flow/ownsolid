@@ -134,8 +134,8 @@ and left request rows and audit counts unchanged. An unauthenticated
 request, over-limit or malformed query, changed key or audience cursor,
 foreign tenant and corrupt receipt all returned a problem without any
 attachment. The companion receipt regression also passed on the JSON
-list and detail. The direct continuation link, versioned contract and
-UI acceptance remain open.
+list and detail. The direct continuation link and UI acceptance remain
+open.
 
 ## Isolated continuation qualification
 
@@ -157,7 +157,7 @@ no next link. Failed responses returned only their normal problems.
 
 The passing overlay and runner are retained in
 `/root/lane-gw-acceptance/gw107-link.yMl6SoLb` on the Linux test host.
-The production route remains reachable with JSON-cursor continuation.
-DEV can adopt the shared type and writer changes with the public
-contract, and WEB can then verify attachment navigation and download
-from the actual usage page.
+The [published CSV contract](gateway-usage-csv-contract.md) uses
+JSON-cursor continuation and is ready for Web integration. Adopting the
+shared type and writer changes needs a corresponding contract update
+and verification from the usage page.
