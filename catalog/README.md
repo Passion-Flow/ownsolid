@@ -18,6 +18,7 @@ one strict UTF-8 JSON object of at most 64 KiB. The fields below define the mani
 | `platform` | Stable versions in `minimum` (inclusive) and `before` (exclusive). |
 | `artifact` | `engine` selects `helm` for `chart.tgz` or `compose` for `compose.yaml`. `sha256` identifies the artifact bytes as `sha256:` followed by 64 lowercase hex digits. |
 | `images` | One to 128 distinct OCI image or index SHA-256 digests available to the offline installer. |
+| `upgrade_from` | Optional list of up to 32 distinct older versions, each with a `version` and the exact signed `bundle_sha256`. |
 | `form` | Up to 32 fields in display order, or an empty array. |
 
 Each field has an `id`, a `type` and a `required` boolean. Types are
@@ -94,6 +95,31 @@ Layer compression may be gzip or uncompressed. The returned `Archive` carries
 the signed digest and byte size, and the manifest and config digests for
 each image in OCI index order.
 
+## Version transitions
+
+The installer records `InstallBundle.Pin` with a successful installation.
+It contains the manifest version and the SHA-256 of the exact signed
+`bundle.json` bytes. Publish a new version when any signed content changes.
+An edge in the new manifest's `upgrade_from` names the retained pin of an
+approved predecessor.
+
+Call `apps.VerifyReleaseTransition` with an immutable root containing one
+app's version directories, the trusted publisher key, the running platform
+version and the installed pin. It selects the unique direct upgrade from
+that pin. Use `UpgradeTo` to require the same choice on a retry. A named
+target does not override a fork. For rollback, pass the exact predecessor pin
+from installation history in `RollbackTo`. Both endpoints must support the
+platform and use the same engine. The selected artifact and signed OCI
+closure pass the same verification as a fresh install. An upgrade also
+verifies the complete installed bundle for recovery. The byte budget
+applies to each verified bundle.
+
+Pass the result's `Pin` as `ImageImportOptions.ExpectedPin` and use its version
+directory for the import. This binds image registration to the selected
+artifact, even if another signed bundle claims the same version. Keep
+staging private and immutable. Installation history, permissions, audit,
+workload execution and configuration or data recovery belong to the installer.
+
 ## Local image import
 
 `apps.ImportInstallImage` verifies a signed Linux amd64 release and confirms
@@ -137,4 +163,6 @@ export OWNSOLID_CATALOG_DOCKER_TEST_MOUNT=/path/to/private/staging-mount
 go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportInstallImageIntoEmptyDockerStore$'
 # Point the same variables at a fresh engine and mount for the set test.
 go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportInstallImageSetIntoEmptyDockerStore$'
+# Use a fresh engine for the upgrade and rollback import fixture as well.
+go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportVerifiedReleaseTransitions$'
 ```
