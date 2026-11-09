@@ -290,6 +290,11 @@ func TestActualObjectBackupFence(t *testing.T) {
 		t.Fatal(err)
 	}
 	g.work(t)
+	if !t.Run("durable hold", func(t *testing.T) {
+		checkActualDurableBackupHold(t, g, proxy, pending)
+	}) {
+		t.FailNow()
+	}
 	tombstone, _, _ := g.create(t, []byte("disposable upload to abort"))
 	g.work(t)
 	if _, err := g.s.Abort(g.ctx, g.portal, g.f.Workspace, tombstone.ID, "Abort fixture object", uuid.NewString()); err != nil {
