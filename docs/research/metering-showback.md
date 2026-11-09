@@ -20,9 +20,10 @@ requests. A zero price is explicit. Usage before the first version or
 without a rate in the selected version stays visible as unrated.
 
 Partition the requested half-open period into disjoint rate intervals.
-Read each interval with the existing exact workspace totals query in one
-read-only [PostgreSQL REPEATABLE READ snapshot](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-REPEATABLE-READ).
-Use the existing authorization boundary to supply both scope IDs. Retain
+Read the exact workspace totals per interval in one PostgreSQL statement.
+Standalone callers retain their read-only REPEATABLE READ transaction.
+Authorized readers use the Workspace owner's READ COMMITTED transaction
+and its session and membership fences. Retain
 the rate ID, pricing inputs, quantity and amount for each rated line.
 Multiply and divide using arbitrary-width integers. Round half up to
 one millionth of the currency unit once per workspace, meter, version and
@@ -56,3 +57,43 @@ verify the same report on retry, correct scope filtering and a stable
 snapshot despite concurrent ingestion. The authorized API, operator UI,
 production policy source and real usage-producer reconciliation remain
 separate acceptance work. This report is showback information.
+
+## Authorized workspace read
+
+The Workspace owner exposes `ReadScopeWithin` and rechecks the exact
+session before locking the workspace and reading its current membership.
+The first metering read admits a workspace owner or a current platform
+administrator on the Admin entrance. The caller supplies its authenticated
+actor and the workspace selector. Use only the tenant and workspace
+returned by the owner for ledger queries. An inaccessible foreign
+workspace and an absent workspace retain the same owner error.
+[RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.5.4)
+
+The Workspace read uses row locks and checks membership after acquiring
+the lock. Its normal READ COMMITTED owner transaction must be preserved.
+Use one grouped ledger statement for all rate intervals. PostgreSQL
+`width_bucket` on sorted timestamp lower bounds puts events at a
+cutover in the new interval. The range predicate still includes both
+scope IDs and the half-open period. Return budget status from those
+same rated totals. This combines the owner's current scope and one
+statement snapshot without a second authority query or ledger scan.
+[Row locking](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-ROWS)
+[READ COMMITTED](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED)
+[Bucket boundaries](https://www.postgresql.org/docs/18/functions-math.html)
+
+A separate authorization transaction would leave a window for a session
+or membership change before reading private usage. Reusing a client
+tenant or cached workspace role would bypass current server authority.
+Multiple aggregate statements in READ COMMITTED could combine different
+ledger snapshots. A read-only transaction cannot acquire the required
+authority locks. Reuse the existing identity and workspace modules and
+the selected PostgreSQL transaction. No new dependency or database schema
+is needed for this composition.
+
+Verify the production identity and workspace authority code on the isolated
+PostgreSQL catalog plus the candidate ledger. Use a real issued session and
+test owner and Admin reads, missing and foreign workspace equivalence, changed
+membership, revoked session, zero price and unrated usage, and budget derived
+from the same report. The identity HTTP dispatcher, public contract,
+production ledger migration, configured policy binding and real producers
+still require their owners before the public flow is available.
