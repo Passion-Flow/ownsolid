@@ -2,6 +2,7 @@ package nodes_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -68,6 +69,18 @@ func TestComponentResultFencesOwnerWritesAtSettlement(t *testing.T) {
 		return raw
 	}
 	before := snapshot()
+	credential := replaceCredentialDuringAgentCall(t, service.DB, node.NodeID, func(ctx context.Context) error {
+		state, err := service.Complete(ctx, node.NodeID, node.Credential, task.ID, result, uuid.NewString())
+		if state != "" {
+			return errors.New("refused completion returned a terminal state")
+		}
+		return err
+	})
+	if snapshot() != before {
+		t.Fatal("refused credential changed the task, component or audit head")
+	}
+	node.Credential = credential
+
 	for _, failure := range []struct{ name, update string }{
 		{"deadline expired", "UPDATE node_tasks SET deadline_at=clock_timestamp()-interval '1 second' WHERE id=$1"},
 		{"lease replaced", "UPDATE node_tasks SET lease_token_hash=decode(repeat('fe',32),'hex') WHERE id=$1"},
