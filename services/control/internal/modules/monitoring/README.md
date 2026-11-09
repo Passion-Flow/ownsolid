@@ -175,6 +175,43 @@ create a network namespace.
 
 The test qualifies the [controlled HTTPS receiver contract](../../../../../docs/research/offline-alert-notifications.md#verified-feishu-relay-contract).
 
+### Site-local DingTalk delivery
+
+Use the [DingTalk settings](alerting/dingtalk-relay.example.json) with the
+[Alertmanager receiver example](alerting/alertmanager-matrix.example.yaml).
+Rename the receiver names and references from `-matrix` to `-dingtalk`.
+Keep the Alertmanager bearer, DingTalk-compatible access token and signing
+secret in separate protected files per tenant. Configure the exact private
+HTTPS IP and a site CA whose server certificate covers that address.
+
+    go -C services/control build -o /absolute/path/to/dingtalk-relay ./internal/modules/monitoring/alerting/cmd/dingtalk-relay
+    /absolute/path/to/dingtalk-relay -config /etc/ownsolid/relay/dingtalk-relay.json
+
+The customer receiver serves `/robot/send`. For an unsigned `OPTIONS` on
+that path without a query string, return HTTP 204 and
+`X-Ownsolid-Idempotency: durable-v1`. For `POST`, validate the access token,
+millisecond timestamp, HMAC-SHA256 signature and tenant binding. The
+message is JSON with `msgtype: "text"` and `text.content`. The site profile
+limits the JSON body to 16 KiB. Persist the
+semantic message and quoted `Idempotency-Key` atomically. Return HTTP
+200 with `{"errcode":0}` and exactly one matching receipt header.
+On a valid replay, acknowledge the same semantic message even though
+the signature or timestamp changed. A conflicting replay is a permanent
+error. Keep the keys for the site's replay horizon and reconcile any
+uncertain downstream operation before repeating it.
+
+Disable query capture in listener and proxy access logs, error logs and
+traces. The `POST` query carries the token and signature. Keep the site
+receiver restricted to the operator network. The local relay reuses
+Alertmanager's routing, silences and retry cadence.
+
+Set `OWNSOLID_TEST_ALERTMANAGER` to the checksum-verified Alertmanager
+0.34.2 binary and run with Linux network namespace permission.
+
+    bash services/control/internal/modules/monitoring/alerting/testdata/check-local-dingtalk.sh
+
+See the [wire contract and native evidence](../../../../../docs/research/offline-alert-notifications.md#site-local-dingtalk-signed-webhook-compatibility).
+
 ### Long retention for fleet health aggregates
 
 Run the [fleet recording rules](alerting/fleet-rollup-rules.yaml) in a separate

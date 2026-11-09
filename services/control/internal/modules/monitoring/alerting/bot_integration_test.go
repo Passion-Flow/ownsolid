@@ -23,26 +23,31 @@ import (
 	"time"
 )
 
-type feishuFixtureRoute struct {
+type botFixtureRoute struct {
 	relayFixtureTenant
 	hook, secret string
 }
 
-func newFeishuFixtureRoute(t *testing.T, root, id string) feishuFixtureRoute {
+func newBotFixtureRoute(t *testing.T, root, id, name string, channel relayChannel) botFixtureRoute {
 	t.Helper()
 	config := tenantConfig{
-		ID: id, Receiver: id + "-feishu",
-		WebhookTokenFile:        filepath.Join(root, id+"-webhook"),
-		FeishuHookFile:          filepath.Join(root, id+"-hook"),
-		FeishuSigningSecretFile: filepath.Join(root, id+"-signing"),
+		ID: id, Receiver: id + "-" + name,
+		WebhookTokenFile: filepath.Join(root, id+"-webhook"),
 	}
-	return feishuFixtureRoute{
+	tokenPath := filepath.Join(root, id+"-hook")
+	secretPath := filepath.Join(root, id+"-signing")
+	if channel == dingTalkChannel {
+		config.DingTalkAccessTokenFile, config.DingTalkSigningSecretFile = tokenPath, secretPath
+	} else {
+		config.FeishuHookFile, config.FeishuSigningSecretFile = tokenPath, secretPath
+	}
+	return botFixtureRoute{
 		relayFixtureTenant{config: config, webhookKey: relayFixtureSecret(t, config.WebhookTokenFile)},
-		relayFixtureSecret(t, config.FeishuHookFile), relayFixtureSecret(t, config.FeishuSigningSecretFile),
+		relayFixtureSecret(t, tokenPath), relayFixtureSecret(t, secretPath),
 	}
 }
 
-func persistFeishuFixture(directory, key, message string) error {
+func persistBotFixture(directory, key, message string) error {
 	f, err := os.OpenFile(filepath.Join(directory, key), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err != nil {
 		return err
@@ -67,44 +72,58 @@ func persistFeishuFixture(directory, key, message string) error {
 }
 
 func TestFeishuRelayRetriesOneDurableTenantDelivery(t *testing.T) {
+	testDurableBotDelivery(t, feishuChannel, "feishu", "OWNSOLID_TEST_FEISHU_RELAY", `{"code":0}`)
+}
+
+func TestDingTalkRelayRetriesOneDurableTenantDelivery(t *testing.T) {
+	testDurableBotDelivery(t, dingTalkChannel, "dingtalk", "OWNSOLID_TEST_DINGTALK_RELAY", `{"errcode":0}`)
+}
+
+func testDurableBotDelivery(t *testing.T, channel relayChannel, name, binary, receipt string) {
+	t.Helper()
 	ctx, cancel := context.WithTimeout(t.Context(), 45*time.Second)
 	defer cancel()
 	root := t.TempDir()
-	tenantA, tenantB := newFeishuFixtureRoute(t, root, "tenant-a"), newFeishuFixtureRoute(t, root, "tenant-b")
-	for _, tnt := range []feishuFixtureRoute{tenantA, tenantB} {
+	tenantA, tenantB := newBotFixtureRoute(t, root, "tenant-a", name, channel), newBotFixtureRoute(t, root, "tenant-b", name, channel)
+	for _, tnt := range []botFixtureRoute{tenantA, tenantB} {
 		if err := os.Mkdir(filepath.Join(root, tnt.config.ID), 0700); err != nil {
 			t.Fatal(err)
 		}
 	}
-	routes := map[string]feishuFixtureRoute{tenantA.hook: tenantA, tenantB.hook: tenantB}
+	routes := map[string]botFixtureRoute{tenantA.hook: tenantA, tenantB.hook: tenantB}
 	var mu sync.Mutex
 	attempts := map[string]int{}
+	acknowledged := map[string]bool{}
 	keyFormat := regexp.MustCompile(`^ownsolid-am-v1-[a-f0-9]{64}$`)
 	site := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		hook, ok := strings.CutPrefix(req.URL.Path, feishuHookPath)
+		hook, validPath := strings.CutPrefix(req.URL.Path, "/open-apis/bot/v2/hook/")
+		if channel == dingTalkChannel {
+			validPath = req.URL.Path == "/robot/send"
+			hook = req.URL.Query().Get("access_token")
+		}
 		route, found := routes[hook]
-		if !ok || !found || req.URL.RawQuery != "" {
+		if !validPath || (channel == feishuChannel && (!found || req.URL.RawQuery != "")) {
 			http.NotFound(w, req)
 			return
 		}
 		if req.Method == http.MethodOptions {
+			if req.URL.RawQuery != "" {
+				t.Error("capability probe carried query credentials")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 			w.Header().Set(relayCapabilityHeader, relayCapabilityVersion)
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 		key, err := strconv.Unquote(req.Header.Get(idempotencyKeyHeader))
-		var message feishuMessage
-		if req.Method != http.MethodPost || err != nil || !keyFormat.MatchString(key) ||
-			json.NewDecoder(http.MaxBytesReader(w, req.Body, maxFeishuRequestBytes)).Decode(&message) != nil || message.MsgType != "text" {
+		if req.Method != http.MethodPost || err != nil || !keyFormat.MatchString(key) || !found {
 			http.Error(w, "invalid fixture request", http.StatusBadRequest)
 			return
 		}
-		stamp, err := strconv.ParseInt(message.Timestamp, 10, 64)
-		signature, decodeErr := base64.StdEncoding.DecodeString(message.Sign)
-		expected := hmac.New(sha256.New, fmt.Appendf(nil, "%d\n%s", stamp, route.secret))
-		if err != nil || decodeErr != nil || time.Since(time.Unix(stamp, 0)).Abs() > time.Minute ||
-			!hmac.Equal(signature, expected.Sum(nil)) || !strings.Contains(message.Content.Text, " | "+route.config.ID+" | ") {
-			http.Error(w, "signature or scope rejected", http.StatusForbidden)
+		message, valid := readBotFixturePost(w, req, route.secret, channel)
+		if !valid || !strings.Contains(message, " | "+route.config.ID+" | ") {
+			http.Error(w, "signature, text or scope rejected", http.StatusForbidden)
 			return
 		}
 
@@ -115,13 +134,17 @@ func TestFeishuRelayRetriesOneDurableTenantDelivery(t *testing.T) {
 		path := filepath.Join(directory, key)
 		previous, err := os.ReadFile(path)
 		if os.IsNotExist(err) {
-			err = persistFeishuFixture(directory, key, message.Content.Text)
+			err = persistBotFixture(directory, key, message)
 			// The fixture commits a real file before dropping the acknowledgement.
-			if err == nil && route.config.ID == "tenant-a" && strings.Contains(message.Content.Text, "ownsolid firing") {
-				w.WriteHeader(http.StatusServiceUnavailable)
+			if err == nil && route.config.ID == "tenant-a" && strings.Contains(message, "ownsolid firing") {
+				if channel == dingTalkChannel {
+					io.WriteString(w, receipt)
+				} else {
+					w.WriteHeader(http.StatusServiceUnavailable)
+				}
 				return
 			}
-		} else if err == nil && string(previous) != message.Content.Text {
+		} else if err == nil && string(previous) != message {
 			http.Error(w, "conflicting replay", http.StatusConflict)
 			return
 		}
@@ -130,22 +153,30 @@ func TestFeishuRelayRetriesOneDurableTenantDelivery(t *testing.T) {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
+		acknowledged[key] = true
 		w.Header().Set(idempotencyKeyHeader, strconv.Quote(key))
-		io.WriteString(w, `{"code":0}`)
+		io.WriteString(w, receipt)
 	}))
 	t.Cleanup(site.Close)
-	siteCA := filepath.Join(root, "feishu-ca.pem")
+	siteCA := filepath.Join(root, "site-ca.pem")
 	writeFixture(t, siteCA, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: site.Certificate().Raw}))
 	cert, key, tlsClient := relayFixtureCertificate(t, root)
 	listen := relayFixtureAddress(t)
 	ingress := "https://" + listen
-	configFile := filepath.Join(root, "feishu.json")
-	writeFixture(t, configFile, fixtureRelayJSON(t, relayConfig{
-		ListenAddress: listen, CertificateFile: cert, PrivateKeyFile: key, FeishuOrigin: site.URL,
-		FeishuCAFile: siteCA, DeliverySeconds: 3, MaxConcurrent: 2,
+	configFile := filepath.Join(root, name+".json")
+	config := relayConfig{
+		ListenAddress: listen, CertificateFile: cert, PrivateKeyFile: key,
+		DeliverySeconds: 3, MaxConcurrent: 2,
 		Tenants: []tenantConfig{tenantA.config, tenantB.config},
-	}))
-	relayFixtureProcess(t, "OWNSOLID_TEST_FEISHU_RELAY", nil, "-config", configFile)
+	}
+	if channel == dingTalkChannel {
+		config.DingTalkOrigin, config.DingTalkCAFile = site.URL, siteCA
+	} else {
+		config.FeishuOrigin, config.FeishuCAFile = site.URL, siteCA
+	}
+	writeFixture(t, configFile, fixtureRelayJSON(t, config))
+	relayFixtureProcess(t, binary, nil, "-config", configFile)
+
 	relayFixtureWait(t, ctx, func() bool {
 		status, _ := relayFixtureRequest(ctx, tlsClient, http.MethodPost, ingress+webhookPath+"tenant-b", tenantA.webhookKey, nil, nil)
 		return status == http.StatusUnauthorized
@@ -218,11 +249,56 @@ func TestFeishuRelayRetriesOneDurableTenantDelivery(t *testing.T) {
 	relayFixtureWait(t, ctx, func() bool {
 		mu.Lock()
 		defer mu.Unlock()
-		return attempts[first] >= 2
+		return attempts[first] >= 2 && acknowledged[first]
 	})
 	alert.EndsAt = time.Now().Add(-time.Second)
 	publish(alert)
 	check("tenant-a", 2, "ownsolid resolved", "NodeUnreachable")
 	check("tenant-b", 1, "Maintenance")
-	t.Logf("Alertmanager %s, Feishu relay %s and controlled HTTPS receiver %s", manager, ingress, site.URL)
+	t.Logf("Alertmanager %s, %s relay %s and controlled HTTPS receiver %s", manager, name, ingress, site.URL)
+}
+
+func readBotFixturePost(w http.ResponseWriter, req *http.Request, secret string, channel relayChannel) (string, bool) {
+	body := json.NewDecoder(http.MaxBytesReader(w, req.Body, 16<<10))
+	body.DisallowUnknownFields()
+	var stamp, signature, text string
+	var expected []byte
+	var at time.Time
+	if channel == dingTalkChannel {
+		var message struct {
+			Type string `json:"msgtype"`
+			Text struct {
+				Content string `json:"content"`
+			} `json:"text"`
+		}
+		q := req.URL.Query()
+		if len(q) != 3 || len(q["access_token"]) != 1 || len(q["timestamp"]) != 1 || len(q["sign"]) != 1 ||
+			body.Decode(&message) != nil || message.Type != "text" {
+			return "", false
+		}
+		stamp, signature, text = q.Get("timestamp"), q.Get("sign"), message.Text.Content
+		millis, err := strconv.ParseInt(stamp, 10, 64)
+		if err != nil {
+			return "", false
+		}
+		at = time.UnixMilli(millis)
+		mac := hmac.New(sha256.New, []byte(secret))
+		fmt.Fprintf(mac, "%d\n%s", millis, secret)
+		expected = mac.Sum(nil)
+	} else {
+		var message feishuMessage
+		if body.Decode(&message) != nil || message.MsgType != "text" {
+			return "", false
+		}
+		stamp, signature, text = message.Timestamp, message.Sign, message.Content.Text
+		seconds, err := strconv.ParseInt(stamp, 10, 64)
+		if err != nil {
+			return "", false
+		}
+		at = time.Unix(seconds, 0)
+		mac := hmac.New(sha256.New, fmt.Appendf(nil, "%d\n%s", seconds, secret))
+		expected = mac.Sum(nil)
+	}
+	decoded, err := base64.StdEncoding.DecodeString(signature)
+	return text, err == nil && time.Since(at).Abs() <= time.Minute && hmac.Equal(decoded, expected)
 }
