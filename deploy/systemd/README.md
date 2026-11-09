@@ -37,3 +37,33 @@ It retires older backups only after publishing a new verified one. The
 ownership records keep scheduled expiry scoped to this installation. Ordinary
 and incomplete backups stay untouched. The regular `restore` command reads
 the scheduled backup directory printed by the job.
+## Read scheduled backup history
+
+Run the local query as root with the installation configuration.
+
+```sh
+ownsolid-install backup-history --config /private/site.yaml
+```
+
+The query returns JSON with `format_version`, the last verified
+`deployment_id` when known, and up to 256 `runs` ordered by sequence. It
+works while Docker or PostgreSQL is stopped and creates no files. With no
+recorded attempts it returns an empty array. The private
+`scheduled-backups.json` stays in the installation root across process
+restarts and archive expiry.
+
+Each run has a sequence, a UTC start time and an outcome. A finished run
+also has a UTC finish time. An interrupted run has no inferred finish time.
+Failures and interruptions carry a fixed error code. A concurrent
+invocation rejected by the installation lock has no separate run record.
+
+`backup_verified: true` means the job confirmed publication of a verified
+backup. The archive may since have expired. A false value leaves
+publication unconfirmed. `expired_backups` reports the number removed when
+retention finished successfully. If expiry fails, the run reports that
+failure and still identifies the confirmed publication.
+
+The output excludes private paths and diagnostic text. A later consumer
+must match the last verified deployment ID to its own authenticated
+installation context before exposing the record. Console access and alerts
+have separate ownership. The local query covers scheduled attempts.

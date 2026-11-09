@@ -219,6 +219,9 @@ checks every restored file's size and SHA-256 on both targets.
 
 ## Schedule verified backups
 
+The host timer and the local `backup-history` JSON query are documented in
+[scheduled backup operations](../systemd/README.md#read-scheduled-backup-history).
+
 Configure a dedicated backup directory and keep count. The
 [systemd timer instructions](../systemd/README.md) show how to enable it and
 how to run the same job on demand.
