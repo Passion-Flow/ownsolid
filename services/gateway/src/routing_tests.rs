@@ -26,6 +26,7 @@ const QUOTA_TEST_NOW: i64 = 1_794_116_800;
 const REFUSE_GENERATION: usize = 6;
 const INTERRUPT_STREAM_AFTER_TEXT: usize = 7;
 const LENGTH_FINISH: usize = 8;
+const CONTENT_FILTER_FINISH: usize = 9;
 
 #[derive(Clone)]
 struct Synthetic {
@@ -41,6 +42,7 @@ struct Synthetic {
     control_mode: Arc<AtomicUsize>,
     backend_mode: Arc<AtomicUsize>,
     model_checks: Arc<AtomicUsize>,
+    expected_messages: Arc<Mutex<Option<Value>>>,
     generations: Arc<AtomicUsize>,
     dropped_generations: Arc<AtomicUsize>,
     admissions: Arc<Mutex<HashSet<Uuid>>>,
@@ -155,6 +157,8 @@ fn event(choices: Value, usage: Value) -> Vec<u8> {
 }
 async fn backend(State(state): State<Synthetic>, request: axum::extract::Request) -> Response {
     assert!(!request.headers().contains_key(header::AUTHORIZATION));
+    assert!(!request.headers().contains_key("x-api-key"));
+    assert!(!request.headers().contains_key("anthropic-version"));
     if request.uri().path() == "/v1/models" {
         return Json(
             json!({"object":"list","data":[{"id":"synthetic-internal","object":"model"}]}),
@@ -175,6 +179,9 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
     .unwrap();
     assert_eq!(body["model"], "synthetic-internal");
     assert_eq!(body["chat_template_kwargs"]["enable_thinking"], false);
+    if let Some(expected) = &*state.expected_messages.lock().unwrap() {
+        assert_eq!(&body["messages"], expected);
+    }
     if tokenize {
         return Json(json!({"count":7,"tokens":[1,2,3,4,5,6,7],"max_model_len":2048}))
             .into_response();
@@ -188,10 +195,10 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
         let _owned = GenerationDrop(state.dropped_generations.clone());
         std::future::pending::<()>().await;
     }
-    let finish = if mode == LENGTH_FINISH {
-        "length"
-    } else {
-        "stop"
+    let finish = match mode {
+        LENGTH_FINISH => "length",
+        CONTENT_FILTER_FINISH => "content_filter",
+        _ => "stop",
     };
     if body["stream"] == false {
         return Json(json!({"id":"chatcmpl-synthetic","object":"chat.completion","created":1,"model":"synthetic-internal","choices":[{"index":0,"message":{"role":"assistant","content":"Synthetic reply \u{4e2d}\u{6587}"},"finish_reason":finish}],"usage":{"prompt_tokens":7,"completion_tokens":2,"total_tokens":9},"private_diagnostic":"must not forward"})).into_response();
@@ -376,6 +383,7 @@ impl Fixture {
             control_mode: Arc::default(),
             backend_mode: Arc::default(),
             model_checks: Arc::default(),
+            expected_messages: Arc::default(),
             generations: Arc::default(),
             dropped_generations: Arc::default(),
             admissions: Arc::default(),
@@ -1778,38 +1786,48 @@ fn responses_request(fixture: &Fixture, stream: bool) -> reqwest::RequestBuilder
         }))
 }
 
-fn responses_events(bytes: &[u8]) -> Vec<Value> {
+fn named_events(bytes: &[u8]) -> Vec<Value> {
     let body = std::str::from_utf8(bytes).unwrap();
     assert!(body.ends_with("\n\n"));
-    let events: Vec<_> = body
-        .trim_end_matches('\n')
+    body.trim_end_matches('\n')
         .split("\n\n")
-        .enumerate()
-        .map(|(i, frame)| {
+        .map(|frame| {
             let (event, data) = frame.split_once('\n').unwrap();
             let event = event.strip_prefix("event: ").unwrap();
             let data: Value = serde_json::from_str(data.strip_prefix("data: ").unwrap()).unwrap();
             assert_eq!(data["type"], event);
-            assert_eq!(data["sequence_number"], i);
             data
         })
-        .collect();
+        .collect()
+}
+
+fn responses_events(bytes: &[u8]) -> Vec<Value> {
+    let events = named_events(bytes);
+    for (i, event) in events.iter().enumerate() {
+        assert_eq!(event["sequence_number"], i);
+    }
     events
 }
 
-async fn read_responses_delta(response: &mut reqwest::Response) -> Vec<u8> {
+async fn read_named_delta(response: &mut reqwest::Response, delta: &str) -> Vec<u8> {
     let mut bytes = Vec::new();
+    let prefix = format!("event: {delta}\n");
     loop {
         bytes.extend(response.chunk().await.unwrap().unwrap());
         if bytes.ends_with(b"\n\n")
             && bytes
-                .windows(b"event: response.output_text.delta".len())
-                .any(|window| window == b"event: response.output_text.delta")
+                .windows(prefix.len())
+                .any(|window| window == prefix.as_bytes())
         {
-            assert!(!String::from_utf8_lossy(&bytes).contains("response.completed"));
             return bytes;
         }
     }
+}
+
+async fn read_responses_delta(response: &mut reqwest::Response) -> Vec<u8> {
+    let bytes = read_named_delta(response, "response.output_text.delta").await;
+    assert!(!String::from_utf8_lossy(&bytes).contains("response.completed"));
+    bytes
 }
 
 #[tokio::test]
@@ -2066,5 +2084,344 @@ async fn responses_disconnect_cancels_upstream_and_keeps_unverified_reservation(
         denied.json::<Value>().await.unwrap()["error"]["code"],
         "daily_token_budget_exceeded"
     );
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
+}
+
+fn messages_body(stream: bool) -> Value {
+    json!({
+        "model":"public-alias", "max_tokens":16, "stream":stream,
+        "system":[{"type":"text","text":"Synthetic system instructions"}],
+        "messages":[
+            {"role":"user","content":"Synthetic first turn"},
+            {"role":"assistant","content":[{"type":"text","text":"Synthetic prior reply"}]},
+            {"role":"user","content":[{"type":"text","text":"Synthetic prompt \u{4e2d}\u{6587}"}]}
+        ]
+    })
+}
+
+fn messages_post(fixture: &Fixture) -> reqwest::RequestBuilder {
+    fixture
+        .client
+        .post(format!("{}/v1/messages", fixture.origin))
+}
+
+fn messages_request(fixture: &Fixture, stream: bool) -> reqwest::RequestBuilder {
+    messages_post(fixture)
+        .header("anthropic-version", "2026-10-21")
+        .header("x-api-key", &fixture.state.client_key)
+        .json(&messages_body(stream))
+}
+
+#[tokio::test]
+async fn messages_json_uses_site_authority_and_exact_system_context() {
+    let fixture = Fixture::new().await;
+    *fixture.state.expected_messages.lock().unwrap() = Some(json!([
+        {"role":"system","content":"Synthetic system instructions"},
+        {"role":"user","content":"Synthetic first turn"},
+        {"role":"assistant","content":"Synthetic prior reply"},
+        {"role":"user","content":"Synthetic prompt \u{4e2d}\u{6587}"}
+    ]));
+    let response = messages_request(&fixture, false).send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let id = response.headers()["x-request-id"]
+        .to_str()
+        .unwrap()
+        .to_owned();
+    assert_eq!(response.headers()["request-id"], format!("req_{id}"));
+    let body: Value = response.json().await.unwrap();
+    assert_eq!(body["id"], format!("msg_{id}"));
+    assert_eq!(body["type"], "message");
+    assert_eq!(body["role"], "assistant");
+    assert_eq!(body["model"], "public-alias");
+    assert_eq!(
+        body["content"],
+        json!([{"type":"text","text":"Synthetic reply \u{4e2d}\u{6587}"}])
+    );
+    assert_eq!(body["stop_reason"], "end_turn");
+    assert!(body["stop_sequence"].is_null());
+    assert_eq!(body["usage"], json!({"input_tokens":7,"output_tokens":2}));
+    assert!(!body.to_string().contains("synthetic-internal"));
+
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 1);
+    let receipt = fixture.state.outcomes.lock().unwrap()[0].clone();
+    assert_eq!(receipt.request_id.to_string(), id);
+    assert_eq!(receipt.status, Status::Succeeded);
+    assert_eq!(receipt.usage.unwrap().total_tokens, 9);
+
+    fixture
+        .state
+        .backend_mode
+        .store(LENGTH_FINISH, Ordering::SeqCst);
+    let mut request = messages_body(false);
+    request["system"] = json!("Synthetic system instructions");
+    let response = messages_post(&fixture)
+        .header("anthropic-version", "2026-10-21")
+        .bearer_auth(&fixture.state.client_key)
+        .json(&request)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.json::<Value>().await.unwrap()["stop_reason"],
+        "max_tokens"
+    );
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 1);
+
+    fixture
+        .state
+        .backend_mode
+        .store(CONTENT_FILTER_FINISH, Ordering::SeqCst);
+    let response = messages_request(&fixture, false).send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    let error: Value = response.json().await.unwrap();
+    assert_eq!(error["error"]["type"], "api_error");
+    assert_eq!(error["error"]["code"], "upstream_response_invalid");
+    let receipt = fixture.app().spool.next_pending().unwrap().unwrap();
+    assert_eq!(receipt.status, Status::InvalidResponse);
+    assert!(receipt.usage.is_none());
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 3);
+}
+
+#[tokio::test]
+async fn messages_rejects_bad_shapes_headers_and_tools_before_admission() {
+    let fixture = Fixture::new().await;
+    for (field, value) in [
+        ("tools", json!([])),
+        ("tool_choice", json!({"type":"auto"})),
+        ("temperature", json!(1)),
+        ("stop_sequences", json!(["synthetic"])),
+        ("max_tokens", json!(0)),
+        ("system", Value::Null),
+        (
+            "system",
+            json!([{"type":"text","text":"a"},{"type":"text","text":"b"}]),
+        ),
+        (
+            "messages",
+            json!([{"role":"assistant","content":"prefill"}]),
+        ),
+        (
+            "messages",
+            json!([{"role":"system","content":"wrong location"}]),
+        ),
+        (
+            "messages",
+            json!([{"role":"user","content":[{"type":"tool_result","tool_use_id":"tool_a","content":"x"}]}]),
+        ),
+        (
+            "messages",
+            json!([{"role":"user","content":[{"type":"text","text":"x","cache_control":{"type":"ephemeral"}}]}]),
+        ),
+        (
+            "messages",
+            json!([{"role":"user","content":"x"},{"role":"assistant","content":"prefill"}]),
+        ),
+    ] {
+        let mut body = messages_body(false);
+        body[field] = value;
+        let response = messages_request(&fixture, false)
+            .json(&body)
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{field}");
+        let id = response.headers()["request-id"]
+            .to_str()
+            .unwrap()
+            .to_owned();
+        let body: Value = response.json().await.unwrap();
+        assert_eq!(body["type"], "error");
+        assert_eq!(body["error"]["type"], "invalid_request_error");
+        assert_eq!(body["request_id"], id);
+    }
+
+    for request in [
+        messages_post(&fixture)
+            .header("x-api-key", &fixture.state.client_key)
+            .json(&messages_body(false)),
+        messages_request(&fixture, false).header("anthropic-version", "2026-10-21"),
+        messages_request(&fixture, false).header("anthropic-beta", "test"),
+        messages_request(&fixture, false).header("anthropic-workspace-id", "client-selected"),
+        messages_request(&fixture, false).bearer_auth(&fixture.state.client_key),
+        messages_request(&fixture, false).header("x-api-key", &fixture.state.client_key),
+        messages_request(&fixture, false).body(
+            r#"{"model":"public-alias","model":"public-alias","messages":[],"max_tokens":16}"#,
+        ),
+    ] {
+        assert_eq!(
+            request.send().await.unwrap().status(),
+            StatusCode::BAD_REQUEST
+        );
+    }
+    assert_eq!(fixture.state.model_checks.load(Ordering::SeqCst), 0);
+    let old = messages_post(&fixture)
+        .header("anthropic-version", "2023-06-01")
+        .header("x-api-key", &fixture.state.client_key)
+        .json(&messages_body(false))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(old.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(
+        old.json::<Value>().await.unwrap()["error"]["code"],
+        "unsupported_api_version"
+    );
+
+    fixture.state.control_mode.store(1, Ordering::SeqCst);
+    let denied = messages_request(&fixture, false).send().await.unwrap();
+    assert_eq!(denied.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        denied.json::<Value>().await.unwrap()["error"]["type"],
+        "authentication_error"
+    );
+    assert!(fixture.state.admissions.lock().unwrap().is_empty());
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test]
+async fn messages_sse_orders_text_and_durable_usage_with_shared_budget() {
+    let fixture = Fixture::with_quota(Some(json!({"tokens":{"daily":32}}))).await;
+    fixture.state.backend_mode.store(4, Ordering::SeqCst);
+    let mut response = messages_request(&fixture, true).send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers()[header::CONTENT_TYPE],
+        "text/event-stream"
+    );
+    let id = response.headers()["x-request-id"]
+        .to_str()
+        .unwrap()
+        .to_owned();
+    let mut bytes = read_named_delta(&mut response, "content_block_delta").await;
+    assert_eq!(named_events(&bytes).len(), 3);
+    assert!(fixture.app().spool.next_pending().unwrap().is_none());
+
+    let denied = messages_request(&fixture, false).send().await.unwrap();
+    assert_eq!(denied.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert!(denied.headers().contains_key(header::RETRY_AFTER));
+    let error: Value = denied.json().await.unwrap();
+    assert_eq!(error["error"]["type"], "rate_limit_error");
+    assert_eq!(error["error"]["code"], "daily_token_budget_exceeded");
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 1);
+    fixture.state.complete_stream.notify_one();
+    bytes.extend(response.bytes().await.unwrap());
+    let events = named_events(&bytes);
+    assert_eq!(
+        events
+            .iter()
+            .map(|e| e["type"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        [
+            "message_start",
+            "content_block_start",
+            "content_block_delta",
+            "content_block_stop",
+            "message_delta",
+            "message_stop"
+        ]
+    );
+    assert_eq!(events[0]["message"]["id"], format!("msg_{id}"));
+    assert_eq!(
+        events[0]["message"]["usage"],
+        json!({"input_tokens":7,"output_tokens":0})
+    );
+    assert_eq!(events[0]["message"]["content"], json!([]));
+    assert!(events[0]["message"]["stop_reason"].is_null());
+    assert_eq!(events[1]["content_block"], json!({"type":"text","text":""}));
+    assert_eq!(
+        events[2]["delta"],
+        json!({"type":"text_delta","text":"Synthetic \u{4e2d}\u{6587}"})
+    );
+    for event in &events[1..=3] {
+        assert_eq!(event["index"], 0);
+    }
+    assert_eq!(events[4]["delta"]["stop_reason"], "end_turn");
+    assert_eq!(events[4]["usage"], json!({"output_tokens":2}));
+    let receipt = fixture.app().spool.next_pending().unwrap().unwrap();
+    assert_eq!(receipt.request_id.to_string(), id);
+    assert!(receipt.output_started);
+    assert_eq!(receipt.usage.unwrap().total_tokens, 9);
+
+    fixture
+        .state
+        .backend_mode
+        .store(LENGTH_FINISH, Ordering::SeqCst);
+    let response = messages_request(&fixture, true).send().await.unwrap();
+    let events = named_events(&response.bytes().await.unwrap());
+    assert_eq!(events[4]["delta"]["stop_reason"], "max_tokens");
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test]
+async fn messages_sse_disconnect_and_failure_never_complete_usage() {
+    for (mode, code, status) in [
+        (
+            INTERRUPT_STREAM_AFTER_TEXT,
+            "upstream_unavailable",
+            Some(Status::UpstreamError),
+        ),
+        (
+            CONTENT_FILTER_FINISH,
+            "upstream_response_invalid",
+            Some(Status::InvalidResponse),
+        ),
+        (4, "usage_storage_unavailable", None),
+    ] {
+        let fixture = Fixture::new().await;
+        fixture.state.backend_mode.store(mode, Ordering::SeqCst);
+        let mut response = messages_request(&fixture, true).send().await.unwrap();
+        let id = response.headers()["x-request-id"]
+            .to_str()
+            .unwrap()
+            .to_owned();
+        let mut bytes = read_named_delta(&mut response, "content_block_delta").await;
+        if status.is_none() {
+            fs::write(
+                fixture
+                    .app()
+                    .configuration
+                    .state_directory
+                    .join("outcomes")
+                    .join(format!(".stage-{id}.json")),
+                b"occupied",
+            )
+            .unwrap();
+        }
+        fixture.state.complete_stream.notify_one();
+        bytes.extend(response.bytes().await.unwrap());
+        let events = named_events(&bytes);
+        assert_eq!(events.len(), 4);
+        assert_eq!(events[3]["type"], "error");
+        assert_eq!(events[3]["error"]["type"], "api_error");
+        assert_eq!(events[3]["error"]["code"], code);
+        assert_eq!(events[3]["request_id"], format!("req_{id}"));
+        assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
+        if let Some(status) = status {
+            let receipt = fixture.app().spool.next_pending().unwrap().unwrap();
+            assert_eq!(receipt.status, status);
+            assert!(receipt.output_started);
+            assert!(receipt.usage.is_none());
+        } else {
+            assert!(!fixture.app().spool.ready());
+        }
+    }
+
+    let fixture = Fixture::with_quota(Some(json!({"tokens":{"daily":32}}))).await;
+    fixture.state.backend_mode.store(4, Ordering::SeqCst);
+    let mut response = messages_request(&fixture, true).send().await.unwrap();
+    read_named_delta(&mut response, "content_block_delta").await;
+    drop(response);
+    wait_until(|| {
+        fixture.state.dropped_generations.load(Ordering::SeqCst) == 1
+            && fixture.app().spool.next_pending().unwrap().is_some()
+    })
+    .await;
+    let receipt = fixture.app().spool.next_pending().unwrap().unwrap();
+    assert_eq!(receipt.status, Status::ClientCancelled);
+    assert!(receipt.output_started);
+    assert!(receipt.usage.is_none());
+    let denied = fixture.chat(false).send().await.unwrap();
+    assert_eq!(denied.status(), StatusCode::TOO_MANY_REQUESTS);
     assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
 }

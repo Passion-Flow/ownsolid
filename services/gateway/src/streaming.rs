@@ -1,8 +1,10 @@
 use crate::configuration::{Limits, Result};
+use crate::messages::MessagesStream;
 use crate::protocol::{ChatRequest, FinishReason, Usage};
-use crate::responses::{ResponseIdentity, ResponsesStream};
+use crate::responses::ResponsesStream;
 use serde::Deserialize;
 use serde_json::{Value, json};
+use std::io::Write;
 
 #[derive(Deserialize)]
 struct Delta {
@@ -29,6 +31,13 @@ struct Chunk {
     usage: Option<Usage>,
 }
 
+/// Selects the public wire format after upstream events have been validated.
+pub(crate) enum Projection {
+    Chat,
+    Responses(ResponsesStream),
+    Messages(MessagesStream),
+}
+
 /// Retains one bounded event; the transport consumes each returned event before reading more.
 pub struct Decoder {
     buffer: Vec<u8>,
@@ -45,7 +54,7 @@ pub struct Decoder {
     maximum_tokens: u32,
     identity: Option<(String, u64)>,
     finish_reason: Option<FinishReason>,
-    responses: Option<ResponsesStream>,
+    projection: Projection,
     done_seen: bool,
     usage: Option<Usage>,
 }
@@ -72,29 +81,33 @@ impl Decoder {
             maximum_tokens: request.maximum_tokens,
             identity: None,
             finish_reason: None,
-            responses: None,
+            projection: Projection::Chat,
             done_seen: false,
             usage: None,
         }
     }
 
-    pub(crate) fn with_responses(mut self, identity: ResponseIdentity, limits: &Limits) -> Self {
-        self.responses = Some(ResponsesStream::new(
-            identity,
-            limits.response_bytes as usize,
-        ));
+    pub(crate) fn with_projection(mut self, projection: Projection) -> Self {
+        self.projection = projection;
         self
     }
 
     pub(crate) fn start(&mut self) -> Option<Vec<u8>> {
-        self.responses.as_mut().map(ResponsesStream::start)
+        match &mut self.projection {
+            Projection::Chat => None,
+            Projection::Responses(responses) => Some(responses.start()),
+            Projection::Messages(messages) => Some(messages.start()),
+        }
     }
 
     pub(crate) fn failure(&self, code: &'static str, id: uuid::Uuid) -> Vec<u8> {
-        self.responses.as_ref().map_or_else(
-            || format!("data: {}\n\n", crate::errors::document(code, id)).into_bytes(),
-            |responses| responses.failure(code),
-        )
+        match &self.projection {
+            Projection::Chat => {
+                format!("data: {}\n\n", crate::errors::document(code, id)).into_bytes()
+            }
+            Projection::Responses(responses) => responses.failure(code),
+            Projection::Messages(messages) => messages.failure(code),
+        }
     }
 
     /// Consumes at most one upstream event before the caller applies client backpressure.
@@ -222,8 +235,11 @@ impl Decoder {
             return Err("upstream_response_invalid");
         }
         self.finish_reason = choice.finish_reason;
-        if let Some(responses) = &mut self.responses {
-            return responses.delta(choice.delta.content.as_deref().unwrap_or_default());
+        let text = choice.delta.content.as_deref().unwrap_or_default();
+        match &mut self.projection {
+            Projection::Chat => {}
+            Projection::Responses(responses) => return responses.delta(text),
+            Projection::Messages(messages) => return messages.delta(text, choice.finish_reason),
         }
         let mut delta = serde_json::Map::new();
         if let Some(role) = &choice.delta.role {
@@ -249,11 +265,16 @@ impl Decoder {
             return Err("upstream_response_invalid");
         }
         let usage = self.usage.take().ok_or("upstream_response_invalid")?;
-        if let Some(responses) = &self.responses {
-            let reason = self.finish_reason.ok_or("upstream_response_invalid")?;
-            let terminal = responses.finish(reason, &usage);
-            return Ok((usage, terminal));
-        }
+        let reason = self.finish_reason.ok_or("upstream_response_invalid")?;
+        let terminal = match &self.projection {
+            Projection::Chat => self.finish_chat(&usage)?,
+            Projection::Responses(responses) => responses.finish(reason, &usage),
+            Projection::Messages(messages) => messages.finish(reason, usage.completion_tokens)?,
+        };
+        Ok((usage, terminal))
+    }
+
+    fn finish_chat(&self, usage: &Usage) -> Result<Vec<u8>> {
         let mut terminal = Vec::new();
         if self.include_usage {
             let (id, created) = self.identity.as_ref().ok_or("upstream_response_invalid")?;
@@ -267,7 +288,7 @@ impl Decoder {
             }))?;
         }
         terminal.extend_from_slice(DONE_EVENT);
-        Ok((usage, terminal))
+        Ok(terminal)
     }
 }
 
@@ -278,6 +299,10 @@ fn encode_event(output: Value) -> Result<Vec<u8>> {
     encoded.extend(json);
     encoded.extend_from_slice(b"\n\n");
     Ok(encoded)
+}
+
+pub(crate) fn named_event(output: &mut Vec<u8>, name: &str, data: Value) {
+    write!(output, "event: {name}\ndata: {data}\n\n").expect("writing SSE to memory cannot fail");
 }
 
 pub const DONE_EVENT: &[u8] = b"data: [DONE]\n\n";

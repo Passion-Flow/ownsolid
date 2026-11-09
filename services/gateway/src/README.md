@@ -21,7 +21,10 @@ foreground text Responses wire format. It bounds accumulated output text by the
 configured JSON response byte limit. The chat and Responses handlers share one
 admission and generation path. Responses lifecycle events alone do not mark
 text as started. The client gets terminal text and usage only after the same
-EOF validation and durable outcome publication as chat.
+EOF validation and durable outcome publication as chat. [messages.rs](messages.rs) maps Anthropic text requests to the
+same generation pipeline and projects one indexed block without accumulating
+its text. The shared decoder validates the original backend terminal and
+usage before either protocol can report completion.
 
 Keep configured startup/shutdown, queue stops, worker/reporter joins and uncertain outcomes intact. No fallback may bypass control authorization, TLS verification or spool admission. Current IPv4 socket and transport constraints are described in the [service guide](../README.md).
 
