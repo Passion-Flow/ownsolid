@@ -11,13 +11,14 @@ import (
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/release/v1"
-	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
+	"golang.org/x/sys/unix"
 )
 
 const (
 	scheduledHistoryFile    = "scheduled-backups.json"
 	scheduledHistoryVersion = 1
 	scheduledHistoryLimit   = 256
+	scheduledHistoryBytes   = 1 << 20
 
 	scheduledRunning     = "running"
 	scheduledSucceeded   = "succeeded"
@@ -32,6 +33,7 @@ var (
 	errScheduleHistoryInvalid = errors.New("INSTALL_BACKUP_HISTORY_INVALID: verify the private scheduled backup history")
 	errScheduleHistoryOwner   = errors.New("INSTALL_BACKUP_HISTORY_OWNER_MISMATCH: use the history belonging to this installation")
 	errScheduleHistoryWrite   = errors.New("INSTALL_BACKUP_HISTORY_WRITE_FAILED: check the installation root's permissions and free space")
+	errScheduleHistoryRoot    = errors.New("INSTALL_BACKUP_HISTORY_ROOT_INVALID: use the installation's private root without symlinks")
 )
 
 // The same run shape is used on disk and in the redacted readback.
@@ -53,10 +55,14 @@ type scheduledBackupHistory struct {
 
 // WriteScheduledBackupHistory reports local scheduled attempts without contacting
 // Docker or PostgreSQL. The writer's lock distinguishes a live attempt from a
-// start record left by a stopped process.
-func WriteScheduledBackupHistory(c Config, out io.Writer) error {
+// start record left by a stopped process. An expected deployment ID requires
+// the snapshot to carry that verified binding before any JSON is emitted.
+func WriteScheduledBackupHistory(c Config, expectedDeploymentID string, out io.Writer) error {
 	if os.Geteuid() != 0 {
 		return errors.New("INSTALL_ROOT_REQUIRED: read scheduled backup history as root on the installation host")
+	}
+	if expectedDeploymentID != "" && !deploymentIDPattern.MatchString(expectedDeploymentID) {
+		return errors.New("INSTALL_BACKUP_HISTORY_DEPLOYMENT_INVALID: use the installation's lowercase deployment UUID")
 	}
 	dir, err := openScheduleHistoryRoot(c)
 	if err != nil {
@@ -69,9 +75,17 @@ func WriteScheduledBackupHistory(c Config, out io.Writer) error {
 	if locked != nil && !errors.Is(locked, syscall.EWOULDBLOCK) {
 		return errScheduleHistoryInvalid
 	}
-	history, err := readScheduledBackupHistory(c)
+	history, err := readScheduledBackupHistory(c, dir)
 	if err != nil {
 		return err
+	}
+	if expectedDeploymentID != "" {
+		if history.Owner.DeploymentID == "" {
+			return errors.New("INSTALL_BACKUP_HISTORY_UNBOUND: run a scheduled job against the installation's PostgreSQL database")
+		}
+		if history.Owner.DeploymentID != expectedDeploymentID {
+			return errScheduleHistoryOwner
+		}
 	}
 	if locked == nil {
 		history.interrupt()
@@ -87,43 +101,70 @@ func WriteScheduledBackupHistory(c Config, out io.Writer) error {
 }
 
 func openScheduleHistoryRoot(c Config) (*os.File, error) {
-	invalid := errors.New("INSTALL_BACKUP_HISTORY_ROOT_INVALID: use the installation's private root without symlinks")
 	resolved, err := filepath.EvalSymlinks(c.InstallRoot)
 	if err != nil || resolved != c.InstallRoot {
-		return nil, invalid
+		return nil, errScheduleHistoryRoot
 	}
 	dir, err := os.OpenFile(c.InstallRoot, os.O_RDONLY|syscall.O_DIRECTORY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
 	if err != nil {
-		return nil, invalid
+		return nil, errScheduleHistoryRoot
 	}
-	opened, err := dir.Stat()
-	current, statErr := os.Lstat(c.InstallRoot)
-	if err != nil || statErr != nil || !os.SameFile(opened, current) || opened.Mode() != os.ModeDir|0o700 ||
-		opened.Sys().(*syscall.Stat_t).Uid != uint32(os.Geteuid()) {
+	if err := checkScheduleHistoryRoot(c, dir); err != nil {
 		dir.Close()
-		return nil, invalid
+		return nil, err
 	}
 	return dir, nil
 }
 
-func readScheduledBackupHistory(c Config) (scheduledBackupHistory, error) {
-	name := filepath.Join(c.InstallRoot, scheduledHistoryFile)
-	if _, err := os.Lstat(name); errors.Is(err, os.ErrNotExist) {
+func checkScheduleHistoryRoot(c Config, dir *os.File) error {
+	opened, err := dir.Stat()
+	current, statErr := os.Lstat(c.InstallRoot)
+	if err != nil || statErr != nil || !os.SameFile(opened, current) || opened.Mode() != os.ModeDir|0o700 ||
+		opened.Sys().(*syscall.Stat_t).Uid != uint32(os.Geteuid()) {
+		return errScheduleHistoryRoot
+	}
+	return nil
+}
+
+func readScheduledBackupHistory(c Config, dir *os.File) (scheduledBackupHistory, error) {
+	var h scheduledBackupHistory
+	// Open only the named file in the directory whose lock was checked.
+	fd, err := unix.Openat(int(dir.Fd()), scheduledHistoryFile, unix.O_RDONLY|unix.O_NOFOLLOW|unix.O_NONBLOCK|unix.O_CLOEXEC, 0)
+	if errors.Is(err, os.ErrNotExist) {
 		return scheduledBackupHistory{
 			FormatVersion: scheduledHistoryVersion,
 			Owner:         scheduleOwner{InstallRoot: c.InstallRoot, Project: c.Project},
 			Runs:          []scheduledBackupRun{},
-		}, nil
+		}, checkScheduleHistoryRoot(c, dir)
 	}
-	raw, err := bundle.ReadProtectedConfiguration(name)
-	var h scheduledBackupHistory
-	if err != nil || wire.StrictJSON(raw, &h) != nil || !h.valid() {
+	if err != nil {
 		return h, errScheduleHistoryInvalid
+	}
+	file := os.NewFile(uintptr(fd), scheduledHistoryFile)
+	defer file.Close()
+	var before, after unix.Stat_t
+	if err := unix.Fstat(fd, &before); err != nil || !validScheduleHistoryFile(before) {
+		return h, errScheduleHistoryInvalid
+	}
+	raw, err := io.ReadAll(io.LimitReader(file, scheduledHistoryBytes+1))
+	if err != nil || unix.Fstat(fd, &after) != nil || !validScheduleHistoryFile(after) ||
+		int64(len(raw)) != before.Size || before.Size != after.Size ||
+		before.Mtim != after.Mtim || before.Ctim != after.Ctim || wire.StrictJSON(raw, &h) != nil || !h.valid() {
+		return h, errScheduleHistoryInvalid
+	}
+	if err := checkScheduleHistoryRoot(c, dir); err != nil {
+		return h, err
 	}
 	if h.Owner.InstallRoot != c.InstallRoot || h.Owner.Project != c.Project {
 		return h, errScheduleHistoryOwner
 	}
 	return h, nil
+}
+
+func validScheduleHistoryFile(info unix.Stat_t) bool {
+	return info.Mode&unix.S_IFMT == unix.S_IFREG && info.Mode&0o077 == 0 &&
+		info.Size > 0 && info.Size <= scheduledHistoryBytes &&
+		info.Uid == uint32(os.Geteuid()) && info.Nlink == 1
 }
 
 func (h scheduledBackupHistory) valid() bool {

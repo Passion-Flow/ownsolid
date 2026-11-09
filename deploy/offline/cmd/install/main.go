@@ -32,7 +32,7 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install backup-coordinated --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install recover-backup --config <install.yaml>\n" +
 	"       ownsolid-install scheduled-backup --config <install.yaml>\n" +
-	"       ownsolid-install backup-history --config <install.yaml>\n" +
+	"       ownsolid-install backup-history --config <install.yaml> [--expected-deployment-id <uuid>]\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <new archive.tar.age> --recipient-file <public key file>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
@@ -79,6 +79,7 @@ func run(args []string, out io.Writer) error {
 	flags := flag.NewFlagSet("ownsolid-install", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 	path := flags.String("config", "", "typed install configuration")
+	expectedDeploymentID := flags.String("expected-deployment-id", "", "independently verified backup-history deployment UUID")
 	clusterPath := flags.String("cluster-config", "", "protected cluster diagnostics configuration")
 	output := flags.String("output", "", "backup directory or new archive path")
 	from := flags.String("from", "", "backup directory or encrypted archive to restore")
@@ -99,12 +100,15 @@ func run(args []string, out io.Writer) error {
 	invalidKeyFlag := false
 	clusterFlag := false
 	configFlag := false
+	invalidHistoryFlag := false
 	flags.Visit(func(f *flag.Flag) {
 		switch f.Name {
 		case "cluster-config":
 			clusterFlag = true
 		case "config":
 			configFlag = true
+		case "expected-deployment-id":
+			invalidHistoryFlag = command != "backup-history" || *expectedDeploymentID == ""
 		case "recipient-file":
 			encrypted = true
 			invalidKeyFlag = invalidKeyFlag || command != "backup" || *recipient == ""
@@ -113,7 +117,7 @@ func run(args []string, out io.Writer) error {
 			invalidKeyFlag = invalidKeyFlag || command != "restore" || *identity == ""
 		}
 	})
-	if invalidKeyFlag || (clusterFlag && (command != "support-bundle" || *clusterPath == "" || configFlag)) ||
+	if invalidKeyFlag || invalidHistoryFlag || (clusterFlag && (command != "support-bundle" || *clusterPath == "" || configFlag)) ||
 		(!clusterFlag && *path == "") {
 		return errors.New(usage)
 	}
@@ -157,7 +161,7 @@ func run(args []string, out io.Writer) error {
 	case "scheduled-backup":
 		return install.ScheduledBackup(ctx, c, install.ExecRunner{}, out)
 	case "backup-history":
-		return install.WriteScheduledBackupHistory(c, out)
+		return install.WriteScheduledBackupHistory(c, *expectedDeploymentID, out)
 	case "restore":
 		if encrypted {
 			return install.RestoreEncrypted(ctx, c, install.ExecRunner{}, *from, *identity, out)

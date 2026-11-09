@@ -83,7 +83,7 @@ func runScheduledBackup(ctx context.Context, o *operation) (result error) {
 	if err := syscall.Flock(int(historyRoot.Fd()), syscall.LOCK_EX); err != nil {
 		return errScheduleHistoryInvalid
 	}
-	history, err := readScheduledBackupHistory(c)
+	history, err := readScheduledBackupHistory(c, historyRoot)
 	if err != nil {
 		return err
 	}

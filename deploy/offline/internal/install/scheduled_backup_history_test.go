@@ -97,8 +97,13 @@ func historyTestRun(t *testing.T, c Config, runner scheduledHistoryRunner, secon
 
 func historyTestReadback(t *testing.T, c Config) (string, []scheduledBackupRun) {
 	t.Helper()
+	return historyTestReadbackFor(t, c, "")
+}
+
+func historyTestReadbackFor(t *testing.T, c Config, expectedID string) (string, []scheduledBackupRun) {
+	t.Helper()
 	var output bytes.Buffer
-	if err := WriteScheduledBackupHistory(c, &output); err != nil {
+	if err := WriteScheduledBackupHistory(c, expectedID, &output); err != nil {
 		t.Fatal(err)
 	}
 	for _, private := range []string{c.InstallRoot, c.Project, c.BackupSchedule.Directory, historyDiagnostic, "ownsolid-scheduled-", "database.dump", "owner"} {
@@ -115,6 +120,45 @@ func historyTestReadback(t *testing.T, c Config) (string, []scheduledBackupRun) 
 		t.Fatalf("invalid query result: %v %s", err, output.Bytes())
 	}
 	return result.DeploymentID, result.Runs
+}
+
+func readHistoryOnDisk(t *testing.T, c Config) (scheduledBackupHistory, error) {
+	t.Helper()
+	dir, err := openScheduleHistoryRoot(c)
+	if err != nil {
+		return scheduledBackupHistory{}, err
+	}
+	defer dir.Close()
+	return readScheduledBackupHistory(c, dir)
+}
+
+func TestScheduledBackupHistoryConsumerRequiresVerifiedDeployment(t *testing.T) {
+	c := historyTestConfig(t)
+	refuse := func(site Config, expectedID, code string) {
+		t.Helper()
+		var out bytes.Buffer
+		err := WriteScheduledBackupHistory(site, expectedID, &out)
+		if err == nil || !strings.HasPrefix(err.Error(), code+":") || out.Len() != 0 {
+			t.Fatalf("expected %s with empty output, got %v and %q", code, err, out.String())
+		}
+	}
+	refuse(c, historyFixtureID, "INSTALL_BACKUP_HISTORY_UNBOUND")
+	if err := historyTestRun(t, c, scheduledHistoryRunner{}, 1); err == nil {
+		t.Fatal("expected an outage before binding")
+	}
+	refuse(c, historyFixtureID, "INSTALL_BACKUP_HISTORY_UNBOUND")
+	if err := historyTestRun(t, c, scheduledHistoryRunner{deploymentID: historyFixtureID}, 2); err != nil {
+		t.Fatal(err)
+	}
+	refuse(c, "not-a-uuid", "INSTALL_BACKUP_HISTORY_DEPLOYMENT_INVALID")
+	refuse(c, "0bc2c190-6fce-4136-a30a-9a32dbfc504b", "INSTALL_BACKUP_HISTORY_OWNER_MISMATCH")
+	wrongProject := c
+	wrongProject.Project = "different-project"
+	refuse(wrongProject, historyFixtureID, "INSTALL_BACKUP_HISTORY_OWNER_MISMATCH")
+	if id, runs := historyTestReadbackFor(t, c, historyFixtureID); id != historyFixtureID || len(runs) != 2 ||
+		runs[0].Outcome != scheduledFailed || runs[1].Outcome != scheduledSucceeded {
+		t.Fatalf("unexpected bound projection: %q %+v", id, runs)
+	}
 }
 
 func TestScheduledBackupHistoryTracksFailuresAndRetention(t *testing.T) {
@@ -192,6 +236,33 @@ func TestScheduledBackupHistoryKeepsPublicationOnRetentionFailure(t *testing.T) 
 		runs[1].ErrorCode != "INSTALL_BACKUP_RETENTION_FAILED" || runs[1].ExpiredBackups != nil {
 		t.Fatalf("publication was lost after retention failure: %+v", runs)
 	}
+	archives := scheduledArchives(t, c.BackupSchedule.Directory)
+	if len(archives) != 3 {
+		t.Fatalf("expected two published backups and the injected directory, got %v", archives)
+	}
+	for _, name := range archives {
+		if name == filepath.Base(foreign) {
+			continue
+		}
+		if _, err := readBackup(filepath.Join(c.BackupSchedule.Directory, name)); err != nil {
+			t.Fatalf("published backup failed readback: %v", err)
+		}
+	}
+	if err := os.Remove(filepath.Join(foreign, scheduleOwnerFile)); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(foreign); err != nil {
+		t.Fatal(err)
+	}
+	if err := historyTestRun(t, c, runner, 3); err != nil {
+		t.Fatal(err)
+	}
+	_, retried := historyTestReadbackFor(t, c, historyFixtureID)
+	if len(scheduledArchives(t, c.BackupSchedule.Directory)) != 1 || len(retried) != 3 ||
+		retried[1].ErrorCode != "INSTALL_BACKUP_RETENTION_FAILED" || !retried[1].BackupVerified ||
+		retried[2].ExpiredBackups == nil || *retried[2].ExpiredBackups != 2 {
+		t.Fatalf("retry lost the published failure or expired the wrong archives: %+v", retried)
+	}
 }
 
 func TestScheduledBackupHistorySurvivesKilledProcess(t *testing.T) {
@@ -228,7 +299,7 @@ func TestScheduledBackupHistorySurvivesKilledProcess(t *testing.T) {
 	if !scanner.Scan() || scanner.Text() != "dump started" {
 		t.Fatalf("the child did not reach the dump: %q", scanner.Text())
 	}
-	_, active := historyTestReadback(t, c)
+	_, active := historyTestReadbackFor(t, c, historyFixtureID)
 	if len(active) != 1 || active[0].Outcome != scheduledRunning || active[0].BackupVerified {
 		t.Fatalf("active backup reported incorrectly: %+v", active)
 	}
@@ -251,13 +322,13 @@ func TestScheduledBackupHistorySurvivesKilledProcess(t *testing.T) {
 	}
 	// A different installer operation holding the global lock is not a
 	// scheduled writer and must not hide the interrupted attempt.
-	_, interrupted := historyTestReadback(t, c)
+	_, interrupted := historyTestReadbackFor(t, c, historyFixtureID)
 	unlock()
 	if len(interrupted) != 1 || interrupted[0].Outcome != scheduledInterrupted ||
 		interrupted[0].ErrorCode != scheduledInterruptCode || interrupted[0].FinishedAt != nil || interrupted[0].BackupVerified {
 		t.Fatalf("interrupted backup reported incorrectly: %+v", interrupted)
 	}
-	onDisk, err := readScheduledBackupHistory(c)
+	onDisk, err := readHistoryOnDisk(t, c)
 	if err != nil || onDisk.Runs[0].Outcome != scheduledRunning {
 		t.Fatal("the read-only query modified the persisted record")
 	}
@@ -273,7 +344,7 @@ func TestScheduledBackupHistorySurvivesKilledProcess(t *testing.T) {
 
 func TestScheduledBackupHistoryBoundsAndRejectsCopiedState(t *testing.T) {
 	c := Config{InstallRoot: shortTempDir(t), Project: "history-fixture"}
-	h, err := readScheduledBackupHistory(c)
+	h, err := readHistoryOnDisk(t, c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -298,14 +369,79 @@ func TestScheduledBackupHistoryBoundsAndRejectsCopiedState(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(copied.InstallRoot, scheduledHistoryFile), raw, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := readScheduledBackupHistory(copied); !errors.Is(err, errScheduleHistoryOwner) {
+	if _, err := readHistoryOnDisk(t, copied); !errors.Is(err, errScheduleHistoryOwner) {
 		t.Fatalf("copied history was accepted: %v", err)
 	}
 	path := filepath.Join(c.InstallRoot, scheduledHistoryFile)
 	if err := os.WriteFile(path, []byte(`{"format_version":1,"owner":{},"runs":[],"detail":"private"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := readScheduledBackupHistory(c); !errors.Is(err, errScheduleHistoryInvalid) {
+	if _, err := readHistoryOnDisk(t, c); !errors.Is(err, errScheduleHistoryInvalid) {
 		t.Fatalf("corrupt history was accepted: %v", err)
+	}
+}
+
+func TestScheduledBackupHistoryReadbackPinsDirectoryAndFile(t *testing.T) {
+	parent := shortTempDir(t)
+	c := Config{InstallRoot: filepath.Join(parent, "installation"), Project: "history-fixture"}
+	if err := os.Mkdir(c.InstallRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	h, err := readHistoryOnDisk(t, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := h.start(c, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(c.InstallRoot, scheduledHistoryFile)
+	alias := filepath.Join(parent, "alias")
+	if err := os.Link(path, alias); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := readHistoryOnDisk(t, c); !errors.Is(err, errScheduleHistoryInvalid) {
+		t.Fatalf("hard-linked history was accepted: %v", err)
+	}
+	if err := os.Remove(alias); err != nil {
+		t.Fatal(err)
+	}
+	dir, err := openScheduleHistoryRoot(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dir.Close()
+	retained := filepath.Join(parent, "retained")
+	if err := os.Rename(c.InstallRoot, retained); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(c.InstallRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := h.save(c); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := readScheduledBackupHistory(c, dir); !errors.Is(err, errScheduleHistoryRoot) {
+		t.Fatalf("a replacement installation root was accepted: %v", err)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(retained, scheduledHistoryFile), path); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := readHistoryOnDisk(t, c); !errors.Is(err, errScheduleHistoryInvalid) {
+		t.Fatalf("linked history was accepted: %v", err)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Truncate(path, scheduledHistoryBytes+1); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := readHistoryOnDisk(t, c); !errors.Is(err, errScheduleHistoryInvalid) {
+		t.Fatalf("oversized history was accepted: %v", err)
 	}
 }
