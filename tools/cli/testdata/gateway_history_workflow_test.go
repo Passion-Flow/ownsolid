@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/pem"
+	"io"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
@@ -68,7 +72,20 @@ func TestLaneDGatewayHistoryTLS(t *testing.T) {
 	if err := handler.Licensing.Service.VerifyStored(t.Context()); err != nil {
 		t.Fatal(err)
 	}
-	server.Config.Handler = handler
+	lostApplyKey := uuid.NewString()
+	var dropApplyReply atomic.Bool
+	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Idempotency-Key") != lostApplyKey || !dropApplyReply.Swap(false) {
+			handler.ServeHTTP(w, r)
+			return
+		}
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, r)
+		w.Header().Set("Content-Type", response.Header().Get("Content-Type"))
+		w.Header().Set("Content-Length", strconv.Itoa(response.Body.Len()))
+		w.WriteHeader(response.Code)
+		_, _ = io.WriteString(w, "{")
+	})
 	server.StartTLS()
 
 	dir := t.TempDir()
@@ -188,6 +205,91 @@ func TestLaneDGatewayHistoryTLS(t *testing.T) {
 	refused("must be a lowercase UUID", "gateway", "request", "get", "wrong-id")
 	refused("RESOURCE_NOT_FOUND", "gateway", "request", "get", known.RequestID, "--workspace", foreign)
 	refused("RESOURCE_NOT_FOUND", append(list(key, nil, "json"), "--workspace", foreign)...)
+
+	id := a.alias.ID
+	cutover := func(operation, action string, revision int64, more ...string) []string {
+		args := []string{"deployment", "alias", "cutover", operation, id, action,
+			"--revision", strconv.FormatInt(revision, 10), "--reason", "Verify controlled alias cutover", "--output", "json"}
+		return append(args, more...)
+	}
+	checkPreview := func(action string, revision int64, beforePaused, afterPaused bool, target string, more ...string) {
+		t.Helper()
+		var preview distribution.CutoverPreview
+		if err := json.Unmarshal(ok(cutover("preview", action, revision, more...)...), &preview); err != nil {
+			t.Fatal(err)
+		}
+		if preview.Before.Revision != revision || preview.After.Revision != revision+1 ||
+			preview.Before.Paused != beforePaused || preview.After.Paused != afterPaused ||
+			preview.After.DeploymentID != target || preview.After.DeploymentRevision < 1 {
+			t.Fatalf("unexpected %s preview: %+v", action, preview)
+		}
+	}
+	checkApply := func(args []string, revision int64, replayed bool) {
+		t.Helper()
+		var applied distribution.CutoverResult
+		if err := json.Unmarshal(ok(args...), &applied); err != nil || applied.AppliedRevision != revision ||
+			applied.Replayed != replayed || applied.Alias.ID != id || applied.Alias.WorkspaceID != workspace {
+			t.Fatalf("invalid cutover result: %v, revision %d, replayed %t", err, applied.AppliedRevision, applied.Replayed)
+		}
+	}
+	apply := func(action string, revision int64, more ...string) {
+		t.Helper()
+		args := cutover("apply", action, revision, "--confirm", "--idempotency-key", uuid.NewString())
+		checkApply(append(args, more...), revision+1, false)
+	}
+	historyArgs := []string{"deployment", "alias", "cutover", "history", id, "--limit", "1", "--output", "json"}
+	beforeHistory := ok(historyArgs...)
+	refused("omit --deployment", cutover("preview", "pause", 1, "--deployment", a.alias.DeploymentID)...)
+	refused("only valid for rollback", cutover("preview", "retarget", 1, "--deployment", a.alias.DeploymentID,
+		"--deployment-revision", strconv.FormatInt(a.alias.DeploymentRevision, 10), "--source-revision", "1")...)
+	refused("RESOURCE_NOT_FOUND", cutover("preview", "pause", 1, "--workspace", foreign)...)
+	checkPreview("pause", 1, false, true, a.alias.DeploymentID)
+	table := cutover("preview", "pause", 1)
+	table[len(table)-1] = "table"
+	if output := string(ok(table...)); !strings.Contains(output, "before") ||
+		!strings.Contains(output, "after") || !strings.Contains(output, a.alias.DeploymentID) {
+		t.Fatal("preview table omitted a state")
+	}
+	refused("pass --confirm", cutover("apply", "pause", 1, "--idempotency-key", lostApplyKey)...)
+	if !bytes.Equal(beforeHistory, ok(historyArgs...)) {
+		t.Fatal("preview or unconfirmed apply mutated target history")
+	}
+	dropApplyReply.Store(true)
+	pause := cutover("apply", "pause", 1, "--idempotency-key", lostApplyKey, "--confirm")
+	refused("retry with the same --idempotency-key "+lostApplyKey, pause...)
+	checkApply(pause, 2, true)
+	refused("VERSION_CONFLICT", cutover("preview", "pause", 1)...)
+	refused("ALIAS_REQUESTS_UNDRAINED", cutover("preview", "resume", 2)...)
+	report(success(unreported))
+	next := c.replaceBaseDeployment(t, a.alias.DeploymentID)
+	target := []string{"--deployment", next.ID, "--deployment-revision", strconv.FormatInt(next.Revision, 10)}
+	checkPreview("retarget", 2, true, true, next.ID, target...)
+	apply("retarget", 2, target...)
+	checkPreview("resume", 3, true, false, next.ID)
+	apply("resume", 3)
+	checkPreview("pause", 4, false, true, next.ID)
+	apply("pause", 4)
+	restored := c.replaceBaseDeployment(t, next.ID)
+	rollback := []string{"--deployment", restored.ID, "--deployment-revision", strconv.FormatInt(restored.Revision, 10), "--source-revision", "1"}
+	checkPreview("rollback", 5, true, true, restored.ID, rollback...)
+	apply("rollback", 5, rollback...)
+	checkPreview("resume", 6, true, false, restored.ID)
+	apply("resume", 6)
+	checkApply(pause, 2, true)
+	var firstHistory, olderHistory distribution.Page[distribution.AliasTarget]
+	if err := json.Unmarshal(ok(historyArgs...), &firstHistory); err != nil || len(firstHistory.Items) != 1 ||
+		firstHistory.Items[0].Revision != 7 || firstHistory.NextCursor == nil {
+		t.Fatal("latest target history missing its continuation", err)
+	}
+	if err := json.Unmarshal(ok(append(historyArgs, "--cursor", *firstHistory.NextCursor)...), &olderHistory); err != nil ||
+		len(olderHistory.Items) != 1 || olderHistory.Items[0].Revision != 6 || olderHistory.Items[0].SourceRevision == nil ||
+		*olderHistory.Items[0].SourceRevision != 1 || olderHistory.Items[0].DeploymentID != restored.ID {
+		t.Fatal("rollback target history did not preserve source and destination", err)
+	}
+	var audits int
+	if err := c.s.DB.QueryRow(t.Context(), "SELECT count(*) FROM audit_events WHERE target_id=$1 AND action='model.alias_paused'", id).Scan(&audits); err != nil || audits != 2 {
+		t.Fatalf("preview or replay changed audit count: %d, %v", audits, err)
+	}
 
 	if _, err := c.s.DB.Exec(t.Context(), "UPDATE gateway_requests SET outcome=jsonb_set(outcome,'{elapsed_milliseconds}','99') WHERE id=$1", known.RequestID); err != nil {
 		t.Fatal(err)
