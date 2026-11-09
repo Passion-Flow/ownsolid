@@ -117,3 +117,71 @@ same test name, build tag and environment documented above. The
 NVIDIA acceptance requires the pinned production runtime, an accepted
 non-final checkpoint and a resumed attempt that advances and produces
 accepted output.
+
+## Non-final CPU replay admission
+
+The retained native trainer follows the declared macOS arm64 profile and
+uses the exact CPython 3.12.15 environment and
+`native-macos-arm64.lock`. Its executable is Mach-O arm64. The Linux
+test server has CPython 3.12.3 without the four training distributions.
+The retained Linux tokenizer environment and the CPU serving image
+qualify separate profiles. The [official PyTorch CPU index](https://download.pytorch.org/whl/cpu/torch/)
+provides Linux amd64 CPython 3.12 Torch 2.14.1+cpu. That distribution's
+exact version differs from `2.14.1` in `runtime.json`, and its hash is
+absent from the training lock. The pinned PyPI Linux Torch distribution
+has a CUDA dependency set. Reusing an approved trainer on this server
+requires a complete admitted Linux training runtime for the CPU
+verification path with a matching interpreter and dependency lock.
+
+The retained one-step checkpoint is at its configured maximum of one
+step. Both retained support-routing checkpoints are at their configured
+maximum of 24 steps. Raising `maximum_steps` would change the sealed
+configuration and scheduler horizon. Verify that the worker refuses a
+request with a different horizon even when the request and its own
+configuration digest agree. This verification needs only the standard
+library and the existing checkpoint verifier. No dependency, model or
+dataset is added. The fixture uses the existing approved Apache-2.0 Qwen
+snapshot and generated CC0 training rows. The existing runtime lock
+continues to govern the actual trainer.
+
+For the two-step rehearsal, use an admitted offline CPU trainer and
+the existing smallest approved dataset and model fixture. Start the
+uninterrupted worker with `maximum_steps=2` and `checkpoint_steps=1`.
+Keep the step-1 receipt from that run. Start a new attempt of the same
+job with that exact seal under `inputs/checkpoint` and retain the same
+model, seed, partition bytes, manifest, recipe, interpreter and lock.
+The uninterrupted run is also the source of the non-final checkpoint.
+This removes any dependence on timing a signal between optimizer
+steps. Both workers run sequentially with kernel network denial and
+the existing parent RSS, wall and output ceilings.
+
+Require the resumed result to bind the parent receipt and report
+`resume_from_step=1` and `global_step=2`. Compare the step-2 metric
+events, exported adapter, optimizer, scheduler and RNG state with the
+uninterrupted result. Verify both seals before inspecting state. Report
+container or archive metadata differences separately from tensor
+values. Compare result and event identities to their respective
+requests because the attempts differ. Keep the original receipts,
+files, events and logs if the experiment fails. The production NVIDIA
+run has its own image, accelerator, stop and admission evidence.
+
+The official Linux CPU candidate wheel advertises SHA-256
+`5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f`.
+Its original core metadata matched
+`a3fd232f82dcc389c6dab2665dfc17649c03ffb72cb641e96a76a0690177b918`
+and states `Version: 2.14.1+cpu`. The worker compares the installed
+distribution version exactly. The approved native lock remains
+`03d3fab0f311aa4837190ab2e90e30a9c16c51c098fc6e6c41626630c6aa0175`.
+
+On Linux, the disconnected verifier checked the complete retained
+24-step CPU checkpoint under its original bindings. The retained seal
+SHA-256 is
+`1606e49e85ca773891130cf3fbad3237ce603299d7a20e5436fffe8f95470495`.
+The original 9,266,571-byte optimizer file had SHA-256
+`12aee1107dcc4fb67df33a0cc1b9aa2a29e27a837eebaccb133e9abe63cf34dc`.
+A fresh, valid 48-step configuration with the same checkpoint cadence
+and its own recomputed digest returned
+`TRAINING_CHECKPOINT_INCOMPATIBLE`. The focused regression in
+`runtimes/training/tests/test_checkpoints.py` passed with all 20
+disconnected training runtime tests. `make check` and `make build`
+also passed with external networking disabled.
