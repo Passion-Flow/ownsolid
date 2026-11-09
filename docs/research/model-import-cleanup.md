@@ -132,3 +132,58 @@ and show when a fresh import is needed. A missing, conflicting or uncertain
 expiry commit must never authorize deletion. Verify lost replies, process
 restart, partial cleanup, fresh progress that races the candidate, and a
 completed model in the same workspace before enabling the interval.
+
+### Worker candidate
+
+The first executable candidate takes a PostgreSQL policy scoped to one
+workspace in the current installation. It accepts an explicit inactivity
+interval of one hour through 365 days, in whole seconds. A nil policy
+leaves the worker disabled. The lower bound allows ordinary upload
+pauses, and the upper bound catches accidental units while allowing a
+full year of retention. The age comparison uses PostgreSQL's clock
+after the scoped row lock. An incomplete import must still be uploading,
+have no model or verification attempt, and have no error. The
+expiry marker and system audit commit in one transaction. A worker can
+resume from that marker even after normal audit retention removes the
+first event. Both events use the import UUID as the operation correlation.
+
+[PostgreSQL row and advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html)
+support rechecking the workspace and import after selection, while the
+existing file lock excludes a writer across the filesystem and both
+transactions. A bulk delete by timestamp would bypass those fences. A
+filesystem mtime would also count retries or temporary writes as progress.
+Reuse the immutable-publication check and refuse disposal if the import
+already has a published object. Reuse the bounded staging discard from
+MOD-120 and keep the historic byte count when removing chunk records.
+The terminal reason is `MODEL_IMPORT_EXPIRED`. A second attempt
+after a lost commit acknowledgement, a partially removed directory, or
+a failed terminal audit must converge without a duplicate expiry event.
+
+The existing [Go standard library](https://go.dev/LICENSE) and
+[UUID library](https://github.com/google/uuid/blob/v1.6.0/LICENSE) are BSD-3-Clause,
+[pgx](https://github.com/jackc/pgx/blob/master/LICENSE) is MIT, and
+[PostgreSQL](https://www.postgresql.org/about/licence/) uses the PostgreSQL
+License. Each permits commercial and offline use and redistribution with
+its notices. The candidate tests use synthetic chunk bytes and the
+existing approved catalogue metadata. No model weights are needed for
+the expiry tests.
+
+### PostgreSQL expiry acceptance
+
+The three `TestActualAbandonedImportExpiry*` tests ran against PostgreSQL
+18.6 in a Linux arm64 container with no network on November 9, 2026. They
+exercise the normal worker loop, a real chunk writer racing expiry, a
+fresh commit after candidate selection, an exact chunk replay, intent
+and terminal audit rollback, synthetic lost acknowledgements after real
+commits, partial staging removal and fresh-worker recovery, scoped
+terminal reads and idempotent replay. They also check that expiry is
+disabled by default and preserves queued, verifying, failed, complete
+and published imports, as well as rows and files in another workspace
+and tenant.
+
+Run with an isolated PostgreSQL test database prepared by the
+[identity fixture](../../services/control/internal/testing/identityfixture/README.md).
+
+```sh
+go -C services/control test ./internal/modules/models -run '^TestActualAbandonedImportExpiry' -count=1 -v
+```

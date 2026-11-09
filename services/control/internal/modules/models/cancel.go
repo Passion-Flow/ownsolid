@@ -39,7 +39,7 @@ func (s *Service) CancelImport(ctx context.Context, a identity.Auth, id, reason,
 				}
 				expectedBytes = current.ExpectedBytes
 				manifest = resolveImportManifest(current.CatalogDigest)
-				if current.State == "ready" {
+				if current.State == "ready" || importExpiryPending(current) {
 					return fail("MODEL_IMPORT_STATE_CONFLICT")
 				}
 				if current.State == "cancelled" {
