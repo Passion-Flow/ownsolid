@@ -39,8 +39,8 @@ reads and reversible writes are denied by this dispatcher. See the
 [risk tiers](../../../../../docs/research/product-assistant-risk-tiers.md)
 and [write confirmation](../../../../../docs/research/product-assistant-write-confirmation.md).
 
-The two assistant reads mask known model keys and gateway credentials in
-application display names. The stored names and ordinary Portal projections
+The two assistant reads remove Unicode directional controls and mask known
+model keys and gateway credentials in display names. The stored names and ordinary Portal projections
 retain their existing values. See [result redaction](../../../../../docs/research/product-assistant-result-redaction.md).
 
 ## Tests
