@@ -25,7 +25,7 @@ type Service struct {
 	Mail              *mail.Outbox
 	HMACKey           []byte
 	Sources           SourceGuard
-	adminTOTP         *mail.Keyring
+	adminTOTP         *adminTOTPKeyring
 }
 
 func (s *Service) transact(ctx context.Context, fn func(pgx.Tx) error) error {

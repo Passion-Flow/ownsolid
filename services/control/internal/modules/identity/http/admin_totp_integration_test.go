@@ -52,31 +52,110 @@ func adminTOTPCandidateFixture(t *testing.T) (*identity.Service, *httptest.Serve
 	if _, err := s.DB.Exec(t.Context(), adminTOTPFixtureSQL); err != nil {
 		t.Fatal(err)
 	}
-	raw := make([]byte, 32)
-	if _, err := rand.Read(raw); err != nil {
-		t.Fatal(err)
-	}
-	keyring := filepath.Join(t.TempDir(), "totp-keyring.json")
-	keyFile, err := json.Marshal(map[string]any{"active": "candidate", "keys": map[string]string{"candidate": base64.StdEncoding.EncodeToString(raw)}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(keyring, keyFile, 0600); err != nil {
-		t.Fatal(err)
-	}
+	keyring := adminTOTPFixtureKeyFile(t, "candidate", map[string]string{"candidate": adminTOTPFixtureKey(t)})
+	cfg := identity.AdminTOTPConfiguration{Enabled: true, KeyringFile: keyring}
 	if err := os.Chmod(keyring, 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.LoadAdminTOTPCandidateKeys(keyring); err == nil {
-		t.Fatal("accepted a key file readable by others")
+	if err := s.ConfigureAdminTOTP(t.Context(), cfg); err == nil || err.Error() != "ADMIN_TOTP_KEYRING_FILE_INVALID" {
+		t.Fatalf("expected a private file refusal, got %v", err)
 	}
 	if err := os.Chmod(keyring, 0600); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.LoadAdminTOTPCandidateKeys(keyring); err != nil {
+	if err := s.ConfigureAdminTOTP(t.Context(), cfg); err != nil {
 		t.Fatal(err)
 	}
 	return s, server, portal, admin, password
+}
+
+func adminTOTPFixtureKey(t *testing.T) string {
+	t.Helper()
+	var key [32]byte
+	if _, err := rand.Read(key[:]); err != nil {
+		t.Fatal(err)
+	}
+	defer clear(key[:])
+	return base64.StdEncoding.EncodeToString(key[:])
+}
+
+func adminTOTPFixtureKeyFile(t *testing.T, active string, keys map[string]string) string {
+	t.Helper()
+	dir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "totp-keyring.json")
+	raw, err := json.Marshal(map[string]any{"active": active, "keys": keys})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer clear(raw)
+	if err := os.WriteFile(path, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestAdminTOTPCandidateStartupHTTPS(t *testing.T) {
+	s, _, _, admin, password := setup(t)
+	ctx := t.Context()
+	if err := s.ConfigureAdminTOTP(ctx, identity.AdminTOTPConfiguration{}); err != nil || s.AdminTOTPCandidateReady() {
+		t.Fatalf("legacy startup failed or mounted TOTP: %v", err)
+	}
+	oldKey := adminTOTPFixtureKey(t)
+	keyFile := adminTOTPFixtureKeyFile(t, "previous", map[string]string{"previous": oldKey})
+	cfg := identity.AdminTOTPConfiguration{Enabled: true, KeyringFile: keyFile}
+	refuse := func(service *identity.Service, cfg identity.AdminTOTPConfiguration, want string) {
+		t.Helper()
+		err := service.ConfigureAdminTOTP(ctx, cfg)
+		if err == nil || err.Error() != want || service.AdminTOTPCandidateReady() {
+			t.Fatalf("expected %s without activating routes, got %v", want, err)
+		}
+	}
+	refuse(s, cfg, "ADMIN_TOTP_SCHEMA_UNAVAILABLE")
+	for _, sql := range []string{
+		adminTOTPFixtureSQL,
+		"ALTER TABLE admin_totp_recovery_codes RENAME COLUMN expires_at TO missing_expiry",
+	} {
+		if _, err := s.DB.Exec(ctx, sql); err != nil {
+			t.Fatal(err)
+		}
+	}
+	refuse(s, cfg, "ADMIN_TOTP_SCHEMA_UNAVAILABLE")
+	if _, err := s.DB.Exec(ctx, "ALTER TABLE admin_totp_recovery_codes RENAME COLUMN missing_expiry TO expires_at"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.ConfigureAdminTOTP(ctx, cfg); err != nil || !s.AdminTOTPCandidateReady() {
+		t.Fatalf("configured startup did not mount TOTP: %v", err)
+	}
+	seed, _, _ := enrollAdminTOTPCandidate(t, s, admin, password)
+
+	restart := func() *identity.Service {
+		return &identity.Service{DB: s.DB, Config: s.Config, Passwords: s.Passwords, Mail: s.Mail, HMACKey: s.HMACKey}
+	}
+	currentKey := adminTOTPFixtureKey(t)
+	refuse(restart(), identity.AdminTOTPConfiguration{Enabled: true, KeyringFile: adminTOTPFixtureKeyFile(t, "current", map[string]string{
+		"current": currentKey,
+	})}, "ADMIN_TOTP_STORED_FACTOR_INVALID")
+	refuse(restart(), identity.AdminTOTPConfiguration{Enabled: true, KeyringFile: adminTOTPFixtureKeyFile(t, "previous", map[string]string{
+		"previous": currentKey,
+	})}, "ADMIN_TOTP_STORED_FACTOR_INVALID")
+	replica := restart()
+	rotated := identity.AdminTOTPConfiguration{Enabled: true, KeyringFile: adminTOTPFixtureKeyFile(t, "current", map[string]string{
+		"previous": oldKey, "current": currentKey,
+	})}
+	if err := replica.ConfigureAdminTOTP(ctx, rotated); err != nil {
+		t.Fatal(err)
+	}
+	browser := newClient(t, accountTLSServer(t, transport.New(replica)), "admin", admin.schemas)
+	pending := browser.mutate(http.MethodPost, "/api/v1/auth/login", map[string]string{"email": "admin@example.invalid", "password": password}, 202, "")
+	browser.mutate(http.MethodPost, "/api/v1/auth/login/totp", map[string]string{
+		"challenge": pending["challenge"].(string), "code": candidateOTP(seed, adminTOTPCandidateStep(t, s)),
+	}, 200, "LoginResponse")
 }
 
 func adminTOTPCandidateStep(t *testing.T, s *identity.Service) int64 {
