@@ -92,12 +92,14 @@ metadata carries no cookie and does not perform HTTP calls.
 
 The scoped command service uses SCI's
 [PostgreSQL writer](product-assistant-audit-writer.md) inside navigation and
-application read transactions. The identity HTTP owner must dispatch the
-authenticated command to `RunForRequest` with the same server request ID it
-returns in `X-Request-ID`. Workspace-free navigation and readable actor
-attribution in the shared audit projection still need their contracts.
-See [product assistant audit attribution](product-assistant-audit.md) for
-the owning paths and acceptance cases.
+application read transactions. The [assistant HTTP adapter](../../services/control/internal/modules/productagent/http/handler.go)
+accepts the authenticated identity and the same server request ID returned in
+`X-Request-ID`. The identity HTTP owner registers the route after the shared
+CSRF and license admission. The API owner publishes the operation after that
+registration. The safe workspace audit reader already verifies the assistant
+actor, which the public audit response and offline export still need to expose.
+Workspace-free navigation requires a shared global-scope decision. See the
+[registration handoff and acceptance cases](product-assistant-audit.md#authenticated-http-handoff).
 
 ## Repository test gate
 
