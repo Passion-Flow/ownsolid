@@ -297,6 +297,43 @@ run from the repository root with namespace access:
     rm "$work/alerting.test"
     rmdir "$work"
 
+#### Enrolled node inventory
+
+The internal RefreshNodeScrapeInventory entry point takes a current
+platform Admin session, the Workspace UUID and operator-owned file
+references from trusted composition. The protected assignment file
+contains only approved endpoints and the Workspace pin.
+
+    {
+      "format_version": 1,
+      "workspace_id": "a943b5a7-c4cf-4e3b-a12a-4b933fa51ef1",
+      "allowed_networks": ["10.42.0.0/16"],
+      "endpoints": {
+        "a1790234-5080-451f-997f-f4f4af42bb80": "10.42.1.15:9443"
+      }
+    }
+
+The module checks enrollment in the selected PostgreSQL repository,
+commits the existing diagnostic audit, and atomically publishes
+nodes-<workspace UUID>.json. Configure that exact file in the collector's
+file_sd_configs. Place it in a private directory dedicated to this
+installation. Run the publisher with ownership of the mode 0700
+directory and give the collector read access through the installed
+private mount and UID policy. Provision the private CA and an IP SAN
+on the exporter endpoint. Remove the endpoint from the approved
+assignment or refresh after disabling the node to withdraw it. A
+current platform Admin can refresh a disabled Workspace to withdraw
+its entire list.
+
+The production composition owner supplies the protected policy reference,
+refresh supervisor and stale-collection stop. The node endpoint owner
+supplies the TLS relay or exporter. Set OWNSOLID_TEST_VMAGENT and
+OWNSOLID_TEST_VICTORIA_METRICS to the verified 1.155.0 executables and
+OWNSOLID_TEST_POSTGRES_IMAGE to the verified PostgreSQL 18.6 image ID
+with pgvector 0.8.7. Run from the repository root with namespace access.
+
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh scrape-inventory
+
 ### Long retention for fleet health aggregates
 
 Run the [fleet recording rules](alerting/fleet-rollup-rules.yaml) in a separate
