@@ -148,9 +148,8 @@ checked again. A partial upload or lost response requires retry and
 readback. Never retag or remove shared engine data.
 
 Call only an explicitly configured Unix socket, with no proxy, redirects
-or context discovery. Bound the operation and responses. Reject
-multi-image bundles before contacting the engine and let the existing
-factory reject archive forms it cannot transport. Directly loading the
+or context discovery. Bound the operation and responses. The first importer rejected multi-image bundles before contacting the
+engine and let the factory reject unsupported archive forms. Directly loading the
 publisher's archive would let source names or tags reach the engine and
 would skip expanded layer and DiffID checks. Registry pulls, daemon
 discovery and starting the workload are outside the import boundary.
@@ -183,4 +182,69 @@ amd64 image, with the signed digest in both the image ID and descriptor.
 
 The installer must supply the authenticated publisher key and host policy,
 invoke the import as an authorized operation, and carry the verified digest
-into workload admission. Multi-image registration also remains open.
+into workload admission.
+
+## Multi-image registration
+
+OCI layouts support a root index with multiple descriptors while keeping
+the manifest, config and layers content-addressed. The
+[OCI layout specification](https://github.com/opencontainers/image-spec/blob/v1.1.1/image-layout.md)
+defines this separation. [Containers Image](https://github.com/containers/image/blob/main/docs/containers-transports.5.md)
+also selects an individual archive image instead of using a publisher's
+tag as an installation identity. Use the catalog's already verified
+manifest digest for that selection.
+
+The release factory's `OpenCurrentImageSource` selects one image for a
+platform release asset. Its inventory validator rejects a different
+runtime manifest and requires one selected config. The first catalog
+prototype kept this contract by writing a single-image projection for
+each signed member. It passed the fault-injection and real Docker tests,
+including retry after a second-load refusal and exact untagged readback.
+
+Use the DEL-owned [`OpenCurrentImageSelection` handoff](catalog-image-selection.md)
+for the shipped multi-image path. It takes the exact original archive
+SHA-256 and size, the selected manifest/config and all approved pairs.
+It checks the full local descriptor closure and verifies the selected
+expanded layers and DiffIDs. Its tagless writer emits the original
+runtime blobs and a single exact manifest descriptor. This removes
+temporary projections and keeps the platform and single-image catalog
+paths on the original reader.
+
+Verify the complete signed archive before opening any selection. Open
+all selections and retain their verified file descriptors before
+opening the Docker socket. Bound the sum of expanded layer bytes by
+the operation's budget, counting each use of a shared layer across
+images. The same timeout covers preflight, transport and readback.
+The catalog bounds the inventory at 128 images. Each open rechecks
+the original archive, and the importer retains one descriptor per image.
+A source that cannot be opened fails before registration. No new
+dependency or image ships with this path. The Go standard library,
+OCI specification and Docker development fixture keep the licensing
+and offline use terms recorded above.
+
+Reject a missing or altered member, an invalid later DiffID and an
+aggregate expansion overrun before Docker access. Test a shared layer,
+two distinct manifest readbacks and retry after a middle load failure.
+A failed operation returns no successful bundle result. Keep any exact
+content already registered and recheck the signed set on retry. The
+caller owns publisher trust, authorization, audit, workload admission
+and deployment state.
+
+The catalog consumer passed separate empty-engine single-image and
+multi-image tests in disconnected Docker Engine 29.1.3 on Linux amd64.
+A signed later member with a wrong DiffID and a set budget one byte
+below the sum refused before the first Docker request. An injected
+failure on the second load left the first exact image registered.
+Retry sent one load for the missing image, and a further call sent
+none. Both readbacks matched the original untagged manifest digests.
+
+A separately signed set containing real
+[VictoriaLogs 1.53.0](https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/v1.53.0/LICENSE)
+and [VictoriaMetrics 1.155.0](https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.155.0/LICENSE)
+passed two calls against another empty disconnected engine. Both projects
+use Apache-2.0 for these fixtures. The fixtures remain outside the
+repository and release. The engine retained exactly these Linux amd64
+image IDs and descriptor digests, with no tags.
+
+- `sha256:45dc9bef07c0c404255790e41f2c22c62ff55a690a1d556e0f9cb6f6e2556f1b`
+- `sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84`
