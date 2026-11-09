@@ -19,15 +19,20 @@ comparison rejects stale output. At runtime, use the generated admission data
 before calling the resource owner. The existing projection transaction still
 rechecks the authenticated user, current membership and private ownership.
 
-The applications OpenAPI currently references `portalCookie` but declares the
-scheme as `PortalSession`. Keep a narrow compatibility rule in the local
-generator while the API owner aligns these names. Accept the legacy reference
-only if `portalCookie` is undeclared and `PortalSession` still describes the
-portal session cookie. Accept the corrected reference directly. Reject any
-declared legacy scheme, anonymous alternative, missing scheme, changed cookie
-type, location or name. The tool adapters call application services in process.
-They use the authenticated server context, and the compatibility rule never
-defines an HTTP credential or grants access.
+Both application operations now reference `PortalSession` directly after
+`9714d52d`. The [OpenAPI security requirement](https://spec.openapis.org/oas/v3.1.1.html#security-requirement-object)
+requires the reference to name a declared scheme. The only caller of this
+generator reads the contract in the same checkout. Older revisions retain
+their own generator. Require the canonical reference and exact Portal cookie
+declaration. Reject an absent or misplaced reference, anonymous alternative,
+nonempty role array, changed scheme type or other cookie. The adapters still
+call the application services in process using authenticated server context.
+
+`9cb3d16a` adds the Portal history search parameter to the conversations
+contract. Catalog generation projects the reviewed operation ID, route,
+method, audience, risk and permission. It carries no cookies, security scheme
+objects, credentials or request arguments. The assistant conversation read
+continues to accept only its existing cursor.
 
 [RFC 8259 object member uniqueness](https://www.rfc-editor.org/rfc/rfc8259#section-4)
 and [Go JSON v2 decoding](https://pkg.go.dev/encoding/json/v2) support rejecting
@@ -46,9 +51,17 @@ under its BSD-style license, which allows commercial redistribution with notices
 and offline use. The tool inventory is ownsolid data. The slice adopts no external
 SDK, model or dataset and needs no new runtime network connection.
 
-Verify byte-for-byte regeneration. Exercise reviewed operation path and method
-drift, duplicate JSON members and operation IDs, unknown overlay keys, broadened
-audiences, and missing or changed cookie authentication.
+Verify byte-for-byte regeneration from the latest contract and both reviewed
+output entries. For each real operation, remove or change its session reference
+and expect generation to fail. Exercise path and method drift, duplicate JSON
+members and operation IDs, unknown overlay keys, broadened audiences and changed
+cookie authentication.
+
+Regeneration against the corrected applications contract was byte-for-byte
+identical. The two exact output entries passed strict decoding, including
+their Portal audience and reviewed risk and permission. Both real operations
+were refused independently when their session reference was removed, moved to
+the path item or replaced with the undeclared legacy reference.
 The release item also needs tools wired through the authenticated assistant
 entrance and reviewed coverage of the complete enabled inventory. The current
 catalog contains only the two implemented read adapters.
