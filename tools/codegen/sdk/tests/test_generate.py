@@ -8,10 +8,30 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from generate import CONTRACTS, METHODS, PUBLIC, UNLISTED, generate, project_contract, read_contract
+from generate import (
+    CONTRACTS, METHODS, PUBLIC, UNLISTED, generate, project_contract, read_contract,
+    serialize_python_uuid_headers,
+)
 
 
 class ProjectionTests(unittest.TestCase):
+
+    def test_serializes_only_uuid_request_headers(self):
+        source = """\
+def _get_kwargs(*, key: UUID, optional: UUID | Unset, trace: str):
+    headers = {}
+    headers["Idempotency-Key"] = key
+    if not isinstance(optional, Unset):
+        headers["X-Optional"] = optional
+    headers["X-Trace"] = trace
+    return {"headers": headers, "body": key}
+"""
+        expected = source.replace('] = key', '] = str(key)').replace('] = optional', '] = str(optional)')
+        generated = serialize_python_uuid_headers(source)
+        self.assertEqual(generated, expected)
+        self.assertEqual(serialize_python_uuid_headers(generated), generated)
+        compile(generated, "generated-endpoint", "exec")
+
     def test_preserves_public_operations_and_parameters(self):
         document = {
             "openapi": "3.1.1",
