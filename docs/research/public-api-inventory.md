@@ -442,3 +442,34 @@ assistant tool catalog should stay byte-identical.
 The disconnected TLS and PostgreSQL fixture returned HTTP 401 without
 the cookie and schema-valid HTTP 200 responses with the cookie on both
 routes. The assistant catalog generator matched its committed output.
+
+## Admin audit action filters
+
+The registered Admin audit list accepts exact action values from the
+[identity query catalogue](../../services/control/internal/modules/identity/lists.go).
+Its request enum omitted two values that already have production writers.
+The [mail resend operation](../../services/control/internal/modules/identity/mail_resend.go)
+commits mail.resent and the [node pacing operation](../../services/control/internal/modules/nodes/pacing.go)
+commits node.pacing_updated.
+
+Keep the input enum and extend it by those two accepted values. The
+[OpenAPI Parameter Object](https://spec.openapis.org/oas/v3.1.1.html#parameter-object)
+describes the schema at the query boundary. [AIP-180](https://google.aip.dev/180#adding-components)
+allows new request enum values while preserving existing callers. A free
+string would advertise values the server rejects. Leave the response's
+action string, route, operation ID, authorization, and cursor untouched.
+
+Verify the request enum matches the real allowlist, the two writers create
+events that the registered Admin HTTPS list can retrieve by exact action,
+and a near miss returns VALIDATION_FAILED. Regenerate clients and verify
+that both new values survive request encoding while old public operation
+identities remain. The existing [SDK licenses](sdk.md#licenses) and
+[Admin audit fixture licenses](admin-audit-cli.md) apply. No dependency,
+model or dataset is added.
+
+The Linux amd64 loopback TLS and PostgreSQL 18.6 test resent a failed
+invitation email and changed pacing through their registered Admin writes.
+Both exact filters returned their single schema-valid event. A misspelled
+action returned VALIDATION_FAILED. The SDK projection retained the complete
+server allowlist, and the pinned Go and Python builders sent both added
+values and an existing value unchanged.

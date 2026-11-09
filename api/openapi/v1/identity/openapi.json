@@ -1992,6 +1992,7 @@
                 "mail.sent",
                 "mail.failed",
                 "mail.cancelled",
+                "mail.resent",
                 "system.retention",
                 "operator.admin_recovered",
                 "operator.auth_invalidated",
@@ -2017,7 +2018,8 @@
                 "node.task_failed",
                 "node.task_cancelled",
                 "node.task_released",
-                "node.resync_granted"
+                "node.resync_granted",
+                "node.pacing_updated"
               ]
             }
           },
