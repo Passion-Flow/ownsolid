@@ -11,7 +11,6 @@ import (
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/agentca"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/agentcost"
@@ -155,7 +154,10 @@ func measureComponentHeartbeats(t *testing.T, fleet int, checkRace bool) map[str
 	}
 
 	if checkRace {
-		credential := replaceCredentialDuringHeartbeat(t, account.DB, handler.Nodes.Service, node, h)
+		credential := replaceCredentialDuringAgentCall(t, account.DB, node.NodeID, func(ctx context.Context) error {
+			_, err := handler.Nodes.Service.Heartbeat(ctx, node.NodeID, node.Credential, h)
+			return err
+		})
 		if got := readComponentHeartbeat(t, account.DB, node.NodeID); got != updated {
 			t.Fatal("heartbeat with the replaced credential changed stored state")
 		}
@@ -188,7 +190,7 @@ func readComponentHeartbeat(t *testing.T, db *pgxpool.Pool, node string) compone
 	return state
 }
 
-func replaceCredentialDuringHeartbeat(t *testing.T, db *pgxpool.Pool, service *nodes.Service, node wire.Enrolled, h wire.Handshake) string {
+func replaceCredentialDuringAgentCall(t *testing.T, db *pgxpool.Pool, node string, call func(context.Context) error) string {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 	defer cancel()
@@ -200,14 +202,11 @@ func replaceCredentialDuringHeartbeat(t *testing.T, db *pgxpool.Pool, service *n
 	credential := security.Token()
 	var holderPID int32
 	if err := holder.QueryRow(ctx, "UPDATE managed_nodes SET credential_hash=$1 WHERE id=$2 RETURNING pg_backend_pid()",
-		security.Digest("node-credential:v1:"+credential), node.NodeID).Scan(&holderPID); err != nil {
+		security.Digest("node-credential:v1:"+credential), node).Scan(&holderPID); err != nil {
 		t.Fatal(err)
 	}
 	done := make(chan error, 1)
-	go func() {
-		_, err := service.Heartbeat(ctx, node.NodeID, node.Credential, h)
-		done <- err
-	}()
+	go func() { done <- call(ctx) }()
 	// Confirm discovery saw the old row and the transaction is waiting on
 	// the locked node before making the new credential visible.
 	wait, cancelWait := context.WithTimeout(ctx, 2*time.Second)
@@ -218,16 +217,16 @@ func replaceCredentialDuringHeartbeat(t *testing.T, db *pgxpool.Pool, service *n
 		var blocked bool
 		if err := db.QueryRow(wait, `SELECT EXISTS(SELECT FROM pg_stat_activity
 			WHERE datname=current_database() AND $1=ANY(pg_blocking_pids(pid)))`, holderPID).Scan(&blocked); err != nil {
-			t.Fatalf("find heartbeat waiting on the node lock: %v", err)
+			t.Fatalf("find Agent call waiting on the node lock: %v", err)
 		}
 		if blocked {
 			break
 		}
 		select {
 		case err := <-done:
-			t.Fatalf("heartbeat finished before the credential transaction committed: %v", err)
+			t.Fatalf("Agent call finished before the credential transaction committed: %v", err)
 		case <-wait.Done():
-			t.Fatal("heartbeat did not reach the held node lock")
+			t.Fatal("Agent call did not reach the held node lock")
 		case <-poll.C:
 		}
 	}
@@ -238,7 +237,7 @@ func replaceCredentialDuringHeartbeat(t *testing.T, db *pgxpool.Pool, service *n
 	case err := <-done:
 		expected(t, err, "AGENT_UNAUTHORIZED")
 	case <-ctx.Done():
-		t.Fatal("heartbeat did not finish after credential rotation")
+		t.Fatal("Agent call did not finish after credential rotation")
 	}
 	return credential
 }

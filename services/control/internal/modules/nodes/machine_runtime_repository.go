@@ -112,7 +112,7 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 	repeats := s.heartbeatRepeats(id, h)
 	check := s.CredentialWithin
 	if h.Component != nil {
-		check = s.componentHeartbeatCredentialWithin
+		check = s.credentialFromLockedNodeWithin
 	}
 	e := s.machineWithinCheckingCredential(ctx, id, credential, check, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
 		if repeats {
@@ -182,9 +182,9 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 	return out, nil
 }
 
-// The component heartbeat already needs the locked node snapshot for
-// profile and scope checks. Read its digest with that snapshot on PostgreSQL.
-func (s *Service) componentHeartbeatCredentialWithin(ctx context.Context, q transaction.Executor, tenant, workspace, id, credential string) (Node, error) {
+// Component exchanges already need the locked node snapshot for profile
+// and scope checks. Read its digest with that snapshot on PostgreSQL.
+func (s *Service) credentialFromLockedNodeWithin(ctx context.Context, q transaction.Executor, tenant, workspace, id, credential string) (Node, error) {
 	if q.Dialect() != transaction.PostgreSQL {
 		return s.CredentialWithin(ctx, q, tenant, workspace, id, credential)
 	}

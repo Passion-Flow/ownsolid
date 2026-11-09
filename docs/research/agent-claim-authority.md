@@ -377,3 +377,42 @@ Run the transaction regression against a protected PostgreSQL test DSN with:
 ```sh
 go -C services/control test -p 1 ./internal/modules/nodes -run '^TestComponentResultFencesOwnerWritesAtSettlement$' -count=1 -v
 ```
+
+### Credential read for component results
+
+Reuse the locked credential projection from component heartbeats for
+PostgreSQL component results. Scope discovery remains a precheck.
+The final digest comparison uses the persisted node returned by the
+existing lock acquisition and remains constant-time. At
+[Read Committed](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED),
+a locking read that waits for a concurrent update sees the updated
+row. Leave the Workspace status read in a separate statement after
+that lock. Combining it into the same snapshot could admit stale
+Workspace authority. Keep the default credential path for other result
+kinds and the existing fallback for other engines. The v1 wire
+contract and audit append stay with their existing owners.
+
+Exercise the result after a real node credential replacement commits
+while it is waiting on the locked node. The old credential must be
+refused without changing the task, component or audit head. Retry with
+the new credential and verify the post-callback settlement fences and
+exact replay. Compare the existing mTLS measurements at 50 and 3,000
+seeded peers against the same schema. The initial result budget remains
+16. No additional dependency, model or dataset is required.
+
+The PostgreSQL 18.6 schema-57 comparison ran both builds in the
+same disconnected Linux arm64 fixture. Each column below gives the
+50 / 3,000-peer statement counts.
+
+| Exchange | Before | After | Ceiling |
+| --- | ---: | ---: | ---: |
+| First component result | 41 / 41 | 40 / 40 | 16 |
+| Exact result replay | 7 / 7 | 6 / 6 | 16 |
+
+The result regression rejected the replaced credential after the
+node lock was released. The replacement could report the result and
+replay it. Deadline and lease-digest rollback, the heartbeat budget
+and enrollment credential boundaries also passed. The trace records
+12 statements through the terminal node write and 28 for the audit
+append and its scope defaults. The unchanged cost assertion still
+fails the first result on both fleet sizes.

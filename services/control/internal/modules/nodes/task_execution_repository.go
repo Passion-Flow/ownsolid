@@ -272,7 +272,11 @@ func (s *Service) completeSelected(ctx context.Context, id, credential, taskID s
 	}
 	resultHash := digest("node-result", string(encoded))
 	out := ""
-	e = s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
+	check := s.CredentialWithin
+	if input.Component != nil {
+		check = s.credentialFromLockedNodeWithin
+	}
+	e = s.machineWithinCheckingCredential(ctx, id, credential, check, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
 		if !active || n.Status != "active" {
 			return fail("ACCESS_DENIED")
 		}
