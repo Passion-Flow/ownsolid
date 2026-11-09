@@ -1,0 +1,133 @@
+package metering
+
+import (
+	"context"
+	"errors"
+	"math/big"
+	"sort"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+)
+
+// ErrReportSnapshotRequired requires a read-only PostgreSQL REPEATABLE READ transaction.
+var ErrReportSnapshotRequired = errors.New("METERING_REPORT_SNAPSHOT_REQUIRED")
+
+// ShowbackLine contains one positive usage quantity per meter and rate
+// version. Rate is nil and AmountMicros is empty for unrated usage.
+// RateVersion is empty for usage before the first configured version.
+type ShowbackLine struct {
+	Meter        Meter
+	RateVersion  string
+	Quantity     string
+	Rate         *MeterRate
+	AmountMicros string
+}
+
+// ShowbackReport describes one authorized workspace and half-open period.
+// KnownAmountMicros is the sum of rated line amounts. FullyRated indicates
+// whether that subtotal covers all reported usage.
+type ShowbackReport struct {
+	Currency          string
+	From              time.Time
+	To                time.Time
+	Lines             []ShowbackLine
+	KnownAmountMicros string
+	FullyRated        bool
+}
+
+// ShowbackWithin rates original occurrence times in one read-only REPEATABLE
+// READ transaction. The caller supplies both scope IDs from its current
+// read authorization and keeps the installation's historical rate versions.
+func ShowbackWithin(ctx context.Context, tx pgx.Tx, scope Scope, from, to time.Time, card *RateCard) (ShowbackReport, error) {
+	from, to, err := reportingWindow(scope, from, to)
+	if err != nil {
+		return ShowbackReport{}, err
+	}
+	if card == nil || len(card.versions) == 0 {
+		return ShowbackReport{}, ErrInvalidRateCard
+	}
+	if err := requireReportSnapshot(ctx, tx); err != nil {
+		return ShowbackReport{}, err
+	}
+
+	report := ShowbackReport{Currency: card.currency, From: from, To: to, FullyRated: true}
+	var known big.Int
+	next := sort.Search(len(card.versions), func(i int) bool { return card.versions[i].effective.After(from) })
+	for cursor := from; cursor.Before(to); next++ {
+		end := to
+		if next < len(card.versions) && card.versions[next].effective.Before(end) {
+			end = card.versions[next].effective
+		}
+		var version rateVersion
+		if next > 0 {
+			version = card.versions[next-1]
+		}
+		totals, err := TotalsWithin(ctx, tx, scope, cursor, end)
+		if err != nil {
+			return ShowbackReport{}, err
+		}
+		if err := report.addRatedTotals(version, totals, &known); err != nil {
+			return ShowbackReport{}, err
+		}
+		cursor = end
+	}
+	report.KnownAmountMicros = known.String()
+	return report, nil
+}
+
+func requireReportSnapshot(ctx context.Context, tx pgx.Tx) error {
+	if ctx == nil || tx == nil {
+		return ErrReportSnapshotRequired
+	}
+	var snapshot bool
+	if err := tx.QueryRow(ctx, `SELECT current_setting('transaction_read_only')='on'
+ AND current_setting('transaction_isolation')='repeatable read'`).Scan(&snapshot); err != nil {
+		return operationError(ctx)
+	}
+	if !snapshot {
+		return ErrReportSnapshotRequired
+	}
+	return nil
+}
+
+func (report *ShowbackReport) addRatedTotals(version rateVersion, totals Totals, known *big.Int) error {
+	for _, row := range []struct {
+		meter    Meter
+		quantity string
+	}{
+		{GPUMicroseconds, totals.GPUMicroseconds},
+		{Tokens, totals.Tokens},
+		{StorageByteSeconds, totals.StorageByteSeconds},
+		{Requests, totals.Requests},
+	} {
+		quantity, ok := new(big.Int).SetString(row.quantity, 10)
+		if !ok || quantity.Sign() < 0 {
+			return ErrUnavailable
+		}
+		if quantity.Sign() == 0 {
+			continue
+		}
+		line := ShowbackLine{Meter: row.meter, RateVersion: version.id, Quantity: row.quantity}
+		if rate, exists := version.rates[row.meter]; exists {
+			amount := roundedAmount(quantity, rate)
+			known.Add(known, amount)
+			line.Rate, line.AmountMicros = &rate, amount.String()
+		} else {
+			report.FullyRated = false
+		}
+		report.Lines = append(report.Lines, line)
+	}
+	return nil
+}
+
+func roundedAmount(quantity *big.Int, rate MeterRate) *big.Int {
+	var amount, remainder big.Int
+	denominator := big.NewInt(rate.Units)
+	amount.Mul(quantity, big.NewInt(rate.AmountMicros))
+	amount.QuoRem(&amount, denominator, &remainder)
+	if remainder.Lsh(&remainder, 1).Cmp(denominator) >= 0 {
+		amount.Add(&amount, big.NewInt(1))
+	}
+	return &amount
+}
