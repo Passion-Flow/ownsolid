@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 const configName = "config.json"
@@ -97,6 +99,23 @@ func loadSettings(server string, serverSet bool) (settings, error) {
 		}
 	}
 	return cfg, nil
+}
+
+func openRegularInput(path, description string) (*os.File, int64, error) {
+	file, err := os.OpenFile(path, os.O_RDONLY|unix.O_NONBLOCK, 0)
+	if err != nil {
+		return nil, 0, fmt.Errorf("open %s: %w", description, err)
+	}
+	info, err := file.Stat()
+	if err != nil {
+		file.Close()
+		return nil, 0, fmt.Errorf("inspect %s: %w", description, err)
+	}
+	if !info.Mode().IsRegular() || info.Size() < 1 {
+		file.Close()
+		return nil, 0, fmt.Errorf("the %s must be a nonempty regular file", description)
+	}
+	return file, info.Size(), nil
 }
 
 func readConfig(path string, config *fileConfig) error {
