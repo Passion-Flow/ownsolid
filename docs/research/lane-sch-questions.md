@@ -40,10 +40,10 @@ database owner to land or authorize the exact fresh and restored fingerprints.
 - SCH-107 has observation readers. The signed offline install assets and
   RKE2 deployment, workload creation, RBAC provisioning and runtime reconciliation
   remain part of the item.
-- SCH-109 requires durable reservations that mark borrowed amounts and an
-  ordered reclaim path. [Kueue cohort](https://kueue.sigs.k8s.io/docs/concepts/cohort/)
-  borrowing is a reference. Borrowing never waives any hard ceiling or grants
-  capacity to a successor before the prior attempt releases it.
+- SCH-109 has candidate PostgreSQL loan attribution and ordered reclaim
+  within enabled departments. [Borrowing and reclaim](scheduling-quota-borrowing.md)
+  records the owner transaction, follow-on schema and positive release
+  boundary. Production schema and runtime stop delivery remain open.
 - SCH-111 requires a cell running the real admission pipeline. A package
   benchmark on synthetic queue entries does not establish that admission
   latency or fleet scale.
