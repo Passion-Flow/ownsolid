@@ -354,3 +354,33 @@ the signed license notices that apply to it. Supply the approved first-party
 and third-party notices for the exact build as `license` assets. The
 [host installation procedure](../../../deploy/offline/README.md#install-a-read-only-agent-from-signed-media)
 requires only the verified Agent inventory and protected site inputs.
+
+## Tokenizer wheelhouse fixture
+
+Run this on Linux amd64 from a protected checkout with CPython 3.12 and a
+network namespace that has no external route. Supply a local wheelhouse
+containing one allowed wheel per projected pin and the manifest-pinned pip
+wheel. The model path may be the retained approved Qwen snapshot. The checker
+copies the five tokenizer files and the catalogue-pinned `LICENSE`.
+
+```sh
+python3 -IB tools/release/offline/tokenizer_wheelhouse.py \
+  --wheelhouse "$wheelhouse" --model "$qwen_snapshot" --output "$new_fixture"
+PYTHONPATH=runtimes/training:runtimes/data-processing \
+  OWNSOLID_TEST_QWEN_TOKENIZER_DIRECTORY="$new_fixture/model" \
+  "$new_fixture/venv/bin/python" -B -m unittest discover -v -s runtimes/training/tests
+```
+
+The output path must be new. A completed `manifest.json` identifies the
+private staged copies, projected lock, source contracts, wheel metadata
+and notice bytes. It follows hash-required installation and `pip check`.
+Retain the protected runtime manifest, full training lock and catalogue at
+their existing repository paths for the smoke. The venv stays at its
+original path. Run the focused checker tests with
+`python3 -B -m unittest discover -s tools/release/offline -p tokenizer_wheelhouse_test.py`.
+
+An incomplete wheelhouse reports missing wheels and embedded notices and
+leaves no fixture. The output profile is for the disconnected build check.
+Release provenance, binary redistribution approval, image publication and
+the optional service configuration use separate gates. See the
+[Linux replay and open inputs](../../../docs/research/training-runtime-delivery.md#disconnected-release-side-replay).
