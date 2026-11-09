@@ -476,9 +476,9 @@ With the target absent, reject a wrong site CA, an anonymous request,
 and a missing manifest by digest. Check the actual containerd errors
 and the absence of the signed workload in the store after each
 attempt. Restore the protected site configuration and let the real
-scheduler bind a Pod on the intended worker. Require its process
-exit and its running image identity to match the signed manifest
-or its signed config identity as reported by CRI. Keep the raw DNS
+scheduler bind a Pod on the intended worker. Require the Pod to reach
+Ready with the workload's [HTTP readiness endpoint](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/master/docs/victoriametrics/url-examples.md#-ready),
+and match its running image to the signed manifest and CRI config identity. Keep the raw DNS
 and packet captures and validate the exact deliberate probes.
 
 RKE2, containerd and CNCF Distribution use Apache-2.0. The Registry
@@ -536,3 +536,33 @@ The private run directory is `cell.QShAJf` under the runner. Keep
 its separate attempt captures and the actual nonzero wrapper result.
 The managed worker path, the ARC-104 console, and DEL-108's remaining
 consumer and release gates are open.
+
+### Cold worker retest
+
+Short-timeout SSH and the host gate passed with about 20.50 GiB
+MemAvailable, 4.24 GiB free memory, 816 GiB free disk and zero full
+I/O PSI avg10. The new Control, server and worker scopes had
+6.00, 4.98 and 4.98 GiB of effective memory headroom, respectively,
+before releasing the installer. The 54 live resource samples showed
+no gate refusal or fixture OOM kill.
+
+The retest reused the verified signed media and allocated an exclusive
+preparation output under
+`/release/arc104-consumer-arc104-registry-cold-1ntmgu-3171725157/approved`.
+It verified the RKE2 archive, completed the signed Compose install
+and enrolled two Agents on the TLS gateway. After successful cell
+creation, the first failing operation was the member-list read
+`GET /api/v1/sites/default/cells/default/admin/cell-clusters/{id}/members`
+while waiting for server readiness. It returned HTTP 409
+`STORAGE_COMMIT_OUTCOME_UNKNOWN`, request ID
+`73e99a41-76f4-4d49-9234-642ee3a8ef78`. The test and launcher both
+exited 1. The strict Control packet check accepted its two exact
+probes. The worker addition, cold pull, readiness and no-fallback
+checks had not started.
+
+The raw evidence is retained on `ownsolid-cpu` at
+`/root/lane-arc104-registry.JFfDHO/cold-retest.IqKiOM/run.1ntmgu/capture`.
+The prior packet and DNS checksums still matched and the old
+`/release/arc-prepared` directory retained its inode and mode.
+The isolated containers and network were removed and the media
+unmounted. No retry or scale run was launched.
