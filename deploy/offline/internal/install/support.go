@@ -19,16 +19,17 @@ import (
 )
 
 type supportReport struct {
-	FormatVersion int                  `json:"format_version"`
-	CollectedAt   time.Time            `json:"collected_at"`
-	Host          supportHost          `json:"host"`
-	Topology      string               `json:"topology"`
-	Configuration supportConfiguration `json:"configuration"`
-	Operations    []supportOperation   `json:"recent_operations"`
-	Services      []supportService     `json:"services"`
-	SchemaVersion *int                 `json:"schema_version,omitempty"`
-	RestorePhase  string               `json:"pending_restore_phase,omitempty"`
-	Issues        []string             `json:"collection_issues"`
+	FormatVersion  int                  `json:"format_version"`
+	CollectedAt    time.Time            `json:"collected_at"`
+	Host           supportHost          `json:"host"`
+	Topology       string               `json:"topology"`
+	Configuration  supportConfiguration `json:"configuration"`
+	Operations     []supportOperation   `json:"recent_operations"`
+	Services       []supportService     `json:"services"`
+	SchemaVersion  *int                 `json:"schema_version,omitempty"`
+	RestorePhase   string               `json:"pending_restore_phase,omitempty"`
+	BackupRecovery string               `json:"coordinated_backup_recovery,omitempty"`
+	Issues         []string             `json:"collection_issues"`
 }
 
 // The deployment configuration contains secret references and site data. Only
@@ -136,6 +137,14 @@ func collectSupport(ctx context.Context, c Config, runner Runner) supportReport 
 		report.Issues = append(report.Issues, "RESTORE_STATE_UNAVAILABLE")
 	} else if intent != nil {
 		report.RestorePhase = intent.Phase
+	}
+	if intent, err := readCoordinatedBackupIntent(c); err != nil {
+		report.Issues = append(report.Issues, "BACKUP_RECOVERY_STATE_UNAVAILABLE")
+	} else if intent != nil {
+		report.BackupRecovery = "recovery_required"
+		if intent.FenceUntil != nil {
+			report.BackupRecovery = "fence_outcome_unconfirmed"
+		}
 	}
 	if raw, err := os.ReadFile("/proc/sys/kernel/osrelease"); err == nil {
 		if version, ok := kernelRelease(strings.TrimSpace(string(raw))); ok {
