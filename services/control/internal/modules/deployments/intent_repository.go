@@ -116,6 +116,9 @@ func (s *Service) createBoundSelected(ctx context.Context, a identity.Auth, inpu
 	if e != nil {
 		return Deployment{}, e
 	}
+	if e = s.admitModelUse(ctx, n.WorkspaceID, version.Kind, version.CatalogDigest); e != nil {
+		return Deployment{}, e
+	}
 	command, e := s.initialCommand(ctx, version, n, input.GPUUUID)
 	if e != nil {
 		return Deployment{}, e
@@ -246,6 +249,9 @@ func (s *Service) actionSelected(ctx context.Context, a identity.Auth, deploymen
 			state := d.ResourceState
 			switch input.Action {
 			case "deploy":
+				if ownerError = s.admitModelUse(ctx, d.WorkspaceID, d.ModelKind, d.CatalogDigest); ownerError != nil {
+					return wire.InferenceCommand{}, ownerError
+				}
 				if state == "recovery_required" {
 					return wire.InferenceCommand{}, fail("INFERENCE_RECOVERY_REQUIRED")
 				}

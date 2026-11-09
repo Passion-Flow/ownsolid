@@ -15,7 +15,7 @@ responsible owners can extend their respective boundaries.
 | MOD-107 | Deployment and alias reference checks already run in the shared retirement callback. Complete application and key references require their owning modules to participate, and the existing UI only receives a generic refusal. |
 | MOD-108 | The current exact allowlist rejects all extra files. Scanning imported models beyond the approved revision depends on MOD-101 and a shared verifier and review flow. |
 | MOD-109 | The Agent fetches the approved files through the leased transfer path. Pre-warming from the site registry requires NET-102 and Agent changes. |
-| MOD-110 | Existing import acknowledgement does not enforce per-version use rights. Installation policy and dispatch authorization must reach every deployment and task admission owner, including SCI and training. |
+| MOD-110 | Deployment admission checks the reviewed Qwen catalogue and on-site use. The [consumer handoff](model-license-admission.md#consumer-handoff) defines the startup configuration, public reasons, training and SCI launch checks still needed. |
 | MOD-113 | The signed index needs a trust root and delivery integration, plus a new multi-entry contract consumed by the UI. No unsigned index should replace the embedded trust decision. |
 | MOD-114 | Offline search depends on MOD-113. The browser's current local filter covers imported inventory. |
 | MOD-115 | The exact pinned fetch manifest depends on MOD-113. The connected-side command belongs in tools/cli, outside this lane. |

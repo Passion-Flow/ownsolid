@@ -12,6 +12,8 @@ type Service struct {
 	Nodes           *nodes.Service
 	Models          *models.Service
 	RegistryActions RegistryActionOwner
+	// ModelUse is the installation-owned purpose for new on-site launches.
+	ModelUse models.OnSiteUse
 }
 type Deployment struct {
 	ModelKind           string                      `json:"model_kind"`

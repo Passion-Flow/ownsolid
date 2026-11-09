@@ -72,6 +72,9 @@ func (s *Service) Placement(ctx context.Context, a identity.Auth, model string) 
 	if e != nil {
 		return Placement{}, e
 	}
+	if e = s.admitModelUse(ctx, version.WorkspaceID, version.Kind, version.CatalogDigest); e != nil {
+		return Placement{}, e
+	}
 	derived := version.Kind == wire.DerivedModelKind
 	if !derived && version.Kind != "approved_base" {
 		return Placement{}, fail("MODEL_FILE_INVALID")
