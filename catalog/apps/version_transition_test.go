@@ -18,6 +18,7 @@ const testTransitionBudget = 1 << 20
 
 type catalogReleaseFixture struct {
 	version, engine, before, variant string
+	composeFields                    string
 	predecessors                     []ReleasePin
 }
 
@@ -51,6 +52,9 @@ func writeTransitionRelease(t *testing.T, catalog *os.Root, key ed25519.PrivateK
 	image := imageVariant(t, "amd64", false, fixture.version+fixture.variant, false)
 	archive := ociTar(t, image.files, "")
 	artifact := engineFixture(t, fixture.engine, fixture.version, image.image)
+	if fixture.engine == "compose" {
+		artifact = append(artifact, fixture.composeFields...)
+	}
 	var manifest Manifest
 	if err := json.Unmarshal([]byte(fixtureManifest), &manifest); err != nil {
 		t.Fatal(err)
