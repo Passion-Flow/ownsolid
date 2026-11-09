@@ -2,7 +2,6 @@ package install
 
 import (
 	"bytes"
-	"context"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
@@ -304,24 +303,9 @@ type coldRestoreBrowser struct {
 
 func (b coldRestoreBrowser) request(t *testing.T, method, path string, body io.Reader, headers map[string]string, want int) []byte {
 	t.Helper()
-	status, raw, err := b.send(t.Context(), method, path, body, headers)
+	req, err := http.NewRequestWithContext(t.Context(), method, b.origin+path, body)
 	if err != nil {
-		t.Fatalf("%s %s: %v", method, path, err)
-	}
-	if status != want {
-		var problem struct {
-			Code string `json:"code"`
-		}
-		_ = json.Unmarshal(raw, &problem)
-		t.Fatalf("%s %s returned HTTP %d at %s (%s), want %d", method, path, status, b.origin, problem.Code, want)
-	}
-	return raw
-}
-
-func (b coldRestoreBrowser) send(ctx context.Context, method, path string, body io.Reader, headers map[string]string) (int, []byte, error) {
-	req, err := http.NewRequestWithContext(ctx, method, b.origin+path, body)
-	if err != nil {
-		return 0, nil, err
+		t.Fatal(err)
 	}
 	if method == http.MethodPost {
 		req.Header.Set("Origin", b.origin)
@@ -332,11 +316,21 @@ func (b coldRestoreBrowser) send(ctx context.Context, method, path string, body 
 	}
 	resp, err := b.client.Do(req)
 	if err != nil {
-		return 0, nil, err
+		t.Fatalf("%s %s: %v", method, path, err)
 	}
 	defer resp.Body.Close()
 	raw, err := io.ReadAll(resp.Body)
-	return resp.StatusCode, raw, err
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != want {
+		var problem struct {
+			Code string `json:"code"`
+		}
+		_ = json.Unmarshal(raw, &problem)
+		t.Fatalf("%s %s returned HTTP %d at %s (%s), want %d", method, path, resp.StatusCode, b.origin, problem.Code, want)
+	}
+	return raw
 }
 
 func (b coldRestoreBrowser) csrf(t *testing.T) string {

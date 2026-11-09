@@ -2,6 +2,7 @@ package install
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,6 +12,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Passion-Flow/ownsolid/api/agent/modelartifact"
+	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	license "github.com/Passion-Flow/ownsolid/pkg/license/v1"
 	"go.yaml.in/yaml/v3"
 )
@@ -189,12 +192,10 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 		return
 	}
 	t.Run("retries and reads the verified database, keys and model back on an empty site", func(t *testing.T) {
-		workspace := query(t, databaseName, "SELECT default_workspace_id FROM installation_state WHERE id=1")
-		modelFile := filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar")
-		if _, err := os.Stat(modelFile); err != nil {
-			t.Fatal("the coordinated drill needs the pinned model.tar")
-		}
-		model := publishColdRestoreModel(t, coldRestoreLogin(t, c, c.Origins.Admin, credential), licenseKey, workspace, modelFile)
+		model := seedCoordinatedModel(t, o)
+		adminBrowser := coldRestoreLogin(t, c, c.Origins.Admin, credential)
+		installColdRestoreLicense(t, adminBrowser, licenseKey)
+		assertColdRestoreModel(t, adminBrowser, c, model)
 		output := privateDir(t)
 		check(t, config, "BACKUP_COMPLETE", false, "backup-coordinated", "--output", output)
 		assertOriginal(t)
@@ -240,6 +241,49 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 			t.Fatalf("stop restored site: %v: %s", err, out)
 		}
 	})
+}
+
+// Use the native recovery fixture pattern: load pinned real files first and
+// seed the admitted model identity in the disposable database. The maintenance
+// drill exercises backup and recovery, independently of model import timing.
+func seedCoordinatedModel(t *testing.T, o *operation) string {
+	t.Helper()
+	model := coldRestoreUUID(t)
+	path := filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar")
+	archive, err := os.Open(path)
+	if err != nil {
+		t.Fatal("the coordinated drill needs the pinned model.tar")
+	}
+	defer archive.Close()
+	directory := filepath.Join(o.modelObjects(), model)
+	if err := os.MkdirAll(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := modelartifact.ExtractArchive(t.Context(), archive, directory); err != nil {
+		t.Fatal(err)
+	}
+	catalogue := agent.ApprovedModel()
+	for _, file := range catalogue.Files {
+		if err := own(filepath.Join(directory, file.Path), o.config, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := o.ownModelDirectories(); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := json.Marshal(catalogue)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sql := fmt.Sprintf(`INSERT INTO model_versions(id,tenant_id,workspace_id,name,model_key,catalog_digest,manifest,state,created_by)
+		SELECT '%s',tenant_id,default_workspace_id,'Approved backup fixture','%s','%s','%s'::jsonb,'ready',primary_admin_user_id
+		FROM installation_state WHERE id=1 AND bootstrap_complete`,
+		model, catalogue.ModelKey, agent.ModelCatalogDigest(), strings.ReplaceAll(string(raw), "'", "''"))
+	if _, err := o.query(t.Context(), databaseName, sql); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("seeded approved model revision %s from the checked archive", catalogue.Revision)
+	return model
 }
 
 func TestPendingCoordinatedBackupBlocksInstallerOperations(t *testing.T) {
