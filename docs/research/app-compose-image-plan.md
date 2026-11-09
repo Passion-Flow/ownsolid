@@ -76,13 +76,50 @@ before launch, and a stale release pin. Deny cross-scope use of the
 admission record, verify that rejected attempts reach no launcher,
 and keep the installation unsettled when startup fails.
 
+## Service environment and label inputs
+
 A Compose 5.5.1 render-only fixture retained an `env_file` reference
-using `config --no-env-resolution`. Changing that file from
-`CATALOG_MODE=serve` to `CATALOG_MODE=debug` changed normal Compose
-evaluation of the identical admitted JSON. Include that replacement
-in the installer test. The installer keeps referenced input files
-immutable through startup or resolves them before admission.
-[Compose config](https://docs.docker.com/reference/cli/docker/compose/config/).
+using `config --no-env-resolution`. Changing the file from
+`CATALOG_MODE=serve` to `CATALOG_MODE=debug` changed evaluation of the
+same JSON. Normal environment resolution embedded the original value
+and removed the file reference. The same probe resolved a null
+environment entry from the process environment on replay. It also
+retained a `label_file` path and read a newly added label from that file
+on replay, while existing inline labels took precedence.
+[Compose config](https://docs.docker.com/reference/cli/docker/compose/config/),
+[Compose service inputs](https://docs.docker.com/reference/compose-file/services/#env_file).
+
+The first Compose path accepts environment values as explicit strings
+in the normalized service environment object, including empty strings.
+Omit keys whose values should stay unset. Use inline labels and omit
+`env_file` and `label_file` from the normalized model. Resolve approved
+non-secret inputs inside the trusted renderer and use the same
+normalized bytes for admission and launch. The catalog refuses file
+references even for optional files and refuses null environment values
+at admission, image import and launch verification, including plans
+retained from an earlier verifier.
+
+Hashing an external path or checking its content only at admission
+would leave Compose free to reopen a replacement. Admitting mutable
+external inputs would require a new signed inventory and a launcher
+that consumes locked content. Keep the first path inline. The installer
+owns the interpolation environment, project directory and profiles.
+It must disable implicit project `.env` loading, omit launch-time
+`--env-file` overrides, and preserve the effective admitted model.
+Configs, mounted secrets, volumes and other workload resources stay
+under separate installer admission. Deliver credentials as scoped file
+references outside the model's environment values.
+[Compose variable interpolation](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/).
+
+Use the existing signed bundle fixtures. Verify that the same rendered
+JSON with an `env_file` reference is refused before Docker and by the
+launch verifier even when it matches a retained plan digest. Exercise
+optional and raw file entries, label files and null environment values.
+On the pinned disconnected Compose and Docker fixture, change the
+referenced file, then verify the model with embedded values keeps the
+original effective environment and imports exactly the signed image.
+
+## Disconnected image import
 
 The initial disconnected Linux amd64 integration rendered the actual signed
 Compose artifact with Compose 5.0.0, checked the normalized bytes,
