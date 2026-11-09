@@ -100,6 +100,50 @@ func engineFixture(t *testing.T, engine, version, image string) []byte {
 	return output.Bytes()
 }
 
+func TestVerifyInitialReleaseChecksSelectedIdentityAndCompatibility(t *testing.T) {
+	for _, engine := range []string{"compose", "helm"} {
+		t.Run(engine, func(t *testing.T) {
+			root, key, private := transitionCatalog(t)
+			pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.0.0", engine: engine})
+			request := InitialReleaseRequest{AppID: "example-app", PlatformVersion: "1.2.0", Pin: pin}
+			var first InstallBundle
+			for attempt := range 2 {
+				release, err := VerifyInitialRelease(t.Context(), root, key, testTransitionBudget, request)
+				if err != nil || release.Pin != pin || release.Manifest.Artifact.Engine != engine || len(release.Archive.Images) != 1 {
+					t.Fatalf("selected release did not pass full verification: %v", err)
+				}
+				if attempt == 0 {
+					first = release
+				} else if first.Manifest.Artifact != release.Manifest.Artifact ||
+					first.Archive.Digest != release.Archive.Digest || !slices.Equal(first.Archive.Images, release.Archive.Images) {
+					t.Fatal("retry returned different signed content")
+				}
+			}
+			for _, candidate := range []InitialReleaseRequest{
+				{AppID: "different-app", PlatformVersion: request.PlatformVersion, Pin: pin},
+				{AppID: request.AppID, PlatformVersion: "0.9.0", Pin: pin},
+			} {
+				if release, err := VerifyInitialRelease(t.Context(), root, key, testTransitionBudget, candidate); !errors.Is(err, ErrReleaseTransition) || release.Pin != (ReleasePin{}) {
+					t.Fatalf("selected an unrelated or incompatible release: %v", err)
+				}
+			}
+
+			replacement := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: pin.Version, engine: engine, variant: "-republished"})
+			if release, err := VerifyInitialRelease(t.Context(), root, key, testTransitionBudget, request); !errors.Is(err, ErrReleaseTransition) || release.Pin != (ReleasePin{}) {
+				t.Fatalf("accepted different signed bytes under the same version: %v", err)
+			}
+
+			if err := root.WriteFile(replacement.Version+"/"+first.Manifest.Artifact.Filename(), []byte("changed artifact"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			request.Pin = replacement
+			if release, err := VerifyInitialRelease(t.Context(), root, key, testTransitionBudget, request); !errors.Is(err, ErrBundle) || release.Pin != (ReleasePin{}) {
+				t.Fatalf("accepted a changed signed payload: %v", err)
+			}
+		})
+	}
+}
+
 func TestVerifyReleaseTransitionSelectsAndRecoversExactBundles(t *testing.T) {
 	for _, engine := range []string{"compose", "helm"} {
 		t.Run(engine, func(t *testing.T) {
