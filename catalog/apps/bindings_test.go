@@ -3,6 +3,7 @@ package apps
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 	"testing"
@@ -125,5 +126,109 @@ func TestRejectUnscopedAndIncompleteBindings(t *testing.T) {
 	}
 	if _, err := manifest.Bind(BindingScope{}, resolved); !errors.Is(err, ErrBindings) {
 		t.Fatalf("accepted an invalid binding scope: %v", err)
+	}
+}
+
+func TestVerifyInstallBindingsUsesSignedDependencies(t *testing.T) {
+	manifest, scope, resolved := bindingFixture(t)
+	root, key, private := transitionCatalog(t)
+	pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{
+		version: "1.2.0", engine: "compose", dependencies: manifest.Dependencies,
+	})
+	list, err := ListReleaseMetadata(t.Context(), root, key, manifest.ID)
+	if err != nil || len(list) != 1 || list[0].Pin != pin ||
+		list[0].English.Title != "Example app" || list[0].SimplifiedChinese.Title != "\u793a\u4f8b\u5e94\u7528" {
+		t.Fatalf("did not list the signed bilingual dependency declaration: %v", err)
+	}
+	request := InitialReleaseRequest{AppID: manifest.ID, Pin: list[0].Pin, PlatformVersion: "1.2.0"}
+	installed, err := VerifyInitialRelease(t.Context(), root, key, testTransitionBudget, request)
+	if err != nil || installed.Pin != request.Pin || !reflect.DeepEqual(installed.Manifest.Dependencies, manifest.Dependencies) {
+		t.Fatalf("complete signed payload verification failed: %v", err)
+	}
+	plan, err := VerifyInstallBindings(t.Context(), root, key, request, scope, resolved)
+	want, bindErr := manifest.Bind(scope, resolved)
+	if err != nil || bindErr != nil || plan.Pin != pin || plan.Scope != scope || !reflect.DeepEqual(plan.Dependencies, want) {
+		t.Fatalf("the exact signed release did not return a scoped plan: %v, %v", err, bindErr)
+	}
+	for _, tc := range []struct {
+		name   string
+		change func(*InitialReleaseRequest, map[string]ResolvedBinding, ResolvedBinding)
+		want   error
+	}{
+		{"missing binding", func(_ *InitialReleaseRequest, entries map[string]ResolvedBinding, _ ResolvedBinding) {
+			delete(entries, "app-database")
+		}, ErrBindings},
+		{"wrong resource type", func(_ *InitialReleaseRequest, entries map[string]ResolvedBinding, b ResolvedBinding) {
+			b.Resource.Kind, b.Resource.Protocol = Storage, "s3"
+			entries["app-database"] = b
+		}, ErrBindings},
+		{"foreign workspace", func(_ *InitialReleaseRequest, entries map[string]ResolvedBinding, b ResolvedBinding) {
+			b.Resource.WorkspaceID = fixtureID(15)
+			entries["app-database"] = b
+		}, ErrBindings},
+		{"foreign installation", func(_ *InitialReleaseRequest, entries map[string]ResolvedBinding, b ResolvedBinding) {
+			b.Secret.Scope.InstallationID = fixtureID(16)
+			entries["app-database"] = b
+		}, ErrBindings},
+		{"direct credential", func(_ *InitialReleaseRequest, entries map[string]ResolvedBinding, b ResolvedBinding) {
+			b.Secret.ID = "synthetic-direct-value"
+			entries["app-database"] = b
+		}, ErrBindings},
+		{"stale pin", func(selection *InitialReleaseRequest, _ map[string]ResolvedBinding, _ ResolvedBinding) {
+			selection.Pin.BundleSHA256 = digestBytes([]byte("different signed inventory"))
+		}, ErrBindings},
+		{"incompatible platform", func(selection *InitialReleaseRequest, _ map[string]ResolvedBinding, _ ResolvedBinding) {
+			selection.PlatformVersion = "2.0.0"
+		}, ErrReleaseTransition},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			selection, entries := request, maps.Clone(resolved)
+			tc.change(&selection, entries, entries["app-database"])
+			result, err := VerifyInstallBindings(t.Context(), root, key, selection, scope, entries)
+			if !errors.Is(err, tc.want) || result.Pin != (ReleasePin{}) || result.Scope != (BindingScope{}) || result.Dependencies != nil {
+				t.Fatalf("expected a refusal with no partial binding plan: %v", err)
+			}
+			if strings.Contains(err.Error(), "synthetic-direct-value") {
+				t.Fatal("binding error disclosed the submitted credential value")
+			}
+		})
+	}
+}
+
+func TestVerifyInstallBindingsRefusesCredentialInSignedDeclaration(t *testing.T) {
+	manifest, scope, resolved := bindingFixture(t)
+	root, key, private := transitionCatalog(t)
+	pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{
+		version: "1.2.0", engine: "helm", dependencies: manifest.Dependencies,
+	})
+	version, err := root.OpenRoot(pin.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer version.Close()
+	index, err := readIndex(version, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := version.ReadFile(manifestName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	changed := strings.Replace(string(raw), `"protocol":"postgresql"`, `"protocol":"postgresql","password":"synthetic-direct-value"`, 1)
+	if changed == string(raw) {
+		t.Fatal("fixture did not put the value into the signed declaration")
+	}
+	if err := version.WriteFile(manifestName, []byte(changed), 0600); err != nil {
+		t.Fatal(err)
+	}
+	index.Manifest = digestBytes([]byte(changed))
+	signed := ociJSON(t, index)
+	signFixtureIndex(t, version, private, signed)
+	pin.BundleSHA256 = digestBytes(signed)
+	request := InitialReleaseRequest{AppID: manifest.ID, Pin: pin, PlatformVersion: "1.2.0"}
+	result, err := VerifyInstallBindings(t.Context(), root, key, request, scope, resolved)
+	if !errors.Is(err, ErrManifest) || result.Pin != (ReleasePin{}) || result.Dependencies != nil ||
+		strings.Contains(err.Error(), "synthetic-direct-value") {
+		t.Fatalf("a signed declaration with a direct credential reached binding: %v", err)
 	}
 }
