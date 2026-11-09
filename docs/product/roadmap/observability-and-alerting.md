@@ -32,6 +32,7 @@ fully offline.
 - [ ] OBS-112 Black-box probes of platform endpoints and model routes (P1)
   - [Private HTTPS platform probe](../../research/platform-endpoint-probes.md#verified-linux-path) qualifies a native health endpoint and remote-written results. Installed entrance and model-route probes remain open.
 - [ ] OBS-113 Telemetry store backup and restore with the open-source tools, scheduled by ownsolid (P1)
+  - [Offline multi-day recovery](../../research/telemetry-backup.md#verified-path) qualifies native metric backup and log-partition recovery across two UTC days and two accounts. Scheduled publication and recovery coordination remain open.
 
 ## P2 Fleet operations
 
