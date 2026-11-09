@@ -184,3 +184,65 @@ before making the first HTTPS preview request. This separates cold package
 and asset I/O on the shared test host from the fixed 30-second fixture
 client deadline. The route and the timed child still run with their
 existing deadlines and resource limits.
+
+## Public HTTP contract
+
+Publish the two already-implemented cell-scoped POST operations. Admin
+resolves the dataset's workspace from the dataset ID. Portal uses the
+workspace path and its own session. Both require the corresponding exact
+Origin and a current CSRF token. The operation reads a preview without
+changing a draft and takes no idempotency key or query parameters. The
+[OpenAPI Operation Object](https://spec.openapis.org/oas/v3.1.1.html#operation-object)
+lets the two operations share one request and response schema with their
+separate audience and path parameters. A single unscoped endpoint or a
+GET with request fields in the URL would diverge from the registered
+handler and its browser security requirements.
+
+The request supplies a same-workspace ready model UUID, a sample limit
+from one through eight and a token budget from 32 through 2,048. Report
+the first bounded page in row order. Completion tokens include EOS.
+The zero-based overflow index and section are present together only
+when the total exceeds the budget. Neither field is present on an exact
+fit. The returned text, digest and counts refer to the sampled rows.
+A preview is neither a truncation nor a reservation for training.
+
+Without an injected runtime, an authorized call returns
+RESOURCE_NOT_FOUND with HTTP 404. Use the dispatcher and real TLS
+with a disposable loopback PostgreSQL database to check both entrances.
+Verify disabled behavior, scope denial, current CSRF, invalid JSON and
+limits, model or draft absence, bad assets, concurrent 429 and 401
+after session revocation during tokenization. Confirm problem responses
+carry no sample payload, retryable responses carry the server's retry
+hint, and restored assets or a free slot allow a later request. Generate
+the existing Go and Python clients and offline Help from this contract.
+No dependency, model or dataset is added.
+
+On Linux amd64, the same TLS dispatcher and disposable PostgreSQL 18.6
+fixture exercised the two public paths with and without the preview
+processor. Both disabled calls returned the documented 404. Enabled
+calls validated the shared response schema with the five digest-verified
+Qwen assets and 31 wheels installed offline from the Linux training lock.
+The Portal overflow and Admin exact fit preserved row identity and
+original token counts. Both refused a foreign model or missing draft,
+and the Portal refused missing and changed assets. The gated real
+tokenizer returned HTTP 429 with Retry-After to a second request. After
+the first request's session logged out, its HTTPS response was HTTP 401
+AUTH_SESSION_EXPIRED with no sample payload. The route also refused
+unsafe scratch, malformed bodies, missing CSRF, the wrong origin and
+a batch over the size limit. The existing scoped fixture was extended
+in a scratch overlay to validate the published wire shapes.
+
+The pinned generated Go and Python clients preserved both paths, CSRF
+headers, exact-fit omission, overflow fields and typed problems. The
+busy response retained its Retry-After header. Downloadable OpenAPI
+descriptions list the dataset-specific error codes. Help's bilingual
+error index can show the remaining dataset codes when both locale
+catalogues have their entries.
+
+### S-503 handoff
+
+The generated adminPreviewDatasetTokenizer and portalPreviewDatasetTokenizer
+operations require the installed runtime and current authorization. Render
+prompt, completion and EOS as separate text and show their counts and
+overflow section. The composition and release owners still need to
+install and inject the runtime, and both entrances need UI acceptance.
