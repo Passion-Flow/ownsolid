@@ -67,3 +67,15 @@ The production dispatcher serves both CSV downloads. The published
 operations and SDKs follow the JSON history cursor and the existing
 attachment semantics. See the [Web handoff and verification](gateway-usage-csv-contract.md#web-handoff).
 The direct continuation header needs the shared HTTP response writer.
+
+## Node exporter reference inventory test
+
+The existing Web Help contract comparison reads the raw Nodes path items
+as JSON objects. The three Admin and one Portal exporter path aliases use
+OpenAPI references to their canonical Components operations. The
+generated Help index retains their legacy entries and bookmarks.
+The comparison therefore reports only these four missing expectations.
+An isolated comparison using the existing readContract path resolver
+produced exact sets for both entrances. The Web owner can make the
+comparison resolve Path Item Objects before enumerating methods. Retain
+the independent check of the audience and operation set.
