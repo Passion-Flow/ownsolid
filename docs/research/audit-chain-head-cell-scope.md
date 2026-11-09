@@ -198,3 +198,16 @@ production rollback regression rejected a real constraint change twice
 before the repaired retry succeeded. The Audit module retained the
 checkpoint, refused foreign writes and verified the retained export and
 concurrent appends with the standalone verifier.
+
+### Shared Linux replay gate
+
+The tracked production tree passed the disconnected local fixture. The
+shared Linux amd64 replay remains pending until the active repository
+gates finish, both the shared heavy-test lock and the SCI replay lock
+are available, free memory is at least 2 GiB, available memory is at least
+8 GiB, available disk is at least 30 GiB, and full I/O PSI avg10 is at
+most 5%. Use the same SCI shell replay and offline verifier against the
+embedded migration and the pinned PostgreSQL image. Require the three
+recorded digests, 118 tables, preserved checkpoints, scope refusal,
+concurrent appends and successful production migrator replay before
+promoting the integrated candidate.
