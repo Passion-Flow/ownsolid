@@ -3,6 +3,7 @@ package config
 import (
 	"crypto/tls"
 	"testing"
+	"time"
 )
 
 func agentGatewayTestConfiguration(t *testing.T, names []string) Config {
@@ -34,6 +35,26 @@ func TestAgentGatewayConfigurationIsCompleteAndApart(t *testing.T) {
 		change(&c)
 		if e := c.Validate(); e == nil || e.Error() != "CONFIG_AGENT_GATEWAY_INVALID" {
 			t.Errorf("%s: %v", name, e)
+		}
+	}
+}
+
+func TestAgentGatewayConnectionMaxAgeDefaultsAndBounds(t *testing.T) {
+	c := agentGatewayTestConfiguration(t, []string{"machine.example.invalid"})
+	if got := c.AgentGateway.MaxConnectionAge(); got != 30*time.Minute {
+		t.Fatalf("legacy gateway age: %v", got)
+	}
+	for _, value := range []int{60, 1200, 86400} {
+		c.AgentGateway.ConnectionMaxAgeSeconds = value
+		decoded := machineTestDecode(t, c)
+		if e := decoded.Validate(); e != nil || decoded.AgentGateway.MaxConnectionAge() != Seconds(value) {
+			t.Fatalf("connection age %d: %v", value, e)
+		}
+	}
+	for _, value := range []int{-1, 59, 86401} {
+		c.AgentGateway.ConnectionMaxAgeSeconds = value
+		if e := c.Validate(); e == nil || e.Error() != "CONFIG_AGENT_GATEWAY_INVALID" {
+			t.Fatalf("invalid connection age %d: %v", value, e)
 		}
 	}
 }
