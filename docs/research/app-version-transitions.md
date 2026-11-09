@@ -67,6 +67,15 @@ The installer still owns authenticated installation history, authorization,
 audit, workload admission and execution, configuration and data recovery,
 and uninstall with an explicit retention choice.
 
+The installer needs an authenticated installation record keyed by app and
+workspace, with the current pin and retained known-good predecessor.
+Serialize changes or compare the current pin before applying a selected
+transition. The authorized deployer records its audit, imports with the
+selected expected pin, admits and applies the workload, and records the
+new pin only after completion. Rollback also needs the retained
+configuration and data recovery contract. The uninstall action must
+persist the operator's retention choice before removing a workload.
+
 ## Verification
 
 The Compose and Helm fixture bundles use native engine artifacts and different
