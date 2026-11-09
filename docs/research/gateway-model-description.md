@@ -182,3 +182,47 @@ optional alias response fields and Admin edit contract before the
 migration activates these response fields on installations. WEB can
 then verify publishing and editing in Console and the S-304 display
 in Portal.
+
+## Public OpenAPI and client boundary
+
+The [OpenAPI Schema Object](https://spec.openapis.org/oas/v3.1.0.html#schema-object)
+supports optional response fields for predecessor schemas. Declare
+description on the existing publication body and description and
+description_revision as optional, non-null alias fields that appear
+together after activation. Keep the released operation IDs, paths and
+required properties. Publish the scoped Admin edit with the existing
+session, Origin, CSRF and UUID idempotency rules. Its response distinguishes
+the current revision from the one applied by the original intent. A
+replacement of the alias would couple catalogue edits to serving revisions.
+
+The server normalizes text before enforcing the 500-character limit.
+Document that order, preserve the empty string for clearing a field and
+treat the result as plain text. Use the existing [SDK dependencies](sdk.md#licenses)
+and local generator. No dependency, model or dataset is added.
+
+Verify both predecessor and candidate responses against the public
+schemas over the production TLS dispatcher on a disconnected PostgreSQL
+fixture. Cover ordinary and described publication, Admin detail, Portal
+list and detail, edit, clear, replay, stale revisions and scoped refusals.
+Before activation, writes that need the new schema return SERVICE_NOT_READY.
+The migration and Console and Portal interaction remain separate gates.
+
+The disconnected PostgreSQL fixture validated the public alias and edit
+schemas through the actual Admin and Portal dispatcher. The predecessor
+omitted the optional fields and returned the typed SERVICE_NOT_READY
+problem for edits and described publication. The candidate returned both
+fields on authorized reads, preserved the independent revision across a
+cutover, and decoded successful clearing, historical replay and scope or
+revision refusals. Go and Python local client probes preserved omitted
+descriptions and explicit empty strings and decoded the typed replay and
+predecessor problem.
+
+### Console and Portal handoff
+
+Use the optional publication field and the generated Admin
+adminEditAliasDescription operation. Send the current
+description_revision with the edit and retain the idempotency key and
+payload when retrying an uncertain response. Render only the text in
+the Portal catalogue. The two alias fields are absent on predecessor
+schemas. The Admin controls and Portal display need installed migration
+evidence and their own UI qualification.
