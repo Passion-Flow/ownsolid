@@ -1,11 +1,11 @@
 // The steps of a long task (design-system long-running tasks).
 import { useI18n, type TranslationKey } from '@ownsolid/i18n';
-import { Check, X } from 'lucide-react';
+import { Check, Minus, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '../cn.ts';
 
 /** Where a step of a task stands. */
-export type StepState = 'pending' | 'running' | 'done' | 'failed';
+export type StepState = 'pending' | 'running' | 'done' | 'failed' | 'cancelled';
 
 /** One step of a {@link StepTimeline}. */
 export interface TimelineStep {
@@ -31,6 +31,7 @@ const stateLabels: Record<StepState, TranslationKey> = {
   running: 'timeline.state.running',
   done: 'timeline.state.done',
   failed: 'timeline.state.failed',
+  cancelled: 'timeline.state.cancelled',
 };
 
 const dots: Record<StepState, string> = {
@@ -38,6 +39,7 @@ const dots: Record<StepState, string> = {
   running: 'border-accent bg-surface text-accent shadow-[0_0_0_4px_var(--accent-soft)]',
   done: 'border-accent bg-accent text-white',
   failed: 'border-critical bg-critical text-white',
+  cancelled: 'border-border-strong bg-surface-2 text-text-2',
 };
 
 /** Steps in order, each with its state and how long it took. */
@@ -69,6 +71,7 @@ export function StepTimeline({ label, steps, className }: StepTimelineProps) {
           >
             {step.state === 'done' ? <Check className="size-3.5 stroke-[2.6]" /> : null}
             {step.state === 'failed' ? <X className="size-3.5 stroke-[2.6]" /> : null}
+            {step.state === 'cancelled' ? <Minus className="size-3.5 stroke-[2.6]" /> : null}
             {step.state === 'pending' || step.state === 'running' ? index + 1 : null}
           </span>
           <div className="min-w-0">
@@ -76,7 +79,10 @@ export function StepTimeline({ label, steps, className }: StepTimelineProps) {
             {step.detail ? <div className="text-[12.5px] text-text-3">{step.detail}</div> : null}
           </div>
           <div className="pt-1 text-[12px] whitespace-nowrap text-text-3">
-            {step.state === 'running' || step.state === 'pending' || !step.duration ? (
+            {step.state === 'running' ||
+            step.state === 'pending' ||
+            step.state === 'cancelled' ||
+            !step.duration ? (
               <span className={step.state === 'pending' ? 'sr-only' : undefined}>
                 {t(stateLabels[step.state])}
               </span>
