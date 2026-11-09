@@ -49,3 +49,17 @@ attempt's frozen inputs and recipe. Plot by optimizer step and distinguish
 different attempts by attempt ID and event sequence. Keep TRN-106 open
 until that user flow is wired and verified. A new collector or metrics
 store would duplicate the existing event authority.
+
+## TRN-107 accepted source handoff
+
+The offline PostgreSQL
+`TestActualPairedAcceptedAdapterSnapshot` verified that the service-owned
+snapshot and the existing borrowed transaction return the same accepted
+adapter identity. It also refused a foreign scope, a revoked session and
+an uncertain commit. Model preparation already uses that borrowed
+transaction in its [source admission](../../services/control/internal/modules/modelpreparations/source_repository.go).
+It can continue to consume the same identity after the training evidence
+checks. The [retained CPU qualification](training-dataset-lineage.md#qualified-cpu-result-and-authorized-dataset-publication)
+provides a separate controlled result. The serving and evaluation owners
+must connect the accepted model lineage to deployment and comparable
+baseline and candidate evaluations before the end-to-end item can close.
