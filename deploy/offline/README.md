@@ -294,6 +294,62 @@ cannot be reached. The record identifies the local recovery phase. Use
 operation details, container output, raw configuration files, environment values,
 addresses, credentials and database records.
 
+### Collect managed cluster information
+
+On a workstation with access to the private management endpoints, use
+`--cluster-config` in place of `--config`. The protected JSON input selects
+one or both sources and a total collection budget of 1 to 60 seconds.
+
+```json
+{
+  "format_version": 1,
+  "timeout_seconds": 10,
+  "management": {
+    "origin": "https://admin.site.invalid",
+    "site_id": "default",
+    "cell_id": "default",
+    "ca_file": "/private/diagnostics/admin-ca.pem",
+    "credential_file": "/private/diagnostics/admin-session"
+  },
+  "helm": {
+    "origin": "https://kubernetes.site.invalid:6443",
+    "namespace": "ownsolid",
+    "release": "ownsolid",
+    "ca_file": "/private/diagnostics/kubernetes-ca.pem",
+    "credential_file": "/private/diagnostics/kubernetes-token"
+  }
+}
+```
+
+Run as the owner of the files and keep the JSON and referenced files at
+mode 0600. Use private HTTPS origins with their own trusted CA files. The
+management credential is the value of an active platform Admin session.
+You can point `credential_file` directly at the protected session file from
+[the operator CLI](../../tools/cli/README.md#configure-and-sign-in).
+The CLI names the file `session-<sha256>` using the SHA-256 of the canonical
+Admin origin. Use the same origin for login and diagnostics.
+
+For Kubernetes, use a short-lived service account token for the API
+audience. Bind the account to a namespaced Role whose two rules grant
+`get` on `apps/deployments` and on core `services`. Set each rule's
+`resourceNames` to the exact `<release>-control` name. Write the token
+directly to a mode 0600 file with the cluster's existing operator tools.
+
+```sh
+ownsolid-install support-bundle --cluster-config /private/diagnostics/cluster.json \
+  --output /private/diagnostics/cluster-support.tar.gz
+tar -xOzf /private/diagnostics/cluster-support.tar.gz support.json
+```
+
+The report identifies Control's cluster and server states as recorded,
+with member counts. It separately includes Helm Deployment rollout state
+and replica counts, and the named Service's HTTPS configuration state.
+A configured Service does not establish ingress or endpoint health.
+Permission denial, timeout and unavailability appear as fixed collection
+issues while successful reads remain available. Site, cell, release and
+namespace names, endpoints, credentials and raw response details stay
+outside the archive.
+
 The collector works while the console is stopped. An installation with no
 operation history has an empty event list. Unavailable collectors report fixed
 codes. Review the archive locally before sharing it.

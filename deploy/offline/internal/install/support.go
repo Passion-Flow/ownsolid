@@ -82,6 +82,16 @@ type supportService struct {
 
 // SupportBundle saves a redacted snapshot on the installation host, even when control is down.
 func SupportBundle(ctx context.Context, c Config, runner Runner, output string, out io.Writer) error {
+	return publishSupportBundle(ctx, output, time.Duration(c.StepSeconds)*time.Second, out, func(collection context.Context) (any, int) {
+		report := collectSupport(collection, c, runner)
+		if errors.Is(collection.Err(), context.DeadlineExceeded) {
+			report.Issues = append(report.Issues, "COLLECTION_TIMEOUT")
+		}
+		return report, len(report.Issues)
+	})
+}
+
+func publishSupportBundle(ctx context.Context, output string, timeout time.Duration, out io.Writer, collect func(context.Context) (any, int)) error {
 	if !canonicalPath(output) || !strings.HasSuffix(output, ".tar.gz") {
 		return errors.New("INSTALL_SUPPORT_OUTPUT_INVALID: supply an absolute path ending in .tar.gz")
 	}
@@ -98,19 +108,16 @@ func SupportBundle(ctx context.Context, c Config, runner Runner, output string, 
 	if _, err := parent.Lstat(name); !errors.Is(err, os.ErrNotExist) {
 		return errors.New("INSTALL_SUPPORT_OUTPUT_EXISTS: use an unused output path")
 	}
-	collection, cancel := context.WithTimeout(ctx, time.Duration(c.StepSeconds)*time.Second)
+	collection, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	report := collectSupport(collection, c, runner)
+	report, issues := collect(collection)
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("INSTALL_SUPPORT_CANCELLED: %w", err)
-	}
-	if errors.Is(collection.Err(), context.DeadlineExceeded) {
-		report.Issues = append(report.Issues, "COLLECTION_TIMEOUT")
 	}
 	if err := writeSupport(parent, name, report); err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(out, "INSTALL_SUPPORT_COMPLETE collection_issues=%d\n", len(report.Issues))
+	_, err = fmt.Fprintf(out, "INSTALL_SUPPORT_COMPLETE collection_issues=%d\n", issues)
 	return err
 }
 
@@ -224,7 +231,7 @@ func readSupportServices(raw string, services []supportService) error {
 	return nil
 }
 
-func writeSupport(parent *os.Root, name string, report supportReport) error {
+func writeSupport(parent *os.Root, name string, report any) error {
 	raw, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
 		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot encode the support report")

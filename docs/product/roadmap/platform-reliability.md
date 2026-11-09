@@ -24,6 +24,7 @@ recovery and support tooling.
 - [ ] REL-104 Restore into an empty air-gapped environment, tested every release (P1) - Catalog: F507
   - The temporary-signed Linux amd64 Compose drill passed for legacy and encrypted backups, rollback, both entrances and restored model files. The every-release production gate remains open. See the [acceptance evidence](../../research/signed-release-recovery.md#linux-amd64-acceptance).
 - [ ] REL-105 Diagnostic bundle: redacted logs, configuration and state for support (P1) - Catalog: F647
+  - The [disconnected managed API check](../../research/support-diagnostics.md#disconnected-managed-api-check) verified the native installer against both scoped HTTPS response contracts and preserved single-node diagnostics. A live managed cluster and installed chart remain to be qualified.
   - The local archive reports the protected pending restore phase with Docker unavailable. The [disconnected Linux check](../../research/support-diagnostics.md#disconnected-diagnostic-check) verified that identifiers stay out of the archive.
 - [ ] REL-106 Long-running tasks idempotent, retryable and resumable after any component restart (P1) - Catalog: F530
 - [ ] REL-107 Self-monitoring of control-plane components with alerts (P1)
