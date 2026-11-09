@@ -184,3 +184,32 @@ func TestParseDCGMPCIIdentity(t *testing.T) {
 		}
 	}
 }
+
+func TestParseDCGMUnavailableFieldIdentity(t *testing.T) {
+	power := "DCGM_FI_DEV_BOARD_POWER_WATTS"
+	pciSample := func(metric, uuid, address, value string) string {
+		return fmt.Sprintf("%s{UUID=%q,pci_bus_id=%q} %s\n", metric, uuid, address, value)
+	}
+	available := gaugeText(gpuUtil, pciSample(gpuUtil, gpuA, "0000:ab:00.3", "0"))
+	for name, sample := range map[string]string{
+		"two devices claim one function":  pciSample(power, gpuB, "00000000:ab:00.3", "140737488355328"),
+		"one device claims two functions": pciSample(power, gpuA, "00000000:ab:00.4", "9223372036854775792"),
+	} {
+		t.Run(name, func(t *testing.T) {
+			got, err := parseDCGM([]byte(available + gaugeText(power, sample)))
+			if got != nil || !errors.Is(err, ErrDCGMInvalid) {
+				t.Fatalf("ambiguous identity returned %+v, %v", got, err)
+			}
+		})
+	}
+	unavailable := gaugeText(power, pciSample(power, gpuA, "00000000:ab:00.3", "140737488355328")+
+		pciSample(power, gpuB, "00000000:ab:00.4", "140737488355329"))
+	readings := gaugeText(gpuUtil, gpuSample(gpuUtil, gpuA, "0"))
+	devices, err := parseDCGM([]byte(readings + unavailable))
+	if err != nil || len(devices) != 1 || devices[0].UUID != gpuA || devices[0].PCIAddress != "00000000:ab:00.3" {
+		t.Fatalf("missing or empty device reported: %+v, %v", devices, err)
+	}
+	if value, ok := devices[0].Samples[gpuUtil]; !ok || value != 0 || len(devices[0].Samples) != 1 {
+		t.Fatalf("incorrect samples: %+v", devices[0].Samples)
+	}
+}
