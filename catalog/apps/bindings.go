@@ -1,8 +1,11 @@
 package apps
 
 import (
+	"context"
+	"crypto/ed25519"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"slices"
 )
@@ -83,6 +86,38 @@ type ResolvedBinding struct {
 type BoundDependency struct {
 	Dependency
 	ResourceID, SecretID string
+}
+
+// InstallBindingPlan identifies the signed release, authenticated installation
+// and owner-resolved dependency references for one operation.
+type InstallBindingPlan struct {
+	Pin          ReleasePin
+	Scope        BindingScope
+	Dependencies []BoundDependency
+}
+
+// VerifyInstallBindings binds the exact selected signed release to scoped
+// references from the resource and secret owners. The caller verifies the
+// payloads before installation and rechecks the grants before projection.
+func VerifyInstallBindings(ctx context.Context, appRoot *os.Root, key ed25519.PublicKey, request InitialReleaseRequest, scope BindingScope, resolved map[string]ResolvedBinding) (InstallBindingPlan, error) {
+	if appRoot == nil || len(key) != ed25519.PublicKeySize || !validID(request.AppID) || !request.Pin.valid() || !scope.valid() {
+		return InstallBindingPlan{}, fmt.Errorf("%w: supply the selected signed release and authenticated installation", ErrBindings)
+	}
+	release, err := readSignedVersion(ctx, appRoot, key, request.AppID, request.Pin.Version)
+	if err != nil {
+		return InstallBindingPlan{}, err
+	}
+	if release.Pin != request.Pin {
+		return InstallBindingPlan{}, fmt.Errorf("%w: reselect the exact signed release before resolving dependencies", ErrBindings)
+	}
+	if err := checkTransitionPlatform(release.Manifest, request.PlatformVersion); err != nil {
+		return InstallBindingPlan{}, err
+	}
+	plan, err := release.Manifest.Bind(scope, resolved)
+	if err != nil {
+		return InstallBindingPlan{}, err
+	}
+	return InstallBindingPlan{Pin: release.Pin, Scope: scope, Dependencies: plan}, nil
 }
 
 // Bind validates a complete set of owner-resolved references and returns it in
