@@ -656,7 +656,8 @@ func TestRestoreWorksOnADatabaseTooDamagedToMigrate(t *testing.T) {
 
 func TestSwapRetriesWhileASessionHoldsTheDatabase(t *testing.T) {
 	attempts := 0
-	d := &fakeDatabase{override: func(line string) (string, error, bool) {
+	intent := restoreIntent{Cluster: 80, Original: 10, Incoming: 20, Suffix: "0123456789abcdef01234567"}
+	d := &fakeDatabase{catalog: intent.before().key(), override: func(line string) (string, error, bool) {
 		if !strings.Contains(line, "RENAME TO") {
 			return "", nil, false
 		}
@@ -667,7 +668,7 @@ func TestSwapRetriesWhileASessionHoldsTheDatabase(t *testing.T) {
 		return "", nil, true
 	}}
 	o := testOperation(t, validConfig(t), d, &bytes.Buffer{})
-	if e := o.renameForRestore(context.Background(), restoreIntent{Cluster: 80, Original: 10, Incoming: 20, Suffix: "0123456789abcdef01234567"}, false); e != nil || attempts != 3 {
+	if e := o.renameForRestore(context.Background(), intent, false); e != nil || attempts != 3 {
 		t.Fatalf("%d %v", attempts, e)
 	}
 }
