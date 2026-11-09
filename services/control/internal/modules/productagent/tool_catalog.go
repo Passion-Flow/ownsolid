@@ -14,7 +14,7 @@ var generatedToolCatalog []byte
 
 type tool struct {
 	OperationID string   `json:"operation_id"`
-	Risk        string   `json:"risk"`
+	Risk        riskTier `json:"risk"`
 	Permission  string   `json:"permission"`
 	Method      string   `json:"method"`
 	Audiences   []string `json:"audiences"`
@@ -38,5 +38,5 @@ func loadTools() (map[string]tool, error) {
 }
 
 func (t tool) allowsRead(audience string) bool {
-	return t.Risk == "read" && t.Permission == "workspace_member" && t.Method == http.MethodGet && len(t.Audiences) == 1 && t.Audiences[0] == audience
+	return t.Risk == riskRead && t.Permission == "workspace_member" && t.Method == http.MethodGet && len(t.Audiences) == 1 && t.Audiences[0] == audience
 }
