@@ -53,6 +53,9 @@ type PublicConnector struct {
 type ConnectorPage struct {
 	Items      []Connector `json:"items"`
 	NextCursor *string     `json:"next_cursor"`
+	// UnreadableConnectorIDs identifies affected rows on this authenticated page.
+	// The published HTTP contract does not yet expose this runtime state.
+	UnreadableConnectorIDs map[string]bool `json:"-"`
 }
 
 type Binding struct {
