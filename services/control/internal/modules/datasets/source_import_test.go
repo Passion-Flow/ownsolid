@@ -335,6 +335,18 @@ pq.write_table(table, sys.argv[1], row_group_size=2, write_page_checksum=True)
 	if files, err := os.ReadDir(outDir); err != nil || len(files) != 1 || files[0].Name() != "rows.jsonl" {
 		t.Fatalf("failed attempt files remain: %v, %v", files, err)
 	}
+
+	previewDir := privateImportDir(t)
+	opts.ExpectedBytes = int64(len(raw))
+	opts.ExpectedSHA256 = fmt.Sprintf("%x", sha256.Sum256(raw))
+	opts.Cleaning = &SourceCleaningPolicy{KeepNonBlankFields: []string{"answer"}, PreviewRows: 2, PreviewBytes: 1024}
+	preview, err := importer.PreviewUpload(t.Context(), bytes.NewReader(raw), previewDir, opts)
+	if err != nil || preview.Rows != 1 || preview.RejectedRows != 1 || preview.Cleaning == nil ||
+		preview.Cleaning.FilteredRows != 1 || len(preview.Cleaning.Samples) != 1 ||
+		preview.Cleaning.Samples[0].Row != 3 || preview.OutputSHA256 != "" {
+		t.Fatal("Parquet dry run did not report the filtered row", err)
+	}
+	assertNoImports(t, previewDir)
 }
 
 func TestSourceImportMemory(t *testing.T) {

@@ -4,9 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
+	"testing/iotest"
 )
 
 func TestSourceCleaningPipeline(t *testing.T) {
@@ -138,4 +141,63 @@ func TestSourceCleaningFailureWithholdsPreview(t *testing.T) {
 			assertNoImports(t, dir)
 		})
 	}
+}
+
+func TestSourceCleaningDryRun(t *testing.T) {
+	const input = "{\"text\":\"private-filtered\",\"tag\":null}\n{\"text\":\" before \",\"tag\":\"keep\"}\n"
+	dir := privateImportDir(t)
+	importer := testImporter(t, testImportLimits(), nil)
+	opts := SourceImportOptions{
+		Format: SourceJSONL, TrainingFormat: SourceTrainingText, ExpectedBytes: int64(len(input)),
+		ExpectedSHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(input))),
+		Cleaning:       &SourceCleaningPolicy{TrimFields: []string{"text"}, KeepNonBlankFields: []string{"tag"}, PreviewRows: 4, PreviewBytes: 1024},
+	}
+	preview, err := importer.PreviewUpload(t.Context(), strings.NewReader(input), dir, opts)
+	if err != nil || preview.Rows != 1 || preview.Cleaning == nil || preview.Cleaning.ChangedRows != 1 ||
+		preview.Cleaning.FilteredRows != 1 || len(preview.Cleaning.Samples) != 2 || preview.OutputSHA256 != "" {
+		t.Fatal("invalid dry-run result", err)
+	}
+	assertNoImports(t, dir)
+
+	applied, err := importer.ImportUpload(t.Context(), strings.NewReader(input), filepath.Join(dir, "rows.jsonl"), opts)
+	if err != nil || applied.OutputSHA256 == "" {
+		t.Fatal("apply failed after the same preview", err)
+	}
+	applied.OutputSHA256 = ""
+	if !reflect.DeepEqual(preview, applied) {
+		t.Fatal("preview differs from application of the same policy")
+	}
+}
+
+func TestSourceCleaningDryRunFiltersEveryRow(t *testing.T) {
+	const input = "{\"text\":\"private-filtered\",\"tag\":null}\n"
+	dir := privateImportDir(t)
+	importer := testImporter(t, testImportLimits(), nil)
+	opts := SourceImportOptions{
+		Format: SourceJSONL, ExpectedBytes: int64(len(input)), ExpectedSHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(input))),
+		Cleaning: &SourceCleaningPolicy{KeepNonBlankFields: []string{"tag"}, PreviewRows: 2, PreviewBytes: 1024},
+	}
+	preview, err := importer.PreviewUpload(t.Context(), strings.NewReader(input), dir, opts)
+	if err != nil || preview.Rows != 0 || preview.OutputBytes != 0 || preview.OutputSHA256 != "" ||
+		preview.SourceSHA256 != opts.ExpectedSHA256 || preview.Cleaning == nil || preview.Cleaning.FilteredRows != 1 ||
+		len(preview.Cleaning.Samples) != 1 || preview.Cleaning.Samples[0].After != nil {
+		t.Fatal("all-filtered dry run did not retain a bounded before sample", err)
+	}
+	raw, err := json.Marshal(preview)
+	if err != nil || strings.Contains(string(raw), "private-filtered") {
+		t.Fatal("dry run serialized private sample values", err)
+	}
+	assertNoImports(t, dir)
+
+	broken := io.MultiReader(strings.NewReader(input), iotest.ErrReader(io.ErrUnexpectedEOF))
+	result, err := importer.PreviewUpload(t.Context(), broken, dir, opts)
+	if err == nil || !strings.HasPrefix(err.Error(), sourceReadFailedCode) || !reflect.DeepEqual(result, SourceImportReport{}) {
+		t.Fatal("dry run returned output after an interrupted transfer", err)
+	}
+	opts.ExpectedSHA256 = strings.Repeat("a", 64)
+	result, err = importer.PreviewUpload(t.Context(), strings.NewReader(input), dir, opts)
+	if err == nil || err.Error() != "DATASET_SOURCE_CHANGED" || !reflect.DeepEqual(result, SourceImportReport{}) {
+		t.Fatal("dry run returned output after a digest mismatch", err)
+	}
+	assertNoImports(t, dir)
 }
