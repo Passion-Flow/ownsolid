@@ -30,6 +30,7 @@ fully offline.
 - [ ] OBS-111 Log-based alert rules and SLO burn-rate alerts (P1)
   - [Node exporter journal alert](../../research/log-alert-rules.md#verified-linux-path) qualifies tenant-scoped native evaluation and offline notification. Continuous log collection, service SLI inputs, rule administration and packaged evaluator wiring remain open.
 - [ ] OBS-112 Black-box probes of platform endpoints and model routes (P1)
+  - [Private HTTPS platform probe](../../research/platform-endpoint-probes.md#verified-linux-path) qualifies a native health endpoint and remote-written results. Installed entrance and model-route probes remain open.
 - [ ] OBS-113 Telemetry store backup and restore with the open-source tools, scheduled by ownsolid (P1)
 
 ## P2 Fleet operations
