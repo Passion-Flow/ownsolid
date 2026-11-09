@@ -5,22 +5,25 @@ package training_test
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 // Physical adapter/checkpoint files are actual approved-model CPU outputs. GPU node reports,
@@ -118,6 +121,7 @@ func TestActualCpuAcceptedCheckpointRecoveryFreezesNewAttemptAndPrivateRanges(t 
 	if e != nil || !bytes.Equal(raw, files[asset.Path][:rangeRequest.Length]) || digest(raw) != download.SHA256 {
 		t.Fatal("accepted checkpoint transfer bytes/hash", e)
 	}
+	verifyDeliveredCheckpoint(t, f, next)
 	rangeRequest.LeaseToken = l.LeaseToken
 	_, e = f.s.InputFile(ctx, f.input.NodeID, f.credential, l.TaskID, rangeRequest)
 	expected(t, e, "AGENT_LEASE_STALE")
@@ -133,6 +137,102 @@ func TestActualCpuAcceptedCheckpointRecoveryFreezesNewAttemptAndPrivateRanges(t 
 	_, e = f.s.InputFile(ctx, f.input.NodeID, f.credential, next.TaskID, rangeRequest)
 	expected(t, e, "ACCESS_DENIED")
 }
+
+// verifyDeliveredCheckpoint exercises the worker seal verifier on only the
+// ranges available to the newly claimed attempt.
+func verifyDeliveredCheckpoint(t *testing.T, f scenario, lease agentwire.Lease) {
+	t.Helper()
+	ctx := t.Context()
+	resume := lease.Training.Resume
+	directory := t.TempDir()
+	for _, asset := range resume.Files {
+		if !wire.CheckpointAssetAllowed(asset.Path) {
+			t.Fatalf("unexpected checkpoint asset %q", asset.Path)
+		}
+		path := filepath.Join(directory, asset.Path)
+		file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = file.Close() })
+		fileHash := sha256.New()
+		for offset := int64(0); offset < asset.SizeBytes; {
+			length := min(wire.TransferChunkBytes, asset.SizeBytes-offset)
+			input := wire.InputFileRequest{LeaseToken: lease.LeaseToken, Kind: "checkpoint", Asset: asset.Path, Offset: offset, Length: length}
+			download, err := f.s.InputFile(ctx, f.input.NodeID, f.credential, lease.TaskID, input)
+			if err != nil {
+				t.Fatal("download checkpoint range", err)
+			}
+			rangeHash := sha256.New()
+			size, err := io.Copy(io.MultiWriter(file, fileHash, rangeHash), io.NewSectionReader(download.File, download.Offset, download.Size))
+			closeErr := download.File.Close()
+			if err != nil || closeErr != nil || size != length || download.Offset != offset || fmt.Sprintf("%x", rangeHash.Sum(nil)) != download.SHA256 {
+				t.Fatalf("invalid checkpoint range for %s at %d: copy %v, close %v", asset.Path, offset, err, closeErr)
+			}
+			offset += length
+		}
+		if err = file.Close(); err != nil || fmt.Sprintf("%x", fileHash.Sum(nil)) != asset.SHA256 {
+			t.Fatalf("invalid complete checkpoint asset %s: %v", asset.Path, err)
+		}
+	}
+	request, err := lease.Training.ContainerRequest()
+	if err != nil {
+		t.Fatal(err)
+	}
+	bindings, err := json.Marshal(wire.ExpectedBindings(request, agentwire.ApprovedModel().Repository))
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtimes, err := filepath.Abs("../../../../../runtimes")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const script = `
+import json, sys
+from pathlib import Path
+runtimes, directory, digest, max_bytes, max_files = sys.argv[1:]
+sys.path[:0] = [runtimes + '/training', runtimes + '/data-processing']
+from projectone_training.checkpoints import CheckpointReference, verify_checkpoint
+from projectone_training.configuration import Configuration
+from projectone_training.data import TrainingError
+bindings = json.load(sys.stdin)
+reference = CheckpointReference(Path(directory), digest)
+try:
+    receipt, trainer = verify_checkpoint(reference, bindings, Configuration(**bindings['configuration']), int(max_bytes), int(max_files))
+    print(receipt['global_step'], trainer['global_step'])
+except TrainingError as error:
+    print(error.code)
+    sys.exit(1)
+`
+	verify := func() (string, error) {
+		command := exec.CommandContext(ctx, os.Getenv("PROJECT_ONE_DATA_PYTHON"), "-IB", "-c", script,
+			runtimes, directory, resume.ReceiptSHA256, strconv.FormatInt(request.Resources.MaximumOutputBytes, 10),
+			strconv.FormatInt(int64(request.Resources.MaximumOutputFiles), 10))
+		command.Stdin = bytes.NewReader(bindings)
+		raw, err := command.CombinedOutput()
+		return strings.TrimSpace(string(raw)), err
+	}
+	if result, err := verify(); err != nil || result != fmt.Sprintf("%d %d", resume.GlobalStep, resume.GlobalStep) {
+		t.Fatalf("worker did not accept transferred checkpoint: %s (%v)", result, err)
+	}
+
+	optimizer, err := os.OpenFile(filepath.Join(directory, "optimizer.pt"), os.O_RDWR, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var first [1]byte
+	_, readErr := optimizer.ReadAt(first[:], 0)
+	first[0] ^= 1
+	_, writeErr := optimizer.WriteAt(first[:], 0)
+	closeErr := optimizer.Close()
+	if readErr != nil || writeErr != nil || closeErr != nil {
+		t.Fatalf("mutate the private checkpoint copy: read %v, write %v, close %v", readErr, writeErr, closeErr)
+	}
+	if result, err := verify(); err == nil || result != "TRAINING_CHECKPOINT_CHANGED" {
+		t.Fatalf("worker accepted altered optimizer bytes: %s (%v)", result, err)
+	}
+}
+
 func actualCheckpointWithFault(t *testing.T, mutate func(map[string][]byte)) (scenario, agentwire.Lease, training.Upload, map[string][]byte, []byte) {
 	t.Helper()
 	output := os.Getenv("PROJECT_ONE_ACTUAL_TRAINING_OUTPUT")
