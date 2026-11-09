@@ -71,6 +71,27 @@ The test binds ephemeral loopback ports and stops the three processes after
 the check. It verifies the webhook batch and queries the notifier's active,
 inhibited and silenced states.
 
+### Occurrence acknowledgement candidate
+
+The candidate uses the existing authenticated webhook parser and a dedicated
+real Alertmanager observation and escalation route. It checks a single alert
+occurrence per group and uses a PostgreSQL row and fenced attempt history.
+The fixture verifies the first authorized responder wins, fresh occurrences
+remain independent, and silent or resolved alerts do not acquire new
+delivery claims. The candidate is compiled only with the
+`alerting_candidate` build tag. The product listener retains its existing
+delivery path.
+
+Set `OWNSOLID_TEST_ALERTMANAGER` to the verified Alertmanager 0.34.2
+binary and `OWNSOLID_TEST_POSTGRES_IMAGE` to the verified, preloaded
+PostgreSQL 18.6 image ID. Run on Linux with permission to enter the
+disposable container's network namespace.
+
+    bash services/control/internal/modules/monitoring/alerting/testdata/check-local-escalation.sh
+
+The runner creates the DDL only in its disposable database. See the
+[candidate boundary and evidence](../../../../../docs/research/alert-occurrence-escalation.md).
+
 ### Local SMTP delivery
 
 The [SMTP example](alerting/alertmanager-smtp.example.yaml) uses implicit
