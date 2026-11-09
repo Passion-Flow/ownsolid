@@ -89,7 +89,7 @@
      "required": false,
      "schema": {
       "type": "string",
-      "maxLength": 2048
+      "maxLength": 512
      }
     },
     {
@@ -325,7 +325,7 @@
      "required": false,
      "schema": {
       "type": "string",
-      "maxLength": 2048
+      "maxLength": 512
      }
     }
    ],
@@ -448,7 +448,7 @@
      "required": false,
      "schema": {
       "type": "string",
-      "maxLength": 2048
+      "maxLength": 512
      }
     }
    ],
@@ -518,7 +518,7 @@
      "required": false,
      "schema": {
       "type": "string",
-      "maxLength": 2048
+      "maxLength": 512
      }
     }
    ],
