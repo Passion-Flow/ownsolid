@@ -65,7 +65,7 @@ and two failed in an archive containing only upstream files.
 - `console API reference > lists exactly the operations the contracts give this entrance`
 - `portal API reference > lists exactly the operations the contracts give this entrance`
 
-The four missing operations are:
+The raw Nodes comparison expected these four operation paths under Nodes. The Help index assigns them to Components.
 
 - `GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter`
 - `GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/logs`
@@ -73,6 +73,8 @@ The four missing operations are:
 - `GET /api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/components/node-exporter`
 
 The Help package, generator and Nodes contract had the same contents at
-`0c78eb79`. The local MOD-121 expiry and MOD-107 deployment retirement
-candidates are absent from that upstream commit. The gate remains with
-the Help and contract owners.
+`0c78eb79`. Commit `9d25ee7c` uses the canonical path resolver in the
+comparison. All 19 Help tests then passed on clean main and in the
+full gate on `d4095c34`. The MOD-121 and MOD-107 slices also passed
+disconnected PostgreSQL after rebasing onto the updated catalogue
+admission and node code. They reached main at `e97a4fb4` and `33bbf870`.
