@@ -105,7 +105,7 @@ func TestPostgresWaitReasonsRefreshWithQuotaAndRelease(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertQuotaReason(QuotaInUse, WaitForCapacity, 3)
-	if changed, err := releaseInTransaction(t.Context(), f.store, f.first); err != nil || !changed {
+	if changed, err := releaseInTransaction(t.Context(), f.store, f.first, fixtureReplicaReleases(f.first, reservationIntent(f.first, 2))...); err != nil || !changed {
 		t.Fatalf("release competing attempt: %v, %v", changed, err)
 	}
 	for _, wantChanged := range []bool{true, false} {

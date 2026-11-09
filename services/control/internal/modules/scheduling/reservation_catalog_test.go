@@ -67,7 +67,7 @@ func TestPostgresReservationCatalogRoundTrip(t *testing.T) {
 				t.Fatalf("seed hold: %v %v", changed, err)
 			}
 		}
-		if changed, err := releaseInTransaction(t.Context(), store, finished); err != nil || !changed {
+		if changed, err := releaseInTransaction(t.Context(), store, finished, fixtureReplicaReleases(finished, reservationIntent(finished, 2))...); err != nil || !changed {
 			t.Fatalf("seed release: %v %v", changed, err)
 		}
 	}

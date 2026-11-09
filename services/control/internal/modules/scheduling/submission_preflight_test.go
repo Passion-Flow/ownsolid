@@ -55,7 +55,7 @@ func TestPostgresPreflightUsesOneSnapshotAndRefreshes(t *testing.T) {
 		}); err != nil {
 			return err
 		}
-		if changed, err := releaseInTransaction(t.Context(), f.store, f.first); err != nil || !changed {
+		if changed, err := releaseInTransaction(t.Context(), f.store, f.first, fixtureReplicaReleases(f.first, reservationIntent(f.first, 2))...); err != nil || !changed {
 			t.Fatalf("release competing attempt: %v, %v", changed, err)
 		}
 		repeated, err := EstimateSubmissionWithin(t.Context(), tx, a.TenantID, a.WorkspaceID, intent, cell)

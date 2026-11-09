@@ -79,3 +79,58 @@ pending claims, cell shortfalls and a later exact-fit reservation. Verify
 that preview never creates or consumes a hold or claim. Full acceptance
 needs the owner's authorized submission endpoint, verified cell observation
 and an offline user flow.
+
+## Atomic gang reservation and release
+
+The version 1 intent already describes named replica groups with counts and
+per-replica resources. The reservation stores the normalized intent and all
+resource dimensions on one exact attempt row. [PostgreSQL transactions](https://www.postgresql.org/docs/18/tutorial-transactions.html)
+give this write the same commit outcome as the workload owner's physical
+holds, dispatch and audit writes. Retain the row, quota checks and exact
+replay key. The model expresses multi-replica demand independently of where
+the cell places the replicas.
+
+[Kueue's readiness check](https://kueue.sigs.k8s.io/docs/tasks/manage/setup_wait_for_pods_ready/)
+can evict an admitted workload when all Pods fail to become ready. Its
+[dynamic reclaim](https://kueue.sigs.k8s.io/docs/concepts/workload/#dynamic-reclaim)
+is a separate partial quota policy. [Volcano gang scheduling](https://volcano.sh/docs/v1.16.0/scheduler/plugins/gang/)
+uses a configured minimum threshold. For an ownsolid whole-job hold, keep
+all capacity charged until the owner has positive release evidence for the
+entire set of reserved replicas. Scheduler phase and timeouts do not prove
+physical removal. Kubernetes documents that [force-deleting a Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination-forced)
+can remove its API object before the node stops it.
+
+Give the owner a group release operation that validates the evidence set
+against the exact stored attempt and its normalized replica groups. Each
+entry names the attempt, group and zero-based replica index and represents a
+verified stop or verified non-delivery. The owner must validate the physical
+node or cell identity and the delivery history before passing an entry. A
+slot that had multiple physical incarnations requires proof that all have
+ended and that dispatch is fenced. The scheduler checks complete coverage
+and rejects repeats, unknown slots, uncertain outcomes and evidence from
+another attempt. It then writes the existing release timestamp in the same
+owner transaction. The single-replica release path keeps the existing owner
+proof contract. Previously released rows remain replayable.
+
+Separate rows per replica would duplicate the exact attempt and complicate
+rollback and accounting. Accepting a caller count would let repeated proof
+for one replica free the entire group. Inferring physical state from a
+Volcano phase, Kueue eviction or a missing object would free live capacity.
+The owner remains the source of physical evidence. The candidate schema
+needs no change.
+
+Use the existing [Go](https://go.dev/LICENSE) BSD-3-Clause standard library,
+[pgx](https://github.com/jackc/pgx/blob/master/LICENSE) MIT and
+[PostgreSQL](https://www.postgresql.org/about/licence/) under its PostgreSQL
+License. They permit commercial use, offline operation and redistribution
+with notices. Kueue, Volcano and Kubernetes are Apache-2.0 references. No
+dependency, model or dataset is added.
+
+On isolated PostgreSQL, verify refusal of a gang when one dimension cannot
+fit, rollback of all owner-side holds on reservation or commit failure,
+replay of one exact gang after a lost commit acknowledgement, refusal of
+changed shapes with identical totals, and complete evidence before any
+capacity becomes free. Cover cross-tenant proof, missing and repeated
+replicas, owner rollback, stale attempts and exact release replay. The
+production migration, actual physical receipts and installed scheduler
+acceptance remain separate owner work.

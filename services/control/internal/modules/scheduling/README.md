@@ -37,3 +37,8 @@ The submission owner can call `EstimateSubmissionWithin` with a read-only
 PostgreSQL REPEATABLE READ transaction, its authorized workspace and verified
 cell capacity. The result includes the policy revision, whole demand and
 wait reasons. The owner submits through the existing reservation transaction.
+
+For distributed work, `ReserveWithin` stores the entire replica-group demand
+on one attempt. `ReleaseGangWithin` checks that the owner has supplied verified
+stop or non-delivery evidence for every reserved slot. See [gang reservation
+and release](../../../../../docs/research/scheduling-admission.md#atomic-gang-reservation-and-release).
