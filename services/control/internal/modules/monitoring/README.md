@@ -190,6 +190,39 @@ The native test above also verifies that vmalert writes these aggregates
 only to the long store. The operator sets the retention periods on each
 VictoriaMetrics instance.
 
+### Node exporter journal alert
+
+Run the [journal rule](alerting/node-journal-rules.yaml) in a dedicated
+vmalert process. Point `-datasource.url` at the private VictoriaLogs
+endpoint and `-notifier.url` at the private Alertmanager. Keep the
+evaluator, data store and Alertmanager API on the operator network. Keep
+VictoriaLogs write access restricted to the trusted Control ingestion path.
+
+    /absolute/path/to/vmalert \
+      -httpListenAddr=127.0.0.1:8880 \
+      -rule=/etc/ownsolid/alerting/node-journal-rules.yaml \
+      -datasource.url=http://10.42.1.23:9428 \
+      -notifier.url=http://10.42.1.24:9093
+
+Route `OwnsolidNodeExporterJournalErrors` through the tenant receiver with
+`group_by: [tenant_id, workspace_id, alertname]`. A workspace warning fires
+when the latest snapshots from at least three distinct nodes include
+an error-or-higher entry. The rule looks back five minutes for snapshots,
+then accepts entries up to five minutes old at collection. A newer clean
+snapshot, a removal marker, or expiry can clear the warning. The signal
+reflects collected snapshots from the component logs action. A workspace
+with no recent snapshots has no signal. View the affected workspace and
+node logs through the authorized component view.
+
+For the isolated Linux run, set `OWNSOLID_TEST_VICTORIA_LOGS`,
+`OWNSOLID_TEST_VMALERT`, and `OWNSOLID_TEST_ALERTMANAGER` to the
+checksum-verified VictoriaLogs 1.53.0, vmalert 1.155.0 and Alertmanager
+0.34.2 binaries. Run with permission to create a network namespace.
+
+    bash services/control/internal/modules/monitoring/alerting/testdata/check-local-journal-alerts.sh
+
+See the [Linux validation and scale measurements](../../../../../docs/research/log-alert-rules.md#verified-linux-path).
+
 ### Offline snapshot restore check
 
 The [snapshot restore check](testdata/check-telemetry-restore.sh) starts
