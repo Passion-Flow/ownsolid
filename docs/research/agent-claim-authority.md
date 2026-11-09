@@ -152,14 +152,32 @@ liveness, and timestamp tests also passed against this database.
 | Updated report, warm pacing | 10 | 9 | 38 | 38 |
 | Foreign credential | 1 | 1 | 1 | 1 |
 
-A separate one-node loopback probe issued a real node certificate and sent the
-first heartbeat over mTLS HTTPS through the production dispatcher. HTTP 200
-returned, but the cold pin check brought the count to 12 statements, 16 rows
-and 94 shared blocks, above the unchanged ceiling of 11. The existing
-Deployments insert still evaluates both cell defaults and the scoped node
-foreign key. The Deployments owner can use the authenticated node row's site
-and cell explicitly on that insert, preserving the scoped update and foreign
-key. Re-measure the cold transport with that change and add first, updated and
-deployment-bound observations to the shared HTTPS cost suite. Component,
-preparation and Registry operations still need the two-fleet measurement.
-No declaration or fleet acceptance result has changed.
+A one-node loopback probe issued a real node certificate and sent the first
+heartbeat over mTLS HTTPS through the production dispatcher. Before the
+Deployments change it returned HTTP 200 with 12 statements, 16 rows and
+94 shared blocks, above the unchanged ceiling of 11. The cold pin check
+added one statement to the service exchange. The Deployments owner changed
+the insert to use site and cell from the authenticated node row in `6ba6da92`,
+removing both default lookups. See [the deployment scope proof](deployment-observation-scope.md).
+
+Independent replay on the local PostgreSQL 18.6 and pgvector 0.8.7 fixture
+passed twice with the normal mTLS transport and the unchanged statement gate.
+The scoped concurrent first-write test passed twice in the same run.
+
+| mTLS HTTPS exchange | Statements | Rows | Shared blocks |
+| --- | ---: | ---: | ---: |
+| Cold first report | 10 | 14 | 86 |
+| Warm update | 8 | 11 | 32 |
+| Foreign credential | 2 | 1 | 3 |
+
+The direct service test now reports 9, 7 and 1 statements respectively. To
+repeat the transport and concurrency checks, configure the protected local
+PostgreSQL fixture and run:
+
+```sh
+go -C services/control test -p 1 ./internal/modules/deployments -run '^(TestMutualTLSInferenceObservationCost|TestInferenceObservationKeepsNodeScopeOnConcurrentFirstWrites)$' -count=2 -v
+```
+
+The one-node mTLS gate is green. ARC-108 still needs deployment-bound
+observations and component, preparation and Registry operations in the shared
+two-fleet cost suite. No declaration or fleet acceptance result has changed.
