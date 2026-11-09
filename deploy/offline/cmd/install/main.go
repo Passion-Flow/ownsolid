@@ -29,6 +29,7 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install backup-coordinated --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install recover-backup --config <install.yaml>\n" +
 	"       ownsolid-install scheduled-backup --config <install.yaml>\n" +
+	"       ownsolid-install backup-history --config <install.yaml>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <directory>\n" +
 	"       ownsolid-install backup --config <install.yaml> --output <new archive.tar.age> --recipient-file <public key file>\n" +
 	"       ownsolid-install restore --config <install.yaml> --from <backup directory>\n" +
@@ -141,6 +142,8 @@ func run(args []string, out io.Writer) error {
 		return install.RecoverCoordinatedBackup(ctx, c, install.ExecRunner{}, out)
 	case "scheduled-backup":
 		return install.ScheduledBackup(ctx, c, install.ExecRunner{}, out)
+	case "backup-history":
+		return install.WriteScheduledBackupHistory(c, out)
 	case "restore":
 		if encrypted {
 			return install.RestoreEncrypted(ctx, c, install.ExecRunner{}, *from, *identity, out)

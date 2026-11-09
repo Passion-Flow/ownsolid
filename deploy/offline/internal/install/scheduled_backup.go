@@ -53,6 +53,11 @@ func ScheduledBackup(ctx context.Context, c Config, runner StreamRunner, out io.
 	if os.Geteuid() != 0 {
 		return errors.New("INSTALL_ROOT_REQUIRED: run the scheduled backup as root")
 	}
+	return runScheduledBackup(ctx, newOperation(c, runner, out))
+}
+
+func runScheduledBackup(ctx context.Context, o *operation) (result error) {
+	c := o.config
 	if c.BackupSchedule == nil {
 		return errors.New("INSTALL_BACKUP_SCHEDULE_REQUIRED: configure backup_schedule before running the scheduled job")
 	}
@@ -60,9 +65,11 @@ func ScheduledBackup(ctx context.Context, c Config, runner StreamRunner, out io.
 	if err := schedule.validate(); err != nil {
 		return err
 	}
-	if err := admitBackupOutput(c, schedule.Directory); err != nil {
+	historyRoot, err := openScheduleHistoryRoot(c)
+	if err != nil {
 		return err
 	}
+	defer historyRoot.Close()
 	unlock, err := lockOperation(c)
 	if err != nil {
 		return err
@@ -71,15 +78,47 @@ func ScheduledBackup(ctx context.Context, c Config, runner StreamRunner, out io.
 	if err := checkBoundOperation(c); err != nil {
 		return err
 	}
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.BackupSeconds)*time.Second)
-	defer cancel()
-	if err := checkLocalDocker(ctx, runner); err != nil {
+	// Only a scheduled backup owns this directory lock. It is independent of
+	// the installation operation lock used by apply, backup and restore.
+	if err := syscall.Flock(int(historyRoot.Fd()), syscall.LOCK_EX); err != nil {
+		return errScheduleHistoryInvalid
+	}
+	history, err := readScheduledBackupHistory(c)
+	if err != nil {
 		return err
 	}
-	o := newOperation(c, runner, out)
+	if err := history.start(c, o.now()); err != nil {
+		return err
+	}
+	var removed int
+	completed := false
+	defer func() {
+		// A panic can unwind with a nil named result before retention has run.
+		// Leave the last durable checkpoint for interruption readback.
+		if result == nil && !completed {
+			return
+		}
+		if err := history.finish(c, o.now(), result, removed); err != nil {
+			result = errors.Join(result, err)
+		}
+		if result == nil {
+			fmt.Fprintf(o.out, "INSTALL_SCHEDULED_BACKUP_COMPLETE expired=%d\n", removed)
+		}
+	}()
+	if err := admitBackupOutput(c, schedule.Directory); err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.BackupSeconds)*time.Second)
+	defer cancel()
+	if err := checkLocalDocker(ctx, o.runner); err != nil {
+		return err
+	}
 	id, err := o.query(ctx, databaseName, "SELECT deployment_id FROM public.platform_license_state WHERE id = 1")
 	if err != nil || !deploymentIDPattern.MatchString(id) {
 		return errors.New("INSTALL_BACKUP_OWNER_UNAVAILABLE: verify that the installation's PostgreSQL database is running")
+	}
+	if err := history.bind(c, id); err != nil {
+		return err
 	}
 	root, lock, err := openScheduleDirectory(c, schedule.Directory)
 	if err != nil {
@@ -87,8 +126,7 @@ func ScheduledBackup(ctx context.Context, c Config, runner StreamRunner, out io.
 	}
 	defer root.Close()
 	defer lock.Close()
-	owner := scheduleOwner{DeploymentID: id, Project: c.Project, InstallRoot: c.InstallRoot}
-	ownerRecord, err := json.Marshal(owner)
+	ownerRecord, err := json.Marshal(history.Owner)
 	if err != nil {
 		return err
 	}
@@ -103,18 +141,25 @@ func ScheduledBackup(ctx context.Context, c Config, runner StreamRunner, out io.
 		return writeFile(filepath.Join(partial, scheduleOwnerFile), ownerRecord, c, false)
 	})
 	if err != nil {
-		err = retryWith(err, "scheduled-backup")
-		o.record("backup", "failed", err.Error())
-		return err
+		code := scheduleFailureCode(err)
+		if published != "" {
+			code = "INSTALL_BACKUP_OUTPUT_FAILED"
+		}
+		o.record("backup", "failed", code)
+		return &StepError{Step: "backup", Code: code, Command: "scheduled-backup"}
 	}
 	path := filepath.Join(schedule.Directory, filepath.Base(published))
-	o.record("backup", "complete", path)
-	fmt.Fprintf(out, "BACKUP_COMPLETE path=%s\n", path)
-	removed, err := expireScheduledBackups(ctx, root, prefix, filepath.Base(path), schedule.Retain, ownerRecord)
-	if err != nil {
-		return fmt.Errorf("INSTALL_BACKUP_RETENTION_FAILED: the new backup is available, but expiry did not finish: %w", err)
+	o.record("backup", "complete", "")
+	fmt.Fprintf(o.out, "BACKUP_COMPLETE path=%s\n", path)
+	history.Runs[len(history.Runs)-1].BackupVerified = true
+	if err := history.save(c); err != nil {
+		return err
 	}
-	fmt.Fprintf(out, "INSTALL_SCHEDULED_BACKUP_COMPLETE expired=%d\n", removed)
+	removed, err = expireScheduledBackups(ctx, root, prefix, filepath.Base(path), schedule.Retain, ownerRecord)
+	if err != nil {
+		return errors.New("INSTALL_BACKUP_RETENTION_FAILED: the new backup is available. Check the scheduled repository before rerunning scheduled-backup")
+	}
+	completed = true
 	return nil
 }
 
