@@ -360,6 +360,9 @@ func TestSourceImportMemory(t *testing.T) {
 			!report.Cleaning.SamplesTruncated || len(report.Cleaning.Samples) != 8 {
 			t.Fatalf("report %+v, cleaning %+v, error %v", report, report.Cleaning, err)
 		}
+		if runtime.GOOS == "linux" {
+			fmt.Printf("peak_rss_bytes=%d\n", linuxImportPeakRSS(t))
+		}
 		return
 	}
 	if testing.Short() {
@@ -388,20 +391,56 @@ func TestSourceImportMemory(t *testing.T) {
 		// Fix CPU parallelism and GC settings so the comparison does not
 		// measure host-wide scheduling or a caller-supplied heap limit.
 		command.Env = append(os.Environ(), childInput+"="+path, "GOMAXPROCS=2", "GOGC=100", "GOMEMLIMIT=off")
-		if out, err := command.CombinedOutput(); err != nil {
+		out, err := command.CombinedOutput()
+		if err != nil {
 			t.Fatalf("import %d MiB: %v\n%s", size>>20, err, out)
 		}
-		usage := command.ProcessState.SysUsage().(*syscall.Rusage)
-		peak[index] = int64(usage.Maxrss)
 		if runtime.GOOS == "linux" {
-			peak[index] *= 1024
+			if _, err = fmt.Sscanf(string(out), "peak_rss_bytes=%d", &peak[index]); err != nil {
+				t.Fatalf("invalid child peak RSS: %v", err)
+			}
+		} else {
+			usage := command.ProcessState.SysUsage().(*syscall.Rusage)
+			peak[index] = int64(usage.Maxrss)
 		}
 		if peak[index] <= 0 {
 			t.Fatal("peak RSS unavailable")
 		}
 		t.Logf("input=%d bytes, cleaned=%d rows, peak RSS=%d bytes (%.2f MiB)", size, size/4096, peak[index], float64(peak[index])/(1<<20))
+		for _, used := range []string{path, path + ".jsonl"} {
+			if err = os.Remove(used); err != nil {
+				t.Fatal(err)
+			}
+		}
 	}
-	if peak[1] > peak[0]+(24<<20) || peak[1] > 64<<20 {
+	if peak[1] > 64<<20 {
+		t.Fatalf("peak RSS exceeded 64 MiB: %d bytes", peak[1])
+	}
+	if peak[1] > peak[0]+(24<<20) {
 		t.Fatalf("peak RSS grew with input: %d -> %d bytes", peak[0], peak[1])
 	}
+}
+
+func linuxImportPeakRSS(t *testing.T) int64 {
+	t.Helper()
+	// ProcessState's rusage can include the parent's resident pages from
+	// before exec. VmHWM belongs to the importing child's address space.
+	status, err := os.ReadFile("/proc/self/status")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for line := range strings.Lines(string(status)) {
+		value, found := strings.CutPrefix(line, "VmHWM:")
+		if !found {
+			continue
+		}
+		var kib int64
+		var unit string
+		if _, err = fmt.Sscan(value, &kib, &unit); err != nil || unit != "kB" || kib <= 0 || kib > (1<<63-1)/1024 {
+			t.Fatal("invalid child VmHWM")
+		}
+		return kib * 1024
+	}
+	t.Fatal("child VmHWM unavailable")
+	return 0
 }

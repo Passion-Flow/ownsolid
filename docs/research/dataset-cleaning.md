@@ -61,3 +61,24 @@ S3 loopback, Parquet, and the opt-in cleaning path. The 16 MiB and 128 MiB
 JSONL files cleaned 4,096 and 32,768 rows and peaked at 24,064,000 and
 25,833,472 resident bytes. Both retained eight samples and reported
 preview truncation.
+
+## Linux peak memory measurement
+
+The full integration process can have a much larger resident set than the
+isolated import child. Linux preserves resource usage across `execve`, and
+the [kernel exec path](https://github.com/torvalds/linux/blob/master/fs/exec.c)
+carries the replaced address space's RSS peak into resource usage. The parent
+can therefore read the same pre-exec high-water value from `wait4` for both
+inputs. Measure `VmHWM` from the importer child's
+[`/proc/self/status`](https://docs.kernel.org/filesystems/proc.html) after
+importing. It measures the child's address space and captures spikes between
+samples. Periodic RSS polling could miss those spikes. Keep the existing
+macOS process usage measurement.
+
+The test uses the [Go standard library](https://go.dev/LICENSE) and
+synthetic fixture data. It adds no dependency or runtime requirement.
+The standard library permits commercial use, redistribution with the
+license notice, and offline use. Verify the 16 MiB and 128 MiB cases both
+in isolation and after the database integration tests. Retain the 64 MiB
+absolute ceiling and the 24 MiB allowed growth. Remove each input and output
+once its measurement is complete.
