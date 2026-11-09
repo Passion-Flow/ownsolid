@@ -10,6 +10,8 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"math/big"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -30,7 +32,6 @@ const declaredOrigin = "https://gw.rack7.example:18443"
 func deliveredScenario(t *testing.T) (scenario, *x509.CertPool) {
 	t.Helper()
 	c := setup(t)
-	c.s.Identity.Config.ModelGatewayIdentity = &config.ModelGatewayIdentityConfiguration{CACertificateFile: "/run/model-gateway-ca.pem", CAPrivateKeyFile: "/run/model-gateway-ca-key.pem"}
 	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	template := &x509.Certificate{SerialNumber: big.NewInt(7), Subject: pkix.Name{CommonName: "test model gateway CA"}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(48 * time.Hour), IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign}
 	der, e := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
@@ -39,7 +40,19 @@ func deliveredScenario(t *testing.T) (scenario, *x509.CertPool) {
 	}
 	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)
 	bundle := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
-	c.s.Certificates, e = agentidentity.NewAuthority(bundle, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER}), 24*time.Hour)
+	caKey := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER})
+	dir := t.TempDir()
+	certPath, keyPath := filepath.Join(dir, "certificate.pem"), filepath.Join(dir, "key.pem")
+	if e := os.WriteFile(certPath, bundle, 0600); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.WriteFile(keyPath, caKey, 0600); e != nil {
+		t.Fatal(e)
+	}
+	c.s.Identity.Config.ModelGatewayIdentity = &config.ModelGatewayIdentityConfiguration{
+		CACertificateFile: certPath, CAPrivateKeyFile: keyPath, CertificateLifetimeHours: 24,
+	}
+	c.s.Certificates, e = agentidentity.NewAuthority(bundle, caKey, 24*time.Hour)
 	if e != nil {
 		t.Fatal(e)
 	}

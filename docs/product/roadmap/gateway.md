@@ -43,6 +43,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
 - [ ] GW-123 The AI and model lifecycle profiles run node gateways too, as the inference profile does since GW-114 (P1)
 - [ ] GW-124 Node gateways renew their serving certificates before they expire, without dropping calls (P1)
 - [ ] GW-125 Callers get the model gateway CA from the console and the portal, beside each endpoint and code sample (P1)
+  - Authorized aliases serve the loaded gateway CA as a PEM attachment. [Disconnected PostgreSQL and TLS acceptance](../../research/gateway-delivery.md#downloading-caller-trust-gw-125) verifies a serving certificate and rejects mixed PEM. Public contract and Console and Portal links remain open.
 
 ## P2 Fleet operations
 

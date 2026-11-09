@@ -102,6 +102,10 @@ func (s *Service) ActivateGatewayWithin(ctx context.Context, q transaction.Execu
 	if !active {
 		return agentwire.GatewayActivated{}, fail("GATEWAY_INSTANCE_INACTIVE")
 	}
+	bundle, e := publicGatewayCA(s.Certificates.Bundle())
+	if e != nil {
+		return agentwire.GatewayActivated{}, e
+	}
 	certificate, notAfter, e := s.Certificates.IssueServing(csr, command.GatewayID, origin)
 	if e != nil {
 		return agentwire.GatewayActivated{}, e
@@ -114,7 +118,7 @@ func (s *Service) ActivateGatewayWithin(ctx context.Context, q transaction.Execu
 	if _, e = q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id) VALUES($1,clock_timestamp(),NULL,$2,$3,'system','gateway.instance_activated','success','gateway_instance',$4,NULL,$5)`, uuid.NewString(), n.TenantID, n.WorkspaceID, command.GatewayID, request)); e != nil {
 		return agentwire.GatewayActivated{}, e
 	}
-	return agentwire.GatewayActivated{Certificate: certificate, CertificateAuthority: s.Certificates.Bundle(), NotAfter: notAfter}, nil
+	return agentwire.GatewayActivated{Certificate: certificate, CertificateAuthority: string(bundle), NotAfter: notAfter}, nil
 }
 
 // RecordGatewayResultWithin records what the agent did with a gateway. A result of a task the

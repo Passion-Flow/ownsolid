@@ -122,13 +122,7 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 		if err != nil {
 			return nil, 0, err
 		}
-		digest := sha256.Sum256(page.CSV)
-		return httpserver.MemoryDownload{
-			Bytes:       page.CSV,
-			SHA256:      hex.EncodeToString(digest[:]),
-			FileName:    "gateway-usage.csv",
-			ContentType: "text/csv; charset=utf-8",
-		}, http.StatusOK, nil
+		return memoryAttachment(page.CSV, "gateway-usage.csv", "text/csv; charset=utf-8"), http.StatusOK, nil
 	}
 	if len(parts) == 3 && parts[0] == "aliases" && wire.ValidID(parts[1]) && parts[2] == "targets" && r.Method == http.MethodGet && isAdmin {
 		v, e := h.Service.TargetHistory(r.Context(), a, workspace, parts[1], r.URL.Query())
@@ -207,6 +201,13 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 		return nil, 0, bad
 	}
 	id := parts[1]
+	if len(parts) == 3 && parts[0] == "aliases" && parts[2] == "ca" && r.Method == http.MethodGet {
+		bundle, err := h.Service.AliasCertificateAuthority(r.Context(), a, workspace, id)
+		if err != nil {
+			return nil, 0, err
+		}
+		return memoryAttachment(bundle, "model-gateway-ca.pem", "application/octet-stream"), http.StatusOK, nil
+	}
 	if len(parts) == 3 && parts[0] == "aliases" && parts[2] == "cutovers" && r.Method == http.MethodPost && isAdmin {
 		var input distribution.CutoverRequest
 		if e := decodeCutover(r, &input); e != nil {
@@ -339,4 +340,12 @@ func decodeCutover(r *http.Request, out *distribution.CutoverRequest) error {
 		return errors.New("VALIDATION_FAILED")
 	}
 	return nil
+}
+
+func memoryAttachment(raw []byte, filename, contentType string) httpserver.MemoryDownload {
+	digest := sha256.Sum256(raw)
+	return httpserver.MemoryDownload{
+		Bytes: raw, SHA256: hex.EncodeToString(digest[:]),
+		FileName: filename, ContentType: contentType,
+	}
 }
