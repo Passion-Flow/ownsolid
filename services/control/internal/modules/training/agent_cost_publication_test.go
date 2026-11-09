@@ -26,6 +26,13 @@ type publicationCostFixture struct {
 
 func newPublicationCostFixture(t *testing.T, peers int) publicationCostFixture {
 	t.Helper()
+	run, base, shape := newPublicationRun(t, peers)
+	dispatched(t, run.f)
+	return newPublicationFixtureForLease(run, base, shape, run.claim(base, 0))
+}
+
+func newPublicationRun(t *testing.T, peers int) (*costRun, string, training.BaseShape) {
+	t.Helper()
 	var shape training.BaseShape
 	run, base := newCostRun(t, peers, func(f *scenario) {
 		f.input.Configuration.Rank = 4
@@ -67,14 +74,25 @@ func newPublicationCostFixture(t *testing.T, peers int) publicationCostFixture {
 	if err = run.flush(); err != nil {
 		t.Fatal(err)
 	}
-	dispatched(t, run.f)
-	l := run.claim(base, 0)
+	return run, base, shape
+}
+
+func acknowledgePublicationLease(run *costRun, base string, l agentwire.Lease) string {
+	t := run.t
+	t.Helper()
 	if l.Training == nil {
 		t.Fatal("publication fixture received no training lease")
 	}
 	task := "/tasks/" + l.TaskID
 	run.client.Call("POST", base+task+"/"+agentwire.TaskAcknowledgementsPath,
 		agentwire.TaskAcknowledgementRequest{Sequence: l.Sequence, LeaseToken: l.LeaseToken}, 200, "")
+	return task
+}
+
+func newPublicationFixtureForLease(run *costRun, base string, shape training.BaseShape, l agentwire.Lease) publicationCostFixture {
+	t := run.t
+	t.Helper()
+	task := acknowledgePublicationLease(run, base, l)
 	request, err := l.Training.ContainerRequest()
 	if err != nil {
 		t.Fatal(err)

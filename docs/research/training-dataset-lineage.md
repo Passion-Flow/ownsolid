@@ -1,0 +1,19 @@
+# Training dataset lineage (DAT-106)
+
+[OpenLineage's dataset version facet](https://openlineage.io/docs/spec/facets/dataset-facets/version_facet/) identifies the input version supplied by the data store. [MLflow Dataset Tracking](https://mlflow.org/docs/latest/ml/dataset/) records a source and a content digest with the run and distinguishes training, validation, and evaluation inputs. These designs inform the ownsolid projection. They are not runtime dependencies.
+
+## Retained sources
+
+A dataset publication has an immutable version ID, a manifest digest, and separate train and validation byte digests. A training job freezes the version and manifest at creation. Each attempt command binds both partitions. A new version or retirement changes dataset admission without changing earlier commands. Recovery of an attempted job can read the retained version under the original workspace authority and must fail if the retained bytes no longer verify. An exact replay of the original creation key returns the original job. Reusing the key with another version is a conflict.
+
+Use the retained accepted adapter read for exports and for model preparation. It reconciles the frozen job, the stopped attempt's command, the physical stop receipt, the accepted result, and the adapter inventory. Keep the public export fields and recheck current authority after physical verification. Looking up the latest dataset version would silently substitute inputs. A second lineage ledger would duplicate the same source of authority and introduce a consistency problem. No dataset scan or file buffering is needed for this projection.
+
+## Failure coverage
+
+Exercise a real processor-backed clone, changed row content, publication, and retirement in PostgreSQL. An existing job's retry must still read the original train and validation bytes. A new job cannot use the retired version, a different workspace cannot reference it, and the successful export and retained preparation source must agree. An inconsistent archived job and accepted result must fail closed even if the accepted adapter files still verify. Tests inject this inconsistency only into an isolated fixture schema.
+
+The existing test stack uses [PostgreSQL](https://www.postgresql.org/about/licence/), [pgvector](https://github.com/pgvector/pgvector/blob/master/LICENSE) (PostgreSQL License), [pgx](https://github.com/jackc/pgx/blob/master/LICENSE) (MIT), [google/uuid](https://github.com/google/uuid/blob/master/LICENSE) (BSD-3-Clause), [Go](https://go.dev/LICENSE) (BSD-3-Clause), and [CPython](https://docs.python.org/3/license.html) (PSF License). They permit commercial, offline use and redistribution under their notice terms. The pinned [Qwen3-0.6B configuration](https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/LICENSE) is Apache-2.0 and may be used commercially and redistributed offline subject to its terms. The test uses the existing approved configuration, synthetic weights and optimizer files, and test-generated CC0 records. It downloads neither a model nor a dataset. [OpenLineage](https://github.com/OpenLineage/OpenLineage/blob/main/LICENSE) and [MLflow](https://github.com/mlflow/mlflow/blob/master/LICENSE.txt) are Apache-2.0 design references. No dependency, model, or dataset is added to distribution.
+
+## Model and UI handoff
+
+Model preparation already freezes the training command and adapter together as a source identity through `AcceptedAdapterWithin`. Project the original training dataset ID, version ID, and manifest SHA-256 from that command for the model's lineage. Keep the preparation holdout's lineage separate. The derived catalog already carries `scope.preparation_id`, the preparation attempt ID, artifact ID, and report digest. Use these scoped references to resolve the retained preparation snapshot when presenting or exporting model lineage. DAT-106 also requires end-to-end evidence from the run and derived model views.
