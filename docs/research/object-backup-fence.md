@@ -246,3 +246,85 @@ fence record and issued no Docker command. Missing keys and objects,
 foreign scope and altered input were refused. Only the IPv4, IPv6 and DNS
 probes reached the recorder. No deployment or provider was restored, and
 the copy confirmation and fence in this run were controlled fixture inputs.
+
+## Restart authority required for production
+
+The selected PostgreSQL owner holds an installation advisory lock for
+serving. [PostgreSQL releases that lock when the session ends](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS).
+A new process can acquire a new installation lock while a prior object
+checkpoint is still incomplete. The current artifactstores constructor
+checks tenant, backend, schema and provider profile. It loads no backup
+hold. The local fence is tied to one lifecycle pointer. Closing that
+lifecycle cancels copy I/O and invalidates the pointer. Its scoped
+inventory and SHA-256 are byte evidence for a staging file.
+
+The object tables retain per-object operations and their authorization.
+ProcessNext selects prepared work, rechecks its actor and commits sent
+before provider I/O. Reconcile may claim an expired or failed intent.
+CleanupStaging can remove local content and Expire can schedule abort
+or deletion. None reads a durable backup operation. Restored-state
+fencing revokes grants and marks interrupted operations for reconciliation.
+It supplies no permission to reopen writers. The installer's a43f2a45
+checkpoint requires a trusted fence digest and copy confirmation. It
+has no production coordinator issuing either.
+
+Use the following contract for the selected PostgreSQL owner and installer.
+It reuses the previously documented PostgreSQL, Go and S3 components and
+licenses. A new dependency is unnecessary.
+
+- Add an installation-scoped hold row with a unique key over the
+  source cluster system identifier, database OID, tenant UUID and
+  store UUID. Pin the site SHA-256 and backend SHA-256 in that row.
+  Preserve a monotonic positive generation across release and reuse.
+  The row needs an operation UUID, coordinator owner UUID, bounded
+  lease deadline, hold state, and nullable verified copy identity
+  fields for inventory SHA-256, copy UUID, archive SHA-256 and size.
+  Require all copy fields together and bind confirmation to operation
+  and generation. Keep the independent fence digest distinct from
+  any secret or release token.
+- Serialize hold transitions and writer admission on the same row.
+  Persist an admission for each operation that can outlive its
+  initial SQL transaction, including direct multipart transfer,
+  cleanup, reconciliation and the worker. Bind permits to scope,
+  generation, operation UUID, owner and admitted/sent state. Reuse
+  an existing durable intent only when it can prove the same
+  boundaries. Commit the drain state before excluding new admissions.
+  Require provider exclusion and settle all admits before copy.
+  A lost acknowledgement or an expired sent operation stays unresolved
+  until the current owner reconciles provider and SQL state.
+- Read and validate the current scope and generation before installing
+  the artifactstores service or starting its worker. During an active
+  or unresolved hold, stop all mutation and cleanup across replicas.
+  Unavailable, missing or inconsistent authority in this profile
+  blocks startup and recovery release. A missing database row after
+  restore cannot override a still-held coordinator operation. The
+  installer must compare its independently durable operation before
+  enabling the restored target.
+- Lease expiry permits a privileged takeover of the same hold with
+  a higher generation. Expiry leaves writers fenced. Copy verification
+  and release recheck scope, operation, generation and current
+  coordinator authority in the owning transaction. A stale confirmation
+  or release returns no success and changes no successor state.
+  Reconcile restart ambiguity before allowing a new confirmation.
+- The provider owner must exclude direct S3 and filer writers, lifecycle
+  expiry and administrative writes throughout capture. The installer
+  pins that exclusion independently and binds a durable archive readback
+  to the logical dump and checkpoint. For restore it must also verify
+  the target and every restored object's content and ETag before
+  releasing the target hold.
+
+Use the existing SeaweedFS and PostgreSQL runner to first confirm that
+a process-local handle cannot return a copy after shutdown or release a
+successor in the same service. Qualification of the new authority needs
+two service processes, one shared database and a fenced provider.
+Kill the first process before copy, after a sent provider request and
+after writing a verified file. Require the next process to refuse
+admissions and cleanup until the current coordinator resolves the hold.
+Exercise lease takeover, stale confirmation, stale release, unknown
+commit, an expired prepared intent and an expired sent intent. Check
+provider requests and SQL revisions to detect effects from a denied call.
+
+The shared schema and startup owners must supply that authority before
+mounting production backup, cleanup or restore release for a checkpoint
+hold. The existing private stage-copy path remains available for its
+process-local fixture. NET-101 and REL-103 remain open.
