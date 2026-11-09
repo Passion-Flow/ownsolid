@@ -11,6 +11,10 @@ Measuring models and applications before release, and gating releases on the res
 ## P1 Enterprise release
 
 - [ ] EVL-101 Evaluation sets with versions, scorers and reports (P1) - Catalog: F148
+  - [Offline replay](../../../runtimes/model-lifecycle/README.md#replay-a-captured-evaluation)
+    binds a published validation partition to an existing base-model capture and
+    re-scores it. The authorized product workflow, UI and real inference repeatability
+    remain open.
 - [ ] EVL-102 Model-against-model comparison on the customer's own set (P1) - Catalog: F067
 - [ ] EVL-103 Release gates: a model or app version cannot be promoted below its threshold (P1) - Catalog: F650
 - [ ] EVL-104 Production traces turned into regression cases (P1)
