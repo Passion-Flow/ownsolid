@@ -14,7 +14,10 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 )
 
-type Handler struct{ Service *datasets.Service }
+type Handler struct {
+	Service          *datasets.Service
+	TokenizerPreview *datasets.TokenizerPreviewProcessor
+}
 
 func Owns(path string) bool {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
@@ -233,6 +236,14 @@ func (h *Handler) drafts(r *http.Request, a identity.Auth, workspace, dataset st
 		}
 		out, e := h.Service.UploadWithSourceRowFormat(ctx, a, workspace, dataset, draft, digests[0], r.ContentLength, r.Body, format, requestID)
 		return out, 202, e
+	}
+	if len(tail) == 2 && tail[1] == "tokenizer-preview" && r.Method == "POST" && h.TokenizerPreview != nil {
+		var input datasets.TokenizerPreviewRequest
+		if e := decode(r, &input, httpserver.MaxJSONBytes); e != nil {
+			return nil, 0, e
+		}
+		out, e := h.Service.PreviewDraftTokenizer(ctx, a, workspace, dataset, draft, input, h.TokenizerPreview)
+		return out, 200, e
 	}
 	if len(tail) == 2 && tail[1] == "publications" && r.Method == "POST" {
 		intent, e := key(r)

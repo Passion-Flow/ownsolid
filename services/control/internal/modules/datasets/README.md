@@ -157,6 +157,23 @@ before/after samples are bounded, excluded from JSON statistics, and available
 to the Go caller after a successful artifact commit. The candidate can be
 staged for an authorized preview before workspace registration.
 
+## Draft tokenizer preview
+
+The optional control adapter reads the first one to eight authorized draft
+rows, up to 64 KiB combined. It selects a ready model in the same workspace,
+stages the approved tokenizer files and verifies their full hashes before
+running the installed training tokenizer. It returns the rendered prompt,
+completion and EOS separately, with counts and the first excess token when
+the training budget is exceeded.
+
+The adapter is dormant until control composition injects a trusted Python
+executable, the installed training root, the existing model service and a
+private scratch root. The HTTP request deadline must cover the child wall
+budget plus the model-store read. The dataset child file-size budget must
+cover the largest pinned tokenizer file. Public API publication and S-503
+are separate release steps. See the
+[reproduction and handoff](../../../../../docs/research/training-tokenizer-preview.md#control-plane-bridge).
+
 ## Opt-in near-duplicate publication
 
 Admin and Portal publication requests can set the optional
