@@ -168,3 +168,34 @@ probe. The capture's SHA-256 was unchanged through admission, installation
 and the tokenizer run. This replay supplies no release approval. The
 formal wheelhouse, complete native notices and the released image and
 control integration remain open.
+
+### Retained inputs and the experiment record boundary
+
+The retained wheel inventory, Linux pip HTTP cache and earlier fixture
+directories supply the 30 dependency archives and the catalogued Qwen
+files. They supply no local copy of
+`pip-26.2.1-py3-none-any.whl` matching the runtime manifest's 1,816,632
+bytes and SHA-256
+`71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e`.
+The upstream Tokenizers tag supplies the source license. The selected
+native wheel still needs approved binary notice material bound to its
+hash, or an approved replacement pin carrying its complete notices.
+The public source license and registry metadata can corroborate identity
+and terms. The release gate also needs the actual approved files.
+
+For DAT-107, once that media is available, build a Linux amd64 preview
+image from the hash-pinned base with installation network-disabled. Bind
+the selected OCI manifest, its config digest and the projected lock digest
+to the verified build inputs, then run the local Qwen smoke. Qualify the
+installed runtime injection separately under the published preview contract.
+
+The [TRN-105 experiment record](training-experiment-records.md) requires
+a separate verified mapping for the full training execution image. The
+[OCI manifest](https://github.com/opencontainers/image-spec/blob/v1.1.1/manifest.md)
+selects the config descriptor and layers. The
+[image configuration](https://github.com/opencontainers/image-spec/blob/v1.1.1/config.md)
+defines the local image ID from the config bytes. Bind both digests to
+the exact full training lock verified during manufacture. The projected
+preview lock and the frozen reference in a worker request describe
+different inputs. Until the approved full image and its build evidence
+exist, the experiment's dependency lock field stays unavailable.
