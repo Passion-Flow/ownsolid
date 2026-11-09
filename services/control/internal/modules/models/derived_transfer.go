@@ -3,15 +3,14 @@ package models
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"io"
 	"os"
 	"path/filepath"
 
-	"github.com/jackc/pgx/v5"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+	"github.com/jackc/pgx/v5"
 )
 
 // OpenDerivedTransfer requires the caller's current node/task/lease and Workspace
@@ -74,6 +73,10 @@ func (s *Service) OpenDerivedTransferWithin(ctx context.Context, q transaction.E
 	if statError != nil || n != input.Length || !os.SameFile(before, after) || before.Size() != after.Size() || !before.ModTime().Equal(after.ModTime()) {
 		return out, fail("MODEL_FILE_CHANGED")
 	}
+	digest, e = modelTransferDigest(input, asset, sum.Sum(nil))
+	if e != nil {
+		return out, e
+	}
 	keep = true
-	return httpserver.Download{File: file, Offset: input.Offset, Size: input.Length, SHA256: hex.EncodeToString(sum.Sum(nil)), ContentType: "application/octet-stream"}, nil
+	return httpserver.Download{File: file, Offset: input.Offset, Size: input.Length, SHA256: digest, ContentType: "application/octet-stream"}, nil
 }
