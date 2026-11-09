@@ -52,3 +52,25 @@ database. It creates its own schema and applies the candidate ledger there.
 ```sh
 go -C services/control test -race ./internal/modules/metering -run '^TestPostgresAuthenticatedWorkspaceReport$' -count=1
 ```
+
+`AppendGatewayReceiptWithin` is the PostgreSQL intake for the gateway's
+canonical v1 acknowledgment. Call it from distribution Report in its
+existing transaction after persisting or verifying the receipt. Pass the
+machine scope, gateway ID and acknowledgment already verified by that path.
+The intake checks the exact persisted outcome and its digest. It records one
+request and, when measured, the receipt's total tokens at the persisted
+admission time. Roll back the owner transaction on error and acknowledge
+only after commit.
+
+A missing token measurement still contributes the request charge and an
+unmeasured-request count. Showback marks its known subtotal incomplete and
+budget status reports `unmeasured_usage` unless known charges reach the
+limit. A receipt with zero completion tokens can still contain measured
+prompt tokens. The generic append path reserves the gateway producer
+identity for the receipt intake.
+
+The disconnected PostgreSQL tests exercise receipt replay, scope, rollback,
+rate cutover and budget consistency. The candidate test schema includes the
+unmeasured-request column. Deploying the intake requires the production
+ledger and a call from the gateway owner. See the
+[transaction handoff](../../../../../docs/research/usage-ledger.md#gateway-receipt-intake).
