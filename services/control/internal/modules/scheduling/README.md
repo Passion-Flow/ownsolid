@@ -65,6 +65,7 @@ on one attempt. `ReleaseGangWithin` checks that the owner has supplied verified
 stop or non-delivery evidence for every reserved slot. See [gang reservation
 and release](../../../../../docs/research/scheduling-admission.md#atomic-gang-reservation-and-release).
 
-`RankWorkspaceQueueWithin` uses current quota and reservations for authorized
-workspace queues in one tenant. Pass a read-only REPEATABLE READ transaction
+`RankWorkspaceQueueWithin` uses current quota and reads aggregate reservations
+for all authorized workspace queues in one tenant with one query.
+Pass a read-only REPEATABLE READ transaction
 and the owner's durable queue entries. See [live workspace shares](../../../../../docs/research/scheduling-queue-policy.md#live-workspace-shares).

@@ -35,6 +35,7 @@ func RankWorkspaceQueueWithin(ctx context.Context, tx pgx.Tx, tenant string, ent
 	}
 
 	queues := make(map[string]QueueShare)
+	var workspaces []string
 	for _, entry := range entries {
 		id := entry.QueueID
 		if _, checked := queues[id]; checked {
@@ -48,13 +49,14 @@ func RankWorkspaceQueueWithin(ctx context.Context, tx pgx.Tx, tenant string, ent
 			return nil, err
 		}
 		queues[id] = QueueShare{Capacity: workspace.Limits.Burst}
+		workspaces = append(workspaces, id)
+	}
+	usage, err := readUsageByWorkspaceWithin(ctx, q, tenant, workspaces)
+	if err != nil {
+		return nil, err
 	}
 	for id, queue := range queues {
-		used, err := readWorkspaceUsageWithin(ctx, q, tenant, id)
-		if err != nil {
-			return nil, err
-		}
-		queue.Reserved = used
+		queue.Reserved = usage[id]
 		queues[id] = queue
 	}
 	return RankQueue(entries, queues)

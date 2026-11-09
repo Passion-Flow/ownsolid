@@ -1,6 +1,7 @@
 package scheduling
 
 import (
+	"context"
 	"errors"
 	"slices"
 	"testing"
@@ -8,6 +9,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
+
+type rankReadCounter struct {
+	pgx.Tx
+	queries int
+}
+
+func (tx *rankReadCounter) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+	tx.queries++
+	return tx.Tx.Query(ctx, sql, args...)
+}
 
 func TestPostgresWorkspaceQueueUsesLiveCommittedShares(t *testing.T) {
 	f := newReservationFixture(t)
@@ -18,9 +29,13 @@ func TestPostgresWorkspaceQueueUsesLiveCommittedShares(t *testing.T) {
 	entries := []QueueEntry{later, earlier, priority}
 	assertRank := func(tx pgx.Tx, want []QueueEntry) {
 		t.Helper()
-		ranked, err := RankWorkspaceQueueWithin(t.Context(), tx, a.TenantID, entries)
+		counted := &rankReadCounter{Tx: tx}
+		ranked, err := RankWorkspaceQueueWithin(t.Context(), counted, a.TenantID, entries)
 		if err != nil || !slices.Equal(ranked, want) {
 			t.Fatalf("workspace queue rank: %+v, %v, want %+v", ranked, err, want)
+		}
+		if counted.queries != 1 {
+			t.Fatalf("rank issued %d reservation reads for two workspaces", counted.queries)
 		}
 	}
 	assertFreshRank := func(want []QueueEntry) {
@@ -87,9 +102,10 @@ func TestPostgresWorkspaceQueueRejectsForeignAndMissingScope(t *testing.T) {
 			{uuid.NewString(), []QueueEntry{local}},
 			{f.first.TenantID, []QueueEntry{local, missing}},
 		} {
-			ranked, err := RankWorkspaceQueueWithin(t.Context(), tx, tc.tenant, tc.entries)
-			if !errors.Is(err, ErrQuotaScopeNotFound) || len(ranked) != 0 {
-				t.Fatalf("invalid scope exposed a partial rank: %+v, %v", ranked, err)
+			counted := &rankReadCounter{Tx: tx}
+			ranked, err := RankWorkspaceQueueWithin(t.Context(), counted, tc.tenant, tc.entries)
+			if !errors.Is(err, ErrQuotaScopeNotFound) || len(ranked) != 0 || counted.queries != 0 {
+				t.Fatalf("invalid scope returned a partial rank or read reservations: %+v, %v, reads=%d", ranked, err, counted.queries)
 			}
 		}
 		return nil
