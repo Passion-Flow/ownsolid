@@ -248,3 +248,57 @@ The Linux amd64 text and S3 intake tests passed in a network namespace with
 loopback only. The 16 MiB and 128 MiB cleaning runs both peaked at 28,000,256
 resident bytes. The fixtures and their normalized outputs were removed when
 the tests exited.
+
+## NET-101 snapshot handoff
+
+The portable copy from NET-101 commit `e03bbbab` covers only the
+[artifact-store inventory](../../services/control/internal/modules/artifactstores/backup_fence.go).
+It binds the SQL database, tenant, store namespace and backend fingerprint to
+settled `artifact_objects` rows. A ready row contributes
+`objects/<workspace_id>/<artifact_object_id>` to the archive. The copy
+verifies its revision, ETag, byte count and SHA-256, and returns the
+inventory digest plus the archive size and SHA-256 after readback.
+
+The dataset draft in candidate `8d7a6363` retains two separate files in
+the private datasets store. Its `dataset_draft_import_candidates` row
+joins `dataset_drafts` by tenant, workspace, dataset and draft IDs. Use
+the draft's `source_object_id` for both relative paths.
+
+| Dataset file | Expected size and SHA-256 |
+| --- | --- |
+| `objects/<source_object_id>/source.parquet` | Candidate report `source_bytes` and `source_sha256` |
+| `objects/<source_object_id>/source.jsonl` | Candidate report `output_bytes` and `output_sha256`, equal to the draft's `expected_bytes` and `source_sha256` |
+
+The candidate also checks `source_format = parquet`. Neither private
+path is an `artifact_objects` entry. The S3 upload used at ingress may
+have its own NET-101 row, but copying it does not prove custody of the
+draft's private original or normalized bytes. The existing dataset file
+snapshot already references the normalized bytes and omits the original.
+Keep the NET-101 scope checks intact.
+
+DEL can publish both owner manifests with one PostgreSQL dump under a
+common writer-exclusion window. A
+[shared PostgreSQL snapshot](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-SNAPSHOT-SYNCHRONIZATION)
+can synchronize SQL readers. The coordinator must still exclude writes
+to both object stores until their verified inventories and the dump
+are bound together. After the ARC audit and GW-120 migrations, admit
+the candidate table and the original in datasets `snapshotReferences`
+and `referenceFiles`. Bind the SQL dump digest, dataset file snapshot
+digest, NET-101 `inventory_sha256` and portable archive size and SHA-256
+before publication. On restore, verify both candidate files and the
+scoped row before ready. OBS can use these verified manifests for
+acceptance without rescanning a general-purpose bucket.
+
+The offline fixture stays on candidate `8d7a6363`. Install its pinned
+decoder and run the existing PostgreSQL and signed HTTPS replay:
+
+```sh
+bash services/control/internal/modules/datasets/testdata/replay_draft_import.sh \
+  "^TestActualParquetDraftAfterMetadataAndObjectRestore$"
+```
+
+This fixture has exercised restored PostgreSQL, the normalized snapshot,
+a signed fetch of the original, scope denial and corrupt or missing
+files. Run the same assertions against the coordinated restore once
+its trusted datasets inventory admits both paths. The current
+NET-101 copy cannot be used for that replay.
