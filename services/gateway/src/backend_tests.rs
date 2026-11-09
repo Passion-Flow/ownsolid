@@ -191,11 +191,12 @@ async fn actual_http_models_tokenize_and_completion_use_fixed_destination_and_sa
     )
     .await
     .unwrap();
-    let (value, usage) =
+    let completion =
         normalize_completion(&bytes, &request, "synthetic-internal", 7, limits).unwrap();
+    let value = completion.chat(&request.alias);
     assert_eq!(value["model"], "public-alias");
     assert!(value.get("private_diagnostic").is_none());
-    assert_eq!(usage.total_tokens, 9);
+    assert_eq!(completion.usage.total_tokens, 9);
     assert_eq!(fixture.state.calls.load(Ordering::SeqCst), 3);
 }
 

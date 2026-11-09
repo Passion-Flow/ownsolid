@@ -1,6 +1,6 @@
 # Model traffic gateway
 
-The Rust gateway serves bounded model-list and chat traffic against the selected local backend. It is a separate data-plane process; the Go control service remains the authority for API keys, model aliases, scope, license and request admission.
+The Rust gateway serves bounded model-list, chat and foreground text Responses traffic against the selected local backend. It is a separate data-plane process; the Go control service remains the authority for API keys, model aliases, scope, license and request admission.
 
 ## Runtime path
 
@@ -9,6 +9,44 @@ The [source guide](src/README.md) maps request admission, backend streaming, dur
 [src/main.rs](src/main.rs) supports serve, inspect, deliver-outcomes and explicit fence operations. [configuration.rs](src/configuration.rs) owns private JSON/secret paths and validated limits. [routing.rs](src/routing.rs) parses the request, resolves allowed models through control, waits for active capacity, reserves outcome-spool capacity and repeats admission immediately before backend work.
 
 [backend.rs](src/backend.rs), [transport.rs](src/transport.rs) and [streaming.rs](src/streaming.rs) bound backend requests, response/event bytes, deadlines and stream completion. [admission.rs](src/admission.rs) owns queue/active permits and terminal execution accounting. [control.rs](src/control.rs) validates control responses and outcome acknowledgements.
+
+## Foreground Responses
+
+Send `POST /v1/responses` over gateway HTTPS with `Authorization: Bearer <workspace API key>`
+and `Content-Type: application/json`. Use the key's public model alias.
+
+```json
+{"model":"public-alias","input":"Summarize the operating procedure.","max_output_tokens":128,"store":false,"stream":true}
+```
+
+The text subset accepts a nonempty string `input`, optional string
+`instructions`, `max_output_tokens`, `temperature` and `stream`.
+Storage and background execution default to false and accept only false
+when supplied. The gateway rejects item arrays, tools, structured output,
+reasoning parameters and conversation state. There is no stored response
+to retrieve or cancel by ID.
+
+Omit `stream` or set it to false to receive one JSON response. A streaming
+caller receives named SSE events with increasing sequence numbers and stable
+response and output item IDs. Close the connection to cancel. A verified
+upstream stop returns `completed`. A token-limit or content-filter stop
+returns `incomplete` with its reason and verified usage. The terminal response
+reports input, output and total tokens after local outcome persistence. Cache
+and reasoning breakdowns are unavailable from this path. A mid-stream failure
+can deliver partial text followed by `response.failed` with an ownsolid
+error code and null usage.
+
+Responses and Chat Completions share admission, token reservations, workspace
+limits and usage reporting. This endpoint covers foreground string-to-text
+creation. Full coding-tool interoperability and Anthropic Messages are tracked
+in [GW-103](../../docs/product/roadmap/gateway.md).
+
+Run `cargo test --locked --offline responses` from this service for the
+loopback protocol and quota tests. The native `gateway_integration` profile
+in control's distribution package includes
+`TestRealGoRustPostgresForegroundResponses`. It needs the compiled gateway
+and an isolated PostgreSQL fixture. See the
+[development environment](../../docs/development/environment.md#database-integration-tests).
 
 ## Backend connection recovery
 
@@ -110,11 +148,11 @@ Each limit is a positive integer and may be omitted independently. Explicit
 child limits must be within each ancestor's corresponding limit. Requests
 still count toward all configured parent ceilings. RPS is measured over a
 rolling second and capped at 10,000 per scope. RPS and concurrency apply to
-authorized chat and model-list calls. Once a policy is configured, every key
+authorized generation and model-list calls. Once a policy is configured, every key
 must be registered for its authorized workspace. Add rotated keys before
 switching clients and restart the gateway to apply policy changes.
 
-Token budgets use UTC calendar hours, days and months. Chat reserves prompt
+Token budgets use UTC calendar hours, days and months. Generation reserves prompt
 tokens plus the maximum output before dispatch and refunds the difference
 when complete usage is verified. Incomplete or interrupted generation retains
 its reservation. A 429 identifies the limiting dimension in the error code

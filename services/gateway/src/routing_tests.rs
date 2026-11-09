@@ -25,6 +25,7 @@ mod throughput;
 const QUOTA_TEST_NOW: i64 = 1_794_116_800;
 const REFUSE_GENERATION: usize = 6;
 const INTERRUPT_STREAM_AFTER_TEXT: usize = 7;
+const LENGTH_FINISH: usize = 8;
 
 #[derive(Clone)]
 struct Synthetic {
@@ -187,8 +188,13 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
         let _owned = GenerationDrop(state.dropped_generations.clone());
         std::future::pending::<()>().await;
     }
+    let finish = if mode == LENGTH_FINISH {
+        "length"
+    } else {
+        "stop"
+    };
     if body["stream"] == false {
-        return Json(json!({"id":"chatcmpl-synthetic","object":"chat.completion","created":1,"model":"synthetic-internal","choices":[{"index":0,"message":{"role":"assistant","content":"Synthetic reply \u{4e2d}\u{6587}"},"finish_reason":"stop"}],"usage":{"prompt_tokens":7,"completion_tokens":2,"total_tokens":9},"private_diagnostic":"must not forward"})).into_response();
+        return Json(json!({"id":"chatcmpl-synthetic","object":"chat.completion","created":1,"model":"synthetic-internal","choices":[{"index":0,"message":{"role":"assistant","content":"Synthetic reply \u{4e2d}\u{6587}"},"finish_reason":finish}],"usage":{"prompt_tokens":7,"completion_tokens":2,"total_tokens":9},"private_diagnostic":"must not forward"})).into_response();
     }
     assert_eq!(body["stream_options"]["include_usage"], true);
     let stream = async_stream::stream! {
@@ -203,7 +209,7 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
         if mode==2 {std::future::pending::<()>().await;}
         if mode==4 {state.complete_stream.notified().await;}
         if mode!=1 {
-            yield Ok(event(json!([{"index":0,"delta":{},"finish_reason":"stop"}]),Value::Null));
+            yield Ok(event(json!([{"index":0,"delta":{},"finish_reason":finish}]),Value::Null));
             yield Ok(event(json!([]),json!({"prompt_tokens":7,"completion_tokens":2,"total_tokens":9})));
             yield Ok(crate::streaming::DONE_EVENT.to_vec());
             if mode==5 {yield Ok(b"data: unexpected\n\n".to_vec());}
@@ -1756,4 +1762,309 @@ async fn shared_quota_round_trip_benchmark() {
         samples[237].as_micros(),
         samples[247].as_micros()
     );
+}
+
+fn responses_request(fixture: &Fixture, stream: bool) -> reqwest::RequestBuilder {
+    fixture
+        .client
+        .post(format!("{}/v1/responses", fixture.origin))
+        .bearer_auth(&fixture.state.client_key)
+        .json(&json!({
+            "model": "public-alias",
+            "input": "Synthetic prompt",
+            "max_output_tokens": 16,
+            "store": false,
+            "stream": stream
+        }))
+}
+
+fn responses_events(bytes: &[u8]) -> Vec<Value> {
+    let body = std::str::from_utf8(bytes).unwrap();
+    assert!(body.ends_with("\n\n"));
+    let events: Vec<_> = body
+        .trim_end_matches('\n')
+        .split("\n\n")
+        .enumerate()
+        .map(|(i, frame)| {
+            let (event, data) = frame.split_once('\n').unwrap();
+            let event = event.strip_prefix("event: ").unwrap();
+            let data: Value = serde_json::from_str(data.strip_prefix("data: ").unwrap()).unwrap();
+            assert_eq!(data["type"], event);
+            assert_eq!(data["sequence_number"], i);
+            data
+        })
+        .collect();
+    events
+}
+
+async fn read_responses_delta(response: &mut reqwest::Response) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    loop {
+        bytes.extend(response.chunk().await.unwrap().unwrap());
+        if bytes.ends_with(b"\n\n")
+            && bytes
+                .windows(b"event: response.output_text.delta".len())
+                .any(|window| window == b"event: response.output_text.delta")
+        {
+            assert!(!String::from_utf8_lossy(&bytes).contains("response.completed"));
+            return bytes;
+        }
+    }
+}
+
+#[tokio::test]
+async fn responses_shape_and_site_authority_precede_backend_work() {
+    let fixture = Fixture::new().await;
+    for (body, code) in [
+        (
+            json!({"model":"public-alias","input":"synthetic","tools":[]}),
+            "unsupported_parameter",
+        ),
+        (
+            json!({"model":"public-alias","input":"synthetic","previous_response_id":"resp_old"}),
+            "unsupported_parameter",
+        ),
+        (
+            json!({"model":"public-alias","input":"synthetic","store":true}),
+            "unsupported_parameter",
+        ),
+        (
+            json!({"model":"public-alias","input":"synthetic","background":true}),
+            "unsupported_parameter",
+        ),
+        (
+            json!({"model":"public-alias","input":[{"type":"input_image"}]}),
+            "invalid_request_error",
+        ),
+        (
+            json!({"model":"public-alias","input":""}),
+            "invalid_request_error",
+        ),
+        (
+            json!({"model":"public-alias","input":"synthetic","max_output_tokens":513}),
+            "invalid_request_error",
+        ),
+    ] {
+        let response = responses_request(&fixture, false)
+            .json(&body)
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let body: Value = response.json().await.unwrap();
+        assert_eq!(body["error"]["code"], code);
+    }
+    assert_eq!(fixture.state.model_checks.load(Ordering::SeqCst), 0);
+    fixture.state.control_mode.store(1, Ordering::SeqCst);
+    assert_eq!(
+        responses_request(&fixture, false)
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    fixture.state.control_mode.store(0, Ordering::SeqCst);
+    let missing = responses_request(&fixture, false)
+        .json(&json!({"model":"other-workspace-alias","input":"synthetic"}))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(missing.status(), StatusCode::NOT_FOUND);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 0);
+    assert!(fixture.state.admissions.lock().unwrap().is_empty());
+
+    let response = responses_request(&fixture, false).send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let request_id = response.headers()["x-request-id"]
+        .to_str()
+        .unwrap()
+        .to_owned();
+    let response: Value = response.json().await.unwrap();
+    assert_eq!(response["id"], format!("resp_{request_id}"));
+    assert_eq!(response["object"], "response");
+    assert_eq!(response["model"], "public-alias");
+    assert_eq!(response["status"], "completed");
+    assert_eq!(response["store"], false);
+    assert_eq!(response["output"][0]["id"], format!("msg_{request_id}"));
+    assert_eq!(
+        response["output"][0]["content"][0]["text"],
+        "Synthetic reply \u{4e2d}\u{6587}"
+    );
+    assert_eq!(
+        response["usage"],
+        json!({"input_tokens":7,"output_tokens":2,"total_tokens":9})
+    );
+    assert!(!response.to_string().contains("synthetic-internal"));
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 1);
+    let outcomes = fixture.state.outcomes.lock().unwrap();
+    assert_eq!(outcomes[0].request_id.to_string(), request_id);
+    assert_eq!(outcomes[0].status, Status::Succeeded);
+    assert_eq!(outcomes[0].usage.as_ref().unwrap().total_tokens, 9);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
+}
+
+#[tokio::test]
+async fn responses_stream_orders_events_and_settles_the_shared_budget() {
+    let fixture = Fixture::with_quota(Some(json!({"tokens":{"daily":32}}))).await;
+    fixture.state.backend_mode.store(4, Ordering::SeqCst);
+    let mut response = responses_request(&fixture, true).send().await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers()[header::CONTENT_TYPE],
+        "text/event-stream"
+    );
+    let request_id = response.headers()["x-request-id"]
+        .to_str()
+        .unwrap()
+        .to_owned();
+    let mut bytes = read_responses_delta(&mut response).await;
+    assert!(fixture.app().spool.next_pending().unwrap().is_none());
+    let denied = fixture.chat(false).send().await.unwrap();
+    assert_eq!(denied.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        denied.json::<Value>().await.unwrap()["error"]["code"],
+        "daily_token_budget_exceeded"
+    );
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
+
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 1);
+    fixture.state.complete_stream.notify_one();
+    bytes.extend(response.bytes().await.unwrap());
+    let events = responses_events(&bytes);
+    assert_eq!(
+        events
+            .iter()
+            .map(|event| event["type"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        [
+            "response.created",
+            "response.in_progress",
+            "response.output_item.added",
+            "response.content_part.added",
+            "response.output_text.delta",
+            "response.output_text.done",
+            "response.content_part.done",
+            "response.output_item.done",
+            "response.completed"
+        ]
+    );
+    let initial = &events[0]["response"];
+    let terminal = &events[8]["response"];
+    assert_eq!(initial["id"], format!("resp_{request_id}"));
+    assert_eq!(initial["status"], "in_progress");
+    assert!(initial["usage"].is_null());
+    assert_eq!(terminal["id"], initial["id"]);
+    assert_eq!(terminal["model"], "public-alias");
+    assert_eq!(terminal["status"], "completed");
+    assert_eq!(terminal["usage"]["total_tokens"], 9);
+    assert_eq!(events[4]["item_id"], terminal["output"][0]["id"]);
+    assert_eq!(
+        events[4]["delta"],
+        terminal["output"][0]["content"][0]["text"]
+    );
+    assert_eq!(events[7]["item"], terminal["output"][0]);
+    let outcome = fixture.app().spool.next_pending().unwrap().unwrap();
+    assert_eq!(outcome.request_id.to_string(), request_id);
+    assert_eq!(outcome.status, Status::Succeeded);
+    assert!(outcome.output_started);
+    assert_eq!(outcome.usage.unwrap().total_tokens, 9);
+
+    // After the refund, the same scope can reserve exactly 23 tokens again.
+    fixture
+        .state
+        .backend_mode
+        .store(LENGTH_FINISH, Ordering::SeqCst);
+    let response = responses_request(&fixture, true).send().await.unwrap();
+    let bytes = response.bytes().await.unwrap();
+    let events = responses_events(&bytes);
+    let terminal = events.last().unwrap();
+    assert_eq!(terminal["type"], "response.incomplete");
+    assert_eq!(terminal["response"]["status"], "incomplete");
+    assert_eq!(
+        terminal["response"]["incomplete_details"]["reason"],
+        "max_output_tokens"
+    );
+    assert_eq!(terminal["response"]["usage"]["total_tokens"], 9);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test]
+async fn responses_stream_failure_after_text_has_no_completed_usage_or_replay() {
+    for (mode, code, outcome_status) in [
+        (
+            INTERRUPT_STREAM_AFTER_TEXT,
+            "upstream_unavailable",
+            Some(Status::UpstreamError),
+        ),
+        (
+            5,
+            "upstream_response_invalid",
+            Some(Status::InvalidResponse),
+        ),
+        (4, "usage_storage_unavailable", None),
+    ] {
+        let fixture = Fixture::new().await;
+        fixture.state.backend_mode.store(mode, Ordering::SeqCst);
+        let mut response = responses_request(&fixture, true).send().await.unwrap();
+        let request_id = response.headers()["x-request-id"]
+            .to_str()
+            .unwrap()
+            .to_owned();
+        let mut bytes = read_responses_delta(&mut response).await;
+        if outcome_status.is_none() {
+            let stage = fixture
+                .app()
+                .configuration
+                .state_directory
+                .join("outcomes")
+                .join(format!(".stage-{request_id}.json"));
+            fs::write(stage, b"occupied").unwrap();
+        }
+        fixture.state.complete_stream.notify_one();
+        bytes.extend(response.bytes().await.unwrap());
+        let events = responses_events(&bytes);
+        assert_eq!(events.len(), 6);
+        assert_eq!(events[4]["type"], "response.output_text.delta");
+        let terminal = &events[5];
+        assert_eq!(terminal["type"], "response.failed");
+        assert_eq!(terminal["response"]["id"], format!("resp_{request_id}"));
+        assert_eq!(terminal["response"]["status"], "failed");
+        assert_eq!(terminal["response"]["error"]["code"], code);
+        assert!(terminal["response"]["usage"].is_null());
+        assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
+        if let Some(status) = outcome_status {
+            let outcome = fixture.app().spool.next_pending().unwrap().unwrap();
+            assert_eq!(outcome.status, status);
+            assert!(outcome.output_started);
+            assert!(outcome.usage.is_none());
+        } else {
+            assert!(!fixture.app().spool.ready());
+        }
+    }
+}
+
+#[tokio::test]
+async fn responses_disconnect_cancels_upstream_and_keeps_unverified_reservation() {
+    let fixture = Fixture::with_quota(Some(json!({"tokens":{"daily":32}}))).await;
+    fixture.state.backend_mode.store(4, Ordering::SeqCst);
+    let mut response = responses_request(&fixture, true).send().await.unwrap();
+    read_responses_delta(&mut response).await;
+    drop(response);
+    wait_until(|| {
+        fixture.state.dropped_generations.load(Ordering::SeqCst) == 1
+            && fixture.app().spool.next_pending().unwrap().is_some()
+    })
+    .await;
+    let outcome = fixture.app().spool.next_pending().unwrap().unwrap();
+    assert_eq!(outcome.status, Status::ClientCancelled);
+    assert!(outcome.output_started);
+    assert!(outcome.usage.is_none());
+    let denied = responses_request(&fixture, false).send().await.unwrap();
+    assert_eq!(denied.status(), StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        denied.json::<Value>().await.unwrap()["error"]["code"],
+        "daily_token_budget_exceeded"
+    );
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 1);
 }
