@@ -100,3 +100,42 @@ with a published workflow.
 The full POR-101 flow remains dependent on the conversation and application destinations
 (POR-102 and POR-103) and on real usage (POR-111). Those omissions do not prevent testing
 the shell, the workspace choice and each independently loaded section.
+
+## Member isolation and a failed source on an installation
+
+The existing live home flow reads published applications, recent
+conversations and unread failed runs, then marks a notice as read. Run
+that same flow with a regular member in a private HTTPS installation.
+Seed a published projection with one two-turn conversation and one unread
+failed run for the member. Give another account in the same workspace a
+conversation with a distinct turn count for the same application. Use the
+existing workflow repository fixture pattern and the terminal-run
+notification trigger. The fixture checks the Portal read path and does
+not exercise the workflow interpreter or publication admission.
+
+Abort only the notification list requests with
+[Playwright network routing](https://playwright.dev/docs/network#handle-requests).
+Keep the applications and conversation requests on the real server.
+Confirm both sections render their real data while Needs you offers a
+retry. Release the failure and check the retry reveals the member's run.
+Assert that no second conversation row from the other account appears,
+and that directly naming an inaccessible workspace is refused by both
+application projections. A stubbed home response could mask a broken
+actor filter. Keep the existing real mark-as-read and reload assertions.
+No new dependency is needed.
+
+The screenshot of the partial overview showed the generic control-plane
+connectivity title while both lists were present. Use each section's
+own title with the shared retry notice. Keep the scope explanation for
+a missing workspace and the original non-retryable error details.
+A transient failure needs a retry for that section, with the request ID
+available when the server supplies one.
+
+The local Mac run used Chromium over private HTTPS with PostgreSQL 18.6.
+The member saw the published application and only their two-turn
+conversation during the notification failure. Retrying revealed their
+failed run. The notice stayed read after reload, both foreign-workspace
+requests were refused, and no request left the installation. PostgreSQL
+confirmed the member's read timestamp and the presence of the other
+account's seven-turn conversation. The ten Portal home browser tests
+also passed, including the existing missing-workspace explanation.

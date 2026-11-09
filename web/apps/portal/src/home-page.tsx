@@ -103,7 +103,15 @@ function useSources(workspaceId: string) {
 type Sources = ReturnType<typeof useSources>;
 
 /** What a section shows while its source has nothing to show. */
-function SourceState({ query, skeleton }: { query: UseQueryResult; skeleton: string }): ReactNode {
+function SourceState({
+  query,
+  skeleton,
+  failureTitle,
+}: {
+  query: UseQueryResult;
+  skeleton: string;
+  failureTitle: TranslationKey;
+}): ReactNode {
   const { t } = useI18n();
   if (query.isPending) {
     return (
@@ -113,12 +121,14 @@ function SourceState({ query, skeleton }: { query: UseQueryResult; skeleton: str
     );
   }
   if (isProblem(query.error)) {
+    const scopeDetail = isProblem(query.error, 'RESOURCE_NOT_FOUND')
+      ? t('home.workspaceUnavailable')
+      : undefined;
     return (
       <ProblemNotice
         problem={query.error}
-        detail={
-          isProblem(query.error, 'RESOURCE_NOT_FOUND') ? t('home.workspaceUnavailable') : undefined
-        }
+        title={query.error.retryable ? t(failureTitle) : undefined}
+        detail={query.error.retryable ? t('home.sourceUnavailable') : scopeDetail}
         onRetry={() => {
           void query.refetch();
         }}
@@ -201,7 +211,13 @@ function NeedsYou({
   const needs = page?.items.filter((item) => needsYou(item, workspaceId)) ?? [];
   let body: ReactNode;
   if (!page) {
-    body = <SourceState query={sources.notifications} skeleton="h-[64px] w-full" />;
+    body = (
+      <SourceState
+        query={sources.notifications}
+        skeleton="h-[64px] w-full"
+        failureTitle="problem.NOTIFICATION_UNAVAILABLE.title"
+      />
+    );
   } else if (needs.length === 0) {
     body = (
       <EmptyState className="py-4" icon={CircleCheck} title={t('home.needs.clear')}>
@@ -235,7 +251,13 @@ function Conversations({ sources }: { sources: Sources }) {
   const page = sources.conversations.data;
   let body: ReactNode;
   if (!page) {
-    body = <SourceState query={sources.conversations} skeleton="h-[150px] w-full" />;
+    body = (
+      <SourceState
+        query={sources.conversations}
+        skeleton="h-[150px] w-full"
+        failureTitle="home.conversations.unavailable"
+      />
+    );
   } else if (page.items.length === 0) {
     body = (
       <EmptyState className="py-4" icon={MessagesSquare} title={t('home.conversations.empty')}>
@@ -300,7 +322,13 @@ function Published({ sources }: { sources: Sources }) {
   const page = sources.applications.data;
   let body: ReactNode;
   if (!page) {
-    body = <SourceState query={sources.applications} skeleton="h-[150px] w-full" />;
+    body = (
+      <SourceState
+        query={sources.applications}
+        skeleton="h-[150px] w-full"
+        failureTitle="problem.WORKFLOW_UNAVAILABLE.title"
+      />
+    );
   } else if (page.items.length === 0) {
     body = (
       <EmptyState className="py-4" icon={Boxes} title={t('home.apps.empty')}>
