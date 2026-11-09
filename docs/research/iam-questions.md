@@ -4,7 +4,7 @@
 | --- | --- | --- |
 | IAM-102 | The SSO client, callback and binding code are outside the IAM checkout's assigned paths. Connector types also flow through a shared API and the console. | Preserve the Gitea path and record the [generic OIDC design and acceptance](oidc-sign-in.md). A provider change needs coordination with the SSO and console owners. |
 | IAM-103, IAM-104, IAM-110 | Directory and SAML sign-in, synchronization, and group mapping need the SSO provider and binding owners, connector contracts and administrator screens. | Carry forward tenant-scoped provider identity and explicit local binding. Use existing local sign-in during provider rollout. |
-| IAM-105 | TOTP enrollment, recovery and step-up need browser challenges, additive wire operations and integration with the SSO callback and sensitive actions in other owners. | Keep both entrances' existing password and CSRF checks. Design one challenge gate for local and federated session issuance before enrolling real factors. |
+| IAM-105 | The production migration, protected key configuration, published challenge and enrollment operations, Admin UI and federated Admin issuance remain separate integration points. | The [local candidate](local-multifactor-authentication.md#verification-and-integration) retains the keyless deployment's browser contract and verifies the full configured flow over disconnected HTTPS. |
 | IAM-106 | Catalog app client registration, redirect authorization and key custody need coordination with the app catalog owner and new OAuth/OIDC operations. | Keep client registration and the issuer protocol together so an app can exercise discovery through a valid tenant-bound token. |
 | IAM-107, IAM-108 | The workspace membership authority and protected resources live in other modules. Identity-only role definitions would leave those access checks unchanged. | Integrate the authorization evaluator and its explain output with one actual resource family first. |
 | IAM-109 and AUD-101 | Distribution keys require a human user, current authentication epoch and Workspace membership authority. There is no service principal in the existing tenant identity model. | Keep the real key lifecycle as the integration point. The [service account design](service-account-keys.md) records the required Distribution, Workspace and audit connections. |
@@ -15,6 +15,25 @@
 | IAM-201 to IAM-206 | P2 follows the P1 completion gate. Its provisioning, policy, approval, emergency access, delegation and WebAuthn flows need public interfaces and operator or user screens. | Preserve the P2 order and keep the items open until their dependencies and delivery paths are available. |
 
 ## Repository acceptance gate
+
+The IAM-105 candidate and IAM-111 and IAM-114 regressions passed
+`make check` and `make build` at `4f3593d8`. The full `make test` run
+passed Go, gateway and both Chromium suites, with 1,074 Console and 387
+Portal cases passed and 33 skipped. Thirteen IAM HTTPS cases passed
+three runs on disconnected PostgreSQL 18.6. The localized audit coverage
+test passed with both IAM-105 action names.
+
+The full suite is blocked by the Console and Portal API-reference
+assertions in `web/packages/help/src/help.test.ts`. The same two failures
+reproduced on unmodified `origin/main` at `c6de726c`. Since `601e3dc7`,
+the Web help generator resolves the Nodes path aliases to the canonical
+Components operations using `tools/codegen/openapi-paths.mjs`. The test
+still reads raw path items and misses three Console operations and one
+Portal operation for node-exporter. To clear the gate, the Web/DEV owners
+must make the reference test and generator enumerate the same resolved
+operation set for both entrances and run the full repository suite.
+The focused reproduction is
+`cd web && pnpm --filter @ownsolid/help exec vitest run src/help.test.ts`.
 
 The previous training shutdown failure was reproduced from an unmodified
 `origin/main` archive. ARC fixed cancellation propagation in `aa5e712f`.
