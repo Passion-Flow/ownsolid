@@ -22,7 +22,8 @@ container=
 recorder_pid=
 cleanup() {
     local status=$?
-    if [[ -n $container ]] && ! docker rm -fv "$container" >/dev/null; then
+    if [[ -n $container ]] && ! timeout 15s docker rm -fv "$container" >/dev/null; then
+        echo "Could not remove fixture $container" >&2
         status=1
     fi
     if [[ -n $recorder_pid ]]; then
@@ -40,24 +41,24 @@ trap 'exit 143' TERM
 # The image entrypoint reads a password from a protected file as the postgres user.
 mkdir -m 0700 "$work/config"
 od -An -N32 -tx1 /dev/urandom | tr -d ' \n' > "$work/postgres-password"
-postgres_uid=$(docker run --rm --pull never --network none --entrypoint id "$image" -u postgres)
-chown "$postgres_uid" "$work/postgres-password"
 
 # Start PostgreSQL only after the recorder is in place. The fixture uses a Unix
 # socket with the image's local authentication and publishes no host port.
-container=$(docker run -d --name "${work##*/}" --pull never --network none --dns 192.0.2.53 \
+container=${work##*/}
+timeout 45s docker run -d --name "$container" --pull never --network none --dns 192.0.2.53 \
     --label ownsolid.test=restored-schema-upgrade \
     --cpus 1 --memory 512m --pids-limit 128 \
     --mount "type=bind,source=$inputs,target=/inputs,readonly" \
     --mount "type=bind,source=$work/config,target=/fixture,readonly" \
-    --mount "type=bind,source=$work/postgres-password,target=/run/fixture-password,readonly" \
+    --mount "type=bind,source=$work/postgres-password,target=/run/bootstrap-password,readonly" \
     --tmpfs /var/lib/postgresql:rw,size=256m \
     --env POSTGRES_DB=ownsolid --env POSTGRES_USER=ownsolid_migrator \
     --env POSTGRES_PASSWORD_FILE=/run/fixture-password \
     --entrypoint bash "$image" -ec '
         while [[ ! -f /fixture/start ]]; do sleep 0.1; done
+        install -o postgres -m 0400 /run/bootstrap-password /run/fixture-password
         exec docker-entrypoint.sh postgres -c "listen_addresses="
-    ')
+    ' >/dev/null
 pid=$(docker inspect --format '{{.State.Pid}}' "$container")
 in_namespace=(nsenter --target "$pid" --net)
 [[ $("${in_namespace[@]}" ip -o link show | wc -l) -eq 1 ]]
@@ -126,7 +127,7 @@ OWNSOLID_SCHEMA_FIXTURE_CONTAINER="$container" \
     OWNSOLID_SCHEMA_FIXTURE_SQL56="$inputs/000056.up.sql" \
     OWNSOLID_SCHEMA_FIXTURE_EXPECT="$expected" \
     "$inputs/install.test" -test.v -test.run '^TestRestoredSchemaUpgrade$' -test.timeout 2m || status=$?
-docker stop --timeout 10 "$container" >/dev/null
+timeout 20s docker stop --timeout 10 "$container" >/dev/null
 kill -0 "$recorder_pid"
 if [[ $(sha256sum "$work/egress.jsonl") != "$probe_hash" ]]; then
     echo "PostgreSQL or control attempted outbound traffic" >&2
