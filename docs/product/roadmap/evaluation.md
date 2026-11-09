@@ -51,6 +51,9 @@ Measuring models and applications before release, and gating releases on the res
   - [Native CPU adversarial qualification](../../research/evaluation-reproducibility.md#native-cpu-adversarial-qualification)
     published the frozen validation group and repeated three real responses
     byte for byte. All three were unverified and the originals were retained.
+  - [Same-input refusal control](../../research/evaluation-reproducibility.md#exact-refusal-control-on-the-same-published-inputs)
+    produced three observed exact refusals from controlled marker text. The
+    three original native responses remain unverified.
 
 EVL-101 records the immutable dataset, scorer and model revisions, seed and execution
 profile. Re-scoring the same captured outputs must give the same scores. EVL-102
