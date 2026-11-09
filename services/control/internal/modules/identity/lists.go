@@ -284,7 +284,6 @@ func makeScopedListPlan(kind string, q url.Values, policy config.RuntimePolicy, 
 		p.pgProjection = "a.id::text,a.occurred_at,a.actor_user_id::text,actor_user.email_display,a.subject_user_id::text,subject_user.email_display,a.audience,a.action,a.outcome,a.target_type,a.target_id::text,a.reason,a.request_id::text"
 		p.myProjection = "a.id,a.occurred_at,a.actor_user_id,actor_user.email_display,a.subject_user_id,subject_user.email_display,a.audience,a.action,a.outcome,a.target_type,a.target_id,a.reason,a.request_id"
 		if auditWorkspaceID != "" {
-			p.pgProjection += "," + auditAssistantProjectionSQL
 			p.pgWhere = append(p.pgWhere, "a.tenant_id=("+installedAuditTenant+")")
 			p.compare("a.workspace_id", "=", auditWorkspaceID, "")
 		}
@@ -430,7 +429,7 @@ func (s *Service) ListForActor(ctx context.Context, a Auth, kind string, q url.V
 	return s.listForActor(ctx, a, kind, q, nil)
 }
 
-func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.Values, audit *workspaceAuditProjection) (List, error) {
+func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.Values, audit *auditListProjection) (List, error) {
 	empty := List{Items: []map[string]any{}}
 	if !sessionActor(a) {
 		return empty, failure("AUTH_SESSION_EXPIRED")
@@ -439,8 +438,8 @@ func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.V
 		return empty, failure("ACCESS_DENIED")
 	}
 	var auditWorkspaceID string
-	if audit != nil {
-		auditWorkspaceID = audit.workspaceID
+	if audit != nil && audit.workspaceID != nil {
+		auditWorkspaceID = *audit.workspaceID
 		if !sessionID(auditWorkspaceID) {
 			return empty, failure("VALIDATION_FAILED")
 		}
@@ -467,6 +466,13 @@ func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.V
 	if e != nil {
 		return empty, e
 	}
+	if audit != nil {
+		if store.Dialect() == transaction.PostgreSQL {
+			p.pgProjection += "," + auditAssistantProjectionSQL
+		} else if audit.workspaceID == nil {
+			audit = nil
+		}
+	}
 	ctx, cancel := s.sessionContext(ctx)
 	defer cancel()
 	var out List
@@ -474,8 +480,8 @@ func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.V
 		if e := s.RecheckWithin(ctx, tx, a); e != nil {
 			return e
 		}
-		if audit != nil {
-			if e := audit.authorize(ctx, tx); e != nil {
+		if audit != nil && audit.workspaceID != nil {
+			if e := audit.authorizeWorkspace(ctx, tx); e != nil {
 				return e
 			}
 		}
@@ -488,7 +494,7 @@ func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.V
 	}
 	return out, nil
 }
-func readList(ctx context.Context, q transaction.Executor, p listPlan, audit *workspaceAuditProjection) (List, error) {
+func readList(ctx context.Context, q transaction.Executor, p listPlan, audit *auditListProjection) (List, error) {
 	empty := List{Items: []map[string]any{}}
 	if q.Dialect() == transaction.Dameng {
 		if e := p.validateDamengTimes(); e != nil {
