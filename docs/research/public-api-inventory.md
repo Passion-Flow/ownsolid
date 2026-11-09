@@ -260,3 +260,36 @@ groups. With a second workspace created over TLS, publication and retry
 requests carrying the original dataset ID both returned HTTP 404. The
 pinned Go and Python generators kept the legacy request body when the
 option was absent and encoded the opt-in value as an integer.
+
+## DAT-104 near-prompt publication request
+
+The [retained near-prompt policy](dataset-near-duplicates.md#initial-policy)
+uses a bounded, exact comparison of candidate shingles. DataTrove's
+[MinHash implementation](https://github.com/huggingface/datatrove/blob/main/src/datatrove/pipeline/dedup/minhash.py)
+illustrates a candidate-based approach. The retained policy avoids a
+probabilistic cutoff and has separate safeguards for grouping and removal.
+[OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
+can express the one public policy value without changing the request's
+required fields. [AIP-180](https://google.aip.dev/180#adding-components)
+preserves behavior for callers that omit a new option.
+
+Expose one optional string enum, near_prompt_v1, through the existing
+publication operations. Omission keeps exact duplicate removal and the
+existing fingerprint. Three-way splitting still groups matching prompts
+before allocation, even with exact removal. An explicit empty string
+would be indistinguishable from omission at the service boundary, so
+validate it before building the internal options. An open string or an
+explicit exact value would admit selections the handler does not accept.
+The existing retry request keeps its reason-only shape and inherits the
+frozen policy. The bounded comparison failure belongs to the job result.
+The existing [SDK licenses](sdk.md#licenses) and
+[policy dependencies and fixture licenses](dataset-near-duplicates.md)
+apply. No dependency, model or dataset is added.
+
+Verify default exact removal and the opt-in policy, including selection
+with a test split. Use the DAT-105 TLS fixture with real PostgreSQL and
+CPython. Compare retained and removed rows and sealed duplicates, test
+invalid policy values, replay and conflict, and verify a failed attempt
+and retry keep the frozen choice. Check that the generated clients leave
+the field absent by default and can encode only the documented selection
+through their declared types.
