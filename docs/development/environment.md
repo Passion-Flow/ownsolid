@@ -311,6 +311,17 @@ through the HTTPS endpoint and checks the reported request IDs and token usage i
 Rust gateway can use the loopback tokenizer and completion fixture from the native GW-112 tests.
 Use the same Portal credentials and Chromium trust settings as above.
 
+`web/apps/portal/e2e/live-key-downloads.spec.ts` reads a separate private
+`OWNSOLID_LIVE_KEY_DOWNLOADS_FILE` for the download fixture. Use a regular member, a history page
+size of two, and three reported calls for the member's key. Seed another actor's key with a call
+in the same workspace, and give the member no access to a second workspace. Publish the member's
+key scope on an agent-activated gateway with a signed HTTPS listener. The fixture file supplies
+`email`, `password`, `workspace`, `other_workspace`, `key_name`, `key_id`, `request_ids`
+in history order, `other_key_id`, `alias_id`, `gateway_origin`, and the lowercase hexadecimal
+`ca_fingerprint` of the issuer DER and `ca_digest` of the attachment PEM.
+Set `OWNSOLID_LIVE_DOWNLOADS_ADMIN_ORIGIN` and the administrator credential variables above
+to exercise the same key drawer through the Admin entrance. Chromium must trust both entrances.
+
 `live-license.spec.ts` refuses real signed files and imports a real renewal, so each run adds one
 to the license history. It needs test files signed with the key the installation trusts.
 `OWNSOLID_LIVE_LICENSE_COMMAND` reads the license state as JSON on standard input and prints a JSON
