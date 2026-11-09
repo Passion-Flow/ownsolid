@@ -129,6 +129,8 @@ export {
 } from './deployments.ts';
 export {
   disableModelAlias,
+  downloadGatewayAliasCA,
+  downloadGatewayKeyCalls,
   issueGatewayKey,
   listGatewayInstances,
   listGatewayKeyCalls,

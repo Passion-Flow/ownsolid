@@ -3,6 +3,7 @@
 // show this list; the session's audience decides which keys the server returns
 // (docs/research/gateway-keys.md, docs/research/portal-api-keys.md).
 import {
+  downloadGatewayKeyCalls,
   isProblem,
   listGatewayKeyCalls,
   listGatewayKeys,
@@ -20,7 +21,9 @@ import {
   FilterTiles,
   Notice,
   ProblemNotice,
+  saveFile,
   SearchField,
+  SelectField,
   Skeleton,
   StatusPill,
   Table,
@@ -28,9 +31,9 @@ import {
   Th,
   Tr,
 } from '@ownsolid/ui';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { KeyRound, Plus, RefreshCw, Trash2 } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { Download, KeyRound, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import { everyPage, pageSize } from '../every-page.ts';
 import { ColumnChooser } from '../list/column-chooser.tsx';
 import { CopyLinkButton } from '../list/copy-link-button.tsx';
@@ -194,7 +197,23 @@ function CallLog({ workspace, gatewayKey }: { workspace: string; gatewayKey: Gat
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.next_cursor,
   });
-  const items = calls.data?.pages.flatMap((page) => page.items) ?? [];
+  const csvScope = useId();
+  const [csvPage, setCsvPage] = useState(0);
+  const pages = calls.data?.pages ?? [];
+  const selectedPage = csvPage < pages.length ? csvPage : 0;
+  const csv = useMutation({
+    mutationFn: (cursor: string | null) =>
+      downloadGatewayKeyCalls(audience, workspace, gatewayKey.id, limit, cursor),
+  });
+  const startCsv = (cursor: string | null) => {
+    if (csv.isPending) return;
+    csv.mutate(cursor, {
+      onSuccess: ({ content, name }) => {
+        saveFile(content, name);
+      },
+    });
+  };
+  const items = pages.flatMap((page) => page.items);
   let body;
   if (calls.isPending) {
     body = <Waiting />;
@@ -268,6 +287,51 @@ function CallLog({ workspace, gatewayKey }: { workspace: string; gatewayKey: Gat
       <h3 id="key-calls" className="m-0 text-[14px] font-semibold">
         {t('gateway.calls.title')}
       </h3>
+      <div className="flex flex-wrap items-end gap-2">
+        {pages.length > 1 ? (
+          <SelectField
+            className="min-w-28"
+            label={t('gateway.calls.csvPage')}
+            value={String(selectedPage)}
+            disabled={csv.isPending}
+            options={pages.map((_, index) => ({
+              value: String(index),
+              label: t('gateway.calls.csvPageNumber', { page: format.number(index + 1) }),
+            }))}
+            onChange={(event) => {
+              setCsvPage(Number(event.currentTarget.value));
+              csv.reset();
+            }}
+          />
+        ) : null}
+        <Button
+          aria-disabled={csv.isPending || pages.length === 0 || undefined}
+          aria-describedby={csvScope}
+          onClick={() => {
+            if (pages.length === 0) return;
+            if (selectedPage === 0) {
+              startCsv(null);
+              return;
+            }
+            const cursor = pages[selectedPage - 1]?.next_cursor;
+            if (cursor) startCsv(cursor);
+          }}
+        >
+          <Download aria-hidden />
+          {t(csv.isPending ? 'gateway.download.pending' : 'gateway.calls.csv')}
+        </Button>
+      </div>
+      <p id={csvScope} className="m-0 text-[13px] text-text-2">
+        {t(pages.length ? 'gateway.calls.csvScope' : 'gateway.calls.csvWaiting')}
+      </p>
+      {isProblem(csv.error) ? (
+        <ProblemNotice
+          problem={csv.error}
+          onRetry={() => {
+            if (csv.variables !== undefined) startCsv(csv.variables);
+          }}
+        />
+      ) : null}
       {body}
     </section>
   );
@@ -356,8 +420,8 @@ function KeyDrawer({
           {gatewayKey.state === 'invalidated' ? (
             <Notice className="m-0" title={t('gateway.detail.invalidated')} />
           ) : null}
-          <KeyUsage workspace={workspace} gatewayKey={gatewayKey} />
-          <CallLog workspace={workspace} gatewayKey={gatewayKey} />
+          <KeyUsage key={gatewayKey.id} workspace={workspace} gatewayKey={gatewayKey} />
+          <CallLog key={gatewayKey.id} workspace={workspace} gatewayKey={gatewayKey} />
         </div>
       ) : null}
     </Drawer>
