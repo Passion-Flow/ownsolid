@@ -32,3 +32,20 @@ keeps the three product items unticked.
 and [MLflow tracking](https://mlflow.org/docs/latest/tracking/) separate status
 and artifact storage from the run comparison UI. Retain ownsolid's existing
 event and artifact authorities. No shared contracts change in the worker seal.
+
+## TRN-106 metrics readback
+
+The existing TLS contract test
+`TestActualTLSDualEntranceTrainingIntentHistoryMetricsRecoveryAndCurrentRoles`
+passed against disposable PostgreSQL and the local dataset processor on
+Linux with only loopback. It records test metrics through the admitted
+agent path, reads the next scoped page from the Portal and refuses a
+cursor from the metrics collection on the attempts collection and an
+unknown attempt. This qualifies server-side ingestion and pagination.
+
+S-502 owns polling and comparison across runs. It can reuse the scoped
+metrics endpoint and the accepted experiment projection for each selected
+attempt's frozen inputs and recipe. Plot by optimizer step and distinguish
+different attempts by attempt ID and event sequence. Keep TRN-106 open
+until that user flow is wired and verified. A new collector or metrics
+store would duplicate the existing event authority.
