@@ -27,3 +27,27 @@ operations against that installation. Terminal access requires a current
 permission check, an audit record and explicit operator confirmation.
 Admission digests and caller-supplied project names cannot establish
 workload ownership.
+
+## CAT-104 automatic sign-in
+
+[IAM-106](../product/roadmap/identity-and-access.md) owns the local provider.
+The current [SSO module](../../services/control/internal/modules/sso/README.md)
+consumes a configured Gitea provider for ownsolid sign-in. Catalog wiring
+requires an issuer-owned operation that registers and revokes one client
+per authorized installation, binds the exact approved callback, and
+returns a client ID and a reference to any confidential credentials.
+The installer projects those credentials and revokes the registration on
+uninstall. [OpenID Connect client metadata](https://openid.net/specs/openid-connect-registration-1_0.html#ClientMetadata)
+defines the exact redirect match.
+
+## CAT-108 quota, reservation and tenant visibility
+
+[Signed license notes](app-license-notes.md) are already available in the
+catalog metadata. The [scheduling module](../../services/control/internal/modules/scheduling/README.md)
+offers a read-only submission estimate and attempt-scoped reservations in
+a workload owner's transaction. Before starting an app, the installer
+needs an authorized installation attempt and admitted demand so the
+owner can reserve and release resources against the exact installation.
+Catalog reads need a server-owned tenant visibility decision before
+opening signed release metadata. A successful quota estimate is not a
+reservation, and a valid publisher signature is not a tenant grant.
