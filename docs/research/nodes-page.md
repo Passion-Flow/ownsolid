@@ -68,6 +68,35 @@ cannot hold.
 
 No new dependency. Everything is built from the workspace's existing packages.
 
+## Kubernetes execution profile (DEV-101, ARC-104)
+
+The node inventory and pending ownsolid enrollment tokens carry
+`execution_profile`. The [Nodes API handoff](lane-d-questions.md#arc-104-generated-web-consumer)
+adds `kubernetes_node` to those generated responses. The backend already admits
+that profile for the managed cell path. The Console can display the value before
+the generated contract moves. Keep one set of translated profile labels, checked
+with TypeScript's [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator)
+against the Node profile union plus the known incoming literal. The typed token
+consumer indexes the same labels. This keeps both contract revisions exhaustive
+without weakening their types.
+
+Show the label in the node list's Agent column, the pending enrollment record,
+and the existing node preview and detail. The profile describes what the ownsolid
+agent is authorized to do. Agent connectivity and the
+[Kubernetes Ready condition](https://kubernetes.io/docs/reference/node/node-status/#condition)
+have separate evidence. The create-token form retains its existing supported
+choices and the cell screens still require their plan entries.
+
+Compile the Web change with the current generated types and with the incoming
+profile in the generated node and token shapes. In Chromium, return both the
+older and the Kubernetes profile through the existing Admin reads. Verify the
+labels in English and Simplified Chinese and keep registration status and node
+connectivity independent of the profile. There is no new dependency, model or
+dataset.
+
+Land the label map before the Nodes contract change. Regenerate and check the
+Web workspace on the combined branch before merging the contract.
+
 ## Failure modes and tests
 
 - A filter applied to a cursor from another filter: refused with `INVALID_CURSOR`, integration test.
