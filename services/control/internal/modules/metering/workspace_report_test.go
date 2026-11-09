@@ -60,14 +60,14 @@ func TestPostgresAuthenticatedWorkspaceReport(t *testing.T) {
 		return ReadWorkspaceReport(ctx, authority, actor, id, from, end, card, &policy)
 	}
 	want := WorkspaceReport{
-		Showback: ShowbackReport{Currency: "XTS", From: from, To: end, KnownAmountMicros: "4", Lines: []ShowbackLine{
+		Showback: ShowbackReport{Currency: "XTS", From: from, To: end, KnownAmountMicros: "4", UnmeasuredTokenRequests: "0", Lines: []ShowbackLine{
 			{Meter: Requests, RateVersion: "first", Quantity: "2", Rate: &MeterRate{Units: 4, AmountMicros: 1}, AmountMicros: "1"},
 			{Meter: Tokens, RateVersion: "next", Quantity: "7"},
 			{Meter: StorageByteSeconds, RateVersion: "next", Quantity: "11", Rate: &MeterRate{Units: 1}, AmountMicros: "0"},
 			{Meter: Requests, RateVersion: "next", Quantity: "4", Rate: &MeterRate{Units: 3, AmountMicros: 2}, AmountMicros: "3"},
 		}},
 		Budget: &BudgetStatus{Currency: "XTS", From: from, To: end, LimitMicros: "10",
-			KnownAmountMicros: "4", State: BudgetUnratedUsage},
+			KnownAmountMicros: "4", UnmeasuredTokenRequests: "0", State: BudgetUnratedUsage},
 	}
 	for _, actor := range []identity.Auth{owner, admin} {
 		if got, err := read(actor, local.WorkspaceID.String()); err != nil || !reflect.DeepEqual(got, want) {

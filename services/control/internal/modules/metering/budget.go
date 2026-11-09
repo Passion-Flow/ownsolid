@@ -39,18 +39,21 @@ const (
 	BudgetLimitReached BudgetState = "limit_reached"
 	// BudgetUnratedUsage means unrated usage prevents a below-limit assessment.
 	BudgetUnratedUsage BudgetState = "unrated_usage"
+	// BudgetUnmeasuredUsage means incomplete token measurements prevent a below-limit assessment.
+	BudgetUnmeasuredUsage BudgetState = "unmeasured_usage"
 )
 
 // BudgetStatus reports the estimate in one authorized workspace and half-open
-// period. FullyRated describes whether all observed ledger usage was priced.
+// period. FullyRated indicates that the ledger quantities are known and priced.
 type BudgetStatus struct {
-	Currency          string
-	From              time.Time
-	To                time.Time
-	LimitMicros       string
-	KnownAmountMicros string
-	FullyRated        bool
-	State             BudgetState
+	Currency                string
+	From                    time.Time
+	To                      time.Time
+	LimitMicros             string
+	KnownAmountMicros       string
+	UnmeasuredTokenRequests string
+	FullyRated              bool
+	State                   BudgetState
 }
 
 // BudgetWithin evaluates an operator's threshold over a single scoped
@@ -92,10 +95,13 @@ func budgetFromReport(report ShowbackReport, policy BudgetPolicy, limit *big.Int
 	status := BudgetStatus{
 		Currency: report.Currency, From: report.From, To: report.To, LimitMicros: policy.LimitMicros,
 		KnownAmountMicros: report.KnownAmountMicros, FullyRated: report.FullyRated,
+		UnmeasuredTokenRequests: report.UnmeasuredTokenRequests,
 	}
 	switch {
 	case known.Cmp(limit) >= 0:
 		status.State = BudgetLimitReached
+	case report.UnmeasuredTokenRequests != "0":
+		status.State = BudgetUnmeasuredUsage
 	case !report.FullyRated:
 		status.State = BudgetUnratedUsage
 	default:

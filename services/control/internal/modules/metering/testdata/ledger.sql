@@ -9,6 +9,7 @@ CREATE TABLE usage_ledger (
   tokens bigint NOT NULL CHECK (tokens >= 0),
   storage_byte_seconds bigint NOT NULL CHECK (storage_byte_seconds >= 0),
   requests bigint NOT NULL CHECK (requests >= 0),
+  unmeasured_token_requests bigint NOT NULL DEFAULT 0 CHECK (unmeasured_token_requests BETWEEN 0 AND requests),
   PRIMARY KEY (producer, event_id),
   FOREIGN KEY (tenant_id, workspace_id) REFERENCES workspaces (tenant_id, id),
   CHECK (gpu_microseconds > 0 OR tokens > 0 OR storage_byte_seconds > 0 OR requests > 0)
