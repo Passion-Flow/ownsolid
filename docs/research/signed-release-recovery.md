@@ -110,3 +110,38 @@ targets (1,519,207,673 bytes). This qualification covers one test release
 and the model store read path. The production release gate stays open
 until the exact production payload runs through the drill for every
 release.
+
+## Production release qualification input
+
+The development restore regression intentionally creates a legacy backup with
+a historical installer. That binary is useful for compatibility coverage but
+is not a reliable release gate for a future schema. The separate production
+qualification uses the candidate installer for both the plaintext and age
+backups and requires both to carry the verified candidate manifest digest.
+Continue using native PostgreSQL logical dumps and the same database exchange.
+[PostgreSQL's dump and restore procedure](https://www.postgresql.org/docs/18/backup-dump.html)
+and [GitLab's release matching requirement](https://docs.gitlab.com/administration/backup_restore/restore_gitlab/)
+support exercising backup and recovery against the selected release.
+
+Before accessing Docker, require a candidate archive SHA-256 supplied by
+the release operator, then use the existing public trust configuration and
+full single-node archive verifier to compare the exact signed archive.
+Exercise both backup forms, the empty-target rollback and retry, and the
+existing HTTPS and database checks through the same disconnected harness.
+Reject a missing or malformed expected digest before invoking verification.
+Reject a valid signed archive with a different digest and any verifier
+refusal before using Docker. Keep the original legacy regression and its
+historical binary requirement separate. This adds no dependency, model,
+dataset or production verification format. The existing PostgreSQL and Go
+licences apply as described above.
+
+The admission tests can run without Docker. Full acceptance still requires
+the independently trusted production archive and pin, a disposable isolated
+Docker host with sufficient resources, and the real empty-target restore.
+
+The native Linux amd64 admission fixture ran with only the recorder's IPv4,
+IPv6 and DNS routes. The focused test refused an invalid pin and a verifier
+error, distinguished two different signed archive identities, and accepted
+the expected verified identity. The production test entry point refused
+an absent pin before reaching a Docker command fixture. The recorder saw
+only its three probes. This run exercised qualification admission only.
