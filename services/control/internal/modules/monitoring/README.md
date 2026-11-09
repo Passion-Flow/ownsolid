@@ -223,6 +223,47 @@ checksum-verified VictoriaLogs 1.53.0, vmalert 1.155.0 and Alertmanager
 
 See the [Linux validation and scale measurements](../../../../../docs/research/log-alert-rules.md#verified-linux-path).
 
+### Private platform readiness probes
+
+Put the [probe modules](alerting/platform-probe-modules.example.yaml)
+and [vmagent scrape settings](alerting/platform-probe-scrape.example.yaml)
+in your protected monitoring configuration directory. Configure the
+site CA and substitute private readiness URLs. Keep the site and endpoint
+labels stable and unique. The example uses IPv4, an exact HTTP 200
+response and verified TLS. It uses no application credentials.
+
+    /absolute/path/to/blackbox_exporter \
+      --web.listen-address=127.0.0.1:9115 \
+      --config.file=/etc/ownsolid/monitoring/platform-probe-modules.yaml
+
+    /absolute/path/to/vmagent \
+      -httpListenAddr=127.0.0.1:8429 \
+      -promscrape.config=/etc/ownsolid/monitoring/platform-probe-scrape.yaml \
+      -remoteWrite.url=http://10.42.1.25:8428/api/v1/write \
+      -remoteWrite.tmpDataPath=/var/lib/ownsolid/platform-probes \
+      -remoteWrite.maxDiskUsagePerURL=500MB
+
+Permit access to the probe listener only from the trusted local
+scraper and enforce an outbound allowlist for the exporter. Limit the
+allowlist to the configured private target addresses and ports. The
+example caps the per-destination disk queue at one 500 MB chunk.
+vmagent drops the oldest queued samples after the queue reaches its cap.
+A failed target can have `probe_success=0` while `up=1` means the
+exporter responded to the scrape. Use `probe_http_status_code` to
+distinguish application responses from a failed connection or TLS
+handshake. Query the `ownsolid-platform-readiness` job in the private
+VictoriaMetrics instance.
+
+Set `OWNSOLID_TEST_BLACKBOX_EXPORTER`, `OWNSOLID_TEST_VMAGENT`,
+`OWNSOLID_TEST_VICTORIA_METRICS` and `OWNSOLID_TEST_VICTORIA_LOGS`
+to the checksum-verified Blackbox Exporter 0.29.1, vmagent and
+VictoriaMetrics 1.155.0, and VictoriaLogs 1.53.0 binaries. Run the Linux
+test with permission to create a network namespace.
+
+    bash services/control/internal/modules/monitoring/alerting/testdata/check-local-platform-probes.sh
+
+See the [pinned exporter and native validation](../../../../../docs/research/platform-endpoint-probes.md#verified-linux-path).
+
 ### Offline snapshot restore check
 
 The [snapshot restore check](testdata/check-telemetry-restore.sh) starts

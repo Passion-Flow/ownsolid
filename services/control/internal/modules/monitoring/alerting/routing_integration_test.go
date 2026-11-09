@@ -194,7 +194,7 @@ func runAlertService(t *testing.T, ctx context.Context, client *http.Client, env
 	if err := listener.Close(); err != nil {
 		t.Fatal(err)
 	}
-	if env == "OWNSOLID_TEST_ALERTMANAGER" {
+	if env == "OWNSOLID_TEST_ALERTMANAGER" || env == "OWNSOLID_TEST_BLACKBOX_EXPORTER" {
 		flags = append(flags, "--web.listen-address="+addr)
 	} else {
 		flags = append(flags, "-httpListenAddr="+addr)
