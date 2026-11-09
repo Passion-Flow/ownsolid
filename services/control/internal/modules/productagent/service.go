@@ -22,7 +22,7 @@ var (
 	ErrInvalidCommand = errors.New("PRODUCT_AGENT_COMMAND_INVALID")
 	// ErrUnknownCommand means the text did not match a registered alias.
 	ErrUnknownCommand = errors.New("PRODUCT_AGENT_COMMAND_UNKNOWN")
-	// ErrCommandDenied means the caller's entrance does not admit the command.
+	// ErrCommandDenied means the server policy does not admit the command.
 	ErrCommandDenied = errors.New("ACCESS_DENIED")
 	// ErrWorkspaceRequired means the command has no authenticated workspace.
 	ErrWorkspaceRequired = errors.New("PRODUCT_AGENT_WORKSPACE_REQUIRED")
@@ -85,13 +85,10 @@ func (s *Service) Commands(ctx context.Context, actor identity.Auth, locale stri
 		return nil, err
 	}
 	result := make([]CommandHelp, 0, len(phrases))
-	if actor.Me.Workspace == nil {
-		return result, nil
-	}
 	for _, id := range slices.Sorted(maps.Keys(phrases)) {
-		canNavigate := commands[id].destination(audience) != ""
-		canRead := s.tools[id].allowsRead(audience)
-		if canNavigate || canRead {
+		cmd := commands[id]
+		cmd.id = id
+		if _, err := s.admit(cmd, actor, ""); err == nil {
 			result = append(result, CommandHelp{ID: id, Aliases: slices.Clone(phrases[id])})
 		}
 	}
@@ -122,21 +119,20 @@ func (s *Service) RunForRequest(ctx context.Context, actor identity.Auth, input,
 		return Result{}, ErrUnknownCommand
 	}
 
-	switch cmd.id {
-	case listApplications, listConversations:
+	path, err := s.admit(cmd, actor, cursor)
+	if err != nil {
+		return Result{}, err
+	}
+	switch cmd.risk {
+	case riskRead:
 		return s.readApplications(ctx, actor, cmd.id, cursor, requestID)
-	default:
-		path := cmd.destination(actor.Me.Audience)
-		if path == "" {
-			return Result{}, ErrCommandDenied
-		}
-		if cursor != "" {
-			return Result{}, ErrInvalidCommand
-		}
+	case riskNavigate:
 		if err := s.auditNavigation(ctx, actor, cmd.id, requestID); err != nil {
 			return Result{}, err
 		}
 		return Result{Command: cmd.id, Path: path}, nil
+	default:
+		return Result{}, ErrCommandDenied
 	}
 }
 
@@ -156,9 +152,6 @@ func (s *Service) withSession(ctx context.Context, actor identity.Auth, operatio
 }
 
 func (s *Service) auditNavigation(ctx context.Context, actor identity.Auth, id, requestID string) error {
-	if actor.Me.Workspace == nil {
-		return ErrWorkspaceRequired
-	}
 	return s.withSession(ctx, actor, func(ctx context.Context, tx transaction.Executor) error {
 		w, err := s.applications.Workspaces.ReadScopeWithin(ctx, tx, actor, actor.Me.Workspace.ID)
 		if err != nil {
@@ -177,26 +170,24 @@ func (s *Service) auditNavigation(ctx context.Context, actor identity.Auth, id, 
 }
 
 func (s *Service) readApplications(ctx context.Context, actor identity.Auth, id, cursor, requestID string) (Result, error) {
-	if !s.tools[id].allowsRead(actor.Me.Audience) {
-		return Result{}, ErrCommandDenied
-	}
-	if actor.Me.Workspace == nil {
-		return Result{}, ErrWorkspaceRequired
-	}
 	query := url.Values{}
 	if cursor != "" {
 		query.Set("cursor", cursor)
 	}
-	if id == listApplications {
+	switch id {
+	case listApplications:
 		page, err := s.applications.ListForAssistant(ctx, actor, query, requestID)
 		if err != nil {
 			return Result{}, err
 		}
 		return Result{Command: id, Applications: &page}, nil
+	case listConversations:
+		page, err := s.applications.ConversationsForAssistant(ctx, actor, query, requestID)
+		if err != nil {
+			return Result{}, err
+		}
+		return Result{Command: id, Conversations: &page}, nil
+	default:
+		return Result{}, ErrCommandDenied
 	}
-	page, err := s.applications.ConversationsForAssistant(ctx, actor, query, requestID)
-	if err != nil {
-		return Result{}, err
-	}
-	return Result{Command: id, Conversations: &page}, nil
 }

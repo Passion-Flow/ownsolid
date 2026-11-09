@@ -67,6 +67,8 @@ func TestCommandRejection(t *testing.T) {
 		{"do not open nodes", "admin", "", ErrUnknownCommand},
 		{"open nodes; deploy model", "admin", "", ErrUnknownCommand},
 		{"open https://example.invalid", "admin", "", ErrUnknownCommand},
+		{`{"command":"open nodes","risk":"navigate"}`, "admin", "", ErrUnknownCommand},
+		{`{"tool":"list_applications","risk":"read","confirmed":true}`, "portal", "", ErrUnknownCommand},
 		{"confirm plan", "admin", "", ErrUnknownCommand},
 	} {
 		actor := identity.Auth{Me: identity.Me{Audience: test.audience}}
