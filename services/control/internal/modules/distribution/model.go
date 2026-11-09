@@ -85,6 +85,9 @@ type Alias struct {
 	CreatedAt          time.Time  `json:"created_at"`
 	Available          bool       `json:"available"`
 	UnavailableCode    *string    `json:"unavailable_code"`
+	// Description and its revision appear together after the description migration.
+	Description         *string `json:"description,omitempty"`
+	DescriptionRevision *int64  `json:"description_revision,omitempty"`
 }
 type PublishRequest struct {
 	WorkspaceID        string `json:"workspace_id"`
@@ -93,6 +96,8 @@ type PublishRequest struct {
 	DeploymentID       string `json:"deployment_id"`
 	DeploymentRevision int64  `json:"deployment_revision"`
 	Reason             string `json:"reason"`
+	// Omit empty text to retain the fingerprint of publications made before descriptions.
+	Description string `json:"description,omitempty"`
 }
 
 type APIKey struct {
