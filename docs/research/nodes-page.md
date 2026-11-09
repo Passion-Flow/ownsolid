@@ -30,13 +30,12 @@ FLT-115 (node events).
   case-insensitive `name_prefix` narrow the list; a cursor is bound to its filters. `nodes/summary`
   counts a fleet with one query for the filter's labels and the overview. Removed nodes leave the list
   unless asked for, because their names can be used again.
-- **Adding a node asks only for a name.** The token is minted for the workspace in use and is shown
-  once. It stays out of the commands, so copying them cannot leak it, and it goes into a file by paste,
-  so it reaches neither shell history nor a process list (AGENTS.md section 8). The dialog watches the
-  token and says when the node has joined.
-- **Joining is read-only for now.** A node with any other execution profile needs further sections in
-  its agent configuration (roots, service user, Docker socket). Offering them before the page can write
-  that configuration would produce commands that fail, so the rest comes with FLT-102.
+- **Adding a node asks for its name and purpose.** The active workspace is the default. The token is
+  minted for the chosen workspace and shown once. It stays out of copied commands and reaches the
+  host through a file, keeping it out of shell history and process arguments (AGENTS.md section 8).
+  The dialog watches the token and says when the node has joined.
+- **The registration dialog offers read-only and model serving.** Other profiles need their own
+  validated agent configuration and preparation instructions before the dialog can offer them.
 - **Removal is typed, disabling is undone.** Removing a node clears its credential and cannot be
   reversed, so the person types its name. Disabling and renaming take effect at once and offer undo
   ([research](undo-and-confirmation.md)).
@@ -67,6 +66,35 @@ cannot hold.
 ## Licences
 
 No new dependency. Everything is built from the workspace's existing packages.
+
+## Kubernetes execution profile (DEV-101, ARC-104)
+
+The node inventory and pending ownsolid enrollment tokens carry
+`execution_profile`. The [Nodes API handoff](lane-d-questions.md#arc-104-generated-web-consumer)
+adds `kubernetes_node` to those generated responses. The backend already admits
+that profile for the managed cell path. The Console can display the value before
+the generated contract moves. Keep one set of translated profile labels, checked
+with TypeScript's [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator)
+against the Node profile union plus the known incoming literal. The typed token
+consumer indexes the same labels. This keeps both contract revisions exhaustive
+without weakening their types.
+
+Show the label in the node list's Agent column, the pending enrollment record,
+and the existing node preview and detail. The profile describes what the ownsolid
+agent is authorized to do. Agent connectivity and the
+[Kubernetes Ready condition](https://kubernetes.io/docs/reference/node/node-status/#condition)
+have separate evidence. The create-token form retains its existing supported
+choices and the cell screens still require their plan entries.
+
+Compile the Web change with the current generated types and with the incoming
+profile in the generated node and token shapes. In Chromium, return both the
+older and the Kubernetes profile through the existing Admin reads. Verify the
+labels in English and Simplified Chinese and keep registration status and node
+connectivity independent of the profile. There is no new dependency, model or
+dataset.
+
+Land the label map before the Nodes contract change. Regenerate and check the
+Web workspace on the combined branch before merging the contract.
 
 ## Failure modes and tests
 

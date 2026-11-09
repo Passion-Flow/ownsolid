@@ -19,11 +19,12 @@ export function nodeState(node: Node): { tone: StatusTone; label: TranslationKey
 }
 
 /** The name of each execution profile. */
-export const profiles: Record<Node['execution_profile'], TranslationKey> = {
+export const profiles = {
   read_only: 'nodes.profile.read_only',
   systemd_components: 'nodes.profile.systemd_components',
   systemd_maintenance: 'nodes.profile.systemd_maintenance',
   docker_inference: 'nodes.profile.docker_inference',
   docker_ai: 'nodes.profile.docker_ai',
   docker_model_lifecycle: 'nodes.profile.docker_model_lifecycle',
-};
+  kubernetes_node: 'nodes.profile.kubernetes_node',
+} satisfies Record<Node['execution_profile'] | 'kubernetes_node', TranslationKey>;
