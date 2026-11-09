@@ -91,3 +91,35 @@ the service. To inspect service state and logs locally, run:
 systemctl status ownsolid-agent.service
 journalctl -u ownsolid-agent.service
 ```
+
+## Contain an authorized node scrape supervisor
+
+[node-scrape-containment.conf](node-scrape-containment.conf) is a systemd
+drop-in for the installation's foreground authorization supervisor. Put it
+in that service's drop-in directory when the site provisions a supervisor.
+The supervisor and its vmagent child stay in one cgroup. A main process exit
+stops the group, with a five-second stop deadline and no automatic restart.
+Reload the systemd unit definitions and check the effective settings before
+starting the provisioned unit.
+
+```sh
+systemctl daemon-reload
+systemctl show "$scrape_supervisor_unit" -p Type -p ExitType -p KillMode -p Restart -p Delegate
+```
+
+Expect `exec`, `main`, `control-group`, `no`, and `no`, respectively.
+
+The existing Compose and Helm installations leave node scraping disabled.
+Provision a dedicated non-root service identity and private discovery
+directory per workspace. The supervisor must publish through the current
+enrollment authority on every refresh, apply its inventory lease and use
+only the approved IP endpoints and private TLS CA. Keep the scope, CA and
+scrape configuration pinned throughout a run. Treat replacement as loss
+of that run's authorization and require a fresh authorized publication
+before starting it again.
+
+Keep the supervisor as the main process and start vmagent only as its
+child. The deployment owner supplies the service's executable, the exact
+protected inputs and a private network path to the exporters. The
+[containment and startup evidence](../../docs/research/node-scrape-budgets.md#systemd-deployment-containment)
+describes the tested boundary and the remaining Control integration.
