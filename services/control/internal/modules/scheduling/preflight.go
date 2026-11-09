@@ -1,6 +1,7 @@
 package scheduling
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 )
@@ -76,14 +77,32 @@ func (t *QuotaTree) Preflight(tenantID, workspaceID string, intent JobIntent, re
 		}
 		out.check(resources, node.Limits.Burst, used, node.Level, QuotaTooSmall, QuotaInUse)
 	}
-	if _, err := normalizeResources(cell.Total); err != nil {
+	if err := out.checkCell(resources, cell); err != nil {
 		return PreflightResult{}, err
+	}
+	return out, nil
+}
+
+func (r *PreflightResult) checkCell(resources []Resource, cell CellCapacity) error {
+	if _, err := normalizeResources(cell.Total); err != nil {
+		return err
 	}
 	if _, err := normalizeResources(cell.Reserved); err != nil {
-		return PreflightResult{}, err
+		return err
 	}
-	out.check(resources, cell.Total, cell.Reserved, "", CellTooSmall, CellInUse)
-	return out, nil
+	r.check(resources, cell.Total, cell.Reserved, "", CellTooSmall, CellInUse)
+	return nil
+}
+
+func workspaceCapacityLimits(demand, ceiling, used Resources) []Limit {
+	var limits []Limit
+	for resource, requested := range demand {
+		if limit, blocked := capacityLimit(resource, requested, ceiling[resource], used[resource], WorkspaceQuota, QuotaTooSmall, QuotaInUse); blocked {
+			limits = append(limits, limit)
+		}
+	}
+	slices.SortFunc(limits, func(a, b Limit) int { return cmp.Compare(a.Resource, b.Resource) })
+	return limits
 }
 
 func (r *PreflightResult) check(resources []Resource, total, used Resources, level QuotaLevel, tooSmall, inUse LimitReason) {

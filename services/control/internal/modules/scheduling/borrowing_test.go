@@ -268,12 +268,12 @@ func TestBorrowingNeedsEveryRequestedDimension(t *testing.T) {
 	}
 	state := cohortUsage{}
 	request := Resources{NVIDIAGPU: 2, CPU: 1000}
-	loans, err := state.allocate("requester", cohort, request)
+	loans, err := state.allocate("requester", cohort, request, false)
 	if err != nil || loans["gpu-team"][NVIDIAGPU] != 2 || loans["cpu-team"][CPU] != 1000 || len(loans) != 2 {
 		t.Fatalf("mixed lending: %v, %v", loans, err)
 	}
 	state.pending = map[string]bool{"gpu-team": true}
-	if loans, err := state.allocate("requester", cohort, request); !errors.Is(err, ErrBorrowingUnavailable) || loans != nil {
+	if loans, err := state.allocate("requester", cohort, request, false); !errors.Is(err, ErrBorrowingUnavailable) || loans != nil {
 		t.Fatalf("partial allocation was exposed: %v, %v", loans, err)
 	}
 }

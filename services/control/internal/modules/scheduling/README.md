@@ -32,3 +32,8 @@ how to project an authorized decision without leaking other workloads' details.
 Use `WaitReasons` on the current reservation or reclaim error,
 `PreflightResult.WaitReasons` on the estimate and `QueueTurnReason` when rank
 actually deferred the current entry.
+
+The submission owner can call `EstimateSubmissionWithin` with a read-only
+PostgreSQL REPEATABLE READ transaction, its authorized workspace and verified
+cell capacity. The result includes the policy revision, whole demand and
+wait reasons. The owner submits through the existing reservation transaction.

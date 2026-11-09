@@ -123,7 +123,10 @@ func (s cohortUsage) addHold(workspace string, demand Resources, loans loanAlloc
 	return s.owned[workspace].addScaled(owned, 1)
 }
 
-func (s cohortUsage) allocate(workspace string, members map[string]Quota, demand Resources) (loanAllocation, error) {
+func (s cohortUsage) allocate(workspace string, members map[string]Quota, demand Resources, hasClaim bool) (loanAllocation, error) {
+	if !hasClaim && s.pending[workspace] {
+		return nil, ErrReclaimPending
+	}
 	need := make(Resources)
 	var ownLent bool
 	whollyNominal := true
@@ -200,10 +203,7 @@ func borrowingForReservation(ctx context.Context, q transaction.Executor, a Atte
 	if err != nil {
 		return nil, false, err
 	}
-	if !claimed && state.pending[a.WorkspaceID] {
-		return nil, false, ErrReclaimPending
-	}
-	loans, err := state.allocate(a.WorkspaceID, members, demand)
+	loans, err := state.allocate(a.WorkspaceID, members, demand, claimed)
 	return loans, claimed, err
 }
 
