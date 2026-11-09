@@ -14,7 +14,7 @@ const modelName = 'Qwen3-0.6B';
 
 test.skip(origin === '' || bundle === '' || impostor === '', 'needs the model bundle');
 test.use(liveOptions);
-// The second retires what the first imports.
+// Retire the resumed version before creating the empty import to discard.
 test.describe.configure({ mode: 'serial' });
 
 const signIn = async (page: Page, path: string, heading: string | RegExp) => {
@@ -24,6 +24,15 @@ const signIn = async (page: Page, path: string, heading: string | RegExp) => {
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByRole('heading', { name: heading, level: 1 })).toBeVisible();
 };
+
+async function prepareUpload(page: Page, reason: string) {
+  await signIn(page, '/library/import', 'Import a bundle');
+  await expectAccessible(page);
+  await page.getByTestId('model-bundle').setInputFiles(bundle);
+  await expect(page.getByText(/Allow about .* in the model store during import/)).toBeVisible();
+  await page.getByLabel('Reason').fill(reason);
+  await page.getByRole('checkbox').check();
+}
 
 const chunkPath = /\/model-imports\/[^/]+\/chunks$/;
 
@@ -71,12 +80,7 @@ test('resumes at the durable offset after a real chunk interruption', async ({
     await route.continue();
   });
 
-  await signIn(first, '/library/import', 'Import a bundle');
-  await expectAccessible(first);
-  await first.getByTestId('model-bundle').setInputFiles(bundle);
-  await expect(first.getByText(/Allow about .* in the model store during import/)).toBeVisible();
-  await first.getByLabel('Reason').fill('Live run of the Model library');
-  await first.getByRole('checkbox').check();
+  await prepareUpload(first, 'Live run of the Model library');
   const checkpointReply = first.waitForResponse(
     (response) =>
       chunkPath.test(new URL(response.url()).pathname) &&
@@ -211,4 +215,62 @@ test('retires the model', async ({ page }) => {
   await dialog.getByLabel('Reason').fill('End of the live run');
   await dialog.getByRole('button', { name: 'Retire' }).click();
   await expect(page.getByRole('heading', { name: 'No models yet' })).toBeVisible();
+});
+
+test('discards a real import before accepting its first chunk', async ({ page }, testInfo) => {
+  test.setTimeout(120_000);
+  await page.route(chunkPath, () => {
+    // Keep the first chunk in Chromium until the operator discards the import.
+  });
+  await prepareUpload(page, 'Verify discard before the first chunk');
+  const firstChunk = page.waitForRequest(chunkPath);
+  await page.getByRole('button', { name: 'Start import' }).click();
+  const request = await firstChunk;
+  expect(chunkOffset(request)).toBe(0);
+  const id = new URL(request.url()).pathname.split('/').at(-2);
+  if (!id) throw new Error('The upload request does not contain an import ID');
+  expect(await readImport(page, id)).toMatchObject({
+    state: 'uploading',
+    uploaded_bytes: 0,
+    attempts: 0,
+  });
+
+  await page.getByRole('button', { name: 'Discard', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: `Discard the import of ${modelName}` });
+  await dialog.getByLabel('Reason').fill('Discard the held first chunk in the isolated run');
+  const discard = dialog.getByRole('button', { name: 'Discard', exact: true });
+  await expect(discard).toBeDisabled();
+  await dialog.getByLabel(/^Type /).fill(modelName);
+  const aborted = page.waitForEvent('requestfailed', (failed) => failed === request);
+  await discard.click();
+  const failed = await aborted;
+  await expect(page.getByText('Discarded', { exact: true })).toBeVisible();
+  const cancelled = await readImport(page, id);
+  expect(cancelled).toMatchObject({
+    state: 'cancelled',
+    uploaded_bytes: 0,
+    attempts: 0,
+    model_id: null,
+  });
+  await testInfo.attach('model-upload-discard-first-chunk', {
+    body: JSON.stringify(
+      {
+        importId: id,
+        offset: chunkOffset(failed),
+        error: failed.failure()?.errorText,
+        state: cancelled.state,
+        uploadedBytes: cancelled.uploaded_bytes,
+        attempts: cancelled.attempts,
+      },
+      null,
+      2,
+    ),
+    contentType: 'application/json',
+  });
+  expect(failed.failure()?.errorText).toBe('net::ERR_ABORTED');
+  await expectAccessible(page);
+  await testInfo.attach('model-upload-discarded', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
 });
