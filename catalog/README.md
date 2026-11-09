@@ -96,20 +96,26 @@ each image in OCI index order.
 
 ## Local image import
 
-`apps.ImportInstallImage` verifies a signed single-image Linux amd64 release
-on the factory's private staging mount and streams its tagless image into
-a configured Docker Unix socket. The current factory transport takes a USTAR
-archive with a direct platform manifest. Configure Docker Engine API v1.49
-with its containerd image store and provide the compressed and expanded byte
-budgets and an operation timeout.
+`apps.ImportInstallImage` verifies a signed Linux amd64 release and confirms
+every declared manifest in a configured local Docker Unix socket. Configure
+Docker Engine API v1.49 with its containerd image store and provide the
+compressed and expanded byte budgets and an operation timeout. The factory
+transport uses one USTAR projection with a direct platform manifest per load.
 
-The import checks expanded layers and DiffIDs, then reads back the image ID,
-manifest descriptor and platform. A retry can reuse the exact registered
-image. Use the returned `Archive.Images[0].ManifestDigest` as the digest-only
+The import checks expanded layers and DiffIDs for the full set before using
+Docker. The expansion budget applies across the set and counts a shared
+layer once per use. For a multi-image release, stage the immutable bundle in
+a private subdirectory of the configured factory mount. Keep the mount
+writable for one private temporary projection at a time. The single-image
+path also accepts staging at the mount root.
+
+The importer reads back every image ID, manifest descriptor and platform.
+When an image fails, retry the same signed bundle. Exact images already
+registered are reused, and a failed operation returns no successful bundle
+result. Use each returned `Archive.Images[i].ManifestDigest` as a digest-only
 image reference in the deployment plan. `Archive.Digest` identifies the signed
-archive bytes. Keep staging immutable throughout. The caller authorizes and
-audits the operation. The installer owns release state, workload admission
-and startup.
+archive bytes. The caller authorizes and audits the operation. The installer
+owns release state, workload admission and startup.
 
 ## Verification
 
@@ -121,13 +127,15 @@ go -C catalog vet ./...
 ```
 
 
-For the real Docker integration test, configure the socket of a disposable
-empty engine and a separate private mounted staging directory. The test
-checks that the store is empty, imports a fixture, retries it and confirms
-the exact signed digest. Dispose of the test engine after the run.
+For each Docker integration test, configure the socket of a new disposable
+empty engine and a separate private staging mount. The multi-image test
+injects a second-load failure and checks that retry loads only the missing
+manifest. Dispose of the test engine after each run.
 
 ```sh
 export OWNSOLID_CATALOG_DOCKER_TEST_SOCKET=/path/to/private/docker.sock
 export OWNSOLID_CATALOG_DOCKER_TEST_MOUNT=/path/to/private/staging-mount
 go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportInstallImageIntoEmptyDockerStore$'
+# Point the same variables at a fresh engine and mount for the set test.
+go -C catalog test -tags catalog_docker_integration ./apps -run '^TestImportInstallImageSetIntoEmptyDockerStore$'
 ```

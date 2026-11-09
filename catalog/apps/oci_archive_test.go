@@ -5,9 +5,12 @@ import (
 	"bytes"
 	"encoding/json/v2"
 	"errors"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 type imageFixture struct {
@@ -17,10 +20,20 @@ type imageFixture struct {
 
 func newImageFixture(t *testing.T, architecture string, remoteLayer bool) imageFixture {
 	t.Helper()
+	return imageVariant(t, architecture, remoteLayer, "base", false)
+}
+
+func imageVariant(t *testing.T, architecture string, remoteLayer bool, name string, badDiffID bool) imageFixture {
+	t.Helper()
 	layer := ociTar(t, map[string][]byte{"app.txt": []byte("offline fixture\n")}, "")
+	diffID := digestBytes(layer)
+	if badDiffID {
+		diffID = digestBytes([]byte("different expanded bytes"))
+	}
 	config := ociJSON(t, map[string]any{
 		"os": "linux", "architecture": architecture,
-		"rootfs": map[string]any{"type": "layers", "diff_ids": []string{digestBytes(layer)}},
+		"rootfs": map[string]any{"type": "layers", "diff_ids": []string{diffID}},
+		"config": map[string]any{"Labels": map[string]string{"fixture": name}},
 	})
 	descriptor := func(mediaType string, data []byte) map[string]any {
 		return map[string]any{"mediaType": mediaType, "digest": digestBytes(data), "size": len(data)}
@@ -47,6 +60,25 @@ func newImageFixture(t *testing.T, architecture string, remoteLayer bool) imageF
 		},
 		image: image, config: digestBytes(config), layer: layerPath,
 	}
+}
+
+func imageSetFiles(t *testing.T, images ...imageFixture) map[string][]byte {
+	t.Helper()
+	files := make(map[string][]byte)
+	manifests := make([]map[string]any, 0, len(images))
+	for _, image := range images {
+		for name, data := range image.files {
+			files[name] = data
+		}
+		manifests = append(manifests, map[string]any{
+			"mediaType": ociManifestType, "digest": image.image, "size": len(files[ociBlobPath(image.image)]),
+			"annotations": map[string]string{"org.opencontainers.image.ref.name": "example.invalid/source:tag"},
+		})
+	}
+	files["index.json"] = ociJSON(t, map[string]any{
+		"schemaVersion": 2, "mediaType": ociIndexType, "manifests": manifests,
+	})
+	return files
 }
 
 func ociJSON(t *testing.T, value any) []byte {
@@ -85,7 +117,7 @@ func ociTar(t *testing.T, files map[string][]byte, duplicate string) []byte {
 	return output.Bytes()
 }
 
-func signOCI(t *testing.T, archive []byte, image string) signedFixture {
+func signOCI(t *testing.T, archive []byte, images ...string) signedFixture {
 	t.Helper()
 	fixture := signedBundle(t, "compose")
 	read := func(name string) []byte {
@@ -96,7 +128,8 @@ func signOCI(t *testing.T, archive []byte, image string) signedFixture {
 		}
 		return raw
 	}
-	manifest := bytes.Replace(read(manifestName), []byte("sha256:"+strings.Repeat("b", 64)), []byte(image), 1)
+	placeholder := []byte(`["sha256:` + strings.Repeat("b", 64) + `"]`)
+	manifest := bytes.Replace(read(manifestName), placeholder, ociJSON(t, images), 1)
 	if err := fixture.root.WriteFile(manifestName, manifest, 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -109,6 +142,71 @@ func signOCI(t *testing.T, archive []byte, image string) signedFixture {
 	}))
 	fixture.limit = int64(len(archive) + len(read("compose.yaml")))
 	return fixture
+}
+
+func TestProjectVerifiedOCIImageSet(t *testing.T) {
+	first := newImageFixture(t, "amd64", false)
+	second := imageVariant(t, "amd64", false, "other", false)
+	files := imageSetFiles(t, first, second)
+	fixture := signOCI(t, ociTar(t, files, ""), second.image, first.image)
+	_, source, err := verifyBundle(t.Context(), fixture.root, fixture.key, fixture.limit, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer source.file.Close()
+	for i, want := range []imageFixture{first, second} {
+		var output bytes.Buffer
+		if err := source.writeProjection(t.Context(), source.members[i], &output); err != nil {
+			t.Fatal(err)
+		}
+		projected := signOCI(t, output.Bytes(), want.image)
+		verified, err := VerifyInstallBundle(t.Context(), projected.root, projected.key, projected.limit)
+		if err != nil || !slices.Equal(verified.Archive.Images, []OCIImage{{ManifestDigest: want.image, ConfigDigest: want.config}}) ||
+			bytes.Contains(output.Bytes(), []byte("example.invalid/source")) {
+			t.Fatalf("projection did not preserve only the selected tagless image: %v", err)
+		}
+	}
+
+	file, err := os.OpenFile(filepath.Join(fixture.root.Name(), ImageArchiveName), os.O_WRONLY, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := file.WriteAt([]byte{0}, source.sections[ociBlobPath(second.config)].offset); err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := source.writeProjection(t.Context(), source.members[1], &bytes.Buffer{}); !errors.Is(err, ErrImageImport) {
+		t.Fatalf("a changed verified blob was staged: %v", err)
+	}
+}
+
+func TestImportImageSetRejectsMissingOrTamperedMember(t *testing.T) {
+	first := newImageFixture(t, "amd64", false)
+	second := imageVariant(t, "amd64", false, "other", false)
+	for _, missing := range []bool{true, false} {
+		name := "tampered"
+		if missing {
+			name = "missing"
+		}
+		t.Run(name, func(t *testing.T) {
+			files := imageSetFiles(t, first, second)
+			path := ociBlobPath(second.config)
+			if missing {
+				delete(files, path)
+			} else {
+				files[path] = append([]byte(" "), files[path]...)
+			}
+			fixture := signOCI(t, ociTar(t, files, ""), first.image, second.image)
+			result, err := ImportInstallImage(t.Context(), fixture.root.Name(), fixture.key, ImageImportOptions{
+				MaximumPayloadBytes: fixture.limit, MaximumExpandedBytes: 1 << 20, Timeout: time.Second,
+			})
+			if !errors.Is(err, ErrBundle) || len(result.Archive.Images) != 0 {
+				t.Fatalf("invalid second member was admitted: %v", err)
+			}
+		})
+	}
 }
 
 func TestVerifyInstallBundleOCIClosure(t *testing.T) {

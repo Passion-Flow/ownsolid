@@ -184,3 +184,54 @@ amd64 image, with the signed digest in both the image ID and descriptor.
 The installer must supply the authenticated publisher key and host policy,
 invoke the import as an authorized operation, and carry the verified digest
 into workload admission. Multi-image registration also remains open.
+
+## Multi-image registration
+
+OCI layouts support a root index with multiple descriptors while keeping
+the manifest, config and layers content-addressed. The
+[OCI layout specification](https://github.com/opencontainers/image-spec/blob/v1.1.1/image-layout.md)
+defines this separation. [Containers Image](https://github.com/containers/image/blob/main/docs/containers-transports.5.md)
+also selects an individual archive image instead of using a publisher's
+tag as an installation identity. Use the catalog's already verified
+manifest digest for that selection.
+
+The release factory's `OpenCurrentImageSource` selects one image for a
+platform release asset. Its inventory validator rejects a different
+runtime manifest and requires one selected config. Keep this DEL
+contract and its platform callers unchanged. Use a canonical tagless
+single-image projection of each authenticated closure as the input to
+the proven factory and Docker path. Preserve the raw manifest, config
+and compressed layer bytes so the original digest remains authoritative.
+A selected projection carries its own transport hash, never the
+publisher's archive hash. Docker registration still uses the
+[Engine API v1.49](https://docs.docker.com/reference/api/engine/version/v1.49/)
+and confirms each exact manifest ID, descriptor and platform separately.
+
+Verify the complete signed archive and closure before projecting. Keep its
+verified file descriptor open. Rehash projected blobs when copying their
+bounded sections. On the configured factory mount, use one private
+temporary projection at a time, outside the immutable signed bundle.
+Run the existing expanded-layer and DiffID verification for every image
+before opening the Docker socket. Bound the sum of expanded layer bytes
+by the operation's budget, counting each use of a shared layer across
+images. The operation timeout covers preflight, transport and readback.
+Missing images use the same projection and factory tagless writer.
+Already registered exact images need no load. Preserve the original
+single-image path, including support for staging at the mount root.
+
+The preflight and per-missing-image projections trade an extra sequential
+read for bounded scratch space and file descriptors. Holding every
+projection could multiply disk use for shared base layers. Sending the
+publisher's multi-image tar directly would bypass the existing DiffID
+and transport checks and could give Docker source names. No new
+dependency or image ships with this path. The Go standard library,
+OCI specification and Docker development fixture keep the licensing
+and offline use terms recorded above.
+
+Reject a missing or altered member, an invalid later DiffID and an
+aggregate expansion overrun before Docker access. Test a shared layer,
+two distinct manifest readbacks and retry after a middle load failure.
+A failed operation returns no successful bundle result. Keep any exact
+content already registered and recheck the signed set on retry. The
+caller owns publisher trust, authorization, audit, workload admission
+and deployment state.
