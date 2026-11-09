@@ -3,21 +3,33 @@
 package datasets_test
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	"github.com/google/uuid"
 )
 
-func verifyTokenizerPreviewHTTPS(t *testing.T, service *datasets.Service, auth identity.Auth, portal, admin *httpfixture.Client, path, adminPath string) {
+type tokenizerPreviewProcessFixture struct {
+	models        *models.Service
+	configuration datasets.TokenizerPreviewConfiguration
+	password      string
+}
+
+func verifyTokenizerPreviewHTTPS(t *testing.T, service *datasets.Service, auth identity.Auth, portal, admin *httpfixture.Client, path, adminPath string, process tokenizerPreviewProcessFixture) {
 	t.Helper()
 	approvedSource := os.Getenv("OWNSOLID_TEST_QWEN_TOKENIZER_DIRECTORY")
 	if approvedSource == "" {
@@ -68,6 +80,7 @@ VALUES($1,$2,$3,'Preview fixture',$4,$5,$6,'ready',$7)`,
 	portal.Call("POST", previewPath, map[string]any{"model_id": foreignModel, "sample_limit": 1, "maximum_tokens": 32}, 404, "Problem")
 	foreignPath := "/api/v1/workspaces/" + foreignWorkspace + "/datasets/" + draft["dataset_id"].(string) + "/drafts/" + draftID + "/tokenizer-preview"
 	portal.Call("POST", foreignPath, input, 404, "Problem")
+	t.Log("read a ready Qwen tokenizer through scoped HTTPS")
 	result := portal.Call("POST", previewPath, input, 200, "")
 	samples := result["samples"].([]any)
 	if result["model_catalog_sha256"] != agentwire.ModelCatalogDigest() || result["maximum_tokens"] != float64(32) || len(samples) != 1 {
@@ -97,11 +110,35 @@ VALUES($1,$2,$3,'Preview fixture',$4,$5,$6,'ready',$7)`,
 	if problem := portal.Call("POST", previewPath, input, 409, "Problem"); problem["code"] != "DATASET_FILE_INVALID" {
 		t.Fatal("missing tokenizer asset was not rejected")
 	}
-	raw[0] ^= 1
-	writePreviewModelFixture(t, file, raw)
+	altered := bytes.Clone(raw)
+	altered[0] ^= 1
+	writePreviewModelFixture(t, file, altered)
 	if problem := portal.Call("POST", previewPath, input, 409, "Problem"); problem["code"] != "DATASET_FILE_INVALID" {
 		t.Fatal("same-size tokenizer tampering was not rejected")
 	}
+
+	if e = os.Remove(file); e != nil {
+		t.Fatal(e)
+	}
+	writePreviewModelFixture(t, file, raw)
+	portal.Call("POST", previewPath, input, 200, "")
+
+	t.Log("verify the training-reserved token failure")
+	reserved := record
+	reserved.Completion = sample["eos"].(string)
+	encoded, e = reserved.Canonical(service.Identity.Config.Policy().Datasets.Limits)
+	if e != nil {
+		t.Fatal(e)
+	}
+	reservedDraft := prepareHTTPSPublicationDraft(t, service, portal, path, append(encoded, '\n'))
+	reservedPath := path + "/drafts/" + reservedDraft["id"].(string) + "/tokenizer-preview"
+	if problem := portal.Call("POST", reservedPath, input, 422, "Problem"); problem["code"] != "DATASET_VALIDATION_FAILED" {
+		t.Fatal("reserved training token was not refused by the real tokenizer")
+	}
+
+	t.Log("hold the real tokenizer before releasing prepared text")
+	verifyPreviewRevocation(t, service, process, workspace, draft["dataset_id"].(string), draftID, model)
+	portal.Call("POST", previewPath, input, 200, "")
 
 	var oversized strings.Builder
 	for _, id := range []string{"large-a", "large-b", "large-c"} {
@@ -118,6 +155,110 @@ VALUES($1,$2,$3,'Preview fixture',$4,$5,$6,'ready',$7)`,
 	bigPath := path + "/drafts/" + big["id"].(string) + "/tokenizer-preview"
 	portal.Call("POST", bigPath, input, 413, "Problem")
 	t.Log("real Qwen tokenizer preview validated over scoped HTTPS")
+}
+
+func verifyPreviewRevocation(t *testing.T, service *datasets.Service, process tokenizerPreviewProcessFixture, workspace, dataset, draft, model string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 35*time.Second)
+	defer cancel()
+	_, token, _, err := service.Identity.Login(ctx, "admin@example.invalid", process.password, "portal", "", uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	actor, err := service.Identity.Authenticate(ctx, token, "portal")
+	if err != nil {
+		t.Fatal(err)
+	}
+	gate := t.TempDir()
+	launcher := filepath.Join(gate, "tokenizer")
+	// exec replaces the launcher so the normal wall and RSS monitor still
+	// observes the actual interpreter and its real tokenizer allocations.
+	quote := func(value string) string { return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'" }
+	const holdAfterPreview = `
+from pathlib import Path
+import sys
+import time
+
+gate = Path(sys.argv[1])
+assert sys.argv[2:5] == ["-I", "-B", "-c"]
+program = sys.argv[5]
+sys.argv = ["-c", *sys.argv[6:]]
+try:
+    exec(compile(program, "<preview>", "exec"), {"__name__": "__main__"})
+except SystemExit as finished:
+    if finished.code != 0:
+        raise
+else:
+    raise RuntimeError("preview did not exit")
+(gate / "prepared").touch()
+while not (gate / "release").exists():
+    time.sleep(0.01)
+`
+	command := "#!/bin/sh\nexec " + quote(process.configuration.PythonExecutable) +
+		" -I -B -c " + quote(holdAfterPreview) + " " + quote(gate) + " \"$@\"\n"
+	if err = os.WriteFile(launcher, []byte(command), 0700); err != nil {
+		t.Fatal(err)
+	}
+	configuration := process.configuration
+	configuration.PythonExecutable = launcher
+	worker, err := datasets.NewTokenizerPreviewProcessor(service.Processor, process.models, configuration)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input := datasets.TokenizerPreviewRequest{ModelID: model, SampleLimit: 1, MaximumTokens: 32}
+	type attempt struct {
+		out datasets.TokenizerPreviewResult
+		err error
+	}
+	completed := make(chan attempt, 1)
+	var request sync.WaitGroup
+	request.Go(func() {
+		out, err := service.PreviewDraftTokenizer(ctx, actor, workspace, dataset, draft, input, worker)
+		completed <- attempt{out, err}
+	})
+	release := sync.OnceFunc(func() {
+		if err := os.WriteFile(filepath.Join(gate, "release"), nil, 0600); err != nil {
+			t.Error(err)
+		}
+	})
+	defer func() {
+		release()
+		request.Wait()
+	}()
+	ticker := time.NewTicker(10 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		if _, err = os.Stat(filepath.Join(gate, "prepared")); err == nil {
+			break
+		} else if !os.IsNotExist(err) {
+			t.Fatal(err)
+		}
+		select {
+		case early := <-completed:
+			t.Fatal("real tokenizer exited before the authorization barrier", early.err)
+		case <-ctx.Done():
+			t.Fatal("real tokenizer did not reach the authorization barrier")
+		case <-ticker.C:
+		}
+	}
+	out, err := service.PreviewDraftTokenizer(ctx, actor, workspace, dataset, draft, input, worker)
+	if err == nil || err.Error() != "RATE_LIMITED" || !reflect.DeepEqual(out, datasets.TokenizerPreviewResult{}) {
+		t.Fatal("one live tokenizer did not consume the preview slot", err)
+	}
+	if err = service.Identity.Logout(ctx, token, "portal", uuid.NewString()); err != nil {
+		t.Fatal(err)
+	}
+	release()
+	select {
+	case denied := <-completed:
+		if denied.err == nil || !strings.HasPrefix(denied.err.Error(), "AUTH_") ||
+			!reflect.DeepEqual(denied.out, datasets.TokenizerPreviewResult{}) {
+			t.Fatal("a revoked session received prepared samples", denied.err)
+		}
+	case <-ctx.Done():
+		t.Fatal("revoked preview did not terminate")
+	}
+	t.Log("revocation after real tokenization and single preview slot verified")
 }
 
 func writePreviewModelFixture(t *testing.T, path string, raw []byte) {
