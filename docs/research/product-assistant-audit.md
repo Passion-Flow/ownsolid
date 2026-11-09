@@ -123,8 +123,10 @@ and the [OWASP CSRF guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cro
 Do not put command text in the URL or echo it in a problem response.
 
 Construct `productagent.New` with the same application service used by the
-ordinary portal routes in `identity/http.New`, join its error into startup
-initialization, and store the resulting adapter on `identity/http.Handler`.
+ordinary portal routes in `identity/http.New` and the
+[installation execution policy](product-assistant-execution-policy.md).
+Join the constructor error into startup initialization and store the adapter
+on `identity/http.Handler`.
 In `identity/http.Handler.api`, dispatch `productagenthttp.Owns(path)` beside
 the existing application branch after the shared origin, CSRF and license guards.
 Call `Authenticate(ctx, session, audience)` and pass its result and the

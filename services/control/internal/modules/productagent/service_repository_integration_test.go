@@ -35,7 +35,7 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 	spaces := &workspaces.Service{Identity: owner}
 	flow := &workflows.Service{Identity: owner, Workspaces: spaces}
 	apps := &applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow}
-	service, err := New(apps)
+	service, err := New(apps, func(context.Context) (bool, error) { return true, nil })
 	if err != nil {
 		t.Fatal(err)
 	}

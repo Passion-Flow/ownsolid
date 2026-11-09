@@ -1,6 +1,31 @@
 package productagent
 
-import "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+import (
+	"context"
+	"errors"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+)
+
+// ExecutionPolicy reads the current installation decision from a trusted local
+// source and honors cancellation. A missing decision must return an error.
+type ExecutionPolicy func(context.Context) (enabled bool, err error)
+
+var errExecutionPolicyUnavailable = errors.New("SERVICE_NOT_READY")
+
+func (s *Service) admitExecution(ctx context.Context) error {
+	if s.executionPolicy == nil {
+		return errExecutionPolicyUnavailable
+	}
+	enabled, err := s.executionPolicy(ctx)
+	if err != nil {
+		return errExecutionPolicyUnavailable
+	}
+	if !enabled {
+		return ErrCommandDenied
+	}
+	return nil
+}
 
 type riskTier string
 
