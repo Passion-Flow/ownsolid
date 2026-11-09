@@ -21,7 +21,7 @@ type nodeUpdate struct {
 
 func (opts *options) addNodeOperations(group *cobra.Command) {
 	group.AddCommand(opts.nodeTasksCommand(), opts.nodeTaskCommand(), opts.nodeTaskLogCommand(), opts.collectFactsCommand(),
-		opts.joinTokensCommand(), opts.nodeInferenceCommand(), opts.probeInferenceCommand(), opts.exporterCommand())
+		opts.joinTokensCommand(), opts.nodeInferenceCommand(), opts.probeInferenceCommand(), opts.exporterCommand(), opts.agentPacingCommand())
 	for _, change := range []struct {
 		command, status, description string
 	}{
