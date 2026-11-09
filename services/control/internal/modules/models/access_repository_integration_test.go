@@ -17,14 +17,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/google/uuid"
 )
 
 // Only the file bytes in the CPU case come from retained real execution. All
@@ -33,6 +33,11 @@ func accessDerived(t *testing.T, x modelReadFixture, native bool, corrupt string
 	t.Helper()
 	p := retirementTraining(t, x, x.model)
 	retirementPreparation(t, x, p, x.model)
+	return accessDerivedFromPreparation(t, x, p, native, corrupt)
+}
+
+func accessDerivedFromPreparation(t *testing.T, x modelReadFixture, p retirementProvenance, native bool, corrupt string) lifecycle.DerivedCatalog {
+	t.Helper()
 	attempt, task, review, derived := uuid.NewString(), uuid.NewString(), uuid.NewString(), uuid.NewString()
 	report := []byte(`{"status":"prepared","gate_passed":true,"event_count":1}`)
 	sum := sha256.Sum256(report)

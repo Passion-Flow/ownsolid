@@ -86,3 +86,21 @@ dataset version and preparation holdout version. Show each retained version
 ID and digest even when a dataset was retired. A record with no lineage field
 needs a localized unavailable state. Keep permissions and data visibility
 on the server and use the existing model detail error and retry behavior.
+
+### Admin HTTP projection
+
+Project the verified version references only after the Admin model detail
+service succeeds. Keep the response-specific types in the models HTTP owner.
+The existing model version type is shared by lists and Portal and continues
+to exclude lineage. The detail serializer must omit the optional property for
+base models and preserve the existing problem response for a refused read.
+The [OpenAPI response object](https://spec.openapis.org/oas/v3.1.1.html#response-object)
+allows the Admin operation to reference its own success schema. Check the
+actual response against the schema assigned to that operation.
+
+Reuse the migrated PostgreSQL and trusted loopback HTTPS fixtures. Verify
+an existing version 1 publication, retained training lineage after dataset
+retirement, separate holdout references, exact base and Portal responses,
+unchanged lists, and a problem-only refusal for invalid metadata or
+unauthorized requests. This metadata read uses the existing dependencies and
+requires no model files or network beyond loopback.
