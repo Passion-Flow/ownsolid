@@ -113,3 +113,58 @@ allocation. The sample is a local fixture with a two-day raw store, a
 90-day rollup store and one-hour routing horizon. It does not measure
 retention expiry, 90-day query latency, sustained ingestion or storage
 growth. PostgreSQL and both metrics stores stopped after the run.
+
+## Private TLS deployment handoff
+
+The [single-server VictoriaMetrics guide](https://docs.victoriametrics.com/victoriametrics/single-server-victoriametrics/)
+and the pinned 1.155.0 binary expose native TLS at the listener.
+[vmalert](https://docs.victoriametrics.com/victoriametrics/vmalert/#configuration)
+accepts distinct CA files for its datasource and remote-write transport.
+Control loads the same protected monitoring JSON through
+`monitoring.LoadEnvironment` at startup. Its query transport uses
+[Go's system certificate pool](https://pkg.go.dev/crypto/x509#SystemCertPool)
+and does not use an ambient HTTP proxy or follow redirects. The TLS
+handoff therefore needs native server certificates with matching SANs,
+independent storage volumes, two private origins and the applicable site
+CAs in the Control trust store. The evaluator's CA paths are separate
+from the Control trust bundle. TLS key references and files remain local.
+
+Qualify that connection contract before changing installation wiring.
+Run two pinned VictoriaMetrics processes with native TLS and separately
+issued private CAs in the loopback-only fixture. Use the same loader
+as the startup owner, replay the checked-in rule with the pinned
+vmalert and verify the Admin service reads both tiers. Redirecting the
+long origin to a server with an untrusted issuer must yield a long-tier
+error without delivering a query or committing a successful diagnostic
+audit. Keep historical series in the same two stores. Go, PostgreSQL
+and the Apache-2.0 VictoriaMetrics components use the licenses already
+listed above. The test issues its own disposable certificates.
+
+DEL still owns packaging, certificate rotation and the deployment ACLs.
+Give the collector raw write access and the evaluator raw read and
+long write access. Give Control only the two query routes. Keep imports,
+administrative and metrics-store listeners private. This TLS fixture
+validates the route and trust chain. It does not qualify installed
+network policy, client identity or 90-day retention.
+
+### Verified private TLS handoff
+
+`TestFleetHistoryPrivateTLS` ran on Linux amd64 inside a
+loopback-only namespace. PostgreSQL 18.6 with pgvector 0.8.7 supplied
+the scope and audit. Two VictoriaMetrics 1.155.0 instances served
+native TLS from independent directories with separately issued
+CAs. The vmalert 1.155.0 process used the explicit datasource and
+remote-write CA files to replay the repository's recording rule.
+Control's protected startup configuration and private process trust
+bundle reached both raw and rollup through the production history
+reader. An unrelated certificate caused the long-tier unavailable
+result before the query arrived. No successful audit was written for
+that attempt. Both stores and PostgreSQL stopped.
+
+Run the existing history fixture with the `history-tls` selector
+and the pinned image and binary inputs in the
+[monitoring README](../../services/control/internal/modules/monitoring/README.md#long-retention-for-fleet-health-aggregates).
+The previously measured 10,000-node raw and rollup sizes and latency
+remain the query-scale evidence. The TLS fixture exercises deployment
+trust with a small sample. DEL still owns installed ACLs, certificate
+lifecycle and isolated volumes.
