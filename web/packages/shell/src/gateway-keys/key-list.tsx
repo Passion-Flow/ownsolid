@@ -595,11 +595,22 @@ export function GatewayKeys({ workspace, issuing, onIssue, owner, noModel }: Gat
   );
 }
 
-/** The button that opens the issue dialog. */
-export function IssueKeyButton({ onClick }: { onClick: () => void }) {
+/** Opens the issue dialog, or points to a visible reason the action is unavailable. */
+export function IssueKeyButton({
+  onClick,
+  unavailableReasonId,
+}: {
+  onClick: () => void;
+  unavailableReasonId?: string | undefined;
+}) {
   const { t } = useI18n();
   return (
-    <Button variant="primary" onClick={onClick}>
+    <Button
+      variant="primary"
+      aria-disabled={unavailableReasonId ? true : undefined}
+      aria-describedby={unavailableReasonId}
+      onClick={unavailableReasonId ? undefined : onClick}
+    >
       <Plus aria-hidden />
       {t('gateway.issue.open')}
     </Button>

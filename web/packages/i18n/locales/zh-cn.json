@@ -2356,6 +2356,7 @@
   "keys.subtitle.none": "用于调用工作空间模型的密钥。",
   "keys.noModel.detail": "密钥调用网关提供的模型。请联系管理员将模型发布到此工作空间。",
   "keys.noWorkspace.detail": "管理员将你加入工作空间后，你就可以在这里为其模型签发密钥。",
+  "keys.issue.noWorkspace": "获得工作空间访问权限后才能签发密钥。",
   "gateway.reason": "原因",
   "gateway.reason.hint": "会随此次变更记录在审计日志中。",
   "gateway.reason.required": "请填写原因，用于审计日志。",

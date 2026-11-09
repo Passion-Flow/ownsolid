@@ -142,3 +142,59 @@ activated issuer, and it verified the signed fixture listener on
 its advertised IP. The independent database read found the same
 four reported receipts after the downloads. This covers the
 key drawers and the current JSON-cursor continuation.
+
+### Losing workspace access between downloads
+
+An already open drawer can hold a previously loaded cursor and alias.
+Membership changes use the existing
+[workspace contract](../../api/openapi/v1/workspaces/openapi.json).
+The CSV and CA handlers recheck the caller's current workspace scope
+before returning an attachment. A scoped 404 can conceal an inaccessible
+resource, as permitted by [HTTP semantics](https://www.rfc-editor.org/rfc/rfc9110.html#name-404-not-found).
+The browser should show the existing safe recovery message without
+inferring why the resource is unavailable.
+
+Use the same member browser tab before and after an Admin removes its
+membership through the workspace page. Save one CSV page and one PEM
+while authorized. Select the second page from the already loaded
+history, remove access, and try both attachments in the still-open
+drawer. Check that the CSV request retains the original key, workspace,
+limit and cursor, and that both responses refuse without attachment
+headers or a second [Playwright download event](https://playwright.dev/docs/downloads).
+Reload to confirm the session still reaches Portal and receives the
+no-workspace guidance. An Admin export of the same key should still
+contain only that key's rows. A URL rewritten to another workspace
+would test a different boundary. A removed session would test sign-in
+rather than workspace access. This adds no dependency, model or dataset.
+
+The no-workspace recovery must keep the primary Issue a key button
+visible. The [interaction states](../product/design/README.md#4-states-every-screen-must-define)
+call for a visible reason and `aria-disabled`. The HTML button remains
+focusable and links to that reason through `aria-describedby`. The
+[ARIA button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/button/)
+specifies `aria-disabled` for an unavailable button. Omit its click
+handler while unavailable so pointer and keyboard activation cannot
+open the issue dialog. Use the workspace load or retry message while
+the workspace list is unresolved and the administrator guidance once
+there is no workspace.
+
+#### Run the withdrawal case
+
+Use the [live download fixture variables](../development/environment.md#browser-test-against-an-installation)
+and set `OWNSOLID_LIVE_DOWNLOADS_REVOKE_MEMBER=1` on a disposable
+fixture. Run `pnpm exec playwright test live-key-downloads.spec.ts` from
+`web/apps/portal`. The administrator needs permission to remove the
+fixture member. The case runs after the two existing download cases
+and leaves the membership removed.
+
+The three cases passed in local Chromium against the production HTTPS
+dispatcher and PostgreSQL 18.6 on an internal Docker network. After the
+Admin removal, both attachment requests and the cursor continuation
+returned 404. Chromium produced only the original CSV and PEM, and
+made no request outside its configured origins. The refreshed Portal
+kept the member signed in and explained who can restore access. Its
+disabled Issue a key button was visible at desktop and phone widths
+and Enter did not open the dialog. The independent database query
+found zero fixture memberships, one audited removal, and the same
+four receipts, three for the selected key and one for the other key.
+The authorized Admin export contained only the selected key's rows.
