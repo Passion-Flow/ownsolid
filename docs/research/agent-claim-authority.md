@@ -260,4 +260,67 @@ on the PostgreSQL upsert. Avoiding the extra reads requires the caller to
 prove it holds the scoped node fence in the same transaction. Keep the active
 and disabled passive-observation semantics and validate the lease before a
 result changes state. Audit append and offline checkpoint compatibility
-remain Audit-owned. The strict test still fails for these three exchanges.
+remain Audit-owned. Those three exchanges failed the strict baseline test.
+
+### PostgreSQL component heartbeat scope reads
+
+The current component owner rechecks the persisted node with
+`PreparationHistoryWithin` before writing. Keep that check for all callers.
+Combine its installation and node reads using a materialized installation
+query and a dependent lateral node lookup. The installation query holds
+the existing shared locks on the installation and active tenant. Only after
+it returns a matching tenant does the lateral lookup take the scoped node
+lock. [PostgreSQL WITH materialization](https://www.postgresql.org/docs/18/queries-with.html#QUERIES-WITH-CTE-MATERIALIZATION)
+and [LATERAL evaluation](https://www.postgresql.org/docs/18/queries-table-expressions.html#QUERIES-LATERAL)
+define the evaluation dependency. Verify the actual plan and lock order.
+
+For PostgreSQL component heartbeats only, project the credential digest from
+that same locked node row, and retain the constant-time comparison against the
+presented credential. Keep preliminary scope discovery and the Workspace
+status read after acquiring the node lock. Under [Read Committed](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED),
+the Workspace check needs a fresh statement snapshot after a concurrent
+Workspace change has released its node locks. An application-level cached
+node or a joined Workspace status could reuse old authority. Other callers retain their separate credential read, and the other SQL
+dialects retain their existing queries.
+
+The target is at most 11 SQL statements for a cold component report and for
+a warm state change on both seeded fleets. Use the real mTLS transport,
+hold the shared rows, preserve the reported and stored state, and require a
+foreign credential to be refused without a write. Exercise node removal or
+credential replacement after discovery and before the transaction obtains
+the node lock. Check that the read uses the new row or refuses, and that
+component state and heartbeat time remain unchanged on refusal. Preserve
+disabled-node passive observations and the existing result and audit
+semantics. The v1 HTTP and session wire remain compatible with older Agents.
+
+The existing [PostgreSQL](https://www.postgresql.org/about/licence/),
+[Go](https://go.dev/LICENSE) and [pgx](https://github.com/jackc/pgx/blob/v5.11.0/LICENSE)
+licences allow commercial and offline use and redistribution with their
+required notices. The probe uses synthetic peers and local trust. There are no
+new dependencies, model weights, datasets or runtime downloads.
+
+A PostgreSQL 18.6 lock-order probe confirmed the materialized installation
+read acquired its shared lock before waiting on a held node, and the
+lateral read returned the committed successor credential. The tracked
+regression passed with real HTTPS and PostgreSQL inside a Linux container
+with networking disabled. The same test over the previous implementation
+refused to pass the unchanged 11-statement budget.
+
+| Measured heartbeat | SQL before, 50 / 3,000 peers | SQL after, 50 / 3,000 peers | Rows after | Blocks after |
+| --- | ---: | ---: | ---: | ---: |
+| First component report | 14 / 14 | 11 / 11 | 18 / 18 | 231 / 240 |
+| Warm component update | 12 / 12 | 9 / 9 | 15 / 15 | 46 / 59 |
+| Foreign credential | 2 / 2 | 2 / 2 | 1 / 1 | 3 / 5 |
+
+The old credential was refused after a concurrent replacement committed.
+Neither that refusal nor the foreign credential changed the persisted
+heartbeat time or observation. The replacement credential could still
+report passive state on a disabled node. The same disconnected fixture
+passed the read-only claim, inference heartbeat and retained model
+preparation scope tests. The result budget and shared audit append remain
+separate. With the protected PostgreSQL fixture input, rerun the measurement
+using:
+
+```sh
+go -C services/control test -p 1 ./internal/modules/nodes -run '^TestComponentHeartbeatCostAtFleetSizes$' -count=1 -v
+```

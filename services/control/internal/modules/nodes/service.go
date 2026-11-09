@@ -95,14 +95,18 @@ func mapped(e error) error {
 }
 
 func scanNode(row pgx.Row) (Node, error) {
-	return scanNodeFacts(row, nil)
+	return scanNodeRow(row, nil, nil)
 }
 
-// scanNodeFacts optionally retains the stored JSON to distinguish missing measurements from zero.
-func scanNodeFacts(row pgx.Row, storedFacts *json.RawMessage) (Node, error) {
+// scanNodeRow can retain the original facts JSON or a credential digest selected with the locked node.
+func scanNodeRow(row pgx.Row, storedFacts *json.RawMessage, credentialHash *[]byte) (Node, error) {
 	var n Node
 	var facts, capabilities []byte
-	e := row.Scan(&n.ID, &n.TenantID, &n.WorkspaceID, &n.Name, &n.Status, &n.Version, &n.ProtocolVersion, &facts, &n.LastHeartbeatAt, &n.CreatedAt, &n.UpdatedAt, &n.Connectivity, &n.ExecutionProfile, &capabilities, &n.SiteID, &n.CellID, &n.ConnectivityChangedAt)
+	dest := []any{&n.ID, &n.TenantID, &n.WorkspaceID, &n.Name, &n.Status, &n.Version, &n.ProtocolVersion, &facts, &n.LastHeartbeatAt, &n.CreatedAt, &n.UpdatedAt, &n.Connectivity, &n.ExecutionProfile, &capabilities, &n.SiteID, &n.CellID, &n.ConnectivityChangedAt}
+	if credentialHash != nil {
+		dest = append(dest, credentialHash)
+	}
+	e := row.Scan(dest...)
 	if errors.Is(e, pgx.ErrNoRows) {
 		return n, fail("RESOURCE_NOT_FOUND")
 	}
