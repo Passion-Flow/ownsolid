@@ -30,7 +30,7 @@ func TestDamengApplicationProjectionBinding(t *testing.T) {
 				args = append(args, at, at, id)
 			}
 			query += " ORDER BY " + stamp + " DESC," + key + " DESC LIMIT 8"
-			got, err := projectionQuery(transaction.Dameng, conversation, "tenant", "workspace", "actor", cursor, 7)
+			got, err := projectionQuery(transaction.Dameng, conversation, "tenant", "workspace", "actor", "", cursor, 7)
 			if err != nil || !reflect.DeepEqual(got, transaction.SQL(transaction.Dameng, query, args...)) {
 				t.Fatal("native scope, publication, private owner or cursor binding changed", err)
 			}
@@ -45,22 +45,31 @@ func TestDamengApplicationUnrepresentableCursorAndLimit(t *testing.T) {
 		time.Date(10000, 1, 1, 0, 0, 0, 0, time.UTC),
 		time.Date(2026, 10, 24, 7, 0, 0, 123456001, time.UTC),
 	} {
-		_, err := projectionQuery(transaction.Dameng, false, "tenant", "workspace", "actor", pagination.Cursor{Time: at, ID: id}, 7)
+		_, err := projectionQuery(transaction.Dameng, false, "tenant", "workspace", "actor", "", pagination.Cursor{Time: at, ID: id}, 7)
 		if err == nil || err.Error() != "INVALID_CURSOR" {
 			t.Fatal("unrepresentable native cursor accepted", err)
 		}
 	}
 	for _, n := range []int{-1, 0, pagination.MaximumLimit + 1} {
-		if _, err := projectionQuery(transaction.Dameng, false, "tenant", "workspace", "actor", pagination.Cursor{}, n); err == nil {
+		if _, err := projectionQuery(transaction.Dameng, false, "tenant", "workspace", "actor", "", pagination.Cursor{}, n); err == nil {
 			t.Fatal("unbounded LIMIT accepted")
 		}
 	}
-	if _, err := projectionQuery(transaction.Dialect("unknown"), false, "tenant", "workspace", "actor", pagination.Cursor{}, 7); err == nil {
+	if _, err := projectionQuery(transaction.Dialect("unknown"), false, "tenant", "workspace", "actor", "", pagination.Cursor{}, 7); err == nil {
 		t.Fatal("unknown vendor fell back to PostgreSQL")
 	}
 	for _, at := range []time.Time{time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(9999, 12, 31, 23, 59, 59, 999999000, time.UTC)} {
-		if _, err := projectionQuery(transaction.Dameng, true, "tenant", "workspace", "actor", pagination.Cursor{Time: at, ID: id}, pagination.MaximumLimit); err != nil {
+		if _, err := projectionQuery(transaction.Dameng, true, "tenant", "workspace", "actor", "", pagination.Cursor{Time: at, ID: id}, pagination.MaximumLimit); err != nil {
 			t.Fatal("representable native cursor rejected", err)
+		}
+	}
+}
+
+func TestConversationSearchDoesNotFallBackToAnUnfilteredPage(t *testing.T) {
+	for _, dialect := range []transaction.Dialect{transaction.MySQL, transaction.Dameng} {
+		_, err := projectionQuery(dialect, true, "tenant", "workspace", "actor", "search", pagination.Cursor{}, 7)
+		if err == nil || err.Error() != "STORAGE_UNAVAILABLE" {
+			t.Fatalf("expected search refusal for %s, got %v", dialect, err)
 		}
 	}
 }
