@@ -104,9 +104,9 @@ func safeImportError(e error) string {
 	return "MODEL_IMPORT_FAILED"
 }
 
-// Run processes imports and reclaims staging from committed publications.
+// Run processes imports and reconciles eligible staging cleanup.
 func (s *Service) Run(ctx context.Context) {
-	var cleanupCursor string
+	var cleanupCursor, expiryCursor string
 	for ctx.Err() == nil {
 		progress, e := s.ProcessNext(ctx)
 		if e != nil && ctx.Err() == nil {
@@ -117,6 +117,11 @@ func (s *Service) Run(ctx context.Context) {
 			slog.WarnContext(ctx, "model_import_cleanup_failed", "import_id", cleanedThrough, "error_code", cleanupError.Error())
 		}
 		cleanupCursor = cleanedThrough
+		expiredThrough, expiryError := s.expireNextImport(ctx, expiryCursor)
+		if expiryError != nil && ctx.Err() == nil {
+			slog.WarnContext(ctx, "model_import_expiry_failed", "import_id", expiredThrough, "error_code", expiryError.Error())
+		}
+		expiryCursor = expiredThrough
 		if progress && e == nil {
 			continue
 		}
