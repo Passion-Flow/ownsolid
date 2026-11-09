@@ -186,3 +186,12 @@ Docker import runs, including exact signed digest readback after retry.
 The catalog research retains the original `bcb614f5` evidence and the
 repeat on this baseline. The delivery scope excludes OPS-104, so its
 component changes and real-store evidence remain on this lane.
+
+The catalog-only change fast-forwarded to main as `ebf8e4a7`.
+The complete native check, build and test gate passed on delivery snapshots
+`8cb8f136` and `5ea8039c` with private preview ports and two browser
+workers. Each run passed 1,435 browser tests with 28 live-installation
+skips. Later rebases preserved the catalog payload. The updated control,
+release factory, gateway, dataset and registry inputs were rechecked, as
+were 180 browser cases covering the changed node and help paths. The
+published commit keeps CAT-107 open. OPS-104 remains on the operations lane.
