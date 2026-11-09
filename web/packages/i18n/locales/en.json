@@ -2338,6 +2338,8 @@
   "portalModels.emptyFilter.detail": "Change the search or the tile, or clear them to see every model.",
   "portalModels.emptyFilter.clear": "Clear filters",
   "portalModels.partial": "Showing the first {count} models. Search for a name to find one further on.",
+  "portalModels.factsUnavailable.title": "Some model details could not load",
+  "portalModels.factsUnavailable.detail": "You can still see the names to call and whether they are available. The model, its origin and context length may be missing.",
   "portalModels.noWorkspace.detail": "An administrator adds you to a workspace. You can then see its models here.",
   "keys.title": "My API keys",
   "keys.subtitle": "Your keys for calling the models of {workspace}. Each key calls one model and stops when it expires, when you revoke it, or if you leave the workspace.",

@@ -60,6 +60,7 @@ test('a person reads what their workspace may call, and nothing of another', asy
   const row = page.getByRole('row', { name: new RegExp(name) });
   const retry = page.getByRole('button', { name: 'Try again' });
   await expect(retry).toBeVisible();
+  await expect(page.getByText('Some model details could not load')).toBeVisible();
   await expect(row.getByText('Not known').first()).toBeVisible();
   await expect(row.getByText('Can be called')).toBeVisible();
   await testInfo.attach('portal-model-facts-unavailable', {
@@ -76,6 +77,7 @@ test('a person reads what their workspace may call, and nothing of another', asy
   await expect(row.getByText('2,048 tokens')).toBeVisible();
   await expect(row.getByText('Can be called')).toBeVisible();
   await expect(row.getByText('Not known')).toHaveCount(0);
+  await expect(page.getByText('Some model details could not load')).toHaveCount(0);
   await expectAccessible(page);
 
   await page.getByRole('button', { name: `Show ${name}` }).click();
