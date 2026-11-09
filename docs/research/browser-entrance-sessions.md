@@ -49,3 +49,32 @@ Chromium with separate hostnames, a pinned TLS public key and no default
 route from control. The browser held both sessions in one context. Each
 host received only its own session cookie. Admin sign-out ended its session
 while the Portal session remained usable.
+
+## Shared-host compatibility boundary (IAM-114)
+
+[RFC 6265](https://www.rfc-editor.org/rfc/rfc6265.html#section-8.5)
+defines the cookie exposure across ports on one host.
+[RFC 6454](https://www.rfc-editor.org/rfc/rfc6454.html#section-4) includes
+the port in the web origin, so the existing exact Origin and audience-bound
+CSRF checks still distinguish the two addresses. Exercise this case with
+one real cookie jar, two TLS listeners on different loopback ports and
+the existing PostgreSQL authentication handlers. Observe both session
+cookies in the jar at both ports. Verify that renaming either token
+cannot cross audiences, Origin and CSRF proofs from the other port fail,
+and signing out at one entrance leaves the other usable.
+
+Use the existing Go cookie jar and PostgreSQL fixture with the licenses
+above. A fixture using separate hostnames cannot establish shared-host
+behavior. Changing cookie names alone cannot create port isolation.
+The configuration owner must still add a typed, default-off exception
+for the shared hostname, apply it at startup and installation, and
+preserve distinct configured origins. The operator and sign-in UI must
+explain the cookie sharing when the exception is selected. The
+compatibility fixture qualifies the identity path after an exception
+is selected.
+
+`TestSharedHostPortsKeepBrowserAuthoritySeparateHTTPS` and the existing
+distinct-host regression each passed three times over verified TLS against
+PostgreSQL 18.6 with pgvector 0.8.7 in an isolated Linux arm64 container.
+With the isolated `PROJECT_ONE_TEST_DSN` configured, run
+`go -C services/control test ./internal/modules/identity/http -run '^TestSharedHostPortsKeepBrowserAuthoritySeparateHTTPS$' -count=3`.
