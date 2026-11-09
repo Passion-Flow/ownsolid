@@ -14,7 +14,7 @@ their original acceptance criteria.
 | OBS-106, OBS-110 | Dashboards and cardinality exploration require authorized query APIs and the web monitoring surface. The inherited snapshot endpoint does not expose those queries. |
 | OBS-107 | Customer export needs an installation-owned destination policy and scope isolation for Prometheus/Grafana and log systems. Exposing the underlying stores would bypass the control-plane scope boundary. |
 | OBS-109 | vmalert can route fleet health rollups to a separate long-retention instance. The installer must configure the second store and the console must query the appropriate tier. |
-| OBS-111 | Log and SLO rules need the collection and service-level metric contracts, rule administration and the deployed evaluator. |
+| OBS-111 | The node exporter journal rule runs on existing snapshots. Continuous collection and a deployed evaluator need installation wiring. Burn-rate alerts need authoritative eligible and failed request counts at the same service, tenant and workspace boundary. Rule administration still needs the Console. |
 | OBS-112 | Model-route probes require scoped local test credentials, route inventory and a managed worker lifecycle. |
 | OBS-113 | Native snapshot and fresh-directory recovery passed. Scheduling, backup publication and recovery integration are owned by the installation and reliability paths. |
 | NET-101 | The existing model and dataset S3 ingress needs the private SeaweedFS and PostgreSQL profile. Checkpoint and backup use of the contract requires their own consumers. |
