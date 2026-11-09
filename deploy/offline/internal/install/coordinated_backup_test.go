@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -71,13 +72,14 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 		}
 		return dir
 	}
-	check := func(t *testing.T, path, want string, failed bool, args ...string) {
+	check := func(t *testing.T, path, want string, failed bool, args ...string) string {
 		t.Helper()
 		out, err := run(installer, append(args, "--config", path)...)
 		t.Logf("%s:\n%s", args[0], out)
 		if (err != nil) != failed || !strings.Contains(out, want) {
 			t.Fatalf("want %s (failure=%t), got %v", want, failed, err)
 		}
+		return out
 	}
 	credential := read(t, c.CredentialPath())
 	admin := installedAdministrator(t, o)
@@ -122,9 +124,9 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 		id := coldRestoreUUID(t)
 		query(t, databaseName, fmt.Sprintf(`INSERT INTO artifact_objects
 			(id,tenant_id,workspace_id,created_by,requested_audience,requested_epoch,execution_epoch,creation_key,fingerprint,
-			store_id,name,purpose,expected_bytes,sha256,part_bytes,state,operation_id,operation_kind,operation_phase,operation_authority,upload_expires_at,expires_at)
+			store_id,name,purpose,expected_bytes,sha256,part_bytes,state,operation_id,operation_kind,operation_phase,operation_authority,operation_expires_at,upload_expires_at,expires_at)
 			SELECT '%s',tenant_id,default_workspace_id,primary_admin_user_id,'admin',1,1,gen_random_uuid(),decode(repeat('00',32),'hex'),
-			gen_random_uuid(),'Backup object fixture','model_bundle',1,repeat('a',64),5242880,'creating',gen_random_uuid(),'create','prepared','{}'::jsonb,now()+interval '1 hour',now()+interval '2 hours'
+			gen_random_uuid(),'Backup object fixture','model_bundle',1,repeat('a',64),5242880,'creating',gen_random_uuid(),'create','prepared','{}'::jsonb,now()+interval '10 minutes',now()+interval '1 hour',now()+interval '2 hours'
 			FROM installation_state WHERE id=1`, id))
 		check(t, config, "INSTALL_BACKUP_PROFILE_UNSUPPORTED", true, "backup-coordinated", "--output", output)
 		if got := query(t, databaseName, "SELECT state FROM artifact_objects WHERE id='"+id+"'"); got != "creating" {
@@ -145,7 +147,10 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 			interruptInstallerDocker(t, "before-dump-file-change")
 			wrapper := filepath.SplitList(os.Getenv("PATH"))[0]
 			write(t, filepath.Join(wrapper, "change-file"), []byte(path))
-			check(t, config, "INSTALL_BACKUP_FILES_CHANGED", true, "backup-coordinated", "--output", output)
+			out := check(t, config, "INSTALL_BACKUP_FILES_CHANGED", true, "backup-coordinated", "--output", output)
+			if !strings.Contains(out, "run backup-coordinated again") {
+				t.Fatal("the failure did not identify the command to retry")
+			}
 		})
 		if err := os.Remove(path); err != nil {
 			t.Fatal(err)
@@ -183,13 +188,13 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 	if t.Failed() {
 		return
 	}
-	workspace := query(t, databaseName, "SELECT default_workspace_id FROM installation_state WHERE id=1")
-	modelFile := filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar")
-	if _, err := os.Stat(modelFile); err != nil {
-		t.Fatal("the coordinated drill needs the pinned model.tar")
-	}
-	model := publishColdRestoreModel(t, coldRestoreLogin(t, c, c.Origins.Admin, credential), licenseKey, workspace, modelFile)
 	t.Run("retries and reads the verified database, keys and model back on an empty site", func(t *testing.T) {
+		workspace := query(t, databaseName, "SELECT default_workspace_id FROM installation_state WHERE id=1")
+		modelFile := filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar")
+		if _, err := os.Stat(modelFile); err != nil {
+			t.Fatal("the coordinated drill needs the pinned model.tar")
+		}
+		model := publishColdRestoreModel(t, coldRestoreLogin(t, c, c.Origins.Admin, credential), licenseKey, workspace, modelFile)
 		output := privateDir(t)
 		check(t, config, "BACKUP_COMPLETE", false, "backup-coordinated", "--output", output)
 		assertOriginal(t)
@@ -219,14 +224,15 @@ func assertCoordinatedBackupIsolatedDocker(t *testing.T, installer, config strin
 			t.Fatal("administrator identity or key material changed")
 		}
 		for _, key := range keyFiles {
-			for _, file := range manifest.Files {
-				if file.Path == key {
-					if err := verifyBackupFile(target.InstallRoot, file, key); err != nil {
-						t.Fatal(err)
-					}
-				}
+			index := slices.IndexFunc(manifest.Files, func(file backupFile) bool { return file.Path == key })
+			if index < 0 {
+				t.Fatalf("the backup omitted %s", key)
+			}
+			if err := verifyBackupFile(target.InstallRoot, manifest.Files[index], key); err != nil {
+				t.Fatal(err)
 			}
 		}
+		t.Log("the restored HMAC and mail keyring matched the verified backup")
 		authenticated := coldRestoreLogin(t, target, target.Origins.Admin, credential)
 		coldRestoreLogin(t, target, target.Origins.Portal, credential)
 		assertColdRestoreModel(t, authenticated, target, model)

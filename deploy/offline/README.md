@@ -118,7 +118,7 @@ See the [operator procedure](../../docs/operations/backup-and-restore.md#encrypt
 
 Use the shipped single-node Linux Compose configuration and a root-owned
 private output directory outside `install_root`. This maintenance command
-briefly takes the control process offline. It closes PostgreSQL to ordinary
+keeps control offline until it has copied and verified the backup. It closes PostgreSQL to ordinary
 database connections and checks that the copied published model files and
 installation keys belong to the same interval as the verified SQL dump.
 

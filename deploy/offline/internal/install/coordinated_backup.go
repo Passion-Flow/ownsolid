@@ -97,10 +97,13 @@ func BackupCoordinated(ctx context.Context, c Config, runner StreamRunner, outpu
 	defer func() {
 		recovery, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Duration(c.StepSeconds)*time.Second)
 		defer cancel()
+		retry := "backup-coordinated"
 		if err := o.resumeCoordinatedBackup(recovery, original); err != nil {
 			result = errors.Join(result, errBackupPending, err)
+			retry = "recover-backup"
 		}
 		if result != nil {
+			result = retryWith(result, retry)
 			o.record("coordinated-backup", "failed", result.Error())
 			return
 		}
