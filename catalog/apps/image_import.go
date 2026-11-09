@@ -28,7 +28,7 @@ type ImageImportOptions struct {
 	MaximumPayloadBytes  int64
 	MaximumExpandedBytes int64
 	Timeout              time.Duration
-	// ExpectedPin binds the staged import to a previously verified transition.
+	// ExpectedPin binds the staged import to a previously verified release.
 	ExpectedPin *ReleasePin
 	// RenderedCompose optionally checks the selected Compose model before loading images.
 	RenderedCompose *RenderedCompose
@@ -54,12 +54,17 @@ func ImportInstallImage(ctx context.Context, stagingDirectory string, key ed2551
 		return InstallBundle{}, imageImportError("open the private release staging directory")
 	}
 	defer root.Close()
-	verified, err := VerifyInstallBundle(ctx, root, key, options.MaximumPayloadBytes)
+	release, index, err := readVerifiedBundleMetadata(ctx, root, key, options.MaximumPayloadBytes)
 	if err != nil {
 		return InstallBundle{}, err
 	}
-	if options.ExpectedPin != nil && verified.Pin != *options.ExpectedPin {
+	pin := ReleasePin{Version: release.Manifest.Version, BundleSHA256: index.digest}
+	if options.ExpectedPin != nil && pin != *options.ExpectedPin {
 		return InstallBundle{}, imageImportError("the signed bundle differs from the selected release pin")
+	}
+	verified, err := verifyReleasePayloads(ctx, root, release, index, options.MaximumPayloadBytes, true)
+	if err != nil {
+		return InstallBundle{}, err
 	}
 	expected := options.ExpectedComposePlan
 	if expected != nil && options.RenderedCompose == nil {
