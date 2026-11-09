@@ -14,43 +14,7 @@ export interface paths {
             cookie?: never;
         };
         /** Read retained AWS observations and authorized choices */
-        get: {
-            parameters: {
-                query?: {
-                    after?: string;
-                    /** @description At most configured runtime.ui.page_size */
-                    limit?: number;
-                };
-                header?: never;
-                path: {
-                    site_id: string;
-                    cell_id: string;
-                    workspace: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Committed result or authorized retained read */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InventoryResponse"];
-                    };
-                };
-                /** @description Safe problem; unknown commits project no successful data */
-                default: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-            };
-        };
+        get: operations["getSitesSiteIdCellsCellIdWorkspacesWorkspaceAws"];
         put?: never;
         post?: never;
         delete?: never;
@@ -73,46 +37,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Import one complete authorized account/region snapshot */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    "X-CSRF-Token": string;
-                    Origin: string;
-                };
-                path: {
-                    site_id: string;
-                    cell_id: string;
-                    workspace: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ImportInput"];
-                };
-            };
-            responses: {
-                /** @description Committed result or authorized retained read */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ReceiptResponse"];
-                    };
-                };
-                /** @description Safe problem; unknown commits project no successful data */
-                default: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-            };
-        };
+        post: operations["postSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImports"];
         delete?: never;
         options?: never;
         head?: never;
@@ -132,40 +57,7 @@ export interface paths {
             cookie?: never;
         };
         /** Reconcile the current actor’s immutable import receipt */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    site_id: string;
-                    cell_id: string;
-                    workspace: string;
-                    key: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Committed result or authorized retained read */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ReceiptResponse"];
-                    };
-                };
-                /** @description Safe problem; unknown commits project no successful data */
-                default: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-            };
-        };
+        get: operations["getSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImportsKey"];
         put?: never;
         post?: never;
         delete?: never;
@@ -186,43 +78,7 @@ export interface paths {
             cookie?: never;
         };
         /** Read retained AWS observations and authorized choices */
-        get: {
-            parameters: {
-                query?: {
-                    after?: string;
-                    /** @description At most configured runtime.ui.page_size */
-                    limit?: number;
-                };
-                header?: never;
-                path: {
-                    site_id: string;
-                    cell_id: string;
-                    workspace: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Committed result or authorized retained read */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InventoryResponse"];
-                    };
-                };
-                /** @description Safe problem; unknown commits project no successful data */
-                default: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-            };
-        };
+        get: operations["getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAws"];
         put?: never;
         post?: never;
         delete?: never;
@@ -245,46 +101,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Import one complete authorized account/region snapshot */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    "X-CSRF-Token": string;
-                    Origin: string;
-                };
-                path: {
-                    site_id: string;
-                    cell_id: string;
-                    workspace: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["ImportInput"];
-                };
-            };
-            responses: {
-                /** @description Committed result or authorized retained read */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ReceiptResponse"];
-                    };
-                };
-                /** @description Safe problem; unknown commits project no successful data */
-                default: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-            };
-        };
+        post: operations["postSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImports"];
         delete?: never;
         options?: never;
         head?: never;
@@ -304,40 +121,7 @@ export interface paths {
             cookie?: never;
         };
         /** Reconcile the current actor’s immutable import receipt */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    site_id: string;
-                    cell_id: string;
-                    workspace: string;
-                    key: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Committed result or authorized retained read */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ReceiptResponse"];
-                    };
-                };
-                /** @description Safe problem; unknown commits project no successful data */
-                default: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["Problem"];
-                    };
-                };
-            };
-        };
+        get: operations["getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImportsKey"];
         put?: never;
         post?: never;
         delete?: never;
@@ -436,4 +220,227 @@ export interface components {
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    getSitesSiteIdCellsCellIdWorkspacesWorkspaceAws: {
+        parameters: {
+            query?: {
+                after?: string;
+                /** @description At most configured runtime.ui.page_size */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Committed result or authorized retained read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryResponse"];
+                };
+            };
+            /** @description Safe problem; unknown commits project no successful data */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    postSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImports: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": string;
+                Origin: string;
+            };
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportInput"];
+            };
+        };
+        responses: {
+            /** @description Committed result or authorized retained read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponse"];
+                };
+            };
+            /** @description Safe problem; unknown commits project no successful data */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImportsKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Committed result or authorized retained read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponse"];
+                };
+            };
+            /** @description Safe problem; unknown commits project no successful data */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAws: {
+        parameters: {
+            query?: {
+                after?: string;
+                /** @description At most configured runtime.ui.page_size */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Committed result or authorized retained read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryResponse"];
+                };
+            };
+            /** @description Safe problem; unknown commits project no successful data */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    postSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImports: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-CSRF-Token": string;
+                Origin: string;
+            };
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportInput"];
+            };
+        };
+        responses: {
+            /** @description Committed result or authorized retained read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponse"];
+                };
+            };
+            /** @description Safe problem; unknown commits project no successful data */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImportsKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Committed result or authorized retained read */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponse"];
+                };
+            };
+            /** @description Safe problem; unknown commits project no successful data */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+}

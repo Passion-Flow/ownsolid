@@ -239,8 +239,12 @@ function api(files, index) {
               schema: schema(response.content?.['application/json']?.schema ?? null),
             }));
           reach({ parameters, body, responses }, all, used);
+          const pathAnchor = `${method} ${path}`;
+          const id = operation['x-help-use-path-anchor'] === true
+            ? pathAnchor
+            : (operation.operationId ?? pathAnchor);
           operations.push({
-            id: operation.operationId ?? `${method} ${path}`,
+            id,
             method,
             path,
             parameters,
