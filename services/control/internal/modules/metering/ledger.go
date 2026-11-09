@@ -118,6 +118,9 @@ type Totals struct {
 	Requests           string
 }
 
+const usageTotalsProjection = `COALESCE(sum(gpu_microseconds),0)::text, COALESCE(sum(tokens),0)::text,
+ COALESCE(sum(storage_byte_seconds),0)::text, COALESCE(sum(requests),0)::text`
+
 // TotalsWithin reports one authorized workspace over the half-open [from, to)
 // period. The caller must obtain scope from its current read authorization.
 func TotalsWithin(ctx context.Context, tx pgx.Tx, scope Scope, from, to time.Time) (Totals, error) {
@@ -129,8 +132,7 @@ func TotalsWithin(ctx context.Context, tx pgx.Tx, scope Scope, from, to time.Tim
 		return Totals{}, ErrUnavailable
 	}
 	var out Totals
-	err = tx.QueryRow(ctx, `SELECT COALESCE(sum(gpu_microseconds),0)::text, COALESCE(sum(tokens),0)::text,
-  COALESCE(sum(storage_byte_seconds),0)::text, COALESCE(sum(requests),0)::text
+	err = tx.QueryRow(ctx, `SELECT `+usageTotalsProjection+`
  FROM usage_ledger WHERE tenant_id=$1 AND workspace_id=$2 AND occurred_at >= $3 AND occurred_at < $4`,
 		scope.TenantID, scope.WorkspaceID, from, to).Scan(&out.GPUMicroseconds, &out.Tokens, &out.StorageByteSeconds, &out.Requests)
 	if err != nil {

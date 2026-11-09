@@ -37,3 +37,18 @@ operator's currency, limit in amount micros and warning in basis points.
 Use the whole budget period in one snapshot. A known subtotal that reaches
 the limit takes precedence over unrated usage. Below the limit, missing
 rates leave the assessment indeterminate. See [budget status research](../../../../../docs/research/metering-budget-status.md).
+
+`ReadWorkspaceReport` uses the Workspace owner's selected PostgreSQL
+repository, live session recheck and membership fence. Pass the
+server-authenticated actor, workspace selector and installed policies.
+A workspace owner or current Admin platform session receives the report
+with optional budget status from the same ledger query.
+
+To verify this path, also set `PROJECT_ONE_TEST_DSN_FILE` to a protected
+loopback DSN for the isolated PostgreSQL 18.6 test database. The current
+identity fixture needs the approved pgvector 0.8.7 extension in that
+database. It creates its own schema and applies the candidate ledger there.
+
+```sh
+go -C services/control test -race ./internal/modules/metering -run '^TestPostgresAuthenticatedWorkspaceReport$' -count=1
+```
