@@ -291,8 +291,9 @@ how to run the same job on demand.
 
 ## Collect support information
 
-Run this on the installation host with access to the local Docker socket. Use an
-unused archive path in a directory writable only by its owner.
+Run this on the installation host. Docker state is included when the local
+socket is available. Use an unused archive path in a directory writable only
+by its owner.
 
 ```sh
 ownsolid-install support-bundle --config /path/to/install.yaml \
@@ -307,8 +308,11 @@ timeouts and retention, and up to 100 recent backup and restore events.
 Events contain a UTC timestamp, operation and outcome. If a protected restore
 record is pending, the report includes its validated phase even when Docker
 cannot be reached. The record identifies the local recovery phase. Use
-`recover-restore` to verify PostgreSQL placement. The installer excludes
-operation details, container output, raw configuration files, environment values,
+`recover-restore` to verify PostgreSQL placement. A validated coordinated
+backup intent reports `recovery_required` or `fence_outcome_unconfirmed`.
+These values describe the recorded state. Use `recover-backup` to verify
+the current writer and database fence. An unreadable or unknown intent
+produces a fixed collection issue. The installer excludes operation details, container output, raw configuration files, environment values,
 addresses, credentials and database records.
 
 ### Collect managed cluster information

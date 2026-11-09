@@ -124,6 +124,80 @@ func TestSupportBundleProjectsOnlyTheValidatedRestorePhase(t *testing.T) {
 	}
 }
 
+func TestSupportBundleProjectsOnlyCoordinatedBackupRecovery(t *testing.T) {
+	t.Setenv("DOCKER_HOST", "unix:///run/docker.sock")
+	for _, tc := range []struct {
+		name, state string
+		issue       bool
+	}{
+		{"absent", "", false},
+		{"valid", "recovery_required", false},
+		{"unconfirmed", "fence_outcome_unconfirmed", false},
+		{"foreign", "", true},
+		{"unknown version", "", true},
+		{"malformed", "", true},
+		{"symlink", "", true},
+		{"unsafe mode", "", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := installedConfig(t)
+			site, err := restoreSite(c)
+			if err != nil {
+				t.Fatal(err)
+			}
+			container := strings.Repeat("3", 64)
+			intent := coordinatedBackupIntent{Version: 1, Site: site, ControlID: container, WasUp: true,
+				Database: coordinatedDB{Cluster: 7482983513342374911, OID: 97433113, Limit: 12}}
+			record := filepath.Join(c.InstallRoot, coordinatedBackupIntentName)
+			switch tc.name {
+			case "absent":
+			case "symlink":
+				if err := os.Symlink(c.License.TrustFile, record); err != nil {
+					t.Fatal(err)
+				}
+			case "malformed":
+				if err := os.WriteFile(record, []byte("private unparsed contents"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			default:
+				switch tc.name {
+				case "unconfirmed":
+					until := time.Now().UTC().Add(-time.Second)
+					intent.FenceUntil = &until
+				case "foreign":
+					intent.Site = strings.Repeat("a", 64)
+				case "unknown version":
+					intent.Version = 2
+				}
+				if err := writeReleaseRecord(c, coordinatedBackupIntentName, intent); err != nil {
+					t.Fatal(err)
+				}
+				if tc.name == "unsafe mode" {
+					if err := os.Chmod(record, 0o644); err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
+			path := filepath.Join(t.TempDir(), "support.tar.gz")
+			runner := &fakeRunner{answer: func(string) (string, error) { return "", errors.New("docker unavailable") }}
+			if err := SupportBundle(t.Context(), c, runner, path, io.Discard); err != nil {
+				t.Fatal(err)
+			}
+			report, raw := readSupportArchive(t, path)
+			if report.Host.Docker || report.BackupRecovery != tc.state ||
+				slices.Contains(report.Issues, "BACKUP_RECOVERY_STATE_UNAVAILABLE") != tc.issue {
+				t.Fatalf("backup recovery=%q, collection issues=%v", report.BackupRecovery, report.Issues)
+			}
+			for _, excluded := range []string{site, intent.Site, container, c.InstallRoot, "7482983513342374911",
+				"97433113", "private unparsed contents", "fence_until"} {
+				if bytes.Contains(raw, []byte(excluded)) {
+					t.Fatal("archive included protected backup recovery metadata")
+				}
+			}
+		})
+	}
+}
+
 func writeSupportLog(t *testing.T, c Config, records string) {
 	t.Helper()
 	if err := os.MkdirAll(c.Layout().Operator, 0o700); err != nil {

@@ -391,6 +391,23 @@ func (o *operation) verifyCoordinatedCopy(ctx context.Context, intent coordinate
 	return ctx.Err()
 }
 
+func readCoordinatedBackupIntent(c Config) (*coordinatedBackupIntent, error) {
+	path := filepath.Join(c.InstallRoot, coordinatedBackupIntentName)
+	if _, err := os.Lstat(path); errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	raw, err := bundle.ReadProtectedConfiguration(path)
+	var intent coordinatedBackupIntent
+	site, siteErr := restoreSite(c)
+	if err != nil || siteErr != nil || wire.StrictJSON(raw, &intent) != nil || intent.Version != 1 ||
+		intent.Site != site || !containerID.MatchString(intent.ControlID) || intent.Database.Cluster == 0 ||
+		intent.Database.OID == 0 || intent.Database.Limit < -1 || intent.Database.Limit == 0 ||
+		(intent.FenceUntil != nil && time.Until(*intent.FenceUntil) > coordinatedFenceWindow) {
+		return nil, errors.New("INSTALL_BACKUP_RECOVERY_INVALID: preserve the record and use the original site configuration")
+	}
+	return &intent, nil
+}
+
 // RecoverCoordinatedBackup restores service after an interrupted backup.
 func RecoverCoordinatedBackup(ctx context.Context, c Config, runner StreamRunner, out io.Writer) error {
 	if err := coordinatedBackupHost(ctx, runner); err != nil {
@@ -411,19 +428,18 @@ func RecoverCoordinatedBackup(ctx context.Context, c Config, runner StreamRunner
 	if err := checkBoundOperation(c); err != nil {
 		return err
 	}
-	raw, err := bundle.ReadProtectedConfiguration(filepath.Join(c.InstallRoot, coordinatedBackupIntentName))
-	var intent coordinatedBackupIntent
-	site, siteErr := restoreSite(c)
-	if err != nil || siteErr != nil || wire.StrictJSON(raw, &intent) != nil || intent.Version != 1 ||
-		intent.Site != site || !containerID.MatchString(intent.ControlID) || intent.Database.Cluster == 0 ||
-		intent.Database.OID == 0 || intent.Database.Limit < -1 || intent.Database.Limit == 0 ||
-		(intent.FenceUntil != nil && time.Until(*intent.FenceUntil) > coordinatedFenceWindow) {
-		return errors.New("INSTALL_BACKUP_RECOVERY_INVALID: preserve the record and use the original site configuration")
+	intent, err := readCoordinatedBackupIntent(c)
+	if err != nil {
+		return err
+	}
+	if intent == nil {
+		fmt.Fprintln(out, "BACKUP_NO_RECOVERY_PENDING")
+		return nil
 	}
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(c.StepSeconds)*time.Second)
 	defer cancel()
 	o := newOperation(c, runner, out)
-	if err := o.resumeCoordinatedBackup(ctx, intent); err != nil {
+	if err := o.resumeCoordinatedBackup(ctx, *intent); err != nil {
 		return errors.Join(errBackupPending, err)
 	}
 	o.record("coordinated-backup", "recovered", "original service state restored")

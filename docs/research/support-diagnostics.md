@@ -146,3 +146,37 @@ Compose diagnostic tests passed in the same namespace.
 The recorder captured only its IPv4, IPv6 and DNS probes. The check used
 no containers or host ports. Live RBAC, RKE2, the installed chart and
 cluster workload logs remain outside this protocol fixture.
+
+## Pending coordinated backup state
+
+The local backup writer may remain stopped after an interrupted fence.
+A completed operator event is absent in this case. As with the restore
+projection, collect recovery state before trying Docker. Reuse the
+protected local coordinated backup intent reader and emit only a fixed
+state for the selected site. `recovery_required` means a validated intent
+exists. `fence_outcome_unconfirmed` means it still records a fence request
+whose outcome was not acknowledged. These states describe the record.
+Only the recovery command may compare it with PostgreSQL and resume the
+writer.
+
+An absent record omits the field. A malformed, foreign, unsafe or unknown
+record yields only a fixed collection issue. No timestamp, site, cluster,
+container, credential, operation or object identity enters the report.
+Following [GitLab's host diagnostics](https://docs.gitlab.com/administration/troubleshooting/diagnostics_tools/)
+and [Replicated's local redaction guidance](https://troubleshoot.sh/docs/redact/redactors/),
+project the allowed fields at collection. Reject copying the raw intent
+or checking the live fence through Docker. No dependency, model or dataset
+is added. The existing BSD-3-Clause Go standard library and local tools
+retain their licensing and offline requirements described above.
+
+Test absent, valid, unacknowledged, foreign, unreadable, malformed and
+unknown-version records. Run the native CLI on disconnected Linux with
+Docker unavailable and verify that a private archive contains only the
+allowed state and fixed issue codes.
+
+On disconnected Ubuntu 24.04 amd64, the native CLI ran as a non-root
+user against a private fixture with an unavailable Docker socket. The
+mode 0600 archives contained the fixed unconfirmed state for a valid
+record and the fixed collection issue for an unknown version. The raw
+record remained byte-identical and its source identifiers were absent.
+The recorder saw only the three IPv4, IPv6 and DNS probes.
