@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Passion-Flow/ownsolid/services/agent/internal/inference"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/internal/inference"
 )
 
 const fixtureID = "00000000-0000-4000-8000-000000000001"
@@ -173,8 +173,33 @@ func TestActualPrivateJournalAndSyntheticOwnedContainerStopReplay(t *testing.T) 
 	if !reflect.DeepEqual(engine.calls, []string{"create", "start", "stop", "remove"}) {
 		t.Fatal("unexpected physical effects", engine.calls)
 	}
-	if _, e = m.Store.Begin(fixtureID, fixtureID, strings.Repeat("B", 43), fixtureCommand()); e == nil {
-		t.Fatal("undelivered receipt overwritten by new token")
+	const foreign = "00000000-0000-4000-8000-000000000002"
+	for _, probe := range []struct {
+		name, node, task, lease string
+		attempt                 string
+		number                  int
+	}{
+		{"foreign node", foreign, j.TaskID, j.LeaseToken, j.Command.AttemptID, j.Command.AttemptNumber},
+		{"foreign task", j.NodeID, foreign, j.LeaseToken, j.Command.AttemptID, j.Command.AttemptNumber},
+		{"stale lease", j.NodeID, j.TaskID, strings.Repeat("B", 43), j.Command.AttemptID, j.Command.AttemptNumber},
+		{"foreign attempt", j.NodeID, j.TaskID, j.LeaseToken, foreign, j.Command.AttemptNumber},
+		{"foreign attempt number", j.NodeID, j.TaskID, j.LeaseToken, j.Command.AttemptID, j.Command.AttemptNumber + 1},
+	} {
+		t.Run(probe.name, func(t *testing.T) {
+			command := j.Command
+			command.AttemptID, command.AttemptNumber = probe.attempt, probe.number
+			if _, err := command.Digest(); err != nil {
+				t.Fatal("expected a valid alternate command", err)
+			}
+			if _, err := m.Store.Begin(probe.node, probe.task, probe.lease, command); err == nil ||
+				err.Error() != "TRAINING_AGENT_PREVIOUS_ATTEMPT_REQUIRES_RECONCILIATION" {
+				t.Fatal("mismatched delivery did not require reconciliation", err)
+			}
+			replay, err := m.Store.Begin(j.NodeID, j.TaskID, j.LeaseToken, j.Command)
+			if err != nil || !reflect.DeepEqual(replay, reloaded) {
+				t.Fatal("refused delivery changed the persisted journal", err)
+			}
+		})
 	}
 }
 func TestUncertainCreateAdoptionAndCancellationEscalationRequireFreshOwnership(t *testing.T) {

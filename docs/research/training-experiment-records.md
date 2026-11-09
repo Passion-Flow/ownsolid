@@ -160,3 +160,53 @@ than the exact accepted result budget. The test fixed the original byte
 budget to the size of the valid report and confirmed that PostgreSQL's
 normalized projection exceeded that limit. The accepted record remained
 readable because the original bytes and the typed outcomes still matched.
+
+### Agent observation and lease binding
+
+The training manager probes the requested GPU with the existing
+root-protected `nvidia-smi` path before launching Docker. The parser
+requires the exact NVIDIA UUID, driver, memory and compute capability.
+It preserves NVIDIA's reported `N/A` for unsupported MIG observations
+and refuses missing or malformed required fields. NVIDIA documents
+stable UUID selection and unsupported fields in the
+[management interface](https://docs.nvidia.com/deploy/nvidia-smi/index.html#query-options).
+This is a preflight observation. The container's requested UUID
+and the final stop receipt do not prove that the observed properties
+remained constant during execution.
+
+The private training journal already retains the node, task, delivered
+lease and validated command digest. The digest covers the attempt ID,
+attempt number and requested GPU. Exact journal replay uses all those
+bindings. The protected preflight currently returns an admission result,
+so its observation is unavailable after that call. The history stores
+the accepted journal and receipt. Neither carries the observed fields.
+
+The v1 result and event decoders admit exact worker fields. The exact
+stop receipt is also used to reconcile physical ownership after a lease
+is revoked. Placing observations in these payloads would change
+compatibility and could give a stop request authority it does not have.
+A future owner handoff needs a versioned, capability-selected Agent
+exchange with the authenticated node, current training lease, exact
+command and attempt. Persist the observation before acknowledging it
+and link its digest to the accepted result. Old Agents and old records
+retain their original behavior. Current heartbeat telemetry, a UUID
+alone and unsupported values cannot populate historical hardware.
+DEL owns the image-to-lock mapping.
+
+The local checks use the existing journal and NVIDIA parser with
+synthetic inputs. Verify that an old lease, foreign node or task, and a
+different attempt ID or number cannot replace a stopped journal, while
+the exact delivery replays. The available CPU server has no NVIDIA
+device to observe. This evidence qualifies the binding controls and
+does not populate the historical experiment record. It uses the
+existing dependencies above and introduces no redistributable input.
+
+On disconnected Linux arm64, the private journal regression rejected
+all five mismatches, preserved the stopped journal, and replayed the
+exact delivery. The bounded NVIDIA CSV parser regression also passed
+its missing, malformed and busy-device controls. Run them with:
+
+```sh
+go -C services/agent test ./internal/training -run '^TestActualPrivateJournalAndSyntheticOwnedContainerStopReplay$' -count=1
+go -C services/agent test ./internal/inference -run '^TestGPUProbeNeverTreatsInvalidFieldsOrOtherProcessesAsFree$' -count=1
+```
