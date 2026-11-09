@@ -162,17 +162,54 @@ func (i *SourceImporter) PreviewUpload(ctx context.Context, body io.Reader, scra
 	if opts.Cleaning == nil {
 		return SourceImportReport{}, failure("DATASET_CLEANING_POLICY_INVALID")
 	}
-	if body == nil || opts.ExpectedBytes < 1 || !wire.ValidDigest(opts.ExpectedSHA256) {
+	if body == nil {
 		return SourceImportReport{}, failure("DATASET_IMPORT_SOURCE_INVALID")
 	}
-	if err := i.validateOptions(opts); err != nil {
+	if err := i.validatePreviewSource(scratch, opts); err != nil {
 		return SourceImportReport{}, err
-	}
-	if _, err := privatePath(scratch, "", true, 0); err != nil {
-		return SourceImportReport{}, failure("DATASET_STORAGE_PATH_INVALID")
 	}
 	ctx, cancel := context.WithTimeout(ctx, i.limits.Timeout)
 	defer cancel()
+	return i.previewSource(ctx, body, scratch, opts)
+}
+
+// PreviewObject evaluates a cleaning policy on an already-authorized object
+// receipt. The caller owns grant resolution and access to any private samples.
+func (i *SourceImporter) PreviewObject(ctx context.Context, storage SourceObjectReader, object SourceObject, scratch string, opts SourceImportOptions) (SourceImportReport, error) {
+	opts, err := sourceObjectOptions(storage, object, opts)
+	if err != nil {
+		return SourceImportReport{}, err
+	}
+	if opts.Cleaning == nil {
+		return SourceImportReport{}, failure("DATASET_CLEANING_POLICY_INVALID")
+	}
+	if err = i.validatePreviewSource(scratch, opts); err != nil {
+		return SourceImportReport{}, err
+	}
+	ctx, cancel := context.WithTimeout(ctx, i.limits.Timeout)
+	defer cancel()
+	body, err := openSourceObject(ctx, storage, object)
+	if err != nil {
+		return SourceImportReport{}, err
+	}
+	defer body.Close()
+	return i.previewSource(ctx, body, scratch, opts)
+}
+
+func (i *SourceImporter) validatePreviewSource(scratch string, opts SourceImportOptions) error {
+	if opts.ExpectedBytes < 1 || !wire.ValidDigest(opts.ExpectedSHA256) {
+		return failure("DATASET_IMPORT_SOURCE_INVALID")
+	}
+	if err := i.validateOptions(opts); err != nil {
+		return err
+	}
+	if _, err := privatePath(scratch, "", true, 0); err != nil {
+		return failure("DATASET_STORAGE_PATH_INVALID")
+	}
+	return nil
+}
+
+func (i *SourceImporter) previewSource(ctx context.Context, body io.Reader, scratch string, opts SourceImportOptions) (SourceImportReport, error) {
 	report, samples, err := i.scanSource(ctx, body, scratch, opts, bufio.NewWriter(io.Discard))
 	if err != nil {
 		return SourceImportReport{}, err
@@ -184,30 +221,47 @@ func (i *SourceImporter) PreviewUpload(ctx context.Context, body io.Reader, scra
 // ImportObject fetches exactly the configured transport object bound by the
 // authorized receipt. It verifies size and SHA-256 before making rows visible.
 func (i *SourceImporter) ImportObject(ctx context.Context, storage SourceObjectReader, object SourceObject, destination string, opts SourceImportOptions) (SourceImportReport, error) {
-	opts.ExpectedBytes, opts.ExpectedSHA256 = object.Bytes, object.SHA256
-	if storage == nil || object.ETag == "" || object.Bytes < 1 || !wire.ValidDigest(object.SHA256) {
-		return SourceImportReport{}, failure("DATASET_IMPORT_OBJECT_INVALID")
+	opts, err := sourceObjectOptions(storage, object, opts)
+	if err != nil {
+		return SourceImportReport{}, err
 	}
-	if _, err := object.Ref.Key(); err != nil {
-		return SourceImportReport{}, failure("DATASET_IMPORT_OBJECT_INVALID")
-	}
-	if err := i.validateOptions(opts); err != nil {
+	if err = i.validateOptions(opts); err != nil {
 		return SourceImportReport{}, err
 	}
 	ctx, cancel := context.WithTimeout(ctx, i.limits.Timeout)
 	defer cancel()
-	download, err := storage.Open(ctx, object.Ref, object.ETag)
+	body, err := openSourceObject(ctx, storage, object)
 	if err != nil {
 		return SourceImportReport{}, err
 	}
+	defer body.Close()
+	return i.importSource(ctx, body, destination, opts)
+}
+
+func sourceObjectOptions(storage SourceObjectReader, object SourceObject, opts SourceImportOptions) (SourceImportOptions, error) {
+	if storage == nil || object.ETag == "" || object.Bytes < 1 || !wire.ValidDigest(object.SHA256) {
+		return SourceImportOptions{}, failure("DATASET_IMPORT_OBJECT_INVALID")
+	}
+	if _, err := object.Ref.Key(); err != nil {
+		return SourceImportOptions{}, failure("DATASET_IMPORT_OBJECT_INVALID")
+	}
+	opts.ExpectedBytes, opts.ExpectedSHA256 = object.Bytes, object.SHA256
+	return opts, nil
+}
+
+func openSourceObject(ctx context.Context, storage SourceObjectReader, object SourceObject) (io.ReadCloser, error) {
+	download, err := storage.Open(ctx, object.Ref, object.ETag)
+	if err != nil {
+		return nil, err
+	}
 	if download.Body == nil {
-		return SourceImportReport{}, failure("DATASET_IMPORT_OBJECT_INVALID")
+		return nil, failure("DATASET_IMPORT_OBJECT_INVALID")
 	}
-	defer download.Body.Close()
 	if download.Info.Bytes != object.Bytes || download.Info.ETag != object.ETag {
-		return SourceImportReport{}, failure("DATASET_SOURCE_CHANGED")
+		_ = download.Body.Close()
+		return nil, failure("DATASET_SOURCE_CHANGED")
 	}
-	return i.importSource(ctx, download.Body, destination, opts)
+	return download.Body, nil
 }
 
 func (i *SourceImporter) validateOptions(opts SourceImportOptions) error {

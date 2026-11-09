@@ -113,3 +113,38 @@ The Linux amd64 loopback-only run verified dry-run parity for JSONL and the
 filtered row in a real PyArrow 26.0.1 Parquet fixture. The pinned wheel was
 installed without an index and passed its lockfile digest check. The
 dry-run scratch directory was empty on success and failure.
+
+## Dry run for an authorized S3 object
+
+A caller that has already resolved a tenant and workspace grant can pass
+its immutable receipt directly to the same cleaning scan used by uploads.
+Reuse the existing S3 reader and
+[conditional GetObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html#API_GetObject_RequestSyntax)
+with the receipt's exact key and ETag. Reject inconsistent response
+metadata, then verify the full byte count and SHA-256 before returning any
+sample. An ETag controls object selection. The receipt's SHA-256 controls
+byte identity. Closing the body and sharing one operation deadline covers
+both the GET and the scan.
+
+A caller-supplied URL, HEAD followed by an unconditional GET, and using
+the ETag alone would remove source binding. Applying the policy solely to
+a prefix would conceal later invalid data and undercount filtered records.
+Reuse the existing Go standard library and the repository's S3 SDK under
+the [Apache-2.0 licence](https://github.com/aws/aws-sdk-go-v2/blob/main/LICENSE).
+Both allow offline use, commercial use and redistribution with the
+documented notices. No new dependency, dataset, or model is required.
+
+Use the existing synthetic TLS S3 fixture to verify signed conditional
+reads, source identity, all-filtered preview, response metadata mismatch,
+interruption, incorrect digest and refusal before opening an invalid
+request. The preview does not retain normalized data. The caller still
+owns current grant resolution, authorized sample presentation and the
+separate apply operation in S-503.
+
+The Linux amd64 loopback-only S3 fixture verified all of these responses
+through the existing SigV4 client. A good request after both metadata
+refusals reused the single transfer slot. Use:
+
+```sh
+go -C services/control test -count=1 ./internal/modules/datasets -run '^TestSourceImportS3$'
+```

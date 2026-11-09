@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -39,11 +40,20 @@ func TestSourceImportS3(t *testing.T) {
 			return
 		}
 		if mode.Load() == 1 {
+			w.Header().Set("Content-Type", "application/xml")
 			w.WriteHeader(http.StatusPreconditionFailed)
+			_, _ = io.WriteString(w, "<Error><Code>PreconditionFailed</Code></Error>")
 			return
 		}
-		w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+		length := len(body)
+		if mode.Load() == 5 {
+			length++
+		}
+		w.Header().Set("Content-Length", strconv.Itoa(length))
 		w.Header().Set("ETag", etag)
+		if mode.Load() == 6 {
+			w.Header().Set("ETag", `"unexpected-etag"`)
+		}
 		if mode.Load() == 2 {
 			_, _ = io.WriteString(w, body[:len(body)/2])
 			return
@@ -118,7 +128,73 @@ func TestSourceImportS3(t *testing.T) {
 			}
 		})
 	}
-	if got := calls.Load(); got != 5 {
+	const cleanMode = 4
+	for _, tc := range []struct {
+		name string
+		mode int32
+		code string
+		all  bool
+	}{
+		{name: "preview-valid", mode: cleanMode},
+		{name: "preview-all-filtered", mode: cleanMode, all: true},
+		{name: "preview-precondition", mode: 1, code: "OBJECT_CONFLICT"},
+		{name: "preview-truncated", mode: 2, code: sourceReadFailedCode},
+		{name: "preview-wrong-digest", mode: 3, code: "DATASET_SOURCE_CHANGED"},
+		{name: "preview-metadata-length", mode: 5, code: "DATASET_SOURCE_CHANGED"},
+		{name: "preview-metadata-etag", mode: 6, code: "OBJECT_CHANGED"},
+		{name: "preview-after-metadata-refusal", mode: cleanMode},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			mode.Store(tc.mode)
+			dir := privateImportDir(t)
+			selected := receipt
+			policy := SourceCleaningPolicy{
+				TrimFields: []string{"text"}, KeepNonBlankFields: []string{"text"},
+				PreviewRows: 2, PreviewBytes: 1024,
+			}
+			if tc.mode == 3 {
+				selected.SHA256 = strings.Repeat("a", 64)
+			}
+			if tc.all {
+				policy.KeepNonBlankFields = []string{"missing"}
+			}
+			preview, err := importer.PreviewObject(t.Context(), client, selected, dir, SourceImportOptions{Format: SourceJSONL, Cleaning: &policy})
+			if tc.code != "" {
+				if err == nil || !strings.HasPrefix(err.Error(), tc.code) || !reflect.DeepEqual(preview, SourceImportReport{}) {
+					t.Fatalf("object preview did not fail closed: %+v, %v", preview, err)
+				}
+			} else {
+				if err != nil || preview.Cleaning == nil || len(preview.Cleaning.Samples) != 2 ||
+					preview.SourceSHA256 != receipt.SHA256 || preview.SourceBytes != receipt.Bytes || preview.OutputSHA256 != "" {
+					t.Fatalf("object preview did not verify its receipt: %+v, %v", preview, err)
+				}
+				if tc.all {
+					if preview.Rows != 0 || preview.OutputBytes != 0 || preview.Cleaning.FilteredRows != 2 ||
+						preview.Cleaning.Samples[0].After != nil || preview.Cleaning.Samples[1].After != nil {
+						t.Fatal("all-filtered preview did not keep only the original samples")
+					}
+				} else if preview.Rows != 1 || preview.Cleaning.ChangedRows != 1 || preview.Cleaning.FilteredRows != 1 {
+					t.Fatal("object preview returned inconsistent cleaning counts")
+				}
+			}
+			assertNoImports(t, dir)
+		})
+	}
+
+	dir := privateImportDir(t)
+	if _, err := importer.PreviewObject(t.Context(), client, receipt, dir, SourceImportOptions{Format: SourceJSONL}); err == nil ||
+		err.Error() != "DATASET_CLEANING_POLICY_INVALID" {
+		t.Fatal("object preview accepted a missing policy", err)
+	}
+	invalid := receipt
+	invalid.Ref.Workspace = "../outside"
+	opts := SourceImportOptions{Format: SourceJSONL, Cleaning: &SourceCleaningPolicy{TrimFields: []string{"text"}}}
+	if _, err := importer.PreviewObject(t.Context(), client, invalid, dir, opts); err == nil ||
+		err.Error() != "DATASET_IMPORT_OBJECT_INVALID" {
+		t.Fatal("object preview accepted an invalid workspace reference", err)
+	}
+
+	if got := calls.Load(); got != 13 {
 		t.Fatalf("unexpected request count %d", got)
 	}
 }
