@@ -21,6 +21,29 @@ version and signed index digest for the installer to retain with the successful
 installation. Old manifests without the field remain valid and can be named as
 predecessors.
 
+## Initial install selection
+
+The installer starts with the app identity and exact release pin selected
+for the operation. A valid publisher signature alone also accepts a different
+app or a republished version signed by the same key. The Update Framework
+checks the selected target's digest and length against trusted metadata.
+Helm accepts an explicit local chart archive, and Compose accepts a local
+project file. Reuse the catalog's exact pin check and bounded signed payload
+verification to select one version directory, then require the signed app
+identity and running platform to match. A version-only or latest lookup would
+let a retry select different bytes. This path needs no new dependencies.
+[The Update Framework target verification](https://theupdateframework.github.io/specification/v1.0.37/#57-fetch-target),
+[Helm install](https://helm.sh/docs/helm/helm_install/),
+[Compose CLI](https://docs.docker.com/reference/cli/docker/compose/).
+
+Test exact repeat selection with signed Compose and Helm packages, a same-key
+bundle for a different app, a substituted release with the same version, an
+incompatible platform, and an altered engine artifact. Reuse the verified pin
+at image import. The installer owns the scoped selection and records the pin
+only after the authorized operation succeeds.
+
+## Upgrade and rollback selection
+
 Upgrade selection authenticates the current pin and scans the bounded set of
 version directories in one private immutable app catalog. Require directory
 versions to match their signed manifests. Choose only a unique direct successor
