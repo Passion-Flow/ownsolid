@@ -15,6 +15,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -22,6 +24,7 @@ import (
 
 	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
 )
 
 func TestNodeScrapeInventoryThroughVmagent(t *testing.T) {
@@ -38,7 +41,9 @@ func TestNodeScrapeInventoryThroughVmagent(t *testing.T) {
 		t.Fatal(e)
 	}
 
+	var requests atomic.Uint64
 	target := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
 		io.WriteString(w, "node_memory_MemAvailable_bytes{tenant_id=\"spoofed\",workspace_id=\"spoofed\",site_id=\"spoofed\",cell_id=\"spoofed\",node_id=\"spoofed\"} 42\n")
 	}))
 	t.Cleanup(target.Close)
@@ -58,12 +63,12 @@ func TestNodeScrapeInventoryThroughVmagent(t *testing.T) {
 	writeFixture(policy, raw)
 	name := "nodes-" + g.f.Workspace + ".json"
 	path := filepath.Join(dir, name)
-	refresh := func(a identity.Auth) (int, error) {
-		return g.s.RefreshNodeScrapeInventory(g.ctx, a, g.f.Workspace, policy, dir, uuid.NewString())
+	refresh := func(ctx context.Context, a identity.Auth) (int, error) {
+		return g.s.RefreshNodeScrapeInventory(ctx, a, g.f.Workspace, policy, dir, uuid.NewString())
 	}
 	expectRefresh := func(count int) {
 		t.Helper()
-		if actual, e := refresh(g.admin); e != nil || actual != count {
+		if actual, e := refresh(g.ctx, g.admin); e != nil || actual != count {
 			t.Fatalf("wanted %d targets, got %d, %v", count, actual, e)
 		}
 	}
@@ -72,16 +77,16 @@ func TestNodeScrapeInventoryThroughVmagent(t *testing.T) {
 	if e != nil || bytes.Contains(before, []byte(foreign.NodeID)) {
 		t.Fatalf("foreign target reached the output: %v", e)
 	}
-	if count, e := refresh(g.portal); e == nil || e.Error() != "ACCESS_DENIED" || count != 0 {
+	if count, e := refresh(g.ctx, g.portal); e == nil || e.Error() != "ACCESS_DENIED" || count != 0 {
 		t.Fatalf("Portal was allowed to publish: %d %v", count, e)
 	}
 	g.exec("UPDATE users SET is_platform_admin=false WHERE id=$1", "", g.f.User)
-	if count, e := refresh(g.admin); e == nil || count != 0 {
+	if count, e := refresh(g.ctx, g.admin); e == nil || count != 0 {
 		t.Fatalf("stale Admin authority was allowed to publish: %d %v", count, e)
 	}
 	g.exec("UPDATE users SET is_platform_admin=true WHERE id=$1", "", g.f.User)
 	writeFixture(policy, []byte(strings.Replace(string(raw), target.Listener.Addr().String(), "203.0.113.15:443", 1)))
-	if count, e := refresh(g.admin); e == nil || e.Error() != "MONITORING_SCRAPE_POLICY_INVALID" || count != 0 {
+	if count, e := refresh(g.ctx, g.admin); e == nil || e.Error() != "MONITORING_SCRAPE_POLICY_INVALID" || count != 0 {
 		t.Fatalf("unsafe replacement was accepted: %d %v", count, e)
 	}
 	after, e := os.ReadFile(path)
@@ -146,10 +151,11 @@ func TestNodeScrapeInventoryThroughVmagent(t *testing.T) {
 	}
 	t.Log("vmagent collected the scoped TLS target and removed it after the authoritative node was disabled")
 
-	// Exercise the complete database and publication path at the workspace cap.
-	// Stop the collector first so the synthetic addresses are never contacted.
 	stopCollector()
 	g.exec("UPDATE workspaces SET status='active' WHERE id=$1", "", g.f.Workspace)
+	checkScrapeLease(t, g, refresh, path, config, store, &requests)
+
+	// Measure publication at the workspace cap with no live collector.
 	const targetCount = 10_000
 	g.exec(`INSERT INTO managed_nodes(id,tenant_id,workspace_id,name,status,credential_hash,protocol_version,facts,last_heartbeat_at,execution_profile,capabilities,site_id,cell_id)
 		SELECT ('a1790234-5080-451f-997f-'||lpad(to_hex(n),12,'0'))::uuid,tenant_id,workspace_id,
@@ -177,6 +183,132 @@ func TestNodeScrapeInventoryThroughVmagent(t *testing.T) {
 	}
 	t.Logf("10,000 IPv6 targets: %d input bytes, %d discovery bytes, %s for policy, PostgreSQL, audit, and publication", len(assignment), info.Size(), elapsed)
 
+}
+
+func checkScrapeLease(t *testing.T, g *story, refresh func(context.Context, identity.Auth) (int, error), path, config, store string, requests *atomic.Uint64) {
+	t.Helper()
+	type leaseRun struct {
+		finished chan error
+		stopped  chan struct{}
+	}
+	start := func(renew func(context.Context) error, every, maximumAge time.Duration) leaseRun {
+		t.Helper()
+		run, cancel := context.WithCancel(g.ctx)
+		t.Cleanup(cancel)
+		queue := filepath.Join(t.TempDir(), "queue")
+		before := requests.Load()
+		lease := leaseRun{make(chan error, 1), make(chan struct{})}
+		go func() {
+			lease.finished <- monitoring.RunNodeScrapeLease(run, every, maximumAge, renew, func(ctx context.Context) error {
+				defer close(lease.stopped)
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
+				_, stop := startMonitoringFixtureProcess(t, g.ctx, "leased vmagent", "OWNSOLID_TEST_VMAGENT",
+					"-promscrape.config="+config, "-promscrape.fileSDCheckInterval=1s", "-memory.allowedBytes=128MB",
+					"-remoteWrite.url="+store+"/api/v1/write", "-remoteWrite.flushInterval=1s", "-remoteWrite.tmpDataPath="+queue)
+				<-ctx.Done()
+				stop()
+				return nil
+			})
+		}()
+		timeout := time.NewTimer(20 * time.Second)
+		defer timeout.Stop()
+		tick := time.NewTicker(100 * time.Millisecond)
+		defer tick.Stop()
+		for requests.Load() == before {
+			select {
+			case err := <-lease.finished:
+				t.Fatalf("collector stopped before its first scrape: %v", err)
+			case <-timeout.C:
+				t.Fatal("collector did not send its first HTTPS request")
+			case <-run.Done():
+				t.Fatal(run.Err())
+			case <-tick.C:
+			}
+		}
+		return lease
+	}
+	readCurrent := func() []byte {
+		t.Helper()
+		data, err := os.ReadFile(path)
+		if err != nil || len(data) <= len("[]\n") {
+			t.Fatalf("expected a retained nonempty inventory: %v", err)
+		}
+		return data
+	}
+	checkStopped := func(lease leaseRun, previous []byte) {
+		t.Helper()
+		select {
+		case <-lease.stopped:
+		case <-time.After(12 * time.Second):
+			t.Fatal("lease did not stop vmagent")
+		}
+		last := requests.Load()
+		select {
+		case <-g.ctx.Done():
+			t.Fatal(g.ctx.Err())
+		case <-time.After(2200 * time.Millisecond):
+		}
+		if last != requests.Load() || !bytes.Equal(previous, readCurrent()) {
+			t.Fatal("collector used or replaced the retained inventory after shutdown")
+		}
+	}
+	checkResult := func(lease leaseRun, want string) {
+		t.Helper()
+		select {
+		case err := <-lease.finished:
+			if err == nil || err.Error() != want {
+				t.Fatalf("lease ended with %v, want %s", err, want)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("lease did not return after stopping vmagent")
+		}
+	}
+	publish := func(ctx context.Context) error {
+		_, err := refresh(ctx, g.admin)
+		return err
+	}
+
+	revoked := start(publish, 2*time.Second, 8*time.Second)
+	snapshot := readCurrent()
+	g.exec("UPDATE users SET is_platform_admin=false WHERE id=$1", "", g.f.User)
+	checkStopped(revoked, snapshot)
+	checkResult(revoked, "AUTH_SESSION_EXPIRED")
+	if err := monitoring.RunNodeScrapeLease(g.ctx, 2*time.Second, 8*time.Second, publish,
+		func(context.Context) error {
+			t.Error("collector started from the retained file after revocation")
+			return nil
+		}); err == nil || err.Error() != "AUTH_SESSION_EXPIRED" {
+		t.Fatalf("revoked authority restarted the collector: %v", err)
+	}
+
+	g.exec("UPDATE users SET is_platform_admin=true WHERE id=$1", "", g.f.User)
+	resume := make(chan struct{})
+	unblock := sync.OnceFunc(func() { close(resume) })
+	t.Cleanup(unblock)
+	renewal := make(chan struct{})
+	var blockRenewal atomic.Bool
+	stalled := start(func(ctx context.Context) error {
+		if !blockRenewal.Load() {
+			return publish(ctx)
+		}
+		close(renewal)
+		// Simulate publication blocked inside filesystem I/O.
+		<-resume
+		return ctx.Err()
+	}, 2*time.Second, 8*time.Second)
+	snapshot = readCurrent()
+	blockRenewal.Store(true)
+	select {
+	case <-renewal:
+	case <-time.After(5 * time.Second):
+		t.Fatal("collector did not enter the stalled renewal")
+	}
+	checkStopped(stalled, snapshot)
+	unblock()
+	checkResult(stalled, "MONITORING_SCRAPE_LEASE_EXPIRED")
+	t.Log("vmagent stopped on stored role revocation and on lease expiry during a blocked refresh, with no later HTTPS requests")
 }
 
 func waitForScrapeInventory(t *testing.T, ctx context.Context, ready func() bool) {
