@@ -1,0 +1,58 @@
+# Offline application manifest (CAT-101)
+
+Package authors need a versioned ownsolid document that identifies a local
+deployment artifact, describes when the application can run, and drives the same
+typed form in both supported languages. Engine-specific workload syntax remains
+in the packaged chart or Compose project.
+
+[Helm charts](https://helm.sh/docs/topics/charts/) separate package metadata from
+values and allow schema validation of values. Dependencies can be carried in
+`charts/`. [Docker Compose](https://docs.docker.com/reference/compose-file/services/#pull_policy)
+supports an explicit local-only pull policy, and
+[`compose up`](https://docs.docker.com/reference/cli/docker/compose/up/) has
+switches to refuse pulls and builds. [OpenShift's disconnected catalog](https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/disconnected_environments/olm-restricted-networks)
+takes the application catalog and its image inventory into the isolated site.
+The [OCI descriptor](https://github.com/opencontainers/image-spec/blob/main/descriptor.md)
+binds artifact identity to a content digest. No implementation from 1Panel is
+used.
+
+Use a strict, bounded JSON document and sibling English and Simplified Chinese
+locale documents. JSON avoids ambiguity from YAML tags, anchors and merge keys
+in the admission format. Reuse the engines' native formats inside the bundle.
+An ownsolid manifest identifies one app release, one local chart or Compose
+artifact by SHA-256, a list of distinct image manifest digests, and an explicit
+inclusive minimum and exclusive maximum for the platform. Use the stable
+[SemVer](https://semver.org/spec/v2.0.0.html) triplet with bounded decimal
+components. Reject prerelease, build suffixes and version expressions in v1.
+Using chart metadata or Compose variables alone would give each adapter a
+different compatibility and localization contract. Fetching charts, image tags,
+schemas or translations by URL would break air-gap operation.
+
+Forms are a bounded list of machine identifiers with typed text, integer,
+boolean and enumerated choice fields. Locale dictionaries must supply the same
+labels and descriptions, including labels for each choice. No credentials or
+values supplied by a dependency belong in the form contract. Configuration
+decoding rejects unknown fields and incorrect scalar types. Keeping dependency
+bindings distinct lets a later resolver deliver secrets only as mounted file
+references (CAT-102).
+
+Tests must exercise loading the same app release from local files, with each
+engine declaration, Chinese and English labels, accepted values and the
+compatibility boundaries. Reject unsupported manifest versions, unknown and
+duplicate keys, malformed UTF-8, missing translations, unsafe identifiers,
+wrong types, version ranges with no compatible release and mutable image
+references. Package validation performs local reads only. Artifact signature
+verification and cross-checking the rendered image inventory, disabled pull
+policies and workload privileges are required before any execution (CAT-107,
+CAT-109).
+
+The reader uses the existing Go toolchain and
+[BSD-3-Clause standard library](https://go.dev/LICENSE), including its
+[strict JSON decoder](https://pkg.go.dev/encoding/json/v2). Commercial use,
+offline execution and redistribution with the required notice are allowed.
+[Helm](https://github.com/helm/helm/blob/main/LICENSE) and the
+[Compose specification](https://github.com/compose-spec/compose-spec/blob/main/LICENSE)
+are Apache-2.0 references. This contract ships neither engine. An adapter must
+check its exact shipped binary and packages separately. There are no new
+dependencies, third-party application artifacts, models or datasets in this
+contract.
