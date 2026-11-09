@@ -22,8 +22,9 @@ type boundedPage struct {
 }
 
 type pageOptions struct {
-	limit  int
-	cursor string
+	limit       int
+	cursor      string
+	cursorBytes int
 }
 
 func (p *pageOptions) bind(cmd *cobra.Command, cursorHelp string) {
@@ -40,8 +41,9 @@ func (p pageOptions) query(cmd *cobra.Command) (url.Values, error) {
 		query.Set("limit", strconv.Itoa(p.limit))
 	}
 	if cmd.Flags().Changed("cursor") {
-		if !validPageCursor(p.cursor) {
-			return nil, fmt.Errorf("--cursor must be printable and between 1 and %d bytes; use the previous page's next cursor", maximumCursorBytes)
+		maximum := max(maximumCursorBytes, p.cursorBytes)
+		if !validPageCursor(p.cursor, maximum) {
+			return nil, fmt.Errorf("--cursor must be printable and between 1 and %d bytes; use the previous page's next cursor", maximum)
 		}
 		query.Set("cursor", p.cursor)
 	}
@@ -53,14 +55,14 @@ func (p pageOptions) validate(page boundedPage, resourceName string) error {
 		return fmt.Errorf("the server returned an invalid %s page", resourceName)
 	}
 	if next := page.NextCursor; next != nil &&
-		(len(page.Items) == 0 || *next == p.cursor || !validPageCursor(*next)) {
+		(len(page.Items) == 0 || *next == p.cursor || !validPageCursor(*next, max(maximumCursorBytes, p.cursorBytes))) {
 		return fmt.Errorf("the server returned an invalid %s cursor", resourceName)
 	}
 	return nil
 }
 
-func validPageCursor(value string) bool {
-	return value != "" && len(value) <= maximumCursorBytes &&
+func validPageCursor(value string, maximum int) bool {
+	return value != "" && len(value) <= maximum &&
 		!strings.ContainsFunc(value, func(r rune) bool { return !unicode.IsPrint(r) })
 }
 
