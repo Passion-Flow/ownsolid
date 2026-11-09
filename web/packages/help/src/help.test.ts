@@ -24,7 +24,12 @@ const { readContract } = createRequire(import.meta.url)(
   join(root, 'tools', 'codegen', 'openapi-paths.mjs'),
 ) as {
   readContract: (source: string) => {
-    document: { paths: Record<string, Record<string, { 'x-audiences'?: string[] }>> };
+    document: {
+      paths: Record<
+        string,
+        Record<string, { 'x-audiences'?: string[]; 'x-error-codes'?: Record<string, string[]> }>
+      >;
+    };
   };
 };
 
@@ -95,9 +100,9 @@ describe('articleMatches', () => {
 });
 
 describe.each(entrances)('%s API reference', (entrance) => {
-  it('lists exactly the operations the contracts give this entrance', async () => {
+  it('publishes the operations and their declared errors for this entrance', async () => {
     const contracts = join(root, 'api', 'openapi', 'v1');
-    const expected = new Set<string>();
+    const expected = new Map<string, Record<string, string[]>>();
     for (const domain of readdirSync(contracts)) {
       if (domain === 'knowledge') continue;
       const source = join(contracts, domain, 'openapi.json');
@@ -106,7 +111,7 @@ describe.each(entrances)('%s API reference', (entrance) => {
       for (const [path, item] of Object.entries(contract.paths)) {
         for (const [method, operation] of Object.entries(item)) {
           if (operation['x-audiences']?.includes(audiences[entrance])) {
-            expected.add(`${domain} ${method} ${path}`);
+            expected.set(`${domain} ${method} ${path}`, operation['x-error-codes'] ?? {});
           }
         }
       }
@@ -116,12 +121,18 @@ describe.each(entrances)('%s API reference', (entrance) => {
         domain.operations.map(({ method, path }) => `${domain.domain} ${method} ${path}`),
       ),
     );
-    expect(listed).toEqual(expected);
+    expect(listed).toEqual(new Set(expected.keys()));
     expect(apiDomains(entrance).map((domain) => domain.domain)).not.toContain('knowledge');
+    const published = new Map<string, Record<string, string[]>>();
     for (const domain of apiDomains(entrance)) {
-      expect(await loadApiDomain(entrance, domain.domain)).not.toBeNull();
+      const detail = await loadApiDomain(entrance, domain.domain);
+      expect(detail, domain.domain).not.toBeNull();
+      for (const { method, path, errors } of detail?.operations ?? []) {
+        published.set(`${domain.domain} ${method} ${path}`, errors);
+      }
       expect(await contractUrl(entrance, domain.domain)).toBeTruthy();
     }
+    expect(published).toEqual(expected);
   });
 
   it.each(['en', 'zh-cn'])('explains every error code it shows in %s', async (catalog) => {
