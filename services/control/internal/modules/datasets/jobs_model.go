@@ -4,16 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/jackc/pgx/v5"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/jackc/pgx/v5"
 )
 
+var errDatasetJobPolicy = failure("DATASET_POLICY_INVALID")
+
 type jobPolicy struct {
-	Limits    wire.Limits    `json:"limits"`
-	Resources wire.Resources `json:"resources"`
+	Limits        wire.Limits    `json:"limits"`
+	Resources     wire.Resources `json:"resources"`
+	Deduplication string         `json:"deduplication,omitempty"`
 }
 
 const jobFields = `error_line_number,reason,id::text,dataset_id::text,draft_id::text,workspace_id::text,kind,requested_by::text,expected_revision,state,version_id::text,input_sha256,split_seed,validation_basis_points,attempt_count,attempt_id::text,lease_expires_at,cancel_requested_at,error_code,retryable,created_at,updated_at,completed_at`
@@ -72,8 +76,24 @@ func (s *Service) GetJob(ctx context.Context, a identity.Auth, workspace, datase
 	})
 	return committed(out, e)
 }
-func (s *Service) jobPolicyBytes() []byte {
+func (s *Service) jobPolicyBytes(deduplication string) []byte {
 	p := s.policy()
-	raw, _ := json.Marshal(jobPolicy{p.Limits, p.Resources})
+	raw, _ := json.Marshal(jobPolicy{Limits: p.Limits, Resources: p.Resources, Deduplication: deduplication})
 	return raw
+}
+
+func datasetJobInput(ctx context.Context, tx transaction.Executor, id string) (jobPolicy, string, int64, error) {
+	var raw []byte
+	var sourceObject string
+	var sourceBytes int64
+	var policy jobPolicy
+	e := tx.QueryRow(ctx, datasetSQL(tx, "SELECT input_policy,source_object_id::text,expected_bytes FROM dataset_jobs JOIN dataset_drafts ON dataset_drafts.id=dataset_jobs.draft_id WHERE dataset_jobs.id=$1", `SELECT input_policy,source_object_id,expected_bytes FROM dataset_jobs JOIN dataset_drafts ON dataset_drafts.id=dataset_jobs.draft_id WHERE dataset_jobs.id=?`, []any{id}, []any{id}, transaction.SQL(transaction.Dameng, dmWorkerInput, id))).Scan(&raw, &sourceObject, &sourceBytes)
+	if e != nil {
+		return policy, "", 0, e
+	}
+	if wire.DecodeStrict(raw, &policy) != nil || policy.Limits.Validate() != nil || policy.Resources.Validate() != nil ||
+		policy.Deduplication != "" && policy.Deduplication != NearPromptV1 {
+		return jobPolicy{}, "", 0, errDatasetJobPolicy
+	}
+	return policy, sourceObject, sourceBytes, nil
 }

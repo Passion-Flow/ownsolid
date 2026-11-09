@@ -156,3 +156,17 @@ validation. Filtered, changed and rejected counts are distinct. Private
 before/after samples are bounded, excluded from JSON statistics, and available
 to the Go caller after a successful artifact commit. The candidate can be
 staged for an authorized preview before workspace registration.
+
+## Opt-in near-duplicate publication
+
+The existing publication path uses exact prompt/completion deduplication.
+Internal callers can use `PublishWithDeduplication` with `NearPromptV1` to
+group similar prompts before splitting and remove eligible near duplicates.
+The rule keeps different completions, guarded text changes, and chain
+endpoints without a direct retained match. Approximate removals include
+`match_rule` in the duplicates asset. The version still retains the original
+effective source and mapping, and a retry uses the original job's rule.
+When the comparison budget is exceeded, the attempt returns
+`DATASET_NEAR_DUPLICATE_BUDGET_EXCEEDED`. Publish a smaller draft or select
+the default exact policy. See the
+[policy and evidence](../../../../../docs/research/dataset-near-duplicates.md).

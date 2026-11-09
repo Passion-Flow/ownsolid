@@ -5,11 +5,13 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"io"
 	"os"
 	"path/filepath"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"reflect"
 	"sort"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 )
 
 type assignment struct {
@@ -23,6 +25,7 @@ type duplicate struct {
 	SourceID       string `json:"source_id"`
 	KeptLineNumber int64  `json:"kept_line_number"`
 	ContentSHA256  string `json:"content_sha256"`
+	MatchRule      string `json:"match_rule,omitempty"`
 }
 type retainedRow struct {
 	record wire.Record
@@ -57,7 +60,11 @@ func readLines(path string, maximumLine, maximumRows int64, accept func(int64, [
 		return failure("DATASET_FILE_INVALID")
 	}
 	defer file.Close()
-	scanner := bufio.NewScanner(file)
+	return scanLines(file, maximumLine, maximumRows, accept)
+}
+
+func scanLines(input io.Reader, maximumLine, maximumRows int64, accept func(int64, []byte) error) error {
+	scanner := bufio.NewScanner(input)
 	scanner.Buffer(make([]byte, 4096), int(maximumLine)+2)
 	line := int64(0)
 	for scanner.Scan() {
@@ -65,7 +72,7 @@ func readLines(path string, maximumLine, maximumRows int64, accept func(int64, [
 		if line > maximumRows || int64(len(scanner.Bytes())) > maximumLine {
 			return failure("DATASET_FILE_INVALID")
 		}
-		if e = accept(line, scanner.Bytes()); e != nil {
+		if e := accept(line, scanner.Bytes()); e != nil {
 			return failure("DATASET_FILE_INVALID")
 		}
 	}
@@ -80,8 +87,13 @@ func verifyPartitions(request wire.ProcessorRequest, manifest wire.Manifest, dir
 	byContent := map[string]retainedRow{}
 	duplicates := []duplicate{}
 	sources := sourceUnion{}
+	plan, e := readNearPlan(request)
+	if e != nil {
+		return e
+	}
+	var rowSources []string
 	var total int64
-	e := readLines(request.InputFile, request.Limits.MaximumLineBytes, request.Limits.MaximumRows, func(line int64, raw []byte) error {
+	e = readLines(request.InputFile, request.Limits.MaximumLineBytes, request.Limits.MaximumRows, func(line int64, raw []byte) error {
 		record, e := wire.DecodeRecord(raw, request.Limits)
 		if e != nil {
 			return e
@@ -92,9 +104,21 @@ func verifyPartitions(request wire.ProcessorRequest, manifest wire.Manifest, dir
 		}
 		sources.find(record.SourceID)
 		total++
+		if plan != nil {
+			if line > int64(len(plan)) {
+				return failure("DATASET_FILE_INVALID")
+			}
+			entry := plan[line-1]
+			rowSources = append(rowSources, record.SourceID)
+			sources.union(record.SourceID, rowSources[entry.Group-1])
+			if entry.Match != 0 {
+				duplicates = append(duplicates, duplicate{line, record.SourceID, int64(entry.Match), digest, NearPromptV1})
+				return nil
+			}
+		}
 		if prior, ok := byContent[digest]; ok {
 			sources.union(prior.record.SourceID, record.SourceID)
-			duplicates = append(duplicates, duplicate{line, record.SourceID, prior.line, digest})
+			duplicates = append(duplicates, duplicate{line, record.SourceID, prior.line, digest, ""})
 		} else {
 			row := retainedRow{record, line, digest}
 			byContent[digest] = row
@@ -102,8 +126,8 @@ func verifyPartitions(request wire.ProcessorRequest, manifest wire.Manifest, dir
 		}
 		return nil
 	})
-	if e != nil {
-		return e
+	if e != nil || plan != nil && int64(len(plan)) != total {
+		return failure("DATASET_FILE_INVALID")
 	}
 	groups := map[string][]string{}
 	sourceIDs := []string{}
