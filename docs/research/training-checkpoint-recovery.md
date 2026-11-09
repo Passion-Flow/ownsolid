@@ -83,3 +83,25 @@ with the vector extension. Set `PROJECT_ONE_TEST_DSN_FILE` and
 approved base configuration directories. This replay proves the control
 handoff and storage checks. A worker restoring optimizer state and
 advancing a real interrupted run remains a separate acceptance gate.
+
+## Controller-to-worker verification
+
+The [pinned Trainer source](https://github.com/huggingface/transformers/blob/v5.19.0/src/transformers/trainer.py)
+restores the optimizer and scheduler in its resume path and consumes
+trainer progress and RNG state. The ownsolid worker first verifies the
+checkpoint seal and the expected execution and data bindings. Run that
+verification against a directory assembled only from the accepted
+attempt's machine transfer responses. Derive the expected bindings from
+the newly claimed command. Keep the same actual CPU-produced adapter,
+optimizer, scheduler and RNG bytes as the controller replay, with that
+fixture's explicit synthetic production envelope.
+
+Check every delivered range digest and the complete file digest against
+the frozen inventory. The worker must accept the sealed step and refuse a
+same-size alteration to the delivered optimizer file. This uses the
+existing Python verifier and standard libraries. No model, data,
+dependency or storage format changes. Directly copying a retained
+directory would bypass the controller's authenticated transfer. Reading
+expected bindings from the receipt would allow the file to supply its own
+authority. A checkpoint at the one-step fixture's final step can exercise
+this handoff without loading the model or advancing another optimizer step.
