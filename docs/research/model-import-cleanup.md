@@ -187,3 +187,60 @@ Run with an isolated PostgreSQL test database prepared by the
 ```sh
 go -C services/control test ./internal/modules/models -run '^TestActualAbandonedImportExpiry' -count=1 -v
 ```
+
+### Operator projection and owner handoff
+
+The current Models OpenAPI schema accepts a nullable string in
+`ModelImport.error_code`. The existing Admin import detail, workspace
+import list, idempotency resolution, creation replay and cancellation
+replay can therefore carry a cancelled import with
+`MODEL_IMPORT_EXPIRED` in their successful payloads. Resolve by the
+original workspace and key after a lost response. An exact creation
+replay returns the original import. A fresh key may start a new
+upload after expiry. An ordinary cancellation and its replay keep a
+null reason. The model worker records distinct system expiry audit
+events for a single import.
+
+Use real PostgreSQL and Admin HTTPS to verify these projections after
+the existing worker expires a partial upload. Verify that the same
+key resolves as absent in another authorized workspace. A foreign
+installation and a Portal caller must receive no import payload.
+Check expired resume and complete requests, ordinary cancellation,
+a fresh upload, and audit counts across retries.
+
+- DEV owns any dedicated Problem response on expired mutation requests.
+  The current chunk and complete routes return the already declared
+  `MODEL_IMPORT_STATE_CONFLICT` (409). The successful DTO already
+  carries the expiry reason. If a dedicated mutation problem is
+  exposed, register `MODEL_IMPORT_EXPIRED` as 409 in the shared problem
+  registry and declare it on the affected routes in the Models OpenAPI
+  contract before updating generated consumers. An in-progress
+  `MODEL_IMPORT_EXPIRY_PENDING` marker means cleanup is still running.
+- ARC owns the startup policy in
+  `services/control/internal/platform/config/models.go` and worker
+  composition in `identity/http/agent_path.go`. Bind the existing
+  workspace and whole-second inactivity interval, validate them at
+  startup, and leave the worker opt-in. The current service is explicitly
+  enabled only by a trusted caller.
+- Web owns the model import view. It currently renders a reason only
+  for failed imports and treats a cancelled import as generic. Render
+  the expired reason for the terminal state, explain that a new key
+  starts a fresh import, and distinguish pending cleanup from a
+  resumable upload. Localize both the lifecycle state and any new
+  Problem response in English and Simplified Chinese.
+
+`TestModelImportHTTPSExpiryIsScopedAndDistinctFromCancellation` passed
+against PostgreSQL 18.6 over TLS in a Linux arm64 container with no
+network. The expiry worker reclaimed the uploaded chunk. Admin detail,
+list, resolution and both replay paths carried the same terminal
+reason and historic byte count. The same key returned absent in
+another workspace. Portal and foreign installation reads returned
+404. A new key opened an upload and ordinary cancellation replay
+retained its null reason. The two expiry audits and one ordinary
+cancellation audit each appeared once. The three existing worker
+cases and the prior HTTPS import tests passed in the same fixture.
+
+```sh
+go -C services/control test ./internal/modules/models/http \
+  -run '^TestModelImportHTTPSExpiryIsScopedAndDistinctFromCancellation$' -count=1 -v
+```
