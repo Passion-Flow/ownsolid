@@ -201,16 +201,12 @@ concurrent appends with the standalone verifier.
 
 ### Shared Linux replay gate
 
-The tracked production tree passed the disconnected local fixture. The
-shared Linux amd64 replay remains pending until the active repository
-gates finish, both the shared heavy-test lock and the SCI replay lock
-are available, free memory is at least 2 GiB, available memory is at least
-8 GiB, available disk is at least 30 GiB, and full I/O PSI avg10 is at
-most 5%. Use the same SCI shell replay and offline verifier against the
-embedded migration and the pinned PostgreSQL image. Require the three
-recorded digests, 118 tables, preserved checkpoints, scope refusal,
-concurrent appends and successful production migrator replay before
-promoting the integrated candidate.
+The shared Linux amd64 replay requires an idle repository gate, both
+the shared heavy-test lock and the SCI replay lock, at least 2 GiB free
+memory, 8 GiB available memory and 30 GiB available disk, and full I/O
+PSI avg10 at most 5%. Run the SCI shell replay, production Go migrator
+and offline verifier against the embedded migration and the pinned
+PostgreSQL image.
 
 The admitted amd64 run verified the exact SQL hashes and the six SQL
 catalogue, checkpoint and 118-table paths. The source transport archive
@@ -218,8 +214,15 @@ included macOS AppleDouble files. The Go embed glob read the 58 extra
 up-migration sidecars and the production migrator refused the sequence.
 Stream the tracked Git archive into the outer payload, preserving its
 file list, and check for exactly 58 up migrations and zero sidecars
-before compiling. The corrected archive passed those preflight checks
-locally. Repeat the Go migrator and Audit module after Linux admission.
+before compiling. The corrected archive passed those checks on Linux
+amd64. Admission held both locks at full I/O PSI avg10 of 0.04%.
+The disconnected PostgreSQL 18.6 and pgvector 0.8.7 run passed all
+six SQL paths, the Go migrator matrix, the cell-owned table check
+and the Audit module. It retained the three schema-58 fingerprints,
+118 tables, earlier checkpoints and the offline-verifiable chain.
+The SQL replay accepted eight concurrent appends each after logical
+restore from 55 and 58. The Audit module also passed scope refusal,
+concurrent appends and mutation detection.
 
 The clean archive remains the replay input after rebasing on
 `273929ee`. The Linux amd64 package list for the production database
@@ -231,3 +234,10 @@ match. Keep the archive SHA-256
 `400305ad8c014ad6652301af098f2b3bc09276caf6d8aa8a0aaa4c39cad0993e`
 for the SCI replay. The full repository gate runs against the actual
 integration tree.
+
+The integration replay comparison at `c04eb4e4` expanded the input
+set to include repository test variants, embedded files and assembly.
+It found the same 966 paths in the archive and integration tree, with
+zero byte differences across those paths, module manifests, migrations
+and release lineage. Run the separate full repository gate before
+promoting 58.

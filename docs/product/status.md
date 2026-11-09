@@ -131,12 +131,10 @@ was checked against that baseline and adds no failure. ARC-005 was checked the s
 on the packages it touches (nodes, identity HTTP, machine composition, agent tests).
 
 At schema 57, TestEveryCellOwnedTableCarriesScope fails because audit_chain_head lacks
-both required scope columns. The 58 candidate passed on disconnected local Linux arm64
-PostgreSQL 18.6, including exact catalog and audit checkpoint replay. Shared Linux amd64
-qualification is pending. The amd64 SQL replay passed all six catalogue paths. The
-Go migrator refused extra migration sidecars carried by the source transport archive.
-A clean Git archive is prepared for replay. Admission requires both locks and full
-I/O PSI avg10 at most 5%, along with the memory, disk and compiler checks in the
+both required scope columns. The 58 candidate passed the six SQL catalog paths,
+production Go migrator and Audit module on disconnected Linux amd64 PostgreSQL 18.6.
+The standalone verifier retained the earlier checkpoints. Repository admission of
+58 still requires the full gate on the integration tree. See the
 [audit scope replay gate](../research/audit-chain-head-cell-scope.md#shared-linux-replay-gate).
 
 `deploy/images/control/assets/index.html`, the old placeholder page, is unused and awaits
