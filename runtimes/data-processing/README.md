@@ -1,6 +1,6 @@
 # Dataset processing runtime
 
-[process.py](process.py) executes one inspect or publish-preparation attempt from an explicit protected request file. It validates the source and can materialize deterministic publication artifacts; Go datasets separately authorizes and commits the published version.
+[process.py](process.py) executes one inspect or publish-preparation attempt from an explicit protected request file. An explicit single-turn messages source maps to the canonical prompt/completion row during inspection. Publication consumes those canonical rows and materializes deterministic artifacts; Go datasets separately authorizes and commits the published version.
 
 ## Code and contract
 

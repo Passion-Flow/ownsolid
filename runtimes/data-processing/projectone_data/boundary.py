@@ -9,6 +9,7 @@ import signal
 import stat
 import sys
 import uuid
+from . import SINGLE_TURN_MESSAGES_V1
 from .validation import DataError,Limits,unique,invalid_constant
 from .limits_generated import RESOURCE_CEILINGS
 
@@ -57,6 +58,10 @@ def read_request(path):
  except (ValueError,UnicodeError,RecursionError):raise DataError('DATASET_PROCESSOR_REQUEST_INVALID') from None
  if not isinstance(value,dict):raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
  fields={'schema_version','operation','job_id','attempt_id','scope_directory','input_file','input_sha256','output_directory','limits','resources'}
+ if value.get('operation')=='inspect' and 'source_row_format' in value:
+  if value['source_row_format'] != SINGLE_TURN_MESSAGES_V1:
+   raise DataError('DATASET_PROCESSOR_REQUEST_INVALID')
+  fields.add('source_row_format')
  if value.get('operation')=='publish':
   fields|={'seed','validation_basis_points'}
   if 'test_basis_points' in value:

@@ -73,7 +73,8 @@ func (s *Service) ProcessNext(ctx context.Context) (bool, error) {
 			}
 			return e
 		}
-		if j.Kind != "publish" && (work.policy.Deduplication != "" || work.policy.TestBasisPoints != 0) {
+		if j.Kind != "publish" && (work.policy.Deduplication != "" || work.policy.TestBasisPoints != 0) ||
+			j.Kind == "publish" && work.policy.SourceRowFormat != "" {
 			return s.finishFailure(ctx, tx, a, w, d, j, "DATASET_POLICY_INVALID", false, false)
 		}
 		if work.policy.TestBasisPoints != 0 && (j.Seed == nil || j.ValidationBasisPoints == nil ||
@@ -107,7 +108,7 @@ func (s *Service) ProcessNext(ctx context.Context) (bool, error) {
 			}
 		}
 		attemptID := uuid.NewString()
-		work.request = wire.ProcessorRequest{SchemaVersion: 1, Operation: wire.InspectOperation, JobID: j.ID, AttemptID: attemptID, InputSHA256: *j.InputSHA256, Limits: work.policy.Limits, Resources: work.policy.Resources}
+		work.request = wire.ProcessorRequest{SchemaVersion: 1, Operation: wire.InspectOperation, JobID: j.ID, AttemptID: attemptID, InputSHA256: *j.InputSHA256, SourceRowFormat: work.policy.SourceRowFormat, Limits: work.policy.Limits, Resources: work.policy.Resources}
 		if j.Kind == "publish" {
 			work.request.Operation = wire.PublishOperation
 			work.request.Seed = j.Seed

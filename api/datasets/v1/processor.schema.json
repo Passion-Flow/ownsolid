@@ -168,6 +168,10 @@
         "resources": {
           "$ref": "#/$defs/Resources"
         },
+        "source_row_format": {
+          "const": "single_turn_messages_v1",
+          "type": "string"
+        },
         "operation": {
           "const": "inspect"
         }

@@ -21,6 +21,15 @@ const MaximumDiagnosticBytes = 16384
 // NearDuplicatePlanFile is the protected publication plan in the attempt scope.
 const NearDuplicatePlanFile = "near-duplicates.json"
 
+// SourceRowFormat selects how the protected inspector reads uploaded JSONL rows.
+type SourceRowFormat string
+
+// SingleTurnMessagesV1 accepts one textual user turn followed by one assistant reply.
+const SingleTurnMessagesV1 SourceRowFormat = "single_turn_messages_v1"
+
+// Valid accepts the legacy default and the supported single-turn format.
+func (f SourceRowFormat) Valid() bool { return f == "" || f == SingleTurnMessagesV1 }
+
 var idPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 var hashPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)
 var seedPattern = regexp.MustCompile(`^[0-9a-f]{32}$`)
@@ -46,24 +55,25 @@ func ValidID(value string) bool {
 func ValidDigest(value string) bool { return hashPattern.MatchString(value) }
 
 type ProcessorRequest struct {
-	SchemaVersion           int       `json:"schema_version"`
-	Operation               string    `json:"operation"`
-	JobID                   string    `json:"job_id"`
-	AttemptID               string    `json:"attempt_id"`
-	ScopeDirectory          string    `json:"scope_directory"`
-	InputFile               string    `json:"input_file"`
-	InputSHA256             string    `json:"input_sha256"`
-	OutputDirectory         string    `json:"output_directory"`
-	Limits                  Limits    `json:"limits"`
-	Resources               Resources `json:"resources"`
-	Seed                    *string   `json:"seed,omitempty"`
-	ValidationBasisPoints   *int      `json:"validation_basis_points,omitempty"`
-	TestBasisPoints         int       `json:"test_basis_points,omitempty"`
-	NearDuplicatePlanSHA256 string    `json:"near_duplicate_plan_sha256,omitempty"`
+	SchemaVersion           int             `json:"schema_version"`
+	Operation               string          `json:"operation"`
+	JobID                   string          `json:"job_id"`
+	AttemptID               string          `json:"attempt_id"`
+	ScopeDirectory          string          `json:"scope_directory"`
+	InputFile               string          `json:"input_file"`
+	InputSHA256             string          `json:"input_sha256"`
+	SourceRowFormat         SourceRowFormat `json:"source_row_format,omitempty"`
+	OutputDirectory         string          `json:"output_directory"`
+	Limits                  Limits          `json:"limits"`
+	Resources               Resources       `json:"resources"`
+	Seed                    *string         `json:"seed,omitempty"`
+	ValidationBasisPoints   *int            `json:"validation_basis_points,omitempty"`
+	TestBasisPoints         int             `json:"test_basis_points,omitempty"`
+	NearDuplicatePlanSHA256 string          `json:"near_duplicate_plan_sha256,omitempty"`
 }
 
 func (r ProcessorRequest) Validate() error {
-	if r.SchemaVersion != 1 || !ValidID(r.JobID) || !ValidID(r.AttemptID) || !ValidDigest(r.InputSHA256) || r.Limits.Validate() != nil || r.Resources.Validate() != nil {
+	if r.SchemaVersion != 1 || !ValidID(r.JobID) || !ValidID(r.AttemptID) || !ValidDigest(r.InputSHA256) || r.Limits.Validate() != nil || r.Resources.Validate() != nil || !r.SourceRowFormat.Valid() {
 		return errors.New("DATASET_PROCESSOR_REQUEST_INVALID")
 	}
 	for _, path := range []string{r.ScopeDirectory, r.InputFile, r.OutputDirectory} {
@@ -81,6 +91,9 @@ func (r ProcessorRequest) Validate() error {
 			return errors.New("DATASET_PROCESSOR_REQUEST_INVALID")
 		}
 	case PublishOperation:
+		if r.SourceRowFormat != "" {
+			return errors.New("DATASET_PROCESSOR_REQUEST_INVALID")
+		}
 		if r.NearDuplicatePlanSHA256 != "" && !ValidDigest(r.NearDuplicatePlanSHA256) {
 			return errors.New("DATASET_PROCESSOR_REQUEST_INVALID")
 		}
@@ -145,25 +158,26 @@ type Manifest struct {
 	ManifestFile          Asset   `json:"manifest_file"`
 }
 type ProcessorResult struct {
-	FatalSourceLineNumber *int64         `json:"fatal_source_line_number,omitempty"`
-	SchemaVersion         int            `json:"schema_version"`
-	ProcessorVersion      string         `json:"processor_version"`
-	JobID                 string         `json:"job_id"`
-	AttemptID             string         `json:"attempt_id"`
-	Operation             string         `json:"operation"`
-	Status                string         `json:"status"`
-	SourceSHA256          string         `json:"source_sha256,omitempty"`
-	SourceBytes           int64          `json:"source_bytes,omitempty"`
-	MemoryEnforcement     string         `json:"memory_enforcement,omitempty"`
-	TotalRows             int64          `json:"total_rows,omitempty"`
-	InvalidRows           int64          `json:"invalid_rows,omitempty"`
-	ErrorsTruncated       bool           `json:"errors_truncated,omitempty"`
-	FatalSourceError      bool           `json:"fatal_source_error,omitempty"`
-	Rows                  []ProcessedRow `json:"rows,omitempty"`
-	Errors                []LineError    `json:"errors,omitempty"`
-	Manifest              *Manifest      `json:"manifest,omitempty"`
-	ErrorCode             string         `json:"error_code,omitempty"`
-	ErrorLineNumber       *int64         `json:"error_line_number,omitempty"`
+	FatalSourceLineNumber *int64          `json:"fatal_source_line_number,omitempty"`
+	SchemaVersion         int             `json:"schema_version"`
+	ProcessorVersion      string          `json:"processor_version"`
+	JobID                 string          `json:"job_id"`
+	AttemptID             string          `json:"attempt_id"`
+	Operation             string          `json:"operation"`
+	Status                string          `json:"status"`
+	SourceSHA256          string          `json:"source_sha256,omitempty"`
+	SourceRowFormat       SourceRowFormat `json:"source_row_format,omitempty"`
+	SourceBytes           int64           `json:"source_bytes,omitempty"`
+	MemoryEnforcement     string          `json:"memory_enforcement,omitempty"`
+	TotalRows             int64           `json:"total_rows,omitempty"`
+	InvalidRows           int64           `json:"invalid_rows,omitempty"`
+	ErrorsTruncated       bool            `json:"errors_truncated,omitempty"`
+	FatalSourceError      bool            `json:"fatal_source_error,omitempty"`
+	Rows                  []ProcessedRow  `json:"rows,omitempty"`
+	Errors                []LineError     `json:"errors,omitempty"`
+	Manifest              *Manifest       `json:"manifest,omitempty"`
+	ErrorCode             string          `json:"error_code,omitempty"`
+	ErrorLineNumber       *int64          `json:"error_line_number,omitempty"`
 }
 
 func invalidResult() error { return errors.New("DATASET_PROCESSOR_RESULT_INVALID") }
@@ -304,10 +318,13 @@ func DecodeResult(raw []byte, request ProcessorRequest) (ProcessorResult, error)
 	if d.Decode(&out) != nil {
 		return out, invalidResult()
 	}
-	if out.SchemaVersion != 1 || out.ProcessorVersion != ProcessorVersion || out.JobID != request.JobID || out.AttemptID != request.AttemptID || out.Operation != request.Operation {
+	if out.SchemaVersion != 1 || out.ProcessorVersion != ProcessorVersion || out.JobID != request.JobID || out.AttemptID != request.AttemptID || out.Operation != request.Operation || out.SourceRowFormat != request.SourceRowFormat {
 		return out, invalidResult()
 	}
 	required := []string{"schema_version", "processor_version", "job_id", "attempt_id", "operation", "status"}
+	if request.SourceRowFormat != "" {
+		required = append(required, "source_row_format")
+	}
 	var fields map[string]json.RawMessage
 	json.Unmarshal(raw, &fields)
 	switch out.Status {
@@ -431,7 +448,7 @@ func (m Manifest) ValidateStored(sourceSHA string, maximumRows, maximumFileBytes
 
 func KnownError(code string) bool {
 	switch code {
-	case "DATASET_JSON_INVALID", "DATASET_FIELDS_INVALID", "DATASET_TEXT_INVALID", "DATASET_SOURCE_INVALID", "DATASET_LINE_TOO_LARGE", "DATASET_ENCODING_INVALID", "DATASET_BOM_FORBIDDEN", "DATASET_EMPTY_LINE", "DATASET_ROW_LIMIT", "DATASET_EMPTY_SOURCE", "DATASET_FILE_TOO_LARGE", "DATASET_DUPLICATE_FIELD", "DATASET_SOURCE_CHANGED", "DATASET_SOURCE_DIGEST_INVALID", "DATASET_PROCESSOR_LIMITS_INVALID", "DATASET_PROCESSOR_RESOURCES_INVALID", "DATASET_PROCESSOR_REQUEST_INVALID", "DATASET_PROCESSOR_PATH_INVALID", "DATASET_PROCESSOR_TIMEOUT", "DATASET_PROCESSOR_FAILED", "DATASET_PROCESSOR_MEMORY_EXCEEDED", "DATASET_PROCESSOR_RESULT_TOO_LARGE", "DATASET_OUTPUT_CONFLICT", "DATASET_SPLIT_CONFIGURATION_INVALID", "DATASET_SPLIT_INSUFFICIENT_GROUPS", "DATASET_VALIDATION_FAILED", "DATASET_NEAR_DUPLICATE_BUDGET_EXCEEDED":
+	case "DATASET_JSON_INVALID", "DATASET_FIELDS_INVALID", "DATASET_MESSAGE_SEQUENCE_INVALID", "DATASET_TEXT_INVALID", "DATASET_SOURCE_INVALID", "DATASET_LINE_TOO_LARGE", "DATASET_ENCODING_INVALID", "DATASET_BOM_FORBIDDEN", "DATASET_EMPTY_LINE", "DATASET_ROW_LIMIT", "DATASET_EMPTY_SOURCE", "DATASET_FILE_TOO_LARGE", "DATASET_DUPLICATE_FIELD", "DATASET_SOURCE_CHANGED", "DATASET_SOURCE_DIGEST_INVALID", "DATASET_PROCESSOR_LIMITS_INVALID", "DATASET_PROCESSOR_RESOURCES_INVALID", "DATASET_PROCESSOR_REQUEST_INVALID", "DATASET_PROCESSOR_PATH_INVALID", "DATASET_PROCESSOR_TIMEOUT", "DATASET_PROCESSOR_FAILED", "DATASET_PROCESSOR_MEMORY_EXCEEDED", "DATASET_PROCESSOR_RESULT_TOO_LARGE", "DATASET_OUTPUT_CONFLICT", "DATASET_SPLIT_CONFIGURATION_INVALID", "DATASET_SPLIT_INSUFFICIENT_GROUPS", "DATASET_VALIDATION_FAILED", "DATASET_NEAR_DUPLICATE_BUDGET_EXCEEDED":
 		return true
 	}
 	return false
