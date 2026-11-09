@@ -42,6 +42,12 @@ func (s *Service) LoadAdminTOTPCandidateKeys(path string) error {
 	return nil
 }
 
+// AdminTOTPCandidateReady reports whether the new browser operations can be
+// mounted. Session issuance checks stored factors independently.
+func (s *Service) AdminTOTPCandidateReady() bool {
+	return s.adminTOTP != nil
+}
+
 // AdminTOTPEnrollment contains the one-time seed display for a pending factor.
 type AdminTOTPEnrollment struct {
 	ID        string    `json:"id"`

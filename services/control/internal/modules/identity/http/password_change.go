@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
@@ -19,14 +20,19 @@ const passwordChangesPath = "/api/v1/me/password-changes"
 func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request, cookies httpserver.CookiePolicy, a identity.Auth, requestID string) (any, int, error) {
 	s := h.Service
 	var v struct {
-		CurrentPassword string `json:"current_password"`
-		NewPassword     string `json:"new_password"`
-		TOTPCode        string `json:"totp_code,omitempty"`
+		CurrentPassword string          `json:"current_password"`
+		NewPassword     string          `json:"new_password"`
+		TOTPCode        json.RawMessage `json:"totp_code"`
 	}
 	if e := decode(r, &v); e != nil {
 		return nil, 0, e
 	}
 	if v.CurrentPassword == "" || v.NewPassword == "" {
+		return nil, 0, errors.New("VALIDATION_FAILED")
+	}
+	var otp string
+	if len(v.TOTPCode) != 0 && (a.Me.Audience != "admin" || !s.AdminTOTPCandidateReady() ||
+		json.Unmarshal(v.TOTPCode, &otp) != nil || otp == "" || r.URL.RawQuery != "" || r.URL.ForceQuery) {
 		return nil, 0, errors.New("VALIDATION_FAILED")
 	}
 	rates := s.Config.Policy().Rates
@@ -37,7 +43,7 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request, cookies
 	); e != nil {
 		return nil, 0, e
 	}
-	issued, e := s.ChangePasswordWithAdminTOTP(r.Context(), a, v.CurrentPassword, v.NewPassword, v.TOTPCode, requestID)
+	issued, e := s.ChangePasswordWithAdminTOTP(r.Context(), a, v.CurrentPassword, v.NewPassword, otp, requestID)
 	if e != nil {
 		return nil, 0, e
 	}
