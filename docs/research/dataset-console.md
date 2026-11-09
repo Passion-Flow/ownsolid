@@ -56,10 +56,10 @@ to the request. Both public retry operations declare the required
 `Idempotency-Key`, and the handler checks it. Reuse the generated operations
 and the browser transport's idempotency header. The read
 job shape returns seed, validation ratio, revision, status and retryability.
-It does not expose the frozen test ratio. On a resumed job, show the retained
-request without restating an unavailable ratio. Show the exact retained
-ratios on the published manifest. Job retry is the server operation that
-preserves the frozen request.
+It does not expose the frozen test ratio or duplicate removal choice. On a
+resumed job, show the retained request without restating unavailable fields.
+Show exact ratios on the published manifest. Job retry preserves the frozen
+request, including the duplicate removal choice.
 
 ## Screens and actions
 
@@ -121,11 +121,16 @@ new dataset and adding a draft to an existing one.
    1–50%, and in three-way mode their sum is at most 90%. Show the
    remaining training target and explain that ratios apply to connected
    groups, so actual row counts can differ. Grouping keeps related rows
-   together. The public route uses its existing exact-removal policy.
-   Near-duplicate removal is a separate option outside this public route.
+   together. Add a duplicate removal choice. Exact duplicates is the
+   default and omits `deduplication`. Near-matching prompts is an explicit
+   opt-in that sends `near_prompt_v1`. Explain that it may remove additional
+   matching rows while preserving distinct answers and that three-way
+   grouping protects related rows under either choice. Link the rule to
+   the [retained duplicates report](dataset-near-duplicates.md).
    Generate a cryptographic 16-byte seed for each new publication intent
    and show it in the review as reproducibility information. Freeze
-   draft revision, seed, ratios and audit reason at submit. Omit
+   draft revision, seed, ratios, duplicate removal choice and audit reason
+   at submit. Omit
    `test_basis_points` for two-way publication. Before Publish say that
    the worker creates another immutable version and stores the
    partition files. Show measured source size. Leave output size pending
@@ -207,13 +212,15 @@ implement in an opt-in `live-datasets.spec.ts` after the screen lands.
    source groups and one near-prompt bridge, select three-way mode,
    set 25% validation and 25% test, and exercise a lost publication
    response without creating a second job. Assert three nonempty
-   partitions and that no connected group spans partitions. Exercise
-   insufficient groups and confirm no version is published.
+   partitions and that no connected group spans partitions. Compare
+   exact and opt-in near-prompt removal on identical source bytes and
+   read the retained duplicates report. Exercise insufficient groups
+   and confirm no version is published.
 3. For a separate publication use the existing processor test's fixture
    failure once to reach a retryable job with no retained version.
    Restore the real processor and click Retry publication. Verify the
-   new job retains revision, seed and both ratios and creates one
-   immutable version. The browser verifies the receipt before
+   new job retains revision, seed, both ratios and the removal policy,
+   and creates one immutable version. The browser verifies the receipt before
    checking the same records independently in PostgreSQL.
 4. Download the test attachment from the browser. Check its filename,
    byte count and digest against the manifest and response header.
