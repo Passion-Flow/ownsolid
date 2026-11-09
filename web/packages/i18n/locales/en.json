@@ -2356,6 +2356,7 @@
   "keys.subtitle.none": "Your keys for calling a workspace's models.",
   "keys.noModel.detail": "A key calls a model the gateway serves. Ask an administrator to publish one to this workspace.",
   "keys.noWorkspace.detail": "An administrator adds you to a workspace. You can then issue keys for its models here.",
+  "keys.issue.noWorkspace": "You need workspace access to issue a key.",
   "gateway.reason": "Reason",
   "gateway.reason.hint": "Kept in the audit log with this change.",
   "gateway.reason.required": "Say why, for the audit log.",

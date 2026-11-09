@@ -9,9 +9,12 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const fixture = process.env.OWNSOLID_LIVE_KEY_DOWNLOADS_FILE ?? '';
 const adminOrigin = process.env.OWNSOLID_LIVE_DOWNLOADS_ADMIN_ORIGIN ?? '';
+const revokeMember = process.env.OWNSOLID_LIVE_DOWNLOADS_REVOKE_MEMBER === '1';
 
 test.skip(origin === '' || fixture === '', 'needs a signed gateway and scoped history fixture');
 test.use({ ...liveOptions, trace: 'off' });
+// The optional final case removes the fixture member used by the first case.
+test.describe.configure({ mode: 'default' });
 
 interface DownloadFixture {
   email: string;
@@ -81,6 +84,21 @@ async function downloadFrom(
   expect(headers['x-artifact-sha256']).toBe(sha256(bytes));
   expect(headers['cache-control']).toBe('no-store');
   return { bytes, query: new URL(response.url()).searchParams };
+}
+
+async function refusedDownload(page: Page, button: Locator, path: string): Promise<URL> {
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      (reply) => reply.request().method() === 'GET' && new URL(reply.url()).pathname === path,
+    ),
+    button.click(),
+  ]);
+  expect(response.status()).toBe(404);
+  expect(await response.headerValue('content-type')).toBe('application/problem+json');
+  expect(await response.headerValue('content-disposition')).toBeNull();
+  expect(await response.headerValue('x-artifact-sha256')).toBeNull();
+  expect(await response.json()).toMatchObject({ code: 'RESOURCE_NOT_FOUND' });
+  return new URL(response.url());
 }
 
 function csvIds(bytes: Buffer): string[] {
@@ -336,5 +354,151 @@ test('downloads the selected key page and CA from the Admin drawer', async ({ br
     expect(foreignOrigins).toEqual([]);
   } finally {
     await context.close();
+  }
+});
+
+test('refuses the next CSV and CA in the same tab after workspace access is removed', async ({
+  page,
+  browser,
+}, info) => {
+  test.skip(
+    adminOrigin === '' || !revokeMember,
+    'needs a disposable membership and the Admin origin',
+  );
+  test.setTimeout(120_000);
+  const data = JSON.parse(await readFile(fixture, 'utf8')) as DownloadFixture;
+  const portalForeign = await restrictBrowserOrigin(page, origin);
+  const distribution = scope(data.workspace);
+  const history = `${distribution}/requests`;
+  const exportPath = `${history}/export`;
+  const caPath = `${distribution}/aliases/${data.alias_id}/ca`;
+  const csvType = 'text/csv; charset=utf-8';
+  const downloads: string[] = [];
+  page.on('download', (download) => downloads.push(download.suggestedFilename()));
+
+  const adminContext = await browser.newContext({ ...liveOptions, baseURL: adminOrigin });
+  try {
+    const adminPage = await adminContext.newPage();
+    const adminForeign = await restrictBrowserOrigin(adminPage, adminOrigin);
+    await signIn(adminPage, '/users/workspaces', email, adminPassword(), 'Workspaces');
+    await adminPage.goto(`/users/workspaces/${data.workspace}`);
+    const remove = adminPage.getByRole('button', { name: `Remove ${data.email}`, exact: true });
+    await expect(remove).toBeVisible();
+
+    await signIn(page, '/keys', data.email, data.password, 'My API keys');
+    const initialHistory = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return (
+        response.ok() &&
+        url.pathname === history &&
+        url.searchParams.get('api_key_id') === data.key_id
+      );
+    });
+    await page.getByRole('button', { name: `Show ${data.key_name}` }).click();
+    const drawer = page.getByRole('dialog', { name: data.key_name });
+    const { data: firstPage } = (await (await initialHistory).json()) as {
+      data: { next_cursor: string | null };
+    };
+    expect(firstPage.next_cursor).toBeTruthy();
+    const csv = drawer.getByRole('button', { name: 'Download CSV' });
+    const ca = drawer.getByRole('button', { name: 'Download gateway CA' });
+    const first = await downloadFrom(page, csv, exportPath, 'gateway-usage.csv', csvType);
+    expect(first.query.get('api_key_id')).toBe(data.key_id);
+    expect(first.query.get('limit')).toBe('2');
+    expect(first.query.has('cursor')).toBe(false);
+    expect(csvIds(first.bytes)).toEqual(data.request_ids.slice(0, 2));
+    await verifyGatewayCA(page, ca, caPath, data);
+    await drawer.getByRole('button', { name: 'Load more' }).click();
+    const pageSelect = drawer.getByLabel('CSV page');
+    await pageSelect.selectOption({ label: 'Page 2' });
+
+    await remove.click();
+    const confirmation = adminPage.getByRole('dialog', { name: `Remove ${data.email}` });
+    await confirmation.getByLabel('Reason').fill('Verify workspace-scoped download revocation');
+    const [removed] = await Promise.all([
+      adminPage.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return (
+          response.request().method() === 'DELETE' &&
+          url.pathname.startsWith(`/api/v1/admin/workspaces/${data.workspace}/members/`)
+        );
+      }),
+      confirmation.getByRole('button', { name: 'Remove', exact: true }).click(),
+    ]);
+    expect(removed.status()).toBe(204);
+    await expect(remove).toHaveCount(0);
+
+    const rejected = await refusedDownload(page, csv, exportPath);
+    expect(rejected.searchParams.get('api_key_id')).toBe(data.key_id);
+    expect(rejected.searchParams.get('limit')).toBe('2');
+    expect(rejected.searchParams.get('cursor')).toBe(firstPage.next_cursor);
+    await expect(
+      drawer.getByText('Go back to the list and open it from there.', { exact: false }),
+    ).toBeVisible();
+    await expect(pageSelect).toHaveValue('1');
+    await csv.scrollIntoViewIfNeeded();
+    await info.attach('portal-revoked-member-csv', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+
+    await refusedDownload(page, ca, caPath);
+    await expect(drawer.getByText('Gateway CA is unavailable')).toBeVisible();
+    await expect(
+      drawer.getByText('Ask your administrator for the CA certificate for this endpoint.'),
+    ).toBeVisible();
+    await expect(drawer.getByText(data.alias_name, { exact: true })).toBeVisible();
+    await ca.scrollIntoViewIfNeeded();
+    await info.attach('portal-revoked-member-ca', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    const continued = await page.evaluate(
+      async (path) => (await fetch(path)).status,
+      history + rejected.search,
+    );
+    expect(continued).toBe(404);
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'My API keys' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'No workspace yet' })).toBeVisible();
+    await expect(
+      page.getByText('An administrator adds you to a workspace.', { exact: false }),
+    ).toBeVisible();
+    const issue = page.getByRole('button', { name: 'Issue a key' });
+    await expect(issue).toBeVisible();
+    await expect(issue).toBeDisabled();
+    await expect(issue).toHaveAccessibleDescription('You need workspace access to issue a key.');
+    await issue.press('Enter');
+    await expect(page.getByRole('dialog', { name: 'Issue a key' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: `Show ${data.key_name}` })).toHaveCount(0);
+    expect(downloads).toEqual(['gateway-usage.csv', 'model-gateway-ca.pem']);
+    await info.attach('portal-revoked-member-recovery', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(issue).toBeInViewport();
+    await info.attach('portal-revoked-member-recovery-phone', {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+
+    await adminPage.goto('/gateway');
+    await adminPage.getByRole('button', { name: `Show ${data.key_name}` }).click();
+    const adminCsv = await downloadFrom(
+      adminPage,
+      adminPage
+        .getByRole('dialog', { name: data.key_name })
+        .getByRole('button', { name: 'Download CSV' }),
+      `/api/v1/sites/default/cells/default/admin/distribution/workspaces/${data.workspace}/requests/export`,
+      'gateway-usage.csv',
+      csvType,
+    );
+    expect(adminCsv.query.get('api_key_id')).toBe(data.key_id);
+    expect(csvIds(adminCsv.bytes)).toEqual(data.request_ids.slice(0, 2));
+    expect(portalForeign).toEqual([]);
+    expect(adminForeign).toEqual([]);
+  } finally {
+    await adminContext.close();
   }
 });
