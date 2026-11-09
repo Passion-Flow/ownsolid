@@ -23,6 +23,14 @@ import (
 //go:embed testdata/ledger.sql
 var testSchemaSQL string
 
+const testWorkspaceSQL = `CREATE TABLE workspaces (
+  tenant_id uuid NOT NULL,
+  id uuid NOT NULL,
+  PRIMARY KEY (tenant_id, id)
+);
+
+`
+
 func newTestLedger(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	dsnFile := os.Getenv("OWNSOLID_METERING_TEST_DSN_FILE")
@@ -65,7 +73,7 @@ func newTestLedger(t *testing.T) *pgxpool.Pool {
 		t.Fatal(err)
 	}
 	t.Cleanup(pool.Close)
-	if _, err := pool.Exec(t.Context(), testSchemaSQL); err != nil {
+	if _, err := pool.Exec(t.Context(), testWorkspaceSQL+testSchemaSQL); err != nil {
 		t.Fatal(err)
 	}
 	return pool

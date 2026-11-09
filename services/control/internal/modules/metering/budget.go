@@ -56,22 +56,34 @@ type BudgetStatus struct {
 // BudgetWithin evaluates an operator's threshold over a single scoped
 // showback snapshot. It returns the observed budget state for reporting.
 func BudgetWithin(ctx context.Context, tx pgx.Tx, scope Scope, from, to time.Time, card *RateCard, policy BudgetPolicy) (BudgetStatus, error) {
-	limit, ok := new(big.Int).SetString(policy.LimitMicros, 10)
-	if !ok || limit.Sign() <= 0 || limit.String() != policy.LimitMicros ||
-		!accountingCurrency.MatchString(policy.Currency) || policy.WarningBasisPoints <= 0 ||
-		policy.WarningBasisPoints >= basisPointsPerWhole {
-		return BudgetStatus{}, ErrInvalidBudgetPolicy
-	}
-	if card == nil || len(card.versions) == 0 {
-		return BudgetStatus{}, ErrInvalidRateCard
-	}
-	if card.currency != policy.Currency {
-		return BudgetStatus{}, ErrBudgetCurrencyMismatch
+	limit, err := budgetLimit(card, policy)
+	if err != nil {
+		return BudgetStatus{}, err
 	}
 	report, err := ShowbackWithin(ctx, tx, scope, from, to, card)
 	if err != nil {
 		return BudgetStatus{}, err
 	}
+	return budgetFromReport(report, policy, limit)
+}
+
+func budgetLimit(card *RateCard, policy BudgetPolicy) (*big.Int, error) {
+	limit, ok := new(big.Int).SetString(policy.LimitMicros, 10)
+	if !ok || limit.Sign() <= 0 || limit.String() != policy.LimitMicros ||
+		!accountingCurrency.MatchString(policy.Currency) || policy.WarningBasisPoints <= 0 ||
+		policy.WarningBasisPoints >= basisPointsPerWhole {
+		return nil, ErrInvalidBudgetPolicy
+	}
+	if card == nil || len(card.versions) == 0 {
+		return nil, ErrInvalidRateCard
+	}
+	if card.currency != policy.Currency {
+		return nil, ErrBudgetCurrencyMismatch
+	}
+	return limit, nil
+}
+
+func budgetFromReport(report ShowbackReport, policy BudgetPolicy, limit *big.Int) (BudgetStatus, error) {
 	known, ok := new(big.Int).SetString(report.KnownAmountMicros, 10)
 	if !ok || known.Sign() < 0 {
 		return BudgetStatus{}, ErrUnavailable
