@@ -6,6 +6,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,6 +27,7 @@ import (
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -55,20 +58,9 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = store.Close() })
 	service := &Service{DB: account.DB, Identity: account, Workspaces: &workspaces.Service{DB: account.DB, Identity: account}, Store: store, Processor: processor}
-	schema, err := os.ReadFile("testdata/draft_import_candidate.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = service.DB.Exec(ctx, string(schema)); err != nil {
-		t.Fatal(err)
-	}
 	parquet := &ParquetImportConfig{
 		PythonExecutable: python, DecoderFile: filepath.Join(filepath.Dir(processor.configuration.ProcessorFile), "import_parquet.py"),
 		BatchRows: 1, MetadataBytes: 1 << 20, RowGroupBytes: 8 << 20, MemoryBytes: 512 << 20,
-	}
-	candidate, err := NewDraftSourceCandidate(service, parquet)
-	if err != nil {
-		t.Fatal(err)
 	}
 	other, err := service.Workspaces.Create(ctx, admin, "Other restore workspace", actor.Me.User.ID, uuid.NewString())
 	if err != nil {
@@ -81,6 +73,53 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Populate the released draft path before applying any candidate SQL.
+	legacyRaw := []byte("{\"source_id\":\"legacy-row\",\"prompt\":\"Old question\",\"completion\":\"Old answer\"}\n")
+	legacySHA := fmt.Sprintf("%x", sha256.Sum256(legacyRaw))
+	legacyKey := uuid.NewString()
+	legacy, err := service.CreateDraft(ctx, actor, workspace, data.ID, DraftRequest{
+		SourceName: "legacy.jsonl", SourceSHA256: legacySHA, ExpectedBytes: int64(len(legacyRaw)), Reason: "Preserve an existing draft",
+	}, legacyKey, uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = service.Upload(ctx, actor, workspace, data.ID, legacy.ID, legacySHA, int64(len(legacyRaw)), bytes.NewReader(legacyRaw), uuid.NewString()); err != nil {
+		t.Fatal(err)
+	}
+	process(t, service)
+	legacy, err = service.GetDraft(ctx, actor, workspace, data.ID, legacy.ID)
+	if err != nil || legacy.State != "editing" {
+		t.Fatal("legacy draft was not inspected", err)
+	}
+	var predecessorSQL []byte
+	if file := os.Getenv("OWNSOLID_TEST_DRAFT_RESTORE_PREDECESSOR_SQL"); file != "" {
+		if !filepath.IsAbs(file) {
+			t.Fatal("absolute owned SQL overlay path required")
+		}
+		predecessorSQL = readDraftMigration(t, file)
+	}
+	up := readDraftMigration(t, "testdata/draft_import_candidate.up.sql")
+	down := readDraftMigration(t, "testdata/draft_import_candidate.down.sql")
+	predecessor := owned.RestoreFresh(t, ctx, service.DB, owned.DumpSchema(t, ctx))
+	for _, sql := range [][]byte{predecessorSQL, up, down} {
+		applyDraftMigration(t, ctx, predecessor, sql)
+	}
+	var tableRemoved, keyRemoved bool
+	if err = predecessor.QueryRow(ctx, `SELECT to_regclass('dataset_draft_import_candidates') IS NULL,
+		NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='dataset_drafts'::regclass
+		           AND conname='dataset_draft_import_scope_key')`).Scan(&tableRemoved, &keyRemoved); err != nil || !tableRemoved || !keyRemoved {
+		t.Fatal("candidate rollback left catalog objects", err)
+	}
+	applyDraftMigration(t, ctx, predecessor, up)
+	verifyLegacyDraftMigration(t, ctx, predecessor, legacy)
+	applyDraftMigration(t, ctx, service.DB, predecessorSQL)
+	applyDraftMigration(t, ctx, service.DB, up)
+	verifyLegacyDraftMigration(t, ctx, service.DB, legacy)
+	candidate, err := NewDraftSourceCandidate(service, parquet)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	script, err := filepath.Abs("testdata/draft_source_fixture.py")
 	if err != nil {
 		t.Fatal(err)
@@ -101,6 +140,11 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 	if err != nil || before.Draft.State != "editing" || before.Report.SourceSHA256 != digest || before.Report.OutputSHA256 != before.Draft.SourceSHA256 {
 		t.Fatal("source report was not readable before backup", err)
 	}
+	if _, err = service.DB.Exec(ctx, `INSERT INTO sites(id,display_name) VALUES('draft-alt-site','Other draft site');
+		INSERT INTO cells(id,site_id,display_name) VALUES('draft-alt-cell',local_site_id(),'Other draft cell');`); err != nil {
+		t.Fatal("seed registered foreign scopes", err)
+	}
+	verifyDraftScopeConstraint(t, ctx, service.DB, before.Draft.ID)
 	var object string
 	if err = service.DB.QueryRow(ctx, "SELECT source_object_id::text FROM dataset_drafts WHERE id=$1 AND workspace_id=$2",
 		before.Draft.ID, workspace).Scan(&object); err != nil {
@@ -114,6 +158,23 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 	backup := filepath.Join(privateSnapshotDirectory(t), "files")
 	if err = service.ExportFiles(ctx, backup); err != nil {
 		t.Fatal("export existing normalized file inventory", err)
+	}
+	var snapshot FileSnapshot
+	manifest, err := os.ReadFile(filepath.Join(backup, snapshotName))
+	if err != nil || json.Unmarshal(manifest, &snapshot) != nil || snapshot.References.TenantID != tenant {
+		t.Fatal("private snapshot inventory", err)
+	}
+	found := false
+	for _, file := range snapshot.Files {
+		if file.Path == objectPath(object) {
+			found = file.SHA256 == before.Report.OutputSHA256 && file.SizeBytes == before.Report.OutputBytes
+		}
+		if strings.HasSuffix(file.Path, "/source.parquet") {
+			t.Fatal("legacy snapshot silently admitted an original outside its inventory")
+		}
+	}
+	if !found {
+		t.Fatal("private normalized inventory lost its accepted digest")
 	}
 	archive := owned.DumpSchema(t, ctx)
 	restored := owned.RestoreFresh(t, ctx, service.DB, archive)
@@ -164,6 +225,20 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 	reauth := fixture.Login(t, restoredAccount, "admin@example.invalid", password, "portal")
 	if reauth.Me.User.ID != actor.Me.User.ID {
 		t.Fatal("restored login did not recover the original subject")
+	}
+	verifyLegacyDraftMigration(t, ctx, restored, legacy)
+	verifyDraftScopeConstraint(t, ctx, restored, before.Draft.ID)
+	if got, err := fresh.GetDraft(ctx, reauth, workspace, data.ID, legacy.ID); err != nil || !reflect.DeepEqual(got, legacy) {
+		t.Fatal("restored authorized legacy draft changed", err)
+	}
+	var legacyObject string
+	if err = restored.QueryRow(ctx, "SELECT source_object_id::text FROM dataset_drafts WHERE id=$1 AND workspace_id=$2",
+		legacy.ID, workspace).Scan(&legacyObject); err != nil {
+		t.Fatal("read restored legacy source reference", err)
+	}
+	legacySource := filepath.Join(restoredRoot, filepath.FromSlash(objectPath(legacyObject)))
+	if raw, err := os.ReadFile(legacySource); err != nil || !bytes.Equal(raw, legacyRaw) {
+		t.Fatal("restored legacy source changed", err)
 	}
 	expectFailure(reauth, other.ID, "DATASET_NOT_FOUND")
 	expectFailure(reauth, workspace, "DATASET_FILE_INVALID")
@@ -231,6 +306,36 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	// The database admits a matching foreign parent/receipt pair. The local
+	// service must still refuse it even when the Workspace and dataset match.
+	if err = pgx.BeginFunc(ctx, restored, func(tx pgx.Tx) error {
+		if _, e := tx.Exec(ctx, "UPDATE dataset_drafts SET cell_id='draft-alt-cell' WHERE id=$1", legacy.ID); e != nil {
+			return e
+		}
+		_, e := tx.Exec(ctx, `INSERT INTO dataset_draft_import_candidates
+			(tenant_id,workspace_id,dataset_id,draft_id,site_id,cell_id,source_format,report)
+			SELECT d.tenant_id,d.workspace_id,d.dataset_id,d.id,d.site_id,d.cell_id,c.source_format,c.report
+			FROM dataset_drafts d CROSS JOIN dataset_draft_import_candidates c
+			WHERE d.id=$1 AND c.draft_id=$2`, legacy.ID, before.Draft.ID)
+		return e
+	}); err != nil {
+		t.Fatal("construct a matching foreign draft receipt", err)
+	}
+	out, err := reader.Read(ctx, reauth, workspace, data.ID, legacy.ID)
+	if err == nil || err.Error() != "DATASET_NOT_FOUND" || !reflect.DeepEqual(out, DraftSourceResult{}) {
+		t.Fatal("matching foreign receipt crossed the local cell boundary", err)
+	}
+	refuseBeforeRead := func(key string) {
+		t.Helper()
+		body := bytes.NewReader(legacyRaw)
+		out, err := reader.Import(ctx, reauth, workspace, data.ID, SourceCSV,
+			DraftSourceRequest{Name: "foreign.csv", SHA256: legacySHA, Bytes: int64(len(legacyRaw))},
+			key, body, uuid.NewString())
+		if err == nil || err.Error() != "DATASET_NOT_FOUND" || !reflect.DeepEqual(out, DraftSourceResult{}) || body.Len() != len(legacyRaw) {
+			t.Fatal("foreign dataset or draft admitted or consumed the import body", err)
+		}
+	}
+	refuseBeforeRead(legacyKey)
 	if _, err = restored.Exec(ctx, `UPDATE dataset_draft_import_candidates
 		SET report=jsonb_set(report,'{output_sha256}',to_jsonb(repeat('0',64))) WHERE draft_id=$1`, before.Draft.ID); err != nil {
 		t.Fatal(err)
@@ -240,7 +345,73 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectFailure(reauth, workspace, "DATASET_NOT_FOUND")
-	t.Log("logical archive, normalized file snapshot, retained S3 original, fresh authorization and digest refusals verified")
+	if _, err = restored.Exec(ctx, "UPDATE datasets SET cell_id='draft-alt-cell' WHERE id=$1", data.ID); err != nil {
+		t.Fatal(err)
+	}
+	refuseBeforeRead(uuid.NewString())
+	t.Log("predecessor upgrade, rollback, restored scope, private normalized inventory, retained S3 original and digest refusals verified")
+}
+
+func readDraftMigration(t *testing.T, name string) []byte {
+	t.Helper()
+	sql, err := os.ReadFile(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return sql
+}
+
+func applyDraftMigration(t *testing.T, ctx context.Context, pool *pgxpool.Pool, sql []byte) {
+	t.Helper()
+	if len(sql) == 0 {
+		return
+	}
+	if err := pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, string(sql))
+		return err
+	}); err != nil {
+		t.Fatal("apply owned candidate or predecessor SQL", err)
+	}
+}
+
+func verifyLegacyDraftMigration(t *testing.T, ctx context.Context, pool *pgxpool.Pool, legacy Draft) {
+	t.Helper()
+	var state, sha string
+	var size int64
+	var local, report bool
+	if err := pool.QueryRow(ctx, `SELECT d.state,d.source_sha256,d.expected_bytes,
+		d.site_id=local_site_id() AND d.cell_id=local_cell_id(),
+		EXISTS(SELECT 1 FROM dataset_draft_import_candidates c WHERE c.draft_id=d.id)
+		FROM dataset_drafts d WHERE id=$1`, legacy.ID).Scan(&state, &sha, &size, &local, &report); err != nil ||
+		state != legacy.State || sha != legacy.SourceSHA256 || size != legacy.ExpectedBytes || !local || report {
+		t.Fatal("candidate DDL changed a legacy draft or manufactured a receipt", err)
+	}
+}
+
+func verifyDraftScopeConstraint(t *testing.T, ctx context.Context, pool *pgxpool.Pool, draft string) {
+	t.Helper()
+	var site, cell string
+	var valid bool
+	if err := pool.QueryRow(ctx, `SELECT d.site_id,d.cell_id,c.site_id=d.site_id AND c.cell_id=d.cell_id
+		AND d.site_id=local_site_id() AND d.cell_id=local_cell_id()
+		FROM dataset_drafts d JOIN dataset_draft_import_candidates c ON c.draft_id=d.id WHERE d.id=$1`, draft).
+		Scan(&site, &cell, &valid); err != nil || !valid {
+		t.Fatal("receipt did not inherit the local draft scope", err)
+	}
+	for _, tc := range []struct {
+		site, cell any
+		code       string
+	}{
+		{site, "draft-alt-cell", "23503"},
+		{"draft-alt-site", cell, "23503"},
+		{site, nil, "23502"},
+	} {
+		_, err := pool.Exec(ctx, "UPDATE dataset_draft_import_candidates SET site_id=$1,cell_id=$2 WHERE draft_id=$3", tc.site, tc.cell, draft)
+		var pg *pgconn.PgError
+		if !errors.As(err, &pg) || pg.Code != tc.code || tc.code == "23503" && pg.ConstraintName != "dataset_draft_import_candidate_scope_fk" {
+			t.Fatal("the receipt accepted a foreign or null scope", err)
+		}
+	}
 }
 
 func ownedDraftRestoreFixture(t *testing.T, ctx context.Context, pool *pgxpool.Pool) fixture.PostgresFixture {
