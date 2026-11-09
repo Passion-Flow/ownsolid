@@ -15,9 +15,16 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// The common CredentialWithin owner rechecks the exact credential under node lock.
-// Scope discovery grants no authority and every value is checked again in the transaction.
-func (s *Service) machineWithin(ctx context.Context, id, credential string, fn func(context.Context, transaction.Executor, Node, bool, pgx.Tx) error) error {
+type machineCredentialCheck func(context.Context, transaction.Executor, string, string, string, string) (Node, error)
+type machineOperation func(context.Context, transaction.Executor, Node, bool, pgx.Tx) error
+
+func (s *Service) machineWithin(ctx context.Context, id, credential string, fn machineOperation) error {
+	return s.machineWithinCheckingCredential(ctx, id, credential, s.CredentialWithin, fn)
+}
+
+// Scope discovery grants no authority. The selected credential check must
+// recheck the exact credential under the node lock inside this transaction.
+func (s *Service) machineWithinCheckingCredential(ctx context.Context, id, credential string, check machineCredentialCheck, fn machineOperation) error {
 	if ctx == nil || !nodeID(id) || !security.ValidToken(credential) || fn == nil {
 		return fail("AGENT_UNAUTHORIZED")
 	}
@@ -45,7 +52,7 @@ func (s *Service) machineWithin(ctx context.Context, id, credential string, fn f
 				return e
 			}
 		}
-		n, e := s.CredentialWithin(ctx, q, tenant, workspace, id, credential)
+		n, e := check(ctx, q, tenant, workspace, id, credential)
 		if e != nil {
 			return e
 		}
@@ -103,7 +110,11 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 	}
 	var out wire.Disposition
 	repeats := s.heartbeatRepeats(id, h)
-	e := s.machineWithin(ctx, id, credential, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
+	check := s.CredentialWithin
+	if h.Component != nil {
+		check = s.componentHeartbeatCredentialWithin
+	}
+	e := s.machineWithinCheckingCredential(ctx, id, credential, check, func(ctx context.Context, q transaction.Executor, n Node, active bool, legacy pgx.Tx) error {
 		if repeats {
 			if e := commitWithoutWaitingForDisk(ctx, q); e != nil {
 				return e
@@ -170,6 +181,30 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 	out.Pacing = &pacing
 	return out, nil
 }
+
+// The component heartbeat already needs the locked node snapshot for
+// profile and scope checks. Read its digest with that snapshot on PostgreSQL.
+func (s *Service) componentHeartbeatCredentialWithin(ctx context.Context, q transaction.Executor, tenant, workspace, id, credential string) (Node, error) {
+	if q.Dialect() != transaction.PostgreSQL {
+		return s.CredentialWithin(ctx, q, tenant, workspace, id, credential)
+	}
+	if !nodeID(tenant) || !nodeID(workspace) {
+		return Node{}, fail("AGENT_UNAUTHORIZED")
+	}
+	var hash []byte
+	n, e := s.lockedInstalledPostgresNode(ctx, q, tenant, workspace, id, &hash)
+	if e != nil {
+		if e.Error() == "RESOURCE_NOT_FOUND" {
+			return Node{}, fail("AGENT_UNAUTHORIZED")
+		}
+		return Node{}, preparationSourceError(e)
+	}
+	if n.Status == "removed" || subtle.ConstantTimeCompare(hash, digest("node-credential", credential)) != 1 {
+		return Node{}, fail("AGENT_UNAUTHORIZED")
+	}
+	return n, nil
+}
+
 func (s *Service) leasedTaskWithin(ctx context.Context, q transaction.Executor, n Node, taskID, lease string) (Task, error) {
 	if !nodeID(taskID) || !security.ValidToken(lease) {
 		return Task{}, fail("VALIDATION_FAILED")

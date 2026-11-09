@@ -5,8 +5,8 @@ import (
 	"slices"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
 func (s *Service) preparationSourceExecutor(ctx context.Context, q transaction.Executor, tenant, workspace, id string) error {
@@ -54,6 +54,13 @@ func (s *Service) PreparationHistoryWithin(ctx context.Context, q transaction.Ex
 	if e := s.preparationSourceExecutor(ctx, q, tenant, workspace, id); e != nil {
 		return Node{}, e
 	}
+	if q.Dialect() == transaction.PostgreSQL {
+		n, e := s.lockedInstalledPostgresNode(ctx, q, tenant, workspace, id, nil)
+		if e != nil {
+			return Node{}, preparationSourceError(e)
+		}
+		return n, nil
+	}
 	installed, e := nodeTenant(ctx, q)
 	if e != nil {
 		return Node{}, preparationSourceError(e)
@@ -66,6 +73,27 @@ func (s *Service) PreparationHistoryWithin(ctx context.Context, q transaction.Ex
 		return Node{}, preparationSourceError(e)
 	}
 	return n, nil
+}
+
+// The lateral lookup depends on the locked installation row so the node
+// lock cannot come first, even when a competing transaction holds the node.
+func (s *Service) lockedInstalledPostgresNode(ctx context.Context, q transaction.Executor, tenant, workspace, id string, credentialHash *[]byte) (Node, error) {
+	fields := pairedNodeFields
+	if credentialHash != nil {
+		fields += ",n.credential_hash"
+	}
+	p := s.Identity.Config.Policy().Nodes
+	row := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `WITH installed AS MATERIALIZED (
+		SELECT i.tenant_id FROM installation_state i JOIN tenants t ON t.id=i.tenant_id
+		WHERE i.id=1 AND i.bootstrap_complete AND t.status='active' AND i.tenant_id=$3
+		FOR SHARE OF i,t
+	)
+	SELECT `+fields+` FROM installed CROSS JOIN LATERAL (
+		SELECT n.* FROM managed_nodes n
+		WHERE n.tenant_id=installed.tenant_id AND n.workspace_id=$4 AND n.id=$5
+		FOR UPDATE OF n
+	) n`, p.OnlineSeconds, p.OfflineSeconds, tenant, workspace, id))
+	return scanNodeRow(row, nil, credentialHash)
 }
 
 func preparationNodeProfile(n Node) bool {
