@@ -85,14 +85,26 @@ func ListReleaseMetadata(ctx context.Context, appRoot *os.Root, key ed25519.Publ
 // VerifyInitialRelease verifies the exact release chosen for a fresh install.
 // appRoot contains the app's private, immutable version directories. The
 // caller supplies the app, platform and release pin from its trusted selection.
+// Signed metadata must match the selection before the payloads are opened.
 func VerifyInitialRelease(ctx context.Context, appRoot *os.Root, key ed25519.PublicKey, maximumPayloadBytes int64, request InitialReleaseRequest) (InstallBundle, error) {
 	if appRoot == nil || len(key) != ed25519.PublicKeySize || maximumPayloadBytes <= 0 ||
 		!validID(request.AppID) || !request.Pin.valid() {
 		return InstallBundle{}, transitionError("supply a trusted app and release pin and a payload limit")
 	}
-	release, err := verifyCatalogVersion(ctx, appRoot, key, maximumPayloadBytes, request.Pin)
+	if err := ctx.Err(); err != nil {
+		return InstallBundle{}, err
+	}
+	root, err := openCatalogVersion(appRoot, request.Pin.Version)
 	if err != nil {
 		return InstallBundle{}, err
+	}
+	defer root.Close()
+	release, index, err := readSignedRelease(root, key)
+	if err != nil {
+		return InstallBundle{}, err
+	}
+	if release.Manifest.Version != request.Pin.Version || index.digest != request.Pin.BundleSHA256 {
+		return InstallBundle{}, transitionError("the signed release differs from the selected pin")
 	}
 	if release.Manifest.ID != request.AppID {
 		return InstallBundle{}, transitionError("the selected release belongs to a different app")
@@ -100,7 +112,7 @@ func VerifyInitialRelease(ctx context.Context, appRoot *os.Root, key ed25519.Pub
 	if err := checkTransitionPlatform(release.Manifest, request.PlatformVersion); err != nil {
 		return InstallBundle{}, err
 	}
-	return release, nil
+	return verifyReleasePayloads(ctx, root, release, index, maximumPayloadBytes, true)
 }
 
 // VerifyReleaseTransition selects an adjacent signed release and runs the
