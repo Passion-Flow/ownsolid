@@ -36,12 +36,18 @@ and `Content-Type: application/json`. Use the key's public model alias.
 {"model":"public-alias","input":"Summarize the operating procedure.","max_output_tokens":128,"store":false,"stream":true}
 ```
 
-The text subset accepts a nonempty string `input`, optional string
-`instructions`, `max_output_tokens`, `temperature` and `stream`.
+The foreground text subset accepts a nonempty string input or a nonempty
+array of message items. An item has a system, user or assistant role and a
+nonempty content string or array of exact input_text parts. The item's
+type can be omitted or set to message. The gateway joins text parts in
+order with newline separators. Optional instructions go before the
+input turns. The existing message, context and output bounds apply.
+
 Storage and background execution default to false and accept only false
-when supplied. The gateway rejects item arrays, tools, structured output,
-reasoning parameters and conversation state. There is no stored response
-to retrieve or cancel by ID.
+when supplied. Tool and output items, item IDs, non-text content,
+structured output, reasoning parameters and conversation state are
+rejected. Foreground requests have no stored result to retrieve or
+cancel by ID.
 
 Omit `stream` or set it to false to receive one JSON response. A streaming
 caller receives named SSE events with increasing sequence numbers and stable

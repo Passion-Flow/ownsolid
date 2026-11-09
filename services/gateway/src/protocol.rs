@@ -39,20 +39,61 @@ where
 {
     match MessageText::deserialize(decoder)? {
         MessageText::String(text) => Ok(text),
-        MessageText::Parts(parts) => {
-            let mut content = String::new();
-            for TextPart::Text { text } in parts {
-                if text.is_empty() {
-                    return Err(serde::de::Error::custom("empty text part"));
-                }
-                if !content.is_empty() {
-                    content.push('\n');
-                }
-                content.push_str(&text);
-            }
-            Ok(content)
-        }
+        MessageText::Parts(parts) => join_text_parts(
+            parts.into_iter().map(|TextPart::Text { text }| text),
+        )
+        .ok_or_else(|| serde::de::Error::custom("empty message text parts")),
     }
+}
+
+fn join_text_parts(parts: impl IntoIterator<Item = String>) -> Option<String> {
+    let mut content = String::new();
+    for text in parts {
+        if text.is_empty() {
+            return None;
+        }
+        if !content.is_empty() {
+            content.push('\n');
+        }
+        content.push_str(&text);
+    }
+    (!content.is_empty()).then_some(content)
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum ResponsesTextInput {
+    String(String),
+    Messages(Vec<ResponsesInputMessage>),
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ResponsesInputMessage {
+    #[serde(default, rename = "type")]
+    _kind: ResponsesInputItemKind,
+    role: Role,
+    content: ResponsesMessageText,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum ResponsesInputItemKind {
+    #[default]
+    Message,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum ResponsesMessageText {
+    String(String),
+    Parts(Vec<ResponsesTextPart>),
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+enum ResponsesTextPart {
+    InputText { text: String },
 }
 
 #[derive(Default, Deserialize)]
@@ -99,13 +140,13 @@ impl ChatRequest {
         Self::validate(parse_input(bytes, limits)?, limits)
     }
 
-    /// Translate the foreground string-input Responses subset to text generation.
+    /// Translate foreground Responses text inputs to text generation.
     pub fn parse_responses(bytes: &[u8], limits: &Limits) -> Result<Self> {
         #[derive(Deserialize)]
         #[serde(deny_unknown_fields)]
         struct Input {
             model: String,
-            input: String,
+            input: ResponsesTextInput,
             instructions: Option<String>,
             max_output_tokens: Option<u32>,
             temperature: Option<f64>,
@@ -127,10 +168,27 @@ impl ChatRequest {
                 content,
             });
         }
-        messages.push(Message {
-            role: Role::User,
-            content: input.input,
-        });
+        match input.input {
+            ResponsesTextInput::String(content) => messages.push(Message {
+                role: Role::User,
+                content,
+            }),
+            ResponsesTextInput::Messages(items) => {
+                if items.is_empty() {
+                    return Err("invalid_request_error");
+                }
+                for ResponsesInputMessage { role, content, .. } in items {
+                    let content = match content {
+                        ResponsesMessageText::String(text) => text,
+                        ResponsesMessageText::Parts(parts) => join_text_parts(
+                            parts.into_iter().map(|ResponsesTextPart::InputText { text }| text),
+                        )
+                        .ok_or("invalid_request_error")?,
+                    };
+                    messages.push(Message { role, content });
+                }
+            }
+        }
         Self::from_text(
             input.model,
             messages,

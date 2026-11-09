@@ -1974,6 +1974,70 @@ async fn read_responses_delta(response: &mut reqwest::Response) -> Vec<u8> {
 }
 
 #[tokio::test]
+async fn responses_text_input_items_use_the_stateless_text_path() {
+    let fixture = Fixture::new().await;
+    let payload = |input: Value, stream: bool| {
+        json!({
+            "model": "public-alias", "input": input, "instructions": "Preserve turns",
+            "max_output_tokens": 16, "stream": stream, "store": false
+        })
+    };
+    for input in [
+        json!([]),
+        json!([{"role": "user", "content": []}]),
+        json!([{"type": "message", "role": "user", "content": [{"type": "input_text", "text": ""}]}]),
+        json!([{"type": "message", "role": "user", "content": [{"type": "input_image", "image_url": "https://example.invalid/image"}]}]),
+        json!([{"type": "message", "id": "msg_previous", "role": "user", "content": "synthetic"}]),
+        json!([{"type": "function_call_output", "call_id": "call_fixture", "output": "synthetic"}]),
+    ] {
+        let response = responses_request(&fixture, false)
+            .json(&payload(input, false))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+    assert_eq!(fixture.state.model_checks.load(Ordering::SeqCst), 0);
+    assert!(fixture.state.admissions.lock().unwrap().is_empty());
+    assert_eq!(fixture.state.tokenizations.load(Ordering::SeqCst), 0);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 0);
+
+    let items = json!([
+        {"role": "user", "content": [{"type": "input_text", "text": "First"}, {"type": "input_text", "text": "Second"}]},
+        {"type": "message", "role": "assistant", "content": "Earlier answer"},
+        {"type": "message", "role": "user", "content": "Continue"}
+    ]);
+    *fixture.state.expected_messages.lock().unwrap() = Some(json!([
+        {"role": "system", "content": "Preserve turns"},
+        {"role": "user", "content": "First\nSecond"},
+        {"role": "assistant", "content": "Earlier answer"},
+        {"role": "user", "content": "Continue"}
+    ]));
+    let response = responses_request(&fixture, false)
+        .json(&payload(items.clone(), false))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let value: Value = response.json().await.unwrap();
+    assert_eq!(value["status"], "completed");
+    assert_eq!(value["usage"]["total_tokens"], 9);
+    let response = responses_request(&fixture, true)
+        .json(&payload(items, true))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let events = responses_events(&response.bytes().await.unwrap());
+    let terminal = events.last().unwrap();
+    assert_eq!(terminal["type"], "response.completed");
+    assert_eq!(terminal["response"]["usage"]["total_tokens"], 9);
+    assert_eq!(fixture.state.tokenizations.load(Ordering::SeqCst), 2);
+    assert_eq!(fixture.state.generations.load(Ordering::SeqCst), 2);
+    assert_eq!(crate::reporting::flush(fixture.app()).await.unwrap(), 2);
+}
+
+#[tokio::test]
 async fn responses_shape_and_site_authority_precede_backend_work() {
     let fixture = Fixture::new().await;
     for (body, code) in [
