@@ -191,6 +191,15 @@
               "format": "uuid",
               "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
             }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
           }
         ],
         "responses": {
@@ -214,7 +223,8 @@
               }
             }
           }
-        }
+        },
+        "description": "List the current Portal user's conversations in the selected workspace. Omit q for the existing unfiltered list. Send q once with a nonblank term of up to 120 Unicode characters and no control characters. Search matches application names and completed-turn questions or plain-text answers as case-insensitive literal substrings. Continue a search with the same exact term, workspace, and Portal login session. Search uses PostgreSQL. Other storage engines return STORAGE_UNAVAILABLE for search."
       },
       "parameters": [
         {

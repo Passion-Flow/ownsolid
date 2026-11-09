@@ -31,6 +31,7 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** @description List the current Portal user's conversations in the selected workspace. Omit q for the existing unfiltered list. Send q once with a nonblank term of up to 120 Unicode characters and no control characters. Search matches application names and completed-turn questions or plain-text answers as case-insensitive literal substrings. Continue a search with the same exact term, workspace, and Portal login session. Search uses PostgreSQL. Other storage engines return STORAGE_UNAVAILABLE for search. */
         get: operations["ListApplicationConversations"];
         put?: never;
         post?: never;
@@ -158,6 +159,7 @@ export interface operations {
                 limit?: number;
                 cursor?: string;
                 workspace_id: string;
+                q?: string;
             };
             header?: never;
             path: {
