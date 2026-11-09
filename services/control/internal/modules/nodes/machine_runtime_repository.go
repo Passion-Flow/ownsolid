@@ -8,11 +8,11 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/jackc/pgx/v5"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/jackc/pgx/v5"
 )
 
 // The common CredentialWithin owner rechecks the exact credential under node lock.
@@ -141,18 +141,25 @@ func (s *Service) heartbeatSelected(ctx context.Context, id, credential string, 
 		if e != nil {
 			return fail("VALIDATION_FAILED")
 		}
-		changed, e := q.Exec(ctx, nodeSQL(q, `UPDATE managed_nodes SET facts=$1,last_heartbeat_at=clock_timestamp(),updated_at=clock_timestamp() WHERE tenant_id=$2 AND workspace_id=$3 AND id=$4`, `UPDATE managed_nodes SET facts=CAST(? AS JSON),last_heartbeat_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND id=?`, `UPDATE managed_nodes SET facts=?,last_heartbeat_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND id=?`, nodeJSON(q, raw), n.TenantID, n.WorkspaceID, n.ID))
+		out.Status = n.Status
+		if !active {
+			out.Status = "disabled"
+		}
+		if q.Dialect() == transaction.PostgreSQL {
+			e = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `UPDATE managed_nodes SET facts=$1,last_heartbeat_at=clock_timestamp(),updated_at=clock_timestamp() WHERE tenant_id=$2 AND workspace_id=$3 AND id=$4 RETURNING last_heartbeat_at`, raw, n.TenantID, n.WorkspaceID, n.ID)).Scan(&out.ServerTime)
+			if errors.Is(e, sql.ErrNoRows) {
+				return fail("AGENT_UNAUTHORIZED")
+			}
+			return e
+		}
+		changed, e := q.Exec(ctx, nodeSQL(q, "", `UPDATE managed_nodes SET facts=CAST(? AS JSON),last_heartbeat_at=UTC_TIMESTAMP(6),updated_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND id=?`, `UPDATE managed_nodes SET facts=?,last_heartbeat_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)),updated_at=SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) WHERE tenant_id=? AND workspace_id=? AND id=?`, nodeJSON(q, raw), n.TenantID, n.WorkspaceID, n.ID))
 		if e != nil {
 			return e
 		}
 		if changed != 1 {
 			return fail("AGENT_UNAUTHORIZED")
 		}
-		out.Status = n.Status
-		if !active {
-			out.Status = "disabled"
-		}
-		return q.QueryRow(ctx, nodeSQL(q, "SELECT clock_timestamp()", "SELECT UTC_TIMESTAMP(6)", `SELECT SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) FROM DUAL`)).Scan(&out.ServerTime)
+		return q.QueryRow(ctx, nodeSQL(q, "", "SELECT UTC_TIMESTAMP(6)", `SELECT SYS_EXTRACT_UTC(CURRENT_TIMESTAMP(6)) FROM DUAL`)).Scan(&out.ServerTime)
 	})
 	if e != nil {
 		return wire.Disposition{}, e
