@@ -369,8 +369,8 @@ function stepStates(item: ModelImport, sending: boolean): [StepState, StepState,
       return ['done', 'failed', 'pending'];
     case 'cancelled':
       return item.uploaded_bytes < item.expected_bytes
-        ? ['failed', 'pending', 'pending']
-        : ['done', 'failed', 'pending'];
+        ? ['cancelled', 'pending', 'pending']
+        : ['done', 'cancelled', 'pending'];
   }
 }
 

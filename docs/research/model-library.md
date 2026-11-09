@@ -221,3 +221,16 @@ flows below still need evidence from publication through the corresponding views
 - A person imports the real model from the console with the network disconnected from the registries:
   uploads, sees verification, opens the model, retires it. The same run interrupts and resumes an upload.
 - `backup` and `restore` bring a published model back on an installation that lost it.
+
+## Cancelled import steps (S-201)
+
+The live first-chunk discard showed a Discarded import with a Failed
+upload step. The stored import state distinguishes cancellation from a
+verification failure. [GitHub check conclusions](https://docs.github.com/en/rest/checks/runs)
+likewise distinguish cancellation from failure. Keep completed steps
+and mark the step that was stopped with a neutral icon and a translated
+Cancelled label. This follows [WCAG use of color](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color)
+and the existing step timeline. Treating a stopped step as pending
+would suggest that the import can still run. The live early-discard
+and Chinese completed-upload cases cover the two positions. No new
+dependency is needed.
