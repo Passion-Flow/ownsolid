@@ -23,7 +23,7 @@ const root = join(import.meta.dirname, '..', '..', '..', '..');
 const { readContract } = createRequire(import.meta.url)(
   join(root, 'tools', 'codegen', 'openapi-paths.mjs'),
 ) as {
-  readContract(source: string): {
+  readContract: (source: string) => {
     document: { paths: Record<string, Record<string, { 'x-audiences'?: string[] }>> };
   };
 };
