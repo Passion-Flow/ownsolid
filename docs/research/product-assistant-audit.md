@@ -40,8 +40,9 @@ SCI added [WriteProductAssistantWithin](../../services/control/internal/modules/
 for PostgreSQL. It borrows the operation transaction, stores the assistant
 actor in fixed metadata, and keeps the authenticated user in the subject
 field. It checks the supplied installation tenant, workspace and subject.
-The chain binds the metadata digest. The safe list and export still lack
-readable assistant actor attribution. See the
+The chain binds the metadata digest. The safe workspace list verifies that
+commitment. The public list and export still need readable assistant actor
+attribution. See the
 [writer contract](product-assistant-audit-writer.md).
 
 Using the signed-in user's ID as both actor and subject would erase delegation.
@@ -109,6 +110,42 @@ navigation case. Rejecting scoped output on failed audit is preferable to a
 separate post-response transaction, an optional write or default-workspace
 attribution.
 
+## Authenticated HTTP handoff
+
+Stage an exact dispatcher-relative `POST /api/v1/product-assistant/commands`
+route for the existing deterministic navigation and read commands. The JSON
+object accepts `command` and an optional `cursor`. It carries no audience,
+workspace, subject or request identifier. An invocation appends an audit
+event, so use POST under the existing browser write-method guard. See
+[RFC 9110 safe methods](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.1)
+and the [OWASP CSRF guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).
+Do not put command text in the URL or echo it in a problem response.
+
+Construct `productagent.New` with the same application service used by the
+ordinary portal routes in `identity/http.New`, join its error into startup
+initialization, and store the resulting adapter on `identity/http.Handler`.
+In `identity/http.Handler.api`, dispatch `productagenthttp.Owns(path)` beside
+the existing application branch after the shared origin, CSRF and license guards.
+Call `Authenticate(ctx, session, audience)` and pass its result and the
+existing `requestID` to the adapter. Preserve the standard success and problem
+envelopes. The provisional path is global in the HTTP router and the command
+still resolves and verifies the session's workspace. The API owner decides
+the public route and schema. A cell-qualified route also needs a matching
+family in `platform/cellroute`.
+
+Do not add a second login or CSRF path. Use Go's build overlay for the test
+until the HTTP owner registers the route. Exercise the real dispatcher with
+the shared private-CA TLS fixture, synthetic license fixture and PostgreSQL.
+Verify that a forged request ID cannot change audit correlation, both
+entrances enforce session audience,
+scope selectors are refused, a cursor from another workspace is unusable,
+and an audit append error releases no result. Read actor attribution through
+`ListWorkspaceAuditForActor` and inspect the stored metadata for submitted text.
+This route exposes no write command or plan confirmation. No runtime or test
+dependency is added. The overlay generator uses the repository's existing
+[Python toolchain](https://docs.python.org/3/license.html) under the PSF License,
+which permits commercial use, redistribution with notices and offline use.
+
 [PostgreSQL transaction semantics](https://www.postgresql.org/docs/18/tutorial-transactions.html)
 support returning the result only after the shared commit. Use a
 [deferred constraint trigger](https://www.postgresql.org/docs/18/sql-createtrigger.html)
@@ -131,6 +168,12 @@ new and historical events with the offline verifier.
 
 The disconnected command fixture verifies the stored actor metadata and
 distinct subject, request ID, non-default workspace, cross-tenant denial,
-rollback and the original portal reads. AGT-107 stays open for authenticated
-HTTP wiring, workspace-free navigation, confirmed writes and the shared
-audit projection and export acceptance.
+rollback and the original portal reads.
+
+`TestAuthenticatedAssistantHTTP` passed in a network-isolated Linux arm64
+container with PostgreSQL 18.6 and pgvector 0.8.7. A build-only overlay mounted
+the adapter in the real dispatcher. The fixture verified both entrances,
+server correlation, the scoped audit reader, fixed metadata, cross-workspace
+cursor denial and retry after an audit append refusal. AGT-107 stays open for
+production HTTP registration, workspace-free navigation, confirmed writes
+and the public audit response and export.
