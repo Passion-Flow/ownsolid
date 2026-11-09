@@ -148,9 +148,13 @@ installation files and PostgreSQL cluster. The backup directory can be offline.
   decided. On a fresh target there is no original application to start.
 - `RESTORE_COMPLETE` means the checked replacement is serving. If it had
   already started serving, recovery keeps writes made since the restore.
-- `RESTORE_NO_RECOVERY_PENDING` means there is no unfinished recorded exchange.
-  An interruption during scratch loading can leave an unreferenced
-  `ownsolid_restore_<id>` database, with the original still in service.
+- `RESTORE_LOAD_ROLLED_BACK` means the original database stayed active. An
+  unverified scratch database is retained as `ownsolid_failed_restore_<id>`
+  if it still exists. Retry the restore with the original backup after
+  addressing the interruption.
+- `RESTORE_NO_RECOVERY_PENDING` means there is no unfinished recorded restore.
+  An interruption before the installer records the scratch OID can leave an
+  unreferenced `ownsolid_restore_<id>` database. The original stays in service.
 
 If the candidate cannot start, retry after fixing the cause or run
 `recover-restore --config install.yaml --rollback` to serve on the original.

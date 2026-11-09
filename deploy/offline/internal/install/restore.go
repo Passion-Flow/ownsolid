@@ -180,44 +180,30 @@ func (o *operation) restore(ctx context.Context, from string, manifest backupMan
 	if e != nil {
 		return e
 	}
-	i := restoreIntent{Version: 1, Site: site, Phase: restorePending, Suffix: hex.EncodeToString(suffix), Fresh: fresh, PITRActivation: manifest.pitrActivation()}
+	i := restoreIntent{Version: 1, Site: site, Phase: restoreLoading, Suffix: hex.EncodeToString(suffix), Fresh: fresh, PITRActivation: manifest.pitrActivation()}
 	incoming := i.incomingName()
 	if e = o.createDatabase(ctx, incoming); e != nil {
 		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
 	}
-	// Once a recovery record might be visible, its databases belong to recovery.
-	journaled := false
-	defer func() {
-		if !journaled {
-			o.dropDatabase(ctx, incoming)
-		}
-	}()
-	if e = o.loadDump(ctx, incoming, filepath.Join(from, backupDatabaseName)); e != nil {
-		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
-	}
-	if o.signedRestore {
-		version, err := o.schemaVersion(ctx, incoming)
-		if err != nil || version != manifest.SchemaVersion {
-			return &StepError{Step: "load", Code: "INSTALL_BUNDLE_SCHEMA_MISMATCH", Detail: "the dump schema does not match the signed release"}
-		}
-	}
-	tables, e := o.fingerprint(ctx, incoming)
-	if e != nil {
-		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: e.Error()}
-	}
-	if !slices.Equal(tables, manifest.Tables) {
-		return &StepError{Step: "load", Code: "INSTALL_RESTORE_CONTENT_MISMATCH", Detail: "the restored tables differ from what the backup recorded"}
-	}
-	fmt.Fprintf(o.out, "step load: ok tables=%d\n", len(tables))
 	catalog, e := o.restoreCatalog(ctx, i)
 	if e != nil {
-		return e
+		return fmt.Errorf("INSTALL_RESTORE_LOAD_FAILED: could not identify scratch database %s: %w", incoming, e)
 	}
 	i.Cluster, i.Original, i.Incoming = catalog.cluster, catalog.current, catalog.incoming
 	if catalog != i.before() || i.Original == 0 || i.Incoming == 0 || i.Original == i.Incoming {
 		return restoreIdentityError()
 	}
-	journaled = true
+	if e = writeReleaseRecord(o.config, restoreIntentName, i); e != nil {
+		return restoreRecoveryRequired(fmt.Errorf("could not record scratch database %s: %w", incoming, e))
+	}
+	if e = o.loadRestoreCandidate(ctx, incoming, filepath.Join(from, backupDatabaseName), manifest); e != nil {
+		return o.failRestoreLoad(ctx, i, e)
+	}
+	catalog, e = o.restoreCatalog(ctx, i)
+	if e != nil || catalog != i.before() {
+		return restoreRecoveryRequired(errors.Join(restoreIdentityError(), e))
+	}
+	i.Phase = restorePending
 	if e = writeReleaseRecord(o.config, restoreIntentName, i); e != nil {
 		return restoreRecoveryRequired(e)
 	}
@@ -240,6 +226,27 @@ func (o *operation) restore(ctx context.Context, from string, manifest backupMan
 		return o.failRestore(ctx, i, &StepError{Step: "swap", Code: "INSTALL_RESTORE_SWAP_FAILED", Detail: e.Error()})
 	}
 	return o.finishRestored(ctx, i)
+}
+
+func (o *operation) loadRestoreCandidate(ctx context.Context, incoming, archive string, manifest backupManifest) error {
+	if err := o.loadDump(ctx, incoming, archive); err != nil {
+		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: err.Error()}
+	}
+	if o.signedRestore {
+		version, err := o.schemaVersion(ctx, incoming)
+		if err != nil || version != manifest.SchemaVersion {
+			return &StepError{Step: "load", Code: "INSTALL_BUNDLE_SCHEMA_MISMATCH", Detail: "the dump schema does not match the signed release"}
+		}
+	}
+	tables, err := o.fingerprint(ctx, incoming)
+	if err != nil {
+		return &StepError{Step: "load", Code: "INSTALL_RESTORE_LOAD_FAILED", Detail: err.Error()}
+	}
+	if !slices.Equal(tables, manifest.Tables) {
+		return &StepError{Step: "load", Code: "INSTALL_RESTORE_CONTENT_MISMATCH", Detail: "the restored tables differ from what the backup recorded"}
+	}
+	fmt.Fprintf(o.out, "step load: ok tables=%d\n", len(tables))
+	return nil
 }
 
 // admitKeys reports whether this is an empty installation that takes its files from the
