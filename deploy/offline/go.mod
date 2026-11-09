@@ -10,12 +10,12 @@ require (
 	github.com/Passion-Flow/ownsolid/pkg/operatorsocket v0.0.0
 	github.com/Passion-Flow/ownsolid/tools/release/offline v0.0.0
 	go.yaml.in/yaml/v3 v3.0.5
+	golang.org/x/sys v0.49.0
 )
 
 require (
 	filippo.io/hpke v0.4.0 // indirect
 	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
 )
 
 replace github.com/Passion-Flow/ownsolid/api => ../../api

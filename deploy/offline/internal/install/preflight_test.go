@@ -171,6 +171,12 @@ func TestSignedRestoreIsolatedDocker(t *testing.T) {
 	testIsolatedDocker(t, isolatedSignedRestore)
 }
 
+// TestCoordinatedBackupIsolatedDocker exercises the local maintenance barrier
+// against real PostgreSQL and the approved model without a network uplink.
+func TestCoordinatedBackupIsolatedDocker(t *testing.T) {
+	testIsolatedDocker(t, isolatedCoordinatedBackup)
+}
+
 type isolatedDockerScenario int
 
 const (
@@ -180,11 +186,13 @@ const (
 	isolatedPITR
 	isolatedEncryptedBackup
 	isolatedSignedRestore
+	isolatedCoordinatedBackup
 )
 
 func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	t.Helper()
 	recovery := scenario == isolatedSignedRestore
+	coordinated := scenario == isolatedCoordinatedBackup
 	signed, upgrade := scenario == isolatedSigned || scenario == isolatedUpgrade || recovery, scenario == isolatedUpgrade
 	pitr, encrypted := scenario == isolatedPITR, scenario == isolatedEncryptedBackup
 	installer := os.Getenv("OWNSOLID_E2E_INSTALLER")
@@ -290,12 +298,12 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 			t.Fatal(err)
 		}
 	}
-	if pitr || encrypted || recovery {
+	if pitr || encrypted || recovery || coordinated {
 		c.Resources.ControlMemory, c.Resources.PostgresMemory = "256m", "512m"
 		c.Resources.MetricsMemory, c.Resources.LogsMemory = "256m", "256m"
 		c.Resources.ControlCPUs, c.Resources.PostgresCPUs = "1", "1"
 		c.Resources.MetricsCPUs, c.Resources.LogsCPUs = "1", "1"
-		if recovery && exists(filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar")) {
+		if (recovery || coordinated) && exists(filepath.Join(os.Getenv("OWNSOLID_E2E_MODEL_ARCHIVE"), "model.tar")) {
 			c.Resources.ControlMemory = "512m"
 		}
 	}
@@ -384,9 +392,9 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	})
 	t.Run("installs and safely repeats with its own HTTPS port in use", func(t *testing.T) {
 		command(t, "preflight", "INSTALL_PREFLIGHT_PASSED", false)
-		if signed || pitr || encrypted {
+		if signed || pitr || encrypted || coordinated {
 			command(t, "apply", "INSTALL_COMPLETE", false)
-			if pitr || encrypted {
+			if pitr || encrypted || coordinated {
 				c.Images.ArchiveFile = ""
 			}
 		} else {
@@ -428,6 +436,12 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 	if encrypted {
 		if !t.Failed() {
 			assertEncryptedBackupIsolatedDocker(t, installer, config, run)
+		}
+		return
+	}
+	if coordinated {
+		if !t.Failed() {
+			assertCoordinatedBackupIsolatedDocker(t, installer, config, licenseKey, run)
 		}
 		return
 	}
@@ -598,12 +612,6 @@ func testIsolatedDocker(t *testing.T, scenario isolatedDockerScenario) {
 			t.Log("support archive reports the selected configuration and two redacted installer events")
 		}
 	})
-	if recovery {
-		if !t.Failed() {
-			assertSignedRestoreIsolatedDocker(t, installer, config, signedArchive, verification, licenseKey, run)
-		}
-		return
-	}
 	if !signed {
 		t.Run("scheduled backups verify before expiring older copies", func(t *testing.T) {
 			schedule := c.BackupSchedule
