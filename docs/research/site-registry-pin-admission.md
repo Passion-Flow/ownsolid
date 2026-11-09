@@ -26,9 +26,9 @@ separates publishing from serving.
   approval and license authority.
 - [Registry configuration](../../services/control/internal/platform/registryconfig/config.go)
   has one endpoint, used for writes, verification and consumer references.
-  The control configuration owner needs a separate typed private source,
-  with its own endpoint, allowed CIDRs, CA and protected credential, and to
-  pass it to the module at startup. Read-only source permissions and a separate
+  The module now accepts a separate typed private source, with its own
+  endpoint, allowed CIDRs, CA and protected credential. The control
+  configuration owner still needs to pass its file at startup. Read-only source permissions and a separate
   writable tenant endpoint are mandatory. User requests continue to select a
   signed asset ID. The server derives the exact digest and repository.
 - Once those prerequisites are available, the import must verify source
@@ -81,3 +81,60 @@ signed source digests and license notices. A different workspace could
 not retrieve it, and replay returned it after the prepared source became
 unavailable. This does not qualify a DEL-108 bundle-to-pin import.
 NET-102 remains open.
+
+## Read-only consumer slice
+
+Use an explicit protected source settings file at module composition. The
+typed file owns the site HTTPS origin, private CIDR allowlist, CA file and
+credential file. The writable configuration still owns the tenant registry,
+and the two endpoints and credential pairs must be distinct. Reuse the
+existing private dial, certificate and redirect rules for both. The source
+wrapper can only construct GET requests under the signed asset's exact
+`ownsolid/release/<id>` repository. A remote Location, tag, host or
+repository from a user, manifest or provider never supplies request routing.
+The [OCI pull contract](https://github.com/opencontainers/distribution-spec/blob/v1.1.1/spec.md#pulling-manifests)
+defines digest pulls and descriptor verification. [Go's HTTP client](https://go.dev/src/net/http/client.go)
+supports refusing redirects before sending a second request.
+
+Before any source I/O, keep existing actor, license, idempotency and signed
+prepared proof checks. Use the verified archive's manifest and blob
+descriptors to stream the exact site responses into private CAS staging.
+Keep the verified tagless archive for offline export. Missing, redirected,
+wrong-size or wrong-digest bytes fail preparation without falling back to
+the archive or writing the tenant Registry. Once all reads verify, bind the
+source origin/CA fingerprint, repository and selected manifest digest to
+the immutable inventory with its existing signed asset, archive digest and
+license notices. Existing inventories omit the new receipt. A committed
+key replay retains its original pin. A complete staged inventory supports
+explicit reconciliation after a SQL rollback without reading the site
+again. An incomplete stage retains the existing abandon and discard flow.
+
+The module constructor is additive and the control composition owner still
+needs to pass the protected configuration file. Current DEL-108 proof
+admission remains the release owner's boundary. Legacy bundle admission,
+tenant permissions and destination routing are unchanged. Verify against
+the small loopback Distribution/PostgreSQL fixture with distinct source
+credentials and the same authenticated import entry point. Check wrong
+origin and trust, missing source bytes despite a usable archive, successful
+source readback and a post-read SQL rollback followed by explicit retry.
+No new runtime dependency, model or dataset is added.
+EOF'
+### Verified consumer boundary
+
+The loopback runner passed with real PostgreSQL and writable and read-only
+Distribution listeners using different credentials. The module constructor
+selected the read-only listener. Its import refused the absent signed manifest
+even though the local archive and the other site blobs were available.
+The writable tenant path stayed empty and key replay returned the same
+unbound intent. The incomplete intent was explicitly abandoned and discarded.
+
+After seeding the approved manifest, import streamed the site closure into
+CAS. An actual SQL bind rollback left the exact staged inventory intact.
+Explicit reconciliation completed the same tenant pin with source I/O
+disabled. The immutable SQL inventory matched the local cache and preserved
+the site receipt, signed archive digests and license notices. The destination
+verified every descriptor, and a different Workspace could not read the pin.
+Unit refusals covered a missing trust or credential file, a source using the
+destination authority or credential pair, a redirect toward the destination,
+and asset names that could escape the release namespace. The same integration
+run kept the incompatible current proof blocked before reservation.
