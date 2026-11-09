@@ -85,6 +85,40 @@ rows on a keyless replica so an enabled factor cannot be bypassed.
 Verify that unconfigured routes are absent, tenant overposting is
 rejected, and existing account and Portal requests retain their contract.
 
+### Startup configuration boundary
+
+Follow the SSO owner's enabled-mode startup pattern in
+[the SSO service](../../services/control/internal/modules/sso/service.go).
+The identity owner takes explicit enabled intent and a dedicated file
+reference. An omitted configuration leaves legacy startup and the
+common session-issuance guard intact. Enabled configuration loads and
+validates the reference, verifies the required PostgreSQL projections
+and decrypts active or still-confirmable factors before publishing a
+usable keyring. Refuse invalid configuration with fixed codes, including
+when the configured key ID exists but its key cannot decrypt stored state.
+
+Keep the candidate's `active` and `keys` JSON format and AES-GCM
+associated-data layout so retained seed rows remain readable. Match the
+protected file pattern used by SSO with a canonical absolute path, a
+private process-owned parent and file, no symlinks or hard links, and
+one bounded read from a pinned descriptor.
+[Go's rooted file API](https://pkg.go.dev/os#OpenRoot) supports that
+descriptor boundary. Use the standard
+[strict JSON decoder](https://pkg.go.dev/encoding/json/v2) to reject
+duplicate, unknown or case-aliased fields and canonical base64 for each
+32-byte key. The mail loader checks file mode and parses keys but can
+accept unknown or duplicate JSON fields and reads the file by path after
+checking it. A second read for stricter validation would let the two
+checks observe different content.
+
+Use the existing Go, pgx and PostgreSQL licenses above. The startup
+tests exercise missing and permissive files, malformed content and
+private error diagnostics, a legacy database without the factor schema,
+and valid and unusable retained encrypted factors. The shared config
+owner maps its eventual `security.admin_totp` policy to this typed
+initializer before constructing the public handler. Migration, restore
+and public composition remain separate.
+
 ### Separate candidate checks
 
 Enrollment confirmation returns ten recovery values once, in the same
@@ -108,8 +142,8 @@ The candidate tests run the real identity HTTP handler on TLS against
 PostgreSQL 18.6 with pgvector 0.8.7. The Linux arm64 container runs with
 `--network none`. The embedded fixture creates only the factor, challenge
 and recovery tables after applying the repository migrations.
-The five candidate cases passed three consecutive runs after replaying
-the candidate onto the mainline containing the bilingual audit catalogs.
+The six candidate cases and the session-rotation and shared-host
+regressions passed three consecutive runs on the disconnected fixture.
 
 - `TestAdminTOTPCandidateHTTPS` covers enrollment, encrypted storage,
   refusal of permissive or absent key files, session revocation,
@@ -129,6 +163,17 @@ the candidate onto the mainline containing the bilingual audit catalogs.
   while the enrolled factor still gates the new password.
 - `TestAdminTOTPCandidateUnmountedHTTPS` verifies the existing login
   representation and strict password change input on a keyless deployment.
+- `TestAdminTOTPCandidateStartupHTTPS` verifies that legacy startup works
+  without the migration, enabled startup refuses missing relations or
+  columns, and a retained key survives rotation and still authorizes an
+  enrolled browser. A missing retained key or wrong bytes under the same
+  ID refuses startup.
+
+`TestAdminTOTPStartupRejectsUnsafeKeyReferences` and
+`TestAdminTOTPKeyringReadsCandidateCiphertextWithoutExposingKeys` exercise
+private file permissions, links, size bounds, strict content validation,
+redacted diagnostics and compatibility with the earlier candidate's
+ciphertext.
 
 With `PROJECT_ONE_TEST_DSN` pointing at a disposable PostgreSQL fixture,
 run `go -C services/control test ./internal/modules/identity/http -run '^TestAdminTOTPCandidate' -count=3`.
@@ -146,11 +191,13 @@ Before enabling enrollment, integrate these owner boundaries:
   migration and update `SchemaVersion` and `TableCount` in the database
   owner, schema inventory, backup, restore and expiry cleanup. Startup
   must validate the full schema and all active key versions before serving.
-- Control configuration and `cmd/server/selected_database.go` need a
-  dedicated protected key-file reference, installation provisioning,
-  startup loading, restore and rotation. Keep the factor gate authoritative
-  for every serving replica. Federated Admin issuance in the SSO owner must
-  join that gate before issuing a full session.
+- Control configuration and `cmd/server/selected_database.go` must map
+  the dedicated policy to `identity.AdminTOTPConfiguration` and call
+  `Service.ConfigureAdminTOTP` after selecting the migrated database and
+  before constructing the handler. Treat any returned error as fatal to
+  that startup. Installation provisioning, restore and rotation must
+  supply all live key versions to each replica. Federated Admin issuance
+  in the SSO owner must join the factor gate before issuing a full session.
 - The identity OpenAPI and generated clients must describe the pending
   login response, completion, enrollment, recovery display, revocation
   and the inline proof. Web needs an Admin challenge screen and account
