@@ -71,15 +71,18 @@ func runBundle(command string, args []string, out io.Writer) error {
 		return install.RollbackBundle(ctx, *config, *archive, verification, install.ExecRunner{}, out)
 	}
 	var result bundle.Result
-	if command == "prepare-bundle" {
+	switch command {
+	case "prepare-bundle":
 		result, err = bundle.UnpackCurrent(ctx, verification, *archive, *output)
-	} else {
+	case "agent-notices":
+		result, err = bundle.InspectAgent(ctx, verification, *archive)
+	default:
 		result, err = bundle.InspectCurrent(ctx, verification, *archive)
 	}
 	if err != nil {
 		return err
 	}
-	if command == "bundle-notices" {
+	if command == "bundle-notices" || command == "agent-notices" {
 		return json.NewEncoder(out).Encode(bundleNotices(result))
 	}
 	return json.NewEncoder(out).Encode(result)

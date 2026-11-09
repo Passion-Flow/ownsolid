@@ -296,6 +296,46 @@ permissions from filenames or supplying a transitive inventory from only
 image tags. A production release still needs the exact notices from its
 selected dependency, model, and plug-in inputs.
 
+### Read-only Agent notice inventory
+
+Go embeds the linked module versions in the finished executable. Use
+[Go build information](https://pkg.go.dev/debug/buildinfo) from the exact
+binary with the build toolchain's license and pinned source archives. The
+manifest alone does not describe packages linked into a binary. The notice
+inventory command should verify the dedicated Agent profile with the existing
+trust policy and use the same stable release, path, checksum and reference
+output as the Compose notice view. Refuse a wrong profile, untrusted signer
+or any changed notice or payload before output. The command needs neither an
+Agent install nor Control access.
+
+The Go 1.27.3 Linux amd64 fixture links 13 external modules. The exact
+module archives supply the following first-level terms and notices:
+
+| Terms | Linked modules |
+| --- | --- |
+| Apache-2.0 | [nftables v0.3.0](https://github.com/google/nftables/tree/v0.3.0), [Prometheus client model v0.6.3](https://github.com/prometheus/client_model/tree/v0.6.3), [Prometheus common v0.72.1](https://github.com/prometheus/common/tree/v0.72.1), [Google RPC definitions ac3dfec99bb1](https://github.com/googleapis/go-genproto/tree/ac3dfec99bb1/googleapis/rpc) and [gRPC Go v1.85.0](https://github.com/grpc/grpc-go/tree/v1.85.0) |
+| MIT | [netlink fbb4dce95f42](https://github.com/mdlayher/netlink/tree/fbb4dce95f42) and [socket v0.5.0](https://github.com/mdlayher/socket/tree/v0.5.0) |
+| BSD-3-Clause | [goautoneg a7dc8b61c822](https://github.com/munnerz/goautoneg/tree/a7dc8b61c822), [Go x/net v0.61.0](https://go.googlesource.com/net/+/refs/tags/v0.61.0), [Go x/sync v0.24.0](https://go.googlesource.com/sync/+/refs/tags/v0.24.0), [Go x/sys v0.49.0](https://go.googlesource.com/sys/+/refs/tags/v0.49.0), [Go x/text v0.43.0](https://go.googlesource.com/text/+/refs/tags/v0.43.0), and [protobuf v1.36.12](https://github.com/protocolbuffers/protobuf-go/tree/v1.36.12) |
+
+These terms allow commercial and offline use and permit redistribution with
+their respective license, attribution and notice conditions. Retain
+applicable NOTICE and PATENTS files and review package-specific terms
+against the final linked package set. The site supplies systemd, which the
+Agent archive does not redistribute. There are no new dependencies, models
+or datasets in this change. This is a fixture inventory. The production
+signer, first-party distribution terms and approved inventory for the exact
+production artifacts remain prerequisites to closing DEL-110.
+
+The Linux amd64 notice drill used the same private mount and network
+namespaces as the [Agent delivery check](agent-offline-enrollment.md#disconnected-linux-amd64-signed-media-check).
+The temporary-signed archive SHA-256 was
+`ee49466a2f1296532b9a70349a1d0760c0e03e4a63a95c2eb34ec83be68c1e33`.
+The native `agent-notices` command returned 23 sorted notice paths, hashes
+and signed asset references. An independent read of the mounted notice
+files and manifest matched the output. An unrelated trust root and changed
+signed payload produced errors and no inventory on stdout. The recorder
+saw only the three IPv4, IPv6 and DNS probes.
+
 ### Prepared directory membership on Linux
 
 The Linux factory suite can add an entry while the directory still has the

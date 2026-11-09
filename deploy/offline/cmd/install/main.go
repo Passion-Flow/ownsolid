@@ -18,6 +18,7 @@ const usage = "usage: ownsolid-install validate|preflight|apply|status --config 
 	"       ownsolid-install verify-bundle --bundle <archive.tar.gz> --verification <policy.json>\n" +
 	"       ownsolid-install bundle-notices --bundle <archive.tar.gz> --verification <policy.json>\n" +
 	"       ownsolid-install prepare-bundle --bundle <archive.tar.gz> --verification <policy.json> --output <new directory>\n" +
+	"       ownsolid-install agent-notices --bundle <archive.tar.gz> --verification <policy.json>\n" +
 	"       ownsolid-install install-agent --bundle <archive.tar.gz> --verification <policy.json> --config <agent-site.json>\n" +
 	"       ownsolid-install apply-bundle --bundle <archive.tar.gz> --verification <policy.json> --config <site.yaml>\n" +
 	"       ownsolid-install registry-bundle --bundle <archive.tar.gz> --verification <policy.json> --config <registry.yaml>\n" +
@@ -54,7 +55,7 @@ func run(args []string, out io.Writer) error {
 	if len(args) < 1 {
 		return errors.New(usage)
 	}
-	if args[0] == "install-agent" || args[0] == "verify-bundle" || args[0] == "bundle-notices" || args[0] == "prepare-bundle" || args[0] == "registry-bundle" || args[0] == "helm-images" || args[0] == "apply-bundle" || args[0] == "upgrade-plan" || args[0] == "upgrade-bundle" || args[0] == "upgrade-patch" || args[0] == "rollback-bundle" || args[0] == "restore-bundle" {
+	if args[0] == "install-agent" || args[0] == "agent-notices" || args[0] == "verify-bundle" || args[0] == "bundle-notices" || args[0] == "prepare-bundle" || args[0] == "registry-bundle" || args[0] == "helm-images" || args[0] == "apply-bundle" || args[0] == "upgrade-plan" || args[0] == "upgrade-bundle" || args[0] == "upgrade-patch" || args[0] == "rollback-bundle" || args[0] == "restore-bundle" {
 		return runBundle(args[0], args[1:], out)
 	}
 	if args[0] == "pitr" {
