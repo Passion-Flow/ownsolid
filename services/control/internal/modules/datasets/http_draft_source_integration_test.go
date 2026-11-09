@@ -338,23 +338,15 @@ func parquetDraftFixtureConfig(t *testing.T, decoderDirectory string) *datasets.
 
 func writeParquetDraftFixture(t *testing.T, python string, invalid bool) []byte {
 	t.Helper()
-	const script = `
-import sys
-import pyarrow as pa
-import pyarrow.parquet as pq
-
-prompt = None if sys.argv[1] == "invalid" else "Who, me?"
-pq.write_table(pa.table({
-    "source_id": ["first", "second"],
-    "prompt": [prompt, "Color"],
-    "completion": ["Yes.\nAgain.", "Blue"],
-}), sys.stdout.buffer, row_group_size=1, write_page_checksum=True)
-`
+	script, err := filepath.Abs("testdata/draft_source_fixture.py")
+	if err != nil {
+		t.Fatal(err)
+	}
 	mode := "valid"
 	if invalid {
 		mode = "invalid"
 	}
-	output, err := exec.CommandContext(t.Context(), python, "-I", "-B", "-c", script, mode).Output()
+	output, err := exec.CommandContext(t.Context(), python, "-I", "-B", script, mode).Output()
 	if err != nil {
 		t.Fatalf("write real Parquet fixture: %v", err)
 	}
