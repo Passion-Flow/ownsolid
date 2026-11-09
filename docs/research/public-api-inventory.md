@@ -473,3 +473,41 @@ Both exact filters returned their single schema-valid event. A misspelled
 action returned VALIDATION_FAILED. The SDK projection retained the complete
 server allowlist, and the pinned Go and Python builders sent both added
 values and an existing value unchanged.
+
+## Training collection cursor bounds
+
+[OpenAPI query parameters](https://spec.openapis.org/oas/v3.1.1.html#parameter-object)
+describe the input limits clients can rely on. The
+[JSON Schema string limit](https://json-schema.org/draft/2020-12/json-schema-validation#name-maxlength)
+is expressed in characters. The ownsolid cursors are opaque URL-safe
+base64, so the character and byte limits agree for valid tokens.
+[AIP-158](https://google.aip.dev/158#opacity) recommends replaying a
+returned token with the same query without interpreting its contents.
+
+The Admin and Portal training job, attempt, checkpoint and recovery
+lists call the [shared paginator](../../services/control/internal/platform/pagination/page.go),
+which rejects cursors longer than 512 bytes. The metrics list uses a
+[separate sequence cursor](../../services/control/internal/modules/training/metrics.go)
+with a 2048-byte limit. The published contract declared 2048 for all ten
+operations. Use the existing per-operation schema to match those two
+bounds. Increasing the server limit would expand what it processes and
+removing the limit would advertise unsupported input. Preserve the
+operation identities, wire format, response schemas and handling of
+previously issued cursors. The [SDK licences](sdk.md#licenses) apply.
+No dependency, model or data set is added.
+
+Verify both entrances against the actual HTTPS dispatcher with PostgreSQL.
+Check same-scope cursor replay and the server's INVALID_CURSOR problem
+at each bound. Confirm the eight list operations document 512 and both
+metrics operations retain 2048. Regenerate Web API and Help and validate
+that pinned Go and Python clients still emit server-issued cursors
+unchanged.
+
+The Linux amd64 loopback TLS fixture passed all ten Admin and Portal
+operations against PostgreSQL 18.6. Each endpoint accepted an in-scope
+cursor at its limit and returned schema-valid INVALID_CURSOR for the
+first larger base64 encoding. The metric fixture padded a real returned
+token for each entrance and still read the correct second metric.
+Pinned generation preserved the four Go attempt and metric requests and
+all ten Python collection requests. The public inventory reported no
+changed operation identities.
