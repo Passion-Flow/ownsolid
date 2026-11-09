@@ -34,6 +34,11 @@ type scenario struct {
 
 func setup(t *testing.T) scenario {
 	t.Helper()
+	return setupDeployment(t, true)
+}
+
+func setupDeployment(t *testing.T, seedModel bool) scenario {
+	t.Helper()
 	account := fixture.New(t)
 	password := fixture.Bootstrap(t, account)
 	a := fixture.Login(t, account, "admin@example.invalid", password, "admin")
@@ -53,10 +58,13 @@ func setup(t *testing.T) scenario {
 	if e != nil {
 		t.Fatal(e)
 	}
-	model := uuid.NewString()
-	manifest, _ := json.Marshal(wire.ApprovedModel())
-	if _, e = account.DB.Exec(context.Background(), "INSERT INTO model_versions(id,tenant_id,workspace_id,name,model_key,catalog_digest,manifest,state,created_by) VALUES($1,$2,$3,'Synthetic metadata only',$4,$5,$6,'ready',$7)", model, a.Me.Workspace.TenantID, a.Me.Workspace.ID, wire.ApprovedModel().ModelKey, wire.ModelCatalogDigest(), manifest, a.Me.User.ID); e != nil {
-		t.Fatal(e)
+	var model string
+	if seedModel {
+		model = uuid.NewString()
+		manifest, _ := json.Marshal(wire.ApprovedModel())
+		if _, e = account.DB.Exec(context.Background(), "INSERT INTO model_versions(id,tenant_id,workspace_id,name,model_key,catalog_digest,manifest,state,created_by) VALUES($1,$2,$3,'Synthetic metadata only',$4,$5,$6,'ready',$7)", model, a.Me.Workspace.TenantID, a.Me.Workspace.ID, wire.ApprovedModel().ModelKey, wire.ModelCatalogDigest(), manifest, a.Me.User.ID); e != nil {
+			t.Fatal(e)
+		}
 	}
 	h.Inference = &wire.InferenceObservation{GPUs: []wire.NVIDIAGPU{{UUID: gpuID, Name: "Synthetic GPU", DriverVersion: "580.1", MemoryTotalMiB: 16384, MemoryFreeMiB: 16384, ComputeCapability: 8, MIGMode: "Disabled", ObservedAt: time.Now().UTC()}}, ObservedAt: time.Now().UTC()}
 	if _, e = n.Heartbeat(context.Background(), enrolled.NodeID, enrolled.Credential, h); e != nil {
