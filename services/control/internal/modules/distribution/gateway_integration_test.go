@@ -15,6 +15,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -52,6 +53,7 @@ const (
 	applicationBudget
 	promptCapacityRelease
 	lostOutcomeReply
+	restartAfterLostOutcomeReply
 )
 
 // Actual Go/Rust/PostgreSQL transport and persistence; backend replies are explicitly synthetic.
@@ -160,7 +162,11 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 		control.Config.Handler = handler.MachineHandler()
 	}
 	var lostReply *outcomeReplyLoss
-	if mode == lostOutcomeReply {
+	if mode == restartAfterLostOutcomeReply {
+		installTestUsageLedger(t, c)
+		handler.Distribution.Service.ProjectGatewayReceipts = true
+	}
+	if mode == lostOutcomeReply || mode == restartAfterLostOutcomeReply {
 		lostReply = newOutcomeReplyLoss(access.gateway.Gateway.ID)
 		control.Config.Handler = lostReply.wrap(t, control.Config.Handler)
 	}
@@ -274,7 +280,7 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 	listener.Close()
 	limits := map[string]any{"active_requests": 2, "queued_requests": 2, "backend_idle_connections": 2, "connect_seconds": 1, "control_seconds": 1, "request_seconds": 5, "idle_seconds": 2, "header_seconds": 1, "shutdown_seconds": 2, "outcome_retry_seconds": 1}
 	configuration := map[string]any{"gateway_id": access.gateway.Gateway.ID, "node_id": c.node.NodeID, "listen_address": listen, "backend_address": strings.TrimPrefix(backend.URL, "http://"), "control_origin": control.URL, "control_ca_file": filepath.Join(root, "ca.pem"), "gateway_credential_file": filepath.Join(root, "credential"), "tls_certificate_file": filepath.Join(root, "certificate.pem"), "tls_private_key_file": filepath.Join(root, "key.pem"), "state_directory": state, "limits": limits}
-	if mode == promptCapacityRelease {
+	if mode == promptCapacityRelease || mode == restartAfterLostOutcomeReply {
 		limits["outcome_retry_seconds"] = 30
 	}
 	if lostReply != nil {
@@ -297,25 +303,21 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 		t.Fatal(e)
 	}
 	defer log.Close()
-	command := exec.Command(binary, "serve", "--config", configPath)
-	command.Stdout = log
-	command.Stderr = log
-	if e = command.Start(); e != nil {
-		t.Fatal(e)
+	startGateway := func() *gatewayTestProcess {
+		t.Helper()
+		child := exec.Command(binary, "serve", "--config", configPath)
+		child.Stdout, child.Stderr = log, log
+		if err := child.Start(); err != nil {
+			t.Fatal(err)
+		}
+		done := make(chan error, 1)
+		go func() { done <- child.Wait() }()
+		return &gatewayTestProcess{child: child, done: done}
 	}
-	exited := make(chan error, 1)
-	go func() { exited <- command.Wait() }()
+	process := startGateway()
 	defer func() {
-		command.Process.Signal(syscall.SIGTERM)
-		select {
-		case e := <-exited:
-			if e != nil {
-				t.Error("native gateway exit", e)
-			}
-		case <-time.After(8 * time.Second):
-			command.Process.Kill()
-			<-exited
-			t.Error("native gateway shutdown timeout")
+		if err := process.stop(syscall.SIGTERM); err != nil {
+			t.Error("native gateway shutdown", err)
 		}
 		if output := os.Getenv("PROJECT_ONE_EVIDENCE_ROOT"); output != "" {
 			data, e := os.ReadFile(logPath)
@@ -431,7 +433,20 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 		return body
 	}
 	if lostReply != nil {
-		lostReply.verify(t, c, access, state, request("/v1/chat/completions", *access.key.Secret, chat(false)), &generations)
+		var restart func(verifyStopped func())
+		if mode == restartAfterLostOutcomeReply {
+			restart = func(verifyStopped func()) {
+				t.Helper()
+				old := process
+				process = nil
+				if err := old.stop(syscall.SIGKILL); err != nil {
+					t.Fatal("native gateway did not exit on SIGKILL", err)
+				}
+				verifyStopped()
+				process = startGateway()
+			}
+		}
+		lostReply.verify(t, c, access, state, request("/v1/chat/completions", *access.key.Secret, chat(false)), &generations, restart)
 		return
 	}
 	response := request("/v1/models", *access.key.Secret, nil)
@@ -832,5 +847,38 @@ func verifyPromptCapacityRelease(t *testing.T, c scenario, access access, reques
 			}
 			time.Sleep(10 * time.Millisecond)
 		}
+	}
+}
+
+type gatewayTestProcess struct {
+	child *exec.Cmd
+	done  <-chan error
+}
+
+func (p *gatewayTestProcess) stop(signal syscall.Signal) error {
+	if p == nil {
+		return nil
+	}
+	if err := p.child.Process.Signal(signal); err != nil && !errors.Is(err, os.ErrProcessDone) {
+		p.child.Process.Kill()
+		<-p.done
+		return err
+	}
+	select {
+	case err := <-p.done:
+		if signal == syscall.SIGTERM {
+			return err
+		}
+		var exited *exec.ExitError
+		if errors.As(err, &exited) {
+			if status, ok := exited.Sys().(syscall.WaitStatus); ok && status.Signaled() && status.Signal() == signal {
+				return nil
+			}
+		}
+		return fmt.Errorf("expected exit on %s, got %v", signal, err)
+	case <-time.After(8 * time.Second):
+		p.child.Process.Kill()
+		<-p.done
+		return errors.New("native gateway shutdown timeout")
 	}
 }
