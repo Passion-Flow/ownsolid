@@ -269,17 +269,55 @@ See the [wire contract and native evidence](../../../../../docs/research/offline
 ### Long retention for fleet health aggregates
 
 Run the [fleet recording rules](alerting/fleet-rollup-rules.yaml) in a separate
-vmalert process. Point -datasource.url at the short-retention raw store and
--remoteWrite.url at a second VictoriaMetrics instance with a longer
--retentionPeriod. Give the two stores disjoint data directories. Use the raw
-store for node drilldowns and the long store for the
-ownsolid:cell_nodes_observed:count and ownsolid:cell_nodes_reachable:count
-series. A zero reachable count is meaningful only when the observed count
-exists for the same cell.
+vmalert process. Set its datasource URL to the raw VictoriaMetrics instance
+and its remote-write URL to a second instance with an independent longer
+retention and storage directory. Keep the ingestion, evaluation and query
+interfaces private. Only the trusted scraper may write the node health
+series, and only the evaluator may write the rollup series. Discovery must
+assign and overwrite tenant_id, workspace_id, site_id, cell_id and node_id,
+with exactly one trusted ownsolid-node target per enrolled node. Keep the
+existing site/cell operational series out of workspace views.
 
-The native test above also verifies that vmalert writes these aggregates
-only to the long store. The operator sets the retention periods on each
-VictoriaMetrics instance.
+The shared startup already loads the protected monitoring JSON. The installer
+owner can provision the two stores and add this optional object to that file:
+
+    "fleet_history": {
+      "raw_origin": "https://raw-metrics.example.invalid",
+      "long_origin": "https://long-metrics.example.invalid",
+      "raw_horizon_seconds": 172800,
+      "max_range_seconds": 7776000,
+      "settling_seconds": 60
+    }
+
+Choose a raw horizon within actual raw retention and a settling delay covering
+scrape, evaluation and remote-write lag. Use private HTTPS origins trusted by
+Control's system CA store. Plain HTTP is restricted to loopback IP literals.
+The same origin cannot represent both tiers. Omitting the long origin allows
+raw-only reads within the raw horizon. Omitting the policy disables history.
+
+The Admin API owner should map the already authenticated and Origin-checked
+request to Service.GetFleetHistory with the workspace, whole-second start and
+end, and Control's request ID. The service checks the current installed
+tenant and workspace twice and commits the existing diagnostic audit before
+releasing counts. The API should publish the returned tier, evaluated grid
+bounds, step and sparse points. A missing point is unobserved. Reachable zero
+with a positive observed count is a real observation. Report
+MONITORING_HISTORY_NOT_CONFIGURED and MONITORING_LONG_TIER_NOT_CONFIGURED
+as configuration errors, MONITORING_RAW_TIER_UNAVAILABLE and
+MONITORING_LONG_TIER_UNAVAILABLE as retryable store failures, and
+MONITORING_HISTORY_RANGE_INVALID as an invalid time range. Do not retry a
+long-tier request against raw. Keep the VictoriaMetrics query endpoints
+private and the existing current snapshot contract intact.
+
+For the Linux amd64 acceptance run, export OWNSOLID_TEST_POSTGRES_IMAGE to
+the preloaded, verified PostgreSQL 18.6 and pgvector 0.8.7 image ID. Set
+OWNSOLID_TEST_VICTORIA_METRICS and OWNSOLID_TEST_VMALERT to the verified
+v1.155.0 binary paths. Run from the repository root with namespace access:
+
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh
+
+The runner uses loopback only and stops all of its processes and container.
+See the [scope, test and scale evidence](../../../../../docs/research/telemetry-retention-tiers.md#scoped-history-read).
 
 ### Node exporter journal alert
 
