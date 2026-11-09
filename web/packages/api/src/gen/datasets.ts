@@ -213,6 +213,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/tokenizer-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview training tokenization for a dataset draft
+         * @description Read the first bounded page of draft rows in line order using the approved tokenizer for a ready model in the same workspace. The Admin session resolves the workspace from the selected dataset. Requires an installed preview runtime. The request takes no query parameters or idempotency key. The sample limit is 1 through 8 and the selected source IDs, prompts and completions can total at most 64 KiB in UTF-8. The token budget is 32 through 2,048. Completion token counts include EOS. The overflow fields are omitted on an exact fit or when the total is below budget. Otherwise the index is the zero-based first token outside the budget, with its prompt, completion or eos section. The preview leaves the draft unchanged and does not truncate training input. The server rechecks authority before returning text.
+         */
+        post: operations["adminPreviewDatasetTokenizer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}": {
         parameters: {
             query?: never;
@@ -572,6 +595,29 @@ export interface paths {
         put?: never;
         /** @description Queue publication for the current draft revision in the authorized workspace. Omit test_basis_points for the existing train and validation split. Test and validation ratios target connected source groups. Each ratio must be from 100 through 5000 basis points and their sum must be at most 9000 for a three-way split. Omit deduplication for exact duplicate removal. The near_prompt_v1 policy groups similar prompts before splitting and removes eligible near duplicates. Three-way splitting groups similar prompts even with exact removal. Invalid ratios or policy values return HTTP 400 with VALIDATION_FAILED. Replaying the same request and Idempotency-Key returns the existing job. Reusing the key with a different valid ratio or policy returns HTTP 409 with IDEMPOTENCY_CONFLICT. A three-way job fails with DATASET_SPLIT_INSUFFICIENT_GROUPS if fewer than three connected groups can be assigned. A job whose near-prompt comparison exhausts its work budget fails with DATASET_NEAR_DUPLICATE_BUDGET_EXCEEDED. */
         post: operations["portalPublishDataset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/tokenizer-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview training tokenization for a dataset draft
+         * @description Read the first bounded page of draft rows in line order using the approved tokenizer for a ready model in the same workspace. The Portal session must have draft read access in the selected workspace. Requires an installed preview runtime. The request takes no query parameters or idempotency key. The sample limit is 1 through 8 and the selected source IDs, prompts and completions can total at most 64 KiB in UTF-8. The token budget is 32 through 2,048. Completion token counts include EOS. The overflow fields are omitted on an exact fit or when the total is below budget. Otherwise the index is the zero-based first token outside the budget, with its prompt, completion or eos section. The preview leaves the draft unchanged and does not truncate training input. The server rechecks authority before returning text.
+         */
+        post: operations["portalPreviewDatasetTokenizer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -978,6 +1024,33 @@ export interface components {
             /** @enum {string} */
             deduplication?: "near_prompt_v1";
         };
+        DatasetTokenizerPreviewRequest: {
+            /** Format: uuid */
+            model_id: string;
+            sample_limit: number;
+            maximum_tokens: number;
+        };
+        DatasetTokenizerPreviewSample: {
+            line_number: number;
+            content_sha256: string;
+            rendered_prompt: string;
+            completion: string;
+            eos: string;
+            prompt_tokens: number;
+            completion_tokens: number;
+            total_tokens: number;
+            first_excess_token_index?: number;
+            /** @enum {string} */
+            first_excess_section?: "prompt" | "completion" | "eos";
+        };
+        DatasetTokenizerPreview: {
+            model_catalog_sha256: string;
+            maximum_tokens: number;
+            samples: components["schemas"]["DatasetTokenizerPreviewSample"][];
+        };
+        DatasetTokenizerPreviewResponse: {
+            data: components["schemas"]["DatasetTokenizerPreview"];
+        };
         RetireDataset: {
             expected_revision: number;
             reason: string;
@@ -1047,7 +1120,120 @@ export interface components {
             data: components["schemas"]["DatasetVersion"];
         };
     };
-    responses: never;
+    responses: {
+        /** @description Authorized training tokenization for the sampled draft rows. */
+        DatasetTokenizerPreviewResult: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["DatasetTokenizerPreviewResponse"];
+            };
+        };
+        /** @description VALIDATION_FAILED for an invalid JSON body, request limit, model UUID or query field. */
+        DatasetTokenizerPreviewInvalid: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description AUTH_REQUIRED when the session is absent. AUTH_SESSION_EXPIRED when it has expired or was revoked, including while tokenization was running. */
+        DatasetTokenizerPreviewUnauthenticated: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description ACCESS_DENIED when the caller lacks dataset access. CSRF_INVALID or ORIGIN_REJECTED for the browser security checks. LICENSE_NEW_BUSINESS_UNAVAILABLE when the installation does not admit this POST. */
+        DatasetTokenizerPreviewDenied: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description RESOURCE_NOT_FOUND when the optional preview runtime is not enabled, or the workspace, model or route is unavailable in scope. DATASET_NOT_FOUND when the dataset or draft is absent or outside the selected scope. */
+        DatasetTokenizerPreviewNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description DATASET_FILE_INVALID when an approved tokenizer asset is missing, changed or failed integrity verification. */
+        DatasetTokenizerPreviewInvalidAsset: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description PAYLOAD_TOO_LARGE when the JSON body or the sampled data exceeds its size limit. */
+        DatasetTokenizerPreviewTooLarge: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description UNSUPPORTED_MEDIA_TYPE unless the body is application/json with optional UTF-8 charset. */
+        DatasetTokenizerPreviewUnsupportedMedia: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description DATASET_EMPTY_SOURCE when no rows can be sampled. DATASET_VALIDATION_FAILED when a sampled row is invalid for training, including a reserved token. */
+        DatasetTokenizerPreviewInvalidSamples: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description RATE_LIMITED while another preview holds the runtime slot. Retry after the indicated delay. */
+        DatasetTokenizerPreviewBusy: {
+            headers: {
+                /** @description Time to wait before retrying, in seconds. */
+                "Retry-After": number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description DATASET_PROCESSOR_TIMEOUT when the tokenizer exceeds its time limit. DATASET_PROCESSOR_MEMORY_EXCEEDED when it exceeds its memory limit. DATASET_DATA_INVALID for an invalid runtime result. DATASET_STORAGE_UNAVAILABLE or STORAGE_UNAVAILABLE when storage or the runtime cannot be used. SERVICE_NOT_READY, LICENSE_STORED_STATE_INVALID or LICENSE_CONFIGURATION_REQUIRED can also prevent admission. */
+        DatasetTokenizerPreviewUnavailable: {
+            headers: {
+                /** @description Time to wait before retrying, in seconds. */
+                "Retry-After": number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description Stable scoped error; no private paths/raw records/diagnostics */
+        DatasetTokenizerPreviewProblem: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -1634,6 +1820,41 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+        };
+    };
+    adminPreviewDatasetTokenizer: {
+        parameters: {
+            query?: never;
+            header: {
+                Origin: string;
+                "X-CSRF-Token": string;
+            };
+            path: {
+                site_id: string;
+                cell_id: string;
+                dataset_id: string;
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatasetTokenizerPreviewRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["DatasetTokenizerPreviewResult"];
+            400: components["responses"]["DatasetTokenizerPreviewInvalid"];
+            401: components["responses"]["DatasetTokenizerPreviewUnauthenticated"];
+            403: components["responses"]["DatasetTokenizerPreviewDenied"];
+            404: components["responses"]["DatasetTokenizerPreviewNotFound"];
+            409: components["responses"]["DatasetTokenizerPreviewInvalidAsset"];
+            413: components["responses"]["DatasetTokenizerPreviewTooLarge"];
+            415: components["responses"]["DatasetTokenizerPreviewUnsupportedMedia"];
+            422: components["responses"]["DatasetTokenizerPreviewInvalidSamples"];
+            429: components["responses"]["DatasetTokenizerPreviewBusy"];
+            503: components["responses"]["DatasetTokenizerPreviewUnavailable"];
+            default: components["responses"]["DatasetTokenizerPreviewProblem"];
         };
     };
     adminGetDatasetJob: {
@@ -2536,6 +2757,42 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+        };
+    };
+    portalPreviewDatasetTokenizer: {
+        parameters: {
+            query?: never;
+            header: {
+                Origin: string;
+                "X-CSRF-Token": string;
+            };
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace_id: string;
+                dataset_id: string;
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatasetTokenizerPreviewRequest"];
+            };
+        };
+        responses: {
+            200: components["responses"]["DatasetTokenizerPreviewResult"];
+            400: components["responses"]["DatasetTokenizerPreviewInvalid"];
+            401: components["responses"]["DatasetTokenizerPreviewUnauthenticated"];
+            403: components["responses"]["DatasetTokenizerPreviewDenied"];
+            404: components["responses"]["DatasetTokenizerPreviewNotFound"];
+            409: components["responses"]["DatasetTokenizerPreviewInvalidAsset"];
+            413: components["responses"]["DatasetTokenizerPreviewTooLarge"];
+            415: components["responses"]["DatasetTokenizerPreviewUnsupportedMedia"];
+            422: components["responses"]["DatasetTokenizerPreviewInvalidSamples"];
+            429: components["responses"]["DatasetTokenizerPreviewBusy"];
+            503: components["responses"]["DatasetTokenizerPreviewUnavailable"];
+            default: components["responses"]["DatasetTokenizerPreviewProblem"];
         };
     };
     portalGetDatasetJob: {
