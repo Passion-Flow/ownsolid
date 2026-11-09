@@ -6,13 +6,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
+	"github.com/google/uuid"
 )
 
-// Import does not repeat external work on an idempotent replay. An interrupted
+// importSelected does not repeat external work on an idempotent replay. An interrupted
 // pin is retained and only an explicit new Reconcile intent may inspect/retry it.
 func (s *Service) importSelected(ctx context.Context, a identity.Auth, m Mutation, asset string, acknowledgeLicenses bool) (Pin, error) {
 	if !acknowledgeLicenses {
@@ -29,11 +30,41 @@ func (s *Service) importSelected(ctx context.Context, a identity.Auth, m Mutatio
 	default:
 		return Pin{}, failure("REGISTRY_IMPORT_BUSY")
 	}
+	intent := struct{ Asset, Reason, Archive, Manifest string }{
+		asset, m.Reason, s.config.ReleaseArchiveSHA256, s.config.ReleaseManifestSHA256,
+	}
+	fingerprint, e := mutationFingerprint(intent)
+	if e != nil {
+		return Pin{}, e
+	}
+	var out Pin
+	replayed := false
+	e = s.actor(ctx, a, m.WorkspaceID, true, true, func(ctx context.Context, q transaction.Executor, w workspaces.Workspace) error {
+		target, replay, e := lookupMutationWithin(ctx, q, a, w, "import", m.Key, fingerprint)
+		replayed = replay
+		if e != nil || !replay {
+			return e
+		}
+		out, e = pinWithin(ctx, q, w.TenantID, w.ID, target)
+		return e
+	})
+	if e != nil {
+		return Pin{}, e
+	}
+	if replayed {
+		return out, nil
+	}
+
+	// Unapproved input must not consume a durable slot. Verify outside SQL,
+	// then recheck the actor and idempotency key when reserving the intent.
+	signed, proof, e := bundle.PreparedImageProof(ctx, s.config.Verification, s.config.PreparedReleaseRoot, intent.Archive, intent.Manifest, asset)
+	if e != nil {
+		return Pin{}, failure("REGISTRY_RELEASE_INVALID")
+	}
 	pin, token := uuid.NewString(), uuid.NewString()
 	fresh := false
-	var out Pin
-	e := s.actor(ctx, a, m.WorkspaceID, true, true, func(ctx context.Context, q transaction.Executor, w workspaces.Workspace) error {
-		target, replay, e := mutationWithin(ctx, q, a, w, "import", pin, m, struct{ Asset, Reason, Archive, Manifest string }{asset, m.Reason, s.config.ReleaseArchiveSHA256, s.config.ReleaseManifestSHA256})
+	e = s.actor(ctx, a, m.WorkspaceID, true, true, func(ctx context.Context, q transaction.Executor, w workspaces.Workspace) error {
+		target, replay, e := mutationWithin(ctx, q, a, w, "import", pin, m, intent)
 		if e != nil {
 			return e
 		}
@@ -67,7 +98,7 @@ func (s *Service) importSelected(ctx context.Context, a identity.Auth, m Mutatio
 	if !fresh {
 		return out, nil
 	}
-	image, e := prepareImage(ctx, s.config, pin, asset)
+	image, e := prepareImage(ctx, s.config, pin, signed, proof)
 	if e != nil {
 		return Pin{}, e
 	}
