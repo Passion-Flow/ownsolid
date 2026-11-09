@@ -103,7 +103,8 @@ test('shows what someone else saved when the change came too late', async ({ pag
 test('offers a retry when it cannot load', async ({ page }) => {
   control.pacingProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
   await page.goto('/nodes/pacing');
-  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+  // The notice appears after the query has used both automatic retries.
+  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible({ timeout: 15_000 });
   control.pacingProblem = null;
   await page.getByRole('button', { name: 'Try again' }).click();
   await expect(heartbeat(page)).toHaveValue('10');
