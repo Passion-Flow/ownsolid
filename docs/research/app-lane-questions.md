@@ -234,3 +234,25 @@ exclusive retry expired while other local suites were still running.
 Run the full repository gate in an exclusive local window before pushing
 these APP commits. Browser shards may run serially with the same tests,
 followed by the remaining `make test` targets.
+
+## AGT-108 production model result boundary
+
+The existing assistant accepts authenticated deterministic commands. The
+registered model gateway publishes one text completion per response and rejects
+arbitrary tool calls. No assistant dispatcher binds a completion to the
+initiating session, authorized workspace and reviewed tool policy. The
+workflow and knowledge gateway callers have their own authority and do not
+supply that binding for the product assistant.
+
+To resume the production check, the identity and gateway owners must bind a
+read-only assistant inference route to current session and workspace
+authorization, a pinned local model alias and a trusted gateway transport.
+A returned completion stays typed text. Any future structured action must
+be admitted through the reviewed tool contract using current server scope.
+The assistant must derive destinations from its registered routes and keep
+confirmed writes behind the existing human confirmation boundary. With that
+route available, replay the retained adversarial outputs through the model
+result adapter and run live offline inference under the same restrictions.
+Verify no unreviewed tool call, caller destination, protected result or success
+audit. The command-adapter regression and offline scoring are separate
+evidence.
