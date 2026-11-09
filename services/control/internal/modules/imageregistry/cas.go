@@ -27,6 +27,7 @@ type cachedImage struct {
 	Archive               bundle.ImportReceipt  `json:"archive"`
 	Descriptors           []Descriptor          `json:"descriptors"`
 	Proof                 bundle.ImageProof     `json:"release_proof"`
+	SiteSource            *siteSourceReceipt    `json:"site_source,omitempty"`
 }
 type imageManifest struct {
 	SchemaVersion int    `json:"schemaVersion"`
@@ -129,7 +130,7 @@ func admitDisk(c Config) error {
 	}
 	return nil
 }
-func prepareImage(ctx context.Context, c Config, pin string, signed bundle.ImageProof, proof bundle.ImageProofResult) (cachedImage, error) {
+func prepareImage(ctx context.Context, c Config, site *siteReleaseSource, pin string, signed bundle.ImageProof, proof bundle.ImageProofResult) (cachedImage, error) {
 	if !validID(pin) {
 		return cachedImage{}, failure("VALIDATION_FAILED")
 	}
@@ -168,7 +169,12 @@ func prepareImage(ctx context.Context, c Config, pin string, signed bundle.Image
 	if receipt.TransportBytes > c.MaximumArchiveBytes {
 		return cachedImage{}, failure("REGISTRY_CAPACITY_REQUIRED")
 	}
-	if e = extractImage(ctx, c, root, stage, &out); e != nil {
+	if site == nil {
+		e = extractImage(ctx, c, root, stage, &out)
+	} else {
+		e = site.stage(ctx, c, root, stage, source.RuntimeBlobs(), &out)
+	}
+	if e != nil {
 		return cachedImage{}, e
 	}
 	raw, e := json.Marshal(out)
@@ -206,7 +212,6 @@ func extractImage(ctx context.Context, c Config, root *os.Root, stage string, ou
 	defer f.Close()
 	tr := tar.NewReader(&contextReader{ctx: ctx, r: f})
 	seen := map[string]bool{}
-	var manifestRaw []byte
 	for {
 		h, e := tr.Next()
 		if e == io.EOF {
@@ -246,15 +251,25 @@ func extractImage(ctx context.Context, c Config, root *os.Root, stage string, ou
 		if e != nil || n != h.Size || "sha256:"+hex.EncodeToString(hash.Sum(nil)) != digest {
 			return failure("REGISTRY_DIGEST_MISMATCH")
 		}
-		if digest == out.Inventory.ManifestDigest {
-			if n > c.Verification.MaximumMetadataBytes {
-				return failure("REGISTRY_IMAGE_INVALID")
-			}
-			manifestRaw, e = root.ReadFile(name)
-			if e != nil {
-				return e
-			}
-		}
+	}
+	if !seen["index.json"] || !seen["oci-layout"] {
+		return failure("REGISTRY_IMAGE_INVALID")
+	}
+	return finishStagedImage(ctx, c, root, stage, len(seen)-2, out)
+}
+
+func finishStagedImage(ctx context.Context, c Config, root *os.Root, stage string, blobCount int, out *cachedImage) error {
+	if !validDigest(out.Inventory.ManifestDigest) {
+		return failure("REGISTRY_IMAGE_INVALID")
+	}
+	f, e := root.Open(stage + "/blobs/" + out.Inventory.ManifestDigest[7:])
+	if e != nil {
+		return failure("REGISTRY_CONTENT_MISSING")
+	}
+	manifestRaw, e := io.ReadAll(io.LimitReader(&contextReader{ctx: ctx, r: f}, c.Verification.MaximumMetadataBytes+1))
+	e = joinedClose(f, e)
+	if e != nil || int64(len(manifestRaw)) > c.Verification.MaximumMetadataBytes {
+		return failure("REGISTRY_IMAGE_INVALID")
 	}
 	var m imageManifest
 	if len(manifestRaw) == 0 || release.UniqueJSON(manifestRaw, &m) != nil || m.SchemaVersion != 2 || m.MediaType != ociManifest && m.MediaType != dockerManifest || m.Config.Digest != out.Inventory.ConfigDigest || len(m.Config.URLs) > 0 || len(m.Layers) != len(out.Inventory.Layers) {
@@ -268,18 +283,18 @@ func extractImage(ctx context.Context, c Config, root *os.Root, stage string, ou
 		}
 		out.Descriptors = append(out.Descriptors, Descriptor{l.Digest, l.Size, l.MediaType, "layer"})
 	}
-	expected := map[string]bool{"index.json": true, "oci-layout": true}
+	expected := map[string]bool{}
 	for _, d := range out.Descriptors {
 		if !validDigest(d.Digest) || d.Size < 1 || d.Size > c.MaximumBlobBytes {
 			return failure("REGISTRY_IMAGE_INVALID")
 		}
-		expected["blobs/sha256/"+d.Digest[7:]] = true
+		expected[d.Digest] = true
 		sha, n, e := hashFile(ctx, root, stage+"/blobs/"+d.Digest[7:], c.MaximumBlobBytes)
 		if e != nil || sha != d.Digest || n != d.Size {
 			return failure("REGISTRY_DIGEST_MISMATCH")
 		}
 	}
-	if len(seen) != len(expected) {
+	if blobCount != len(expected) {
 		return failure("REGISTRY_IMAGE_INVALID")
 	}
 	return writePrivate(root, stage+"/manifest.json", manifestRaw)
@@ -302,7 +317,7 @@ func readCacheNamed(ctx context.Context, c Config, pin string) (cachedImage, err
 		return cachedImage{}, failure("REGISTRY_CONTENT_MISSING")
 	}
 	var out cachedImage
-	if release.StrictJSON(raw, &out) != nil || !release.ValidSHA256(out.ReleaseArchiveSHA256) || !release.ValidSHA256(out.ReleaseManifestSHA256) || out.Inventory.ManifestDigest != out.Asset.ImageID || out.Inventory.ConfigDigest != out.Asset.ImageConfigDigest || len(out.Descriptors) < 2 || out.Descriptors[0].Digest != out.Inventory.ManifestDigest {
+	if release.StrictJSON(raw, &out) != nil || !out.SiteSource.matches(out.Asset) || !release.ValidSHA256(out.ReleaseArchiveSHA256) || !release.ValidSHA256(out.ReleaseManifestSHA256) || out.Inventory.ManifestDigest != out.Asset.ImageID || out.Inventory.ConfigDigest != out.Asset.ImageConfigDigest || len(out.Descriptors) < 2 || out.Descriptors[0].Digest != out.Inventory.ManifestDigest {
 		return cachedImage{}, failure("REGISTRY_CONTENT_INVALID")
 	}
 	sha, n, e := hashFile(ctx, root, pin+"/archive.tar", c.MaximumArchiveBytes)
