@@ -342,3 +342,51 @@ an unknown attempt, a missing attempt flag, and cursors reused across
 attempts and collections. The independent Admin and Portal HTTPS fixture
 passed training intent, history, metric and recovery checks. The fixture
 did not execute a GPU worker.
+
+## Training checkpoint and recovery history (DEV-102, TRN-104)
+
+[PyTorch Elastic](https://docs.pytorch.org/docs/main/elastic/train_script.html)
+describes progress restored from a checkpoint after restart.
+[Kubeflow Trainer](https://trainer.kubeflow.org/en/latest/user-guides/trainjob-lifecycle.html)
+keeps the job lifecycle separate from the workers that execute it.
+Ownsolid retains the accepted checkpoint's producing attempt, optimizer
+step and receipt digest. Recovery history links the preceding attempt
+to a new one when dispatch occurs. A queued or withdrawn recovery can
+have no next attempt. A restart has no checkpoint reference.
+
+Use the two registered Admin GET operations in the
+[training API](../../api/openapi/v1/training/openapi.json). Keep the
+existing TLS session and workspace selection, with a single page of
+opaque continuation bounded to 512 bytes and at most 100 rows. Display
+the checkpoint identifiers and the recovery links in the existing
+table, JSON and YAML formats. Follow [AIP-158](https://google.aip.dev/158#opacity)
+by replaying the cursor on the same collection, job and workspace. The
+server rechecks access on each read. Local files cannot establish
+accepted checkpoint identity. A separate attempt filter or recovery
+mutation would expand the existing read contract.
+
+The current Cobra (Apache-2.0), Go and x/sys (BSD-3-Clause), and
+[SDK fixture licences](sdk.md#licenses) allow commercial and offline use
+and redistribution under their notice terms. The fixture adds no
+dependency, model or dataset.
+
+In a disconnected PostgreSQL and Admin HTTPS run, read both empty
+collections and page retained checkpoints and recovery events. Verify
+the exact job and attempt IDs, the completed and pending recovery links,
+stable retry and final page boundaries. Use actual recovery admission
+and dispatch with synthetic node and stop evidence. Use clearly labelled
+synthetic checkpoint metadata to isolate the read path. Exercise a
+different job, workspace and collection, and a revoked Admin session.
+The fixture qualifies the CLI metadata path. Checkpoint file sealing and
+real GPU resume have separate acceptance.
+
+The Linux amd64 compiled CLI passed the Admin HTTPS fixture on
+loopback-only PostgreSQL 18.6 with pgvector 0.8.7. It preserved the
+checkpoint digest, optimizer step and producing attempt on both pages.
+Recovery history retained the dispatched predecessor and successor and
+the still-pending intent without a successor. Empty and final pages,
+retry, help and table continuation passed. Both commands refused
+cross-job, cross-collection and cross-workspace cursors. Role removal
+and session revocation refused a saved cursor without history data.
+A fresh authorized session could use that cursor again. The separate
+Admin and Portal HTTPS training fixture also passed.
