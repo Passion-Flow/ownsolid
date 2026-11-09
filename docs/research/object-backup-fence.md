@@ -161,3 +161,88 @@ Run the [isolated runner](../../services/control/internal/modules/artifactstores
 with the verified local SeaweedFS executable and the preloaded PostgreSQL
 image ID. The installer and provider owners still own exclusion,
 separate backup storage, publication with the SQL dump, and restore.
+## Installer checkpoint boundary
+
+Use the existing PostgreSQL custom-format dump, table fingerprints and
+protected-file inventory inside a distinct object checkpoint manifest.
+[PostgreSQL custom archives](https://www.postgresql.org/docs/18/app-pgdump.html)
+carry a logical database export. Their contents cannot establish which
+external object bytes or source cluster they belong to. Bind the verified
+dump SHA-256, source cluster and database OID, site, operation, tenant,
+store and backend to the Control inventory digest. Match a trusted copy
+confirmation for the same scope and inventory. The coordinator supplies
+an identifier for the durable fence and the independently verified dump
+digest. These values are not recovered from the package itself.
+
+Read the exact private PAX copy produced by `BackupFence.CopyInventory`
+in `e03bbbab`. Bind the producer-confirmed archive size and SHA-256
+as well as the copy identifier. Require the canonical workspace and
+object paths in SQL order, followed by the sole `inventory.json`. The
+version 1 inventory digest uses Go JSON with `inventory_sha256` empty.
+Compare it with the trusted operation and the verified copy. Stream
+and verify every size and checksum. Refuse missing or unlisted objects,
+tombstone content, duplicate entries, unsafe headers and trailing bytes.
+Keep the tenant, workspace, object ID, SQL revision and ETag in the
+inventory. The digest is a byte identity. An
+[S3 ETag](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html)
+cannot substitute for the full SHA-256.
+
+Publish the object checkpoint manifest last with exclusive atomic
+placement and directory sync. The input directory must be private and
+already contain the durable dump and copy. Never place a version 1
+manifest in the object staging directory. The standard local and age
+paths refuse the object format. The independent restore check requires
+the exact sealed manifest SHA-256 and operation binding from a trusted
+durable record, then rechecks the package files. After an interruption,
+an absent, changed or unconfirmed manifest leaves recovery held. An
+exact retry may finish the same seal after rechecking all input. It
+cannot replace a different manifest. Directory sync follows the
+[Linux fsync contract](https://man7.org/linux/man-pages/man2/fsync.2.html).
+Do not add a production backup or restore route for this checkpoint
+while the independently trusted provider copy and durable fence are
+unavailable.
+
+The control owner supplies the authenticated scoped inventory and the
+verified portable copy under admission and worker exclusion. The provider
+owner supplies independently enforced writer and expiry exclusion. The
+coordinator retains the verified copy in durable immutable storage and
+binds the producer's exact scope and archive readback to the operation. The installer coordinator must persist that
+authority and the fence before capture, then confirm the round-tripped
+dump under the same operation. Restore additionally needs durable
+target exclusion, target-scope authorization and readback of every
+restored object before writer admission. The restored provider must
+preserve the SQL-bound ETag or have a separately authorized and
+qualified reconciliation of that identity. Tombstones must remain absent. Only that coordinator can reconcile or
+release a fence. Neither successful seal nor local readback grants
+permission to start a service.
+
+Reuse the existing Go, PostgreSQL and object protocol components and
+licenses described above. No dependency, model or dataset is added.
+Test missing files, changed dumps and object bytes, unconfirmed copies,
+wrong operation or scope, path substitutions, repeated sealing and
+interrupted publication. On disconnected Linux amd64, create a real
+`pg_dump -Fc` archive and load it into a disposable PostgreSQL database
+before binding its bytes. The lightweight run does not restore a
+deployment or qualify the provider.
+
+### Linux amd64 checkpoint validation
+
+On `ownsolid-cpu`, one cached PostgreSQL 18.6 container used network none,
+Unix sockets and a private tmpfs database. The fixture created one scoped
+artifact row, exported it with `pg_dump -Fc` and loaded it with
+`pg_restore --exit-on-error` into a scratch database. The original and
+scratch table fingerprints and object SHA-256 matched. The logical dump
+SHA-256 was `648b35595d80f12ffef8e3029d78c6d58c823464ae591151bc842356a5b32d12`.
+
+The native installer test bound those dump bytes to the actual source
+cluster and database OID, the fixture's exact PAX object copy, and a
+separate operation record. The fixture independently wrote the archive
+using Control's inventory types and PAX header writer at `e03bbbab`.
+The archive SHA-256 was
+`004aa1c438c5164d56311f2579b0fb3bdae3b8054a09615697c224cff302ac46`. A subprocess exited after the checkpoint was durable
+and before its digest was recorded. Recovery held until the trusted
+operation retried the exact seal. Legacy recovery preserved an unknown
+fence record and issued no Docker command. Missing keys and objects,
+foreign scope and altered input were refused. Only the IPv4, IPv6 and DNS
+probes reached the recorder. No deployment or provider was restored, and
+the copy confirmation and fence in this run were controlled fixture inputs.
