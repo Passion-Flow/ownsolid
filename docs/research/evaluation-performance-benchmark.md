@@ -78,3 +78,63 @@ The same output digests accompanied substantial timing variation.
 These retained windows cover one tiny serial preparation workload.
 Representative gateway latency, sustained throughput, device
 comparison and cost remain open.
+
+## Disconnected direct CPU serving
+
+The [vLLM 0.29.0 serving guide](https://docs.vllm.ai/en/v0.29.0/serving/online_serving/)
+and [benchmark CLI](https://docs.vllm.ai/en/v0.29.0/benchmarking/cli/)
+separate the chat endpoint, completed throughput and client latency. Use a
+bounded standard-library client to retain every observed time and token count.
+The [CPU setup](https://docs.vllm.ai/en/v0.29.0/getting_started/installation/cpu/)
+provides OpenMP and KV-cache controls. The existing Qwen model and vLLM
+image are Apache-2.0. The image also supplies PyTorch under BSD-3-Clause,
+Transformers, tokenizers and safetensors under Apache-2.0, and the packaged
+Triton `3.7.0+git270e696d` under MIT. The existing
+[model and runtime evidence](evaluation-reproducibility.md#native-cpu-adversarial-qualification)
+records the pinned artifacts and notices. These licenses permit commercial
+and offline use and redistribution subject to their notice terms. The test
+reuses the cached image and original synthetic prompts. It ships no artifact.
+
+Linux amd64 used an Intel Xeon Platinum 8168, the pinned nine-file
+Qwen3-0.6B revision `c1899de289a04d12100db370d81485cdf75e47ca`, and CPU wheel
+`vllm 0.29.0+cpu` with PyTorch `2.13.0+cpu` and Transformers `5.16.1`.
+The read-only container had network mode `none`, no published ports, a
+four-CPU quota, four OpenMP threads, 8 GiB memory and a 1 GiB KV cache.
+The engine used float32,
+eager execution, a 256-token context, a maximum of two active sequences,
+seed 42 and disabled prefix caching. NUMA placement used the container's
+default kernel policy after the explicit binding request was refused.
+
+Three initial starts produced no observations. The first tried to write
+Triton's default cache on the read-only root. The second wrote into a
+`noexec` temporary mount. The third loaded the compiled launcher from an
+executable cache, then failed to load a separate temporary shared object.
+Inspection of the image's CPU driver confirmed it uses Python's temporary
+file directory for that object. An isolated probe loaded a shared object
+under the final settings. The passing run set both `TMPDIR` and
+`TRITON_CACHE_DIR` within one dedicated 256 MiB executable tmpfs with
+`nosuid,nodev`. The root stayed read-only and the general `/tmp` stayed
+`noexec`.
+
+A direct loopback client sent two warm-up calls, then the same eight
+nonstreaming prompts at each concurrency. Requests used greedy decoding,
+seed 42, thinking disabled and at most 24 completion tokens. The engine
+reported 20 to 21 prompt tokens per measured request. All 18 requests
+returned a well-formed completion and internally consistent token usage.
+The archived observations record the request and output digests and the
+monotonic interval through the full response body. An independent readback
+recomputed the nearest-rank percentiles and checked peak overlap. The
+API startup log uses `0.29.0`; the independent verifier checked the
+CPU wheel's full version with its `+cpu` suffix.
+
+| Concurrency | Completed / measured | P50 / P95 latency in ms | Requests/s | Output tokens/s |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 8 / 8 | 3344.077 / 3483.805 | 0.313 | 6.999 |
+| 2 | 8 / 8 | 3568.120 / 3712.689 | 0.560 | 12.534 |
+
+Both groups returned 179 output tokens. The eight paired output digests
+matched. The raw observation SHA-256 is
+`ceace0a1253b196142fa739cf8766f930f85086dfe9ed06a0acf704a1d8911bc`.
+With eight measured calls per group, P95 is the longest observed response.
+This run covers direct HTTP on one shared CPU host. Authorized gateway
+admission, signed usage, GPU measurements and rates for cost remain open.
