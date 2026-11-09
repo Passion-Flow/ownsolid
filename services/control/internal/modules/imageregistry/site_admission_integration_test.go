@@ -8,6 +8,7 @@ import (
 	"compress/gzip"
 	"context"
 	"crypto/ed25519"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -25,6 +26,7 @@ import (
 	release "github.com/Passion-Flow/ownsolid/api/release/v1"
 	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type fixtureArchiveEntry struct {
@@ -193,7 +195,7 @@ func seedSiteAdmissionFixture(t *testing.T, g *registryStory, img nativeTranspor
 	}
 }
 
-func readonlySiteClient(t *testing.T, g *registryStory) *distributionClient {
+func readonlySiteClient(t *testing.T, g *registryStory) (*distributionClient, siteSourceConfig) {
 	t.Helper()
 	listener, err := net.Listen("tcp4", "127.0.0.1:0")
 	if err != nil {
@@ -202,7 +204,22 @@ func readonlySiteClient(t *testing.T, g *registryStory) *distributionClient {
 	addr := listener.Addr().String()
 	listener.Close()
 	root := g.native.Root
-	path := filepath.Join(t.TempDir(), "registry.yml")
+	dir := t.TempDir()
+	path := filepath.Join(dir, "registry.yml")
+	htpasswd, credentialFile := filepath.Join(dir, "htpasswd"), filepath.Join(dir, "credential.json")
+	var passwordBytes [24]byte
+	rand.Read(passwordBytes[:])
+	credential := registryCredential{Username: "site-reader", Password: base64.RawURLEncoding.EncodeToString(passwordBytes[:])}
+	hash, err := bcrypt.GenerateFromPassword([]byte(credential.Password), bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(htpasswd, fmt.Appendf(nil, "%s:%s\n", credential.Username, hash), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(credentialFile, fixtureJSON(t, credential), 0600); err != nil {
+		t.Fatal(err)
+	}
 	raw := fmt.Sprintf(`version: 0.1
 log:
   level: warn
@@ -223,7 +240,7 @@ auth:
   htpasswd:
     realm: site-fixture
     path: %q
-`, filepath.Join(root, "data"), addr, filepath.Join(root, "server.pem"), filepath.Join(root, "server-key.pem"), filepath.Join(root, "htpasswd"))
+`, filepath.Join(root, "data"), addr, filepath.Join(root, "server.pem"), filepath.Join(root, "server-key.pem"), htpasswd)
 	if err := os.WriteFile(path, []byte(raw), 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -246,6 +263,7 @@ auth:
 
 	c := g.s.config
 	c.Endpoint = "https://" + addr
+	c.CredentialFile = credentialFile
 	client, err := newDistribution(c)
 	if err != nil {
 		t.Fatal(err)
@@ -258,7 +276,7 @@ auth:
 		if err == nil {
 			resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
-				return client
+				return client, siteSourceConfig{Endpoint: c.Endpoint, AllowedCIDRs: c.AllowedCIDRs, CAFile: c.CAFile, CredentialFile: c.CredentialFile}
 			}
 		}
 		select {
@@ -313,10 +331,27 @@ func TestActualSiteRegistryPinAdmissionBoundary(t *testing.T) {
 		t.Fatalf("unexpected prepared proof boundary: %v", err)
 	}
 	unsigned, raw := img.manifest(t, "digest present in the registry but absent from the release")
-	seedSiteAdmissionFixture(t, g, img, approved, approvedRaw)
 	seedSiteAdmissionFixture(t, g, img, unsigned, raw)
-	site := readonlySiteClient(t, g)
-	assertSiteDigestReads(t, g, site, approved, img.config, img.layer, unsigned)
+	site, siteConfig := readonlySiteClient(t, g)
+	assertSiteDigestReads(t, g, site, img.config, img.layer, unsigned)
+	previous := g.s
+	previous.deployments.RegistryActions = nil
+	configFile := siteSourceFixtureFile(t, siteConfig)
+	service, err := NewWithSiteReleaseSource(previous.identity, previous.workspaces, previous.nodes, previous.deployments, previous.license, previous.config, configFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.s = service
+	t.Cleanup(service.Close)
+	wrong := *site
+	wrong.credential = previous.remote.credential
+	response, err := wrong.request(g.ctx, http.MethodGet, site.origin.String()+"/v2/", "", nil, 0)
+	if response != nil {
+		response.Body.Close()
+	}
+	if err == nil || err.Error() != "REGISTRY_AUTH_REJECTED" {
+		t.Fatalf("writable credentials admitted by the site source: %v", err)
+	}
 	t.Logf("isolated Distribution endpoints: writer %s, read-only %s", g.native.Endpoint, site.origin)
 	mutation := g.mutation()
 	refuses := func(asset, code string) {
@@ -346,14 +381,53 @@ func TestActualSiteRegistryPinAdmissionBoundary(t *testing.T) {
 		t.Fatal("reservation did not reach the rollback boundary")
 	}
 	g.s.identity.Storage = g.f.Store
-	pin, err := g.s.Import(g.ctx, g.a, mutation, "control-image", true)
-	if err != nil || pin.State != "ready" || pin.WorkspaceID != g.f.Workspace ||
-		pin.ManifestDigest == nil || *pin.ManifestDigest != approved.Digest || g.count("image_registry_pins") != 1 || g.count("image_registry_mutations") != 1 {
-		t.Fatalf("same-key retry did not commit one scoped pin: %+v %v", pin, err)
+	// The signed archive has the requested manifest, but the site has not
+	// published it yet. The incomplete source read cannot fall back or push.
+	if pin, err := g.s.Import(g.ctx, g.a, mutation, "control-image", true); err == nil || err.Error() != "REGISTRY_CONTENT_MISSING" || !reflect.DeepEqual(pin, Pin{}) {
+		t.Fatalf("missing source content was admitted: %+v %v", pin, err)
+	}
+	incomplete, err := g.s.Import(g.ctx, g.a, mutation, "control-image", true)
+	if err != nil || incomplete.State != "importing" || incomplete.ManifestDigest != nil {
+		t.Fatalf("incomplete source changed on replay: %+v %v", incomplete, err)
+	}
+	if err := g.s.remote.Verify(g.ctx, repository(g.f.Tenant, g.f.Workspace, incomplete.ID), approved); err == nil || err.Error() != "REGISTRY_CONTENT_MISSING" {
+		t.Fatalf("failed preparation wrote the tenant Registry: %v", err)
+	}
+	discard, err := g.s.AbandonPrepared(g.ctx, g.a, g.mutation(), incomplete.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := g.s.DiscardFailed(g.ctx, g.a, g.mutation(), incomplete.ID, discard.SHA256); err != nil {
+		t.Fatal(err)
+	}
+
+	seedSiteAdmissionFixture(t, g, img, approved, approvedRaw)
+	assertSiteDigestReads(t, g, site, approved, img.config, img.layer)
+	mutation = g.mutation()
+	// An actual SQL failure rolls back binding the freshly verified CAS.
+	fault = &registryFaultStore{Store: g.f.Store, table: "image_registry_blobs"}
+	fault.armed.Store(true)
+	g.s.identity.Storage = fault
+	if pin, err := g.s.Import(g.ctx, g.a, mutation, "control-image", true); err == nil || !reflect.DeepEqual(pin, Pin{}) || fault.armed.Load() {
+		t.Fatalf("expected a rolled-back CAS bind: %+v %v", pin, err)
+	}
+	g.s.identity.Storage = g.f.Store
+	pending, err := g.s.Import(g.ctx, g.a, mutation, "control-image", true)
+	if err != nil || pending.State != "importing" || pending.ManifestDigest != nil {
+		t.Fatalf("bind rollback left ready metadata: %+v %v", pending, err)
+	}
+	g.s.siteSource.client.Close()
+	g.s.siteSource.client.http.Transport = unavailableSiteFixture{t}
+	pin, err := g.s.Reconcile(g.ctx, g.a, g.mutation(), pending.ID, true)
+	if err != nil || pin.ID != pending.ID || pin.State != "ready" || pin.WorkspaceID != g.f.Workspace ||
+		pin.ManifestDigest == nil || *pin.ManifestDigest != approved.Digest {
+		t.Fatalf("explicit retry did not complete the verified site pin: %+v %v", pin, err)
 	}
 	cache, err := readCached(g.ctx, g.s.config, pin.ID)
 	if err != nil || cachedMatches(pin, cache) != nil || cache.ReleaseArchiveSHA256 != legacy.ReleaseArchiveSHA256 ||
-		cache.ReleaseManifestSHA256 != legacy.ReleaseManifestSHA256 || !reflect.DeepEqual(cache.Asset.Licenses, []string{"fixture-notice"}) {
+		cache.ReleaseManifestSHA256 != legacy.ReleaseManifestSHA256 || !reflect.DeepEqual(cache.Asset.Licenses, []string{"fixture-notice"}) ||
+		cache.SiteSource == nil || cache.SiteSource.RegistryIdentity != site.identity ||
+		cache.SiteSource.Repository != "ownsolid/release/control-image" || cache.SiteSource.ManifestDigest != approved.Digest {
 		t.Fatal("signed source and notices were not retained", err)
 	}
 	for _, d := range cache.Descriptors {
@@ -366,12 +440,20 @@ func TestActualSiteRegistryPinAdmissionBoundary(t *testing.T) {
 	if foreign, err := g.s.Get(g.ctx, g.a, other, pin.ID); err == nil || err.Error() != "RESOURCE_NOT_FOUND" || !reflect.DeepEqual(foreign, Pin{}) {
 		t.Fatalf("pin crossed the Workspace boundary: %+v %v", foreign, err)
 	}
+	pins, mutations := g.count("image_registry_pins"), g.count("image_registry_mutations")
 	g.s.config.PreparedReleaseRoot = filepath.Join(mount, "unavailable")
 	replay, err := g.s.Import(g.ctx, g.a, mutation, "control-image", true)
-	if err != nil || replay.ID != pin.ID || g.count("image_registry_pins") != 1 || g.count("image_registry_mutations") != 1 {
+	if err != nil || replay.ID != pin.ID || g.count("image_registry_pins") != pins || g.count("image_registry_mutations") != mutations {
 		t.Fatalf("replay depended on the source or duplicated the pin: %+v %v", replay, err)
 	}
 	if _, err := g.s.Import(g.ctx, g.a, mutation, "different-image", true); err == nil || err.Error() != "IDEMPOTENCY_CONFLICT" {
 		t.Fatalf("changed key fingerprint accepted: %v", err)
 	}
+}
+
+type unavailableSiteFixture struct{ t *testing.T }
+
+func (f unavailableSiteFixture) RoundTrip(*http.Request) (*http.Response, error) {
+	f.t.Error("prepared reconciliation or replay contacted the site source")
+	return nil, failure("REGISTRY_UNAVAILABLE")
 }

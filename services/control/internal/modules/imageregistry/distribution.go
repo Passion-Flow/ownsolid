@@ -123,7 +123,7 @@ func newDistribution(c Config) (*distributionClient, error) {
 		return nil, last
 	}
 	identity := digestBytes(append([]byte(origin.String()+"\n"), pem...))
-	return &distributionClient{origin: origin, http: &http.Client{Transport: transport, Timeout: time.Duration(c.RequestSeconds) * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return failure("REGISTRY_REDIRECT_REJECTED") }}, credential: credential, maximum: c.MaximumBlobBytes, identity: identity}, nil
+	return &distributionClient{origin: origin, http: &http.Client{Transport: transport, Timeout: time.Duration(c.RequestSeconds) * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, credential: credential, maximum: c.MaximumBlobBytes, identity: identity}, nil
 }
 func repository(tenant, workspace, pin string) string {
 	return "projectone/" + tenant + "/" + workspace + "/" + pin
@@ -185,15 +185,28 @@ func (c *distributionClient) verify(ctx context.Context, repo string, d Descript
 	if e != nil {
 		return e
 	}
+	return c.copyVerified(ctx, target, d, io.Discard)
+}
+
+// copyVerified streams one exact response through the digest verifier. The
+// caller owns any incomplete destination and decides whether to publish it.
+func (c *distributionClient) copyVerified(ctx context.Context, target string, d Descriptor, w io.Writer) (result error) {
+	if !validDigest(d.Digest) || d.Size < 1 || d.Size > c.maximum {
+		return failure("REGISTRY_DESCRIPTOR_INVALID")
+	}
 	r, e := c.request(ctx, http.MethodGet, target, "", nil, 0)
 	if e != nil {
 		return e
 	}
-	defer r.Body.Close()
+	defer func() {
+		if e := r.Body.Close(); e != nil && result == nil {
+			result = failure("REGISTRY_REMOTE_INVALID")
+		}
+	}()
 	if r.StatusCode == http.StatusNotFound {
 		return failure("REGISTRY_CONTENT_MISSING")
 	}
-	if r.StatusCode != http.StatusOK || r.ContentLength != d.Size || d.Size < 1 || d.Size > c.maximum {
+	if r.StatusCode != http.StatusOK || r.ContentLength != d.Size {
 		return failure("REGISTRY_REMOTE_INVALID")
 	}
 	if v := r.Header.Get("Docker-Content-Digest"); v != "" && v != d.Digest {
@@ -203,7 +216,7 @@ func (c *distributionClient) verify(ctx context.Context, repo string, d Descript
 		return failure("REGISTRY_REMOTE_INVALID")
 	}
 	h := sha256.New()
-	n, e := io.Copy(h, io.LimitReader(r.Body, d.Size+1))
+	n, e := io.Copy(io.MultiWriter(w, h), io.LimitReader(r.Body, d.Size+1))
 	if e != nil || n != d.Size || "sha256:"+hex.EncodeToString(h.Sum(nil)) != d.Digest {
 		return failure("REGISTRY_DIGEST_MISMATCH")
 	}
