@@ -11,6 +11,11 @@ export function KeysPage() {
   const workspaces = useWorkspaces();
   const active = workspaces.active;
   const [issuing, setIssuing] = useHashDialog('issue');
+  const issueUnavailable = workspaces.isPending
+    ? t('status.loading')
+    : workspaces.error
+      ? t('workspace.loadFailed')
+      : t('keys.issue.noWorkspace');
   return (
     <>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -22,13 +27,19 @@ export function KeysPage() {
             {active ? t('keys.subtitle', { workspace: active.name }) : t('keys.subtitle.none')}
           </p>
         </div>
-        {active ? (
+        <div className="flex flex-col items-start gap-1 sm:items-end">
           <IssueKeyButton
+            unavailableReasonId={active ? undefined : 'portal-keys-issue-unavailable'}
             onClick={() => {
               setIssuing(true);
             }}
           />
-        ) : null}
+          {!active ? (
+            <p id="portal-keys-issue-unavailable" className="m-0 text-[12.5px] text-text-3">
+              {issueUnavailable}
+            </p>
+          ) : null}
+        </div>
       </div>
       <WorkspaceBody workspaces={workspaces} noWorkspace={t('keys.noWorkspace.detail')}>
         {(workspace) => (
