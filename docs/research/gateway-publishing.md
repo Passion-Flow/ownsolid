@@ -121,11 +121,21 @@ The S-205 deployment detail specifies rolling back a deployment version.
 GW-111 previews and applies a change to a published alias using the
 alias's current revision and the previous target's retained revision.
 The deployment and alias have separate identities and histories. See
-the [S-205 specification](../product/plan/README.md#s-205--deployment-detail-deploymentid)
-and the [alias cutover contract](gateway-cutover-preview.md#public-contract).
+the S-205 section of the [build plan](../product/plan/README.md)
+and the [alias cutover contract](gateway-cutover-preview.md#public-contract-and-client-acceptance).
 
 The current plan defines the deployment action and the gateway card's
 publish, issue and stop-publishing actions. A Console alias rollback
 requires its own screen definition for selecting a previous target,
 reviewing the server preview and applying the scoped change. GW-111's
 Console work remains open at that boundary.
+
+## Administrator description flow
+
+GW-120 exposes an optional description on publication and an
+independently versioned edit in the [distribution contract](../../api/openapi/v1/distribution/openapi.json).
+The S-205 publish dialog currently collects the alias name, gateway
+and reason. Browser coverage of Admin entry and clearing can follow
+once an Admin screen specifies those actions and an installation
+has the numbered migration. The existing HTTPS contract fixture
+checks editing and clearing against the GW-120 candidate.
