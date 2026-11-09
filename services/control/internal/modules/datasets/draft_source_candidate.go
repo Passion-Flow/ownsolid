@@ -18,16 +18,16 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// CSVImportCandidate is an opt-in PostgreSQL adapter for the module's
+// DraftSourceCandidate is an opt-in PostgreSQL adapter for the module's
 // isolated source receipt schema. Production does not register it.
-type CSVImportCandidate struct {
+type DraftSourceCandidate struct {
 	service  *Service
 	importer *SourceImporter
 	slots    chan struct{}
 }
 
-// NewCSVImportCandidate enables the isolated CSV flow on an existing service.
-func NewCSVImportCandidate(s *Service) (*CSVImportCandidate, error) {
+// NewDraftSourceCandidate enables the isolated draft flow on an existing service. Parquet requires an explicit decoder.
+func NewDraftSourceCandidate(s *Service, parquet *ParquetImportConfig) (*DraftSourceCandidate, error) {
 	if s == nil || s.Identity == nil || s.Store == nil || s.Processor == nil {
 		return nil, failure("DATASET_STORAGE_UNAVAILABLE")
 	}
@@ -46,45 +46,57 @@ func NewCSVImportCandidate(s *Service) (*CSVImportCandidate, error) {
 		RecordBytes: int(2*limits.MaximumLineBytes + 3),
 		Fields:      3,
 		Timeout:     config.Seconds(policy.UploadSeconds),
-	}, nil)
+	}, parquet)
 	if err != nil {
 		return nil, err
 	}
-	return &CSVImportCandidate{s, importer, make(chan struct{}, policy.Concurrency)}, nil
+	return &DraftSourceCandidate{s, importer, make(chan struct{}, policy.Concurrency)}, nil
 }
 
-// CSVImportRequest declares the immutable original upload.
-type CSVImportRequest struct {
+// DraftSourceRequest declares the immutable original upload.
+type DraftSourceRequest struct {
 	Name   string
 	SHA256 string
 	Bytes  int64
 }
 
-// CSVImportResult pairs the existing editable draft with its committed receipt.
-type CSVImportResult struct {
+// DraftSourceResult pairs the existing editable draft with its committed receipt.
+type DraftSourceResult struct {
 	Draft  Draft              `json:"draft"`
 	Report SourceImportReport `json:"report"`
 }
 
-// Import streams a CSV source, then commits the draft, report and inspection
+// Import streams a supported source, then commits the draft, report and inspection
 // together. The caller owns the input reader and any transport read deadline.
-func (c *CSVImportCandidate) Import(ctx context.Context, a identity.Auth, workspace, dataset string, input CSVImportRequest, key string, body io.Reader, requestID string) (CSVImportResult, error) {
+func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, workspace, dataset string, format SourceFormat, input DraftSourceRequest, key string, body io.Reader, requestID string) (DraftSourceResult, error) {
 	s := c.service
 	policy := s.policy()
 	if !wire.ValidID(key) || !validDraftSourceName(input.Name) || !wire.ValidDigest(input.SHA256) || input.Bytes < 1 || body == nil {
-		return CSVImportResult{}, failure("VALIDATION_FAILED")
+		return DraftSourceResult{}, failure("VALIDATION_FAILED")
 	}
 	if input.Bytes > policy.Limits.MaximumBytes {
-		return CSVImportResult{}, failure("DATASET_FILE_TOO_LARGE")
+		return DraftSourceResult{}, failure("DATASET_FILE_TOO_LARGE")
+	}
+	var original, kind string
+	switch format {
+	case SourceCSV:
+		original, kind = "source.csv", "csv_utf8_draft_v1"
+	case SourceParquet:
+		if c.importer.parquet == nil {
+			return DraftSourceResult{}, failure("DATASET_STORAGE_UNAVAILABLE")
+		}
+		original, kind = "source.parquet", "parquet_draft_v1"
+	default:
+		return DraftSourceResult{}, failure("VALIDATION_FAILED")
 	}
 	intent := fingerprint(struct {
 		Format string
-		Input  CSVImportRequest
-	}{"csv_utf8_draft_v1", input}, a.Me.User.ID)
+		Input  DraftSourceRequest
+	}{kind, input}, a.Me.User.ID)
 	var authority *string
-	var result CSVImportResult
-	err := s.csvImportTransaction(ctx, a, workspace, dataset, key, input, intent,
-		func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, previous CSVImportResult) error {
+	var result DraftSourceResult
+	err := s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, original, input, intent,
+		func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, previous DraftSourceResult) error {
 			result = previous
 			if previous.Draft.ID != "" {
 				return nil
@@ -104,28 +116,28 @@ func (c *CSVImportCandidate) Import(ctx context.Context, a identity.Auth, worksp
 	case c.slots <- struct{}{}:
 		defer func() { <-c.slots }()
 	default:
-		return CSVImportResult{}, failure("DATASET_UPLOAD_BUSY")
+		return DraftSourceResult{}, failure("DATASET_UPLOAD_BUSY")
 	}
 	bounded, cancel := context.WithTimeout(ctx, config.Seconds(policy.UploadSeconds))
 	defer cancel()
 	object := uuid.NewString()
-	directory, err := s.Store.allocateCSVObject(object, input.Bytes+policy.Limits.MaximumBytes+1)
+	directory, err := s.Store.allocateDraftSourceObject(object, input.Bytes+policy.Limits.MaximumBytes+1)
 	if err != nil {
-		return CSVImportResult{}, err
+		return DraftSourceResult{}, err
 	}
 	keepFiles := false
 	defer func() {
 		if !keepFiles {
-			s.Store.discardCSVObject(directory)
+			s.Store.discardDraftSourceObject(directory, original)
 		}
 	}()
-	report, err := c.stage(bounded, directory, body, input, policy.Limits)
+	report, err := c.stage(bounded, directory, original, format, body, input, policy.Limits)
 	if err != nil {
-		return CSVImportResult{}, err
+		return DraftSourceResult{}, err
 	}
 	draftID := uuid.NewString()
-	err = s.csvImportTransaction(ctx, a, workspace, dataset, key, input, intent,
-		func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, previous CSVImportResult) error {
+	err = s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, original, input, intent,
+		func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, previous DraftSourceResult) error {
 			result = previous
 			if previous.Draft.ID != "" {
 				return nil
@@ -140,7 +152,10 @@ func (c *CSVImportCandidate) Import(ctx context.Context, a identity.Auth, worksp
 			if err = s.checkDraftCapacity(ctx, tx, w); err != nil {
 				return err
 			}
-			const reason = "Import CSV source"
+			reason := "Import CSV source"
+			if format == SourceParquet {
+				reason = "Import Parquet source"
+			}
 			draftInput := DraftRequest{SourceName: input.Name, ExpectedBytes: report.OutputBytes, SourceSHA256: report.OutputSHA256, Reason: reason}
 			if err = insertDraft(ctx, tx, a, w, dataset, draftID, object, draftInput, key, intent, nil, current); err != nil {
 				return err
@@ -161,10 +176,10 @@ func (c *CSVImportCandidate) Import(ctx context.Context, a identity.Auth, worksp
 				return failure("DATASET_DATA_INVALID")
 			}
 			_, err = tx.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `
-				INSERT INTO dataset_csv_import_candidates(tenant_id,workspace_id,dataset_id,draft_id,report)
-				VALUES($1,$2,$3,$4,$5::jsonb)`, w.TenantID, w.ID, dataset, draftID, raw))
+				INSERT INTO dataset_draft_import_candidates(tenant_id,workspace_id,dataset_id,draft_id,source_format,report)
+				VALUES($1,$2,$3,$4,$5,$6::jsonb)`, w.TenantID, w.ID, dataset, draftID, string(format), raw))
 			if err == nil {
-				result = CSVImportResult{Draft: d, Report: report}
+				result = DraftSourceResult{Draft: d, Report: report}
 			}
 			return err
 		})
@@ -174,7 +189,7 @@ func (c *CSVImportCandidate) Import(ctx context.Context, a identity.Auth, worksp
 	return committed(result, err)
 }
 
-func (s *Service) csvImportTransaction(ctx context.Context, a identity.Auth, workspace, dataset, key string, input CSVImportRequest, intent []byte, apply func(context.Context, transaction.Executor, workspaces.Workspace, CSVImportResult) error) error {
+func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, workspace, dataset, key string, format SourceFormat, originalFile string, input DraftSourceRequest, intent []byte, apply func(context.Context, transaction.Executor, workspaces.Workspace, DraftSourceResult) error) error {
 	return s.transaction(ctx, a, workspace, true, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
 		if w.TenantID != s.Store.namespace.TenantID {
 			return failure("DATASET_STORAGE_UNAVAILABLE")
@@ -186,19 +201,19 @@ func (s *Service) csvImportTransaction(ctx context.Context, a identity.Auth, wor
 		if err != nil {
 			return err
 		}
-		var id, object string
+		var id, object, storedFormat string
 		var original, raw []byte
 		err = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `
-			SELECT d.id::text, d.source_object_id::text, d.creation_fingerprint, c.report
-			FROM dataset_drafts d LEFT JOIN dataset_csv_import_candidates c
+			SELECT d.id::text, d.source_object_id::text, d.creation_fingerprint, COALESCE(c.source_format,''), c.report
+			FROM dataset_drafts d LEFT JOIN dataset_draft_import_candidates c
 			  ON (c.tenant_id,c.workspace_id,c.dataset_id,c.draft_id)=(d.tenant_id,d.workspace_id,d.dataset_id,d.id)
 			WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.dataset_id=$3
-			  AND d.created_by=$4 AND d.creation_key=$5`, w.TenantID, w.ID, dataset, a.Me.User.ID, key)).Scan(&id, &object, &original, &raw)
+			  AND d.created_by=$4 AND d.creation_key=$5`, w.TenantID, w.ID, dataset, a.Me.User.ID, key)).Scan(&id, &object, &original, &storedFormat, &raw)
 		if errors.Is(err, pgx.ErrNoRows) {
 			if target.RetiredAt != nil {
 				return failure("DATASET_RETIRED")
 			}
-			return apply(ctx, tx, w, CSVImportResult{})
+			return apply(ctx, tx, w, DraftSourceResult{})
 		}
 		if err != nil {
 			return err
@@ -214,7 +229,7 @@ func (s *Service) csvImportTransaction(ctx context.Context, a identity.Auth, wor
 			return err
 		}
 		var report SourceImportReport
-		if json.Unmarshal(raw, &report) != nil || draft.SourceReceivedAt == nil ||
+		if storedFormat != string(format) || json.Unmarshal(raw, &report) != nil || draft.SourceReceivedAt == nil ||
 			report.SourceBytes != input.Bytes || report.SourceSHA256 != input.SHA256 ||
 			report.OutputBytes != draft.ExpectedBytes || report.OutputSHA256 != draft.SourceSHA256 {
 			return failure("DATASET_DATA_INVALID")
@@ -222,16 +237,14 @@ func (s *Service) csvImportTransaction(ctx context.Context, a identity.Auth, wor
 		if _, err = s.Store.Source(object, report.OutputSHA256, report.OutputBytes); err != nil {
 			return err
 		}
-		if err = s.Store.verifyCSVOriginal(object, report); err != nil {
+		if err = s.Store.verifyDraftOriginal(object, originalFile, report); err != nil {
 			return err
 		}
-		return apply(ctx, tx, w, CSVImportResult{Draft: draft, Report: report})
+		return apply(ctx, tx, w, DraftSourceResult{Draft: draft, Report: report})
 	})
 }
 
-const rawCSVFile = "source.csv"
-
-func (s *Store) allocateCSVObject(object string, bytes int64) (string, error) {
+func (s *Store) allocateDraftSourceObject(object string, bytes int64) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
@@ -245,22 +258,22 @@ func (s *Store) allocateCSVObject(object string, bytes int64) (string, error) {
 		return "", failure("DATASET_STORAGE_UNAVAILABLE")
 	}
 	if err := s.sync("objects"); err != nil {
-		s.discardCSVObject(directory)
+		_ = s.root.Remove(directory)
 		return "", err
 	}
 	return directory, nil
 }
 
-func (s *Store) discardCSVObject(directory string) {
-	_ = s.root.Remove(filepath.Join(directory, rawCSVFile))
+func (s *Store) discardDraftSourceObject(directory, original string) {
+	_ = s.root.Remove(filepath.Join(directory, original))
 	_ = s.root.Remove(filepath.Join(directory, "source.jsonl"))
 	_ = s.root.Remove(directory)
 	_ = s.sync("objects")
 }
 
-func (s *Store) verifyCSVOriginal(object string, report SourceImportReport) error {
+func (s *Store) verifyDraftOriginal(object, original string, report SourceImportReport) error {
 	// Source already validated the object ID in this directory.
-	path := filepath.Join(s.path, "objects", object, rawCSVFile)
+	path := filepath.Join(s.path, "objects", object, original)
 	if _, err := privatePath(path, s.path, false, report.SourceBytes); err != nil {
 		return failure("DATASET_FILE_INVALID")
 	}
@@ -271,28 +284,34 @@ func (s *Store) verifyCSVOriginal(object string, report SourceImportReport) erro
 	return nil
 }
 
-func (c *CSVImportCandidate) stage(ctx context.Context, directory string, body io.Reader, input CSVImportRequest, limits wire.Limits) (SourceImportReport, error) {
+func (c *DraftSourceCandidate) stage(ctx context.Context, directory, original string, format SourceFormat, body io.Reader, input DraftSourceRequest, limits wire.Limits) (SourceImportReport, error) {
 	store := c.service.Store
-	raw, err := store.root.OpenFile(filepath.Join(directory, rawCSVFile), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	raw, err := store.root.OpenFile(filepath.Join(directory, original), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err != nil {
 		return SourceImportReport{}, failure("DATASET_STORAGE_UNAVAILABLE")
 	}
 	defer raw.Close()
-	writer := csvOriginalWriter{file: raw}
+	writer := draftOriginalWriter{file: raw}
 	path := filepath.Join(store.path, directory, "source.jsonl")
-	report, err := c.importer.ImportUpload(ctx, io.TeeReader(body, &writer), path, SourceImportOptions{
-		Format: SourceCSV, ExpectedBytes: input.Bytes, ExpectedSHA256: input.SHA256,
-	})
+	var parquetOriginal *os.File
+	if format == SourceParquet {
+		parquetOriginal = raw
+	} else {
+		body = io.TeeReader(body, &writer)
+	}
+	report, err := c.importer.importSource(ctx, body, path, SourceImportOptions{
+		Format: format, ExpectedBytes: input.Bytes, ExpectedSHA256: input.SHA256,
+	}, parquetOriginal)
 	if writer.failed {
 		return SourceImportReport{}, failure("DATASET_STORAGE_UNAVAILABLE")
 	}
 	if err != nil {
-		return SourceImportReport{}, csvImportError(err)
+		return SourceImportReport{}, draftSourceError(err)
 	}
 	if report.Rows > limits.MaximumRows {
 		return SourceImportReport{}, failure("DATASET_ROW_LIMIT")
 	}
-	if err = validateCSVDraftRows(ctx, path, limits); err != nil {
+	if err = validateDraftSourceRows(ctx, path, limits); err != nil {
 		return SourceImportReport{}, err
 	}
 	if raw.Sync() != nil || raw.Close() != nil {
@@ -304,12 +323,12 @@ func (c *CSVImportCandidate) stage(ctx context.Context, directory string, body i
 	return report, datasetRuntimeError(ctx.Err())
 }
 
-type csvOriginalWriter struct {
+type draftOriginalWriter struct {
 	file   *os.File
 	failed bool
 }
 
-func (w *csvOriginalWriter) Write(p []byte) (int, error) {
+func (w *draftOriginalWriter) Write(p []byte) (int, error) {
 	n, err := w.file.Write(p)
 	if err != nil {
 		w.failed = true
@@ -317,7 +336,7 @@ func (w *csvOriginalWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
-func validateCSVDraftRows(ctx context.Context, path string, limits wire.Limits) error {
+func validateDraftSourceRows(ctx context.Context, path string, limits wire.Limits) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return failure("DATASET_STORAGE_UNAVAILABLE")
@@ -339,7 +358,7 @@ func validateCSVDraftRows(ctx context.Context, path string, limits wire.Limits) 
 	return nil
 }
 
-func csvImportError(err error) error {
+func draftSourceError(err error) error {
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return datasetRuntimeError(err)
 	}
@@ -355,7 +374,8 @@ func csvImportError(err error) error {
 		return failure("DATASET_FILE_TOO_LARGE")
 	case "DATASET_FILE_TOO_LARGE", "DATASET_SOURCE_CHANGED", "DATASET_STORAGE_UNAVAILABLE":
 		return failure(code)
-	case "DATASET_IMPORT_COMMIT_UNCERTAIN", "DATASET_STORAGE_PATH_INVALID", "DATASET_OUTPUT_CONFLICT":
+	case "DATASET_IMPORT_COMMIT_UNCERTAIN", "DATASET_STORAGE_PATH_INVALID", "DATASET_OUTPUT_CONFLICT",
+		"DATASET_PARQUET_RUNTIME_UNAVAILABLE", "DATASET_PARQUET_STAGE_FAILED":
 		return failure("DATASET_STORAGE_UNAVAILABLE")
 	default:
 		return failure("DATASET_VALIDATION_FAILED")
