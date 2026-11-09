@@ -16,6 +16,7 @@ const MaxCommandBytes = 128
 
 type command struct {
 	id     string
+	risk   riskTier
 	admin  string
 	portal string
 }
@@ -26,17 +27,17 @@ const (
 )
 
 var commands = map[string]command{
-	"open_home":           {admin: "/", portal: "/"},
-	"open_nodes":          {admin: "/nodes"},
-	"open_model_library":  {admin: "/library"},
-	"open_model_services": {admin: "/services"},
-	"open_gateway":        {admin: "/gateway"},
-	"open_audit":          {admin: "/audit"},
-	"open_models":         {portal: "/models"},
-	"open_keys":           {portal: "/keys"},
-	"open_support":        {admin: "/support", portal: "/support"},
-	listApplications:      {},
-	listConversations:     {},
+	"open_home":           {risk: riskNavigate, admin: "/", portal: "/"},
+	"open_nodes":          {risk: riskNavigate, admin: "/nodes"},
+	"open_model_library":  {risk: riskNavigate, admin: "/library"},
+	"open_model_services": {risk: riskNavigate, admin: "/services"},
+	"open_gateway":        {risk: riskNavigate, admin: "/gateway"},
+	"open_audit":          {risk: riskNavigate, admin: "/audit"},
+	"open_models":         {risk: riskNavigate, portal: "/models"},
+	"open_keys":           {risk: riskNavigate, portal: "/keys"},
+	"open_support":        {risk: riskNavigate, admin: "/support", portal: "/support"},
+	listApplications:      {risk: riskRead},
+	listConversations:     {risk: riskRead},
 }
 
 //go:embed locales/*/commands.json
