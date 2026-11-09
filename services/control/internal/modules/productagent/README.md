@@ -36,6 +36,15 @@ The two assistant reads remove Unicode directional controls and mask known
 model keys and gateway credentials in display names. The stored names and ordinary Portal projections
 retain their existing values. See [result redaction](../../../../../docs/research/product-assistant-result-redaction.md).
 
+## Offline model qualification
+
+The [qualification runner](testdata/qualify_model.py) uses the existing
+evaluation replay to check retained safety evidence. It emits a review
+decision with the evidence fingerprints and prerequisite status. Production
+qualification still requires a live authenticated gateway route and
+positive capability evidence. See the
+[replay instructions and acceptance](../../../../../docs/research/product-assistant-model-qualification.md).
+
 ## Tests
 
 ```sh
