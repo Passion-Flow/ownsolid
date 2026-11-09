@@ -10,7 +10,7 @@ Fabric and storage operations for GPU clusters, and the storage contracts ownsol
 ## P1 Enterprise release
 
 - [ ] NET-101 Object storage contract over S3 for models, datasets, checkpoints and backups (P1) - Catalog: F199, F210
-  - [Object backup fence](../../research/object-backup-fence.md) covers the artifactstores instance. A [verified staged archive](../../research/object-backup-fence.md#verified-staged-archive) copies exact S3 bytes under that fence. Provider exclusion, publication and coordinated recovery remain open.
+  - [Object backup fence](../../research/object-backup-fence.md) covers the artifactstores instance. A [verified staged archive](../../research/object-backup-fence.md#verified-staged-archive) copies exact S3 bytes under that fence. A [PostgreSQL hold candidate](../../research/object-backup-fence.md#postgresql-hold-candidate) verifies coordinator takeover. Durable write admission, provider exclusion, publication and coordinated recovery remain open.
 - [ ] NET-102 OCI registry contract and the in-site registry (P1) - Catalog: F200, F212
   - [Site release pin admission](../../research/site-registry-pin-admission.md) verifies read-only import with the current release profile, recovery and Workspace scope. Control startup wiring and installed-release acceptance remain open.
 - [ ] NET-103 Network interface, link and RDMA status per node (P1)
