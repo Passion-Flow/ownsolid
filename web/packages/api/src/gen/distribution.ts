@@ -52,6 +52,7 @@ export interface paths {
         };
         get: operations["adminListModelAlias"];
         put?: never;
+        /** @description Publish a ready deployment under a model alias in the selected workspace. Optional description is plain text. The server normalizes CRLF and trims outer whitespace before applying the 500 Unicode character limit. Nonblank descriptions require the installed description schema. After activation, alias responses include description and its independent description_revision together. */
         post: operations["adminPublishAlias"];
         delete?: never;
         options?: never;
@@ -670,6 +671,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/description": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Edit a model alias description
+         * @description Edit the selected alias's catalogue text at its current description revision. An exact retry with the same idempotency key returns the current text and original applied revision. The edit leaves the alias routing revision and target unchanged. This operation requires the installed alias description schema. The server normalizes CRLF and trims outer whitespace before applying the 500 Unicode character limit. Internal line feeds and tabs are allowed. Send an empty string to clear the description.
+         */
+        post: operations["adminEditAliasDescription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -744,6 +768,9 @@ export interface components {
             created_at: string;
             available: boolean;
             unavailable_code: "MODEL_ALIAS_UNAVAILABLE" | null;
+            description?: string;
+            /** Format: int64 */
+            description_revision?: number;
         };
         AliasCutover: {
             /** @enum {string} */
@@ -805,6 +832,7 @@ export interface components {
             deployment_id: string;
             deployment_revision: number;
             reason: string;
+            description?: string;
         };
         DistributionKey: {
             /** Format: uuid */
@@ -1076,6 +1104,23 @@ export interface components {
         RotateDistributionKey: {
             overlap_seconds: number;
             reason: string;
+        };
+        AliasDescriptionEdit: {
+            description: string;
+            /** Format: int64 */
+            expected_description_revision: number;
+            reason: string;
+        };
+        AliasDescriptionResult: {
+            description: string;
+            /** Format: int64 */
+            description_revision: number;
+            /** Format: int64 */
+            applied_description_revision: number;
+            replayed: boolean;
+        };
+        AliasDescriptionResultResponse: {
+            data: components["schemas"]["AliasDescriptionResult"];
         };
     };
     responses: {
@@ -2643,6 +2688,120 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GatewayOutcomeAcknowledgmentResponse"];
+                };
+            };
+            /** @description Stable safe error. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminEditAliasDescription: {
+        parameters: {
+            query?: never;
+            header: {
+                Origin: string;
+                "X-CSRF-Token": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                site_id: string;
+                cell_id: string;
+                workspace_id: string;
+                resource_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AliasDescriptionEdit"];
+            };
+        };
+        responses: {
+            /** @description Current description and the revision applied by this intent. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AliasDescriptionResultResponse"];
+                };
+            };
+            /** @description The request, reason or required idempotency key is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description An authenticated Admin session is required. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Access was denied or browser request validation failed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The cell, workspace or alias could not be found in the caller's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The description revision changed or the idempotency key belongs to a different edit. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The request body exceeds the allowed size. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Use the supported JSON request media type. */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The installed schema does not support alias descriptions, or the service or storage is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Stable safe error. */
