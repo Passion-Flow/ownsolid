@@ -328,3 +328,73 @@ The shared schema and startup owners must supply that authority before
 mounting production backup, cleanup or restore release for a checkpoint
 hold. The existing private stage-copy path remains available for its
 process-local fixture. NET-101 and REL-103 remain open.
+
+## PostgreSQL hold candidate
+
+Use an unnumbered schema candidate under the artifactstores test fixture.
+Provision one released row explicitly for the selected database, tenant,
+site and store. Opening the candidate will neither insert a missing row
+nor infer release from its absence. Observe the current database OID,
+cluster system identifier and installed tenant on each transition. Use
+the existing PostgreSQL transaction owner and take the scope row with
+`SELECT FOR UPDATE` before evaluating the lease. The
+[PostgreSQL row lock](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-ROWS)
+serializes decisions, and
+[clock_timestamp](https://www.postgresql.org/docs/18/functions-datetime.html)
+samples server time after the lock wait. Enable transaction-local
+[synchronous_commit](https://www.postgresql.org/docs/18/runtime-config-wal.html#GUC-SYNCHRONOUS-COMMIT)
+and refuse a server configured with fsync off. The
+[control identity functions](https://www.postgresql.org/docs/18/functions-info.html#FUNCTIONS-CONTROLDATA)
+supply the cluster pin. ARC owns least-privilege grants and validation
+of the selected SQL owner. The fixture uses its disposable operator.
+
+A hold increments the generation and expires only for takeover. Takeover
+keeps the operation UUID, replaces the owner and clears any copy identity
+from the prior generation. A current owner can confirm only the result
+of a new exact local archive readback scoped to that hold. Confirmation
+never reopens the write gate. Release requires the current unexpired
+token and the exact persisted copy identity. An ambiguous commit yields
+no token, receipt or permission. The coordinator can inspect current
+state or retry the same identity. A release retry is accepted only
+while the row still identifies that exact released hold and copy. Reject
+SQL table-lock-only and process-memory designs because neither persists
+ownership after the coordinator process exits.
+
+The test gate represents a startup/cleanup decision with the local writer
+already independently stopped. It supplies no durable writer permits.
+The candidate is unmounted. Prove the closed gate across a coordinator
+process kill, expiry, takeover, stale confirmation and stale release,
+then prove exact archive confirmation and explicit release on the
+isolated PostgreSQL/SeaweedFS fixture. Test that a new generation clears
+an earlier verified copy and that a missing or mismatched scope remains
+closed. [S3 access controls](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-management.html)
+describe the object data plane. They cannot prove exclusion for SeaweedFS
+filer, lifecycle and administrative routes. Provider write exclusion,
+durable business admission and the installer's independent restore
+authority remain production prerequisites. No dependency changes.
+
+### Verified PostgreSQL coordinator takeover
+
+On Linux amd64, `TestActualObjectBackupFence/durable_hold` applied
+the candidate DDL to its disposable PostgreSQL 18.6 schema with
+pgvector 0.8.7. SeaweedFS 4.53 held the already verified multipart
+object. The network namespace had only loopback.
+
+A child coordinator committed the hold and was killed. A fresh SQL
+pool saw the gate closed before and after forced lease expiry.
+Two successor claims yielded one owner. The old owner could neither
+start a new copy nor release the hold. Takeover cleared an earlier
+confirmed copy, and a blocked S3 readback that finished after another
+takeover could not record its result. The real local staging cleanup
+returned busy and did not reach S3. The retained file could be removed
+after the current owner confirmed a new archive and explicitly
+released with that exact identity. The fixture also refused missing
+DDL, an unprovisioned scope and mismatched site and tenant pins.
+
+The data-plane service was separately paused by its existing local
+fence throughout the child-process test. This does not qualify a
+control-plane restart with external provider requests still pending,
+or provider write exclusion. ARC owns migration numbering, SQL grants
+and durable write admission at startup. The provider and installer
+owners still own the exclusions and independent target release checks
+described above. The PostgreSQL and SeaweedFS fixtures stopped.
