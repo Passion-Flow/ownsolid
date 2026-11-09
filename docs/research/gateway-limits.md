@@ -254,3 +254,31 @@ peer was refused on its next attempt. PostgreSQL acknowledged four
 outcomes, recorded 64 actual tokens and released every admission hold.
 The product installer and control policy manager were outside this
 standalone run.
+
+## Native application budget acceptance
+
+[LiteLLM's budgets and rate limits](https://docs.litellm.ai/docs/proxy/users)
+attach ceilings to authority shared by several keys. Verify the ownsolid
+equivalent with real keys issued and checked by Go/PostgreSQL. The test
+uses the existing private quota policy keyed by server-issued key IDs
+and a single native Rust gateway. Keep the tenant ceiling higher than
+each application ceiling so an application refusal can be distinguished
+from a tenant refusal.
+
+Use three keys in the same workspace. Two keys belong to an application
+with a 31-token monthly ceiling. A synthetic 7-token prompt with 16
+allowed output tokens reserves 23, and the valid receipt settles 9.
+The sibling key now has 22 tokens left in its shared application
+budget and must be refused before generation. A key in a different
+application still completes. Verify the refused admission receives a
+terminal no-usage receipt and releases deployment capacity. Existing
+deterministic Rust tests cover rollover and the shared quota authority.
+No dependency, model, dataset or provider credential is added.
+
+The disconnected Linux run passed with three real workspace keys.
+The first call settled 9 tokens. Its sibling returned HTTP 429
+with a positive Retry-After and the application monthly budget code.
+The other application generated normally. PostgreSQL retained two
+successful receipts and one terminal receipt with unknown usage and
+no output. Each released its deployment hold. The two successful
+calls were the only generation dispatches.
