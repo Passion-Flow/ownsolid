@@ -21,12 +21,14 @@ use tokio::time::Instant;
 use uuid::Uuid;
 
 mod throughput;
+mod tools;
 
 const QUOTA_TEST_NOW: i64 = 1_794_116_800;
 const REFUSE_GENERATION: usize = 6;
 const INTERRUPT_STREAM_AFTER_TEXT: usize = 7;
 const LENGTH_FINISH: usize = 8;
 const CONTENT_FILTER_FINISH: usize = 9;
+const UNSOLICITED_TOOL_DELTA: usize = 10;
 
 #[derive(Clone)]
 struct Synthetic {
@@ -212,6 +214,13 @@ async fn backend(State(state): State<Synthetic>, request: axum::extract::Request
             state.complete_stream.notified().await;
             yield Err(std::io::Error::other("synthetic stream interruption"));
             return;
+        }
+        if mode == UNSOLICITED_TOOL_DELTA {
+            state.complete_stream.notified().await;
+            yield Ok(event(json!([{"index":0,"delta":{"tool_calls":[{
+                "index":0,"id":"call_unexpected","type":"function",
+                "function":{"name":"private_synthetic_tool","arguments":"{\"key\":\"private-synthetic-arguments\"}"}
+            }]},"finish_reason":null}]),Value::Null));
         }
         if mode==2 {std::future::pending::<()>().await;}
         if mode==4 {state.complete_stream.notified().await;}

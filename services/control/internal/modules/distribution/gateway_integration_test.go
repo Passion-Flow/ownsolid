@@ -340,6 +340,30 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 		}
 		return response
 	}
+	if mode == foregroundMessages {
+		foreignKey := foreignFixtureKey(t, c.a.Me.Workspace.TenantID)
+		ownedSecrets = append(ownedSecrets, foreignKey)
+		for _, probe := range []struct {
+			path string
+			body any
+		}{
+			{"/v1/responses", map[string]any{"model": access.alias.Name, "input": "Synthetic foreign request"}},
+			{"/v1/messages", map[string]any{"model": access.alias.Name, "max_tokens": 16,
+				"messages": []any{map[string]any{"role": "user", "content": "Synthetic foreign request"}}}},
+		} {
+			denied := request(probe.path, foreignKey, probe.body)
+			body, err := io.ReadAll(io.LimitReader(denied.Body, 16385))
+			denied.Body.Close()
+			if err != nil || denied.StatusCode != 401 || !bytes.Contains(body, []byte(`"code":"invalid_api_key"`)) {
+				t.Fatal("foreign tenant credential was not refused", probe.path, denied.StatusCode, err)
+			}
+		}
+		var admissions int
+		if err := c.s.DB.QueryRow(ctx, "SELECT count(*) FROM gateway_requests").Scan(&admissions); err != nil ||
+			admissions != 0 || backendCalls.Load() != 0 {
+			t.Fatal("foreign credential reached backend or created a local admission", err)
+		}
+	}
 	if mode == foregroundResponses || mode == foregroundMessages {
 		verifyForegroundText(t, mode, c, access, request, &paused, &backendCalls, &generations)
 		return
@@ -527,6 +551,24 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
 			t.Fatal(e)
 		}
 	}
+}
+
+// Mint a real key in an independent PostgreSQL installation fixture and
+// establish that its own control authority accepts it before using it on this site.
+func foreignFixtureKey(t *testing.T, localTenant string) string {
+	t.Helper()
+	foreign := setup(t)
+	if foreign.a.Me.Workspace.TenantID == localTenant {
+		t.Fatal("expected independent tenant scope")
+	}
+	access := foreign.access(t)
+	key := *access.key.Secret
+	allowed, err := foreign.s.AuthorizeModels(t.Context(), access.gateway.Gateway.ID, *access.gateway.Secret, key)
+	if err != nil || allowed.WorkspaceID != access.alias.WorkspaceID ||
+		len(allowed.Models) != 1 || allowed.Models[0].Name != access.alias.Name {
+		t.Fatal("foreign credential did not work in its own installation", err)
+	}
+	return key
 }
 
 func verifyForegroundText(

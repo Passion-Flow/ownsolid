@@ -87,6 +87,13 @@ loopback protocol. The native control `gateway_integration` test
 `TestRealGoRustPostgresForegroundMessages` exercises the same endpoint against
 the real distribution owner and an isolated PostgreSQL fixture.
 
+## Tool requests
+
+The Responses and Messages routes reject tool declarations and tool result
+history before generation. The pinned serving recipe has no parser for a
+native call envelope. See [tool round-trip research](../../docs/research/gateway-tool-roundtrip.md)
+for the tested schema, binding and serving boundaries.
+
 ## Backend connection recovery
 
 A connection failure during model discovery or tokenization temporarily
