@@ -75,7 +75,8 @@ the original fresh catalogue signature.
 
 The catalogue query in
 `services/control/internal/platform/database/catalog.go` measured the
-candidate after migration and after a logical schema dump and reparse.
+initial, unscoped candidate after migration and after a logical schema
+dump and reparse. The scoped candidate below supersedes these values.
 
 | Catalogue | Candidate SHA-256 |
 | --- | --- |
@@ -249,3 +250,56 @@ its body correlation ID matched the `X-Request-ID` header.
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Edit sent as plain text |
 | 503 | `SERVICE_NOT_READY` | Alias description fields are absent from the predecessor database |
 | 503 | `STORAGE_UNAVAILABLE` | Forced audit insertion failure rolled back the edit |
+
+## Site and cell scope for edit intents
+
+ARC's audit migration qualification identified the unscoped edit-intent
+table. Follow [ADR 0006](../decisions/0006-cell-and-site-scope.md) and the
+existing alias scope. The new table gets non-null site and cell columns
+with the local registry functions as defaults. A composite foreign key
+ties both columns to the referenced alias alongside its tenant and
+workspace. The alias keeps its original primary key and gets a unique
+key for the reference. This uses a
+[PostgreSQL foreign key](https://www.postgresql.org/docs/18/ddl-constraints.html#DDL-CONSTRAINTS-FK)
+to enforce consistency without locking the registry row on every edit.
+A check constraint that reads other tables would make restore order
+significant. The service resolves the local scope in SQL and HTTP
+continues to reject foreign cell paths before dispatch.
+
+The new table starts empty. Predecessor aliases already carry scope and
+receive the same empty description and initial description revision.
+Retain alias identity, serving revisions, existing keys and legacy
+publication replay. Verify defaulted scope against a second registered
+site and cell in an isolated transaction, refusal of mismatched scope
+and null values, and no mutation on a foreign-cell HTTP path. Verify the
+down SQL removes the new alias reference key and restores the
+predecessor. No dependency, model or dataset is added. The existing
+PostgreSQL and Go license terms above still apply. ARC owns the numbered
+migration and must calculate the catalog signatures on the committed tail.
+
+The scoped SQL is kept unnumbered in
+`services/control/internal/modules/distribution/testdata/alias_description_candidate.up.sql`
+and `alias_description_candidate.down.sql`. The disconnected PostgreSQL
+18.6 and pgvector 0.8.7 run passed
+`TestAliasDescriptionPostgreSQLUpgradeAndHTTPS`, including 23502 for
+explicit null, 23503 for a mismatched site or cell, defaulting to a
+second registered scope inside a rolled-back transaction, and
+RESOURCE_NOT_FOUND for a foreign cell write with no alias change or
+intent. The old publication replayed and its original deployment
+binding remained usable.
+
+An isolated SQL overlay applied the exact ARC 000058 up SQL from
+`032b21e6` before applying the scoped candidate. It reproduced all three
+of ARC's predecessor signatures, preserved the seeded alias binding
+and description defaults, and restored the baseline signatures on
+the fresh and restored-at-55 paths after running the down SQL.
+
+| ARC 000058 overlay history | Scoped candidate SHA-256 |
+| --- | --- |
+| Fresh | 72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782 |
+| Restored from current schema | 18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc |
+| Restored at 55, upgraded through 58 | 8c2f55bab0055c374d9083cfa993fc9986cf9b3ebb7e8fd6b06c0adfdd415069 |
+
+These are overlay measurements. Recompute the signatures, release
+lineage and expected table count from the actual committed tail when
+the migration is ordered. The candidate adds one table.

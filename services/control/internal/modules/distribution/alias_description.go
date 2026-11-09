@@ -106,7 +106,8 @@ func (s *Service) EditAliasDescription(ctx context.Context, a identity.Auth, wor
 		var saved []byte
 		err := tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
 			`SELECT alias_id::text,result_revision,fingerprint FROM model_alias_description_intents
-			WHERE tenant_id=$1 AND workspace_id=$2 AND actor_user_id=$3 AND idempotency_key=$4`,
+			WHERE tenant_id=$1 AND workspace_id=$2 AND actor_user_id=$3 AND idempotency_key=$4
+			AND site_id=local_site_id() AND cell_id=local_cell_id()`,
 			w.TenantID, w.ID, a.Me.User.ID, key)).Scan(&storedAlias, &out.AppliedDescriptionRevision, &saved)
 		switch {
 		case err == nil:
@@ -120,7 +121,8 @@ func (s *Service) EditAliasDescription(ctx context.Context, a identity.Auth, wor
 
 		err = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
 			`SELECT description,description_revision FROM model_aliases
-			WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE`, w.TenantID, w.ID, id)).
+			WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3
+			AND site_id=local_site_id() AND cell_id=local_cell_id() FOR UPDATE`, w.TenantID, w.ID, id)).
 			Scan(&out.Description, &out.DescriptionRevision)
 		if errors.Is(err, sql.ErrNoRows) {
 			return fail("MODEL_ALIAS_NOT_FOUND")

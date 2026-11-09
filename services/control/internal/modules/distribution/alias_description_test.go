@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // The shared catalogue owner assigns a migration number after ordering the lineage.
@@ -108,6 +110,13 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 		if value["description"] != description || value["description_revision"] != float64(revision) {
 			t.Fatal("unexpected description or description revision")
 		}
+	}
+	assertDescription(portal.Call("GET", portalPath+"/"+legacyID, nil, 200, "ModelAliasResponse"), "", 1)
+	verifyAliasDescriptionScope(t, c, legacyID)
+	problem(admin, cellroute.Public(predecessorEditPath, agentwire.Scope{SiteID: "other-site", CellID: "other-cell"}), edit, 404, "RESOURCE_NOT_FOUND")
+	var legacyIntentCount int
+	if err := c.s.DB.QueryRow(ctx, "SELECT count(*) FROM model_alias_description_intents WHERE alias_id=$1", legacyID).Scan(&legacyIntentCount); err != nil || legacyIntentCount != 0 {
+		t.Fatal("foreign cell write created an edit intent for the predecessor alias", err, legacyIntentCount)
 	}
 	assertDescription(portal.Call("GET", portalPath+"/"+legacyID, nil, 200, "ModelAliasResponse"), "", 1)
 	admin.Headers["Idempotency-Key"] = legacyKey
@@ -205,6 +214,13 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	edit.Description = strings.Repeat("\u4e2d", 500)
 	updated := admin.Write("POST", editPath, edit, 200, "AliasDescriptionResultResponse")
 	assertDescription(updated, edit.Description, 2)
+	var intentInAliasCell bool
+	if err := c.s.DB.QueryRow(ctx, `SELECT i.site_id=a.site_id AND i.cell_id=a.cell_id
+		AND i.site_id=local_site_id() AND i.cell_id=local_cell_id()
+		FROM model_alias_description_intents i JOIN model_aliases a ON a.id=i.alias_id
+		WHERE i.alias_id=$1 AND i.idempotency_key=$2`, id, firstEdit).Scan(&intentInAliasCell); err != nil || !intentInAliasCell {
+		t.Fatal("edit intent did not retain its alias scope", err)
+	}
 	if len(updated) != 4 || updated["applied_description_revision"] != float64(2) || updated["replayed"] != false {
 		t.Fatal("unexpected first edit receipt")
 	}
@@ -340,6 +356,53 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 		t.Fatal(err)
 	}
 	member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse")
+}
+
+func verifyAliasDescriptionScope(t *testing.T, c scenario, aliasID string) {
+	t.Helper()
+	ctx := t.Context()
+	tenant, workspace, actor := c.a.Me.Workspace.TenantID, c.a.Me.Workspace.ID, c.a.Me.User.ID
+	for _, probe := range []struct {
+		site, cell any
+		code       string
+	}{
+		{"other-site", agentwire.DefaultCellID, "23503"},
+		{agentwire.DefaultSiteID, "other-cell", "23503"},
+		{nil, agentwire.DefaultCellID, "23502"},
+		{agentwire.DefaultSiteID, nil, "23502"},
+	} {
+		_, err := c.s.DB.Exec(ctx, `INSERT INTO model_alias_description_intents
+			(tenant_id,workspace_id,actor_user_id,idempotency_key,alias_id,result_revision,fingerprint,site_id,cell_id)
+			VALUES($1,$2,$3,$4,$5,2,$6,$7,$8)`, tenant, workspace, actor, uuid.NewString(), aliasID, make([]byte, 32), probe.site, probe.cell)
+		var pgErr *pgconn.PgError
+		if !errors.As(err, &pgErr) || pgErr.Code != probe.code ||
+			(probe.code == "23503" && pgErr.ConstraintName != "model_alias_description_scope_fk") {
+			t.Fatalf("intent accepted an invalid alias scope or failed on a different constraint: %v", err)
+		}
+	}
+
+	// A separately registered cell demonstrates that these defaults follow the registry.
+	tx, err := c.s.DB.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `INSERT INTO sites(id,display_name) VALUES('other-site','Synthetic site');
+		UPDATE cells SET is_local=false WHERE is_local;
+		INSERT INTO cells(id,site_id,display_name,is_local) VALUES('other-cell','other-site','Synthetic cell',true);`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.Exec(ctx, `UPDATE model_aliases SET site_id=local_site_id(),cell_id=local_cell_id() WHERE id=$1`, aliasID); err != nil {
+		t.Fatal(err)
+	}
+	var site, cell string
+	err = tx.QueryRow(ctx, `INSERT INTO model_alias_description_intents
+		(tenant_id,workspace_id,actor_user_id,idempotency_key,alias_id,result_revision,fingerprint)
+		VALUES($1,$2,$3,$4,$5,2,$6) RETURNING site_id,cell_id`,
+		tenant, workspace, actor, uuid.NewString(), aliasID, make([]byte, 32)).Scan(&site, &cell)
+	if err != nil || site != "other-site" || cell != "other-cell" {
+		t.Fatal("intent defaults did not derive the registered site and cell", err, site, cell)
+	}
 }
 
 // descriptionEditRequest prepares a real session and CSRF context before starting the HTTP race.
