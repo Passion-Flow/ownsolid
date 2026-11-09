@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import re
 
-from generate import CONTRACTS, METHODS, public_audiences, public_sources
+from generate import CONTRACTS, METHODS, public_audiences, public_sources, read_contract
 
 
 def inventory(contracts):
@@ -15,7 +15,7 @@ def inventory(contracts):
     routes, operation_ids = defaultdict(list), defaultdict(list)
     for source in public_sources(contracts):
         domain = source.parent.name
-        document = json.loads(source.read_text(encoding="utf-8"))
+        document, aliases = read_contract(source)
         for path, item in sorted(document["paths"].items()):
             for method, operation in sorted(item.items()):
                 if method not in METHODS:
@@ -36,6 +36,8 @@ def inventory(contracts):
                 if not isinstance(operation_id, str) or not operation_id.strip():
                     findings.append({"code": "PUBLIC_OPERATION_ID_MISSING", "domain": domain,
                                      "method": row["method"], "path": path})
+                if path in aliases:
+                    continue
                 shape = re.sub(r"\{[^{}]+\}", "{}", path)
                 for audience in audiences:
                     routes[(audience, row["method"], shape)].append({"domain": domain, "path": path})

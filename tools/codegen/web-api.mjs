@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readContract } from './openapi-paths.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const contracts = join(root, 'api', 'openapi', 'v1');
@@ -31,7 +32,8 @@ async function generate() {
     .sort();
   for (const domain of domains) {
     const source = join(contracts, domain, 'openapi.json');
-    const ast = await openapiTS(pathToFileURL(source));
+    const { document, hasAliases } = readContract(source);
+    const ast = await openapiTS(hasAliases ? document : pathToFileURL(source));
     files.set(`${domain}.ts`, banner(`api/openapi/v1/${domain}/openapi.json`) + astToString(ast));
   }
   const index = domains
