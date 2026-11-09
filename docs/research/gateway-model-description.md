@@ -226,3 +226,24 @@ payload when retrying an uncertain response. Render only the text in
 the Portal catalogue. The two alias fields are absent on predecessor
 schemas. The Admin controls and Portal display need installed migration
 evidence and their own UI qualification.
+
+## Observed edit failures
+
+The disconnected PostgreSQL and Admin HTTPS probe verified standard
+`application/problem+json` responses without a success envelope. The
+problem contains `type`, `title`, `status`, `code` and `request_id`.
+The predecessor response used the configured `Retry-After` seconds and
+its body correlation ID matched the `X-Request-ID` header.
+
+| HTTP status | Observed code | Trigger |
+| --- | --- | --- |
+| 400 | `VALIDATION_FAILED` | Missing idempotency key or invalid request object, encoding, control characters or description length |
+| 403 | `CSRF_INVALID` | Anonymous POST or an Admin POST without its CSRF proof |
+| 404 | `MODEL_ALIAS_NOT_FOUND` | Alias absent from another workspace in the same tenant |
+| 404 | `RESOURCE_NOT_FOUND` | Foreign tenant workspace or Portal mutation path |
+| 409 | `VERSION_CONFLICT` | Stale description revision in a concurrent edit |
+| 409 | `IDEMPOTENCY_CONFLICT` | Changed payload under the same intent key |
+| 413 | `PAYLOAD_TOO_LARGE` | Request object exceeds the JSON envelope limit |
+| 415 | `UNSUPPORTED_MEDIA_TYPE` | Edit sent as plain text |
+| 503 | `SERVICE_NOT_READY` | Alias description fields are absent from the predecessor database |
+| 503 | `STORAGE_UNAVAILABLE` | Forced audit insertion failure rolled back the edit |
