@@ -173,6 +173,13 @@ func TestManufactureCurrentRelease(t *testing.T) {
 	if source := os.Getenv("OWNSOLID_CURRENT_FACTORY_SOURCE_SHA256"); wire.ValidSHA256(source) {
 		m.SourceSHA256 = source
 	}
+	if os.Getenv("OWNSOLID_CURRENT_FACTORY_REGISTRY") == "1" {
+		m.Prerequisites = append(m.Prerequisites, RegistryPrerequisite)
+		m.Assets = slices.Insert(m.Assets, len(m.Assets)-1,
+			wire.Asset{ID: RegistryImageAsset, Path: RegistryImageAsset, Kind: "image_archive", Architecture: "amd64", Licenses: []string{"registry-notice"}},
+			wire.Asset{ID: "registry-notice", Path: "registry-notice", Kind: "license", Licenses: []string{}},
+		)
+	}
 	if os.Getenv("OWNSOLID_CURRENT_FACTORY_RKE2") == "1" {
 		release := agent.ApprovedKubernetesRelease()
 		m.Prerequisites = append(m.Prerequisites, rke2Prerequisite+release.Version)

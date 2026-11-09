@@ -10,6 +10,15 @@ import (
 // CurrentProfile identifies the installable single-node Linux amd64 inventory.
 const CurrentProfile = factory.CurrentProfile
 
+// RegistryPrerequisite identifies the optional signed site registry group.
+const RegistryPrerequisite = factory.RegistryPrerequisite
+
+// RegistryImageAsset names the exact Distribution runtime archive.
+const RegistryImageAsset = factory.RegistryImageAsset
+
+// RuntimeBlob describes a selected OCI image's immutable runtime content.
+type RuntimeBlob = factory.RuntimeBlob
+
 // InspectCurrent verifies the current inventory against independent public trust.
 func InspectCurrent(ctx context.Context, p Verification, source string) (Result, error) {
 	c, err := p.config()

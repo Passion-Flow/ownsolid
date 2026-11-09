@@ -30,13 +30,29 @@ type ImageInventory struct {
 	ExpandedBytes     int64        `json:"expanded_bytes"`
 	manifestMediaType string
 	manifestBytes     int64
+	configMediaType   string
+	configBytes       int64
 }
+
+// RuntimeBlob identifies a config, layer or manifest from the selected OCI image.
+type RuntimeBlob struct {
+	Digest, MediaType string
+	Size              int64
+	Manifest          bool
+}
+
+type runtimeBlobLocation struct {
+	RuntimeBlob
+	offset int64
+}
+
 type ImageSource struct {
 	file      *os.File
 	before    os.FileInfo
 	asset     wire.Asset
 	config    Config
 	inventory ImageInventory
+	runtime   []runtimeBlobLocation
 }
 type ImportReceipt struct {
 	SourceSHA256    string `json:"source_sha256"`
@@ -52,6 +68,38 @@ func (s *ImageSource) Inventory() ImageInventory {
 	out.Layers = append([]ImageLayer(nil), out.Layers...)
 	return out
 }
+
+// RuntimeBlobs returns the config and distinct layers before the selected manifest.
+func (s *ImageSource) RuntimeBlobs() []RuntimeBlob {
+	out := make([]RuntimeBlob, len(s.runtime))
+	for i, b := range s.runtime {
+		out[i] = b.RuntimeBlob
+	}
+	return out
+}
+
+// OpenRuntimeBlob reads the exact bytes at the verified archive offset.
+func (s *ImageSource) OpenRuntimeBlob(digest string) (*io.SectionReader, error) {
+	if err := s.CheckUnchanged(); err != nil {
+		return nil, err
+	}
+	for _, b := range s.runtime {
+		if b.Digest == digest {
+			return io.NewSectionReader(s.file, b.offset, b.Size), nil
+		}
+	}
+	return nil, fail("RELEASE_IMPORT_RUNTIME_BLOB_MISSING")
+}
+
+// CheckUnchanged checks the pinned archive descriptor after a consuming operation.
+func (s *ImageSource) CheckUnchanged() error {
+	current, err := s.file.Stat()
+	if err != nil || !sameVersion(s.before, current) {
+		return fail("RELEASE_IMPORT_IMAGE_SOURCE_CHANGED")
+	}
+	return nil
+}
+
 func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asset, maximumExpandedBytes int64) (*ImageSource, error) {
 	if mounted(c.MountRoot) != nil || !within(c.MountRoot, filename) || a.Kind != "image_archive" || a.Size < 1 || a.Size > c.MaximumAssetBytes || !wire.ValidSHA256(a.SHA256) || maximumExpandedBytes < 1 {
 		return nil, fail("RELEASE_IMPORT_IMAGE_INPUT_INVALID")
@@ -95,6 +143,23 @@ func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asse
 		multiplicity[name]++
 	}
 	observed := map[string]bool{}
+	runtime := []runtimeBlobLocation{
+		{RuntimeBlob: RuntimeBlob{Digest: inventory.ConfigDigest, MediaType: inventory.configMediaType, Size: inventory.configBytes}},
+	}
+	unique := map[string]bool{inventory.ConfigDigest: true}
+	for _, layer := range inventory.Layers {
+		if !unique[layer.Digest] {
+			unique[layer.Digest] = true
+			runtime = append(runtime, runtimeBlobLocation{RuntimeBlob: RuntimeBlob{Digest: layer.Digest, MediaType: layer.MediaType, Size: layer.Size}})
+		}
+	}
+	runtime = append(runtime, runtimeBlobLocation{RuntimeBlob: RuntimeBlob{
+		Digest: inventory.ManifestDigest, MediaType: inventory.manifestMediaType, Size: inventory.manifestBytes, Manifest: true,
+	}})
+	runtimeIndex := make(map[string]int, len(runtime))
+	for i, b := range runtime {
+		runtimeIndex["blobs/sha256/"+strings.TrimPrefix(b.Digest, "sha256:")] = i
+	}
 	sum.Reset()
 	input, e = newStreamReader(ctx, f)
 	if e != nil {
@@ -109,6 +174,12 @@ func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asse
 		}
 		if e != nil {
 			return nil, fail("RELEASE_IMPORT_LAYER_ARCHIVE_INVALID")
+		}
+		if i, ok := runtimeIndex[header.Name]; ok {
+			if runtime[i].Size != header.Size || runtime[i].offset != 0 {
+				return nil, fail("RELEASE_IMPORT_RUNTIME_BLOB_INVALID")
+			}
+			runtime[i].offset = counter.n
 		}
 		layer, ok := layers[header.Name]
 		if !ok {
@@ -155,8 +226,13 @@ func OpenImageSource(ctx context.Context, c Config, filename string, a wire.Asse
 		return nil, fail("RELEASE_IMPORT_IMAGE_SOURCE_CHANGED")
 	}
 	inventory.ExpandedBytes = maximumExpandedBytes - remaining
+	for _, b := range runtime {
+		if b.offset == 0 {
+			return nil, fail("RELEASE_IMPORT_RUNTIME_BLOB_MISSING")
+		}
+	}
 	success = true
-	return &ImageSource{file: f, before: before, asset: a, config: c, inventory: inventory}, nil
+	return &ImageSource{file: f, before: before, asset: a, config: c, inventory: inventory, runtime: runtime}, nil
 }
 
 // WriteTagless preserves the selected runtime blobs with a single platform root;

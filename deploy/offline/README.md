@@ -310,6 +310,80 @@ and `OWNSOLID_CURRENT_FACTORY_SCHEMA`. Put the resulting `ownsolid.tar.gz` and
 `OWNSOLID_E2E_RUN='^TestSignedBundleIsolatedDocker$'`. The test starts with an
 empty Docker daemon and checks that a truncated bundle cannot load an image.
 
+## Bootstrap a site Registry
+
+On a Linux amd64 host with local Docker Engine and its containerd image store,
+stage a signed release that includes the approved Registry image. Reuse the
+protected verification policy and separately provisioned public trust used by
+`verify-bundle`. Allow space for the staged archive, the verified extracted
+assets, the loaded Registry image and its persistent content store.
+
+Create a root-owned mode 0600 `registry.yaml`. Use a dedicated empty root under
+an existing root-owned directory. Select a private IPv4 address assigned to
+the host, an available port, a Docker container name reserved for this
+Registry and a dedicated unprivileged runtime user and group.
+
+```yaml
+root: /var/lib/ownsolid-registry
+name: ownsolid-site-registry
+listen: 10.42.0.10:5443
+uid: 18080
+gid: 18080
+request_seconds: 300
+tls_ca_file: /etc/ownsolid/registry/ca.pem
+tls_certificate_file: /etc/ownsolid/registry/site.pem
+tls_key_file: /etc/ownsolid/registry/site-key.pem
+credential_file: /etc/ownsolid/registry/pull-credential.json
+```
+
+Provide the CA, the server certificate chain with an IP subject alternative
+name for the listen address, the matching key and the credential as separate
+root-owned mode 0600 files. The credential file has JSON fields `username`
+and `password`. Supply a generated password of 20 to 72 bytes. Keep the
+certificate and credential inputs outside the Registry root.
+
+```sh
+ownsolid-install registry-bundle --bundle /mnt/release/ownsolid.tar.gz \
+  --verification /etc/ownsolid/release-verification.json \
+  --config /etc/ownsolid/registry.yaml
+```
+
+The JSON output lists immutable `ownsolid/release/<asset-id>@sha256:...`
+references at the private endpoint. Install the public site CA under
+`/etc/docker/certs.d/<host>:<port>/ca.crt` on each Docker node. Use the node's
+private Docker credential store and supply the password to `docker login
+--password-stdin` from its protected credential file. Pull one of the exact
+references reported by the installer.
+
+The command stages an authenticated writer on loopback and makes the
+private address available after content verification. To resume a failed
+install, correct the reported cause and repeat the command with the same
+archive, configuration and root. A repeat checks the existing content and
+retains the bound container. The Registry serves one signed release per root.
+The release reader can pull and has no upload rights. Its local operation
+records live in `operations.log` in the Registry root.
+
+### Exercise the isolated Registry path
+
+On a disposable Linux amd64 host with Docker, containerd, OpenSSL, curl, jq,
+iproute2 and Python 3, run the installer and the repository egress recorder
+against a current signed Registry release and a current signed legacy release
+with the same public trust. The runner requires a fresh mode 0700 work
+directory and privileges to create network and mount namespaces and an ext4
+loop mount.
+
+```sh
+bash deploy/offline/test-registry-egress.sh "$PRIVATE_WORK_DIR" "$INSTALLER" \
+  "$EGRESS_RECORDER" "$REGISTRY_RELEASE" "$LEGACY_RELEASE" "$PUBLIC_TRUST"
+```
+
+The two empty Docker engines share only a private veth. Each namespace routes
+external IPv4, IPv6 and DNS to the recorder. The test requires the deliberate
+probes and fails on any other external attempt. It checks refusal before
+initialization, repeat installation, TLS and authenticated pulls from the
+second node, missing digest refusal and read-only serving. The work directory
+contains disposable test credentials, media and logs.
+
 ## Prepare RKE2 artifacts for Agent delivery
 
 Use a protected verification policy with the independently supplied release

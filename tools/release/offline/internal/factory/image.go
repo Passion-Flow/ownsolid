@@ -210,6 +210,8 @@ func validateImageInventory(ctx context.Context, reader io.Reader, a wire.Asset,
 				inventory.manifestBytes = d.Size
 				inventory.ManifestDigest = d.Digest
 				inventory.ConfigDigest = doc.Config.Digest
+				inventory.configMediaType = doc.Config.MediaType
+				inventory.configBytes = doc.Config.Size
 				inventory.OS = identity.OS
 				inventory.Architecture = identity.Architecture
 				inventory.DiffIDs = append([]string(nil), identity.RootFS.DiffIDs...)

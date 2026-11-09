@@ -185,6 +185,28 @@ trust file. `TestManufactureCurrentRelease` uses ephemeral test trust and a
 fixture SBOM with real Docker exports for the isolated installer test. Those
 inputs do not qualify a production release.
 
+### Optional site Registry inventory
+
+Add `ownsolid-site-registry:distribution-v3.1.2` to `prerequisites` and a
+`registry-image` asset of kind `image_archive` and architecture `amd64`.
+The factory requires these Docker Official Image identities:
+
+| Field | Digest |
+| --- | --- |
+| `image_id` | `sha256:52b489ad8e6f40d1a676702e3ce398ec796ce38f08fbb786e1f324baa12d84b8` |
+| `image_config_digest` | `sha256:39a2a88344598be51c03d6829b40dd29fcda04ce1e01ef1f7596b5af744276ce` |
+
+On the manufacturing host, export that exact platform image. Sign the archive
+SHA-256, include its component and notice evidence and add the archive checksum
+to the current release SPDX. The site installer verifies the complete bundle,
+starts the Registry from the packaged image and preloads the selected
+Linux amd64 manifests and blobs of the other signed image archives.
+
+For an isolated test fixture, set `OWNSOLID_CURRENT_FACTORY_REGISTRY=1` in
+`TestManufactureCurrentRelease` and stage `assets/registry-image` and
+`assets/registry-notice`. See the
+[Registry installation and acceptance instructions](../../../deploy/offline/README.md#bootstrap-a-site-registry).
+
 ### Optional RKE2 inventory
 
 To carry the approved Linux amd64 RKE2 release in a current bundle, add

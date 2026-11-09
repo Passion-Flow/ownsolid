@@ -29,6 +29,7 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 - [x] DEL-106 Incremental patch bundles verified against the installed baseline (P1) - Catalog: F504 - Evidence: 4e22094 and c54fed2. The isolated installer refused the wrong baseline and verified and applied the patch against the exact installed signed release.
 - [ ] DEL-107 Helm chart with values schema, image-address rewrite, secret references, ingress and TLS (P1) - Catalog: F216, F228, F492
 - [ ] DEL-108 In-site OCI registry bootstrapped from the bundle; images pinned by digest (P1) - Catalog: F494
+  - The signed-release Registry path passed the disconnected Linux amd64 drill. It refused missing and truncated inputs, retained its container across repeats, and served all four signed image digests to a cold private Docker node over authenticated TLS. See [status evidence](../status.md) and [ADR 0061](../../decisions/0061-seed-a-site-registry-from-the-signed-release.md). Leave open for the production release inventory and the managed RKE2 worker pull path in ADR 0051 and ARC-116.
 - [ ] DEL-109 Offline license activation, renewal and migration with the ownsolid-entitlement file format (P1) - Catalog: F443, F501, F646
   - Includes an installer setting for `runtime.licensing.maximum_imports`: today raising it means editing `control.yaml`, which `apply` rewrites.
   - Before starting this item: freeze the license format in `pkg/license`, then tell the

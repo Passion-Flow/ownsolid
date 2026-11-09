@@ -137,20 +137,9 @@ func prepareBundle(ctx context.Context, configPath, archive string, policy bundl
 	if err := c.validate(true); err != nil {
 		return candidate, nil, err
 	}
-	mount, err := filepath.EvalSymlinks(policy.MountRoot)
-	if err != nil || mount != policy.MountRoot || !canonicalPath(mount) || mount == "/" {
-		return candidate, nil, errors.New("INSTALL_BUNDLE_STAGING_UNAVAILABLE: use a real mounted volume for release preparation")
-	}
-	stage, err := os.MkdirTemp(mount, ".ownsolid-install-")
+	prepared, result, cleanup, err := unpackCurrentBundle(ctx, archive, policy)
 	if err != nil {
-		return candidate, nil, errors.New("INSTALL_BUNDLE_STAGING_UNAVAILABLE: check the mounted volume's permissions and free space")
-	}
-	cleanup := func() { _ = os.RemoveAll(stage) }
-	prepared := filepath.Join(stage, "prepared")
-	result, err := bundle.UnpackCurrent(ctx, policy, archive, prepared)
-	if err != nil {
-		cleanup()
-		return candidate, nil, fmt.Errorf("INSTALL_BUNDLE_VERIFICATION_FAILED: %w", err)
+		return candidate, nil, err
 	}
 	assets, binding := bundleInventory(result)
 	c.ComposeFile = filepath.Join(prepared, filepath.FromSlash(assets["compose"].Path))
@@ -160,6 +149,25 @@ func prepareBundle(ctx context.Context, configPath, archive string, policy bundl
 		return candidate, nil, err
 	}
 	return preparedBundle{config: c, result: result, assets: assets, binding: binding, root: prepared}, cleanup, nil
+}
+
+func unpackCurrentBundle(ctx context.Context, archive string, policy bundle.Verification) (string, bundle.Result, func(), error) {
+	mount, err := filepath.EvalSymlinks(policy.MountRoot)
+	if err != nil || mount != policy.MountRoot || !canonicalPath(mount) || mount == "/" {
+		return "", bundle.Result{}, nil, errors.New("INSTALL_BUNDLE_STAGING_UNAVAILABLE: use a real mounted volume for release preparation")
+	}
+	stage, err := os.MkdirTemp(mount, ".ownsolid-install-")
+	if err != nil {
+		return "", bundle.Result{}, nil, errors.New("INSTALL_BUNDLE_STAGING_UNAVAILABLE: check the mounted volume's permissions and free space")
+	}
+	cleanup := func() { _ = os.RemoveAll(stage) }
+	prepared := filepath.Join(stage, "prepared")
+	result, err := bundle.UnpackCurrent(ctx, policy, archive, prepared)
+	if err != nil {
+		cleanup()
+		return "", bundle.Result{}, nil, fmt.Errorf("INSTALL_BUNDLE_VERIFICATION_FAILED: %w", err)
+	}
+	return prepared, result, cleanup, nil
 }
 
 func bundleInventory(result bundle.Result) (map[string]wire.Asset, bundleBinding) {

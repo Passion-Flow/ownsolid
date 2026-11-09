@@ -116,6 +116,9 @@ func (c Config) validateManifest(m wire.Manifest) error {
 			return fail("RELEASE_REQUIRED_ASSET_MISSING")
 		}
 	}
+	if err := validateCurrentRegistry(m); err != nil {
+		return err
+	}
 	return validateRKE2Inventory(m, c.RequireRKE2, c.RequireRKE2Components)
 }
 
