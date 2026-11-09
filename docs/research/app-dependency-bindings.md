@@ -29,6 +29,37 @@ and recheck the plan against the owning records before mounting any credential.
 The installer owns the mount roots, file permissions, per-container scope and
 intranet endpoint policy.
 
+## Signed release selection
+
+The application owner supplies the exact selected release pin, running platform
+version and authenticated installation scope. Read the manifest and both
+locales from the signed version directory and compare the returned pin with
+the selection before checking the owner-resolved records. Apply the existing
+platform range check and `Manifest.Bind` validation. Return the pin, scope and
+ordered reference-only plan together. Binding a caller-assembled manifest
+would allow a declaration other than the signed release to supply the slots.
+Binding validation reads only signed metadata. Full payload verification
+still runs before installation and import.
+
+The installer accepts resource IDs as choices and resolves the corresponding
+grants through each owner. The secret owner returns an opaque reference for
+the exact resource and installation slot. The caller rechecks authorization
+and revocation before projecting files. The closed Compose launch profile
+needs an admitted credential projection path before it can consume these
+references.
+[Closed Compose staging](catalog-compose-staging.md),
+[Kubernetes workload projection](https://servicebinding.io/spec/core/1.1.0/#workload-projection).
+
+Test a signed release with model, database and storage dependencies, list
+its two authenticated locales, select the returned pin and verify both its
+bindings and full payload. Reject omitted or mistyped bindings, foreign
+workspace or installation references, an unrecognized field holding a
+credential even in a correctly signed manifest, and a direct value in place
+of a secret reference. Exercise a stale pin and an incompatible platform.
+The existing strict JSON reader and UUID validation cover the two input
+shapes. No dependency, model or dataset is added.
+[Go strict JSON decoding](https://pkg.go.dev/encoding/json/v2#RejectUnknownMembers).
+
 Free-form URLs, credentials in environment variables and arbitrary host-file
 paths allow package inputs to bypass resource selection or leak secrets.
 Kubernetes-specific binding objects alone would leave Compose without the same
