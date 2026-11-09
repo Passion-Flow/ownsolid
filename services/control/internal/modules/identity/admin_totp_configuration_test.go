@@ -80,6 +80,8 @@ func TestAdminTOTPStartupRejectsUnsafeKeyReferences(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertRefusal(&Service{}, AdminTOTPConfiguration{Enabled: true, KeyringFile: link}, "ADMIN_TOTP_KEYRING_FILE_INVALID")
+	shared.Config.Security.MailKeyringFile = link
+	assertRefusal(shared, cfg, "ADMIN_TOTP_KEYRING_FILE_INVALID")
 	if err := os.Remove(link); err != nil {
 		t.Fatal(err)
 	}
