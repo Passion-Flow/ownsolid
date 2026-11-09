@@ -23,6 +23,11 @@ database owner to land or authorize the exact fresh and restored fingerprints.
 - SCH-101 has a PostgreSQL reservation and release seam. The
   [training and database handoff](scheduling-training-reservations.md) names the
   existing owner transactions and records fresh and restored catalog evidence.
+- SCH-103 ranks eligible workspace queues for one tenant using the existing
+  policy and active reservations. The dispatch owner still supplies authorized
+  membership, priority and durable enqueue order, opens a fresh snapshot after
+  dispatch and rechecks admission in the write transaction. See
+  [live workspace shares](scheduling-queue-policy.md#live-workspace-shares).
 - SCH-104 reserves whole demand in PostgreSQL and requires a verified
   stop or non-delivery for every exact replica slot before release.
   The [gang handoff](scheduling-admission.md#atomic-gang-reservation-and-release)
@@ -41,8 +46,9 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   from the workload owner, a bounded retry policy and cell confirmation before
   resource release. Kueue [preemption](https://kueue.sigs.k8s.io/docs/concepts/preemption/)
   and Slurm [preemption](https://slurm.schedmd.com/preempt.html) expose different
-  stop and requeue semantics. Do not treat a Kubernetes stop request or an
-  elapsed grace period as proof that GPUs are free.
+  stop and requeue semantics. The owner must supply a durable, scoped
+  preemption lineage to distinguish requeues from ordinary attempt retries,
+  plus a checkpoint and exact positive stop result before capacity is freed.
 - SCH-106 requires trustworthy device and network topology observations. The
   current agent facts contract lacks the full PCIe, NUMA, NVLink and fabric
   inventory. [NVIDIA DCGM topology](https://docs.nvidia.com/datacenter/dcgm/latest/learn/core-services/topology-and-links.html)
