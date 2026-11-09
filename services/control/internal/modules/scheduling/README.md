@@ -6,7 +6,10 @@ PostgreSQL transaction to hold or release the exact attempt. The quota snapshot
 repository also uses an expected policy revision. Enabled departments can
 attribute loans to sibling workspaces and keep a reclaim pending until every
 selected victim has a committed owner release. The cell adapter reads
-the exact Kueue or Volcano object over verified TLS. Runtime controllers still
+the exact Kueue or Volcano object over verified TLS. Provision the cell's
+bearer credential as a protected regular file. Rotate it by atomically
+replacing the file at the same path. Each observation reads the current file
+and refuses insecure replacements before contacting the cell. Runtime controllers still
 own execution, and a preflight result does not reserve resources.
 
 For unit and TLS transport tests, run:

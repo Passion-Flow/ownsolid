@@ -18,9 +18,12 @@ import (
 
 func TestObserveVerifiedTLSAndIdentity(t *testing.T) {
 	token := rand.Text()
-	var mode atomic.Int32
+	var accepted atomic.Value
+	accepted.Store(token)
+	var mode, requests atomic.Int32
 	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		if req.Header.Get("Authorization") != "Bearer "+token || req.Method != http.MethodGet {
+		requests.Add(1)
+		if req.Header.Get("Authorization") != "Bearer "+accepted.Load().(string) || req.Method != http.MethodGet {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -82,6 +85,35 @@ func TestObserveVerifiedTLSAndIdentity(t *testing.T) {
 		if _, err := client.Observe(t.Context(), ref); !errors.Is(err, want) {
 			t.Errorf("response %d: got %v, want %v", i, err, want)
 		}
+	}
+	mode.Store(0)
+	rotate := func(permissions os.FileMode) {
+		t.Helper()
+		newToken := rand.Text()
+		replacement := filepath.Join(dir, "token-replacement")
+		if err := os.WriteFile(replacement, []byte(newToken), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(replacement, permissions); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Rename(replacement, tokenFile); err != nil {
+			t.Fatal(err)
+		}
+		accepted.Store(newToken)
+	}
+	rotate(0o600)
+	if got, err := client.Observe(t.Context(), ref); err != nil || got.State != Admitted {
+		t.Fatalf("rotated credential was not used: %+v, %v", got, err)
+	}
+	before := requests.Load()
+	rotate(0o644)
+	if _, err := client.Observe(t.Context(), ref); !errors.Is(err, ErrConfiguration) || requests.Load() != before {
+		t.Fatalf("unsafe credential reached the cell: %v", err)
+	}
+	rotate(0o600)
+	if got, err := client.Observe(t.Context(), ref); err != nil || got.State != Admitted {
+		t.Fatalf("credential replacement did not restore observations: %+v, %v", got, err)
 	}
 	u, err := url.Parse(config.Origin)
 	if err != nil {

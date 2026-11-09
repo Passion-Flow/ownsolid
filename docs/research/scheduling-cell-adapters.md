@@ -41,3 +41,35 @@ UIDs, terminating objects, stale conditions and the two schedulers' distinct
 readiness and terminal states. Full acceptance needs signed offline installation
 of both controllers, real admission and cancellation through the proper owner,
 and egress-isolated tests against RKE2.
+
+## Rotating the protected bearer file
+
+Kubernetes issues time-bound ServiceAccount tokens and expects clients to
+reload the rotated credentials. The
+[ServiceAccount guide](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#launch-a-pod-using-service-account-token-projection)
+describes kubelet renewal. The upstream
+[client-go transport](https://github.com/kubernetes/client-go/blob/master/transport/token_source.go)
+periodically reloads its file and invalidates its cache on an authorization
+failure.
+
+This adapter uses one operator-owned protected file on the Control host.
+Validate it at startup and reload the small file before every bounded
+scheduler observation through the existing protected reader. Credential
+provisioning supplies a replacement regular file by atomic rename in the
+same directory. Keep the TLS transport and authenticated destination
+unchanged across rotation. If the path becomes unreadable, malformed,
+insecure, or changes while it is read, fail locally and retry a later
+observation after the file is valid. Avoid a background cache or fallback
+credential. At the current observation boundary they add timing state
+and can keep sending a revoked token after a file is withdrawn.
+
+Test real loopback TLS with a server that accepts only the current token.
+Rotate the protected file without recreating the adapter. Reject an
+insecure replacement before making a network request and recover when
+the operator installs the next valid file. The installation owner still
+provisions a least-privilege ServiceAccount and supplies its rotating
+credential. The existing protected-file contract requires a regular
+file, so direct kubelet projected symlinks need a separately verified
+installation path. client-go is an Apache-2.0 design reference. The
+implementation uses the existing standard library and bundle reader,
+with no new dependency or license obligations.
