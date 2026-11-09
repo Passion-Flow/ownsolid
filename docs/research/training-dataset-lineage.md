@@ -17,3 +17,11 @@ The existing test stack uses [PostgreSQL](https://www.postgresql.org/about/licen
 ## Model and UI handoff
 
 Model preparation already freezes the training command and adapter together as a source identity through `AcceptedAdapterWithin`. Project the original training dataset ID, version ID, and manifest SHA-256 from that command for the model's lineage. Keep the preparation holdout's lineage separate. The derived catalog already carries `scope.preparation_id`, the preparation attempt ID, artifact ID, and report digest. Use these scoped references to resolve the retained preparation snapshot when presenting or exporting model lineage. DAT-106 also requires end-to-end evidence from the run and derived model views.
+
+## Preparation detail projection
+
+The preparation detail service can return two named dataset version references after validating the retained version 1 snapshot. Training comes from the frozen command. Holdout comes from the frozen preparation input. The read must retain the existing session, tenant, workspace, preparation, and training attempt checks and reject a conflicting snapshot or digest without returning either reference. The projection only uses validated metadata. It requires no active dataset lookup, file read, or network access. Legacy preparation records keep their existing snapshot format, and public JSON stays unchanged until the API and UI owners bind the fields.
+
+Verify the detail read with a version 1 snapshot in PostgreSQL, a separate holdout source, and a second version of the training dataset. Retiring the original version must preserve its ID and digest on subsequent reads. A request in a different authorized workspace must not find the preparation. An internally consistent snapshot that names a different training attempt must fail against the scoped preparation row. Compare the serialized detail before and after projection to guard the existing HTTP response shape.
+
+`TestPreparationDetailRetainsDatasetLineage` and the existing `TestActualPairedPreparationReview` passed on PostgreSQL 18.6 with pgvector 0.8.7 inside a Linux arm64 container with no network interface beyond loopback. The test seeds synthetic source and artifact metadata under the ordinary SQL constraints. It verifies the scoped read and compatibility with retained snapshots, without running training or rebuilding model artifacts.

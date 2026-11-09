@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	trainingwire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
 )
 
 type CreateRequest struct {
@@ -52,6 +52,19 @@ func (i preparationInputs) inventory() wire.InputInventory {
 	return wire.InputInventory{AdapterFiles: append([]datawire.Asset{}, i.Adapter.Files...), Heldout: datawire.Asset{Path: "heldout.jsonl", SizeBytes: i.Heldout.SourceBytes, SHA256: i.Heldout.EffectiveSourceSHA256}}
 }
 
+// DatasetVersionLineage identifies a frozen dataset version and its manifest.
+type DatasetVersionLineage struct {
+	DatasetID        string
+	DatasetVersionID string
+	ManifestSHA256   string
+}
+
+// PreparationDatasetLineage keeps the original training source distinct from the preparation holdout.
+type PreparationDatasetLineage struct {
+	Training DatasetVersionLineage
+	Holdout  DatasetVersionLineage
+}
+
 type Preparation struct {
 	ReviewID              *string              `json:"review_id"`
 	DerivedModelID        *string              `json:"derived_model_id"`
@@ -84,8 +97,10 @@ type Preparation struct {
 	CreatedAt             time.Time            `json:"created_at"`
 	UpdatedAt             time.Time            `json:"updated_at"`
 	FinishedAt            *time.Time           `json:"finished_at"`
-	tenant                string
-	inputs                preparationInputs
+	// DatasetLineage is populated by the scoped detail read for internal consumers.
+	DatasetLineage PreparationDatasetLineage `json:"-"`
+	tenant         string
+	inputs         preparationInputs
 }
 
 func validPreparationState(state string) bool {
