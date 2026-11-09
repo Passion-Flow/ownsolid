@@ -51,6 +51,12 @@ the Console are pending, so deployed installations leave expiry disabled.
 
 This is a large owner with distinct import, verified storage and derived-model areas. A future split should preserve one authority and the exact acceptance/retirement transaction; do not create parallel “base” and “derived” authorization systems just to reduce file count.
 
+A leased file transfer computes a digest of the requested range. When
+that range covers the complete file, the owner also compares it with the
+pinned catalogue before releasing a download. A mismatch returns
+`MODEL_FILE_CHANGED`. The Agent verifies the complete digest of a
+multi-range file before use.
+
 Synchronize contracts/agent model catalogs and model-lifecycle references, [M06](../../../../../docs/milestones/m06-models), control/deployment consumers, [models frontend](../../../../../web/README.md), model-cache policy/examples and offline/image source manifests.
 
 Focused native check: go -C services/control test ./internal/modules/models. Actual import, empty-store identity, derived transfer and SQL tests have separate fixture requirements. Imported bytes do not establish inference/GPU performance.
