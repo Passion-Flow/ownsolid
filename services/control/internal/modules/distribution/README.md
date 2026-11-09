@@ -21,6 +21,12 @@ digest, the same check used for report replay. If a stored receipt fails
 verification, the request returns `STORAGE_UNAVAILABLE` without a partial
 page. See the [usage history verification](../../../../../docs/research/gateway-usage-history.md).
 
+The Report transaction can project an accepted receipt into the PostgreSQL
+usage ledger through `Service.ProjectGatewayReceipts`. The service defaults
+to disabled. Enable it in control composition only after the ledger migration
+is active. A projection failure rolls back the receipt and its report audit
+and leaves the gateway able to retry the same canonical outcome.
+
 Add `/export` to the cell-scoped Admin or Portal request list path to
 download one authorized page as `gateway-usage.csv`. The request takes the
 same `api_key_id`, `limit` and `cursor` query parameters. To continue,
