@@ -10,18 +10,38 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/jackc/pgx/v5"
 )
 
 const connectorColumns = `id::text,name,provider,origin,client_id::text,enabled,revision,auth_version,created_at,updated_at`
 
-func scanConnector(row transaction.Row) (Connector, error) {
+func scanConnector(row transaction.Row, extra ...any) (Connector, error) {
 	var c Connector
-	e := row.Scan(&c.ID, &c.Name, &c.Provider, &c.Origin, &c.ClientID, &c.Enabled, &c.Revision, &c.AuthVersion, &c.CreatedAt, &c.UpdatedAt)
+	e := row.Scan(append([]any{&c.ID, &c.Name, &c.Provider, &c.Origin, &c.ClientID, &c.Enabled, &c.Revision, &c.AuthVersion, &c.CreatedAt, &c.UpdatedAt}, extra...)...)
 	return c, e
+}
+
+const connectorSecretColumns = "secret_key_id,secret_nonce,secret_ciphertext"
+
+func (v *sealedSecret) scanTargets() []any {
+	return []any{&v.keyID, &v.nonce, &v.ciphertext}
+}
+
+func (s *Service) verifyConnectorCredential(tenant, id string, sealed sealedSecret) error {
+	return s.verifyStoredSecret(secretScope{tenant, id, id, clientSecretPurpose}, sealed)
+}
+
+// Read under the caller's existing connector fence.
+func (s *Service) verifyConnectorCredentialWithin(ctx context.Context, q transaction.Executor, tenant, id string) error {
+	var sealed sealedSecret
+	if e := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+		"SELECT "+connectorSecretColumns+" FROM sso_connectors WHERE tenant_id=$1 AND id=$2", tenant, id)).Scan(sealed.scanTargets()...); e != nil {
+		return e
+	}
+	return s.verifyConnectorCredential(tenant, id, sealed)
 }
 
 func validReason(value string) bool {
