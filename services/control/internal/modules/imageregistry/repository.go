@@ -29,6 +29,7 @@ type Service struct {
 	license     *licensing.Service
 	config      Config
 	remote      *distributionClient
+	siteSource  *siteReleaseSource
 	imports     chan struct{}
 }
 type Pin struct {
@@ -59,7 +60,22 @@ type Mutation struct {
 	RequestID   string `json:"-"`
 }
 
+// New opens the tenant registry with the signed local archive as its byte source.
 func New(i *identity.Service, w *workspaces.Service, n *nodes.Service, d *deployments.Service, l *licensing.Service, c Config) (*Service, error) {
+	return newService(i, w, n, d, l, c, "")
+}
+
+// NewWithSiteReleaseSource enables an independently configured read-only site
+// registry. The protected JSON file contains only source settings and file
+// references. Tenant registry writes continue to use c.
+func NewWithSiteReleaseSource(i *identity.Service, w *workspaces.Service, n *nodes.Service, d *deployments.Service, l *licensing.Service, c Config, sourceFile string) (*Service, error) {
+	if sourceFile == "" {
+		return nil, failure("REGISTRY_SITE_SOURCE_CONFIGURATION_INVALID")
+	}
+	return newService(i, w, n, d, l, c, sourceFile)
+}
+
+func newService(i *identity.Service, w *workspaces.Service, n *nodes.Service, d *deployments.Service, l *licensing.Service, c Config, sourceFile string) (*Service, error) {
 	if i == nil || w == nil || w.Identity != i || n == nil || n.Identity != i || n.Workspaces != w || d == nil || d.RegistryActions != nil || d.Nodes != n || d.Models == nil || d.Models.Identity != i || l == nil || !l.UsesIdentity(i) {
 		return nil, failure("REGISTRY_OWNER_REQUIRED")
 	}
@@ -76,13 +92,32 @@ func New(i *identity.Service, w *workspaces.Service, n *nodes.Service, d *deploy
 		return nil, e
 	}
 	root.Close()
-	service := &Service{i, w, n, d, l, c, remote, make(chan struct{}, c.MaximumConcurrentImports)}
+	var source *siteReleaseSource
+	if sourceFile != "" {
+		source, e = openSiteReleaseSource(sourceFile, c, remote)
+		if e != nil {
+			remote.Close()
+			return nil, e
+		}
+	}
+	service := &Service{
+		identity: i, workspaces: w, nodes: n, deployments: d, license: l,
+		config: c, remote: remote, siteSource: source, imports: make(chan struct{}, c.MaximumConcurrentImports),
+	}
 	d.RegistryActions = service
 	return service, nil
 }
+
+// Close releases idle connections for the destination and any site source.
 func (s *Service) Close() {
-	if s != nil && s.remote != nil {
+	if s == nil {
+		return
+	}
+	if s.remote != nil {
 		s.remote.Close()
+	}
+	if s.siteSource != nil {
+		s.siteSource.client.Close()
 	}
 }
 func vendorStatement(q transaction.Executor, pg, my, dm string, args ...any) transaction.Statement {
@@ -299,7 +334,7 @@ func (s *Service) List(ctx context.Context, a identity.Auth, workspace, cursor s
 }
 func cachedMatches(p Pin, image cachedImage) error {
 	raw, e := json.Marshal(image)
-	if e != nil || p.inventorySHA == nil || strings.TrimPrefix(digestBytes(raw), "sha256:") != *p.inventorySHA || p.ManifestDigest == nil || *p.ManifestDigest != image.Inventory.ManifestDigest || p.ConfigDigest == nil || *p.ConfigDigest != image.Inventory.ConfigDigest || p.ArchiveSHA256 == nil || *p.ArchiveSHA256 != image.Archive.TransportSHA256 || p.ArchiveBytes == nil || *p.ArchiveBytes != image.Archive.TransportBytes {
+	if e != nil || !image.SiteSource.matches(image.Asset) || p.inventorySHA == nil || strings.TrimPrefix(digestBytes(raw), "sha256:") != *p.inventorySHA || p.ManifestDigest == nil || *p.ManifestDigest != image.Inventory.ManifestDigest || p.ConfigDigest == nil || *p.ConfigDigest != image.Inventory.ConfigDigest || p.ArchiveSHA256 == nil || *p.ArchiveSHA256 != image.Archive.TransportSHA256 || p.ArchiveBytes == nil || *p.ArchiveBytes != image.Archive.TransportBytes {
 		return failure("REGISTRY_CONTENT_INVALID")
 	}
 	return nil

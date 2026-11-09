@@ -61,6 +61,11 @@ func (s *Service) importSelected(ctx context.Context, a identity.Auth, m Mutatio
 	if e != nil {
 		return Pin{}, failure("REGISTRY_RELEASE_INVALID")
 	}
+	if s.siteSource != nil {
+		if _, e := siteReleaseRepository(proof.Asset.ID); e != nil {
+			return Pin{}, e
+		}
+	}
 	pin, token := uuid.NewString(), uuid.NewString()
 	fresh := false
 	e = s.actor(ctx, a, m.WorkspaceID, true, true, func(ctx context.Context, q transaction.Executor, w workspaces.Workspace) error {
@@ -98,7 +103,7 @@ func (s *Service) importSelected(ctx context.Context, a identity.Auth, m Mutatio
 	if !fresh {
 		return out, nil
 	}
-	image, e := prepareImage(ctx, s.config, pin, signed, proof)
+	image, e := prepareImage(ctx, s.config, s.siteSource, pin, signed, proof)
 	if e != nil {
 		return Pin{}, e
 	}
