@@ -227,3 +227,74 @@ All 19 training runtime tests passed with the approved local Qwen
 tokenizer assets. This install was a private runtime test. The strict
 release checker still requires the binary notice before emitting a
 fixture manifest.
+
+### Exact Tokenizers notice inputs
+
+The retained wheel is
+`tokenizers-0.23.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl`.
+Its 3,396,193 bytes match the Linux training lock and the
+[PyPI release](https://pypi.org/project/tokenizers/0.23.3/#files).
+The wheel's `METADATA` has an Apache classifier and no `License`,
+`License-Expression`, or `License-File` fields. The archive has no
+license file. The `WHEEL` entry identifies Maturin 1.15.0 and the
+CPython 3.10 stable ABI used on CPython 3.12.
+
+[PyPI's verifier](https://docs.pypi.org/attestations/consuming-attestations/)
+verified the exact archive offline using the staged Sigstore trust data
+and provenance from the [integrity endpoint](https://pypi.org/integrity/tokenizers/0.23.3/tokenizers-0.23.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl/provenance).
+It rejected a one-byte change and a different expected repository.
+The publishing identity names the `release` environment and
+[`python-release.yml` at the tag commit](https://github.com/huggingface/tokenizers/blob/301277072263fb3830eb66eec7e47adadf76f1dc/.github/workflows/python-release.yml).
+Its source digest matches `301277072263fb3830eb66eec7e47adadf76f1dc`.
+The [root license at that commit](https://github.com/huggingface/tokenizers/blob/301277072263fb3830eb66eec7e47adadf76f1dc/LICENSE)
+and Python source archive's `tokenizers/LICENSE` are byte-identical.
+The source archive's `bindings/python/Cargo.lock` also matches the tag.
+The embedded Rust SBOM includes the local core crate 0.23.2 from that
+same tree and 126 registry entries. The Python package is 0.23.3.
+
+| Input | SHA-256 |
+| --- | --- |
+| Selected wheel | `376851d22bcf9d650a5c3090bb83e6cf9e895fbf0595369fa4cd43c1f69b5f87` |
+| Native extension | `4b1458a379296762a034d3bc89299c0c35b4eefb0577acca922f481b262c65a1` |
+| Published Python source archive | `cded33237c77caeef62944d32aa9a7ef42bdce2b3497e18d137e072a8c4be438` |
+| Tagged source license | `c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4` |
+| Tagged Cargo lock | `afcedf7f2ebe008b068d7afd25e77f7d9d8e433c24153bc35a1eb5611083ee5b` |
+| Embedded CycloneDX SBOM | `6faa23324b2b53b4a8da9b451a675610cc45e1a23e8c5bb0740c080064e1ba0d` |
+| PyPI provenance JSON | `9040f103398a9349f6e651afa476d5b4c08a6c2eb2f4cf478f1d8b20d879e689` |
+| DEL notice candidate archive | `2eb423cd61dec1cf9a2e0c0349d954d2daa15341e86db6b064e7408069d93204` |
+| Candidate inventory JSON | `d74c6d354671f827e7bdb7c2d82b872da1f30809d6c2b13cbcf4d252fbda76bc` |
+
+The private `tokenizers-0.23.3-linux-amd64-notices.tar.gz` candidate
+contains the original notice bytes, paths and digests for all 127 SBOM
+components. Every registry source archive matched its Cargo checksum.
+The `defmt-parser` 1.0.0 archive omitted notices. Its recorded source
+commit identifies the [upstream license files](https://github.com/knurling-rs/defmt/tree/4a8cdb44891ed57b8ff5a023b6bec7137c48708f).
+Its `src/lib.rs` and original manifest matched that commit byte for byte.
+The inventory preserves Oniguruma's COPYING text and distinct original
+C header attributions, the vendored esaxx and sais notices, the
+`unicode-ident` Unicode-3.0 text, and Oniguruma's
+[Unicode 16.0 data attribution](https://www.unicode.org/Public/16.0.0/ucd/ReadMe.txt)
+and [Unicode license](https://www.unicode.org/license.txt). The wheel
+has a Rust SBOM and no grafted library files. The ELF names glibc,
+`libstdc++` and `libgcc_s` among its shared-library requirements.
+The selected base image supplies its own system-library notices.
+
+Commercial use and offline distribution are allowed under the applicable
+terms. Carry the Apache-2.0 text with redistributed copies and retain
+attributions and applicable NOTICE material under
+[Apache-2.0 section 4](https://www.apache.org/licenses/LICENSE-2.0#redistribution).
+Carry the original copyright, permission and disclaimer texts for
+bundled components, including the separate BSD-style Oniguruma and
+Unicode terms. The archive supplies the declared alternatives for
+review. The SBOM describes Maturin's dependency graph. DEL reviews the
+binary notices and base-image notices for the selected build.
+
+The [wheel specification](https://packaging.python.org/en/latest/specifications/binary-distribution-format/#the-dist-info-licenses-directory)
+uses `.dist-info/licenses/` for files declared by `License-File`. The
+current [release checker](../../tools/release/offline/README.md#tokenizer-wheelhouse-fixture)
+requires embedded notices and still refuses this upstream wheel. The
+private candidate is ready for DEL's approval as a wheel-digest-bound
+notice asset and offline installation/readback of the signed media.
+An approved replacement wheel with embedded notices would require its
+own provenance and a reviewed lock update. Repacking the existing
+wheel changes the pinned digest and breaks the upstream attestation.
