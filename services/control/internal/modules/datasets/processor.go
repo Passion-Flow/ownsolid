@@ -226,69 +226,10 @@ func (p *Processor) Execute(ctx context.Context, request wire.ProcessorRequest) 
 	if e = writeNew(requestFile, raw); e != nil {
 		return empty, e
 	}
-	if ctx.Err() != nil {
-		return empty, failure("DATASET_JOB_CANCELLED")
-	}
 	command := exec.Command(p.configuration.PythonExecutable, "-I", "-B", p.configuration.ProcessorFile, "--request-file", requestFile)
-	command.Dir = request.ScopeDirectory
-	command.Env = []string{"PATH=/usr/bin:/bin", "LANG=C.UTF-8", "LC_ALL=C.UTF-8", "TMPDIR=" + request.ScopeDirectory, "PYTHONNOUSERSITE=1", "PYTHONDONTWRITEBYTECODE=1"}
-	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	diagnostic := &boundedDiagnostic{}
-	command.Stdout = diagnostic
-	command.Stderr = diagnostic
-	if command.Start() != nil {
-		return empty, failure("DATASET_PROCESSOR_START_FAILED")
-	}
-	done := make(chan error, 1)
-	go func() { done <- command.Wait() }()
-	wall := time.NewTimer(time.Duration(request.Resources.WallSeconds) * time.Second)
-	defer wall.Stop()
-	memory := time.NewTicker(time.Duration(p.policy.MemoryPollMilliseconds) * time.Millisecond)
-	defer memory.Stop()
-	var exitError error
-running:
-	for {
-		select {
-		case exitError = <-done:
-			break running
-		case <-ctx.Done():
-			stopChild(command, done, time.Duration(p.policy.ChildStopSeconds)*time.Second)
-			return empty, failure("DATASET_JOB_CANCELLED")
-		case <-wall.C:
-			stopChild(command, done, time.Duration(p.policy.ChildStopSeconds)*time.Second)
-			return empty, failure("DATASET_PROCESSOR_TIMEOUT")
-		case <-memory.C:
-			resident, monitorError := childResidentBytes(ctx, command.Process.Pid, time.Duration(p.policy.MemoryPollMilliseconds)*time.Millisecond)
-			if monitorError != nil {
-				if runtime.GOOS == "linux" {
-					exitError, e = processorMemoryExitReceipt(ctx, done, monitorError, wall.C, time.Duration(p.policy.ChildStopSeconds)*time.Second)
-					if e == nil {
-						break running
-					}
-				} else {
-					// Preserve the existing non-Linux sampler's receipt behavior;
-					// only Linux supplies the terminal kernel observation above.
-					select {
-					case exitError = <-done:
-						break running
-					default:
-					}
-					e = failure("DATASET_PROCESSOR_MEMORY_MONITOR_FAILED")
-				}
-				stopChild(command, done, time.Duration(p.policy.ChildStopSeconds)*time.Second)
-				return empty, e
-			}
-			if resident > request.Resources.MemoryBytes {
-				stopChild(command, done, time.Duration(p.policy.ChildStopSeconds)*time.Second)
-				return empty, failure("DATASET_PROCESSOR_MEMORY_EXCEEDED")
-			}
-		}
-	}
-	if ctx.Err() != nil {
-		return empty, failure("DATASET_JOB_CANCELLED")
-	}
-	if diagnostic.exceeded() {
-		return empty, failure("DATASET_PROCESSOR_RESULT_INVALID")
+	exitError, e := p.run(ctx, command, request.ScopeDirectory, request.Resources, nil)
+	if e != nil {
+		return empty, e
 	}
 	resultFile := filepath.Join(request.OutputDirectory, "result.json")
 	resultInfo, e := privatePath(resultFile, request.OutputDirectory, false, request.Resources.MaximumResultBytes)
@@ -339,6 +280,74 @@ running:
 		}
 	}
 	return result, nil
+}
+
+// run owns the lifetime and resource observations of one dataset subprocess.
+func (p *Processor) run(ctx context.Context, command *exec.Cmd, scope string, resources wire.Resources, environment []string) (error, error) {
+	if ctx.Err() != nil {
+		return nil, failure("DATASET_JOB_CANCELLED")
+	}
+	command.Dir = scope
+	command.Env = append([]string{"PATH=/usr/bin:/bin", "LANG=C.UTF-8", "LC_ALL=C.UTF-8", "TMPDIR=" + scope, "PYTHONNOUSERSITE=1", "PYTHONDONTWRITEBYTECODE=1"}, environment...)
+	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	diagnostic := &boundedDiagnostic{}
+	command.Stdout = diagnostic
+	command.Stderr = diagnostic
+	if command.Start() != nil {
+		return nil, failure("DATASET_PROCESSOR_START_FAILED")
+	}
+	done := make(chan error, 1)
+	go func() { done <- command.Wait() }()
+	wall := time.NewTimer(time.Duration(resources.WallSeconds) * time.Second)
+	defer wall.Stop()
+	memory := time.NewTicker(time.Duration(p.policy.MemoryPollMilliseconds) * time.Millisecond)
+	defer memory.Stop()
+	var exitError, e error
+running:
+	for {
+		select {
+		case exitError = <-done:
+			break running
+		case <-ctx.Done():
+			stopChild(command, done, time.Duration(p.policy.ChildStopSeconds)*time.Second)
+			return nil, failure("DATASET_JOB_CANCELLED")
+		case <-wall.C:
+			stopChild(command, done, time.Duration(p.policy.ChildStopSeconds)*time.Second)
+			return nil, failure("DATASET_PROCESSOR_TIMEOUT")
+		case <-memory.C:
+			resident, monitorError := childResidentBytes(ctx, command.Process.Pid, time.Duration(p.policy.MemoryPollMilliseconds)*time.Millisecond)
+			if monitorError != nil {
+				if runtime.GOOS == "linux" {
+					exitError, e = processorMemoryExitReceipt(ctx, done, monitorError, wall.C, time.Duration(p.policy.ChildStopSeconds)*time.Second)
+					if e == nil {
+						break running
+					}
+				} else {
+					// Preserve the existing non-Linux sampler's receipt behavior;
+					// only Linux supplies the terminal kernel observation above.
+					select {
+					case exitError = <-done:
+						break running
+					default:
+					}
+					e = failure("DATASET_PROCESSOR_MEMORY_MONITOR_FAILED")
+				}
+				stopChild(command, done, time.Duration(p.policy.ChildStopSeconds)*time.Second)
+				return nil, e
+			}
+			if resident > resources.MemoryBytes {
+				stopChild(command, done, time.Duration(p.policy.ChildStopSeconds)*time.Second)
+				return nil, failure("DATASET_PROCESSOR_MEMORY_EXCEEDED")
+			}
+		}
+	}
+	if ctx.Err() != nil {
+		return nil, failure("DATASET_JOB_CANCELLED")
+	}
+	if diagnostic.exceeded() {
+		return nil, failure("DATASET_PROCESSOR_RESULT_INVALID")
+	}
+	return exitError, nil
 }
 
 func verifyPrepared(request wire.ProcessorRequest, result wire.ProcessorResult) error {

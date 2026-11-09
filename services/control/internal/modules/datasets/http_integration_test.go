@@ -50,6 +50,15 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 		t.Fatal(e)
 	}
 	account.Config.Datasets = config.DatasetConfiguration{ArtifactRoot: root, PythonExecutable: binary, ProcessorFile: script}
+	if os.Getenv("OWNSOLID_TEST_PREVIEW_PYTHON") != "" {
+		if account.Config.Models.ArtifactRoot == "" {
+			account.Config.Models.ArtifactRoot = t.TempDir()
+		}
+		// Reserve the subprocess budget plus time for a cold model-store read.
+		policy := account.Config.Policy()
+		policy.HTTP.RequestSeconds = 45
+		account.Config.Runtime = &policy
+	}
 	if account.Config.Models.ArtifactRoot != "" {
 		if e = models.InitializeStore(account.Config.Models.ArtifactRoot, os.Geteuid(), os.Getegid()); e != nil {
 			t.Fatal(e)
@@ -70,6 +79,21 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	}
 	handler.Datasets.Service.Store = store
 	handler.Datasets.Service.Processor = processor
+	if python := os.Getenv("OWNSOLID_TEST_PREVIEW_PYTHON"); python != "" {
+		scratch := t.TempDir()
+		if e = os.Chmod(scratch, 0700); e != nil {
+			t.Fatal(e)
+		}
+		trainingRoot := filepath.Clean(filepath.Join(filepath.Dir(script), "../training"))
+		resources := account.Config.Policy().Datasets.Resources
+		resources.WallSeconds = 30
+		handler.Datasets.TokenizerPreview, e = datasets.NewTokenizerPreviewProcessor(processor, handler.Models.Service, datasets.TokenizerPreviewConfiguration{
+			PythonExecutable: python, TrainingRoot: trainingRoot, ScratchRoot: scratch, Resources: resources,
+		})
+		if e != nil {
+			t.Fatal(e)
+		}
+	}
 	server := httpfixture.NewTLSServer(t, handler)
 	defer server.Close()
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/datasets/openapi.json")
@@ -170,6 +194,9 @@ func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *test
 	verifyThreeWayHTTPSPublication(t, handler.Datasets.Service, portal, admin, path, adminPath)
 	verifyNearPromptHTTPSPublication(t, handler.Datasets.Service, portal, admin, path, adminPath)
 	verifySingleTurnHTTPSUpload(t, handler.Datasets.Service, portal, admin, path, adminPath)
+	if handler.Datasets.TokenizerPreview != nil {
+		verifyTokenizerPreviewHTTPS(t, handler.Datasets.Service, auth, portal, admin, path, adminPath)
+	}
 }
 
 func createHTTPSDatasetDraft(t *testing.T, client *httpfixture.Client, path string, raw []byte) map[string]any {

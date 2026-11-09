@@ -92,6 +92,54 @@ rows, and bound concurrency and time before invoking the runtime. Map the
 runtime refusal codes to actionable errors without exposing host paths or
 sample content in logs.
 
+### Control-plane bridge
+
+Reuse the model registry's [scoped ready and range checks](../../services/control/internal/modules/models/transfer.go)
+to stage the five tokenizer assets for the requested ready model ID.
+Verify the full lengths and SHA-256 against the compiled catalogue before
+the Python preview independently verifies the assets and installed catalogue.
+The request selects a model ID in the authenticated workspace. Filesystem
+paths and catalogue identity remain under operator control.
+
+Read the first bounded page through the authorized draft reader and reject
+invalid samples. Use the existing dataset subprocess limits and process
+custody. Start the pinned interpreter in [isolated mode](https://docs.python.org/3.12/using/cmdline.html#cmdoption-I)
+with [direct process execution](https://pkg.go.dev/os/exec). Keep the
+transport adapter with its control owner so data and training worker source
+identities remain stable. The control image currently ships the dataset
+processor and standard Python. The handler requires explicit injection of
+a hash-checked runtime and private scratch space. This adds no dependency,
+model, dataset or licence.
+
+The isolated Linux prototype produced the expected counts with the existing
+dataset CPU and memory limits. Peak RSS was 179,768 KiB. In the loopback-only
+HTTPS and PostgreSQL fixture, Admin and Portal used the real tokenizer from
+the retained Qwen snapshot. The test seeded scoped ready-model metadata
+and installed only the five read-only files. This exercises the existing
+registry range reader and exact-byte verification. Model import and production installation have separate evidence. A foreign
+draft and model, missing and same-size altered assets, an invalid token
+budget and an oversized batch were refused. The exact-fit and over-budget reads bound the compiled
+catalogue and canonical row digest. Existing draft and publication
+requests used the same dispatcher and subprocess runner.
+
+To repeat the fixture, configure the real loopback database and
+`PROJECT_ONE_DATA_PYTHON` as in the
+[development environment](../development/environment.md). Set
+`OWNSOLID_TEST_PREVIEW_PYTHON` to the isolated, hash-checked preview
+interpreter and `OWNSOLID_TEST_QWEN_TOKENIZER_DIRECTORY` to the retained
+approved assets. With external networking disabled, run:
+
+```sh
+go -C services/control test -tags dataset_processor_integration -count=1   ./internal/modules/datasets -run '^TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness$'
+```
+
+The fixture reserves a 30-second child wall budget and a 45-second HTTP
+deadline for the cold model-store read and tokenizer load. The preview
+uses separate resource settings from inspection and publication. Before enablement, DEV must publish
+the optional route and its error contract. The composition and release
+owners must supply typed configuration, the protected runtime and a
+sufficient request and file-size budget. S-503 owns the user entry point.
+
 ### Dataset UI handoff
 
 The S-503 dataset preview entry point must show the original counts, the
