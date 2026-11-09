@@ -184,7 +184,30 @@ func (s *Service) PreviewDraftTokenizer(ctx context.Context, a identity.Auth, wo
 	if e != nil {
 		return out, e
 	}
-	return worker.execute(ctx, scope, input.MaximumTokens, rows, digests)
+	out, e = worker.execute(ctx, scope, input.MaximumTokens, rows, digests)
+	if e != nil {
+		return TokenizerPreviewResult{}, e
+	}
+	// The child runs outside PostgreSQL. Recheck current authority before
+	// publishing text prepared under the earlier scoped read.
+	e = s.transaction(ctx, a, workspace, false, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+		if _, e := lockedDataset(ctx, tx, w, dataset); e != nil {
+			return e
+		}
+		d, e := lockedDraft(ctx, tx, w, dataset, draft)
+		if e != nil {
+			return e
+		}
+		if e = draftAccess(a, w, d, false); e != nil {
+			return e
+		}
+		e = worker.models.ReadyWithin(ctx, tx, w.TenantID, w.ID, input.ModelID)
+		if e != nil && e.Error() == "MODEL_FILE_INVALID" {
+			return failure("DATASET_FILE_INVALID")
+		}
+		return e
+	})
+	return committed(out, e)
 }
 
 func (p *TokenizerPreviewProcessor) stageAsset(ctx context.Context, tx transaction.Executor, workspace workspaces.Workspace, model, path string, asset agentwire.ModelFile) error {
