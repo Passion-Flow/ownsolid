@@ -35,15 +35,24 @@ func (c ParquetImportConfig) validate() error {
 	return nil
 }
 
-func (s *sourceImportState) readParquet(source io.Reader, directory string, cfg ParquetImportConfig) error {
-	raw, err := os.CreateTemp(directory, ".dataset-parquet-")
-	if err != nil {
-		return failure("DATASET_STORAGE_UNAVAILABLE")
+// An original owned by the draft caller is retained on success. Other
+// callers use a temporary seekable file with the same decoder and limits.
+func (s *sourceImportState) readParquet(source io.Reader, directory string, cfg ParquetImportConfig, original *os.File) error {
+	raw := original
+	if raw == nil {
+		var err error
+		raw, err = os.CreateTemp(directory, ".dataset-parquet-")
+		if err != nil {
+			return failure("DATASET_STORAGE_UNAVAILABLE")
+		}
+		defer os.Remove(raw.Name())
+		defer raw.Close()
 	}
-	defer os.Remove(raw.Name())
-	size, copyErr := io.Copy(raw, source)
-	closeErr := raw.Close()
-	if copyErr != nil || closeErr != nil {
+	size, err := io.Copy(raw, source)
+	if err != nil {
+		return failure("DATASET_PARQUET_STAGE_FAILED")
+	}
+	if original == nil && raw.Close() != nil {
 		return failure("DATASET_PARQUET_STAGE_FAILED")
 	}
 	if size > s.limits.SourceBytes {
