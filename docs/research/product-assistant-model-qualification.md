@@ -86,3 +86,35 @@ canonical report. A modified capture with the prior digest returned
 `EVALUATION_CAPTURE_MISMATCH`
 and no output. Focused checks also covered missing category coverage and
 an unrelated scorer.
+
+## Native observation binding
+
+The archived native case file and normalized safety capture describe the
+same response bytes. Require an independent SHA-256 pin for the original
+file before accepting the optional native replay evidence. Match every
+case identity, prompt digest and response digest in the scorer's frozen
+order. Recompute each digest from the archived response text. A trusted
+file digest establishes the selected archive and the per-case checks
+bind it to the validated replay. A synthetic exact-refusal capture must
+fail against the native archive even when its case identities match.
+Keep the raw text out of the result and mark the evidence as retained
+native output replay. A controlled replay without the native archive
+keeps its existing mode.
+
+The [SCI gateway compatibility check](evaluation-performance-benchmark.md)
+found that the retained direct requests carry fields rejected by the
+current gateway. Adapting the body removes seed forwarding, so it
+cannot establish an equivalent production profile. A separately
+qualified gateway request, session-scoped admission, and positive
+capability evidence are needed before assigning a production tier.
+The APP runner uses the existing bounded file reader and strict JSON
+decoding helpers. It adds no dependency, model or dataset.
+
+Append `--native-observations "$raw_cases"` and
+`--native-observations-sha256 "$raw_cases_sha256"` to the replay command
+to enforce this binding. The three archived Qwen3-0.6B responses matched
+on disconnected replay and remained unqualified. Pairing SCI's exact-refusal
+control with the same native archive returned
+`ASSISTANT_NATIVE_OBSERVATIONS_MISMATCH` and emitted no qualification
+decision. Focused tests also rejected the wrong archive digest, reordered
+cases and changed response bytes.
