@@ -74,3 +74,28 @@ cancelled call reached the synthetic engine under the gateway-generated
 UUID and appeared under the same UUID in the authorized history. The
 Admin HTTPS request detail and deployment detail returned the same
 node and revision and the deployment's fixture GPU assignment.
+
+## Historical trace through target changes
+
+The admitted request carries its own deployment ID and revision.
+The alias supplies its stable public name and can move to another
+deployment. Use the existing authorized request detail as the historical
+trace source. Resolving the current alias target for an older request
+would attribute it to the replacement. The engine correlation contract
+and its pinned vLLM source above still apply.
+
+In the existing disconnected cutover fixture, retain the actual Admin
+HTTPS request detail immediately after the canonical report. Read it
+again after retarget and after rollback. Require the same node, alias,
+deployment revision, actor, key and usage. Refuse the same request to
+an independently authenticated foreign tenant. The fixture's deployment
+observations are synthetic. This adds no runtime or dependency, and
+the existing Go and PostgreSQL licence terms above apply.
+
+The disconnected PostgreSQL and HTTPS run passed. The published
+`GatewayRequestResponse` body was identical before target changes,
+after retarget and resume, and after rollback and resume. The
+independently authenticated foreign Admin received RESOURCE_NOT_FOUND.
+The current alias and original key moved to the replacement while the
+record retained its original admission and outcome. The fixture
+verified admitted placement identity and did not execute a GPU workload.
